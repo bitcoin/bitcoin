@@ -87,6 +87,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintf_, LogSetup)
     LogPrintf_("fn2", "src2", 2, BCLog::LogFlags::NET, BCLog::Level::None, "foo2: %s\n", "bar2");
     LogPrintf_("fn3", "src3", 3, BCLog::LogFlags::NONE, BCLog::Level::Debug, "foo3: %s\n", "bar3");
     LogPrintf_("fn4", "src4", 4, BCLog::LogFlags::NONE, BCLog::Level::None, "foo4: %s\n", "bar4");
+    LogPrintf_("fn5", "src5", 5, BCLog::LogFlags::NONE, BCLog::Level::Info, "foo5: %s\n", "bar5");
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
     for (std::string log; std::getline(file, log);) {
@@ -97,6 +98,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintf_, LogSetup)
         "[src2:2] [fn2] [net] foo2: bar2",
         "[src3:3] [fn3] [debug] foo3: bar3",
         "[src4:4] [fn4] foo4: bar4",
+        "[src5:5] [fn5] [info] foo5: bar5",
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }

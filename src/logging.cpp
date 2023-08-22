@@ -202,7 +202,7 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
     return false;
 }
 
-std::string BCLog::Logger::LogLevelToStr(BCLog::Level level) const
+std::string BCLog::Logger::LogLevelToStr(BCLog::Level level)
 {
     switch (level) {
     case BCLog::Level::Trace:
@@ -341,7 +341,7 @@ static constexpr std::array<BCLog::Level, 3> LogLevelsList()
 std::string BCLog::Logger::LogLevelsString() const
 {
     const auto& levels = LogLevelsList();
-    return Join(std::vector<BCLog::Level>{levels.begin(), levels.end()}, ", ", [this](BCLog::Level level) { return LogLevelToStr(level); });
+    return Join(std::vector<BCLog::Level>{levels.begin(), levels.end()}, ", ", [](BCLog::Level level) { return LogLevelToStr(level); });
 }
 
 std::string BCLog::Logger::LogTimestampStr(const std::string& str)
@@ -392,12 +392,9 @@ namespace BCLog {
     }
 } // namespace BCLog
 
-void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+std::string BCLog::Logger::GetLogPrefix(BCLog::LogFlags category, BCLog::Level level) const
 {
-    StdLockGuard scoped_lock(m_cs);
-    std::string str_prefixed = LogEscapeMessage(str);
-
-    if ((category != LogFlags::NONE || level != Level::None) && m_started_new_line) {
+    if (category != LogFlags::NONE || level != Level::None) {
         std::string s{"["};
 
         if (category != LogFlags::NONE) {
@@ -414,7 +411,18 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
         }
 
         s += "] ";
-        str_prefixed.insert(0, s);
+        return s;
+    }
+    return {};
+}
+
+void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+{
+    StdLockGuard scoped_lock(m_cs);
+    std::string str_prefixed = LogEscapeMessage(str);
+
+    if (m_started_new_line) {
+        str_prefixed.insert(0, GetLogPrefix(category, level));
     }
 
     if (m_log_sourcelocations && m_started_new_line) {

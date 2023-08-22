@@ -124,6 +124,8 @@ namespace BCLog {
         fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
 
+        std::string GetLogPrefix(LogFlags category, Level level) const;
+
         /** Send a string to the log output */
         void LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level);
 
@@ -194,7 +196,7 @@ namespace BCLog {
         std::string LogLevelsString() const;
 
         //! Returns the string representation of a log level.
-        std::string LogLevelToStr(BCLog::Level level) const;
+        static std::string LogLevelToStr(BCLog::Level level);
 
         bool DefaultShrinkDebugFile() const;
     };
