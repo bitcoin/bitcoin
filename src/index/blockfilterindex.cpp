@@ -4,6 +4,7 @@
 
 #include <map>
 
+#include <clientversion.h>
 #include <common/args.h>
 #include <dbwrapper.h>
 #include <hash.h>
