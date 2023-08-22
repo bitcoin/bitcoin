@@ -118,6 +118,7 @@ bool AddWallet(const std::shared_ptr<CWallet>& wallet)
         vpwallets.push_back(wallet);
     }
     wallet->ConnectScriptPubKeyManNotifiers();
+    wallet->AutoLockMasternodeCollaterals();
     assert(::masternodeSync != nullptr);
     coinJoinClientManagers.emplace(std::make_pair(wallet->GetName(), std::make_shared<CCoinJoinClientManager>(*wallet, *::masternodeSync)));
     g_wallet_init_interface.InitCoinJoinSettings();
