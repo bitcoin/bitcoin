@@ -94,11 +94,11 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintf_, LogSetup)
         log_lines.push_back(log);
     }
     std::vector<std::string> expected = {
-        "[src1:1] [fn1] [net:debug] foo1: bar1",
+        "[src1:1] [fn1] [net] foo1: bar1",
         "[src2:2] [fn2] [net] foo2: bar2",
         "[src3:3] [fn3] [debug] foo3: bar3",
         "[src4:4] [fn4] foo4: bar4",
-        "[src5:5] [fn5] [info] foo5: bar5",
+        "[src5:5] [fn5] foo5: bar5",
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
@@ -120,7 +120,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
     std::vector<std::string> expected = {
         "foo5: bar5",
         "[net] foo6: bar6",
-        "[net:debug] foo7: bar7",
+        "[net] foo7: bar7",
         "[net:info] foo8: bar8",
         "[net:warning] foo9: bar9",
         "[net:error] foo10: bar10",
