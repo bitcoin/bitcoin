@@ -174,6 +174,9 @@ public:
         }
         return true;
     }
+
+    unsigned int GetValueSize() const;
+
 };
 
 struct LevelDBContext;

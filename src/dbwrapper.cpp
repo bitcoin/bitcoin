@@ -411,6 +411,11 @@ Span<const std::byte> CDBIterator::GetValueImpl() const
     return MakeByteSpan(m_impl_iter->iter->value());
 }
 
+unsigned int CDBIterator::GetValueSize() const
+{
+    return m_impl_iter->iter->value().size();
+}
+
 CDBIterator::~CDBIterator() = default;
 bool CDBIterator::Valid() const { return m_impl_iter->iter->Valid(); }
 void CDBIterator::SeekToFirst() { m_impl_iter->iter->SeekToFirst(); }
