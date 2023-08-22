@@ -237,9 +237,12 @@ static inline void LogPrintf_(const std::string& logging_function, const std::st
 #define LogPrintLevel_(category, level, ...) LogPrintf_(__func__, __FILE__, __LINE__, category, level, __VA_ARGS__)
 
 // Log unconditionally.
-#define LogPrintf(...) LogPrintLevel_(BCLog::LogFlags::NONE, BCLog::Level::Info, __VA_ARGS__)
+#define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, __VA_ARGS__)
+#define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Warning, __VA_ARGS__)
+#define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, __VA_ARGS__)
 
-// Log unconditionally, prefixing the output with the passed category name.
+// Deprecated unconditional logging.
+#define LogPrintf(...) LogInfo(__VA_ARGS__)
 #define LogPrintfCategory(category, ...) LogPrintLevel_(category, BCLog::Level::Info, __VA_ARGS__)
 
 // Use a macro instead of a function for conditional logging to prevent
@@ -254,7 +257,11 @@ static inline void LogPrintf_(const std::string& logging_function, const std::st
     } while (0)
 
 // Log conditionally, prefixing the output with the passed category name.
-#define LogPrint(category, ...)  LogPrintLevel(category, BCLog::Level::Debug, __VA_ARGS__)
+#define LogDebug(category, ...) LogPrintLevel(category, BCLog::Level::Debug, __VA_ARGS__)
+#define LogTrace(category, ...) LogPrintLevel(category, BCLog::Level::Trace, __VA_ARGS__)
+
+// Deprecated conditional logging
+#define LogPrint(category, ...)  LogDebug(category, __VA_ARGS__)
 
 template <typename... Args>
 bool error(const char* fmt, const Args&... args)
