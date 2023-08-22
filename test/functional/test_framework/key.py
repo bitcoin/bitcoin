@@ -6,6 +6,7 @@
 WARNING: This code is slow, uses bad randomness, does not properly protect
 keys, and is trivially vulnerable to side channel attacks. Do not use for
 anything but tests."""
+import secrets
 import csv
 import hashlib
 import hmac
@@ -327,9 +328,14 @@ class ECPubKey():
             return False
         return True
 
-def generate_privkey():
+def generate_privkey() -> bytes:
     """Generate a valid random 32-byte private key."""
-    return random.randrange(1, SECP256K1_ORDER).to_bytes(32, 'big')
+    sec = b'\x00'
+
+    while (as_int := int.from_bytes(sec, 'big')) < 1 or as_int > SECP256K1_ORDER:
+        sec = secrets.token_bytes(32)
+
+    return sec
 
 def rfc6979_nonce(key):
     """Compute signing nonce using RFC6979."""
@@ -347,7 +353,7 @@ class ECKey():
     def __init__(self):
         self.valid = False
 
-    def set(self, secret, compressed):
+    def set(self, secret: bytes, compressed: bool):
         """Construct a private key object with given 32-byte secret and compressed flag."""
         assert(len(secret) == 32)
         secret = int.from_bytes(secret, 'big')
@@ -394,7 +400,7 @@ class ECKey():
         if rfc6979:
             k = int.from_bytes(rfc6979_nonce(self.secret.to_bytes(32, 'big') + msg), 'big')
         else:
-            k = random.randrange(1, SECP256K1_ORDER)
+            k = generate_privkey()
         R = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, k)]))
         r = R[0] % SECP256K1_ORDER
         s = (modinv(k, SECP256K1_ORDER) * (z + self.secret * r)) % SECP256K1_ORDER
