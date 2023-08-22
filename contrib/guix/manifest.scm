@@ -57,16 +57,16 @@ FILE-NAME found in ./patches relative to the current file."
          ;; 2. Build cross-compiled kernel headers with XGCC-SANS-LIBC, derived
          ;; from BASE-KERNEL-HEADERS
          (xkernel (cross-kernel-headers target
-                                        base-kernel-headers
-                                        xgcc-sans-libc
-                                        xbinutils))
+                                        #:linux-headers base-kernel-headers
+                                        #:xgcc xgcc-sans-libc
+                                        #:xbinutils xbinutils))
          ;; 3. Build a cross-compiled libc with XGCC-SANS-LIBC and XKERNEL,
          ;; derived from BASE-LIBC
          (xlibc (cross-libc target
-                            base-libc
-                            xgcc-sans-libc
-                            xbinutils
-                            xkernel))
+                            #:libc base-libc
+                            #:xgcc xgcc-sans-libc
+                            #:xbinutils xbinutils
+                            #:xheaders xkernel))
          ;; 4. Build a cross-compiling gcc targeting XLIBC, derived from
          ;; BASE-GCC
          (xgcc (cross-gcc target
