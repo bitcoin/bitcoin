@@ -64,3 +64,12 @@ void AutoFile::write(Span<const std::byte> src)
         }
     }
 }
+
+CDataStream::CDataStream(int nTypeIn, client_version_tag)
+  : nType{nTypeIn}, nVersion{CLIENT_VERSION} {}
+
+CDataStream::CDataStream(Span<const uint8_t> sp, int type, client_version_tag)
+  : CDataStream{AsBytes(sp), type, CLIENT_VERSION} {}
+
+CDataStream::CDataStream(Span<const value_type> sp, int nTypeIn, client_version_tag)
+  : DataStream{sp}, nType{nTypeIn}, nVersion{CLIENT_VERSION}{}

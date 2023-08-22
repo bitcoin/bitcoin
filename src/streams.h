@@ -353,6 +353,13 @@ public:
           nType{nTypeIn},
           nVersion{nVersionIn} {}
 
+    struct client_version_tag{};
+
+    // Constructors for using the current client version without knowing it
+    explicit CDataStream(int nTypeIn, client_version_tag);
+    explicit CDataStream(Span<const uint8_t> sp, int type, client_version_tag);
+    explicit CDataStream(Span<const value_type> sp, int nTypeIn, client_version_tag);
+
     int GetType() const          { return nType; }
     void SetVersion(int n)       { nVersion = n; }
     int GetVersion() const       { return nVersion; }
