@@ -10,47 +10,72 @@
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
-#include <interfaces/wallet.h>
+#include <kernel/cs_main.h>
 #include <logging.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
-#include <psbt.h>
+#include <primitives/transaction.h>
+#include <script/interpreter.h>
+#include <script/script.h>
+#include <support/allocators/secure.h>
+#include <sync.h>
 #include <tinyformat.h>
+#include <uint256.h>
 #include <util/fs.h>
 #include <util/hasher.h>
-#include <util/message.h>
 #include <util/result.h>
-#include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
 #include <util/ui_change_type.h>
-#include <validationinterface.h>
 #include <wallet/crypter.h>
+#include <wallet/db.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/transaction.h>
-#include <wallet/walletdb.h>
+#include <wallet/types.h>
 #include <wallet/walletutil.h>
 
-#include <algorithm>
 #include <atomic>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <limits>
 #include <map>
 #include <memory>
 #include <optional>
 #include <set>
-#include <stdexcept>
-#include <stdint.h>
 #include <string>
-#include <utility>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <boost/signals2/signal.hpp>
 
+class CKey;
+class CKeyID;
+class CPubKey;
+class Coin;
+class SigningProvider;
+enum class MemPoolRemovalReason;
+enum class SigningResult;
+enum class TransactionError;
+namespace interfaces {
+class Wallet;
+}
+namespace wallet {
+class CWallet;
+class WalletBatch;
+enum class DBErrors : int;
+} // namespace wallet
+struct CBlockLocator;
+struct CExtKey;
+struct FlatSigningProvider;
+struct KeyOriginInfo;
+struct PartiallySignedTransaction;
+struct SignatureData;
 
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
 
-class CScript;
-enum class FeeEstimateMode;
 struct bilingual_str;
 
 namespace wallet {
@@ -119,8 +144,6 @@ constexpr CAmount HIGH_MAX_TX_FEE{100 * HIGH_TX_FEE_PER_KB};
 static constexpr size_t DUMMY_NESTED_P2WPKH_INPUT_SIZE = 91;
 
 class CCoinControl;
-class CWalletTx;
-class ReserveDestination;
 
 //! Default for -addresstype
 constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::BECH32};
