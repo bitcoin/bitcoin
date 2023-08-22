@@ -131,6 +131,15 @@ static const std::map<std::string,WalletFlags> WALLET_FLAG_MAP{
 
 extern const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS;
 
+// Use a macro instead of a function for conditional logging to prevent
+// evaluating arguments when logging for the category is not enabled.
+#define WalletCJLogPrint(wallet, ...)               \
+    do {                                            \
+        if (LogAcceptCategory(BCLog::COINJOIN)) {   \
+            wallet.WalletLogPrintf(__VA_ARGS__);    \
+        }                                           \
+    } while (0)
+
 /** A wrapper to reserve an address from a wallet
  *
  * ReserveDestination is used to reserve an address. It is passed around
