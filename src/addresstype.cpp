@@ -3,39 +3,42 @@
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include <addresstype.h>
-#include <script/script.h>
-#include <script/solver.h>
+
+#include <crypto/sha256.h>
 #include <hash.h>
 #include <pubkey.h>
+#include <script/script.h>
+#include <script/solver.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
+#include <cassert>
 #include <vector>
 
 typedef std::vector<unsigned char> valtype;
 
 ScriptHash::ScriptHash(const CScript& in) : BaseHash(Hash160(in)) {}
-ScriptHash::ScriptHash(const CScriptID& in) : BaseHash(static_cast<uint160>(in)) {}
+ScriptHash::ScriptHash(const CScriptID& in) : BaseHash{in} {}
 
 PKHash::PKHash(const CPubKey& pubkey) : BaseHash(pubkey.GetID()) {}
 PKHash::PKHash(const CKeyID& pubkey_id) : BaseHash(pubkey_id) {}
 
 WitnessV0KeyHash::WitnessV0KeyHash(const CPubKey& pubkey) : BaseHash(pubkey.GetID()) {}
-WitnessV0KeyHash::WitnessV0KeyHash(const PKHash& pubkey_hash) : BaseHash(static_cast<uint160>(pubkey_hash)) {}
+WitnessV0KeyHash::WitnessV0KeyHash(const PKHash& pubkey_hash) : BaseHash{pubkey_hash} {}
 
 CKeyID ToKeyID(const PKHash& key_hash)
 {
-    return CKeyID{static_cast<uint160>(key_hash)};
+    return CKeyID{uint160{key_hash}};
 }
 
 CKeyID ToKeyID(const WitnessV0KeyHash& key_hash)
 {
-    return CKeyID{static_cast<uint160>(key_hash)};
+    return CKeyID{uint160{key_hash}};
 }
 
 CScriptID ToScriptID(const ScriptHash& script_hash)
 {
-    return CScriptID{static_cast<uint160>(script_hash)};
+    return CScriptID{uint160{script_hash}};
 }
 
 WitnessV0ScriptHash::WitnessV0ScriptHash(const CScript& in)
