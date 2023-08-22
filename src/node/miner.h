@@ -21,10 +21,11 @@
 #include <boost/multi_index_container.hpp>
 
 class ArgsManager;
-class ChainstateManager;
 class CBlockIndex;
 class CChainParams;
 class CScript;
+class Chainstate;
+class ChainstateManager;
 
 namespace Consensus { struct Params; };
 

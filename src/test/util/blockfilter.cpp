@@ -6,6 +6,8 @@
 
 #include <chainparams.h>
 #include <node/blockstorage.h>
+#include <primitives/block.h>
+#include <undo.h>
 #include <validation.h>
 
 using node::BlockManager;
