@@ -4,7 +4,7 @@
 
 #include <string>
 
-// Test for bitcoin-unterminated-logprintf
+// Test for syscoin-unterminated-logprintf
 
 enum LogFlags {
     NONE

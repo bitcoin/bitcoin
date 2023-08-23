@@ -9,10 +9,10 @@
 import platform
 import stat
 import subprocess
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 
 
-class BlockstoreReindexTest(BitcoinTestFramework):
+class BlockstoreReindexTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
