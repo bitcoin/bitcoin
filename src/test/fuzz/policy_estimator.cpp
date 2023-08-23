@@ -16,7 +16,7 @@
 
 void initialize_policy_estimator()
 {
-    static const auto testing_setup = MakeFuzzingContext<>();
+    static const auto testing_setup = MakeNoLogFileContext<>();
 }
 
 FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)

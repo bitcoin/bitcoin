@@ -20,7 +20,7 @@ extern int g_socks5_recv_timeout;
 
 void initialize_socks5()
 {
-    static const auto testing_setup = MakeFuzzingContext<>();
+    static const auto testing_setup = MakeNoLogFileContext<>();
     default_socks5_recv_timeout = g_socks5_recv_timeout;
 }
 

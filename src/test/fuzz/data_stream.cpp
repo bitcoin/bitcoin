@@ -13,7 +13,7 @@
 
 void initialize_data_stream_addr_man()
 {
-    static const auto testing_setup = MakeFuzzingContext<>();
+    static const auto testing_setup = MakeNoLogFileContext<>();
 }
 
 FUZZ_TARGET_INIT(data_stream_addr_man, initialize_data_stream_addr_man)
