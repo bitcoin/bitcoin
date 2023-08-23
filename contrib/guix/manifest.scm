@@ -539,7 +539,8 @@ inspecting signatures in Mach-O binaries.")
               (patches (search-our-patches "glibc-2.27-riscv64-Use-__has_include-to-include-asm-syscalls.h.patch"
                                            "glibc-2.27-fcommon.patch"
                                            "glibc-2.27-guix-prefix.patch"
-                                           "glibc-2.27-no-librt.patch"))))
+                                           "glibc-2.27-no-librt.patch"
+                                           "glibc-2.27-powerpc-ldbrx.patch"))))
     (arguments
       (substitute-keyword-arguments (package-arguments glibc)
         ((#:configure-flags flags)

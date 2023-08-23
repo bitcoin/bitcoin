@@ -1,0 +1,245 @@
+From 50b0b3c9ff71ffd7ebbd74ae46844c3566478123 Mon Sep 17 00:00:00 2001
+From: "Gabriel F. T. Gomes" <gabrielftg@linux.ibm.com>
+Date: Mon, 27 May 2019 15:21:22 -0300
+Subject: [PATCH] powerpc: Fix build failures with current GCC
+
+Since GCC commit 271500 (svn), also known as the following commit on the
+git mirror:
+
+commit e154242724b084380e3221df7c08fcdbd8460674
+Author: amodra <amodra@138bc75d-0d04-0410-961f-82ee72b054a4>
+Date:   Wed May 22 04:34:26 2019 +0000
+
+    [RS6000] Don't pass -many to the assembler
+
+glibc builds are failing when an assembly implementation does not
+declare the correct '.machine' directive, or when no such directive is
+declared at all.  For example, when a POWER6 instruction is used, but
+'.machine power6' is not declared, the assembler will fail with an error
+similar to the following:
+
+    ../sysdeps/powerpc/powerpc64/power8/strcmp.S: Assembler messages:
+     24 ../sysdeps/powerpc/powerpc64/power8/strcmp.S:55: Error: unrecognized opcode: `cmpb'
+
+This patch adds '.machine powerN' directives where none existed, as well
+as it updates '.machine power7' directives on POWER8 files, because the
+minimum binutils version required to build glibc (binutils 2.25) now
+provides this machine version.  It also adds '-many' to the assembler
+command used to build tst-set_ppr.c.
+
+Tested for powerpc, powerpc64, and powerpc64le, as well as with
+build-many-glibcs.py for powerpc targets.
+
+Reviewed-by: Tulio Magno Quites Machado Filho <tuliom@linux.ibm.com>
+---
+ sysdeps/powerpc/Makefile                      |  5 +++
+ sysdeps/powerpc/powerpc64/power4/memcmp.S     |  7 ++++
+ sysdeps/powerpc/powerpc64/power7/strncmp.S    |  1 +
+ .../powerpc/powerpc64/power8/fpu/s_llround.S  |  1 +
+ sysdeps/powerpc/powerpc64/power8/strcasecmp.S | 36 ++++++-------------
+ sysdeps/powerpc/powerpc64/power8/strcasestr.S | 14 ++------
+ sysdeps/powerpc/powerpc64/power8/strcmp.S     |  1 +
+ 7 files changed, 28 insertions(+), 37 deletions(-)
+
+diff --git a/sysdeps/powerpc/Makefile b/sysdeps/powerpc/Makefile
+index 6aa683b03f..23126147df 100644
+--- a/sysdeps/powerpc/Makefile
++++ b/sysdeps/powerpc/Makefile
+@@ -45,6 +45,11 @@ ifeq ($(subdir),misc)
+ sysdep_headers += sys/platform/ppc.h
+ tests += test-gettimebase
+ tests += tst-set_ppr
++
++# This test is expected to run and exit with EXIT_UNSUPPORTED on
++# processors that do not implement the Power ISA 2.06 or greater.
++# But the test makes use of instructions from Power ISA 2.06 and 2.07.
++CFLAGS-tst-set_ppr.c += -Wa,-many
+ endif
+ 
+ ifneq (,$(filter %le,$(config-machine)))
+diff --git a/sysdeps/powerpc/powerpc64/power4/memcmp.S b/sysdeps/powerpc/powerpc64/power4/memcmp.S
+index e5319f101f..38dcf4c9a1 100644
+--- a/sysdeps/powerpc/powerpc64/power4/memcmp.S
++++ b/sysdeps/powerpc/powerpc64/power4/memcmp.S
+@@ -26,7 +26,14 @@
+ # define MEMCMP memcmp
+ #endif
+ 
++#ifndef __LITTLE_ENDIAN__
+ 	.machine power4
++#else
++/* Little endian is only available since POWER8, so it's safe to
++   specify .machine as power8 (or older), even though this is a POWER4
++   file.  Since the little-endian code uses 'ldbrx', power7 is enough. */
++	.machine power7
++#endif
+ ENTRY_TOCLESS (MEMCMP, 4)
+ 	CALL_MCOUNT 3
+ 
+diff --git a/sysdeps/powerpc/powerpc64/power7/strncmp.S b/sysdeps/powerpc/powerpc64/power7/strncmp.S
+index 0c7429d19f..10f898c5a3 100644
+--- a/sysdeps/powerpc/powerpc64/power7/strncmp.S
++++ b/sysdeps/powerpc/powerpc64/power7/strncmp.S
+@@ -28,6 +28,7 @@
+ 		     const char *s2 [r4],
+ 		     size_t size [r5])  */
+ 
++	.machine power7
+ ENTRY_TOCLESS (STRNCMP, 5)
+ 	CALL_MCOUNT 3
+ 
+diff --git a/sysdeps/powerpc/powerpc64/power8/fpu/s_llround.S b/sysdeps/powerpc/powerpc64/power8/fpu/s_llround.S
+index a22fc63bb3..84c76ba0f9 100644
+--- a/sysdeps/powerpc/powerpc64/power8/fpu/s_llround.S
++++ b/sysdeps/powerpc/powerpc64/power8/fpu/s_llround.S
+@@ -26,6 +26,7 @@
+ 
+ /* long long [r3] llround (float x [fp1])  */
+ 
++	.machine power8
+ ENTRY_TOCLESS (__llround)
+ 	CALL_MCOUNT 0
+ 	frin	fp1,fp1	/* Round to nearest +-0.5.  */
+diff --git a/sysdeps/powerpc/powerpc64/power8/strcasecmp.S b/sysdeps/powerpc/powerpc64/power8/strcasecmp.S
+index 3a2efe2a64..eeacd40c7f 100644
+--- a/sysdeps/powerpc/powerpc64/power8/strcasecmp.S
++++ b/sysdeps/powerpc/powerpc64/power8/strcasecmp.S
+@@ -91,21 +91,7 @@
+ 3: \
+ 	TOLOWER()
+ 
+-#ifdef _ARCH_PWR8
+-#  define VCLZD_V8_v7	vclzd	v8, v7;
+-#  define MFVRD_R3_V1	mfvrd	r3, v1;
+-#  define VSUBUDM_V9_V8	vsubudm	v9, v9, v8;
+-#  define VPOPCNTD_V8_V8	vpopcntd v8, v8;
+-#  define VADDUQM_V7_V8	vadduqm	v9, v7, v8;
+-#else
+-#  define VCLZD_V8_v7	.long	0x11003fc2
+-#  define MFVRD_R3_V1	.long	0x7c230067
+-#  define VSUBUDM_V9_V8	.long	0x112944c0
+-#  define VPOPCNTD_V8_V8	.long	0x110047c3
+-#  define VADDUQM_V7_V8	.long	0x11274100
+-#endif
+-
+-	.machine  power7
++	.machine  power8
+ 
+ ENTRY (__STRCASECMP)
+ #ifdef USE_AS_STRNCASECMP
+@@ -265,15 +251,15 @@ L(different):
+ #ifdef __LITTLE_ENDIAN__
+ 	/* Count trailing zero.  */
+ 	vspltisb	v8, -1
+-	VADDUQM_V7_V8
++	vadduqm	v9, v7, v8
+ 	vandc	v8, v9, v7
+-	VPOPCNTD_V8_V8
++	vpopcntd	v8, v8
+ 	vspltb	v6, v8, 15
+ 	vcmpequb.	v6, v6, v1
+ 	blt	cr6, L(shift8)
+ #else
+ 	/* Count leading zero.  */
+-	VCLZD_V8_v7
++	vclzd	v8, v7
+ 	vspltb	v6, v8, 7
+ 	vcmpequb.	v6, v6, v1
+ 	blt	cr6, L(shift8)
+@@ -291,7 +277,7 @@ L(skipsum):
+ 	/* Merge and move to GPR.  */
+ 	vmrglb	v6, v6, v7
+ 	vslo	v1, v6, v1
+-	MFVRD_R3_V1
++	mfvrd	r3, v1
+ 	/* Place the characters that are different in first position.  */
+ 	sldi	rSTR2, rRTN, 56
+ 	srdi	rSTR2, rSTR2, 56
+@@ -301,7 +287,7 @@ L(skipsum):
+ 	vslo	v6, v5, v8
+ 	vslo	v7, v4, v8
+ 	vmrghb	v1, v6, v7
+-	MFVRD_R3_V1
++	mfvrd	r3, v1
+ 	srdi	rSTR2, rRTN, 48
+ 	sldi	rSTR2, rSTR2, 56
+ 	srdi	rSTR2, rSTR2, 56
+@@ -320,15 +306,15 @@ L(null_found):
+ #ifdef __LITTLE_ENDIAN__
+ 	/* Count trailing zero.  */
+ 	vspltisb	v8, -1
+-	VADDUQM_V7_V8
++	vadduqm	v9, v7, v8
+ 	vandc	v8, v9, v7
+-	VPOPCNTD_V8_V8
++	vpopcntd	v8, v8
+ 	vspltb	v6, v8, 15
+ 	vcmpequb.	v6, v6, v10
+ 	blt	cr6, L(shift_8)
+ #else
+ 	/* Count leading zero.  */
+-	VCLZD_V8_v7
++	vclzd	v8, v7
+ 	vspltb	v6, v8, 7
+ 	vcmpequb.	v6, v6, v10
+ 	blt	cr6, L(shift_8)
+@@ -343,10 +329,10 @@ L(skipsum1):
+ 	vspltisb	v10, 7
+ 	vslb	v10, v10, v10
+ 	vsldoi	v9, v0, v10, 1
+-	VSUBUDM_V9_V8
++	vsubudm	v9, v9, v8
+ 	vspltisb	v8, 8
+ 	vsldoi	v8, v0, v8, 1
+-	VSUBUDM_V9_V8
++	vsubudm	v9, v9, v8
+ 	/* Shift and remove junk after null character.  */
+ #ifdef __LITTLE_ENDIAN__
+ 	vslo	v5, v5, v9
+diff --git a/sysdeps/powerpc/powerpc64/power8/strcasestr.S b/sysdeps/powerpc/powerpc64/power8/strcasestr.S
+index 9fc24c29f9..e10f06fd86 100644
+--- a/sysdeps/powerpc/powerpc64/power8/strcasestr.S
++++ b/sysdeps/powerpc/powerpc64/power8/strcasestr.S
+@@ -73,18 +73,8 @@
+ 	vor	reg, v8, reg; \
+ 	vcmpequb.	v6, reg, v4;
+ 
+-/* TODO: change these to the actual instructions when the minimum required
+-   binutils allows it.  */
+-#ifdef _ARCH_PWR8
+-#define VCLZD_V8_v7	vclzd	v8, v7;
+-#else
+-#define VCLZD_V8_v7	.long	0x11003fc2
+-#endif
+-
+ #define	FRAMESIZE	(FRAME_MIN_SIZE+48)
+-/* TODO: change this to .machine power8 when the minimum required binutils
+-   allows it.  */
+-	.machine  power7
++	.machine  power8
+ ENTRY (STRCASESTR, 4)
+ 	CALL_MCOUNT 2
+ 	mflr	r0			/* Load link register LR to r0.  */
+@@ -291,7 +281,7 @@ L(nullchk1):
+ 	vcmpequb.	v6, v0, v7
+ 	/* Shift r3 by 16 bytes and proceed.  */
+ 	blt	cr6, L(shift16)
+-	VCLZD_V8_v7
++	vclzd	v8, v7
+ #ifdef __LITTLE_ENDIAN__
+ 	vspltb	v6, v8, 15
+ #else
+diff --git a/sysdeps/powerpc/powerpc64/power8/strcmp.S b/sysdeps/powerpc/powerpc64/power8/strcmp.S
+index 15e7351d1b..d592266d1d 100644
+--- a/sysdeps/powerpc/powerpc64/power8/strcmp.S
++++ b/sysdeps/powerpc/powerpc64/power8/strcmp.S
+@@ -31,6 +31,7 @@
+    64K as default, the page cross handling assumes minimum page size of
+    4k.  */
+ 
++	.machine power8
+ ENTRY_TOCLESS (STRCMP, 4)
+ 	li	r0,0
+ 
+-- 
+2.41.0
