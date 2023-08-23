@@ -1014,9 +1014,9 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                              "are replaceable).\n"},
                     {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
                              "\"" + FeeModes("\"\n\"") + "\""},
-                    {"outputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "New outputs (key-value pairs) which will replace\n"
-                             "the original ones, if provided. Each address can only appear once and there can\n"
-                             "only be one \"data\" object.\n"
+                    {"outputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "The outputs specified as key-value pairs.\n"
+                             "Each key may only appear once, i.e. there can only be one 'data' output, and no address may be duplicated.\n"
+                             "At least one output of either type must be specified.\n"
                              "Cannot be provided if 'reduce_output' is specified.",
                         OutputsDoc(),
                         RPCArgOptions{.skip_type_check = true}},
@@ -1188,8 +1188,9 @@ RPCHelpMan send()
         "\nEXPERIMENTAL warning: this call may be changed in future releases.\n"
         "\nSend a transaction.\n",
         {
-            {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs (key-value pairs), where none of the keys are duplicated.\n"
-                    "That is, each address can only appear once and there can only be one 'data' object.\n"
+            {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs specified as key-value pairs.\n"
+                    "Each key may only appear once, i.e. there can only be one 'data' output, and no address may be duplicated.\n"
+                    "At least one output of either type must be specified.\n"
                     "For convenience, a dictionary, which holds the key-value pairs directly, is also accepted.",
                 OutputsDoc(),
                 RPCArgOptions{.skip_type_check = true}},
@@ -1638,8 +1639,9 @@ RPCHelpMan walletcreatefundedpsbt()
                             },
                         },
                         },
-                    {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs (key-value pairs), where none of the keys are duplicated.\n"
-                            "That is, each address can only appear once and there can only be one 'data' object.\n"
+                    {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs specified as key-value pairs.\n"
+                            "Each key may only appear once, i.e. there can only be one 'data' output, and no address may be duplicated.\n"
+                            "At least one output of either type must be specified.\n"
                             "For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
                             "accepted as second parameter.",
                         OutputsDoc(),
