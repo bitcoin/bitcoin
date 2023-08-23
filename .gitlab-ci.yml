@@ -152,6 +152,15 @@ builder-image:
   script:
     - echo "INTEGRATION_TESTS_ARGS=${INTEGRATION_TESTS_ARGS}"
     - ./ci/dash/test_integrationtests.sh $INTEGRATION_TESTS_ARGS
+  cache:
+    # Let all branches share the same cache, which is ok because get_previous_releases.py extracts release binaries in separate folders
+    key:
+      files:
+        # CI files where $PREVIOUS_RELEASES_TO_DOWNLOAD is defined
+        - ci/test/00_setup_env_native_qt5.sh
+      prefix: ${CI_JOB_NAME}
+    paths:
+      - releases
   after_script:
     - mkdir -p $CI_PROJECT_DIR/testlogs
   artifacts:
