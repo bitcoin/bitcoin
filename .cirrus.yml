@@ -8,9 +8,6 @@ env:  # Global defaults
   CCACHE_DIR: "/tmp/ccache_dir"
   CCACHE_NOHASHDIR: "1"  # Debug info might contain a stale path if the build dir changes, but this is fine
 
-cirrus_ephemeral_worker_template_env: &CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-  DANGER_RUN_CI_ON_HOST: "1"  # Containers will be discarded after the run, so there is no risk that the ci scripts modify the system
-
 # https://cirrus-ci.org/guide/persistent-workers/
 #
 # It is possible to select a specific persistent worker by label. Refer to the
@@ -66,25 +63,11 @@ base_template: &BASE_TEMPLATE
 
 main_template: &MAIN_TEMPLATE
   timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
-  ccache_cache:
-    folder: "/tmp/ccache_dir"
   ci_script:
     - ./ci/test_run_all.sh
 
-container_depends_template: &CONTAINER_DEPENDS_TEMPLATE
-  << : *BASE_TEMPLATE
-  container:
-    # https://cirrus-ci.org/faq/#are-there-any-limits
-    # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
-    cpu: 2
-    memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
-    dockerfile: ci/test_imagefile  # https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
-  base_depends_built_cache:
-    folder: "/ci_container_base/depends/built"
-    fingerprint_script: echo $CIRRUS_TASK_NAME $(git rev-parse HEAD:depends)
-
 global_task_template: &GLOBAL_TASK_TEMPLATE
-  << : *CONTAINER_DEPENDS_TEMPLATE
+  << : *BASE_TEMPLATE
   << : *MAIN_TEMPLATE
 
 compute_credits_template: &CREDITS_TEMPLATE
@@ -93,7 +76,7 @@ compute_credits_template: &CREDITS_TEMPLATE
   use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'bitcoin/bitcoin' && $CIRRUS_PR != ""
 
 task:
-  name: 'lint [bookworm]'
+  name: 'lint'
   << : *BASE_TEMPLATE
   container:
     image: debian:bookworm
@@ -108,11 +91,9 @@ task:
     - git fetch --unshallow --no-tags
   lint_script:
     - ./ci/lint_run_all.sh
-  env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
-  name: 'tidy [lunar]'
+  name: 'tidy'
   << : *GLOBAL_TASK_TEMPLATE
   persistent_worker:
     labels:
@@ -217,7 +198,7 @@ task:
     - python test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=99999999 --jobs=6 --timeout-factor=8 --extended --exclude feature_dbcrash
 
 task:
-  name: 'ARM [unit tests, no functional tests] [bullseye]'
+  name: 'ARM, unit tests, no functional tests'
   << : *GLOBAL_TASK_TEMPLATE
   persistent_worker:
     labels:
@@ -226,33 +207,25 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_arm.sh"
 
 task:
-  name: 'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [jammy]'
+  name: 'Win64, unit tests, no gui tests, no boost::process, no functional tests'
   << : *GLOBAL_TASK_TEMPLATE
-  container:
-    docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:jammy
-      FILE_ENV: "./ci/test/00_setup_env_win64.sh"
-  << : *CREDITS_TEMPLATE
+  persistent_worker:
+    labels:
+      type: small
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
 task:
-  name: '32-bit + dash [gui] [CentOS 9]'
+  name: '32-bit CentOS, dash, gui'
   << : *GLOBAL_TASK_TEMPLATE
-  container:
-    docker_arguments:
-      CI_IMAGE_NAME_TAG: "quay.io/centos/amd64:stream9"
-      FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
-  # For faster CI feedback, immediately schedule one task that runs all tests
-  << : *CREDITS_TEMPLATE
+  persistent_worker:
+    labels:
+      type: small
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    PACKAGE_MANAGER_INSTALL: "yum install -y"
+    FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
 
 task:
-  name: '[previous releases, qt5 dev package and depends packages, DEBUG] [focal]'
-  previous_releases_cache:
-    folder: "releases"
+  name: 'previous releases, qt5 dev package and depends packages, DEBUG'
   << : *GLOBAL_TASK_TEMPLATE
   persistent_worker:
     labels:
@@ -261,30 +234,26 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
-  name: '[TSan, depends, gui] [lunar]'
+  name: 'TSan, depends, gui'
   << : *GLOBAL_TASK_TEMPLATE
-  container:
-    cpu: 4
-    memory: 16G  # The default memory is too small, so double everything
-    docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:lunar
-      FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
+  persistent_worker:
+    labels:
+      type: medium
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
 
 task:
-  name: '[MSan, depends] [jammy]'
+  name: 'MSan, depends'
   << : *GLOBAL_TASK_TEMPLATE
-  container:
-    docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:jammy
-      FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
+  persistent_worker:
+    labels:
+      type: small
+  timeout_in: 300m  # Use longer timeout for the *rare* case where a full build (llvm + msan + depends + ...) needs to be done.
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
-    MAKEJOBS: "-j4"  # Avoid excessive memory use due to MSan
+    FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
 
 task:
-  name: '[ASan + LSan + UBSan + integer, no depends, USDT] [lunar]'
+  name: 'ASan + LSan + UBSan + integer, no depends, USDT'
   enable_bpfcc_script:
     # In the image build step, no external environment variables are available,
     # so any settings will need to be written to the settings env file:
@@ -297,46 +266,37 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
 task:
-  name: '[fuzzer,address,undefined,integer, no depends] [lunar]'
+  name: 'fuzzer,address,undefined,integer, no depends'
   << : *GLOBAL_TASK_TEMPLATE
-  container:
-    cpu: 4  # Increase CPU and memory to avoid timeout
-    memory: 16G
-    docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:lunar
-      FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
+  persistent_worker:
+    labels:
+      type: medium
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
 
 task:
-  name: '[multiprocess, i686, DEBUG] [focal]'
+  name: 'multiprocess, i686, DEBUG'
   << : *GLOBAL_TASK_TEMPLATE
-  container:
-    cpu: 4
-    memory: 16G  # The default memory is too small, so double everything
-    docker_arguments:
-      CI_IMAGE_NAME_TAG: "docker.io/amd64/ubuntu:focal"
-      FILE_ENV: "./ci/test/00_setup_env_i686_multiprocess.sh"
+  persistent_worker:
+    labels:
+      type: medium
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV: "./ci/test/00_setup_env_i686_multiprocess.sh"
 
 task:
-  name: '[no wallet, libbitcoinkernel] [focal]'
+  name: 'no wallet, libbitcoinkernel'
   << : *GLOBAL_TASK_TEMPLATE
-  container:
-    docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:focal
-      FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libbitcoinkernel.sh"
-  << : *CREDITS_TEMPLATE
+  persistent_worker:
+    labels:
+      type: small
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libbitcoinkernel.sh"
 
 task:
-  name: 'macOS 11.0 [gui, no tests] [jammy]'
+  name: 'macOS-cross 11.0, gui, no tests'
   << : *GLOBAL_TASK_TEMPLATE
-  container:
-    docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:jammy
-      FILE_ENV: "./ci/test/00_setup_env_mac.sh"
+  persistent_worker:
+    labels:
+      type: small
   env:
-    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV: "./ci/test/00_setup_env_mac.sh"
