@@ -86,30 +86,31 @@ static constexpr unsigned int EXTRA_DESCENDANT_TX_SIZE_LIMIT{10000};
  * Note that this does not affect consensus validity; see GetBlockScriptFlags()
  * for that.
  */
-static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
+static constexpr unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS{SCRIPT_VERIFY_P2SH |
+                                                             SCRIPT_VERIFY_DERSIG |
+                                                             SCRIPT_VERIFY_NULLDUMMY |
+                                                             SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY |
+                                                             SCRIPT_VERIFY_CHECKSEQUENCEVERIFY |
+                                                             SCRIPT_VERIFY_WITNESS |
+                                                             SCRIPT_VERIFY_TAPROOT};
 
 /**
  * Standard script verification flags that standard transactions will comply
  * with. However we do not ban/disconnect nodes that forward txs violating
- * these rules, for better forwards and backwards compatability.
+ * the additional (non-mandatory) rules here, to improve forwards and
+ * backwards compatability.
  */
 static constexpr unsigned int STANDARD_SCRIPT_VERIFY_FLAGS{MANDATORY_SCRIPT_VERIFY_FLAGS |
-                                                             SCRIPT_VERIFY_DERSIG |
                                                              SCRIPT_VERIFY_STRICTENC |
                                                              SCRIPT_VERIFY_MINIMALDATA |
-                                                             SCRIPT_VERIFY_NULLDUMMY |
                                                              SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS |
                                                              SCRIPT_VERIFY_CLEANSTACK |
                                                              SCRIPT_VERIFY_MINIMALIF |
                                                              SCRIPT_VERIFY_NULLFAIL |
-                                                             SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY |
-                                                             SCRIPT_VERIFY_CHECKSEQUENCEVERIFY |
                                                              SCRIPT_VERIFY_LOW_S |
-                                                             SCRIPT_VERIFY_WITNESS |
                                                              SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM |
                                                              SCRIPT_VERIFY_WITNESS_PUBKEYTYPE |
                                                              SCRIPT_VERIFY_CONST_SCRIPTCODE |
-                                                             SCRIPT_VERIFY_TAPROOT |
                                                              SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION |
                                                              SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS |
                                                              SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE};

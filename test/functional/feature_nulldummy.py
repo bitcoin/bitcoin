@@ -37,7 +37,7 @@ from test_framework.util import (
 from test_framework.wallet import getnewdestination
 from test_framework.wallet_util import generate_keypair
 
-NULLDUMMY_ERROR = "non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero)"
+NULLDUMMY_ERROR = "mandatory-script-verify-flag-failed (Dummy CHECKMULTISIG argument must be zero)"
 
 
 def invalidate_nulldummy_tx(tx):
