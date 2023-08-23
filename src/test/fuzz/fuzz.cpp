@@ -72,7 +72,7 @@ extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
 }
 
 #if defined(PROVIDE_MAIN_FUNCTION)
-__attribute__((weak)) int main(int argc, char** argv)
+int main(int argc, char** argv)
 {
     initialize();
     static const auto& test_one_input = *Assert(g_test_one_input);
