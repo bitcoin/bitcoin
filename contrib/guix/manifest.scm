@@ -243,7 +243,7 @@ thus should be able to compile on most platforms where these exist.")
 (define-public python-oscrypto
   (package
     (name "python-oscrypto")
-    (version "1.2.1")
+    (version "1.3.0")
     (source
      (origin
        (method git-fetch)
@@ -253,7 +253,7 @@ thus should be able to compile on most platforms where these exist.")
        (file-name (git-file-name name version))
        (sha256
         (base32
-         "1d4d8s4z340qhvb3g5m5v3436y3a71yc26wk4749q64m09kxqc3l"))
+         "1v5wkmzcyiqy39db8j2dvkdrv2nlsc48556h73x4dzjwd6kg4q0a"))
        (patches (search-our-patches "oscrypto-hard-code-openssl.patch"))))
     (build-system python-build-system)
     (native-search-paths
