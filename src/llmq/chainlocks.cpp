@@ -29,12 +29,12 @@ CChainLocksHandler::CChainLocksHandler(CChainState& chainstate, CConnman& _connm
                                        CTxMemPool& _mempool, const std::unique_ptr<PeerManager>& peerman) :
     m_chainstate(chainstate),
     connman(_connman),
-    mempool(_mempool),
-    spork_manager(sporkManager),
+    m_mn_sync(mn_sync),
+    qman(_qman),
     sigman(_sigman),
     shareman(_shareman),
-    qman(_qman),
-    m_mn_sync(mn_sync),
+    spork_manager(sporkManager),
+    mempool(_mempool),
     m_peerman(peerman),
     scheduler(std::make_unique<CScheduler>()),
     scheduler_thread(std::make_unique<std::thread>([&] { TraceThread("cl-schdlr", [&] { scheduler->serviceQueue(); }); }))
