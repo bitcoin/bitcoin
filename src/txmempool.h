@@ -18,7 +18,6 @@
 #include <spentindex.h>
 #include <amount.h>
 #include <coins.h>
-#include <crypto/siphash.h>
 #include <indirectmap.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
@@ -26,6 +25,7 @@
 #include <random.h>
 #include <netaddress.h>
 #include <pubkey.h>
+#include <util/hasher.h>
 
 #include <boost/optional.hpp>
 #include <boost/multi_index_container.hpp>
@@ -366,20 +366,6 @@ enum class MemPoolRemovalReason {
     BLOCK,       //!< Removed for block
     CONFLICT,    //!< Removed for conflict with in-block transaction
     MANUAL       //!< Removed manually
-};
-
-class SaltedTxidHasher
-{
-private:
-    /** Salt */
-    const uint64_t k0, k1;
-
-public:
-    SaltedTxidHasher();
-
-    size_t operator()(const uint256& txid) const {
-        return SipHashUint256(k0, k1, txid);
-    }
 };
 
 /**

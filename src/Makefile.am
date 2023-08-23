@@ -313,6 +313,7 @@ BITCOIN_CORE_H = \
   util/fastrange.h \
   util/fees.h \
   util/golombrice.h \
+  util/hasher.h \
   util/hash_type.h \
   util/irange.h \
   util/spanparsing.h \
@@ -740,6 +741,7 @@ libbitcoin_util_a_SOURCES = \
   util/check.cpp \
   util/error.cpp \
   util/fees.cpp \
+  util/hasher.cpp \
   util/getuniquepath.cpp \
   util/sock.cpp \
   util/system.cpp \
