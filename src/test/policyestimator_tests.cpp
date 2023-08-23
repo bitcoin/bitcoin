@@ -12,7 +12,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(policyestimator_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(policyestimator_tests, TestingSetup)
 
 BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 {

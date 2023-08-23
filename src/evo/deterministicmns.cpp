@@ -1192,7 +1192,7 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
 
     LogPrintf("CDeterministicMNManager::%s -- upgrading DB to migrate MN type\n", __func__);
 
-    if (::ChainActive().Tip() == nullptr) {
+    if (m_chainstate.m_chain.Tip() == nullptr) {
         // should have no records
         LogPrintf("CDeterministicMNManager::%s -- Chain empty. evoDB:%d.\n", __func__, m_evoDb.IsEmpty());
         return m_evoDb.IsEmpty();
@@ -1203,7 +1203,7 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
         return true;
     }
 
-    if (::ChainActive().Tip()->pprev != nullptr && llmq::utils::IsV19Active(::ChainActive().Tip()->pprev)) {
+    if (m_chainstate.m_chain.Tip()->pprev != nullptr && llmq::utils::IsV19Active(m_chainstate.m_chain.Tip()->pprev)) {
         // too late
         LogPrintf("CDeterministicMNManager::%s -- migration is not possible\n", __func__);
         return false;
@@ -1212,25 +1212,25 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
     // Removing the old EVODB_BEST_BLOCK value early results in older version to crash immediately, even if the upgrade
     // process is cancelled in-between. But if the new version sees that the old EVODB_BEST_BLOCK is already removed,
     // then we must assume that the upgrade process was already running before but was interrupted.
-    if (::ChainActive().Height() > 1 && !m_evoDb.GetRawDB().Exists(DB_OLD_BEST_BLOCK)) {
+    if (m_chainstate.m_chain.Height() > 1 && !m_evoDb.GetRawDB().Exists(DB_OLD_BEST_BLOCK)) {
         LogPrintf("CDeterministicMNManager::%s -- previous migration attempt failed.\n", __func__);
         return false;
     }
     m_evoDb.GetRawDB().Erase(DB_OLD_BEST_BLOCK);
 
-    if (::ChainActive().Height() < Params().GetConsensus().DIP0003Height) {
+    if (m_chainstate.m_chain.Height() < Params().GetConsensus().DIP0003Height) {
         // not reached DIP3 height yet, so no upgrade needed
         LogPrintf("CDeterministicMNManager::%s -- migration not needed. dip3 not reached\n", __func__);
         auto dbTx = m_evoDb.BeginTransaction();
-        m_evoDb.WriteBestBlock(::ChainActive().Tip()->GetBlockHash());
+        m_evoDb.WriteBestBlock(m_chainstate.m_chain.Tip()->GetBlockHash());
         dbTx->Commit();
         return true;
     }
 
     CDBBatch batch(m_evoDb.GetRawDB());
 
-    for (const auto nHeight : irange::range(Params().GetConsensus().DIP0003Height, ::ChainActive().Height() + 1)) {
-        auto pindex = ::ChainActive()[nHeight];
+    for (const auto nHeight : irange::range(Params().GetConsensus().DIP0003Height, m_chainstate.m_chain.Height() + 1)) {
+        auto pindex = m_chainstate.m_chain[nHeight];
         // Unserialise CDeterministicMNListDiff using MN_OLD_FORMAT and set it's type to the default value TYPE_REGULAR_MASTERNODE
         // It will be later written with format MN_CURRENT_FORMAT which includes the type field and MN state bls version.
         CDataStream diff_data(SER_DISK, CLIENT_VERSION);
@@ -1258,7 +1258,7 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
 
     // Writing EVODB_BEST_BLOCK (which is b_b4 now) marks the DB as upgraded
     auto dbTx = m_evoDb.BeginTransaction();
-    m_evoDb.WriteBestBlock(::ChainActive().Tip()->GetBlockHash());
+    m_evoDb.WriteBestBlock(m_chainstate.m_chain.Tip()->GetBlockHash());
     dbTx->Commit();
 
     LogPrintf("CDeterministicMNManager::%s -- done migrating\n", __func__);
@@ -1291,7 +1291,7 @@ bool CDeterministicMNManager::MigrateDBIfNeeded2()
 
     LogPrintf("CDeterministicMNManager::%s -- upgrading DB to migrate MN state bls version\n", __func__);
 
-    if (::ChainActive().Tip() == nullptr) {
+    if (m_chainstate.m_chain.Tip() == nullptr) {
         // should have no records
         LogPrintf("CDeterministicMNManager::%s -- Chain empty. evoDB:%d.\n", __func__, m_evoDb.IsEmpty());
         return m_evoDb.IsEmpty();
@@ -1302,7 +1302,7 @@ bool CDeterministicMNManager::MigrateDBIfNeeded2()
         return true;
     }
 
-    if (::ChainActive().Tip()->pprev != nullptr && llmq::utils::IsV19Active(::ChainActive().Tip()->pprev)) {
+    if (m_chainstate.m_chain.Tip()->pprev != nullptr && llmq::utils::IsV19Active(m_chainstate.m_chain.Tip()->pprev)) {
         // too late
         LogPrintf("CDeterministicMNManager::%s -- migration is not possible\n", __func__);
         return false;
@@ -1311,25 +1311,25 @@ bool CDeterministicMNManager::MigrateDBIfNeeded2()
     // Removing the old EVODB_BEST_BLOCK value early results in older version to crash immediately, even if the upgrade
     // process is cancelled in-between. But if the new version sees that the old EVODB_BEST_BLOCK is already removed,
     // then we must assume that the upgrade process was already running before but was interrupted.
-    if (::ChainActive().Height() > 1 && !m_evoDb.GetRawDB().Exists(DB_OLD_BEST_BLOCK)) {
+    if (m_chainstate.m_chain.Height() > 1 && !m_evoDb.GetRawDB().Exists(DB_OLD_BEST_BLOCK)) {
         LogPrintf("CDeterministicMNManager::%s -- previous migration attempt failed.\n", __func__);
         return false;
     }
     m_evoDb.GetRawDB().Erase(DB_OLD_BEST_BLOCK);
 
-    if (::ChainActive().Height() < Params().GetConsensus().DIP0003Height) {
+    if (m_chainstate.m_chain.Height() < Params().GetConsensus().DIP0003Height) {
         // not reached DIP3 height yet, so no upgrade needed
         LogPrintf("CDeterministicMNManager::%s -- migration not needed. dip3 not reached\n", __func__);
         auto dbTx = m_evoDb.BeginTransaction();
-        m_evoDb.WriteBestBlock(::ChainActive().Tip()->GetBlockHash());
+        m_evoDb.WriteBestBlock(m_chainstate.m_chain.Tip()->GetBlockHash());
         dbTx->Commit();
         return true;
     }
 
     CDBBatch batch(m_evoDb.GetRawDB());
 
-    for (const auto nHeight : irange::range(Params().GetConsensus().DIP0003Height, ::ChainActive().Height() + 1)) {
-        auto pindex = ::ChainActive()[nHeight];
+    for (const auto nHeight : irange::range(Params().GetConsensus().DIP0003Height, m_chainstate.m_chain.Height() + 1)) {
+        auto pindex = m_chainstate.m_chain[nHeight];
         // Unserialise CDeterministicMNListDiff using MN_TYPE_FORMAT and set MN state bls version to LEGACY_BLS_VERSION.
         // It will be later written with format MN_CURRENT_FORMAT which includes the type field.
         CDataStream diff_data(SER_DISK, CLIENT_VERSION);
@@ -1357,7 +1357,7 @@ bool CDeterministicMNManager::MigrateDBIfNeeded2()
 
     // Writing EVODB_BEST_BLOCK (which is b_b4 now) marks the DB as upgraded
     auto dbTx = m_evoDb.BeginTransaction();
-    m_evoDb.WriteBestBlock(::ChainActive().Tip()->GetBlockHash());
+    m_evoDb.WriteBestBlock(m_chainstate.m_chain.Tip()->GetBlockHash());
     dbTx->Commit();
 
     LogPrintf("CDeterministicMNManager::%s -- done migrating\n", __func__);

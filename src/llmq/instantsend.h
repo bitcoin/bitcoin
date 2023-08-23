@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+class CChainState;
 class CMasternodeSync;
 class CSporkManager;
 class PeerManager;
@@ -203,14 +204,15 @@ class CInstantSendManager : public CRecoveredSigsListener
 {
 private:
     CInstantSendDb db;
+
+    CChainLocksHandler& clhandler;
+    CChainState& m_chainstate;
     CConnman& connman;
-    CTxMemPool& mempool;
-    CSporkManager& spork_manager;
     CQuorumManager& qman;
     CSigningManager& sigman;
     CSigSharesManager& shareman;
-    CChainLocksHandler& clhandler;
-
+    CSporkManager& spork_manager;
+    CTxMemPool& mempool;
     const CMasternodeSync& m_mn_sync;
     const std::unique_ptr<PeerManager>& m_peerman;
 
@@ -260,12 +262,13 @@ private:
     std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs GUARDED_BY(cs_pendingRetry);
 
 public:
-    explicit CInstantSendManager(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager,
+    explicit CInstantSendManager(CChainLocksHandler& _clhandler, CChainState& chainstate, CConnman& _connman,
                                  CQuorumManager& _qman, CSigningManager& _sigman, CSigSharesManager& _shareman,
-                                 CChainLocksHandler& _clhandler, CMasternodeSync& mn_sync,
+                                 CSporkManager& sporkManager, CTxMemPool& _mempool, const CMasternodeSync& mn_sync,
                                  const std::unique_ptr<PeerManager>& peerman, bool unitTests, bool fWipe) :
-        db(unitTests, fWipe), connman(_connman), mempool(_mempool), spork_manager(sporkManager), qman(_qman), sigman(_sigman), shareman(_shareman),
-        clhandler(_clhandler), m_mn_sync(mn_sync), m_peerman(peerman)
+        db(unitTests, fWipe),
+        clhandler(_clhandler), m_chainstate(chainstate), connman(_connman), qman(_qman), sigman(_sigman),
+        shareman(_shareman), spork_manager(sporkManager), mempool(_mempool), m_mn_sync(mn_sync), m_peerman(peerman)
     {
         workInterrupt.reset();
     }

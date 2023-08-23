@@ -8,6 +8,7 @@
 #include <coinjoin/coinjoin.h>
 #include <net.h>
 
+class CChainState;
 class CCoinJoinServer;
 class CTxMemPool;
 class PeerManager;
@@ -22,8 +23,9 @@ extern std::unique_ptr<CCoinJoinServer> coinJoinServer;
 class CCoinJoinServer : public CCoinJoinBaseSession, public CCoinJoinBaseManager
 {
 private:
-    CTxMemPool& mempool;
+    CChainState& m_chainstate;
     CConnman& connman;
+    CTxMemPool& mempool;
     const CMasternodeSync& m_mn_sync;
 
     // Mixing uses collateral transactions to trust parties entering the pool
@@ -79,9 +81,10 @@ private:
     void SetNull() EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
 public:
-    explicit CCoinJoinServer(CTxMemPool& mempool, CConnman& _connman, const CMasternodeSync& mn_sync) :
-        mempool(mempool),
+    explicit CCoinJoinServer(CChainState& chainstate, CConnman& _connman, CTxMemPool& mempool, const CMasternodeSync& mn_sync) :
+        m_chainstate(chainstate),
         connman(_connman),
+        mempool(mempool),
         m_mn_sync(mn_sync),
         vecSessionCollaterals(),
         fUnitTest(false)

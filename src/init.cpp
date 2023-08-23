@@ -1937,12 +1937,13 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
                 // Same logic as above with pblocktree
                 deterministicMNManager.reset();
-                deterministicMNManager.reset(new CDeterministicMNManager(*node.evodb, *node.connman));
+                deterministicMNManager.reset(new CDeterministicMNManager(chainman.ActiveChainstate(), *node.connman, *node.evodb));
+                creditPoolManager.reset();
                 creditPoolManager.reset(new CCreditPoolManager(*node.evodb));
                 llmq::quorumSnapshotManager.reset();
                 llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*node.evodb));
                 node.llmq_ctx.reset();
-                node.llmq_ctx.reset(new LLMQContext(*node.evodb, *node.mempool, *node.connman, *::sporkManager, node.peerman, false, fReset || fReindexChainState));
+                node.llmq_ctx.reset(new LLMQContext(chainman.ActiveChainstate(), *node.connman, *node.evodb, *::sporkManager, *node.mempool, node.peerman, false, fReset || fReindexChainState));
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
@@ -2248,7 +2249,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     // ********************************************************* Step 10a: Setup CoinJoin
 
-    ::coinJoinServer = std::make_unique<CCoinJoinServer>(*node.mempool, *node.connman, *::masternodeSync);
+    ::coinJoinServer = std::make_unique<CCoinJoinServer>(chainman.ActiveChainstate(), *node.connman, *node.mempool, *::masternodeSync);
 #ifdef ENABLE_WALLET
     if (!ignores_incoming_txs) {
         ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*node.connman, *::masternodeSync);

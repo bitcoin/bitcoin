@@ -69,6 +69,10 @@ static inline bool InsecureRandBool() { return g_insecure_rand_ctx.randbool(); }
 
 static constexpr CAmount CENT{1000000};
 
+/* Initialize Dash-specific components after chainstate initialization */
+void DashTestSetup(NodeContext& node);
+void DashTestSetupClose(NodeContext& node);
+
 /** Basic testing setup.
  * This just configures logging, data dir and chain parameters.
  */
@@ -88,7 +92,6 @@ struct BasicTestingSetup {
  * initialization behaviour.
  */
 struct ChainTestingSetup : public BasicTestingSetup {
-
     explicit ChainTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
     ~ChainTestingSetup();
 };
@@ -97,6 +100,7 @@ struct ChainTestingSetup : public BasicTestingSetup {
  */
 struct TestingSetup : public ChainTestingSetup {
     explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
+    ~TestingSetup();
 };
 
 /** Identical to TestingSetup, but chain set to regtest */

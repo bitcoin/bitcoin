@@ -8,6 +8,7 @@
 #include <memory>
 
 class CBLSWorker;
+class CChainState;
 class CConnman;
 class CDBWrapper;
 class CEvoDB;
@@ -29,7 +30,7 @@ class CInstantSendManager;
 struct LLMQContext {
     LLMQContext() = delete;
     LLMQContext(const LLMQContext&) = delete;
-    LLMQContext(CEvoDB& evo_db, CTxMemPool& mempool, CConnman& connman, CSporkManager& sporkman,
+    LLMQContext(CChainState& chainstate, CConnman& connman, CEvoDB& evo_db, CSporkManager& sporkman, CTxMemPool& mempool,
                 const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe);
     ~LLMQContext();
 

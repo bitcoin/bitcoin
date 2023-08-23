@@ -95,6 +95,24 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
     return os;
 }
 
+void DashTestSetup(NodeContext& node)
+{
+    CChainState& chainstate = Assert(node.chainman)->ActiveChainstate();
+
+    ::coinJoinServer = std::make_unique<CCoinJoinServer>(chainstate, *node.connman, *node.mempool, *::masternodeSync);
+    ::deterministicMNManager = std::make_unique<CDeterministicMNManager>(chainstate, *node.connman, *node.evodb);
+    node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.evodb, *sporkManager, *node.mempool, node.peerman, true, false);
+}
+
+void DashTestSetupClose(NodeContext& node)
+{
+    node.llmq_ctx->Interrupt();
+    node.llmq_ctx->Stop();
+    node.llmq_ctx.reset();
+    ::deterministicMNManager.reset();
+    ::coinJoinServer.reset();
+}
+
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
     : m_path_root{fs::temp_directory_path() / "test_common_" PACKAGE_NAME / g_insecure_rand_ctx_temp_path.rand256().ToString()}
 {
@@ -139,7 +157,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     fCheckBlockIndex = true;
     m_node.evodb = std::make_unique<CEvoDB>(1 << 20, true, true);
     connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
-    deterministicMNManager.reset(new CDeterministicMNManager(*m_node.evodb, *connman));
     llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*m_node.evodb));
     creditPoolManager = std::make_unique<CCreditPoolManager>(*m_node.evodb);
     static bool noui_connected = false;
@@ -154,7 +171,6 @@ BasicTestingSetup::~BasicTestingSetup()
 {
     connman.reset();
     llmq::quorumSnapshotManager.reset();
-    deterministicMNManager.reset();
     creditPoolManager.reset();
     m_node.evodb.reset();
 
@@ -185,13 +201,10 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     ::sporkManager = std::make_unique<CSporkManager>();
     ::governance = std::make_unique<CGovernanceManager>();
     ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman);
-    ::coinJoinServer = std::make_unique<CCoinJoinServer>(*m_node.mempool, *m_node.connman, *::masternodeSync);
 #ifdef ENABLE_WALLET
     ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*m_node.connman, *::masternodeSync);
 #endif // ENABLE_WALLET
 
-    deterministicMNManager.reset(new CDeterministicMNManager(*m_node.evodb, *m_node.connman));
-    m_node.llmq_ctx = std::make_unique<LLMQContext>(*m_node.evodb, *m_node.mempool, *m_node.connman, *sporkManager, m_node.peerman, true, false);
     m_node.creditPoolManager = std::make_unique<CCreditPoolManager>(*m_node.evodb);
 
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
@@ -203,9 +216,6 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 ChainTestingSetup::~ChainTestingSetup()
 {
     m_node.scheduler->stop();
-    deterministicMNManager.reset();
-    m_node.llmq_ctx->Interrupt();
-    m_node.llmq_ctx->Stop();
     m_node.creditPoolManager.reset();
     StopScriptCheckWorkerThreads();
     GetMainSignals().FlushBackgroundCallbacks();
@@ -213,18 +223,15 @@ ChainTestingSetup::~ChainTestingSetup()
 #ifdef ENABLE_WALLET
     ::coinJoinClientQueueManager.reset();
 #endif // ENABLE_WALLET
-    ::coinJoinServer.reset();
     ::masternodeSync.reset();
     ::governance.reset();
     ::sporkManager.reset();
     m_node.connman.reset();
     m_node.addrman.reset();
     m_node.args = nullptr;
-    m_node.banman.reset();
     UnloadBlockIndex(m_node.mempool.get(), *m_node.chainman);
     m_node.mempool.reset();
     m_node.scheduler.reset();
-    m_node.llmq_ctx.reset();
     m_node.chainman->Reset();
     m_node.chainman = nullptr;
     pblocktree.reset();
@@ -258,10 +265,20 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         m_node.connman->Init(options);
     }
 
+    DashTestSetup(m_node);
+
     BlockValidationState state;
     if (!::ChainstateActive().ActivateBestChain(state)) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
+}
+
+TestingSetup::~TestingSetup()
+{
+    DashTestSetupClose(m_node);
+    m_node.connman->Stop();
+    m_node.peerman.reset();
+    m_node.banman.reset();
 }
 
 TestChainSetup::TestChainSetup(int num_blocks, const std::vector<const char*>& extra_args)

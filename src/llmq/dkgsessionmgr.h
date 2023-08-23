@@ -11,6 +11,7 @@
 #include <bls/bls_worker.h>
 
 class CBlockIndex;
+class CChainState;
 class CDKGDebugManager;
 class CSporkManager;
 class PeerManager;
@@ -27,12 +28,13 @@ class CDKGSessionManager
 
 private:
     std::unique_ptr<CDBWrapper> db{nullptr};
+
     CBLSWorker& blsWorker;
+    CChainState& m_chainstate;
     CConnman& connman;
-    CSporkManager& spork_manager;
     CDKGDebugManager& dkgDebugManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
-
+    CSporkManager& spork_manager;
     const std::unique_ptr<PeerManager>& m_peerman;
 
     //TODO name struct instead of std::pair
@@ -58,7 +60,7 @@ private:
     mutable std::map<ContributionsCacheKey, ContributionsCacheEntry> contributionsCache GUARDED_BY(contributionsCacheCs);
 
 public:
-    CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorker, CDKGDebugManager& _dkgDebugManager,
+    CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGDebugManager& _dkgDebugManager,
                        CQuorumBlockProcessor& _quorumBlockProcessor, CSporkManager& sporkManager,
                        const std::unique_ptr<PeerManager>& peerman, bool unitTests, bool fWipe);
     ~CDKGSessionManager() = default;

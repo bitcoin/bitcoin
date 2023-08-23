@@ -19,6 +19,7 @@
 #include <atomic>
 #include <unordered_set>
 
+class CChainState;
 class CConnman;
 class CBlockIndex;
 class CMasternodeSync;
@@ -41,14 +42,14 @@ class CChainLocksHandler : public CRecoveredSigsListener
     static constexpr int64_t WAIT_FOR_ISLOCK_TIMEOUT = 10 * 60;
 
 private:
+    CChainState& m_chainstate;
     CConnman& connman;
-    CTxMemPool& mempool;
-    CSporkManager& spork_manager;
+    CMasternodeSync& m_mn_sync;
+    CQuorumManager& qman;
     CSigningManager& sigman;
     CSigSharesManager& shareman;
-    CQuorumManager& qman;
-
-    CMasternodeSync& m_mn_sync;
+    CSporkManager& spork_manager;
+    CTxMemPool& mempool;
     const std::unique_ptr<PeerManager>& m_peerman;
 
     std::unique_ptr<CScheduler> scheduler;
@@ -83,10 +84,9 @@ private:
     int64_t lastCleanupTime GUARDED_BY(cs) {0};
 
 public:
-    explicit CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman, CSporkManager& sporkManager,
-                                CSigningManager& _sigman, CSigSharesManager& _shareman, CQuorumManager& _qman,
-                                CMasternodeSync& mn_sync,
-                                const std::unique_ptr<PeerManager>& peerman);
+    explicit CChainLocksHandler(CChainState& chainstate, CConnman& _connman, CMasternodeSync& mn_sync, CQuorumManager& _qman,
+                                CSigningManager& _sigman, CSigSharesManager& _shareman, CSporkManager& sporkManager,
+                                CTxMemPool& _mempool, const std::unique_ptr<PeerManager>& peerman);
     ~CChainLocksHandler();
 
     void Start();

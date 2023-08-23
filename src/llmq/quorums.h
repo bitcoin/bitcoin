@@ -16,8 +16,9 @@
 
 #include <evo/evodb.h>
 
-class CConnman;
 class CBlockIndex;
+class CChainState;
+class CConnman;
 class CDeterministicMN;
 class CMasternodeSync;
 class CNode;
@@ -212,12 +213,12 @@ private:
 class CQuorumManager
 {
 private:
-    CEvoDB& m_evoDb;
-    CConnman& connman;
     CBLSWorker& blsWorker;
+    CChainState& m_chainstate;
+    CConnman& connman;
     CDKGSessionManager& dkgManager;
+    CEvoDB& m_evoDb;
     CQuorumBlockProcessor& quorumBlockProcessor;
-
     const std::unique_ptr<CMasternodeSync>& m_mn_sync;
     const std::unique_ptr<PeerManager>& m_peerman;
 
@@ -230,8 +231,8 @@ private:
     mutable CThreadInterrupt quorumThreadInterrupt;
 
 public:
-    CQuorumManager(CEvoDB& _evoDb, CConnman& _connman, CBLSWorker& _blsWorker, CQuorumBlockProcessor& _quorumBlockProcessor,
-                   CDKGSessionManager& _dkgManager, const std::unique_ptr<CMasternodeSync>& mnSync,
+    CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGSessionManager& _dkgManager,
+                   CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor, const std::unique_ptr<CMasternodeSync>& mn_sync,
                    const std::unique_ptr<PeerManager>& peerman);
     ~CQuorumManager() { Stop(); };
 

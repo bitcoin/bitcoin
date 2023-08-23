@@ -4,6 +4,7 @@
 //
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <evo/deterministicmns.h>
 #include <index/txindex.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
@@ -12,6 +13,7 @@
 #include <evo/evodb.h>
 #include <random.h>
 #include <rpc/blockchain.h>
+#include <spork.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
@@ -47,6 +49,8 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     WITH_LOCK(::cs_main, c1.InitCoinsCache(1 << 23));
 
+    DashTestSetup(m_node);
+
     BOOST_CHECK(!manager.IsSnapshotActive());
     BOOST_CHECK(!manager.IsSnapshotValidated());
     BOOST_CHECK(!manager.IsBackgroundIBD(&c1));
@@ -67,6 +71,8 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
 
     BOOST_CHECK(!manager.SnapshotBlockhash().has_value());
 
+    DashTestSetupClose(m_node);
+
     // Create a snapshot-based chainstate.
     //
     const uint256 snapshot_blockhash = GetRandHash();
@@ -75,6 +81,8 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
         snapshot_blockhash)
     );
     chainstates.push_back(&c2);
+
+    DashTestSetup(m_node);
 
     BOOST_CHECK_EQUAL(manager.SnapshotBlockhash().value(), snapshot_blockhash);
 
@@ -118,6 +126,8 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
 
     // Let scheduler events finish running to avoid accessing memory that is going to be unloaded
     SyncWithValidationInterfaceQueue();
+
+    DashTestSetupClose(m_node);
 
     WITH_LOCK(::cs_main, manager.Unload());
 }

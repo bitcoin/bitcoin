@@ -21,17 +21,18 @@
 namespace llmq
 {
 
-CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager,
-                                       CDKGDebugManager& _dkgDebugManager, CQuorumBlockProcessor& _quorumBlockProcessor,
-                                       CConnman& _connman, const std::unique_ptr<PeerManager>& peerman, int _quorumIndex) :
-        params(_params),
-        connman(_connman),
-        quorumIndex(_quorumIndex),
+CDKGSessionHandler::CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGDebugManager& _dkgDebugManager,
+                                       CDKGSessionManager& _dkgManager, CQuorumBlockProcessor& _quorumBlockProcessor,
+                                       const Consensus::LLMQParams& _params, const std::unique_ptr<PeerManager>& peerman, int _quorumIndex) :
         blsWorker(_blsWorker),
-        dkgManager(_dkgManager),
+        m_chainstate(chainstate),
+        connman(_connman),
         dkgDebugManager(_dkgDebugManager),
+        dkgManager(_dkgManager),
         quorumBlockProcessor(_quorumBlockProcessor),
+        params(_params),
         m_peerman(peerman),
+        quorumIndex(_quorumIndex),
         curSession(std::make_unique<CDKGSession>(_params, _blsWorker, _dkgManager, _dkgDebugManager, _connman)),
         pendingContributions((size_t)_params.size * 2, MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
         pendingComplaints((size_t)_params.size * 2, MSG_QUORUM_COMPLAINT),
@@ -493,7 +494,7 @@ void CDKGSessionHandler::HandleDKGRound()
         curQuorumHash = quorumHash;
     }
 
-    const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return g_chainman.m_blockman.LookupBlockIndex(curQuorumHash));
+    const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return m_chainstate.m_blockman.LookupBlockIndex(curQuorumHash));
 
     if (!InitNewQuorum(pQuorumBaseBlockIndex)) {
         // should actually never happen

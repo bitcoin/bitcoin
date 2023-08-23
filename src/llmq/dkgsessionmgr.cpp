@@ -22,15 +22,16 @@ static const std::string DB_VVEC = "qdkg_V";
 static const std::string DB_SKCONTRIB = "qdkg_S";
 static const std::string DB_ENC_CONTRIB = "qdkg_E";
 
-CDKGSessionManager::CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorker, CDKGDebugManager& _dkgDebugManager,
+CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGDebugManager& _dkgDebugManager,
                                        CQuorumBlockProcessor& _quorumBlockProcessor, CSporkManager& sporkManager,
                                        const std::unique_ptr<PeerManager>& peerman, bool unitTests, bool fWipe) :
     db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/dkgdb"), 1 << 20, unitTests, fWipe)),
     blsWorker(_blsWorker),
+    m_chainstate(chainstate),
     connman(_connman),
-    spork_manager(sporkManager),
     dkgDebugManager(_dkgDebugManager),
     quorumBlockProcessor(_quorumBlockProcessor),
+    spork_manager(sporkManager),
     m_peerman(peerman)
 {
     if (!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) {
@@ -46,7 +47,7 @@ CDKGSessionManager::CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorke
         for (const auto i : irange::range(session_count)) {
             dkgSessionHandlers.emplace(std::piecewise_construct,
                                        std::forward_as_tuple(params.type, i),
-                                       std::forward_as_tuple(params, blsWorker, *this, dkgDebugManager, quorumBlockProcessor, connman, peerman, i));
+                                       std::forward_as_tuple(blsWorker, m_chainstate, connman, dkgDebugManager, *this, quorumBlockProcessor, params, peerman, i));
         }
     }
 }
@@ -224,7 +225,7 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
 
     // No luck, try to compute
     if (quorumIndex == -1) {
-        CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return g_chainman.m_blockman.LookupBlockIndex(quorumHash));
+        CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return m_chainstate.m_blockman.LookupBlockIndex(quorumHash));
         if (pQuorumBaseBlockIndex == nullptr) {
             LogPrintf("CDKGSessionManager -- unknown quorumHash %s\n", quorumHash.ToString());
             // NOTE: do not insta-ban for this, we might be lagging behind
@@ -483,8 +484,8 @@ void CDKGSessionManager::CleanupOldContributions() const
                     break;
                 }
                 cnt_all++;
-                const CBlockIndex* pindexQuorum = g_chainman.m_blockman.LookupBlockIndex(std::get<2>(k));
-                if (pindexQuorum == nullptr || ::ChainActive().Tip()->nHeight - pindexQuorum->nHeight > MAX_STORE_DEPTH) {
+                const CBlockIndex* pindexQuorum = m_chainstate.m_blockman.LookupBlockIndex(std::get<2>(k));
+                if (pindexQuorum == nullptr || m_chainstate.m_chain.Tip()->nHeight - pindexQuorum->nHeight > MAX_STORE_DEPTH) {
                     // not found or too old
                     batch.Erase(k);
                     cnt_old++;
