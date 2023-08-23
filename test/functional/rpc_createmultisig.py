@@ -12,6 +12,7 @@ from test_framework.address import address_to_scriptpubkey
 from test_framework.descriptors import descsum_create, drop_origins
 from test_framework.key import ECPubKey
 from test_framework.messages import COIN
+from test_framework.script_util import keys_to_multisig_script
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
@@ -68,6 +69,16 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         # Check that bech32m is currently not allowed
         assert_raises_rpc_error(-5, "createmultisig cannot create bech32m multisig addresses", self.nodes[0].createmultisig, 2, self.pub, "bech32m")
+
+        self.log.info('Check correct encoding of multisig script for all n (1..20)')
+        for nkeys in range(1, 20+1):
+            keys = [self.pub[0]]*nkeys
+            expected_ms_script = keys_to_multisig_script(keys, k=nkeys)  # simply use n-of-n
+            # note that the 'legacy' address type fails for n values larger than 15
+            # due to exceeding the P2SH size limit (520 bytes), so we use 'bech32' instead
+            # (for the purpose of this encoding test, we don't care about the resulting address)
+            res = self.nodes[0].createmultisig(nrequired=nkeys, keys=keys, address_type='bech32')
+            assert_equal(res['redeemScript'], expected_ms_script.hex())
 
     def check_addmultisigaddress_errors(self):
         if self.options.descriptors:
