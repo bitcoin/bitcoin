@@ -523,19 +523,18 @@ class P2PInterface(P2PConnection):
 
         self.wait_until(test_function, timeout=timeout)
 
-    # TODO: enable when p2p_filter.py is backported
-    # def wait_for_inv(self, expected_inv, timeout=60):
-    #     """Waits for an INV message and checks that the first inv object in the message was as expected."""
-    #     if len(expected_inv) > 1:
-    #         raise NotImplementedError("wait_for_inv() will only verify the first inv object")
+    def wait_for_inv(self, expected_inv, timeout=60):
+        """Waits for an INV message and checks that the first inv object in the message was as expected."""
+        if len(expected_inv) > 1:
+            raise NotImplementedError("wait_for_inv() will only verify the first inv object")
 
-    #     def test_function():
-    #         assert self.is_connected
-    #         return self.last_message.get("inv") and \
-    #                             self.last_message["inv"].inv[0].type == expected_inv[0].type and \
-    #                             self.last_message["inv"].inv[0].hash == expected_inv[0].hash
+        def test_function():
+            assert self.is_connected
+            return self.last_message.get("inv") and \
+                                self.last_message["inv"].inv[0].type == expected_inv[0].type and \
+                                self.last_message["inv"].inv[0].hash == expected_inv[0].hash
 
-    #    self.wait_until(test_function, timeout=timeout)
+        self.wait_until(test_function, timeout=timeout)
 
     def wait_for_verack(self, timeout=60):
         def test_function():

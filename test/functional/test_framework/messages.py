@@ -38,6 +38,8 @@ MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version 
 
 MAX_LOCATOR_SZ = 101
 MAX_BLOCK_SIZE = 1000000
+MAX_BLOOM_FILTER_SIZE = 36000
+MAX_BLOOM_HASH_FUNCS = 50
 
 COIN = 100000000  # 1 btc in satoshis
 MAX_MONEY = 21000000 * COIN
