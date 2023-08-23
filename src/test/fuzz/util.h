@@ -28,6 +28,7 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/time.h>
+#include <util/vector.h>
 #include <version.h>
 
 #include <algorithm>
@@ -321,9 +322,17 @@ inline std::unique_ptr<CNode> ConsumeNodeAsUniquePtr(FuzzedDataProvider& fdp, co
 
 void FillNode(FuzzedDataProvider& fuzzed_data_provider, CNode& node, bool init_version) noexcept;
 
-inline void InitializeFuzzingContext(const std::string& chain_name = CBaseChainParams::REGTEST)
+template <class T = const BasicTestingSetup>
+std::unique_ptr<T> MakeFuzzingContext(const std::string& chain_name = CBaseChainParams::REGTEST, const std::vector<const char*>& extra_args = {})
 {
-    static const BasicTestingSetup basic_testing_setup{chain_name, {"-nodebuglogfile"}};
+    // Prepend default arguments for fuzzing
+    const std::vector<const char*> arguments = Cat(
+        {
+            "-nodebuglogfile",
+        },
+        extra_args);
+
+    return std::make_unique<T>(chain_name, arguments);
 }
 
 class FuzzedFileProvider
