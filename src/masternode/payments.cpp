@@ -22,6 +22,7 @@
 #include <validation.h>
 #include <evo/creditpool.h>
 
+#include <cassert>
 #include <string>
 
 /**
@@ -40,10 +41,9 @@ static bool GetBlockTxOuts(const int nBlockHeight, const CAmount blockReward, st
     bool fMNRewardReallocated =  llmq::utils::IsMNRewardReallocationActive(pindex);
 
     if (fMNRewardReallocated) {
-        const CAmount platformReward = masternodeReward * 0.375;
+        const CAmount platformReward = MasternodePayments::PlatformShare(masternodeReward);
         masternodeReward -= platformReward;
 
-        assert(MoneyRange(platformReward));
         assert(MoneyRange(masternodeReward));
 
         LogPrint(BCLog::MNPAYMENTS, "CMasternodePayments::%s -- MN reward %lld reallocated to credit pool\n", __func__, platformReward);
@@ -343,6 +343,15 @@ void FillBlockPayments(const CSporkManager& sporkManager, CGovernanceManager& go
 
     LogPrint(BCLog::MNPAYMENTS, "%s -- nBlockHeight %d blockReward %lld voutMasternodePaymentsRet \"%s\" txNew %s", __func__, /* Continued */
                             nBlockHeight, blockReward, voutMasternodeStr, txNew.ToString());
+}
+
+CAmount PlatformShare(const CAmount reward)
+{
+    constexpr double platformShare = 0.375;
+    const CAmount platformReward = reward * platformShare;
+    assert(MoneyRange(platformReward));
+
+    return platformReward;
 }
 
 } // namespace MasternodePayments

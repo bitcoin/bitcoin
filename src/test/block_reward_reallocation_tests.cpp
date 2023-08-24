@@ -26,6 +26,7 @@
 #include <llmq/context.h>
 #include <llmq/instantsend.h>
 #include <llmq/utils.h>
+#include <masternode/payments.h>
 #include <util/enumerate.h>
 #include <util/irange.h>
 
@@ -257,7 +258,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
 
         bool isMNRewardReallocated = llmq::utils::IsMNRewardReallocationActive(::ChainActive().Tip());
         if (isMNRewardReallocated) {
-            CAmount platform_payment = 0.375 * masternode_payment;
+            const CAmount platform_payment = MasternodePayments::PlatformShare(masternode_payment);
             masternode_payment -= platform_payment;
         }
         size_t payment_index = isMNRewardReallocated ? 1 : 0;
@@ -269,7 +270,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         // Reward split should reach ~60/40 after reallocation is done
         LOCK(cs_main);
         CAmount masternode_payment = GetMasternodePayment(::ChainActive().Height(), GetBlockSubsidyInner(::ChainActive().Tip()->nBits, ::ChainActive().Height(), consensus_params), 2500);
-        CAmount platform_payment = 0.375 * masternode_payment;
+        const CAmount platform_payment = MasternodePayments::PlatformShare(masternode_payment);
         masternode_payment -= platform_payment;
         const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx, *m_node.evodb, ::ChainstateActive(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
         BOOST_CHECK_EQUAL(pblocktemplate->block.vtx[0]->GetValueOut(), 9491484944);

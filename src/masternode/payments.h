@@ -32,6 +32,13 @@ bool IsBlockPayeeValid(const CSporkManager& sporkManager, CGovernanceManager& go
 void FillBlockPayments(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
                        CMutableTransaction& txNew, const int nBlockHeight, const CAmount blockReward,
                        std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet);
+
+/**
+ * this helper returns amount that should be reallocated to platform
+ * it is calculated based on total amount of Masternode rewards (not block reward)
+ */
+CAmount PlatformShare(const CAmount masternodeReward);
+
 } // namespace MasternodePayments
 
 #endif // BITCOIN_MASTERNODE_PAYMENTS_H
