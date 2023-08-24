@@ -14,8 +14,8 @@ on:
       - '**'
 
 concurrency:
-  group: ${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ${{ github.event_name != 'pull_request' && github.run_id || github.ref }}
+  cancel-in-progress: true
 
 env:
   DANGER_RUN_CI_ON_HOST: 1
