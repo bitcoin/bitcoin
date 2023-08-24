@@ -25,7 +25,7 @@ class CEvoDB;
 namespace interfaces {
 class Chain;
 class ChainClient;
-class WalletClient;
+class WalletLoader;
 } // namespace interfaces
 
 //! NodeContext struct containing references to chain state and connection
@@ -52,7 +52,7 @@ struct NodeContext {
     std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
     //! Reference to chain client that should used to load or create wallets
     //! opened by the gui.
-    interfaces::WalletClient* wallet_client{nullptr};
+    interfaces::WalletLoader* wallet_loader{nullptr};
     std::unique_ptr<CScheduler> scheduler;
     std::function<void()> rpc_interruption_point = [] {};
     //! Dash

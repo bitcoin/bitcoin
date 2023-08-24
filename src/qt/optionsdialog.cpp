@@ -404,7 +404,7 @@ void OptionsDialog::on_okButton_clicked()
     appearance->accept();
 #ifdef ENABLE_WALLET
     if (m_enable_wallet) {
-        for (auto& wallet : model->node().walletClient().getWallets()) {
+        for (auto& wallet : model->node().walletLoader().getWallets()) {
             wallet->coinJoin().resetCachedBlocks();
             wallet->markDirty();
         }

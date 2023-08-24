@@ -71,7 +71,7 @@ using interfaces::Handler;
 using interfaces::LLMQ;
 using interfaces::MakeHandler;
 using interfaces::Node;
-using interfaces::WalletClient;
+using interfaces::WalletLoader;
 
 namespace node {
 namespace {
@@ -431,9 +431,9 @@ public:
         assert(std::addressof(::ChainstateActive()) == std::addressof(chainman().ActiveChainstate()));
         return chainman().ActiveChainstate().CoinsTip().GetCoin(output, coin);
     }
-    WalletClient& walletClient() override
+    WalletLoader& walletLoader() override
     {
-        return *Assert(m_context->wallet_client);
+        return *Assert(m_context->wallet_loader);
     }
 
     EVO& evo() override { return m_evo; }

@@ -34,11 +34,11 @@ WalletController::WalletController(ClientModel& client_model, QObject* parent)
     , m_node(client_model.node())
     , m_options_model(client_model.getOptionsModel())
 {
-    m_handler_load_wallet = m_node.walletClient().handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
+    m_handler_load_wallet = m_node.walletLoader().handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
         getOrCreateWallet(std::move(wallet));
     });
 
-    for (std::unique_ptr<interfaces::Wallet>& wallet : m_node.walletClient().getWallets()) {
+    for (std::unique_ptr<interfaces::Wallet>& wallet : m_node.walletLoader().getWallets()) {
         getOrCreateWallet(std::move(wallet));
     }
 
@@ -65,7 +65,7 @@ std::map<std::string, bool> WalletController::listWalletDir() const
 {
     QMutexLocker locker(&m_mutex);
     std::map<std::string, bool> wallets;
-    for (const std::string& name : m_node.walletClient().listWalletDir()) {
+    for (const std::string& name : m_node.walletLoader().listWalletDir()) {
         wallets[name] = false;
     }
     for (WalletModel* wallet_model : m_wallets) {
@@ -228,7 +228,7 @@ void CreateWalletActivity::createWallet()
     }
 
     QTimer::singleShot(500, worker(), [this, name, flags] {
-        std::unique_ptr<interfaces::Wallet> wallet = node().walletClient().createWallet(name, m_passphrase, flags, m_error_message, m_warning_message);
+        std::unique_ptr<interfaces::Wallet> wallet = node().walletLoader().createWallet(name, m_passphrase, flags, m_error_message, m_warning_message);
 
         if (wallet) m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet));
 
@@ -299,7 +299,7 @@ void OpenWalletActivity::open(const std::string& path)
     showProgressDialog(tr("Opening Wallet <b>%1</b>...").arg(name.toHtmlEscaped()));
 
     QTimer::singleShot(0, worker(), [this, path] {
-        std::unique_ptr<interfaces::Wallet> wallet = node().walletClient().loadWallet(path, m_error_message, m_warning_message);
+        std::unique_ptr<interfaces::Wallet> wallet = node().walletLoader().loadWallet(path, m_error_message, m_warning_message);
 
         if (wallet) m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet));
 

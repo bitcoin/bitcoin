@@ -37,7 +37,7 @@ struct NodeContext;
 
 namespace interfaces {
 class Handler;
-class WalletClient;
+class WalletLoader;
 struct BlockTip;
 
 //! Interface for the src/evo part of a dash node (dashd process).
@@ -284,8 +284,8 @@ public:
     //! Get unspent outputs associated with a transaction.
     virtual bool getUnspentOutput(const COutPoint& output, Coin& coin) = 0;
 
-    //! Get wallet client.
-    virtual WalletClient& walletClient() = 0;
+    //! Get wallet loader.
+    virtual WalletLoader& walletLoader() = 0;
 
     //! Return interface for accessing evo related handler.
     virtual EVO& evo() = 0;
