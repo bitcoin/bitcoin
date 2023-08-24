@@ -7,6 +7,7 @@
 
 WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
     : TestingSetup(chainName),
+      m_wallet_loader{interfaces::MakeWalletLoader(*m_node.chain, *Assert(m_node.args))},
       m_wallet(m_node.chain.get(), "", CreateMockWalletDatabase())
 {
     bool fFirstRun;
