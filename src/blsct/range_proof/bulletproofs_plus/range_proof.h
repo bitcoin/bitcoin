@@ -29,9 +29,7 @@ struct RangeProof: public range_proof::ProofBase<T> {
     Scalar s_prime;
     Scalar delta_prime;
 
-    // since verifier runs wip w/ alpha_hat, alpha_hat is assumed to be public
-    // but alpha_hat is not explicitly passed to verifier in the argument
-    Scalar alpha_hat;
+    Scalar alpha_hat;  // used only for amount recovery
 
     Scalar tau_x;  // value to embed msg2
 
