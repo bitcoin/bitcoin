@@ -296,7 +296,7 @@ void PrepareShutdown(NodeContext& node)
     node.banman.reset();
     node.addrman.reset();
 
-    if (node.mempool && node.mempool->IsLoaded() && node.args->GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
+    if (node.mempool && node.mempool->IsLoaded() && node.args->GetBoolArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool(*node.mempool);
     }
 
@@ -1231,10 +1231,10 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     if (args.IsArgSet("-devnet")) {
         // Require setting of ports when running devnet
-        if (args.GetArg("-listen", DEFAULT_LISTEN) && !args.IsArgSet("-port")) {
+        if (args.GetBoolArg("-listen", DEFAULT_LISTEN) && !args.IsArgSet("-port")) {
             return InitError(_("-port must be specified when -devnet and -listen are specified"));
         }
-        if (args.GetArg("-server", false) && !args.IsArgSet("-rpcport")) {
+        if (args.GetBoolArg("-server", false) && !args.IsArgSet("-rpcport")) {
             return InitError(_("-rpcport must be specified when -devnet and -server are specified"));
         }
         if (args.GetArgs("-devnet").size() > 1) {
