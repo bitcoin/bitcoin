@@ -7,6 +7,7 @@
 
 #include <blsct/arith/elements.h>
 #include <blsct/range_proof/bulletproofs_plus/range_proof.h>
+#include <ctokens/tokenid.h>
 
 namespace bulletproofs_plus {
 
@@ -18,6 +19,7 @@ struct AmountRecoveryRequest
     using Points = Elements<Point>;
 
     size_t id;
+    TokenId token_id;
     Scalar y;
     Scalar z;
     Scalar alpha_hat;

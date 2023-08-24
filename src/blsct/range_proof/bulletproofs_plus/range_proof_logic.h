@@ -40,13 +40,11 @@ public:
     );
 
     bool Verify(
-        const std::vector<RangeProof<T>>& proofs,
-        const TokenId& token_id
+        const std::vector<RangeProof<T>>& proofs
     );
 
     AmountRecoveryResult<T> RecoverAmounts(
-        const std::vector<AmountRecoveryRequest<T>>& reqs,
-        const TokenId& token_id
+        const std::vector<AmountRecoveryRequest<T>>& reqs
     );
 
 #ifndef BOOST_UNIT_TEST
@@ -104,7 +102,6 @@ private:
 
     bool VerifyProofs(
         const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
-        const TokenId& token_id,
         const size_t& max_mn
     );
 

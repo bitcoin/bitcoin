@@ -218,6 +218,7 @@ RangeProof<T> RangeProofLogic<T>::Prove(
         blsct::Common::GetFirstPowerOf2GreaterOrEqTo(vs.Size());
 
     RangeProof<T> proof;
+    proof.token_id = token_id;
 
     const size_t m = num_input_values_power_of_2;
     const size_t n = range_proof::Setup::num_input_value_bits;
@@ -379,15 +380,14 @@ template RangeProof<Mcl> RangeProofLogic<Mcl>::Prove(
 template <typename T>
 bool RangeProofLogic<T>::VerifyProofs(
     const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
-    const TokenId& token_id,
     const size_t& max_mn
 ) {
     using Scalar = typename T::Scalar;
     using Scalars = Elements<Scalar>;
 
-    range_proof::Generators<T> gens = m_common.Gf().GetInstance(token_id);
-
     for (const RangeProofWithTranscript<T>& pt : proof_transcripts) {
+        range_proof::Generators<T> gens = m_common.Gf().GetInstance(pt.proof.token_id);
+
         auto gs = gens.GetGiSubset(pt.mn);
         auto hs = gens.GetHiSubset(pt.mn);
         auto h = gens.H;
@@ -487,21 +487,19 @@ bool RangeProofLogic<T>::VerifyProofs(
 }
 template bool RangeProofLogic<Mcl>::VerifyProofs(
     const std::vector<RangeProofWithTranscript<Mcl>>&,
-    const TokenId&,
     const size_t&
 );
 
 template <typename T>
 bool RangeProofLogic<T>::Verify(
-    const std::vector<RangeProof<T>>& proofs,
-    const TokenId& token_id
+    const std::vector<RangeProof<T>>& proofs
 ) {
     range_proof::Common<T>::ValidateProofsBySizes(proofs);
 
     std::vector<RangeProofWithTranscript<T>> proof_transcripts;
     size_t max_num_rounds = 0;
 
-    for (const RangeProof<T>& proof : proofs) {
+    for (const RangeProof<T>& proof: proofs) {
         // update max # of rounds and sum of all V bits
         max_num_rounds = std::max(max_num_rounds, proof.Ls.Size());
 
@@ -511,23 +509,19 @@ bool RangeProofLogic<T>::Verify(
     }
 
     const size_t max_mn = 1ull << max_num_rounds;
-    const range_proof::Generators<T> gens = m_common.Gf().GetInstance(token_id);
 
     return VerifyProofs(
         proof_transcripts,
-        token_id,
         max_mn
     );
 }
 template bool RangeProofLogic<Mcl>::Verify(
-    const std::vector<RangeProof<Mcl>>&,
-    const TokenId&
+    const std::vector<RangeProof<Mcl>>&
 );
 
 template <typename T>
 AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
-    const std::vector<AmountRecoveryRequest<T>>& reqs,
-    const TokenId& token_id
+    const std::vector<AmountRecoveryRequest<T>>& reqs
 ) {
     using Scalar = typename T::Scalar;
     using Point = typename T::Point;
@@ -535,8 +529,8 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
     // will contain result of successful requests only
     std::vector<range_proof::RecoveredData<T>> xs;
 
-    for (const AmountRecoveryRequest<T>& req : reqs) {
-        range_proof::Generators<T> gens = m_common.Gf().GetInstance(token_id);
+    for (const AmountRecoveryRequest<T>& req: reqs) {
+        range_proof::Generators<T> gens = m_common.Gf().GetInstance(req.token_id);
         Point g = gens.G;
         Point h = gens.H;
 
@@ -616,8 +610,7 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
     };
 }
 template AmountRecoveryResult<Mcl> RangeProofLogic<Mcl>::RecoverAmounts(
-    const std::vector<AmountRecoveryRequest<Mcl>>&,
-    const TokenId&
+    const std::vector<AmountRecoveryRequest<Mcl>>&
 );
 
 } // namespace bulletproofs_plus

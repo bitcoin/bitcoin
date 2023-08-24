@@ -11,6 +11,7 @@ template <typename T>
 bool RangeProof<T>::operator==(const RangeProof<T>& other) const
 {
     return range_proof::ProofBase<T>::operator==(other) &&
+        token_id == other.token_id &&
         A == other.A &&
         A_wip == other.A_wip &&
         B == other.B &&

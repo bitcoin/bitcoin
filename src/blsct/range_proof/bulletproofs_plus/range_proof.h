@@ -10,6 +10,7 @@
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <blsct/range_proof/proof_base.h>
+#include <ctokens/tokenid.h>
 #include <span.h>
 #include <streams.h>
 
@@ -21,6 +22,8 @@ struct RangeProof: public range_proof::ProofBase<T> {
     using Scalar = typename T::Scalar;
     using Points = Elements<Point>;
     using Scalars = Elements<Scalar>;
+
+    TokenId token_id;
 
     Point A;      // A = Gi^{aL} + Hi^{aR} + h^{alpha}; required to set up transcript
     Point A_wip;  // A in the last round of wip
@@ -40,6 +43,7 @@ struct RangeProof: public range_proof::ProofBase<T> {
     void Serialize(Stream& s) const
     {
         range_proof::ProofBase<T>::Serialize(s);
+        ::Serialize(s, token_id);
         ::Serialize(s, A);
         ::Serialize(s, A_wip);
         ::Serialize(s, B);
@@ -54,6 +58,7 @@ struct RangeProof: public range_proof::ProofBase<T> {
     void Unserialize(Stream& s)
     {
         range_proof::ProofBase<T>::Unserialize(s);
+        ::Unserialize(s, token_id);
         ::Unserialize(s, A);
         ::Unserialize(s, A_wip);
         ::Unserialize(s, B);
