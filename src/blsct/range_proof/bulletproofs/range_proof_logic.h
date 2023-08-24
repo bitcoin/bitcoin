@@ -38,18 +38,18 @@ public:
         const TokenId& token_id) const;
 
     bool Verify(
-        const std::vector<RangeProof<T>>& proofs,
-        const TokenId& token_id) const;
+        const std::vector<RangeProof<T>>& proofs
+    ) const;
 
     AmountRecoveryResult<T> RecoverAmounts(
-        const std::vector<AmountRecoveryRequest<T>>& reqs,
-        const TokenId& token_id) const;
+        const std::vector<AmountRecoveryRequest<T>>& reqs
+    ) const;
 
 private:
     bool VerifyProofs(
         const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
-        const range_proof::Generators<T>& gens,
-        const size_t& max_mn) const;
+        const size_t& max_mn
+    ) const;
 
     range_proof::Common<T> m_common;
 };

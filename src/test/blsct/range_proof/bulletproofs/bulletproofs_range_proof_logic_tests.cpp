@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_prove_verify_one_value)
     bulletproofs::RangeProofLogic<T> rp;
     auto p = rp.Prove(vs, nonce, msg.second, token_id);
 
-    auto is_valid = rp.Verify(std::vector<bulletproofs::RangeProof<T>> { p }, token_id);
+    auto is_valid = rp.Verify(std::vector<bulletproofs::RangeProof<T>> { p });
     BOOST_CHECK(is_valid);
 }
 
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_recovery_one_value)
 
     auto req = bulletproofs::AmountRecoveryRequest<T>::of(proof, nonce);
     auto reqs = std::vector<bulletproofs::AmountRecoveryRequest<T>> { req };
-    auto result = rp.RecoverAmounts(reqs, token_id);
+    auto result = rp.RecoverAmounts(reqs);
 
     BOOST_CHECK(result.is_completed);
     auto xs = result.amounts;
@@ -280,7 +280,7 @@ static void RunTestCase(
     }
 
     // verify proofs
-    auto verify_result = rp.Verify(proofs, token_id);
+    auto verify_result = rp.Verify(proofs);
     BOOST_CHECK(verify_result == test_case.verify_result);
 
     // recover value, gamma and message
@@ -289,7 +289,7 @@ static void RunTestCase(
     for (size_t i=0; i<proofs.size(); ++i) {
         reqs.push_back(bulletproofs::AmountRecoveryRequest<T>::of(proofs[i], nonce));
     }
-    auto recovery_result = rp.RecoverAmounts(reqs, token_id);
+    auto recovery_result = rp.RecoverAmounts(reqs);
     BOOST_CHECK(recovery_result.is_completed == test_case.should_complete_recovery);
 
     if (recovery_result.is_completed) {

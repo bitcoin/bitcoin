@@ -15,7 +15,7 @@ AmountRecoveryRequest<T> AmountRecoveryRequest<T>::of(RangeProof<T>& proof, type
 
     AmountRecoveryRequest<T> req {
         1,
-        proof_with_transcript.proof.token_id,
+        proof.token_id,
         proof_with_transcript.y,
         proof_with_transcript.z,
         proof.alpha_hat,

@@ -480,7 +480,7 @@ bool RangeProofLogic<T>::VerifyProofs(
         lp.Add(hs, hs_exp);
         lp.Add(pt.proof.Vs, vs_exp);
 
-        return lp.Sum().IsZero();
+        if (!lp.Sum().IsZero()) return false;
     }
 
     return true;
