@@ -65,7 +65,7 @@ static bool GetMasternodeTxOuts(const int nBlockHeight, const CAmount blockRewar
     voutMasternodePaymentsRet.clear();
 
     if(!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet)) {
-        LogPrintf("CMasternodePayments::%s -- no payee (deterministic masternode list empty)\n", __func__);
+        LogPrintf("MasternodePayments::%s -- no payee (deterministic masternode list empty)\n", __func__);
         return false;
     }
 
@@ -73,7 +73,7 @@ static bool GetMasternodeTxOuts(const int nBlockHeight, const CAmount blockRewar
         CTxDestination dest;
         ExtractDestination(txout.scriptPubKey, dest);
 
-        LogPrintf("CMasternodePayments::%s -- Masternode payment %lld to %s\n", __func__, txout.nValue, EncodeDestination(dest));
+        LogPrintf("MasternodePayments::%s -- Masternode payment %lld to %s\n", __func__, txout.nValue, EncodeDestination(dest));
     }
 
     return true;
@@ -88,7 +88,7 @@ static bool IsTransactionValid(const CTransaction& txNew, const int nBlockHeight
 
     std::vector<CTxOut> voutMasternodePayments;
     if (!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePayments)) {
-        LogPrintf("CMasternodePayments::%s -- ERROR failed to get payees for block at height %s\n", __func__, nBlockHeight);
+        LogPrintf("MasternodePayments::%s -- ERROR failed to get payees for block at height %s\n", __func__, nBlockHeight);
         return true;
     }
 
@@ -98,7 +98,7 @@ static bool IsTransactionValid(const CTransaction& txNew, const int nBlockHeight
             CTxDestination dest;
             if (!ExtractDestination(txout.scriptPubKey, dest))
                 assert(false);
-            LogPrintf("CMasternodePayments::%s -- ERROR failed to find expected payee %s in block at height %s\n", __func__, EncodeDestination(dest), nBlockHeight);
+            LogPrintf("MasternodePayments::%s -- ERROR failed to find expected payee %s in block at height %s\n", __func__, EncodeDestination(dest), nBlockHeight);
             return false;
         }
     }
@@ -147,7 +147,7 @@ static bool IsOldBudgetBlockValueValid(const CMasternodeSync& mn_sync, const CBl
     return isBlockRewardValueMet;
 }
 
-namespace CMasternodePayments {
+namespace MasternodePayments {
 
 /**
 * IsBlockValueValid
@@ -329,4 +329,4 @@ void FillBlockPayments(const CSporkManager& sporkManager, CGovernanceManager& go
                             nBlockHeight, blockReward, voutMasternodeStr, txNew.ToString());
 }
 
-} // namespace CMasternodePayments
+} // namespace MasternodePayments

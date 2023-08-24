@@ -18,12 +18,12 @@ class CSporkManager;
 class CTxOut;
 class CMasternodeSync;
 
-//
-// Masternode Payments Class
-// Keeps track of who should get paid for which blocks
-//
+/**
+ * Masternode Payments Namespace
+ * Helpers to kees track of who should get paid for which blocks
+ */
 
-namespace CMasternodePayments
+namespace MasternodePayments
 {
 bool IsBlockValueValid(const CSporkManager& sporkManager, CGovernanceManager& governanceManager, const CMasternodeSync& mn_sync,
                        const CBlock& block, const int nBlockHeight, const CAmount blockReward, std::string& strErrorRet);
@@ -32,6 +32,6 @@ bool IsBlockPayeeValid(const CSporkManager& sporkManager, CGovernanceManager& go
 void FillBlockPayments(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
                        CMutableTransaction& txNew, const int nBlockHeight, const CAmount blockReward,
                        std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet);
-} // namespace CMasternodePayments
+} // namespace MasternodePayments
 
 #endif // BITCOIN_MASTERNODE_PAYMENTS_H
