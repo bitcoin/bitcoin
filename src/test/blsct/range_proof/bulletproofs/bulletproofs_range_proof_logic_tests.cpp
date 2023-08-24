@@ -24,7 +24,7 @@ struct TestCase
 {
     std::string name;
     Scalars values;
-    bool is_batched;  // prove function is called once for with all values
+    bool is_batched;
     bool should_complete_recovery;
     size_t num_amounts;
     bool verify_result;
