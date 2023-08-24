@@ -885,7 +885,9 @@ static void PeriodicStats(ArgsManager& args, const CTxMemPool& mempool)
         statsClient.gauge("utxoset.txOutputs", stats.nTransactionOutputs, 1.0f);
         statsClient.gauge("utxoset.dbSizeBytes", stats.nDiskSize, 1.0f);
         statsClient.gauge("utxoset.blockHeight", stats.nHeight, 1.0f);
-        statsClient.gauge("utxoset.totalAmount", (double)stats.nTotalAmount / (double)COIN, 1.0f);
+        if (stats.total_amount.has_value()) {
+            statsClient.gauge("utxoset.totalAmount", (double)stats.total_amount.value() / (double)COIN, 1.0f);
+        }
     } else {
         // something went wrong
         LogPrintf("%s: GetUTXOStats failed\n", __func__);

@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <test/fuzz/util.h>
+
+#include <util/overflow.h>
 #include <version.h>
 
 FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider)
