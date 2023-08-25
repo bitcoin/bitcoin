@@ -84,7 +84,8 @@ static RPCHelpMan sendrawtransaction()
                                                      DEFAULT_MAX_RAW_TX_FEE_RATE :
                                                      CFeeRate(AmountFromValue(request.params[1]));
 
-            int64_t virtual_size = GetVirtualTransactionSize(*tx);
+            // BUG: The virtual size here currently fails to consider sigops, which could potentially result in an incorrectly-low max_raw_tx_fee
+            int64_t virtual_size = GetVirtualTransactionSize(*tx, 0, 0 /* BUG */);
             CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
 
             std::string err_string;

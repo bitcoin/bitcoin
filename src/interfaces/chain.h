@@ -259,6 +259,7 @@ public:
     virtual void getPackageLimits(unsigned int& limit_ancestor_count, unsigned int& limit_descendant_count) = 0;
 
     //! Check if transaction will pass the mempool's chain limits.
+    //! WARNING: Does not consider non-weight vsize, so only safe for wallet transactions.
     virtual bool checkChainLimits(const CTransactionRef& tx) = 0;
 
     //! Estimate smart fee.
