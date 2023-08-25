@@ -3539,7 +3539,8 @@ void Chainstate::ResetBlockFailureFlags(CBlockIndex *pindex) {
 void Chainstate::TryAddBlockIndexCandidate(CBlockIndex* pindex)
 {
     AssertLockHeld(cs_main);
-    // The block only is a candidate for the most-work-chain if it has more work than our current tip.
+    // The block only is a candidate for the most-work-chain if it has the same
+    // or more work than our current tip.
     if (m_chain.Tip() != nullptr && setBlockIndexCandidates.value_comp()(pindex, m_chain.Tip())) {
         return;
     }
