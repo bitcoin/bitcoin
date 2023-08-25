@@ -82,7 +82,7 @@ static void Reorg(const ReorgTxns& reorg)
     disconnectpool.removeForBlock(reorg.connected_txns_2);
 
     // Sanity Check
-    assert(disconnectpool.queuedTx.size() == BLOCK_VTX_COUNT - reorg.num_shared);
+    assert(disconnectpool.size() == BLOCK_VTX_COUNT - reorg.num_shared);
 
     disconnectpool.clear();
 }

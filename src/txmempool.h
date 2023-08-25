@@ -850,29 +850,23 @@ public:
  * Instead, store the disconnected transactions (in order!) as we go, remove any
  * that are included in blocks in the new chain, and then process the remaining
  * still-unconfirmed transactions at the end.
+ *
+ * Order of queuedTx:
+ * The front of the list should be the most recently-confirmed transactions (transactions at the
+ * end of vtx of blocks closer to the tip). If memory usage grows too large, we trim from the front
+ * of the list. After trimming, transactions can be re-added to the mempool from the back of the
+ * list to the front without running into missing inputs.
  */
+class DisconnectedBlockTransactions {
+private:
+    /** Cached dynamic memory usage for the CTransactions (memory for the shared pointers is
+     * included in the container calculations). */
+    uint64_t cachedInnerUsage = 0;
+    std::list<CTransactionRef> queuedTx;
+    using TxList = decltype(queuedTx);
+    std::unordered_map<uint256, TxList::iterator, SaltedTxidHasher> iters_by_txid;
 
-// multi_index tag names
-struct txid_index {};
-struct insertion_order {};
-
-struct DisconnectedBlockTransactions {
-    typedef boost::multi_index_container<
-        CTransactionRef,
-        boost::multi_index::indexed_by<
-            // sorted by txid
-            boost::multi_index::hashed_unique<
-                boost::multi_index::tag<txid_index>,
-                mempoolentry_txid,
-                SaltedTxidHasher
-            >,
-            // sorted by order in the blockchain
-            boost::multi_index::sequenced<
-                boost::multi_index::tag<insertion_order>
-            >
-        >
-    > indexed_disconnected_transactions;
-
+public:
     // It's almost certainly a logic bug if we don't clear out queuedTx before
     // destruction, as we add to it while disconnecting blocks, and then we
     // need to re-process remaining transactions to ensure mempool consistency.
@@ -881,18 +875,17 @@ struct DisconnectedBlockTransactions {
     // to be refactored such that this assumption is no longer true (for
     // instance if there was some other way we cleaned up the mempool after a
     // reorg, besides draining this object).
-    ~DisconnectedBlockTransactions() { assert(queuedTx.empty()); }
-
-    indexed_disconnected_transactions queuedTx;
-    uint64_t cachedInnerUsage = 0;
-
-    // Estimate the overhead of queuedTx to be 6 pointers + an allocation, as
-    // no exact formula for boost::multi_index_contained is implemented.
-    size_t DynamicMemoryUsage() const {
-        return memusage::MallocUsage(sizeof(CTransactionRef) + 6 * sizeof(void*)) * queuedTx.size() + cachedInnerUsage;
+    ~DisconnectedBlockTransactions() {
+        assert(queuedTx.empty());
+        assert(iters_by_txid.empty());
+        assert(cachedInnerUsage == 0);
     }
 
-	/** Add transactions from the block, iterating through vtx in reverse order. Callers should call
+    size_t DynamicMemoryUsage() const {
+        return cachedInnerUsage + memusage::DynamicUsage(iters_by_txid) + memusage::DynamicUsage(queuedTx);
+    }
+
+    /** Add transactions from the block, iterating through vtx in reverse order. Callers should call
      * this function for blocks in descending order by block height.
      * We assume that callers never pass multiple transactions with the same txid, otherwise things
      * can go very wrong in removeForBlock due to queuedTx containing an item without a
@@ -900,39 +893,60 @@ struct DisconnectedBlockTransactions {
      */
     void AddTransactionsFromBlock(const std::vector<CTransactionRef>& vtx)
     {
+        iters_by_txid.reserve(iters_by_txid.size() + vtx.size());
         for (auto block_it = vtx.rbegin(); block_it != vtx.rend(); ++block_it) {
-            queuedTx.insert(*block_it);
-            cachedInnerUsage += RecursiveDynamicUsage(*block_it);
+            auto it = queuedTx.insert(queuedTx.end(), *block_it);
+            iters_by_txid.emplace((*block_it)->GetHash(), it);
+            cachedInnerUsage += RecursiveDynamicUsage(**block_it);
         }
     }
 
-    // Remove entries based on txid_index, and update memory usage.
+    /** Remove any entries that are in this block. */
     void removeForBlock(const std::vector<CTransactionRef>& vtx)
     {
         // Short-circuit in the common case of a block being added to the tip
         if (queuedTx.empty()) {
             return;
         }
-        for (auto const &tx : vtx) {
-            auto it = queuedTx.find(tx->GetHash());
-            if (it != queuedTx.end()) {
-                cachedInnerUsage -= RecursiveDynamicUsage(*it);
-                queuedTx.erase(it);
+        for (const auto& tx : vtx) {
+            auto iter = iters_by_txid.find(tx->GetHash());
+            if (iter != iters_by_txid.end()) {
+                auto list_iter = iter->second;
+                iters_by_txid.erase(iter);
+                cachedInnerUsage -= RecursiveDynamicUsage(**list_iter);
+                queuedTx.erase(list_iter);
             }
         }
     }
 
-    // Remove an entry by insertion_order index, and update memory usage.
-    void removeEntry(indexed_disconnected_transactions::index<insertion_order>::type::iterator entry)
+    /** Remove the first entry and update memory usage. */
+    CTransactionRef take_first()
     {
-        cachedInnerUsage -= RecursiveDynamicUsage(*entry);
-        queuedTx.get<insertion_order>().erase(entry);
+        CTransactionRef first_tx;
+        if (!queuedTx.empty()) {
+            first_tx = queuedTx.front();
+            cachedInnerUsage -= RecursiveDynamicUsage(*queuedTx.front());
+            iters_by_txid.erase(queuedTx.front()->GetHash());
+            queuedTx.pop_front();
+        }
+        return first_tx;
     }
+
+    size_t size() const { return queuedTx.size(); }
 
     void clear()
     {
         cachedInnerUsage = 0;
+        iters_by_txid.clear();
         queuedTx.clear();
+    }
+
+    /** Clear all data structures and return the list of transactions. */
+    std::list<CTransactionRef> take()
+    {
+        std::list<CTransactionRef> ret = std::move(queuedTx);
+        clear();
+        return ret;
     }
 };
 
