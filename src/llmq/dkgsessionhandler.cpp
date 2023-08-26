@@ -16,6 +16,7 @@
 #include <chainparams.h>
 #include <net_processing.h>
 #include <validation.h>
+#include <util/thread.h>
 #include <util/underlying.h>
 
 namespace llmq
@@ -151,8 +152,8 @@ void CDKGSessionHandler::StartThread()
         throw std::runtime_error("Tried to start an already started CDKGSessionHandler thread.");
     }
 
-    std::string threadName = strprintf("llmq-%d-%d", ToUnderlying(params.type), quorumIndex);
-    phaseHandlerThread = std::thread(&TraceThread<std::function<void()> >, threadName, std::function<void()>(std::bind(&CDKGSessionHandler::PhaseHandlerThread, this)));
+    m_thread_name = strprintf("llmq-%d-%d", ToUnderlying(params.type), quorumIndex);
+    phaseHandlerThread = std::thread(util::TraceThread, m_thread_name.c_str(), [this] { PhaseHandlerThread(); });
 }
 
 void CDKGSessionHandler::StopThread()

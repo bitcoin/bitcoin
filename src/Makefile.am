@@ -332,6 +332,7 @@ BITCOIN_CORE_H = \
   util/sock.h \
   util/string.h \
   util/time.h \
+  util/thread.h \
   util/threadnames.h \
   util/trace.h \
   util/translation.h \
@@ -755,6 +756,7 @@ libbitcoin_util_a_SOURCES = \
   util/time.cpp \
   util/serfloat.cpp \
   util/string.cpp \
+  util/thread.cpp \
   util/threadnames.cpp \
   $(BITCOIN_CORE_H)
 

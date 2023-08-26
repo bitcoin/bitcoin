@@ -23,7 +23,6 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <util/settings.h>
-#include <util/threadnames.h>
 #include <util/time.h>
 #include <amount.h>
 
@@ -467,24 +466,6 @@ namespace ctpl {
     class thread_pool;
 }
 void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName);
-
-/**
- * .. and a wrapper that just calls func once
- */
-template <typename Callable> void TraceThread(const std::string name,  Callable func)
-{
-    util::ThreadRename(name.c_str());
-    try
-    {
-        LogPrintf("%s thread start\n", name);
-        func();
-        LogPrintf("%s thread exit\n", name);
-    }
-    catch (...) {
-        PrintExceptionContinue(std::current_exception(), name.c_str());
-        throw;
-    }
-}
 
 std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear);
 

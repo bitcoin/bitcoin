@@ -127,6 +127,7 @@ private:
 
     std::unique_ptr<CDKGSession> curSession;
     std::thread phaseHandlerThread;
+    std::string m_thread_name;
 
     // Do not guard these, they protect their internals themselves
     CDKGPendingMessages pendingContributions;

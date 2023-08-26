@@ -17,6 +17,7 @@
 #include <netmessagemaker.h>
 #include <spork.h>
 #include <util/irange.h>
+#include <util/thread.h>
 #include <util/underlying.h>
 
 #include <cxxtimer.hpp>
@@ -183,9 +184,7 @@ void CSigSharesManager::StartWorkerThread()
         assert(false);
     }
 
-    workThread = std::thread(&TraceThread<std::function<void()> >,
-        "sigshares",
-        std::function<void()>(std::bind(&CSigSharesManager::WorkThreadMain, this)));
+    workThread = std::thread(&util::TraceThread, "sigshares", [this] { WorkThreadMain(); });
 }
 
 void CSigSharesManager::StopWorkerThread()

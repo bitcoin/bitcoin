@@ -25,6 +25,7 @@
 #include <evo/deterministicmns.h>
 #include <llmq/instantsend.h>
 
+#include <cmath>
 #include <optional>
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,

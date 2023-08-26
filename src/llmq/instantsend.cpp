@@ -20,6 +20,7 @@
 #include <txmempool.h>
 #include <util/irange.h>
 #include <util/ranges.h>
+#include <util/thread.h>
 #include <validation.h>
 
 #include <cxxtimer.hpp>
@@ -459,7 +460,7 @@ void CInstantSendManager::Start()
         assert(false);
     }
 
-    workThread = std::thread(&TraceThread<std::function<void()> >, "isman", std::function<void()>(std::bind(&CInstantSendManager::WorkThreadMain, this)));
+    workThread = std::thread(&util::TraceThread, "isman", [this] { WorkThreadMain(); });
 
     sigman.RegisterRecoveredSigsListener(this);
 }
