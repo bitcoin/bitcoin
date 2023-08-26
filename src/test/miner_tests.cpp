@@ -369,24 +369,6 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     BOOST_CHECK_EXCEPTION(AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey), std::runtime_error, HasReason("bad-cb-multiple"));
     m_node.mempool->clear();
 
-    // invalid (pre-p2sh) txn in mempool, template creation fails
-    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
-    tx.vin[0].prevout.n = 0;
-    tx.vin[0].scriptSig = CScript() << OP_1;
-    tx.vout[0].nValue = BLOCKSUBSIDY-LOWFEE;
-    script = CScript() << OP_0;
-    tx.vout[0].scriptPubKey = GetScriptForDestination(ScriptHash(script));
-    hash = tx.GetHash();
-    m_node.mempool->addUnchecked(entry.Fee(LOWFEE).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
-    tx.vin[0].prevout.hash = hash;
-    tx.vin[0].scriptSig = CScript() << std::vector<unsigned char>(script.begin(), script.end());
-    tx.vout[0].nValue -= LOWFEE;
-    hash = tx.GetHash();
-    m_node.mempool->addUnchecked(entry.Fee(LOWFEE).Time(GetTime()).SpendsCoinbase(false).FromTx(tx));
-    // Should throw block-validation-failed
-    BOOST_CHECK_EXCEPTION(AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey), std::runtime_error, HasReason("block-validation-failed"));
-    m_node.mempool->clear();
-
     // double spend txn pair in mempool, template creation fails
     tx.vin[0].prevout.hash = txFirst[0]->GetHash();
     tx.vin[0].scriptSig = CScript() << OP_1;
@@ -426,6 +408,25 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     //     ::ChainActive().SetTip(next);
     // }
     //BOOST_CHECK(pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
+
+    // invalid (pre-p2sh) txn in mempool, template creation fails
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
+    tx.vin[0].prevout.n = 0;
+    tx.vin[0].scriptSig = CScript() << OP_1;
+    tx.vout[0].nValue = BLOCKSUBSIDY-LOWFEE;
+    script = CScript() << OP_0;
+    tx.vout[0].scriptPubKey = GetScriptForDestination(ScriptHash(script));
+    hash = tx.GetHash();
+    m_node.mempool->addUnchecked(entry.Fee(LOWFEE).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
+    tx.vin[0].prevout.hash = hash;
+    tx.vin[0].scriptSig = CScript() << std::vector<unsigned char>(script.begin(), script.end());
+    tx.vout[0].nValue -= LOWFEE;
+    hash = tx.GetHash();
+    m_node.mempool->addUnchecked(entry.Fee(LOWFEE).Time(GetTime()).SpendsCoinbase(false).FromTx(tx));
+    // Should throw block-validation-failed
+    BOOST_CHECK_EXCEPTION(AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey), std::runtime_error, HasReason("block-validation-failed"));
+    m_node.mempool->clear();
+
     // // Delete the dummy blocks again.
     // while (::ChainActive().Tip()->nHeight > nHeight) {
     //     CBlockIndex* del = ::ChainActive().Tip();

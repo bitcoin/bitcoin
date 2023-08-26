@@ -136,6 +136,7 @@ public:
     CMainParams() {
         strNetworkID = CBaseChainParams::MAIN;
         consensus.nSubsidyHalvingInterval = 210240; // Note: actual number of blocks per calendar year with DGW v3 is ~200700 (for example 449750 - 249050)
+        consensus.BIP16Height = 0;
         consensus.nMasternodePaymentsStartBlock = 100000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 158000; // actual historical value
         consensus.nMasternodePaymentsIncreasePeriod = 576*30; // 17280 - actual historical value
@@ -182,7 +183,7 @@ public:
 
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].bit = 9;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nStartTime = 19999999999;     // TODO: To be determined later
-        consensus.vDeployments[Consensus::DEPLOYMENT_V20].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_V20].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nWindowSize = 4032;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nThresholdStart = 3226;       // 80% of 4032
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nThresholdMin = 2420;         // 60% of 4032
@@ -190,7 +191,7 @@ public:
 
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].bit = 10;
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nStartTime = 19999999999;   // TODO: To be determined later
-        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nWindowSize = 4032;
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdStart = 3226;     // 80% of 4032
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdMin = 2420;       // 60% of 4032
@@ -332,6 +333,7 @@ public:
     CTestNetParams() {
         strNetworkID = CBaseChainParams::TESTNET;
         consensus.nSubsidyHalvingInterval = 210240;
+        consensus.BIP16Height = 0;
         consensus.nMasternodePaymentsStartBlock = 4010; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 4030;
         consensus.nMasternodePaymentsIncreasePeriod = 10;
@@ -378,7 +380,7 @@ public:
 
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].bit = 9;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nStartTime = 19999999999;     // TODO: To be determined later
-        consensus.vDeployments[Consensus::DEPLOYMENT_V20].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_V20].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nWindowSize = 100;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nThresholdStart = 80;         // 80% of 100
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nThresholdMin = 60;           // 60% of 100
@@ -386,7 +388,7 @@ public:
 
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].bit = 10;
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nStartTime = 19999999999;   // TODO: To be determined later
-        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nWindowSize = 100;
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdStart = 80;       // 80% of 100
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdMin = 60;         // 60% of 100
@@ -503,6 +505,7 @@ public:
     explicit CDevNetParams(const ArgsManager& args) {
         strNetworkID = CBaseChainParams::DEVNET;
         consensus.nSubsidyHalvingInterval = 210240;
+        consensus.BIP16Height = 0;
         consensus.nMasternodePaymentsStartBlock = 4010; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 4030;
         consensus.nMasternodePaymentsIncreasePeriod = 10;
@@ -548,7 +551,7 @@ public:
 
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].bit = 9;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nStartTime = 1661990400; // Sep 1st, 2022
-        consensus.vDeployments[Consensus::DEPLOYMENT_V20].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_V20].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nWindowSize = 120;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nThresholdStart = 80; // 80% of 100
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nThresholdMin = 60;   // 60% of 100
@@ -556,7 +559,7 @@ public:
 
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].bit = 10;
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nStartTime = 1661990400; // Sep 1st, 2022
-        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nWindowSize = 120;
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdStart = 80; // 80% of 100
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdMin = 60;   // 60% of 100
@@ -739,6 +742,7 @@ public:
     explicit CRegTestParams(const ArgsManager& args) {
         strNetworkID =  CBaseChainParams::REGTEST;
         consensus.nSubsidyHalvingInterval = 150;
+        consensus.BIP16Height = 0; // always enforce P2SH BIP16 on regtest
         consensus.nMasternodePaymentsStartBlock = 240;
         consensus.nMasternodePaymentsIncreaseBlock = 350;
         consensus.nMasternodePaymentsIncreasePeriod = 10;
@@ -781,11 +785,11 @@ public:
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].bit = 9;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nStartTime = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V20].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_V20].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nWindowSize = 480;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nThresholdStart = 384; // 80% of 480
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nThresholdMin = 288;   // 60% of 480
@@ -793,7 +797,7 @@ public:
 
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].bit = 10;
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nStartTime = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nWindowSize = 1030;
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdStart = 800; // 80% of 1000
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdMin = 600;   // 60% of 1000
