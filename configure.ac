@@ -966,11 +966,19 @@ if test "$use_hardening" != "no"; then
   dnl However, FORTIFY_SOURCE requires that there is some level of optimization, otherwise it does nothing and just creates a compiler warning.
   dnl Since FORTIFY_SOURCE is a no-op without optimizations, do not enable it when enable_debug is yes.
   if test "$enable_debug" != "yes"; then
-    AX_CHECK_PREPROC_FLAG([-D_FORTIFY_SOURCE=3],[
+    AC_MSG_CHECKING([for __builtin_dynamic_object_size])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
+        (void) __builtin_dynamic_object_size(nullptr, 0);
+      ]])],
+      [ AC_MSG_RESULT([yes]); fortify_source_level=3 ],
+      [ AC_MSG_RESULT([no]); fortify_source_level=2]
+    )
+
+    AX_CHECK_PREPROC_FLAG([-D_FORTIFY_SOURCE=$fortify_source_level],[
       AX_CHECK_PREPROC_FLAG([-U_FORTIFY_SOURCE],[
         HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -U_FORTIFY_SOURCE"
       ])
-      HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -D_FORTIFY_SOURCE=3"
+      HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -D_FORTIFY_SOURCE=$fortify_source_level"
     ])
   fi
 
