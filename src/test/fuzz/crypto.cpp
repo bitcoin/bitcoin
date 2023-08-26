@@ -4,6 +4,7 @@
 
 #include <crypto/hmac_sha256.h>
 #include <crypto/hmac_sha512.h>
+#include <crypto/muhash.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
@@ -39,6 +40,7 @@ FUZZ_TARGET(crypto)
     CSHA512 sha512;
     SHA3_256 sha3;
     CSipHasher sip_hasher{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
+    MuHash3072 muhash;
 
     while (--limit_max_ops >= 0 && fuzzed_data_provider.ConsumeBool()) {
         CallOneOf(
@@ -65,6 +67,12 @@ FUZZ_TARGET(crypto)
                 (void)Hash160(data);
                 (void)Hash160(data.begin(), data.end());
                 (void)sha512.Size();
+
+                if (fuzzed_data_provider.ConsumeBool()) {
+                    muhash *= MuHash3072(data);
+                } else {
+                    muhash /= MuHash3072(data);
+                }
             },
             [&] {
                 (void)hash160.Reset();
@@ -74,6 +82,7 @@ FUZZ_TARGET(crypto)
                 (void)sha256.Reset();
                 (void)sha3.Reset();
                 (void)sha512.Reset();
+                muhash = MuHash3072();
             },
             [&] {
                 CallOneOf(
@@ -117,6 +126,10 @@ FUZZ_TARGET(crypto)
                     [&] {
                         data.resize(SHA3_256::OUTPUT_SIZE);
                         sha3.Finalize(data);
+                    },
+                    [&] {
+                        uint256 out;
+                        muhash.Finalize(out);
                     });
                 });
     }
