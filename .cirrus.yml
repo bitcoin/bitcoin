@@ -31,7 +31,7 @@ env:  # Global defaults
 #   swap:
 #
 #   ```
-#   fallocate -l 16G /swapfile_ci && chmod 600 /swapfile_ci && mkswap /swapfile_ci && swapon /swapfile_ci && ( echo '/swapfile_ci none swap sw 0 0' | sudo tee -a /etc/fstab )
+#   fallocate -l 16G /swapfile_ci && chmod 600 /swapfile_ci && mkswap /swapfile_ci && swapon /swapfile_ci && ( echo '/swapfile_ci none swap sw 0 0' | tee -a /etc/fstab )
 #   ```
 #
 # - To register the persistent worker, open a `screen` session and run:
