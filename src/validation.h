@@ -206,7 +206,15 @@ void StopScriptCheckWorkerThreads();
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock);
 
 double ConvertBitsToDouble(unsigned int nBits);
-CAmount GetBlockSubsidy(int nBits, int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly = false);
+/**
+ * Due to difference in logic, the GetBlockSubsidy() has also different list of
+ * arguments.
+ *
+ * When pindex points to a genesis block GetBlockSubsidy() returns a pre-calculated value.
+ * For other blocks it calls GetBlockSubsidyInner() using nBits and nHeight of a pindex->pprev block.
+ */
+CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly = false);
+CAmount GetBlockSubsidy(const CBlockIndex* const pindex, const Consensus::Params& consensusParams);
 CAmount GetMasternodePayment(int nHeight, CAmount blockValue, int nReallocActivationHeight = std::numeric_limits<int>::max() /* not activated */);
 
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
