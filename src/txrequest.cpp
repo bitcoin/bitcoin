@@ -72,16 +72,10 @@ struct Announcement {
     /** Whether this is a wtxid request. */
     const bool m_is_wtxid : 1;
 
-    /** What state this announcement is in.
-     *  This is a uint8_t instead of a State to silence a GCC warning in versions prior to 9.3.
-     *  See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61414 */
-    uint8_t m_state : 3;
-
-    /** Convert m_state to a State enum. */
-    State GetState() const { return static_cast<State>(m_state); }
-
-    /** Convert a State enum to a uint8_t and store it in m_state. */
-    void SetState(State state) { m_state = static_cast<uint8_t>(state); }
+    /** What state this announcement is in. */
+    State m_state : 3;
+    State GetState() const { return m_state; }
+    void SetState(State state) { m_state = state; }
 
     /** Whether this announcement is selected. There can be at most 1 selected peer per txhash. */
     bool IsSelected() const
@@ -105,7 +99,7 @@ struct Announcement {
     Announcement(const GenTxid& gtxid, NodeId peer, bool preferred, std::chrono::microseconds reqtime,
         SequenceNumber sequence) :
         m_txhash(gtxid.GetHash()), m_time(reqtime), m_peer(peer), m_sequence(sequence), m_preferred(preferred),
-        m_is_wtxid(gtxid.IsWtxid()), m_state(static_cast<uint8_t>(State::CANDIDATE_DELAYED)) {}
+        m_is_wtxid{gtxid.IsWtxid()}, m_state{State::CANDIDATE_DELAYED} {}
 };
 
 //! Type alias for priorities.
