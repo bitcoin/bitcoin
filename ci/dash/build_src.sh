@@ -14,9 +14,6 @@ source ./ci/dash/matrix.sh
 unset CC; unset CXX
 unset DISPLAY
 
-export CCACHE_COMPRESS=${CCACHE_COMPRESS:-1}
-export CCACHE_SIZE=${CCACHE_SIZE:-400M}
-
 if [ "$PULL_REQUEST" != "false" ]; then test/lint/commit-script-check.sh $COMMIT_RANGE; fi
 
 if [ "$CHECK_DOC" = 1 ]; then

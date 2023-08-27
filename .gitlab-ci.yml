@@ -115,6 +115,8 @@ builder-image:
 .build-template:
   stage: build
   extends: .base-template
+  variables:
+    CCACHE_SIZE: "400M"
   script:
     - ./ci/dash/build_src.sh
     - ./ci/dash/test_unittests.sh # Run unit tests in build stage to avoid creating too many parallel jobs
