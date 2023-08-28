@@ -308,7 +308,7 @@ public:
         // create initial filter with scripts from all ScriptPubKeyMans
         for (auto spkm : m_wallet.GetAllScriptPubKeyMans()) {
             auto desc_spkm{dynamic_cast<DescriptorScriptPubKeyMan*>(spkm)};
-            assert(desc_spkm != nullptr);
+            if (!desc_spkm) continue;
             AddScriptPubKeys(desc_spkm);
             // save each range descriptor's end for possible future filter updates
             if (desc_spkm->IsHDEnabled()) {
@@ -322,7 +322,7 @@ public:
         // repopulate filter with new scripts if top-up has happened since last iteration
         for (const auto& [desc_spkm_id, last_range_end] : m_last_range_ends) {
             auto desc_spkm{dynamic_cast<DescriptorScriptPubKeyMan*>(m_wallet.GetScriptPubKeyMan(desc_spkm_id))};
-            assert(desc_spkm != nullptr);
+            if (!desc_spkm) continue;
             int32_t current_range_end{desc_spkm->GetEndRange()};
             if (current_range_end > last_range_end) {
                 AddScriptPubKeys(desc_spkm, last_range_end);
@@ -549,7 +549,7 @@ void CWallet::UpgradeDescriptorCache()
 
     for (ScriptPubKeyMan* spkm : GetAllScriptPubKeyMans()) {
         DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
-        desc_spkm->UpgradeDescriptorCache();
+        if (desc_spkm) desc_spkm->UpgradeDescriptorCache();
     }
     SetWalletFlag(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED);
 }
@@ -3692,7 +3692,9 @@ std::optional<bool> CWallet::IsInternalScriptPubKeyMan(ScriptPubKeyMan* spk_man)
 
     const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
     if (!desc_spk_man) {
-        throw std::runtime_error(std::string(__func__) + ": unexpected ScriptPubKeyMan type.");
+        // Currently only DescriptorScriptPubKeyMan makes sense for this function,
+        // so skip other SPKMs (e.g. SilentPaymentsSPKM)
+        return false;
     }
 
     LOCK(desc_spk_man->cs_desc_man);
