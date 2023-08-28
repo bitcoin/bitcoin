@@ -689,6 +689,9 @@ private:
 
     /** Whether the transaction(s) would replace any mempool transactions. If so, RBF rules apply. */
     bool m_rbf{false};
+
+    /** The coins that were spent by the transaction(s) being validated */
+    std::map<COutPoint, Coin> m_spent_coins;
 };
 
 bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
@@ -784,7 +787,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // Note: this call may add txin.prevout to the coins cache
         // (coins_cache.cacheCoins) by way of FetchCoin(). It should be removed
         // later (via coins_to_uncache) if this tx turns out to be invalid.
-        if (!m_view.HaveCoin(txin.prevout)) {
+        const Coin& coin = m_view.AccessCoin(txin.prevout);
+        if (coin.IsSpent()) {
             // Are inputs missing because we already have the tx?
             for (size_t out = 0; out < tx.vout.size(); out++) {
                 // Optimistically just do efficient check of cache for outputs
@@ -795,6 +799,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             // Otherwise assume this might be an orphan tx for which we just haven't seen parents yet
             return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-missingorspent");
         }
+        m_spent_coins[txin.prevout] = coin;
     }
 
     // This is const, but calls into the back end CoinsViews. The CCoinsViewDB at the bottom of the
@@ -1214,7 +1219,7 @@ bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& 
         results.emplace(ws.m_ptx->GetWitnessHash(),
                         MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize,
                                          ws.m_base_fees, effective_feerate, effective_feerate_wtxids));
-        GetMainSignals().TransactionAddedToMempool(ws.m_ptx, m_pool.GetAndIncrementSequence());
+        GetMainSignals().TransactionAddedToMempool(ws.m_ptx, m_pool.GetAndIncrementSequence(), m_spent_coins);
     }
     return all_submitted;
 }
@@ -1246,7 +1251,7 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
 
     if (!Finalize(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
 
-    GetMainSignals().TransactionAddedToMempool(ptx, m_pool.GetAndIncrementSequence());
+    GetMainSignals().TransactionAddedToMempool(ptx, m_pool.GetAndIncrementSequence(), m_spent_coins);
 
     return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize, ws.m_base_fees,
                                         effective_feerate, single_wtxid);

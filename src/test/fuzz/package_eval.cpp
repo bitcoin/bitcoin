@@ -55,7 +55,7 @@ struct OutpointsUpdater final : public CValidationInterface {
     explicit OutpointsUpdater(std::set<COutPoint>& r)
         : m_mempool_outpoints{r} {}
 
-    void TransactionAddedToMempool(const CTransactionRef& tx, uint64_t /* mempool_sequence */) override
+    void TransactionAddedToMempool(const CTransactionRef& tx, uint64_t, const std::map<COutPoint, Coin>&) override
     {
         // for coins spent we always want to be able to rbf so they're not removed
 
@@ -85,7 +85,8 @@ struct TransactionsDelta final : public CValidationInterface {
     explicit TransactionsDelta(std::set<CTransactionRef>& a)
         : m_added{a} {}
 
-    void TransactionAddedToMempool(const CTransactionRef& tx, uint64_t /* mempool_sequence */) override
+    void TransactionAddedToMempool(const CTransactionRef& tx, uint64_t, const std::map<COutPoint, Coin>&) override
+
     {
         // Transactions may be entered and booted any number of times
         m_added.insert(tx);

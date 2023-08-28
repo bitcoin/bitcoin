@@ -4,6 +4,7 @@
 
 #include <zmq/zmqnotificationinterface.h>
 
+#include <coins.h>
 #include <common/args.h>
 #include <kernel/chain.h>
 #include <logging.h>
@@ -152,7 +153,7 @@ void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, co
     });
 }
 
-void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx, uint64_t mempool_sequence)
+void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx, uint64_t mempool_sequence, const std::map<COutPoint, Coin>& spent_coins)
 {
     const CTransaction& tx = *ptx;
 
