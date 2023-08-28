@@ -740,7 +740,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         }
     }
 
-    // Bring the best block into scope
+    // This is const, but calls into the back end CoinsViews. The CCoinsViewDB at the bottom of the
+    // hierarchy brings the best block into scope. See CCoinsViewDB::GetBestBlock().
     m_view.GetBestBlock();
 
     // we have all inputs cached now, so switch back to dummy (to protect
@@ -990,9 +991,9 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
     if (!res || test_accept) {
         if (!res) LogPrint(BCLog::MEMPOOL, "%s: %s %s (%s)\n", __func__, tx->GetHash().ToString(), state.GetRejectReason(), state.GetDebugMessage());
 
-        // Remove coins that were not present in the coins cache before calling ATMPW;
-        // this is to prevent memory DoS in case we receive a large number of
-        // invalid transactions that attempt to overrun the in-memory coins cache
+        // Remove coins that were not present in the coins cache before calling;
+        // AcceptSingleTransaction(); this is to prevent memory DoS in case we receive a large
+        // number of invalid transactions that attempt to overrun the in-memory coins cache
         // (`CCoinsViewCache::cacheCoins`).
 
         for (const COutPoint& hashTx : coins_to_uncache)
@@ -2716,7 +2717,6 @@ void CChainState::UpdateTip(const CBlockIndex* pindexNew)
     assert(std::addressof(::ChainstateActive()) == std::addressof(*this));
     if (!this->IsInitialBlockDownload())
     {
-        int nUpgraded = 0;
         const CBlockIndex* pindex = pindexNew;
         for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
             WarningBitsConditionChecker checker(bit);
@@ -2730,16 +2730,6 @@ void CChainState::UpdateTip(const CBlockIndex* pindexNew)
                 }
             }
         }
-        // Check the version of the last 100 blocks to see if we need to upgrade:
-        for (int i = 0; i < 100 && pindex != nullptr; i++)
-        {
-            int32_t nExpectedVersion = ComputeBlockVersion(pindex->pprev, m_params.GetConsensus());
-            if (pindex->nVersion > VERSIONBITS_LAST_OLD_BLOCK_VERSION && (pindex->nVersion & ~nExpectedVersion) != 0)
-                ++nUpgraded;
-            pindex = pindex->pprev;
-        }
-        if (nUpgraded > 0)
-            AppendWarning(warningMessages, strprintf(_("%d of last 100 blocks have unexpected version").translated, nUpgraded));
     }
     assert(std::addressof(::ChainstateActive()) == std::addressof(*this));
     LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo) evodb_cache=%.1fMiB%s\n", __func__,
@@ -4259,8 +4249,11 @@ bool ChainstateManager::ProcessNewBlock(const CChainParams& chainparams, const s
         // Therefore, the following critical section must include the CheckBlock() call as well.
         LOCK(cs_main);
 
-        // Ensure that CheckBlock() passes before calling AcceptBlock, as
-        // belt-and-suspenders.
+        // Skipping AcceptBlock() for CheckBlock() failures means that we will never mark a block as invalid if
+        // CheckBlock() fails.  This is protective against consensus failure if there are any unknown forms of block
+        // malleability that cause CheckBlock() to fail; see e.g. CVE-2012-2459 and
+        // https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2019-February/016697.html.  Because CheckBlock() is
+        // not very expensive, the anti-DoS benefits of caching failure (of a definitely-invalid block) are not substantial.
         bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
         if (ret) {
             // Store to disk

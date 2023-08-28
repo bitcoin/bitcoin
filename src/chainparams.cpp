@@ -129,7 +129,7 @@ std::optional<Consensus::LLMQParams> CChainParams::GetLLMQ(Consensus::LLMQType l
 }
 
 /**
- * Main network
+ * Main network on which people trade goods and services.
  */
 class CMainParams : public CChainParams {
 public:
@@ -325,7 +325,7 @@ public:
 };
 
 /**
- * Testnet (v3)
+ * Testnet (v3): public test network which is reset from time to time.
  */
 class CTestNetParams : public CChainParams {
 public:
@@ -496,7 +496,7 @@ public:
 };
 
 /**
- * Devnet
+ * Devnet: The Development network intended for developers use.
  */
 class CDevNetParams : public CChainParams {
 public:
@@ -731,7 +731,8 @@ public:
 };
 
 /**
- * Regression test
+ * Regression test: intended for private networks only. Has minimal difficulty to ensure that
+ * blocks can be found instantly.
  */
 class CRegTestParams : public CChainParams {
 public:
