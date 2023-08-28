@@ -191,8 +191,7 @@ void SerializeHDKeypaths(Stream& s, const std::map<CPubKey, KeyOriginInfo>& hd_k
 struct PSBTInput
 {
     CTransactionRef non_witness_utxo;
-    // SYSCOIN
-    CTxOutCoin witness_utxo;
+    CTxOut witness_utxo;
     CScript redeem_script;
     CScript witness_script;
     CScript final_script_sig;
@@ -973,8 +972,7 @@ struct PartiallySignedTransaction
      * @param[in] input_index Index of the input to retrieve the UTXO of
      * @return Whether the UTXO for the specified input was found
      */
-    // SYSCOIN
-    bool GetInputUTXO(CTxOutCoin& utxo, int input_index) const;
+    bool GetInputUTXO(CTxOut& utxo, int input_index) const;
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {

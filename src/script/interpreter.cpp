@@ -1370,8 +1370,8 @@ uint256 GetOutputsSHA256(const T& txTo)
     return ss.GetSHA256();
 }
 
-/** SYSCOIN Compute the (single) SHA256 of the concatenation of all amounts spent by a tx. */
-uint256 GetSpentAmountsSHA256(const std::vector<CTxOutCoin>& outputs_spent)
+/** Compute the (single) SHA256 of the concatenation of all amounts spent by a tx. */
+uint256 GetSpentAmountsSHA256(const std::vector<CTxOut>& outputs_spent)
 {
     HashWriter ss{};
     for (const auto& txout : outputs_spent) {
@@ -1380,8 +1380,8 @@ uint256 GetSpentAmountsSHA256(const std::vector<CTxOutCoin>& outputs_spent)
     return ss.GetSHA256();
 }
 
-/** SYSCOIN Compute the (single) SHA256 of the concatenation of all scriptPubKeys spent by a tx. */
-uint256 GetSpentScriptsSHA256(const std::vector<CTxOutCoin>& outputs_spent)
+/** Compute the (single) SHA256 of the concatenation of all scriptPubKeys spent by a tx. */
+uint256 GetSpentScriptsSHA256(const std::vector<CTxOut>& outputs_spent)
 {
     HashWriter ss{};
     for (const auto& txout : outputs_spent) {
@@ -1392,9 +1392,8 @@ uint256 GetSpentScriptsSHA256(const std::vector<CTxOutCoin>& outputs_spent)
 
 
 } // namespace
-// SYSCOIN
 template <class T>
-void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOutCoin>&& spent_outputs, bool force)
+void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent_outputs, bool force)
 {
     assert(!m_spent_outputs_ready);
 
@@ -1451,9 +1450,9 @@ PrecomputedTransactionData::PrecomputedTransactionData(const T& txTo)
     Init(txTo, {});
 }
 
-// SYSCOIN explicit instantiation
-template void PrecomputedTransactionData::Init(const CTransaction& txTo, std::vector<CTxOutCoin>&& spent_outputs, bool force);
-template void PrecomputedTransactionData::Init(const CMutableTransaction& txTo, std::vector<CTxOutCoin>&& spent_outputs, bool force);
+// explicit instantiation
+template void PrecomputedTransactionData::Init(const CTransaction& txTo, std::vector<CTxOut>&& spent_outputs, bool force);
+template void PrecomputedTransactionData::Init(const CMutableTransaction& txTo, std::vector<CTxOut>&& spent_outputs, bool force);
 template PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo);
 template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo);
 

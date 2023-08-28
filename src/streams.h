@@ -219,7 +219,9 @@ protected:
     vector_type vch;
     vector_type::size_type m_read_pos{0};
 
-
+    // SYSCOIN
+    int nType;
+    int nTxVersion{0};
 public:
     typedef vector_type::allocator_type   allocator_type;
     typedef vector_type::size_type        size_type;
@@ -234,7 +236,11 @@ public:
     explicit DataStream() {}
     explicit DataStream(Span<const uint8_t> sp) : DataStream{AsBytes(sp)} {}
     explicit DataStream(Span<const value_type> sp) : vch(sp.data(), sp.data() + sp.size()) {}
-
+    // SYSCOIN
+    void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
+    int GetTxVersion()           { return nTxVersion; }
+    void seek(size_t _nSize) {return;}
+    int GetType() const          { return nType; }
     std::string str() const
     {
         return std::string{UCharCast(data()), UCharCast(data() + size())};
@@ -360,28 +366,18 @@ public:
 class CDataStream : public DataStream
 {
 private:
-    int nType;
     int nVersion;
-    // SYSCOIN
-    int nTxVersion{0};
 public:
     explicit CDataStream(int nTypeIn, int nVersionIn)
-        : nType{nTypeIn},
-          nVersion{nVersionIn} {}
+        : nVersion{nVersionIn} {nType = nTypeIn;}
 
     explicit CDataStream(Span<const uint8_t> sp, int type, int version) : CDataStream{AsBytes(sp), type, version} {}
     explicit CDataStream(Span<const value_type> sp, int nTypeIn, int nVersionIn)
         : DataStream{sp},
-          nType{nTypeIn},
-          nVersion{nVersionIn} {}
+        nVersion{nVersionIn} {nType = nTypeIn;}
 
-    int GetType() const          { return nType; }
     void SetVersion(int n)       { nVersion = n; }
     int GetVersion() const       { return nVersion; }
-    // SYSCOIN
-    void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
-    int GetTxVersion()           { return nTxVersion; }
-    void seek(size_t _nSize) {return;}
     template <typename T>
     CDataStream& operator<<(const T& obj)
     {

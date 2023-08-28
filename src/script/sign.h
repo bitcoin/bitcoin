@@ -115,8 +115,8 @@ bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, C
 bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo,
                    unsigned int nIn, int nHashType, SignatureData& sig_data);
 
-/** SYSCOIN Extract signature data from a transaction input, and insert it. */
-SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOutCoin& txout);
+/** Extract signature data from a transaction input, and insert it. */
+SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout);
 void UpdateInput(CTxIn& input, const SignatureData& data);
 
 /** Check whether a scriptPubKey is known to be segwit. */

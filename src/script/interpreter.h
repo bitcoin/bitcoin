@@ -164,13 +164,11 @@ struct PrecomputedTransactionData
     uint256 hashPrevouts, hashSequence, hashOutputs;
     //! Whether the 3 fields above are initialized.
     bool m_bip143_segwit_ready = false;
-    // SYSCOIN
-    std::vector<CTxOutCoin> m_spent_outputs;
+    std::vector<CTxOut> m_spent_outputs;
     //! Whether m_spent_outputs is initialized.
     bool m_spent_outputs_ready = false;
 
     PrecomputedTransactionData() = default;
-    // SYSCOIN
     /** Initialize this PrecomputedTransactionData with transaction data.
      *
      * @param[in]   tx             The transaction for which data is being precomputed.
@@ -179,7 +177,7 @@ struct PrecomputedTransactionData
      *                             regardless of what is in the inputs (used at signing
      *                             time, when the inputs aren't filled in yet). */
     template <class T>
-    void Init(const T& tx, std::vector<CTxOutCoin>&& spent_outputs, bool force = false);
+    void Init(const T& tx, std::vector<CTxOut>&& spent_outputs, bool force = false);
 
     template <class T>
     explicit PrecomputedTransactionData(const T& tx);

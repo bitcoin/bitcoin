@@ -32,11 +32,9 @@ FUZZ_TARGET(script_flags)
 
         unsigned int fuzzed_flags;
         ds >> fuzzed_flags;
-        // SYSCOIN
-        std::vector<CTxOutCoin> spent_outputs;
+        std::vector<CTxOut> spent_outputs;
         for (unsigned i = 0; i < tx.vin.size(); ++i) {
-            // SYSCOIN
-            CTxOutCoin prevout;
+            CTxOut prevout;
             ds >> prevout;
             if (!MoneyRange(prevout.nValue)) {
                 // prevouts should be consensus-valid
@@ -48,8 +46,7 @@ FUZZ_TARGET(script_flags)
         txdata.Init(tx, std::move(spent_outputs));
 
         for (unsigned i = 0; i < tx.vin.size(); ++i) {
-            // SYSCOIN
-            const CTxOutCoin& prevout = txdata.m_spent_outputs.at(i);
+            const CTxOut& prevout = txdata.m_spent_outputs.at(i);
             const TransactionSignatureChecker checker{&tx, i, prevout.nValue, txdata, MissingDataBehavior::ASSERT_FAIL};
 
             ScriptError serror;

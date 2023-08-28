@@ -8,13 +8,14 @@
 #include <nevm/nevm.h>
 #include <nevm/address.h>
 #include <nevm/sha3.h>
-#include <script/standard.h>
+#include <addresstype.h>
 #include <messagesigner.h>
 #include <util/rbf.h>
 #include <undo.h>
 #include <validationinterface.h>
 #include <timedata.h>
 #include <key_io.h>
+#include <logging.h>
 std::unique_ptr<CNEVMTxRootsDB> pnevmtxrootsdb;
 std::unique_ptr<CNEVMMintedTxDB> pnevmtxmintdb;
 std::unique_ptr<CBlockIndexDB> pblockindexdb;

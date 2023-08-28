@@ -52,8 +52,7 @@ static const struct {
 
 struct CCoin {
     uint32_t nHeight;
-    // SYSCOIN
-    CTxOutCoin out;
+    CTxOut out;
 
     CCoin() : nHeight(0) {}
     explicit CCoin(Coin&& in) : nHeight(in.nHeight), out(std::move(in.out)) {}
