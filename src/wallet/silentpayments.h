@@ -10,7 +10,6 @@
 #include <util/result.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/types.h>
-#include <wallet/wallet.h>
 
 #include <unordered_map>
 
