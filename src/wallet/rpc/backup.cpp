@@ -1807,7 +1807,8 @@ RPCHelpMan listdescriptors()
     for (const auto& spk_man : wallet->GetAllScriptPubKeyMans()) {
         const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
         if (!desc_spk_man) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Unexpected ScriptPubKey manager type.");
+            // We can have silent payments spkms when descriptors, so just silently ignore
+            continue;
         }
         LOCK(desc_spk_man->cs_desc_man);
         const auto& wallet_descriptor = desc_spk_man->GetWalletDescriptor();
