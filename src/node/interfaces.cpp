@@ -812,7 +812,12 @@ public:
         if (!m_node.mempool) return;
         LOCK2(::cs_main, m_node.mempool->cs);
         for (const CTxMemPoolEntry& entry : m_node.mempool->mapTx) {
-            notifications.transactionAddedToMempool(entry.GetSharedTx(), {});
+            std::map<COutPoint, Coin> spent_coins;
+            for (const CTxIn& txin : entry.GetTx().vin) {
+                spent_coins[txin.prevout];
+            }
+            findCoins(spent_coins);
+            notifications.transactionAddedToMempool(entry.GetSharedTx(), spent_coins);
         }
     }
     bool hasAssumedValidChain() override
