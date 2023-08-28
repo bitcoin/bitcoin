@@ -1189,6 +1189,157 @@ static DBErrors LoadDecryptionKeys(CWallet* pwallet, DatabaseBatch& batch) EXCLU
     return mkey_res.m_result;
 }
 
+static DBErrors LoadSilentPaymentsRecords(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+{
+    AssertLockHeld(pwallet->cs_wallet);
+
+    // Load silent payments scan key record
+    LoadResult sp_res = LoadRecords(pwallet, batch, DBKeys::SPSCANKEY,
+        [&batch] (CWallet* pwallet, DataStream& key, CDataStream& value, std::string& strErr) {
+        DBErrors result = DBErrors::LOAD_OK;
+
+        // Data for silent payments
+        uint256 id;
+        V0SilentPaymentDestination sp_dest;
+        CKey scan_key;
+        CKey spend_key;
+        std::vector<unsigned char> spend_ckey;
+        std::vector<uint256> tweaks;
+        int64_t creation_time;
+        int64_t labels_used;
+
+        // Start with the scan key
+        CPubKey scan_pubkey;
+        key >> id;
+        key >> scan_pubkey;
+        if (!scan_pubkey.IsValid()) {
+            strErr = "Error reading wallet database: scan key CPubKey corrupt";
+            return DBErrors::CORRUPT;
+        }
+
+        CPrivKey scan_privkey;
+        uint256 checksum;
+        value >> scan_privkey;
+        value >> checksum;
+
+        std::vector<unsigned char> to_hash;
+        to_hash.reserve(scan_pubkey.size() + scan_privkey.size());
+        to_hash.insert(to_hash.end(), scan_pubkey.begin(), scan_pubkey.end());
+        to_hash.insert(to_hash.end(), scan_privkey.begin(), scan_privkey.end());
+
+        if (Hash(to_hash) != checksum) {
+            strErr = "Error reading wallet database: silent payments scan key CPubKey/CPrivKey corrupt";
+            return DBErrors::CORRUPT;
+        }
+
+        if (!scan_key.Load(scan_privkey, scan_pubkey, true)) {
+            strErr = "Error reading wallet database: silent payments scan key CPrivKey corrupt";
+            return DBErrors::CORRUPT;
+        }
+        sp_dest.m_scan_pubkey = scan_pubkey;
+
+        // Get spend key
+        DataStream prefix = PrefixStream(DBKeys::SPSPENDKEY, id);
+        LoadResult spend_key_res = LoadRecords(pwallet, batch, DBKeys::SPSPENDKEY, prefix,
+            [&id, &spend_key, &sp_dest] (CWallet* pwallet, DataStream& key, CDataStream& value, std::string& err) {
+            uint256 spkm_id;
+            CPubKey spend_pubkey;
+            key >> spkm_id;
+            assert(spkm_id == id);
+            key >> spend_pubkey;
+            if (!spend_pubkey.IsValid()) {
+                err = "Error reading wallet database: spend key CPubKey corrupt";
+                return DBErrors::CORRUPT;
+            }
+
+            CPrivKey spend_privkey;
+            uint256 checksum;
+            value >> spend_privkey;
+            value >> checksum;
+
+            std::vector<unsigned char> to_hash;
+            to_hash.reserve(spend_pubkey.size() + spend_privkey.size());
+            to_hash.insert(to_hash.end(), spend_pubkey.begin(), spend_pubkey.end());
+            to_hash.insert(to_hash.end(), spend_privkey.begin(), spend_privkey.end());
+
+            if (Hash(to_hash) != checksum) {
+                err = "Error reading wallet database: silent payments spend key CPubKey/CPrivKey corrupt";
+                return DBErrors::CORRUPT;
+            }
+
+            if (!spend_key.Load(spend_privkey, spend_pubkey, true)) {
+                err = "Error reading wallet database: silent payments spend key CPrivKey corrupt";
+                return DBErrors::CORRUPT;
+            }
+            sp_dest.m_spend_pubkey = spend_pubkey;
+            return DBErrors::LOAD_OK;
+        });
+        result = std::max(result, spend_key_res.m_result);
+
+        // Get encrypted spend key
+        prefix = PrefixStream(DBKeys::SPSPENDCKEY, id);
+        LoadResult ckey_res = LoadRecords(pwallet, batch, DBKeys::SPSPENDCKEY, prefix,
+            [&id, &spend_ckey, &sp_dest] (CWallet* pwallet, DataStream& key, CDataStream& value, std::string& err) {
+            uint256 spkm_id;
+            CPubKey spend_pubkey;
+            key >> spkm_id;
+            assert(spkm_id == id);
+            key >> spend_pubkey;
+            if (!spend_pubkey.IsValid()) {
+                err = "Error reading wallet database: encrypted silent payments spend key CPubKey corrupt";
+                return DBErrors::CORRUPT;
+            }
+
+            value >> spend_ckey;
+            sp_dest.m_spend_pubkey = spend_pubkey;
+            return DBErrors::LOAD_OK;
+        });
+        result = std::max(result, ckey_res.m_result);
+
+        if (!spend_ckey.empty() && spend_key.IsValid()) {
+            strErr = "Error reading wallet database: Both encrypted and unencrypted spend private key found";
+            return DBErrors::CORRUPT;
+        }
+
+        // Load silent payments tweaks
+        prefix = PrefixStream(DBKeys::SPTWEAK, id);
+        LoadResult tweaks_res = LoadRecords(pwallet, batch, DBKeys::SPTWEAK, prefix,
+            [&id, &tweaks] (CWallet* pwallet, DataStream& key, CDataStream& value, std::string& err) {
+            uint256 spkm_id;
+            key >> spkm_id;
+            assert(spkm_id == id);
+
+            uint256 tweak;
+            value >> tweak;
+            tweaks.push_back(tweak);
+            return DBErrors::LOAD_OK;
+        });
+        result = std::max(result, tweaks_res.m_result);
+
+        // Load silent payments metadata
+        prefix = PrefixStream(DBKeys::SPMETA, id);
+        LoadResult meta_res = LoadRecords(pwallet, batch, DBKeys::SPMETA, prefix,
+            [&id, &creation_time, &labels_used] (CWallet* pwallet, DataStream& key, CDataStream& value, std::string& err) {
+            uint256 spkm_id;
+            key >> spkm_id;
+            assert(spkm_id == id);
+
+            value >> creation_time;
+            value >> labels_used;
+            return DBErrors::LOAD_OK;
+        });
+        result = std::max(result, meta_res.m_result);
+
+        // Load into the wallet
+        pwallet->LoadSilentPaymentsSPKM(id, sp_dest, scan_key, spend_key, spend_ckey, tweaks, creation_time, labels_used);
+
+        return result;
+    });
+
+    pwallet->WalletLogPrintf("Silent Payments SPKMs: %u\n", sp_res.m_records);
+    return sp_res.m_result;
+}
+
 DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 {
     DBErrors result = DBErrors::LOAD_OK;
@@ -1225,6 +1376,9 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         // may reference the unknown descriptor's ID which can result in a misleading corruption error
         // when in reality the wallet is simply too new.
         if (result == DBErrors::UNKNOWN_DESCRIPTOR) return result;
+
+        // Load silent payments spkms
+        result = std::max(LoadSilentPaymentsRecords(pwallet, *m_batch), result);
 
         // Load address book
         result = std::max(LoadAddressBookRecords(pwallet, *m_batch), result);
