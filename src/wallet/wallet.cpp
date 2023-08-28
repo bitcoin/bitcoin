@@ -3539,6 +3539,12 @@ void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc)
     }
 }
 
+void CWallet::LoadSilentPaymentsSPKM(const uint256& id, const V0SilentPaymentDestination& dest, const CKey& scan_key, const CKey& spend_key, const std::vector<unsigned char>& spend_ckey, const std::vector<uint256>& tweaks, int64_t creation_time, int64_t labels_used)
+{
+    auto spk_manager = std::make_unique<SilentPaymentsSPKM>(*this, id, dest, scan_key, spend_key, spend_ckey, tweaks, m_keypool_size, creation_time, labels_used);
+    AddScriptPubKeyMan(id, std::move(spk_manager));
+}
+
 void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
 {
     AssertLockHeld(cs_wallet);
