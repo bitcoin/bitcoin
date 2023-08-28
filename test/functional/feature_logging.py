@@ -82,23 +82,6 @@ class LoggingTest(BitcoinTestFramework):
             match=ErrorMatch.FULL_REGEX,
         )
 
-        self.log.info("Test -loglevel raises when invalid values are passed")
-        self.nodes[0].assert_start_raises_init_error(
-            extra_args=["-loglevel=abc"],
-            expected_msg="Error: Unsupported global logging level -loglevel=abc. Valid values: info, debug, trace.",
-            match=ErrorMatch.FULL_REGEX,
-        )
-        self.nodes[0].assert_start_raises_init_error(
-            extra_args=["-loglevel=net:abc"],
-            expected_msg="Error: Unsupported category-specific logging level -loglevel=net:abc.",
-            match=ErrorMatch.PARTIAL_REGEX,
-        )
-        self.nodes[0].assert_start_raises_init_error(
-            extra_args=["-loglevel=net:info:abc"],
-            expected_msg="Error: Unsupported category-specific logging level -loglevel=net:info:abc.",
-            match=ErrorMatch.PARTIAL_REGEX,
-        )
-
         self.log.info("Test that -nodebug,-debug=0,-debug=none clear previously specified debug options")
         disable_debug_options = [
             '-debug=0',
@@ -108,7 +91,23 @@ class LoggingTest(BitcoinTestFramework):
 
         for disable_debug_opt in disable_debug_options:
             # Every category before disable_debug_opt will be ignored, including the invalid 'abc'
-            self.restart_node(0, ['-debug=http', '-debug=abc', disable_debug_opt, '-debug=rpc', '-debug=net'])
+            self.restart_node(0, ['-trace=0', '-debug=http', '-debug=abc', disable_debug_opt, '-debug=rpc', '-debug=net'])
+            logging = self.nodes[0].logging()
+            assert not logging['http']
+            assert 'abc' not in logging
+            assert logging['rpc']
+            assert logging['net']
+
+        self.log.info("Test that -notrace,-trace=0,-trace=none clear previously specified trace options")
+        disable_trace_options = [
+            '-trace=0',
+            '-trace=none',
+            '-notrace'
+        ]
+
+        for disable_trace_opt in disable_trace_options:
+            # Every category before disable_trace_opt will be ignored, including the invalid 'abc'
+            self.restart_node(0, ['-debug=0', '-trace=http', '-trace=abc', disable_trace_opt, '-trace=rpc', '-trace=net'])
             logging = self.nodes[0].logging()
             assert not logging['http']
             assert 'abc' not in logging

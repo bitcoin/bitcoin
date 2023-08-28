@@ -126,7 +126,6 @@ namespace BCLog {
         Warning,
         Error,
     };
-    constexpr auto DEFAULT_LOG_LEVEL{Level::Debug};
     constexpr size_t DEFAULT_MAX_LOG_BUFFER{1'000'000}; // buffer up to 1MB of log data prior to StartLogging
     constexpr uint64_t RATELIMIT_MAX_BYTES{1024 * 1024}; // maximum number of bytes per source location that can be logged within the RATELIMIT_WINDOW
     constexpr auto RATELIMIT_WINDOW{1h}; // time window after which log ratelimit stats are reset
@@ -227,7 +226,7 @@ namespace BCLog {
 
         //! If there is no category-specific log level, all logs with a severity
         //! level lower than `m_log_level` will be ignored.
-        std::atomic<Level> m_log_level{DEFAULT_LOG_LEVEL};
+        std::atomic<Level> m_log_level{Level::Debug};
 
         /** Log categories bitfield. */
         std::atomic<CategoryMask> m_categories{BCLog::NONE};
@@ -326,6 +325,7 @@ namespace BCLog {
             STDLOCK(m_cs);
             m_category_log_levels[category] = level;
         }
+        void SetCategoryLogLevel(LogFlags flag, Level level) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
         bool SetCategoryLogLevel(std::string_view category_str, std::string_view level_str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         Level LogLevel() const { return m_log_level.load(); }
@@ -334,10 +334,12 @@ namespace BCLog {
 
         CategoryMask GetCategoryMask() const { return m_categories.load(); }
 
-        void EnableCategory(LogFlags flag);
-        bool EnableCategory(std::string_view str);
-        void DisableCategory(LogFlags flag);
-        bool DisableCategory(std::string_view str);
+        void EnableCategory(LogFlags flag) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        bool EnableCategory(std::string_view str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        void TraceCategory(LogFlags flag) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        bool TraceCategory(std::string_view str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        void DisableCategory(LogFlags flag) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        bool DisableCategory(std::string_view str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         bool WillLogCategory(LogFlags category) const;
         bool WillLogCategoryLevel(LogFlags category, Level level) const EXCLUSIVE_LOCKS_REQUIRED(!m_cs);

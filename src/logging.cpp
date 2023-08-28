@@ -123,6 +123,7 @@ void BCLog::Logger::DisableLogging()
 void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 {
     m_categories |= flag;
+    SetCategoryLogLevel(flag, Level::Debug);
 }
 
 bool BCLog::Logger::EnableCategory(std::string_view str)
@@ -130,6 +131,20 @@ bool BCLog::Logger::EnableCategory(std::string_view str)
     BCLog::LogFlags flag;
     if (!GetLogCategory(flag, str)) return false;
     EnableCategory(flag);
+    return true;
+}
+
+void BCLog::Logger::TraceCategory(BCLog::LogFlags flag)
+{
+    m_categories |= flag;
+    SetCategoryLogLevel(flag, Level::Trace);
+}
+
+bool BCLog::Logger::TraceCategory(std::string_view str)
+{
+    BCLog::LogFlags flag;
+    if (!GetLogCategory(flag, str)) return false;
+    TraceCategory(flag);
     return true;
 }
 
@@ -591,6 +606,17 @@ bool BCLog::Logger::SetLogLevel(std::string_view level_str)
     return true;
 }
 
+void BCLog::Logger::SetCategoryLogLevel(BCLog::LogFlags flag, BCLog::Level level)
+{
+    STDLOCK(m_cs);
+    if (flag == LogFlags::ALL) {
+        SetLogLevel(level);
+        m_category_log_levels.clear();
+    } else {
+        m_category_log_levels[flag] = level;
+    }
+}
+
 bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::string_view level_str)
 {
     BCLog::LogFlags flag;
@@ -599,7 +625,6 @@ bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::stri
     const auto level = GetLogLevel(level_str);
     if (!level.has_value() || level.value() > MAX_USER_SETABLE_SEVERITY_LEVEL) return false;
 
-    STDLOCK(m_cs);
-    m_category_log_levels[flag] = level.value();
+    SetCategoryLogLevel(flag, level.value());
     return true;
 }

@@ -310,10 +310,10 @@ build options of an existing build with `ccmake build`.
 If the code is behaving strangely, take a look in the `debug.log` file in the data directory;
 error and debugging messages are written there.
 
-Debug logging can be enabled on startup with the `-debug` and `-loglevel`
+Debug logging can be enabled on startup with the `-debug` and `-trace`
 configuration options and toggled while bitcoind is running with the `logging`
 RPC.  For instance, launching bitcoind with `-debug` or `-debug=1` will turn on
-all log categories and `-loglevel=trace` will turn on all log severity levels.
+all log categories, and `-trace` or `-trace=1` will turn on full trace debugging.
 
 The Qt code routes `qDebug()` output to `debug.log` under category "qt": run with `-debug=qt`
 to see it.
@@ -749,9 +749,8 @@ logging messages. They should be used as follows:
 - `LogTrace(BCLog::CATEGORY, fmt, params...)` should be used in place of
   `LogDebug` for log messages that would be unusable on a production
   system, e.g. due to being too noisy in normal use, or too resource
-  intensive to process. These will be logged if the startup
-  options `-debug=category -loglevel=category:trace` or `-debug=1
-  -loglevel=trace` are selected.
+  intensive to process. These will be logged if the startup options
+  `-trace=category` or `-trace=1` are selected.
 
 Note that the format strings and parameters of `LogDebug` and `LogTrace`
 are only evaluated if the logging category is enabled, so you must be
