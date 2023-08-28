@@ -1475,10 +1475,32 @@ void CWallet::blockConnected(const interfaces::BlockInfo& block)
     // Uses chain max time and twice the grace period to adjust time for block time variability.
     if (block.chain_time_max < m_birth_time.load() - (TIMESTAMP_WINDOW * 2)) return;
 
+    // Retrieve the undo data from disk
+    // Although BlockInfo has a field for the undo data, it actually is not provided by blockConnected,
+    // so we need to pull it up from disk.
+    // Since blocks with only one tx do not have any relevant undo data, we can avoid unnecessary disk I/O
+    // by skipping this step for those blocks.
+    CBlockUndo block_undo;
+    if (block.data->vtx.size() > 0) {
+        chain().findBlock(block.hash, FoundBlock().undoData(block_undo));
+    }
+
     // Scan block
     for (size_t index = 0; index < block.data->vtx.size(); index++) {
-        SyncTransaction(block.data->vtx[index], TxStateConfirmed{block.hash, block.height, static_cast<int>(index)});
-        transactionRemovedFromMempool(block.data->vtx[index], MemPoolRemovalReason::BLOCK);
+        CTransactionRef tx = block.data->vtx.at(index);
+
+        std::map<COutPoint, Coin> spent_coins;
+        if (index > 0 && Assume(index - 1 < block_undo.vtxundo.size())) {
+            // Retrieve the undo data for this tx and build the spent coins map
+            const CTxUndo& tx_undo = block_undo.vtxundo.at(index - 1);
+            for (size_t i = 0; i < tx_undo.vprevout.size(); ++i) {
+                spent_coins.emplace(tx->vin.at(i).prevout, tx_undo.vprevout.at(i));
+            }
+        }
+
+        // Sync tx with wallet
+        SyncTransaction(tx, TxStateConfirmed{block.hash, block.height, static_cast<int>(index)}, spent_coins);
+        transactionRemovedFromMempool(tx, MemPoolRemovalReason::BLOCK);
     }
 }
 
@@ -1903,7 +1925,8 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
         if (fetch_block) {
             // Read block data
             CBlock block;
-            chain().findBlock(block_hash, FoundBlock().data(block));
+            CBlockUndo block_undo;
+            chain().findBlock(block_hash, FoundBlock().data(block).undoData(block_undo));
 
             if (!block.IsNull()) {
                 LOCK(cs_wallet);
@@ -1915,7 +1938,19 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                     break;
                 }
                 for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
-                    SyncTransaction(block.vtx[posInBlock], TxStateConfirmed{block_hash, block_height, static_cast<int>(posInBlock)}, {}, fUpdate, /*rescanning_old_block=*/true);
+                    CTransactionRef tx = block.vtx.at(posInBlock);
+
+                    std::map<COutPoint, Coin> spent_coins;
+                    if (posInBlock > 0) {
+                        // Retrieve the undo data for this tx and build the spent coins map
+                        const CTxUndo& tx_undo = block_undo.vtxundo.at(posInBlock - 1);
+                        for (size_t i = 0; i < tx_undo.vprevout.size(); ++i) {
+                            spent_coins.emplace(tx->vin.at(i).prevout, tx_undo.vprevout.at(i));
+                        }
+                    }
+
+                    // Sync tx with wallet
+                    SyncTransaction(tx, TxStateConfirmed{block_hash, block_height, static_cast<int>(posInBlock)}, spent_coins, fUpdate, /*rescanning_old_block=*/true);
                 }
                 // scan succeeded, record block as most recent successfully scanned
                 result.last_scanned_block = block_hash;
