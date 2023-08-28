@@ -33,7 +33,8 @@ BOOST_FIXTURE_TEST_SUITE(logging_tests, BasicTestingSetup)
 
 static void ResetLogger()
 {
-    LogInstance().SetLogLevel(BCLog::DEFAULT_LOG_LEVEL);
+    LogInstance().SetRateLimiting(nullptr);
+    LogInstance().SetLogLevel(BCLog::Level::Debug);
     LogInstance().SetCategoryLogLevel({});
 }
 
@@ -79,10 +80,7 @@ struct LogSetup : public BasicTestingSetup {
         // Prevent tests from failing when the line number of the logs changes.
         LogInstance().m_log_sourcelocations = false;
 
-        LogInstance().SetLogLevel(BCLog::Level::Debug);
-        LogInstance().DisableCategory(BCLog::LogFlags::ALL);
-        LogInstance().SetCategoryLogLevel({});
-        LogInstance().SetRateLimiting(nullptr);
+        ResetLogger();
     }
 
     ~LogSetup()
@@ -230,54 +228,54 @@ BOOST_FIXTURE_TEST_CASE(logging_SeverityLevels, LogSetup)
 
 BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
 {
-    // Set global log level
+    // No categories traced
     {
         ResetLogger();
         ArgsManager args;
-        args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-        const char* argv_test[] = {"bitcoind", "-loglevel=debug"};
+        args.AddArg("-trace", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+        const char* argv_test[] = {"bitcoind"};
         std::string err;
-        BOOST_REQUIRE(args.ParseParameters(2, argv_test, err));
+        BOOST_REQUIRE(args.ParseParameters(1, argv_test, err));
 
-        auto result = init::SetLoggingLevel(args);
+        auto result = init::SetLoggingCategories(args);
         BOOST_REQUIRE(result);
         BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Debug);
     }
 
-    // Set category-specific log level
+    // All traced categories
     {
         ResetLogger();
         ArgsManager args;
-        args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-        const char* argv_test[] = {"bitcoind", "-loglevel=net:trace"};
+        args.AddArg("-trace", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+        const char* argv_test[] = {"bitcoind", "-trace=1"};
         std::string err;
         BOOST_REQUIRE(args.ParseParameters(2, argv_test, err));
 
-        auto result = init::SetLoggingLevel(args);
+        auto result = init::SetLoggingCategories(args);
         BOOST_REQUIRE(result);
-        BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::DEFAULT_LOG_LEVEL);
+
+        BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Trace);
 
         const auto& category_levels{LogInstance().CategoryLevels()};
-        const auto net_it{category_levels.find(BCLog::LogFlags::NET)};
-        BOOST_REQUIRE(net_it != category_levels.end());
-        BOOST_CHECK_EQUAL(net_it->second, BCLog::Level::Trace);
+        BOOST_CHECK_EQUAL(category_levels.size(), 0);
     }
 
-    // Set both global log level and category-specific log level
+    // Specific traced categories
     {
         ResetLogger();
         ArgsManager args;
-        args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-        const char* argv_test[] = {"bitcoind", "-loglevel=debug", "-loglevel=net:trace", "-loglevel=http:info"};
+        args.AddArg("-debug", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+        args.AddArg("-trace", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+        const char* argv_test[] = {"bitcoind", "-trace=net", "-trace=http", "-debug=mempool"};
         std::string err;
         BOOST_REQUIRE(args.ParseParameters(4, argv_test, err));
 
-        auto result = init::SetLoggingLevel(args);
+        auto result = init::SetLoggingCategories(args);
         BOOST_REQUIRE(result);
         BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Debug);
 
         const auto& category_levels{LogInstance().CategoryLevels()};
-        BOOST_CHECK_EQUAL(category_levels.size(), 2);
+        BOOST_CHECK_EQUAL(category_levels.size(), 3);
 
         const auto net_it{category_levels.find(BCLog::LogFlags::NET)};
         BOOST_CHECK(net_it != category_levels.end());
@@ -285,7 +283,11 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
 
         const auto http_it{category_levels.find(BCLog::LogFlags::HTTP)};
         BOOST_CHECK(http_it != category_levels.end());
-        BOOST_CHECK_EQUAL(http_it->second, BCLog::Level::Info);
+        BOOST_CHECK_EQUAL(http_it->second, BCLog::Level::Trace);
+
+        const auto mempool_it{category_levels.find(BCLog::LogFlags::MEMPOOL)};
+        BOOST_CHECK(mempool_it != category_levels.end());
+        BOOST_CHECK_EQUAL(mempool_it->second, BCLog::Level::Debug);
     }
 }
 
@@ -448,6 +450,7 @@ BOOST_FIXTURE_TEST_CASE(logging_filesize_rate_limit, LogSetup)
     LogInstance().m_log_timestamps = false;
     LogInstance().m_log_sourcelocations = false;
     LogInstance().m_log_threadnames = false;
+    LogInstance().DisableCategory(BCLog::LogFlags::ALL);
     LogInstance().EnableCategory(BCLog::LogFlags::HTTP);
 
     constexpr int64_t line_length{1024};
