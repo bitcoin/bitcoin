@@ -169,7 +169,10 @@ class TestNode():
             self.args.append("-logthreadnames")
         if self.version_is_at_least(219900):
             self.args.append("-logsourcelocations")
-        if self.version_is_at_least(239000):
+
+        if self.version_is_at_least(319000):
+            self.args.append("-trace")
+        elif self.version_is_at_least(239000):
             self.args.append("-loglevel=trace")
         if self.version_is_at_least(290100):
             self.args.append("-nologratelimit")
