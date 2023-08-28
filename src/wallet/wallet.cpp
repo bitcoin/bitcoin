@@ -1415,7 +1415,7 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& sta
     MarkInputsDirty(ptx);
 }
 
-void CWallet::transactionAddedToMempool(const CTransactionRef& tx) {
+void CWallet::transactionAddedToMempool(const CTransactionRef& tx, const std::map<COutPoint, Coin>& spent_coins) {
     LOCK(cs_wallet);
     SyncTransaction(tx, TxStateInMempool{});
 

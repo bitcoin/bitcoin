@@ -962,7 +962,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
 
     mtx.vin.clear();
     mtx.vin.push_back(CTxIn(tx_id_to_spend, 0));
-    wallet.transactionAddedToMempool(MakeTransactionRef(mtx));
+    wallet.transactionAddedToMempool(MakeTransactionRef(mtx), {});
     const uint256& good_tx_id = mtx.GetHash();
 
     {
@@ -983,7 +983,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
     GetMockableDatabase(wallet).m_pass = false;
     mtx.vin.clear();
     mtx.vin.push_back(CTxIn(good_tx_id, 0));
-    BOOST_CHECK_EXCEPTION(wallet.transactionAddedToMempool(MakeTransactionRef(mtx)),
+    BOOST_CHECK_EXCEPTION(wallet.transactionAddedToMempool(MakeTransactionRef(mtx), {}),
                           std::runtime_error,
                           HasReason("DB error adding transaction to wallet, write failed"));
 }
