@@ -4663,8 +4663,13 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         int64_t nNow = GetTimeMicros();
         auto current_time = GetTime<std::chrono::microseconds>();
 
-        if (pto->IsAddrRelayPeer() && !m_chainman.ActiveChainstate().IsInitialBlockDownload() && pto->m_next_local_addr_send < current_time) {
-            AdvertiseLocal(pto);
+        if (fListen && pto->IsAddrRelayPeer() &&
+            !m_chainman.ActiveChainstate().IsInitialBlockDownload() &&
+            pto->m_next_local_addr_send < current_time) {
+            if (std::optional<CAddress> local_addr = GetLocalAddrForPeer(pto)) {
+                FastRandomContext insecure_rand;
+                pto->PushAddress(*local_addr, insecure_rand);
+            }
             pto->m_next_local_addr_send = PoissonNextSend(current_time, AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL);
         }
 

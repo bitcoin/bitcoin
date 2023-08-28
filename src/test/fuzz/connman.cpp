@@ -23,6 +23,7 @@ void initialize_connman()
 FUZZ_TARGET_INIT(connman, initialize_connman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
     CAddrMan addrman;
     CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman};
     CNetAddr random_netaddr;

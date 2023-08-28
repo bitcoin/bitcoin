@@ -68,7 +68,7 @@ void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO
     }
     CNode& p2p_node = *ConsumeNodeAsUniquePtr(fuzzed_data_provider).release();
 
-    const bool successfully_connected{true};
+    const bool successfully_connected{fuzzed_data_provider.ConsumeBool()};
     p2p_node.fSuccessfullyConnected = successfully_connected;
     connman.AddTestNode(p2p_node);
     g_setup->m_node.peerman->InitializeNode(&p2p_node);
