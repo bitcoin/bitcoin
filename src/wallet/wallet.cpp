@@ -3585,6 +3585,15 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
         master_key.SetSeed(seed_key);
 
         SetupDescriptorScriptPubKeyMans(master_key);
+
+        if (IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENTS)) {
+            // Also setup a SilentPaymentsSPKM
+            auto sp_spkm = std::unique_ptr<SilentPaymentsSPKM>(new SilentPaymentsSPKM(*this, m_keypool_size, master_key));
+            uint256 id = sp_spkm->GetID();
+            AddScriptPubKeyMan(id, std::move(sp_spkm));
+            AddActiveScriptPubKeyMan(id, OutputType::SILENT_PAYMENT, /*internal=*/false);
+            AddActiveScriptPubKeyMan(id, OutputType::SILENT_PAYMENT, /*internal=*/true);
+        }
     } else {
         ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
 

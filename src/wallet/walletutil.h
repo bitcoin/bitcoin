@@ -75,6 +75,9 @@ enum WalletFlags : uint64_t {
 
     //! Indicates that the wallet needs an external signer
     WALLET_FLAG_EXTERNAL_SIGNER = (1ULL << 35),
+
+    //! Indicate that this wallet supports and has a SilentPaymentsSPKM
+    WALLET_FLAG_SILENT_PAYMENTS = (1ULL << 36),
 };
 
 //! Get the path of the wallet directory.
