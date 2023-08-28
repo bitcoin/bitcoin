@@ -347,6 +347,7 @@ static RPCHelpMan createwallet()
                                                                        " support for creating and opening legacy wallets will be removed in the future."},
             {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
             {"external_signer", RPCArg::Type::BOOL, RPCArg::Default{false}, "Use an external signer such as a hardware wallet. Requires -signer to be configured. Wallet creation will fail if keys cannot be fetched. Requires disable_private_keys and descriptors set to true."},
+            {"silent_payments", RPCArg::Type::BOOL, RPCArg::Default{false}, "Enable creating and receiving with a silent payments address. Will disable fast rescans with block filters"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -408,6 +409,13 @@ static RPCHelpMan createwallet()
         throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without bdb support (required for legacy wallets)");
     }
 #endif
+
+    if (self.Arg<bool>(8)) {
+        if (!(flags & WALLET_FLAG_DESCRIPTORS)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Wallet with silent payments must also be a descriptor wallet");
+        }
+        flags |= WALLET_FLAG_SILENT_PAYMENTS;
+    }
 
     DatabaseOptions options;
     DatabaseStatus status;
