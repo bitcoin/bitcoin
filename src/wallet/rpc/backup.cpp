@@ -1572,6 +1572,10 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             if (!w_desc.descriptor->GetOutputType()) {
                 warnings.push_back("Unknown output type, cannot set descriptor to active.");
             } else {
+                // If this spkm is set as active for the other internal-ness, deactivate it first
+                if (wallet.GetScriptPubKeyMan(*w_desc.descriptor->GetOutputType(), !internal) == spk_manager) {
+                    wallet.DeactivateScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), !internal);
+                }
                 wallet.AddActiveScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), internal);
             }
         } else {
