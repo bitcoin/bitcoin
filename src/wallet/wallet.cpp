@@ -649,9 +649,11 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         // must get current HD chain before EncryptKeys
         CHDChain hdChainCurrent;
 
-        // GetHDChain exist only at legacy.... how to validate it? just do static cast? we don't have any other type yet so may be ok temporary!
-        if (auto spk_man = GetLegacyScriptPubKeyMan()) {
-            spk_man->GetHDChain(hdChainCurrent);
+        for (const auto& spk_man_pair : m_spk_managers) {
+            auto spk_man = spk_man_pair.second.get();
+            LegacyScriptPubKeyMan *spk_man_legacy = dynamic_cast<LegacyScriptPubKeyMan*>(spk_man);
+            if (spk_man_legacy != nullptr) spk_man_legacy->GetHDChain(hdChainCurrent);
+
             if (!spk_man->Encrypt(_vMasterKey, encrypted_batch)) {
                 encrypted_batch->TxnAbort();
                 delete encrypted_batch;
@@ -661,10 +663,10 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
                 assert(false);
             }
             if (!hdChainCurrent.IsNull()) {
-                assert(spk_man->EncryptHDChain(_vMasterKey));
+                assert(spk_man_legacy->EncryptHDChain(_vMasterKey));
 
                 CHDChain hdChainCrypted;
-                assert(spk_man->GetHDChain(hdChainCrypted));
+                assert(spk_man_legacy->GetHDChain(hdChainCrypted));
 
                 DBG(
                     tfm::format(std::cout, "EncryptWallet -- current seed: '%s'\n", HexStr(hdChainCurrent.GetSeed()));
@@ -675,7 +677,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
                 assert(hdChainCurrent.GetID() == hdChainCrypted.GetID());
                 assert(hdChainCurrent.GetSeedHash() != hdChainCrypted.GetSeedHash());
 
-                assert(spk_man->SetCryptedHDChain(*encrypted_batch, hdChainCrypted, false));
+                assert(spk_man_legacy->SetCryptedHDChain(*encrypted_batch, hdChainCrypted, false));
             }
         }
 
@@ -4032,6 +4034,17 @@ bool CWallet::GetNewChangeDestination(CTxDestination& dest, std::string& error)
 
     reservedest.KeepDestination();
     return true;
+}
+
+int64_t CWallet::GetOldestKeyPoolTime() const
+{
+    LOCK(cs_wallet);
+    int64_t oldestKey = std::numeric_limits<int64_t>::max();
+    for (const auto& spk_man_pair : m_spk_managers) {
+        oldestKey = std::min(oldestKey, spk_man_pair.second->GetOldestKeyPoolTime());
+    }
+
+    return oldestKey;
 }
 
 void CWallet::MarkDestinationsDirty(const std::set<CTxDestination>& destinations) {

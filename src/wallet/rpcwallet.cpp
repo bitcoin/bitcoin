@@ -258,10 +258,6 @@ UniValue getnewaddress(const JSONRPCRequest& request)
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
 
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
-    }
     LOCK(pwallet->cs_wallet);
 
     if (!pwallet->CanGetAddresses()) {
@@ -2560,9 +2556,9 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
     if (spk_man) {
         obj.pushKV("timefirstkey", spk_man->GetTimeFirstKey());
         obj.pushKV("keypoololdest", spk_man->GetOldestKeyPoolTime());
-        obj.pushKV("keypoolsize",   (int64_t)spk_man->KeypoolCountExternalKeys());
-        obj.pushKV("keypoolsize_hd_internal",   (int64_t)(spk_man->KeypoolCountInternalKeys()));
     }
+    obj.pushKV("keypoolsize",   (int64_t)pwallet->KeypoolCountExternalKeys());
+    obj.pushKV("keypoolsize_hd_internal",   (int64_t)(pwallet->KeypoolCountInternalKeys()));
     obj.pushKV("keys_left",     pwallet->nKeysLeftSinceAutoBackup);
     if (pwallet->IsCrypted())
         obj.pushKV("unlocked_until", pwallet->nRelockTime);
