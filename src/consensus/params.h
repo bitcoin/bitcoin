@@ -38,20 +38,18 @@ enum DeploymentPos : uint16_t {
 constexpr bool ValidDeployment(DeploymentPos dep) { return dep < MAX_VERSION_BITS_DEPLOYMENTS; }
 
 /**
- * Struct for each individual consensus rule change using BIP9.
+ * Struct for each individual consensus rule change
  */
-struct BIP9Deployment {
-    /** Bit position to select the particular bit in nVersion. */
-    int bit{28};
+struct HereticalDeployment
+{
+    /** nVersion values used to signal activation */
+    int32_t signal_activate = -1;
+    /** nVersion values used to signal abandonment */
+    int32_t signal_abandon = -2;
     /** Start MedianTime for version bits miner confirmation. Can be a date in the past */
     int64_t nStartTime{NEVER_ACTIVE};
     /** Timeout/expiry MedianTime for the deployment attempt. */
     int64_t nTimeout{NEVER_ACTIVE};
-    /** If lock in occurs, delay activation until at least this block
-     *  height.  Note that activation will only occur on a retarget
-     *  boundary.
-     */
-    int min_activation_height{0};
 
     /** Constant for nTimeout very far in the future. */
     static constexpr int64_t NO_TIMEOUT = std::numeric_limits<int64_t>::max();
@@ -106,7 +104,7 @@ struct Params {
      */
     uint32_t nRuleChangeActivationThreshold;
     uint32_t nMinerConfirmationWindow;
-    BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
+    HereticalDeployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
     /** Proof of work parameters */
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;

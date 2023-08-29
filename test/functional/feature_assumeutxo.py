@@ -58,7 +58,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.num_nodes = 3
         self.rpc_timeout = 120
         self.extra_args = [
-            [],
+            ["-blockversion=805306368"], # blocks must be generated deterministically, so must signal for bip9 TESTDUMMY activation
             ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1"],
             ["-persistmempool=0","-txindex=1", "-blockfilterindex=1", "-coinstatsindex=1"],
         ]

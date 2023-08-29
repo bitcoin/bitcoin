@@ -1153,7 +1153,8 @@ static void SoftForkDescPushBack(const CBlockIndex* blockindex, UniValue& softfo
         case ThresholdState::STARTED: return "started";
         case ThresholdState::LOCKED_IN: return "locked_in";
         case ThresholdState::ACTIVE: return "active";
-        case ThresholdState::FAILED: return "failed";
+        case ThresholdState::DEACTIVATING: return "deactivating";
+        case ThresholdState::ABANDONED: return "abandoned";
         }
         return "invalid";
     };
@@ -1163,50 +1164,47 @@ static void SoftForkDescPushBack(const CBlockIndex* blockindex, UniValue& softfo
     const ThresholdState next_state = chainman.m_versionbitscache.State(blockindex, chainman.GetConsensus(), id);
     const ThresholdState current_state = chainman.m_versionbitscache.State(blockindex->pprev, chainman.GetConsensus(), id);
 
-    const bool has_signal = (ThresholdState::STARTED == current_state || ThresholdState::LOCKED_IN == current_state);
-
-    // BIP9 parameters
-    if (has_signal) {
-        bip9.pushKV("bit", chainman.GetConsensus().vDeployments[id].bit);
+    // deployment parameters
+    int year = -1, number = -1, revision = -1;
+    if (chainman.m_versionbitscache.BINANA(year, number, revision, chainman.GetConsensus(), id)) {
+        bip9.pushKV("binana-id", strprintf("BIN-%04d-%04d-%03d", year, number, revision));
     }
     bip9.pushKV("start_time", chainman.GetConsensus().vDeployments[id].nStartTime);
     bip9.pushKV("timeout", chainman.GetConsensus().vDeployments[id].nTimeout);
-    bip9.pushKV("min_activation_height", chainman.GetConsensus().vDeployments[id].min_activation_height);
+    bip9.pushKV("period", (int64_t)chainman.GetConsensus().nMinerConfirmationWindow);
 
     // BIP9 status
+    const auto since{chainman.m_versionbitscache.StateSinceHeight(blockindex->pprev, chainman.GetConsensus(), id)};
     bip9.pushKV("status", get_state_name(current_state));
-    bip9.pushKV("since", chainman.m_versionbitscache.StateSinceHeight(blockindex->pprev, chainman.GetConsensus(), id));
+    bip9.pushKV("since", since);
     bip9.pushKV("status_next", get_state_name(next_state));
 
-    // BIP9 signalling status, if applicable
-    if (has_signal) {
-        UniValue statsUV(UniValue::VOBJ);
-        std::vector<bool> signals;
-        BIP9Stats statsStruct = chainman.m_versionbitscache.Statistics(blockindex, chainman.GetConsensus(), id, &signals);
-        statsUV.pushKV("period", statsStruct.period);
-        statsUV.pushKV("elapsed", statsStruct.elapsed);
-        statsUV.pushKV("count", statsStruct.count);
-        if (ThresholdState::LOCKED_IN != current_state) {
-            statsUV.pushKV("threshold", statsStruct.threshold);
-            statsUV.pushKV("possible", statsStruct.possible);
+    // If signalling is relevant, report what versions will signal
+    if (since == 0 && current_state != ThresholdState::DEFINED) {
+        // configured as always/never active, so signalling is irrelevant
+    } else {
+        switch (current_state) {
+        case ThresholdState::DEFINED:
+        case ThresholdState::STARTED:
+            bip9.pushKV("signal_activate", strprintf("%08x", chainman.GetConsensus().vDeployments[id].signal_activate));
+            [[fallthrough]];
+        case ThresholdState::LOCKED_IN:
+        case ThresholdState::ACTIVE:
+            bip9.pushKV("signal_abandon", strprintf("%08x", chainman.GetConsensus().vDeployments[id].signal_abandon));
+            break;
+        case ThresholdState::DEACTIVATING:
+        case ThresholdState::ABANDONED:
+            break;
         }
-        bip9.pushKV("statistics", statsUV);
-
-        std::string sig;
-        sig.reserve(signals.size());
-        for (const bool s : signals) {
-            sig.push_back(s ? '#' : '-');
-        }
-        bip9.pushKV("signalling", sig);
     }
 
     UniValue rv(UniValue::VOBJ);
-    rv.pushKV("type", "bip9");
+    rv.pushKV("type", "heretical");
     if (ThresholdState::ACTIVE == next_state) {
         rv.pushKV("height", chainman.m_versionbitscache.StateSinceHeight(blockindex, chainman.GetConsensus(), id));
     }
-    rv.pushKV("active", ThresholdState::ACTIVE == next_state);
-    rv.pushKV("bip9", bip9);
+    rv.pushKV("active", ThresholdState::ACTIVE == next_state || ThresholdState::DEACTIVATING == next_state);
+    rv.pushKV("heretical", bip9);
 
     softforks.pushKV(DeploymentName(id), rv);
 }
@@ -1281,27 +1279,20 @@ RPCHelpMan getblockchaininfo()
 
 namespace {
 const std::vector<RPCResult> RPCHelpForDeployment{
-    {RPCResult::Type::STR, "type", "one of \"buried\", \"bip9\""},
-    {RPCResult::Type::NUM, "height", /*optional=*/true, "height of the first block which the rules are or will be enforced (only for \"buried\" type, or \"bip9\" type with \"active\" status)"},
+    {RPCResult::Type::STR, "type", "one of \"buried\", \"heretical\""},
+    {RPCResult::Type::NUM, "height", /*optional=*/true, "height of the first block which the rules are or will be enforced (only for \"buried\" type, or \"heretical\" type with \"active\" status)"},
     {RPCResult::Type::BOOL, "active", "true if the rules are enforced for the mempool and the next block"},
-    {RPCResult::Type::OBJ, "bip9", /*optional=*/true, "status of bip9 softforks (only for \"bip9\" type)",
+    {RPCResult::Type::OBJ, "heretical", /*optional=*/true, "status of heretical softforks (only for \"heretical\" type)",
     {
-        {RPCResult::Type::NUM, "bit", /*optional=*/true, "the bit (0-28) in the block version field used to signal this softfork (only for \"started\" and \"locked_in\" status)"},
+        {RPCResult::Type::STR, "binana-id", /*optional=*/true, "the BINANA id for this soft fork"},
         {RPCResult::Type::NUM_TIME, "start_time", "the minimum median time past of a block at which the bit gains its meaning"},
         {RPCResult::Type::NUM_TIME, "timeout", "the median time past of a block at which the deployment is considered failed if not yet locked in"},
-        {RPCResult::Type::NUM, "min_activation_height", "minimum height of blocks for which the rules may be enforced"},
+        {RPCResult::Type::NUM, "period", "the length in blocks of each signalling period"},
         {RPCResult::Type::STR, "status", "status of deployment at specified block (one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\")"},
         {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
         {RPCResult::Type::STR, "status_next", "status of deployment at the next block"},
-        {RPCResult::Type::OBJ, "statistics", /*optional=*/true, "numeric statistics about signalling for a softfork (only for \"started\" and \"locked_in\" status)",
-        {
-            {RPCResult::Type::NUM, "period", "the length in blocks of the signalling period"},
-            {RPCResult::Type::NUM, "threshold", /*optional=*/true, "the number of blocks with the version bit set required to activate the feature (only for \"started\" status)"},
-            {RPCResult::Type::NUM, "elapsed", "the number of blocks elapsed since the beginning of the current period"},
-            {RPCResult::Type::NUM, "count", "the number of blocks with the version bit set in the current period"},
-            {RPCResult::Type::BOOL, "possible", /*optional=*/true, "returns false if there are not enough blocks left in this period to pass activation threshold (only for \"started\" status)"},
-        }},
-        {RPCResult::Type::STR, "signalling", /*optional=*/true, "indicates blocks that signalled with a # and blocks that did not with a -"},
+        {RPCResult::Type::STR_HEX, "signal_activate", /*optional=*/true, "version number to trigger deployment activation"},
+        {RPCResult::Type::STR_HEX, "signal_abandon", /*optional=*/true, "version number to trigger deployment abandonment"},
     }},
 };
 

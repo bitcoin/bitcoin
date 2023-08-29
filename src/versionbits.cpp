@@ -2,26 +2,48 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <consensus/params.h>
-#include <util/check.h>
 #include <versionbits.h>
 
-ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const
+#include <kernel/chainparams.h>
+#include <consensus/params.h>
+#include <deploymentinfo.h>
+#include <util/check.h>
+
+bool AbstractThresholdConditionChecker::BINANA(int& year, int& number, int& revision) const
 {
-    int nPeriod = Period(params);
-    int nThreshold = Threshold(params);
-    int min_activation_height = MinActivationHeight(params);
-    int64_t nTimeStart = BeginTime(params);
-    int64_t nTimeTimeout = EndTime(params);
+    const int32_t activate = ActivateVersion();
+    const int32_t abandon = AbandonVersion();
+
+    if ((activate & ~VERSIONBITS_TOP_MASK) != (abandon & ~VERSIONBITS_TOP_MASK)) {
+        return false;
+    }
+    if ((activate & 0x18000000) != 0) return false;
+    if ((activate & VERSIONBITS_TOP_MASK) != VERSIONBITS_TOP_ACTIVE) return false;
+    if ((abandon & VERSIONBITS_TOP_MASK) != VERSIONBITS_TOP_ABANDON) return false;
+
+    year = ((activate & 0x07c00000) >> 22) + 2016;
+    number = (activate & 0x003fff00) >> 8;
+    revision = (activate & 0x000000ff);
+
+    return true;
+}
+
+ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, ThresholdConditionCache& cache) const
+{
+    int nPeriod = Period();
+    int64_t nTimeStart = BeginTime();
+    int64_t nTimeTimeout = EndTime();
+    const int32_t activate = ActivateVersion();
+    const int32_t abandon = AbandonVersion();
 
     // Check if this deployment is always active.
-    if (nTimeStart == Consensus::BIP9Deployment::ALWAYS_ACTIVE) {
+    if (nTimeStart == Consensus::HereticalDeployment::ALWAYS_ACTIVE) {
         return ThresholdState::ACTIVE;
     }
 
     // Check if this deployment is never active.
-    if (nTimeStart == Consensus::BIP9Deployment::NEVER_ACTIVE) {
-        return ThresholdState::FAILED;
+    if (nTimeStart == Consensus::HereticalDeployment::NEVER_ACTIVE) {
+        return ThresholdState::ABANDONED;
     }
 
     // A block's state is always the same as that of the first of its period, so it is computed based on a pindexPrev whose height equals a multiple of nPeriod - 1.
@@ -37,7 +59,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
             cache[pindexPrev] = ThresholdState::DEFINED;
             break;
         }
-        if (pindexPrev->GetMedianTimePast() < nTimeStart) {
+        if (pindexPrev->GetMedianTimePast() < nTimeStart && pindexPrev->GetMedianTimePast() < nTimeTimeout) {
             // Optimization: don't recompute down further, as we know every earlier block will be before the start time
             cache[pindexPrev] = ThresholdState::DEFINED;
             break;
@@ -56,42 +78,63 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
         pindexPrev = vToCompute.back();
         vToCompute.pop_back();
 
+        bool finished = pindexPrev->GetMedianTimePast() >= nTimeTimeout;
         switch (state) {
-            case ThresholdState::DEFINED: {
-                if (pindexPrev->GetMedianTimePast() >= nTimeStart) {
+            case ThresholdState::DEFINED:
+                if (finished) {
+                    stateNext = ThresholdState::ABANDONED;
+                } else if (pindexPrev->GetMedianTimePast() >= nTimeStart) {
                     stateNext = ThresholdState::STARTED;
                 }
                 break;
-            }
             case ThresholdState::STARTED: {
-                // We need to count
-                const CBlockIndex* pindexCount = pindexPrev;
-                int count = 0;
-                for (int i = 0; i < nPeriod; i++) {
-                    if (Condition(pindexCount, params)) {
-                        count++;
+                if (finished) {
+                    stateNext = ThresholdState::ABANDONED;
+                    break;
+                }
+                // We need to look for the signal
+                const CBlockIndex* pindexCheck = pindexPrev;
+                bool sig_active = false;
+                bool sig_abandon = false;
+                for (int i = 0; i < nPeriod; ++i) {
+                    if (pindexCheck->nVersion == abandon) {
+                        sig_abandon = true;
+                    } else if (pindexCheck->nVersion == activate) {
+                        sig_active = true;
                     }
-                    pindexCount = pindexCount->pprev;
+                    pindexCheck = pindexCheck->pprev;
                 }
-                if (count >= nThreshold) {
+                if (sig_abandon) {
+                    stateNext = ThresholdState::ABANDONED;
+                } else if (sig_active) {
                     stateNext = ThresholdState::LOCKED_IN;
-                } else if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
-                    stateNext = ThresholdState::FAILED;
                 }
                 break;
             }
-            case ThresholdState::LOCKED_IN: {
-                // Progresses into ACTIVE provided activation height will have been reached.
-                if (pindexPrev->nHeight + 1 >= min_activation_height) {
-                    stateNext = ThresholdState::ACTIVE;
-                }
-                break;
-            }
-            case ThresholdState::FAILED:
+            case ThresholdState::LOCKED_IN:
+                stateNext = ThresholdState::ACTIVE;
+                [[fallthrough]];
             case ThresholdState::ACTIVE: {
-                // Nothing happens, these are terminal states.
+                if (finished) {
+                    stateNext = ThresholdState::DEACTIVATING;
+                    break;
+                }
+                const CBlockIndex* pindexCheck = pindexPrev;
+                for (int i = 0; i < nPeriod; ++i) {
+                    if (pindexCheck->nVersion == abandon) {
+                        stateNext = ThresholdState::DEACTIVATING;
+                        break;
+                    }
+                    pindexCheck = pindexCheck->pprev;
+                }
                 break;
             }
+            case ThresholdState::DEACTIVATING:
+                stateNext = ThresholdState::ABANDONED;
+                break;
+            case ThresholdState::ABANDONED:
+                // Nothing happens, terminal state
+                break;
         }
         cache[pindexPrev] = state = stateNext;
     }
@@ -99,59 +142,21 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     return state;
 }
 
-BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params, std::vector<bool>* signalling_blocks) const
+int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex* pindexPrev, ThresholdConditionCache& cache) const
 {
-    BIP9Stats stats = {};
-
-    stats.period = Period(params);
-    stats.threshold = Threshold(params);
-
-    if (pindex == nullptr) return stats;
-
-    // Find how many blocks are in the current period
-    int blocks_in_period = 1 + (pindex->nHeight % stats.period);
-
-    // Reset signalling_blocks
-    if (signalling_blocks) {
-        signalling_blocks->assign(blocks_in_period, false);
-    }
-
-    // Count from current block to beginning of period
-    int elapsed = 0;
-    int count = 0;
-    const CBlockIndex* currentIndex = pindex;
-    do {
-        ++elapsed;
-        --blocks_in_period;
-        if (Condition(currentIndex, params)) {
-            ++count;
-            if (signalling_blocks) signalling_blocks->at(blocks_in_period) = true;
-        }
-        currentIndex = currentIndex->pprev;
-    } while(blocks_in_period > 0);
-
-    stats.elapsed = elapsed;
-    stats.count = count;
-    stats.possible = (stats.period - stats.threshold ) >= (stats.elapsed - count);
-
-    return stats;
-}
-
-int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const
-{
-    int64_t start_time = BeginTime(params);
-    if (start_time == Consensus::BIP9Deployment::ALWAYS_ACTIVE || start_time == Consensus::BIP9Deployment::NEVER_ACTIVE) {
+    int64_t start_time = BeginTime();
+    if (start_time == Consensus::HereticalDeployment::ALWAYS_ACTIVE || start_time == Consensus::HereticalDeployment::NEVER_ACTIVE) {
         return 0;
     }
 
-    const ThresholdState initialState = GetStateFor(pindexPrev, params, cache);
+    const ThresholdState initialState = GetStateFor(pindexPrev, cache);
 
     // BIP 9 about state DEFINED: "The genesis block is by definition in this state for each deployment."
     if (initialState == ThresholdState::DEFINED) {
         return 0;
     }
 
-    const int nPeriod = Period(params);
+    const int nPeriod = Period();
 
     // A block's state is always the same as that of the first of its period, so it is computed based on a pindexPrev whose height equals a multiple of nPeriod - 1.
     // To ease understanding of the following height calculation, it helps to remember that
@@ -163,7 +168,7 @@ int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex*
 
     const CBlockIndex* previousPeriodParent = pindexPrev->GetAncestor(pindexPrev->nHeight - nPeriod);
 
-    while (previousPeriodParent != nullptr && GetStateFor(previousPeriodParent, params, cache) == initialState) {
+    while (previousPeriodParent != nullptr && GetStateFor(previousPeriodParent, cache) == initialState) {
         pindexPrev = previousPeriodParent;
         previousPeriodParent = pindexPrev->GetAncestor(pindexPrev->nHeight - nPeriod);
     }
@@ -179,23 +184,18 @@ namespace
  */
 class VersionBitsConditionChecker : public AbstractThresholdConditionChecker {
 private:
+    const Consensus::Params& params;
     const Consensus::DeploymentPos id;
 
 protected:
-    int64_t BeginTime(const Consensus::Params& params) const override { return params.vDeployments[id].nStartTime; }
-    int64_t EndTime(const Consensus::Params& params) const override { return params.vDeployments[id].nTimeout; }
-    int MinActivationHeight(const Consensus::Params& params) const override { return params.vDeployments[id].min_activation_height; }
-    int Period(const Consensus::Params& params) const override { return params.nMinerConfirmationWindow; }
-    int Threshold(const Consensus::Params& params) const override { return params.nRuleChangeActivationThreshold; }
-
-    bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override
-    {
-        return (((pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) && (pindex->nVersion & Mask(params)) != 0);
-    }
+    int64_t BeginTime() const override { return params.vDeployments[id].nStartTime; }
+    int64_t EndTime() const override { return params.vDeployments[id].nTimeout; }
+    int Period() const override { return params.nMinerConfirmationWindow; }
+    int32_t ActivateVersion() const override { return params.vDeployments[id].signal_activate; }
+    int32_t AbandonVersion() const override { return params.vDeployments[id].signal_abandon; }
 
 public:
-    explicit VersionBitsConditionChecker(Consensus::DeploymentPos id_) : id(id_) {}
-    uint32_t Mask(const Consensus::Params& params) const { return (uint32_t{1}) << params.vDeployments[id].bit; }
+    explicit VersionBitsConditionChecker(const Consensus::Params& params, Consensus::DeploymentPos id_) : params{params}, id(id_) {}
 };
 
 } // namespace
@@ -203,39 +203,24 @@ public:
 ThresholdState VersionBitsCache::State(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
     LOCK(m_mutex);
-    return VersionBitsConditionChecker(pos).GetStateFor(pindexPrev, params, m_caches[pos]);
-}
-
-BIP9Stats VersionBitsCache::Statistics(const CBlockIndex* pindex, const Consensus::Params& params, Consensus::DeploymentPos pos, std::vector<bool>* signalling_blocks)
-{
-    return VersionBitsConditionChecker(pos).GetStateStatisticsFor(pindex, params, signalling_blocks);
+    return VersionBitsConditionChecker(params, pos).GetStateFor(pindexPrev, m_caches[pos]);
 }
 
 int VersionBitsCache::StateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
     LOCK(m_mutex);
-    return VersionBitsConditionChecker(pos).GetStateSinceHeightFor(pindexPrev, params, m_caches[pos]);
-}
-
-uint32_t VersionBitsCache::Mask(const Consensus::Params& params, Consensus::DeploymentPos pos)
-{
-    return VersionBitsConditionChecker(pos).Mask(params);
+    return VersionBitsConditionChecker(params, pos).GetStateSinceHeightFor(pindexPrev, m_caches[pos]);
 }
 
 int32_t VersionBitsCache::ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
-    LOCK(m_mutex);
     int32_t nVersion = VERSIONBITS_TOP_BITS;
-
-    for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
-        Consensus::DeploymentPos pos = static_cast<Consensus::DeploymentPos>(i);
-        ThresholdState state = VersionBitsConditionChecker(pos).GetStateFor(pindexPrev, params, m_caches[pos]);
-        if (state == ThresholdState::LOCKED_IN || state == ThresholdState::STARTED) {
-            nVersion |= Mask(params, pos);
-        }
-    }
-
     return nVersion;
+}
+
+bool VersionBitsCache::BINANA(int& year, int& number, int& revision, const Consensus::Params& params, Consensus::DeploymentPos pos) const
+{
+    return VersionBitsConditionChecker(params, pos).BINANA(year, number, revision);
 }
 
 void VersionBitsCache::Clear()

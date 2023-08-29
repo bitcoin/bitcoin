@@ -814,7 +814,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     cache_node_dir,
                     chain=self.chain,
                     extra_conf=["bind=127.0.0.1"],
-                    extra_args=['-disablewallet'],
+                    extra_args=['-disablewallet', '-blockversion=4'],
                     rpchost=None,
                     timewait=self.rpc_timeout,
                     timeout_factor=self.options.timeout_factor,

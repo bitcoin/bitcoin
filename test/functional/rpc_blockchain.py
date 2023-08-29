@@ -191,7 +191,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res['prune_target_size'], 576716800)
         assert_greater_than(res['size_on_disk'], 0)
 
-    def check_signalling_deploymentinfo_result(self, gdi_result, height, blockhash, status_next):
+    def check_signalling_deploymentinfo_result(self, gdi_result, height, blockhash):
         assert height >= 144 and height <= 287
 
         assert_equal(gdi_result, {
@@ -206,23 +206,16 @@ class BlockchainTest(BitcoinTestFramework):
             'segwit': {'type': 'buried', 'active': True, 'height': 6},
             'taproot': {'type': 'buried', 'active': True, 'height': 1},
             'testdummy': {
-                'type': 'bip9',
-                'bip9': {
-                    'bit': 28,
+                'type': 'heretical',
+                'heretical': {
                     'start_time': 0,
                     'timeout': 0x7fffffffffffffff,  # testdummy does not have a timeout so is set to the max int64 value
-                    'min_activation_height': 0,
+                    'period': 144,
                     'status': 'started',
-                    'status_next': status_next,
+                    'status_next': 'started',
                     'since': 144,
-                    'statistics': {
-                        'period': 144,
-                        'threshold': 108,
-                        'elapsed': height - 143,
-                        'count': height - 143,
-                        'possible': True,
-                    },
-                    'signalling': '#'*(height-143),
+                    'signal_activate': "30000000",
+                    'signal_abandon': "50000000",
                 },
                 'active': False
             },
@@ -244,15 +237,15 @@ class BlockchainTest(BitcoinTestFramework):
         ])
 
         gbci207 = self.nodes[0].getblockchaininfo()
-        self.check_signalling_deploymentinfo_result(self.nodes[0].getdeploymentinfo(), gbci207["blocks"], gbci207["bestblockhash"], "started")
+        self.check_signalling_deploymentinfo_result(self.nodes[0].getdeploymentinfo(), gbci207["blocks"], gbci207["bestblockhash"])
 
         # block just prior to lock in
         self.generate(self.wallet, 287 - gbci207["blocks"])
         gbci287 = self.nodes[0].getblockchaininfo()
-        self.check_signalling_deploymentinfo_result(self.nodes[0].getdeploymentinfo(), gbci287["blocks"], gbci287["bestblockhash"], "locked_in")
+        self.check_signalling_deploymentinfo_result(self.nodes[0].getdeploymentinfo(), gbci287["blocks"], gbci287["bestblockhash"])
 
         # calling with an explicit hash works
-        self.check_signalling_deploymentinfo_result(self.nodes[0].getdeploymentinfo(gbci207["bestblockhash"]), gbci207["blocks"], gbci207["bestblockhash"], "started")
+        self.check_signalling_deploymentinfo_result(self.nodes[0].getdeploymentinfo(gbci207["bestblockhash"]), gbci207["blocks"], gbci207["bestblockhash"])
 
     def _test_y2106(self):
         self.log.info("Check that block timestamps work until year 2106")
