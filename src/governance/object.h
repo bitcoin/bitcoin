@@ -42,6 +42,7 @@ static constexpr int64_t GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS = 1;
 static constexpr int64_t GOVERNANCE_UPDATE_MIN = 60 * 60;
 static constexpr int64_t GOVERNANCE_DELETION_DELAY = 10 * 60;
 static constexpr int64_t GOVERNANCE_ORPHAN_EXPIRATION_TIME = 10 * 60;
+static constexpr int64_t GOVERNANCE_FUDGE_WINDOW = 60 * 60 * 2;
 
 // FOR SEEN MAP ARRAYS - GOVERNANCE OBJECTS AND VOTES
 enum class SeenObjectStatus {
@@ -272,6 +273,7 @@ public:
     void Relay(CConnman& connman) const;
 
     uint256 GetHash() const;
+    uint256 GetDataHash() const;
 
     // GET VOTE COUNT FOR SIGNAL
 

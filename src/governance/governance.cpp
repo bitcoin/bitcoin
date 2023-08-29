@@ -12,6 +12,7 @@
 #include <governance/classes.h>
 #include <governance/validators.h>
 #include <masternode/meta.h>
+#include <masternode/node.h>
 #include <masternode/sync.h>
 #include <net_processing.h>
 #include <netfulfilledman.h>
@@ -41,6 +42,7 @@ CGovernanceManager::CGovernanceManager() :
     setRequestedObjects(),
     fRateChecksEnabled(true),
     lastMNListForVotingKeys(std::make_shared<CDeterministicMNList>()),
+    votedFundingYesTriggerHash(std::nullopt),
     cs()
 {
 }
@@ -307,6 +309,10 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 
     // SEND NOTIFICATION TO SCRIPT/ZMQ
     GetMainSignals().NotifyGovernanceObject(std::make_shared<const CGovernanceObject>(govobj));
+
+    if (govobj.GetObjectType() == GovernanceObject::TRIGGER && HasAlreadyVotedFundingTrigger()) {
+        VoteFundingTrigger(govobj.GetHash(), VOTE_OUTCOME_NO, connman);
+    }
 }
 
 void CGovernanceManager::UpdateCachesAndClean()
@@ -428,6 +434,26 @@ CGovernanceObject* CGovernanceManager::FindGovernanceObject(const uint256& nHash
     return nullptr;
 }
 
+bool CGovernanceManager::HasGovernanceObjectByDataHash(const uint256 &nHash)
+{
+    LOCK(cs);
+
+    for (const auto& [unused, object] : mapObjects) {
+        if (object.GetDataHash() == nHash) return true;
+    }
+
+    return false;
+}
+
+void CGovernanceManager::DeleteGovernanceObject(const uint256& nHash)
+{
+    LOCK(cs);
+
+    if (mapObjects.count(nHash)) {
+        mapObjects.erase(nHash);
+    }
+}
+
 std::vector<CGovernanceVote> CGovernanceManager::GetCurrentVotes(const uint256& nParentHash, const COutPoint& mnCollateralOutpointFilter) const
 {
     LOCK(cs);
@@ -497,6 +523,194 @@ struct sortProposalsByVotes {
         return (UintToArith256(left.first->GetCollateralHash()) > UintToArith256(right.first->GetCollateralHash()));
     }
 };
+
+std::optional<CSuperblock> CGovernanceManager::CreateSuperblockCandidate(int nHeight) const
+{
+    if (!fMasternodeMode || fDisableGovernance) return std::nullopt;
+    if (::masternodeSync == nullptr || !::masternodeSync->IsSynced()) return std::nullopt;
+    if (nHeight % Params().GetConsensus().nSuperblockCycle < Params().GetConsensus().nSuperblockCycle - Params().GetConsensus().nSuperblockMaturityWindow) return std::nullopt;
+    if (HasAlreadyVotedFundingTrigger()) return std::nullopt;
+
+    // only vote if we are the payee
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto mn_payees = mnList.GetProjectedMNPayeesAtChainTip();
+    if (mn_payees.empty() || mn_payees.front()->proTxHash != WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash)) return std::nullopt;
+
+    // A proposal is considered passing if (YES votes) >= (Total Weight of Masternodes / 10),
+    // count total valid (ENABLED) masternodes to determine passing threshold.
+    const int nWeightedMnCount = mnList.GetValidWeightedMNsCount();
+    const int nAbsVoteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, nWeightedMnCount / 10);
+
+    // Use std::vector of std::shared_ptr<const CGovernanceObject> because CGovernanceObject doesn't support move operations (needed for sorting the vector later)
+    std::vector<std::shared_ptr<const CGovernanceObject>> approvedProposals;
+
+    for (const auto& [unused, object] : mapObjects) {
+        // Skip all non-proposals objects
+        if (object.GetObjectType() != GovernanceObject::PROPOSAL) continue;
+
+        const int absYesCount = object.GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING);
+        // Skip non-passing proposals
+        if (absYesCount < nAbsVoteReq) continue;
+
+        approvedProposals.emplace_back(std::make_shared<const CGovernanceObject>(object));
+    }
+
+    // Sort approved proposals by absolute Yes votes descending
+    std::sort(approvedProposals.begin(), approvedProposals.end(), [](std::shared_ptr<const CGovernanceObject> a, std::shared_ptr<const CGovernanceObject> b) {
+        const auto a_yes = a->GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING);
+        const auto b_yes = b->GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING);
+        return a_yes == b_yes ? UintToArith256(a->GetHash()) > UintToArith256(b->GetHash()) : a_yes > b_yes;
+    });
+
+    if (approvedProposals.empty()) {
+        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s nHeight:%d empty approvedProposals\n", __func__, nHeight);
+        return std::nullopt;
+    }
+
+    std::vector<CGovernancePayment> payments;
+    int nLastSuperblock;
+    int nNextSuperblock;
+
+    CSuperblock::GetNearestSuperblocksHeights(nHeight, nLastSuperblock, nNextSuperblock);
+    auto SBEpochTime = static_cast<int64_t>(count_seconds(GetTime<std::chrono::seconds>()) + (nNextSuperblock - nHeight) * 2.62 * 60);
+    auto governanceBudget = CSuperblock::GetPaymentsLimit(nNextSuperblock);
+
+    CAmount budgetAllocated{};
+    for (const auto& proposal : approvedProposals) {
+        // Extract payment address and amount from proposal
+        UniValue jproposal = proposal->GetJSONObject();
+
+        CTxDestination dest = DecodeDestination(jproposal["payment_address"].getValStr());
+        if (!IsValidDestination(dest)) continue;
+
+        CAmount nAmount{};
+        try {
+            nAmount = ParsePaymentAmount(jproposal["payment_amount"].getValStr());
+        }
+        catch (const std::runtime_error& e) {
+            LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s nHeight:%d Skipping payment exception:%s\n", __func__,nHeight, e.what());
+            continue;
+        }
+
+        // Construct CGovernancePayment object and make sure it is valid
+        CGovernancePayment payment(dest, nAmount, proposal->GetHash());
+        if (!payment.IsValid()) continue;
+
+        // Skip proposals that are too expensive
+        if (budgetAllocated + payment.nAmount > governanceBudget) continue;
+
+        int64_t windowStart = jproposal["start_epoch"].get_int64() - GOVERNANCE_FUDGE_WINDOW;
+        int64_t windowEnd = jproposal["end_epoch"].get_int64() + GOVERNANCE_FUDGE_WINDOW;
+
+        // Skip proposals if the SB isn't within the proposal time window
+        if (SBEpochTime < windowStart) {
+            LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s nHeight:%d SB:%d windowStart:%d\n", __func__,nHeight, SBEpochTime, windowStart);
+            continue;
+        }
+        if (SBEpochTime > windowEnd) {
+            LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s nHeight:%d SB:%d windowEnd:%d\n", __func__,nHeight, SBEpochTime, windowEnd);
+            continue;
+        }
+
+        // Keep track of total budget allocation
+        budgetAllocated += payment.nAmount;
+
+        // Add the payment
+        payments.push_back(payment);
+    }
+
+    // No proposals made the cut
+    if (payments.empty()) {
+        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s CreateSuperblockCandidate nHeight:%d empty payments\n", __func__, nHeight);
+        return std::nullopt;
+    }
+
+    // Sort by proposal hash descending
+    std::sort(payments.begin(), payments.end(), [](const CGovernancePayment& a, const CGovernancePayment& b) {
+        return UintToArith256(a.proposalHash) > UintToArith256(b.proposalHash);
+    });
+
+    // Create Superblock
+    return CSuperblock(nNextSuperblock, std::move(payments));
+}
+
+void CGovernanceManager::CreateGovernanceTrigger(const CSuperblock& sb, CConnman& connman)
+{
+    //TODO: Check if nHashParentIn, nRevision and nCollateralHashIn are correct
+    LOCK(cs_main);
+    LOCK(governance->cs);
+    CGovernanceObject gov_sb(uint256(), 1, GetAdjustedTime(), uint256(), sb.GetHexStrData());
+    {
+        LOCK(activeMasternodeInfoCs);
+        gov_sb.SetMasternodeOutpoint(activeMasternodeInfo.outpoint);
+        gov_sb.Sign( *activeMasternodeInfo.blsKeyOperator);
+    }
+
+    if (std::string strError; !gov_sb.IsValidLocally(strError, true)) {
+        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Created trigger is invalid:%s\n", __func__, strError);
+        return;
+    }
+
+    if (!governance->MasternodeRateCheck(gov_sb)) {
+        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Trigger rejected because of rate check failure hash(%s)\n", __func__, gov_sb.GetHash().ToString());
+        return;
+    }
+
+    // Check if identical trigger (equal DataHash()) is already created (signed by other masternode)
+    if (!governance->HasGovernanceObjectByDataHash(gov_sb.GetDataHash())) {
+        governance->AddGovernanceObject(gov_sb, connman);
+    }
+
+    // Vote YES-FUNDING for the newly created trigger
+    if (!VoteFundingTrigger(gov_sb.GetHash(), VOTE_OUTCOME_YES, connman)) {
+        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Voting YES-FUNDING for new trigger:%s failed\n", __func__, gov_sb.GetHash().ToString());
+        return;
+    }
+
+    votedFundingYesTriggerHash = gov_sb.GetHash();
+
+    // Vote NO-FUNDING for the rest of the active triggers
+    auto activeTriggers = triggerman.GetActiveTriggers();
+    for (const auto& trigger : activeTriggers) {
+        if (trigger->GetHash() == gov_sb.GetHash()) continue; // Skip actual trigger
+
+        if (!VoteFundingTrigger(trigger->GetHash(), VOTE_OUTCOME_NO, connman)) {
+            LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Voting NO-FUNDING for trigger:%s failed\n", __func__, trigger->GetHash().ToString());
+            return;
+        }
+
+    }
+}
+
+bool CGovernanceManager::VoteFundingTrigger(const uint256& nHash, const vote_outcome_enum_t outcome, CConnman& connman)
+{
+    CGovernanceVote vote(WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.outpoint), nHash, VOTE_SIGNAL_FUNDING, outcome);
+    vote.SetTime(GetAdjustedTime());
+    vote.Sign(WITH_LOCK(activeMasternodeInfoCs, return *activeMasternodeInfo.blsKeyOperator));
+
+    if (!vote.IsValid()) {
+        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Vote FUNDING %d for trigger:%s is invalid\n", __func__, outcome, nHash.ToString());
+        return false;
+    }
+
+    CGovernanceException exception;
+    if (!governance->ProcessVoteAndRelay(vote, exception, connman)) {
+        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Vote FUNDING %d for trigger:%s failed:%s\n", __func__, outcome, nHash.ToString(), exception.what());
+        return false;
+    }
+
+    return true;
+}
+
+bool CGovernanceManager::HasAlreadyVotedFundingTrigger() const
+{
+    return votedFundingYesTriggerHash.has_value();
+}
+
+void CGovernanceManager::ResetVotedFundingTrigger()
+{
+    votedFundingYesTriggerHash = std::nullopt;
+}
 
 void CGovernanceManager::DoMaintenance(CConnman& connman)
 {
@@ -1163,6 +1377,11 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex* pindex, CConnman& co
     // presumably never deleted.
     if (!pindex) {
         return;
+    }
+
+    auto sb_opt = CreateSuperblockCandidate(pindex->nHeight);
+    if (sb_opt.has_value()) {
+        CreateGovernanceTrigger(sb_opt.value(), connman);
     }
 
     nCachedBlockHeight = pindex->nHeight;

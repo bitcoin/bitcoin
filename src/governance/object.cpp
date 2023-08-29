@@ -292,6 +292,14 @@ uint256 CGovernanceObject::GetHash() const
     return ss.GetHash();
 }
 
+uint256 CGovernanceObject::GetDataHash() const
+{
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    ss << GetDataAsHexString();
+
+    return ss.GetHash();
+}
+
 uint256 CGovernanceObject::GetSignatureHash() const
 {
     return SerializeHash(*this);

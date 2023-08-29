@@ -13,6 +13,7 @@
 #include <timedata.h>
 #include <util/strencodings.h>
 #include <validation.h>
+#include <util/moneystr.h>
 #include <util/underlying.h>
 
 #include <univalue.h>
@@ -385,6 +386,7 @@ void CSuperblockManager::ExecuteBestSuperblock(CGovernanceManager& governanceMan
         // All checks are done in CSuperblock::IsValid via IsBlockValueValid and IsBlockPayeeValid,
         // tip wouldn't be updated if anything was wrong. Mark this trigger as executed.
         pSuperblock->SetExecuted();
+        governanceManager.ResetVotedFundingTrigger();
     }
 }
 
@@ -429,10 +431,17 @@ CSuperblock::
     // NEXT WE GET THE PAYMENT INFORMATION AND RECONSTRUCT THE PAYMENT VECTOR
     std::string strAddresses = obj["payment_addresses"].get_str();
     std::string strAmounts = obj["payment_amounts"].get_str();
-    ParsePaymentSchedule(strAddresses, strAmounts);
+    std::string strProposalHashes = obj["proposal_hashes"].get_str();
+    ParsePaymentSchedule(strAddresses, strAmounts, strProposalHashes);
 
     LogPrint(BCLog::GOBJECT, "CSuperblock -- nBlockHeight = %d, strAddresses = %s, strAmounts = %s, vecPayments.size() = %d\n",
         nBlockHeight, strAddresses, strAmounts, vecPayments.size());
+}
+
+CSuperblock::CSuperblock(int nBlockHeight, std::vector<CGovernancePayment> vecPayments) : nBlockHeight(nBlockHeight), vecPayments(std::move(vecPayments))
+{
+    nStatus = SeenObjectStatus::Valid; //TODO: Investigate this
+    nGovObjHash = GetHash();
 }
 
 CGovernanceObject* CSuperblock::GetGovernanceObject(CGovernanceManager& governanceManager)
@@ -493,20 +502,22 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
     return nPaymentsLimit;
 }
 
-void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, const std::string& strPaymentAmounts)
+void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, const std::string& strPaymentAmounts, const std::string& strProposalHashes)
 {
     // SPLIT UP ADDR/AMOUNT STRINGS AND PUT IN VECTORS
 
     std::vector<std::string> vecParsed1;
     std::vector<std::string> vecParsed2;
+    std::vector<std::string> vecParsed3;
     vecParsed1 = SplitBy(strPaymentAddresses, "|");
     vecParsed2 = SplitBy(strPaymentAmounts, "|");
+    vecParsed3 = SplitBy(strProposalHashes, "|");
 
     // IF THESE DON'T MATCH, SOMETHING IS WRONG
 
-    if (vecParsed1.size() != vecParsed2.size()) {
+    if (vecParsed1.size() != vecParsed2.size() || vecParsed1.size() != vecParsed3.size()) {
         std::ostringstream ostr;
-        ostr << "CSuperblock::ParsePaymentSchedule -- Mismatched payments and amounts";
+        ostr << "CSuperblock::ParsePaymentSchedule -- Mismatched payments, amounts and proposalHashes";
         LogPrintf("%s\n", ostr.str());
         throw std::runtime_error(ostr.str());
     }
@@ -535,9 +546,17 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
 
         CAmount nAmount = ParsePaymentAmount(vecParsed2[i]);
 
-        LogPrint(BCLog::GOBJECT, "CSuperblock::ParsePaymentSchedule -- i = %d, amount string = %s, nAmount = %lld\n", i, vecParsed2[i], nAmount);
+        uint256 proposalHash;
+        if (!ParseHashStr(vecParsed3[i], proposalHash)){
+            std::ostringstream ostr;
+            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid proposal hash : " << vecParsed3[i];
+            LogPrintf("%s\n", ostr.str());
+            throw std::runtime_error(ostr.str());
+        }
 
-        CGovernancePayment payment(dest, nAmount);
+        LogPrint(BCLog::GOBJECT, "CSuperblock::ParsePaymentSchedule -- i = %d, amount string = %s, nAmount = %lld, proposalHash = %s\n", i, vecParsed2[i], nAmount, proposalHash.ToString());
+
+        CGovernancePayment payment(dest, nAmount, proposalHash);
         if (payment.IsValid()) {
             vecPayments.push_back(payment);
         } else {
@@ -692,10 +711,48 @@ bool CSuperblock::IsExpired(const CGovernanceManager& governanceManager) const
     return false;
 }
 
-CGovernancePayment::CGovernancePayment(const CTxDestination& destIn, CAmount nAmountIn) :
+std::vector<uint256> CSuperblock::GetProposalHashes() const
+{
+    std::vector<uint256> res;
+
+    for (const auto& payment : vecPayments) {
+        res.push_back(payment.proposalHash);
+    }
+
+    return res;
+}
+
+std::string CSuperblock::GetHexStrData() const
+{
+    // {\"event_block_height\": 879720, \"payment_addresses\": \"yd5KMREs3GLMe6mTJYr3YrH1juwNwrFCfB\", \"payment_amounts\": \"5.00000000\", \"proposal_hashes\": \"485817fddbcab6c55c9a6856dabc8b19ed79548bda8c01712daebc9f74f287f4\", \"type\": 2}\u0000
+
+    std::string str_addresses = Join(vecPayments, "|", [&](const auto& payment) {
+        CTxDestination dest;
+        ExtractDestination(payment.script, dest);
+        return EncodeDestination(dest);
+    });
+    std::string str_amounts = Join(vecPayments, "|", [&](const auto& payment) {
+        return FormatMoney(payment.nAmount);
+    });
+    std::string str_hashes = Join(vecPayments, "|", [&](const auto& payment) { return payment.proposalHash.ToString(); });
+
+    std::stringstream ss;
+    ss << "{";
+    ss << "\"event_block_height\": " << nBlockHeight << ", ";
+    ss << "\"payment_addresses\": \"" << str_addresses << "\", ";
+    ss << "\"payment_amounts\": \"" << str_amounts << "\", ";
+    ss << "\"proposal_hashes\": \"" << str_hashes << "\", ";
+    ss << "\"type\":" << 2;
+    ss << "}";
+
+    return HexStr(ss.str());
+}
+
+CGovernancePayment::CGovernancePayment(const CTxDestination& destIn, CAmount nAmountIn, const uint256& proposalHash) :
         fValid(false),
         script(),
-        nAmount(0)
+        nAmount(0),
+        proposalHash(proposalHash)
 {
     try {
         script = GetScriptForDestination(destIn);
