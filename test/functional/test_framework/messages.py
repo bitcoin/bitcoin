@@ -1942,7 +1942,7 @@ def get_combined_hash(package_wtxids):
     def uint256_lexico(a):
         return ser_uint256(a)
     wtxids_copy.sort(key=uint256_lexico)
-    return uint256_from_str(hash256(ser_uint256_vector(wtxids_copy)))
+    return uint256_from_str(sha256(ser_uint256_vector(wtxids_copy)))
 
 def get_package_hash(package_txns):
     # There should never be duplicate hashes
@@ -1959,11 +1959,11 @@ class TestFrameworkMessages(unittest.TestCase):
         assert zero < one
         assert one < two
         assert two < eff
-        hash_0 = uint256_from_str(hash256(ser_uint256_vector([zero])))
-        hash_01 = uint256_from_str(hash256(ser_uint256_vector([zero, one])))
-        hash_12 = uint256_from_str(hash256(ser_uint256_vector([one, two])))
-        hash_012 = uint256_from_str(hash256(ser_uint256_vector([zero, one, two])))
-        hash_012f = uint256_from_str(hash256(ser_uint256_vector([zero, one, two, eff])))
+        hash_0 = uint256_from_str(sha256(ser_uint256_vector([zero])))
+        hash_01 = uint256_from_str(sha256(ser_uint256_vector([zero, one])))
+        hash_12 = uint256_from_str(sha256(ser_uint256_vector([one, two])))
+        hash_012 = uint256_from_str(sha256(ser_uint256_vector([zero, one, two])))
+        hash_012f = uint256_from_str(sha256(ser_uint256_vector([zero, one, two, eff])))
         assert_equal(hash_0, get_combined_hash([zero]))
         assert_equal(hash_01, get_combined_hash([one, zero]))
         assert_equal(hash_12, get_combined_hash([two, one]))

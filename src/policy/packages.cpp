@@ -185,7 +185,7 @@ uint256 GetCombinedHash(const std::vector<uint256>& wtxids)
 {
     std::vector<uint256> wtxids_copy(wtxids.cbegin(), wtxids.cend());
     std::sort(wtxids_copy.begin(), wtxids_copy.end());
-    return (HashWriter() << wtxids_copy).GetHash();
+    return (HashWriter() << wtxids_copy).GetSHA256();
 }
 uint256 GetPackageHash(const std::vector<CTransactionRef>& transactions)
 {
