@@ -9,9 +9,11 @@ Check for specified flake8 and mypy warnings in python files.
 """
 
 import os
-import pkg_resources
 import subprocess
 import sys
+
+from importlib.metadata import metadata, PackageNotFoundError
+
 
 DEPS = ['flake8', 'lief', 'mypy', 'pyzmq']
 MYPY_CACHE_DIR = f"{os.getenv('BASE_ROOT_DIR', '')}/test/.mypy_cache"
@@ -99,10 +101,10 @@ ENABLED = (
 
 
 def check_dependencies():
-    working_set = {pkg.key for pkg in pkg_resources.working_set}
-
     for dep in DEPS:
-        if dep not in working_set:
+        try:
+            metadata(dep)
+        except PackageNotFoundError:
             print(f"Skipping Python linting since {dep} is not installed.")
             exit(0)
 
