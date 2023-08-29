@@ -204,6 +204,7 @@ class BlockchainTest(BitcoinTestFramework):
             'bip65': {'type': 'buried', 'active': True, 'height': 4},
             'csv': {'type': 'buried', 'active': True, 'height': 5},
             'segwit': {'type': 'buried', 'active': True, 'height': 6},
+            'taproot': {'type': 'buried', 'active': True, 'height': 1},
             'testdummy': {
                 'type': 'bip9',
                 'bip9': {
@@ -225,19 +226,6 @@ class BlockchainTest(BitcoinTestFramework):
                 },
                 'active': False
             },
-            'taproot': {
-                'type': 'bip9',
-                'bip9': {
-                    'start_time': -1,
-                    'timeout': 9223372036854775807,
-                    'min_activation_height': 0,
-                    'status': 'active',
-                    'status_next': 'active',
-                    'since': 0,
-                },
-                'height': 0,
-                'active': True
-            }
           }
         })
 
