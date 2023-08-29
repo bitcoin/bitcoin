@@ -4441,7 +4441,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             ProcessPackage(pfrom, std::get<node::TxPackageTracker::PackageToValidate>(result));
         } else {
             const auto& request_list{std::get<std::vector<uint256>>(result)};
-            if (!request_list.empty()) {
+            if (!request_list.empty() && request_list.size() < node::MAX_PKGTXNS_COUNT) {
                 if (m_txpackagetracker->PeerSupportsVersion(pfrom.GetId(), node::PKG_RELAY_PKGTXNS)) {
                     // If this peer supports it, request transactions in a batch so they can be
                     // submitted as a package without hitting the orphanage.
