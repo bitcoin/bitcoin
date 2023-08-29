@@ -65,6 +65,15 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
 
+template<size_t N>
+static void RenounceDeployments(const CChainParams::RenounceParameters& renounce, Consensus::HereticalDeployment (&vDeployments)[N])
+{
+    for (Consensus::BuriedDeployment dep : renounce) {
+        vDeployments[dep].nStartTime = Consensus::HereticalDeployment::NEVER_ACTIVE;
+        vDeployments[dep].nTimeout = Consensus::HereticalDeployment::NO_TIMEOUT;
+    }
+}
+
 namespace {
 struct SetupDeployment
 {
@@ -362,6 +371,8 @@ public:
         consensus.powLimit = uint256S("00000377ae000000000000000000000000000000000000000000000000000000");
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY] = SetupDeployment{.activate = 0x30000000, .abandon = 0, .never = true};
 
+        RenounceDeployments(options.renounce, consensus.vDeployments);
+
         // message start is defined as the first 4 bytes of the sha256d of the block script
         HashWriter h{};
         h << consensus.signet_challenge;
@@ -471,6 +482,8 @@ public:
             consensus.vDeployments[deployment_pos].nStartTime = version_bits_params.start_time;
             consensus.vDeployments[deployment_pos].nTimeout = version_bits_params.timeout;
         }
+
+        RenounceDeployments(opts.renounce, consensus.vDeployments);
 
         genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();

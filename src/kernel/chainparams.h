@@ -135,12 +135,15 @@ public:
 
     const ChainTxData& TxData() const { return chainTxData; }
 
+    using RenounceParameters = std::vector<Consensus::BuriedDeployment>;
+
     /**
      * SigNetOptions holds configurations for creating a signet CChainParams.
      */
     struct SigNetOptions {
         std::optional<std::vector<uint8_t>> challenge{};
         std::optional<std::vector<std::string>> seeds{};
+        RenounceParameters renounce{};
     };
 
     /**
@@ -157,6 +160,7 @@ public:
     struct RegTestOptions {
         std::unordered_map<Consensus::DeploymentPos, VersionBitsParameters> version_bits_parameters{};
         std::unordered_map<Consensus::BuriedDeployment, int> activation_heights{};
+        RenounceParameters renounce{};
         bool fastprune{false};
     };
 
