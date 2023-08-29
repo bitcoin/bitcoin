@@ -140,15 +140,10 @@ namespace BCLog {
         //! Manages the rate limiting of each log location.
         std::shared_ptr<LogRateLimiter> m_limiter GUARDED_BY(m_cs);
 
-        //! Category-specific log level. Overrides `m_log_level`.
-        std::unordered_map<LogFlags, Level> m_category_log_levels GUARDED_BY(m_cs);
-
-        //! If there is no category-specific log level, all logs with a severity
-        //! level lower than `m_log_level` will be ignored.
-        std::atomic<Level> m_log_level{Level::Debug};
-
         /** Log categories bitfield. */
         std::atomic<CategoryMask> m_categories{BCLog::NONE};
+        /** Tracing-enabled categories bitfield. */
+        std::atomic<CategoryMask> m_trace_categories{BCLog::NONE};
 
         std::string Format(const util::log::Entry& entry) const;
 
@@ -227,42 +222,41 @@ namespace BCLog {
 
         void ShrinkDebugFile() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
-        std::unordered_map<LogFlags, Level> CategoryLevels() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
-        {
-            STDLOCK(m_cs);
-            return m_category_log_levels;
-        }
-        void SetCategoryLogLevel(const std::unordered_map<LogFlags, Level>& levels) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
-        {
-            STDLOCK(m_cs);
-            m_category_log_levels = levels;
-        }
-        void AddCategoryLogLevel(LogFlags category, Level level) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
-        {
-            STDLOCK(m_cs);
-            m_category_log_levels[category] = level;
-        }
-        void SetCategoryLogLevel(LogFlags flag, Level level) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        void SetCategoryLogLevel(LogFlags flag, Level level);
         bool SetCategoryLogLevel(std::string_view category_str, std::string_view level_str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
-        Level LogLevel() const { return m_log_level.load(); }
-        void SetLogLevel(Level level) { m_log_level = level; }
-        bool SetLogLevel(std::string_view level);
-
         CategoryMask GetCategoryMask() const { return m_categories.load(); }
+        CategoryMask GetCategoryTraceMask() const { return m_trace_categories.load(); }
+        void ResetLogLevels(CategoryMask catmask, CategoryMask tracemask) {
+            m_categories = (catmask | tracemask);
+            m_trace_categories = tracemask;
+        }
 
-        void EnableCategory(LogFlags flag) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
-        bool EnableCategory(std::string_view str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
-        void TraceCategory(LogFlags flag) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
-        bool TraceCategory(std::string_view str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
-        void DisableCategory(LogFlags flag);
+        void EnableCategory(LogFlags flag) { SetCategoryLogLevel(flag, Level::Debug); }
+        bool EnableCategory(std::string_view str);
+        void TraceCategory(LogFlags flag) { SetCategoryLogLevel(flag, Level::Trace); }
+        bool TraceCategory(std::string_view str);
+        void DisableCategory(LogFlags flag) { SetCategoryLogLevel(flag, Level::Info); }
         bool DisableCategory(std::string_view str);
 
-        bool WillLogCategory(LogFlags category) const;
-        bool WillLogCategoryLevel(LogFlags category, Level level) const EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        bool WillLogCategory(LogFlags category) const { return WillLogCategoryLevel(category, BCLog::Level::Debug); }
+        bool WillLogCategoryLevel(LogFlags category, Level level) const
+        {
+            switch (level) {
+            case BCLog::Level::Error:
+            case BCLog::Level::Warning:
+            case BCLog::Level::Info:
+                break;
+            case BCLog::Level::Debug:
+                return (m_categories.load(std::memory_order_relaxed) & category) != 0;
+            case BCLog::Level::Trace:
+                return (m_trace_categories.load(std::memory_order_relaxed) & category) != 0;
+            }
+            return true;
+        }
 
         /** Returns a vector of the log categories in alphabetical order. */
-        std::vector<CategoryInfo> LogCategoriesInfo() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        std::vector<CategoryInfo> LogCategoriesInfo() const;
         /** Returns a string with the log categories in alphabetical order. */
         std::string LogCategoriesString() const;
 
