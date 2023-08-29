@@ -131,4 +131,7 @@ public:
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
 };
 
+/** Return the CKeyID of the key involved in a script (if there is a unique one). */
+CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& dest);
+
 #endif // BITCOIN_SCRIPT_SIGNINGPROVIDER_H
