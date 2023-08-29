@@ -26,20 +26,22 @@ public:
     explicit EnvTestingSetup(const ChainType chainType = ChainType::MAIN,
                              TestOpts opts = {})
         : BasicTestingSetup{chainType, opts},
-          m_prev_log_level{LogInstance().LogLevel()},
+          m_prev_log_mask{LogInstance().GetCategoryMask()},
+          m_prev_log_trace_mask{LogInstance().GetCategoryTraceMask()},
           m_create_sock_orig{CreateSock}
     {
-        LogInstance().SetLogLevel(BCLog::Level::Trace);
+        LogInstance().TraceCategory(BCLog::LogFlags::ALL);
     }
 
     ~EnvTestingSetup()
     {
         CreateSock = m_create_sock_orig;
-        LogInstance().SetLogLevel(m_prev_log_level);
+        LogInstance().ResetLogLevels(m_prev_log_mask, m_prev_log_trace_mask);
     }
 
 private:
-    const BCLog::Level m_prev_log_level;
+    const BCLog::CategoryMask m_prev_log_mask;
+    const BCLog::CategoryMask m_prev_log_trace_mask;
     const decltype(CreateSock) m_create_sock_orig;
 };
 
