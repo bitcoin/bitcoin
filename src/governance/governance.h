@@ -172,8 +172,6 @@ private:
     // keep track of the scanning errors
     std::map<uint256, CGovernanceObject> mapObjects;
 
-    std::optional<uint256> votedFundingYesTriggerHash;
-
     // mapErasedGovernanceObjects contains key-value pairs, where
     //   key   - governance object's hash
     //   value - expiration time for deleted objects
@@ -198,6 +196,8 @@ private:
 
     // used to check for changed voting keys
     CDeterministicMNListPtr lastMNListForVotingKeys;
+
+    std::optional<uint256> votedFundingYesTriggerHash;
 
     class ScopedLockBool
     {
