@@ -14,6 +14,19 @@
 
 #include <memory>
 
+std::vector<uint8_t> ConstructPubKeyBytes(FuzzedDataProvider& fuzzed_data_provider, Span<const uint8_t> byte_data, const bool compressed) noexcept
+{
+    uint8_t pk_type;
+    if (compressed) {
+        pk_type = fuzzed_data_provider.PickValueInArray({0x02, 0x03});
+    } else {
+        pk_type = fuzzed_data_provider.PickValueInArray({0x04, 0x06, 0x07});
+    }
+    std::vector<uint8_t> pk_data{byte_data.begin(), byte_data.begin() + (compressed ? CPubKey::COMPRESSED_SIZE : CPubKey::SIZE)};
+    pk_data[0] = pk_type;
+    return pk_data;
+}
+
 CAmount ConsumeMoney(FuzzedDataProvider& fuzzed_data_provider, const std::optional<CAmount>& max) noexcept
 {
     return fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, max.value_or(MAX_MONEY));
@@ -103,16 +116,12 @@ CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const bool maybe
                     // navigate the highly structured multisig format.
                     r_script << fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, 22);
                     int num_data{fuzzed_data_provider.ConsumeIntegralInRange(1, 22)};
-                    std::vector<uint8_t> pubkey_comp{buffer.begin(), buffer.begin() + CPubKey::COMPRESSED_SIZE};
-                    pubkey_comp.front() = fuzzed_data_provider.ConsumeIntegralInRange(2, 3); // Set first byte for GetLen() to pass
-                    std::vector<uint8_t> pubkey_uncomp{buffer.begin(), buffer.begin() + CPubKey::SIZE};
-                    pubkey_uncomp.front() = fuzzed_data_provider.ConsumeIntegralInRange(4, 7); // Set first byte for GetLen() to pass
                     while (num_data--) {
-                        auto& pubkey{fuzzed_data_provider.ConsumeBool() ? pubkey_uncomp : pubkey_comp};
+                        auto pubkey_bytes{ConstructPubKeyBytes(fuzzed_data_provider, buffer, fuzzed_data_provider.ConsumeBool())};
                         if (fuzzed_data_provider.ConsumeBool()) {
-                            pubkey.back() = num_data; // Make each pubkey different
+                            pubkey_bytes.back() = num_data; // Make each pubkey different
                         }
-                        r_script << pubkey;
+                        r_script << pubkey_bytes;
                     }
                     r_script << fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, 22);
                 },
