@@ -372,7 +372,12 @@ public:
         consensus.MinBIP9WarningHeight = 0;
         consensus.powLimit = uint256S("00000377ae000000000000000000000000000000000000000000000000000000");
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY] = SetupDeployment{.activate = 0x30000000, .abandon = 0, .never = true};
-        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKTEMPLATEVERIFY] = SetupDeployment{.activate = 0x60007700, .abandon = 0x40007700, .never = true};
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKTEMPLATEVERIFY] = SetupDeployment{
+            .start = 1654041600, // 2022-06-01
+            .timeout = 1969660800, // 2032-06-01
+            .activate = 0x60007700,
+            .abandon = 0x40007700,
+        };
 
         RenounceDeployments(options.renounce, consensus.vDeployments);
 
