@@ -4,8 +4,8 @@
 
 #include <test/util/setup_common.h>
 
-#include <chainparams.h>
 #include <bls/bls.h>
+#include <chainparams.h>
 #include <consensus/validation.h>
 #include <messagesigner.h>
 #include <miner.h>
@@ -17,9 +17,9 @@
 #include <spork.h>
 #include <validation.h>
 
-#include <evo/specialtx.h>
-#include <evo/providertx.h>
 #include <evo/deterministicmns.h>
+#include <evo/providertx.h>
+#include <evo/specialtx.h>
 #include <governance/governance.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>

@@ -1,11 +1,11 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Copyright (c) 2014-2022 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
-#include <net_permissions.h>
 #include <protocol.h>
 #include <serialize.h>
 #include <streams.h>

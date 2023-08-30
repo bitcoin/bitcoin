@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
+#include <consensus/validation.h>
+#include <evo/evodb.h>
 #include <index/txindex.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/instantsend.h>
-#include <evo/evodb.h>
 #include <random.h>
-#include <uint256.h>
-#include <consensus/validation.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
+#include <uint256.h>
 #include <validation.h>
 
 #include <vector>

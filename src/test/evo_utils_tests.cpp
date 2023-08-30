@@ -5,9 +5,9 @@
 #include <test/util/setup_common.h>
 
 #include <llmq/context.h>
-#include <llmq/utils.h>
 #include <llmq/params.h>
 #include <llmq/quorums.h>
+#include <llmq/utils.h>
 
 #include <chainparams.h>
 

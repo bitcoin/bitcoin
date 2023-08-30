@@ -3,12 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
-#include <validation.h>
-#include <txmempool.h>
-#include <script/standard.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
+#include <script/standard.h>
 #include <test/util/setup_common.h>
+#include <txmempool.h>
+#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 

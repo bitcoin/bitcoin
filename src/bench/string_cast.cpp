@@ -4,8 +4,8 @@
 
 #include <bench/bench.h>
 #include <tinyformat.h>
-#include <util/string.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 
 #include <boost/lexical_cast.hpp>
 #include <string>

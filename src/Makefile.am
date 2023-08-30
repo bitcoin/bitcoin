@@ -751,8 +751,11 @@ libbitcoin_util_a_SOURCES = \
   util/serfloat.cpp \
   util/string.cpp \
   util/threadnames.cpp \
-  util/url.cpp \
   $(BITCOIN_CORE_H)
+
+if USE_LIBEVENT
+libbitcoin_util_a_SOURCES += util/url.cpp
+endif
 
 # cli: shared between dash-cli and dash-qt
 libbitcoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)

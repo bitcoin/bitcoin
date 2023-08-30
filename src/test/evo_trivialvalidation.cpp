@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/util/setup_common.h>
 #include <test/data/trivially_invalid.json.h>
 #include <test/data/trivially_valid.json.h>
+#include <test/util/setup_common.h>
 
 #include <evo/providertx.h>
 #include <primitives/transaction.h>

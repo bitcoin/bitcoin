@@ -18,9 +18,9 @@
 #include <txmempool.h>
 #include <validation.h>
 
-#include <evo/specialtx.h>
-#include <evo/providertx.h>
 #include <evo/deterministicmns.h>
+#include <evo/providertx.h>
+#include <evo/specialtx.h>
 #include <llmq/utils.h>
 
 #include <boost/test/unit_test.hpp>
