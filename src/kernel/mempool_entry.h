@@ -83,7 +83,7 @@ private:
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
     const int64_t sigOpCost;        //!< Total sigop cost
     CAmount m_modified_fee;         //!< Used for determining the priority of the transaction for mining in a block
-    LockPoints lockPoints;          //!< Track the height and time at which tx was final
+    mutable LockPoints lockPoints;  //!< Track the height and time at which tx was final
 
     // Information about descendants of this transaction that are in the
     // mempool; if we remove this transaction we must remove all of these
@@ -151,7 +151,7 @@ public:
     }
 
     // Update the LockPoints after a reorg
-    void UpdateLockPoints(const LockPoints& lp)
+    void UpdateLockPoints(const LockPoints& lp) const
     {
         lockPoints = lp;
     }
