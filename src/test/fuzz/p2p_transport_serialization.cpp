@@ -371,3 +371,14 @@ FUZZ_TARGET(p2p_transport_bidirectional_v2, .init = initialize_p2p_transport_ser
     if (!t1 || !t2) return;
     SimulationTest(*t1, *t2, rng, provider);
 }
+
+FUZZ_TARGET(p2p_transport_bidirectional_v1v2, .init = initialize_p2p_transport_serialization)
+{
+    // Test with a V1 initiator talking to a V2 responder.
+    FuzzedDataProvider provider{buffer.data(), buffer.size()};
+    XoRoShiRo128PlusPlus rng(provider.ConsumeIntegral<uint64_t>());
+    auto t1 = MakeV1Transport(NodeId{0});
+    auto t2 = MakeV2Transport(NodeId{1}, false, rng, provider);
+    if (!t1 || !t2) return;
+    SimulationTest(*t1, *t2, rng, provider);
+}
