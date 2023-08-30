@@ -266,8 +266,6 @@ public:
 
     /** Returns true if the current message is complete (so GetReceivedMessage can be called). */
     virtual bool ReceivedMessageComplete() const = 0;
-    /** Set the deserialization context version for objects returned by GetReceivedMessage. */
-    virtual void SetReceiveVersion(int version) = 0;
 
     /** Feed wire bytes to the transport.
      *
@@ -411,14 +409,6 @@ public:
     {
         AssertLockNotHeld(m_recv_mutex);
         return WITH_LOCK(m_recv_mutex, return CompleteInternal());
-    }
-
-    void SetReceiveVersion(int nVersionIn) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
-    {
-        AssertLockNotHeld(m_recv_mutex);
-        LOCK(m_recv_mutex);
-        hdrbuf.SetVersion(nVersionIn);
-        vRecv.SetVersion(nVersionIn);
     }
 
     bool ReceivedBytes(Span<const uint8_t>& msg_bytes) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
