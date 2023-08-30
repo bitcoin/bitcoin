@@ -703,9 +703,9 @@ public:
         if (!m_node.mempool) return true;
         LockPoints lp;
         CTxMemPoolEntry entry(tx, 0, 0, 0, 0, false, 0, lp);
-        const CTxMemPool::Limits& limits{m_node.mempool->m_limits};
         LOCK(m_node.mempool->cs);
-        return m_node.mempool->CalculateMemPoolAncestors(entry, limits).has_value();
+        std::string err_string;
+        return m_node.mempool->CheckPackageLimits({tx}, entry.GetTxSize(), err_string);
     }
     CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc) override
     {
