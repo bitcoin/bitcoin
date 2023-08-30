@@ -2147,6 +2147,11 @@ unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Chainstat
         flags |= SCRIPT_VERIFY_DEFAULT_CHECK_TEMPLATE_VERIFY_HASH;
     }
 
+    // Enforce ANYPREVOUT (BIP118)
+    if ((flags & SCRIPT_VERIFY_TAPROOT) && DeploymentActiveAt(block_index, chainman, Consensus::DEPLOYMENT_ANYPREVOUT)) {
+        flags |= SCRIPT_VERIFY_ANYPREVOUT;
+    }
+
     return flags;
 }
 

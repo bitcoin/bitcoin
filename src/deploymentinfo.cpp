@@ -19,6 +19,10 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
         /*.name =*/ "checktemplateverify",
         /*.gbt_force =*/ true,
     },
+    {
+        /*.name =*/ "anyprevout",
+        /*.gbt_force =*/ true,
+    },
 };
 
 std::string DeploymentName(Consensus::BuriedDeployment dep)
