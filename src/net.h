@@ -1057,7 +1057,7 @@ public:
     struct Options
     {
         ServiceFlags nLocalServices = NODE_NONE;
-        int nMaxConnections = 0;
+        int m_max_automatic_connections = 0;
         CClientUIInterface* uiInterface = nullptr;
         NetEventsInterface* m_msgproc = nullptr;
         BanMan* m_banman = nullptr;
@@ -1084,11 +1084,11 @@ public:
         AssertLockNotHeld(m_total_bytes_sent_mutex);
 
         nLocalServices = connOptions.nLocalServices;
-        nMaxConnections = connOptions.nMaxConnections;
-        m_max_outbound_full_relay = std::min(MAX_OUTBOUND_FULL_RELAY_CONNECTIONS, nMaxConnections);
-        m_max_outbound_block_relay = std::min(MAX_BLOCK_RELAY_ONLY_CONNECTIONS, nMaxConnections - m_max_outbound_full_relay);
-        m_max_outbound = m_max_outbound_full_relay + m_max_outbound_block_relay + nMaxFeeler;
-        m_max_inbound = std::max(0, nMaxConnections - m_max_outbound);
+        m_max_automatic_connections = connOptions.m_max_automatic_connections;
+        m_max_outbound_full_relay = std::min(MAX_OUTBOUND_FULL_RELAY_CONNECTIONS, m_max_automatic_connections);
+        m_max_outbound_block_relay = std::min(MAX_BLOCK_RELAY_ONLY_CONNECTIONS, m_max_automatic_connections - m_max_outbound_full_relay);
+        m_max_automatic_outbound = m_max_outbound_full_relay + m_max_outbound_block_relay + m_max_feeler;
+        m_max_inbound = std::max(0, m_max_automatic_connections - m_max_automatic_outbound);
         m_use_addrman_outgoing = connOptions.m_use_addrman_outgoing;
         m_client_interface = connOptions.uiInterface;
         m_banman = connOptions.m_banman;
@@ -1474,7 +1474,7 @@ private:
 
     std::unique_ptr<CSemaphore> semOutbound;
     std::unique_ptr<CSemaphore> semAddnode;
-    int nMaxConnections;
+    int m_max_automatic_connections;
 
     // How many full-relay (tx, block, addr) outbound peers we want
     int m_max_outbound_full_relay;
@@ -1483,9 +1483,9 @@ private:
     // We do not relay tx or addr messages with these peers
     int m_max_outbound_block_relay;
 
-    int nMaxAddnode{MAX_ADDNODE_CONNECTIONS};
-    int nMaxFeeler{MAX_FEELER_CONNECTIONS};
-    int m_max_outbound;
+    int m_max_addnode{MAX_ADDNODE_CONNECTIONS};
+    int m_max_feeler{MAX_FEELER_CONNECTIONS};
+    int m_max_automatic_outbound;
     int m_max_inbound;
     bool m_use_addrman_outgoing;
     CClientUIInterface* m_client_interface;
