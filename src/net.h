@@ -1474,7 +1474,18 @@ private:
 
     std::unique_ptr<CSemaphore> semOutbound;
     std::unique_ptr<CSemaphore> semAddnode;
+
+    /**
+     * Maximum number of automatic connections permitted, excluding manual
+     * connections but including inbounds. May be changed by the user and is
+     * potentially limited by the operating system (number of file descriptors).
+     */
     int m_max_automatic_connections;
+
+    /*
+     * Maximum number of peers by connection type. Might vary from defaults
+     * based on -maxconnections init value.
+     */
 
     // How many full-relay (tx, block, addr) outbound peers we want
     int m_max_outbound_full_relay;
@@ -1487,6 +1498,7 @@ private:
     int m_max_feeler{MAX_FEELER_CONNECTIONS};
     int m_max_automatic_outbound;
     int m_max_inbound;
+
     bool m_use_addrman_outgoing;
     CClientUIInterface* m_client_interface;
     NetEventsInterface* m_msgproc;
