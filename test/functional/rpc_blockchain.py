@@ -197,7 +197,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(gdi_result, {
           "hash": blockhash,
           "height": height,
-          "script_flags": ["CHECKLOCKTIMEVERIFY","CHECKSEQUENCEVERIFY","DERSIG","NULLDUMMY","P2SH","TAPROOT","WITNESS"],
+          "script_flags": ["CHECKLOCKTIMEVERIFY","CHECKSEQUENCEVERIFY","DEFAULT_CHECK_TEMPLATE_VERIFY_HASH","DERSIG","NULLDUMMY","P2SH","TAPROOT","WITNESS"],
           "deployments": {
             'bip34': {'type': 'buried', 'active': True, 'height': 2},
             'bip66': {'type': 'buried', 'active': True, 'height': 3},
@@ -220,6 +220,20 @@ class BlockchainTest(BitcoinTestFramework):
                 },
                 'active': False
             },
+            'checktemplateverify': {
+                'type': 'heretical',
+                'heretical': {
+                    'binana-id': 'BIN-2016-0119-000',
+                    'start_time': -1,
+                    'timeout': 9223372036854775807,
+                    'period': 144,
+                    'status': 'active',
+                    'status_next': 'active',
+                    'since': 0,
+                },
+                'height': 0,
+                'active': True
+             },
           }
         })
 

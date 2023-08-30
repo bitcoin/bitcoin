@@ -2141,6 +2141,11 @@ unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Chainstat
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 
+    // Enforce CheckTemplateVerify (BIP119)
+    if (DeploymentActiveAt(block_index, chainman, Consensus::DEPLOYMENT_CHECKTEMPLATEVERIFY)) {
+        flags |= SCRIPT_VERIFY_DEFAULT_CHECK_TEMPLATE_VERIFY_HASH;
+    }
+
     return flags;
 }
 
