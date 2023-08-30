@@ -43,7 +43,7 @@ void initialize()
     std::get<1>(it->second)();
 }
 
-#if defined(PROVIDE_MAIN_FUNCTION)
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION)
 static bool read_stdin(std::vector<uint8_t>& data)
 {
     uint8_t buffer[1024];
@@ -71,8 +71,8 @@ extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
     return 0;
 }
 
-#if defined(PROVIDE_MAIN_FUNCTION)
-__attribute__((weak)) int main(int argc, char** argv)
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION)
+int main(int argc, char** argv)
 {
     initialize();
     static const auto& test_one_input = *Assert(g_test_one_input);

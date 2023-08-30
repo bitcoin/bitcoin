@@ -14,7 +14,12 @@
 #include <string>
 #include <vector>
 
-FUZZ_TARGET(policy_estimator)
+void initialize_policy_estimator()
+{
+    static const auto testing_setup = MakeNoLogFileContext<>();
+}
+
+FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     CBlockPolicyEstimator block_policy_estimator;
@@ -61,5 +66,11 @@ FUZZ_TARGET(policy_estimator)
         FeeCalculation fee_calculation;
         (void)block_policy_estimator.estimateSmartFee(fuzzed_data_provider.ConsumeIntegral<int>(), fuzzed_data_provider.ConsumeBool() ? &fee_calculation : nullptr, fuzzed_data_provider.ConsumeBool());
         (void)block_policy_estimator.HighestTargetTracked(fuzzed_data_provider.PickValueInArray({FeeEstimateHorizon::SHORT_HALFLIFE, FeeEstimateHorizon::MED_HALFLIFE, FeeEstimateHorizon::LONG_HALFLIFE}));
+    }
+    {
+        FuzzedAutoFileProvider fuzzed_auto_file_provider = ConsumeAutoFile(fuzzed_data_provider);
+        CAutoFile fuzzed_auto_file = fuzzed_auto_file_provider.open();
+        block_policy_estimator.Write(fuzzed_auto_file);
+        block_policy_estimator.Read(fuzzed_auto_file);
     }
 }

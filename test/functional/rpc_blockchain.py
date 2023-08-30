@@ -145,7 +145,7 @@ class BlockchainTest(BitcoinTestFramework):
                 'bip9': {
                     'status': 'defined',
                     'start_time': 0,
-                    'timeout': 999999999999,
+                    'timeout': 9223372036854775807,
                     'since': 0
                 }, 'active': False},
             'mn_rr': {
@@ -153,7 +153,7 @@ class BlockchainTest(BitcoinTestFramework):
                 'bip9': {
                     'status': 'defined',
                     'start_time': 0,
-                    'timeout': 999999999999,
+                    'timeout': 9223372036854775807,
                     'since': 0
                 },
                 'active': False},
@@ -163,7 +163,7 @@ class BlockchainTest(BitcoinTestFramework):
                     'status': 'started',
                     'bit': 28,
                     'start_time': 0,
-                    'timeout': 999999999999,  # testdummy does not have a timeout so is set to the max int64 value
+                    'timeout': 9223372036854775807,  # testdummy does not have a timeout so is set to the max int64 value
                     'since': 144,
                     'statistics': {
                         'period': 144,

@@ -1966,11 +1966,12 @@ static ThresholdConditionCache warningcache[VERSIONBITS_NUM_BITS] GUARDED_BY(cs_
 static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     AssertLockHeld(cs_main);
 
-    // BIP16 didn't become active until Apr 1 2012
-    int64_t nBIP16SwitchTime = 1333238400;
-    bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
+    unsigned int flags = SCRIPT_VERIFY_NONE;
 
-    unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
+    // Start enforcing P2SH (BIP16)
+    if (pindex->nHeight >= consensusparams.BIP16Height) {
+        flags |= SCRIPT_VERIFY_P2SH;
+    }
 
     // Start enforcing the DERSIG (BIP66) rule
     if (pindex->nHeight >= consensusparams.BIP66Height) {
@@ -5507,11 +5508,11 @@ CBlockFileInfo* GetBlockFileInfo(size_t n)
 
 static const uint64_t MEMPOOL_DUMP_VERSION = 1;
 
-bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate)
+bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mockable_fopen_function)
 {
     const CChainParams& chainparams = Params();
     int64_t nExpiryTimeout = gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
-    FILE* filestr = fsbridge::fopen(GetDataDir() / "mempool.dat", "rb");
+    FILE* filestr{mockable_fopen_function(GetDataDir() / "mempool.dat", "rb")};
     CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
     if (file.IsNull()) {
         LogPrintf("Failed to open mempool file from disk. Continuing anyway.\n");
@@ -5601,7 +5602,7 @@ bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate)
     return true;
 }
 
-bool DumpMempool(const CTxMemPool& pool)
+bool DumpMempool(const CTxMemPool& pool, FopenFn mockable_fopen_function, bool skip_file_commit)
 {
     int64_t start = GetTimeMicros();
 
@@ -5624,7 +5625,7 @@ bool DumpMempool(const CTxMemPool& pool)
     int64_t mid = GetTimeMicros();
 
     try {
-        FILE* filestr = fsbridge::fopen(GetDataDir() / "mempool.dat.new", "wb");
+        FILE* filestr{mockable_fopen_function(GetDataDir() / "mempool.dat.new", "wb")};
         if (!filestr) {
             return false;
         }
@@ -5647,7 +5648,7 @@ bool DumpMempool(const CTxMemPool& pool)
         LogPrintf("Writing %d unbroadcast transactions to disk.\n", unbroadcast_txids.size());
         file << unbroadcast_txids;
 
-        if (!FileCommit(file.Get()))
+        if (!skip_file_commit && !FileCommit(file.Get()))
             throw std::runtime_error("FileCommit failed");
         file.fclose();
         if (!RenameOver(GetDataDir() / "mempool.dat.new", GetDataDir() / "mempool.dat")) {

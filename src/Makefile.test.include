@@ -3,9 +3,11 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-if ENABLE_FUZZ
+if ENABLE_FUZZ_BINARY
 noinst_PROGRAMS += test/fuzz/fuzz
-else
+endif
+
+if !ENABLE_FUZZ
 bin_PROGRAMS += test/test_dash
 endif
 
@@ -60,6 +62,14 @@ FUZZ_SUITE_LD_COMMON = \
  $(EVENT_PTHREADS_LIBS) \
  $(GMP_LIBS) \
  $(BACKTRACE_LIB)
+
+if USE_UPNP
+FUZZ_SUITE_LD_COMMON += $(MINIUPNPC_LIBS)
+endif
+
+if USE_NATPMP
+FUZZ_SUITE_LD_COMMON += $(NATPMP_LIBS)
+endif
 
 # test_dash binary #
 BITCOIN_TESTS =\
@@ -178,9 +188,15 @@ BITCOIN_TESTS += \
   wallet/test/ismine_tests.cpp \
   wallet/test/scriptpubkeyman_tests.cpp
 
+FUZZ_SUITE_LD_COMMON +=\
+ $(LIBBITCOIN_WALLET) \
+ $(SQLITE_LIBS) \
+ $(BDB_LIBS)
+
 if USE_BDB
 BITCOIN_TESTS += wallet/test/db_tests.cpp
 endif
+
 
 BITCOIN_TEST_SUITE += \
   wallet/test/wallet_test_fixture.cpp \
@@ -204,11 +220,12 @@ test_test_dash_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $
 
 if ENABLE_ZMQ
 test_test_dash_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
+FUZZ_SUITE_LD_COMMON += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
 endif
 
-if ENABLE_FUZZ
 FUZZ_SUITE_LDFLAGS_COMMON = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS) $(PTHREAD_FLAGS)
 
+if ENABLE_FUZZ_BINARY
 test_fuzz_fuzz_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_fuzz_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_fuzz_LDADD = $(FUZZ_SUITE_LD_COMMON)
@@ -240,6 +257,7 @@ test_fuzz_fuzz_SOURCES = \
   test/fuzz/crypto_hkdf_hmac_sha256_l32.cpp \
   test/fuzz/crypto_poly1305.cpp \
   test/fuzz/cuckoocache.cpp \
+  test/fuzz/data_stream.cpp \
   test/fuzz/decode_tx.cpp \
   test/fuzz/descriptor_parse.cpp \
   test/fuzz/deserialize.cpp \
@@ -260,6 +278,7 @@ test_fuzz_fuzz_SOURCES = \
   test/fuzz/locale.cpp \
   test/fuzz/merkleblock.cpp \
   test/fuzz/message.cpp \
+  test/fuzz/muhash.cpp \
   test/fuzz/multiplication_overflow.cpp \
   test/fuzz/net.cpp \
   test/fuzz/net_permissions.cpp \
@@ -272,6 +291,7 @@ test_fuzz_fuzz_SOURCES = \
   test/fuzz/parse_script.cpp \
   test/fuzz/parse_univalue.cpp \
   test/fuzz/policy_estimator.cpp \
+  test/fuzz/policy_estimator_io.cpp \
   test/fuzz/pow.cpp \
   test/fuzz/prevector.cpp \
   test/fuzz/primitives_transaction.cpp \
@@ -300,11 +320,13 @@ test_fuzz_fuzz_SOURCES = \
   test/fuzz/strprintf.cpp \
   test/fuzz/system.cpp \
   test/fuzz/timedata.cpp \
+  test/fuzz/torcontrol.cpp \
   test/fuzz/transaction.cpp \
   test/fuzz/tx_in.cpp \
-  test/fuzz/tx_out.cpp
-
-endif # ENABLE_FUZZ
+  test/fuzz/tx_out.cpp \
+  test/fuzz/validation_load_mempool.cpp \
+  test/fuzz/versionbits.cpp
+endif # ENABLE_FUZZ_BINARY
 
 nodist_test_test_dash_SOURCES = $(GENERATED_TEST_FILES)
 

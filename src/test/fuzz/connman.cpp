@@ -17,7 +17,7 @@
 
 void initialize_connman()
 {
-    InitializeFuzzingContext();
+    static const auto testing_setup = MakeNoLogFileContext<>();
 }
 
 FUZZ_TARGET_INIT(connman, initialize_connman)
