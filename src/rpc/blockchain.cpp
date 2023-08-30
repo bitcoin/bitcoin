@@ -68,7 +68,7 @@ extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool
 
 NodeContext& EnsureAnyNodeContext(const CoreContext& context)
 {
-    auto* node_context = GetContext<NodeContext>(context);
+    auto* const node_context = GetContext<NodeContext>(context);
     if (!node_context) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");
     }
