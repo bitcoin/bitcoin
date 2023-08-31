@@ -278,7 +278,7 @@ bool CCreditPoolDiff::ProcessTransaction(const CTransaction& tx, TxValidationSta
 
     if (tx.nType != TRANSACTION_ASSET_LOCK && tx.nType != TRANSACTION_ASSET_UNLOCK) return true;
 
-    if (!CheckAssetLockUnlockTx(tx, pindex, this->pool, state)) {
+    if (!CheckAssetLockUnlockTx(tx, pindex, pool.indexes, state)) {
         // pass the state returned by the function above
         return false;
     }

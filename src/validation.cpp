@@ -52,7 +52,6 @@
 #include <masternode/payments.h>
 #include <masternode/sync.h>
 
-#include <evo/creditpool.h>
 #include <evo/evodb.h>
 #include <evo/specialtx.h>
 #include <evo/specialtxman.h>
@@ -712,7 +711,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             }
         }
     }
-    CCreditPool creditPool = creditPoolManager->GetCreditPool(::ChainActive().Tip(), chainparams.GetConsensus());
     LockPoints lp;
     m_view.SetBackend(m_viewmempool);
 
@@ -828,7 +826,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // DoS scoring a node for non-critical errors, e.g. duplicate keys because a TX is received that was already
     // mined
     // NOTE: we use UTXO here and do NOT allow mempool txes as masternode collaterals
-    if (!CheckSpecialTx(tx, m_active_chainstate.m_chain.Tip(), m_active_chainstate.CoinsTip(), creditPool, true, state))
+    if (!CheckSpecialTx(tx, m_active_chainstate.m_chain.Tip(), m_active_chainstate.CoinsTip(), true, state))
         return false;
 
     if (m_pool.existsProviderTxConflict(tx)) {

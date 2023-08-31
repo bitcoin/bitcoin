@@ -60,13 +60,18 @@ class AssetLocksTest(DashTestFramework):
 
         inputs = [CTxIn(COutPoint(int(coin["txid"], 16), coin["vout"]))]
 
-        credit_outputs = CTxOut(amount, CScript([OP_DUP, OP_HASH160, hash160(pubkey), OP_EQUALVERIFY, OP_CHECKSIG]))
+        credit_outputs = []
+        tmp_amount = amount
+        if tmp_amount > COIN:
+            tmp_amount -= COIN
+            credit_outputs.append(CTxOut(COIN, CScript([OP_DUP, OP_HASH160, hash160(pubkey), OP_EQUALVERIFY, OP_CHECKSIG])))
+        credit_outputs.append(CTxOut(tmp_amount, CScript([OP_DUP, OP_HASH160, hash160(pubkey), OP_EQUALVERIFY, OP_CHECKSIG])))
 
-        lockTx_payload = CAssetLockTx(1, [credit_outputs])
+        lockTx_payload = CAssetLockTx(1, credit_outputs)
 
-        remaining = int(COIN * coin['amount']) - tiny_amount - credit_outputs.nValue
+        remaining = int(COIN * coin['amount']) - tiny_amount - amount
 
-        tx_output_ret = CTxOut(credit_outputs.nValue, CScript([OP_RETURN, b""]))
+        tx_output_ret = CTxOut(amount, CScript([OP_RETURN, b""]))
         tx_output = CTxOut(remaining, CScript([pubkey, OP_CHECKSIG]))
 
         lock_tx = CTransaction()
@@ -293,6 +298,7 @@ class AssetLocksTest(DashTestFramework):
         asset_unlock_tx_too_big_fee = self.create_assetunlock(104, COIN, pubkey, fee=int(Decimal("0.1") * COIN))
         asset_unlock_tx_zero_fee = self.create_assetunlock(105, COIN, pubkey, fee=0)
         asset_unlock_tx_duplicate_index = copy.deepcopy(asset_unlock_tx)
+        # modify this tx with duplicated index to make a hash of tx different, otherwise tx would be refused too early
         asset_unlock_tx_duplicate_index.vout[0].nValue += COIN
         too_late_height = node.getblock(node.getbestblockhash())["height"] + 48
 
@@ -325,12 +331,6 @@ class AssetLocksTest(DashTestFramework):
         self.send_tx(asset_unlock_tx,
             expected_error = "Transaction already in block chain",
             reason = "double copy")
-
-        self.check_mempool_result(tx=asset_unlock_tx_duplicate_index,
-                result_expected={'allowed': False, 'reject-reason' : 'bad-assetunlock-duplicated-index'})
-        self.send_tx(asset_unlock_tx_duplicate_index,
-            expected_error = "bad-assetunlock-duplicated-index",
-            reason = "double index")
 
         self.log.info("Mining next quorum to check tx 'asset_unlock_tx_late' is still valid...")
         self.mine_quorum()
@@ -405,11 +405,6 @@ class AssetLocksTest(DashTestFramework):
         block = node.getblock(node.getbestblockhash())
         assert txid_in_block in block['tx']
         self.validate_credit_pool_balance(0)
-
-        self.log.info("After many blocks duplicated tx still should not be mined")
-        self.send_tx(asset_unlock_tx_duplicate_index,
-                expected_error = "bad-assetunlock-duplicated-index",
-                reason = "double index")
 
         self.log.info("Forcibly mine asset_unlock_tx_full and ensure block is invalid...")
         self.create_and_check_block([asset_unlock_tx_duplicate_index], expected_error = "bad-assetunlock-duplicated-index")

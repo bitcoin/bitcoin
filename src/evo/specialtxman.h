@@ -12,7 +12,6 @@
 class BlockValidationState;
 class CBlock;
 class CBlockIndex;
-struct CCreditPool;
 class CCoinsViewCache;
 class TxValidationState;
 namespace llmq {
@@ -25,7 +24,7 @@ struct Params;
 
 extern RecursiveMutex cs_main;
 
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, const CCreditPool& pool, bool check_sigs,
+bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, bool check_sigs,
                     TxValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq::CQuorumBlockProcessor& quorum_block_processor, const llmq::CChainLocksHandler& chainlock_handler,
                             const Consensus::Params& consensusParams, const CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots,

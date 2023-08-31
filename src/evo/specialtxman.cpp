@@ -19,7 +19,7 @@
 #include <primitives/block.h>
 #include <validation.h>
 
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, const CCreditPool& creditPool, bool check_sigs, TxValidationState& state)
+static bool CheckSpecialTxInner(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, const std::optional<CRangesSet>& indexes, bool check_sigs, TxValidationState& state)
 {
     AssertLockHeld(cs_main);
 
@@ -54,7 +54,7 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const
             if (!llmq::utils::IsV20Active(pindexPrev)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "assetlocks-before-v20");
             }
-            return CheckAssetLockUnlockTx(tx, pindexPrev, creditPool, state);
+            return CheckAssetLockUnlockTx(tx, pindexPrev, indexes, state);
         }
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
@@ -64,7 +64,13 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const
     return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-tx-type-check");
 }
 
-bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, TxValidationState& state)
+bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, bool check_sigs, TxValidationState& state)
+{
+    AssertLockHeld(cs_main);
+    return CheckSpecialTxInner(tx, pindexPrev, view, std::nullopt, check_sigs, state);
+}
+
+static bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, TxValidationState& state)
 {
     if (tx.nVersion != 3 || tx.nType == TRANSACTION_NORMAL) {
         return true;
@@ -90,7 +96,7 @@ bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, TxValid
     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-tx-type-proc");
 }
 
-bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
+static bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
 {
     if (tx.nVersion != 3 || tx.nType == TRANSACTION_NORMAL) {
         return true;
@@ -142,7 +148,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, ll
             TxValidationState tx_state;
             // At this moment CheckSpecialTx() and ProcessSpecialTx() may fail by 2 possible ways:
             // consensus failures and "TX_BAD_SPECIAL"
-            if (!CheckSpecialTx(*ptr_tx, pindex->pprev, view, creditPool, fCheckCbTxMerleRoots, tx_state)) {
+            if (!CheckSpecialTxInner(*ptr_tx, pindex->pprev, view, creditPool.indexes, fCheckCbTxMerleRoots, tx_state)) {
                 assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS || tx_state.GetResult() == TxValidationResult::TX_BAD_SPECIAL);
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
                                  strprintf("Special Transaction check failed (tx hash %s) %s", ptr_tx->GetHash().ToString(), tx_state.GetDebugMessage()));

@@ -4,7 +4,6 @@
 
 #include <evo/assetlocktx.h>
 #include <evo/specialtx.h>
-#include <evo/creditpool.h>
 
 #include <consensus/params.h>
 
@@ -17,18 +16,20 @@
 #include <llmq/utils.h>
 #include <llmq/quorums.h>
 
+#include <util/ranges_set.h>
+
 #include <algorithm>
 
 /**
  *  Common code for Asset Lock and Asset Unlock
  */
-bool CheckAssetLockUnlockTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCreditPool& creditPool, TxValidationState& state)
+bool CheckAssetLockUnlockTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state)
 {
     switch (tx.nType) {
     case TRANSACTION_ASSET_LOCK:
         return CheckAssetLockTx(tx, state);
     case TRANSACTION_ASSET_UNLOCK:
-        return CheckAssetUnlockTx(tx, pindexPrev, creditPool, state);
+        return CheckAssetUnlockTx(tx, pindexPrev, indexes, state);
     default:
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-not-asset-locks-at-all");
     }
@@ -142,8 +143,10 @@ bool CAssetUnlockPayload::VerifySig(const uint256& msgHash, const CBlockIndex* p
     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-not-verified");
 }
 
-bool CheckAssetUnlockTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCreditPool& creditPool, TxValidationState& state)
+bool CheckAssetUnlockTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state)
 {
+    // Some checks depends from blockchain status also, such as `known indexes` and `withdrawal limits`
+    // They are omitted here and done by CCreditPool
     if (tx.nType != TRANSACTION_ASSET_UNLOCK) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-assetunlocktx-type");
     }
@@ -165,7 +168,7 @@ bool CheckAssetUnlockTx(const CTransaction& tx, const CBlockIndex* pindexPrev, c
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-assetunlocktx-version");
     }
 
-    if (creditPool.indexes.Contains(assetUnlockTx.getIndex())) {
+    if (indexes != std::nullopt && indexes->Contains(assetUnlockTx.getIndex())) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-duplicated-index");
     }
 
