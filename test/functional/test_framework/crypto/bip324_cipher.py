@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-"""Test-only implementation of ChaCha20 Poly1305 AEAD Construction in RFC 8439
+"""Test-only implementation of ChaCha20 Poly1305 AEAD Construction in RFC 8439 and FSChaCha20Poly1305 for BIP 324
 
 It is designed for ease of understanding, not performance.
 
@@ -13,7 +13,7 @@ anything but tests.
 
 import unittest
 
-from .chacha20 import chacha20_block
+from .chacha20 import chacha20_block, REKEY_INTERVAL
 from .poly1305 import Poly1305
 
 
@@ -58,6 +58,32 @@ def aead_chacha20_poly1305_decrypt(key, nonce, aad, ciphertext):
         for j in range(now):
             ret.append(ciphertext[j + 64 * i] ^ keystream[j])
     return bytes(ret)
+
+
+class FSChaCha20Poly1305:
+    """Rekeying wrapper AEAD around ChaCha20Poly1305."""
+    def __init__(self, initial_key):
+        self._key = initial_key
+        self._packet_counter = 0
+
+    def _crypt(self, aad, text, is_decrypt):
+        nonce = ((self._packet_counter % REKEY_INTERVAL).to_bytes(4, 'little') +
+                 (self._packet_counter // REKEY_INTERVAL).to_bytes(8, 'little'))
+        if is_decrypt:
+            ret = aead_chacha20_poly1305_decrypt(self._key, nonce, aad, text)
+        else:
+            ret = aead_chacha20_poly1305_encrypt(self._key, nonce, aad, text)
+        if (self._packet_counter + 1) % REKEY_INTERVAL == 0:
+            rekey_nonce = b"\xFF\xFF\xFF\xFF" + nonce[4:]
+            self._key = aead_chacha20_poly1305_encrypt(self._key, rekey_nonce, b"", b"\x00" * 32)[:32]
+        self._packet_counter += 1
+        return ret
+
+    def decrypt(self, aad, ciphertext):
+        return self._crypt(aad, ciphertext, True)
+
+    def encrypt(self, aad, plaintext):
+        return self._crypt(aad, plaintext, False)
 
 
 # Test vectors from RFC8439 consisting of plaintext, aad, 32 byte key, 12 byte nonce and ciphertext
@@ -113,6 +139,30 @@ AEAD_TESTS = [
      "aaae5bb81e8407c94b2ae86ae0c7efbe"],
 ]
 
+FSAEAD_TESTS = [
+    ["d6a4cb04ef0f7c09c1866ed29dc24d820e75b0491032a51b4c3366f9ca35c19e"
+     "a3047ec6be9d45f9637b63e1cf9eb4c2523a5aab7b851ebeba87199db0e839cf"
+     "0d5c25e50168306377aedbe9089fd2463ded88b83211cf51b73b150608cc7a60"
+     "0d0f11b9a742948482e1b109d8faf15b450aa7322e892fa2208c6691e3fecf4c"
+     "711191b14d75a72147",
+     "786cb9b6ebf44288974cf0",
+     "5c9e1c3951a74fba66708bf9d2c217571684556b6a6a3573bff2847d38612654",
+     500,
+     "9dcebbd3281ea3dd8e9a1ef7d55a97abd6743e56ebc0c190cb2c4e14160b385e"
+     "0bf508dddf754bd02c7c208447c131ce23e47a4a14dfaf5dd8bc601323950f75"
+     "4e05d46e9232f83fc5120fbbef6f5347a826ec79a93820718d4ec7a2b7cfaaa4"
+     "4b21e16d726448b62f803811aff4f6d827ed78e738ce8a507b81a8ae13131192"
+     "8039213de18a5120dc9b7370baca878f50ff254418de3da50c"],
+    ["8349b7a2690b63d01204800c288ff1138a1d473c832c90ea8b3fc102d0bb3adc"
+     "44261b247c7c3d6760bfbe979d061c305f46d94c0582ac3099f0bf249f8cb234",
+     "",
+     "3bd2093fcbcb0d034d8c569583c5425c1a53171ea299f8cc3bbf9ae3530adfce",
+     60000,
+     "30a6757ff8439b975363f166a0fa0e36722ab35936abd704297948f45083f4d4"
+     "99433137ce931f7fca28a0acd3bc30f57b550acbc21cbd45bbef0739d9caf30c"
+     "14b94829deb27f0b1923a2af704ae5d6"],
+]
+
 
 class TestFrameworkAEAD(unittest.TestCase):
     def test_aead(self):
@@ -127,4 +177,25 @@ class TestFrameworkAEAD(unittest.TestCase):
             ciphertext = aead_chacha20_poly1305_encrypt(key, nonce, aad, plain)
             self.assertEqual(hex_cipher, ciphertext.hex())
             plaintext = aead_chacha20_poly1305_decrypt(key, nonce, aad, ciphertext)
+            self.assertEqual(plain, plaintext)
+
+    def test_fschacha20poly1305aead(self):
+        "FSChaCha20Poly1305 AEAD test vectors."
+        for test_vector in FSAEAD_TESTS:
+            hex_plain, hex_aad, hex_key, msg_idx, hex_cipher = test_vector
+            plain = bytes.fromhex(hex_plain)
+            aad = bytes.fromhex(hex_aad)
+            key = bytes.fromhex(hex_key)
+
+            enc_aead = FSChaCha20Poly1305(key)
+            dec_aead = FSChaCha20Poly1305(key)
+
+            for _ in range(msg_idx):
+                enc_aead.encrypt(b"", b"")
+            ciphertext = enc_aead.encrypt(aad, plain)
+            self.assertEqual(hex_cipher, ciphertext.hex())
+
+            for _ in range(msg_idx):
+                dec_aead.decrypt(b"", bytes(16))
+            plaintext = dec_aead.decrypt(aad, ciphertext)
             self.assertEqual(plain, plaintext)
