@@ -295,7 +295,7 @@ static void gobject_submit_help(const JSONRPCRequest& request)
             {"revision", RPCArg::Type::NUM, RPCArg::Optional::NO, "object revision in the system"},
             {"time", RPCArg::Type::NUM, RPCArg::Optional::NO, "time this object was created"},
             {"data-hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "data in hex string form"},
-            {"fee-txid", RPCArg::Type::STR_HEX, /* default */ "", "fee-tx id, required for all objects except triggers"},
+            {"fee-txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "txid of the corresponding proposal fee transaction"},
         },
         RPCResults{},
         RPCExamples{""}
@@ -342,26 +342,16 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
     LogPrint(BCLog::GOBJECT, "gobject_submit -- GetDataAsPlainString = %s, hash = %s, txid = %s\n",
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), txidFee.ToString());
 
+    if (govobj.GetObjectType() == GovernanceObject::TRIGGER) {
+        LogPrintf("govobject(submit) -- Object submission rejected because submission of trigger is disabled\n");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Submission of triggers is not available");
+    }
+
     if (govobj.GetObjectType() == GovernanceObject::PROPOSAL) {
         CProposalValidator validator(strDataHex);
         if (!validator.Validate()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages:" + validator.GetErrorMessages());
         }
-    }
-
-    // Attempt to sign triggers if we are a MN
-    if (govobj.GetObjectType() == GovernanceObject::TRIGGER) {
-        if (fMnFound) {
-            LOCK(activeMasternodeInfoCs);
-            govobj.SetMasternodeOutpoint(activeMasternodeInfo.outpoint);
-            govobj.Sign(*activeMasternodeInfo.blsKeyOperator);
-        } else {
-            LogPrintf("gobject(submit) -- Object submission rejected because node is not a masternode\n");
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Only valid masternodes can submit this type of object");
-        }
-    } else if (request.params.size() != 5) {
-        LogPrintf("gobject(submit) -- Object submission rejected because fee tx not provided\n");
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "The fee-txid parameter must be included to submit this type of object");
     }
 
     std::string strHash = govobj.GetHash().ToString();
@@ -399,111 +389,6 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
     }
 
     return govobj.GetHash().ToString();
-}
-
-static void gobject_vote_conf_help(const JSONRPCRequest& request)
-{
-    RPCHelpMan{"gobject vote-conf",
-        "Vote on a governance object by masternode configured in dash.conf\n",
-        {
-            {"governance-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "hash of the governance object"},
-            {"vote", RPCArg::Type::STR, RPCArg::Optional::NO, "vote, possible values: [funding|valid|delete|endorsed]"},
-            {"vote-outcome", RPCArg::Type::STR, RPCArg::Optional::NO, "vote outcome, possible values: [yes|no|abstain]"},
-        },
-        RPCResults{},
-        RPCExamples{""}
-    }.Check(request);
-}
-
-static UniValue gobject_vote_conf(const JSONRPCRequest& request)
-{
-    gobject_vote_conf_help(request);
-
-    uint256 hash(ParseHashV(request.params[0], "Object hash"));
-    std::string strVoteSignal = request.params[1].get_str();
-    std::string strVoteOutcome = request.params[2].get_str();
-
-    vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal);
-    if (eVoteSignal == VOTE_SIGNAL_NONE) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER,
-                           "Invalid vote signal. Please using one of the following: "
-                           "(funding|valid|delete|endorsed)");
-    }
-
-    vote_outcome_enum_t eVoteOutcome = CGovernanceVoting::ConvertVoteOutcome(strVoteOutcome);
-    if (eVoteOutcome == VOTE_OUTCOME_NONE) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
-    }
-
-    GovernanceObject govObjType = WITH_LOCK(governance->cs, return [&](){
-        CGovernanceObject *pGovObj = governance->FindGovernanceObject(hash);
-        if (!pGovObj) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Governance object not found");
-        }
-        return pGovObj->GetObjectType();
-    }());
-
-    int nSuccessful = 0;
-    int nFailed = 0;
-
-    UniValue resultsObj(UniValue::VOBJ);
-
-    UniValue statusObj(UniValue::VOBJ);
-    UniValue returnObj(UniValue::VOBJ);
-
-    auto dmn = WITH_LOCK(activeMasternodeInfoCs, return deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(activeMasternodeInfo.outpoint));
-
-    if (!dmn) {
-        nFailed++;
-        statusObj.pushKV("result", "failed");
-        statusObj.pushKV("errorMessage", "Can't find masternode by collateral output");
-        resultsObj.pushKV("dash.conf", statusObj);
-        returnObj.pushKV("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed));
-        returnObj.pushKV("detail", resultsObj);
-        return returnObj;
-    }
-
-    CGovernanceVote vote(dmn->collateralOutpoint, hash, eVoteSignal, eVoteOutcome);
-
-    bool signSuccess = false;
-    if (govObjType == GovernanceObject::PROPOSAL && eVoteSignal == VOTE_SIGNAL_FUNDING) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf for proposals");
-    }
-
-    {
-        LOCK(activeMasternodeInfoCs);
-        if (activeMasternodeInfo.blsKeyOperator) {
-            signSuccess = vote.Sign(*activeMasternodeInfo.blsKeyOperator);
-        }
-    }
-
-    if (!signSuccess) {
-        nFailed++;
-        statusObj.pushKV("result", "failed");
-        statusObj.pushKV("errorMessage", "Failure to sign.");
-        resultsObj.pushKV("dash.conf", statusObj);
-        returnObj.pushKV("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed));
-        returnObj.pushKV("detail", resultsObj);
-        return returnObj;
-    }
-
-    CGovernanceException exception;
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    if (governance->ProcessVoteAndRelay(vote, exception, *node.connman)) {
-        nSuccessful++;
-        statusObj.pushKV("result", "success");
-    } else {
-        nFailed++;
-        statusObj.pushKV("result", "failed");
-        statusObj.pushKV("errorMessage", exception.GetMessage());
-    }
-
-    resultsObj.pushKV("dash.conf", statusObj);
-
-    returnObj.pushKV("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed));
-    returnObj.pushKV("detail", resultsObj);
-
-    return returnObj;
 }
 
 static UniValue VoteWithMasternodes(const JSONRPCRequest& request, const std::map<uint256, CKey>& keys,
@@ -983,9 +868,6 @@ static UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
         "  diff               - List differences since last diff\n"
 #ifdef ENABLE_WALLET
         "  vote-alias         - Vote on a governance object by masternode proTxHash\n"
-#endif // ENABLE_WALLET
-        "  vote-conf          - Vote on a governance object by masternode configured in dash.conf\n"
-#ifdef ENABLE_WALLET
         "  vote-many          - Vote on a governance object by all masternodes for which the voting key is in the wallet\n"
 #endif // ENABLE_WALLET
         ,
@@ -1023,8 +905,6 @@ static UniValue gobject(const JSONRPCRequest& request)
             gobject submit 6e622bb41bad1fb18e7f23ae96770aeb33129e18bd9efe790522488e580a0a03 0 1 1464292854 "beer-reimbursement" 5b5b22636f6e7472616374222c207b2270726f6a6563745f6e616d65223a20225c22626565722d7265696d62757273656d656e745c22222c20227061796d656e745f61646472657373223a20225c225879324c4b4a4a64655178657948726e34744744514238626a6876464564615576375c22222c2022656e645f64617465223a202231343936333030343030222c20226465736372697074696f6e5f75726c223a20225c227777772e646173687768616c652e6f72672f702f626565722d7265696d62757273656d656e745c22222c2022636f6e74726163745f75726c223a20225c22626565722d7265696d62757273656d656e742e636f6d2f3030312e7064665c22222c20227061796d656e745f616d6f756e74223a20223233342e323334323232222c2022676f7665726e616e63655f6f626a6563745f6964223a2037342c202273746172745f64617465223a202231343833323534303030227d5d5d1
         */
         return gobject_submit(new_request);
-    } else if (command == "gobjectvote-conf") {
-        return gobject_vote_conf(new_request);
 #ifdef ENABLE_WALLET
     } else if (command == "gobjectvote-many") {
         return gobject_vote_many(new_request);
