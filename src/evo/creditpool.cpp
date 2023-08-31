@@ -18,6 +18,11 @@
 #include <memory>
 #include <stack>
 
+// Forward declaration to prevent a new circular dependencies through masternode/payments.h
+namespace MasternodePayments {
+CAmount PlatformShare(const CAmount masternodeReward);
+} // namespace MasternodePayments
+
 static const std::string DB_CREDITPOOL_SNAPSHOT = "cpm_S";
 
 std::unique_ptr<CCreditPoolManager> creditPoolManager;
@@ -241,7 +246,7 @@ bool CCreditPoolDiff::SetTarget(const CTransaction& tx, TxValidationState& state
     for (const CTxOut& txout : tx.vout) {
         blockReward += txout.nValue;
     }
-    masternodeReward = 0.375 * GetMasternodePayment(cbTx.nHeight, blockReward, params.BRRHeight);
+    masternodeReward = MasternodePayments::PlatformShare(GetMasternodePayment(cbTx.nHeight, blockReward, params.BRRHeight));
     LogPrintf("CreditPool: set target to %lld with MN reward %lld\n", *targetBalance, masternodeReward);
 
     return true;
