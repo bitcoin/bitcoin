@@ -6,22 +6,22 @@
 #define NAVCOIN_BLSCT_SET_MEM_PROOF_SET_MEM_PROVER_H
 
 #include <vector>
-#include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/elements.h>
 #include <blsct/set_mem_proof/set_mem_proof_setup.h>
 #include <blsct/set_mem_proof/set_mem_proof.h>
 #include <blsct/building_block/imp_inner_prod_arg.h>
 #include <hash.h>
 
+template <typename T>
 class SetMemProofProver {
 public:
-    using Scalar = Mcl::Scalar;
-    using Point = Mcl::Point;
+    using Scalar = typename T::Scalar;
+    using Point = typename T::Point;
     using Scalars = Elements<Scalar>;
     using Points = Elements<Point>;
 
-    static SetMemProof Prove(
-        const SetMemProofSetup& setup,
+    static SetMemProof<T> Prove(
+        const SetMemProofSetup<T>& setup,
         const Points& Ys_src, // N Pedersen Commitment Y^n
         const Point& sigma,  // Commitment of the set member
         const Scalar& m,  // Message used for the commitment of the set member
@@ -30,10 +30,10 @@ public:
     );
 
     static bool Verify(
-        const SetMemProofSetup& setup,
+        const SetMemProofSetup<T>& setup,
         const Points& Ys_src,
         const Scalar& eta,
-        const SetMemProof& proof  // Output of Prove()
+        const SetMemProof<T>& proof  // Output of Prove()
     );
 
 #ifndef BOOST_UNIT_TEST
@@ -51,7 +51,7 @@ private:
     );
 
     static Scalar ComputeX(
-        const SetMemProofSetup& setup,
+        const SetMemProofSetup<T>& setup,
         const Scalar& omega,
         const Scalar& y,
         const Scalar& z,
@@ -60,7 +60,7 @@ private:
     );
 
     static Points ExtendYs(
-        const SetMemProofSetup& setup,
+        const SetMemProofSetup<T>& setup,
         const Points& Ys_src,
         const size_t& new_size
     );

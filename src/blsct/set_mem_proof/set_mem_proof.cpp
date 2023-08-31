@@ -3,11 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/set_mem_proof/set_mem_proof.h>
+#include <blsct/arith/mcl/mcl.h>
 #include <streams.h>
 
-bool SetMemProof::operator==(const SetMemProof& other) const
+template <typename T>
+bool SetMemProof<T>::operator==(const SetMemProof& other) const
 {
-  return phi == other.phi
+    return phi == other.phi
         && A1 == other.A1
         && A2 == other.A2
         && S1 == other.S1
@@ -28,13 +30,17 @@ bool SetMemProof::operator==(const SetMemProof& other) const
         && omega == other.omega;
 }
 
-bool SetMemProof::operator!=(const SetMemProof& other) const
+template <typename T>
+bool SetMemProof<T>::operator!=(const SetMemProof& other) const
 {
     return !operator==(other);
 }
+template
+bool SetMemProof<Mcl>::operator!=(const SetMemProof<Mcl>& other) const;
 
+template <typename T>
 template <typename Stream>
-void SetMemProof::Serialize(Stream& st) const
+void SetMemProof<T>::Serialize(Stream& st) const
 {
     st << phi
        << A1
@@ -56,15 +62,32 @@ void SetMemProof::Serialize(Stream& st) const
        << b
        << omega;
 }
-template void SetMemProof::Serialize(CDataStream& st) const;
+template
+void SetMemProof<Mcl>::Serialize(CDataStream& st) const;
 
+template <typename T>
 template <typename Stream>
-void SetMemProof::Unserialize(Stream& st)
+void SetMemProof<T>::Unserialize(Stream& st)
 {
-    st >> phi >> A1 >> A2 >> S1 >> S2 >> S3 >> T1 >> T2 >> tau_x >> mu >> z_alpha >> z_tau >> z_beta >> t >> Ls >> Rs >> a >> b >> omega;
-
-    if (Ls.HasZero() || Rs.HasZero() || A1.IsZero() || A2.IsZero() || S1.IsZero() || S2.IsZero() || S3.IsZero() || T1.IsZero() || T2.IsZero())
-        throw std::runtime_error("SetMemProof::Unserialize: Invalid proof, at least one point is infinity");
+    st >> phi
+       >> A1
+       >> A2
+       >> S1
+       >> S2
+       >> S3
+       >> T1
+       >> T2
+       >> tau_x
+       >> mu
+       >> z_alpha
+       >> z_tau
+       >> z_beta
+       >> t
+       >> Ls
+       >> Rs
+       >> a
+       >> b
+       >> omega;
 }
-
-template void SetMemProof::Unserialize(CDataStream& st);
+template
+void SetMemProof<Mcl>::Unserialize(CDataStream& st);

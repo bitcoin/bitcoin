@@ -2,15 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <blsct/range_proof/range_proof_logic.h>
+#include <blsct/range_proof/bulletproofs/range_proof_logic.h>
+#include <blsct/range_proof/common.h>
 #include <blsct/arith/mcl/mcl.h>
+#include <blsct/building_block/imp_inner_prod_arg.h>
 #include <test/util/setup_common.h>
 
 #include <tinyformat.h>
 #include <boost/test/unit_test.hpp>
 #include <util/strencodings.h>
 
-BOOST_FIXTURE_TEST_SUITE(range_proof_logic_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(bulletproofs_range_proof_logic_tests, BasicTestingSetup)
 
 using T = Mcl;
 using Point = T::Point;
@@ -22,7 +24,7 @@ struct TestCase
 {
     std::string name;
     Scalars values;
-    bool is_batched;  // prove function is called once for with all values
+    bool is_batched;
     bool should_complete_recovery;
     size_t num_amounts;
     bool verify_result;
@@ -61,10 +63,10 @@ BOOST_AUTO_TEST_CASE(test_range_proof_prove_verify_one_value)
     Scalars vs;
     vs.Add(one);
 
-    RangeProofLogic<T> rp;
+    bulletproofs::RangeProofLogic<T> rp;
     auto p = rp.Prove(vs, nonce, msg.second, token_id);
 
-    auto is_valid = rp.Verify(std::vector<RangeProof<T>> { p }, token_id);
+    auto is_valid = rp.Verify(std::vector<bulletproofs::RangeProof<T>> { p });
     BOOST_CHECK(is_valid);
 }
 
@@ -75,19 +77,15 @@ BOOST_AUTO_TEST_CASE(test_range_proof_recovery_one_value)
     auto token_id = GenTokenId();
 
     Scalar one(1);
-    std::vector<Scalar> vs_vec;
-    vs_vec.push_back(one);
-
     Scalars vs;
     vs.Add(one);
 
-    RangeProofLogic<T> rp;
+    bulletproofs::RangeProofLogic<T> rp;
     auto proof = rp.Prove(vs, nonce, msg.second, token_id);
 
-    size_t index = 0;
-    auto req = AmountRecoveryRequest<T>::of(proof, index, nonce);
-    auto reqs = std::vector<AmountRecoveryRequest<T>> { req };
-    auto result = rp.RecoverAmounts(reqs, token_id);
+    auto req = bulletproofs::AmountRecoveryRequest<T>::of(proof, nonce);
+    auto reqs = std::vector<bulletproofs::AmountRecoveryRequest<T>> { req };
+    auto result = rp.RecoverAmounts(reqs);
 
     BOOST_CHECK(result.is_completed);
     auto xs = result.amounts;
@@ -99,7 +97,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_recovery_one_value)
 
 static std::vector<TestCase> BuildTestCases()
 {
-    RangeProofLogic<T> rp;
+    bulletproofs::RangeProofLogic<T> rp;
 
     Scalar one(1);
     Scalar two(2);
@@ -184,7 +182,7 @@ static std::vector<TestCase> BuildTestCases()
         Scalars values;
         values.Add(Scalar(1));
 
-        std::vector<size_t> msg_sizes { 1ul, 23ul, 24ul, RangeProofSetup::m_max_message_size };
+        std::vector<size_t> msg_sizes { 1ul, 23ul, 24ul, range_proof::Setup::max_message_size };
         for (auto msg_size: msg_sizes) {
             TestCase x;
             x.name = strprintf("with message of length %d", msg_size).c_str();
@@ -200,7 +198,7 @@ static std::vector<TestCase> BuildTestCases()
 
     // test # of input values from 1 to max
     {
-        for (size_t n=1; n<=RangeProofSetup::m_max_input_values; ++n) {
+        for (size_t n=1; n<=range_proof::Setup::max_input_values; ++n) {
             Scalars values;
             for (size_t i=0; i<n; ++i) {
                 values.Add(Scalar(i + 1));
@@ -237,7 +235,7 @@ static std::vector<TestCase> BuildTestCases()
     {
         // string of maximum message size 54
         const std::string s("Pneumonoultramicroscopicsilicovolcanoconiosis123456789");
-        assert(s.size() == RangeProofSetup::m_max_message_size);
+        assert(s.size() == range_proof::Setup::max_message_size);
         Scalars values;
         values.Add(one);
 
@@ -260,13 +258,13 @@ static std::vector<TestCase> BuildTestCases()
 }
 
 static void RunTestCase(
-    RangeProofLogic<T>& rp,
+    bulletproofs::RangeProofLogic<T>& rp,
     TestCase& test_case
 ) {
     auto token_id = GenTokenId();
     auto nonce = GenNonce();
 
-    std::vector<RangeProof<T>> proofs;
+    std::vector<bulletproofs::RangeProof<T>> proofs;
 
     // calculate proofs
     if (test_case.is_batched) {
@@ -282,16 +280,16 @@ static void RunTestCase(
     }
 
     // verify proofs
-    auto verify_result = rp.Verify(proofs, token_id);
+    auto verify_result = rp.Verify(proofs);
     BOOST_CHECK(verify_result == test_case.verify_result);
 
     // recover value, gamma and message
-    std::vector<AmountRecoveryRequest<T>> reqs;
+    std::vector<bulletproofs::AmountRecoveryRequest<T>> reqs;
 
     for (size_t i=0; i<proofs.size(); ++i) {
-        reqs.push_back(AmountRecoveryRequest<T>::of(proofs[i], i, nonce));
+        reqs.push_back(bulletproofs::AmountRecoveryRequest<T>::of(proofs[i], nonce));
     }
-    auto recovery_result = rp.RecoverAmounts(reqs, token_id);
+    auto recovery_result = rp.RecoverAmounts(reqs);
     BOOST_CHECK(recovery_result.is_completed == test_case.should_complete_recovery);
 
     if (recovery_result.is_completed) {
@@ -314,7 +312,7 @@ static void RunTestCase(
 BOOST_AUTO_TEST_CASE(test_range_proof_prove_verify_recovery)
 {
     auto test_cases = BuildTestCases();
-    RangeProofLogic<T> rp;
+    bulletproofs::RangeProofLogic<T> rp;
     for (auto test_case: test_cases) {
         RunTestCase(rp, test_case);
     }
@@ -322,7 +320,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_prove_verify_recovery)
 
 BOOST_AUTO_TEST_CASE(test_range_proof_message_size)
 {
-    RangeProofLogic<T> rp;
+    bulletproofs::RangeProofLogic<T> rp;
 
     Scalars values;
     values.Add(Scalar(1));
@@ -336,13 +334,13 @@ BOOST_AUTO_TEST_CASE(test_range_proof_message_size)
     }
     {
         // msg of valid size
-        std::string s(RangeProofSetup::m_max_message_size, 'x');
+        std::string s(range_proof::Setup::max_message_size, 'x');
         std::vector<unsigned char> msg(s.begin(), s.end());
         BOOST_CHECK_NO_THROW(rp.Prove(values, nonce, msg, token_id));
     }
     {
         // msg of exceeded size
-        std::string s(RangeProofSetup::m_max_message_size + 1, 'x');
+        std::string s(range_proof::Setup::max_message_size + 1, 'x');
         std::vector<unsigned char> msg(s.begin(), s.end());
         BOOST_CHECK_THROW(rp.Prove(values, nonce, msg, token_id), std::runtime_error);
     }
@@ -350,7 +348,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_message_size)
 
 BOOST_AUTO_TEST_CASE(test_range_proof_number_of_input_values)
 {
-    RangeProofLogic<T> rp;
+    bulletproofs::RangeProofLogic<T> rp;
     MclG1Point nonce = MclG1Point::GetBasePoint();
     std::vector<unsigned char> msg;
     TokenId token_id;
@@ -369,7 +367,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_number_of_input_values)
     {
         // should throw if number of input values is outsize the valid range
         Scalars values;
-        for (size_t i=0; i<RangeProofSetup::m_max_input_values + 1; ++i) {
+        for (size_t i=0; i<range_proof::Setup::max_input_values + 1; ++i) {
             values.Add(Scalar(1));
         }
         BOOST_CHECK_THROW(rp.Prove(values, nonce, msg, token_id), std::runtime_error);
@@ -379,12 +377,12 @@ BOOST_AUTO_TEST_CASE(test_range_proof_number_of_input_values)
 BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
 {
     auto gen_valid_proof_wo_value_commitments = [](size_t num_inputs) {
-        RangeProof<T> p;
+        bulletproofs::RangeProof<T> p;
         auto n = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(num_inputs);
         for (size_t i=0; i<n; ++i) {
             p.Vs.Add(MclG1Point::GetBasePoint());
         }
-        auto num_rounds = RangeProofWithTranscript<T>::RecoverNumRounds(n);
+        auto num_rounds = range_proof::Common<Mcl>::GetNumRoundsExclLast(n);
         for (size_t i=0; i<num_rounds; ++i) {
             p.Ls.Add(MclG1Point::GetBasePoint());
             p.Rs.Add(MclG1Point::GetBasePoint());
@@ -392,35 +390,35 @@ BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
         return p;
     };
 
-    RangeProofLogic<T> rp;
+    bulletproofs::RangeProofLogic<T> rp;
     {
         // no proof should validate fine
-        std::vector<RangeProof<T>> proofs;
-        BOOST_CHECK_NO_THROW(rp.ValidateProofsBySizes(proofs));
+        std::vector<bulletproofs::RangeProof<T>> proofs;
+        BOOST_CHECK_NO_THROW(range_proof::Common<T>::ValidateProofsBySizes(proofs));
     }
     {
         // no value commitment
-        RangeProof<T> p;
-        std::vector<RangeProof<T>> proofs { p };
-        BOOST_CHECK_THROW(rp.ValidateProofsBySizes(proofs), std::runtime_error);
+        bulletproofs::RangeProof<T> p;
+        std::vector<bulletproofs::RangeProof<T>> proofs { p };
+        BOOST_CHECK_THROW(range_proof::Common<T>::ValidateProofsBySizes(proofs), std::runtime_error);
     }
     {
         // minimum number of value commitments
         auto p = gen_valid_proof_wo_value_commitments(1);
-        std::vector<RangeProof<T>> proofs { p };
-        BOOST_CHECK_NO_THROW(rp.ValidateProofsBySizes(proofs));
+        std::vector<bulletproofs::RangeProof<T>> proofs { p };
+        BOOST_CHECK_NO_THROW(range_proof::Common<T>::ValidateProofsBySizes(proofs));
     }
     {
         // maximum number of value commitments
-        auto p = gen_valid_proof_wo_value_commitments(RangeProofSetup::m_max_input_values);
-        std::vector<RangeProof<T>> proofs { p };
-        BOOST_CHECK_NO_THROW(rp.ValidateProofsBySizes(proofs));
+        auto p = gen_valid_proof_wo_value_commitments(range_proof::Setup::max_input_values);
+        std::vector<bulletproofs::RangeProof<T>> proofs { p };
+        BOOST_CHECK_NO_THROW(range_proof::Common<T>::ValidateProofsBySizes(proofs));
     }
     {
         // number of value commitments exceeding maximum
-        auto p = gen_valid_proof_wo_value_commitments(RangeProofSetup::m_max_input_values + 1);
-        std::vector<RangeProof<T>> proofs { p };
-        BOOST_CHECK_THROW(rp.ValidateProofsBySizes(proofs), std::runtime_error);
+        auto p = gen_valid_proof_wo_value_commitments(range_proof::Setup::max_input_values + 1);
+        std::vector<bulletproofs::RangeProof<T>> proofs { p };
+        BOOST_CHECK_THROW(range_proof::Common<T>::ValidateProofsBySizes(proofs), std::runtime_error);
     }
 }
 

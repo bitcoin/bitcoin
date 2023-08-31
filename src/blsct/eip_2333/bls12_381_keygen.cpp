@@ -54,15 +54,14 @@ template std::array<uint8_t,48ul> BLS12_381_KeyGen::HKDF_Expand<48ul>(const std:
 std::vector<uint8_t> BLS12_381_KeyGen::I2OSP(const MclScalar& x, const size_t& xLen)
 {
     if (xLen == 0) {
-        throw std::runtime_error("Output size cannot be zero");
+        throw std::runtime_error(std::string(__func__) + ": Output size cannot be zero");
     }
     // TODO dropping preceding zeros after generating 32-byte octet string. check if this is acceptable
     auto ret = x.GetVch(true);
     if (ret.size() == xLen) {
         return ret;
     } else if (ret.size() > xLen) {
-        auto s = strprintf("Input too large. Expected octet length <= %ld, but got %ld", xLen, ret.size());
-        throw std::runtime_error(s);
+        throw std::runtime_error(std::string(__func__) + strprintf(": Input too large. Expected octet length <= %ld, but got %ld", xLen, ret.size()));
     } else {
         // prepend 0 padding to make the octet string size xLen
         auto padded_ret = std::vector<uint8_t>(xLen - ret.size());
@@ -172,7 +171,7 @@ BLS12_381_KeyGen::parent_SK_to_lamport_PK(const MclScalar& parent_SK, const uint
 MclScalar BLS12_381_KeyGen::derive_master_SK(const std::vector<uint8_t>& seed)
 {
     if (seed.size() < 32) {
-        throw std::runtime_error("seed must be an 256-bit octet string or larger");
+        throw std::runtime_error(std::string(__func__) + ": Seed must be an 256-bit octet string or larger");
     }
     auto SK = HKDF_mod_r(seed);
     return SK;

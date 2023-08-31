@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/building_block/imp_inner_prod_arg.h>
+#include <blsct/range_proof/setup.h>
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/elements.h>
 #include <hash.h>
@@ -92,10 +93,9 @@ BOOST_AUTO_TEST_CASE(test_gen_all_round_xs_xinvs)
     Rs.Add(g + g + g + g);
 
     auto res = ImpInnerProdArg::GenAllRoundXs<Mcl>(2, Ls, Rs, fiat_shamir).value();
-
     BOOST_CHECK(res.Size() == 2);
     BOOST_CHECK(res[0].GetString(16) == "1549ffc50ba69bf258b57da9e829cf787d7996fb9b6f779667a3d83544f8fac3");
-    BOOST_CHECK(res[1].GetString(16) == "4ef56006527d9bd77bec57c74d96cd237d1af6c0a424cd890c26969a2ef7d55c");
+    BOOST_CHECK(res[1].GetString(16) == "198816319c5d3178b6569166c76e75c956e3382487a95fed771d4312686b6e8");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -2,13 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <blsct/range_proof/range_proof.h>
+#include <blsct/range_proof/bulletproofs/range_proof.h>
 #include <blsct/arith/mcl/mcl.h>
 #include <test/util/setup_common.h>
 #include <boost/test/unit_test.hpp>
 #include <streams.h>
 
-BOOST_FIXTURE_TEST_SUITE(range_proof_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(bulletproofs_range_proof_tests, BasicTestingSetup)
 
 using T = Mcl;
 using Point = T::Point;
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(test_equal)
     Scalar b(5);
     Scalar t_hat(6);
 
-    RangeProof<T> p;
+    bulletproofs::RangeProof<T> p;
     p.Vs = Vs;
     p.A = A;
     p.S = S;
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(test_equal)
     p.b = b;
     p.t_hat = t_hat;
 
-    RangeProof<T> q;
+    bulletproofs::RangeProof<T> q;
     q.Vs = Vs;
     q.A = g;
     q.S = S;
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(test_de_ser)
     Scalar b(5);
     Scalar t_hat(6);
 
-    RangeProof<T> p;
+    bulletproofs::RangeProof<T> p;
     p.Vs = Vs;
     p.A = A;
     p.S = S;
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(test_de_ser)
     CDataStream st(SER_DISK, PROTOCOL_VERSION);
     p.Serialize(st);
 
-    RangeProof<T> q;
+    bulletproofs::RangeProof<T> q;
     q.Unserialize(st);
 
     BOOST_CHECK(p == q);

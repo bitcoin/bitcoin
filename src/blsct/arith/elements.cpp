@@ -5,8 +5,9 @@
 #include <blsct/arith/elements.h>
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
-#include <deque>
 #include <tinyformat.h>
+#include <deque>
+#include <sstream>
 
 template <typename T>
 Elements<T>::Elements()
@@ -52,7 +53,7 @@ template <typename T>
 std::vector<uint8_t> Elements<T>::GetVch() const
 {
     std::vector<uint8_t> aggr_vec;
-    for (T x : m_vec) {
+    for (T x: m_vec) {
         auto vec = x.GetVch();
         aggr_vec.insert(aggr_vec.end(), vec.begin(), vec.end());
     }
@@ -72,19 +73,6 @@ T Elements<T>::Sum() const
 }
 template MclScalar Elements<MclScalar>::Sum() const;
 template MclG1Point Elements<MclG1Point>::Sum() const;
-
-template <typename T>
-bool Elements<T>::HasZero() const
-{
-    for (T s : m_vec) {
-        if (s.IsZero()) return true;
-    }
-
-    return false;
-}
-template bool Elements<MclScalar>::HasZero() const;
-template bool Elements<MclG1Point>::HasZero() const;
-
 
 template <typename T>
 void Elements<T>::ConfirmIndexInsideRange(const uint32_t& index) const
@@ -143,7 +131,7 @@ template <typename T>
 inline void Elements<T>::ConfirmSizesMatch(const size_t& other_size) const
 {
     if (m_vec.size() != other_size) {
-        throw std::runtime_error("sizes of elements are expected to be the same, but different");
+        throw std::runtime_error(std::string(__func__) + ": Sizes of elements are expected to be the same, but different");
     }
 }
 template void Elements<MclScalar>::ConfirmSizesMatch(const size_t&) const;
@@ -283,7 +271,7 @@ template <typename T>
 Elements<T> Elements<T>::From(const size_t from_index) const
 {
     if (from_index >= Size()) {
-        throw std::runtime_error("'From' index out of range");
+        throw std::runtime_error(std::string(__func__) + ": 'From' index out of range");
     }
 
     Elements<T> ret;
@@ -299,7 +287,7 @@ template <typename T>
 Elements<T> Elements<T>::To(const size_t to_index) const
 {
     if (to_index > Size()) {
-        throw std::runtime_error("'To' index out of range");
+        throw std::runtime_error(std::string(__func__) + ": 'To' index out of range");
     }
 
     Elements<T> ret;
@@ -328,11 +316,11 @@ Elements<T> Elements<T>::Invert() const
     // build:
     // - elem_inverses = (x_1, x_2, ..., x_n)^-1
     // - extract_factors = [1, x_1, x_1*x_2, ..., x_1*...*x_n]
-    Elements<T> extract_factors; // cumulative product sequence used to cancel out inverses
-    T elem_inverse_prod;         // product of all element inverses
+    Elements<T> extract_factors;  // cumulative product sequence used to cancel out inverses
+    T elem_inverse_prod;  // product of all element inverses
     {
         T n(1);
-        for (auto& x : m_vec) {
+        for (auto& x: m_vec) {
             extract_factors.Add(n);
             n = n * x;
         }
@@ -341,7 +329,7 @@ Elements<T> Elements<T>::Invert() const
 
     // calculate inverses of all elements
     std::deque<T> q;
-    size_t i = m_vec.size() - 1;
+    size_t i = m_vec.size()-1;
     for (;;) {
         // extract x_i^-1 by multiplying x_1*...*x_{i-1}
         T x = elem_inverse_prod * extract_factors[i];
@@ -354,7 +342,57 @@ Elements<T> Elements<T>::Invert() const
         --i;
     }
 
-    Elements<T> ret({q.begin(), q.end()});
+    Elements<T> ret({ q.begin(), q.end() });
     return ret;
 }
 template Elements<MclScalar> Elements<MclScalar>::Invert() const;
+
+template <typename T>
+Elements<T> Elements<T>::Reverse() const
+{
+    std::vector<T> rev_vec(m_vec.rbegin(), m_vec.rend());
+    Elements<T> ret(rev_vec);
+    return ret;
+}
+template Elements<MclScalar> Elements<MclScalar>::Reverse() const;
+
+template <typename T>
+T Elements<T>::Product() const
+{
+    if (m_vec.size() == 0) {
+        throw std::runtime_error(std::string(__func__) + ": Cannot compute the product of empty vector");
+    }
+    T ret = m_vec[0];
+    for (size_t i=1; i<m_vec.size(); ++i) {
+        ret = ret * m_vec[i];
+    }
+    return ret;
+}
+template MclScalar Elements<MclScalar>::Product() const;
+
+template <typename T>
+Elements<T> Elements<T>::Square() const
+{
+    Elements<T> ret;
+    std::transform(m_vec.begin(), m_vec.end(), std::back_inserter(ret.m_vec), [](const T& x) {
+        return x.Square();
+    });
+    return ret;
+}
+template Elements<MclScalar> Elements<MclScalar>::Square() const;
+
+template <typename T>
+std::string Elements<T>::GetString(const uint8_t& radix) const
+{
+    std::stringstream ss;
+    ss << "[";
+    for (size_t i=0; i<m_vec.size(); ++i) {
+        ss << m_vec[i].GetString(radix);
+        if (i != m_vec.size() - 1) ss << ", ";
+    }
+    ss << "]";
+
+    return ss.str();
+}
+template
+std::string Elements<MclG1Point>::GetString(const uint8_t& radix) const;

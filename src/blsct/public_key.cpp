@@ -60,7 +60,7 @@ std::vector<unsigned char> PublicKey::GetVch() const
 
 blsPublicKey PublicKey::ToBlsPublicKey() const
 {
-    blsPublicKey bls_pk{point.Underlying()};
+    blsPublicKey bls_pk{point.GetUnderlying()};
     return bls_pk;
 }
 

@@ -8,7 +8,7 @@ namespace blsct {
 SubAddress::SubAddress(const PrivateKey& viewKey, const PublicKey& spendKey, const SubAddressIdentifier& subAddressId)
 {
     if (!viewKey.IsValid() || !spendKey.IsValid()) {
-        throw std::runtime_error("blsct::SubAddress::SubAddress(): no valid blsct keys");
+        throw std::runtime_error(std::string(__func__) + ": no valid blsct keys");
     }
 
     CHashWriter string(SER_GETHASH, 0);

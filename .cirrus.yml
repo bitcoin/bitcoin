@@ -160,11 +160,11 @@ task:
     - python test\functional\test_runner.py --nocleanup --ci --quiet --combinedlogslen=99999999 --jobs=6 --timeout-factor=8 --extended --exclude feature_dbcrash
 
 task:
-  name: 'ARM [unit tests, no functional tests] [bullseye]'
+  name: 'ARM [unit tests, no functional tests] [bookworm]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     docker_arguments:
-      CI_IMAGE_NAME_TAG: debian:bullseye
+      CI_IMAGE_NAME_TAG: debian:bookworm
       FILE_ENV: "./ci/test/00_setup_env_arm.sh"
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV

@@ -19,8 +19,8 @@ BOOST_AUTO_TEST_CASE(test_gg_ones_times_z)
 {
     auto z = MclScalar::Rand(true);
     auto gg = Elements<MclG1Point>(std::vector<MclG1Point>{
-        MclG1Point::MapToG1("g1"),
-        MclG1Point::MapToG1("g2")});
+        MclG1Point::MapToPoint("g1"),
+        MclG1Point::MapToPoint("g2")});
     auto r1 = gg * z;
 
     MclScalar one(1);
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(test_offset_by_negation)
     {
         MclScalar z(100);
         MclScalar basis(12345);
-        auto g = MclG1Point::MapToG1("g");
+        auto g = MclG1Point::MapToPoint("g");
 
         auto r1 = g * (basis - z);
         auto r2 = g * (basis + z.Negate());
@@ -67,9 +67,9 @@ BOOST_AUTO_TEST_CASE(test_range_proof_66_67_excl_h_prime)
     auto mu = alpha + rho * x;
 
     auto gg = Elements<MclG1Point>(std::vector<MclG1Point>{
-        MclG1Point::MapToG1("g1"),
-        MclG1Point::MapToG1("g2")});
-    auto h = MclG1Point::MapToG1("h");
+        MclG1Point::MapToPoint("g1"),
+        MclG1Point::MapToPoint("g2")});
+    auto h = MclG1Point::MapToPoint("h");
 
     Elements<MclScalar> al(std::vector<MclScalar> {
         MclScalar {1},
@@ -100,8 +100,8 @@ BOOST_AUTO_TEST_CASE(test_rebasing_base_point)
     auto z = MclScalar::Rand(true);
     auto y_n = Elements<MclScalar>::FirstNPow(y, n);
     auto hh = Elements<MclG1Point>(std::vector<MclG1Point> {
-        MclG1Point::MapToG1("h1"),
-        MclG1Point::MapToG1("h2")
+        MclG1Point::MapToPoint("h1"),
+        MclG1Point::MapToPoint("h2")
     });
     {
         auto hhp = hh * y;
@@ -147,8 +147,8 @@ BOOST_AUTO_TEST_CASE(test_range_proof_66_67_only_h_prime)
     auto sr = Elements<MclScalar>::RandVec(n);
     auto zs = one_n * z;
     auto hh = Elements<MclG1Point>(std::vector<MclG1Point>{
-        MclG1Point::MapToG1("h1"),
-        MclG1Point::MapToG1("h2")});
+        MclG1Point::MapToPoint("h1"),
+        MclG1Point::MapToPoint("h2")});
     auto a = hh * ar;
     auto s = hh * sr;
 
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_65_h_part_only)
     auto tau2 = MclScalar::Rand(true);
 
     // RHS
-    auto h = MclG1Point::MapToG1("h");
+    auto h = MclG1Point::MapToPoint("h");
     auto v = h * gamma;
     auto z = MclScalar::Rand(true);
     auto t1 = h * tau1;
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_65_g_part_only_excl_ts)
     auto lr_equiv = (l0 * r0).Sum();
     BOOST_CHECK(t_hat == lr_equiv);
 
-    auto g = MclG1Point::MapToG1("g");
+    auto g = MclG1Point::MapToPoint("g");
 
     auto v = g * upsilon;
     auto delta_yz =
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_65_g_part_ts_only)
     auto t1 = (l1 * r0).Sum();
     auto t2 = (l1 * r1).Sum();
 
-    auto g = MclG1Point::MapToG1("g");
+    auto g = MclG1Point::MapToPoint("g");
 
     auto cap_t1 = g * t1;
     auto cap_t2 = g * t2;
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(test_range_proof_65_g_part_only)
     auto t2 = (l1 * r1).Sum();
     auto t_hat = t0 + t1 * x + t2 * x.Square();
 
-    auto g = MclG1Point::MapToG1("g");
+    auto g = MclG1Point::MapToPoint("g");
 
     auto lhs = g * t_hat;
 
@@ -372,12 +372,12 @@ BOOST_AUTO_TEST_CASE(test_inner_product_argument)
     auto n = 2;
 
     auto gg = Elements<MclG1Point>(std::vector{
-        MclG1Point::MapToG1("g1"),
-        MclG1Point::MapToG1("g2")});
+        MclG1Point::MapToPoint("g1"),
+        MclG1Point::MapToPoint("g2")});
     auto hh = Elements<MclG1Point>(std::vector{
-        MclG1Point::MapToG1("h1"),
-        MclG1Point::MapToG1("h2")});
-    auto u = MclG1Point::MapToG1("u");
+        MclG1Point::MapToPoint("h1"),
+        MclG1Point::MapToPoint("h2")});
+    auto u = MclG1Point::MapToPoint("u");
 
     // a, b are Scalar vectors
     Elements<MclScalar> a(std::vector<MclScalar> { MclScalar {2}, MclScalar {3} });
@@ -501,20 +501,20 @@ BOOST_AUTO_TEST_CASE(test_range_proof)
     size_t n = al.Size();
     MclScalar upsilon(9);
 
-    auto g = MclG1Point::MapToG1("g");
-    auto h = MclG1Point::MapToG1("h");
+    auto g = MclG1Point::MapToPoint("g");
+    auto h = MclG1Point::MapToPoint("h");
 
     auto gg = Elements<MclG1Point>(std::vector<MclG1Point> {
-        MclG1Point::MapToG1("g1"),
-        MclG1Point::MapToG1("g2"),
-        MclG1Point::MapToG1("g3"),
-        MclG1Point::MapToG1("g4")
+        MclG1Point::MapToPoint("g1"),
+        MclG1Point::MapToPoint("g2"),
+        MclG1Point::MapToPoint("g3"),
+        MclG1Point::MapToPoint("g4")
     });
     auto hh = Elements<MclG1Point>(std::vector<MclG1Point> {
-        MclG1Point::MapToG1("h1"),
-        MclG1Point::MapToG1("h2"),
-        MclG1Point::MapToG1("h3"),
-        MclG1Point::MapToG1("h4")
+        MclG1Point::MapToPoint("h1"),
+        MclG1Point::MapToPoint("h2"),
+        MclG1Point::MapToPoint("h3"),
+        MclG1Point::MapToPoint("h4")
     });
 
     auto v = h * gamma + g * upsilon;

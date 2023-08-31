@@ -22,6 +22,9 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
 
     # Temporary, removed in followup https://github.com/bitcoin/bitcoin/pull/24230
     "index/base -> node/context -> net_processing -> index/blockfilterindex -> index/base",
+
+    # No issue. Due to explicit instantiation of LazyPoint template with Mcl
+    "blsct/arith/mcl/mcl -> blsct/arith/mcl/mcl_util -> blsct/building_block/lazy_point -> blsct/arith/mcl/mcl",
 )
 
 CODE_DIR = "src"

@@ -39,7 +39,7 @@
     <ClCompile Include="..\..\src\blsct\arith\elements.cpp" />
     <ClCompile Include="..\..\src\blsct\arith\mcl\mcl_g1point.cpp" />
     <ClCompile Include="..\..\src\blsct\arith\mcl\mcl_scalar.cpp" />
-    <ClCompile Include="..\..\src\blsct\range_proof\range_proof.cpp" />
+    <ClCompile Include="..\..\src\blsct\range_proof\bulletproofs\range_proof.cpp" />
     <ClCompile Include="..\..\src\blsct\signature.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />

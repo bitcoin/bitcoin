@@ -18,14 +18,15 @@
 
 BOOST_FIXTURE_TEST_SUITE(set_mem_proof_prover_tests, BasicTestingSetup)
 
-using Point = Mcl::Point;
-using Scalar = Mcl::Scalar;
+using Arith = Mcl;
+using Point = Arith::Point;
+using Scalar = Arith::Scalar;
 using Points = Elements<Point>;
-using Prover = SetMemProofProver;
+using Prover = SetMemProofProver<Arith>;
 
 BOOST_AUTO_TEST_CASE(test_extend_ys)
 {
-    auto setup = SetMemProofSetup::Get();
+    auto setup = SetMemProofSetup<Arith>::Get();
     {
         Points ys;
         auto ys2 = Prover::ExtendYs(setup, ys, 1);
@@ -78,11 +79,11 @@ BOOST_AUTO_TEST_CASE(test_extend_ys)
 
 BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_good_inputs_of_power_of_2)
 {
-    auto y1 = Point::MapToG1("y1", Endianness::Little);
-    auto y2 = Point::MapToG1("y2", Endianness::Little);
-    auto y4 = Point::MapToG1("y4", Endianness::Little);
+    auto y1 = Point::MapToPoint("y1", Endianness::Little);
+    auto y2 = Point::MapToPoint("y2", Endianness::Little);
+    auto y4 = Point::MapToPoint("y4", Endianness::Little);
 
-    auto setup = SetMemProofSetup::Get();
+    auto setup = SetMemProofSetup<Arith>::Get();
 
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
@@ -103,10 +104,10 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_good_inputs_of_power_of_2)
 
 BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_good_inputs_of_non_power_of_2)
 {
-    auto y1 = Point::MapToG1("y1", Endianness::Little);
-    auto y2 = Point::MapToG1("y2", Endianness::Little);
+    auto y1 = Point::MapToPoint("y1", Endianness::Little);
+    auto y2 = Point::MapToPoint("y2", Endianness::Little);
 
-    auto setup = SetMemProofSetup::Get();
+    auto setup = SetMemProofSetup<Arith>::Get();
 
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
@@ -126,11 +127,11 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_good_inputs_of_non_power_of_2)
 
 BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_not_included)
 {
-    auto y1 = Point::MapToG1("y1", Endianness::Little);
-    auto y2 = Point::MapToG1("y2", Endianness::Little);
-    auto y4 = Point::MapToG1("y4", Endianness::Little);
+    auto y1 = Point::MapToPoint("y1", Endianness::Little);
+    auto y2 = Point::MapToPoint("y2", Endianness::Little);
+    auto y4 = Point::MapToPoint("y4", Endianness::Little);
 
-    auto setup = SetMemProofSetup::Get();
+    auto setup = SetMemProofSetup<Arith>::Get();
 
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
@@ -142,7 +143,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_not_included)
     prove_Ys.Add(sigma);
     prove_Ys.Add(y4);
 
-    auto y3 = Point::MapToG1("y3", Endianness::Little);
+    auto y3 = Point::MapToPoint("y3", Endianness::Little);
     Points verify_Ys;
     verify_Ys.Add(y1);
     verify_Ys.Add(y2);
@@ -158,7 +159,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_not_included)
 
 BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_generated_from_other_inputs)
 {
-    auto setup = SetMemProofSetup::Get();
+    auto setup = SetMemProofSetup<Arith>::Get();
 
     // Commitment set includes A=g*f_a+h*m_a, B=g*f_b+h*m_b, and C=g*f_c+h*m_c
     Scalar m_a = Scalar::Rand();
@@ -196,11 +197,11 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_generated_from_other_inp
 
 BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_in_different_pos)
 {
-    auto y1 = Point::MapToG1("y1", Endianness::Little);
-    auto y2 = Point::MapToG1("y2", Endianness::Little);
-    auto y3 = Point::MapToG1("y4", Endianness::Little);
+    auto y1 = Point::MapToPoint("y1", Endianness::Little);
+    auto y2 = Point::MapToPoint("y2", Endianness::Little);
+    auto y3 = Point::MapToPoint("y4", Endianness::Little);
 
-    auto setup = SetMemProofSetup::Get();
+    auto setup = SetMemProofSetup<Arith>::Get();
 
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
@@ -227,11 +228,11 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_in_different_pos)
 
 BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_different_eta)
 {
-    auto y1 = Point::MapToG1("y1", Endianness::Little);
-    auto y2 = Point::MapToG1("y2", Endianness::Little);
-    auto y4 = Point::MapToG1("y4", Endianness::Little);
+    auto y1 = Point::MapToPoint("y1", Endianness::Little);
+    auto y2 = Point::MapToPoint("y2", Endianness::Little);
+    auto y4 = Point::MapToPoint("y4", Endianness::Little);
 
-    auto setup = SetMemProofSetup::Get();
+    auto setup = SetMemProofSetup<Arith>::Get();
 
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
@@ -253,15 +254,15 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_different_eta)
 
 BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_same_sigma_different_ys)
 {
-    auto y1_1 = Point::MapToG1("y1_1", Endianness::Little);
-    auto y2_1 = Point::MapToG1("y2_1", Endianness::Little);
-    auto y4_1 = Point::MapToG1("y4_1", Endianness::Little);
+    auto y1_1 = Point::MapToPoint("y1_1", Endianness::Little);
+    auto y2_1 = Point::MapToPoint("y2_1", Endianness::Little);
+    auto y4_1 = Point::MapToPoint("y4_1", Endianness::Little);
 
-    auto y1_2 = Point::MapToG1("y1_2", Endianness::Little);
-    auto y2_2 = Point::MapToG1("y2_2", Endianness::Little);
-    auto y4_2 = Point::MapToG1("y4_2", Endianness::Little);
+    auto y1_2 = Point::MapToPoint("y1_2", Endianness::Little);
+    auto y2_2 = Point::MapToPoint("y2_2", Endianness::Little);
+    auto y4_2 = Point::MapToPoint("y4_2", Endianness::Little);
 
-    auto setup = SetMemProofSetup::Get();
+    auto setup = SetMemProofSetup<Arith>::Get();
 
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
@@ -289,7 +290,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_same_sigma_different_ys)
 
 BOOST_AUTO_TEST_CASE(test_prove_verify_large_size_input)
 {
-    auto setup = SetMemProofSetup::Get();
+    auto setup = SetMemProofSetup<Arith>::Get();
 
     const size_t NUM_INPUTS = setup.N;
     Points Ys;
@@ -303,7 +304,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_large_size_input)
         } else {
             std::ostringstream ss;
             ss << "y" << i;
-            auto y = Point::MapToG1(ss.str(), Endianness::Little);
+            auto y = Point::MapToPoint(ss.str(), Endianness::Little);
             Ys.Add(y);
         }
     }

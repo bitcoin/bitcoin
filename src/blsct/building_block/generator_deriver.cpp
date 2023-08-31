@@ -1,8 +1,11 @@
 #include <blsct/building_block/generator_deriver.h>
+#include <blsct/arith/mcl/mcl.h>
 #include <util/strencodings.h>
+#include <hash.h>
 #include <optional>
 
-Point GeneratorDeriver::Derive(
+template <typename Point>
+Point GeneratorDeriver<Point>::Derive(
     const Point& p,
     const size_t index,
     const std::optional<TokenId>& token_id
@@ -27,10 +30,16 @@ Point GeneratorDeriver::Derive(
     auto hash = ss.GetHash();
 
     auto vec_hash = std::vector<uint8_t>(hash.begin(), hash.end());
-    auto ret = Point::MapToG1(vec_hash);
+    auto ret = Point::MapToPoint(vec_hash);
     if (ret.IsZero()) {
         throw std::runtime_error(strprintf(
             "%s: Generated G1Point is the point at infinity. Try changing parameters", __func__));
     }
     return ret;
 }
+template
+typename Mcl::Point GeneratorDeriver<typename Mcl::Point>::Derive(
+    const Mcl::Point& p,
+    const size_t index,
+    const std::optional<TokenId>& token_id
+) const;

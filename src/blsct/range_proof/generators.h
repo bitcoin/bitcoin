@@ -7,10 +7,12 @@
 
 #include <blsct/arith/elements.h>
 #include <blsct/building_block/generator_deriver.h>
-#include <blsct/range_proof/range_proof_setup.h>
+#include <blsct/range_proof/setup.h>
 #include <ctokens/tokenid.h>
 
 #include <mutex>
+
+namespace range_proof {
 
 template <typename T>
 struct Generators {
@@ -18,41 +20,38 @@ struct Generators {
     using Points = Elements<Point>;
 
 public:
-    Generators(Point& H, Point& G, Points& Gi, Points& Hi) : H{H}, G{G}, Gi{Gi}, Hi{Hi} {}
+    Generators(
+        const Point& H,
+        const Point& G,
+        const Points& Gi,
+        const Points& Hi
+    ) : H{H}, G{G}, Gi{Gi}, Hi{Hi} {}
+
     Points GetGiSubset(const size_t& size) const;
     Points GetHiSubset(const size_t& size) const;
 
-    std::reference_wrapper<Point> H;
-    Point G;
-
-private:
-    std::reference_wrapper<Points> Gi;
-    std::reference_wrapper<Points> Hi;
+    const Point H;
+    const Point G;
+    const Points Gi;
+    const Points Hi;
 };
 
 /**
- * Dependent on token_id:
  * - G generator is derived from token_id
- *
- * Static:
  * - H generator points to the base point
  * - Gi and Hi generators are derived from the base point
  *   and the default token_id at initialization time
  *
- * Reason for assigning the base point to H:
+ * G is used for amounts and H is used for randomness
+ * following the Bulletproofs paper
  *
- * On the bulletproofs paper, G is used for amounts and H is used
- * for randomness. Our Bulletproofs code follows the convention for
- * readbility.
+ * When a tx is valid, the sum of the input and output
+ * becomes zero, and that clears the G term and only
+ * the H term remains.
  *
- * Upon checking if a tx is valid, the total of the value commitments
- * of tx input and output are calculated. The total becomes zero when
- * the tx is valid and that clears the G term. The remaining term will
- * be H^Sum(randomness).
- *
- * By assigning the base point to H, we are making the remaining term
- * the public key whose private key is Sum(randomness). That will be
- * used later for signature verification.
+ * Since H is the base point to H, the remaining term
+ * becomes the publickey and is later used later for
+ * signature verification.
  */
 template <typename T>
 class GeneratorsFactory
@@ -66,18 +65,20 @@ public:
     Generators<T> GetInstance(const TokenId& token_id);
 
 private:
-    inline const static GeneratorDeriver m_deriver = GeneratorDeriver("bulletproofs");
+    inline const static GeneratorDeriver m_deriver =
+        GeneratorDeriver<typename T::Point>("bulletproofs");
 
     // G generators are cached
     inline static std::map<const TokenId, const Point> m_G_cache;
 
-    // made optional to initialize values lazily after mcl initialization
-    inline static std::optional<Point> m_H;
-    inline static std::optional<Points> m_Gi;
-    inline static std::optional<Points> m_Hi;
+    inline static Point m_H;
+    inline static Points m_Gi;
+    inline static Points m_Hi;
 
     inline static std::mutex m_init_mutex;
     inline static bool m_is_initialized = false;
 };
+
+}
 
 #endif // NAVCOIN_BLSCT_RANGE_PROOF_GENERATORS_H

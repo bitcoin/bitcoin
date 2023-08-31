@@ -2,11 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_ARITH_RANGE_PROOF_PROOF_WITH_TRANSCRIPT_H
-#define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_PROOF_WITH_TRANSCRIPT_H
+#ifndef NAVCOIN_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_WITH_TRANSCRIPT_H
+#define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_WITH_TRANSCRIPT_H
 
 #include <blsct/arith/elements.h>
-#include <blsct/range_proof/range_proof.h>
+#include <blsct/range_proof/bulletproofs/range_proof.h>
+
+namespace bulletproofs {
 
 template <typename T>
 class RangeProofWithTranscript
@@ -21,17 +23,16 @@ public:
         const Scalar& x,
         const Scalar& y,
         const Scalar& z,
-        const Scalar& cx_factor,
+        const Scalar& c_factor,
         const Scalars& xs,
         const size_t& num_input_values_power_2,
         const size_t& concat_input_values_in_bits
-    ): proof{proof}, x{x}, y{y}, z{z}, cx_factor{cx_factor}, xs(xs), inv_y(y.Invert()),
+    ): proof{proof}, x{x}, y{y}, z{z}, c_factor{c_factor},
+        xs(xs), inv_y(y.Invert()),
         num_input_values_power_2(num_input_values_power_2),
         concat_input_values_in_bits(concat_input_values_in_bits) {}
 
     static RangeProofWithTranscript<T> Build(const RangeProof<T>& proof);
-
-    static size_t RecoverNumRounds(const size_t& num_input_values);
 
     const RangeProof<T> proof;
 
@@ -39,7 +40,7 @@ public:
     const Scalar x;  // x used in the main prove procedure
     const Scalar y;
     const Scalar z;
-    const Scalar cx_factor;  // factor multiplied to cL and cR in inner product argument
+    const Scalar c_factor;  // factor multiplied to cL and cR in inner product argument
     const Scalars xs;      // x used in inner product argument
     const Scalar inv_y;
 
@@ -47,4 +48,6 @@ public:
     const size_t concat_input_values_in_bits;  // MN is old impl
 };
 
-#endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_PROOF_WITH_TRANSCRIPT_H
+} // namespace bulletproofs
+
+#endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_WITH_TRANSCRIPT_H

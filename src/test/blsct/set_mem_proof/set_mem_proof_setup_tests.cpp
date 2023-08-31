@@ -17,19 +17,19 @@ using Point = Mcl::Point;
 
 BOOST_AUTO_TEST_CASE(test_size_of_hs)
 {
-    auto setup = SetMemProofSetup::Get();
+    auto setup = SetMemProofSetup<Mcl>::Get();
     BOOST_CHECK(setup.N == setup.hs.Size());
 }
 
 BOOST_AUTO_TEST_CASE(test_g)
 {
-    auto setup = SetMemProofSetup::Get();
+    auto setup = SetMemProofSetup<Mcl>::Get();
     BOOST_CHECK(setup.g == Point::GetBasePoint());
 }
 
 BOOST_AUTO_TEST_CASE(test_all_generators_differ)
 {
-    auto setup = SetMemProofSetup::Get();
+    auto setup = SetMemProofSetup<Mcl>::Get();
     BOOST_CHECK(setup.g != setup.h);
 
     Point prev_p = setup.h;
@@ -39,35 +39,9 @@ BOOST_AUTO_TEST_CASE(test_all_generators_differ)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_hash)
-{
-    auto setup = SetMemProofSetup::Get();
-
-    // same msg and index should hash to the same scalar value
-    {
-        Scalar a = setup.Hash(std::vector<uint8_t>{1,2,3}, 1);
-        Scalar b = setup.Hash(std::vector<uint8_t>{1,2,3}, 1);
-        BOOST_CHECK(a == b);
-    }
-
-    // different index sould hash to different scalar values
-    {
-        Scalar a = setup.Hash(std::vector<uint8_t>{1,2,3}, 1);
-        Scalar b = setup.Hash(std::vector<uint8_t>{1,2,3}, 2);
-        BOOST_CHECK(a != b);
-    }
-
-    // different msg sould hash to different scalar values
-    {
-        Scalar a = setup.Hash(std::vector<uint8_t>{1,2,3}, 1);
-        Scalar b = setup.Hash(std::vector<uint8_t>{1,2,3,4}, 1);
-        BOOST_CHECK(a != b);
-    }
-}
-
 BOOST_AUTO_TEST_CASE(test_h1_to_h7)
 {
-    auto setup = SetMemProofSetup::Get();
+    auto setup = SetMemProofSetup<Mcl>::Get();
 
     std::vector<uint8_t> msg {1,2,3};
 

@@ -6,7 +6,7 @@
 #define NAVCOIN_BLSCT_BUILDING_BLOCK_G_H_GI_HI_ZERO_VERIFIER_H
 
 #include <blsct/arith/elements.h>
-#include <blsct/building_block/lazy_point.h>
+#include <blsct/building_block/lazy_points.h>
 
 template <typename T>
 struct G_H_Gi_Hi_ZeroVerifier {

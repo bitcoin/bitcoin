@@ -2,34 +2,36 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <blsct/common.h>
+#include <blsct/arith/mcl/mcl.h>
 #include <blsct/building_block/fiat_shamir.h>
 #include <blsct/building_block/imp_inner_prod_arg.h>
-#include <blsct/building_block/lazy_point.h>
+#include <blsct/building_block/lazy_points.h>
 #include <blsct/building_block/g_h_gi_hi_zero_verifier.h>
+#include <blsct/common.h>
 #include <blsct/set_mem_proof/set_mem_proof_prover.h>
 #include <stdexcept>
 #include <cmath>
 #include <hash.h>
 #include <streams.h>
 #include <version.h>
+#include <util/strencodings.h>
 
-using Scalar = SetMemProofProver::Scalar;
-using Point = SetMemProofProver::Point;
-using Scalars = SetMemProofProver::Scalars;
-using Points = SetMemProofProver::Points;
-
-const Scalar& SetMemProofProver::One()
+template <typename T>
+const typename SetMemProofProver<T>::Scalar& SetMemProofProver<T>::One()
 {
+    using Scalar = typename T::Scalar;
     static Scalar* x = nullptr;
     if (x == nullptr) {
         x = new Scalar(1);
     }
     return *x;
 }
+template
+const typename SetMemProofProver<Mcl>::Scalar& SetMemProofProver<Mcl>::One();
 
-Scalar SetMemProofProver::ComputeX(
-    const SetMemProofSetup& setup,
+template <typename T>
+typename T::Scalar SetMemProofProver<T>::ComputeX(
+    const SetMemProofSetup<T>& setup,
     const Scalar& omega,
     const Scalar& y,
     const Scalar& z,
@@ -42,8 +44,19 @@ Scalar SetMemProofProver::ComputeX(
     Scalar x = setup.H1(vec);
     return x;
 }
+template
+typename Mcl::Scalar SetMemProofProver<Mcl>::ComputeX(
+    const SetMemProofSetup<Mcl>& setup,
+    const Scalar& omega,
+    const Scalar& y,
+    const Scalar& z,
+    const Point& T1,
+    const Point& T2
+);
 
-CHashWriter SetMemProofProver::GenInitialFiatShamir(
+
+template <typename T>
+CHashWriter SetMemProofProver<T>::GenInitialFiatShamir(
     const Points& Ys,
     const Point& A1,
     const Point& A2,
@@ -57,14 +70,26 @@ CHashWriter SetMemProofProver::GenInitialFiatShamir(
     fiat_shamir << Ys << A1 << A2 << S1 << S2 << S3 << phi << eta;
     return fiat_shamir;
 }
+template
+CHashWriter SetMemProofProver<Mcl>::GenInitialFiatShamir(
+    const Points& Ys,
+    const Point& A1,
+    const Point& A2,
+    const Point& S1,
+    const Point& S2,
+    const Point& S3,
+    const Point& phi,
+    const Scalar& eta
+);
 
-Points SetMemProofProver::ExtendYs(
-    const SetMemProofSetup& setup,
+template <typename T>
+typename SetMemProofProver<T>::Points SetMemProofProver<T>::ExtendYs(
+    const SetMemProofSetup<T>& setup,
     const Points& Ys_src,
     const size_t& new_size
 ) {
     if (Ys_src.Size() > new_size) {
-        throw std::runtime_error("Not expecting new_size < current_size");
+        throw std::runtime_error(std::string(__func__) + ": Not expecting new_size < current_size");
     }
     std::string padding_prefix = "SET_MEMBERSHIP_DUMMY";
     std::vector<uint8_t> msg(padding_prefix.begin(), padding_prefix.end());
@@ -82,9 +107,16 @@ Points SetMemProofProver::ExtendYs(
     }
     return Ys;
 }
+template
+typename SetMemProofProver<Mcl>::Points SetMemProofProver<Mcl>::ExtendYs(
+    const SetMemProofSetup<Mcl>& setup,
+    const Points& Ys_src,
+    const size_t& new_size
+);
 
-SetMemProof SetMemProofProver::Prove(
-    const SetMemProofSetup& setup,
+template <typename T>
+SetMemProof<T> SetMemProofProver<T>::Prove(
+    const SetMemProofSetup<T>& setup,
     const Points& Ys_src,
     const Point& sigma,
     const Scalar& m,
@@ -93,7 +125,7 @@ SetMemProof SetMemProofProver::Prove(
 ) {
     size_t n = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(Ys_src.Size());
     if (n > setup.N) {
-        throw std::runtime_error("# of commitments exceeds the setup maximum");
+        throw std::runtime_error(std::string(__func__) + ": # of commitments exceeds the setup maximum");
     }
     Points Ys = ExtendYs(setup, Ys_src, n);
 
@@ -185,7 +217,7 @@ retry: // retrying without generating fiat_shamir again to get different hashes
 
     GEN_FIAT_SHAMIR_VAR(c_factor, fiat_shamir, retry);
 
-    auto iipa_res = ImpInnerProdArg::Run<Mcl>(
+    auto iipa_res = ImpInnerProdArg::Run<T>(
         n,
         Ys, Hi, setup.g,
         l, r,
@@ -194,7 +226,7 @@ retry: // retrying without generating fiat_shamir again to get different hashes
     );
     if (iipa_res == std::nullopt) goto retry;
 
-    auto proof = SetMemProof(
+    auto proof = SetMemProof<T>(
         phi, A1,
         A2, S1, S2, S3, T1, T2,
         tau_x, mu, z_alpha, z_tau, z_beta,
@@ -207,18 +239,28 @@ retry: // retrying without generating fiat_shamir again to get different hashes
     );
     return proof;
 }
+template
+SetMemProof<Mcl> SetMemProofProver<Mcl>::Prove(
+    const SetMemProofSetup<Mcl>& setup,
+    const Points& Ys_src,
+    const Point& sigma,
+    const Scalar& m,
+    const Scalar& f,
+    const Scalar& eta
+);
 
-bool SetMemProofProver::Verify(
-    const SetMemProofSetup& setup,
+template <typename T>
+bool SetMemProofProver<T>::Verify(
+    const SetMemProofSetup<T>& setup,
     const Points& Ys_src,
     const Scalar& eta,
-    const SetMemProof& proof
+    const SetMemProof<T>& proof
 ) {
-    using LazyPoint = LazyPoint<Mcl>;
+    using LazyPoint = LazyPoint<T>;
 
     size_t n = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(Ys_src.Size());
     if (n > setup.N) {
-        throw std::runtime_error("# of commitments exceeds the setup maximum");
+        throw std::runtime_error(std::string(__func__) + ": # of commitments exceeds the setup maximum");
     }
     Points Ys = ExtendYs(setup, Ys_src, n);
 
@@ -242,7 +284,7 @@ retry:
     Points h_primes = setup.hs.To(n) * y_inv_to_n;
     Scalar x = ComputeX(setup, omega, y, z, proof.T1, proof.T2);
 
-    G_H_Gi_Hi_ZeroVerifier<Mcl> verifier(n);
+    G_H_Gi_Hi_ZeroVerifier<T> verifier(n);
 
     //////// (18)
     {
@@ -278,14 +320,14 @@ retry:
 
         Scalars xs;
         {
-            auto maybe_xs = ImpInnerProdArg::GenAllRoundXs<Mcl>(num_rounds, proof.Ls, proof.Rs, fiat_shamir);
+            auto maybe_xs = ImpInnerProdArg::GenAllRoundXs<T>(num_rounds, proof.Ls, proof.Rs, fiat_shamir);
             if (!maybe_xs.has_value()) goto retry;
             xs = maybe_xs.value();
         }
         auto x_invs = xs.Invert();
-        auto gen_exps = ImpInnerProdArg::GenGeneratorExponents<Mcl>(num_rounds, xs);
+        auto gen_exps = ImpInnerProdArg::GenGeneratorExponents<T>(num_rounds, xs);
 
-        ImpInnerProdArg::LoopWithYPows<Mcl>(n, y,
+        ImpInnerProdArg::LoopWithYPows<T>(n, y,
             [&](const size_t& i, const Scalar& y_pow, const Scalar& y_inv_pow) {
                 verifier.SetGiExp(i, (proof.a * gen_exps[i]).Negate() - z);
                 verifier.SetHiExp(i,
@@ -328,3 +370,10 @@ retry:
 
     return verifier.Verify(setup.g, setup.h, Ys, setup.hs.To(n));
 }
+template
+bool SetMemProofProver<Mcl>::Verify(
+    const SetMemProofSetup<Mcl>& setup,
+    const Points& Ys_src,
+    const Scalar& eta,
+    const SetMemProof<Mcl>& proof
+);

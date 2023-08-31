@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(test_compatibility_bet_bls_keys_and_blsct_keys)
     // secret key
     blsSecretKey bls_sk{1};
     blsct::PrivateKey blsct_sk(bls_sk.v);
-    auto a = blsct_sk.GetScalar().m_fr;
+    auto a = blsct_sk.GetScalar().m_scalar;
     auto b = bls_sk.v;
     BOOST_CHECK(mclBnFr_isEqual(&a, &b) == 1);
 
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(test_compatibility_bet_bls_keys_and_blsct_keys)
 
     blsPublicKey bls_pk;
     blsGetPublicKey(&bls_pk, &bls_sk);
-    auto c = blsct_g1_point.m_p;
+    auto c = blsct_g1_point.m_point;
     auto d = bls_pk.v;
     BOOST_CHECK(mclBnG1_isEqual(&c, &d) == 1);
 }

@@ -472,22 +472,53 @@ BOOST_AUTO_TEST_CASE(test_to)
 
 BOOST_AUTO_TEST_CASE(test_negate)
 {
-    {
-        Scalars ss(std::vector<Scalar> { Scalar{1}, Scalar{2} });
-        auto ss_inv = ss.Negate();
-        BOOST_CHECK(ss_inv[0] == ss[0].Negate());
-        BOOST_CHECK(ss_inv[1] == ss[1].Negate());
-    }
+    Scalars ss(std::vector<Scalar> { Scalar{1}, Scalar{2} });
+    auto ss_inv = ss.Negate();
+    BOOST_CHECK(ss_inv[0] == ss[0].Negate());
+    BOOST_CHECK(ss_inv[1] == ss[1].Negate());
 }
 
 BOOST_AUTO_TEST_CASE(test_invert)
 {
+    Scalars ss(std::vector<Scalar> { Scalar{1}, Scalar{2} });
+    auto ss_inv = ss.Invert();
+    BOOST_CHECK(ss_inv[0] == ss[0].Invert());
+    BOOST_CHECK(ss_inv[1] == ss[1].Invert());
+}
+
+BOOST_AUTO_TEST_CASE(test_reverse)
+{
+    Scalars ss(std::vector<Scalar> { Scalar{1}, Scalar{2}, Scalar{3} });
+    auto ss_rev = ss.Reverse();
+    BOOST_CHECK(ss_rev[0] == ss[2]);
+    BOOST_CHECK(ss_rev[1] == ss[1]);
+    BOOST_CHECK(ss_rev[2] == ss[0]);
+}
+
+BOOST_AUTO_TEST_CASE(test_product)
+{
     {
-        Scalars ss(std::vector<Scalar> { Scalar{1}, Scalar{2} });
-        auto ss_inv = ss.Invert();
-        BOOST_CHECK(ss_inv[0] == ss[0].Invert());
-        BOOST_CHECK(ss_inv[1] == ss[1].Invert());
+        Scalars xs;
+        BOOST_CHECK_THROW(xs.Product(), std::runtime_error);
     }
+    {
+        Scalars xs(std::vector<Scalar> { Scalar{2} });
+        Scalar prod = xs.Product();
+        BOOST_CHECK(prod.GetUint64() == 2);
+    }
+    {
+        Scalars xs(std::vector<Scalar> { Scalar{2}, Scalar{3} });
+        Scalar prod = xs.Product();
+        BOOST_CHECK(prod.GetUint64() == 6);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_square)
+{
+    Scalars ss(std::vector<Scalar> { Scalar{2}, Scalar{3}, Scalar{5} });
+    Scalars exp(std::vector<Scalar> { Scalar{4}, Scalar{9}, Scalar{25} });
+    auto act = ss.Square();
+    BOOST_CHECK(act == exp);
 }
 
 BOOST_AUTO_TEST_CASE(test_get_via_index_operator)
@@ -537,7 +568,7 @@ BOOST_AUTO_TEST_CASE(test_serialize)
 
         CDataStream st(0, 0);
         xs.Serialize(st);
-        BOOST_CHECK(st.size() == 1 + xs.Size() * sizeof(one.m_fr));
+        BOOST_CHECK(st.size() == 1 + xs.Size() * sizeof(one.m_scalar));
 
         Scalars ys;
         ys.Unserialize(st);

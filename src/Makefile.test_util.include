@@ -13,6 +13,7 @@ TEST_UTIL_H = \
   blsct/arith/mcl/mcl_g1point.h \
   blsct/arith/mcl/mcl_init.h \
   blsct/arith/mcl/mcl_scalar.h \
+  blsct/arith/mcl/mcl_util.h \
   blsct/double_public_key.h \
   blsct/private_key.h \
   blsct/public_key.h \

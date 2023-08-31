@@ -11,6 +11,7 @@
 
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
+#include <blsct/arith/mcl/mcl_util.h>
 
 /**
  * Define a variable of type `MclInit` at the beginning
@@ -19,6 +20,7 @@
 struct Mcl {
     using Scalar = MclScalar;
     using Point = MclG1Point;
+    using Util = MclUtil;
 };
 
 #endif // NAVCOIN_BLSCT_ARITH_MCL_MCL_H

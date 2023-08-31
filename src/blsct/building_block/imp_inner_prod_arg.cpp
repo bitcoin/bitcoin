@@ -1,6 +1,10 @@
+#include <blsct/arith/mcl/mcl.h>
+#include <blsct/building_block/fiat_shamir.h>
 #include <blsct/building_block/imp_inner_prod_arg.h>
-#include <blsct/building_block/lazy_point.h>
-#include <blsct/range_proof/range_proof.h>
+#include <blsct/building_block/lazy_points.h>
+#include <blsct/common.h>
+#include <blsct/range_proof/bulletproofs/range_proof.h>
+#include <blsct/range_proof/setup.h>
 
 template <typename T>
 std::optional<ImpInnerProdArgResult<T>> ImpInnerProdArg::Run(
@@ -43,9 +47,8 @@ std::optional<ImpInnerProdArgResult<T>> ImpInnerProdArg::Run(
         res.Rs.Add(R);
 
         // verifier chooses random x and sends to prover
-        Scalar x = fiat_shamir.GetHash();
-        if (x == 0)
-            return std::nullopt;
+        GEN_FIAT_SHAMIR_VAR(x, fiat_shamir, retry);
+
         Scalar x_inv = x.Invert();
 
         // update Gi, Hi for the next iteration
@@ -69,6 +72,9 @@ std::optional<ImpInnerProdArgResult<T>> ImpInnerProdArg::Run(
     res.b = b[0];
 
     return res;
+
+retry:
+    return std::nullopt;
 }
 template
 std::optional<ImpInnerProdArgResult<Mcl>> ImpInnerProdArg::Run(
@@ -148,11 +154,13 @@ std::optional<Elements<typename T::Scalar>> ImpInnerProdArg::GenAllRoundXs(
     for (size_t i = 0; i < num_rounds; ++i) {
         fiat_shamir << Ls[i];
         fiat_shamir << Rs[i];
-        Scalar x(fiat_shamir.GetHash());
-        if (x == 0) return std::nullopt;
+        GEN_FIAT_SHAMIR_VAR(x, fiat_shamir, retry);
         xs.Add(x);
     }
     return xs;
+
+retry:
+    return std::nullopt;
 }
 template
 std::optional<Elements<Mcl::Scalar>> ImpInnerProdArg::GenAllRoundXs<Mcl>(
