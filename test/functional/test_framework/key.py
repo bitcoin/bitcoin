@@ -9,9 +9,9 @@ anything but tests."""
 import csv
 import hashlib
 import hmac
-import os
 import random
 import unittest
+from pathlib import Path
 
 from test_framework import secp256k1
 
@@ -312,7 +312,7 @@ class TestFrameworkKey(unittest.TestCase):
     def test_schnorr_testvectors(self):
         """Implement the BIP340 test vectors (read from bip340_test_vectors.csv)."""
         num_tests = 0
-        vectors_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bip340_test_vectors.csv')
+        vectors_file = Path(__file__).parent / 'bip340_test_vectors.csv'
         with open(vectors_file, newline='', encoding='utf8') as csvfile:
             reader = csv.reader(csvfile)
             next(reader)

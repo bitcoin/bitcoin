@@ -4,8 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test block-relay-only anchors functionality"""
 
-import os
-
 from test_framework.p2p import P2PInterface, P2P_SERVICES
 from test_framework.socks5 import Socks5Configuration, Socks5Server
 from test_framework.messages import CAddress, hash256
@@ -26,7 +24,7 @@ class AnchorsTest(BitcoinTestFramework):
         node_anchors_path = self.nodes[0].chain_path / "anchors.dat"
 
         self.log.info("When node starts, check if anchors.dat doesn't exist")
-        assert not os.path.exists(node_anchors_path)
+        assert not node_anchors_path.exists()
 
         self.log.info(f"Add {BLOCK_RELAY_CONNECTIONS} block-relay-only connections to node")
         for i in range(BLOCK_RELAY_CONNECTIONS):
@@ -85,7 +83,7 @@ class AnchorsTest(BitcoinTestFramework):
             self.start_node(0)
 
         self.log.info("When node starts, check if anchors.dat doesn't exist anymore")
-        assert not os.path.exists(node_anchors_path)
+        assert not node_anchors_path.exists()
 
         self.log.info("Ensure addrv2 support")
         # Use proxies to catch outbound connections to networks with 256-bit addresses

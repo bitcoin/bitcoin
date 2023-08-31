@@ -13,8 +13,9 @@ import argparse
 from collections import defaultdict, namedtuple
 import heapq
 import itertools
-import os
-import pathlib
+from os import access, R_OK
+from os.path import getmtime
+from pathlib import Path
 import re
 import sys
 import tempfile
@@ -80,7 +81,7 @@ def read_logs(tmp_dir):
     for each of the input log files."""
 
     # Find out what the folder is called that holds the debug.log file
-    glob = pathlib.Path(tmp_dir).glob('node0/**/debug.log')
+    glob = Path(tmp_dir).glob('node0/**/debug.log')
     path = next(glob, None)
     if path:
         assert next(glob, None) is None #  more than one debug.log, should never happen
@@ -91,7 +92,7 @@ def read_logs(tmp_dir):
     files = [("test", "%s/test_framework.log" % tmp_dir)]
     for i in itertools.count():
         logfile = "{}/node{}/{}/debug.log".format(tmp_dir, i, chain)
-        if not os.path.isfile(logfile):
+        if not Path(logfile).is_file():
             break
         files.append(("node%d" % i, logfile))
 
@@ -104,12 +105,12 @@ def print_node_warnings(tmp_dir, colors):
     warnings = []
     for stream in ['stdout', 'stderr']:
         for i in itertools.count():
-            folder = "{}/node{}/{}".format(tmp_dir, i, stream)
-            if not os.path.isdir(folder):
+            folder = Path(tmp_dir) / f'node{i}' / stream
+            if not folder.is_dir():
                 break
-            for (_, _, fns) in os.walk(folder):
-                for fn in fns:
-                    warning = pathlib.Path('{}/{}'.format(folder, fn)).read_text().strip()
+            for fn in folder.rglob('*'):
+                if fn.is_file():
+                    warning = (folder / fn).read_text().strip()
                     if warning:
                         warnings.append(("node{} {}".format(i, stream), warning))
 
@@ -120,24 +121,24 @@ def print_node_warnings(tmp_dir, colors):
 
 def find_latest_test_dir():
     """Returns the latest tmpfile test directory prefix."""
-    tmpdir = tempfile.gettempdir()
+    tmpdir = Path(tempfile.gettempdir())
 
     def join_tmp(basename):
-        return os.path.join(tmpdir, basename)
+        return tmpdir / basename
 
     def is_valid_test_tmpdir(basename):
         fullpath = join_tmp(basename)
         return (
-            os.path.isdir(fullpath)
-            and basename.startswith(TMPDIR_PREFIX)
-            and os.access(fullpath, os.R_OK)
+            fullpath.is_dir()
+            and str(basename).startswith(TMPDIR_PREFIX)
+            and access(fullpath, R_OK)
         )
 
     testdir_paths = [
-        join_tmp(name) for name in os.listdir(tmpdir) if is_valid_test_tmpdir(name)
+        join_tmp(f.name) for f in tmpdir.iterdir() if is_valid_test_tmpdir(f.name)
     ]
 
-    return max(testdir_paths, key=os.path.getmtime) if testdir_paths else None
+    return max(testdir_paths, key=getmtime) if testdir_paths else None
 
 
 def get_log_events(source, logfile):

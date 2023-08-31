@@ -8,19 +8,17 @@ import re
 import configparser
 import hmac
 import importlib
-import os
+from pathlib import Path
 import sys
 import unittest
 
 class TestRPCAuth(unittest.TestCase):
     def setUp(self):
         config = configparser.ConfigParser()
-        config_path = os.path.abspath(
-            os.path.join(os.sep, os.path.abspath(os.path.dirname(__file__)),
-            "../config.ini"))
-        with open(config_path, encoding="utf8") as config_file:
+        config_path = Path(__file__).parents[1] / 'config.ini'        
+        with config_path.open(encoding="utf8") as config_file:
             config.read_file(config_file)
-        sys.path.insert(0, os.path.dirname(config['environment']['RPCAUTH']))
+        sys.path.insert(0, str(Path(config['environment']['RPCAUTH']).parent))
         self.rpcauth = importlib.import_module('rpcauth')
 
     def test_generate_salt(self):

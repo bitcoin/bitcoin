@@ -11,7 +11,7 @@ import sys
 import socket
 import struct
 import array
-import os
+from pathlib import Path
 
 # STATE_ESTABLISHED = '01'
 # STATE_SYN_SENT  = '02'
@@ -29,10 +29,10 @@ def get_socket_inodes(pid):
     '''
     Get list of socket inodes for process pid.
     '''
-    base = '/proc/%i/fd' % pid
+    base = Path(f'/proc/{pid}/fd')
     inodes = []
-    for item in os.listdir(base):
-        target = os.readlink(os.path.join(base, item))
+    for item in base.iterdir():
+        target = str((base / item).readlink())
         if target.startswith('socket:'):
             inodes.append(int(target[8:-1]))
     return inodes

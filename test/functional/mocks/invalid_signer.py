@@ -3,14 +3,14 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-import os
 import sys
 import argparse
 import json
+from pathlib import Path
 
 def perform_pre_checks():
-    mock_result_path = os.path.join(os.getcwd(), "mock_result")
-    if os.path.isfile(mock_result_path):
+    mock_result_path = Path.cwd() / "mock_result"
+    if mock_result_path.is_file():
         with open(mock_result_path, "r", encoding="utf8") as f:
             mock_result = f.read()
         if mock_result[0]:

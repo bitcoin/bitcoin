@@ -6,7 +6,7 @@
 import decimal
 import itertools
 import json
-import os
+from pathlib import Path
 
 from test_framework.address import address_to_scriptpubkey
 from test_framework.blocktools import COINBASE_MATURITY
@@ -104,7 +104,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
                     assert_equal(result['warnings'], err_msg)
 
         self.log.info('Testing sortedmulti descriptors with BIP 67 test vectors')
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_bip67.json'), encoding='utf-8') as f:
+        with (Path(__file__).parent / 'data' / 'rpc_bip67.json').open(encoding='utf-8') as f:
             vectors = json.load(f)
 
         for t in vectors:

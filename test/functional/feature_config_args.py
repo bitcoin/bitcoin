@@ -4,8 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test various command line arguments and configuration file parameters."""
 
-import os
-import pathlib
+from os import linesep
+from pathlib import Path
 import re
 import sys
 import tempfile
@@ -39,10 +39,10 @@ class ConfArgsTest(BitcoinTestFramework):
             extra_args=[f'-conf={bad_conf_file_path}'],
             expected_msg=conf_in_config_file_err,
         )
-        inc_conf_file_path = os.path.join(self.nodes[0].datadir, 'include.conf')
-        with open(os.path.join(self.nodes[0].datadir, 'bitcoin.conf'), 'a', encoding='utf-8') as conf:
+        inc_conf_file_path = self.nodes[0].datadir_path / 'include.conf'
+        with (self.nodes[0].datadir_path / 'bitcoin.conf').open(mode='a', encoding='utf-8') as conf:
             conf.write(f'includeconf={inc_conf_file_path}\n')
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with inc_conf_file_path.open(mode='w', encoding='utf-8') as conf:
             conf.write('conf=some.conf\n')
         self.nodes[0].assert_start_raises_init_error(
             expected_msg=conf_in_config_file_err,
@@ -52,65 +52,65 @@ class ConfArgsTest(BitcoinTestFramework):
             expected_msg='Error: Error parsing command line arguments: Invalid parameter -dash_cli=1',
             extra_args=['-dash_cli=1'],
         )
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with inc_conf_file_path.open(mode='w', encoding='utf-8') as conf:
             conf.write('dash_conf=1\n')
 
         with self.nodes[0].assert_debug_log(expected_msgs=['Ignoring unknown configuration value dash_conf']):
             self.start_node(0)
         self.stop_node(0)
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with inc_conf_file_path.open(mode='w', encoding='utf-8') as conf:
             conf.write('reindex=1\n')
 
         with self.nodes[0].assert_debug_log(expected_msgs=['Warning: reindex=1 is set in the configuration file, which will significantly slow down startup. Consider removing or commenting out this option for better performance, unless there is currently a condition which makes rebuilding the indexes necessary']):
             self.start_node(0)
         self.stop_node(0)
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with inc_conf_file_path.open(mode='w', encoding='utf-8') as conf:
             conf.write('-dash=1\n')
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 1: -dash=1, options in configuration file must be specified without leading -')
 
         if self.is_wallet_compiled():
-            with open(inc_conf_file_path, 'w', encoding='utf8') as conf:
+            with inc_conf_file_path.open(mode='w', encoding='utf8') as conf:
                 conf.write("wallet=foo\n")
             self.nodes[0].assert_start_raises_init_error(expected_msg=f'Error: Config setting for -wallet only applied on {self.chain} network when in [{self.chain}] section.')
 
         main_conf_file_path = self.nodes[0].datadir_path / "bitcoin_main.conf"
         util.write_config(main_conf_file_path, n=0, chain='', extra_config=f'includeconf={inc_conf_file_path}\n')
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with inc_conf_file_path.open(mode='w', encoding='utf-8') as conf:
             conf.write('acceptnonstdtxn=1\n')
         self.nodes[0].assert_start_raises_init_error(extra_args=[f"-conf={main_conf_file_path}", "-allowignoredconf"], expected_msg='Error: acceptnonstdtxn is not currently supported for main chain')
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with inc_conf_file_path.open(mode='w', encoding='utf-8') as conf:
             conf.write('nono\n')
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 1: nono, if you intended to specify a negated option, use nono=1 instead')
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with inc_conf_file_path.open(mode='w', encoding='utf-8') as conf:
             conf.write('server=1\nrpcuser=someuser\nrpcpassword=some#pass')
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 3, using # in rpcpassword can be ambiguous and should be avoided')
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with inc_conf_file_path.open(mode='w', encoding='utf-8') as conf:
             conf.write('server=1\nrpcuser=someuser\nmain.rpcpassword=some#pass')
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 3, using # in rpcpassword can be ambiguous and should be avoided')
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with inc_conf_file_path.open(mode='w', encoding='utf-8') as conf:
             conf.write('server=1\nrpcuser=someuser\n[main]\nrpcpassword=some#pass')
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 4, using # in rpcpassword can be ambiguous and should be avoided')
 
-        inc_conf_file2_path = os.path.join(self.nodes[0].datadir, 'include2.conf')
-        with open(os.path.join(self.nodes[0].datadir, 'bitcoin.conf'), 'a', encoding='utf-8') as conf:
+        inc_conf_file2_path = self.nodes[0].datadir_path / 'include2.conf'
+        with (self.nodes[0].datadir_path / 'bitcoin.conf').open(mode='a', encoding='utf-8') as conf:
             conf.write(f'includeconf={inc_conf_file2_path}\n')
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with inc_conf_file_path.open(mode='w', encoding='utf-8') as conf:
             conf.write('testnot.datadir=1\n')
-        with open(inc_conf_file2_path, 'w', encoding='utf-8') as conf:
+        with inc_conf_file2_path.open(mode='w', encoding='utf-8') as conf:
             conf.write('[testnet]\n')
         self.restart_node(0)
-        self.nodes[0].stop_node(expected_stderr=f'Warning: {inc_conf_file_path}:1 Section [testnot] is not recognized.{os.linesep}{inc_conf_file2_path}:1 Section [testnet] is not recognized.')
+        self.nodes[0].stop_node(expected_stderr=f'Warning: {inc_conf_file_path}:1 Section [testnot] is not recognized.{linesep}{inc_conf_file2_path}:1 Section [testnet] is not recognized.')
 
-        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+        with inc_conf_file_path.open(mode='w', encoding='utf-8') as conf:
             conf.write('')  # clear
-        with open(inc_conf_file2_path, 'w', encoding='utf-8') as conf:
+        with inc_conf_file2_path.open(mode='w', encoding='utf-8') as conf:
             conf.write('')  # clear
 
     def test_config_file_log(self):
@@ -123,15 +123,15 @@ class ConfArgsTest(BitcoinTestFramework):
 
         # Create a temporary directory that will be treated as the default data
         # directory by bitcoind.
-        env, default_datadir = util.get_temp_default_datadir(pathlib.Path(self.options.tmpdir, "test_config_file_log"))
+        env, default_datadir = util.get_temp_default_datadir(Path(self.options.tmpdir, "test_config_file_log"))
         default_datadir.mkdir(parents=True)
 
         # Write a bitcoin.conf file in the default data directory containing a
         # datadir= line pointing at the node datadir.
         node = self.nodes[0]
-        conf_text = pathlib.Path(node.bitcoinconf).read_text()
+        conf_text = node.bitcoinconf.read_text()
         conf_path = default_datadir / "bitcoin.conf"
-        conf_path.write_text(f"datadir={node.datadir}\n{conf_text}")
+        conf_path.write_text(f"datadir={node.datadir_path}\n{conf_text}")
 
         # Drop the node -datadir= argument during this test, because if it is
         # specified it would take precedence over the datadir setting in the
@@ -218,7 +218,8 @@ class ConfArgsTest(BitcoinTestFramework):
 
     def test_seed_peers(self):
         self.log.info('Test seed peers')
-        default_data_dir = self.nodes[0].datadir
+        default_data_dir = self.nodes[0].datadir_path
+        peer_dat = default_data_dir / 'peers.dat'
         # Only regtest has no fixed seeds. To avoid connections to random
         # nodes, regtest is the only network where it is safe to enable
         # -fixedseeds in tests
@@ -229,7 +230,7 @@ class ConfArgsTest(BitcoinTestFramework):
         # We expect the node will use DNS Seeds, but Regtest mode does not have
         # any valid DNS seeds. So after 60 seconds, the node should fallback to
         # fixed seeds
-        assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
+        assert not peer_dat.exists()
         start = int(time.time())
         with self.nodes[0].assert_debug_log(
                 expected_msgs=[
@@ -248,7 +249,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
         # No peers.dat exists and -dnsseed=0
         # We expect the node will fallback immediately to fixed seeds
-        assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
+        assert not peer_dat.exists()
         start = time.time()
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Loaded 0 addresses from peers.dat",
@@ -262,7 +263,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
         # No peers.dat exists and dns seeds are disabled.
         # We expect the node will not add fixed seeds when explicitly disabled.
-        assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
+        assert not peer_dat.exists()
         start = time.time()
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Loaded 0 addresses from peers.dat",
@@ -275,7 +276,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
         # No peers.dat exists and -dnsseed=0, but a -addnode is provided
         # We expect the node will allow 60 seconds prior to using fixed seeds
-        assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
+        assert not peer_dat.exists()
         start = int(time.time())
         with self.nodes[0].assert_debug_log(
                 expected_msgs=[
@@ -327,16 +328,16 @@ class ConfArgsTest(BitcoinTestFramework):
                       'because a conflicting -conf file argument is passed.')
         node = self.nodes[0]
         with tempfile.NamedTemporaryFile(dir=self.options.tmpdir, mode="wt", delete=False) as temp_conf:
-            temp_conf.write(f"datadir={node.datadir}\n")
+            temp_conf.write(f"datadir={node.datadir_path}\n")
         node.assert_start_raises_init_error([f"-conf={temp_conf.name}"], re.escape(
-            f'Error: Data directory "{node.datadir}" contains a "bitcoin.conf" file which is ignored, because a '
+            f'Error: Data directory "{node.datadir_path}" contains a "bitcoin.conf" file which is ignored, because a '
             f'different configuration file "{temp_conf.name}" from command line argument "-conf={temp_conf.name}" '
             f'is being used instead.') + r"[\s\S]*", match=ErrorMatch.FULL_REGEX)
 
         # Test that passing a redundant -conf command line argument pointing to
         # the same bitcoin.conf that would be loaded anyway does not trigger an
         # error.
-        self.start_node(0, [f'-conf={node.datadir}/bitcoin.conf'])
+        self.start_node(0, [f'-conf={node.datadir_path}/bitcoin.conf'])
         self.stop_node(0)
 
     def test_ignored_default_conf(self):
@@ -350,7 +351,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
         # Create a temporary directory that will be treated as the default data
         # directory by bitcoind.
-        env, default_datadir = util.get_temp_default_datadir(pathlib.Path(self.options.tmpdir, "home"))
+        env, default_datadir = util.get_temp_default_datadir(Path(self.options.tmpdir, "home"))
         default_datadir.mkdir(parents=True)
 
         # Write a bitcoin.conf file in the default data directory containing a
@@ -358,7 +359,7 @@ class ConfArgsTest(BitcoinTestFramework):
         # startup error because the node datadir contains a different
         # bitcoin.conf that would be ignored.
         node = self.nodes[0]
-        (default_datadir / "bitcoin.conf").write_text(f"datadir={node.datadir}\n")
+        (default_datadir / "bitcoin.conf").write_text(f"datadir={node.datadir_path}\n")
 
         # Drop the node -datadir= argument during this test, because if it is
         # specified it would take precedence over the datadir setting in the
@@ -366,7 +367,7 @@ class ConfArgsTest(BitcoinTestFramework):
         node_args = node.args
         node.args = [arg for arg in node.args if not arg.startswith("-datadir=")]
         node.assert_start_raises_init_error([], re.escape(
-            f'Error: Data directory "{node.datadir}" contains a "bitcoin.conf" file which is ignored, because a '
+            f'Error: Data directory "{node.datadir_path}" contains a "bitcoin.conf" file which is ignored, because a '
             f'different configuration file "{default_datadir}/bitcoin.conf" from data directory "{default_datadir}" '
             f'is being used instead.') + r"[\s\S]*", env=env, match=ErrorMatch.FULL_REGEX)
         node.args = node_args
@@ -396,41 +397,41 @@ class ConfArgsTest(BitcoinTestFramework):
         # Remove the -datadir argument so it doesn't override the config file
         self.nodes[0].args = [arg for arg in self.nodes[0].args if not arg.startswith("-datadir")]
 
-        default_data_dir = self.nodes[0].datadir
-        new_data_dir = os.path.join(default_data_dir, 'newdatadir')
-        new_data_dir_2 = os.path.join(default_data_dir, 'newdatadir2')
+        default_data_dir = self.nodes[0].datadir_path
+        new_data_dir = default_data_dir / 'newdatadir'
+        new_data_dir_2 = default_data_dir / 'newdatadir2'
 
         # Check that using -datadir argument on non-existent directory fails
-        self.nodes[0].datadir = new_data_dir
+        self.nodes[0].datadir_path = new_data_dir
         self.nodes[0].assert_start_raises_init_error([f'-datadir={new_data_dir}'], f'Error: Specified data directory "{new_data_dir}" does not exist.')
 
         # Check that using non-existent datadir in conf file fails
-        conf_file = os.path.join(default_data_dir, "bitcoin.conf")
+        conf_file = default_data_dir / "bitcoin.conf"
 
         # datadir needs to be set before [chain] section
-        with open(conf_file, encoding='utf8') as f:
+        with conf_file.open(encoding='utf8') as f:
             conf_file_contents = f.read()
-        with open(conf_file, 'w', encoding='utf8') as f:
+        with conf_file.open(mode='w', encoding='utf8') as f:
             f.write(f"datadir={new_data_dir}\n")
             f.write(conf_file_contents)
 
         self.nodes[0].assert_start_raises_init_error([f'-conf={conf_file}'], f'Error: Error reading configuration file: specified data directory "{new_data_dir}" does not exist.')
 
         # Check that an explicitly specified config file that cannot be opened fails
-        none_existent_conf_file = os.path.join(default_data_dir, "none_existent_bitcoin.conf")
-        self.nodes[0].assert_start_raises_init_error(['-conf=' + none_existent_conf_file], 'Error: Error reading configuration file: specified config file "' + none_existent_conf_file + '" could not be opened.')
+        none_existent_conf_file = default_data_dir / "none_existent_bitcoin.conf"
+        self.nodes[0].assert_start_raises_init_error(['-conf=' + f'{none_existent_conf_file}'], 'Error: Error reading configuration file: specified config file "' + f'{none_existent_conf_file}' + '" could not be opened.')
 
         # Create the directory and ensure the config file now works
-        os.mkdir(new_data_dir)
+        new_data_dir.mkdir()
         self.start_node(0, [f'-conf={conf_file}'])
         self.stop_node(0)
-        assert os.path.exists(os.path.join(new_data_dir, self.chain, 'blocks'))
+        assert (new_data_dir / self.chain / 'blocks').exists()
 
         # Ensure command line argument overrides datadir in conf
-        os.mkdir(new_data_dir_2)
-        self.nodes[0].datadir = new_data_dir_2
+        new_data_dir_2.mkdir()
+        self.nodes[0].datadir_path = new_data_dir_2
         self.start_node(0, [f'-datadir={new_data_dir_2}', f'-conf={conf_file}'])
-        assert os.path.exists(os.path.join(new_data_dir_2, self.chain, 'blocks'))
+        assert (new_data_dir_2 / self.chain / 'blocks').exists()
 
 
 if __name__ == '__main__':

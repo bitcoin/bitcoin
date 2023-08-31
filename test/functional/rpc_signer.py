@@ -7,7 +7,7 @@
 Verify that a bitcoind node can use an external signer command.
 See also wallet_signer.py for tests that require wallet context.
 """
-import os
+from pathlib import Path
 import platform
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -19,9 +19,9 @@ from test_framework.util import (
 
 class RPCSignerTest(BitcoinTestFramework):
     def mock_signer_path(self):
-        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'mocks', 'signer.py')
+        path = Path(__file__).parent / 'mocks' /'signer.py'
         if platform.system() == "Windows":
-            return "py -3 " + path
+            return f"py -3 {path}" 
         else:
             return path
 
@@ -39,11 +39,11 @@ class RPCSignerTest(BitcoinTestFramework):
         self.skip_if_no_external_signer()
 
     def set_mock_result(self, node, res):
-        with open(os.path.join(node.cwd, "mock_result"), "w", encoding="utf8") as f:
+        with (Path(node.cwd) / "mock_result").open(mode="w", encoding="utf8") as f:
             f.write(res)
 
     def clear_mock_result(self, node):
-        os.remove(os.path.join(node.cwd, "mock_result"))
+        (Path(node.cwd) / "mock_result").unlink()
 
     def run_test(self):
         self.log.debug(f"-signer={self.mock_signer_path()}")

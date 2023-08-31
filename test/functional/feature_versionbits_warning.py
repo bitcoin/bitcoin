@@ -7,7 +7,7 @@
 Generate chains with block versions that appear to be signalling unknown
 soft-forks, and test that warning alerts are generated.
 """
-import os
+from pathlib import Path
 import re
 
 from test_framework.blocktools import create_block, create_coinbase
@@ -30,7 +30,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def setup_network(self):
-        self.alert_filename = os.path.join(self.options.tmpdir, "alert.txt")
+        self.alert_filename = Path(self.options.tmpdir) / "alert.txt"
         # Open and close to create zero-length file
         with open(self.alert_filename, 'w', encoding='utf8'):
             pass

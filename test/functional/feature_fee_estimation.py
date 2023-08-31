@@ -315,10 +315,10 @@ class EstimateFeeTest(BitcoinTestFramework):
 
     def test_estimate_dat_is_flushed_periodically(self):
         fee_dat = self.nodes[0].chain_path / "fee_estimates.dat"
-        os.remove(fee_dat) if os.path.exists(fee_dat) else None
-
+        fee_dat.unlink() if fee_dat.exists() else None
+        
         # Verify that fee_estimates.dat does not exist
-        assert_equal(os.path.isfile(fee_dat), False)
+        assert_equal(fee_dat.is_file(), False)
 
         # Verify if the string "Flushed fee estimates to fee_estimates.dat." is present in the debug log file.
         # If present, it indicates that fee estimates have been successfully flushed to disk.
@@ -327,7 +327,7 @@ class EstimateFeeTest(BitcoinTestFramework):
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
 
         # Verify that fee estimates were flushed and fee_estimates.dat file is created
-        assert_equal(os.path.isfile(fee_dat), True)
+        assert_equal(fee_dat.is_file(), True)
 
         # Verify that the estimates remain the same if there are no blocks in the flush interval
         block_hash_before = self.nodes[0].getbestblockhash()
@@ -421,8 +421,8 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         self.log.info("Restarting node with fresh estimation")
         self.stop_node(0)
-        fee_dat = os.path.join(self.nodes[0].chain_path, "fee_estimates.dat")
-        os.remove(fee_dat)
+        fee_dat = self.nodes[0].chain_path / "fee_estimates.dat"
+        fee_dat.unlink()
         self.start_node(0)
         self.connect_nodes(0, 1)
         self.connect_nodes(0, 2)

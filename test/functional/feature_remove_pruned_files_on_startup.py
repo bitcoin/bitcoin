@@ -33,22 +33,22 @@ class FeatureRemovePrunedFilesOnStartupTest(BitcoinTestFramework):
 
         # Windows systems will not remove files with an open fd
         if os.name != 'nt':
-            assert not os.path.exists(blk0)
-            assert not os.path.exists(rev0)
-            assert not os.path.exists(blk1)
-            assert not os.path.exists(rev1)
+            assert not blk0.exists()
+            assert not rev0.exists()
+            assert not blk1.exists()
+            assert not rev1.exists()
         else:
-            assert os.path.exists(blk0)
-            assert not os.path.exists(rev0)
-            assert not os.path.exists(blk1)
-            assert os.path.exists(rev1)
+            assert blk0.exists()
+            assert not rev0.exists()
+            assert not blk1.exists()
+            assert rev1.exists()
 
         # Check that the files are removed on restart once the fds are closed
         fd1.close()
         fd2.close()
         self.restart_node(0)
-        assert not os.path.exists(blk0)
-        assert not os.path.exists(rev1)
+        assert not blk0.exists()
+        assert not rev1.exists()
 
 if __name__ == '__main__':
     FeatureRemovePrunedFilesOnStartupTest().main()

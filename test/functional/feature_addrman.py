@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test addrman functionality"""
 
-import os
+from pathlib import Path
 import re
 import struct
 
@@ -44,7 +44,7 @@ def serialize_addrman(
 
 
 def write_addrman(peers_dat, **kwargs):
-    with open(peers_dat, "wb") as f:
+    with peers_dat.open(mode="wb") as f:
         f.write(serialize_addrman(**kwargs))
 
 
@@ -53,11 +53,11 @@ class AddrmanTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def run_test(self):
-        peers_dat = os.path.join(self.nodes[0].chain_path, "peers.dat")
+        peers_dat = self.nodes[0].chain_path / "peers.dat"
         init_error = lambda reason: (
             f"Error: Invalid or corrupt peers.dat \\({reason}\\). If you believe this "
             f"is a bug, please report it to {self.config['environment']['PACKAGE_BUGREPORT']}. "
-            f'As a workaround, you can move the file \\("{re.escape(peers_dat)}"\\) out of the way \\(rename, '
+            f'As a workaround, you can move the file \\("{re.escape(str(peers_dat))}"\\) out of the way \\(rename, '
             "move, or delete\\) to have a new one created on the next start."
         )
 
@@ -82,13 +82,13 @@ class AddrmanTest(BitcoinTestFramework):
         self.log.info("Check that addrman from future is overwritten with new addrman")
         self.stop_node(0)
         write_addrman(peers_dat, lowest_compatible=111)
-        assert_equal(os.path.exists(peers_dat + ".bak"), False)
+        assert_equal(Path(f'{peers_dat}.bak').exists(), False)
         with self.nodes[0].assert_debug_log([
                 f'Creating new peers.dat because the file version was not compatible ("{peers_dat}"). Original backed up to peers.dat.bak',
         ]):
             self.start_node(0)
         assert_equal(self.nodes[0].getnodeaddresses(), [])
-        assert_equal(os.path.exists(peers_dat + ".bak"), True)
+        assert_equal(Path(f'{peers_dat}.bak').exists(), True)
 
         self.log.info("Check that corrupt addrman cannot be read (EOF)")
         self.stop_node(0)
@@ -141,7 +141,7 @@ class AddrmanTest(BitcoinTestFramework):
 
         self.log.info("Check that missing addrman is recreated")
         self.stop_node(0)
-        os.remove(peers_dat)
+        peers_dat.unlink()
         with self.nodes[0].assert_debug_log([
                 f'Creating peers.dat because the file was not found ("{peers_dat}")',
         ]):

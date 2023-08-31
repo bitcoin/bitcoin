@@ -5,7 +5,6 @@
 """Test the listtransactions API."""
 
 from decimal import Decimal
-import os
 import shutil
 
 from test_framework.messages import (
@@ -234,8 +233,8 @@ class ListTransactionsTest(BitcoinTestFramework):
         # refill keypool otherwise the second node wouldn't recognize addresses generated on the first nodes
         self.nodes[0].keypoolrefill(1000)
         self.stop_nodes()
-        wallet0 = os.path.join(self.nodes[0].chain_path, self.default_wallet_name, "wallet.dat")
-        wallet2 = os.path.join(self.nodes[2].chain_path, self.default_wallet_name, "wallet.dat")
+        wallet0 = self.nodes[0].chain_path / self.default_wallet_name / "wallet.dat"
+        wallet2 = self.nodes[2].chain_path / self.default_wallet_name / "wallet.dat"
         shutil.copyfile(wallet0, wallet2)
         self.start_nodes()
         # reconnect nodes

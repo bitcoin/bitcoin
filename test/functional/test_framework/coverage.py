@@ -8,7 +8,8 @@ Provides a way to track which RPC commands are exercised during
 testing.
 """
 
-import os
+from os import getpid
+from pathlib import Path
 
 from .authproxy import AuthServiceProxy
 from typing import Optional
@@ -73,9 +74,7 @@ def get_filename(dirname, n_node):
 
     This file will contain a list of RPC commands covered.
     """
-    pid = str(os.getpid())
-    return os.path.join(
-        dirname, "coverage.pid%s.node%s.txt" % (pid, str(n_node)))
+    return str(Path(dirname) / f'coverage.pid{getpid()}.node{n_node}.txt')
 
 
 def write_all_rpc_commands(dirname: str, node: AuthServiceProxy) -> bool:
@@ -92,9 +91,9 @@ def write_all_rpc_commands(dirname: str, node: AuthServiceProxy) -> bool:
         if the RPC interface file was written.
 
     """
-    filename = os.path.join(dirname, REFERENCE_FILENAME)
+    filename = Path(dirname) / REFERENCE_FILENAME
 
-    if os.path.isfile(filename):
+    if filename.is_file():
         return False
 
     help_output = node.help().split('\n')
@@ -107,7 +106,7 @@ def write_all_rpc_commands(dirname: str, node: AuthServiceProxy) -> bool:
         if line and not line.startswith('='):
             commands.add("%s\n" % line.split()[0])
 
-    with open(filename, 'w', encoding='utf8') as f:
+    with filename.open(mode='w', encoding='utf8') as f:
         f.writelines(list(commands))
 
     return True

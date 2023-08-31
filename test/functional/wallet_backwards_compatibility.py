@@ -14,7 +14,6 @@ Use only the latest patch version of each release, unless a test specifically
 needs an older patch version.
 """
 
-import os
 import shutil
 
 from test_framework.blocktools import COINBASE_MATURITY
@@ -167,10 +166,10 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         for node in legacy_nodes:
             # Copy wallets to previous version
-            for wallet in os.listdir(node_master_wallets_dir):
+            for wallet in node_master_wallets_dir.iterdir():
                 shutil.copytree(
-                    os.path.join(node_master_wallets_dir, wallet),
-                    os.path.join(self.nodes_wallet_dir(node), wallet)
+                    node_master_wallets_dir / wallet,
+                    self.nodes_wallet_dir(node)/ wallet
                 )
 
         if not self.options.descriptors:
@@ -260,8 +259,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             # Old wallets are BDB and will only work if BDB is compiled
             # Copy the 0.16 wallet to the last Bitcoin Core version and open it:
             shutil.copyfile(
-                os.path.join(node_v16_wallets_dir, "wallets/u1_v16"),
-                os.path.join(node_master_wallets_dir, "u1_v16")
+                node_v16_wallets_dir / "wallets/u1_v16",
+                node_master_wallets_dir / "u1_v16"
             )
             load_res = node_master.loadwallet("u1_v16")
             # Make sure this wallet opens with only the migration warning. See https://github.com/bitcoin/bitcoin/pull/19054
@@ -279,10 +278,10 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
             # Now copy that same wallet back to 0.16 to make sure no automatic upgrade breaks it
             node_master.unloadwallet("u1_v16")
-            os.remove(os.path.join(node_v16_wallets_dir, "wallets/u1_v16"))
+            (node_v16_wallets_dir / "wallets/u1_v16").unlink()
             shutil.copyfile(
-                os.path.join(node_master_wallets_dir, "u1_v16"),
-                os.path.join(node_v16_wallets_dir, "wallets/u1_v16")
+                node_master_wallets_dir / "u1_v16",
+                node_v16_wallets_dir / "wallets/u1_v16"
             )
             self.start_node(node_v16.index, extra_args=["-wallet=u1_v16"])
             wallet = node_v16.get_wallet_rpc("u1_v16")
@@ -292,8 +291,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             # Copy the 0.17 wallet to the last Bitcoin Core version and open it:
             node_v17.unloadwallet("u1_v17")
             shutil.copytree(
-                os.path.join(node_v17_wallets_dir, "u1_v17"),
-                os.path.join(node_master_wallets_dir, "u1_v17")
+                node_v17_wallets_dir / "u1_v17",
+                node_master_wallets_dir / "u1_v17"
             )
             node_master.loadwallet("u1_v17")
             wallet = node_master.get_wallet_rpc("u1_v17")
@@ -303,10 +302,10 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
             # Now copy that same wallet back to 0.17 to make sure no automatic upgrade breaks it
             node_master.unloadwallet("u1_v17")
-            shutil.rmtree(os.path.join(node_v17_wallets_dir, "u1_v17"))
+            shutil.rmtree(node_v17_wallets_dir / "u1_v17")
             shutil.copytree(
-                os.path.join(node_master_wallets_dir, "u1_v17"),
-                os.path.join(node_v17_wallets_dir, "u1_v17")
+                node_master_wallets_dir / "u1_v17",
+                node_v17_wallets_dir / "u1_v17"
             )
             node_v17.loadwallet("u1_v17")
             wallet = node_v17.get_wallet_rpc("u1_v17")
@@ -315,8 +314,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
             # Copy the 0.19 wallet to the last Bitcoin Core version and open it:
             shutil.copytree(
-                os.path.join(node_v19_wallets_dir, "w1_v19"),
-                os.path.join(node_master_wallets_dir, "w1_v19")
+                node_v19_wallets_dir / "w1_v19",
+                node_master_wallets_dir / "w1_v19"
             )
             node_master.loadwallet("w1_v19")
             wallet = node_master.get_wallet_rpc("w1_v19")
@@ -324,10 +323,10 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
             # Now copy that same wallet back to 0.19 to make sure no automatic upgrade breaks it
             node_master.unloadwallet("w1_v19")
-            shutil.rmtree(os.path.join(node_v19_wallets_dir, "w1_v19"))
+            shutil.rmtree(node_v19_wallets_dir / "w1_v19")
             shutil.copytree(
-                os.path.join(node_master_wallets_dir, "w1_v19"),
-                os.path.join(node_v19_wallets_dir, "w1_v19")
+                node_master_wallets_dir / "w1_v19",
+                node_v19_wallets_dir / "w1_v19"
             )
             node_v19.loadwallet("w1_v19")
             wallet = node_v19.get_wallet_rpc("w1_v19")

@@ -8,7 +8,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
 from collections import defaultdict
-import os
+from pathlib import Path
 import re
 
 
@@ -18,11 +18,11 @@ def parse_string(s):
     return s[1:-1]
 
 
-def process_mapping(fname):
+def process_mapping(file):
     """Find and parse conversion table in implementation file `fname`."""
     cmds = []
     in_rpcs = False
-    with open(fname, "r", encoding="utf8") as f:
+    with file.open(mode="r", encoding="utf8") as f:
         for line in f:
             line = line.rstrip()
             if not in_rpcs:
@@ -58,7 +58,7 @@ class HelpRpcTest(BitcoinTestFramework):
             self.wallet_help()
 
     def test_client_conversion_table(self):
-        file_conversion_table = os.path.join(self.config["environment"]["SRCDIR"], 'src', 'rpc', 'client.cpp')
+        file_conversion_table = Path(self.config["environment"]["SRCDIR"]) / 'src' / 'rpc' / 'client.cpp'
         mapping_client = process_mapping(file_conversion_table)
         # Ignore echojson in client table
         mapping_client = [m for m in mapping_client if m[0] != 'echojson']
@@ -117,11 +117,11 @@ class HelpRpcTest(BitcoinTestFramework):
         assert_equal(titles, sorted(components))
 
     def dump_help(self):
-        dump_dir = os.path.join(self.options.tmpdir, 'rpc_help_dump')
-        os.mkdir(dump_dir)
+        dump_dir = Path(self.options.tmpdir) / 'rpc_help_dump'
+        dump_dir.mkdir()
         calls = [line.split(' ', 1)[0] for line in self.nodes[0].help().splitlines() if line and not line.startswith('==')]
         for call in calls:
-            with open(os.path.join(dump_dir, call), 'w', encoding='utf-8') as f:
+            with (dump_dir / call).open(mode='w', encoding='utf-8') as f:
                 # Make sure the node can generate the help at runtime without crashing
                 f.write(self.nodes[0].help(call))
 

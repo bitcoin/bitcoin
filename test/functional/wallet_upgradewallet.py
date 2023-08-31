@@ -178,7 +178,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
             os.mkdir(node_master_wallet_dir)
             shutil.copy(
                 split_hd_wallet,
-                os.path.join(node_master_wallet_dir, 'wallet.dat')
+                (node_master_wallet_dir /'wallet.dat')
             )
             node_master.loadwallet(self.default_wallet_name)
 

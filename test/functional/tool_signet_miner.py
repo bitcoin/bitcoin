@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test signet miner tool"""
 
-import os.path
+from pathlib import Path
 import subprocess
 import sys
 import time
@@ -47,7 +47,7 @@ class SignetMinerTest(BitcoinTestFramework):
 
         # generate block with signet miner tool
         base_dir = self.config["environment"]["SRCDIR"]
-        signet_miner_path = os.path.join(base_dir, "contrib", "signet", "miner")
+        signet_miner_path = Path(base_dir) / "contrib" / "signet" / "miner"
         subprocess.run([
                 sys.executable,
                 signet_miner_path,

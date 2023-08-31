@@ -14,7 +14,7 @@ from test_framework.p2p import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 
-import os
+from pathlib import Path
 
 
 class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
@@ -33,7 +33,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Read headers data")
-        self.headers_file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), self.options.datafile)
+        self.headers_file_path = Path(__file__).parent / self.options.datafile
         with open(self.headers_file_path, encoding='utf-8') as headers_data:
             h_lines = [l.strip() for l in headers_data.readlines()]
 

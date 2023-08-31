@@ -36,7 +36,7 @@ Test is as follows:
 
 """
 from decimal import Decimal
-import os
+from pathlib import Path
 import time
 
 from test_framework.p2p import P2PTxInvStore
@@ -143,15 +143,15 @@ class MempoolPersistTest(BitcoinTestFramework):
             self.nodes[2].syncwithvalidationinterfacequeue()  # Flush mempool to wallet
             assert_equal(node2_balance, wallet_watch.getbalance())
 
-        mempooldat0 = os.path.join(self.nodes[0].chain_path, 'mempool.dat')
-        mempooldat1 = os.path.join(self.nodes[1].chain_path, 'mempool.dat')
+        mempooldat0 = self.nodes[0].chain_path / 'mempool.dat'
+        mempooldat1 = self.nodes[1].chain_path / 'mempool.dat'
 
         self.log.debug("Force -persistmempool=0 node1 to savemempool to disk via RPC")
-        assert not os.path.exists(mempooldat1)
+        assert not mempooldat1.exists()
         result1 = self.nodes[1].savemempool()
-        assert os.path.isfile(mempooldat1)
-        assert_equal(result1['filename'], mempooldat1)
-        os.remove(mempooldat1)
+        assert mempooldat1.is_file()
+        assert_equal(result1['filename'], str(mempooldat1))
+        mempooldat1.unlink()
 
         self.log.debug("Stop-start node0 with -persistmempool=0. Verify that it doesn't load its mempool.dat file.")
         self.stop_nodes()
@@ -176,13 +176,13 @@ class MempoolPersistTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].getrawmempool()), 7)
 
         self.log.debug("Remove the mempool.dat file. Verify that savemempool to disk via RPC re-creates it")
-        os.remove(mempooldat0)
+        mempooldat0.unlink()
         result0 = self.nodes[0].savemempool()
-        assert os.path.isfile(mempooldat0)
-        assert_equal(result0['filename'], mempooldat0)
+        assert mempooldat0.is_file()
+        assert_equal(result0['filename'], str(mempooldat0))
 
         self.log.debug("Stop nodes, make node1 use mempool.dat from node0. Verify it has 7 transactions")
-        os.rename(mempooldat0, mempooldat1)
+        mempooldat0.rename(mempooldat1)
         self.stop_nodes()
         self.start_node(1, extra_args=["-persistmempool"])
         assert self.nodes[1].getmempoolinfo()["loaded"]
@@ -191,10 +191,10 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.log.debug("Prevent bitcoind from writing mempool.dat to disk. Verify that `savemempool` fails")
         # to test the exception we are creating a tmp folder called mempool.dat.new
         # which is an implementation detail that could change and break this test
-        mempooldotnew1 = mempooldat1 + '.new'
-        os.mkdir(mempooldotnew1)
+        mempooldotnew1 = Path(f'{mempooldat1}.new')
+        mempooldotnew1.mkdir()
         assert_raises_rpc_error(-1, "Unable to dump mempool to disk", self.nodes[1].savemempool)
-        os.rmdir(mempooldotnew1)
+        mempooldotnew1.rmdir()
 
         self.test_importmempool_union()
         self.test_persist_unbroadcast()

@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests some generic aspects of the RPC interface."""
 
-import os
 from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_greater_than_or_equal
@@ -46,7 +45,7 @@ class RPCInterfaceTest(BitcoinTestFramework):
         command = info['active_commands'][0]
         assert_equal(command['method'], 'getrpcinfo')
         assert_greater_than_or_equal(command['duration'], 0)
-        assert_equal(info['logpath'], os.path.join(self.nodes[0].chain_path, 'debug.log'))
+        assert_equal(info['logpath'], str(self.nodes[0].chain_path / 'debug.log'))
 
     def test_batch_request(self):
         self.log.info("Testing basic JSON-RPC batch request...")

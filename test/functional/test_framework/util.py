@@ -11,8 +11,8 @@ import hashlib
 import inspect
 import json
 import logging
-import os
-import pathlib
+from os import getenv
+from pathlib import Path
 import random
 import re
 import sys
@@ -299,7 +299,7 @@ def random_bytes(n):
 # The maximum number of nodes a single test can spawn
 MAX_NODES = 12
 # Don't assign rpc or p2p ports lower than this
-PORT_MIN = int(os.getenv('TEST_RUNNER_PORT_MIN', default=11000))
+PORT_MIN = int(getenv('TEST_RUNNER_PORT_MIN', default=11000))
 # The number of ports to "reserve" for p2p and rpc, each
 PORT_RANGE = 5000
 
@@ -343,8 +343,8 @@ def rpc_port(n):
     return PORT_MIN + PORT_RANGE + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
 
 
-def rpc_url(datadir, i, chain, rpchost):
-    rpc_u, rpc_p = get_auth_cookie(datadir, chain)
+def rpc_url(datadir_path, i, chain, rpchost):
+    rpc_u, rpc_p = get_auth_cookie(datadir_path, chain)
     host = '127.0.0.1'
     port = rpc_port(i)
     if rpchost:
@@ -362,11 +362,11 @@ def rpc_url(datadir, i, chain, rpchost):
 
 def initialize_datadir(dirname, n, chain, disable_autoconnect=True):
     datadir = get_datadir_path(dirname, n)
-    if not os.path.isdir(datadir):
-        os.makedirs(datadir)
-    write_config(os.path.join(datadir, "bitcoin.conf"), n=n, chain=chain, disable_autoconnect=disable_autoconnect)
-    os.makedirs(os.path.join(datadir, 'stderr'), exist_ok=True)
-    os.makedirs(os.path.join(datadir, 'stdout'), exist_ok=True)
+    if not datadir.is_dir():
+        datadir.mkdir(parents=True)
+    write_config(datadir / "bitcoin.conf", n=n, chain=chain, disable_autoconnect=disable_autoconnect)
+    (datadir / 'stderr').mkdir(parents=True, exist_ok=True)
+    (datadir / 'stdout').mkdir(parents=True, exist_ok=True)
     return datadir
 
 
@@ -378,7 +378,7 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
     else:
         chain_name_conf_arg = chain
         chain_name_conf_section = chain
-    with open(config_path, 'w', encoding='utf8') as f:
+    with config_path.open(mode='w', encoding='utf8') as f:
         if chain_name_conf_arg:
             f.write("{}=1\n".format(chain_name_conf_arg))
         if chain_name_conf_section:
@@ -412,10 +412,10 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
 
 
 def get_datadir_path(dirname, n):
-    return os.path.join(dirname, "node" + str(n))
+    return Path(dirname) / f"node{n}"
 
 
-def get_temp_default_datadir(temp_dir: pathlib.Path) -> Tuple[dict, pathlib.Path]:
+def get_temp_default_datadir(temp_dir: Path) -> Tuple[dict, Path]:
     """Return os-specific environment variables that can be set to make the
     GetDefaultDataDir() function return a datadir path under the provided
     temp_dir, as well as the complete path it would return."""
@@ -432,16 +432,16 @@ def get_temp_default_datadir(temp_dir: pathlib.Path) -> Tuple[dict, pathlib.Path
 
 
 def append_config(datadir, options):
-    with open(os.path.join(datadir, "bitcoin.conf"), 'a', encoding='utf8') as f:
+    with (datadir / "bitcoin.conf").open(mode='a', encoding='utf8') as f:
         for option in options:
             f.write(option + "\n")
 
 
-def get_auth_cookie(datadir, chain):
+def get_auth_cookie(datadir_path, chain):
     user = None
     password = None
-    if os.path.isfile(os.path.join(datadir, "bitcoin.conf")):
-        with open(os.path.join(datadir, "bitcoin.conf"), 'r', encoding='utf8') as f:
+    if (datadir_path / "bitcoin.conf").is_file():
+        with (datadir_path / "bitcoin.conf").open(mode='r', encoding='utf8') as f:
             for line in f:
                 if line.startswith("rpcuser="):
                     assert user is None  # Ensure that there is only one rpcuser line
@@ -450,7 +450,7 @@ def get_auth_cookie(datadir, chain):
                     assert password is None  # Ensure that there is only one rpcpassword line
                     password = line.split("=")[1].strip("\n")
     try:
-        with open(os.path.join(datadir, chain, ".cookie"), 'r', encoding="ascii") as f:
+        with (datadir_path / chain / '.cookie').open(mode='r', encoding="ascii") as f:
             userpass = f.read()
             split_userpass = userpass.split(':')
             user = split_userpass[0]
@@ -463,10 +463,11 @@ def get_auth_cookie(datadir, chain):
 
 
 # If a cookie file exists in the given datadir, delete it.
-def delete_cookie_file(datadir, chain):
-    if os.path.isfile(os.path.join(datadir, chain, ".cookie")):
+def delete_cookie_file(datadir_path, chain):
+    filepath = datadir_path / f'{chain}.cookie'
+    if filepath.is_file():
         logger.debug("Deleting leftover cookie file")
-        os.remove(os.path.join(datadir, chain, ".cookie"))
+        filepath.unlink()
 
 
 def softfork_active(node, key):

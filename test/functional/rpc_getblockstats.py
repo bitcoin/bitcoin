@@ -14,9 +14,9 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 import json
-import os
+from pathlib import Path
 
-TESTSDIR = os.path.dirname(os.path.realpath(__file__))
+TESTSDIR = Path(__file__).parent
 
 class GetblockstatsTest(BitcoinTestFramework):
 
@@ -97,7 +97,7 @@ class GetblockstatsTest(BitcoinTestFramework):
 
 
     def run_test(self):
-        test_data = os.path.join(TESTSDIR, self.options.test_data)
+        test_data = str(TESTSDIR / self.options.test_data)
         if self.options.gen_test_data:
             self.generate_test_data(test_data)
         else:

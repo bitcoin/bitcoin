@@ -5,7 +5,7 @@
 """Test decoding scripts via decodescript RPC command."""
 
 import json
-import os
+from pathlib import Path
 
 from test_framework.messages import (
     sha256,
@@ -256,7 +256,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         assert_equal('OP_RETURN 3011020701010101010101020601010101010101', rpc_result['vin'][0]['scriptSig']['asm'])
 
     def decodescript_datadriven_tests(self):
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_decodescript.json'), encoding='utf-8') as f:
+        with (Path(__file__).parent / 'data' / 'rpc_decodescript.json').open(encoding='utf-8') as f:
             dd_tests = json.load(f)
 
         for script, result in dd_tests:

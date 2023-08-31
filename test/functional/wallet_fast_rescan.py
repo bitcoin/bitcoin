@@ -43,7 +43,7 @@ class WalletFastRescanTest(BitcoinTestFramework):
         wallet = MiniWallet(node)
 
         self.log.info("Create descriptor wallet with backup")
-        WALLET_BACKUP_FILENAME = os.path.join(node.datadir, 'wallet.bak')
+        WALLET_BACKUP_FILENAME = node.datadir_path / 'wallet.bak'
         node.createwallet(wallet_name='topup_test', descriptors=True)
         w = node.get_wallet_rpc('topup_test')
         fixed_key = get_generate_key()

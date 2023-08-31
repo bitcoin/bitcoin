@@ -8,9 +8,9 @@ WARNING: This code is slow and uses bad randomness.
 Do not use for anything but tests."""
 
 import csv
-import os
 import random
 import unittest
+from pathlib import Path
 
 from test_framework.secp256k1 import FE, G, GE
 
@@ -133,7 +133,7 @@ class TestFrameworkEllSwift(unittest.TestCase):
 
     def test_elligator_encode_testvectors(self):
         """Implement the BIP324 test vectors for ellswift encoding (read from xswiftec_inv_test_vectors.csv)."""
-        vectors_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'xswiftec_inv_test_vectors.csv')
+        vectors_file = Path(__file__).parent / 'xswiftec_inv_test_vectors.csv'
         with open(vectors_file, newline='', encoding='utf8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
@@ -149,7 +149,7 @@ class TestFrameworkEllSwift(unittest.TestCase):
 
     def test_elligator_decode_testvectors(self):
         """Implement the BIP324 test vectors for ellswift decoding (read from ellswift_decode_test_vectors.csv)."""
-        vectors_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ellswift_decode_test_vectors.csv')
+        vectors_file = Path(__file__).parent / 'ellswift_decode_test_vectors.csv'
         with open(vectors_file, newline='', encoding='utf8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
