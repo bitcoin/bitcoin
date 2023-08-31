@@ -20,7 +20,6 @@
 #include <util/ranges.h>
 #include <util/system.h>
 #include <validation.h>
-#include <evo/creditpool.h>
 
 #include <cassert>
 #include <string>
