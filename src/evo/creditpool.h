@@ -67,7 +67,7 @@ private:
 
     CAmount sessionLocked{0};
     CAmount sessionUnlocked{0};
-    CAmount masternodeReward{0};
+    CAmount platformReward{0};
 
     // target value is used to validate CbTx. If values mismatched, block is invalid
     std::optional<CAmount> targetBalance;
@@ -85,12 +85,12 @@ public:
     bool ProcessTransaction(const CTransaction& tx, TxValidationState& state);
 
     /**
-     * This function should be called by miner for initalization of MasterNode reward
+     * This function should be called by miner for initialization of MasterNode reward
      */
     void AddRewardRealloced(const CAmount reward);
 
     CAmount GetTotalLocked() const {
-        return pool.locked + sessionLocked - sessionUnlocked + masternodeReward;
+        return pool.locked + sessionLocked - sessionUnlocked + platformReward;
     }
 
     const std::optional<CAmount>& GetTargetBalance() const {

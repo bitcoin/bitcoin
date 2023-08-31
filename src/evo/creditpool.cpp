@@ -225,7 +225,7 @@ CCreditPoolDiff::CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindex,
 
 void CCreditPoolDiff::AddRewardRealloced(const CAmount reward) {
     assert(MoneyRange(reward));
-    masternodeReward += reward;
+    platformReward += reward;
 }
 
 bool CCreditPoolDiff::SetTarget(const CTransaction& tx, TxValidationState& state)
@@ -246,8 +246,8 @@ bool CCreditPoolDiff::SetTarget(const CTransaction& tx, TxValidationState& state
     for (const CTxOut& txout : tx.vout) {
         blockReward += txout.nValue;
     }
-    masternodeReward = MasternodePayments::PlatformShare(GetMasternodePayment(cbTx.nHeight, blockReward, params.BRRHeight));
-    LogPrintf("CreditPool: set target to %lld with MN reward %lld\n", *targetBalance, masternodeReward);
+    platformReward = MasternodePayments::PlatformShare(GetMasternodePayment(cbTx.nHeight, blockReward, params.BRRHeight));
+    LogPrintf("CreditPool: set target to %lld with MN reward %lld\n", *targetBalance, platformReward);
 
     return true;
 }
