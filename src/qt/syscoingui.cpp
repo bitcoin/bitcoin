@@ -705,7 +705,7 @@ void SyscoinGUI::enableHistoryAction(bool privacy)
     if (historyAction->isChecked()) gotoOverviewPage();
 }
 
-void SyscoinGUI::setWalletController(WalletController* wallet_controller)
+void SyscoinGUI::setWalletController(WalletController* wallet_controller, bool show_loading_minimized)
 {
     assert(!m_wallet_controller);
     assert(wallet_controller);
@@ -725,7 +725,7 @@ void SyscoinGUI::setWalletController(WalletController* wallet_controller)
     });
 
     auto activity = new LoadWalletsActivity(m_wallet_controller, this);
-    activity->load();
+    activity->load(show_loading_minimized);
 }
 
 WalletController* SyscoinGUI::getWalletController()

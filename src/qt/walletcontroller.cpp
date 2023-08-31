@@ -191,7 +191,7 @@ WalletControllerActivity::WalletControllerActivity(WalletController* wallet_cont
     connect(this, &WalletControllerActivity::finished, this, &QObject::deleteLater);
 }
 
-void WalletControllerActivity::showProgressDialog(const QString& title_text, const QString& label_text)
+void WalletControllerActivity::showProgressDialog(const QString& title_text, const QString& label_text, bool show_minimized)
 {
     auto progress_dialog = new QProgressDialog(m_parent_widget);
     progress_dialog->setAttribute(Qt::WA_DeleteOnClose);
@@ -206,6 +206,8 @@ void WalletControllerActivity::showProgressDialog(const QString& title_text, con
     // The setValue call forces QProgressDialog to start the internal duration estimation.
     // See details in https://bugreports.qt.io/browse/QTBUG-47042.
     progress_dialog->setValue(0);
+    // When requested, launch dialog minimized
+    if (show_minimized) progress_dialog->showMinimized();
 }
 
 CreateWalletActivity::CreateWalletActivity(WalletController* wallet_controller, QWidget* parent_widget)
@@ -368,14 +370,15 @@ LoadWalletsActivity::LoadWalletsActivity(WalletController* wallet_controller, QW
 {
 }
 
-void LoadWalletsActivity::load()
+void LoadWalletsActivity::load(bool show_loading_minimized)
 {
     showProgressDialog(
         //: Title of progress window which is displayed when wallets are being loaded.
         tr("Load Wallets"),
         /*: Descriptive text of the load wallets progress window which indicates to
             the user that wallets are currently being loaded.*/
-        tr("Loading wallets…"));
+        tr("Loading wallets…"),
+        /*show_minimized=*/show_loading_minimized);
 
     QTimer::singleShot(0, worker(), [this] {
         for (auto& wallet : node().walletLoader().getWallets()) {
