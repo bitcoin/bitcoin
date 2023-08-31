@@ -29,8 +29,10 @@ body:
     attributes:
       label: Useful Skills
       description: For example, “`std::thread`”, “Qt5 GUI and async GUI design” or “basic understanding of Syscoin mining and the Syscoin Core RPC interface”.
-    validations:
-      required: false
+      value: |
+        * Compiling Syscoin Core from source
+        * Running the C++ unit tests and the Python functional tests
+        * ...
   - type: textarea
     attributes:
       label: Guidance for new contributors
