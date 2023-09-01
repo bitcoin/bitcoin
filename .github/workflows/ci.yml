@@ -52,6 +52,7 @@ jobs:
         run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
 
       - name: Restore Ccache cache
+        id: ccache-cache
         uses: actions/cache/restore@v3
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -63,7 +64,7 @@ jobs:
 
       - name: Save Ccache cache
         uses: actions/cache/save@v3
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
         with:
           path: ${{ env.CCACHE_DIR }}
           # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
@@ -203,6 +204,7 @@ jobs:
           Copy-Item -Path "$env:ChocolateyInstall\lib\ccache\tools\ccache-$env:CI_CCACHE_VERSION-windows-x86_64\ccache.exe" -Destination "C:\ccache\cl.exe"
 
       - name: Restore Ccache cache
+        id: ccache-cache
         uses: actions/cache/restore@v3
         with:
           path: ~/AppData/Local/ccache
@@ -243,7 +245,7 @@ jobs:
 
       - name: Save Ccache cache
         uses: actions/cache/save@v3
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
         with:
           path: ~/AppData/Local/ccache
           # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
