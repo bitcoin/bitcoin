@@ -70,6 +70,12 @@
         <translation type="unfinished">Estes son os teus enderezos de Bitcoin para enviar pagamentos. Asegurate sempre de comprobar a cantidade e maila dirección antes de enviar moedas.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">Estes son os teus enderezos de Bitcoin para recibir pagamentos. Emprega o botón 'Crear novo enderezo para recibir pagamentos' na solapa de recibir para crear novos enderezos.
+Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation type="unfinished">Copiar Enderezo</translation>
     </message>
@@ -244,10 +250,6 @@
     <message>
         <source>Amount</source>
         <translation type="unfinished">Cantidade</translation>
-    </message>
-    <message>
-        <source>Internal</source>
-        <translation type="unfinished">Interno</translation>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
