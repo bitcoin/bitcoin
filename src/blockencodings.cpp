@@ -107,7 +107,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     std::vector<bool> have_txn(txn_available.size());
     {
     LOCK(pool->cs);
-    for (const auto& tx : pool->vTxHashes) {
+    for (const auto& tx : pool->txns_randomized) {
         uint64_t shortid = cmpctblock.GetShortID(tx->GetWitnessHash());
         std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
         if (idit != shorttxids.end()) {

@@ -172,7 +172,7 @@ public:
     Parents& GetMemPoolParents() const { return m_parents; }
     Children& GetMemPoolChildren() const { return m_children; }
 
-    mutable size_t vTxHashesIdx; //!< Index in mempool's vTxHashes
+    mutable size_t idx_randomized; //!< Index in mempool's txns_randomized
     mutable Epoch::Marker m_epoch_marker; //!< epoch when last touched, useful for graph algorithms
 };
 

@@ -480,8 +480,8 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
         minerPolicyEstimator->processTransaction(entry, validFeeEstimate);
     }
 
-    vTxHashes.emplace_back(newit->GetSharedTx());
-    newit->vTxHashesIdx = vTxHashes.size() - 1;
+    txns_randomized.emplace_back(newit->GetSharedTx());
+    newit->idx_randomized = txns_randomized.size() - 1;
 
     TRACE3(mempool, added,
         entry.GetTx().GetHash().data(),
@@ -517,16 +517,16 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 
     RemoveUnbroadcastTx(hash, true /* add logging because unchecked */ );
 
-    if (vTxHashes.size() > 1) {
-        // Update vTxHashesIdx of the to-be-moved entry.
-        Assert(GetEntry(vTxHashes.back()->GetHash()))->vTxHashesIdx = it->vTxHashesIdx;
-        // Remove entry from vTxHashes by replacing it with the back and deleting the back.
-        vTxHashes[it->vTxHashesIdx] = std::move(vTxHashes.back());
-        vTxHashes.pop_back();
-        if (vTxHashes.size() * 2 < vTxHashes.capacity())
-            vTxHashes.shrink_to_fit();
+    if (txns_randomized.size() > 1) {
+        // Update idx_randomized of the to-be-moved entry.
+        Assert(GetEntry(txns_randomized.back()->GetHash()))->idx_randomized = it->idx_randomized;
+        // Remove entry from txns_randomized by replacing it with the back and deleting the back.
+        txns_randomized[it->idx_randomized] = std::move(txns_randomized.back());
+        txns_randomized.pop_back();
+        if (txns_randomized.size() * 2 < txns_randomized.capacity())
+            txns_randomized.shrink_to_fit();
     } else
-        vTxHashes.clear();
+        txns_randomized.clear();
 
     totalTxSize -= it->GetTxSize();
     m_total_fee -= it->GetFee();
@@ -1054,7 +1054,7 @@ void CCoinsViewMemPool::Reset()
 size_t CTxMemPool::DynamicMemoryUsage() const {
     LOCK(cs);
     // Estimate the overhead of mapTx to be 15 pointers + an allocation, as no exact formula for boost::multi_index_contained is implemented.
-    return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 15 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(vTxHashes) + cachedInnerUsage;
+    return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 15 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(txns_randomized) + cachedInnerUsage;
 }
 
 void CTxMemPool::RemoveUnbroadcastTx(const uint256& txid, const bool unchecked) {
