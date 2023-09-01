@@ -581,4 +581,58 @@ BOOST_AUTO_TEST_CASE(help_example)
     BOOST_CHECK_NE(HelpExampleRpcNamed("foo", {{"arg", true}}), HelpExampleRpcNamed("foo", {{"arg", "true"}}));
 }
 
+static void CheckRpc(const std::vector<RPCArg>& params, const UniValue& args, RPCHelpMan::RPCMethodImpl test_impl)
+{
+    auto null_result{RPCResult{RPCResult::Type::NONE, "", "None"}};
+    const RPCHelpMan rpc{"dummy", "dummy description", params, null_result, RPCExamples{""}, test_impl};
+    JSONRPCRequest req;
+    req.params = args;
+
+    rpc.HandleRequest(req);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_arg_helper)
+{
+    constexpr bool DEFAULT_BOOL = true;
+    constexpr auto DEFAULT_STRING = "default";
+    constexpr uint64_t DEFAULT_UINT64_T = 3;
+
+    //! Parameters with which the RPCHelpMan is instantiated
+    const std::vector<RPCArg> params{
+        // Required arg
+        {"req_int", RPCArg::Type::NUM, RPCArg::Optional::NO, ""},
+        {"req_str", RPCArg::Type::STR, RPCArg::Optional::NO, ""},
+        // Default arg
+        {"def_uint64_t", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_UINT64_T}, ""},
+        {"def_string", RPCArg::Type::STR, RPCArg::Default{DEFAULT_STRING}, ""},
+        {"def_bool", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_BOOL}, ""},
+        // Optional arg without default
+        {"opt_double", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, ""},
+        {"opt_string", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""}
+    };
+
+    //! Check that `self.Arg` returns the same value as the `request.params` accessors
+    RPCHelpMan::RPCMethodImpl check_positional = [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            BOOST_CHECK_EQUAL(self.Arg<int>(0), request.params[0].getInt<int>());
+            BOOST_CHECK_EQUAL(self.Arg<std::string>(1), request.params[1].get_str());
+            BOOST_CHECK_EQUAL(self.Arg<uint64_t>(2), request.params[2].isNull() ? DEFAULT_UINT64_T : request.params[2].getInt<uint64_t>());
+            BOOST_CHECK_EQUAL(self.Arg<std::string>(3), request.params[3].isNull() ? DEFAULT_STRING : request.params[3].get_str());
+            BOOST_CHECK_EQUAL(self.Arg<bool>(4), request.params[4].isNull() ? DEFAULT_BOOL : request.params[4].get_bool());
+            if (!request.params[5].isNull()) {
+                BOOST_CHECK_EQUAL(self.MaybeArg<double>(5).value(), request.params[5].get_real());
+            } else {
+                BOOST_CHECK(!self.MaybeArg<double>(5));
+            }
+            if (!request.params[6].isNull()) {
+                BOOST_CHECK(self.MaybeArg<std::string>(6));
+                BOOST_CHECK_EQUAL(*self.MaybeArg<std::string>(6), request.params[6].get_str());
+            } else {
+                BOOST_CHECK(!self.MaybeArg<std::string>(6));
+            }
+            return UniValue{};
+        };
+    CheckRpc(params, UniValue{JSON(R"([5, "hello", null, null, null, null, null])")}, check_positional);
+    CheckRpc(params, UniValue{JSON(R"([5, "hello", 4, "test", true, 1.23, "world"])")}, check_positional);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
