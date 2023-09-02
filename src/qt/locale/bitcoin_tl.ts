@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">I-right-click upang i-edit ang ♦address♦ o ♦label♦</translation>
+        <translation type="unfinished">I-right-click upang i-edit ang address o label</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -270,14 +270,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Isang malubhang pagkakamali ang naganap. Suriin ang mga ♦setting♦ ng ♦file♦ na ♦writable♦, o subukan na patakbuhin sa ♦-nosettings♦.</translation>
     </message>
     <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation type="unfinished">Pagkakamali: Ang natukoy na datos na ♦directory♦ "1%1" ay wala.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1.</source>
-        <translation type="unfinished">Pagkakamali: Hindi ma-parse ang ♦configuration file♦: %1.</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">Pagkakamali: 1%1</translation>
     </message>
@@ -333,17 +325,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Settings file could not be read</source>
-        <translation type="unfinished">Ang mga ♦setting file♦ ay hindi mabasa</translation>
-    </message>
-    <message>
-        <source>Settings file could not be written</source>
-        <translation type="unfinished">Ang mga ♦settings file♦ ay hindi maisulat</translation>
-    </message>
-    </context>
-<context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
@@ -371,23 +352,27 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;About %1</source>
-        <translation type="unfinished">&amp;Tungkol sa %1</translation>
+        <translation type="unfinished">&amp;Tungkol sa 1%1</translation>
     </message>
     <message>
         <source>Show information about %1</source>
-        <translation type="unfinished">Ipakita ang impormasyon tungkol sa %1</translation>
+        <translation type="unfinished">Ipakita ang impormasyon tungkol sa 1%1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation type="unfinished">Tungkol sa &amp;♦Qt♦</translation>
+        <translation type="unfinished">Patungkol sa &amp;♦Qt♦</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
-        <translation type="unfinished">Baguhin ang mga pagpipilian sa ♦configuration♦ para sa %1</translation>
+        <translation type="unfinished">Baguhin ang mga pagpipilian sa ♦configuration♦ para sa 1%1</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
         <translation type="unfinished">Gumawa ng bagong pitaka</translation>
+    </message>
+    <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">Bawasan</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -397,10 +382,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Network activity disabled.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">Na-disable ang aktibidad ng ♦network♦</translation>
-    </message>
-    <message>
-        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
-        <translation type="unfinished">Ang paghalili ay  &lt;b&gt;na-enable&lt;/b&gt;: %1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -428,7 +409,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Encrypt Wallet…</source>
-        <translation type="unfinished">&amp;I-encrypt ang Pitaka</translation>
+        <translation type="unfinished">&amp;I-encrypt ang pitaka</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -488,7 +469,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation type="unfinished">&amp;Tulong</translation>
+        <translation type="unfinished">&amp;Tulungan</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
@@ -509,10 +490,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Processing blocks on disk…</source>
         <translation type="unfinished">Pinoproseso ang mga bloke sa ♦disk♦...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk…</source>
-        <translation type="unfinished">Ni-rere-index ang mga bloke sa ♦disk♦</translation>
     </message>
     <message>
         <source>Connecting to peers…</source>
@@ -568,6 +545,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Information</source>
         <translation type="unfinished">Impormasyon</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation type="unfinished">napapapanahon</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
@@ -1524,4 +1505,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">I-export ang datos sa kasalukuyang ♦tab♦ sa isang file</translation>
     </message>
     </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">Ang mga ♦setting file♦ ay hindi mabasa</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">Ang mga ♦settings file♦ ay hindi maisulat</translation>
+    </message>
+</context>
 </TS>

@@ -21,26 +21,14 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "resetting the chain height from %d to %d. On the next restart, the node will "
 "resume syncing from %d without using any snapshot data. Please report this "
 "incident to %s, including how you obtained the snapshot. The invalid "
-"snapshot chainstate has been left on disk in case it is helpful in "
-"diagnosing the issue that caused this error."),
+"snapshot chainstate will be left on disk in case it is helpful in diagnosing "
+"the issue that caused this error."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "%s is set very high! Fees this large could be paid on a single transaction."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "%s request to listen on port %u. This port is considered \"bad\" and thus it "
 "is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for "
 "details and a full list."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"-reindex-chainstate option is not compatible with -blockfilterindex. Please "
-"temporarily disable blockfilterindex while using -reindex-chainstate, or "
-"replace -reindex-chainstate with -reindex to fully rebuild all indexes."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"-reindex-chainstate option is not compatible with -coinstatsindex. Please "
-"temporarily disable coinstatsindex while using -reindex-chainstate, or "
-"replace -reindex-chainstate with -reindex to fully rebuild all indexes."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"-reindex-chainstate option is not compatible with -txindex. Please "
-"temporarily disable txindex while using -reindex-chainstate, or replace -"
-"reindex-chainstate with -reindex to fully rebuild all indexes."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot downgrade wallet from version %i to version %i. Wallet version "
 "unchanged."),
@@ -69,7 +57,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "successfully after node sync reaches height %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error reading %s! All keys read correctly, but transaction data or address "
-"book entries might be missing or incorrect."),
+"metadata may be missing or incorrect."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error reading %s! Transaction data may be missing or incorrect. Rescanning "
 "wallet."),
@@ -153,6 +141,10 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Prune: last wallet synchronisation goes beyond pruned data. You need to -"
 "reindex (download the whole blockchain again in case of pruned node)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Rename of '%s' -> '%s' failed. You should resolve this by manually moving or "
+"deleting the invalid snapshot directory %s, otherwise you will encounter the "
+"same error again on the next startup."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
 "SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is "
 "supported"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -219,8 +211,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "The wallet might had been created on a newer version.\n"
 "Please try running the latest software version.\n"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Unsupported category-specific logging level -loglevel=%s. Expected -"
-"loglevel=<category>:<loglevel>. Valid categories: %s. Valid loglevels: %s."),
+"Unsupported category-specific logging level %1$s=%2$s. Expected "
+"%1$s=<category>:<loglevel>. Valid categories: %3$s. Valid loglevels: %4$s."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Unsupported chainstate database format found. Please restart with -reindex-"
 "chainstate. This will rebuild the chainstate database."),
@@ -228,6 +220,11 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Wallet created successfully. The legacy wallet type is being deprecated and "
 "support for creating and opening legacy wallets will be removed in the "
 "future."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Wallet loaded successfully. The legacy wallet type is being deprecated and "
+"support for creating and opening legacy wallets will be removed in the "
+"future. Legacy wallets can be migrated to a descriptor wallet with "
+"migratewallet."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: Dumpfile wallet format \"%s\" does not match command line specified "
 "format \"%s\"."),
@@ -300,6 +297,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Error: Unable to remove watchonly address boo
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: Unable to write record to new wallet"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Failed to listen on any port. Use -listen=0 if you want this."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Failed to rescan the wallet during initialization"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Failed to start indexes, shutting down.."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Failed to verify database"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Fee rate (%s) is lower than the minimum fee rate setting (%s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Ignoring duplicate -wallet %s."),
@@ -381,10 +379,11 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Unknown address type '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unknown change type '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unknown network specified in -onlynet: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unknown new rules activated (versionbit %i)"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Unsupported global logging level -loglevel=%s. Valid values: %s."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Unsupported global logging level %s=%s. Valid values: %s."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Unsupported logging category %s=%s."),
 QT_TRANSLATE_NOOP("bitcoin-core", "User Agent comment (%s) contains unsafe characters."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Verifying blocks…"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Verifying wallet(s)…"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Wallet needed to be rewritten: restart %s to complete"),
+QT_TRANSLATE_NOOP("bitcoin-core", "acceptstalefeeestimates is not supported on %s chain."),
 };
