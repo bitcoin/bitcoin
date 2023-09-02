@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 """Test wallet import on pruned node."""
-import os
 
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.blocktools import (
@@ -74,7 +73,7 @@ class WalletPruningTest(BitcoinTestFramework):
 
         # Import wallet into pruned node
         self.nodes[1].createwallet(wallet_name="wallet_pruned", descriptors=False, load_on_startup=True)
-        self.nodes[1].importwallet(os.path.join(self.nodes[0].datadir, wallet_file))
+        self.nodes[1].importwallet(self.nodes[0].datadir_path / wallet_file)
 
         # Make sure that prune node's wallet correctly accounts for balances
         assert_equal(self.nodes[1].getbalance(), self.nodes[0].getbalance())
@@ -93,12 +92,12 @@ class WalletPruningTest(BitcoinTestFramework):
         # Make sure wallet cannot be imported because of missing blocks
         # This will try to rescan blocks `TIMESTAMP_WINDOW` (2h) before the wallet birthheight.
         # There are 6 blocks an hour, so 11 blocks (excluding birthheight).
-        assert_raises_rpc_error(-4, f"Pruned blocks from height {wallet_birthheight - 11} required to import keys. Use RPC call getblockchaininfo to determine your pruned height.", self.nodes[1].importwallet, os.path.join(self.nodes[0].datadir, wallet_file))
+        assert_raises_rpc_error(-4, f"Pruned blocks from height {wallet_birthheight - 11} required to import keys. Use RPC call getblockchaininfo to determine your pruned height.", self.nodes[1].importwallet, self.nodes[0].datadir_path / wallet_file)
         self.log.info("- Done")
 
     def get_birthheight(self, wallet_file):
         """Gets birthheight of a wallet on node0"""
-        with open(os.path.join(self.nodes[0].datadir, wallet_file), 'r', encoding="utf8") as f:
+        with open(self.nodes[0].datadir_path / wallet_file, 'r', encoding="utf8") as f:
             for line in f:
                 if line.startswith('# * Best block at time of backup'):
                     wallet_birthheight = int(line.split(' ')[9])
@@ -106,12 +105,12 @@ class WalletPruningTest(BitcoinTestFramework):
 
     def has_block(self, block_index):
         """Checks if the pruned node has the specific blk0000*.dat file"""
-        return os.path.isfile(os.path.join(self.nodes[1].blocks_path, f"blk{block_index:05}.dat"))
+        return (self.nodes[1].blocks_path / f"blk{block_index:05}.dat").is_file()
 
     def create_wallet(self, wallet_name, *, unload=False):
         """Creates and dumps a wallet on the non-pruned node0 to be later import by the pruned node"""
         self.nodes[0].createwallet(wallet_name=wallet_name, descriptors=False, load_on_startup=True)
-        self.nodes[0].dumpwallet(os.path.join(self.nodes[0].datadir, wallet_name + ".dat"))
+        self.nodes[0].dumpwallet(self.nodes[0].datadir_path / f"{wallet_name}.dat")
         if (unload):
             self.nodes[0].unloadwallet(wallet_name)
 
