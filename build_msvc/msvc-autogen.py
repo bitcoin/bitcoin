@@ -70,7 +70,7 @@ def parse_config_into_btc_config():
     config_dict = dict(item.split(", ") for item in config_info)
     config_dict["PACKAGE_VERSION"] = f"\"{config_dict['CLIENT_VERSION_MAJOR']}.{config_dict['CLIENT_VERSION_MINOR']}.{config_dict['CLIENT_VERSION_BUILD']}\""
     version = config_dict["PACKAGE_VERSION"].strip('"')
-    config_dict["PACKAGE_STRING"] = f"\"Bitcoin Core {version}\""
+    config_dict["PACKAGE_STRING"] = f"\"Bitcoin Inquisition {version}\""
 
     with open(os.path.join(SOURCE_DIR,'../build_msvc/bitcoin_config.h.in'), "r", encoding="utf8") as template_file:
         template = template_file.readlines()

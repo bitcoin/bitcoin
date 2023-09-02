@@ -116,7 +116,7 @@
 #define PACKAGE_BUGREPORT "https://github.com/bitcoin/bitcoin/issues"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "Bitcoin Core"
+#define PACKAGE_NAME "Bitcoin Inquisition"
 
 /* Define to the full name and version of this package. */
 #define PACKAGE_STRING $
