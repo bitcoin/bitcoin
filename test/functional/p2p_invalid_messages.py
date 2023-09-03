@@ -68,6 +68,8 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.test_checksum()
         self.test_size()
         self.test_msgtype()
+        self.test_unknown_msgtype()
+        self.test_bip61_msg()
         self.test_addrv2_empty()
         self.test_addrv2_no_addresses()
         self.test_addrv2_too_long_address()
@@ -156,6 +158,34 @@ class InvalidMessagesTest(BitcoinTestFramework):
             conn.sync_with_ping(timeout=1)
         # Check that traffic is accounted for (24 bytes header + 2 bytes payload)
         assert_equal(self.nodes[0].getpeerinfo()[0]['bytesrecv_per_msg']['*other*'], 26)
+        self.nodes[0].disconnect_p2ps()
+
+    def test_unknown_msgtype(self):
+        self.log.info("Test message with unknown message type is ignored and logged")
+        conn = self.nodes[0].add_p2p_connection(P2PDataStore())
+        msg = msg_unrecognized(str_data=b"")
+        msg.msgtype = b"abc123"
+        with self.nodes[0].assert_debug_log(
+            expected_msgs=[
+                "received: abc123 (1 bytes) peer=",
+                'Ignoring unknown command "abc123" from inbound not_publicly_routable peer=',
+            ]
+        ):
+            conn.send_raw_message(conn.build_message(msg))
+            conn.sync_with_ping()
+        self.nodes[0].disconnect_p2ps()
+
+    def test_bip61_msg(self):
+        self.log.info('Test BIP61 "reject" message is ignored but not logged, as they can be very frequent')
+        conn = self.nodes[0].add_p2p_connection(P2PDataStore())
+        msg = msg_unrecognized(str_data=b"")
+        msg.msgtype = b"reject"
+        with self.nodes[0].assert_debug_log(
+            expected_msgs=["received: reject (1 bytes) peer="],
+            unexpected_msgs=['Ignoring unknown command "reject"'],
+        ):
+            conn.send_raw_message(conn.build_message(msg))
+            conn.sync_with_ping()
         self.nodes[0].disconnect_p2ps()
 
     def test_addrv2(self, label, required_log_messages, raw_addrv2):
