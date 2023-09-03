@@ -4881,8 +4881,18 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     }
 
+    const auto msg_str{SanitizeString(msg_type)};
+
+    // Ignore BIP61 "reject" messages. They can be very frequent, so don't log.
+    if (msg_str == "reject") {
+        return;
+    }
+
     // Ignore unknown commands for extensibility
-    LogPrint(BCLog::NET, "Unknown command \"%s\" from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
+    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Ignoring unknown command \"%s\" from %s %s peer=%d%s, version=%d, subver=%s\n",
+                  msg_str, pfrom.ConnectionTypeAsString(), GetNetworkName(pfrom.ConnectedThroughNetwork()),
+                  pfrom.GetId(), fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : "",
+                  pfrom.nVersion.load(), WITH_LOCK(pfrom.m_subver_mutex, return pfrom.cleanSubVer));
     return;
 }
 
