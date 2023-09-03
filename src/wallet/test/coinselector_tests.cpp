@@ -336,6 +336,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         const auto result9 = SelectCoinsBnB(GroupCoins(available_coins.All()), 1 * CENT, coin_selection_params_bnb.m_cost_of_change);
         BOOST_CHECK(result9);
         BOOST_CHECK_EQUAL(result9->GetSelectedValue(), 1 * CENT);
+        BOOST_CHECK_EQUAL(result9->GetChange(coin_selection_params_bnb.min_viable_change, coin_selection_params_bnb.m_change_fee), 0);
     }
 
     {
@@ -444,6 +445,35 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         add_coin(5 * CENT, 2, expected_result);
         add_coin(3 * CENT, 2, expected_result);
         BOOST_CHECK(EquivalentResult(expected_result, *res));
+        BOOST_CHECK_EQUAL(res->GetChange(coin_selection_params_bnb.min_viable_change, coin_selection_params_bnb.m_change_fee), 0);
+    }
+
+    {
+        // Test BnB upper selection bound. The process must only create changeless solution.
+        // The solutions can be in the range of: target <= solution_amount < target + min_viable_change - 1.
+        //
+        // The following cases are covered:
+        // 1) The only available solution contain an excess equal to min_viable_change.
+        //    The expected behavior here is BnB search to fail. Because, if BnB would return a valid solution, the transaction
+        //    creation process would create a change output (which is what we don't expect from a BnB solution).
+        //
+        // 2) The only available solution contain an excess one unit below the min_viable_change.
+        //    The expected behavior here is BnB search returning a successful solution.
+        //
+        // Case 1:
+        utxo_pool.clear();
+        target = 1 * COIN;
+        // Add coin that is exactly one unit above the upper bound.
+        add_coin(target + coin_selection_params_bnb.min_viable_change, 1, utxo_pool);
+        // BnB should fail. Otherwise, the transaction creation process would create change.
+        auto res = SelectCoinsBnB(GroupCoins(utxo_pool, /*subtract_fee_outputs=*/true), target, coin_selection_params_bnb.min_viable_change);
+        BOOST_CHECK(!res);
+
+        // Case 2:
+        // Add coin that is exactly the upper bound.
+        add_coin(target + coin_selection_params_bnb.min_viable_change - 1, 1, utxo_pool);
+        res = SelectCoinsBnB(GroupCoins(utxo_pool, /*subtract_fee_outputs=*/true), target, coin_selection_params_bnb.min_viable_change);
+        BOOST_CHECK_EQUAL(res->GetChange(coin_selection_params_bnb.min_viable_change, coin_selection_params_bnb.m_change_fee), 0);
     }
 }
 
