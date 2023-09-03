@@ -65,14 +65,14 @@ struct {
  *        values are their effective values.
  * @param const CAmount& selection_target This is the value that we want to select. It is the lower
  *        bound of the range.
- * @param const CAmount& cost_of_change This is the cost of creating and spending a change output.
+ * @param const CAmount& min_viable_change This is the minimum amount for creating a change output, if change would be less then the process forgo change
  *        This plus selection_target is the upper bound of the range.
  * @returns The result of this coin selection algorithm, or std::nullopt
  */
 
 static const size_t TOTAL_TRIES = 100000;
 
-util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
+util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& min_viable_change,
                                              int max_weight)
 {
     SelectionResult result(selection_target, SelectionAlgorithm::BNB);
@@ -102,12 +102,19 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
     bool is_feerate_high = utxo_pool.at(0).fee > utxo_pool.at(0).long_term_fee;
     bool max_tx_weight_exceeded = false;
 
+    // We seek for a solution where the process does not create change, so we can go as high as one unit below
+    // the amount where the transaction creation process starts creating a change output.
+    // In other words, the range of the possible solutions is:
+    // target <= solution_amount < target + min_viable_change - 1.
+    // Note: when 'min_viable_change=0', the upper bound is 'selection_target'.
+    CAmount selection_upper_bound = selection_target + (min_viable_change != 0 ? min_viable_change - 1 : 0);
+
     // Depth First search loop for choosing the UTXOs
     for (size_t curr_try = 0, utxo_pool_index = 0; curr_try < TOTAL_TRIES; ++curr_try, ++utxo_pool_index) {
         // Conditions for starting a backtrack
         bool backtrack = false;
         if (curr_value + curr_available_value < selection_target || // Cannot possibly reach target with the amount remaining in the curr_available_value.
-            curr_value > selection_target + cost_of_change || // Selected value is out of range, go back and try other branch
+            curr_value > selection_upper_bound || // Selected value is out of range, go back and try other branch
             (curr_waste > best_waste && is_feerate_high)) { // Don't select things which we know will be more wasteful if the waste is increasing
             backtrack = true;
         } else if (curr_selection_weight > max_weight) { // Exceeding weight for standard tx, cannot find more solutions by adding more inputs
@@ -176,7 +183,9 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
     for (const size_t& i : best_selection) {
         result.AddInput(utxo_pool.at(i));
     }
-    result.ComputeAndSetWaste(cost_of_change, cost_of_change, CAmount{0});
+
+    // Compute waste for a changeless solution
+    result.ComputeAndSetWaste(/*min_viable_change=*/min_viable_change, /*change_cost=*/CAmount{0}, /*change_fee*/CAmount{0});
     assert(best_waste == result.GetWaste());
 
     return result;
