@@ -24,13 +24,7 @@
 #include <cassert>
 #include <string>
 
-/**
-*   GetMasternodeTxOuts
-*
-*   Get masternode payment tx outputs
-*/
-
-static bool GetBlockTxOuts(const int nBlockHeight, const CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet)
+[[nodiscard]] static bool GetBlockTxOuts(const int nBlockHeight, const CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet)
 {
     voutMasternodePaymentsRet.clear();
 
@@ -74,7 +68,12 @@ static bool GetBlockTxOuts(const int nBlockHeight, const CAmount blockReward, st
 }
 
 
-static bool GetMasternodeTxOuts(const int nBlockHeight, const CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet)
+/**
+*   GetMasternodeTxOuts
+*
+*   Get masternode payment tx outputs
+*/
+[[nodiscard]] static bool GetMasternodeTxOuts(const int nBlockHeight, const CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet)
 {
     // make sure it's not filled yet
     voutMasternodePaymentsRet.clear();
@@ -94,7 +93,7 @@ static bool GetMasternodeTxOuts(const int nBlockHeight, const CAmount blockRewar
     return true;
 }
 
-static bool IsTransactionValid(const CTransaction& txNew, const int nBlockHeight, const CAmount blockReward)
+[[nodiscard]] static bool IsTransactionValid(const CTransaction& txNew, const int nBlockHeight, const CAmount blockReward)
 {
     if (!deterministicMNManager->IsDIP3Enforced(nBlockHeight)) {
         // can't verify historical blocks here
