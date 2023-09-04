@@ -85,7 +85,7 @@ class KeyPoolTest(BitcoinTestFramework):
         assert_raises_rpc_error(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
 
         # put six (plus 2) new keys in the keypool (100% external-, +100% internal-keys, 1 in min)
-        nodes[0].walletpassphrase('test', 12000)
+        nodes[0].walletpassphrase("test", 999000)
         nodes[0].keypoolrefill(6)
         nodes[0].walletlock()
         wi = nodes[0].getwalletinfo()
@@ -131,7 +131,7 @@ class KeyPoolTest(BitcoinTestFramework):
             nodes[0].getnewaddress()
         assert_raises_rpc_error(-12, "Keypool ran out", nodes[0].getnewaddress)
 
-        nodes[0].walletpassphrase('test', 100)
+        nodes[0].walletpassphrase("test", 999000)
         nodes[0].keypoolrefill(100)
         wi = nodes[0].getwalletinfo()
         if self.options.descriptors:
@@ -170,7 +170,7 @@ class KeyPoolTest(BitcoinTestFramework):
         else:
             res = w2.importmulti([{'desc': desc, 'timestamp': 'now'}])
         assert_equal(res[0]['success'], True)
-        w1.walletpassphrase('test', 100)
+        w1.walletpassphrase("test", 999000)
 
         res = w1.sendtoaddress(address=address, amount=0.00010000)
         self.generate(nodes[0], 1)

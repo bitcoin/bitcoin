@@ -109,7 +109,7 @@ class CreateWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w4.getnewaddress)
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w4.getrawchangeaddress)
         # Now set a seed and it should work. Wallet should also be encrypted
-        w4.walletpassphrase('pass', 60)
+        w4.walletpassphrase("pass", 999000)
         if self.options.descriptors:
             w4.importdescriptors([{
                 'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPcwuZGKp8TeWppSuLMiLe2d9PupB14QpPeQsqoj3LneJLhGHH13xESfvASyd4EFLJvLrG8b7DrLxEuV7hpF9uUc6XruKA1Wq/0h/*)'),
@@ -142,7 +142,7 @@ class CreateWalletTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name='wblank', disable_private_keys=False, blank=True, passphrase='thisisapassphrase')
         wblank = node.get_wallet_rpc('wblank')
         assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", wblank.signmessage, "needanargument", "test")
-        wblank.walletpassphrase('thisisapassphrase', 60)
+        wblank.walletpassphrase("thisisapassphrase", 999000)
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", wblank.getnewaddress)
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", wblank.getrawchangeaddress)
 
@@ -151,7 +151,7 @@ class CreateWalletTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name='w6', disable_private_keys=False, blank=False, passphrase='thisisapassphrase')
         w6 = node.get_wallet_rpc('w6')
         assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", w6.signmessage, "needanargument", "test")
-        w6.walletpassphrase('thisisapassphrase', 60)
+        w6.walletpassphrase("thisisapassphrase", 999000)
         w6.signmessage(w6.getnewaddress('', 'legacy'), "test")
         w6.keypoolrefill(1)
         # There should only be 1 key for legacy, 3 for descriptors
