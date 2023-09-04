@@ -130,7 +130,10 @@ class DashGovernanceTest (DashTestFramework):
         self.sync_blocks()
         time.sleep(1)
 
-        assert_equal(len(self.nodes[0].gobject("list", "valid", "triggers")), 1)
+        valid_triggers = self.nodes[0].gobject("list", "valid", "triggers")
+        assert_equal(len(valid_triggers), 1)
+        trigger_data = list(valid_triggers.values())[0]
+        assert_equal(trigger_data['YesCount'], self.mn_count)
 
         block_count = self.nodes[0].getblockcount()
         n = sb_cycle - block_count % sb_cycle
