@@ -126,7 +126,7 @@ bool CChainParams::UpdateMNActivationParam(int nBit, int height, int64_t timePas
         }
     }
     LogPrintf("%s: not found MnEHF fork bit=%d\n", __func__, nBit);
-    return false;
+    return true;
 }
 
 void CChainParams::AddLLMQ(Consensus::LLMQType llmqType)
