@@ -58,7 +58,14 @@
 #if !defined SECP256K1_CHECKMEM_ENABLED
 #  if defined VALGRIND
 #    include <stddef.h>
+#  if defined(__clang__) && defined(__APPLE__)
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wreserved-identifier"
+#  endif
 #    include <valgrind/memcheck.h>
+#  if defined(__clang__) && defined(__APPLE__)
+#    pragma clang diagnostic pop
+#  endif
 #    define SECP256K1_CHECKMEM_ENABLED 1
 #    define SECP256K1_CHECKMEM_UNDEFINE(p, len) VALGRIND_MAKE_MEM_UNDEFINED((p), (len))
 #    define SECP256K1_CHECKMEM_DEFINE(p, len) VALGRIND_MAKE_MEM_DEFINED((p), (len))

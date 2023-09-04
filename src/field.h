@@ -176,12 +176,6 @@ static int secp256k1_fe_is_odd(const secp256k1_fe *a);
  */
 static int secp256k1_fe_equal(const secp256k1_fe *a, const secp256k1_fe *b);
 
-/** Determine whether two field elements are equal, without constant-time guarantee.
- *
- * Identical in behavior to secp256k1_fe_equal, but not constant time in either a or b.
- */
-static int secp256k1_fe_equal_var(const secp256k1_fe *a, const secp256k1_fe *b);
-
 /** Compare the values represented by 2 field elements, without constant-time guarantee.
  *
  * On input, a and b must be valid normalized field elements.
@@ -351,5 +345,8 @@ static int secp256k1_fe_is_square_var(const secp256k1_fe *a);
 
 /** Check invariants on a field element (no-op unless VERIFY is enabled). */
 static void secp256k1_fe_verify(const secp256k1_fe *a);
+
+/** Check that magnitude of a is at most m (no-op unless VERIFY is enabled). */
+static void secp256k1_fe_verify_magnitude(const secp256k1_fe *a, int m);
 
 #endif /* SECP256K1_FIELD_H */
