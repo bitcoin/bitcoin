@@ -11,7 +11,7 @@
 //
 // It is part of the libbitcoinkernel project.
 
-#include <kernel/chainparams.h>
+#include <kernel/chainparms.h>
 #include <kernel/chainstatemanager_opts.h>
 #include <kernel/checks.h>
 #include <kernel/context.h>
