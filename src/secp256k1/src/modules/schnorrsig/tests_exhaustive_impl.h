@@ -110,15 +110,15 @@ static void test_exhaustive_schnorrsig_verify(const secp256k1_context *ctx, cons
                 if (!e_done[e]) {
                     /* Iterate over the possible valid last 32 bytes in the signature.
                        0..order=that s value; order+1=random bytes */
-                    int count_valid = 0, s;
+                    int count_valid = 0;
+                    unsigned int s;
                     for (s = 0; s <= EXHAUSTIVE_TEST_ORDER + 1; ++s) {
                         int expect_valid, valid;
                         if (s <= EXHAUSTIVE_TEST_ORDER) {
-                            secp256k1_scalar s_s;
-                            secp256k1_scalar_set_int(&s_s, s);
-                            secp256k1_scalar_get_b32(sig64 + 32, &s_s);
+                            memset(sig64 + 32, 0, 32);
+                            secp256k1_write_be32(sig64 + 60, s);
                             expect_valid = actual_k != -1 && s != EXHAUSTIVE_TEST_ORDER &&
-                                           (s_s == (actual_k + actual_d * e) % EXHAUSTIVE_TEST_ORDER);
+                                           (s == (actual_k + actual_d * e) % EXHAUSTIVE_TEST_ORDER);
                         } else {
                             secp256k1_testrand256(sig64 + 32);
                             expect_valid = 0;
