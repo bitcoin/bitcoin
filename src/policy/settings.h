@@ -8,5 +8,6 @@
 
 extern unsigned int nBytesPerSigOp;
 extern unsigned int nBytesPerSigOpStrict;
+extern unsigned int g_weight_per_data_byte;
 
 #endif // BITCOIN_POLICY_SETTINGS_H
