@@ -288,6 +288,7 @@ class AssetLocksTest(DashTestFramework):
         self.mine_quorum()
         self.validate_credit_pool_balance(locked_1)
 
+
         self.log.info("Testing asset unlock...")
 
         self.log.info("Generating several txes by same quorum....")
@@ -300,7 +301,7 @@ class AssetLocksTest(DashTestFramework):
         asset_unlock_tx_duplicate_index = copy.deepcopy(asset_unlock_tx)
         # modify this tx with duplicated index to make a hash of tx different, otherwise tx would be refused too early
         asset_unlock_tx_duplicate_index.vout[0].nValue += COIN
-        too_late_height = node.getblock(node.getbestblockhash())["height"] + 48
+        too_late_height = node.getblockcount() + 48
 
         self.check_mempool_result(tx=asset_unlock_tx, result_expected={'allowed': True})
         self.check_mempool_result(tx=asset_unlock_tx_too_big_fee,
@@ -345,7 +346,7 @@ class AssetLocksTest(DashTestFramework):
         self.validate_credit_pool_balance(locked_1 - 2 * COIN)
 
         self.log.info("Generating many blocks to make quorum far behind (even still active)...")
-        self.slowly_generate_batch(too_late_height - node.getblock(node.getbestblockhash())["height"] - 1)
+        self.slowly_generate_batch(too_late_height - node.getblockcount() - 1)
         self.check_mempool_result(tx=asset_unlock_tx_too_late, result_expected={'allowed': True})
         node.generate(1)
         self.sync_all()
@@ -496,7 +497,7 @@ class AssetLocksTest(DashTestFramework):
         self.check_mempool_size()
 
         self.activate_mn_rr(expected_activation_height=3090)
-        self.log.info(f'height: {node.getblock(node.getbestblockhash())["height"]} credit: {self.get_credit_pool_balance()}')
+        self.log.info(f'height: {node.getblockcount()} credit: {self.get_credit_pool_balance()}')
         reward = 2299859813
         assert_equal(new_total, self.get_credit_pool_balance())
         node.generate(1)
