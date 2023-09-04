@@ -1417,11 +1417,11 @@ util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::
     return std::make_pair(old_chunks, new_chunks);
 }
 
-CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, const CoinAgeCache coin_age_cache, bool spends_coinbase, int64_t sigops_cost, LockPoints lp)
+CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, const CoinAgeCache coin_age_cache, bool spends_coinbase, int32_t extra_weight, int64_t sigops_cost, LockPoints lp)
 {
     LOCK(m_pool->cs);
     Assume(m_to_add.find(tx->GetHash()) == m_to_add.end());
-    auto newit = m_to_add.emplace(tx, fee, time, entry_height, entry_sequence, coin_age_cache, spends_coinbase, sigops_cost, lp).first;
+    auto newit = m_to_add.emplace(tx, fee, time, entry_height, entry_sequence, coin_age_cache, spends_coinbase, /*extra_weight=*/ extra_weight, /*sigops_cost=*/ sigops_cost, lp).first;
     double priority_delta{0.};
     CAmount delta{0};
     m_pool->ApplyDeltas(tx->GetHash(), priority_delta, delta);

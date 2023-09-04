@@ -113,7 +113,7 @@ static std::pair<CTransactionRef, CTransactionRef> add_children_to_parent(const 
 }
 
 static CTxMemPool::ChangeSet::TxHandle RBFTestStageAddition(CTxMemPool::ChangeSet& changeset, const CTransactionRef& tx, const CAmount fee) {
-    return changeset.StageAddition(tx, fee, 0, 1, 0, COIN_AGE_CACHE_ZERO, false, 4, LockPoints());
+    return changeset.StageAddition(tx, fee, 0, 1, 0, COIN_AGE_CACHE_ZERO, false, /*extra_weight=*/0, 4, LockPoints());
 }
 
 BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)

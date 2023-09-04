@@ -87,6 +87,7 @@ private:
     const int64_t nTime;            //!< Local time when entering the mempool
     const uint64_t entry_sequence;  //!< Sequence number used to determine whether this transaction is too recent for relay
     const int64_t sigOpCost;        //!< Total sigop cost
+    const int32_t m_extra_weight;   //!< Policy-only additional transaction weight beyond nTxWeight
     const size_t nModSize;          //!< Cached modified size for priority
     const double entryPriority;     //!< Priority when entering the mempool
     const unsigned int entryHeight; //!< Chain height when entering the mempool
@@ -117,6 +118,7 @@ public:
                     int64_t time, unsigned int entry_height, uint64_t entry_sequence,
                     CoinAgeCache coin_age_cache,
                     bool spends_coinbase,
+                    int32_t extra_weight,
                     int64_t sigops_cost, LockPoints lp)
         : tx{tx},
           nFee{fee},
@@ -125,6 +127,7 @@ public:
           nTime{time},
           entry_sequence{entry_sequence},
           sigOpCost{sigops_cost},
+          m_extra_weight{extra_weight},
           nModSize{CalculateModifiedSize(*tx, GetTxSize())},
           entryPriority{ComputePriority2(coin_age_cache.inputs_coin_age, nModSize)},
           entryHeight{entry_height},
@@ -179,6 +182,7 @@ public:
     std::chrono::seconds GetTime() const { return std::chrono::seconds{nTime}; }
     unsigned int GetHeight() const { return entryHeight; }
     uint64_t GetSequence() const { return entry_sequence; }
+    int32_t GetExtraWeight() const { return m_extra_weight; }
     int64_t GetSigOpCost() const { return sigOpCost; }
     CAmount GetModifiedFee() const { return m_modified_fee; }
     size_t DynamicMemoryUsage() const { return nUsageSize; }
