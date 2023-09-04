@@ -39,7 +39,7 @@ CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransactionRef& tx) const
 {
     constexpr double coin_age{0};
     const CAmount inChainValue = 0;
-    return CTxMemPoolEntry{tx, nFee, TicksSinceEpoch<std::chrono::seconds>(time), nHeight, m_sequence, /*entry_tx_inputs_coin_age=*/coin_age, inChainValue, spendsCoinbase, sigOpCost, lp};
+    return CTxMemPoolEntry{tx, nFee, TicksSinceEpoch<std::chrono::seconds>(time), nHeight, m_sequence, /*entry_tx_inputs_coin_age=*/coin_age, inChainValue, spendsCoinbase, /*extra_weight=*/0, sigOpCost, lp};
 }
 
 std::optional<std::string> CheckPackageMempoolAcceptResult(const Package& txns,

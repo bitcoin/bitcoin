@@ -1002,10 +1002,11 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Set entry_sequence to 0 when rejectmsg_zero_mempool_entry_seq is used; this allows txs from a block
     // reorg to be marked earlier than any child txs that were already in the mempool.
     const uint64_t entry_sequence = args.m_ignore_rejects.count(rejectmsg_zero_mempool_entry_seq) ? 0 : m_pool.GetSequence();
+    int32_t extra_weight = CalculateExtraTxWeight(*ptx, m_view, ::g_weight_per_data_byte);
     entry.reset(new CTxMemPoolEntry(ptx, ws.m_base_fees, nAcceptTime, m_active_chainstate.m_chain.Height(), entry_sequence,
                                     /*entry_tx_inputs_coin_age=*/coin_age,
                                     inChainInputValue,
-                                    fSpendsCoinbase, nSigOpsCost, lock_points.value()));
+                                    fSpendsCoinbase, extra_weight, nSigOpsCost, lock_points.value()));
     ws.m_vsize = entry->GetTxSize();
 
     // To avoid rejecting low-sigop bare-multisig transactions, the sigops
