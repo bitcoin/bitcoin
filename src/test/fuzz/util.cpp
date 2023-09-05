@@ -188,15 +188,11 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
             tx_destination = WitnessV1Taproot{XOnlyPubKey{ConsumeUInt256(fuzzed_data_provider)}};
         },
         [&] {
-            WitnessUnknown witness_unknown{};
-            witness_unknown.version = fuzzed_data_provider.ConsumeIntegralInRange(2, 16);
-            std::vector<uint8_t> witness_unknown_program_1{fuzzed_data_provider.ConsumeBytes<uint8_t>(40)};
-            if (witness_unknown_program_1.size() < 2) {
-                witness_unknown_program_1 = {0, 0};
+            std::vector<unsigned char> program{ConsumeRandomLengthByteVector(fuzzed_data_provider, /*max_length=*/40)};
+            if (program.size() < 2) {
+                program = {0, 0};
             }
-            witness_unknown.length = witness_unknown_program_1.size();
-            std::copy(witness_unknown_program_1.begin(), witness_unknown_program_1.end(), witness_unknown.program);
-            tx_destination = witness_unknown;
+            tx_destination = WitnessUnknown{fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(2, 16), program};
         })};
     Assert(call_size == std::variant_size_v<CTxDestination>);
     return tx_destination;

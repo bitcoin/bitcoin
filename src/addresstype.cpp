@@ -87,11 +87,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         return true;
     }
     case TxoutType::WITNESS_UNKNOWN: {
-        WitnessUnknown unk;
-        unk.version = vSolutions[0][0];
-        std::copy(vSolutions[1].begin(), vSolutions[1].end(), unk.program);
-        unk.length = vSolutions[1].size();
-        addressRet = unk;
+        addressRet = WitnessUnknown{vSolutions[0][0], vSolutions[1]};
         return true;
     }
     case TxoutType::MULTISIG:
@@ -138,7 +134,7 @@ public:
 
     CScript operator()(const WitnessUnknown& id) const
     {
-        return CScript() << CScript::EncodeOP_N(id.version) << std::vector<unsigned char>(id.program, id.program + id.length);
+        return CScript() << CScript::EncodeOP_N(id.GetWitnessVersion()) << id.GetWitnessProgram();
     }
 };
 } // namespace

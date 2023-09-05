@@ -69,22 +69,26 @@ struct WitnessV1Taproot : public XOnlyPubKey
 //! CTxDestination subtype to encode any future Witness version
 struct WitnessUnknown
 {
-    unsigned int version;
-    unsigned int length;
-    unsigned char program[40];
+private:
+    unsigned int m_version;
+    std::vector<unsigned char> m_program;
+
+public:
+    WitnessUnknown(unsigned int version, const std::vector<unsigned char>& program) : m_version(version), m_program(program) {}
+    WitnessUnknown(int version, const std::vector<unsigned char>& program) : m_version(static_cast<unsigned int>(version)), m_program(program) {}
+
+    unsigned int GetWitnessVersion() const { return m_version; }
+    const std::vector<unsigned char>& GetWitnessProgram() const LIFETIMEBOUND { return m_program; }
 
     friend bool operator==(const WitnessUnknown& w1, const WitnessUnknown& w2) {
-        if (w1.version != w2.version) return false;
-        if (w1.length != w2.length) return false;
-        return std::equal(w1.program, w1.program + w1.length, w2.program);
+        if (w1.GetWitnessVersion() != w2.GetWitnessVersion()) return false;
+        return w1.GetWitnessProgram() == w2.GetWitnessProgram();
     }
 
     friend bool operator<(const WitnessUnknown& w1, const WitnessUnknown& w2) {
-        if (w1.version < w2.version) return true;
-        if (w1.version > w2.version) return false;
-        if (w1.length < w2.length) return true;
-        if (w1.length > w2.length) return false;
-        return std::lexicographical_compare(w1.program, w1.program + w1.length, w2.program, w2.program + w2.length);
+        if (w1.GetWitnessVersion() < w2.GetWitnessVersion()) return true;
+        if (w1.GetWitnessVersion() > w2.GetWitnessVersion()) return false;
+        return w1.GetWitnessProgram() < w2.GetWitnessProgram();
     }
 };
 
