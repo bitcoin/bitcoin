@@ -12,6 +12,7 @@
 #include <coins.h>
 #include <compat.h>
 #include <consensus/consensus.h>
+#include <key.h>
 #include <merkleblock.h>
 #include <net.h>
 #include <netaddress.h>
@@ -249,6 +250,8 @@ template <typename WeakEnumType, size_t size>
         });
     return tx_destination;
 }
+
+[[nodiscard]] CKey ConsumePrivateKey(FuzzedDataProvider& fuzzed_data_provider, std::optional<bool> compressed = std::nullopt) noexcept;
 
 template <typename T>
 [[nodiscard]] bool MultiplicationOverflow(const T i, const T j) noexcept
