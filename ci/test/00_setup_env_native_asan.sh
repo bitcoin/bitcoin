@@ -23,4 +23,5 @@ export GOAL="install"
 export TEST_RUNNER_EXTRA="--exclude interface_zmq_nevm,feature_llmqchainlocks"
 export SYSCOIN_CONFIG="--enable-c++20 --enable-usdt --enable-zmq --with-incompatible-bdb --with-gui=qt5 \
 CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' \
---with-sanitizers=address,float-divide-by-zero,integer,undefined CC=clang-16 CXX=clang++-16"
+--with-sanitizers=address,float-divide-by-zero,integer,undefined \
+CC='clang-16 -ftrivial-auto-var-init=pattern' CXX='clang++-16 -ftrivial-auto-var-init=pattern'"
