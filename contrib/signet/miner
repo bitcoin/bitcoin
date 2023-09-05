@@ -21,7 +21,7 @@ sys.path.insert(0, PATH_BASE_TEST_FUNCTIONAL)
 from test_framework.blocktools import get_witness_script, script_BIP34_coinbase_height # noqa: E402
 from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, from_binary, from_hex, ser_string, ser_uint256, tx_from_hex # noqa: E402
 from test_framework.psbt import PSBT, PSBTMap, PSBT_GLOBAL_UNSIGNED_TX, PSBT_IN_FINAL_SCRIPTSIG, PSBT_IN_FINAL_SCRIPTWITNESS, PSBT_IN_NON_WITNESS_UTXO, PSBT_IN_SIGHASH_TYPE # noqa: E402
-from test_framework.script import CScriptOp # noqa: E402
+from test_framework.script import CScript, CScriptOp # noqa: E402
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)s %(message)s',
@@ -93,12 +93,16 @@ def finish_block(block, signet_solution, grind_cmd):
         block.rehash()
     return block
 
-def generate_psbt(tmpl, reward_spk, *, blocktime=None):
+def generate_psbt(tmpl, reward_spk, *, blocktime=None, poolid=None):
     signet_spk = tmpl["signet_challenge"]
     signet_spk_bin = bytes.fromhex(signet_spk)
 
+    scriptSig = script_BIP34_coinbase_height(tmpl["height"])
+    if poolid is not None:
+        scriptSig = CScript(b"" + scriptSig + CScriptOp.encode_op_pushdata(poolid))
+
     cbtx = CTransaction()
-    cbtx.vin = [CTxIn(COutPoint(0, 0xffffffff), script_BIP34_coinbase_height(tmpl["height"]), 0xffffffff)]
+    cbtx.vin = [CTxIn(COutPoint(0, 0xffffffff), scriptSig, 0xffffffff)]
     cbtx.vout = [CTxOut(tmpl["coinbasevalue"], reward_spk)]
     cbtx.vin[0].nSequence = 2**32-2
     cbtx.rehash()
@@ -132,6 +136,17 @@ def generate_psbt(tmpl, reward_spk, *, blocktime=None):
     psbt.o = [ PSBTMap() ]
     return psbt.to_base64()
 
+def get_poolid(args):
+    if args.poolid is not None:
+        if args.poolnum is not None:
+             logging.error("Can only specify one of --poolid and --poolnum")
+             raise Exception("bad arguments")
+        return args.poolid.encode('utf8')
+    elif args.poolnum is not None:
+        return b"/signet:%d/" % (args.poolnum)
+    else:
+        return None
+
 def get_reward_addr_spk(args, height):
     assert args.address is not None or args.descriptor is not None
 
@@ -160,9 +175,10 @@ def get_reward_addr_spk(args, height):
     return reward_addr, reward_spk
 
 def do_genpsbt(args):
+    poolid = get_poolid(args)
     tmpl = json.load(sys.stdin)
     _, reward_spk = get_reward_addr_spk(args, tmpl["height"])
-    psbt = generate_psbt(tmpl, reward_spk)
+    psbt = generate_psbt(tmpl, reward_spk, poolid=poolid)
     print(psbt)
 
 def do_solvepsbt(args):
@@ -214,7 +230,8 @@ class Generate:
 
 
     def __init__(self, multiminer=None, ultimate_target=None, poisson=False, max_interval=1800,
-                 standby_delay=0, backup_delay=0, set_block_time=None):
+                 standby_delay=0, backup_delay=0, set_block_time=None,
+                 poolid=None):
         if multiminer is None:
             multiminer = (0, 1, 1)
         (self.multi_low, self.multi_high, self.multi_period) = multiminer
@@ -224,6 +241,7 @@ class Generate:
         self.standby_delay = standby_delay
         self.backup_delay = backup_delay
         self.set_block_time = set_block_time
+        self.poolid = poolid
 
     def next_block_delta(self, last_nbits, last_hash):
         # strategy:
@@ -307,7 +325,7 @@ class Generate:
         return tmpl
 
     def mine(self, bcli, grind_cmd, tmpl, reward_spk):
-        psbt = generate_psbt(tmpl, reward_spk, blocktime=self.mine_time)
+        psbt = generate_psbt(tmpl, reward_spk, blocktime=self.mine_time, poolid=self.poolid)
         input_stream = os.linesep.join([psbt, "true", "ALL"]).encode('utf8')
         psbt_signed = json.loads(bcli("-stdin", "walletprocesspsbt", input=input_stream))
         if not psbt_signed.get("complete",False):
@@ -373,10 +391,12 @@ def do_generate(args):
         logging.error("--max-interval must be at least 960 (16 minutes)")
         return 1
 
+    poolid = get_poolid(args)
+
     ultimate_target = nbits_to_target(int(args.nbits,16))
 
     gen = Generate(multiminer=my_blocks, ultimate_target=ultimate_target, poisson=args.poisson, max_interval=args.max_interval,
-                   standby_delay=args.standby_delay, backup_delay=args.backup_delay, set_block_time=args.set_block_time)
+                   standby_delay=args.standby_delay, backup_delay=args.backup_delay, set_block_time=args.set_block_time, poolid=poolid)
 
     mined_blocks = 0
     bestheader = {"hash": None}
@@ -501,6 +521,8 @@ def main():
     cmds = parser.add_subparsers(help="sub-commands")
     genpsbt = cmds.add_parser("genpsbt", help="Generate a block PSBT for signing")
     genpsbt.set_defaults(fn=do_genpsbt)
+    genpsbt.add_argument("--poolnum", default=None, type=int, help="Identify blocks that you mine")
+    genpsbt.add_argument("--poolid", default=None, type=str, help="Identify blocks that you mine (eg: /signet:1/)")
 
     solvepsbt = cmds.add_parser("solvepsbt", help="Solve a signed block PSBT")
     solvepsbt.set_defaults(fn=do_solvepsbt)
@@ -517,6 +539,8 @@ def main():
     generate.add_argument("--backup-delay", default=300, type=int, help="Seconds to delay before mining blocks reserved for other miners (default=300)")
     generate.add_argument("--standby-delay", default=0, type=int, help="Seconds to delay before mining blocks (default=0)")
     generate.add_argument("--max-interval", default=1800, type=int, help="Maximum interblock interval (seconds)")
+    generate.add_argument("--poolnum", default=None, type=int, help="Identify blocks that you mine")
+    generate.add_argument("--poolid", default=None, type=str, help="Identify blocks that you mine (eg: /signet:1/)")
 
     calibrate = cmds.add_parser("calibrate", help="Calibrate difficulty")
     calibrate.set_defaults(fn=do_calibrate)

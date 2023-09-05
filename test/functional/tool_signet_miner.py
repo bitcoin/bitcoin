@@ -57,6 +57,7 @@ class SignetMinerTest(BitcoinTestFramework):
                 f'--grind-cmd={self.options.bitcoinutil} grind',
                 '--nbits=1d00ffff',
                 f'--set-block-time={int(time.time())}',
+                '--poolnum=99',
             ], check=True, stderr=subprocess.STDOUT)
         assert_equal(node.getblockcount(), 1)
 
