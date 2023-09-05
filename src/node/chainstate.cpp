@@ -97,10 +97,10 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         // EvoDB processed some blocks earlier but we have no blocks anymore, something is wrong
         return {ChainstateLoadStatus::FAILURE, _("Error initializing block database")};
     }
-    // new CBlockTreeDB tries to delete the existing file, which
+    // new BlockTreeDB tries to delete the existing file, which
     // fails if it's still open from the previous loop. Close it first:
     pblocktree.reset();
-    pblocktree = std::make_unique<CBlockTreeDB>(DBParams{
+    pblocktree = std::make_unique<BlockTreeDB>(DBParams{
         .path = chainman.m_options.datadir / "blocks" / "index",
         .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
         .memory_only = options.block_tree_db_in_memory,

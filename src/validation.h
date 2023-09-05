@@ -48,7 +48,6 @@
 // SYSCOIN
 #include <saltedhasher.h>
 class Chainstate;
-class CBlockTreeDB;
 class CTxMemPool;
 class ChainstateManager;
 struct ChainTxData;
