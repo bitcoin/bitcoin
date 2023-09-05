@@ -27,7 +27,7 @@ class RpcMiscTest(BitcoinTestFramework):
         self.log.info("test CHECK_NONFATAL")
         assert_raises_rpc_error(
             -1,
-            'Internal bug detected: "request.params[9].get_str() != "trigger_internal_bug""',
+            'Internal bug detected: request.params[9].get_str() != "trigger_internal_bug"',
             lambda: node.echo(arg9='trigger_internal_bug'),
         )
 
