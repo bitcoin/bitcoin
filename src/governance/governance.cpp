@@ -309,11 +309,6 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 
     // SEND NOTIFICATION TO SCRIPT/ZMQ
     GetMainSignals().NotifyGovernanceObject(std::make_shared<const CGovernanceObject>(govobj));
-
-    if (govobj.GetObjectType() == GovernanceObject::TRIGGER) {
-        vote_outcome_enum_t funding_vote = HasAlreadyVotedFundingTrigger() ? VOTE_OUTCOME_NO : VOTE_OUTCOME_YES;
-        VoteFundingTrigger(govobj.GetHash(), funding_vote, connman);
-    }
 }
 
 void CGovernanceManager::UpdateCachesAndClean()
@@ -435,15 +430,15 @@ CGovernanceObject* CGovernanceManager::FindGovernanceObject(const uint256& nHash
     return nullptr;
 }
 
-bool CGovernanceManager::HasGovernanceObjectByDataHash(const uint256 &nHash)
+CGovernanceObject* CGovernanceManager::FindGovernanceObjectByDataHash(const uint256 &nDataHash)
 {
     LOCK(cs);
 
-    for (const auto& [unused, object] : mapObjects) {
-        if (object.GetDataHash() == nHash) return true;
+    for (const auto& [nHash, object] : mapObjects) {
+        if (object.GetDataHash() == nDataHash) return &mapObjects[nHash];
     }
 
-    return false;
+    return nullptr;
 }
 
 void CGovernanceManager::DeleteGovernanceObject(const uint256& nHash)
@@ -532,13 +527,9 @@ std::optional<CSuperblock> CGovernanceManager::CreateSuperblockCandidate(int nHe
     if (nHeight % Params().GetConsensus().nSuperblockCycle < Params().GetConsensus().nSuperblockCycle - Params().GetConsensus().nSuperblockMaturityWindow) return std::nullopt;
     if (HasAlreadyVotedFundingTrigger()) return std::nullopt;
 
-    // only vote if we are the payee
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-    auto mn_payees = mnList.GetProjectedMNPayeesAtChainTip();
-    if (mn_payees.empty() || mn_payees.front()->proTxHash != WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash)) return std::nullopt;
-
     // A proposal is considered passing if (YES votes) >= (Total Weight of Masternodes / 10),
     // count total valid (ENABLED) masternodes to determine passing threshold.
+    const auto mnList = deterministicMNManager->GetListAtChainTip();
     const int nWeightedMnCount = mnList.GetValidWeightedMNsCount();
     const int nAbsVoteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, nWeightedMnCount / 10);
 
@@ -638,48 +629,58 @@ std::optional<CSuperblock> CGovernanceManager::CreateSuperblockCandidate(int nHe
 void CGovernanceManager::CreateGovernanceTrigger(const CSuperblock& sb, CConnman& connman)
 {
     //TODO: Check if nHashParentIn, nRevision and nCollateralHashIn are correct
-    LOCK(cs_main);
-    LOCK(governance->cs);
-    CGovernanceObject gov_sb(uint256(), 1, GetAdjustedTime(), uint256(), sb.GetHexStrData());
-    {
-        LOCK(activeMasternodeInfoCs);
-        gov_sb.SetMasternodeOutpoint(activeMasternodeInfo.outpoint);
-        gov_sb.Sign( *activeMasternodeInfo.blsKeyOperator);
-    }
-
-    if (std::string strError; !gov_sb.IsValidLocally(strError, true)) {
-        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Created trigger is invalid:%s\n", __func__, strError);
-        return;
-    }
-
-    if (!governance->MasternodeRateCheck(gov_sb)) {
-        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Trigger rejected because of rate check failure hash(%s)\n", __func__, gov_sb.GetHash().ToString());
-        return;
-    }
+    LOCK2(cs_main, governance->cs);
 
     // Check if identical trigger (equal DataHash()) is already created (signed by other masternode)
-    if (!governance->HasGovernanceObjectByDataHash(gov_sb.GetDataHash())) {
+    CGovernanceObject* gov_sb_voting{nullptr};
+    CGovernanceObject gov_sb(uint256(), 1, GetAdjustedTime(), uint256(), sb.GetHexStrData());
+    const auto identical_sb = governance->FindGovernanceObjectByDataHash(gov_sb.GetDataHash());
+
+    if (identical_sb == nullptr) {
+        // Nobody submitted a trigger we'd like to see,
+        // so let's do it but only if we are the payee
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        auto mn_payees = mnList.GetProjectedMNPayeesAtChainTip();
+        if (mn_payees.empty()) return;
+        {
+            LOCK(activeMasternodeInfoCs);
+            if (mn_payees.front()->proTxHash != activeMasternodeInfo.proTxHash) return;
+            gov_sb.SetMasternodeOutpoint(activeMasternodeInfo.outpoint);
+            gov_sb.Sign( *activeMasternodeInfo.blsKeyOperator);
+        }
+        if (std::string strError; !gov_sb.IsValidLocally(strError, true)) {
+            LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Created trigger is invalid:%s\n", __func__, strError);
+            return;
+        }
+        if (!governance->MasternodeRateCheck(gov_sb)) {
+            LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Trigger rejected because of rate check failure hash(%s)\n", __func__, gov_sb.GetHash().ToString());
+            return;
+        }
+        // The trigger we just created looks good, submit it
         governance->AddGovernanceObject(gov_sb, connman);
+        gov_sb_voting = &gov_sb;
+    } else {
+        // Somebody submitted a trigger with the same data, support it instead of submitting a duplicate
+        gov_sb_voting = identical_sb;
     }
 
-    // Vote YES-FUNDING for the newly created trigger
-    if (!VoteFundingTrigger(gov_sb.GetHash(), VOTE_OUTCOME_YES, connman)) {
-        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Voting YES-FUNDING for new trigger:%s failed\n", __func__, gov_sb.GetHash().ToString());
+    // Vote YES-FUNDING for the trigger we like
+    if (!VoteFundingTrigger(gov_sb_voting->GetHash(), VOTE_OUTCOME_YES, connman)) {
+        LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Voting YES-FUNDING for new trigger:%s failed\n", __func__, gov_sb_voting->GetHash().ToString());
         return;
     }
 
-    votedFundingYesTriggerHash = gov_sb.GetHash();
+    votedFundingYesTriggerHash = gov_sb_voting->GetHash();
 
     // Vote NO-FUNDING for the rest of the active triggers
     auto activeTriggers = triggerman.GetActiveTriggers();
     for (const auto& trigger : activeTriggers) {
-        if (trigger->GetHash() == gov_sb.GetHash()) continue; // Skip actual trigger
+        if (trigger->GetHash() == gov_sb_voting->GetHash()) continue; // Skip actual trigger
 
         if (!VoteFundingTrigger(trigger->GetHash(), VOTE_OUTCOME_NO, connman)) {
             LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Voting NO-FUNDING for trigger:%s failed\n", __func__, trigger->GetHash().ToString());
             return;
         }
-
     }
 }
 

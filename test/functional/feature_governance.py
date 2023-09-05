@@ -130,9 +130,21 @@ class DashGovernanceTest (DashTestFramework):
         self.sync_blocks()
         time.sleep(1)
 
+        # The "winner" should submit new trigger and vote for it, no one else should vote yet
         valid_triggers = self.nodes[0].gobject("list", "valid", "triggers")
         assert_equal(len(valid_triggers), 1)
         trigger_data = list(valid_triggers.values())[0]
+        assert_equal(trigger_data['YesCount'], 1)
+
+        # Move 1 block inside the Superblock maturity window
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        time.sleep(1)
+
+        # Every MN should vote for the same trigger now, no new triggers should be created
+        triggers_rpc = self.nodes[0].gobject("list", "valid", "triggers")
+        assert_equal(len(triggers_rpc), 1)
+        trigger_data = list(triggers_rpc.values())[0]
         assert_equal(trigger_data['YesCount'], self.mn_count)
 
         block_count = self.nodes[0].getblockcount()

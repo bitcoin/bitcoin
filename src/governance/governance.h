@@ -249,7 +249,7 @@ public:
     void DoMaintenance(CConnman& connman);
 
     CGovernanceObject* FindGovernanceObject(const uint256& nHash);
-    bool HasGovernanceObjectByDataHash(const uint256& nHash);
+    CGovernanceObject* FindGovernanceObjectByDataHash(const uint256& nDataHash);
     void DeleteGovernanceObject(const uint256& nHash);
 
     // These commands are only used in RPC
