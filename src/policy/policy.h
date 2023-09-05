@@ -196,4 +196,6 @@ static inline int64_t GetVirtualTransactionInputSize(const CTxIn& tx)
 
 std::pair<CScript, unsigned int> GetScriptForTransactionInput(CScript prevScript, const CTxIn&);
 
+size_t DatacarrierBytes(const CTransaction& tx, const CCoinsViewCache& view);
+
 #endif // BITCOIN_POLICY_POLICY_H
