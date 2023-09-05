@@ -321,7 +321,7 @@ bool CoinStatsIndex::LookUpStats(const CBlockIndex* block_index, CCoinsStats& co
     coins_stats.hashSerialized = entry.muhash;
     coins_stats.nTransactionOutputs = entry.transaction_output_count;
     coins_stats.nBogoSize = entry.bogo_size;
-    coins_stats.nTotalAmount = entry.total_amount;
+    coins_stats.total_amount = entry.total_amount;
     coins_stats.total_subsidy = entry.total_subsidy;
     coins_stats.total_unspendable_amount = entry.total_unspendable_amount;
     coins_stats.total_prevout_spent_amount = entry.total_prevout_spent_amount;

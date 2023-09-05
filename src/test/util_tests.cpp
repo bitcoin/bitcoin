@@ -15,6 +15,7 @@
 #include <util/getuniquepath.h>
 #include <util/message.h> // For MessageSign(), MessageVerify(), MESSAGE_MAGIC
 #include <util/moneystr.h>
+#include <util/overflow.h>
 #include <util/ranges_set.h>
 #include <util/spanparsing.h>
 #include <util/strencodings.h>
@@ -51,6 +52,53 @@ namespace BCLog {
 
 BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
 
+BOOST_AUTO_TEST_CASE(util_datadir)
+{
+    ClearDatadirCache();
+    const fs::path dd_norm = GetDataDir();
+
+    gArgs.ForceSetArg("-datadir", dd_norm.string() + "/");
+    ClearDatadirCache();
+    BOOST_CHECK_EQUAL(dd_norm, GetDataDir());
+
+    gArgs.ForceSetArg("-datadir", dd_norm.string() + "/.");
+    ClearDatadirCache();
+    BOOST_CHECK_EQUAL(dd_norm, GetDataDir());
+
+    gArgs.ForceSetArg("-datadir", dd_norm.string() + "/./");
+    ClearDatadirCache();
+    BOOST_CHECK_EQUAL(dd_norm, GetDataDir());
+
+    gArgs.ForceSetArg("-datadir", dd_norm.string() + "/.//");
+    ClearDatadirCache();
+    BOOST_CHECK_EQUAL(dd_norm, GetDataDir());
+}
+
+namespace {
+class NoCopyOrMove
+{
+public:
+    int i;
+    explicit NoCopyOrMove(int i) : i{i} { }
+
+    NoCopyOrMove() = delete;
+    NoCopyOrMove(const NoCopyOrMove&) = delete;
+    NoCopyOrMove(NoCopyOrMove&&) = delete;
+    NoCopyOrMove& operator=(const NoCopyOrMove&) = delete;
+    NoCopyOrMove& operator=(NoCopyOrMove&&) = delete;
+
+    operator bool() const { return i != 0; }
+
+    int get_ip1() { return i + 1; }
+    bool test()
+    {
+        // Check that Assume can be used within a lambda and still call methods
+        [&]() { Assume(get_ip1()); }();
+        return Assume(get_ip1() != 5);
+    }
+};
+} // namespace
+
 BOOST_AUTO_TEST_CASE(util_check)
 {
     // Check that Assert can forward
@@ -62,6 +110,14 @@ BOOST_AUTO_TEST_CASE(util_check)
     // Check that Assume can be used as unary expression
     const bool result{Assume(two == 2)};
     Assert(result);
+
+    // Check that Assert doesn't require copy/move
+    NoCopyOrMove x{9};
+    Assert(x).i += 3;
+    Assert(x).test();
+
+    // Check nested Asserts
+    BOOST_CHECK_EQUAL(Assert((Assert(x).test() ? 3 : 0)), 3);
 }
 
 BOOST_AUTO_TEST_CASE(util_criticalsection)
@@ -1414,6 +1470,38 @@ BOOST_AUTO_TEST_CASE(test_IsDigit)
     BOOST_CHECK_EQUAL(IsDigit(1), false);
     BOOST_CHECK_EQUAL(IsDigit(8), false);
     BOOST_CHECK_EQUAL(IsDigit(9), false);
+}
+
+/* Check for overflow */
+template <typename T>
+static void TestAddMatrixOverflow()
+{
+    constexpr T MAXI{std::numeric_limits<T>::max()};
+    BOOST_CHECK(!CheckedAdd(T{1}, MAXI));
+    BOOST_CHECK(!CheckedAdd(MAXI, MAXI));
+    BOOST_CHECK_EQUAL(0, CheckedAdd(T{0}, T{0}).value());
+    BOOST_CHECK_EQUAL(MAXI, CheckedAdd(T{0}, MAXI).value());
+    BOOST_CHECK_EQUAL(MAXI, CheckedAdd(T{1}, MAXI - 1).value());
+}
+
+/* Check for overflow or underflow */
+template <typename T>
+static void TestAddMatrix()
+{
+    TestAddMatrixOverflow<T>();
+    constexpr T MINI{std::numeric_limits<T>::min()};
+    constexpr T MAXI{std::numeric_limits<T>::max()};
+    BOOST_CHECK(!CheckedAdd(T{-1}, MINI));
+    BOOST_CHECK(!CheckedAdd(MINI, MINI));
+    BOOST_CHECK_EQUAL(MINI, CheckedAdd(T{0}, MINI).value());
+    BOOST_CHECK_EQUAL(MINI, CheckedAdd(T{-1}, MINI + 1).value());
+    BOOST_CHECK_EQUAL(-1, CheckedAdd(MINI, MAXI).value());
+}
+
+BOOST_AUTO_TEST_CASE(util_overflow)
+{
+    TestAddMatrixOverflow<unsigned>();
+    TestAddMatrix<signed>();
 }
 
 BOOST_AUTO_TEST_CASE(test_ParseInt32)

@@ -11,8 +11,8 @@
 #include <index/coinstatsindex.h>
 #include <serialize.h>
 #include <uint256.h>
-// #include <util/system.h>
 #include <util/check.h>
+#include <util/overflow.h>
 #include <util/system.h>
 #include <validation.h>
 
@@ -83,7 +83,9 @@ static void ApplyStats(CCoinsStats& stats, const uint256& hash, const std::map<u
     stats.nTransactions++;
     for (auto it = outputs.begin(); it != outputs.end(); ++it) {
         stats.nTransactionOutputs++;
-        stats.nTotalAmount += it->second.out.nValue;
+        if (stats.total_amount.has_value()) {
+            stats.total_amount = CheckedAdd(*stats.total_amount, it->second.out.nValue);
+        }
         stats.nBogoSize += GetBogoSize(it->second.out.scriptPubKey);
     }
 }
@@ -94,7 +96,9 @@ static void ApplyStats(CCoinsStats& stats, std::nullptr_t, const uint256& hash, 
     stats.nTransactions++;
     for (const auto& output : outputs) {
         stats.nTransactionOutputs++;
-        stats.nTotalAmount += output.second.out.nValue;
+        if (stats.total_amount.has_value()) {
+            stats.total_amount = CheckedAdd(*stats.total_amount, output.second.out.nValue);
+        }
         stats.nBogoSize += GetBogoSize(output.second.out.scriptPubKey);
     }
 }
@@ -107,11 +111,9 @@ static bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& 
     assert(pcursor);
 
     if (!pindex) {
-        {
-            LOCK(cs_main);
-            assert(std::addressof(g_chainman.m_blockman) == std::addressof(blockman));
-            pindex = blockman.LookupBlockIndex(view->GetBestBlock());
-        }
+        LOCK(cs_main);
+        assert(std::addressof(g_chainman.m_blockman) == std::addressof(blockman));
+        pindex = blockman.LookupBlockIndex(view->GetBestBlock());
     }
     stats.nHeight = Assert(pindex)->nHeight;
     stats.hashBlock = pindex->GetBlockHash();

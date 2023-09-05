@@ -310,8 +310,10 @@ BITCOIN_CORE_H = \
   util/check.h \
   util/enumerate.h \
   util/error.h \
+  util/fastrange.h \
   util/fees.h \
   util/golombrice.h \
+  util/hasher.h \
   util/hash_type.h \
   util/irange.h \
   util/spanparsing.h \
@@ -321,6 +323,7 @@ BITCOIN_CORE_H = \
   util/macros.h \
   util/message.h \
   util/moneystr.h \
+  util/overflow.h \
   util/ranges.h \
   util/readwritefile.h \
   util/underlying.h \
@@ -330,7 +333,9 @@ BITCOIN_CORE_H = \
   util/sock.h \
   util/string.h \
   util/time.h \
+  util/thread.h \
   util/threadnames.h \
+  util/trace.h \
   util/translation.h \
   util/vector.h \
   util/url.h \
@@ -735,8 +740,10 @@ libbitcoin_util_a_SOURCES = \
   util/asmap.cpp \
   util/bip32.cpp \
   util/bytevectorhash.cpp \
+  util/check.cpp \
   util/error.cpp \
   util/fees.cpp \
+  util/hasher.cpp \
   util/getuniquepath.cpp \
   util/sock.cpp \
   util/system.cpp \
@@ -750,6 +757,7 @@ libbitcoin_util_a_SOURCES = \
   util/time.cpp \
   util/serfloat.cpp \
   util/string.cpp \
+  util/thread.cpp \
   util/threadnames.cpp \
   $(BITCOIN_CORE_H)
 

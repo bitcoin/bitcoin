@@ -25,6 +25,7 @@
 #include <evo/deterministicmns.h>
 #include <llmq/instantsend.h>
 
+#include <cmath>
 #include <optional>
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
@@ -1682,5 +1683,3 @@ void CTxMemPool::SetIsLoaded(bool loaded)
     LOCK(cs);
     m_is_loaded = loaded;
 }
-
-SaltedTxidHasher::SaltedTxidHasher() : k0(GetRand(std::numeric_limits<uint64_t>::max())), k1(GetRand(std::numeric_limits<uint64_t>::max())) {}

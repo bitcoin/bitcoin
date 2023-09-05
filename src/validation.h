@@ -26,6 +26,7 @@
 #include <versionbits.h>
 #include <serialize.h>
 #include <spentindex.h>
+#include <util/hasher.h>
 
 #include <atomic>
 #include <map>
@@ -125,14 +126,6 @@ static const unsigned int DEFAULT_CHECKLEVEL = 3;
 // one 128 MiB block file + added 15% undo data = 147 MiB greater for a total of 941 MiB
 // Setting the target to > than 945 MiB will make it likely we can respect the target.
 static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 945 * 1024 * 1024;
-
-struct BlockHasher
-{
-    // this used to call `GetCheapHash()` in uint256, which was later moved; the
-    // cheap hash function simply calls ReadLE64() however, so the end result is
-    // identical
-    size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
-};
 
 extern RecursiveMutex cs_main;
 typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;

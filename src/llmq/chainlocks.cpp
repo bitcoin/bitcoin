@@ -18,6 +18,7 @@
 #include <spork.h>
 #include <txmempool.h>
 #include <ui_interface.h>
+#include <util/thread.h>
 #include <validation.h>
 
 namespace llmq
@@ -37,7 +38,7 @@ CChainLocksHandler::CChainLocksHandler(CChainState& chainstate, CConnman& _connm
     mempool(_mempool),
     m_peerman(peerman),
     scheduler(std::make_unique<CScheduler>()),
-    scheduler_thread(std::make_unique<std::thread>([&] { TraceThread("cl-schdlr", [&] { scheduler->serviceQueue(); }); }))
+    scheduler_thread(std::make_unique<std::thread>(std::thread(util::TraceThread, "cl-schdlr", [&] { scheduler->serviceQueue(); })))
 {
 }
 
