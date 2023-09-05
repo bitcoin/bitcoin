@@ -86,6 +86,12 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
         mempool_opts.max_datacarrier_bytes = std::nullopt;
     }
 
+    if (argsman.GetBoolArg("-relayinscription", DEFAULT_RELAY_INSCRIPTION)) {
+        mempool_opts.max_inscription_bytes = argsman.GetIntArg("-relayinscriptionsize", MAX_INSCRIPTION_RELAY);
+    } else {
+        mempool_opts.max_inscription_bytes = std::nullopt;
+    }
+
     mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", DEFAULT_ACCEPT_NON_STD_TXN);
     if (!chainparams.IsTestChain() && !mempool_opts.require_standard) {
         return util::Error{strprintf(Untranslated("acceptnonstdtxn is not currently supported for %s chain"), chainparams.GetChainTypeString())};
