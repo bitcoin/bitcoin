@@ -221,6 +221,10 @@ void OptionsModel::Init(bool resetSettings)
         addOverriddenOption("-spendzeroconfchange");
 
     // CoinJoin
+    if (!settings.contains("nCoinJoinSessions"))
+        settings.setValue("nCoinJoinSessions", DEFAULT_COINJOIN_SESSIONS);
+    m_node.coinJoinOptions().setSessions(settings.value("nCoinJoinSessions").toInt());
+
     if (!settings.contains("nCoinJoinRounds"))
         settings.setValue("nCoinJoinRounds", DEFAULT_COINJOIN_ROUNDS);
     if (!m_node.softSetArg("-coinjoinrounds", settings.value("nCoinJoinRounds").toString().toStdString()))
@@ -243,6 +247,14 @@ void OptionsModel::Init(bool resetSettings)
     if (!m_node.softSetBoolArg("-coinjoinmultisession", settings.value("fCoinJoinMultiSession").toBool()))
         addOverriddenOption("-coinjoinmultisession");
     m_node.coinJoinOptions().setMultiSessionEnabled(settings.value("fCoinJoinMultiSession").toBool());
+
+    if (!settings.contains("nCoinJoinDenomsGoal"))
+        settings.setValue("nCoinJoinDenomsGoal", DEFAULT_COINJOIN_DENOMS_GOAL);
+    m_node.coinJoinOptions().setDenomsGoal(settings.value("nCoinJoinDenomsGoal").toInt());
+
+    if (!settings.contains("nCoinJoinDenomsHardCap"))
+        settings.setValue("nCoinJoinDenomsHardCap", DEFAULT_COINJOIN_DENOMS_HARDCAP);
+    m_node.coinJoinOptions().setDenomsHardCap(settings.value("nCoinJoinDenomsHardCap").toInt());
 #endif
 
     // Network
@@ -458,10 +470,16 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("fShowCoinJoinPopups");
         case LowKeysWarning:
             return settings.value("fLowKeysWarning");
+        case CoinJoinSessions:
+            return settings.value("nCoinJoinSessions");
         case CoinJoinRounds:
             return settings.value("nCoinJoinRounds");
         case CoinJoinAmount:
             return settings.value("nCoinJoinAmount");
+        case CoinJoinDenomsGoal:
+            return settings.value("nCoinJoinDenomsGoal");
+        case CoinJoinDenomsHardCap:
+            return settings.value("nCoinJoinDenomsHardCap");
         case CoinJoinMultiSession:
             return settings.value("fCoinJoinMultiSession");
 #endif
@@ -640,6 +658,13 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case LowKeysWarning:
             settings.setValue("fLowKeysWarning", value);
             break;
+        case CoinJoinSessions:
+            if (settings.value("nCoinJoinSessions") != value) {
+                m_node.coinJoinOptions().setSessions(value.toInt());
+                settings.setValue("nCoinJoinSessions", m_node.coinJoinOptions().getSessions());
+                Q_EMIT coinJoinRoundsChanged();
+            }
+            break;
         case CoinJoinRounds:
             if (settings.value("nCoinJoinRounds") != value)
             {
@@ -654,6 +679,18 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 m_node.coinJoinOptions().setAmount(value.toInt());
                 settings.setValue("nCoinJoinAmount", m_node.coinJoinOptions().getAmount());
                 Q_EMIT coinJoinAmountChanged();
+            }
+            break;
+        case CoinJoinDenomsGoal:
+            if (settings.value("nCoinJoinDenomsGoal") != value) {
+                m_node.coinJoinOptions().setDenomsGoal(value.toInt());
+                settings.setValue("nCoinJoinDenomsGoal", m_node.coinJoinOptions().getDenomsGoal());
+            }
+            break;
+        case CoinJoinDenomsHardCap:
+            if (settings.value("nCoinJoinDenomsHardCap") != value) {
+                m_node.coinJoinOptions().setDenomsHardCap(value.toInt());
+                settings.setValue("nCoinJoinDenomsHardCap", m_node.coinJoinOptions().getDenomsHardCap());
             }
             break;
         case CoinJoinMultiSession:

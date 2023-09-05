@@ -77,8 +77,11 @@ public:
         ShowAdvancedCJUI,     // bool
         ShowCoinJoinPopups,   // bool
         LowKeysWarning,       // bool
+        CoinJoinSessions,     // int
         CoinJoinRounds,       // int
         CoinJoinAmount,       // int
+        CoinJoinDenomsGoal,   // int
+        CoinJoinDenomsHardCap,// int
         CoinJoinMultiSession, // bool
         Listen,               // bool
         OptionIDRowCount,

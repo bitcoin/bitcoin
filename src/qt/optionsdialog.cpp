@@ -288,6 +288,9 @@ void OptionsDialog::setModel(OptionsModel *_model)
             ui->coinJoinEnabled->click();
         }
     });
+
+    connect(ui->coinJoinDenomsGoal, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &OptionsDialog::updateCoinJoinDenomGoal);
+    connect(ui->coinJoinDenomsHardCap, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &OptionsDialog::updateCoinJoinDenomHardCap);
 #endif
 }
 
@@ -323,8 +326,11 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->lowKeysWarning, OptionsModel::LowKeysWarning);
     mapper->addMapping(ui->coinJoinMultiSession, OptionsModel::CoinJoinMultiSession);
     mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
+    mapper->addMapping(ui->coinJoinSessions, OptionsModel::CoinJoinSessions);
     mapper->addMapping(ui->coinJoinRounds, OptionsModel::CoinJoinRounds);
     mapper->addMapping(ui->coinJoinAmount, OptionsModel::CoinJoinAmount);
+    mapper->addMapping(ui->coinJoinDenomsGoal, OptionsModel::CoinJoinDenomsGoal);
+    mapper->addMapping(ui->coinJoinDenomsHardCap, OptionsModel::CoinJoinDenomsHardCap);
 
     /* Network */
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
@@ -504,6 +510,20 @@ void OptionsDialog::updateCoinJoinVisibility()
 #endif
     ui->btnCoinJoin->setVisible(fEnabled);
     GUIUtil::updateButtonGroupShortcuts(pageButtons);
+}
+
+void OptionsDialog::updateCoinJoinDenomGoal()
+{
+    if (ui->coinJoinDenomsGoal->value() > ui->coinJoinDenomsHardCap->value()) {
+        ui->coinJoinDenomsGoal->setValue(ui->coinJoinDenomsHardCap->value());
+    }
+}
+
+void OptionsDialog::updateCoinJoinDenomHardCap()
+{
+    if (ui->coinJoinDenomsGoal->value() > ui->coinJoinDenomsHardCap->value()) {
+        ui->coinJoinDenomsHardCap->setValue(ui->coinJoinDenomsGoal->value());
+    }
 }
 
 void OptionsDialog::updateWidth()

@@ -125,6 +125,10 @@ namespace CoinJoin = interfaces::CoinJoin;
 class CoinJoinOptionsImpl : public CoinJoin::Options
 {
 public:
+    int getSessions() override
+    {
+        return CCoinJoinClientOptions::GetSessions();
+    }
     int getRounds() override
     {
         return CCoinJoinClientOptions::GetRounds();
@@ -132,6 +136,14 @@ public:
     int getAmount() override
     {
         return CCoinJoinClientOptions::GetAmount();
+    }
+    int getDenomsGoal() override
+    {
+        return CCoinJoinClientOptions::GetDenomsGoal();
+    }
+    int getDenomsHardCap() override
+    {
+        return CCoinJoinClientOptions::GetDenomsHardCap();
     }
     void setEnabled(bool fEnabled) override
     {
@@ -141,6 +153,10 @@ public:
     {
         CCoinJoinClientOptions::SetMultiSessionEnabled(fEnabled);
     }
+    void setSessions(int sessions) override
+    {
+        CCoinJoinClientOptions::SetSessions(sessions);
+    }
     void setRounds(int nRounds) override
     {
         CCoinJoinClientOptions::SetRounds(nRounds);
@@ -148,6 +164,14 @@ public:
     void setAmount(CAmount amount) override
     {
         CCoinJoinClientOptions::SetAmount(amount);
+    }
+    void setDenomsGoal(int denoms_goal) override
+    {
+        CCoinJoinClientOptions::SetDenomsGoal(denoms_goal);
+    }
+    void setDenomsHardCap(int denoms_hardcap) override
+    {
+        CCoinJoinClientOptions::SetDenomsHardCap(denoms_hardcap);
     }
     bool isEnabled() override
     {

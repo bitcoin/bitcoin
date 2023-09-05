@@ -82,13 +82,19 @@ namespace CoinJoin {
 class Options
 {
 public:
+    virtual int getSessions() = 0;
     virtual int getRounds() = 0;
     virtual int getAmount() = 0;
+    virtual int getDenomsGoal() = 0;
+    virtual int getDenomsHardCap() = 0;
 
     virtual void setEnabled(bool fEnabled) = 0;
     virtual void setMultiSessionEnabled(bool fEnabled) = 0;
+    virtual void setSessions(int sessions) = 0;
     virtual void setRounds(int nRounds) = 0;
     virtual void setAmount(CAmount amount) = 0;
+    virtual void setDenomsGoal(int denoms_goal) = 0;
+    virtual void setDenomsHardCap(int denoms_hardcap) = 0;
 
     virtual bool isMultiSessionEnabled() = 0;
     virtual bool isEnabled() = 0;

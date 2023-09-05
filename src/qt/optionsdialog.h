@@ -74,6 +74,8 @@ private Q_SLOTS:
     void updateDefaultProxyNets();
 
     void updateCoinJoinVisibility();
+    void updateCoinJoinDenomGoal();
+    void updateCoinJoinDenomHardCap();
 
     void updateWidth();
 

@@ -61,8 +61,11 @@ public:
 
     static void SetEnabled(bool fEnabled);
     static void SetMultiSessionEnabled(bool fEnabled);
+    static void SetSessions(int sessions);
     static void SetRounds(int nRounds);
     static void SetAmount(CAmount amount);
+    static void SetDenomsGoal(int denoms_goal);
+    static void SetDenomsHardCap(int denoms_hardcap);
 
     static bool IsEnabled() { return CCoinJoinClientOptions::Get().fEnableCoinJoin; }
     static bool IsMultiSessionEnabled() { return CCoinJoinClientOptions::Get().fCoinJoinMultiSession; }

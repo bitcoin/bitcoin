@@ -31,6 +31,12 @@ void CCoinJoinClientOptions::SetMultiSessionEnabled(bool fEnabled)
     options.fCoinJoinMultiSession = fEnabled;
 }
 
+void CCoinJoinClientOptions::SetSessions(int sessions)
+{
+    CCoinJoinClientOptions& options = CCoinJoinClientOptions::Get();
+    options.nCoinJoinSessions = sessions;
+}
+
 void CCoinJoinClientOptions::SetRounds(int nRounds)
 {
     CCoinJoinClientOptions& options = CCoinJoinClientOptions::Get();
@@ -41,6 +47,18 @@ void CCoinJoinClientOptions::SetAmount(CAmount amount)
 {
     CCoinJoinClientOptions& options = CCoinJoinClientOptions::Get();
     options.nCoinJoinAmount = amount;
+}
+
+void CCoinJoinClientOptions::SetDenomsGoal(int denoms_goal)
+{
+    CCoinJoinClientOptions& options = CCoinJoinClientOptions::Get();
+    options.nCoinJoinDenomsGoal = denoms_goal;
+}
+
+void CCoinJoinClientOptions::SetDenomsHardCap(int denoms_hardcap)
+{
+    CCoinJoinClientOptions& options = CCoinJoinClientOptions::Get();
+    options.nCoinJoinDenomsHardCap = denoms_hardcap;
 }
 
 void CCoinJoinClientOptions::Init()

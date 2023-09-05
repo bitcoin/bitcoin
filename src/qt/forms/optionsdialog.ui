@@ -160,20 +160,20 @@
         </widget>
        </item>
        <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_Main_Prune">
-        <item>
-         <widget class="QCheckBox" name="prune">
-          <property name="toolTip">
-           <string>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</string>
-          </property>
-          <property name="text">
-           <string>Prune &amp;block storage to</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSpinBox" name="pruneSize"/>
-        </item>
+        <layout class="QHBoxLayout" name="horizontalLayout_Main_Prune">
+         <item>
+          <widget class="QCheckBox" name="prune">
+           <property name="toolTip">
+            <string>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</string>
+           </property>
+           <property name="text">
+            <string>Prune &amp;block storage to</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="pruneSize"/>
+         </item>
          <item>
           <widget class="QLabel" name="pruneSizeUnitLabel">
            <property name="text">
@@ -307,68 +307,68 @@
      <widget class="QWidget" name="pageWallet">
       <layout class="QVBoxLayout" name="verticalLayout_Wallet">
        <item>
-         <layout class="QVBoxLayout" name="verticalLayout_2">
-          <item>
-           <widget class="QCheckBox" name="coinControlFeatures">
-            <property name="toolTip">
-             <string>Whether to show coin control features or not.</string>
-            </property>
-            <property name="text">
-             <string>Enable coin &amp;control features</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="keepChangeAddress">
-            <property name="toolTip">
-             <string>Whether to keep the specified custom change address or not.</string>
-            </property>
-            <property name="text">
-             <string>Keep custom change &amp;address</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="showMasternodesTab">
-            <property name="toolTip">
-             <string>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</string>
-            </property>
-            <property name="text">
-             <string>Show Masternodes Tab</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="showGovernanceTab">
-            <property name="toolTip">
-             <string>Show additional tab listing governance proposals.</string>
-            </property>
-            <property name="text">
-             <string>Show Governance Tab</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="spendZeroConfChange">
-            <property name="toolTip">
-             <string>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</string>
-            </property>
-            <property name="text">
-             <string>&amp;Spend unconfirmed change</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="coinJoinEnabled">
-            <property name="toolTip">
-             <string>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</string>
-            </property>
-            <property name="text">
-             <string notr="true">Enable CoinJoin features</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QCheckBox" name="coinControlFeatures">
+           <property name="toolTip">
+            <string>Whether to show coin control features or not.</string>
+           </property>
+           <property name="text">
+            <string>Enable coin &amp;control features</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="keepChangeAddress">
+           <property name="toolTip">
+            <string>Whether to keep the specified custom change address or not.</string>
+           </property>
+           <property name="text">
+            <string>Keep custom change &amp;address</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="showMasternodesTab">
+           <property name="toolTip">
+            <string>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</string>
+           </property>
+           <property name="text">
+            <string>Show Masternodes Tab</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="showGovernanceTab">
+           <property name="toolTip">
+            <string>Show additional tab listing governance proposals.</string>
+           </property>
+           <property name="text">
+            <string>Show Governance Tab</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="spendZeroConfChange">
+           <property name="toolTip">
+            <string>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</string>
+           </property>
+           <property name="text">
+            <string>&amp;Spend unconfirmed change</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="coinJoinEnabled">
+           <property name="toolTip">
+            <string>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</string>
+           </property>
+           <property name="text">
+            <string notr="true">Enable CoinJoin features</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <spacer name="verticalSpacer_Wallet">
@@ -428,8 +428,31 @@
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4_Wallet">
-         <item>
+        <layout class="QGridLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="lblCoinJoinSessionsText">
+           <property name="toolTip">
+            <string>Use this many separate masternodes in parallel to mix funds.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</string>
+           </property>
+           <property name="text">
+            <string>Parallel sessions</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="coinJoinSessions">
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>10</number>
+           </property>
+           <property name="value">
+            <number>4</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
           <widget class="QLabel" name="lblCoinJoinRoundsText">
            <property name="toolTip">
             <string>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</string>
@@ -439,7 +462,7 @@
            </property>
           </widget>
          </item>
-         <item>
+         <item row="1" column="1">
           <widget class="QSpinBox" name="coinJoinRounds">
            <property name="minimum">
             <number>2</number>
@@ -452,11 +475,7 @@
            </property>
           </widget>
          </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
+         <item row="2" column="0">
           <widget class="QLabel" name="lblCoinJoinAmountText">
            <property name="toolTip">
             <string>This amount acts as a threshold to turn off mixing once it's reached.</string>
@@ -478,7 +497,7 @@
            </property>
           </widget>
          </item>
-         <item>
+         <item row="2" column="1">
           <widget class="QSpinBox" name="coinJoinAmount">
            <property name="minimum">
             <number>2</number>
@@ -493,6 +512,80 @@
             <number>1000</number>
            </property>
           </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="lblCoinJoinDenoms">
+           <property name="toolTip">
+            <string>How many inputs of each denominated amount are created.&lt;br/&gt;Lower these numbers if you want fewer smaller denominations.</string>
+           </property>
+           <property name="text">
+            <string>Inputs per denomination</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <layout class="QHBoxLayout">
+           <item>
+            <layout class="QVBoxLayout">
+             <item>
+              <widget class="QLabel" name="lblCoinJoinDenomsTarget">
+               <property name="toolTip">
+                <string>Try to create at least this many inputs for each denominated amount.&lt;br/&gt;Lower this number if you want fewer smaller denominations.</string>
+               </property>
+               <property name="text">
+                <string>Target</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="coinJoinDenomsGoal">
+               <property name="minimum">
+                <number>10</number>
+               </property>
+               <property name="maximum">
+                <number>100000</number>
+               </property>
+               <property name="singleStep">
+                <number>10</number>
+               </property>
+               <property name="value">
+                <number>50</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QVBoxLayout">
+             <item>
+              <widget class="QLabel" name="lblCoinJoinDenomsMaximum">
+               <property name="toolTip">
+                <string>Create up to this many inputs for each denominated amount.&lt;br/&gt;Lower this number if you want fewer smaller denominations.</string>
+               </property>
+               <property name="text">
+                <string>Maximum</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="coinJoinDenomsHardCap">
+               <property name="minimum">
+                <number>10</number>
+               </property>
+               <property name="maximum">
+                <number>100000</number>
+               </property>
+               <property name="singleStep">
+                <number>10</number>
+               </property>
+               <property name="value">
+                <number>300</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
          </item>
         </layout>
        </item>
