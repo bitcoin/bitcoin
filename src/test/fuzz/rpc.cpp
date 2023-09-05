@@ -285,9 +285,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider)
         },
         [&] {
             // base58 encoded key
-            const std::vector<uint8_t> random_bytes = fuzzed_data_provider.ConsumeBytes<uint8_t>(32);
-            CKey key;
-            key.Set(random_bytes.begin(), random_bytes.end(), fuzzed_data_provider.ConsumeBool());
+            CKey key = ConsumePrivateKey(fuzzed_data_provider);
             if (!key.IsValid()) {
                 return;
             }
@@ -295,9 +293,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider)
         },
         [&] {
             // hex encoded pubkey
-            const std::vector<uint8_t> random_bytes = fuzzed_data_provider.ConsumeBytes<uint8_t>(32);
-            CKey key;
-            key.Set(random_bytes.begin(), random_bytes.end(), fuzzed_data_provider.ConsumeBool());
+            CKey key = ConsumePrivateKey(fuzzed_data_provider);
             if (!key.IsValid()) {
                 return;
             }

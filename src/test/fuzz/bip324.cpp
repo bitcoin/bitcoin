@@ -30,19 +30,13 @@ FUZZ_TARGET(bip324_cipher_roundtrip, .init=Initialize)
     // Load keys from fuzzer.
     FuzzedDataProvider provider(buffer.data(), buffer.size());
     // Initiator key
-    auto init_key_data = provider.ConsumeBytes<unsigned char>(32);
-    init_key_data.resize(32);
-    CKey init_key;
-    init_key.Set(init_key_data.begin(), init_key_data.end(), true);
+    CKey init_key = ConsumePrivateKey(provider, /*compressed=*/true);
     if (!init_key.IsValid()) return;
     // Initiator entropy
     auto init_ent = provider.ConsumeBytes<std::byte>(32);
     init_ent.resize(32);
     // Responder key
-    auto resp_key_data = provider.ConsumeBytes<unsigned char>(32);
-    resp_key_data.resize(32);
-    CKey resp_key;
-    resp_key.Set(resp_key_data.begin(), resp_key_data.end(), true);
+    CKey resp_key = ConsumePrivateKey(provider, /*compressed=*/true);
     if (!resp_key.IsValid()) return;
     // Responder entropy
     auto resp_ent = provider.ConsumeBytes<std::byte>(32);

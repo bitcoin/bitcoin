@@ -79,9 +79,7 @@ FUZZ_TARGET(script_sign, .init = initialize_script_sign)
     }
 
     FillableSigningProvider provider;
-    CKey k;
-    const std::vector<uint8_t> key_data = ConsumeRandomLengthByteVector(fuzzed_data_provider);
-    k.Set(key_data.begin(), key_data.end(), fuzzed_data_provider.ConsumeBool());
+    CKey k = ConsumePrivateKey(fuzzed_data_provider);
     if (k.IsValid()) {
         provider.AddKey(k);
     }
