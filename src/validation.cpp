@@ -21,6 +21,7 @@
 #include <flatfile.h>
 #include <hash.h>
 #include <kernel/chainparams.h>
+#include <kernel/disconnected_transactions.h>
 #include <kernel/mempool_entry.h>
 #include <kernel/notifications_interface.h>
 #include <logging.h>

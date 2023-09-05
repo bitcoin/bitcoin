@@ -4,6 +4,7 @@
 //
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <kernel/disconnected_transactions.h>
 #include <node/kernel_notifications.h>
 #include <node/utxo_snapshot.h>
 #include <random.h>

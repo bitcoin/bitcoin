@@ -3,9 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <kernel/disconnected_transactions.h>
+#include <primitives/block.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
-#include <validation.h>
 
 constexpr size_t BLOCK_VTX_COUNT{4000};
 constexpr size_t BLOCK_VTX_COUNT_10PERCENT{400};
