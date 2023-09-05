@@ -86,6 +86,8 @@ static const bool DEFAULT_ACCEPT_DATACARRIER = true;
  * +2 for the pushdata opcodes.
  */
 static const unsigned int MAX_OP_RETURN_RELAY = 83;
+/** Default for -datacarrierfullcount */
+static constexpr bool DEFAULT_DATACARRIER_FULLCOUNT{false};
 /**
  * An extra transaction can be added to a package, as long as it only has one
  * ancestor and is no larger than this. Not really any reason to make this
