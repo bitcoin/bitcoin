@@ -51,6 +51,7 @@ struct MemPoolOptions {
      * If nullopt, any size is nonstandard.
      */
     std::optional<unsigned> max_datacarrier_bytes{DEFAULT_ACCEPT_DATACARRIER ? std::optional{MAX_OP_RETURN_RELAY} : std::nullopt};
+    unsigned int max_dummy_script_bytes{MAX_DUMMY_SCRIPT_RELAY};
     bool permit_bare_multisig{DEFAULT_PERMIT_BAREMULTISIG};
     bool require_standard{true};
     bool persist_v1_dat{DEFAULT_PERSIST_V1_DAT};
