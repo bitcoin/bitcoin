@@ -221,7 +221,7 @@ class WalletBackupTest(BitcoinTestFramework):
             self.erase_three()
 
             #start node2 with no chain
-            shutil.rmtree(os.path.join(self.nodes[2].chain_path, 'blocks'))
+            shutil.rmtree(os.path.join(self.nodes[2].blocks_path))
             shutil.rmtree(os.path.join(self.nodes[2].chain_path, 'chainstate'))
 
             self.start_three(["-nowallet"])
