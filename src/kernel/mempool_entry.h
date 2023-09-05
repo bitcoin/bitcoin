@@ -176,7 +176,7 @@ public:
     const CAmount& GetFee() const { return nFee; }
     int32_t GetTxSize() const
     {
-        return GetVirtualTransactionSize(nTxWeight, sigOpCost, ::nBytesPerSigOp);
+        return GetVirtualTransactionSize(nTxWeight + m_extra_weight, sigOpCost, ::nBytesPerSigOp);
     }
     int32_t GetTxWeight() const { return nTxWeight; }
     std::chrono::seconds GetTime() const { return std::chrono::seconds{nTime}; }
