@@ -905,6 +905,12 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs");
     }
 
+    if (tx.GetTotalSize() > m_pool.m_opts.max_dummy_script_bytes) {
+        if (DummyScriptBytes(tx, m_view) > m_pool.m_opts.max_dummy_script_bytes) {
+            return state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "txn-dummyscript-exceeded");
+        }
+    }
+
     // Check for non-standard witnesses.
     if (tx.HasWitness() && m_pool.m_opts.require_standard && !IsWitnessStandard(tx, m_view)) {
         return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, "bad-witness-nonstandard");
