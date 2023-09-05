@@ -435,11 +435,6 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         }
     }
 
-    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "trying %s connection %s lastseen=%.1fhrs\n",
-        use_v2transport ? "v2" : "v1",
-        pszDest ? pszDest : addrConnect.ToStringAddrPort(),
-        Ticks<HoursDouble>(pszDest ? 0h : Now<NodeSeconds>() - addrConnect.nTime));
-
     // Resolve
     const uint16_t default_port{pszDest != nullptr ? GetDefaultPort(pszDest) :
                                                      m_params.GetDefaultPort()};
@@ -459,6 +454,11 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             }
         }
     }
+
+    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Trying v%i %s connection to net=%s%s, lastseen=%.1fh ago\n",
+                  use_v2transport ? 2 : 1, ConnectionTypeAsString(conn_type), GetNetworkName(addrConnect.GetNetwork()),
+                  fLogIPs ? strprintf(", peeraddr=%s", pszDest ? pszDest : addrConnect.ToStringAddrPort()) : "",
+                  Ticks<HoursDouble>(pszDest ? 0h : Now<NodeSeconds>() - addrConnect.nTime));
 
     // Connect
     bool connected = false;
@@ -2766,7 +2766,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 if (!interruptNet.sleep_for(rng.rand_uniform_duration<CThreadInterrupt::Clock>(FEELER_SLEEP_WINDOW))) {
                     return;
                 }
-                LogPrint(BCLog::NET, "Making feeler connection to %s\n", addrConnect.ToStringAddrPort());
             }
 
             if (preferred_net != std::nullopt) LogPrint(BCLog::NET, "Making network specific connection to %s on %s.\n", addrConnect.ToStringAddrPort(), GetNetworkName(preferred_net.value()));
