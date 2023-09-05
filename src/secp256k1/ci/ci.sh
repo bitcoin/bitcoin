@@ -13,7 +13,7 @@ print_environment() {
     # does not rely on bash.
     for var in WERROR_CFLAGS MAKEFLAGS BUILD \
             ECMULTWINDOW ECMULTGENPRECISION ASM WIDEMUL WITH_VALGRIND EXTRAFLAGS \
-            EXPERIMENTAL ECDH RECOVERY SCHNORRSIG \
+            EXPERIMENTAL ECDH RECOVERY SCHNORRSIG ELLSWIFT \
             SECP256K1_TEST_ITERS BENCH SECP256K1_BENCH_ITERS CTIMETESTS\
             EXAMPLES \
             HOST WRAPPER_CMD \
@@ -31,17 +31,14 @@ print_environment() {
 }
 print_environment
 
-# Start persistent wineserver if necessary.
-# This speeds up jobs with many invocations of wine (e.g., ./configure with MSVC) tremendously.
-case "$WRAPPER_CMD" in
-    *wine*)
-        # Make sure to shutdown wineserver whenever we exit.
-        trap "wineserver -k || true" EXIT INT HUP
-        wineserver -p
+env >> test_env.log
+
+# If gcc is requested, assert that it's in fact gcc (and not some symlinked Apple clang).
+case "${CC:-undefined}" in
+    *gcc*)
+        $CC -v 2>&1 | grep -q "gcc version" || exit 1;
         ;;
 esac
-
-env >> test_env.log
 
 if [ -n "${CC+x}" ]; then
     # The MSVC compiler "cl" doesn't understand "-v"
