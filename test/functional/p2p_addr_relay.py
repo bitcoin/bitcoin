@@ -133,7 +133,7 @@ class AddrTest(SyscoinTestFramework):
         self.mock_time += 10 * 60
         self.nodes[0].setmocktime(self.mock_time)
         for peer in receivers:
-            peer.sync_send_with_ping()
+            peer.sync_with_ping()
 
     def oversized_addr_test(self):
         self.log.info('Send an addr message that is too large')
