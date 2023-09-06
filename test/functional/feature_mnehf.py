@@ -124,31 +124,37 @@ class MnehfTest(DashTestFramework):
         key = ECKey()
         key.generate()
         pubkey = key.get_pubkey().get_bytes()
-        tx = self.create_mnehf(28, pubkey)
+        ehf_tx = self.create_mnehf(28, pubkey)
+        ehf_unknown_tx = self.create_mnehf(27, pubkey)
+        ehf_invalid_tx = self.create_mnehf(9, pubkey) # deployment that is known as non-EHF
 
         self.log.info("Checking deserialization of CMnEhf by python's code")
         mnehf_payload = CMnEhf()
-        mnehf_payload.deserialize(BytesIO(tx.vExtraPayload))
+        mnehf_payload.deserialize(BytesIO(ehf_tx.vExtraPayload))
         assert_equal(mnehf_payload.version, 1)
         assert_equal(mnehf_payload.versionBit, 28)
         self.log.info("Checking correctness of requestId and quorumHash")
         assert_equal(mnehf_payload.quorumHash, int(self.mninfo[0].node.quorum("selectquorum", 100, 'a0eee872d7d3170dd20d5c5e8380c92b3aa887da5f63d8033289fafa35a90691')["quorumHash"], 16))
 
-        self.send_tx(tx, expected_error='mnhf-before-v20')
+        self.send_tx(ehf_tx, expected_error='mnhf-before-v20')
 
         assert_equal(get_bip9_details(node, 'testdummy')['status'], 'defined')
         self.activate_v20()
         assert_equal(get_bip9_details(node, 'testdummy')['status'], 'defined')
 
-        tx_sent = self.send_tx(tx)
+        ehf_tx_sent = self.send_tx(ehf_tx)
+        ehf_unknown_tx_sent = self.send_tx(ehf_unknown_tx)
+        self.send_tx(ehf_invalid_tx, expected_error='bad-mnhf-non-ehf')
         node.generate(1)
         self.sync_all()
 
         ehf_block = node.getbestblockhash()
-        self.log.info(f"Check MnEhfTx {tx_sent} was mined in {ehf_block}")
-        assert tx_sent in node.getblock(ehf_block)['tx']
+        self.log.info(f"Check MnEhfTx {ehf_tx_sent} was mined in {ehf_block}")
+        assert ehf_tx_sent in node.getblock(ehf_block)['tx']
+        assert ehf_unknown_tx_sent in node.getblock(ehf_block)['tx']
 
-        self.log.info(f"MnEhf tx: '{tx}' is sent: {tx_sent}")
+        self.log.info(f"MnEhf tx: '{ehf_tx}' is sent: {ehf_tx_sent}")
+        self.log.info(f"MnEhf 'unknown' tx: '{ehf_unknown_tx}' is sent: {ehf_unknown_tx_sent}")
         self.log.info(f"mempool: {node.getmempoolinfo()}")
         assert_equal(node.getmempoolinfo()['size'], 0)
 
@@ -188,7 +194,7 @@ class MnehfTest(DashTestFramework):
 
 
         self.log.info("Re-sending MnEHF for new fork")
-        tx_sent_2 = self.send_tx(tx)
+        tx_sent_2 = self.send_tx(ehf_tx)
         node.generate(1)
         self.sync_all()
 
