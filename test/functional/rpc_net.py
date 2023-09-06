@@ -216,9 +216,10 @@ class NetTest(BitcoinTestFramework):
         ip_port = "127.0.0.1:{}".format(p2p_port(2))
         self.nodes[0].addnode(node=ip_port, command='add')
         # check that the node has indeed been added
-        added_nodes = self.nodes[0].getaddednodeinfo(ip_port)
-        assert_equal(len(added_nodes), 1)
-        assert_equal(added_nodes[0]['addednode'], ip_port)
+        assert_equal(
+            self.nodes[0].getaddednodeinfo(ip_port),
+            [{"addednode": ip_port, "addresses": [{"address": ip_port, "connected": "inbound"}], "connected": True}]
+        )
         # check that node cannot be added again
         assert_raises_rpc_error(-23, "Node already added", self.nodes[0].addnode, node=ip_port, command='add')
         # check that node can be removed

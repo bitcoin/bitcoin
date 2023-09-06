@@ -1823,6 +1823,13 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     }
 
     const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
+
+    // Do not accept inbound connections from I2P peers already connected to us,
+    // as creating new tunnels is expensive.
+    if (addr.IsI2P() && AlreadyConnectedToAddress(addr, ConnectionType::INBOUND)) {
+        return;
+    }
+
     // The V2Transport transparently falls back to V1 behavior when an incoming V1 connection is
     // detected, so use it whenever we signal NODE_P2P_V2.
     const bool use_v2transport(nodeServices & NODE_P2P_V2);
