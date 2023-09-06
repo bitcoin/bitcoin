@@ -617,7 +617,7 @@ private:
     /** Process bytes in m_recv_buffer, while in KEY_MAYBE_V1 state. */
     void ProcessReceivedMaybeV1Bytes() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex, !m_send_mutex);
     /** Process bytes in m_recv_buffer, while in KEY state. */
-    void ProcessReceivedKeyBytes() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex, !m_send_mutex);
+    bool ProcessReceivedKeyBytes() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex, !m_send_mutex);
     /** Process bytes in m_recv_buffer, while in GARB_GARBTERM state. */
     bool ProcessReceivedGarbageBytes() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
     /** Process bytes in m_recv_buffer, while in GARBAUTH/VERSION/APP state. */

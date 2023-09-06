@@ -1104,6 +1104,15 @@ public:
         m_to_send.insert(m_to_send.end(), data.begin(), data.end());
     }
 
+    /** Send V1 version message header to the transport. */
+    void SendV1Version(const CMessageHeader::MessageStartChars& magic)
+    {
+        CMessageHeader hdr(magic, "version", 126 + InsecureRandRange(11));
+        CDataStream ser(SER_NETWORK, CLIENT_VERSION);
+        ser << hdr;
+        m_to_send.insert(m_to_send.end(), UCharCast(ser.data()), UCharCast(ser.data() + ser.size()));
+    }
+
     /** Schedule bytes to be sent to the transport. */
     void Send(Span<const std::byte> data) { Send(MakeUCharSpan(data)); }
 
@@ -1504,6 +1513,22 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         BOOST_CHECK(!(*ret)[0]);
         BOOST_CHECK((*ret)[1] && (*ret)[1]->m_type == "block" && Span{(*ret)[1]->m_recv} == MakeByteSpan(msg_data_1));
         tester.ReceiveMessage(uint8_t(3), msg_data_2); // "blocktxn" short id
+    }
+
+    // Send correct network's V1 header
+    {
+        V2TransportTester tester(false);
+        tester.SendV1Version(Params().MessageStart());
+        auto ret = tester.Interact();
+        BOOST_CHECK(ret);
+    }
+
+    // Send wrong network's V1 header
+    {
+        V2TransportTester tester(false);
+        tester.SendV1Version(CChainParams::Main()->MessageStart());
+        auto ret = tester.Interact();
+        BOOST_CHECK(!ret);
     }
 }
 

@@ -1109,12 +1109,29 @@ void V2Transport::ProcessReceivedMaybeV1Bytes() noexcept
     }
 }
 
-void V2Transport::ProcessReceivedKeyBytes() noexcept
+bool V2Transport::ProcessReceivedKeyBytes() noexcept
 {
     AssertLockHeld(m_recv_mutex);
     AssertLockNotHeld(m_send_mutex);
     Assume(m_recv_state == RecvState::KEY);
     Assume(m_recv_buffer.size() <= EllSwiftPubKey::size());
+
+    // As a special exception, if bytes 4-16 of the key on a responder connection match the
+    // corresponding bytes of a V1 version message, but bytes 0-4 don't match the network magic
+    // (if they did, we'd have switched to V1 state already), assume this is a peer from
+    // another network, and disconnect them. They will almost certainly disconnect us too when
+    // they receive our uniformly random key and garbage, but detecting this case specially
+    // means we can log it.
+    static constexpr std::array<uint8_t, 12> MATCH = {'v', 'e', 'r', 's', 'i', 'o', 'n', 0, 0, 0, 0, 0};
+    static constexpr size_t OFFSET = sizeof(CMessageHeader::MessageStartChars);
+    if (!m_initiating && m_recv_buffer.size() >= OFFSET + MATCH.size()) {
+        if (std::equal(MATCH.begin(), MATCH.end(), m_recv_buffer.begin() + OFFSET)) {
+            LogPrint(BCLog::NET, "V2 transport error: V1 peer with wrong MessageStart %s\n",
+                     HexStr(Span(m_recv_buffer).first(OFFSET)));
+            return false;
+        }
+    }
+
     if (m_recv_buffer.size() == EllSwiftPubKey::size()) {
         // Other side's key has been fully received, and can now be Diffie-Hellman combined with
         // our key to initialize the encryption ciphers.
@@ -1157,6 +1174,7 @@ void V2Transport::ProcessReceivedKeyBytes() noexcept
     } else {
         // We still have to receive more key bytes.
     }
+    return true;
 }
 
 bool V2Transport::ProcessReceivedGarbageBytes() noexcept
@@ -1378,7 +1396,7 @@ bool V2Transport::ReceivedBytes(Span<const uint8_t>& msg_bytes) noexcept
             break;
 
         case RecvState::KEY:
-            ProcessReceivedKeyBytes();
+            if (!ProcessReceivedKeyBytes()) return false;
             break;
 
         case RecvState::GARB_GARBTERM:
