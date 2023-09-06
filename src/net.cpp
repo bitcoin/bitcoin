@@ -2765,15 +2765,19 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo() const
         std::copy(m_added_node_params.cbegin(), m_added_node_params.cend(), std::back_inserter(lAddresses));
     }
 
-
-    // Build a map of all already connected addresses (by IP:port and by name) to inbound/outbound and resolved CService
-    std::map<CService, bool> mapConnected;
+    // Collect all addresses to which we are already connected.
+    std::unordered_set<CNetAddr, CNetAddrHash> connected_to_inbound;
+    std::unordered_set<CService, CServiceHash> connected_to_outbound;
     std::map<std::string, std::pair<bool, CService>> mapConnectedByName;
     {
         LOCK(m_nodes_mutex);
         for (const CNode* pnode : m_nodes) {
             if (pnode->addr.IsValid()) {
-                mapConnected[pnode->addr] = pnode->IsInboundConn();
+                if (pnode->IsInboundConn()) {
+                    connected_to_inbound.insert(pnode->addr);
+                } else {
+                    connected_to_outbound.insert(pnode->addr);
+                }
             }
             std::string addrName{pnode->m_addr_name};
             if (!addrName.empty()) {
@@ -2786,15 +2790,18 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo() const
         CService service(LookupNumeric(addr.m_added_node, GetDefaultPort(addr.m_added_node)));
         AddedNodeInfo addedNode{addr, CService(), false, false};
         if (service.IsValid()) {
-            // strAddNode is an IP:port
-            auto it = mapConnected.find(service);
-            if (it != mapConnected.end()) {
+            // addr.m_added_node is an addr:port
+            if (connected_to_outbound.count(service)) {
                 addedNode.resolvedAddress = service;
                 addedNode.fConnected = true;
-                addedNode.fInbound = it->second;
+                addedNode.fInbound = false;
+            } else if (connected_to_inbound.count(service)) {
+                addedNode.resolvedAddress = service;
+                addedNode.fConnected = true;
+                addedNode.fInbound = true;
             }
         } else {
-            // strAddNode is a name
+            // addr.m_added_node is a name
             auto it = mapConnectedByName.find(addr.m_added_node);
             if (it != mapConnectedByName.end()) {
                 addedNode.resolvedAddress = it->second.second;
