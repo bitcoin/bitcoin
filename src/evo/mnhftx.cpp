@@ -80,6 +80,10 @@ bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValida
         return false;
     }
 
+    if (!Params().UpdateMNActivationParam(mnhfTx.signal.versionBit, pindexPrev->nHeight, pindexPrev->GetMedianTimePast(), true /* fJustCheck */)) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-non-ehf");
+    }
+
     return true;
 }
 
