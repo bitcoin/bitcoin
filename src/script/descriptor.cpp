@@ -22,6 +22,7 @@
 #include <util/vector.h>
 
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <string>
 #include <vector>
@@ -706,6 +707,19 @@ public:
     }
 
     std::optional<OutputType> GetOutputType() const override { return std::nullopt; }
+
+    std::optional<int64_t> ScriptSize() const override { return {}; }
+
+    /** A helper for MaxSatisfactionWeight.
+     *
+     * @param use_max_sig Whether to assume ECDSA signatures will have a high-r.
+     * @return The maximum size of the satisfaction in raw bytes (with no witness meaning).
+     */
+    virtual std::optional<int64_t> MaxSatSize(bool use_max_sig) const { return {}; }
+
+    std::optional<int64_t> MaxSatisfactionWeight(bool) const override { return {}; }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override { return {}; }
 };
 
 /** A parsed addr(A) descriptor. */
@@ -725,6 +739,8 @@ public:
     }
     bool IsSingleType() const final { return true; }
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const final { return false; }
+
+    std::optional<int64_t> ScriptSize() const override { return GetScriptForDestination(m_destination).size(); }
 };
 
 /** A parsed raw(H) descriptor. */
@@ -746,6 +762,8 @@ public:
     }
     bool IsSingleType() const final { return true; }
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const final { return false; }
+
+    std::optional<int64_t> ScriptSize() const override { return m_script.size(); }
 };
 
 /** A parsed pk(P) descriptor. */
@@ -766,6 +784,21 @@ protected:
 public:
     PKDescriptor(std::unique_ptr<PubkeyProvider> prov, bool xonly = false) : DescriptorImpl(Vector(std::move(prov)), "pk"), m_xonly(xonly) {}
     bool IsSingleType() const final { return true; }
+
+    std::optional<int64_t> ScriptSize() const override {
+        return 1 + (m_xonly ? 32 : m_pubkey_args[0]->GetSize()) + 1;
+    }
+
+    std::optional<int64_t> MaxSatSize(bool use_max_sig) const override {
+        const auto ecdsa_sig_size = use_max_sig ? 72 : 71;
+        return 1 + (m_xonly ? 65 : ecdsa_sig_size);
+    }
+
+    std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const override {
+        return *MaxSatSize(use_max_sig) * WITNESS_SCALE_FACTOR;
+    }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override { return 1; }
 };
 
 /** A parsed pkh(P) descriptor. */
@@ -782,6 +815,19 @@ public:
     PKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), "pkh") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::LEGACY; }
     bool IsSingleType() const final { return true; }
+
+    std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 1 + 20 + 1 + 1; }
+
+    std::optional<int64_t> MaxSatSize(bool use_max_sig) const override {
+        const auto sig_size = use_max_sig ? 72 : 71;
+        return 1 + sig_size + 1 + m_pubkey_args[0]->GetSize();
+    }
+
+    std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const override {
+        return *MaxSatSize(use_max_sig) * WITNESS_SCALE_FACTOR;
+    }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override { return 2; }
 };
 
 /** A parsed wpkh(P) descriptor. */
@@ -798,6 +844,19 @@ public:
     WPKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), "wpkh") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32; }
     bool IsSingleType() const final { return true; }
+
+    std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 20; }
+
+    std::optional<int64_t> MaxSatSize(bool use_max_sig) const override {
+        const auto sig_size = use_max_sig ? 72 : 71;
+        return (1 + sig_size + 1 + 33);
+    }
+
+    std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const override {
+        return MaxSatSize(use_max_sig);
+    }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override { return 2; }
 };
 
 /** A parsed combo(P) descriptor. */
@@ -842,6 +901,24 @@ protected:
 public:
     MultisigDescriptor(int threshold, std::vector<std::unique_ptr<PubkeyProvider>> providers, bool sorted = false) : DescriptorImpl(std::move(providers), sorted ? "sortedmulti" : "multi"), m_threshold(threshold), m_sorted(sorted) {}
     bool IsSingleType() const final { return true; }
+
+    std::optional<int64_t> ScriptSize() const override {
+        const auto n_keys = m_pubkey_args.size();
+        auto op = [](int64_t acc, const std::unique_ptr<PubkeyProvider>& pk) { return acc + 1 + pk->GetSize();};
+        const auto pubkeys_size{std::accumulate(m_pubkey_args.begin(), m_pubkey_args.end(), int64_t{0}, op)};
+        return 1 + BuildScript(n_keys).size() + BuildScript(m_threshold).size() + pubkeys_size;
+    }
+
+    std::optional<int64_t> MaxSatSize(bool use_max_sig) const override {
+        const auto sig_size = use_max_sig ? 72 : 71;
+        return (1 + (1 + sig_size) * m_threshold);
+    }
+
+    std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const override {
+        return *MaxSatSize(use_max_sig) * WITNESS_SCALE_FACTOR;
+    }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override { return 1 + m_threshold; }
 };
 
 /** A parsed (sorted)multi_a(...) descriptor. Always uses x-only pubkeys. */
@@ -867,6 +944,17 @@ protected:
 public:
     MultiADescriptor(int threshold, std::vector<std::unique_ptr<PubkeyProvider>> providers, bool sorted = false) : DescriptorImpl(std::move(providers), sorted ? "sortedmulti_a" : "multi_a"), m_threshold(threshold), m_sorted(sorted) {}
     bool IsSingleType() const final { return true; }
+
+    std::optional<int64_t> ScriptSize() const override {
+        const auto n_keys = m_pubkey_args.size();
+        return (1 + 32 + 1) * n_keys + BuildScript(m_threshold).size() + 1;
+    }
+
+    std::optional<int64_t> MaxSatSize(bool use_max_sig) const override {
+        return (1 + 65) * m_threshold + (m_pubkey_args.size() - m_threshold);
+    }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override { return m_pubkey_args.size(); }
 };
 
 /** A parsed sh(...) descriptor. */
@@ -879,16 +967,39 @@ protected:
         if (ret.size()) out.scripts.emplace(CScriptID(scripts[0]), scripts[0]);
         return ret;
     }
+
+    bool IsSegwit() const { return m_subdescriptor_args[0]->GetOutputType() == OutputType::BECH32; }
+
 public:
     SHDescriptor(std::unique_ptr<DescriptorImpl> desc) : DescriptorImpl({}, std::move(desc), "sh") {}
 
     std::optional<OutputType> GetOutputType() const override
     {
         assert(m_subdescriptor_args.size() == 1);
-        if (m_subdescriptor_args[0]->GetOutputType() == OutputType::BECH32) return OutputType::P2SH_SEGWIT;
+        if (IsSegwit()) return OutputType::P2SH_SEGWIT;
         return OutputType::LEGACY;
     }
     bool IsSingleType() const final { return true; }
+
+    std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 20 + 1; }
+
+    std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const override {
+        if (const auto sat_size = m_subdescriptor_args[0]->MaxSatSize(use_max_sig)) {
+            if (const auto subscript_size = m_subdescriptor_args[0]->ScriptSize()) {
+                // The subscript is never witness data.
+                const auto subscript_weight = (1 + *subscript_size) * WITNESS_SCALE_FACTOR;
+                // The weight depends on whether the inner descriptor is satisfied using the witness stack.
+                if (IsSegwit()) return subscript_weight + *sat_size;
+                return subscript_weight + *sat_size * WITNESS_SCALE_FACTOR;
+            }
+        }
+        return {};
+    }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override {
+        if (const auto sub_elems = m_subdescriptor_args[0]->MaxSatisfactionElems()) return 1 + *sub_elems;
+        return {};
+    }
 };
 
 /** A parsed wsh(...) descriptor. */
@@ -905,6 +1016,26 @@ public:
     WSHDescriptor(std::unique_ptr<DescriptorImpl> desc) : DescriptorImpl({}, std::move(desc), "wsh") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32; }
     bool IsSingleType() const final { return true; }
+
+    std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 32; }
+
+    std::optional<int64_t> MaxSatSize(bool use_max_sig) const override {
+        if (const auto sat_size = m_subdescriptor_args[0]->MaxSatSize(use_max_sig)) {
+            if (const auto subscript_size = m_subdescriptor_args[0]->ScriptSize()) {
+                return GetSizeOfCompactSize(*subscript_size) + *subscript_size + *sat_size;
+            }
+        }
+        return {};
+    }
+
+    std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const override {
+        return MaxSatSize(use_max_sig);
+    }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override {
+        if (const auto sub_elems = m_subdescriptor_args[0]->MaxSatisfactionElems()) return 1 + *sub_elems;
+        return {};
+    }
 };
 
 /** A parsed tr(...) descriptor. */
@@ -958,6 +1089,18 @@ public:
     }
     std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32M; }
     bool IsSingleType() const final { return true; }
+
+    std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 32; }
+
+    std::optional<int64_t> MaxSatisfactionWeight(bool) const override {
+        // FIXME: We assume keypath spend, which can lead to very large underestimations.
+        return 1 + 65;
+    }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override {
+        // FIXME: See above, we assume keypath spend.
+        return 1;
+    }
 };
 
 /* We instantiate Miniscript here with a simple integer as key type.
@@ -1041,6 +1184,17 @@ public:
 
     bool IsSolvable() const override { return true; }
     bool IsSingleType() const final { return true; }
+
+    std::optional<int64_t> ScriptSize() const override { return m_node->ScriptSize(); }
+
+    std::optional<int64_t> MaxSatSize(bool) const override {
+        // For Miniscript we always assume high-R ECDSA signatures.
+        return m_node->GetWitnessSize();
+    }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override {
+        return m_node->GetStackSize();
+    }
 };
 
 /** A parsed rawtr(...) descriptor. */
@@ -1059,6 +1213,18 @@ public:
     RawTRDescriptor(std::unique_ptr<PubkeyProvider> output_key) : DescriptorImpl(Vector(std::move(output_key)), "rawtr") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32M; }
     bool IsSingleType() const final { return true; }
+
+    std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 32; }
+
+    std::optional<int64_t> MaxSatisfactionWeight(bool) const override {
+        // We can't know whether there is a script path, so assume key path spend.
+        return 1 + 65;
+    }
+
+    std::optional<int64_t> MaxSatisfactionElems() const override {
+        // See above, we assume keypath spend.
+        return 1;
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////
