@@ -298,4 +298,19 @@ public:
 /** Return the CKeyID of the key involved in a script (if there is a unique one). */
 CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& dest);
 
+/** A signing provider to be used to interface with multiple signing providers at once. */
+class MultiSigningProvider: public SigningProvider {
+    std::vector<std::unique_ptr<SigningProvider>> m_providers;
+
+public:
+    void AddProvider(std::unique_ptr<SigningProvider> provider);
+
+    bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
+    bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
+    bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
+    bool GetKey(const CKeyID& keyid, CKey& key) const override;
+    bool GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const override;
+    bool GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const override;
+};
+
 #endif // BITCOIN_SCRIPT_SIGNINGPROVIDER_H

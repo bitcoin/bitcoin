@@ -673,8 +673,6 @@ public:
     bool SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, std::string& err_string, bool relay) const
         EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    bool DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> &txouts, const CCoinControl* coin_control = nullptr) const;
-
     bool ImportScripts(const std::set<CScript> scripts, int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -1086,10 +1084,6 @@ bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
 
 //! Remove wallet name from persistent configuration so it will not be loaded on startup.
 bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
-
-bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, bool can_grind_r, const CCoinControl* coin_control);
-
-bool FillInputToWeight(CTxIn& txin, int64_t target_weight);
 
 struct MigrationResult {
     std::string wallet_name;
