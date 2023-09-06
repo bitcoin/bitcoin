@@ -892,10 +892,18 @@ struct DisconnectedBlockTransactions {
         return memusage::MallocUsage(sizeof(CTransactionRef) + 6 * sizeof(void*)) * queuedTx.size() + cachedInnerUsage;
     }
 
-    void addTransaction(const CTransactionRef& tx)
+	/** Add transactions from the block, iterating through vtx in reverse order. Callers should call
+     * this function for blocks in descending order by block height.
+     * We assume that callers never pass multiple transactions with the same txid, otherwise things
+     * can go very wrong in removeForBlock due to queuedTx containing an item without a
+     * corresponding entry in iters_by_txid.
+     */
+    void AddTransactionsFromBlock(const std::vector<CTransactionRef>& vtx)
     {
-        queuedTx.insert(tx);
-        cachedInnerUsage += RecursiveDynamicUsage(tx);
+        for (auto block_it = vtx.rbegin(); block_it != vtx.rend(); ++block_it) {
+            queuedTx.insert(*block_it);
+            cachedInnerUsage += RecursiveDynamicUsage(*block_it);
+        }
     }
 
     // Remove entries based on txid_index, and update memory usage.
