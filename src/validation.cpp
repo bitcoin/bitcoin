@@ -80,8 +80,6 @@ using node::CBlockIndexWorkComparator;
 using node::fReindex;
 using node::SnapshotMetadata;
 
-/** Maximum kilobytes for transactions to store for processing during reorg */
-static const unsigned int MAX_DISCONNECTED_TX_POOL_SIZE = 20000;
 /** Time to wait between writing blocks/block index to disk. */
 static constexpr std::chrono::hours DATABASE_WRITE_INTERVAL{1};
 /** Time to wait between flushing chainstate to disk. */
@@ -2723,12 +2721,10 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
     }
 
     if (disconnectpool && m_mempool) {
-        // Save transactions to re-add to mempool at end of reorg
-        disconnectpool->AddTransactionsFromBlock(block.vtx);
-        while (disconnectpool->DynamicMemoryUsage() > MAX_DISCONNECTED_TX_POOL_SIZE * 1000) {
-            // Drop the earliest entry, and remove its children from the mempool.
-            auto ptx = disconnectpool->take_first();
-            m_mempool->removeRecursive(*ptx, MemPoolRemovalReason::REORG);
+        // Save transactions to re-add to mempool at end of reorg. If any entries are evicted for
+        // exceeding memory limits, remove them and their descendants from the mempool.
+        for (auto&& evicted_tx : disconnectpool->AddTransactionsFromBlock(block.vtx)) {
+            m_mempool->removeRecursive(*evicted_tx, MemPoolRemovalReason::REORG);
         }
     }
 
@@ -2978,7 +2974,7 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex*
 
     // Disconnect active blocks which are no longer in the best chain.
     bool fBlocksDisconnected = false;
-    DisconnectedBlockTransactions disconnectpool;
+    DisconnectedBlockTransactions disconnectpool{MAX_DISCONNECTED_TX_POOL_SIZE * 1000};
     while (m_chain.Tip() && m_chain.Tip() != pindexFork) {
         if (!DisconnectTip(state, &disconnectpool)) {
             // This is likely a fatal error, but keep the mempool consistent,
@@ -3312,7 +3308,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
 
         // ActivateBestChain considers blocks already in m_chain
         // unconditionally valid already, so force disconnect away from it.
-        DisconnectedBlockTransactions disconnectpool;
+        DisconnectedBlockTransactions disconnectpool{MAX_DISCONNECTED_TX_POOL_SIZE * 1000};
         bool ret = DisconnectTip(state, &disconnectpool);
         // DisconnectTip will add transactions to disconnectpool.
         // Adjust the mempool to be consistent with the new tip, adding

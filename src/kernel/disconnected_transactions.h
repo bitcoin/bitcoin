@@ -12,7 +12,10 @@
 
 #include <list>
 #include <unordered_map>
+#include <vector>
 
+/** Maximum kilobytes for transactions to store for processing during reorg */
+static const unsigned int MAX_DISCONNECTED_TX_POOL_SIZE = 20'000;
 /**
  * DisconnectedBlockTransactions
 
@@ -38,11 +41,28 @@ private:
     /** Cached dynamic memory usage for the CTransactions (memory for the shared pointers is
      * included in the container calculations). */
     uint64_t cachedInnerUsage = 0;
+    const size_t m_max_mem_usage;
     std::list<CTransactionRef> queuedTx;
     using TxList = decltype(queuedTx);
     std::unordered_map<uint256, TxList::iterator, SaltedTxidHasher> iters_by_txid;
 
+    /** Trim the earliest-added entries until we are within memory bounds. */
+    std::vector<CTransactionRef> LimitMemoryUsage()
+    {
+        std::vector<CTransactionRef> evicted;
+
+        while (!queuedTx.empty() && DynamicMemoryUsage() > m_max_mem_usage) {
+            evicted.emplace_back(queuedTx.front());
+            cachedInnerUsage -= RecursiveDynamicUsage(*queuedTx.front());
+            iters_by_txid.erase(queuedTx.front()->GetHash());
+            queuedTx.pop_front();
+        }
+        return evicted;
+    }
+
 public:
+    DisconnectedBlockTransactions(size_t max_mem_usage) : m_max_mem_usage{max_mem_usage} {}
+
     // It's almost certainly a logic bug if we don't clear out queuedTx before
     // destruction, as we add to it while disconnecting blocks, and then we
     // need to re-process remaining transactions to ensure mempool consistency.
@@ -66,8 +86,9 @@ public:
      * We assume that callers never pass multiple transactions with the same txid, otherwise things
      * can go very wrong in removeForBlock due to queuedTx containing an item without a
      * corresponding entry in iters_by_txid.
+     * @returns vector of transactions that were evicted for size-limiting.
      */
-    void AddTransactionsFromBlock(const std::vector<CTransactionRef>& vtx)
+    [[nodiscard]] std::vector<CTransactionRef> AddTransactionsFromBlock(const std::vector<CTransactionRef>& vtx)
     {
         iters_by_txid.reserve(iters_by_txid.size() + vtx.size());
         for (auto block_it = vtx.rbegin(); block_it != vtx.rend(); ++block_it) {
@@ -75,6 +96,7 @@ public:
             iters_by_txid.emplace((*block_it)->GetHash(), it);
             cachedInnerUsage += RecursiveDynamicUsage(**block_it);
         }
+        return LimitMemoryUsage();
     }
 
     /** Remove any entries that are in this block. */
@@ -93,19 +115,6 @@ public:
                 queuedTx.erase(list_iter);
             }
         }
-    }
-
-    /** Remove the first entry and update memory usage. */
-    CTransactionRef take_first()
-    {
-        CTransactionRef first_tx;
-        if (!queuedTx.empty()) {
-            first_tx = queuedTx.front();
-            cachedInnerUsage -= RecursiveDynamicUsage(*queuedTx.front());
-            iters_by_txid.erase(queuedTx.front()->GetHash());
-            queuedTx.pop_front();
-        }
-        return first_tx;
     }
 
     size_t size() const { return queuedTx.size(); }
