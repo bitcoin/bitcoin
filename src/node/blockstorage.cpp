@@ -22,6 +22,7 @@
 #include <util/batchpriority.h>
 #include <util/fs.h>
 #include <util/signalinterrupt.h>
+#include <util/strencodings.h>
 #include <util/translation.h>
 #include <validation.h>
 

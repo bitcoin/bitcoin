@@ -5,6 +5,7 @@
 #include <bench/bench.h>
 #include <kernel/mempool_entry.h>
 #include <policy/policy.h>
+#include <random.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
 #include <util/chaintype.h>
