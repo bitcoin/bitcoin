@@ -1114,7 +1114,7 @@ public:
     }
 
     /** Send V1 version message header to the transport. */
-    void SendV1Version(const CMessageHeader::MessageStartChars& magic)
+    void SendV1Version(const MessageStartChars& magic)
     {
         CMessageHeader hdr(magic, "version", 126 + InsecureRandRange(11));
         CDataStream ser(SER_NETWORK, CLIENT_VERSION);

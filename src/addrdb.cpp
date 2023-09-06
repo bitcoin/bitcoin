@@ -90,7 +90,7 @@ void DeserializeDB(Stream& stream, Data&& data, bool fCheckSum = true)
 {
     HashVerifier verifier{stream};
     // de-serialize file header (network specific magic number) and ..
-    CMessageHeader::MessageStartChars pchMsgTmp;
+    MessageStartChars pchMsgTmp;
     verifier >> pchMsgTmp;
     // ... verify the network matches ours
     if (pchMsgTmp != Params().MessageStart()) {

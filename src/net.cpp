@@ -1144,7 +1144,7 @@ bool V2Transport::ProcessReceivedKeyBytes() noexcept
     // they receive our uniformly random key and garbage, but detecting this case specially
     // means we can log it.
     static constexpr std::array<uint8_t, 12> MATCH = {'v', 'e', 'r', 's', 'i', 'o', 'n', 0, 0, 0, 0, 0};
-    static constexpr size_t OFFSET = std::tuple_size_v<CMessageHeader::MessageStartChars>;
+    static constexpr size_t OFFSET = std::tuple_size_v<MessageStartChars>;
     if (!m_initiating && m_recv_buffer.size() >= OFFSET + MATCH.size()) {
         if (std::equal(MATCH.begin(), MATCH.end(), m_recv_buffer.begin() + OFFSET)) {
             LogPrint(BCLog::NET, "V2 transport error: V1 peer with wrong MessageStart %s\n",
