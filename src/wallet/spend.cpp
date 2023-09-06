@@ -818,7 +818,7 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
     // Coin Selection attempts to select inputs from a pool of eligible UTXOs to fund the
     // transaction at a target feerate. If an attempt fails, more attempts may be made using a more
     // permissive CoinEligibilityFilter.
-    util::Result<SelectionResult> res = [&] {
+    {
         // Place coins eligibility filters on a scope increasing order.
         std::vector<SelectionFilter> ordered_filters{
                 // If possible, fund the transaction with confirmed UTXOs only. Prefer at least six
@@ -866,7 +866,7 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
         if (CAmount total_amount = available_coins.GetTotalAmount() - total_discarded < value_to_select) {
             // Special case, too-long-mempool cluster.
             if (total_amount + total_unconf_long_chain > value_to_select) {
-                return util::Result<SelectionResult>({_("Unconfirmed UTXOs are available, but spending them creates a chain of transactions that will be rejected by the mempool")});
+                return util::Error{_("Unconfirmed UTXOs are available, but spending them creates a chain of transactions that will be rejected by the mempool")};
             }
             return util::Result<SelectionResult>(util::Error()); // General "Insufficient Funds"
         }
@@ -885,19 +885,17 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
                 // If any specific error message appears here, then something particularly wrong might have happened.
                 // Save the error and continue the selection process. So if no solutions gets found, we can return
                 // the detailed error to the upper layers.
-                if (HasErrorMsg(res)) res_detailed_errors.emplace_back(res);
+                if (HasErrorMsg(res)) res_detailed_errors.emplace_back(std::move(res));
             }
         }
 
         // Return right away if we have a detailed error
-        if (!res_detailed_errors.empty()) return res_detailed_errors.front();
+        if (!res_detailed_errors.empty()) return std::move(res_detailed_errors.front());
 
 
         // General "Insufficient Funds"
         return util::Result<SelectionResult>(util::Error());
-    }();
-
-    return res;
+    }
 }
 
 static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, const uint256& block_hash)
