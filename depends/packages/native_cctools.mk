@@ -1,11 +1,10 @@
 package=native_cctools
-$(package)_version=2ef2e931cf641547eb8a68cfebde61003587c9fd
+$(package)_version=c74fafe86076713cb8e6f937af43b6df6da1f42d
 $(package)_download_path=https://github.com/tpoechtrager/cctools-port/archive
 $(package)_file_name=$($(package)_version).tar.gz
-$(package)_sha256_hash=6b73269efdf5c58a070e7357b66ee760501388549d6a12b423723f45888b074b
+$(package)_sha256_hash=e2c1588d505a69c32e079f4e616e0f117d5478429040e394f624f43f2796e6bc
 $(package)_build_subdir=cctools
 $(package)_dependencies=native_libtapi
-$(package)_patches=no_fixup_chains.patch
 
 define $(package)_set_vars
   $(package)_config_opts=--target=$(host) --enable-lto-support
@@ -18,15 +17,9 @@ endef
 ifneq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
 define $(package)_preprocess_cmds
   mkdir -p $($(package)_staging_prefix_dir)/lib && \
-  cp $(llvm_lib_dir)/libLTO.so $($(package)_staging_prefix_dir)/lib/ && \
-  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub cctools && \
-  patch -p1 < $($(package)_patch_dir)/no_fixup_chains.patch
+  cp $(llvm_lib_dir)/libLTO.so $($(package)_staging_prefix_dir)/lib/
 endef
 else
-define $(package)_preprocess_cmds
-  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub cctools && \
-  patch -p1 < $($(package)_patch_dir)/no_fixup_chains.patch
-endef
 endif
 
 define $(package)_config_cmds
