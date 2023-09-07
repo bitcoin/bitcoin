@@ -11,6 +11,7 @@
 #include <compat/compat.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <key.h>
 #include <merkleblock.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -164,6 +165,8 @@ template <typename WeakEnumType, size_t size>
 }
 
 [[nodiscard]] CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept;
+
+[[nodiscard]] CKey ConsumePrivateKey(FuzzedDataProvider& fuzzed_data_provider, std::optional<bool> compressed = std::nullopt) noexcept;
 
 template <typename T>
 [[nodiscard]] bool MultiplicationOverflow(const T i, const T j) noexcept
