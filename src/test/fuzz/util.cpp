@@ -193,6 +193,16 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
     return tx_destination;
 }
 
+CKey ConsumePrivateKey(FuzzedDataProvider& fuzzed_data_provider, std::optional<bool> compressed) noexcept
+{
+    auto key_data = fuzzed_data_provider.ConsumeBytes<uint8_t>(32);
+    key_data.resize(32);
+    CKey key;
+    bool compressed_value = compressed ? *compressed : fuzzed_data_provider.ConsumeBool();
+    key.Set(key_data.begin(), key_data.end(), compressed_value);
+    return key;
+}
+
 bool ContainsSpentInput(const CTransaction& tx, const CCoinsViewCache& inputs) noexcept
 {
     for (const CTxIn& tx_in : tx.vin) {
