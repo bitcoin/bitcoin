@@ -965,6 +965,7 @@ static UniValue voteraw(const JSONRPCRequest& request)
     }
 
     GovernanceObject govObjType = WITH_LOCK(governance->cs, return [&](){
+        AssertLockHeld(governance->cs);
         CGovernanceObject *pGovObj = governance->FindGovernanceObject(hashGovObj);
         if (!pGovObj) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Governance object not found");

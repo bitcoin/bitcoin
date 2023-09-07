@@ -423,7 +423,7 @@ void CGovernanceManager::UpdateCachesAndClean()
 
 CGovernanceObject* CGovernanceManager::FindGovernanceObject(const uint256& nHash)
 {
-    LOCK(cs);
+    AssertLockHeld(cs);
 
     if (mapObjects.count(nHash)) return &mapObjects[nHash];
 
@@ -432,7 +432,7 @@ CGovernanceObject* CGovernanceManager::FindGovernanceObject(const uint256& nHash
 
 CGovernanceObject* CGovernanceManager::FindGovernanceObjectByDataHash(const uint256 &nDataHash)
 {
-    LOCK(cs);
+    AssertLockHeld(cs);
 
     for (const auto& [nHash, object] : mapObjects) {
         if (object.GetDataHash() == nDataHash) return &mapObjects[nHash];
@@ -536,16 +536,19 @@ std::optional<CSuperblock> CGovernanceManager::CreateSuperblockCandidate(int nHe
     // Use std::vector of std::shared_ptr<const CGovernanceObject> because CGovernanceObject doesn't support move operations (needed for sorting the vector later)
     std::vector<std::shared_ptr<const CGovernanceObject>> approvedProposals;
 
-    for (const auto& [unused, object] : mapObjects) {
-        // Skip all non-proposals objects
-        if (object.GetObjectType() != GovernanceObject::PROPOSAL) continue;
+    {
+        LOCK(cs);
+        for (const auto& [unused, object] : mapObjects) {
+            // Skip all non-proposals objects
+            if (object.GetObjectType() != GovernanceObject::PROPOSAL) continue;
 
-        const int absYesCount = object.GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING);
-        // Skip non-passing proposals
-        if (absYesCount < nAbsVoteReq) continue;
+            const int absYesCount = object.GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING);
+            // Skip non-passing proposals
+            if (absYesCount < nAbsVoteReq) continue;
 
-        approvedProposals.emplace_back(std::make_shared<const CGovernanceObject>(object));
-    }
+            approvedProposals.emplace_back(std::make_shared<const CGovernanceObject>(object));
+        }
+    } // cs
 
     // Sort approved proposals by absolute Yes votes descending
     std::sort(approvedProposals.begin(), approvedProposals.end(), [](std::shared_ptr<const CGovernanceObject> a, std::shared_ptr<const CGovernanceObject> b) {
@@ -629,12 +632,12 @@ std::optional<CSuperblock> CGovernanceManager::CreateSuperblockCandidate(int nHe
 void CGovernanceManager::CreateGovernanceTrigger(const CSuperblock& sb, CConnman& connman)
 {
     //TODO: Check if nHashParentIn, nRevision and nCollateralHashIn are correct
-    LOCK2(cs_main, governance->cs);
+    LOCK2(cs_main, cs);
 
     // Check if identical trigger (equal DataHash()) is already created (signed by other masternode)
     CGovernanceObject* gov_sb_voting{nullptr};
     CGovernanceObject gov_sb(uint256(), 1, GetAdjustedTime(), uint256(), sb.GetHexStrData());
-    const auto identical_sb = governance->FindGovernanceObjectByDataHash(gov_sb.GetDataHash());
+    const auto identical_sb = FindGovernanceObjectByDataHash(gov_sb.GetDataHash());
 
     if (identical_sb == nullptr) {
         // Nobody submitted a trigger we'd like to see,
@@ -652,12 +655,12 @@ void CGovernanceManager::CreateGovernanceTrigger(const CSuperblock& sb, CConnman
             LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Created trigger is invalid:%s\n", __func__, strError);
             return;
         }
-        if (!governance->MasternodeRateCheck(gov_sb)) {
+        if (!MasternodeRateCheck(gov_sb)) {
             LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Trigger rejected because of rate check failure hash(%s)\n", __func__, gov_sb.GetHash().ToString());
             return;
         }
         // The trigger we just created looks good, submit it
-        governance->AddGovernanceObject(gov_sb, connman);
+        AddGovernanceObject(gov_sb, connman);
         gov_sb_voting = &gov_sb;
     } else {
         // Somebody submitted a trigger with the same data, support it instead of submitting a duplicate
@@ -696,7 +699,7 @@ bool CGovernanceManager::VoteFundingTrigger(const uint256& nHash, const vote_out
     }
 
     CGovernanceException exception;
-    if (!governance->ProcessVoteAndRelay(vote, exception, connman)) {
+    if (!ProcessVoteAndRelay(vote, exception, connman)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Vote FUNDING %d for trigger:%s failed:%s\n", __func__, outcome, nHash.ToString(), exception.what());
         return false;
     }

@@ -171,7 +171,7 @@ private:
     int nCachedBlockHeight;
 
     // keep track of the scanning errors
-    std::map<uint256, CGovernanceObject> mapObjects;
+    std::map<uint256, CGovernanceObject> mapObjects GUARDED_BY(cs);
 
     // mapErasedGovernanceObjects contains key-value pairs, where
     //   key   - governance object's hash
@@ -248,8 +248,8 @@ public:
 
     void DoMaintenance(CConnman& connman);
 
-    CGovernanceObject* FindGovernanceObject(const uint256& nHash);
-    CGovernanceObject* FindGovernanceObjectByDataHash(const uint256& nDataHash);
+    CGovernanceObject* FindGovernanceObject(const uint256& nHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    CGovernanceObject* FindGovernanceObjectByDataHash(const uint256& nDataHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void DeleteGovernanceObject(const uint256& nHash);
 
     // These commands are only used in RPC
