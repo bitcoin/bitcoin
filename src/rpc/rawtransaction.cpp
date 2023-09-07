@@ -62,7 +62,7 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
     // Blockchain contextual information (confirmations and blocktime) is not
     // available to code in bitcoin-common, so we query them here and push the
     // data into the returned UniValue.
-    TxToUniv(tx, /*block_hash=*/uint256(), entry, /*include_hex=*/true, RPCSerializationFlags(), txundo, verbosity);
+    TxToUniv(tx, /*block_hash=*/uint256(), entry, /*include_hex=*/true, RPCSerializationWithoutWitness(), txundo, verbosity);
 
     if (!hashBlock.IsNull()) {
         LOCK(cs_main);
@@ -383,7 +383,7 @@ static RPCHelpMan getrawtransaction()
     }
 
     if (verbosity <= 0) {
-        return EncodeHexTx(*tx, RPCSerializationFlags());
+        return EncodeHexTx(*tx, /*without_witness=*/RPCSerializationWithoutWitness());
     }
 
     UniValue result(UniValue::VOBJ);
@@ -1541,7 +1541,7 @@ static RPCHelpMan finalizepsbt()
     std::string result_str;
 
     if (complete && extract) {
-        ssTx << mtx;
+        ssTx << TX_WITH_WITNESS(mtx);
         result_str = HexStr(ssTx);
         result.pushKV("hex", result_str);
     } else {
@@ -1994,8 +1994,8 @@ RPCHelpMan descriptorprocesspsbt()
         CMutableTransaction mtx;
         PartiallySignedTransaction psbtx_copy = psbtx;
         CHECK_NONFATAL(FinalizeAndExtractPSBT(psbtx_copy, mtx));
-        CDataStream ssTx_final(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx_final << mtx;
+        DataStream ssTx_final;
+        ssTx_final << TX_WITH_WITNESS(mtx);
         result.pushKV("hex", HexStr(ssTx_final));
     }
     return result;

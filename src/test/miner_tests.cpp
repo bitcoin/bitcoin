@@ -144,7 +144,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000; // 0 fee
     uint256 hashFreeTx = tx.GetHash();
     tx_mempool.addUnchecked(entry.Fee(0).FromTx(tx));
-    size_t freeTxSize = ::GetSerializeSize(tx, PROTOCOL_VERSION);
+    size_t freeTxSize = ::GetSerializeSize(TX_WITH_WITNESS(tx));
 
     // Calculate a fee on child transaction that will put the package just
     // below the block min tx fee (assuming 1 child tx of the same size).

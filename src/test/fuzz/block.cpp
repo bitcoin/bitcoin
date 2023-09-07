@@ -31,7 +31,7 @@ FUZZ_TARGET(block, .init = initialize_block)
         int nVersion;
         ds >> nVersion;
         ds.SetVersion(nVersion);
-        ds >> block;
+        ds >> TX_WITH_WITNESS(block);
     } catch (const std::ios_base::failure&) {
         return;
     }

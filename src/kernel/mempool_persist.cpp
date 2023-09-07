@@ -42,7 +42,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
 {
     if (load_path.empty()) return false;
 
-    CAutoFile file{opts.mockable_fopen_function(load_path, "rb"), CLIENT_VERSION};
+    AutoFile file{opts.mockable_fopen_function(load_path, "rb")};
     if (file.IsNull()) {
         LogPrintf("Failed to open mempool file from disk. Continuing anyway.\n");
         return false;
@@ -74,7 +74,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             CTransactionRef tx;
             int64_t nTime;
             int64_t nFeeDelta;
-            file >> tx;
+            file >> TX_WITH_WITNESS(tx);
             file >> nTime;
             file >> nFeeDelta;
 
@@ -158,7 +158,7 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
 
     auto mid = SteadyClock::now();
 
-    CAutoFile file{mockable_fopen_function(dump_path + ".new", "wb"), CLIENT_VERSION};
+    AutoFile file{mockable_fopen_function(dump_path + ".new", "wb")};
     if (file.IsNull()) {
         return false;
     }
@@ -176,7 +176,7 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
 
         file << (uint64_t)vinfo.size();
         for (const auto& i : vinfo) {
-            file << *(i.tx);
+            file << TX_WITH_WITNESS(*(i.tx));
             file << int64_t{count_seconds(i.m_time)};
             file << int64_t{i.nFeeDelta};
             mapDeltas.erase(i.tx->GetHash());

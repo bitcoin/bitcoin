@@ -23,7 +23,7 @@ FUZZ_TARGET(script_flags)
     }
 
     try {
-        const CTransaction tx(deserialize, ds);
+        const CTransaction tx(deserialize, TX_WITH_WITNESS, ds);
 
         unsigned int verify_flags;
         ds >> verify_flags;

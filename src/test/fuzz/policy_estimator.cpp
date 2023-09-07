@@ -37,7 +37,7 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                const std::optional<CMutableTransaction> mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
+                const std::optional<CMutableTransaction> mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
                 if (!mtx) {
                     good_data = false;
                     return;
@@ -52,7 +52,7 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
                 std::vector<CTxMemPoolEntry> mempool_entries;
                 LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
                 {
-                    const std::optional<CMutableTransaction> mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
+                    const std::optional<CMutableTransaction> mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
                     if (!mtx) {
                         good_data = false;
                         break;
