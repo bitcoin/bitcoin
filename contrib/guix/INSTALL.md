@@ -578,7 +578,7 @@ sudo --login guix pull --commit=<particular-commit>
 ```
 
 `guix pull` is quite a long process (especially if you're using
-`--no-substitute`). If you encounter build problems, please refer to the
+`--no-substitutes`). If you encounter build problems, please refer to the
 [troubleshooting section](#troubleshooting).
 
 Note that running a bare `guix pull` with no commit or branch specified will
@@ -616,7 +616,7 @@ systemctl enable guix-daemon
 systemctl start guix-daemon
 ```
 
-Remember to set `--no-substitute` in `$libdir/systemd/system/guix-daemon.service` and other customizations if you used them for `guix-daemon-original.service`.
+Remember to set `--no-substitutes` in `$libdir/systemd/system/guix-daemon.service` and other customizations if you used them for `guix-daemon-original.service`.
 
 ##### If you installed Guix via the Debian/Ubuntu distribution packages
 
