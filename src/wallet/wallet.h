@@ -31,13 +31,14 @@
 
 #include <algorithm>
 #include <atomic>
-#include <deque>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <stdint.h>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 

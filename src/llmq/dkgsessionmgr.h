@@ -10,6 +10,9 @@
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
 
+#include <map>
+#include <memory>
+
 class CBlockIndex;
 class CChainState;
 class CDKGDebugManager;

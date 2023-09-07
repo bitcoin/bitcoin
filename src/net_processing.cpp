@@ -34,6 +34,7 @@
 
 #include <list>
 #include <memory>
+#include <optional>
 #include <typeinfo>
 
 #include <spork.h>

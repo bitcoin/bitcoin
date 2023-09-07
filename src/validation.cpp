@@ -62,6 +62,7 @@
 
 #include <statsd_client.h>
 
+#include <deque>
 #include <optional>
 #include <string>
 

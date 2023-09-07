@@ -11,6 +11,8 @@
 #include <threadinterrupt.h>
 #include <validationinterface.h>
 
+#include <atomic>
+
 class CBlockIndex;
 class CChainState;
 

@@ -13,7 +13,6 @@
 #include <util/system.h>
 #include <wallet/db.h>
 
-#include <atomic>
 #include <map>
 #include <memory>
 #include <string>

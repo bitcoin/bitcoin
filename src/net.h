@@ -36,7 +36,6 @@
 #include <thread>
 #include <memory>
 #include <condition_variable>
-#include <unordered_set>
 #include <optional>
 #include <queue>
 

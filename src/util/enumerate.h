@@ -5,7 +5,6 @@
 #ifndef BITCOIN_UTIL_ENUMERATE_H
 #define BITCOIN_UTIL_ENUMERATE_H
 
-#include <tuple>
 #include <iterator>
 
 /**

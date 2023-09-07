@@ -13,7 +13,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <optional>
 #include <string>
 
 class CAddrManTest : public CAddrMan

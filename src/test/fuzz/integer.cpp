@@ -38,6 +38,7 @@
 #include <chrono>
 #include <ctime>
 #include <limits>
+#include <optional>
 #include <set>
 #include <vector>
 

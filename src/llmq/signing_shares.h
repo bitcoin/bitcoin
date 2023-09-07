@@ -14,6 +14,7 @@
 #include <sync.h>
 #include <uint256.h>
 
+#include <atomic>
 #include <optional>
 #include <thread>
 #include <unordered_map>

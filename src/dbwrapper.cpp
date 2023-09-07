@@ -13,6 +13,7 @@
 #include <memenv.h>
 #include <stdint.h>
 #include <algorithm>
+#include <optional>
 
 class CBitcoinLevelDBLogger : public leveldb::Logger {
 public:

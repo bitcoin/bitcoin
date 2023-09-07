@@ -19,6 +19,7 @@
 #include <validation.h>
 
 #include <cxxtimer.hpp>
+#include <atomic>
 #include <memory>
 #include <util/irange.h>
 #include <util/underlying.h>

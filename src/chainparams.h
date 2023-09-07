@@ -15,6 +15,7 @@
 #include <util/hash_type.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 

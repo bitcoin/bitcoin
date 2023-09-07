@@ -10,6 +10,8 @@
 #include <sync.h>
 #include <validationinterface.h>
 
+#include <atomic>
+
 class CAddrMan;
 class CTxMemPool;
 class ChainstateManager;

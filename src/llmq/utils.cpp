@@ -22,6 +22,7 @@
 #include <validation.h>
 #include <versionbits.h>
 
+#include <atomic>
 #include <optional>
 
 static constexpr int TESTNET_LLMQ_25_67_ACTIVATION_HEIGHT = 847000;

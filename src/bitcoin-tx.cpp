@@ -25,6 +25,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <stdio.h>
 
 #include <stacktraces.h>

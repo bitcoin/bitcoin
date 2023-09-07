@@ -35,6 +35,7 @@
 #endif // __linux__
 
 #include <algorithm>
+#include <atomic>
 #include <cassert>
 #include <fcntl.h>
 #include <sched.h>

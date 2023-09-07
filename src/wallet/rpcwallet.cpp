@@ -46,6 +46,7 @@
 
 #include <univalue.h>
 
+#include <optional>
 
 using interfaces::FoundBlock;
 

@@ -9,6 +9,8 @@
 #include <primitives/transaction.h>
 #include <univalue.h>
 
+#include <optional>
+
 class BlockValidationState;
 class CBlock;
 class CBlockIndex;

@@ -14,6 +14,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <optional>
 
 class BlockManager;
 class CCoinsView;

@@ -17,8 +17,6 @@
 #include <netmessagemaker.h>
 #include <validation.h>
 
-#include <unordered_set>
-
 void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
 {
     LOCK(activeMasternodeInfoCs);

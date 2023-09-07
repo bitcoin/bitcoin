@@ -15,6 +15,7 @@
 #include <threadinterrupt.h>
 #include <txmempool.h>
 
+#include <atomic>
 #include <unordered_map>
 #include <unordered_set>
 

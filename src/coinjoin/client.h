@@ -9,8 +9,9 @@
 #include <coinjoin/coinjoin.h>
 #include <util/translation.h>
 
-#include <utility>
 #include <atomic>
+#include <deque>
+#include <utility>
 
 class CDeterministicMN;
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;

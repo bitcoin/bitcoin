@@ -33,7 +33,6 @@
 #include <spork.h>
 
 #include <stdint.h>
-#include <tuple>
 #ifdef HAVE_MALLOC_INFO
 #include <malloc.h>
 #endif

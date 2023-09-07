@@ -25,6 +25,7 @@
 #include <llmq/snapshot.h>
 
 #include <iomanip>
+#include <optional>
 
 namespace llmq {
 extern const std::string CLSIG_REQUESTID_PREFIX;

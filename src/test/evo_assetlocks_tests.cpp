@@ -16,7 +16,6 @@
 #include <boost/test/unit_test.hpp>
 
 
-#include <optional>
 //
 // Helper: create two dummy transactions, each with
 // two outputs.  The first has 11 and 50 CENT outputs

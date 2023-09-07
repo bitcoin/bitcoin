@@ -19,6 +19,7 @@
 
 #include <immer/map.hpp>
 
+#include <atomic>
 #include <limits>
 #include <numeric>
 #include <unordered_map>

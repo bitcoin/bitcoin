@@ -17,6 +17,7 @@
 #include <boost/signals2/signal.hpp>
 
 #include <algorithm>
+#include <atomic>
 #include <memory> // for unique_ptr
 #include <unordered_map>
 

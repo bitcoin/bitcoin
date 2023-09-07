@@ -6,6 +6,7 @@
 #define BITCOIN_UTIL_OVERFLOW_H
 
 #include <limits>
+#include <optional>
 #include <type_traits>
 
 template <class T>

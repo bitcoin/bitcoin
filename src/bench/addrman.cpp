@@ -7,7 +7,6 @@
 #include <random.h>
 #include <util/time.h>
 
-#include <optional>
 #include <vector>
 
 /* A "source" is a source address from which we have received a bunch of other addresses. */

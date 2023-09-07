@@ -8,7 +8,6 @@
 #include <fs.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
 
-#include <atomic>
 #include <cstdint>
 #include <vector>
 

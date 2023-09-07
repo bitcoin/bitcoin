@@ -60,6 +60,7 @@
 #include <boost/signals2/signal.hpp>
 
 #include <memory>
+#include <optional>
 #include <utility>
 
 using interfaces::BlockTip;

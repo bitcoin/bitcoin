@@ -17,6 +17,8 @@
 #include <sync.h>
 
 #include <atomic>
+#include <map>
+#include <unordered_map>
 #include <unordered_set>
 
 class CChainState;

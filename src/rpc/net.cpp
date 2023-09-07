@@ -27,8 +27,6 @@
 #include <version.h>
 #include <warnings.h>
 
-#include <optional>
-
 #include <univalue.h>
 
 static UniValue getconnectioncount(const JSONRPCRequest& request)

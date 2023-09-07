@@ -102,6 +102,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <memory>
+#include <optional>
 #include <set>
 #include <thread>
 #include <vector>

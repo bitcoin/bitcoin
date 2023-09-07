@@ -9,6 +9,8 @@
 #include <ctpl_stl.h>
 #include <net.h>
 
+#include <atomic>
+#include <map>
 #include <optional>
 
 class CBlockIndex;

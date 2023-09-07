@@ -7,6 +7,8 @@
 
 #include <util/system.h>
 
+#include <atomic>
+
 static std::atomic<bool> g_initial_block_download_completed(false);
 
 #define MAKE_MSG(var_name, p2p_name_str)   \
