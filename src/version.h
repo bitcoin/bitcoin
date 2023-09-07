@@ -48,6 +48,6 @@ static const int WTXID_RELAY_VERSION = 70016;
 //! BLS scheme was introduced in this version
 static const int BLS_SCHEME_PROTO_VERSION = 70017;
 // Make sure that none of the values above collide with
-// `SERIALIZE_TRANSACTION_NO_WITNESS` or `ADDRV2_FORMAT`.
+// `SERIALIZE_TRANSACTION_NO_WITNESS`.
 
 #endif // SYSCOIN_VERSION_H

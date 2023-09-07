@@ -55,13 +55,13 @@ public:
         }
     }
 
-    
+
     void SetNull()
     {
         CPureBlockHeader::SetNull();
         auxpow.reset();
     }
-    
+
     NodeSeconds Time() const
     {
         return NodeSeconds{std::chrono::seconds{nTime}};
@@ -96,8 +96,7 @@ public:
 
     SERIALIZE_METHODS(CBlock, obj)
     {
-        READWRITEAS(CBlockHeader, obj);
-        READWRITE(obj.vtx);
+        READWRITE(AsBase<CBlockHeader>(obj), obj.vtx);
         // SYSCOIN
         if (obj.IsNEVM() && !(s.GetType() & SER_GETHASH) && !(s.GetType() & SER_SIZE))
             READWRITE(obj.vchNEVMBlockData);
