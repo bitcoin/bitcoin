@@ -146,23 +146,6 @@ public:
     }
 };
 
-class CHashWriter : public HashWriter
-{
-private:
-    const int nVersion;
-
-public:
-    CHashWriter(int nVersionIn) : nVersion{nVersionIn} {}
-
-    int GetVersion() const { return nVersion; }
-
-    template<typename T>
-    CHashWriter& operator<<(const T& obj) {
-        ::Serialize(*this, obj);
-        return (*this);
-    }
-};
-
 /** Reads data from an underlying stream, while hashing the read data. */
 template <typename Source>
 class HashVerifier : public HashWriter
