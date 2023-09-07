@@ -641,7 +641,7 @@ UniValue RPCHelpMan::HandleRequest(const node::JSONRPCRequest& request) const
 }
 
 using CheckFn = void(const RPCArg&);
-static const UniValue* DetailMaybeArg(CheckFn* check, const std::vector<RPCArg>& params, const JSONRPCRequest* req, size_t i)
+static const UniValue* DetailMaybeArg(CheckFn* check, const std::vector<RPCArg>& params, const node::JSONRPCRequest* req, size_t i)
 {
     CHECK_NONFATAL(i < params.size());
     const UniValue& arg{CHECK_NONFATAL(req)->params[i]};
@@ -667,7 +667,8 @@ static void CheckRequiredOrDefault(const RPCArg& param)
     ret_type RPCHelpMan::ArgValue<ret_type>(size_t i) const \
     {                                                       \
         const UniValue* maybe_arg{                          \
-            DetailMaybeArg(check_param, m_args, m_req, i),  \
+            DetailMaybeArg(check_param, m_args,             \
+                           m_req, i), \
         };                                                  \
         return return_code                                  \
     }                                                       \

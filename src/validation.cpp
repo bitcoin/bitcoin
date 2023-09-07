@@ -3991,13 +3991,9 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex *pinde
         // parameter indicating the source of the tip change so hooks can
         // distinguish user-initiated invalidateblock changes from other
         // changes.
-<<<<<<< HEAD
-        (void)m_chainman.GetNotifications().blockTip(GetSynchronizationState(IsInitialBlockDownload()), *to_mark_failed->pprev);
+        (void)m_chainman.GetNotifications().blockTip(GetSynchronizationState(m_chainman.IsInitialBlockDownload()), *to_mark_failed->pprev);
         // SYSCOIN for MN list to update
         GetMainSignals().SynchronousUpdatedBlockTip(to_mark_failed->pprev, nullptr);
-=======
-        (void)m_chainman.GetNotifications().blockTip(GetSynchronizationState(m_chainman.IsInitialBlockDownload()), *to_mark_failed->pprev);
->>>>>>> 723f1c669f (Merge bitcoin/bitcoin#28218: refactor: Make IsInitialBlockDownload & NotifyHeaderTip not require a Chainstate)
     }
     return true;
 }
@@ -4079,7 +4075,7 @@ bool Chainstate::MarkConflictingBlock(BlockValidationState& state, CBlockIndex *
     // Only notify about a new block tip if the active chain was modified.
     if (pindex_was_in_chain) {
         // SYSCOIN for MN list to update
-        (void)m_chainman.GetNotifications().blockTip(GetSynchronizationState(IsInitialBlockDownload()), *pindex->pprev);
+        (void)m_chainman.GetNotifications().blockTip(GetSynchronizationState(m_chainman.IsInitialBlockDownload()), *pindex->pprev);
     }
     return true;
 }

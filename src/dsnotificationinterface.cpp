@@ -20,7 +20,7 @@ void CDSNotificationInterface::InitializeCurrentBlockTip(ChainstateManager& chai
 {
     LOCK(cs_main);
     SynchronousUpdatedBlockTip(chainman.ActiveChain().Tip(), nullptr);
-    UpdatedBlockTip(chainman.ActiveChain().Tip(), nullptr, chainman, chainman.ActiveChainstate().IsInitialBlockDownload());
+    UpdatedBlockTip(chainman.ActiveChain().Tip(), nullptr, chainman, chainman.IsInitialBlockDownload());
 }
 
 
