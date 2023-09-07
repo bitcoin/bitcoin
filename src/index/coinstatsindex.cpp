@@ -288,7 +288,9 @@ bool CoinStatsIndex::CustomRewind(const interfaces::BlockKey& current_tip, const
                              __func__, iter_tip->GetBlockHash().ToString());
             }
 
-            ReverseBlock(block, iter_tip);
+            if (!ReverseBlock(block, iter_tip)) {
+                return false; // failure cause logged internally
+            }
 
             iter_tip = iter_tip->GetAncestor(iter_tip->nHeight - 1);
         } while (new_tip_index != iter_tip);
