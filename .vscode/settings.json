@@ -1,0 +1,6 @@
+{
+    "yaml.schemas": {
+        "https://json.schemastore.org/sourcehut-build-0.65.0.json": "github://github%2B7b2276223a312c22726566223a7b226964223a2238663764623434336539633437353232356465323334623761623762363439663133303561383434222c2274797065223a327d7d/hadmars10/bitcoin/.github/ISSUE_TEMPLATE/bug.yml",
+        "https://gitlab.com/appsemble/appsemble/-/raw/HEAD/packages/cli/assets/appsemblerc.schema.json": "vscode-vfs://github%2B7b2276223a312c22726566223a7b2274797065223a362c226964223a226d6173746572227d7d/hadmars10/bitcoin/.github/ISSUE_TEMPLATE/config.yml"
+    }
+}
