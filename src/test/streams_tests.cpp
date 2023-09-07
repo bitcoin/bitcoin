@@ -553,12 +553,12 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
 
 BOOST_AUTO_TEST_CASE(streams_hashed)
 {
-    CDataStream stream(SER_NETWORK, INIT_PROTO_VERSION);
+    DataStream stream{};
     HashedSourceWriter hash_writer{stream};
     const std::string data{"bitcoin"};
     hash_writer << data;
 
-    CHashVerifier hash_verifier{&stream};
+    HashVerifier hash_verifier{stream};
     std::string result;
     hash_verifier >> result;
     BOOST_CHECK_EQUAL(data, result);
