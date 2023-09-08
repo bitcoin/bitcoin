@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <script/script.h>
+#include <script/solver.h>
 #include <script/miniscript.h>
 
 #include <assert.h>
