@@ -268,6 +268,7 @@ BITCOIN_CORE_H = \
   script/sign.h \
   script/signingprovider.h \
   script/solver.h \
+  script/txouttype.h \
   shutdown.h \
   signet.h \
   streams.h \
@@ -704,6 +705,7 @@ libbitcoin_common_a_SOURCES = \
   script/sign.cpp \
   script/signingprovider.cpp \
   script/solver.cpp \
+  script/txouttype.cpp \
   warnings.cpp \
   $(BITCOIN_CORE_H)
 
@@ -966,6 +968,7 @@ libbitcoinkernel_la_SOURCES = \
   script/script_error.cpp \
   script/sigcache.cpp \
   script/solver.cpp \
+  script/txouttype.cpp \
   signet.cpp \
   streams.cpp \
   support/cleanse.cpp \

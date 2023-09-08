@@ -11,26 +11,8 @@
 
 #include <algorithm>
 #include <cassert>
-#include <string>
 
 typedef std::vector<unsigned char> valtype;
-
-std::string GetTxnOutputType(TxoutType t)
-{
-    switch (t) {
-    case TxoutType::NONSTANDARD: return "nonstandard";
-    case TxoutType::PUBKEY: return "pubkey";
-    case TxoutType::PUBKEYHASH: return "pubkeyhash";
-    case TxoutType::SCRIPTHASH: return "scripthash";
-    case TxoutType::MULTISIG: return "multisig";
-    case TxoutType::NULL_DATA: return "nulldata";
-    case TxoutType::WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
-    case TxoutType::WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
-    case TxoutType::WITNESS_V1_TAPROOT: return "witness_v1_taproot";
-    case TxoutType::WITNESS_UNKNOWN: return "witness_unknown";
-    } // no default case, so the compiler can warn about missing cases
-    assert(false);
-}
 
 static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)
 {

@@ -10,31 +10,14 @@
 
 #include <attributes.h>
 #include <script/script.h>
+#include <script/txouttype.h>
 
-#include <string>
 #include <optional>
 #include <utility>
 #include <vector>
 
 class CPubKey;
 template <typename C> class Span;
-
-enum class TxoutType {
-    NONSTANDARD,
-    // 'standard' transaction types:
-    PUBKEY,
-    PUBKEYHASH,
-    SCRIPTHASH,
-    MULTISIG,
-    NULL_DATA, //!< unspendable OP_RETURN script that carries data
-    WITNESS_V0_SCRIPTHASH,
-    WITNESS_V0_KEYHASH,
-    WITNESS_V1_TAPROOT,
-    WITNESS_UNKNOWN, //!< Only for Witness versions not already defined above
-};
-
-/** Get the name of a TxoutType as a string */
-std::string GetTxnOutputType(TxoutType t);
 
 constexpr bool IsPushdataOp(opcodetype opcode)
 {
