@@ -25,6 +25,7 @@ std::vector<std::string> g_all_messages;
 
 void initialize_p2p_transport_serialization()
 {
+    ECC_Start();
     SelectParams(ChainType::REGTEST);
     g_all_messages = getAllNetMessageTypes();
     std::sort(g_all_messages.begin(), g_all_messages.end());
@@ -92,7 +93,7 @@ FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serial
             assert(queued);
             std::optional<bool> known_more;
             while (true) {
-                const auto& [to_send, more, _msg_type] = send_transport.GetBytesToSend();
+                const auto& [to_send, more, _msg_type] = send_transport.GetBytesToSend(false);
                 if (known_more) assert(!to_send.empty() == *known_more);
                 if (to_send.empty()) break;
                 send_transport.MarkBytesSent(to_send.size());
@@ -124,11 +125,13 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
     // Vectors with bytes last returned by GetBytesToSend() on transport[i].
     std::array<std::vector<uint8_t>, 2> to_send;
 
-    // Last returned 'more' values (if still relevant) by transport[i]->GetBytesToSend().
-    std::array<std::optional<bool>, 2> last_more;
+    // Last returned 'more' values (if still relevant) by transport[i]->GetBytesToSend(), for
+    // both have_next_message false and true.
+    std::array<std::optional<bool>, 2> last_more, last_more_next;
 
-    // Whether more bytes to be sent are expected on transport[i].
-    std::array<std::optional<bool>, 2> expect_more;
+    // Whether more bytes to be sent are expected on transport[i], before and after
+    // SetMessageToSend().
+    std::array<std::optional<bool>, 2> expect_more, expect_more_next;
 
     // Function to consume a message type.
     auto msg_type_fn = [&]() {
@@ -177,18 +180,27 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
 
     // Wrapper around transport[i]->GetBytesToSend() that performs sanity checks.
     auto bytes_to_send_fn = [&](int side) -> Transport::BytesToSend {
-        const auto& [bytes, more, msg_type] = transports[side]->GetBytesToSend();
+        // Invoke GetBytesToSend twice (for have_next_message = {false, true}). This function does
+        // not modify state (it's const), and only the "more" return value should differ between
+        // the calls.
+        const auto& [bytes, more_nonext, msg_type] = transports[side]->GetBytesToSend(false);
+        const auto& [bytes_next, more_next, msg_type_next] = transports[side]->GetBytesToSend(true);
         // Compare with expected more.
         if (expect_more[side].has_value()) assert(!bytes.empty() == *expect_more[side]);
+        // Verify consistency between the two results.
+        assert(bytes == bytes_next);
+        assert(msg_type == msg_type_next);
+        if (more_nonext) assert(more_next);
         // Compare with previously reported output.
         assert(to_send[side].size() <= bytes.size());
         assert(to_send[side] == Span{bytes}.first(to_send[side].size()));
         to_send[side].resize(bytes.size());
         std::copy(bytes.begin(), bytes.end(), to_send[side].begin());
-        // Remember 'more' result.
-        last_more[side] = {more};
+        // Remember 'more' results.
+        last_more[side] = {more_nonext};
+        last_more_next[side] = {more_next};
         // Return.
-        return {bytes, more, msg_type};
+        return {bytes, more_nonext, msg_type};
     };
 
     // Function to make side send a new message.
@@ -199,7 +211,8 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
         CSerializedNetMsg msg = next_msg[side].Copy();
         bool queued = transports[side]->SetMessageToSend(msg);
         // Update expected more data.
-        expect_more[side] = std::nullopt;
+        expect_more[side] = expect_more_next[side];
+        expect_more_next[side] = std::nullopt;
         // Verify consistency of GetBytesToSend after SetMessageToSend
         bytes_to_send_fn(/*side=*/side);
         if (queued) {
@@ -223,6 +236,7 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
         // If all to-be-sent bytes were sent, move last_more data to expect_more data.
         if (send_now == bytes.size()) {
             expect_more[side] = last_more[side];
+            expect_more_next[side] = last_more_next[side];
         }
         // Remove the bytes from the last reported to-be-sent vector.
         assert(to_send[side].size() >= send_now);
@@ -251,6 +265,7 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
             // Clear cached expected 'more' information: if certainly no more data was to be sent
             // before, receiving bytes makes this uncertain.
             if (expect_more[!side] == false) expect_more[!side] = std::nullopt;
+            if (expect_more_next[!side] == false) expect_more_next[!side] = std::nullopt;
             // Verify consistency of GetBytesToSend after ReceivedBytes
             bytes_to_send_fn(/*side=*/!side);
             bool progress = to_recv.size() < old_len;
@@ -320,6 +335,40 @@ std::unique_ptr<Transport> MakeV1Transport(NodeId nodeid) noexcept
     return std::make_unique<V1Transport>(nodeid, SER_NETWORK, INIT_PROTO_VERSION);
 }
 
+template<typename RNG>
+std::unique_ptr<Transport> MakeV2Transport(NodeId nodeid, bool initiator, RNG& rng, FuzzedDataProvider& provider)
+{
+    // Retrieve key
+    auto key = ConsumePrivateKey(provider);
+    if (!key.IsValid()) return {};
+    // Construct garbage
+    size_t garb_len = provider.ConsumeIntegralInRange<size_t>(0, V2Transport::MAX_GARBAGE_LEN);
+    std::vector<uint8_t> garb;
+    if (garb_len <= 64) {
+        // When the garbage length is up to 64 bytes, read it directly from the fuzzer input.
+        garb = provider.ConsumeBytes<uint8_t>(garb_len);
+        garb.resize(garb_len);
+    } else {
+        // If it's longer, generate it from the RNG. This avoids having large amounts of
+        // (hopefully) irrelevant data needing to be stored in the fuzzer data.
+        for (auto& v : garb) v = uint8_t(rng());
+    }
+    // Retrieve entropy
+    auto ent = provider.ConsumeBytes<std::byte>(32);
+    ent.resize(32);
+    // Use as entropy SHA256(ent || garbage). This prevents a situation where the fuzzer manages to
+    // include the garbage terminator (which is a function of both ellswift keys) in the garbage.
+    // This is extremely unlikely (~2^-116) with random keys/garbage, but the fuzzer can choose
+    // both non-randomly and dependently. Since the entropy is hashed anyway inside the ellswift
+    // computation, no coverage should be lost by using a hash as entropy, and it removes the
+    // possibility of garbage that happens to contain what is effectively a hash of the keys.
+    CSHA256().Write(UCharCast(ent.data()), ent.size())
+             .Write(garb.data(), garb.size())
+             .Finalize(UCharCast(ent.data()));
+
+    return std::make_unique<V2Transport>(nodeid, initiator, SER_NETWORK, INIT_PROTO_VERSION, key, ent, garb);
+}
+
 } // namespace
 
 FUZZ_TARGET(p2p_transport_bidirectional, .init = initialize_p2p_transport_serialization)
@@ -329,6 +378,28 @@ FUZZ_TARGET(p2p_transport_bidirectional, .init = initialize_p2p_transport_serial
     XoRoShiRo128PlusPlus rng(provider.ConsumeIntegral<uint64_t>());
     auto t1 = MakeV1Transport(NodeId{0});
     auto t2 = MakeV1Transport(NodeId{1});
+    if (!t1 || !t2) return;
+    SimulationTest(*t1, *t2, rng, provider);
+}
+
+FUZZ_TARGET(p2p_transport_bidirectional_v2, .init = initialize_p2p_transport_serialization)
+{
+    // Test with two V2 transports talking to each other.
+    FuzzedDataProvider provider{buffer.data(), buffer.size()};
+    XoRoShiRo128PlusPlus rng(provider.ConsumeIntegral<uint64_t>());
+    auto t1 = MakeV2Transport(NodeId{0}, true, rng, provider);
+    auto t2 = MakeV2Transport(NodeId{1}, false, rng, provider);
+    if (!t1 || !t2) return;
+    SimulationTest(*t1, *t2, rng, provider);
+}
+
+FUZZ_TARGET(p2p_transport_bidirectional_v1v2, .init = initialize_p2p_transport_serialization)
+{
+    // Test with a V1 initiator talking to a V2 responder.
+    FuzzedDataProvider provider{buffer.data(), buffer.size()};
+    XoRoShiRo128PlusPlus rng(provider.ConsumeIntegral<uint64_t>());
+    auto t1 = MakeV1Transport(NodeId{0});
+    auto t2 = MakeV2Transport(NodeId{1}, false, rng, provider);
     if (!t1 || !t2) return;
     SimulationTest(*t1, *t2, rng, provider);
 }
