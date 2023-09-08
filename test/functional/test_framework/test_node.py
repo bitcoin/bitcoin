@@ -736,6 +736,9 @@ class TestNode():
         supports_v2_p2p = supports_v2_p2p and advertise_v2_p2p
         p2p_conn.peer_accept_connection(connect_cb=addconnection_callback, connect_id=p2p_idx + 1, net=self.chain, timeout_factor=self.timeout_factor, supports_v2_p2p=supports_v2_p2p, reconnect=reconnect, **kwargs)()
 
+        if reconnect:
+            p2p_conn.wait_for_reconnect()
+
         if connection_type == "feeler":
             # feeler connections are closed as soon as the node receives a `version` message
             p2p_conn.wait_until(lambda: p2p_conn.message_count["version"] == 1, check_connected=False)

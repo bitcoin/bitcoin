@@ -590,6 +590,13 @@ class P2PInterface(P2PConnection):
         test_function = lambda: not self.is_connected
         self.wait_until(test_function, timeout=timeout, check_connected=False)
 
+    def wait_for_reconnect(self, timeout=60):
+        def test_function():
+            if not (self.is_connected and self.last_message.get('version') and self.v2_state is None):
+                return False
+            return True
+        self.wait_until(test_function, timeout=timeout, check_connected=False)
+
     # Message receiving helper methods
 
     def wait_for_tx(self, txid, timeout=60):

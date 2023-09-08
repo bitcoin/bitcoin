@@ -68,13 +68,19 @@ class P2PEncrypted(BitcoinTestFramework):
         assert not peer3.supports_v2_p2p
         assert_equal(node0.getpeerinfo()[-1]["transport_protocol_type"], "v1")
 
+        # v2 TestNode performs downgrading here
+        self.log.info("Check outbound connection from v2 TestNode to v1 P2PConnection advertised as v2 is v1")
+        peer4 = node0.add_outbound_p2p_connection(P2PInterface(), p2p_idx=1, supports_v2_p2p=False, advertise_v2_p2p=True)
+        assert not peer4.supports_v2_p2p
+        assert_equal(node0.getpeerinfo()[-1]["transport_protocol_type"], "v1")
+
         self.log.info("Check outbound connection from v2 TestNode to v2 P2PConnection advertised as v2 is v2")
         peer5 = node0.add_outbound_p2p_connection(P2PInterface(), p2p_idx=2, supports_v2_p2p=True, advertise_v2_p2p=True)
         assert peer5.supports_v2_p2p
         assert_equal(node0.getpeerinfo()[-1]["transport_protocol_type"], "v2")
 
         self.log.info("Check if version is sent and verack is received in inbound/outbound connections")
-        assert_equal(len(node0.getpeerinfo()), 4)  # check if above 4 connections are present in node0's getpeerinfo()
+        assert_equal(len(node0.getpeerinfo()), 5)  # check if above 5 connections are present in node0's getpeerinfo()
         for peer in node0.getpeerinfo():
             assert_greater_than(peer['bytessent_per_msg']['version'], 0)
             assert_greater_than(peer['bytesrecv_per_msg']['verack'], 0)
@@ -114,7 +120,7 @@ class P2PEncrypted(BitcoinTestFramework):
             self.disconnect_nodes(0, 1)
 
         self.log.info("Check the connections opened as expected")
-        check_node_connections(node=node0, num_in=4, num_out=2)
+        check_node_connections(node=node0, num_in=4, num_out=3)
 
         self.log.info("Check inbound connection to v1 TestNode from v2 P2PConnection is v1")
         self.restart_node(0, ["-v2transport=0"])
