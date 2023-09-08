@@ -157,13 +157,13 @@ public:
     //! Get the KeyID of this public key (hash of its serialization)
     CKeyID GetID() const
     {
-        return CKeyID(Hash160(vch, vch + size()));
+        return CKeyID(Hash160(MakeSpan(vch).first(size())));
     }
 
     //! Get the 256-bit hash of this public key.
     uint256 GetHash() const
     {
-        return Hash(vch, vch + size());
+        return Hash(MakeSpan(vch).first(size()));
     }
 
     /*

@@ -113,7 +113,7 @@ bool WalletBatch::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey,
     vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
     vchKey.insert(vchKey.end(), vchPrivKey.begin(), vchPrivKey.end());
 
-    return WriteIC(std::make_pair(DBKeys::KEY, vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey.begin(), vchKey.end())), false);
+    return WriteIC(std::make_pair(DBKeys::KEY, vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey)), false);
 }
 
 bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
@@ -125,7 +125,7 @@ bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
     }
 
     // Compute a checksum of the encrypted key
-    uint256 checksum = Hash(vchCryptedSecret.begin(), vchCryptedSecret.end());
+    uint256 checksum = Hash(vchCryptedSecret);
 
     const auto key = std::make_pair(DBKeys::CRYPTED_KEY, vchPubKey);
     if (!WriteIC(key, std::make_pair(vchCryptedSecret, checksum), false)) {
@@ -339,7 +339,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
                 vchKey.insert(vchKey.end(), pkey.begin(), pkey.end());
 
-                if (Hash(vchKey.begin(), vchKey.end()) != hash)
+                if (Hash(vchKey) != hash)
                 {
                     strErr = "Error reading wallet database: CPubKey/CPrivKey corrupt";
                     return false;
@@ -388,7 +388,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             if (!ssValue.eof()) {
                 uint256 checksum;
                 ssValue >> checksum;
-                if ((checksum_valid = Hash(vchPrivKey.begin(), vchPrivKey.end()) != checksum)) {
+                if ((checksum_valid = Hash(vchPrivKey) != checksum)) {
                     strErr = "Error reading wallet database: Crypted key corrupt";
                     return false;
                 }

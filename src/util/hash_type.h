@@ -64,6 +64,9 @@ public:
     {
         return m_hash.size();
     }
+
+    unsigned char* data() { return m_hash.data(); }
+    const unsigned char* data() const { return m_hash.data(); }
 };
 
 #endif // BITCOIN_UTIL_HASH_TYPE_H

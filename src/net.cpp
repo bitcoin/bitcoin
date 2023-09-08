@@ -850,7 +850,7 @@ std::optional<CNetMessage> V1TransportDeserializer::GetMessage(int64_t time, uin
 
 void V1TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) {
     // create dbl-sha256 checksum
-    uint256 hash = Hash(msg.data.begin(), msg.data.end());
+    uint256 hash = Hash(msg.data);
 
     // create header
     CMessageHeader hdr(Params().MessageStart(), msg.command.c_str(), msg.data.size());
