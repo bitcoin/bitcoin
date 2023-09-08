@@ -540,8 +540,8 @@ private:
     enum class SendState : uint8_t {
         /** (Responder only) Not sending until v1 or v2 is detected.
          *
-         * This is the initial state for responders. The send buffer contains the public key to
-         * send, but nothing is sent in this state yet. When the receiver determines whether this
+         * This is the initial state for responders. The send buffer is empty.
+         * When the receiver determines whether this
          * is a V1 or V2 connection, the sender state becomes AWAITING_KEY (for v2) or V1 (for v1).
          */
         MAYBE_V1,
@@ -601,6 +601,8 @@ private:
     std::vector<uint8_t> m_send_buffer GUARDED_BY(m_send_mutex);
     /** How many bytes from the send buffer have been sent so far. */
     uint32_t m_send_pos GUARDED_BY(m_send_mutex) {0};
+    /** The garbage sent, or to be sent (MAYBE_V1 and AWAITING_KEY state only). */
+    std::vector<uint8_t> m_send_garbage GUARDED_BY(m_send_mutex);
     /** Type of the message being sent. */
     std::string m_send_type GUARDED_BY(m_send_mutex);
     /** Current sender state. */
@@ -614,6 +616,8 @@ private:
     static std::optional<std::string> GetMessageType(Span<const uint8_t>& contents) noexcept;
     /** Determine how many received bytes can be processed in one go (not allowed in V1 state). */
     size_t GetMaxBytesToProcess() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
+    /** Put our public key + garbage in the send buffer. */
+    void StartSendingHandshake() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_send_mutex);
     /** Process bytes in m_recv_buffer, while in KEY_MAYBE_V1 state. */
     void ProcessReceivedMaybeV1Bytes() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex, !m_send_mutex);
     /** Process bytes in m_recv_buffer, while in KEY state. */
@@ -636,7 +640,7 @@ public:
     V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in) noexcept;
 
     /** Construct a V2 transport with specified keys and garbage (test use only). */
-    V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in, const CKey& key, Span<const std::byte> ent32, Span<const uint8_t> garbage) noexcept;
+    V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in, const CKey& key, Span<const std::byte> ent32, std::vector<uint8_t> garbage) noexcept;
 
     // Receive side functions.
     bool ReceivedMessageComplete() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
