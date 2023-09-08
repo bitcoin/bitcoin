@@ -979,22 +979,23 @@ public:
 
 const V2MessageMap V2_MESSAGE_MAP;
 
-} // namespace
-
-V2Transport::V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in) noexcept :
-    m_cipher{}, m_initiating{initiating}, m_nodeid{nodeid},
-    m_v1_fallback{nodeid, type_in, version_in}, m_recv_type{type_in}, m_recv_version{version_in},
-    m_recv_state{initiating ? RecvState::KEY : RecvState::KEY_MAYBE_V1},
-    m_send_state{initiating ? SendState::AWAITING_KEY : SendState::MAYBE_V1}
+CKey GenerateRandomKey() noexcept
 {
-    // Construct garbage (including its length) using a FastRandomContext.
-    FastRandomContext rng;
-    size_t garbage_len = rng.randrange(MAX_GARBAGE_LEN + 1);
-    // Initialize the send buffer with ellswift pubkey + garbage.
-    m_send_buffer.resize(EllSwiftPubKey::size() + garbage_len);
-    std::copy(std::begin(m_cipher.GetOurPubKey()), std::end(m_cipher.GetOurPubKey()), MakeWritableByteSpan(m_send_buffer).begin());
-    rng.fillrand(MakeWritableByteSpan(m_send_buffer).subspan(EllSwiftPubKey::size()));
+    CKey key;
+    key.MakeNewKey(/*fCompressed=*/true);
+    return key;
 }
+
+std::vector<uint8_t> GenerateRandomGarbage() noexcept
+{
+    std::vector<uint8_t> ret;
+    FastRandomContext rng;
+    ret.resize(rng.randrange(V2Transport::MAX_GARBAGE_LEN + 1));
+    rng.fillrand(MakeWritableByteSpan(ret));
+    return ret;
+}
+
+} // namespace
 
 V2Transport::V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in, const CKey& key, Span<const std::byte> ent32, Span<const uint8_t> garbage) noexcept :
     m_cipher{key, ent32}, m_initiating{initiating}, m_nodeid{nodeid},
@@ -1008,6 +1009,10 @@ V2Transport::V2Transport(NodeId nodeid, bool initiating, int type_in, int versio
     std::copy(std::begin(m_cipher.GetOurPubKey()), std::end(m_cipher.GetOurPubKey()), MakeWritableByteSpan(m_send_buffer).begin());
     std::copy(garbage.begin(), garbage.end(), m_send_buffer.begin() + EllSwiftPubKey::size());
 }
+
+V2Transport::V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in) noexcept :
+    V2Transport{nodeid, initiating, type_in, version_in, GenerateRandomKey(),
+                MakeByteSpan(GetRandHash()), GenerateRandomGarbage()} { }
 
 void V2Transport::SetReceiveState(RecvState recv_state) noexcept
 {
