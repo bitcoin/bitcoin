@@ -58,6 +58,16 @@ class P2PConnectionLimits(BitcoinTestFramework):
             self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False, expect_success=False)
         self.wait_until(lambda: len(node.getpeerinfo()) == 2)
 
+        self.log.info('Test different values of inboundrelaypercent')
+        self.restart_node(0, ['-maxconnections=13', '-inboundrelaypercent=0'])
+        with node.assert_debug_log(['failed to find a tx-relaying eviction candidate - connection dropped']):
+            self.nodes[0].add_p2p_connection(P2PInterface(), expect_success=False, wait_for_verack=False)
+
+        self.restart_node(0, ['-maxconnections=13', '-inboundrelaypercent=100'])
+        node.add_p2p_connection(P2PInterface())
+        node.add_p2p_connection(P2PInterface())
+        self.wait_until(lambda: len(node.getpeerinfo()) == 2)
+
 
 if __name__ == '__main__':
     P2PConnectionLimits(__file__).main()
