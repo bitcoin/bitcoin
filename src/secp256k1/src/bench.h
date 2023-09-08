@@ -7,15 +7,31 @@
 #ifndef SECP256K1_BENCH_H
 #define SECP256K1_BENCH_H
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "sys/time.h"
+
+#if (defined(_MSC_VER) && _MSC_VER >= 1900)
+#  include <time.h>
+#else
+#  include "sys/time.h"
+#endif
 
 static int64_t gettime_i64(void) {
+#if (defined(_MSC_VER) && _MSC_VER >= 1900)
+    /* C11 way to get wallclock time */
+    struct timespec tv;
+    if (!timespec_get(&tv, TIME_UTC)) {
+        fputs("timespec_get failed!", stderr);
+        exit(1);
+    }
+    return (int64_t)tv.tv_nsec / 1000 + (int64_t)tv.tv_sec * 1000000LL;
+#else
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (int64_t)tv.tv_usec + (int64_t)tv.tv_sec * 1000000LL;
+#endif
 }
 
 #define FP_EXP (6)

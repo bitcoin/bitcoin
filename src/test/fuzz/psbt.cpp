@@ -15,12 +15,7 @@
 #include <string>
 #include <vector>
 
-void initialize_psbt()
-{
-    static const ECCVerifyHandle verify_handle;
-}
-
-FUZZ_TARGET_INIT(psbt, initialize_psbt)
+FUZZ_TARGET(psbt)
 {
     PartiallySignedTransaction psbt_mut;
     const std::string raw_psbt{buffer.begin(), buffer.end()};

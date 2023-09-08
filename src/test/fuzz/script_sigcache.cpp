@@ -18,7 +18,6 @@
 
 void initialize_script_sigcache()
 {
-    static const ECCVerifyHandle ecc_verify_handle;
     ECC_Start();
     SelectParams(CBaseChainParams::REGTEST);
     InitSignatureCache();

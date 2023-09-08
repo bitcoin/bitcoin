@@ -22,7 +22,6 @@ static const unsigned int QUEUE_BATCH_SIZE = 128;
 // and there is a little bit of work done between calls to Add.
 static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
 {
-    const ECCVerifyHandle verify_handle;
     ECC_Start();
 
     struct PrevectorJob {

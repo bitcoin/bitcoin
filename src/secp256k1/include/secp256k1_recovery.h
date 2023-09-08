@@ -72,7 +72,7 @@ SECP256K1_API int secp256k1_ecdsa_recoverable_signature_serialize_compact(
  *
  *  Returns: 1: signature created
  *           0: the nonce generation function failed, or the secret key was invalid.
- *  Args:    ctx:       pointer to a context object, initialized for signing.
+ *  Args:    ctx:       pointer to a context object (not secp256k1_context_static).
  *  Out:     sig:       pointer to an array where the signature will be placed.
  *  In:      msghash32: the 32-byte message hash being signed.
  *           seckey:    pointer to a 32-byte secret key.
@@ -94,7 +94,7 @@ SECP256K1_API int secp256k1_ecdsa_sign_recoverable(
  *
  *  Returns: 1: public key successfully recovered (which guarantees a correct signature).
  *           0: otherwise.
- *  Args:    ctx:       pointer to a context object, initialized for verification.
+ *  Args:    ctx:       pointer to a context object.
  *  Out:     pubkey:    pointer to the recovered public key.
  *  In:      sig:       pointer to initialized signature that supports pubkey recovery.
  *           msghash32: the 32-byte message hash assumed to be signed.

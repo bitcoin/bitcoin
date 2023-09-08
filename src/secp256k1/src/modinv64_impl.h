@@ -7,9 +7,8 @@
 #ifndef SECP256K1_MODINV64_IMPL_H
 #define SECP256K1_MODINV64_IMPL_H
 
+#include "int128.h"
 #include "modinv64.h"
-
-#include "util.h"
 
 /* This file implements modular inversion based on the paper "Fast constant-time gcd computation and
  * modular inversion" by Daniel J. Bernstein and Bo-Yin Yang.
@@ -17,6 +16,15 @@
  * For an explanation of the algorithm, see doc/safegcd_implementation.md. This file contains an
  * implementation for N=62, using 62-bit signed limbs represented as int64_t.
  */
+
+/* Data type for transition matrices (see section 3 of explanation).
+ *
+ * t = [ u  v ]
+ *     [ q  r ]
+ */
+typedef struct {
+    int64_t u, v, q, r;
+} secp256k1_modinv64_trans2x2;
 
 #ifdef VERIFY
 /* Helper function to compute the absolute value of an int64_t.
@@ -32,15 +40,17 @@ static const secp256k1_modinv64_signed62 SECP256K1_SIGNED62_ONE = {{1}};
 /* Compute a*factor and put it in r. All but the top limb in r will be in range [0,2^62). */
 static void secp256k1_modinv64_mul_62(secp256k1_modinv64_signed62 *r, const secp256k1_modinv64_signed62 *a, int alen, int64_t factor) {
     const int64_t M62 = (int64_t)(UINT64_MAX >> 2);
-    int128_t c = 0;
+    secp256k1_int128 c, d;
     int i;
+    secp256k1_i128_from_i64(&c, 0);
     for (i = 0; i < 4; ++i) {
-        if (i < alen) c += (int128_t)a->v[i] * factor;
-        r->v[i] = (int64_t)c & M62; c >>= 62;
+        if (i < alen) secp256k1_i128_accum_mul(&c, a->v[i], factor);
+        r->v[i] = secp256k1_i128_to_i64(&c) & M62; secp256k1_i128_rshift(&c, 62);
     }
-    if (4 < alen) c += (int128_t)a->v[4] * factor;
-    VERIFY_CHECK(c == (int64_t)c);
-    r->v[4] = (int64_t)c;
+    if (4 < alen) secp256k1_i128_accum_mul(&c, a->v[4], factor);
+    secp256k1_i128_from_i64(&d, secp256k1_i128_to_i64(&c));
+    VERIFY_CHECK(secp256k1_i128_eq_var(&c, &d));
+    r->v[4] = secp256k1_i128_to_i64(&c);
 }
 
 /* Return -1 for a<b*factor, 0 for a==b*factor, 1 for a>b*factor. A has alen limbs; b has 5. */
@@ -59,6 +69,13 @@ static int secp256k1_modinv64_mul_cmp_62(const secp256k1_modinv64_signed62 *a, i
         if (am.v[i] > bm.v[i]) return 1;
     }
     return 0;
+}
+
+/* Check if the determinant of t is equal to 1 << n. */
+static int secp256k1_modinv64_det_check_pow2(const secp256k1_modinv64_trans2x2 *t, unsigned int n) {
+    secp256k1_int128 a;
+    secp256k1_i128_det(&a, t->u, t->v, t->q, t->r);
+    return secp256k1_i128_check_pow2(&a, n);
 }
 #endif
 
@@ -136,15 +153,6 @@ static void secp256k1_modinv64_normalize_62(secp256k1_modinv64_signed62 *r, int6
 #endif
 }
 
-/* Data type for transition matrices (see section 3 of explanation).
- *
- * t = [ u  v ]
- *     [ q  r ]
- */
-typedef struct {
-    int64_t u, v, q, r;
-} secp256k1_modinv64_trans2x2;
-
 /* Compute the transition matrix and eta for 59 divsteps (where zeta=-(delta+1/2)).
  * Note that the transformation matrix is scaled by 2^62 and not 2^59.
  *
@@ -203,13 +211,15 @@ static int64_t secp256k1_modinv64_divsteps_59(int64_t zeta, uint64_t f0, uint64_
     t->v = (int64_t)v;
     t->q = (int64_t)q;
     t->r = (int64_t)r;
+#ifdef VERIFY
     /* The determinant of t must be a power of two. This guarantees that multiplication with t
      * does not change the gcd of f and g, apart from adding a power-of-2 factor to it (which
      * will be divided out again). As each divstep's individual matrix has determinant 2, the
      * aggregate of 59 of them will have determinant 2^59. Multiplying with the initial
      * 8*identity (which has determinant 2^6) means the overall outputs has determinant
      * 2^65. */
-    VERIFY_CHECK((int128_t)t->u * t->r - (int128_t)t->v * t->q == ((int128_t)1) << 65);
+    VERIFY_CHECK(secp256k1_modinv64_det_check_pow2(t, 65));
+#endif
     return zeta;
 }
 
@@ -286,11 +296,13 @@ static int64_t secp256k1_modinv64_divsteps_62_var(int64_t eta, uint64_t f0, uint
     t->v = (int64_t)v;
     t->q = (int64_t)q;
     t->r = (int64_t)r;
+#ifdef VERIFY
     /* The determinant of t must be a power of two. This guarantees that multiplication with t
      * does not change the gcd of f and g, apart from adding a power-of-2 factor to it (which
      * will be divided out again). As each divstep's individual matrix has determinant 2, the
      * aggregate of 62 of them will have determinant 2^62. */
-    VERIFY_CHECK((int128_t)t->u * t->r - (int128_t)t->v * t->q == ((int128_t)1) << 62);
+    VERIFY_CHECK(secp256k1_modinv64_det_check_pow2(t, 62));
+#endif
     return eta;
 }
 
@@ -307,7 +319,7 @@ static void secp256k1_modinv64_update_de_62(secp256k1_modinv64_signed62 *d, secp
     const int64_t e0 = e->v[0], e1 = e->v[1], e2 = e->v[2], e3 = e->v[3], e4 = e->v[4];
     const int64_t u = t->u, v = t->v, q = t->q, r = t->r;
     int64_t md, me, sd, se;
-    int128_t cd, ce;
+    secp256k1_int128 cd, ce;
 #ifdef VERIFY
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(d, 5, &modinfo->modulus, -2) > 0); /* d > -2*modulus */
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(d, 5, &modinfo->modulus, 1) < 0);  /* d <    modulus */
@@ -324,54 +336,64 @@ static void secp256k1_modinv64_update_de_62(secp256k1_modinv64_signed62 *d, secp
     md = (u & sd) + (v & se);
     me = (q & sd) + (r & se);
     /* Begin computing t*[d,e]. */
-    cd = (int128_t)u * d0 + (int128_t)v * e0;
-    ce = (int128_t)q * d0 + (int128_t)r * e0;
+    secp256k1_i128_mul(&cd, u, d0);
+    secp256k1_i128_accum_mul(&cd, v, e0);
+    secp256k1_i128_mul(&ce, q, d0);
+    secp256k1_i128_accum_mul(&ce, r, e0);
     /* Correct md,me so that t*[d,e]+modulus*[md,me] has 62 zero bottom bits. */
-    md -= (modinfo->modulus_inv62 * (uint64_t)cd + md) & M62;
-    me -= (modinfo->modulus_inv62 * (uint64_t)ce + me) & M62;
+    md -= (modinfo->modulus_inv62 * (uint64_t)secp256k1_i128_to_i64(&cd) + md) & M62;
+    me -= (modinfo->modulus_inv62 * (uint64_t)secp256k1_i128_to_i64(&ce) + me) & M62;
     /* Update the beginning of computation for t*[d,e]+modulus*[md,me] now md,me are known. */
-    cd += (int128_t)modinfo->modulus.v[0] * md;
-    ce += (int128_t)modinfo->modulus.v[0] * me;
+    secp256k1_i128_accum_mul(&cd, modinfo->modulus.v[0], md);
+    secp256k1_i128_accum_mul(&ce, modinfo->modulus.v[0], me);
     /* Verify that the low 62 bits of the computation are indeed zero, and then throw them away. */
-    VERIFY_CHECK(((int64_t)cd & M62) == 0); cd >>= 62;
-    VERIFY_CHECK(((int64_t)ce & M62) == 0); ce >>= 62;
+    VERIFY_CHECK((secp256k1_i128_to_i64(&cd) & M62) == 0); secp256k1_i128_rshift(&cd, 62);
+    VERIFY_CHECK((secp256k1_i128_to_i64(&ce) & M62) == 0); secp256k1_i128_rshift(&ce, 62);
     /* Compute limb 1 of t*[d,e]+modulus*[md,me], and store it as output limb 0 (= down shift). */
-    cd += (int128_t)u * d1 + (int128_t)v * e1;
-    ce += (int128_t)q * d1 + (int128_t)r * e1;
+    secp256k1_i128_accum_mul(&cd, u, d1);
+    secp256k1_i128_accum_mul(&cd, v, e1);
+    secp256k1_i128_accum_mul(&ce, q, d1);
+    secp256k1_i128_accum_mul(&ce, r, e1);
     if (modinfo->modulus.v[1]) { /* Optimize for the case where limb of modulus is zero. */
-        cd += (int128_t)modinfo->modulus.v[1] * md;
-        ce += (int128_t)modinfo->modulus.v[1] * me;
+        secp256k1_i128_accum_mul(&cd, modinfo->modulus.v[1], md);
+        secp256k1_i128_accum_mul(&ce, modinfo->modulus.v[1], me);
     }
-    d->v[0] = (int64_t)cd & M62; cd >>= 62;
-    e->v[0] = (int64_t)ce & M62; ce >>= 62;
+    d->v[0] = secp256k1_i128_to_i64(&cd) & M62; secp256k1_i128_rshift(&cd, 62);
+    e->v[0] = secp256k1_i128_to_i64(&ce) & M62; secp256k1_i128_rshift(&ce, 62);
     /* Compute limb 2 of t*[d,e]+modulus*[md,me], and store it as output limb 1. */
-    cd += (int128_t)u * d2 + (int128_t)v * e2;
-    ce += (int128_t)q * d2 + (int128_t)r * e2;
+    secp256k1_i128_accum_mul(&cd, u, d2);
+    secp256k1_i128_accum_mul(&cd, v, e2);
+    secp256k1_i128_accum_mul(&ce, q, d2);
+    secp256k1_i128_accum_mul(&ce, r, e2);
     if (modinfo->modulus.v[2]) { /* Optimize for the case where limb of modulus is zero. */
-        cd += (int128_t)modinfo->modulus.v[2] * md;
-        ce += (int128_t)modinfo->modulus.v[2] * me;
+        secp256k1_i128_accum_mul(&cd, modinfo->modulus.v[2], md);
+        secp256k1_i128_accum_mul(&ce, modinfo->modulus.v[2], me);
     }
-    d->v[1] = (int64_t)cd & M62; cd >>= 62;
-    e->v[1] = (int64_t)ce & M62; ce >>= 62;
+    d->v[1] = secp256k1_i128_to_i64(&cd) & M62; secp256k1_i128_rshift(&cd, 62);
+    e->v[1] = secp256k1_i128_to_i64(&ce) & M62; secp256k1_i128_rshift(&ce, 62);
     /* Compute limb 3 of t*[d,e]+modulus*[md,me], and store it as output limb 2. */
-    cd += (int128_t)u * d3 + (int128_t)v * e3;
-    ce += (int128_t)q * d3 + (int128_t)r * e3;
+    secp256k1_i128_accum_mul(&cd, u, d3);
+    secp256k1_i128_accum_mul(&cd, v, e3);
+    secp256k1_i128_accum_mul(&ce, q, d3);
+    secp256k1_i128_accum_mul(&ce, r, e3);
     if (modinfo->modulus.v[3]) { /* Optimize for the case where limb of modulus is zero. */
-        cd += (int128_t)modinfo->modulus.v[3] * md;
-        ce += (int128_t)modinfo->modulus.v[3] * me;
+        secp256k1_i128_accum_mul(&cd, modinfo->modulus.v[3], md);
+        secp256k1_i128_accum_mul(&ce, modinfo->modulus.v[3], me);
     }
-    d->v[2] = (int64_t)cd & M62; cd >>= 62;
-    e->v[2] = (int64_t)ce & M62; ce >>= 62;
+    d->v[2] = secp256k1_i128_to_i64(&cd) & M62; secp256k1_i128_rshift(&cd, 62);
+    e->v[2] = secp256k1_i128_to_i64(&ce) & M62; secp256k1_i128_rshift(&ce, 62);
     /* Compute limb 4 of t*[d,e]+modulus*[md,me], and store it as output limb 3. */
-    cd += (int128_t)u * d4 + (int128_t)v * e4;
-    ce += (int128_t)q * d4 + (int128_t)r * e4;
-    cd += (int128_t)modinfo->modulus.v[4] * md;
-    ce += (int128_t)modinfo->modulus.v[4] * me;
-    d->v[3] = (int64_t)cd & M62; cd >>= 62;
-    e->v[3] = (int64_t)ce & M62; ce >>= 62;
+    secp256k1_i128_accum_mul(&cd, u, d4);
+    secp256k1_i128_accum_mul(&cd, v, e4);
+    secp256k1_i128_accum_mul(&ce, q, d4);
+    secp256k1_i128_accum_mul(&ce, r, e4);
+    secp256k1_i128_accum_mul(&cd, modinfo->modulus.v[4], md);
+    secp256k1_i128_accum_mul(&ce, modinfo->modulus.v[4], me);
+    d->v[3] = secp256k1_i128_to_i64(&cd) & M62; secp256k1_i128_rshift(&cd, 62);
+    e->v[3] = secp256k1_i128_to_i64(&ce) & M62; secp256k1_i128_rshift(&ce, 62);
     /* What remains is limb 5 of t*[d,e]+modulus*[md,me]; store it as output limb 4. */
-    d->v[4] = (int64_t)cd;
-    e->v[4] = (int64_t)ce;
+    d->v[4] = secp256k1_i128_to_i64(&cd);
+    e->v[4] = secp256k1_i128_to_i64(&ce);
 #ifdef VERIFY
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(d, 5, &modinfo->modulus, -2) > 0); /* d > -2*modulus */
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(d, 5, &modinfo->modulus, 1) < 0);  /* d <    modulus */
@@ -389,36 +411,46 @@ static void secp256k1_modinv64_update_fg_62(secp256k1_modinv64_signed62 *f, secp
     const int64_t f0 = f->v[0], f1 = f->v[1], f2 = f->v[2], f3 = f->v[3], f4 = f->v[4];
     const int64_t g0 = g->v[0], g1 = g->v[1], g2 = g->v[2], g3 = g->v[3], g4 = g->v[4];
     const int64_t u = t->u, v = t->v, q = t->q, r = t->r;
-    int128_t cf, cg;
+    secp256k1_int128 cf, cg;
     /* Start computing t*[f,g]. */
-    cf = (int128_t)u * f0 + (int128_t)v * g0;
-    cg = (int128_t)q * f0 + (int128_t)r * g0;
+    secp256k1_i128_mul(&cf, u, f0);
+    secp256k1_i128_accum_mul(&cf, v, g0);
+    secp256k1_i128_mul(&cg, q, f0);
+    secp256k1_i128_accum_mul(&cg, r, g0);
     /* Verify that the bottom 62 bits of the result are zero, and then throw them away. */
-    VERIFY_CHECK(((int64_t)cf & M62) == 0); cf >>= 62;
-    VERIFY_CHECK(((int64_t)cg & M62) == 0); cg >>= 62;
+    VERIFY_CHECK((secp256k1_i128_to_i64(&cf) & M62) == 0); secp256k1_i128_rshift(&cf, 62);
+    VERIFY_CHECK((secp256k1_i128_to_i64(&cg) & M62) == 0); secp256k1_i128_rshift(&cg, 62);
     /* Compute limb 1 of t*[f,g], and store it as output limb 0 (= down shift). */
-    cf += (int128_t)u * f1 + (int128_t)v * g1;
-    cg += (int128_t)q * f1 + (int128_t)r * g1;
-    f->v[0] = (int64_t)cf & M62; cf >>= 62;
-    g->v[0] = (int64_t)cg & M62; cg >>= 62;
+    secp256k1_i128_accum_mul(&cf, u, f1);
+    secp256k1_i128_accum_mul(&cf, v, g1);
+    secp256k1_i128_accum_mul(&cg, q, f1);
+    secp256k1_i128_accum_mul(&cg, r, g1);
+    f->v[0] = secp256k1_i128_to_i64(&cf) & M62; secp256k1_i128_rshift(&cf, 62);
+    g->v[0] = secp256k1_i128_to_i64(&cg) & M62; secp256k1_i128_rshift(&cg, 62);
     /* Compute limb 2 of t*[f,g], and store it as output limb 1. */
-    cf += (int128_t)u * f2 + (int128_t)v * g2;
-    cg += (int128_t)q * f2 + (int128_t)r * g2;
-    f->v[1] = (int64_t)cf & M62; cf >>= 62;
-    g->v[1] = (int64_t)cg & M62; cg >>= 62;
+    secp256k1_i128_accum_mul(&cf, u, f2);
+    secp256k1_i128_accum_mul(&cf, v, g2);
+    secp256k1_i128_accum_mul(&cg, q, f2);
+    secp256k1_i128_accum_mul(&cg, r, g2);
+    f->v[1] = secp256k1_i128_to_i64(&cf) & M62; secp256k1_i128_rshift(&cf, 62);
+    g->v[1] = secp256k1_i128_to_i64(&cg) & M62; secp256k1_i128_rshift(&cg, 62);
     /* Compute limb 3 of t*[f,g], and store it as output limb 2. */
-    cf += (int128_t)u * f3 + (int128_t)v * g3;
-    cg += (int128_t)q * f3 + (int128_t)r * g3;
-    f->v[2] = (int64_t)cf & M62; cf >>= 62;
-    g->v[2] = (int64_t)cg & M62; cg >>= 62;
+    secp256k1_i128_accum_mul(&cf, u, f3);
+    secp256k1_i128_accum_mul(&cf, v, g3);
+    secp256k1_i128_accum_mul(&cg, q, f3);
+    secp256k1_i128_accum_mul(&cg, r, g3);
+    f->v[2] = secp256k1_i128_to_i64(&cf) & M62; secp256k1_i128_rshift(&cf, 62);
+    g->v[2] = secp256k1_i128_to_i64(&cg) & M62; secp256k1_i128_rshift(&cg, 62);
     /* Compute limb 4 of t*[f,g], and store it as output limb 3. */
-    cf += (int128_t)u * f4 + (int128_t)v * g4;
-    cg += (int128_t)q * f4 + (int128_t)r * g4;
-    f->v[3] = (int64_t)cf & M62; cf >>= 62;
-    g->v[3] = (int64_t)cg & M62; cg >>= 62;
+    secp256k1_i128_accum_mul(&cf, u, f4);
+    secp256k1_i128_accum_mul(&cf, v, g4);
+    secp256k1_i128_accum_mul(&cg, q, f4);
+    secp256k1_i128_accum_mul(&cg, r, g4);
+    f->v[3] = secp256k1_i128_to_i64(&cf) & M62; secp256k1_i128_rshift(&cf, 62);
+    g->v[3] = secp256k1_i128_to_i64(&cg) & M62; secp256k1_i128_rshift(&cg, 62);
     /* What remains is limb 5 of t*[f,g]; store it as output limb 4. */
-    f->v[4] = (int64_t)cf;
-    g->v[4] = (int64_t)cg;
+    f->v[4] = secp256k1_i128_to_i64(&cf);
+    g->v[4] = secp256k1_i128_to_i64(&cg);
 }
 
 /* Compute (t/2^62) * [f, g], where t is a transition matrix for 62 divsteps.
@@ -431,30 +463,34 @@ static void secp256k1_modinv64_update_fg_62_var(int len, secp256k1_modinv64_sign
     const int64_t M62 = (int64_t)(UINT64_MAX >> 2);
     const int64_t u = t->u, v = t->v, q = t->q, r = t->r;
     int64_t fi, gi;
-    int128_t cf, cg;
+    secp256k1_int128 cf, cg;
     int i;
     VERIFY_CHECK(len > 0);
     /* Start computing t*[f,g]. */
     fi = f->v[0];
     gi = g->v[0];
-    cf = (int128_t)u * fi + (int128_t)v * gi;
-    cg = (int128_t)q * fi + (int128_t)r * gi;
+    secp256k1_i128_mul(&cf, u, fi);
+    secp256k1_i128_accum_mul(&cf, v, gi);
+    secp256k1_i128_mul(&cg, q, fi);
+    secp256k1_i128_accum_mul(&cg, r, gi);
     /* Verify that the bottom 62 bits of the result are zero, and then throw them away. */
-    VERIFY_CHECK(((int64_t)cf & M62) == 0); cf >>= 62;
-    VERIFY_CHECK(((int64_t)cg & M62) == 0); cg >>= 62;
+    VERIFY_CHECK((secp256k1_i128_to_i64(&cf) & M62) == 0); secp256k1_i128_rshift(&cf, 62);
+    VERIFY_CHECK((secp256k1_i128_to_i64(&cg) & M62) == 0); secp256k1_i128_rshift(&cg, 62);
     /* Now iteratively compute limb i=1..len of t*[f,g], and store them in output limb i-1 (shifting
      * down by 62 bits). */
     for (i = 1; i < len; ++i) {
         fi = f->v[i];
         gi = g->v[i];
-        cf += (int128_t)u * fi + (int128_t)v * gi;
-        cg += (int128_t)q * fi + (int128_t)r * gi;
-        f->v[i - 1] = (int64_t)cf & M62; cf >>= 62;
-        g->v[i - 1] = (int64_t)cg & M62; cg >>= 62;
+        secp256k1_i128_accum_mul(&cf, u, fi);
+        secp256k1_i128_accum_mul(&cf, v, gi);
+        secp256k1_i128_accum_mul(&cg, q, fi);
+        secp256k1_i128_accum_mul(&cg, r, gi);
+        f->v[i - 1] = secp256k1_i128_to_i64(&cf) & M62; secp256k1_i128_rshift(&cf, 62);
+        g->v[i - 1] = secp256k1_i128_to_i64(&cg) & M62; secp256k1_i128_rshift(&cg, 62);
     }
     /* What remains is limb (len) of t*[f,g]; store it as output limb (len-1). */
-    f->v[len - 1] = (int64_t)cf;
-    g->v[len - 1] = (int64_t)cg;
+    f->v[len - 1] = secp256k1_i128_to_i64(&cf);
+    g->v[len - 1] = secp256k1_i128_to_i64(&cg);
 }
 
 /* Compute the inverse of x modulo modinfo->modulus, and replace x with it (constant time in x). */

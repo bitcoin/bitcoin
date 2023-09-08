@@ -10,6 +10,7 @@ AC_MSG_RESULT([$has_64bit_asm])
 ])
 
 AC_DEFUN([SECP_VALGRIND_CHECK],[
+AC_MSG_CHECKING([for valgrind support])
 if test x"$has_valgrind" != x"yes"; then
   CPPFLAGS_TEMP="$CPPFLAGS"
   CPPFLAGS="$VALGRIND_CPPFLAGS $CPPFLAGS"
@@ -21,6 +22,7 @@ if test x"$has_valgrind" != x"yes"; then
     #endif
   ]])], [has_valgrind=yes; AC_DEFINE(HAVE_VALGRIND,1,[Define this symbol if valgrind is installed, and it supports the host platform])])
 fi
+AC_MSG_RESULT($has_valgrind)
 ])
 
 dnl SECP_TRY_APPEND_CFLAGS(flags, VAR)

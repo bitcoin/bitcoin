@@ -230,7 +230,7 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool gr
     secp256k1_pubkey pk;
     ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pk, begin());
     assert(ret);
-    ret = secp256k1_ecdsa_verify(GetVerifyContext(), &sig, hash.begin(), &pk);
+    ret = secp256k1_ecdsa_verify(secp256k1_context_static, &sig, hash.begin(), &pk);
     assert(ret);
     return true;
 }
@@ -265,9 +265,9 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
     secp256k1_pubkey epk, rpk;
     ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &epk, begin());
     assert(ret);
-    ret = secp256k1_ecdsa_recover(GetVerifyContext(), &rpk, &rsig, hash.begin());
+    ret = secp256k1_ecdsa_recover(secp256k1_context_static, &rpk, &rsig, hash.begin());
     assert(ret);
-    ret = secp256k1_ec_pubkey_cmp(GetVerifyContext(), &epk, &rpk);
+    ret = secp256k1_ec_pubkey_cmp(secp256k1_context_static, &epk, &rpk);
     assert(ret == 0);
     return true;
 }
@@ -362,7 +362,7 @@ bool ECC_InitSanityCheck() {
 void ECC_Start() {
     assert(secp256k1_context_sign == nullptr);
 
-    secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+    secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
     assert(ctx != nullptr);
 
     {

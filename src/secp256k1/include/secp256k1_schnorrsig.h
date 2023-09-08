@@ -106,7 +106,7 @@ typedef struct {
  *  signatures from being valid in multiple contexts by accident.
  *
  *  Returns 1 on success, 0 on failure.
- *  Args:    ctx: pointer to a context object, initialized for signing.
+ *  Args:    ctx: pointer to a context object (not secp256k1_context_static).
  *  Out:   sig64: pointer to a 64-byte array to store the serialized signature.
  *  In:    msg32: the 32-byte message being signed.
  *       keypair: pointer to an initialized keypair.
@@ -161,7 +161,7 @@ SECP256K1_API int secp256k1_schnorrsig_sign_custom(
  *
  *  Returns: 1: correct signature
  *           0: incorrect signature
- *  Args:    ctx: a secp256k1 context object, initialized for verification.
+ *  Args:    ctx: a secp256k1 context object.
  *  In:    sig64: pointer to the 64-byte signature to verify.
  *           msg: the message being verified. Can only be NULL if msglen is 0.
  *        msglen: length of the message

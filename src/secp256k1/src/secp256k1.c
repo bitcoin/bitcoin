@@ -4,6 +4,17 @@
  * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
  ***********************************************************************/
 
+/* This is a C project. It should not be compiled with a C++ compiler,
+ * and we error out if we detect one.
+ *
+ * We still want to be able to test the project with a C++ compiler
+ * because it is still good to know if this will lead to real trouble, so
+ * there is a possibility to override the check. But be warned that
+ * compiling with a C++ compiler is not supported. */
+#if defined(__cplusplus) && !defined(SECP256K1_CPLUSPLUS_TEST_OVERRIDE)
+#error Trying to compile a C project with a C++ compiler.
+#endif
+
 #define SECP256K1_BUILD
 
 #include "../include/secp256k1.h"
@@ -11,6 +22,7 @@
 
 #include "assumptions.h"
 #include "util.h"
+
 #include "field_impl.h"
 #include "scalar_impl.h"
 #include "group_impl.h"
@@ -20,6 +32,7 @@
 #include "ecdsa_impl.h"
 #include "eckey_impl.h"
 #include "hash_impl.h"
+#include "int128_impl.h"
 #include "scratch_impl.h"
 #include "selftest.h"
 
@@ -44,6 +57,8 @@
     } \
 } while(0)
 
+/* Note that whenever you change the context struct, you must also change the
+ * context_eq function. */
 struct secp256k1_context_struct {
     secp256k1_ecmult_gen_context ecmult_gen_ctx;
     secp256k1_callback illegal_callback;
@@ -51,13 +66,20 @@ struct secp256k1_context_struct {
     int declassify;
 };
 
-static const secp256k1_context secp256k1_context_no_precomp_ = {
+static const secp256k1_context secp256k1_context_static_ = {
     { 0 },
     { secp256k1_default_illegal_callback_fn, 0 },
     { secp256k1_default_error_callback_fn, 0 },
     0
 };
-const secp256k1_context *secp256k1_context_no_precomp = &secp256k1_context_no_precomp_;
+const secp256k1_context *secp256k1_context_static = &secp256k1_context_static_;
+const secp256k1_context *secp256k1_context_no_precomp = &secp256k1_context_static_;
+
+void secp256k1_selftest(void) {
+    if (!secp256k1_selftest_passes()) {
+        secp256k1_callback_call(&default_error_callback, "self test failed");
+    }
+}
 
 size_t secp256k1_context_preallocated_size(unsigned int flags) {
     size_t ret = sizeof(secp256k1_context);
@@ -83,9 +105,7 @@ secp256k1_context* secp256k1_context_preallocated_create(void* prealloc, unsigne
     size_t prealloc_size;
     secp256k1_context* ret;
 
-    if (!secp256k1_selftest()) {
-        secp256k1_callback_call(&default_error_callback, "self test failed");
-    }
+    secp256k1_selftest();
 
     prealloc_size = secp256k1_context_preallocated_size(flags);
     if (prealloc_size == 0) {
@@ -137,7 +157,7 @@ secp256k1_context* secp256k1_context_clone(const secp256k1_context* ctx) {
 }
 
 void secp256k1_context_preallocated_destroy(secp256k1_context* ctx) {
-    ARG_CHECK_NO_RETURN(ctx != secp256k1_context_no_precomp);
+    ARG_CHECK_NO_RETURN(ctx != secp256k1_context_static);
     if (ctx != NULL) {
         secp256k1_ecmult_gen_context_clear(&ctx->ecmult_gen_ctx);
     }
@@ -151,7 +171,7 @@ void secp256k1_context_destroy(secp256k1_context* ctx) {
 }
 
 void secp256k1_context_set_illegal_callback(secp256k1_context* ctx, void (*fun)(const char* message, void* data), const void* data) {
-    ARG_CHECK_NO_RETURN(ctx != secp256k1_context_no_precomp);
+    ARG_CHECK_NO_RETURN(ctx != secp256k1_context_static);
     if (fun == NULL) {
         fun = secp256k1_default_illegal_callback_fn;
     }
@@ -160,7 +180,7 @@ void secp256k1_context_set_illegal_callback(secp256k1_context* ctx, void (*fun)(
 }
 
 void secp256k1_context_set_error_callback(secp256k1_context* ctx, void (*fun)(const char* message, void* data), const void* data) {
-    ARG_CHECK_NO_RETURN(ctx != secp256k1_context_no_precomp);
+    ARG_CHECK_NO_RETURN(ctx != secp256k1_context_static);
     if (fun == NULL) {
         fun = secp256k1_default_error_callback_fn;
     }

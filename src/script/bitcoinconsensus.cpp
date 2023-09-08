@@ -59,12 +59,6 @@ inline int set_error(dashconsensus_error* ret, dashconsensus_error serror)
     return 0;
 }
 
-struct ECCryptoClosure
-{
-    ECCVerifyHandle handle;
-};
-
-ECCryptoClosure instance_of_eccryptoclosure;
 } // namespace
 
 /** Check that all specified flags are part of the libconsensus interface. */

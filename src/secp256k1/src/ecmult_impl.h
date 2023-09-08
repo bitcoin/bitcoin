@@ -200,9 +200,15 @@ static int secp256k1_ecmult_wnaf(int *wnaf, int len, const secp256k1_scalar *a, 
         bit += now;
     }
 #ifdef VERIFY
-    CHECK(carry == 0);
-    while (bit < 256) {
-        CHECK(secp256k1_scalar_get_bits(&s, bit++, 1) == 0);
+    {
+        int verify_bit = bit;
+
+        VERIFY_CHECK(carry == 0);
+
+        while (verify_bit < 256) {
+            VERIFY_CHECK(secp256k1_scalar_get_bits(&s, verify_bit, 1) == 0);
+            verify_bit++;
+        }
     }
 #endif
     return last_set_bit + 1;

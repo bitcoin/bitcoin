@@ -342,15 +342,15 @@ void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_ge *grou
 }
 
 #ifdef ENABLE_MODULE_RECOVERY
-#include "src/modules/recovery/tests_exhaustive_impl.h"
+#include "modules/recovery/tests_exhaustive_impl.h"
 #endif
 
 #ifdef ENABLE_MODULE_EXTRAKEYS
-#include "src/modules/extrakeys/tests_exhaustive_impl.h"
+#include "modules/extrakeys/tests_exhaustive_impl.h"
 #endif
 
 #ifdef ENABLE_MODULE_SCHNORRSIG
-#include "src/modules/schnorrsig/tests_exhaustive_impl.h"
+#include "modules/schnorrsig/tests_exhaustive_impl.h"
 #endif
 
 int main(int argc, char** argv) {
@@ -396,7 +396,7 @@ int main(int argc, char** argv) {
 
     while (count--) {
         /* Build context */
-        ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+        ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
         secp256k1_testrand256(rand32);
         CHECK(secp256k1_context_randomize(ctx, rand32));
 
