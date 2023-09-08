@@ -864,6 +864,7 @@ void BitcoinGUI::createTrayIconMenu()
     // Note: On macOS, the Dock icon is used to provide the tray's functionality.
     MacDockIconHandler* dockIconHandler = MacDockIconHandler::instance();
     connect(dockIconHandler, &MacDockIconHandler::dockIconClicked, [this] {
+        if (m_node.shutdownRequested()) return; // nothing to show, node is shutting down.
         show();
         activateWindow();
     });
@@ -875,6 +876,8 @@ void BitcoinGUI::createTrayIconMenu()
         // See https://bugreports.qt.io/browse/QTBUG-91697
         trayIconMenu.get(), &QMenu::aboutToShow,
         [this, show_hide_action, send_action, receive_action, sign_action, verify_action, options_action, node_window_action, quit_action] {
+            if (m_node.shutdownRequested()) return; // nothing to do, node is shutting down.
+
             if (show_hide_action) show_hide_action->setText(
                 (!isHidden() && !isMinimized() && !GUIUtil::isObscured(this)) ?
                     tr("&Hide") :
