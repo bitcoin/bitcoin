@@ -4,23 +4,27 @@
 
 #include <bloom.h>
 
-#include <primitives/transaction.h>
 #include <evo/assetlocktx.h>
-#include <evo/specialtx.h>
 #include <evo/providertx.h>
-#include <logging.h>
+#include <evo/specialtx.h>
 #include <hash.h>
+#include <logging.h>
+#include <primitives/transaction.h>
+#include <random.h>
 #include <script/script.h>
 #include <script/standard.h>
-#include <random.h>
+#include <span.h>
 #include <streams.h>
 #include <util/fastrange.h>
 
-#include <math.h>
-#include <stdlib.h>
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <limits>
+#include <vector>
 
-#define LN2SQUARED 0.4804530139182014246671025263266649717305529515945455
-#define LN2 0.6931471805599453094172321214581765680755001343602552
+static constexpr double LN2SQUARED = 0.4804530139182014246671025263266649717305529515945455;
+static constexpr double LN2 = 0.6931471805599453094172321214581765680755001343602552;
 
 CBloomFilter::CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweakIn, unsigned char nFlagsIn) :
     /**
@@ -40,13 +44,13 @@ CBloomFilter::CBloomFilter(const unsigned int nElements, const double nFPRate, c
 {
 }
 
-inline unsigned int CBloomFilter::Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const
+inline unsigned int CBloomFilter::Hash(unsigned int nHashNum, Span<const unsigned char> vDataToHash) const
 {
     // 0xFBA4C795 chosen as it guarantees a reasonable bit difference between nHashNum values.
     return MurmurHash3(nHashNum * 0xFBA4C795 + nTweak, vDataToHash) % (vData.size() * 8);
 }
 
-void CBloomFilter::insert(const std::vector<unsigned char>& vKey)
+void CBloomFilter::insert(Span<const unsigned char> vKey)
 {
     if (vData.empty()) // Avoid divide-by-zero (CVE-2013-5700)
         return;
@@ -62,17 +66,10 @@ void CBloomFilter::insert(const COutPoint& outpoint)
 {
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << outpoint;
-    std::vector<unsigned char> data(stream.begin(), stream.end());
-    insert(data);
+    insert(stream);
 }
 
-void CBloomFilter::insert(const uint256& hash)
-{
-    std::vector<unsigned char> data(hash.begin(), hash.end());
-    insert(data);
-}
-
-bool CBloomFilter::contains(const std::vector<unsigned char>& vKey) const
+bool CBloomFilter::contains(Span<const unsigned char> vKey) const
 {
     if (vData.empty()) // Avoid divide-by-zero (CVE-2013-5700)
         return true;
@@ -90,20 +87,7 @@ bool CBloomFilter::contains(const COutPoint& outpoint) const
 {
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << outpoint;
-    std::vector<unsigned char> data(stream.begin(), stream.end());
-    return contains(data);
-}
-
-bool CBloomFilter::contains(const uint256& hash) const
-{
-    std::vector<unsigned char> data(hash.begin(), hash.end());
-    return contains(data);
-}
-
-bool CBloomFilter::contains(const uint160& hash) const
-{
-    std::vector<unsigned char> data(hash.begin(), hash.end());
-    return contains(data);
+    return contains(MakeUCharSpan(stream));
 }
 
 bool CBloomFilter::IsWithinSizeConstraints() const
@@ -304,11 +288,12 @@ CRollingBloomFilter::CRollingBloomFilter(const unsigned int nElements, const dou
 }
 
 /* Similar to CBloomFilter::Hash */
-static inline uint32_t RollingBloomHash(unsigned int nHashNum, uint32_t nTweak, const std::vector<unsigned char>& vDataToHash) {
+static inline uint32_t RollingBloomHash(unsigned int nHashNum, uint32_t nTweak, Span<const unsigned char> vDataToHash)
+{
     return MurmurHash3(nHashNum * 0xFBA4C795 + nTweak, vDataToHash);
 }
 
-void CRollingBloomFilter::insert(const std::vector<unsigned char>& vKey)
+void CRollingBloomFilter::insert(Span<const unsigned char> vKey)
 {
     if (nEntriesThisGeneration == nEntriesPerGeneration) {
         nEntriesThisGeneration = 0;
@@ -339,13 +324,7 @@ void CRollingBloomFilter::insert(const std::vector<unsigned char>& vKey)
     }
 }
 
-void CRollingBloomFilter::insert(const uint256& hash)
-{
-    std::vector<unsigned char> vData(hash.begin(), hash.end());
-    insert(vData);
-}
-
-bool CRollingBloomFilter::contains(const std::vector<unsigned char>& vKey) const
+bool CRollingBloomFilter::contains(Span<const unsigned char> vKey) const
 {
     for (int n = 0; n < nHashFuncs; n++) {
         uint32_t h = RollingBloomHash(n, nTweak, vKey);
@@ -357,12 +336,6 @@ bool CRollingBloomFilter::contains(const std::vector<unsigned char>& vKey) const
         }
     }
     return true;
-}
-
-bool CRollingBloomFilter::contains(const uint256& hash) const
-{
-    std::vector<unsigned char> vData(hash.begin(), hash.end());
-    return contains(vData);
 }
 
 void CRollingBloomFilter::reset()
