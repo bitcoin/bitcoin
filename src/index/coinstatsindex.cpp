@@ -235,7 +235,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
     return m_db->Write(DBHeightKey(block.height), value);
 }
 
-static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
+[[nodiscard]] static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
                                        const std::string& index_name,
                                        int start_height, int stop_height)
 {
