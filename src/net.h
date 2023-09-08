@@ -548,17 +548,17 @@ private:
 
         /** Waiting for the other side's public key.
          *
-         * This is the initial state for initiators. The public key is sent out. When the receiver
-         * receives the other side's public key and transitions to GARB_GARBTERM, the sender state
-         * becomes READY. */
+         * This is the initial state for initiators. The public key and garbage is sent out. When
+         * the receiver receives the other side's public key and transitions to GARB_GARBTERM, the
+         * sender state becomes READY. */
         AWAITING_KEY,
 
         /** Normal sending state.
          *
          * In this state, the ciphers are initialized, so packets can be sent. When this state is
-         * entered, the garbage, garbage terminator, garbage authentication packet, and version
-         * packet are appended to the send buffer (in addition to the key which may still be
-         * there). In this state a message can be provided if the send buffer is empty. */
+         * entered, the garbage terminator, garbage authentication packet, and version
+         * packet are appended to the send buffer (in addition to the key and garbage which may
+         * still be there). In this state a message can be provided if the send buffer is empty. */
         READY,
 
         /** This transport is using v1 fallback.
