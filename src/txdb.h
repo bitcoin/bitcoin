@@ -77,7 +77,4 @@ public:
     std::optional<fs::path> StoragePath() { return m_db->StoragePath(); }
 };
 
-
-[[nodiscard]] util::Result<void> CheckLegacyTxindex(CBlockTreeDB& block_tree_db);
-
 #endif // SYSCOIN_TXDB_H

@@ -174,7 +174,7 @@ public:
      * @param[in]  data Referenced byte vector to overwrite/append
      */
     SpanReader(int type, int version, Span<const unsigned char> data)
-        : m_type(type), m_version(version), m_data(data)  {}
+        : m_type(type), m_version(version), m_data(data) {}
 
     template<typename T>
     SpanReader& operator>>(T&& obj)
@@ -366,18 +366,24 @@ public:
 class CDataStream : public DataStream
 {
 private:
+    int nType;
     int nVersion;
+
 public:
     explicit CDataStream(int nTypeIn, int nVersionIn)
-        : nVersion{nVersionIn} {nType = nTypeIn;}
+        : nType{nTypeIn},
+          nVersion{nVersionIn} {}
 
     explicit CDataStream(Span<const uint8_t> sp, int type, int version) : CDataStream{AsBytes(sp), type, version} {}
     explicit CDataStream(Span<const value_type> sp, int nTypeIn, int nVersionIn)
         : DataStream{sp},
-        nVersion{nVersionIn} {nType = nTypeIn;}
+          nType{nTypeIn},
+          nVersion{nVersionIn} {}
 
+    int GetType() const          { return nType; }
     void SetVersion(int n)       { nVersion = n; }
     int GetVersion() const       { return nVersion; }
+
     template <typename T>
     CDataStream& operator<<(const T& obj)
     {
