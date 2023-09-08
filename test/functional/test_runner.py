@@ -200,6 +200,7 @@ BASE_SCRIPTS = [
     'mempool_reorg.py',
     'p2p_block_sync.py --v1transport',
     'p2p_block_sync.py --v2transport',
+    'feature_64bit_arithmetic_opcodes.py',
     'wallet_createwallet.py --legacy-wallet',
     'wallet_createwallet.py --usecli',
     'wallet_createwallet.py --descriptors',

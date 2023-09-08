@@ -93,6 +93,7 @@ public:
             break;
         case SigVersion::TAPROOT:
         case SigVersion::TAPSCRIPT:
+        case SigVersion::TAPSCRIPT_64BIT:
             assert(false);
         }
     }
