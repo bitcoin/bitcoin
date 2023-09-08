@@ -527,7 +527,7 @@ public:
     std::vector<unsigned char> vchTxPath;
     // where in vchReceiptParentNodes the vchReceiptValue can be found as an offset
     uint16_t posReceipt;
-    std::vector<unsigned char> vchReceiptParentNodes; 
+    std::vector<unsigned char> vchReceiptParentNodes;
     uint256 nReceiptRoot;
     uint256 nTxHash;
     uint256 nBlockHash;
@@ -587,8 +587,7 @@ class CNEVMBlock: public CNEVMHeader {
     std::vector<unsigned char>  vchNEVMBlockData;
     SERIALIZE_METHODS(CNEVMBlock, obj)
     {
-        READWRITEAS(CNEVMHeader, obj);
-        READWRITE(obj.vchNEVMBlockData);
+        READWRITE(AsBase<CNEVMHeader>(obj), obj.vchNEVMBlockData);
     }
 };
 
