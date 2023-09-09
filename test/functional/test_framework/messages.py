@@ -26,7 +26,7 @@ import socket
 import struct
 import time
 
-from test_framework.siphash import siphash256
+from test_framework.crypto.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, assert_equal
 
 import dash_hash

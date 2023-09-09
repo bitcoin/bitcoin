@@ -13,7 +13,7 @@ import os
 import random
 import unittest
 
-from test_framework import secp256k1
+from test_framework.crypto import secp256k1
 
 # Order of the secp256k1 curve
 ORDER = secp256k1.GE.ORDER
