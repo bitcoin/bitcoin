@@ -118,6 +118,15 @@ public:
  */
 struct CBlockLocator
 {
+    /** Historically CBlockLocator's version field has been written to network
+     * streams as the negotiated protocol version and to disk streams as the
+     * client version, but the value has never been used.
+     *
+     * Hard-code to the highest protocol version ever written to a network stream.
+     * SerParams can be used if the field requires any meaning in the future,
+     **/
+    static constexpr int DUMMY_VERSION = 70016;
+
     std::vector<uint256> vHave;
 
     CBlockLocator() {}
@@ -126,9 +135,8 @@ struct CBlockLocator
 
     SERIALIZE_METHODS(CBlockLocator, obj)
     {
-        int nVersion = s.GetVersion();
-        if (!(s.GetType() & SER_GETHASH))
-            READWRITE(nVersion);
+        int nVersion = DUMMY_VERSION;
+        READWRITE(nVersion);
         READWRITE(obj.vHave);
     }
 
