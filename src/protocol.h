@@ -389,16 +389,16 @@ static inline bool MayHaveUsefulAddressDB(ServiceFlags services) {
 /** A CService with information about it as peer */
 class CAddress : public CService
 {
-public:
-    CAddress();
-    explicit CAddress(CService ipIn, ServiceFlags nServicesIn);
-    CAddress(CService ipIn, ServiceFlags nServicesIn, uint32_t nTimeIn);
+    static constexpr uint32_t TIME_INIT{100000000};
 
-    void Init();
+public:
+    CAddress() : CService{} {};
+    explicit CAddress(CService ipIn, ServiceFlags nServicesIn) : CService{ipIn}, nServices{nServicesIn} {};
+    CAddress(CService ipIn, ServiceFlags nServicesIn, uint32_t nTimeIn) : CService{ipIn}, nTime{nTimeIn}, nServices{nServicesIn} {};
 
     SERIALIZE_METHODS(CAddress, obj)
     {
-        SER_READ(obj, obj.Init());
+        SER_READ(obj, obj.nTime = TIME_INIT);
         int nVersion = s.GetVersion();
         if (s.GetType() & SER_DISK) {
             READWRITE(nVersion);
@@ -424,12 +424,10 @@ public:
         READWRITEAS(CService, obj);
     }
 
-    // TODO: make private (improves encapsulation)
-public:
-    ServiceFlags nServices;
-
     // disk and network only
-    unsigned int nTime;
+    uint32_t nTime{TIME_INIT};
+
+    ServiceFlags nServices{NODE_NONE};
 };
 
 /** getdata / inv message types.
