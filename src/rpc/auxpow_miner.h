@@ -7,7 +7,6 @@
 
 #include <node/miner.h>
 #include <script/script.h>
-#include <script/script.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <univalue.h>
