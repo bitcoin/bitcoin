@@ -19,6 +19,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <clientversion.h>
 #include <common/args.h>
 #include <common/system.h>
 #include <consensus/amount.h>
