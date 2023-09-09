@@ -31,17 +31,7 @@ class TapHashPeginTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [
-            ["-initialfreecoins=2100000000000000",
-             "-anyonecanspendaremine=1",
-            "-blindedaddresses=1",
-            "-validatepegin=0",
-            "-con_parent_chain_signblockscript=51",
-            "-parentscriptprefix=75",
-            "-parent_bech32_hrp=ert",
-            "-minrelaytxfee=0",
-            "-maxtxfee=100.0",
-        ]]
+
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
