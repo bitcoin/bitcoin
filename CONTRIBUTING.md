@@ -295,8 +295,8 @@ before and after commits must be present locally.
 
 ```
 function gfd() {
-        local fp1=$(git merge-base --fork-point develop $1)
-        local fp2=$(git merge-base --fork-point develop $2)
+        local fp1=$(git show-branch --merge-base develop $1)
+        local fp2=$(git show-branch --merge-base develop $2)
         echo fp1=$fp1
         echo fp2=$fp2
         diff --color=always -u -I'^[^-+]' <(git diff $fp1..$1) <(git diff $fp2..$2)
