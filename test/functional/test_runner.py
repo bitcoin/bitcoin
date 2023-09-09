@@ -74,11 +74,11 @@ TEST_EXIT_SKIPPED = 77
 TEST_FRAMEWORK_MODULES = [
     "address",
     "blocktools",
-    "ellswift",
+    "crypto.ellswift",
     "key",
     "messages",
-    "muhash",
-    "ripemd160",
+    "crypto.muhash",
+    "crypto.ripemd160",
     "script",
     "segwit_addr",
 ]

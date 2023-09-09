@@ -13,7 +13,7 @@ import os
 import random
 import unittest
 
-from test_framework import secp256k1
+from test_framework.crypto import secp256k1
 
 # Point with no known discrete log.
 H_POINT = "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0"
