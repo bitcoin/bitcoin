@@ -6,6 +6,7 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
     msg_version,
+    msg_filterload
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -57,6 +58,18 @@ class P2PConnectionLimits(BitcoinTestFramework):
         with node.assert_debug_log(['failed to find an eviction candidate - connection dropped (full)']):
             self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False, expect_success=False)
         self.wait_until(lambda: len(node.getpeerinfo()) == 2)
+
+        self.log.info('Run with bloom filter support and check that a switch to tx relay during runtime can trigger eviction')
+        self.restart_node(0, ['-maxconnections=13', '-peerbloomfilters'])
+        peer1 = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
+        peer1.send_without_ping(self.create_blocks_only_version())
+        peer1.wait_for_verack()
+
+        node.add_p2p_connection(P2PInterface())
+        self.wait_until(lambda: len(node.getpeerinfo()) == 2)
+        with node.assert_debug_log(['filterload received, but no capacity for tx-relay and no other peer to evict. disconnecting peer']):
+            peer1.send_without_ping(msg_filterload(data=b'\xbb'*(100)))
+        self.wait_until(lambda: len(node.getpeerinfo()) == 1)
 
         self.log.info('Test different values of inboundrelaypercent')
         self.restart_node(0, ['-maxconnections=13', '-inboundrelaypercent=0'])
