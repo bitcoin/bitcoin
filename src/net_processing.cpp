@@ -220,7 +220,7 @@ class PeerManagerImpl final : public PeerManager
 public:
     PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
                     BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman,
-                    CTxMemPool& pool, const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs);
+                    CTxMemPool& pool, const std::unique_ptr<LLMQContext>& llmq_ctx, CGovernanceManager& govman, bool ignore_incoming_txs);
 
     /** Overridden from CValidationInterface. */
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
@@ -310,6 +310,7 @@ private:
     ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
     const std::unique_ptr<LLMQContext>& m_llmq_ctx;
+    CGovernanceManager& m_govman;
 
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
@@ -1542,14 +1543,14 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex, const Conse
 
 std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman, BanMan* banman,
                                                CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                               const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs)
+                                               const std::unique_ptr<LLMQContext>& llmq_ctx, CGovernanceManager& govman, bool ignore_incoming_txs)
 {
-    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, scheduler, chainman, pool, llmq_ctx, ignore_incoming_txs);
+    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, scheduler, chainman, pool, llmq_ctx, govman, ignore_incoming_txs);
 }
 
 PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman, BanMan* banman,
                                  CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                 const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs)
+                                 const std::unique_ptr<LLMQContext>& llmq_ctx, CGovernanceManager& govman, bool ignore_incoming_txs)
     : m_chainparams(chainparams),
       m_connman(connman),
       m_addrman(addrman),
@@ -1557,6 +1558,7 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
       m_chainman(chainman),
       m_mempool(pool),
       m_llmq_ctx(llmq_ctx),
+      m_govman(govman),
       m_stale_tip_check_time(0),
       m_ignore_incoming_txs(ignore_incoming_txs)
 {
@@ -1858,7 +1860,7 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
 
     case MSG_GOVERNANCE_OBJECT:
     case MSG_GOVERNANCE_OBJECT_VOTE:
-        return ! governance->ConfirmInventoryRequest(inv);
+        return !m_govman.ConfirmInventoryRequest(inv);
 
     case MSG_QUORUM_FINAL_COMMITMENT:
         return m_llmq_ctx->quorum_block_processor->HasMineableCommitment(inv.hash);
@@ -2166,9 +2168,9 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             if (!push && inv.type == MSG_GOVERNANCE_OBJECT) {
                 CDataStream ss(SER_NETWORK, pfrom.GetSendVersion());
                 bool topush = false;
-                if (governance->HaveObjectForHash(inv.hash)) {
+                if (m_govman.HaveObjectForHash(inv.hash)) {
                     ss.reserve(1000);
-                    if (governance->SerializeObjectForHash(inv.hash, ss)) {
+                    if (m_govman.SerializeObjectForHash(inv.hash, ss)) {
                         topush = true;
                     }
                 }
@@ -2181,9 +2183,9 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             if (!push && inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
                 CDataStream ss(SER_NETWORK, pfrom.GetSendVersion());
                 bool topush = false;
-                if (governance->HaveVoteForHash(inv.hash)) {
+                if (m_govman.HaveVoteForHash(inv.hash)) {
                     ss.reserve(1000);
-                    if (governance->SerializeVoteForHash(inv.hash, ss)) {
+                    if (m_govman.SerializeVoteForHash(inv.hash, ss)) {
                         topush = true;
                     }
                 }
@@ -4319,7 +4321,7 @@ void PeerManagerImpl::ProcessMessage(
         coinJoinServer->ProcessMessage(pfrom, *this, msg_type, vRecv);
         sporkManager->ProcessMessage(pfrom, *this, m_connman, msg_type, vRecv);
         ::masternodeSync->ProcessMessage(pfrom, msg_type, vRecv);
-        governance->ProcessMessage(pfrom, *this, m_connman, msg_type, vRecv);
+        m_govman.ProcessMessage(pfrom, *this, m_connman, msg_type, vRecv);
         CMNAuth::ProcessMessage(pfrom, *this, m_connman, msg_type, vRecv);
         m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv);
         m_llmq_ctx->qdkgsman->ProcessMessage(pfrom, *m_llmq_ctx->qman, msg_type, vRecv);

@@ -421,6 +421,16 @@ void CGovernanceManager::UpdateCachesAndClean()
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean -- %s\n", ToString());
 }
 
+const CGovernanceObject* CGovernanceManager::FindConstGovernanceObject(const uint256& nHash) const
+{
+    AssertLockHeld(cs);
+
+    auto it = mapObjects.find(nHash);
+    if (it != mapObjects.end()) return &(it->second);
+
+    return nullptr;
+}
+
 CGovernanceObject* CGovernanceManager::FindGovernanceObject(const uint256& nHash)
 {
     AssertLockHeld(cs);
@@ -1108,7 +1118,7 @@ void CGovernanceManager::CheckPostponedObjects(CConnman& connman)
     }
 }
 
-void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman& connman, bool fUseFilter)
+void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman& connman, bool fUseFilter) const
 {
     if (!pfrom) {
         return;
@@ -1123,7 +1133,7 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
     size_t nVoteCount = 0;
     if (fUseFilter) {
         LOCK(cs);
-        const CGovernanceObject* pObj = FindGovernanceObject(nHash);
+        const CGovernanceObject* pObj = FindConstGovernanceObject(nHash);
 
         if (pObj) {
             filter = CBloomFilter(Params().GetConsensus().nGovernanceFilterElements, GOVERNANCE_FILTER_FP_RATE, GetRandInt(999999), BLOOM_UPDATE_ALL);
@@ -1139,13 +1149,13 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
     connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, nHash, filter));
 }
 
-int CGovernanceManager::RequestGovernanceObjectVotes(CNode& peer, CConnman& connman)
+int CGovernanceManager::RequestGovernanceObjectVotes(CNode& peer, CConnman& connman) const
 {
     std::array<CNode*, 1> nodeCopy{&peer};
     return RequestGovernanceObjectVotes(nodeCopy, connman);
 }
 
-int CGovernanceManager::RequestGovernanceObjectVotes(Span<CNode*> vNodesCopy, CConnman& connman)
+int CGovernanceManager::RequestGovernanceObjectVotes(Span<CNode*> vNodesCopy, CConnman& connman) const
 {
     static std::map<uint256, std::map<CService, int64_t> > mapAskedRecently;
 

@@ -1694,15 +1694,16 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.chainman = &g_chainman;
     ChainstateManager& chainman = *Assert(node.chainman);
 
+    ::governance = std::make_unique<CGovernanceManager>();
+
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
-                                     *node.scheduler, chainman, *node.mempool, node.llmq_ctx, ignores_incoming_txs);
+                                     *node.scheduler, chainman, *node.mempool, node.llmq_ctx, *::governance, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
-    ::governance = std::make_unique<CGovernanceManager>();
     assert(!::sporkManager);
     ::sporkManager = std::make_unique<CSporkManager>();
-    ::masternodeSync = std::make_unique<CMasternodeSync>(*node.connman);
+    ::masternodeSync = std::make_unique<CMasternodeSync>(*node.connman, *::governance);
 
     std::vector<std::string> vSporkAddresses;
     if (args.IsArgSet("-sporkaddr")) {

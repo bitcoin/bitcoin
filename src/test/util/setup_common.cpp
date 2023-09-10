@@ -204,7 +204,7 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     ::sporkManager = std::make_unique<CSporkManager>();
     ::governance = std::make_unique<CGovernanceManager>();
-    ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman);
+    ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman, *::governance);
 #ifdef ENABLE_WALLET
     ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*m_node.connman, *::masternodeSync);
 #endif // ENABLE_WALLET
@@ -261,7 +261,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
     m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman, m_node.banman.get(),
-                                       *m_node.scheduler, *m_node.chainman, *m_node.mempool, m_node.llmq_ctx,
+                                       *m_node.scheduler, *m_node.chainman, *m_node.mempool, m_node.llmq_ctx, *governance,
                                        false);
     {
         CConnman::Options options;

@@ -398,7 +398,7 @@ static UniValue VoteWithMasternodes(const JSONRPCRequest& request, const std::ma
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     {
         LOCK(governance->cs);
-        CGovernanceObject *pGovObj = governance->FindGovernanceObject(hash);
+        const CGovernanceObject *pGovObj = governance->FindConstGovernanceObject(hash);
         if (!pGovObj) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Governance object not found");
         }
@@ -731,7 +731,7 @@ static UniValue gobject_get(const JSONRPCRequest& request)
 
     // FIND THE GOVERNANCE OBJECT THE USER IS LOOKING FOR
     LOCK2(cs_main, governance->cs);
-    CGovernanceObject* pGovObj = governance->FindGovernanceObject(hash);
+    const CGovernanceObject* pGovObj = governance->FindConstGovernanceObject(hash);
 
     if (pGovObj == nullptr) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown governance object");
@@ -829,7 +829,7 @@ static UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
 
     LOCK(governance->cs);
 
-    CGovernanceObject* pGovObj = governance->FindGovernanceObject(hash);
+    const CGovernanceObject* pGovObj = governance->FindConstGovernanceObject(hash);
 
     if (pGovObj == nullptr) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown governance-hash");
@@ -966,7 +966,7 @@ static UniValue voteraw(const JSONRPCRequest& request)
 
     GovernanceObject govObjType = WITH_LOCK(governance->cs, return [&](){
         AssertLockHeld(governance->cs);
-        CGovernanceObject *pGovObj = governance->FindGovernanceObject(hashGovObj);
+        const CGovernanceObject *pGovObj = governance->FindConstGovernanceObject(hashGovObj);
         if (!pGovObj) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Governance object not found");
         }

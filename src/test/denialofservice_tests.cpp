@@ -18,6 +18,7 @@
 #include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
+#include <governance/governance.h>
 
 #include <test/util/setup_common.h>
 
@@ -80,7 +81,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     const CChainParams& chainparams = Params();
     auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
     auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr, *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, m_node.llmq_ctx, false);
+                                       *m_node.chainman, *m_node.mempool, m_node.llmq_ctx, *governance, false);
 
     // Mock an outbound peer
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
@@ -152,7 +153,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     const CChainParams& chainparams = Params();
     auto connman = std::make_unique<CConnmanTest>(0x1337, 0x1337, *m_node.addrman);
     auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr, *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, m_node.llmq_ctx, false);
+                                       *m_node.chainman, *m_node.mempool, m_node.llmq_ctx, *governance, false);
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
     constexpr int max_outbound_full_relay = MAX_OUTBOUND_FULL_RELAY_CONNECTIONS;
@@ -226,7 +227,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     auto banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
     auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, banman.get(), *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, m_node.llmq_ctx, false);
+                                       *m_node.chainman, *m_node.mempool, m_node.llmq_ctx, *governance, false);
 
     banman->ClearBanned();
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
@@ -273,7 +274,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     auto banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
     auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, banman.get(), *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, m_node.llmq_ctx, false);
+                                       *m_node.chainman, *m_node.mempool, m_node.llmq_ctx, *governance, false);
 
     banman->ClearBanned();
     gArgs.ForceSetArg("-banscore", "111"); // because 11 is my favorite number
@@ -318,7 +319,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     auto banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
     auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, banman.get(), *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, m_node.llmq_ctx, false);
+                                       *m_node.chainman, *m_node.mempool, m_node.llmq_ctx, *governance, false);
 
     banman->ClearBanned();
     int64_t nStartTime = GetTime();

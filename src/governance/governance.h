@@ -248,6 +248,7 @@ public:
 
     void DoMaintenance(CConnman& connman);
 
+    const CGovernanceObject* FindConstGovernanceObject(const uint256& nHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     CGovernanceObject* FindGovernanceObject(const uint256& nHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
     CGovernanceObject* FindGovernanceObjectByDataHash(const uint256& nDataHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void DeleteGovernanceObject(const uint256& nHash);
@@ -359,11 +360,11 @@ public:
 
     void InitOnLoad();
 
-    int RequestGovernanceObjectVotes(CNode& peer, CConnman& connman);
-    int RequestGovernanceObjectVotes(Span<CNode*> vNodesCopy, CConnman& connman);
+    int RequestGovernanceObjectVotes(CNode& peer, CConnman& connman) const;
+    int RequestGovernanceObjectVotes(Span<CNode*> vNodesCopy, CConnman& connman) const;
 
 private:
-    void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman& connman, bool fUseFilter = false);
+    void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman& connman, bool fUseFilter = false) const;
 
     void AddInvalidVote(const CGovernanceVote& vote)
     {

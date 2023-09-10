@@ -16,6 +16,7 @@ class CAddrMan;
 class CTxMemPool;
 class ChainstateManager;
 struct LLMQContext;
+class CGovernanceManager;
 
 extern RecursiveMutex cs_main;
 extern RecursiveMutex g_cs_orphans;
@@ -39,7 +40,7 @@ class PeerManager : public CValidationInterface, public NetEventsInterface
 public:
     static std::unique_ptr<PeerManager> make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
                                              BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman,
-                                             CTxMemPool& pool, const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs);
+                                             CTxMemPool& pool, const std::unique_ptr<LLMQContext>& llmq_ctx, CGovernanceManager& govman, bool ignore_incoming_txs);
     virtual ~PeerManager() { }
 
     /** Get statistics from node state */

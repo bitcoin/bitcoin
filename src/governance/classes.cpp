@@ -209,7 +209,7 @@ std::vector<CSuperblock_sptr> CGovernanceTriggerManager::GetActiveTriggers()
 
     // LOOK AT THESE OBJECTS AND COMPILE A VALID LIST OF TRIGGERS
     for (const auto& pair : mapTrigger) {
-        const CGovernanceObject* pObj = governance->FindGovernanceObject(pair.first);
+        const CGovernanceObject* pObj = governance->FindConstGovernanceObject(pair.first);
         if (pObj) {
             vecResults.push_back(pair.second);
         }
