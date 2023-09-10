@@ -5017,6 +5017,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             }
             pfrom.m_bloom_filter_loaded = true;
             pfrom.m_relays_txs = true;
+            MaybeDisconnectForTxRelayCapacity(pfrom, msg_type);
         }
         return;
     }
@@ -5065,6 +5066,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
         pfrom.m_bloom_filter_loaded = false;
         pfrom.m_relays_txs = true;
+        MaybeDisconnectForTxRelayCapacity(pfrom, msg_type);
         return;
     }
 
