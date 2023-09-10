@@ -252,43 +252,30 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         # that the handle_* functions succeeded.
         EXPECTED_HANDLE_ADD_SUCCESS = 2
         EXPECTED_HANDLE_SPENT_SUCCESS = 1
-        handle_add_succeeds = 0
-        handle_spent_succeeds = 0
 
-        expected_utxocache_spents = []
         expected_utxocache_adds = []
+        expected_utxocache_spents = []
+
+        actual_utxocache_adds = []
+        actual_utxocache_spents = []
+
+        def compare_utxo_with_event(utxo, event):
+            """Compare a utxo dict to the event produced by BPF"""
+            assert_equal(utxo["txid"], bytes(event.txid[::-1]).hex())
+            assert_equal(utxo["index"], event.index)
+            assert_equal(utxo["height"], event.height)
+            assert_equal(utxo["value"], event.value)
+            assert_equal(utxo["is_coinbase"], event.is_coinbase)
 
         def handle_utxocache_add(_, data, __):
-            nonlocal handle_add_succeeds
             event = ctypes.cast(data, ctypes.POINTER(UTXOCacheChange)).contents
             self.log.info(f"handle_utxocache_add(): {event}")
-            add = expected_utxocache_adds.pop(0)
-            try:
-                assert_equal(add["txid"], bytes(event.txid[::-1]).hex())
-                assert_equal(add["index"], event.index)
-                assert_equal(add["height"], event.height)
-                assert_equal(add["value"], event.value)
-                assert_equal(add["is_coinbase"], event.is_coinbase)
-            except AssertionError:
-                self.log.exception("Assertion failed")
-            else:
-                handle_add_succeeds += 1
+            actual_utxocache_adds.append(event)
 
         def handle_utxocache_spent(_, data, __):
-            nonlocal handle_spent_succeeds
             event = ctypes.cast(data, ctypes.POINTER(UTXOCacheChange)).contents
             self.log.info(f"handle_utxocache_spent(): {event}")
-            spent = expected_utxocache_spents.pop(0)
-            try:
-                assert_equal(spent["txid"], bytes(event.txid[::-1]).hex())
-                assert_equal(spent["index"], event.index)
-                assert_equal(spent["height"], event.height)
-                assert_equal(spent["value"], event.value)
-                assert_equal(spent["is_coinbase"], event.is_coinbase)
-            except AssertionError:
-                self.log.exception("Assertion failed")
-            else:
-                handle_spent_succeeds += 1
+            actual_utxocache_spents.append(event)
 
         bpf["utxocache_add"].open_perf_buffer(handle_utxocache_add)
         bpf["utxocache_spent"].open_perf_buffer(handle_utxocache_spent)
@@ -324,19 +311,18 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
                         "is_coinbase": block_index == 0,
                     })
 
-        assert_equal(EXPECTED_HANDLE_ADD_SUCCESS, len(expected_utxocache_adds))
-        assert_equal(EXPECTED_HANDLE_SPENT_SUCCESS,
-                     len(expected_utxocache_spents))
-
         bpf.perf_buffer_poll(timeout=200)
-        bpf.cleanup()
+
+        assert_equal(EXPECTED_HANDLE_ADD_SUCCESS, len(expected_utxocache_adds), len(actual_utxocache_adds))
+        assert_equal(EXPECTED_HANDLE_SPENT_SUCCESS, len(expected_utxocache_spents), len(actual_utxocache_spents))
 
         self.log.info(
             f"check that we successfully traced {EXPECTED_HANDLE_ADD_SUCCESS} adds and {EXPECTED_HANDLE_SPENT_SUCCESS} spent")
-        assert_equal(0, len(expected_utxocache_adds))
-        assert_equal(0, len(expected_utxocache_spents))
-        assert_equal(EXPECTED_HANDLE_ADD_SUCCESS, handle_add_succeeds)
-        assert_equal(EXPECTED_HANDLE_SPENT_SUCCESS, handle_spent_succeeds)
+        for expected_utxo, actual_event in zip(expected_utxocache_adds + expected_utxocache_spents,
+                                               actual_utxocache_adds + actual_utxocache_spents):
+            compare_utxo_with_event(expected_utxo, actual_event)
+
+        bpf.cleanup()
 
     def test_flush(self):
         """ Tests the utxocache:flush tracepoint API.
@@ -367,9 +353,13 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
                 "size": event.size
             })
             # sanity checks only
-            assert event.memory > 0
-            assert event.duration > 0
-            handle_flush_succeeds += 1
+            try:
+                assert event.memory > 0
+                assert event.duration > 0
+            except AssertionError:
+                self.log.exception("Assertion error")
+            else:
+                handle_flush_succeeds += 1
 
         bpf["utxocache_flush"].open_perf_buffer(handle_utxocache_flush)
 
