@@ -110,6 +110,8 @@ public:
 
     isminetype IsMineSilentPayments(const CTransaction& tx, const std::map<COutPoint, Coin>& coins);
     bool AddTweakWithDB(WalletBatch& batch, const uint256& tweak) EXCLUSIVE_LOCKS_REQUIRED(cs_sp_man);
+
+    std::pair<CKey, bool> GetPrivKeyForSilentPayment(const CScript& scriptPubKey) const override;
 };
 } // namespace wallet
 #endif // BITCOIN_WALLET_SILENTPAYMENTS_H
