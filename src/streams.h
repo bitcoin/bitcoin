@@ -50,12 +50,15 @@ class OverrideStream
 {
     Stream* stream;
 
-    const int nType;
     const int nVersion;
+    // SYSCOIN
+    const int nType;
     int nTxVersion{0};
-public:
-    OverrideStream(Stream* stream_, int nType_, int nVersion_) : stream(stream_), nType(nType_), nVersion(nVersion_) {}
 
+public:
+    OverrideStream(Stream* stream_, int nVersion_) : stream{stream_}, nVersion{nVersion_} {}
+    // SYSCOIN
+    OverrideStream(Stream* stream_, int nType_, int nVersion_) : stream(stream_), nType(nType_), nVersion(nVersion_) {}
     template<typename T>
     OverrideStream<Stream>& operator<<(const T& obj)
     {
@@ -81,14 +84,14 @@ public:
     }
 
     int GetVersion() const { return nVersion; }
-    int GetType() const { return nType; }
+    size_t size() const { return stream->size(); }
+    void ignore(size_t size) { return stream->ignore(size); }
     // SYSCOIN
+    int GetType() const { return nType; }
     const void* GetParams() const { return nullptr; }
     void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
     int GetTxVersion()           { return nTxVersion; }
     void seek(size_t _nSize) {return;}
-    size_t size() const { return stream->size(); }
-    void ignore(size_t size) { return stream->ignore(size); }
 
 };
 
@@ -101,24 +104,34 @@ class CVectorWriter
  public:
 
 /*
- * @param[in]  nTypeIn Serialization Type
  * @param[in]  nVersionIn Serialization Version (including any flags)
  * @param[in]  vchDataIn  Referenced byte vector to overwrite/append
  * @param[in]  nPosIn Starting position. Vector index where writes should start. The vector will initially
  *                    grow as necessary to max(nPosIn, vec.size()). So to append, use vec.size().
 */
+    CVectorWriter(int nVersionIn, std::vector<unsigned char>& vchDataIn, size_t nPosIn) : nVersion{nVersionIn}, vchData{vchDataIn}, nPos{nPosIn}
+    {
+        if(nPos > vchData.size())
+            vchData.resize(nPos);
+    }
+    // SYSCOIN
     CVectorWriter(int nTypeIn, int nVersionIn, std::vector<unsigned char>& vchDataIn, size_t nPosIn) : nType(nTypeIn), nVersion(nVersionIn), vchData(vchDataIn), nPos(nPosIn)
     {
         if(nPos > vchData.size())
             vchData.resize(nPos);
     }
+
 /*
  * (other params same as above)
  * @param[in]  args  A list of items to serialize starting at nPosIn.
 */
     template <typename... Args>
-    CVectorWriter(int nTypeIn, int nVersionIn, std::vector<unsigned char>& vchDataIn, size_t nPosIn, Args&&... args) : CVectorWriter(nTypeIn, nVersionIn, vchDataIn, nPosIn)
+    CVectorWriter(int nVersionIn, std::vector<unsigned char>& vchDataIn, size_t nPosIn, Args&&... args) : CVectorWriter{nVersionIn, vchDataIn, nPosIn}
     {
+        ::SerializeMany(*this, std::forward<Args>(args)...);
+    }
+    // SYSCOIN
+    CVectorWriter(int nTypeIn, int nVersionIn, std::vector<unsigned char>& vchDataIn, size_t nPosIn, Args&&... args) : CVectorWriter(nTypeIn, nVersionIn, vchDataIn, nPosIn)    {
         ::SerializeMany(*this, std::forward<Args>(args)...);
     }
     void write(Span<const std::byte> src)
@@ -143,17 +156,17 @@ class CVectorWriter
     {
         return nVersion;
     }
-    int GetType() const
-    {
-        return nType;
-    }
     // SYSCOIN
+    int GetType() const { return nType; }
     const void* GetParams() const { return nullptr; }
     void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
     int GetTxVersion()           { return nTxVersion; }
     void seek(size_t _nSize) {return;}
+
 private:
+    // SYSCOIN
     const int nType;
+
     const int nVersion;
     int nTxVersion{0};
     std::vector<unsigned char>& vchData;
@@ -165,17 +178,19 @@ private:
 class SpanReader
 {
 private:
-    const int m_type;
     const int m_version;
     Span<const unsigned char> m_data;
+    // SYSCOIN
+    const int m_type;
     int nTxVersion{0};
 public:
-
     /**
-     * @param[in]  type Serialization Type
      * @param[in]  version Serialization Version (including any flags)
      * @param[in]  data Referenced byte vector to overwrite/append
      */
+    SpanReader(int version, Span<const unsigned char> data)
+        : m_version{version}, m_data{data} {}
+    // SYSCOIN
     SpanReader(int type, int version, Span<const unsigned char> data)
         : m_type(type), m_version(version), m_data(data) {}
 
@@ -187,12 +202,13 @@ public:
     }
 
     int GetVersion() const { return m_version; }
-    int GetType() const { return m_type; }
     // SYSCOIN
+    int GetType() const { return m_type; }
     const void* GetParams() const { return nullptr; }
     void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
     int GetTxVersion()           { return nTxVersion; }
     void seek(size_t _nSize) {return;}
+
     size_t size() const { return m_data.size(); }
     bool empty() const { return m_data.empty(); }
 
