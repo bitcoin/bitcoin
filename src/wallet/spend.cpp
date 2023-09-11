@@ -1056,7 +1056,7 @@ std::map<size_t, WitnessV1Taproot> CreateSilentPaymentOutputs(
             error = _("Only one ScriptPubKeyManager was expected for the input.");
             return {};
         }
-        const auto* spk_manager = dynamic_cast<DescriptorScriptPubKeyMan*>(*spk_managers.begin());
+        const auto* spk_manager = *spk_managers.begin();
         const auto& [sender_secret_key, is_taproot]{spk_manager->GetPrivKeyForSilentPayment(input->txout.scriptPubKey)};
         if (!sender_secret_key.IsValid()) {
             error = _("The private key of one of the inputs was not found.");
@@ -1115,12 +1115,12 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     }
 
     // Create change script that will be used if we need change
-    CScript scriptChange;
+    CTxDestination change_dest;
     bilingual_str error; // possible error str
 
     // coin control: send change to custom address
     if (!std::get_if<CNoDestination>(&coin_control.destChange)) {
-        scriptChange = GetScriptForDestination(coin_control.destChange);
+        change_dest = coin_control.destChange;
     } else { // no coin control: send change to newly generated address
         // Note: We use a new key here to keep it from being obvious which side is the change.
         //  The drawback is that by not reusing a previous key, the change may be lost if a
@@ -1131,20 +1131,20 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
         // Reserve a new key pair from key pool. If it fails, provide a dummy
         // destination in case we don't need change.
-        CTxDestination dest;
         auto op_dest = reservedest.GetReservedDestination(true);
         if (!op_dest) {
             error = _("Transaction needs a change address, but we can't generate it.") + Untranslated(" ") + util::ErrorString(op_dest);
         } else {
-            dest = *op_dest;
-            scriptChange = GetScriptForDestination(dest);
+            change_dest = *op_dest;
         }
-        // A valid destination implies a change script (and
-        // vice-versa). An empty change script will abort later, if the
-        // change keypool ran out, but change is required.
-        CHECK_NONFATAL(IsValidDestination(dest) != scriptChange.empty());
     }
-    CTxOut change_prototype_txout(0, scriptChange);
+
+    CScript prototype_change_script = GetScriptForDestination(change_dest);
+    if (std::get_if<V0SilentPaymentDestination>(&change_dest)) {
+        prototype_change_script = GetScriptForDestination(WitnessV1Taproot());
+    }
+
+    CTxOut change_prototype_txout(0, prototype_change_script);
     coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
 
     // Get size of spending the change output
@@ -1255,7 +1255,23 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     }
     const CAmount change_amount = result.GetChange(coin_selection_params.min_viable_change, coin_selection_params.m_change_fee);
     if (change_amount > 0) {
-        CTxOut newTxOut(change_amount, scriptChange);
+        // Give up if change keypool ran out as change is required
+        if (!IsValidDestination(change_dest)) {
+            return util::Error{error};
+        }
+
+        if (const auto* sp = std::get_if<V0SilentPaymentDestination>(&change_dest)) {
+            // Since we will be getting the final destination
+            // for only the change output, the index doesn't matter.
+            std::map<size_t, V0SilentPaymentDestination> change_sp_dest;
+            change_sp_dest[0] = *sp;
+            change_dest = CreateSilentPaymentOutputs(wallet, change_sp_dest, result.GetInputSet(), error).at(0);
+        }
+
+        CScript change_script = GetScriptForDestination(change_dest);
+        Assert(!change_script.empty());
+
+        CTxOut newTxOut(change_amount, change_script);
         if (!change_pos) {
             // Insert change txn at random position:
             change_pos = rng_fast.randrange(txNew.vout.size() + 1);
@@ -1391,11 +1407,6 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // If it is not, it is a bug.
     if (fee_needed > current_fee) {
         return util::Error{Untranslated(STR_INTERNAL_BUG("Fee needed > fee paid"))};
-    }
-
-    // Give up if change keypool ran out and change is required
-    if (scriptChange.empty() && change_pos) {
-        return util::Error{error};
     }
 
     if (sign && !wallet.SignTransaction(txNew)) {

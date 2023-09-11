@@ -237,6 +237,7 @@ public:
     virtual SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const { return SigningResult::SIGNING_FAILED; };
     /** Adds script and derivation path information to a PSBT, and optionally signs it. */
     virtual TransactionError FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type = SIGHASH_DEFAULT, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr, bool finalize = true) const { return TransactionError::INVALID_PSBT; }
+    virtual std::pair<CKey,bool> GetPrivKeyForSilentPayment(const CScript& scriptPubKey) const { return {}; }
 
     virtual uint256 GetID() const { return uint256(); }
 
@@ -651,7 +652,7 @@ public:
     bool AddKey(const CKeyID& key_id, const CKey& key);
     bool AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key);
 
-    std::pair<CKey,bool> GetPrivKeyForSilentPayment(const CScript& scriptPubKey) const;
+    std::pair<CKey,bool> GetPrivKeyForSilentPayment(const CScript& scriptPubKey) const override;
 
     bool HasWalletDescriptor(const WalletDescriptor& desc) const;
     void UpdateWalletDescriptor(WalletDescriptor& descriptor);
