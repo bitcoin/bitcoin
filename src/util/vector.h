@@ -49,4 +49,22 @@ inline V Cat(V v1, const V& v2)
     return v1;
 }
 
+/** Clear a vector (or std::deque) and release its allocated memory. */
+template<typename V>
+inline void ClearShrink(V& v) noexcept
+{
+    // There are various ways to clear a vector and release its memory:
+    //
+    // 1. V{}.swap(v)
+    // 2. v = V{}
+    // 3. v = {}; v.shrink_to_fit();
+    // 4. v.clear(); v.shrink_to_fit();
+    //
+    // (2) does not appear to release memory in glibc debug mode, even if v.shrink_to_fit()
+    // follows. (3) and (4) rely on std::vector::shrink_to_fit, which is only a non-binding
+    // request. Therefore, we use method (1).
+
+    V{}.swap(v);
+}
+
 #endif // BITCOIN_UTIL_VECTOR_H
