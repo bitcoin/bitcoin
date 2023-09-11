@@ -366,7 +366,7 @@ std::unique_ptr<Transport> MakeV2Transport(NodeId nodeid, bool initiator, RNG& r
              .Write(garb.data(), garb.size())
              .Finalize(UCharCast(ent.data()));
 
-    return std::make_unique<V2Transport>(nodeid, initiator, SER_NETWORK, INIT_PROTO_VERSION, key, ent, garb);
+    return std::make_unique<V2Transport>(nodeid, initiator, SER_NETWORK, INIT_PROTO_VERSION, key, ent, std::move(garb));
 }
 
 } // namespace

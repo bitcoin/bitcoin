@@ -41,8 +41,8 @@ private:
     std::array<std::byte, GARBAGE_TERMINATOR_LEN> m_recv_garbage_terminator;
 
 public:
-    /** Initialize a BIP324 cipher with securely generated random keys. */
-    BIP324Cipher() noexcept;
+    /** No default constructor; keys must be provided to create a BIP324Cipher. */
+    BIP324Cipher() = delete;
 
     /** Initialize a BIP324 cipher with specified key and encoding entropy (testing only). */
     BIP324Cipher(const CKey& key, Span<const std::byte> ent32) noexcept;
