@@ -118,8 +118,8 @@ bool CChainParams::UpdateMNActivationParam(int nBit, int height, int64_t timePas
                 LogPrintf("%s: trying to set MnEHF height=%d for non-masternode activation fork bit=%d\n", __func__, height, nBit);
                 return false;
             }
+            LogPrintf("%s: set MnEHF height=%d for bit=%d fJustCheck=%d is valid\n", __func__, height, nBit, fJustCheck);
             if (!fJustCheck) {
-                LogPrintf("%s: set MnEHF height=%d for bit=%d successfuly while fJustCheck=%d\n", __func__, height, nBit, fJustCheck);
                 deployment.nMNActivationHeight = height;
             }
             return true;
