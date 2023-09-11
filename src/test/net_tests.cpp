@@ -1008,12 +1008,20 @@ BOOST_AUTO_TEST_CASE(advertise_local_address)
 
 namespace {
 
+CKey GenerateRandomTestKey() noexcept
+{
+    CKey key;
+    uint256 key_data = InsecureRand256();
+    key.Set(key_data.begin(), key_data.end(), true);
+    return key;
+}
+
 /** A class for scenario-based tests of V2Transport
  *
  * Each V2TransportTester encapsulates a V2Transport (the one being tested), and can be told to
  * interact with it. To do so, it also encapsulates a BIP324Cipher to act as the other side. A
  * second V2Transport is not used, as doing so would not permit scenarios that involve sending
- * invalid data, or ones scenarios using BIP324 features that are not implemented on the sending
+ * invalid data, or ones using BIP324 features that are not implemented on the sending
  * side (like decoy packets).
  */
 class V2TransportTester
@@ -1031,6 +1039,7 @@ public:
     /** Construct a tester object. test_initiator: whether the tested transport is initiator. */
     V2TransportTester(bool test_initiator) :
         m_transport(0, test_initiator, SER_NETWORK, INIT_PROTO_VERSION),
+        m_cipher{GenerateRandomTestKey(), MakeByteSpan(InsecureRand256())},
         m_test_initiator(test_initiator) {}
 
     /** Data type returned by Interact:

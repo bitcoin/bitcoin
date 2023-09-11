@@ -979,35 +979,55 @@ public:
 
 const V2MessageMap V2_MESSAGE_MAP;
 
-} // namespace
-
-V2Transport::V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in) noexcept :
-    m_cipher{}, m_initiating{initiating}, m_nodeid{nodeid},
-    m_v1_fallback{nodeid, type_in, version_in}, m_recv_type{type_in}, m_recv_version{version_in},
-    m_recv_state{initiating ? RecvState::KEY : RecvState::KEY_MAYBE_V1},
-    m_send_state{initiating ? SendState::AWAITING_KEY : SendState::MAYBE_V1}
+CKey GenerateRandomKey() noexcept
 {
-    // Construct garbage (including its length) using a FastRandomContext.
-    FastRandomContext rng;
-    size_t garbage_len = rng.randrange(MAX_GARBAGE_LEN + 1);
-    // Initialize the send buffer with ellswift pubkey + garbage.
-    m_send_buffer.resize(EllSwiftPubKey::size() + garbage_len);
-    std::copy(std::begin(m_cipher.GetOurPubKey()), std::end(m_cipher.GetOurPubKey()), MakeWritableByteSpan(m_send_buffer).begin());
-    rng.fillrand(MakeWritableByteSpan(m_send_buffer).subspan(EllSwiftPubKey::size()));
+    CKey key;
+    key.MakeNewKey(/*fCompressed=*/true);
+    return key;
 }
 
-V2Transport::V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in, const CKey& key, Span<const std::byte> ent32, Span<const uint8_t> garbage) noexcept :
+std::vector<uint8_t> GenerateRandomGarbage() noexcept
+{
+    std::vector<uint8_t> ret;
+    FastRandomContext rng;
+    ret.resize(rng.randrange(V2Transport::MAX_GARBAGE_LEN + 1));
+    rng.fillrand(MakeWritableByteSpan(ret));
+    return ret;
+}
+
+} // namespace
+
+void V2Transport::StartSendingHandshake() noexcept
+{
+    AssertLockHeld(m_send_mutex);
+    Assume(m_send_state == SendState::AWAITING_KEY);
+    Assume(m_send_buffer.empty());
+    // Initialize the send buffer with ellswift pubkey + provided garbage.
+    m_send_buffer.resize(EllSwiftPubKey::size() + m_send_garbage.size());
+    std::copy(std::begin(m_cipher.GetOurPubKey()), std::end(m_cipher.GetOurPubKey()), MakeWritableByteSpan(m_send_buffer).begin());
+    std::copy(m_send_garbage.begin(), m_send_garbage.end(), m_send_buffer.begin() + EllSwiftPubKey::size());
+    // We cannot wipe m_send_garbage as it will still be used to construct the garbage
+    // authentication packet.
+}
+
+V2Transport::V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in, const CKey& key, Span<const std::byte> ent32, std::vector<uint8_t> garbage) noexcept :
     m_cipher{key, ent32}, m_initiating{initiating}, m_nodeid{nodeid},
     m_v1_fallback{nodeid, type_in, version_in}, m_recv_type{type_in}, m_recv_version{version_in},
     m_recv_state{initiating ? RecvState::KEY : RecvState::KEY_MAYBE_V1},
+    m_send_garbage{std::move(garbage)},
     m_send_state{initiating ? SendState::AWAITING_KEY : SendState::MAYBE_V1}
 {
-    assert(garbage.size() <= MAX_GARBAGE_LEN);
-    // Initialize the send buffer with ellswift pubkey + provided garbage.
-    m_send_buffer.resize(EllSwiftPubKey::size() + garbage.size());
-    std::copy(std::begin(m_cipher.GetOurPubKey()), std::end(m_cipher.GetOurPubKey()), MakeWritableByteSpan(m_send_buffer).begin());
-    std::copy(garbage.begin(), garbage.end(), m_send_buffer.begin() + EllSwiftPubKey::size());
+    Assume(m_send_garbage.size() <= MAX_GARBAGE_LEN);
+    // Start sending immediately if we're the initiator of the connection.
+    if (initiating) {
+        LOCK(m_send_mutex);
+        StartSendingHandshake();
+    }
 }
+
+V2Transport::V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in) noexcept :
+    V2Transport{nodeid, initiating, type_in, version_in, GenerateRandomKey(),
+                MakeByteSpan(GetRandHash()), GenerateRandomGarbage()} { }
 
 void V2Transport::SetReceiveState(RecvState recv_state) noexcept
 {
@@ -1087,9 +1107,10 @@ void V2Transport::ProcessReceivedMaybeV1Bytes() noexcept
     if (!std::equal(m_recv_buffer.begin(), m_recv_buffer.end(), v1_prefix.begin())) {
         // Mismatch with v1 prefix, so we can assume a v2 connection.
         SetReceiveState(RecvState::KEY); // Convert to KEY state, leaving received bytes around.
-        // Transition the sender to AWAITING_KEY state (if not already).
+        // Transition the sender to AWAITING_KEY state and start sending.
         LOCK(m_send_mutex);
         SetSendState(SendState::AWAITING_KEY);
+        StartSendingHandshake();
     } else if (m_recv_buffer.size() == v1_prefix.size()) {
         // Full match with the v1 prefix, so fall back to v1 behavior.
         LOCK(m_send_mutex);
@@ -1149,7 +1170,6 @@ bool V2Transport::ProcessReceivedKeyBytes() noexcept
         SetSendState(SendState::READY);
 
         // Append the garbage terminator to the send buffer.
-        size_t garbage_len = m_send_buffer.size() - EllSwiftPubKey::size();
         m_send_buffer.resize(m_send_buffer.size() + BIP324Cipher::GARBAGE_TERMINATOR_LEN);
         std::copy(m_cipher.GetSendGarbageTerminator().begin(),
                   m_cipher.GetSendGarbageTerminator().end(),
@@ -1160,9 +1180,12 @@ bool V2Transport::ProcessReceivedKeyBytes() noexcept
         m_send_buffer.resize(m_send_buffer.size() + BIP324Cipher::EXPANSION);
         m_cipher.Encrypt(
             /*contents=*/{},
-            /*aad=*/MakeByteSpan(m_send_buffer).subspan(EllSwiftPubKey::size(), garbage_len),
+            /*aad=*/MakeByteSpan(m_send_garbage),
             /*ignore=*/false,
             /*output=*/MakeWritableByteSpan(m_send_buffer).last(BIP324Cipher::EXPANSION));
+        // We no longer need the garbage.
+        m_send_garbage.clear();
+        m_send_garbage.shrink_to_fit();
 
         // Construct version packet in the send buffer.
         m_send_buffer.resize(m_send_buffer.size() + BIP324Cipher::EXPANSION + VERSION_CONTENTS.size());
@@ -1532,9 +1555,7 @@ Transport::BytesToSend V2Transport::GetBytesToSend(bool have_next_message) const
     LOCK(m_send_mutex);
     if (m_send_state == SendState::V1) return m_v1_fallback.GetBytesToSend(have_next_message);
 
-    // We do not send anything in MAYBE_V1 state (as we don't know if the peer is v1 or v2),
-    // despite there being data in the send buffer in that state.
-    if (m_send_state == SendState::MAYBE_V1) return {{}, false, m_send_type};
+    if (m_send_state == SendState::MAYBE_V1) Assume(m_send_buffer.empty());
     Assume(m_send_pos <= m_send_buffer.size());
     return {
         Span{m_send_buffer}.subspan(m_send_pos),
@@ -1553,10 +1574,8 @@ void V2Transport::MarkBytesSent(size_t bytes_sent) noexcept
 
     m_send_pos += bytes_sent;
     Assume(m_send_pos <= m_send_buffer.size());
-    // Only wipe the buffer when everything is sent in the READY state. In the AWAITING_KEY state
-    // we still need the garbage that's in the send buffer to construct the garbage authentication
-    // packet.
-    if (m_send_state == SendState::READY && m_send_pos == m_send_buffer.size()) {
+    // Wipe the buffer when everything is sent.
+    if (m_send_pos == m_send_buffer.size()) {
         m_send_pos = 0;
         m_send_buffer = {};
     }
