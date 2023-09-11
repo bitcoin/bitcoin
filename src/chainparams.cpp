@@ -125,7 +125,7 @@ bool CChainParams::UpdateMNActivationParam(int nBit, int height, int64_t timePas
             return true;
         }
     }
-    LogPrintf("%s: not found MnEHF fork bit=%d\n", __func__, nBit);
+    LogPrintf("%s: WARNING: unknown MnEHF fork bit=%d\n", __func__, nBit);
     return true;
 }
 
