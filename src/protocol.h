@@ -396,6 +396,7 @@ public:
     };
     struct SerParams : CNetAddr::SerParams {
         const Format fmt;
+        SER_PARAMS_OPFUNC
     };
     static constexpr SerParams V1_NETWORK{{CNetAddr::Encoding::V1}, Format::Network};
     static constexpr SerParams V2_NETWORK{{CNetAddr::Encoding::V2}, Format::Network};

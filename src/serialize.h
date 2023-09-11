@@ -1192,4 +1192,17 @@ static auto WithParams(const Params& params, T&& t)
     return ParamsWrapper<Params, T>{params, t};
 }
 
+/**
+ * Helper macro for SerParams structs
+ *
+ * Allows you define SerParams instances and then apply them directly
+ * to an object via function call syntax, eg:
+ *
+ *   constexpr SerParams FOO{....};
+ *   ss << FOO(obj);
+ */
+#define SER_PARAMS_OPFUNC \
+    template <typename T> \
+    auto operator()(T&& t) const { return WithParams(*this, t); }
+
 #endif // BITCOIN_SERIALIZE_H

@@ -218,6 +218,7 @@ public:
     };
     struct SerParams {
         const Encoding enc;
+        SER_PARAMS_OPFUNC
     };
     static constexpr SerParams V1{Encoding::V1};
     static constexpr SerParams V2{Encoding::V2};
