@@ -128,9 +128,7 @@ class WalletUnlock():
     A context manager for unlocking a wallet with a passphrase and automatically locking it afterward.
     """
 
-    MAXIMUM_TIMEOUT = 999000
-
-    def __init__(self, wallet, passphrase, timeout=MAXIMUM_TIMEOUT):
+    def __init__(self, wallet, passphrase, timeout=-1):
         self.wallet = wallet
         self.passphrase = passphrase
         self.timeout = timeout

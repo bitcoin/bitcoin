@@ -18,7 +18,7 @@ RPCHelpMan walletpassphrase()
             "time that overrides the old one.\n",
                 {
                     {"passphrase", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet passphrase"},
-                    {"timeout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The time to keep the decryption key in seconds; capped at 100000000 (~3 years)."},
+                    {"timeout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The time to keep the decryption key in seconds; capped at 100000000 (~3 years), will use cap if -1 specified."},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
@@ -54,12 +54,13 @@ RPCHelpMan walletpassphrase()
         // Get the timeout
         nSleepTime = request.params[1].getInt<int64_t>();
         // Timeout cannot be negative, otherwise it will relock immediately
-        if (nSleepTime < 0) {
+        if (nSleepTime < 0 && nSleepTime != -1) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Timeout cannot be negative.");
         }
         // Clamp timeout
         constexpr int64_t MAX_SLEEP_TIME = 100000000; // larger values trigger a macos/libevent bug?
-        if (nSleepTime > MAX_SLEEP_TIME) {
+
+        if (nSleepTime > MAX_SLEEP_TIME || nSleepTime == -1) {
             nSleepTime = MAX_SLEEP_TIME;
         }
 
