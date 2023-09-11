@@ -28,6 +28,12 @@ VALID_SIGHASHES_TAPROOT = [SIGHASH_DEFAULT] + VALID_SIGHASHES_ECDSA
 
 class TapHashPeginTest(BitcoinTestFramework):
 
+    def add_options(self, parser):
+        # idk why but 'createwallet' rpc fails if i don't set this
+        # this log occurs in the bitcoind logs saying the wallet is not enabled
+        # 2023-09-09T18:17:52.261789Z [init] [wallet/init.cpp:132] [Construct] Wallet disabled!
+        self.add_wallet_options(parser, descriptors=True, legacy=False)
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -246,7 +252,8 @@ class TapHashPeginTest(BitcoinTestFramework):
 
 
     def run_test(self):
-        self.nodes[0].generate(101)
+        self.log.info("Starting test case!")
+        self.generate(self.nodes[0], 101)
         self.wait_until(lambda: self.nodes[0].getblockcount() == 101, timeout=5)
         # Test whether the above test framework is working
         self.log.info("Test simple op_1")
