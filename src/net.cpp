@@ -35,6 +35,7 @@
 #include <util/threadinterrupt.h>
 #include <util/trace.h>
 #include <util/translation.h>
+#include <util/vector.h>
 
 #ifdef WIN32
 #include <string.h>
@@ -899,8 +900,7 @@ void V1Transport::MarkBytesSent(size_t bytes_sent) noexcept
         m_bytes_sent = 0;
     } else if (!m_sending_header && m_bytes_sent == m_message_to_send.data.size()) {
         // We're done sending a message's data. Wipe the data vector to reduce memory consumption.
-        m_message_to_send.data.clear();
-        m_message_to_send.data.shrink_to_fit();
+        ClearShrink(m_message_to_send.data);
         m_bytes_sent = 0;
     }
 }
@@ -1123,8 +1123,8 @@ void V2Transport::ProcessReceivedMaybeV1Bytes() noexcept
         SetReceiveState(RecvState::V1);
         SetSendState(SendState::V1);
         // Reset v2 transport buffers to save memory.
-        m_recv_buffer = {};
-        m_send_buffer = {};
+        ClearShrink(m_recv_buffer);
+        ClearShrink(m_send_buffer);
     } else {
         // We have not received enough to distinguish v1 from v2 yet. Wait until more bytes come.
     }
@@ -1184,8 +1184,7 @@ bool V2Transport::ProcessReceivedKeyBytes() noexcept
             /*ignore=*/false,
             /*output=*/MakeWritableByteSpan(m_send_buffer).last(BIP324Cipher::EXPANSION));
         // We no longer need the garbage.
-        m_send_garbage.clear();
-        m_send_garbage.shrink_to_fit();
+        ClearShrink(m_send_garbage);
 
         // Construct version packet in the send buffer.
         m_send_buffer.resize(m_send_buffer.size() + BIP324Cipher::EXPANSION + VERSION_CONTENTS.size());
@@ -1275,7 +1274,7 @@ bool V2Transport::ProcessReceivedPacketBytes() noexcept
             // Ignore flag does not matter for garbage authentication. Any valid packet functions
             // as authentication. Receive and process the version packet next.
             SetReceiveState(RecvState::VERSION);
-            m_recv_garbage = {};
+            ClearShrink(m_recv_garbage);
             break;
         case RecvState::VERSION:
             if (!ignore) {
@@ -1295,9 +1294,9 @@ bool V2Transport::ProcessReceivedPacketBytes() noexcept
             Assume(false);
         }
         // Wipe the receive buffer where the next packet will be received into.
-        m_recv_buffer = {};
+        ClearShrink(m_recv_buffer);
         // In all but APP_READY state, we can wipe the decoded contents.
-        if (m_recv_state != RecvState::APP_READY) m_recv_decode_buffer = {};
+        if (m_recv_state != RecvState::APP_READY) ClearShrink(m_recv_decode_buffer);
     } else {
         // We either have less than 3 bytes, so we don't know the packet's length yet, or more
         // than 3 bytes but less than the packet's full ciphertext. Wait until those arrive.
@@ -1511,7 +1510,7 @@ CNetMessage V2Transport::GetReceivedMessage(std::chrono::microseconds time, bool
         LogPrint(BCLog::NET, "V2 transport error: invalid message type (%u bytes contents), peer=%d\n", m_recv_decode_buffer.size(), m_nodeid);
         reject_message = true;
     }
-    m_recv_decode_buffer = {};
+    ClearShrink(m_recv_decode_buffer);
     SetReceiveState(RecvState::APP);
 
     return msg;
@@ -1545,7 +1544,7 @@ bool V2Transport::SetMessageToSend(CSerializedNetMsg& msg) noexcept
     m_cipher.Encrypt(MakeByteSpan(contents), {}, false, MakeWritableByteSpan(m_send_buffer));
     m_send_type = msg.m_type;
     // Release memory
-    msg.data = {};
+    ClearShrink(msg.data);
     return true;
 }
 
@@ -1577,7 +1576,7 @@ void V2Transport::MarkBytesSent(size_t bytes_sent) noexcept
     // Wipe the buffer when everything is sent.
     if (m_send_pos == m_send_buffer.size()) {
         m_send_pos = 0;
-        m_send_buffer = {};
+        ClearShrink(m_send_buffer);
     }
 }
 
