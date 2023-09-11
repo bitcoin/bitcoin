@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(vector_bool)
     std::vector<bool> vec2{1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1};
 
     BOOST_CHECK(vec1 == std::vector<uint8_t>(vec2.begin(), vec2.end()));
-    BOOST_CHECK(SerializeHash(vec1) == SerializeHash(vec2));
+    BOOST_CHECK((HashWriter{} << vec1).GetHash() == (HashWriter{} << vec2).GetHash());
 }
 
 BOOST_AUTO_TEST_CASE(noncanonical)
