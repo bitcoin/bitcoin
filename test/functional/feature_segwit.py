@@ -89,6 +89,7 @@ class SegWitTest(BitcoinTestFramework):
             [
                 "-acceptnonstdtxn=1",
                 "-rpcserialversion=0",
+                "-deprecatedrpc=serialversion",
                 "-testactivationheight=segwit@165",
                 "-addresstype=legacy",
             ],
