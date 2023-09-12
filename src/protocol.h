@@ -13,6 +13,7 @@
 #include <uint256.h>
 #include <util/time.h>
 
+#include <array>
 #include <cstdint>
 #include <limits>
 #include <string>
@@ -26,14 +27,13 @@
 class CMessageHeader
 {
 public:
-    static constexpr size_t MESSAGE_START_SIZE = 4;
+    using MessageStartChars = std::array<uint8_t, 4>;
     static constexpr size_t COMMAND_SIZE = 12;
     static constexpr size_t MESSAGE_SIZE_SIZE = 4;
     static constexpr size_t CHECKSUM_SIZE = 4;
-    static constexpr size_t MESSAGE_SIZE_OFFSET = MESSAGE_START_SIZE + COMMAND_SIZE;
+    static constexpr size_t MESSAGE_SIZE_OFFSET = std::tuple_size_v<MessageStartChars> + COMMAND_SIZE;
     static constexpr size_t CHECKSUM_OFFSET = MESSAGE_SIZE_OFFSET + MESSAGE_SIZE_SIZE;
-    static constexpr size_t HEADER_SIZE = MESSAGE_START_SIZE + COMMAND_SIZE + MESSAGE_SIZE_SIZE + CHECKSUM_SIZE;
-    typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
+    static constexpr size_t HEADER_SIZE = std::tuple_size_v<MessageStartChars> + COMMAND_SIZE + MESSAGE_SIZE_SIZE + CHECKSUM_SIZE;
 
     explicit CMessageHeader() = default;
 
@@ -47,7 +47,7 @@ public:
 
     SERIALIZE_METHODS(CMessageHeader, obj) { READWRITE(obj.pchMessageStart, obj.pchCommand, obj.nMessageSize, obj.pchChecksum); }
 
-    char pchMessageStart[MESSAGE_START_SIZE]{};
+    MessageStartChars pchMessageStart{};
     char pchCommand[COMMAND_SIZE]{};
     uint32_t nMessageSize{std::numeric_limits<uint32_t>::max()};
     uint8_t pchChecksum[CHECKSUM_SIZE]{};

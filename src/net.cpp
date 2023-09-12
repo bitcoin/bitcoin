@@ -730,7 +730,7 @@ V1Transport::V1Transport(const NodeId node_id, int nTypeIn, int nVersionIn) noex
     m_node_id(node_id), hdrbuf(nTypeIn, nVersionIn), vRecv(nTypeIn, nVersionIn)
 {
     assert(std::size(Params().MessageStart()) == std::size(m_magic_bytes));
-    std::copy(std::begin(Params().MessageStart()), std::end(Params().MessageStart()), m_magic_bytes);
+    m_magic_bytes = Params().MessageStart();
     LOCK(m_recv_mutex);
     Reset();
 }
@@ -759,7 +759,7 @@ int V1Transport::readHeader(Span<const uint8_t> msg_bytes)
     }
 
     // Check start string, network magic
-    if (memcmp(hdr.pchMessageStart, m_magic_bytes, CMessageHeader::MESSAGE_START_SIZE) != 0) {
+    if (hdr.pchMessageStart != m_magic_bytes) {
         LogPrint(BCLog::NET, "Header error: Wrong MessageStart %s received, peer=%d\n", HexStr(hdr.pchMessageStart), m_node_id);
         return -1;
     }
@@ -1144,7 +1144,7 @@ bool V2Transport::ProcessReceivedKeyBytes() noexcept
     // they receive our uniformly random key and garbage, but detecting this case specially
     // means we can log it.
     static constexpr std::array<uint8_t, 12> MATCH = {'v', 'e', 'r', 's', 'i', 'o', 'n', 0, 0, 0, 0, 0};
-    static constexpr size_t OFFSET = sizeof(CMessageHeader::MessageStartChars);
+    static constexpr size_t OFFSET = std::tuple_size_v<CMessageHeader::MessageStartChars>;
     if (!m_initiating && m_recv_buffer.size() >= OFFSET + MATCH.size()) {
         if (std::equal(MATCH.begin(), MATCH.end(), m_recv_buffer.begin() + OFFSET)) {
             LogPrint(BCLog::NET, "V2 transport error: V1 peer with wrong MessageStart %s\n",

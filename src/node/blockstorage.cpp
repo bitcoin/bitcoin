@@ -932,7 +932,7 @@ bool BlockManager::ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatF
 
         filein >> blk_start >> blk_size;
 
-        if (memcmp(blk_start, GetParams().MessageStart(), CMessageHeader::MESSAGE_START_SIZE)) {
+        if (blk_start != GetParams().MessageStart()) {
             return error("%s: Block magic mismatch for %s: %s versus expected %s", __func__, pos.ToString(),
                          HexStr(blk_start),
                          HexStr(GetParams().MessageStart()));
