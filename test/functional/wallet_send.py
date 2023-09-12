@@ -530,13 +530,11 @@ class WalletSendTest(BitcoinTestFramework):
         signed = ext_wallet.walletprocesspsbt(res["psbt"])
         signed = ext_fund.walletprocesspsbt(res["psbt"])
         assert signed["complete"]
-        self.nodes[0].finalizepsbt(signed["psbt"])
 
         res = self.test_send(from_wallet=ext_wallet, to_wallet=self.nodes[0], amount=15, inputs=[ext_utxo], add_inputs=True, psbt=True, include_watching=True, solving_data={"descriptors": [desc]})
         signed = ext_wallet.walletprocesspsbt(res["psbt"])
         signed = ext_fund.walletprocesspsbt(res["psbt"])
         assert signed["complete"]
-        self.nodes[0].finalizepsbt(signed["psbt"])
 
         dec = self.nodes[0].decodepsbt(signed["psbt"])
         for i, txin in enumerate(dec["tx"]["vin"]):
@@ -574,8 +572,7 @@ class WalletSendTest(BitcoinTestFramework):
         signed = ext_wallet.walletprocesspsbt(res["psbt"])
         signed = ext_fund.walletprocesspsbt(res["psbt"])
         assert signed["complete"]
-        tx = self.nodes[0].finalizepsbt(signed["psbt"])
-        testres = self.nodes[0].testmempoolaccept([tx["hex"]])[0]
+        testres = self.nodes[0].testmempoolaccept([signed["hex"]])[0]
         assert_equal(testres["allowed"], True)
         assert_fee_amount(testres["fees"]["base"], testres["vsize"], Decimal(0.0001))
 
