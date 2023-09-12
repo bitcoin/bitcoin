@@ -1078,6 +1078,9 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckInferDescriptor("76a914a31725c74421fadc50d35520ab8751ed120af80588ac", "pkh(04c56fe4a92d401bcbf1b3dfbe4ac3dac5602ca155a3681497f02c1b9a733b92d704e2da6ec4162e4846af9236ef4171069ac8b7f8234a8405b6cadd96f34f5a31)", {}, {{"04c56fe4a92d401bcbf1b3dfbe4ac3dac5602ca155a3681497f02c1b9a733b92d704e2da6ec4162e4846af9236ef4171069ac8b7f8234a8405b6cadd96f34f5a31", ""}});
     // Infer pk() from p2pk with uncompressed key
     CheckInferDescriptor("4104032540df1d3c7070a8ab3a9cdd304dfc7fd1e6541369c53c4c3310b2537d91059afc8b8e7673eb812a32978dabb78c40f2e423f7757dca61d11838c7aeeb5220ac", "pk(04032540df1d3c7070a8ab3a9cdd304dfc7fd1e6541369c53c4c3310b2537d91059afc8b8e7673eb812a32978dabb78c40f2e423f7757dca61d11838c7aeeb5220)", {}, {{"04032540df1d3c7070a8ab3a9cdd304dfc7fd1e6541369c53c4c3310b2537d91059afc8b8e7673eb812a32978dabb78c40f2e423f7757dca61d11838c7aeeb5220", ""}});
+    // addr(<silent-payment-address>) is not valid, since a silent payment address is instructions on how to create a scriptPubKey and not simply an encoding of a scriptPubKey
+    CheckUnparsable("addr(sp1qq0x6hdljmnnml0v2pw2hp3harecjuhtyq30f66630v74qu39rhpqgqe8qutscuwc7a0yef8rln58pw2qnh90z2c9r5au4hlhgarl5asecqeww2rq)",
+                    "addr(sp1qq0x6hdljmnnml0v2pw2hp3harecjuhtyq30f66630v74qu39rhpqgqe8qutscuwc7a0yef8rln58pw2qnh90z2c9r5au4hlhgarl5asecqeww2rq)", "silent-payments address is not valid for addr()");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
