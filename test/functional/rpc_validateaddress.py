@@ -130,7 +130,18 @@ INVALID_DATA = [
         "sp1qqgqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqf26rn7",
         "Invalid Silent payments address",
         []
-    )
+    ),
+    # TODO move to VALID_DATA when Silent payments sending is enabled
+    (
+        "sp1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwv", # V0 Silent Payments address
+        "This is a valid Silent Payments v0 address, but sending support is not yet implemented.",
+        []
+    ),
+    (
+        "sp1pq22l5s6l9460ww6t4tkzsy2a7zejurcmzz35pt0ffrzk5erlaykdcqugecjjnjqf7ggq39vl6wexjlm00n66z94v675n7wcux6d2krr68t02m0h0s8cwhy", # V1 Silent Payments address
+        "This is a valid Silent Payments v1 address, but sending support is not yet implemented.",
+        []
+    ),
 ]
 VALID_DATA = [
     # BIP 350
@@ -176,16 +187,7 @@ VALID_DATA = [
     (
         "bc1pfeessrawgf",
         "51024e73",
-    ),
-    # Silent Payments
-    (
-        "sp1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwv", # V0 Silent Payments address
-        None
-    ),
-    (
-        "sp1pq22l5s6l9460ww6t4tkzsy2a7zejurcmzz35pt0ffrzk5erlaykdcqugecjjnjqf7ggq39vl6wexjlm00n66z94v675n7wcux6d2krr68t02m0h0s8cwhy", # V1 Silent Payments address
-        None
-    ),
+    )
 ]
 
 

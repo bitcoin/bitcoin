@@ -187,6 +187,11 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                 error_str = "Invalid Silent payments address";
                 return CNoDestination();
             }
+            // This is a bit of a hack to disable silent payments until sending is implemented. The reason we return a valid SilentPayments Destination
+            // while also setting an error message is so that we can use DecodeDestination in the unit tests, but also have `validateaddress` fail
+            // when passed a silent payment address
+            // TODO: remove this error_str once sending support is implemented
+            error_str = strprintf("This is a valid Silent Payments v%u address, but sending support is not yet implemented.", version);
             return *sp_dest;
         }
         // Bech32 decoding
