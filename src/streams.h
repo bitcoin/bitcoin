@@ -577,7 +577,7 @@ public:
  *  Will automatically close the file when it goes out of scope if not null.
  *  If you need to close the file early, use file.fclose() instead of fclose(file).
  */
-class CBufferedFile
+class BufferedFile
 {
 private:
     const int nVersion;
@@ -600,7 +600,7 @@ private:
             return false;
         size_t nBytes = fread((void*)&vchBuf[pos], 1, readNow, src);
         if (nBytes == 0) {
-            throw std::ios_base::failure(feof(src) ? "CBufferedFile::Fill: end of file" : "CBufferedFile::Fill: fread failed");
+            throw std::ios_base::failure(feof(src) ? "BufferedFile::Fill: end of file" : "BufferedFile::Fill: fread failed");
         }
         nSrcPos += nBytes;
         return true;
@@ -629,7 +629,7 @@ private:
     }
 
 public:
-    CBufferedFile(FILE* fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nVersionIn)
+    BufferedFile(FILE* fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nVersionIn)
         : nVersion{nVersionIn}, nReadLimit{std::numeric_limits<uint64_t>::max()}, nRewind{nRewindIn}, vchBuf(nBufSize, std::byte{0})
     {
         if (nRewindIn >= nBufSize)
@@ -637,14 +637,14 @@ public:
         src = fileIn;
     }
 
-    ~CBufferedFile()
+    ~BufferedFile()
     {
         fclose();
     }
 
     // Disallow copies
-    CBufferedFile(const CBufferedFile&) = delete;
-    CBufferedFile& operator=(const CBufferedFile&) = delete;
+    BufferedFile(const BufferedFile&) = delete;
+    BufferedFile& operator=(const BufferedFile&) = delete;
 
     int GetVersion() const { return nVersion; }
 
@@ -711,7 +711,7 @@ public:
     }
 
     template<typename T>
-    CBufferedFile& operator>>(T&& obj) {
+    BufferedFile& operator>>(T&& obj) {
         ::Unserialize(*this, obj);
         return (*this);
     }
