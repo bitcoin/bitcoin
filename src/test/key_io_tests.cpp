@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(key_io_valid_parse)
             // Private key must be invalid public key
             destination = DecodeDestination(exp_base58string);
             BOOST_CHECK_MESSAGE(!IsValidDestination(destination), "IsValid privkey as pubkey:" + strTest);
-        } else {
+        } else if (!isSilentPayment) { // TODO remove if condition when silent payments sending is implemented
             // Must be a valid destination
             destination = DecodeDestination(exp_base58string);
             BOOST_CHECK_MESSAGE(IsValidDestination(destination), "!IsValid:" + strTest);
