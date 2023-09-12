@@ -181,10 +181,8 @@ public:
     bool operator()(const PubKeyDestination& dest) const { return false; }
     bool operator()(const PKHash& dest) const { return true; }
     bool operator()(const ScriptHash& dest) const { return true; }
-    // silent payments addresses are not valid until sending support has been implemented
-    // TODO: set this to true once sending is implemented
-    bool operator()(const V0SilentPaymentsDestination& dest) const { return false; }
-    bool operator()(const UnknownSilentPaymentsDestination& dest) const { return false; }
+    bool operator()(const V0SilentPaymentsDestination& dest) const { return true; }
+    bool operator()(const UnknownSilentPaymentsDestination& dest) const { return true; }
     bool operator()(const WitnessV0KeyHash& dest) const { return true; }
     bool operator()(const WitnessV0ScriptHash& dest) const { return true; }
     bool operator()(const WitnessV1Taproot& dest) const { return true; }
