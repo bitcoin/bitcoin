@@ -1223,7 +1223,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.connman);
     node.connman = std::make_unique<CConnman>(GetRand<uint64_t>(),
                                               GetRand<uint64_t>(),
-                                              *node.addrman, *node.netgroupman, args.GetBoolArg("-networkactive", true));
+                                              *node.addrman, *node.netgroupman, chainparams, args.GetBoolArg("-networkactive", true));
 
     assert(!node.fee_estimator);
     // Don't initialize fee estimation with old data if we don't relay transactions,

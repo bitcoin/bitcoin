@@ -470,8 +470,8 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         Ticks<HoursDouble>(pszDest ? 0h : Now<NodeSeconds>() - addrConnect.nTime));
 
     // Resolve
-    const uint16_t default_port{pszDest != nullptr ? Params().GetDefaultPort(pszDest) :
-                                                     Params().GetDefaultPort()};
+    const uint16_t default_port{pszDest != nullptr ? m_params.GetDefaultPort(pszDest) :
+                                                     m_params.GetDefaultPort()};
     if (pszDest) {
         const std::vector<CService> resolved{Lookup(pszDest, default_port, fNameLookup && !HaveNameProxy(), 256)};
         if (!resolved.empty()) {
@@ -2184,7 +2184,7 @@ void CConnman::WakeMessageHandler()
 void CConnman::ThreadDNSAddressSeed()
 {
     FastRandomContext rng;
-    std::vector<std::string> seeds = Params().DNSSeeds();
+    std::vector<std::string> seeds = m_params.DNSSeeds();
     Shuffle(seeds.begin(), seeds.end(), rng);
     int seeds_right_now = 0; // Number of seeds left before testing if we have enough connections
     int found = 0;
@@ -2275,7 +2275,7 @@ void CConnman::ThreadDNSAddressSeed()
             const auto addresses{LookupHost(host, nMaxIPs, true)};
             if (!addresses.empty()) {
                 for (const CNetAddr& ip : addresses) {
-                    CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()), requiredServiceBits);
+                    CAddress addr = CAddress(CService(ip, m_params.GetDefaultPort()), requiredServiceBits);
                     addr.nTime = rng.rand_uniform_delay(Now<NodeSeconds>() - 3 * 24h, -4 * 24h); // use a random age between 3 and 7 days old
                     vAdd.push_back(addr);
                     found++;
@@ -2480,7 +2480,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
 
             if (add_fixed_seeds_now) {
-                std::vector<CAddress> seed_addrs{ConvertSeeds(Params().FixedSeeds())};
+                std::vector<CAddress> seed_addrs{ConvertSeeds(m_params.FixedSeeds())};
                 // We will not make outgoing connections to peers that are unreachable
                 // (e.g. because of -onlynet configuration).
                 // Therefore, we do not add them to addrman in the first place.
@@ -2769,7 +2769,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo() const
     }
 
     for (const std::string& strAddNode : lAddresses) {
-        CService service(LookupNumeric(strAddNode, Params().GetDefaultPort(strAddNode)));
+        CService service(LookupNumeric(strAddNode, m_params.GetDefaultPort(strAddNode)));
         AddedNodeInfo addedNode{strAddNode, CService(), false, false};
         if (service.IsValid()) {
             // strAddNode is an IP:port
@@ -3075,11 +3075,12 @@ void CConnman::SetNetworkActive(bool active)
 }
 
 CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, AddrMan& addrman_in,
-                   const NetGroupManager& netgroupman, bool network_active)
+                   const NetGroupManager& netgroupman, const CChainParams& params, bool network_active)
     : addrman(addrman_in)
     , m_netgroupman{netgroupman}
     , nSeed0(nSeed0In)
     , nSeed1(nSeed1In)
+    , m_params(params)
 {
     SetTryNewOutboundPeer(false);
 
