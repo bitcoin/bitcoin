@@ -174,11 +174,6 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             }
             CPubKey scan_pubkey{data.begin(), data.begin() + CPubKey::COMPRESSED_SIZE};
             CPubKey spend_pubkey{data.begin() + CPubKey::COMPRESSED_SIZE, data.begin() + 2*CPubKey::COMPRESSED_SIZE};
-            // This is a bit of a hack to disable silent payments until sending is implemented. The reason we return a V0SilentPaymentDestination
-            // while also setting an error message is so that we can use DecodeDestination in the unit tests, but also have `validateaddress` fail
-            // when passed a silent payment address
-            // TODO: remove this error_str once sending support is implemented
-            error_str = strprintf("This is a valid Silent Payments v0 address, but sending support is not yet implemented.");
             return V0SilentPaymentDestination{scan_pubkey, spend_pubkey};
         }
         // Bech32 decoding
