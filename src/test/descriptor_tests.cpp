@@ -1256,6 +1256,9 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     // Fuzzer crash test cases
     CheckUnparsable("pk(musig(dd}uue/00/)k(", "pk(musig(dd}uue/00/)k(", "Invalid musig() expression");
     CheckUnparsable("tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)", "tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)","tr(): Too many ')' in musig() expression");
+    // addr(<silent-payment-address>) is not valid, since a silent payment address is instructions on how to create a scriptPubKey and not simply an encoding of a scriptPubKey
+    CheckUnparsable("addr(sp1qq0x6hdljmnnml0v2pw2hp3harecjuhtyq30f66630v74qu39rhpqgqe8qutscuwc7a0yef8rln58pw2qnh90z2c9r5au4hlhgarl5asecqeww2rq)",
+                    "addr(sp1qq0x6hdljmnnml0v2pw2hp3harecjuhtyq30f66630v74qu39rhpqgqe8qutscuwc7a0yef8rln58pw2qnh90z2c9r5au4hlhgarl5asecqeww2rq)", "silent-payments address is not valid for addr()");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
