@@ -231,8 +231,7 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
         keys.push_back(key);
         key.clear();
         key.setObject();
-        CKey futureKey;
-        futureKey.MakeNewKey(true);
+        CKey futureKey = GenerateRandomKey();
         key.pushKV("scriptPubKey", HexStr(GetScriptForRawPubKey(futureKey.GetPubKey())));
         key.pushKV("timestamp", newTip->GetBlockTimeMax() + TIMESTAMP_WINDOW + 1);
         key.pushKV("internal", UniValue(true));
@@ -704,8 +703,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
 static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
 {
     // Generate ephemeral valid pubkey
-    CKey key;
-    key.MakeNewKey(true);
+    CKey key = GenerateRandomKey();
     CPubKey pubkey = key.GetPubKey();
 
     // Generate pubkey hash
@@ -789,8 +787,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
     context.args = &m_args;
     context.chain = m_node.chain.get();
     auto wallet = TestLoadWallet(context);
-    CKey key;
-    key.MakeNewKey(true);
+    CKey key = GenerateRandomKey();
     AddKey(*wallet, key);
     TestUnloadWallet(std::move(wallet));
 
@@ -898,8 +895,7 @@ BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
     context.args = &m_args;
     context.chain = m_node.chain.get();
     auto wallet = TestLoadWallet(context);
-    CKey key;
-    key.MakeNewKey(true);
+    CKey key = GenerateRandomKey();
     AddKey(*wallet, key);
 
     std::string error;

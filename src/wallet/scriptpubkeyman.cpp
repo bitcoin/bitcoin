@@ -1183,8 +1183,7 @@ bool LegacyScriptPubKeyMan::CanGenerateKeys() const
 CPubKey LegacyScriptPubKeyMan::GenerateNewSeed()
 {
     assert(!m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
-    CKey key;
-    key.MakeNewKey(true);
+    CKey key = GenerateRandomKey();
     return DeriveNewSeed(key);
 }
 

@@ -47,8 +47,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         pubkeys[i] = keys[i].GetPubKey();
     }
 
-    CKey uncompressedKey;
-    uncompressedKey.MakeNewKey(false);
+    CKey uncompressedKey = GenerateRandomKey(/*compressed=*/false);
     CPubKey uncompressedPubkey = uncompressedKey.GetPubKey();
     std::unique_ptr<interfaces::Chain>& chain = m_node.chain;
 

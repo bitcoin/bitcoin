@@ -136,10 +136,8 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
 
 BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
 {
-    CKey key;
-    CPubKey pubkey;
-    key.MakeNewKey(true);
-    pubkey = key.GetPubKey();
+    CKey key = GenerateRandomKey();
+    CPubKey pubkey = key.GetPubKey();
 
     CScript s;
     std::vector<std::vector<unsigned char> > solutions;
@@ -192,10 +190,8 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
 
 BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
 {
-    CKey key;
-    CPubKey pubkey;
-    key.MakeNewKey(true);
-    pubkey = key.GetPubKey();
+    CKey key = GenerateRandomKey();
+    CPubKey pubkey = key.GetPubKey();
 
     CScript s;
     CTxDestination address;
