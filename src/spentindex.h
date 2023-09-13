@@ -170,14 +170,14 @@ public:
     uint8_t m_address_type{AddressType::UNKNOWN};
     uint160 m_address_bytes;
     uint256 m_tx_hash;
-    size_t m_tx_index{0};
+    uint32_t m_tx_index{0};
 
 public:
     CAddressUnspentKey() {
         SetNull();
     }
 
-    CAddressUnspentKey(uint8_t address_type, uint160 address_bytes, uint256 tx_hash, size_t tx_index) :
+    CAddressUnspentKey(uint8_t address_type, uint160 address_bytes, uint256 tx_hash, uint32_t tx_index) :
         m_address_type{address_type}, m_address_bytes{address_bytes}, m_tx_hash{tx_hash}, m_tx_index{tx_index} {};
 
     void SetNull() {
@@ -247,7 +247,7 @@ public:
     int32_t m_block_height{0};
     uint32_t m_block_tx_pos{0};
     uint256 m_tx_hash;
-    size_t m_tx_index{0};
+    uint32_t m_tx_index{0};
     bool m_tx_spent{false};
 
 public:
@@ -256,7 +256,7 @@ public:
     }
 
     CAddressIndexKey(uint8_t address_type, uint160 address_bytes, int32_t block_height, uint32_t block_tx_pos, uint256 tx_hash,
-                     size_t tx_index, bool tx_spent) :
+                     uint32_t tx_index, bool tx_spent) :
         m_address_type{address_type},
         m_address_bytes{address_bytes},
         m_block_height{block_height},
