@@ -37,6 +37,13 @@ bool CheckPackage(const Package& txns, PackageValidationState& state)
     std::unordered_set<uint256, SaltedTxidHasher> later_txids;
     std::transform(txns.cbegin(), txns.cend(), std::inserter(later_txids, later_txids.end()),
                    [](const auto& tx) { return tx->GetHash(); });
+
+    // Package must not contain any duplicate transactions, which is checked by txid. This also
+    // includes transactions with duplicate wtxids and same-txid-different-witness transactions.
+    if (later_txids.size() != txns.size()) {
+        return state.Invalid(PackageValidationResult::PCKG_POLICY, "package-contains-duplicates");
+    }
+
     for (const auto& tx : txns) {
         for (const auto& input : tx->vin) {
             if (later_txids.find(input.prevout.hash) != later_txids.end()) {

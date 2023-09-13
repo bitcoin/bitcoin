@@ -212,8 +212,8 @@ class RPCPackagesTest(BitcoinTestFramework):
         coin = self.wallet.get_utxo()
 
         # tx1 and tx2 share the same inputs
-        tx1 = self.wallet.create_self_transfer(utxo_to_spend=coin)
-        tx2 = self.wallet.create_self_transfer(utxo_to_spend=coin)
+        tx1 = self.wallet.create_self_transfer(utxo_to_spend=coin, fee_rate=DEFAULT_FEE)
+        tx2 = self.wallet.create_self_transfer(utxo_to_spend=coin, fee_rate=2*DEFAULT_FEE)
 
         # Ensure tx1 and tx2 are valid by themselves
         assert node.testmempoolaccept([tx1["hex"]])[0]["allowed"]
@@ -222,8 +222,8 @@ class RPCPackagesTest(BitcoinTestFramework):
         self.log.info("Test duplicate transactions in the same package")
         testres = node.testmempoolaccept([tx1["hex"], tx1["hex"]])
         assert_equal(testres, [
-            {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "conflict-in-package"},
-            {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "conflict-in-package"}
+            {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "package-contains-duplicates"},
+            {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "package-contains-duplicates"}
         ])
 
         self.log.info("Test conflicting transactions in the same package")

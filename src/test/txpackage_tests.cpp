@@ -66,6 +66,17 @@ BOOST_FIXTURE_TEST_CASE(package_sanitization_tests, TestChain100Setup)
     BOOST_CHECK(!CheckPackage(package_too_large, state_too_large));
     BOOST_CHECK_EQUAL(state_too_large.GetResult(), PackageValidationResult::PCKG_POLICY);
     BOOST_CHECK_EQUAL(state_too_large.GetRejectReason(), "package-too-large");
+
+    // Packages can't contain transactions with the same txid.
+    Package package_duplicate_txids_empty;
+    for (auto i{0}; i < 3; ++i) {
+        CMutableTransaction empty_tx;
+        package_duplicate_txids_empty.emplace_back(MakeTransactionRef(empty_tx));
+    }
+    PackageValidationState state_duplicates;
+    BOOST_CHECK(!CheckPackage(package_duplicate_txids_empty, state_duplicates));
+    BOOST_CHECK_EQUAL(state_duplicates.GetResult(), PackageValidationResult::PCKG_POLICY);
+    BOOST_CHECK_EQUAL(state_duplicates.GetRejectReason(), "package-contains-duplicates");
 }
 
 BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100Setup)
