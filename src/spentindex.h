@@ -46,7 +46,7 @@ public:
     uint32_t m_tx_index{0};
     int32_t m_block_height{0};
     CAmount m_amount{0};
-    int32_t m_address_type{AddressType::UNKNOWN};
+    uint8_t m_address_type{AddressType::UNKNOWN};
     uint160 m_address_bytes;
 
 public:
@@ -54,7 +54,7 @@ public:
         SetNull();
     }
 
-    CSpentIndexValue(uint256 txin_hash, uint32_t txin_index, int32_t block_height, CAmount amount, int32_t address_type,
+    CSpentIndexValue(uint256 txin_hash, uint32_t txin_index, int32_t block_height, CAmount amount, uint8_t address_type,
                      uint160 address_bytes) :
         m_tx_hash{txin_hash},
         m_tx_index{txin_index},
@@ -167,7 +167,7 @@ public:
 
 struct CAddressUnspentKey {
 public:
-    uint32_t m_address_type{AddressType::UNKNOWN};
+    uint8_t m_address_type{AddressType::UNKNOWN};
     uint160 m_address_bytes;
     uint256 m_tx_hash;
     size_t m_tx_index{0};
@@ -177,7 +177,7 @@ public:
         SetNull();
     }
 
-    CAddressUnspentKey(uint32_t address_type, uint160 address_bytes, uint256 tx_hash, size_t tx_index) :
+    CAddressUnspentKey(uint8_t address_type, uint160 address_bytes, uint256 tx_hash, size_t tx_index) :
         m_address_type{address_type}, m_address_bytes{address_bytes}, m_tx_hash{tx_hash}, m_tx_index{tx_index} {};
 
     void SetNull() {
@@ -242,7 +242,7 @@ public:
 
 struct CAddressIndexKey {
 public:
-    uint32_t m_address_type{AddressType::UNKNOWN};
+    uint8_t m_address_type{AddressType::UNKNOWN};
     uint160 m_address_bytes;
     int32_t m_block_height{0};
     uint32_t m_block_tx_pos{0};
@@ -255,7 +255,7 @@ public:
         SetNull();
     }
 
-    CAddressIndexKey(uint32_t address_type, uint160 address_bytes, int32_t block_height, uint32_t block_tx_pos, uint256 tx_hash,
+    CAddressIndexKey(uint8_t address_type, uint160 address_bytes, int32_t block_height, uint32_t block_tx_pos, uint256 tx_hash,
                      size_t tx_index, bool tx_spent) :
         m_address_type{address_type},
         m_address_bytes{address_bytes},
@@ -308,7 +308,7 @@ public:
 
 struct CAddressIndexIteratorKey {
 public:
-    uint32_t m_address_type{AddressType::UNKNOWN};
+    uint8_t m_address_type{AddressType::UNKNOWN};
     uint160 m_address_bytes;
 
 public:
@@ -316,7 +316,7 @@ public:
         SetNull();
     }
 
-    CAddressIndexIteratorKey(uint32_t address_type, uint160 address_bytes) :
+    CAddressIndexIteratorKey(uint8_t address_type, uint160 address_bytes) :
         m_address_type{address_type}, m_address_bytes{address_bytes} {};
 
     void SetNull() {
@@ -344,7 +344,7 @@ public:
 
 struct CAddressIndexIteratorHeightKey {
 public:
-    uint32_t m_address_type{AddressType::UNKNOWN};
+    uint8_t m_address_type{AddressType::UNKNOWN};
     uint160 m_address_bytes;
     int32_t m_block_height{0};
 
@@ -353,7 +353,7 @@ public:
         SetNull();
     }
 
-    CAddressIndexIteratorHeightKey(uint32_t address_type, uint160 address_bytes, int32_t block_height) :
+    CAddressIndexIteratorHeightKey(uint8_t address_type, uint160 address_bytes, int32_t block_height) :
         m_address_type{address_type}, m_address_bytes{address_bytes}, m_block_height{block_height} {};
 
     void SetNull() {

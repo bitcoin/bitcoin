@@ -42,21 +42,21 @@ public:
 struct CMempoolAddressDeltaKey
 {
 public:
-    int32_t m_address_type;
+    uint8_t m_address_type{AddressType::UNKNOWN};
     uint160 m_address_bytes;
     uint256 m_tx_hash;
     uint32_t m_tx_index{0};
     bool m_tx_spent{false};
 
 public:
-    CMempoolAddressDeltaKey(int32_t address_type, uint160 address_bytes, uint256 tx_hash, uint32_t tx_index, bool tx_spent) :
+    CMempoolAddressDeltaKey(uint8_t address_type, uint160 address_bytes, uint256 tx_hash, uint32_t tx_index, bool tx_spent) :
         m_address_type{address_type},
         m_address_bytes{address_bytes},
         m_tx_hash{tx_hash},
         m_tx_index{tx_index},
         m_tx_spent{tx_spent} {};
 
-    CMempoolAddressDeltaKey(int32_t address_type, uint160 address_bytes) :
+    CMempoolAddressDeltaKey(uint8_t address_type, uint160 address_bytes) :
         m_address_type{address_type},
         m_address_bytes{address_bytes} {};
 };
