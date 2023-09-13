@@ -43,7 +43,7 @@ env:  # Global defaults
 # The following specific types should exist, with the following requirements:
 # - small: For an x86_64 machine, recommended to have 2 CPUs and 8 GB of memory.
 # - medium: For an x86_64 machine, recommended to have 4 CPUs and 16 GB of memory.
-# - lunar: For a machine running the Linux kernel shipped with Ubuntu Lunar 23.04. The machine is recommended to have 4 CPUs and 16 GB of memory.
+# - lunar: For a machine running the Linux kernel shipped with exactly Ubuntu Mantic 23.10. The machine is recommended to have 4 CPUs and 16 GB of memory.
 # - arm64: For an aarch64 machine, recommended to have 2 CPUs and 8 GB of memory.
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
