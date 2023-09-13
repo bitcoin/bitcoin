@@ -16,12 +16,14 @@ class CAddrMan;
 class CBlockPolicyEstimator;
 class CConnman;
 class CCreditPoolManager;
+class ChainstateManager;
+class CEvoDB;
 class CScheduler;
 class CTxMemPool;
-class ChainstateManager;
-struct LLMQContext;
 class PeerManager;
-class CEvoDB;
+struct CJContext;
+struct LLMQContext;
+
 namespace interfaces {
 class Chain;
 class ChainClient;
@@ -58,6 +60,7 @@ struct NodeContext {
     //! Dash
     std::unique_ptr<LLMQContext> llmq_ctx;
     std::unique_ptr<CCreditPoolManager> creditPoolManager;
+    std::unique_ptr<CJContext> cj_ctx;
 
     std::unique_ptr<CEvoDB> evodb;
 

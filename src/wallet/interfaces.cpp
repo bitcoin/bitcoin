@@ -123,52 +123,54 @@ WalletTxOut MakeWalletTxOut(const CWallet& wallet,
 namespace CoinJoin = interfaces::CoinJoin;
 class CoinJoinImpl : public CoinJoin::Client
 {
-    std::shared_ptr<CCoinJoinClientManager> m_manager;
+    CCoinJoinClientManager& m_manager;
+
 public:
-    CoinJoinImpl(const std::shared_ptr<CWallet>& wallet) : m_manager(coinJoinClientManagers.at(wallet->GetName())) {}
+    CoinJoinImpl(const CJClientManager& clientman, const std::shared_ptr<CWallet>& wallet)
+        : m_manager(*Assert(clientman.Get(*wallet))) {}
+
     void resetCachedBlocks() override
     {
-        m_manager->nCachedNumBlocks = std::numeric_limits<int>::max();
+        m_manager.nCachedNumBlocks = std::numeric_limits<int>::max();
     }
     void resetPool() override
     {
-        m_manager->ResetPool();
+        m_manager.ResetPool();
     }
     void disableAutobackups() override
     {
-        m_manager->fCreateAutoBackups = false;
+        m_manager.fCreateAutoBackups = false;
     }
     int getCachedBlocks() override
     {
-        return m_manager->nCachedNumBlocks;
+        return m_manager.nCachedNumBlocks;
     }
     std::string getSessionDenoms() override
     {
-        return m_manager->GetSessionDenoms();
+        return m_manager.GetSessionDenoms();
     }
     void setCachedBlocks(int nCachedBlocks) override
     {
-       m_manager->nCachedNumBlocks = nCachedBlocks;
+       m_manager.nCachedNumBlocks = nCachedBlocks;
     }
     bool isMixing() override
     {
-        return m_manager->IsMixing();
+        return m_manager.IsMixing();
     }
     bool startMixing() override
     {
-        return m_manager->StartMixing();
+        return m_manager.StartMixing();
     }
     void stopMixing() override
     {
-        m_manager->StopMixing();
+        m_manager.StopMixing();
     }
 };
 
 class WalletImpl : public Wallet
 {
 public:
-
-    explicit WalletImpl(const std::shared_ptr<CWallet>& wallet) : m_wallet(wallet), m_coinjoin(wallet) {}
+    explicit WalletImpl(const std::shared_ptr<CWallet>& wallet, const CJClientManager& clientman) : m_wallet(wallet), m_coinjoin(clientman, wallet) {}
 
     void markDirty() override
     {
@@ -629,7 +631,7 @@ public:
     void setMockTime(int64_t time) override { return SetMockTime(time); }
 
     //! WalletLoader methods
-    std::unique_ptr<Wallet> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings) override
+    std::unique_ptr<Wallet> createWallet(const CJClientManager& client_man, const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
         std::shared_ptr<CWallet> wallet;
         DatabaseOptions options;
@@ -637,14 +639,14 @@ public:
         options.require_create = true;
         options.create_flags = wallet_creation_flags;
         options.create_passphrase = passphrase;
-        return MakeWallet(CreateWallet(*m_context.chain, name, true /* load_on_start */, options, status, error, warnings));
+        return MakeWallet(CreateWallet(*m_context.chain, name, true /* load_on_start */, options, status, error, warnings), client_man);
     }
-    std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
+    std::unique_ptr<Wallet> loadWallet(const CJClientManager& client_man, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
         DatabaseOptions options;
         DatabaseStatus status;
         options.require_existing = true;
-        return MakeWallet(LoadWallet(*m_context.chain, name, true /* load_on_start */, options, status, error, warnings));
+        return MakeWallet(LoadWallet(*m_context.chain, name, true /* load_on_start */, options, status, error, warnings), client_man);
     }
     std::string getWalletDir() override
     {
@@ -662,7 +664,7 @@ public:
     {
         std::vector<std::unique_ptr<Wallet>> wallets;
         for (const auto& wallet : GetWallets()) {
-            wallets.emplace_back(MakeWallet(wallet));
+            wallets.emplace_back(MakeWallet(wallet, *::coinJoinClientManagers));
         }
         return wallets;
     }
@@ -680,7 +682,7 @@ public:
 } // namespace wallet
 
 namespace interfaces {
-std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(wallet) : nullptr; }
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet, const CJClientManager& clientman) { return wallet ? std::make_unique<wallet::WalletImpl>(wallet, clientman) : nullptr; }
 std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args) {
     return std::make_unique<wallet::WalletLoaderImpl>(chain, args);
 }

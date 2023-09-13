@@ -15,9 +15,6 @@ class PeerManager;
 
 class UniValue;
 
-// The main object for accessing mixing
-extern std::unique_ptr<CCoinJoinServer> coinJoinServer;
-
 /** Used to keep track of current status of mixing pool
  */
 class CCoinJoinServer : public CCoinJoinBaseSession, public CCoinJoinBaseManager
@@ -96,7 +93,7 @@ public:
     void CheckTimeout();
     void CheckForCompleteQueue();
 
-    void DoMaintenance() const;
+    void DoMaintenance();
 
     void GetJsonInfo(UniValue& obj) const;
 };

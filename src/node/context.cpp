@@ -6,6 +6,7 @@
 
 #include <addrman.h>
 #include <banman.h>
+#include <coinjoin/context.h>
 #include <evo/creditpool.h>
 #include <interfaces/chain.h>
 #include <llmq/context.h>

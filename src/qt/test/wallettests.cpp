@@ -135,7 +135,8 @@ void TestGUI(interfaces::Node& node)
     TransactionView transactionView;
     OptionsModel optionsModel(node);
     ClientModel clientModel(node, &optionsModel);
-    WalletModel walletModel(interfaces::MakeWallet(wallet), clientModel);;
+    // TODO: replace access of CoinJoin objects with access through interface
+    WalletModel walletModel(interfaces::MakeWallet(wallet, *::coinJoinClientManagers), clientModel);;
     sendCoinsDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);
 

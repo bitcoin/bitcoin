@@ -7,11 +7,12 @@
 
 class CConnman;
 class CMasternodeSync;
+struct CJContext;
 
 class CMasternodeUtils
 {
 public:
-    static void DoMaintenance(CConnman &connman, const CMasternodeSync& mn_sync);
+    static void DoMaintenance(CConnman &connman, const CMasternodeSync& mn_sync, const CJContext& cj_ctx);
 };
 
 #endif // BITCOIN_MASTERNODE_UTILS_H

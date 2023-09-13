@@ -15,6 +15,8 @@
 class CAddrMan;
 class CTxMemPool;
 class ChainstateManager;
+class CCoinJoinServer;
+struct CJContext;
 struct LLMQContext;
 class CGovernanceManager;
 
@@ -40,7 +42,8 @@ class PeerManager : public CValidationInterface, public NetEventsInterface
 public:
     static std::unique_ptr<PeerManager> make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
                                              BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman,
-                                             CTxMemPool& pool, const std::unique_ptr<LLMQContext>& llmq_ctx, CGovernanceManager& govman, bool ignore_incoming_txs);
+                                             CTxMemPool& pool, CGovernanceManager& govman, const std::unique_ptr<CJContext>& cj_ctx,
+                                             const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs);
     virtual ~PeerManager() { }
 
     /** Get statistics from node state */

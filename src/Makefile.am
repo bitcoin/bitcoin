@@ -149,6 +149,7 @@ BITCOIN_CORE_H = \
   clientversion.h \
   coinjoin/coinjoin.h \
   coinjoin/client.h \
+  coinjoin/context.h \
   coinjoin/options.h \
   coinjoin/server.h \
   coinjoin/util.h \
@@ -391,6 +392,7 @@ libbitcoin_server_a_SOURCES = \
   blockfilter.cpp \
   chain.cpp \
   coinjoin/coinjoin.cpp \
+  coinjoin/context.cpp \
   coinjoin/options.cpp \
   coinjoin/server.cpp \
   consensus/tx_verify.cpp \

@@ -11,6 +11,7 @@ class CConnman;
 class CDeterministicMNManager;
 class CGovernanceManager;
 class CMasternodeSync;
+struct CJContext;
 struct LLMQContext;
 
 class CDSNotificationInterface : public CValidationInterface
@@ -18,7 +19,8 @@ class CDSNotificationInterface : public CValidationInterface
 public:
     explicit CDSNotificationInterface(CConnman& _connman,
                                       CMasternodeSync& _mn_sync, const std::unique_ptr<CDeterministicMNManager>& _dmnman,
-                                      CGovernanceManager& _govman, const std::unique_ptr<LLMQContext>& _llmq_ctx);
+                                      CGovernanceManager& _govman, const std::unique_ptr<LLMQContext>& _llmq_ctx,
+                                      const std::unique_ptr<CJContext>& _cj_ctx);
     virtual ~CDSNotificationInterface() = default;
 
     // a small helper to initialize current block height in sub-modules on startup
@@ -45,6 +47,7 @@ private:
     CGovernanceManager& govman;
 
     const std::unique_ptr<LLMQContext>& llmq_ctx;
+    const std::unique_ptr<CJContext>& cj_ctx;
 };
 
 #endif // BITCOIN_DSNOTIFICATIONINTERFACE_H

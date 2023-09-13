@@ -7,6 +7,7 @@
 #ifdef ENABLE_WALLET
 #include <coinjoin/client.h>
 #endif // ENABLE_WALLET
+#include <coinjoin/context.h>
 #include <dsnotificationinterface.h>
 #include <governance/governance.h>
 #include <masternode/sync.h>
@@ -23,8 +24,9 @@
 
 CDSNotificationInterface::CDSNotificationInterface(CConnman& _connman,
                                                    CMasternodeSync& _mn_sync, const std::unique_ptr<CDeterministicMNManager>& _dmnman,
-                                                   CGovernanceManager& _govman, const std::unique_ptr<LLMQContext>& _llmq_ctx
-) : connman(_connman), m_mn_sync(_mn_sync), dmnman(_dmnman), govman(_govman), llmq_ctx(_llmq_ctx) {}
+                                                   CGovernanceManager& _govman, const std::unique_ptr<LLMQContext>& _llmq_ctx,
+                                                   const std::unique_ptr<CJContext>& _cj_ctx
+) : connman(_connman), m_mn_sync(_mn_sync), dmnman(_dmnman), govman(_govman), llmq_ctx(_llmq_ctx), cj_ctx(_cj_ctx) {}
 
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
@@ -66,7 +68,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
     CCoinJoin::UpdatedBlockTip(pindexNew, *llmq_ctx->clhandler, m_mn_sync);
 #ifdef ENABLE_WALLET
-    for (auto& pair : coinJoinClientManagers) {
+    for (auto& pair : cj_ctx->clientman->raw()) {
         pair.second->UpdatedBlockTip(pindexNew);
     }
 #endif // ENABLE_WALLET

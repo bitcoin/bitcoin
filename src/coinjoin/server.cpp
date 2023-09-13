@@ -23,7 +23,6 @@
 
 #include <univalue.h>
 
-std::unique_ptr<CCoinJoinServer> coinJoinServer;
 constexpr static CAmount DEFAULT_MAX_RAW_TX_FEE{COIN / 10};
 
 void CCoinJoinServer::ProcessMessage(CNode& peer, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv)
@@ -886,17 +885,15 @@ void CCoinJoinServer::SetState(PoolState nStateNew)
     nState = nStateNew;
 }
 
-void CCoinJoinServer::DoMaintenance() const
+void CCoinJoinServer::DoMaintenance()
 {
     if (!fMasternodeMode) return; // only run on masternodes
     if (!m_mn_sync.IsBlockchainSynced()) return;
     if (ShutdownRequested()) return;
 
-    if (!coinJoinServer) return;
-
-    coinJoinServer->CheckForCompleteQueue();
-    coinJoinServer->CheckPool();
-    coinJoinServer->CheckTimeout();
+    CheckForCompleteQueue();
+    CheckPool();
+    CheckTimeout();
 }
 
 void CCoinJoinServer::GetJsonInfo(UniValue& obj) const

@@ -13,16 +13,16 @@
 #include <shutdown.h>
 #include <validation.h>
 #include <util/ranges.h>
+#include <coinjoin/context.h>
 
-
-void CMasternodeUtils::DoMaintenance(CConnman& connman, const CMasternodeSync& mn_sync)
+void CMasternodeUtils::DoMaintenance(CConnman& connman, const CMasternodeSync& mn_sync, const CJContext& cj_ctx)
 {
     if (!mn_sync.IsBlockchainSynced()) return;
     if (ShutdownRequested()) return;
 
     std::vector<CDeterministicMNCPtr> vecDmns; // will be empty when no wallet
 #ifdef ENABLE_WALLET
-    for (const auto& pair : coinJoinClientManagers) {
+    for (auto& pair : cj_ctx.clientman->raw()) {
         pair.second->GetMixingMasternodesInfo(vecDmns);
     }
 #endif // ENABLE_WALLET

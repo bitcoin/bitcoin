@@ -68,6 +68,7 @@
 #include <validationinterface.h>
 
 #include <masternode/node.h>
+#include <coinjoin/context.h>
 #ifdef ENABLE_WALLET
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
@@ -320,10 +321,6 @@ void PrepareShutdown(NodeContext& node)
 
     // After all scheduled tasks have been flushed, destroy pointers
     // and reset all to nullptr.
-    ::coinJoinServer.reset();
-#ifdef ENABLE_WALLET
-    ::coinJoinClientQueueManager.reset();
-#endif // ENABLE_WALLET
     ::governance.reset();
     ::sporkManager.reset();
     ::masternodeSync.reset();
@@ -393,6 +390,11 @@ void PrepareShutdown(NodeContext& node)
     }
 
     node.chain_clients.clear();
+
+    // After all wallets are removed, destroy all CoinJoin objects
+    // and reset them to nullptr
+    node.cj_ctx.reset();
+
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
 }
@@ -1698,7 +1700,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
-                                     *node.scheduler, chainman, *node.mempool, node.llmq_ctx, *::governance, ignores_incoming_txs);
+                                     *node.scheduler, chainman, *node.mempool, *::governance,
+                                     node.cj_ctx, node.llmq_ctx, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
     assert(!::sporkManager);
@@ -1852,7 +1855,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     assert(masternodeSync != nullptr);
     assert(governance != nullptr);
     pdsNotificationInterface = new CDSNotificationInterface(
-        *node.connman, *::masternodeSync, ::deterministicMNManager, *::governance, node.llmq_ctx
+        *node.connman, *::masternodeSync, ::deterministicMNManager, *::governance, node.llmq_ctx, node.cj_ctx
     );
     RegisterValidationInterface(pdsNotificationInterface);
 
@@ -2191,6 +2194,14 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         return false;
     }
 
+    // ********************************************************* Step 7c: Setup CoinJoin
+
+    node.cj_ctx = std::make_unique<CJContext>(chainman.ActiveChainstate(), *node.connman, *node.mempool, *::masternodeSync, !ignores_incoming_txs);
+
+#ifdef ENABLE_WALLET
+    g_wallet_init_interface.InitCoinJoinSettings(*node.cj_ctx->clientman);
+#endif // ENABLE_WALLET
+
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         g_txindex = std::make_unique<TxIndex>(nTxIndexCache, false, fReindex);
@@ -2252,18 +2263,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         return false;
     }
 
-    // ********************************************************* Step 10a: Setup CoinJoin
-
-    ::coinJoinServer = std::make_unique<CCoinJoinServer>(chainman.ActiveChainstate(), *node.connman, *node.mempool, *::masternodeSync);
-#ifdef ENABLE_WALLET
-    if (!ignores_incoming_txs) {
-        ::coinJoinClientQueueManager = std::make_unique<CCoinJoinClientQueueManager>(*node.connman, *::masternodeSync);
-    }
-#endif // ENABLE_WALLET
-
-    g_wallet_init_interface.InitCoinJoinSettings();
-
-    // ********************************************************* Step 10b: Load cache data
+    // ********************************************************* Step 10a: Load cache data
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
 
@@ -2318,7 +2318,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(netfulfilledman)), std::chrono::minutes{1});
     node.scheduler->scheduleEvery(std::bind(&CMasternodeSync::DoMaintenance, std::ref(*::masternodeSync)), std::chrono::seconds{1});
-    node.scheduler->scheduleEvery(std::bind(&CMasternodeUtils::DoMaintenance, std::ref(*node.connman), std::ref(*::masternodeSync)), std::chrono::minutes{1});
+    node.scheduler->scheduleEvery(std::bind(&CMasternodeUtils::DoMaintenance, std::ref(*node.connman), std::ref(*::masternodeSync), std::ref(*node.cj_ctx)), std::chrono::minutes{1});
     node.scheduler->scheduleEvery(std::bind(&CDeterministicMNManager::DoMaintenance, std::ref(*deterministicMNManager)), std::chrono::seconds{10});
 
     if (!fDisableGovernance) {
@@ -2326,11 +2326,12 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     }
 
     if (fMasternodeMode) {
-        node.scheduler->scheduleEvery(std::bind(&CCoinJoinServer::DoMaintenance, std::ref(*::coinJoinServer)), std::chrono::seconds{1});
+        node.scheduler->scheduleEvery(std::bind(&CCoinJoinServer::DoMaintenance, std::ref(*node.cj_ctx->server)), std::chrono::seconds{1});
         node.scheduler->scheduleEvery(std::bind(&llmq::CDKGSessionManager::CleanupOldContributions, std::ref(*node.llmq_ctx->qdkgsman)), std::chrono::hours{1});
 #ifdef ENABLE_WALLET
     } else if (!ignores_incoming_txs) {
-        node.scheduler->scheduleEvery(std::bind(&DoCoinJoinMaintenance, std::ref(*node.connman), std::ref(*node.fee_estimator), std::ref(*node.mempool)), std::chrono::seconds{1});
+        node.scheduler->scheduleEvery(std::bind(&CCoinJoinClientQueueManager::DoMaintenance, std::ref(*node.cj_ctx->queueman)), std::chrono::seconds{1});
+        node.scheduler->scheduleEvery(std::bind(&CJClientManager::DoMaintenance, std::ref(*node.cj_ctx->clientman), std::ref(*node.fee_estimator)), std::chrono::seconds{1});
 #endif // ENABLE_WALLET
     }
 

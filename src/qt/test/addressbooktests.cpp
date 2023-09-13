@@ -14,6 +14,7 @@
 #include <qt/qvalidatedlineedit.h>
 #include <qt/walletmodel.h>
 
+#include <coinjoin/client.h>
 #include <key.h>
 #include <key_io.h>
 #include <wallet/wallet.h>
@@ -108,7 +109,8 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
     OptionsModel optionsModel(node);
     ClientModel clientModel(node, &optionsModel);
     AddWallet(wallet);
-    WalletModel walletModel(interfaces::MakeWallet(wallet), clientModel);
+    // TODO: replace access of CoinJoin objects with access through interface
+    WalletModel walletModel(interfaces::MakeWallet(wallet, *::coinJoinClientManagers), clientModel);
     RemoveWallet(wallet, std::nullopt);
     EditAddressDialog editAddressDialog(EditAddressDialog::NewSendingAddress);
     editAddressDialog.setModel(walletModel.getAddressTableModel());

@@ -46,7 +46,7 @@ public:
 
     // Dash Specific Wallet Init
     void AutoLockMasternodeCollaterals() const override;
-    void InitCoinJoinSettings() const override;
+    void InitCoinJoinSettings(const CJClientManager& clientman) const override;
     bool InitAutoBackup() const override;
 };
 
@@ -199,7 +199,7 @@ void WalletInit::AutoLockMasternodeCollaterals() const
     }
 }
 
-void WalletInit::InitCoinJoinSettings() const
+void WalletInit::InitCoinJoinSettings(const CJClientManager& clientman) const
 {
     CCoinJoinClientOptions::SetEnabled(!GetWallets().empty() ? gArgs.GetBoolArg("-enablecoinjoin", true) : false);
     if (!CCoinJoinClientOptions::IsEnabled()) {
@@ -207,10 +207,12 @@ void WalletInit::InitCoinJoinSettings() const
     }
     bool fAutoStart = gArgs.GetBoolArg("-coinjoinautostart", DEFAULT_COINJOIN_AUTOSTART);
     for (auto& pwallet : GetWallets()) {
+        auto manager = clientman.Get(*pwallet);
+        assert(manager != nullptr);
         if (pwallet->IsLocked()) {
-            coinJoinClientManagers.at(pwallet->GetName())->StopMixing();
+            manager->StopMixing();
         } else if (fAutoStart) {
-            coinJoinClientManagers.at(pwallet->GetName())->StartMixing();
+            manager->StartMixing();
         }
     }
     LogPrintf("CoinJoin: autostart=%d, multisession=%d," /* Continued */

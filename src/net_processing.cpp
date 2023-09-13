@@ -44,6 +44,7 @@
 #ifdef ENABLE_WALLET
 #include <coinjoin/client.h>
 #endif // ENABLE_WALLET
+#include <coinjoin/context.h>
 #include <coinjoin/server.h>
 
 #include <evo/deterministicmns.h>
@@ -220,7 +221,8 @@ class PeerManagerImpl final : public PeerManager
 public:
     PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
                     BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman,
-                    CTxMemPool& pool, const std::unique_ptr<LLMQContext>& llmq_ctx, CGovernanceManager& govman, bool ignore_incoming_txs);
+                    CTxMemPool& pool, CGovernanceManager& govman, const std::unique_ptr<CJContext>& cj_ctx,
+                    const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs);
 
     /** Overridden from CValidationInterface. */
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
@@ -309,6 +311,7 @@ private:
     BanMan* const m_banman;
     ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
+    const std::unique_ptr<CJContext>& m_cj_ctx;
     const std::unique_ptr<LLMQContext>& m_llmq_ctx;
     CGovernanceManager& m_govman;
 
@@ -1543,20 +1546,23 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex, const Conse
 
 std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman, BanMan* banman,
                                                CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                               const std::unique_ptr<LLMQContext>& llmq_ctx, CGovernanceManager& govman, bool ignore_incoming_txs)
+                                               CGovernanceManager& govman, const std::unique_ptr<CJContext>& cj_ctx,
+                                               const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs)
 {
-    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, scheduler, chainman, pool, llmq_ctx, govman, ignore_incoming_txs);
+    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, scheduler, chainman, pool, govman, cj_ctx, llmq_ctx, ignore_incoming_txs);
 }
 
 PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman, BanMan* banman,
                                  CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                 const std::unique_ptr<LLMQContext>& llmq_ctx, CGovernanceManager& govman, bool ignore_incoming_txs)
+                                 CGovernanceManager& govman, const std::unique_ptr<CJContext>& cj_ctx,
+                                 const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs)
     : m_chainparams(chainparams),
       m_connman(connman),
       m_addrman(addrman),
       m_banman(banman),
       m_chainman(chainman),
       m_mempool(pool),
+      m_cj_ctx(cj_ctx),
       m_llmq_ctx(llmq_ctx),
       m_govman(govman),
       m_stale_tip_check_time(0),
@@ -4313,12 +4319,12 @@ void PeerManagerImpl::ProcessMessage(
     {
         //probably one the extensions
 #ifdef ENABLE_WALLET
-        coinJoinClientQueueManager->ProcessMessage(pfrom, *this, msg_type, vRecv);
-        for (auto& pair : coinJoinClientManagers) {
+        m_cj_ctx->queueman->ProcessMessage(pfrom, *this, msg_type, vRecv);
+        for (auto& pair : m_cj_ctx->clientman->raw()) {
             pair.second->ProcessMessage(pfrom, *this, m_connman, m_mempool, msg_type, vRecv);
         }
 #endif // ENABLE_WALLET
-        coinJoinServer->ProcessMessage(pfrom, *this, msg_type, vRecv);
+        m_cj_ctx->server->ProcessMessage(pfrom, *this, msg_type, vRecv);
         sporkManager->ProcessMessage(pfrom, *this, m_connman, msg_type, vRecv);
         ::masternodeSync->ProcessMessage(pfrom, msg_type, vRecv);
         m_govman.ProcessMessage(pfrom, *this, m_connman, msg_type, vRecv);
