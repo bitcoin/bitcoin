@@ -50,14 +50,14 @@ struct CMempoolAddressDeltaKey
     uint160 addressBytes;
     uint256 txhash;
     unsigned int index;
-    int spending;
+    bool is_spent;
 
-    CMempoolAddressDeltaKey(int addressType, uint160 addressHash, uint256 hash, unsigned int i, int s) {
+    CMempoolAddressDeltaKey(int addressType, uint160 addressHash, uint256 hash, unsigned int i, bool s) {
         type = addressType;
         addressBytes = addressHash;
         txhash = hash;
         index = i;
-        spending = s;
+        is_spent = s;
     }
 
     CMempoolAddressDeltaKey(int addressType, uint160 addressHash) {
@@ -65,7 +65,7 @@ struct CMempoolAddressDeltaKey
         addressBytes = addressHash;
         txhash.SetNull();
         index = 0;
-        spending = 0;
+        is_spent = false;
     }
 };
 
@@ -73,7 +73,7 @@ struct CMempoolAddressDeltaKeyCompare
 {
     bool operator()(const CMempoolAddressDeltaKey& a, const CMempoolAddressDeltaKey& b) const {
         auto to_tuple = [](const CMempoolAddressDeltaKey& obj) {
-            return std::tie(obj.type, obj.addressBytes, obj.txhash, obj.index, obj.spending);
+            return std::tie(obj.type, obj.addressBytes, obj.txhash, obj.index, obj.is_spent);
         };
         return to_tuple(a) < to_tuple(b);
     }
