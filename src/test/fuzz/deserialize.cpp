@@ -91,9 +91,9 @@ void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj, const P& params
 }
 
 template <typename T>
-CDataStream Serialize(const T& obj, const int version = INIT_PROTO_VERSION, const int ser_type = SER_NETWORK)
+CDataStream Serialize(const T& obj)
 {
-    CDataStream ds(ser_type, version);
+    CDataStream ds{SER_NETWORK, INIT_PROTO_VERSION};
     ds << obj;
     return ds;
 }
@@ -107,12 +107,10 @@ T Deserialize(CDataStream ds)
 }
 
 template <typename T>
-void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj, const std::optional<int> protocol_version = std::nullopt, const int ser_type = SER_NETWORK)
+void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj)
 {
-    CDataStream ds(buffer, ser_type, INIT_PROTO_VERSION);
-    if (protocol_version) {
-        ds.SetVersion(*protocol_version);
-    } else {
+    CDataStream ds{buffer, SER_NETWORK, INIT_PROTO_VERSION};
+    {
         try {
             int version;
             ds >> version;
@@ -135,9 +133,9 @@ void AssertEqualAfterSerializeDeserialize(const T& obj, const P& params)
     assert(Deserialize<T>(Serialize(obj, params), params) == obj);
 }
 template <typename T>
-void AssertEqualAfterSerializeDeserialize(const T& obj, const int version = INIT_PROTO_VERSION, const int ser_type = SER_NETWORK)
+void AssertEqualAfterSerializeDeserialize(const T& obj)
 {
-    assert(Deserialize<T>(Serialize(obj, version, ser_type)) == obj);
+    assert(Deserialize<T>(Serialize(obj)) == obj);
 }
 
 } // namespace
