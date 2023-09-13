@@ -331,6 +331,8 @@ private:
     std::optional<CAmount> m_waste;
     /** Total weight of the selected inputs */
     int m_weight{0};
+    /** How much individual inputs overestimated the bump fees for the shared ancestry */
+    CAmount bump_fee_group_discount{0};
 
     template<typename T>
     void InsertInputs(const T& inputs)
@@ -376,6 +378,9 @@ public:
 
     void AddInput(const OutputGroup& group);
     void AddInputs(const std::set<std::shared_ptr<COutput>>& inputs, bool subtract_fee_outputs);
+
+    /** How much individual inputs overestimated the bump fees for shared ancestries */
+    void SetBumpFeeDiscount(const CAmount discount);
 
     /** Calculates and stores the waste for this selection via GetSelectionWaste */
     void ComputeAndSetWaste(const CAmount min_viable_change, const CAmount change_cost, const CAmount change_fee);

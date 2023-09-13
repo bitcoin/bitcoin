@@ -86,13 +86,11 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CMutableTrans
         reused_inputs.push_back(txin.prevout);
     }
 
-    std::map<COutPoint, CAmount> bump_fees = wallet.chain().CalculateIndividualBumpFees(reused_inputs, newFeerate);
-    CAmount total_bump_fees = 0;
-    for (auto& [_, bump_fee] : bump_fees) {
-        total_bump_fees += bump_fee;
+    std::optional<CAmount> combined_bump_fee = wallet.chain().CalculateCombinedBumpFee(reused_inputs, newFeerate);
+    if (!combined_bump_fee.has_value()) {
+        errors.push_back(strprintf(Untranslated("Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.")));
     }
-
-    CAmount new_total_fee = newFeerate.GetFee(maxTxSize) + total_bump_fees;
+    CAmount new_total_fee = newFeerate.GetFee(maxTxSize) + combined_bump_fee.value();
 
     CFeeRate incrementalRelayFee = std::max(wallet.chain().relayIncrementalFee(), CFeeRate(WALLET_INCREMENTAL_RELAY_FEE));
 
