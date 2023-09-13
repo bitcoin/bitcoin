@@ -252,7 +252,7 @@ FUZZ_TARGET(netaddr_deserialize, .init = initialize_deserialize)
     if (!maybe_na) return;
     const CNetAddr& na{*maybe_na};
     if (na.IsAddrV1Compatible()) {
-        AssertEqualAfterSerializeDeserialize(na, ConsumeDeserializationParams<CNetAddr::SerParams>(fdp));
+        AssertEqualAfterSerializeDeserialize(na, CNetAddr::V1);
     }
     AssertEqualAfterSerializeDeserialize(na, CNetAddr::V2);
 }
@@ -264,7 +264,7 @@ FUZZ_TARGET(service_deserialize, .init = initialize_deserialize)
     if (!maybe_s) return;
     const CService& s{*maybe_s};
     if (s.IsAddrV1Compatible()) {
-        AssertEqualAfterSerializeDeserialize(s, ConsumeDeserializationParams<CNetAddr::SerParams>(fdp));
+        AssertEqualAfterSerializeDeserialize(s, CNetAddr::V1);
     }
     AssertEqualAfterSerializeDeserialize(s, CNetAddr::V2);
     if (ser_params.enc == CNetAddr::Encoding::V1) {
@@ -279,8 +279,8 @@ FUZZ_TARGET_DESERIALIZE(messageheader_deserialize, {
 FUZZ_TARGET(address_deserialize, .init = initialize_deserialize)
 {
     FuzzedDataProvider fdp{buffer.data(), buffer.size()};
-    const auto ser_enc{ConsumeDeserializationParams<CNetAddr::SerParams>(fdp)};
-    const auto maybe_a{ConsumeDeserializable<CAddress>(fdp, CAddress::SerParams{{ser_enc}, CAddress::Format::Network})};
+    const auto ser_enc{ConsumeDeserializationParams<CAddress::SerParams>(fdp)};
+    const auto maybe_a{ConsumeDeserializable<CAddress>(fdp, ser_enc)};
     if (!maybe_a) return;
     const CAddress& a{*maybe_a};
     // A CAddress in V1 mode will roundtrip
