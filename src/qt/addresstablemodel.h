@@ -80,6 +80,8 @@ public:
 
     EditStatus getEditStatus() const { return editStatus; }
 
+    QString GetWalletDisplayName() const;
+
 private:
     WalletModel* const walletModel;
     AddressTablePriv *priv = nullptr;
