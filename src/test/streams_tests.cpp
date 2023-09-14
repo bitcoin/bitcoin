@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     // The buffer size (second arg) must be greater than the rewind
     // amount (third arg).
     try {
-        CBufferedFile bfbad(file, 25, 25, 222, 333);
+        BufferedFile bfbad{file, 25, 25, 333};
         BOOST_CHECK(false);
     } catch (const std::exception& e) {
         BOOST_CHECK(strstr(e.what(),
@@ -268,11 +268,10 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     }
 
     // The buffer is 25 bytes, allow rewinding 10 bytes.
-    CBufferedFile bf(file, 25, 10, 222, 333);
+    BufferedFile bf{file, 25, 10, 333};
     BOOST_CHECK(!bf.eof());
 
-    // These two members have no functional effect.
-    BOOST_CHECK_EQUAL(bf.GetType(), 222);
+    // This member has no functional effect.
     BOOST_CHECK_EQUAL(bf.GetVersion(), 333);
 
     uint8_t i;
@@ -357,7 +356,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
         BOOST_CHECK(false);
     } catch (const std::exception& e) {
         BOOST_CHECK(strstr(e.what(),
-                        "CBufferedFile::Fill: end of file") != nullptr);
+                        "BufferedFile::Fill: end of file") != nullptr);
     }
     // Attempting to read beyond the end sets the EOF indicator.
     BOOST_CHECK(bf.eof());
@@ -392,7 +391,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
     rewind(file);
 
     // The buffer is 25 bytes, allow rewinding 10 bytes.
-    CBufferedFile bf(file, 25, 10, 222, 333);
+    BufferedFile bf{file, 25, 10, 333};
 
     uint8_t i;
     // This is like bf >> (7-byte-variable), in that it will cause data
@@ -446,7 +445,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
 
         size_t bufSize = InsecureRandRange(300) + 1;
         size_t rewindSize = InsecureRandRange(bufSize);
-        CBufferedFile bf(file, bufSize, rewindSize, 222, 333);
+        BufferedFile bf{file, bufSize, rewindSize, 333};
         size_t currentPos = 0;
         size_t maxPos = 0;
         for (int step = 0; step < 100; ++step) {
