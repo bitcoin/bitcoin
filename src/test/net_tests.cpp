@@ -850,7 +850,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     std::chrono::microseconds time_received_dummy{0};
 
     const auto msg_version =
-        msg_maker.Make(NetMsgType::VERSION, PROTOCOL_VERSION, services, time, services, WithParams(CAddress::V1_NETWORK, peer_us));
+        msg_maker.Make(NetMsgType::VERSION, PROTOCOL_VERSION, services, time, services, CAddress::V1_NETWORK(peer_us));
     CDataStream msg_version_stream{msg_version.data, SER_NETWORK, PROTOCOL_VERSION};
 
     m_node.peerman->ProcessMessage(
@@ -876,7 +876,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
             DataStream s{data};
             std::vector<CAddress> addresses;
 
-            s >> WithParams(CAddress::V1_NETWORK, addresses);
+            s >> CAddress::V1_NETWORK(addresses);
 
             for (const auto& addr : addresses) {
                 if (addr == expected) {
