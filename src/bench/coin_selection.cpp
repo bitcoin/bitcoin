@@ -79,7 +79,7 @@ static void CoinSelection(benchmark::Bench& bench)
     };
     auto group = wallet::GroupOutputs(wallet, available_coins, coin_selection_params, {{filter_standard}})[filter_standard];
     bench.run([&] {
-        auto result = AttemptSelection(1003 * COIN, group, coin_selection_params, /*allow_mixed_output_types=*/true);
+        auto result = AttemptSelection(wallet.chain(), 1003 * COIN, group, coin_selection_params, /*allow_mixed_output_types=*/true);
         assert(result);
         assert(result->GetSelectedValue() == 1003 * COIN);
         assert(result->GetInputSet().size() == 2);

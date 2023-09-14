@@ -19,12 +19,13 @@ class MiniMinerMempoolEntry
     const CAmount fee_individual;
     const CTransactionRef tx;
     const int64_t vsize_individual;
+    CAmount fee_with_ancestors;
+    int64_t vsize_with_ancestors;
 
 // This class must be constructed while holding mempool.cs. After construction, the object's
 // methods can be called without holding that lock.
+
 public:
-    CAmount fee_with_ancestors;
-    int64_t vsize_with_ancestors;
     explicit MiniMinerMempoolEntry(CTxMemPool::txiter entry) :
         fee_individual{entry->GetModifiedFee()},
         tx{entry->GetSharedTx()},
@@ -38,6 +39,10 @@ public:
     int64_t GetTxSize() const { return vsize_individual; }
     int64_t GetSizeWithAncestors() const { return vsize_with_ancestors; }
     const CTransaction& GetTx() const LIFETIMEBOUND { return *tx; }
+    void UpdateAncestorState(int64_t vsize_change, CAmount fee_change) {
+        vsize_with_ancestors += vsize_change;
+        fee_with_ancestors += fee_change;
+    }
 };
 
 // Comparator needed for std::set<MockEntryMap::iterator>
