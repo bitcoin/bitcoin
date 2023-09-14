@@ -212,4 +212,19 @@ public:
     }
 };
 
+template <typename T1>
+inline std::vector<uint8_t> TrimScriptP2PK(const T1& input) {
+    return std::vector<uint8_t>(input.begin() + 1, input.end() - 1);
+};
+
+template <typename T1>
+inline std::vector<uint8_t> TrimScriptP2PKH(const T1& input) {
+    return std::vector<uint8_t>(input.begin() + 3, input.begin() + 23);
+};
+
+template <typename T1>
+inline std::vector<uint8_t> TrimScriptP2SH(const T1& input) {
+    return std::vector<uint8_t>(input.begin() + 2, input.begin() + 22);
+};
+
 #endif // BITCOIN_ADDRESSINDEX_H

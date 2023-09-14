@@ -474,47 +474,51 @@ void CTxMemPool::addAddressIndex(const CTxMemPoolEntry &entry, const CCoinsViewC
         const CTxIn input = tx.vin[j];
         const Coin& coin = view.AccessCoin(input.prevout);
         const CTxOut &prevout = coin.out;
+
+        uint8_t address_type{0};
+        uint160 address_bytes;
+
         if (prevout.scriptPubKey.IsPayToScriptHash()) {
-            std::vector<unsigned char> hashBytes(prevout.scriptPubKey.begin()+2, prevout.scriptPubKey.begin()+22);
-            CMempoolAddressDeltaKey key(AddressType::P2SH, uint160(hashBytes), txhash, j, /* tx_spent */ true);
-            CMempoolAddressDelta delta(entry.GetTime(), prevout.nValue * -1, input.prevout.hash, input.prevout.n);
-            mapAddress.insert(std::make_pair(key, delta));
-            inserted.push_back(key);
+            address_type  = AddressType::P2SH;
+            address_bytes = uint160(TrimScriptP2SH(prevout.scriptPubKey));
         } else if (prevout.scriptPubKey.IsPayToPublicKeyHash()) {
-            std::vector<unsigned char> hashBytes(prevout.scriptPubKey.begin()+3, prevout.scriptPubKey.begin()+23);
-            CMempoolAddressDeltaKey key(AddressType::P2PKH, uint160(hashBytes), txhash, j, /* tx_spent */ true);
-            CMempoolAddressDelta delta(entry.GetTime(), prevout.nValue * -1, input.prevout.hash, input.prevout.n);
-            mapAddress.insert(std::make_pair(key, delta));
-            inserted.push_back(key);
+            address_type  = AddressType::P2PKH;
+            address_bytes = uint160(TrimScriptP2PKH(prevout.scriptPubKey));
         } else if (prevout.scriptPubKey.IsPayToPublicKey()) {
-            uint160 hashBytes{Hash160(Span{prevout.scriptPubKey.data()+1, prevout.scriptPubKey.size() - 2})};
-            CMempoolAddressDeltaKey key(AddressType::P2PK, hashBytes, txhash, j, /* tx_spent */ true);
-            CMempoolAddressDelta delta(entry.GetTime(), prevout.nValue * -1, input.prevout.hash, input.prevout.n);
-            mapAddress.insert(std::make_pair(key, delta));
-            inserted.push_back(key);
+            address_type  = AddressType::P2PK;
+            address_bytes = Hash160(TrimScriptP2PK(prevout.scriptPubKey));
+        } else {
+            continue;
         }
+
+        CMempoolAddressDeltaKey key(address_type, address_bytes, txhash, j, /* tx_spent */ true);
+        CMempoolAddressDelta delta(entry.GetTime(), prevout.nValue * -1, input.prevout.hash, input.prevout.n);
+        mapAddress.insert(std::make_pair(key, delta));
+        inserted.push_back(key);
     }
 
     for (unsigned int k = 0; k < tx.vout.size(); k++) {
         const CTxOut &out = tx.vout[k];
+
+        uint8_t address_type{0};
+        uint160 address_bytes;
+
         if (out.scriptPubKey.IsPayToScriptHash()) {
-            std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+2, out.scriptPubKey.begin()+22);
-            CMempoolAddressDeltaKey key(AddressType::P2SH, uint160(hashBytes), txhash, k, /* tx_spent */ false);
-            mapAddress.insert(std::make_pair(key, CMempoolAddressDelta(entry.GetTime(), out.nValue)));
-            inserted.push_back(key);
+            address_type  = AddressType::P2SH;
+            address_bytes = uint160(TrimScriptP2SH(out.scriptPubKey));
         } else if (out.scriptPubKey.IsPayToPublicKeyHash()) {
-            std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+3, out.scriptPubKey.begin()+23);
-            std::pair<addressDeltaMap::iterator,bool> ret;
-            CMempoolAddressDeltaKey key(AddressType::P2PKH, uint160(hashBytes), txhash, k, /* tx_spent */ false);
-            mapAddress.insert(std::make_pair(key, CMempoolAddressDelta(entry.GetTime(), out.nValue)));
-            inserted.push_back(key);
+            address_type  = AddressType::P2PKH;
+            address_bytes = uint160(TrimScriptP2PKH(out.scriptPubKey));
         } else if (out.scriptPubKey.IsPayToPublicKey()) {
-            uint160 hashBytes{Hash160(Span{out.scriptPubKey.data()+1, out.scriptPubKey.size() - 2})};
-            std::pair<addressDeltaMap::iterator,bool> ret;
-            CMempoolAddressDeltaKey key(AddressType::P2PK, hashBytes, txhash, k, /* tx_spent */ false);
-            mapAddress.insert(std::make_pair(key, CMempoolAddressDelta(entry.GetTime(), out.nValue)));
-            inserted.push_back(key);
+            address_type  = AddressType::P2PK;
+            address_bytes = Hash160(TrimScriptP2PK(out.scriptPubKey));
+        } else {
+            continue;
         }
+
+        CMempoolAddressDeltaKey key(address_type, address_bytes, txhash, k, /* tx_spent */ false);
+        mapAddress.insert(std::make_pair(key, CMempoolAddressDelta(entry.GetTime(), out.nValue)));
+        inserted.push_back(key);
     }
 
     mapAddressInserted.insert(std::make_pair(txhash, inserted));
@@ -562,29 +566,29 @@ void CTxMemPool::addSpentIndex(const CTxMemPoolEntry &entry, const CCoinsViewCac
         const CTxIn input = tx.vin[j];
         const Coin& coin = view.AccessCoin(input.prevout);
         const CTxOut &prevout = coin.out;
-        uint160 addressHash;
-        int addressType;
+
+        uint8_t address_type{0};
+        uint160 address_bytes;
 
         if (prevout.scriptPubKey.IsPayToScriptHash()) {
-            addressHash = uint160(std::vector<unsigned char> (prevout.scriptPubKey.begin()+2, prevout.scriptPubKey.begin()+22));
-            addressType = AddressType::P2SH;
+            address_type  = AddressType::P2SH;
+            address_bytes = uint160(TrimScriptP2SH(prevout.scriptPubKey));
         } else if (prevout.scriptPubKey.IsPayToPublicKeyHash()) {
-            addressHash = uint160(std::vector<unsigned char> (prevout.scriptPubKey.begin()+3, prevout.scriptPubKey.begin()+23));
-            addressType = AddressType::P2PKH;
+            address_type  = AddressType::P2PKH;
+            address_bytes = uint160(TrimScriptP2PKH(prevout.scriptPubKey));
         } else if (prevout.scriptPubKey.IsPayToPublicKey()) {
-            addressHash = Hash160(Span{prevout.scriptPubKey.data()+1, prevout.scriptPubKey.size() - 2});
-            addressType = AddressType::P2PK;
+            address_type  = AddressType::P2PK;
+            address_bytes = Hash160(TrimScriptP2PK(prevout.scriptPubKey));
         } else {
-            addressHash.SetNull();
-            addressType = AddressType::UNKNOWN;
+            address_type  = AddressType::UNKNOWN;
+            address_bytes.SetNull();
         }
 
         CSpentIndexKey key = CSpentIndexKey(input.prevout.hash, input.prevout.n);
-        CSpentIndexValue value = CSpentIndexValue(txhash, j, -1, prevout.nValue, addressType, addressHash);
+        CSpentIndexValue value = CSpentIndexValue(txhash, j, -1, prevout.nValue, address_type, address_bytes);
 
         mapSpent.insert(std::make_pair(key, value));
         inserted.push_back(key);
-
     }
 
     mapSpentInserted.insert(make_pair(txhash, inserted));
