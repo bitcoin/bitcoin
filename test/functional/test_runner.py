@@ -316,6 +316,7 @@ BASE_SCRIPTS = [
     'wallet_sendall.py --descriptors',
     'wallet_create_tx.py --descriptors',
     'wallet_inactive_hdchains.py --legacy-wallet',
+    'wallet_spend_unconfirmed.py',
     'p2p_fingerprint.py',
     'feature_uacomment.py',
     'feature_init.py',
