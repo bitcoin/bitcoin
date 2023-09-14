@@ -11,6 +11,7 @@
 #include <chain.h>
 #include <primitives/block.h>
 #include <spentindex.h>
+#include <timestampindex.h>
 
 #include <memory>
 #include <string>
