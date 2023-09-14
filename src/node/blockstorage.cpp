@@ -11,6 +11,7 @@
 #include <flatfile.h>
 #include <hash.h>
 #include <kernel/chainparams.h>
+#include <kernel/messagestartchars.h>
 #include <logging.h>
 #include <pow.h>
 #include <reverse_iterator.h>
@@ -21,6 +22,7 @@
 #include <util/batchpriority.h>
 #include <util/fs.h>
 #include <util/signalinterrupt.h>
+#include <util/strencodings.h>
 #include <util/translation.h>
 #include <validation.h>
 
@@ -927,12 +929,12 @@ bool BlockManager::ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatF
     }
 
     try {
-        CMessageHeader::MessageStartChars blk_start;
+        MessageStartChars blk_start;
         unsigned int blk_size;
 
         filein >> blk_start >> blk_size;
 
-        if (memcmp(blk_start, GetParams().MessageStart(), CMessageHeader::MESSAGE_START_SIZE)) {
+        if (blk_start != GetParams().MessageStart()) {
             return error("%s: Block magic mismatch for %s: %s versus expected %s", __func__, pos.ToString(),
                          HexStr(blk_start),
                          HexStr(GetParams().MessageStart()));

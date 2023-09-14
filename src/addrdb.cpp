@@ -90,10 +90,10 @@ void DeserializeDB(Stream& stream, Data&& data, bool fCheckSum = true)
 {
     HashVerifier verifier{stream};
     // de-serialize file header (network specific magic number) and ..
-    unsigned char pchMsgTmp[4];
+    MessageStartChars pchMsgTmp;
     verifier >> pchMsgTmp;
     // ... verify the network matches ours
-    if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp))) {
+    if (pchMsgTmp != Params().MessageStart()) {
         throw std::runtime_error{"Invalid network magic number"};
     }
 

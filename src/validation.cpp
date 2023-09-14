@@ -23,6 +23,7 @@
 #include <hash.h>
 #include <kernel/chainparams.h>
 #include <kernel/mempool_entry.h>
+#include <kernel/messagestartchars.h>
 #include <kernel/notifications_interface.h>
 #include <logging.h>
 #include <logging/timer.h>
@@ -4602,11 +4603,11 @@ void ChainstateManager::LoadExternalBlockFile(
             unsigned int nSize = 0;
             try {
                 // locate a header
-                unsigned char buf[CMessageHeader::MESSAGE_START_SIZE];
+                MessageStartChars buf;
                 blkdat.FindByte(std::byte(params.MessageStart()[0]));
                 nRewind = blkdat.GetPos() + 1;
                 blkdat >> buf;
-                if (memcmp(buf, params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE)) {
+                if (buf != params.MessageStart()) {
                     continue;
                 }
                 // read size

@@ -6,6 +6,7 @@
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
 #include <node/miner.h>
+#include <random.h>
 #include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>

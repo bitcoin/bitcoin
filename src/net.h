@@ -10,15 +10,16 @@
 #include <chainparams.h>
 #include <common/bloom.h>
 #include <compat/compat.h>
-#include <node/connection_types.h>
 #include <consensus/amount.h>
 #include <crypto/siphash.h>
 #include <hash.h>
 #include <i2p.h>
+#include <kernel/messagestartchars.h>
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <netgroup.h>
+#include <node/connection_types.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -46,6 +47,7 @@
 
 class AddrMan;
 class BanMan;
+class CChainParams;
 class CNode;
 class CScheduler;
 struct bilingual_str;
@@ -360,7 +362,7 @@ public:
 class V1Transport final : public Transport
 {
 private:
-    CMessageHeader::MessageStartChars m_magic_bytes;
+    MessageStartChars m_magic_bytes;
     const NodeId m_node_id; // Only for logging
     mutable Mutex m_recv_mutex; //!< Lock for receive state
     mutable CHash256 hasher GUARDED_BY(m_recv_mutex);
@@ -1080,7 +1082,7 @@ public:
     }
 
     CConnman(uint64_t seed0, uint64_t seed1, AddrMan& addrman, const NetGroupManager& netgroupman,
-             bool network_active = true);
+             const CChainParams& params, bool network_active = true);
 
     ~CConnman();
 
@@ -1356,6 +1358,9 @@ private:
     // Whether the node should be passed out in ForEach* callbacks
     static bool NodeFullyConnected(const CNode* pnode);
 
+    uint16_t GetDefaultPort(Network net) const;
+    uint16_t GetDefaultPort(const std::string& addr) const;
+
     // Network usage totals
     mutable Mutex m_total_bytes_sent_mutex;
     std::atomic<uint64_t> nTotalBytesRecv{0};
@@ -1564,6 +1569,8 @@ private:
     private:
         std::vector<CNode*> m_nodes_copy;
     };
+
+    const CChainParams& m_params;
 
     friend struct ConnmanTestMsg;
 };
