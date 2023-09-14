@@ -16,7 +16,7 @@ static void FindByte(benchmark::Bench& bench)
     data[file_size-1] = 1;
     fwrite(&data, sizeof(uint8_t), file_size, file);
     rewind(file);
-    CBufferedFile bf(file, /*nBufSize=*/file_size + 1, /*nRewindIn=*/file_size, 0, 0);
+    BufferedFile bf{file, /*nBufSize=*/file_size + 1, /*nRewindIn=*/file_size, 0};
 
     bench.run([&] {
         bf.SetPos(0);

@@ -853,6 +853,29 @@ bool BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFileP
     return true;
 }
 
+bool BlockManager::WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const
+{
+    // Open history file to append
+    CAutoFile fileout(OpenBlockFile(pos), CLIENT_VERSION);
+    if (fileout.IsNull()) {
+        return error("WriteBlockToDisk: OpenBlockFile failed");
+    }
+
+    // SYSCOIN Write index header
+    unsigned int nSize = GetSerializeSize(block, fileout.GetVersion(), SER_DISK);
+    fileout << GetParams().MessageStart() << nSize;
+
+    // Write block
+    long fileOutPos = ftell(fileout.Get());
+    if (fileOutPos < 0) {
+        return error("WriteBlockToDisk: ftell failed");
+    }
+    pos.nPos = (unsigned int)fileOutPos;
+    fileout << block;
+
+    return true;
+}
+
 bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
 {
     AssertLockHeld(::cs_main);
@@ -893,9 +916,10 @@ bool BlockManager::ReadBlockOrHeader(T& block, const FlatFilePos& pos) const
     block.SetNull();
 
     // Open history file to read
-    CAutoFile filein(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
-    if (filein.IsNull())
+    CAutoFile filein(OpenBlockFile(pos, true), CLIENT_VERSION);
+    if (filein.IsNull()) {
         return error("ReadBlockFromDisk: OpenBlockFile failed for %s", pos.ToString());
+    }
 
     // Read block
     try {
@@ -962,29 +986,6 @@ bool BlockManager::ReadBlockFromDisk(CBlock& block, const CBlockIndex& index) co
 bool BlockManager::ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex) const
 {
     return ReadBlockOrHeader(block, *pindex);
-}
-
-bool BlockManager::WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const
-{
-    // Open history file to append
-    CAutoFile fileout(OpenBlockFile(pos), SER_DISK, CLIENT_VERSION);
-    if (fileout.IsNull()) {
-        return error("WriteBlockToDisk: OpenBlockFile failed");
-    }
-
-    // SYSCOIN Write index header
-    unsigned int nSize = GetSerializeSize(block, fileout.GetVersion(), SER_DISK);
-    fileout << GetParams().MessageStart() << nSize;
-
-    // Write block
-    long fileOutPos = ftell(fileout.Get());
-    if (fileOutPos < 0) {
-        return error("WriteBlockToDisk: ftell failed");
-    }
-    pos.nPos = (unsigned int)fileOutPos;
-    fileout << block;
-
-    return true;
 }
 
 bool BlockManager::ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos) const

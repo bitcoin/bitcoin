@@ -80,11 +80,11 @@ private:
     const std::unique_ptr<WriteBatchImpl> m_impl_batch;
 
     DataStream ssKey{};
-    CDataStream ssValue;
+    DataStream ssValue{};
 
     size_t size_estimate{0};
 
-    void WriteImpl(Span<const std::byte> key, CDataStream& ssValue);
+    void WriteImpl(Span<const std::byte> key, DataStream& ssValue);
     void EraseImpl(Span<const std::byte> key);
 
 public:
