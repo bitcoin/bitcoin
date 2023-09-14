@@ -17,6 +17,7 @@
 #include <core_io.h>
 #include <streams.h>
 #include <util/exception.h>
+#include <util/strencodings.h>
 #include <util/translation.h>
 #include <version.h>
 

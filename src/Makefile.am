@@ -234,6 +234,7 @@ SYSCOIN_CORE_H = \
   kernel/mempool_options.h \
   kernel/mempool_persist.h \
   kernel/mempool_removal_reason.h \
+  kernel/messagestartchars.h \
   kernel/notifications_interface.h \
   kernel/validation_cache_sizes.h \
   key.h \

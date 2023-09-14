@@ -8,6 +8,7 @@
 #include <script/descriptor.h>
 #include <test/fuzz/fuzz.h>
 #include <util/chaintype.h>
+#include <util/strencodings.h>
 
 //! Types are raw (un)compressed pubkeys, raw xonly pubkeys, raw privkeys (WIF), xpubs, xprvs.
 static constexpr uint8_t KEY_TYPES_COUNT{6};

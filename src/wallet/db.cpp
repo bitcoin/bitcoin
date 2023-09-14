@@ -136,7 +136,7 @@ bool IsSQLiteFile(const fs::path& path)
     }
 
     // Check the application id matches our network magic
-    return memcmp(Params().MessageStart(), app_id, 4) == 0;
+    return memcmp(Params().MessageStart().data(), app_id, 4) == 0;
 }
 
 void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options)
