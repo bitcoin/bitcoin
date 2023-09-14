@@ -31,7 +31,7 @@ jobs:
     env:
       MAX_COUNT: '--max-count=6'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: '8'  # Two more than $MAX_COUNT
