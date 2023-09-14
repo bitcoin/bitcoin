@@ -11,6 +11,7 @@ from test_framework.messages import (
     COIN,
     MAX_BLOOM_FILTER_SIZE,
     MAX_BLOOM_HASH_FUNCS,
+    MSG_WTX,
     MSG_BLOCK,
     MSG_FILTERED_BLOCK,
     msg_filteradd,
@@ -135,14 +136,22 @@ class FilterTest(BitcoinTestFramework):
         self.log.info("Check that a node with bloom filters enabled services p2p mempool messages")
         filter_peer = P2PBloomFilter()
 
-        self.log.debug("Create a tx relevant to the peer before connecting")
-        txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=filter_peer.watch_script_pubkey, amount=9 * COIN)["txid"]
+        self.log.info("Create two tx before connecting, one relevant to the node another that is not")
+        rel_txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=filter_peer.watch_script_pubkey, amount=1 * COIN)["txid"]
+        irr_result = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=2 * COIN)
+        irr_txid = irr_result["txid"]
+        irr_wtxid = irr_result["wtxid"]
 
-        self.log.debug("Send a mempool msg after connecting and check that the tx is received")
+        self.log.info("Send a mempool msg after connecting and check that the relevant tx is announced")
         self.nodes[0].add_p2p_connection(filter_peer)
         filter_peer.send_and_ping(filter_peer.watch_filter_init)
         filter_peer.send_message(msg_mempool())
-        filter_peer.wait_for_tx(txid)
+        filter_peer.wait_for_tx(rel_txid)
+
+        self.log.info("Request the irrelevant transaction even though it was not announced")
+        filter_peer.send_message(msg_getdata([CInv(t=MSG_WTX, h=int(irr_wtxid, 16))]))
+        self.log.info("We should get it anyway because it was in the mempool on connection to peer")
+        filter_peer.wait_for_tx(irr_txid)
 
     def test_frelay_false(self, filter_peer):
         self.log.info("Check that a node with fRelay set to false does not receive invs until the filter is set")
