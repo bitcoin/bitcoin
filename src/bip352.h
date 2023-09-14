@@ -33,13 +33,13 @@ struct ScanningResult {
 PrivTweakData CreateInputPrivkeysTweak(
     const std::vector<CKey>& plain_keys,
     const std::vector<CKey>& taproot_keys,
-    const uint256& outpoints_hash);
+    const COutPoint& smallest_outpoint);
 
 // Silent Payments receiver interface
 PubTweakData CreateInputPubkeysTweak(
     const std::vector<CPubKey>& plain_pubkeys,
     const std::vector<XOnlyPubKey>& taproot_pubkeys,
-    const uint256& outpoints_hash);
+    const COutPoint& smallest_outpoint);
 
 // Silent Payments common interface
 SharedSecret CreateSharedSecret(const PubTweakData& public_tweak_data, const CKey& receiver_scan_privkey);
