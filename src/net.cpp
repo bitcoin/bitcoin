@@ -2355,7 +2355,7 @@ int CConnman::GetExtraFullOutboundCount() const
             }
         }
     }
-    return std::max(full_outbound_peers - m_max_outbound_full_relay, 0);
+    return full_outbound_peers - m_max_outbound_full_relay;
 }
 
 int CConnman::GetExtraBlockRelayCount() const
