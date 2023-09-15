@@ -22,18 +22,6 @@
 #include <QSettings>
 #include <QTextDocument>
 
-static const char* const COPY_URI_SINGLE_TEXT = "Copy &URI";
-static const char* const COPY_ADDRESS_SINGLE_TEXT = "&Copy address";
-static const char* const COPY_LABEL_SINGLE_TEXT = "Copy &label";
-static const char* const COPY_MESSAGE_SINGLE_TEXT = "Copy &message";
-static const char* const COPY_AMOUNT_SINGLE_TEXT = "Copy &amount";
-
-static const char* const COPY_URI_MULTIPLE_TEXT = "Copy &URIs";
-static const char* const COPY_ADDRESS_MULTIPLE_TEXT = "&Copy addresses";
-static const char* const COPY_LABEL_MULTIPLE_TEXT = "Copy &labels";
-static const char* const COPY_MESSAGE_MULTIPLE_TEXT = "Copy &messages";
-static const char* const COPY_AMOUNT_MULTIPLE_TEXT = "Copy &amounts";
-
 #include <ranges>
 
 ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
@@ -60,11 +48,11 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWid
 
     // context menu
     contextMenu = new QMenu(this);
-    copyURIAction = contextMenu->addAction(tr(COPY_URI_SINGLE_TEXT), this, &ReceiveCoinsDialog::copyURI);
-    copyAddressAction = contextMenu->addAction(tr(COPY_ADDRESS_SINGLE_TEXT), this, &ReceiveCoinsDialog::copyAddress);
-    copyLabelAction = contextMenu->addAction(tr(COPY_LABEL_SINGLE_TEXT), this, &ReceiveCoinsDialog::copyLabel);
-    copyMessageAction = contextMenu->addAction(tr(COPY_MESSAGE_SINGLE_TEXT), this, &ReceiveCoinsDialog::copyMessage);
-    copyAmountAction = contextMenu->addAction(tr(COPY_AMOUNT_SINGLE_TEXT), this, &ReceiveCoinsDialog::copyAmount);
+    copyURIAction = contextMenu->addAction("", this, &ReceiveCoinsDialog::copyURI);
+    copyAddressAction = contextMenu->addAction("", this, &ReceiveCoinsDialog::copyAddress);
+    copyLabelAction = contextMenu->addAction("", this, &ReceiveCoinsDialog::copyLabel);
+    copyMessageAction = contextMenu->addAction("", this, &ReceiveCoinsDialog::copyMessage);
+    copyAmountAction = contextMenu->addAction("", this, &ReceiveCoinsDialog::copyAmount);
     connect(ui->recentRequestsView, &QWidget::customContextMenuRequested, this, &ReceiveCoinsDialog::showMenu);
 
     connect(ui->clearButton, &QPushButton::clicked, this, &ReceiveCoinsDialog::clear);
@@ -314,14 +302,13 @@ void ReceiveCoinsDialog::showMenu(const QPoint &point)
         return;
     }
 
-    if (sel.size() == 1 && sel.at(0).isValid()) {
-        // Make sure we have single labels
-        copyAddressAction->setText(tr(COPY_ADDRESS_SINGLE_TEXT));
-        copyURIAction->setText(tr(COPY_URI_SINGLE_TEXT));
-        copyLabelAction->setText(tr(COPY_LABEL_SINGLE_TEXT));
-        copyMessageAction->setText(tr(COPY_MESSAGE_SINGLE_TEXT));
-        copyAmountAction->setText(tr(COPY_AMOUNT_SINGLE_TEXT));
+    copyAddressAction->setText(tr("&Copy address(es)", nullptr, sel.size()));
+    copyURIAction->setText(tr("Copy &URI(s)", nullptr, sel.size()));
+    copyLabelAction->setText(tr("Copy &label(s)", nullptr, sel.size()));
+    copyMessageAction->setText(tr("Copy &message(s)", nullptr, sel.size()));
+    copyAmountAction->setText(tr("Copy &amount(s)", nullptr, sel.size()));
 
+    if (sel.size() == 1 && sel.at(0).isValid()) {
         // disable context menu actions when appropriate
         const RecentRequestsTableModel* const submodel = model->getRecentRequestsTableModel();
         const RecentRequestEntry& req = submodel->entry(sel.at(0).row());
@@ -332,13 +319,6 @@ void ReceiveCoinsDialog::showMenu(const QPoint &point)
         contextMenu->exec(QCursor::pos());
     } else if (sel.size() > 1) {
         // multiple selection
-
-        // Make sure we have multiple labels
-        copyAddressAction->setText(tr(COPY_ADDRESS_MULTIPLE_TEXT));
-        copyURIAction->setText(tr(COPY_URI_MULTIPLE_TEXT));
-        copyLabelAction->setText(tr(COPY_LABEL_MULTIPLE_TEXT));
-        copyMessageAction->setText(tr(COPY_MESSAGE_MULTIPLE_TEXT));
-        copyAmountAction->setText(tr(COPY_AMOUNT_MULTIPLE_TEXT));
 
         copyLabelAction->setDisabled(false);
         copyMessageAction->setDisabled(false);
