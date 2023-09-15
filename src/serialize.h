@@ -167,9 +167,9 @@ const Out& AsBase(const In& x)
     return x;
 }
 
-#define READWRITE(...) (::SerReadWriteMany(s, ser_action, __VA_ARGS__))
-#define SER_READ(obj, code) ::SerRead(s, ser_action, obj, [&](Stream& s, typename std::remove_const<Type>::type& obj) { code; })
-#define SER_WRITE(obj, code) ::SerWrite(s, ser_action, obj, [&](Stream& s, const Type& obj) { code; })
+#define READWRITE(...) (ser_action.SerReadWriteMany(s, __VA_ARGS__))
+#define SER_READ(obj, code) ser_action.SerRead(s, obj, [&](Stream& s, typename std::remove_const<Type>::type& obj) { code; })
+#define SER_WRITE(obj, code) ser_action.SerWrite(s, obj, [&](Stream& s, const Type& obj) { code; })
 
 /**
  * Implement the Ser and Unser methods needed for implementing a formatter (see Using below).
@@ -1008,17 +1008,65 @@ void Unserialize(Stream& is, std::shared_ptr<const T>& p)
     p = std::make_shared<const T>(deserialize, is);
 }
 
+/**
+ * Support for (un)serializing many things at once
+ */
+
+template <typename Stream, typename... Args>
+void SerializeMany(Stream& s, const Args&... args)
+{
+    (::Serialize(s, args), ...);
+}
+
+template <typename Stream, typename... Args>
+inline void UnserializeMany(Stream& s, Args&&... args)
+{
+    (::Unserialize(s, args), ...);
+}
 
 /**
  * Support for all macros providing or using the ser_action parameter of the SerializationOps method.
  */
 struct ActionSerialize {
-    constexpr bool ForRead() const { return false; }
+    static constexpr bool ForRead() { return false; }
+
+    template<typename Stream, typename... Args>
+    static void SerReadWriteMany(Stream& s, const Args&... args)
+    {
+        ::SerializeMany(s, args...);
+    }
+
+    template<typename Stream, typename Type, typename Fn>
+    static void SerRead(Stream& s, Type&&, Fn&&)
+    {
+    }
+
+    template<typename Stream, typename Type, typename Fn>
+    static void SerWrite(Stream& s, Type&& obj, Fn&& fn)
+    {
+        fn(s, std::forward<Type>(obj));
+    }
 };
 struct ActionUnserialize {
-    constexpr bool ForRead() const { return true; }
-};
+    static constexpr bool ForRead() { return true; }
 
+    template<typename Stream, typename... Args>
+    static void SerReadWriteMany(Stream& s, Args&&... args)
+    {
+        ::UnserializeMany(s, args...);
+    }
+
+    template<typename Stream, typename Type, typename Fn>
+    static void SerRead(Stream& s, Type&& obj, Fn&& fn)
+    {
+        fn(s, std::forward<Type>(obj));
+    }
+
+    template<typename Stream, typename Type, typename Fn>
+    static void SerWrite(Stream& s, Type&&, Fn&&)
+    {
+    }
+};
 
 /* ::GetSerializeSize implementations
  *
@@ -1064,52 +1112,6 @@ public:
 
     int GetVersion() const { return nVersion; }
 };
-
-template <typename Stream, typename... Args>
-void SerializeMany(Stream& s, const Args&... args)
-{
-    (::Serialize(s, args), ...);
-}
-
-template <typename Stream, typename... Args>
-inline void UnserializeMany(Stream& s, Args&&... args)
-{
-    (::Unserialize(s, args), ...);
-}
-
-template<typename Stream, typename... Args>
-inline void SerReadWriteMany(Stream& s, ActionSerialize ser_action, const Args&... args)
-{
-    ::SerializeMany(s, args...);
-}
-
-template<typename Stream, typename... Args>
-inline void SerReadWriteMany(Stream& s, ActionUnserialize ser_action, Args&&... args)
-{
-    ::UnserializeMany(s, args...);
-}
-
-template<typename Stream, typename Type, typename Fn>
-inline void SerRead(Stream& s, ActionSerialize ser_action, Type&&, Fn&&)
-{
-}
-
-template<typename Stream, typename Type, typename Fn>
-inline void SerRead(Stream& s, ActionUnserialize ser_action, Type&& obj, Fn&& fn)
-{
-    fn(s, std::forward<Type>(obj));
-}
-
-template<typename Stream, typename Type, typename Fn>
-inline void SerWrite(Stream& s, ActionSerialize ser_action, Type&& obj, Fn&& fn)
-{
-    fn(s, std::forward<Type>(obj));
-}
-
-template<typename Stream, typename Type, typename Fn>
-inline void SerWrite(Stream& s, ActionUnserialize ser_action, Type&&, Fn&&)
-{
-}
 
 template<typename I>
 inline void WriteVarInt(CSizeComputer &s, I n)
@@ -1161,12 +1163,11 @@ public:
 template <typename Params, typename T>
 class ParamsWrapper
 {
-    static_assert(std::is_lvalue_reference<T>::value, "ParamsWrapper needs an lvalue reference type T");
     const Params& m_params;
-    T m_object;
+    T& m_object;
 
 public:
-    explicit ParamsWrapper(const Params& params, T obj) : m_params{params}, m_object{obj} {}
+    explicit ParamsWrapper(const Params& params, T& obj) : m_params{params}, m_object{obj} {}
 
     template <typename Stream>
     void Serialize(Stream& s) const
@@ -1190,7 +1191,20 @@ public:
 template <typename Params, typename T>
 static auto WithParams(const Params& params, T&& t)
 {
-    return ParamsWrapper<Params, T&>{params, t};
+    return ParamsWrapper<Params, T>{params, t};
 }
+
+/**
+ * Helper macro for SerParams structs
+ *
+ * Allows you define SerParams instances and then apply them directly
+ * to an object via function call syntax, eg:
+ *
+ *   constexpr SerParams FOO{....};
+ *   ss << FOO(obj);
+ */
+#define SER_PARAMS_OPFUNC \
+    template <typename T> \
+    auto operator()(T&& t) const { return WithParams(*this, t); }
 
 #endif // BITCOIN_SERIALIZE_H
