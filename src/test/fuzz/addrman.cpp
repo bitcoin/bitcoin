@@ -83,7 +83,7 @@ CNetAddr RandAddr(FuzzedDataProvider& fuzzed_data_provider, FastRandomContext& f
         s << net;
         s << fast_random_context.randbytes(net_len_map.at(net));
 
-        s >> WithParams(CAddress::V2_NETWORK, addr);
+        s >> CAddress::V2_NETWORK(addr);
     }
 
     // Return a dummy IPv4 5.5.5.5 if we generated an invalid address.
