@@ -87,6 +87,8 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
         case Amount:
             if (rec->recipient.amount == 0 && role == Qt::DisplayRole)
                 return tr("(no amount requested)");
+            else if (rec->recipient.amount == 0 && role == Qt::EditRole)
+                return "";
             else if (role == Qt::EditRole)
                 return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, false, BitcoinUnits::SeparatorStyle::NEVER);
             else
