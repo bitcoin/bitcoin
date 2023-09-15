@@ -1357,11 +1357,19 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         BOOST_CHECK(!(*ret)[1]);
         BOOST_CHECK((*ret)[2] && (*ret)[2]->m_type == "tx" && Span{(*ret)[2]->m_recv} == MakeByteSpan(msg_data_2));
 
-        // Then send a message with a bit error, expecting failure.
+        // Then send a message with a bit error, expecting failure. It's possible this failure does
+        // not occur immediately (when the length descriptor was modified), but it should come
+        // eventually, and no messages can be delivered anymore.
         tester.SendMessage("bad", msg_data_1);
         tester.Damage();
-        ret = tester.Interact();
-        BOOST_CHECK(!ret);
+        while (true) {
+            ret = tester.Interact();
+            if (!ret) break; // failure
+            BOOST_CHECK(ret->size() == 0); // no message can be delivered
+            // Send another message.
+            auto msg_data_3 = g_insecure_rand_ctx.randbytes<uint8_t>(InsecureRandRange(10000));
+            tester.SendMessage(uint8_t(12), msg_data_3); // getheaders short id
+        }
     }
 
     // Normal scenario, with a transport in responder node.
