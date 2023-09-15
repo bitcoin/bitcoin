@@ -48,11 +48,11 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWid
 
     // context menu
     contextMenu = new QMenu(this);
-    copyURIAction = contextMenu->addAction("", this, &ReceiveCoinsDialog::copyURI);
-    copyAddressAction = contextMenu->addAction("", this, &ReceiveCoinsDialog::copyAddress);
-    copyLabelAction = contextMenu->addAction("", this, &ReceiveCoinsDialog::copyLabel);
-    copyMessageAction = contextMenu->addAction("", this, &ReceiveCoinsDialog::copyMessage);
-    copyAmountAction = contextMenu->addAction("", this, &ReceiveCoinsDialog::copyAmount);
+    contextMenu->addAction(tr("Copy &URI"), this, &ReceiveCoinsDialog::copyURI);
+    contextMenu->addAction(tr("&Copy address"), this, &ReceiveCoinsDialog::copyAddress);
+    copyLabelAction = contextMenu->addAction(tr("Copy &label"), this, &ReceiveCoinsDialog::copyLabel);
+    copyMessageAction = contextMenu->addAction(tr("Copy &message"), this, &ReceiveCoinsDialog::copyMessage);
+    copyAmountAction = contextMenu->addAction(tr("Copy &amount"), this, &ReceiveCoinsDialog::copyAmount);
     connect(ui->recentRequestsView, &QWidget::customContextMenuRequested, this, &ReceiveCoinsDialog::showMenu);
 
     connect(ui->clearButton, &QPushButton::clicked, this, &ReceiveCoinsDialog::clear);
@@ -301,12 +301,6 @@ void ReceiveCoinsDialog::showMenu(const QPoint &point)
     if (sel.isEmpty()) {
         return;
     }
-
-    copyAddressAction->setText(tr("&Copy address(es)", nullptr, sel.size()));
-    copyURIAction->setText(tr("Copy &URI(s)", nullptr, sel.size()));
-    copyLabelAction->setText(tr("Copy &label(s)", nullptr, sel.size()));
-    copyMessageAction->setText(tr("Copy &message(s)", nullptr, sel.size()));
-    copyAmountAction->setText(tr("Copy &amount(s)", nullptr, sel.size()));
 
     if (sel.size() == 1 && sel.at(0).isValid()) {
         // disable context menu actions when appropriate
