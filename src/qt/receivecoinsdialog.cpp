@@ -320,9 +320,9 @@ void ReceiveCoinsDialog::showMenu(const QPoint &point)
     } else if (sel.size() > 1) {
         // multiple selection
 
-        copyLabelAction->setDisabled(false);
-        copyMessageAction->setDisabled(false);
-        copyAmountAction->setDisabled(false);
+        copyLabelAction->setDisabled(true);
+        copyMessageAction->setDisabled(true);
+        copyAmountAction->setDisabled(true);
 
         // disable context menu actions when appropriate
         const RecentRequestsTableModel* const submodel = model->getRecentRequestsTableModel();
@@ -332,14 +332,14 @@ void ReceiveCoinsDialog::showMenu(const QPoint &point)
                 continue;
             }
             const RecentRequestEntry& req = submodel->entry(selection.row());
-            if (req.recipient.label.isEmpty()) {
-                copyLabelAction->setDisabled(true);
+            if (!req.recipient.label.isEmpty()) {
+                copyLabelAction->setDisabled(false);
             }
-            if (req.recipient.message.isEmpty()) {
-                copyMessageAction->setDisabled(true);
+            if (!req.recipient.message.isEmpty()) {
+                copyMessageAction->setDisabled(false);
             }
-            if (req.recipient.amount == 0) {
-                copyAmountAction->setDisabled(true);
+            if (req.recipient.amount != 0) {
+                copyAmountAction->setDisabled(false);
             }
         }
         contextMenu->exec(QCursor::pos());
