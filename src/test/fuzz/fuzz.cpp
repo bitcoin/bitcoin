@@ -192,17 +192,11 @@ int main(int argc, char** argv)
 {
     initialize();
     static const auto& test_one_input = *Assert(g_test_one_input);
-#ifdef __AFL_HAVE_MANUAL_CONTROL
-    // Enable AFL deferred forkserver mode. Requires compilation using
-    // afl-clang-fast++. See fuzzing.md for details.
-    __AFL_INIT();
-#endif
-
 #ifdef __AFL_LOOP
     // Enable AFL persistent mode. Requires compilation using afl-clang-fast++.
     // See fuzzing.md for details.
     const uint8_t* buffer = __AFL_FUZZ_TESTCASE_BUF;
-    while (__AFL_LOOP(1000)) {
+    while (__AFL_LOOP(100000)) {
         size_t buffer_len = __AFL_FUZZ_TESTCASE_LEN;
         test_one_input({buffer, buffer_len});
     }
