@@ -107,7 +107,7 @@ template <typename T, typename P>
     DataStream ds{buffer};
     T obj;
     try {
-        ds >> WithParams(params, obj);
+        ds >> params(obj);
     } catch (const std::ios_base::failure&) {
         return std::nullopt;
     }

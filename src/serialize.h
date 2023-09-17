@@ -216,7 +216,7 @@ const Out& AsBase(const In& x)
  * which would then be invoked as
  *   READWRITE(WithParams(BarParameter{...}, Using<FooFormatter>(obj.foo)))
  *
- * WithParams(parameter, obj) can be invoked anywhere in the call stack; it is
+ * parameter(obj) can be invoked anywhere in the call stack; it is
  * passed down recursively into all serialization code, until another
  * WithParams overrides it.
  *

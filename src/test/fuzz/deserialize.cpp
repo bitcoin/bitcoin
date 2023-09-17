@@ -66,7 +66,7 @@ template <typename T, typename P>
 DataStream Serialize(const T& obj, const P& params)
 {
     DataStream ds{};
-    ds << WithParams(params, obj);
+    ds << params(obj);
     return ds;
 }
 
@@ -74,7 +74,7 @@ template <typename T, typename P>
 T Deserialize(DataStream&& ds, const P& params)
 {
     T obj;
-    ds >> WithParams(params, obj);
+    ds >> params(obj);
     return obj;
 }
 
@@ -83,7 +83,7 @@ void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj, const P& params
 {
     DataStream ds{buffer};
     try {
-        ds >> WithParams(params, obj);
+        ds >> params(obj);
     } catch (const std::ios_base::failure&) {
         throw invalid_fuzzing_input_exception();
     }
