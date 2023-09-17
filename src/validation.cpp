@@ -5230,19 +5230,8 @@ bool ChainstateManager::ActivateSnapshot(
             static_cast<size_t>(current_coinstip_cache_size * SNAPSHOT_CACHE_PERC));
     }
 
-    bool snapshot_ok = this->PopulateAndValidateSnapshot(
-        *snapshot_chainstate, coins_file, metadata);
-
-    // If not in-memory, persist the base blockhash for use during subsequent
-    // initialization.
-    if (!in_memory) {
-        LOCK(::cs_main);
-        if (!node::WriteSnapshotBaseBlockhash(*snapshot_chainstate)) {
-            snapshot_ok = false;
-        }
-    }
-    if (!snapshot_ok) {
-        LOCK(::cs_main);
+    auto cleanup_bad_snapshot = [&](const char* reason) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        LogPrintf("[snapshot] activation failed - %s\n", reason);
         this->MaybeRebalanceCaches();
 
         // PopulateAndValidateSnapshot can return (in error) before the leveldb datadir
@@ -5259,30 +5248,48 @@ bool ChainstateManager::ActivateSnapshot(
             }
         }
         return false;
-    }
+    };
 
-    {
+    if (!this->PopulateAndValidateSnapshot(*snapshot_chainstate, coins_file, metadata)) {
         LOCK(::cs_main);
-        assert(!m_snapshot_chainstate);
-        m_snapshot_chainstate.swap(snapshot_chainstate);
-        const bool chaintip_loaded = m_snapshot_chainstate->LoadChainTip();
-        assert(chaintip_loaded);
-
-        // Transfer possession of the mempool to the snapshot chianstate.
-        // Mempool is empty at this point because we're still in IBD.
-        Assert(m_active_chainstate->m_mempool->size() == 0);
-        Assert(!m_snapshot_chainstate->m_mempool);
-        m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
-        m_active_chainstate->m_mempool = nullptr;
-        m_active_chainstate = m_snapshot_chainstate.get();
-        m_blockman.m_snapshot_height = this->GetSnapshotBaseHeight();
-
-        LogPrintf("[snapshot] successfully activated snapshot %s\n", base_blockhash.ToString());
-        LogPrintf("[snapshot] (%.2f MB)\n",
-            m_snapshot_chainstate->CoinsTip().DynamicMemoryUsage() / (1000 * 1000));
-
-        this->MaybeRebalanceCaches();
+        return cleanup_bad_snapshot("population failed");
     }
+
+    LOCK(::cs_main);  // cs_main required for rest of snapshot activation.
+
+    // Do a final check to ensure that the snapshot chainstate is actually a more
+    // work chain than the active chainstate; a user could have loaded a snapshot
+    // very late in the IBD process, and we wouldn't want to load a useless chainstate.
+    if (!CBlockIndexWorkComparator()(ActiveTip(), snapshot_chainstate->m_chain.Tip())) {
+        return cleanup_bad_snapshot("work does not exceed active chainstate");
+    }
+    // If not in-memory, persist the base blockhash for use during subsequent
+    // initialization.
+    if (!in_memory) {
+        if (!node::WriteSnapshotBaseBlockhash(*snapshot_chainstate)) {
+            return cleanup_bad_snapshot("could not write base blockhash");
+        }
+    }
+
+    assert(!m_snapshot_chainstate);
+    m_snapshot_chainstate.swap(snapshot_chainstate);
+    const bool chaintip_loaded = m_snapshot_chainstate->LoadChainTip();
+    assert(chaintip_loaded);
+
+    // Transfer possession of the mempool to the snapshot chainstate.
+    // Mempool is empty at this point because we're still in IBD.
+    Assert(m_active_chainstate->m_mempool->size() == 0);
+    Assert(!m_snapshot_chainstate->m_mempool);
+    m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
+    m_active_chainstate->m_mempool = nullptr;
+    m_active_chainstate = m_snapshot_chainstate.get();
+    m_blockman.m_snapshot_height = this->GetSnapshotBaseHeight();
+
+    LogPrintf("[snapshot] successfully activated snapshot %s\n", base_blockhash.ToString());
+    LogPrintf("[snapshot] (%.2f MB)\n",
+        m_snapshot_chainstate->CoinsTip().DynamicMemoryUsage() / (1000 * 1000));
+
+    this->MaybeRebalanceCaches();
     return true;
 }
 
@@ -5341,6 +5348,14 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     }
 
     const AssumeutxoData& au_data = *maybe_au_data;
+
+    // This work comparison is a duplicate check with the one performed later in
+    // ActivateSnapshot(), but is done so that we avoid doing the long work of staging
+    // a snapshot that isn't actually usable.
+    if (WITH_LOCK(::cs_main, return !CBlockIndexWorkComparator()(ActiveTip(), snapshot_start_block))) {
+        LogPrintf("[snapshot] activation failed - height does not exceed active chainstate\n");
+        return false;
+    }
 
     COutPoint outpoint;
     Coin coin;
