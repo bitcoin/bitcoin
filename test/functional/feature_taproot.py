@@ -97,14 +97,15 @@ from test_framework.util import (
     assert_equal,
     random_bytes,
 )
+from test_framework.wallet_util import generate_keypair
 from test_framework.key import (
     generate_privkey,
     compute_xonly_pubkey,
     sign_schnorr,
     tweak_add_privkey,
     ECKey,
-    SECP256K1
 )
+from test_framework import secp256k1
 from test_framework.address import (
     hash160,
     program_to_witness,
@@ -694,7 +695,7 @@ def spenders_taproot_active():
     # Generate an invalid public key
     while True:
         invalid_pub = random_bytes(32)
-        if not SECP256K1.is_x_coord(int.from_bytes(invalid_pub, 'big')):
+        if not secp256k1.GE.is_valid_x(int.from_bytes(invalid_pub, 'big')):
             break
 
     # Implement a test case that detects validation logic which maps invalid public keys to the
@@ -738,7 +739,11 @@ def spenders_taproot_active():
         scripts = [
             ("pk_codesep", CScript(random_checksig_style(pubs[1]) + bytes([OP_CODESEPARATOR]))),  # codesep after checksig
             ("codesep_pk", CScript(bytes([OP_CODESEPARATOR]) + random_checksig_style(pubs[1]))),  # codesep before checksig
-            ("branched_codesep", CScript([random_bytes(random.randrange(511)), OP_DROP, OP_IF, OP_CODESEPARATOR, pubs[0], OP_ELSE, OP_CODESEPARATOR, pubs[1], OP_ENDIF, OP_CHECKSIG])),  # branch dependent codesep
+            ("branched_codesep", CScript([random_bytes(random.randrange(2, 511)), OP_DROP, OP_IF, OP_CODESEPARATOR, pubs[0], OP_ELSE, OP_CODESEPARATOR, pubs[1], OP_ENDIF, OP_CHECKSIG])),  # branch dependent codesep
+            # Note that the first data push in the "branched_codesep" script has the purpose of
+            # randomizing the sighash, both by varying script size and content. In order to
+            # avoid MINIMALDATA script verification errors caused by not-minimal-encoded data
+            # pushes (e.g. `OP_PUSH1 1` instead of `OP_1`), we set a minimum data size of 2 bytes.
         ]
         random.shuffle(scripts)
         tap = taproot_construct(pubs[0], scripts)
@@ -1186,11 +1191,8 @@ def spenders_taproot_active():
 
     # Also add a few legacy spends into the mix, so that transactions which combine taproot and pre-taproot spends get tested too.
     for compressed in [False, True]:
-        eckey1 = ECKey()
-        eckey1.set(generate_privkey(), compressed)
-        pubkey1 = eckey1.get_pubkey().get_bytes()
-        eckey2 = ECKey()
-        eckey2.set(generate_privkey(), compressed)
+        eckey1, pubkey1 = generate_keypair(compressed=compressed)
+        eckey2, _ = generate_keypair(compressed=compressed)
         for p2sh in [False, True]:
             for witv0 in [False, True]:
                 for hashtype in VALID_SIGHASHES_ECDSA + [random.randrange(0x04, 0x80), random.randrange(0x84, 0x100)]:

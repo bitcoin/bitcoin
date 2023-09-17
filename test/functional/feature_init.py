@@ -71,7 +71,7 @@ class InitStressTest(BitcoinTestFramework):
             b'init message: Starting network threads',
             b'net thread start',
             b'addcon thread start',
-            b'loadblk thread start',
+            b'initload thread start',
             b'txindex thread start',
             b'block filter index thread start',
             b'coinstatsindex thread start',

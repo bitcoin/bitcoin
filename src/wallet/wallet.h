@@ -6,50 +6,76 @@
 #ifndef BITCOIN_WALLET_WALLET_H
 #define BITCOIN_WALLET_WALLET_H
 
+#include <addresstype.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
-#include <interfaces/wallet.h>
+#include <kernel/cs_main.h>
 #include <logging.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
-#include <psbt.h>
+#include <primitives/transaction.h>
+#include <script/interpreter.h>
+#include <script/script.h>
+#include <support/allocators/secure.h>
+#include <sync.h>
 #include <tinyformat.h>
+#include <uint256.h>
 #include <util/fs.h>
 #include <util/hasher.h>
-#include <util/message.h>
 #include <util/result.h>
-#include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
 #include <util/ui_change_type.h>
-#include <validationinterface.h>
 #include <wallet/crypter.h>
+#include <wallet/db.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/transaction.h>
-#include <wallet/walletdb.h>
+#include <wallet/types.h>
 #include <wallet/walletutil.h>
 
-#include <algorithm>
 #include <atomic>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <limits>
 #include <map>
 #include <memory>
 #include <optional>
 #include <set>
-#include <stdexcept>
-#include <stdint.h>
 #include <string>
-#include <utility>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <boost/signals2/signal.hpp>
 
+class CKey;
+class CKeyID;
+class CPubKey;
+class Coin;
+class SigningProvider;
+enum class MemPoolRemovalReason;
+enum class SigningResult;
+enum class TransactionError;
+namespace interfaces {
+class Wallet;
+}
+namespace wallet {
+class CWallet;
+class WalletBatch;
+enum class DBErrors : int;
+} // namespace wallet
+struct CBlockLocator;
+struct CExtKey;
+struct FlatSigningProvider;
+struct KeyOriginInfo;
+struct PartiallySignedTransaction;
+struct SignatureData;
 
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
 
-class CScript;
-enum class FeeEstimateMode;
 struct bilingual_str;
 
 namespace wallet {
@@ -118,8 +144,6 @@ constexpr CAmount HIGH_MAX_TX_FEE{100 * HIGH_TX_FEE_PER_KB};
 static constexpr size_t DUMMY_NESTED_P2WPKH_INPUT_SIZE = 91;
 
 class CCoinControl;
-class CWalletTx;
-class ReserveDestination;
 
 //! Default for -addresstype
 constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::BECH32};
@@ -649,8 +673,6 @@ public:
     bool SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, std::string& err_string, bool relay) const
         EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    bool DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> &txouts, const CCoinControl* coin_control = nullptr) const;
-
     bool ImportScripts(const std::set<CScript> scripts, int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -890,9 +912,10 @@ public:
     };
 
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
-    template<typename... Params>
-    void WalletLogPrintf(std::string fmt, Params... parameters) const {
-        LogPrintf(("%s " + fmt).c_str(), GetDisplayName(), parameters...);
+    template <typename... Params>
+    void WalletLogPrintf(const char* fmt, Params... parameters) const
+    {
+        LogPrintf(("%s " + std::string{fmt}).c_str(), GetDisplayName(), parameters...);
     };
 
     /** Upgrade the wallet */
@@ -1061,10 +1084,6 @@ bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
 
 //! Remove wallet name from persistent configuration so it will not be loaded on startup.
 bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
-
-bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, bool can_grind_r, const CCoinControl* coin_control);
-
-bool FillInputToWeight(CTxIn& txin, int64_t target_weight);
 
 struct MigrationResult {
     std::string wallet_name;

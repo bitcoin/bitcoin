@@ -1,9 +1,11 @@
 Checks: '
 -*,
+bitcoin-*,
 bugprone-argument-comment,
 bugprone-use-after-move,
 misc-unused-using-decls,
 modernize-use-default-member-init,
+modernize-use-noexcept,
 modernize-use-nullptr,
 performance-*,
 -performance-inefficient-string-concatenation,

@@ -9,7 +9,6 @@ from itertools import product
 
 from test_framework.authproxy import JSONRPCException
 from test_framework.descriptors import descsum_create
-from test_framework.key import ECKey
 from test_framework.messages import (
     ser_compact_size,
     WITNESS_SCALE_FACTOR,
@@ -22,7 +21,8 @@ from test_framework.util import (
     assert_raises_rpc_error,
     count_bytes,
 )
-from test_framework.wallet_util import bytes_to_wif
+from test_framework.wallet_util import generate_keypair
+
 
 class WalletSendTest(BitcoinTestFramework):
     def add_options(self, parser):
@@ -387,7 +387,7 @@ class WalletSendTest(BitcoinTestFramework):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=invalid_value, expect_error=(-3, msg))
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=invalid_value, expect_error=(-3, msg))
         # Test fee_rate values that cannot be represented in sat/vB.
-        for invalid_value in [0.0001, 0.00000001, 0.00099999, 31.99999999, "0.0001", "0.00000001", "0.00099999", "31.99999999"]:
+        for invalid_value in [0.0001, 0.00000001, 0.00099999, 31.99999999]:
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=invalid_value, expect_error=(-3, msg))
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=invalid_value, expect_error=(-3, msg))
         # Test fee_rate out of range (negative number).
@@ -500,9 +500,7 @@ class WalletSendTest(BitcoinTestFramework):
         assert res["complete"]
 
         self.log.info("External outputs")
-        eckey = ECKey()
-        eckey.generate()
-        privkey = bytes_to_wif(eckey.get_bytes())
+        privkey, _ = generate_keypair(wif=True)
 
         self.nodes[1].createwallet("extsend")
         ext_wallet = self.nodes[1].get_wallet_rpc("extsend")
@@ -532,13 +530,11 @@ class WalletSendTest(BitcoinTestFramework):
         signed = ext_wallet.walletprocesspsbt(res["psbt"])
         signed = ext_fund.walletprocesspsbt(res["psbt"])
         assert signed["complete"]
-        self.nodes[0].finalizepsbt(signed["psbt"])
 
         res = self.test_send(from_wallet=ext_wallet, to_wallet=self.nodes[0], amount=15, inputs=[ext_utxo], add_inputs=True, psbt=True, include_watching=True, solving_data={"descriptors": [desc]})
         signed = ext_wallet.walletprocesspsbt(res["psbt"])
         signed = ext_fund.walletprocesspsbt(res["psbt"])
         assert signed["complete"]
-        self.nodes[0].finalizepsbt(signed["psbt"])
 
         dec = self.nodes[0].decodepsbt(signed["psbt"])
         for i, txin in enumerate(dec["tx"]["vin"]):
@@ -576,8 +572,7 @@ class WalletSendTest(BitcoinTestFramework):
         signed = ext_wallet.walletprocesspsbt(res["psbt"])
         signed = ext_fund.walletprocesspsbt(res["psbt"])
         assert signed["complete"]
-        tx = self.nodes[0].finalizepsbt(signed["psbt"])
-        testres = self.nodes[0].testmempoolaccept([tx["hex"]])[0]
+        testres = self.nodes[0].testmempoolaccept([signed["hex"]])[0]
         assert_equal(testres["allowed"], True)
         assert_fee_amount(testres["fees"]["base"], testres["vsize"], Decimal(0.0001))
 

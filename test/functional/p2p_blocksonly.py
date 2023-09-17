@@ -101,7 +101,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         # Bump time forward to ensure m_next_inv_send_time timer pops
         self.nodes[0].setmocktime(int(time.time()) + 60)
 
-        conn.sync_send_with_ping()
+        conn.sync_with_ping()
         assert int(txid, 16) not in conn.get_invs()
 
     def check_p2p_inv_violation(self, peer):

@@ -11,6 +11,7 @@
 #include <random.h>
 
 #include <secp256k1.h>
+#include <secp256k1_ellswift.h>
 #include <secp256k1_extrakeys.h>
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
@@ -329,6 +330,42 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
     keyChild.fCompressed = true;
     keyChild.fValid = ret;
     return ret;
+}
+
+EllSwiftPubKey CKey::EllSwiftCreate(Span<const std::byte> ent32) const
+{
+    assert(fValid);
+    assert(ent32.size() == 32);
+    std::array<std::byte, EllSwiftPubKey::size()> encoded_pubkey;
+
+    auto success = secp256k1_ellswift_create(secp256k1_context_sign,
+                                             UCharCast(encoded_pubkey.data()),
+                                             keydata.data(),
+                                             UCharCast(ent32.data()));
+
+    // Should always succeed for valid keys (asserted above).
+    assert(success);
+    return {encoded_pubkey};
+}
+
+ECDHSecret CKey::ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift, const EllSwiftPubKey& our_ellswift, bool initiating) const
+{
+    assert(fValid);
+
+    ECDHSecret output;
+    // BIP324 uses the initiator as party A, and the responder as party B. Remap the inputs
+    // accordingly:
+    bool success = secp256k1_ellswift_xdh(secp256k1_context_sign,
+                                          UCharCast(output.data()),
+                                          UCharCast(initiating ? our_ellswift.data() : their_ellswift.data()),
+                                          UCharCast(initiating ? their_ellswift.data() : our_ellswift.data()),
+                                          keydata.data(),
+                                          initiating ? 0 : 1,
+                                          secp256k1_ellswift_xdh_hash_function_bip324,
+                                          nullptr);
+    // Should always succeed for valid keys (assert above).
+    assert(success);
+    return output;
 }
 
 bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {

@@ -13,7 +13,6 @@
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/check.h>

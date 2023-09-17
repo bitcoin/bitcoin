@@ -29,7 +29,10 @@ struct ConnmanTestMsg : public CConnman {
     {
         LOCK(m_nodes_mutex);
         m_nodes.push_back(&node);
+
+        if (node.IsManualOrFullOutboundConn()) ++m_network_conn_counts[node.addr.GetNetwork()];
     }
+
     void ClearTestNodes()
     {
         LOCK(m_nodes_mutex);
@@ -51,7 +54,8 @@ struct ConnmanTestMsg : public CConnman {
 
     void NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const;
 
-    bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg& ser_msg) const;
+    bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg&& ser_msg) const;
+    void FlushSendBuffer(CNode& node) const;
 };
 
 constexpr ServiceFlags ALL_SERVICE_FLAGS[]{

@@ -108,9 +108,13 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         # Set correct m_best_block_time, which is used in ResubmitWalletTransactions
         node.syncwithvalidationinterfacequeue()
 
-        # Evict these txs from the mempool
         evict_time = block_time + 60 * 60 * DEFAULT_MEMPOOL_EXPIRY_HOURS + 5
-        node.setmocktime(evict_time)
+        # Flush out currently scheduled resubmit attempt now so that there can't be one right between eviction and check.
+        with node.assert_debug_log(['resubmit 2 unconfirmed transactions']):
+            node.setmocktime(evict_time)
+            node.mockscheduler(60)
+
+        # Evict these txs from the mempool
         indep_send = node.send(outputs=[{node.getnewaddress(): 1}], inputs=[indep_utxo])
         node.getmempoolentry(indep_send["txid"])
         assert_raises_rpc_error(-5, "Transaction not in mempool", node.getmempoolentry, txid)

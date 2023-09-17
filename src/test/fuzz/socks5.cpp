@@ -26,7 +26,7 @@ void initialize_socks5()
     default_socks5_recv_timeout = g_socks5_recv_timeout;
 }
 
-FUZZ_TARGET_INIT(socks5, initialize_socks5)
+FUZZ_TARGET(socks5, .init = initialize_socks5)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     ProxyCredentials proxy_credentials;

@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 
+#include <db_cxx.h>
 #include <sys/stat.h>
 
 // Windows may not define S_IRUSR or S_IWUSR. We define both
@@ -28,6 +29,8 @@
 #define S_IWUSR             0200
 #endif
 #endif
+
+static_assert(BDB_DB_FILE_ID_LEN == DB_FILE_ID_LEN, "DB_FILE_ID_LEN should be 20.");
 
 namespace wallet {
 namespace {
@@ -232,6 +235,26 @@ BerkeleyEnvironment::BerkeleyEnvironment() : m_use_shared_memory(false)
     fMockDb = true;
 }
 
+/** RAII class that automatically cleanses its data on destruction */
+class SafeDbt final
+{
+    Dbt m_dbt;
+
+public:
+    // construct Dbt with internally-managed data
+    SafeDbt();
+    // construct Dbt with provided data
+    SafeDbt(void* data, size_t size);
+    ~SafeDbt();
+
+    // delegate to Dbt
+    const void* get_data() const;
+    uint32_t get_size() const;
+
+    // conversion operator to access the underlying Dbt
+    operator Dbt*();
+};
+
 SafeDbt::SafeDbt()
 {
     m_dbt.set_flags(DB_DBT_MALLOC);
@@ -269,6 +292,18 @@ uint32_t SafeDbt::get_size() const
 SafeDbt::operator Dbt*()
 {
     return &m_dbt;
+}
+
+static Span<const std::byte> SpanFromDbt(const SafeDbt& dbt)
+{
+    return {reinterpret_cast<const std::byte*>(dbt.get_data()), dbt.get_size()};
+}
+
+BerkeleyDatabase::BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, fs::path filename, const DatabaseOptions& options) :
+    WalletDatabase(), env(std::move(env)), m_filename(std::move(filename)), m_max_log_mb(options.max_log_mb)
+{
+    auto inserted = this->env->m_databases.emplace(m_filename, std::ref(*this));
+    assert(inserted.second);
 }
 
 bool BerkeleyDatabase::Verify(bilingual_str& errorStr)
@@ -456,6 +491,15 @@ void BerkeleyEnvironment::ReloadDbEnv()
     Reset();
     bilingual_str open_err;
     Open(open_err);
+}
+
+DbTxn* BerkeleyEnvironment::TxnBegin(int flags)
+{
+    DbTxn* ptxn = nullptr;
+    int ret = dbenv->txn_begin(nullptr, &ptxn, flags);
+    if (!ptxn || ret != 0)
+        return nullptr;
+    return ptxn;
 }
 
 bool BerkeleyDatabase::Rewrite(const char* pszSkip)
@@ -702,7 +746,7 @@ DatabaseCursor::Status BerkeleyCursor::Next(DataStream& ssKey, DataStream& ssVal
         return Status::FAIL;
     }
 
-    Span<const std::byte> raw_key = {AsBytePtr(datKey.get_data()), datKey.get_size()};
+    Span<const std::byte> raw_key = SpanFromDbt(datKey);
     if (!m_key_prefix.empty() && std::mismatch(raw_key.begin(), raw_key.end(), m_key_prefix.begin(), m_key_prefix.end()).second != m_key_prefix.end()) {
         return Status::DONE;
     }
@@ -711,7 +755,7 @@ DatabaseCursor::Status BerkeleyCursor::Next(DataStream& ssKey, DataStream& ssVal
     ssKey.clear();
     ssKey.write(raw_key);
     ssValue.clear();
-    ssValue.write({AsBytePtr(datValue.get_data()), datValue.get_size()});
+    ssValue.write(SpanFromDbt(datValue));
     return Status::MORE;
 }
 
@@ -738,7 +782,7 @@ bool BerkeleyBatch::TxnBegin()
 {
     if (!pdb || activeTxn)
         return false;
-    DbTxn* ptxn = env->TxnBegin();
+    DbTxn* ptxn = env->TxnBegin(DB_TXN_WRITE_NOSYNC);
     if (!ptxn)
         return false;
     activeTxn = ptxn;
@@ -796,7 +840,7 @@ bool BerkeleyBatch::ReadKey(DataStream&& key, DataStream& value)
     int ret = pdb->get(activeTxn, datKey, datValue, 0);
     if (ret == 0 && datValue.get_data() != nullptr) {
         value.clear();
-        value.write({AsBytePtr(datValue.get_data()), datValue.get_size()});
+        value.write(SpanFromDbt(datValue));
         return true;
     }
     return false;

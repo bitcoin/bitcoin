@@ -5,11 +5,12 @@
 #ifndef BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
 #define BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
 
+#include <addresstype.h>
 #include <logging.h>
 #include <psbt.h>
 #include <script/descriptor.h>
+#include <script/script.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
 #include <util/error.h>
 #include <util/message.h>
 #include <util/result.h>
@@ -249,9 +250,10 @@ public:
     virtual std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const { return {}; };
 
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
-    template<typename... Params>
-    void WalletLogPrintf(std::string fmt, Params... parameters) const {
-        LogPrintf(("%s " + fmt).c_str(), m_storage.GetDisplayName(), parameters...);
+    template <typename... Params>
+    void WalletLogPrintf(const char* fmt, Params... parameters) const
+    {
+        LogPrintf(("%s " + std::string{fmt}).c_str(), m_storage.GetDisplayName(), parameters...);
     };
 
     /** Watch-only address added */

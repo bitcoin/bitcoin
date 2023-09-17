@@ -175,9 +175,9 @@ public:
     uint64_t rand64() noexcept
     {
         if (requires_seed) RandomSeed();
-        unsigned char buf[8];
-        rng.Keystream(buf, 8);
-        return ReadLE64(buf);
+        std::array<std::byte, 8> buf;
+        rng.Keystream(buf);
+        return ReadLE64(UCharCast(buf.data()));
     }
 
     /** Generate a random (bits)-bit integer. */
@@ -211,7 +211,11 @@ public:
     }
 
     /** Generate random bytes. */
-    std::vector<unsigned char> randbytes(size_t len);
+    template <typename B = unsigned char>
+    std::vector<B> randbytes(size_t len);
+
+    /** Fill a byte Span with random bytes. */
+    void fillrand(Span<std::byte> output);
 
     /** Generate a random 32-bit integer. */
     uint32_t rand32() noexcept { return randbits(32); }

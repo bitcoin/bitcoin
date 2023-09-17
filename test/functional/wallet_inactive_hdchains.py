@@ -5,7 +5,6 @@
 """
 Test Inactive HD Chains.
 """
-import os
 import shutil
 import time
 
@@ -130,8 +129,8 @@ class InactiveHDChainsTest(BitcoinTestFramework):
 
         # Copy test wallet to node 0
         test_wallet.unloadwallet()
-        test_wallet_dir = os.path.join(self.nodes[1].datadir, "regtest/wallets/keymeta_test")
-        new_test_wallet_dir = os.path.join(self.nodes[0].datadir, "regtest/wallets/keymeta_test")
+        test_wallet_dir = self.nodes[1].wallets_path / "keymeta_test"
+        new_test_wallet_dir = self.nodes[0].wallets_path / "keymeta_test"
         shutil.copytree(test_wallet_dir, new_test_wallet_dir)
         self.nodes[0].loadwallet("keymeta_test")
         test_wallet = self.nodes[0].get_wallet_rpc("keymeta_test")

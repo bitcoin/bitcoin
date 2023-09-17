@@ -55,7 +55,7 @@ SQLite is required for the descriptor wallet:
     sudo apt install libsqlite3-dev
 
 Berkeley DB is only required for the legacy wallet. Ubuntu and Debian have their own `libdb-dev` and `libdb++-dev` packages,
-but these will install Berkeley DB 5.1 or later. This will break binary wallet compatibility with the distributed
+but these will install Berkeley DB 5.3 or later. This will break binary wallet compatibility with the distributed
 executables, which are based on BerkeleyDB 4.8. If you do not care about wallet compatibility, pass
 `--with-incompatible-bdb` to configure. Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
 
@@ -111,11 +111,7 @@ SQLite is required for the descriptor wallet:
 
     sudo dnf install sqlite-devel
 
-Berkeley DB is required for the legacy wallet:
-
-    sudo dnf install libdb4-devel libdb4-cxx-devel
-
-Berkeley DB is only required for the legacy wallet. Newer Fedora releases have only `libdb-devel` and `libdb-cxx-devel` packages, but these will install
+Berkeley DB is only required for the legacy wallet. Fedora releases have only `libdb-devel` and `libdb-cxx-devel` packages, but these will install
 Berkeley DB 5.3 or later. This will break binary wallet compatibility with the distributed executables, which
 are based on Berkeley DB 4.8. If you do not care about wallet compatibility,
 pass `--with-incompatible-bdb` to configure. Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
@@ -132,7 +128,7 @@ ZMQ dependencies (provides ZMQ API):
 
 User-Space, Statically Defined Tracing (USDT) dependencies:
 
-    sudo dnf install systemtap
+    sudo dnf install systemtap-sdt-devel
 
 GUI dependencies:
 

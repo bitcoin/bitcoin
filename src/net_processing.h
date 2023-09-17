@@ -14,10 +14,13 @@ class CChainParams;
 class CTxMemPool;
 class ChainstateManager;
 
+/** Whether transaction reconciliation protocol should be enabled by default. */
+static constexpr bool DEFAULT_TXRECONCILIATION_ENABLE{false};
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
-static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
-/** Default number of orphan+recently-replaced txn to keep around for block reconstruction */
-static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = 100;
+static const uint32_t DEFAULT_MAX_ORPHAN_TRANSACTIONS{100};
+/** Default number of non-mempool transactions to keep around for block reconstruction. Includes
+    orphan, replaced, and rejected transactions. */
+static const uint32_t DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN{100};
 static const bool DEFAULT_PEERBLOOMFILTERS = false;
 static const bool DEFAULT_PEERBLOCKFILTERS = false;
 /** Threshold for marking a node to be discouraged, e.g. disconnected and added to the discouragement filter. */
@@ -43,9 +46,23 @@ struct CNodeStateStats {
 class PeerManager : public CValidationInterface, public NetEventsInterface
 {
 public:
+    struct Options {
+        //! Whether this node is running in -blocksonly mode
+        bool ignore_incoming_txs{DEFAULT_BLOCKSONLY};
+        //! Whether transaction reconciliation protocol is enabled
+        bool reconcile_txs{DEFAULT_TXRECONCILIATION_ENABLE};
+        //! Maximum number of orphan transactions kept in memory
+        uint32_t max_orphan_txs{DEFAULT_MAX_ORPHAN_TRANSACTIONS};
+        //! Number of non-mempool transactions to keep around for block reconstruction. Includes
+        //! orphan, replaced, and rejected transactions.
+        uint32_t max_extra_txs{DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN};
+        //! Whether all P2P messages are captured to disk
+        bool capture_messages{false};
+    };
+
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
                                              BanMan* banman, ChainstateManager& chainman,
-                                             CTxMemPool& pool, bool ignore_incoming_txs);
+                                             CTxMemPool& pool, Options opts);
     virtual ~PeerManager() { }
 
     /**

@@ -5,6 +5,8 @@
 #include <core_io.h>
 #include <key_io.h>
 #include <rpc/util.h>
+#include <script/script.h>
+#include <script/solver.h>
 #include <util/bip32.h>
 #include <util/translation.h>
 #include <wallet/receive.h>
@@ -440,10 +442,9 @@ public:
 
     UniValue operator()(const ScriptHash& scripthash) const
     {
-        CScriptID scriptID(scripthash);
         UniValue obj(UniValue::VOBJ);
         CScript subscript;
-        if (provider && provider->GetCScript(scriptID, subscript)) {
+        if (provider && provider->GetCScript(ToScriptID(scripthash), subscript)) {
             ProcessSubScript(subscript, obj);
         }
         return obj;
@@ -677,11 +678,11 @@ RPCHelpMan getaddressesbylabel()
             CHECK_NONFATAL(unique);
             // UniValue::pushKV checks if the key exists in O(N)
             // and since duplicate addresses are unexpected (checked with
-            // std::set in O(log(N))), UniValue::__pushKV is used instead,
+            // std::set in O(log(N))), UniValue::pushKVEnd is used instead,
             // which currently is O(1).
             UniValue value(UniValue::VOBJ);
             value.pushKV("purpose", _purpose ? PurposeToString(*_purpose) : "unknown");
-            ret.__pushKV(address, value);
+            ret.pushKVEnd(address, value);
         }
     });
 

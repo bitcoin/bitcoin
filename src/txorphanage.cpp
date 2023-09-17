@@ -21,6 +21,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
     LOCK(m_mutex);
 
     const uint256& hash = tx->GetHash();
+    const uint256& wtxid = tx->GetWitnessHash();
     if (m_orphans.count(hash))
         return false;
 
@@ -34,7 +35,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
     unsigned int sz = GetTransactionWeight(*tx);
     if (sz > MAX_STANDARD_TX_WEIGHT)
     {
-        LogPrint(BCLog::MEMPOOL, "ignoring large orphan tx (size: %u, hash: %s)\n", sz, hash.ToString());
+        LogPrint(BCLog::TXPACKAGES, "ignoring large orphan tx (size: %u, txid: %s, wtxid: %s)\n", sz, hash.ToString(), wtxid.ToString());
         return false;
     }
 
@@ -47,7 +48,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
         m_outpoint_to_orphan_it[txin.prevout].insert(ret.first);
     }
 
-    LogPrint(BCLog::MEMPOOL, "stored orphan tx %s (mapsz %u outsz %u)\n", hash.ToString(),
+    LogPrint(BCLog::TXPACKAGES, "stored orphan tx %s (wtxid=%s) (mapsz %u outsz %u)\n", hash.ToString(), wtxid.ToString(),
              m_orphans.size(), m_outpoint_to_orphan_it.size());
     return true;
 }
@@ -55,10 +56,10 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
 int TxOrphanage::EraseTx(const uint256& txid)
 {
     LOCK(m_mutex);
-    return _EraseTx(txid);
+    return EraseTxNoLock(txid);
 }
 
-int TxOrphanage::_EraseTx(const uint256& txid)
+int TxOrphanage::EraseTxNoLock(const uint256& txid)
 {
     AssertLockHeld(m_mutex);
     std::map<uint256, OrphanTx>::iterator it = m_orphans.find(txid);
@@ -83,6 +84,8 @@ int TxOrphanage::_EraseTx(const uint256& txid)
         m_orphan_list[old_pos] = it_last;
         it_last->second.list_pos = old_pos;
     }
+    const auto& wtxid = it->second.tx->GetWitnessHash();
+    LogPrint(BCLog::TXPACKAGES, "   removed orphan tx %s (wtxid=%s)\n", txid.ToString(), wtxid.ToString());
     m_orphan_list.pop_back();
     m_wtxid_to_orphan_it.erase(it->second.tx->GetWitnessHash());
 
@@ -103,10 +106,10 @@ void TxOrphanage::EraseForPeer(NodeId peer)
         std::map<uint256, OrphanTx>::iterator maybeErase = iter++; // increment to avoid iterator becoming invalid
         if (maybeErase->second.fromPeer == peer)
         {
-            nErased += _EraseTx(maybeErase->second.tx->GetHash());
+            nErased += EraseTxNoLock(maybeErase->second.tx->GetHash());
         }
     }
-    if (nErased > 0) LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx from peer=%d\n", nErased, peer);
+    if (nErased > 0) LogPrint(BCLog::TXPACKAGES, "Erased %d orphan tx from peer=%d\n", nErased, peer);
 }
 
 void TxOrphanage::LimitOrphans(unsigned int max_orphans)
@@ -125,24 +128,24 @@ void TxOrphanage::LimitOrphans(unsigned int max_orphans)
         {
             std::map<uint256, OrphanTx>::iterator maybeErase = iter++;
             if (maybeErase->second.nTimeExpire <= nNow) {
-                nErased += _EraseTx(maybeErase->second.tx->GetHash());
+                nErased += EraseTxNoLock(maybeErase->second.tx->GetHash());
             } else {
                 nMinExpTime = std::min(maybeErase->second.nTimeExpire, nMinExpTime);
             }
         }
         // Sweep again 5 minutes after the next entry that expires in order to batch the linear scan.
         nNextSweep = nMinExpTime + ORPHAN_TX_EXPIRE_INTERVAL;
-        if (nErased > 0) LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx due to expiration\n", nErased);
+        if (nErased > 0) LogPrint(BCLog::TXPACKAGES, "Erased %d orphan tx due to expiration\n", nErased);
     }
     FastRandomContext rng;
     while (m_orphans.size() > max_orphans)
     {
         // Evict a random orphan:
         size_t randompos = rng.randrange(m_orphan_list.size());
-        _EraseTx(m_orphan_list[randompos]->first);
+        EraseTxNoLock(m_orphan_list[randompos]->first);
         ++nEvicted;
     }
-    if (nEvicted > 0) LogPrint(BCLog::MEMPOOL, "orphanage overflow, removed %u tx\n", nEvicted);
+    if (nEvicted > 0) LogPrint(BCLog::TXPACKAGES, "orphanage overflow, removed %u tx\n", nEvicted);
 }
 
 void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx)
@@ -159,6 +162,8 @@ void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx)
                 std::set<uint256>& orphan_work_set = m_peer_work_set.try_emplace(elem->second.fromPeer).first->second;
                 // Add this tx to the work set
                 orphan_work_set.insert(elem->first);
+                LogPrint(BCLog::TXPACKAGES, "added %s (wtxid=%s) to peer %d workset\n",
+                         tx.GetHash().ToString(), tx.GetWitnessHash().ToString(), elem->second.fromPeer);
             }
         }
     }
@@ -231,8 +236,8 @@ void TxOrphanage::EraseForBlock(const CBlock& block)
     if (vOrphanErase.size()) {
         int nErased = 0;
         for (const uint256& orphanHash : vOrphanErase) {
-            nErased += _EraseTx(orphanHash);
+            nErased += EraseTxNoLock(orphanHash);
         }
-        LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx included or conflicted by block\n", nErased);
+        LogPrint(BCLog::TXPACKAGES, "Erased %d orphan tx included or conflicted by block\n", nErased);
     }
 }

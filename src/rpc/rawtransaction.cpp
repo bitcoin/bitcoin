@@ -30,7 +30,7 @@
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
+#include <script/solver.h>
 #include <uint256.h>
 #include <undo.h>
 #include <util/bip32.h>
@@ -147,8 +147,9 @@ static std::vector<RPCArg> CreateTxDoc()
                 },
             },
         },
-        {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs (key-value pairs), where none of the keys are duplicated.\n"
-                "That is, each address can only appear once and there can only be one 'data' object.\n"
+        {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs specified as key-value pairs.\n"
+                "Each key may only appear once, i.e. there can only be one 'data' output, and no address may be duplicated.\n"
+                "At least one output of either type must be specified.\n"
                 "For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
                 "                             accepted as second parameter.",
             {

@@ -41,7 +41,7 @@ void initialize_coins_view()
     g_setup = testing_setup.get();
 }
 
-FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
+FUZZ_TARGET(coins_view, .init = initialize_coins_view)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     CCoinsView backend_coins_view;
@@ -155,14 +155,16 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
         }
         assert((exists_using_access_coin && exists_using_have_coin_in_cache && exists_using_have_coin && exists_using_get_coin) ||
                (!exists_using_access_coin && !exists_using_have_coin_in_cache && !exists_using_have_coin && !exists_using_get_coin));
+        // If HaveCoin on the backend is true, it must also be on the cache if the coin wasn't spent.
         const bool exists_using_have_coin_in_backend = backend_coins_view.HaveCoin(random_out_point);
-        if (exists_using_have_coin_in_backend) {
+        if (!coin_using_access_coin.IsSpent() && exists_using_have_coin_in_backend) {
             assert(exists_using_have_coin);
         }
         Coin coin_using_backend_get_coin;
         if (backend_coins_view.GetCoin(random_out_point, coin_using_backend_get_coin)) {
             assert(exists_using_have_coin_in_backend);
-            assert(coin_using_get_coin == coin_using_backend_get_coin);
+            // Note we can't assert that `coin_using_get_coin == coin_using_backend_get_coin` because the coin in
+            // the cache may have been modified but not yet flushed.
         } else {
             assert(!exists_using_have_coin_in_backend);
         }

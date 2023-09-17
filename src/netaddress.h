@@ -25,14 +25,6 @@
 #include <vector>
 
 /**
- * A flag that is ORed into the protocol version to designate that addresses
- * should be serialized in (unserialized from) v2 format (BIP155).
- * Make sure that this does not collide with any of the values in `version.h`
- * or with `SERIALIZE_TRANSACTION_NO_WITNESS`.
- */
-static constexpr int ADDRV2_FORMAT = 0x20000000;
-
-/**
  * A network type.
  * @note An address may belong to more than one network, for example `10.0.0.1`
  * belongs to both `NET_UNROUTABLE` and `NET_IPV4`.
@@ -203,7 +195,7 @@ public:
     bool HasLinkedIPv4() const;
 
     std::vector<unsigned char> GetAddrBytes() const;
-    int GetReachabilityFrom(const CNetAddr* paddrPartner = nullptr) const;
+    int GetReachabilityFrom(const CNetAddr& paddrPartner) const;
 
     explicit CNetAddr(const struct in6_addr& pipv6Addr, const uint32_t scope = 0);
     bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
@@ -220,13 +212,24 @@ public:
         return IsIPv4() || IsIPv6() || IsTor() || IsI2P() || IsCJDNS();
     }
 
+    enum class Encoding {
+        V1,
+        V2, //!< BIP155 encoding
+    };
+    struct SerParams {
+        const Encoding enc;
+        SER_PARAMS_OPFUNC
+    };
+    static constexpr SerParams V1{Encoding::V1};
+    static constexpr SerParams V2{Encoding::V2};
+
     /**
      * Serialize to a stream.
      */
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        if (s.GetVersion() & ADDRV2_FORMAT) {
+        if (s.GetParams().enc == Encoding::V2) {
             SerializeV2Stream(s);
         } else {
             SerializeV1Stream(s);
@@ -239,7 +242,7 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        if (s.GetVersion() & ADDRV2_FORMAT) {
+        if (s.GetParams().enc == Encoding::V2) {
             UnserializeV2Stream(s);
         } else {
             UnserializeV1Stream(s);
@@ -540,8 +543,7 @@ public:
 
     SERIALIZE_METHODS(CService, obj)
     {
-        READWRITEAS(CNetAddr, obj);
-        READWRITE(Using<BigEndianFormatter<2>>(obj.port));
+        READWRITE(AsBase<CNetAddr>(obj), Using<BigEndianFormatter<2>>(obj.port));
     }
 
     friend class CServiceHash;
@@ -564,7 +566,7 @@ public:
         CSipHasher hasher(m_salt_k0, m_salt_k1);
         hasher.Write(a.m_net);
         hasher.Write(a.port);
-        hasher.Write(a.m_addr.data(), a.m_addr.size());
+        hasher.Write(a.m_addr);
         return static_cast<size_t>(hasher.Finalize());
     }
 

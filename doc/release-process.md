@@ -12,7 +12,7 @@ Release Process
 
 ### Before every major and minor release
 
-* Update [bips.md](bips.md) to account for changes since the last release (don't forget to bump the version number on the first line).
+* Update [bips.md](bips.md) to account for changes since the last release.
 * Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_RC` to `0`).
 * Update manpages (see previous section)
 * Write release notes (see "Write the release notes" below).
@@ -57,7 +57,7 @@ Release Process
 - Update the versions.
 - Create the draft, named "*version* Release Notes Draft", as a [collaborative wiki](https://github.com/bitcoin-core/bitcoin-devwiki/wiki/_new).
 - Clear the release notes: `cp doc/release-notes-empty-template.md doc/release-notes.md`
-- Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/bitcoin/bitcoin/issues/17079) for an example) and provide a link to it in the release announcements where useful.
+- Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/bitcoin/bitcoin/issues/27621) for an example) and provide a link to it in the release announcements where useful.
 - Translations on Transifex
     - Change the auto-update URL for the new major version's resource away from `master` and to the branch, e.g. `https://raw.githubusercontent.com/bitcoin/bitcoin/<branch>/src/qt/locale/bitcoin_en.xlf`. Do not forget this or it will keep tracking the translations on master instead, drifting away from the specific major release.
 - Prune inputs from the qa-assets repo (See [pruning
@@ -72,7 +72,7 @@ Release Process
 
 To tag the version (or release candidate) in git, use the `make-tag.py` script from [bitcoin-maintainer-tools](https://github.com/bitcoin-core/bitcoin-maintainer-tools). From the root of the repository run:
 
-    ../bitcoin-maintainer-tools/make-tag.py v(new version, e.g. 23.0)
+    ../bitcoin-maintainer-tools/make-tag.py v(new version, e.g. 25.0)
 
 This will perform a few last-minute consistency checks in the build system files, and if they pass, create a signed tag.
 
@@ -96,11 +96,9 @@ Open a draft of the release notes for collaborative editing at https://github.co
 
 For the period during which the notes are being edited on the wiki, the version on the branch should be wiped and replaced with a link to the wiki which should be used for all announcements until `-final`.
 
-Generate the change log. As this is a huge amount of work to do manually, there is the `list-pulls` script to do a pre-sorting step based on github PR metadata. See the [documentation in the README.md](https://github.com/bitcoin-core/bitcoin-maintainer-tools/blob/master/README.md#list-pulls).
-
 Generate list of authors:
 
-    git log --format='- %aN' v(current version, e.g. 24.0)..v(new version, e.g. 24.1) | sort -fiu
+    git log --format='- %aN' v(current version, e.g. 25.0)..v(new version, e.g. 25.1) | grep -v 'merge-script' | sort -fiu
 
 ### Setup and perform Guix builds
 
@@ -109,7 +107,7 @@ Checkout the Bitcoin Core version you'd like to build:
 ```sh
 pushd ./bitcoin
 SIGNER='(your builder key, ie bluematt, sipa, etc)'
-VERSION='(new version without v-prefix, e.g. 24.0)'
+VERSION='(new version without v-prefix, e.g. 25.0)'
 git fetch origin "v${VERSION}"
 git checkout "v${VERSION}"
 popd
@@ -144,9 +142,10 @@ Follow the relevant Guix README.md sections:
 pushd ./guix.sigs
 git add "${VERSION}/${SIGNER}"/noncodesigned.SHA256SUMS{,.asc}
 git commit -m "Add attestations by ${SIGNER} for ${VERSION} non-codesigned"
-git push  # Assuming you can push to the guix.sigs tree
 popd
 ```
+
+Then open a Pull Request to the [guix.sigs repository](https://github.com/bitcoin-core/guix.sigs).
 
 ## Codesigning
 
@@ -202,9 +201,10 @@ popd
 pushd ./guix.sigs
 git add "${VERSION}/${SIGNER}"/all.SHA256SUMS{,.asc}
 git commit -m "Add attestations by ${SIGNER} for ${VERSION} codesigned"
-git push  # Assuming you can push to the guix.sigs tree
 popd
 ```
+
+Then open a Pull Request to the [guix.sigs repository](https://github.com/bitcoin-core/guix.sigs).
 
 ## After 3 or more people have guix-built and their results match
 
@@ -268,17 +268,7 @@ cat "$VERSION"/*/all.SHA256SUMS.asc > SHA256SUMS.asc
 
   - bitcoincore.org RPC documentation update
 
-      - Install [golang](https://golang.org/doc/install)
-
-      - Install the new Bitcoin Core release
-
-      - Run bitcoind on regtest
-
-      - Clone the [bitcoincore.org repository](https://github.com/bitcoin-core/bitcoincore.org)
-
-      - Run: `go run generate.go` while being in `contrib/doc-gen` folder, and with bitcoin-cli in PATH
-
-      - Add the generated files to git
+      - See https://github.com/bitcoin-core/bitcoincore.org/blob/master/contrib/doc-gen/
 
   - Update packaging repo
 

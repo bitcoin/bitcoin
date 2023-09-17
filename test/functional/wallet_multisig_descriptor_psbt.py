@@ -150,8 +150,7 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
             signing_wallet = participants["signers"][m]
             psbt = signing_wallet.walletprocesspsbt(psbt["psbt"])
             assert_equal(psbt["complete"], m == self.M - 1)
-        finalized = coordinator_wallet.finalizepsbt(psbt["psbt"])
-        coordinator_wallet.sendrawtransaction(finalized["hex"])
+        coordinator_wallet.sendrawtransaction(psbt["hex"])
 
         self.log.info("Check that balances are correct after the transaction has been included in a block.")
         self.generate(self.nodes[0], 1)

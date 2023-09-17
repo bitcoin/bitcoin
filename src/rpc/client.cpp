@@ -229,6 +229,10 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "importaddress", 2, "rescan" },
     { "importaddress", 3, "p2sh" },
     { "importpubkey", 2, "rescan" },
+    { "importmempool", 1, "options" },
+    { "importmempool", 1, "apply_fee_delta_priority" },
+    { "importmempool", 1, "use_current_time" },
+    { "importmempool", 1, "apply_unbroadcast_set" },
     { "importmulti", 0, "requests" },
     { "importmulti", 1, "options" },
     { "importmulti", 1, "rescan" },
@@ -259,11 +263,13 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "bumpfee", 1, "fee_rate"},
     { "bumpfee", 1, "replaceable"},
     { "bumpfee", 1, "outputs"},
+    { "bumpfee", 1, "reduce_output"},
     { "psbtbumpfee", 1, "options" },
     { "psbtbumpfee", 1, "conf_target"},
     { "psbtbumpfee", 1, "fee_rate"},
     { "psbtbumpfee", 1, "replaceable"},
     { "psbtbumpfee", 1, "outputs"},
+    { "psbtbumpfee", 1, "reduce_output"},
     { "logging", 0, "include" },
     { "logging", 1, "exclude" },
     { "disconnectnode", 1, "nodeid" },
@@ -293,6 +299,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getnodeaddresses", 0, "count"},
     { "addpeeraddress", 1, "port"},
     { "addpeeraddress", 2, "tried"},
+    { "sendmsgtopeer", 0, "peer_id" },
     { "stop", 0, "wait" },
 };
 // clang-format on
@@ -371,10 +378,10 @@ UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<s
     }
 
     if (!positional_args.empty()) {
-        // Use __pushKV instead of pushKV to avoid overwriting an explicit
+        // Use pushKVEnd instead of pushKV to avoid overwriting an explicit
         // "args" value with an implicit one. Let the RPC server handle the
         // request as given.
-        params.__pushKV("args", positional_args);
+        params.pushKVEnd("args", positional_args);
     }
 
     return params;

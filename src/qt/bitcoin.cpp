@@ -16,6 +16,8 @@
 #include <interfaces/handler.h>
 #include <interfaces/init.h>
 #include <interfaces/node.h>
+#include <logging.h>
+#include <node/context.h>
 #include <node/interface_ui.h>
 #include <noui.h>
 #include <qt/bitcoingui.h>
@@ -397,9 +399,7 @@ void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHead
 {
     qDebug() << __func__ << ": Initialization result: " << success;
 
-    // Set exit result.
-    returnValue = success ? EXIT_SUCCESS : EXIT_FAILURE;
-    if(success) {
+    if (success) {
         delete m_splash;
         m_splash = nullptr;
 
@@ -407,18 +407,21 @@ void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHead
         qInfo() << "Platform customization:" << platformStyle->getName();
         clientModel = new ClientModel(node(), optionsModel);
         window->setClientModel(clientModel, &tip_info);
+
+        // If '-min' option passed, start window minimized (iconified) or minimized to tray
+        bool start_minimized = gArgs.GetBoolArg("-min", false);
 #ifdef ENABLE_WALLET
         if (WalletModel::isWalletEnabled()) {
             m_wallet_controller = new WalletController(*clientModel, platformStyle, this);
-            window->setWalletController(m_wallet_controller);
+            window->setWalletController(m_wallet_controller, /*show_loading_minimized=*/start_minimized);
             if (paymentServer) {
                 paymentServer->setOptionsModel(optionsModel);
             }
         }
 #endif // ENABLE_WALLET
 
-        // If -min option passed, start window minimized (iconified) or minimized to tray
-        if (!gArgs.GetBoolArg("-min", false)) {
+        // Show or minimize window
+        if (!start_minimized) {
             window->show();
         } else if (clientModel->getOptionsModel()->getMinimizeToTray() && window->hasTrayIcon()) {
             // do nothing as the window is managed by the tray icon
@@ -653,7 +656,6 @@ int GuiMain(int argc, char* argv[])
         app.InitPruneSetting(prune_MiB);
     }
 
-    int rv = EXIT_SUCCESS;
     try
     {
         app.createWindow(networkStyle.data());
@@ -666,10 +668,9 @@ int GuiMain(int argc, char* argv[])
             WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely…").arg(PACKAGE_NAME), (HWND)app.getMainWinId());
 #endif
             app.exec();
-            rv = app.getReturnValue();
         } else {
             // A dialog with detailed error will have been shown by InitError()
-            rv = EXIT_FAILURE;
+            return EXIT_FAILURE;
         }
     } catch (const std::exception& e) {
         PrintExceptionContinue(&e, "Runaway exception");
@@ -678,5 +679,5 @@ int GuiMain(int argc, char* argv[])
         PrintExceptionContinue(nullptr, "Runaway exception");
         app.handleRunawayException(QString::fromStdString(app.node().getWarnings().translated));
     }
-    return rv;
+    return app.node().getExitStatus();
 }

@@ -23,7 +23,7 @@ void initialize_block()
     SelectParams(ChainType::REGTEST);
 }
 
-FUZZ_TARGET_INIT(block, initialize_block)
+FUZZ_TARGET(block, .init = initialize_block)
 {
     CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
     CBlock block;

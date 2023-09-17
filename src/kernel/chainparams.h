@@ -7,9 +7,8 @@
 #define BITCOIN_KERNEL_CHAINPARAMS_H
 
 #include <consensus/params.h>
-#include <netaddress.h>
+#include <kernel/messagestartchars.h>
 #include <primitives/block.h>
-#include <protocol.h>
 #include <uint256.h>
 #include <util/chaintype.h>
 #include <util/hash_type.h>
@@ -87,23 +86,12 @@ public:
     };
 
     const Consensus::Params& GetConsensus() const { return consensus; }
-    const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
+    const MessageStartChars& MessageStart() const { return pchMessageStart; }
     uint16_t GetDefaultPort() const { return nDefaultPort; }
-    uint16_t GetDefaultPort(Network net) const
-    {
-        return net == NET_I2P ? I2P_SAM31_PORT : GetDefaultPort();
-    }
-    uint16_t GetDefaultPort(const std::string& addr) const
-    {
-        CNetAddr a;
-        return a.SetSpecial(addr) ? GetDefaultPort(a.GetNetwork()) : GetDefaultPort();
-    }
 
     const CBlock& GenesisBlock() const { return genesis; }
     /** Default value for -checkmempool and -checkblockindex argument */
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
-    /** Policy: Filter transactions that do not match well-defined patterns */
-    bool RequireStandard() const { return fRequireStandard; }
     /** If this chain is exclusively used for testing */
     bool IsTestChain() const { return m_is_test_chain; }
     /** If this chain allows time to be mocked */
@@ -167,7 +155,7 @@ protected:
     CChainParams() {}
 
     Consensus::Params consensus;
-    CMessageHeader::MessageStartChars pchMessageStart;
+    MessageStartChars pchMessageStart;
     uint16_t nDefaultPort;
     uint64_t nPruneAfterHeight;
     uint64_t m_assumed_blockchain_size;
@@ -179,7 +167,6 @@ protected:
     CBlock genesis;
     std::vector<uint8_t> vFixedSeeds;
     bool fDefaultConsistencyChecks;
-    bool fRequireStandard;
     bool m_is_test_chain;
     bool m_is_mockable_chain;
     CCheckpointData checkpointData;

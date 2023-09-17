@@ -9,7 +9,6 @@ from decimal import Decimal
 import math
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.key import ECKey
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     COIN,
@@ -44,6 +43,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
+from test_framework.wallet_util import generate_keypair
 
 
 class MempoolAcceptanceTest(BitcoinTestFramework):
@@ -283,9 +283,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             rawtxs=[tx.serialize().hex()],
         )
         tx = tx_from_hex(raw_tx_reference)
-        key = ECKey()
-        key.generate()
-        pubkey = key.get_pubkey().get_bytes()
+        _, pubkey = generate_keypair()
         tx.vout[0].scriptPubKey = keys_to_multisig_script([pubkey] * 3, k=2)  # Some bare multisig script (2-of-3)
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bare-multisig'}],

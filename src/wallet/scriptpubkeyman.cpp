@@ -7,7 +7,9 @@
 #include <logging.h>
 #include <outputtype.h>
 #include <script/descriptor.h>
+#include <script/script.h>
 #include <script/sign.h>
+#include <script/solver.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -757,12 +759,12 @@ bool LegacyScriptPubKeyMan::AddKeyPubKeyWithDB(WalletBatch& batch, const CKey& s
         RemoveWatchOnly(script);
     }
 
+    m_storage.UnsetBlankWalletFlag(batch);
     if (!m_storage.HasEncryptionKeys()) {
         return batch.WriteKey(pubkey,
                                                  secret.GetPrivKey(),
                                                  mapKeyMetadata[pubkey.GetID()]);
     }
-    m_storage.UnsetBlankWalletFlag(batch);
     return true;
 }
 
@@ -2584,10 +2586,7 @@ std::unique_ptr<CKeyMetadata> DescriptorScriptPubKeyMan::GetMetadata(const CTxDe
 uint256 DescriptorScriptPubKeyMan::GetID() const
 {
     LOCK(cs_desc_man);
-    std::string desc_str = m_wallet_descriptor.descriptor->ToString();
-    uint256 id;
-    CSHA256().Write((unsigned char*)desc_str.data(), desc_str.size()).Finalize(id.begin());
-    return id;
+    return DescriptorID(*m_wallet_descriptor.descriptor);
 }
 
 void DescriptorScriptPubKeyMan::SetCache(const DescriptorCache& cache)

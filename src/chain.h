@@ -113,10 +113,10 @@ enum BlockStatus : uint32_t {
     BLOCK_VALID_TRANSACTIONS =    3,
 
     //! Outputs do not overspend inputs, no double spends, coinbase output ok, no immature coinbase spends, BIP30.
-    //! Implies all parents are also at least CHAIN.
+    //! Implies all parents are either at least VALID_CHAIN, or are ASSUMED_VALID
     BLOCK_VALID_CHAIN        =    4,
 
-    //! Scripts & signatures ok. Implies all parents are also at least SCRIPTS.
+    //! Scripts & signatures ok. Implies all parents are either at least VALID_SCRIPTS, or are ASSUMED_VALID.
     BLOCK_VALID_SCRIPTS      =    5,
 
     //! All validity bits.
@@ -134,10 +134,18 @@ enum BlockStatus : uint32_t {
     BLOCK_OPT_WITNESS        =   128, //!< block data in blk*.dat was received with a witness-enforcing client
 
     /**
-     * If set, this indicates that the block index entry is assumed-valid.
-     * Certain diagnostics will be skipped in e.g. CheckBlockIndex().
-     * It almost certainly means that the block's full validation is pending
-     * on a background chainstate. See `doc/design/assumeutxo.md`.
+     * If ASSUMED_VALID is set, it means that this block has not been validated
+     * and has validity status less than VALID_SCRIPTS. Also that it may have
+     * descendant blocks with VALID_SCRIPTS set, because they can be validated
+     * based on an assumeutxo snapshot.
+     *
+     * When an assumeutxo snapshot is loaded, the ASSUMED_VALID flag is added to
+     * unvalidated blocks at the snapshot height and below. Then, as the background
+     * validation progresses, and these blocks are validated, the ASSUMED_VALID
+     * flags are removed. See `doc/design/assumeutxo.md` for details.
+     *
+     * This flag is only used to implement checks in CheckBlockIndex() and
+     * should not be used elsewhere.
      */
     BLOCK_ASSUMED_VALID      =   256,
 };
@@ -380,6 +388,14 @@ const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* 
 /** Used to marshal pointers into hashes for db storage. */
 class CDiskBlockIndex : public CBlockIndex
 {
+    /** Historically CBlockLocator's version field has been written to disk
+     * streams as the client version, but the value has never been used.
+     *
+     * Hard-code to the highest client version ever written.
+     * SerParams can be used if the field requires any meaning in the future.
+     **/
+    static constexpr int DUMMY_VERSION = 259900;
+
 public:
     uint256 hashPrev;
 
@@ -396,8 +412,8 @@ public:
     SERIALIZE_METHODS(CDiskBlockIndex, obj)
     {
         LOCK(::cs_main);
-        int _nVersion = s.GetVersion();
-        if (!(s.GetType() & SER_GETHASH)) READWRITE(VARINT_MODE(_nVersion, VarIntMode::NONNEGATIVE_SIGNED));
+        int _nVersion = DUMMY_VERSION;
+        READWRITE(VARINT_MODE(_nVersion, VarIntMode::NONNEGATIVE_SIGNED));
 
         READWRITE(VARINT_MODE(obj.nHeight, VarIntMode::NONNEGATIVE_SIGNED));
         READWRITE(VARINT(obj.nStatus));

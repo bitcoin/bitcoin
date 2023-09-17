@@ -29,8 +29,10 @@ body:
     attributes:
       label: Useful Skills
       description: For example, “`std::thread`”, “Qt5 GUI and async GUI design” or “basic understanding of Bitcoin mining and the Bitcoin Core RPC interface”.
-    validations:
-      required: false
+      value: |
+        * Compiling Bitcoin Core from source
+        * Running the C++ unit tests and the Python functional tests
+        * ...
   - type: textarea
     attributes:
       label: Guidance for new contributors

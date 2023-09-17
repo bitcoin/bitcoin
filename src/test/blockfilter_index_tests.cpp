@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <blockfilter.h>
 #include <chainparams.h>
 #include <consensus/merkle.h>
@@ -10,10 +11,9 @@
 #include <interfaces/chain.h>
 #include <node/miner.h>
 #include <pow.h>
-#include <script/standard.h>
 #include <test/util/blockfilter.h>
+#include <test/util/index.h>
 #include <test/util/setup_common.h>
-#include <util/time.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -113,6 +113,7 @@ bool BuildChainTestingSetup::BuildChain(const CBlockIndex* pindex,
 BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
 {
     BlockFilterIndex filter_index(interfaces::MakeChain(m_node), BlockFilterType::BASIC, 1 << 20, true);
+    BOOST_REQUIRE(filter_index.Init());
 
     uint256 last_header;
 
@@ -139,15 +140,10 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     // BlockUntilSyncedToCurrentChain should return false before index is started.
     BOOST_CHECK(!filter_index.BlockUntilSyncedToCurrentChain());
 
-    BOOST_REQUIRE(filter_index.Start());
+    BOOST_REQUIRE(filter_index.StartBackgroundSync());
 
     // Allow filter index to catch up with the block index.
-    constexpr auto timeout{10s};
-    const auto time_start{SteadyClock::now()};
-    while (!filter_index.BlockUntilSyncedToCurrentChain()) {
-        BOOST_REQUIRE(time_start + timeout > SteadyClock::now());
-        UninterruptibleSleep(std::chrono::milliseconds{100});
-    }
+    IndexWaitSynced(filter_index);
 
     // Check that filter index has all blocks that were in the chain before it started.
     {

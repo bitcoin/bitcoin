@@ -6,6 +6,30 @@
 #ifndef BITCOIN_TXMEMPOOL_H
 #define BITCOIN_TXMEMPOOL_H
 
+#include <coins.h>
+#include <consensus/amount.h>
+#include <indirectmap.h>
+#include <kernel/cs_main.h>
+#include <kernel/mempool_entry.h>          // IWYU pragma: export
+#include <kernel/mempool_limits.h>         // IWYU pragma: export
+#include <kernel/mempool_options.h>        // IWYU pragma: export
+#include <kernel/mempool_removal_reason.h> // IWYU pragma: export
+#include <policy/feerate.h>
+#include <policy/packages.h>
+#include <primitives/transaction.h>
+#include <sync.h>
+#include <util/epochguard.h>
+#include <util/hasher.h>
+#include <util/result.h>
+
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/indexed_by.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/sequenced_index.hpp>
+#include <boost/multi_index/tag.hpp>
+#include <boost/multi_index_container.hpp>
+
 #include <atomic>
 #include <map>
 #include <optional>
@@ -15,31 +39,7 @@
 #include <utility>
 #include <vector>
 
-#include <kernel/mempool_limits.h>
-#include <kernel/mempool_options.h>
-
-#include <coins.h>
-#include <consensus/amount.h>
-#include <indirectmap.h>
-#include <kernel/cs_main.h>
-#include <kernel/mempool_entry.h>
-#include <policy/feerate.h>
-#include <policy/packages.h>
-#include <primitives/transaction.h>
-#include <random.h>
-#include <sync.h>
-#include <util/epochguard.h>
-#include <util/hasher.h>
-#include <util/result.h>
-
-#include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/ordered_index.hpp>
-#include <boost/multi_index/sequenced_index.hpp>
-#include <boost/multi_index_container.hpp>
-
-class CBlockIndex;
 class CChain;
-class Chainstate;
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
@@ -219,25 +219,11 @@ struct TxMempoolInfo
     CAmount fee;
 
     /** Virtual size of the transaction. */
-    size_t vsize;
+    int32_t vsize;
 
     /** The fee delta. */
     int64_t nFeeDelta;
 };
-
-/** Reason why a transaction was removed from the mempool,
- * this is passed to the notification signal.
- */
-enum class MemPoolRemovalReason {
-    EXPIRY,      //!< Expired from mempool
-    SIZELIMIT,   //!< Removed in size limiting
-    REORG,       //!< Removed for reorganization
-    BLOCK,       //!< Removed for block
-    CONFLICT,    //!< Removed for conflict with in-block transaction
-    REPLACED,    //!< Removed for replacement
-};
-
-std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept;
 
 /**
  * CTxMemPool stores valid-according-to-the-current-best-chain transactions
@@ -439,7 +425,7 @@ private:
      *
      * @return all in-mempool ancestors, or an error if any ancestor or descendant limits were hit
      */
-    util::Result<setEntries> CalculateAncestorsAndCheckLimits(size_t entry_size,
+    util::Result<setEntries> CalculateAncestorsAndCheckLimits(int64_t entry_size,
                                                               size_t entry_count,
                                                               CTxMemPoolEntry::Parents &staged_ancestors,
                                                               const Limits& limits
@@ -515,6 +501,19 @@ public:
     void PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta);
     void ApplyDelta(const uint256& hash, CAmount &nFeeDelta) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     void ClearPrioritisation(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    struct delta_info {
+        /** Whether this transaction is in the mempool. */
+        const bool in_mempool;
+        /** The fee delta added using PrioritiseTransaction(). */
+        const CAmount delta;
+        /** The modified fee (base fee + delta) of this entry. Only present if in_mempool=true. */
+        std::optional<CAmount> modified_fee;
+        /** The prioritised transaction's txid. */
+        const uint256 txid;
+    };
+    /** Return a vector of all entries in mapDeltas with their corresponding delta_info. */
+    std::vector<delta_info> GetPrioritisedTransactions() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     /** Get the transaction in the pool that spends the same prevout */
     const CTransaction* GetConflictTx(const COutPoint& prevout) const EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -647,13 +646,13 @@ public:
     void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants, size_t* ancestorsize = nullptr, CAmount* ancestorfees = nullptr) const;
 
     /**
-     * @returns true if we've made an attempt to load the mempool regardless of
+     * @returns true if an initial attempt to load the persisted mempool was made, regardless of
      *          whether the attempt was successful or not
      */
     bool GetLoadTried() const;
 
     /**
-     * Set whether or not we've made an attempt to load the mempool (regardless
+     * Set whether or not an initial attempt to load the persisted mempool was made (regardless
      * of whether the attempt was successful or not)
      */
     void SetLoadTried(bool load_tried);
@@ -692,6 +691,10 @@ public:
         return mapTx.project<0>(mapTx.get<index_by_wtxid>().find(wtxid));
     }
     TxMempoolInfo info(const GenTxid& gtxid) const;
+
+    /** Returns info for a transaction if its entry_sequence < last_sequence */
+    TxMempoolInfo info_for_relay(const GenTxid& gtxid, uint64_t last_sequence) const;
+
     std::vector<TxMempoolInfo> infoAll() const;
 
     size_t DynamicMemoryUsage() const;
@@ -823,15 +826,27 @@ class CCoinsViewMemPool : public CCoinsViewBacked
     * validation, since we can access transaction outputs without submitting them to mempool.
     */
     std::unordered_map<COutPoint, Coin, SaltedOutpointHasher> m_temp_added;
+
+    /**
+     * Set of all coins that have been fetched from mempool or created using PackageAddTransaction
+     * (not base). Used to track the origin of a coin, see GetNonBaseCoins().
+     */
+    mutable std::unordered_set<COutPoint, SaltedOutpointHasher> m_non_base_coins;
 protected:
     const CTxMemPool& mempool;
 
 public:
     CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn);
+    /** GetCoin, returning whether it exists and is not spent. Also updates m_non_base_coins if the
+     * coin is not fetched from base. */
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
     /** Add the coins created by this transaction. These coins are only temporarily stored in
      * m_temp_added and cannot be flushed to the back end. Only used for package validation. */
     void PackageAddTransaction(const CTransactionRef& tx);
+    /** Get all coins in m_non_base_coins. */
+    std::unordered_set<COutPoint, SaltedOutpointHasher> GetNonBaseCoins() const { return m_non_base_coins; }
+    /** Clear m_temp_added and m_non_base_coins. */
+    void Reset();
 };
 
 /**

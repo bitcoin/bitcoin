@@ -22,7 +22,10 @@ import shlex
 import sys
 from pathlib import Path
 
-from .authproxy import JSONRPCException
+from .authproxy import (
+    JSONRPCException,
+    serialization_fallback,
+)
 from .descriptors import descsum_create
 from .p2p import P2P_SUBVERSION
 from .util import (
@@ -35,7 +38,6 @@ from .util import (
     rpc_url,
     wait_until_helper,
     p2p_port,
-    EncodeDecimal,
 )
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
@@ -141,6 +143,8 @@ class TestNode():
 
         self.p2ps = []
         self.timeout_factor = timeout_factor
+
+        self.mocktime = None
 
     AddressKeyPair = collections.namedtuple('AddressKeyPair', ['address', 'key'])
     PRIV_KEYS = [
@@ -248,7 +252,7 @@ class TestNode():
                     # Wait for the node to finish reindex, block import, and
                     # loading the mempool. Usually importing happens fast or
                     # even "immediate" when the node is started. However, there
-                    # is no guarantee and sometimes ThreadImport might finish
+                    # is no guarantee and sometimes ImportBlocks might finish
                     # later. This is going to cause intermittent test failures,
                     # because generally the tests assume the node is fully
                     # ready after being started.
@@ -322,6 +326,15 @@ class TestNode():
         assert not invalid_call
         return self.__getattr__('generatetodescriptor')(*args, **kwargs)
 
+    def setmocktime(self, timestamp):
+        """Wrapper for setmocktime RPC, sets self.mocktime"""
+        if timestamp == 0:
+            # setmocktime(0) resets to system time.
+            self.mocktime = None
+        else:
+            self.mocktime = timestamp
+        return self.__getattr__('setmocktime')(timestamp)
+
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
             return RPCOverloadWrapper(self.cli("-rpcwallet={}".format(wallet_name)), True, self.descriptors)
@@ -351,21 +364,13 @@ class TestNode():
         for profile_name in tuple(self.perf_subprocesses.keys()):
             self._stop_perf(profile_name)
 
-        # Check that stderr is as expected
-        self.stderr.seek(0)
-        stderr = self.stderr.read().decode('utf-8').strip()
-        if stderr != expected_stderr:
-            raise AssertionError("Unexpected stderr {} != {}".format(stderr, expected_stderr))
-
-        self.stdout.close()
-        self.stderr.close()
-
         del self.p2ps[:]
 
+        assert (not expected_stderr) or wait_until_stopped  # Must wait to check stderr
         if wait_until_stopped:
-            self.wait_until_stopped()
+            self.wait_until_stopped(expected_stderr=expected_stderr)
 
-    def is_node_stopped(self):
+    def is_node_stopped(self, *, expected_stderr="", expected_ret_code=0):
         """Checks whether the node has stopped.
 
         Returns True if the node has stopped. False otherwise.
@@ -377,8 +382,17 @@ class TestNode():
             return False
 
         # process has stopped. Assert that it didn't return an error code.
-        assert return_code == 0, self._node_msg(
-            "Node returned non-zero exit code (%d) when stopping" % return_code)
+        assert return_code == expected_ret_code, self._node_msg(
+            f"Node returned unexpected exit code ({return_code}) vs ({expected_ret_code}) when stopping")
+        # Check that stderr is as expected
+        self.stderr.seek(0)
+        stderr = self.stderr.read().decode('utf-8').strip()
+        if stderr != expected_stderr:
+            raise AssertionError("Unexpected stderr {} != {}".format(stderr, expected_stderr))
+
+        self.stdout.close()
+        self.stderr.close()
+
         self.running = False
         self.process = None
         self.rpc_connected = False
@@ -386,8 +400,9 @@ class TestNode():
         self.log.debug("Node stopped")
         return True
 
-    def wait_until_stopped(self, timeout=BITCOIND_PROC_WAIT_TIMEOUT):
-        wait_until_helper(self.is_node_stopped, timeout=timeout, timeout_factor=self.timeout_factor)
+    def wait_until_stopped(self, *, timeout=BITCOIND_PROC_WAIT_TIMEOUT, expect_error=False, **kwargs):
+        expected_ret_code = 1 if expect_error else 0  # Whether node shutdown return EXIT_FAILURE or EXIT_SUCCESS
+        wait_until_helper(lambda: self.is_node_stopped(expected_ret_code=expected_ret_code, **kwargs), timeout=timeout, timeout_factor=self.timeout_factor)
 
     def replace_in_config(self, replacements):
         """
@@ -405,15 +420,27 @@ class TestNode():
             conf.write(conf_data)
 
     @property
+    def datadir_path(self) -> Path:
+        return Path(self.datadir)
+
+    @property
     def chain_path(self) -> Path:
-        return Path(self.datadir) / self.chain
+        return self.datadir_path / self.chain
 
     @property
     def debug_log_path(self) -> Path:
         return self.chain_path / 'debug.log'
 
-    def debug_log_bytes(self) -> int:
-        with open(self.debug_log_path, encoding='utf-8') as dl:
+    @property
+    def blocks_path(self) -> Path:
+        return self.chain_path / "blocks"
+
+    @property
+    def wallets_path(self) -> Path:
+        return self.chain_path / "wallets"
+
+    def debug_log_size(self, **kwargs) -> int:
+        with open(self.debug_log_path, **kwargs) as dl:
             dl.seek(0, 2)
             return dl.tell()
 
@@ -422,13 +449,13 @@ class TestNode():
         if unexpected_msgs is None:
             unexpected_msgs = []
         time_end = time.time() + timeout * self.timeout_factor
-        prev_size = self.debug_log_bytes()
+        prev_size = self.debug_log_size(encoding="utf-8")  # Must use same encoding that is used to read() below
 
         yield
 
         while True:
             found = True
-            with open(self.debug_log_path, encoding='utf-8') as dl:
+            with open(self.debug_log_path, encoding="utf-8", errors="replace") as dl:
                 dl.seek(prev_size)
                 log = dl.read()
             print_log = " - " + "\n - ".join(log.splitlines())
@@ -453,7 +480,7 @@ class TestNode():
             the number of log lines we encountered when matching
         """
         time_end = time.time() + timeout * self.timeout_factor
-        prev_size = self.debug_log_bytes()
+        prev_size = self.debug_log_size(mode="rb")  # Must use same mode that is used to read() below
 
         yield
 
@@ -632,10 +659,14 @@ class TestNode():
             # in comparison to the upside of making tests less fragile and unexpected intermittent errors less likely.
             p2p_conn.sync_with_ping()
 
-            # Consistency check that the Bitcoin Core has received our user agent string. This checks the
-            # node's newest peer. It could be racy if another Bitcoin Core node has connected since we opened
-            # our connection, but we don't expect that to happen.
-            assert_equal(self.getpeerinfo()[-1]['subver'], P2P_SUBVERSION)
+            # Consistency check that the node received our user agent string.
+            # Find our connection in getpeerinfo by our address:port and theirs, as this combination is unique.
+            sockname = p2p_conn._transport.get_extra_info("socket").getsockname()
+            our_addr_and_port = f"{sockname[0]}:{sockname[1]}"
+            dst_addr_and_port = f"{p2p_conn.dstaddr}:{p2p_conn.dstport}"
+            info = [peer for peer in self.getpeerinfo() if peer["addr"] == our_addr_and_port and peer["addrbind"] == dst_addr_and_port]
+            assert_equal(len(info), 1)
+            assert_equal(info[0]["subver"], P2P_SUBVERSION)
 
         return p2p_conn
 
@@ -684,6 +715,13 @@ class TestNode():
 
         wait_until_helper(lambda: self.num_test_p2p_connections() == 0, timeout_factor=self.timeout_factor)
 
+    def bumpmocktime(self, seconds):
+        """Fast forward using setmocktime to self.mocktime + seconds. Requires setmocktime to have
+        been called at some point in the past."""
+        assert self.mocktime
+        self.mocktime += seconds
+        self.setmocktime(self.mocktime)
+
 
 class TestNodeCLIAttr:
     def __init__(self, cli, command):
@@ -703,7 +741,7 @@ def arg_to_cli(arg):
     elif arg is None:
         return 'null'
     elif isinstance(arg, dict) or isinstance(arg, list):
-        return json.dumps(arg, default=EncodeDecimal)
+        return json.dumps(arg, default=serialization_fallback)
     else:
         return str(arg)
 

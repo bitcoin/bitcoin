@@ -40,7 +40,7 @@ static bool operator==(const CBanEntry& lhs, const CBanEntry& rhs)
            lhs.nBanUntil == rhs.nBanUntil;
 }
 
-FUZZ_TARGET_INIT(banman, initialize_banman)
+FUZZ_TARGET(banman, .init = initialize_banman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));

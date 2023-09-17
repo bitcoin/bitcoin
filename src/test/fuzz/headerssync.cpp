@@ -46,7 +46,7 @@ public:
     }
 };
 
-FUZZ_TARGET_INIT(headers_sync_state, initialize_headers_sync_state_fuzz)
+FUZZ_TARGET(headers_sync_state, .init = initialize_headers_sync_state_fuzz)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     auto mock_time{ConsumeTime(fuzzed_data_provider)};

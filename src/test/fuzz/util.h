@@ -5,15 +5,16 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_H
 #define BITCOIN_TEST_FUZZ_UTIL_H
 
+#include <addresstype.h>
 #include <arith_uint256.h>
 #include <coins.h>
 #include <compat/compat.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <key.h>
 #include <merkleblock.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
-#include <script/standard.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -53,12 +54,16 @@ auto& PickValue(FuzzedDataProvider& fuzzed_data_provider, Collection& col)
     return *it;
 }
 
-[[nodiscard]] inline std::vector<uint8_t> ConsumeRandomLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
+template<typename B = uint8_t>
+[[nodiscard]] inline std::vector<B> ConsumeRandomLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
+    static_assert(sizeof(B) == 1);
     const std::string s = max_length ?
                               fuzzed_data_provider.ConsumeRandomLengthString(*max_length) :
                               fuzzed_data_provider.ConsumeRandomLengthString();
-    return {s.begin(), s.end()};
+    std::vector<B> ret(s.size());
+    std::copy(s.begin(), s.end(), reinterpret_cast<char*>(ret.data()));
+    return ret;
 }
 
 [[nodiscard]] inline std::vector<bool> ConsumeRandomLengthBitVector(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
@@ -66,9 +71,9 @@ auto& PickValue(FuzzedDataProvider& fuzzed_data_provider, Collection& col)
     return BytesToBits(ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length));
 }
 
-[[nodiscard]] inline CDataStream ConsumeDataStream(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
+[[nodiscard]] inline DataStream ConsumeDataStream(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
-    return CDataStream{ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length), SER_NETWORK, INIT_PROTO_VERSION};
+    return DataStream{ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length)};
 }
 
 [[nodiscard]] inline std::vector<std::string> ConsumeRandomLengthStringVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_vector_size = 16, const size_t max_string_length = 16) noexcept
@@ -90,6 +95,23 @@ template <typename T>
         r.push_back(fuzzed_data_provider.ConsumeIntegral<T>());
     }
     return r;
+}
+
+template <typename P>
+[[nodiscard]] P ConsumeDeserializationParams(FuzzedDataProvider& fuzzed_data_provider) noexcept;
+
+template <typename T, typename P>
+[[nodiscard]] std::optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const P& params, const std::optional<size_t>& max_length = std::nullopt) noexcept
+{
+    const std::vector<uint8_t> buffer{ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length)};
+    DataStream ds{buffer};
+    T obj;
+    try {
+        ds >> WithParams(params, obj);
+    } catch (const std::ios_base::failure&) {
+        return std::nullopt;
+    }
+    return obj;
 }
 
 template <typename T>
@@ -161,6 +183,8 @@ template <typename WeakEnumType, size_t size>
 
 [[nodiscard]] CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
+[[nodiscard]] CKey ConsumePrivateKey(FuzzedDataProvider& fuzzed_data_provider, std::optional<bool> compressed = std::nullopt) noexcept;
+
 template <typename T>
 [[nodiscard]] bool MultiplicationOverflow(const T i, const T j) noexcept
 {
@@ -209,14 +233,13 @@ inline void SetFuzzedErrNo(FuzzedDataProvider& fuzzed_data_provider) noexcept
  * Returns a byte vector of specified size regardless of the number of remaining bytes available
  * from the fuzzer. Pads with zero value bytes if needed to achieve the specified size.
  */
-[[nodiscard]] inline std::vector<uint8_t> ConsumeFixedLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const size_t length) noexcept
+template<typename B = uint8_t>
+[[nodiscard]] inline std::vector<B> ConsumeFixedLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const size_t length) noexcept
 {
-    std::vector<uint8_t> result(length);
-    const std::vector<uint8_t> random_bytes = fuzzed_data_provider.ConsumeBytes<uint8_t>(length);
-    if (!random_bytes.empty()) {
-        std::memcpy(result.data(), random_bytes.data(), random_bytes.size());
-    }
-    return result;
+    static_assert(sizeof(B) == 1);
+    auto random_bytes = fuzzed_data_provider.ConsumeBytes<B>(length);
+    random_bytes.resize(length);
+    return random_bytes;
 }
 
 class FuzzedFileProvider

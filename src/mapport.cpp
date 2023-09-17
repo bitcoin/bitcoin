@@ -14,7 +14,6 @@
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
-#include <util/syscall_sandbox.h>
 #include <util/thread.h>
 #include <util/threadinterrupt.h>
 
@@ -219,7 +218,6 @@ static bool ProcessUpnp()
 
 static void ThreadMapPort()
 {
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::INITIALIZATION_MAP_PORT);
     bool ok;
     do {
         ok = false;

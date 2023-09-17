@@ -9,15 +9,19 @@
 #include <stdint.h>
 #include <vector>
 
+#include <addresstype.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
 #include <node/blockstorage.h>
 #include <policy/policy.h>
 #include <rpc/server.h>
+#include <script/solver.h>
 #include <test/util/logging.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <validationinterface.h>
 #include <wallet/coincontrol.h>
 #include <wallet/context.h>
 #include <wallet/receive.h>
@@ -938,11 +942,10 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
     }
 
     // Add tx to wallet
-    const auto& op_dest = wallet.GetNewDestination(OutputType::BECH32M, "");
-    BOOST_ASSERT(op_dest);
+    const auto op_dest{*Assert(wallet.GetNewDestination(OutputType::BECH32M, ""))};
 
     CMutableTransaction mtx;
-    mtx.vout.push_back({COIN, GetScriptForDestination(*op_dest)});
+    mtx.vout.push_back({COIN, GetScriptForDestination(op_dest)});
     mtx.vin.push_back(CTxIn(g_insecure_rand_ctx.rand256(), 0));
     const auto& tx_id_to_spend = wallet.AddToWallet(MakeTransactionRef(mtx), TxStateInMempool{})->GetHash();
 

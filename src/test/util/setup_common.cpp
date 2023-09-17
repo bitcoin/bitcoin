@@ -19,6 +19,7 @@
 #include <init/common.h>
 #include <interfaces/chain.h>
 #include <kernel/mempool_entry.h>
+#include <logging.h>
 #include <net.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
@@ -27,11 +28,13 @@
 #include <node/kernel_notifications.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
+#include <node/peerman_args.h>
 #include <node/validation_cache_args.h>
 #include <noui.h>
 #include <policy/fees.h>
 #include <policy/fees_args.h>
 #include <pow.h>
+#include <random.h>
 #include <rpc/blockchain.h>
 #include <rpc/register.h>
 #include <rpc/server.h>
@@ -40,6 +43,7 @@
 #include <shutdown.h>
 #include <streams.h>
 #include <test/util/net.h>
+#include <test/util/random.h>
 #include <test/util/txmempool.h>
 #include <timedata.h>
 #include <txdb.h>
@@ -60,6 +64,7 @@
 #include <functional>
 #include <stdexcept>
 
+using kernel::BlockTreeDB;
 using kernel::ValidationCacheSizes;
 using node::ApplyArgsManOptions;
 using node::BlockAssembler;
@@ -73,28 +78,8 @@ using node::VerifyLoadedChainstate;
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = nullptr;
 
-FastRandomContext g_insecure_rand_ctx;
 /** Random context to get unique temp data dirs. Separate from g_insecure_rand_ctx, which can be seeded from a const env var */
 static FastRandomContext g_insecure_rand_ctx_temp_path;
-
-/** Return the unsigned from the environment var if available, otherwise 0 */
-static uint256 GetUintFromEnv(const std::string& env_name)
-{
-    const char* num = std::getenv(env_name.c_str());
-    if (!num) return {};
-    return uint256S(num);
-}
-
-void Seed(FastRandomContext& ctx)
-{
-    // Should be enough to get the seed once for the process
-    static uint256 seed{};
-    static const std::string RANDOM_CTX_SEED{"RANDOM_CTX_SEED"};
-    if (seed.IsNull()) seed = GetUintFromEnv(RANDOM_CTX_SEED);
-    if (seed.IsNull()) seed = GetRandHash();
-    LogPrintf("%s: Setting random seed for current tests to %s=%s\n", __func__, RANDOM_CTX_SEED, seed.GetHex());
-    ctx = FastRandomContext(seed);
-}
 
 std::ostream& operator<<(std::ostream& os, const uint256& num)
 {
@@ -157,7 +142,6 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, const std::vecto
         noui_connect();
         noui_connected = true;
     }
-    node::g_indexes_ready_to_sync = true;
 }
 
 BasicTestingSetup::~BasicTestingSetup()
@@ -179,12 +163,12 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, const std::vecto
     m_node.scheduler->m_service_thread = std::thread(util::TraceThread, "scheduler", [&] { m_node.scheduler->serviceQueue(); });
     GetMainSignals().RegisterBackgroundSignalScheduler(*m_node.scheduler);
 
-    m_node.fee_estimator = std::make_unique<CBlockPolicyEstimator>(FeeestPath(*m_node.args));
+    m_node.fee_estimator = std::make_unique<CBlockPolicyEstimator>(FeeestPath(*m_node.args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES);
     m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(m_node));
 
     m_cache_sizes = CalculateCacheSizes(m_args);
 
-    m_node.notifications = std::make_unique<KernelNotifications>();
+    m_node.notifications = std::make_unique<KernelNotifications>(m_node.exit_status);
 
     const ChainstateManager::Options chainman_opts{
         .chainparams = chainparams,
@@ -196,9 +180,10 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, const std::vecto
     const BlockManager::Options blockman_opts{
         .chainparams = chainman_opts.chainparams,
         .blocks_dir = m_args.GetBlocksDirPath(),
+        .notifications = chainman_opts.notifications,
     };
-    m_node.chainman = std::make_unique<ChainstateManager>(chainman_opts, blockman_opts);
-    m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(DBParams{
+    m_node.chainman = std::make_unique<ChainstateManager>(m_node.kernel->interrupt, chainman_opts, blockman_opts);
+    m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<BlockTreeDB>(DBParams{
         .path = m_args.GetDataDirNet() / "blocks" / "index",
         .cache_bytes = static_cast<size_t>(m_cache_sizes.block_tree_db),
         .memory_only = true});
@@ -268,10 +253,13 @@ TestingSetup::TestingSetup(
                                                /*deterministic=*/false,
                                                m_node.args->GetIntArg("-checkaddrman", 0));
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.
+    m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()); // Deterministic randomness for tests.
+    PeerManager::Options peerman_opts;
+    ApplyArgsManOptions(*m_node.args, peerman_opts);
     m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
                                        m_node.banman.get(), *m_node.chainman,
-                                       *m_node.mempool, false);
+                                       *m_node.mempool, peerman_opts);
+
     {
         CConnman::Options options;
         options.m_msgproc = m_node.peerman.get();
@@ -437,7 +425,7 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
             LOCK2(cs_main, m_node.mempool->cs);
             LockPoints lp;
             m_node.mempool->addUnchecked(CTxMemPoolEntry(ptx, /*fee=*/(total_in - num_outputs * amount_per_output),
-                                                         /*time=*/0, /*entry_height=*/1,
+                                                         /*time=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
                                                          /*spends_coinbase=*/false, /*sigops_cost=*/4, lp));
         }
         --num_transactions;
@@ -467,7 +455,7 @@ void TestChain100Setup::MockMempoolMinFee(const CFeeRate& target_feerate)
     const auto tx_fee = target_feerate.GetFee(GetVirtualTransactionSize(*tx)) -
         m_node.mempool->m_incremental_relay_feerate.GetFee(GetVirtualTransactionSize(*tx));
     m_node.mempool->addUnchecked(CTxMemPoolEntry(tx, /*fee=*/tx_fee,
-                                                 /*time=*/0, /*entry_height=*/1,
+                                                 /*time=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
                                                  /*spends_coinbase=*/true, /*sigops_cost=*/1, lp));
     m_node.mempool->TrimToSize(0);
     assert(m_node.mempool->GetMinFee() == target_feerate);

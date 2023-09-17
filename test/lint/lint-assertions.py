@@ -45,6 +45,16 @@ def main():
         ":(exclude)src/rpc/server.cpp",
     ], "CHECK_NONFATAL(condition) or NONFATAL_UNREACHABLE should be used instead of assert for RPC code.")
 
+    # The `BOOST_ASSERT` macro requires to `#include boost/assert.hpp`,
+    # which is an unnecessary Boost dependency.
+    exit_code |= git_grep([
+        "-E",
+        r"BOOST_ASSERT *\(.*\);",
+        "--",
+        "*.cpp",
+        "*.h",
+    ], "BOOST_ASSERT must be replaced with Assert, BOOST_REQUIRE, or BOOST_CHECK.")
+
     sys.exit(exit_code)
 
 

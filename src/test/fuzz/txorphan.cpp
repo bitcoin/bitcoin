@@ -30,7 +30,7 @@ void initialize_orphanage()
     static const auto testing_setup = MakeNoLogFileContext();
 }
 
-FUZZ_TARGET_INIT(txorphan, initialize_orphanage)
+FUZZ_TARGET(txorphan, .init = initialize_orphanage)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));

@@ -6,6 +6,7 @@
 #include <common/args.h>
 
 #include <chainparamsbase.h>
+#include <common/settings.h>
 #include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
@@ -14,7 +15,6 @@
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
-#include <util/settings.h>
 #include <util/strencodings.h>
 
 #ifdef WIN32
@@ -104,7 +104,7 @@ KeyInfo InterpretKey(std::string key)
  * @return parsed settings value if it is valid, otherwise nullopt accompanied
  * by a descriptive error string
  */
-std::optional<util::SettingsValue> InterpretValue(const KeyInfo& key, const std::string* value,
+std::optional<common::SettingsValue> InterpretValue(const KeyInfo& key, const std::string* value,
                                                   unsigned int flags, std::string& error)
 {
     // Return negated settings as false values.
@@ -238,15 +238,15 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
             return false;
         }
 
-        std::optional<util::SettingsValue> value = InterpretValue(keyinfo, val ? &*val : nullptr, *flags, error);
+        std::optional<common::SettingsValue> value = InterpretValue(keyinfo, val ? &*val : nullptr, *flags, error);
         if (!value) return false;
 
         m_settings.command_line_options[keyinfo.name].push_back(*value);
     }
 
     // we do not allow -includeconf from command line, only -noincludeconf
-    if (auto* includes = util::FindKey(m_settings.command_line_options, "includeconf")) {
-        const util::SettingsSpan values{*includes};
+    if (auto* includes = common::FindKey(m_settings.command_line_options, "includeconf")) {
+        const common::SettingsSpan values{*includes};
         // Range may be empty if -noincludeconf was passed
         if (!values.empty()) {
             error = "-includeconf cannot be used from commandline; -includeconf=" + values.begin()->write();
@@ -361,7 +361,7 @@ std::optional<const ArgsManager::Command> ArgsManager::GetCommand() const
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
 {
     std::vector<std::string> result;
-    for (const util::SettingsValue& value : GetSettingsList(strArg)) {
+    for (const common::SettingsValue& value : GetSettingsList(strArg)) {
         result.push_back(value.isFalse() ? "0" : value.isTrue() ? "1" : value.get_str());
     }
     return result;
@@ -408,7 +408,7 @@ bool ArgsManager::ReadSettingsFile(std::vector<std::string>* errors)
     LOCK(cs_args);
     m_settings.rw_settings.clear();
     std::vector<std::string> read_errors;
-    if (!util::ReadSettings(path, m_settings.rw_settings, read_errors)) {
+    if (!common::ReadSettings(path, m_settings.rw_settings, read_errors)) {
         SaveErrors(read_errors, errors);
         return false;
     }
@@ -430,7 +430,7 @@ bool ArgsManager::WriteSettingsFile(std::vector<std::string>* errors, bool backu
 
     LOCK(cs_args);
     std::vector<std::string> write_errors;
-    if (!util::WriteSettings(path_tmp, m_settings.rw_settings, write_errors)) {
+    if (!common::WriteSettings(path_tmp, m_settings.rw_settings, write_errors)) {
         SaveErrors(write_errors, errors);
         return false;
     }
@@ -441,10 +441,10 @@ bool ArgsManager::WriteSettingsFile(std::vector<std::string>* errors, bool backu
     return true;
 }
 
-util::SettingsValue ArgsManager::GetPersistentSetting(const std::string& name) const
+common::SettingsValue ArgsManager::GetPersistentSetting(const std::string& name) const
 {
     LOCK(cs_args);
-    return util::GetSetting(m_settings, m_network, name, !UseDefaultSection("-" + name),
+    return common::GetSetting(m_settings, m_network, name, !UseDefaultSection("-" + name),
         /*ignore_nonpersistent=*/true, /*get_chain_type=*/false);
 }
 
@@ -460,11 +460,11 @@ std::string ArgsManager::GetArg(const std::string& strArg, const std::string& st
 
 std::optional<std::string> ArgsManager::GetArg(const std::string& strArg) const
 {
-    const util::SettingsValue value = GetSetting(strArg);
+    const common::SettingsValue value = GetSetting(strArg);
     return SettingToString(value);
 }
 
-std::optional<std::string> SettingToString(const util::SettingsValue& value)
+std::optional<std::string> SettingToString(const common::SettingsValue& value)
 {
     if (value.isNull()) return std::nullopt;
     if (value.isFalse()) return "0";
@@ -473,7 +473,7 @@ std::optional<std::string> SettingToString(const util::SettingsValue& value)
     return value.get_str();
 }
 
-std::string SettingToString(const util::SettingsValue& value, const std::string& strDefault)
+std::string SettingToString(const common::SettingsValue& value, const std::string& strDefault)
 {
     return SettingToString(value).value_or(strDefault);
 }
@@ -485,11 +485,11 @@ int64_t ArgsManager::GetIntArg(const std::string& strArg, int64_t nDefault) cons
 
 std::optional<int64_t> ArgsManager::GetIntArg(const std::string& strArg) const
 {
-    const util::SettingsValue value = GetSetting(strArg);
+    const common::SettingsValue value = GetSetting(strArg);
     return SettingToInt(value);
 }
 
-std::optional<int64_t> SettingToInt(const util::SettingsValue& value)
+std::optional<int64_t> SettingToInt(const common::SettingsValue& value)
 {
     if (value.isNull()) return std::nullopt;
     if (value.isFalse()) return 0;
@@ -498,7 +498,7 @@ std::optional<int64_t> SettingToInt(const util::SettingsValue& value)
     return LocaleIndependentAtoi<int64_t>(value.get_str());
 }
 
-int64_t SettingToInt(const util::SettingsValue& value, int64_t nDefault)
+int64_t SettingToInt(const common::SettingsValue& value, int64_t nDefault)
 {
     return SettingToInt(value).value_or(nDefault);
 }
@@ -510,18 +510,18 @@ bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
 
 std::optional<bool> ArgsManager::GetBoolArg(const std::string& strArg) const
 {
-    const util::SettingsValue value = GetSetting(strArg);
+    const common::SettingsValue value = GetSetting(strArg);
     return SettingToBool(value);
 }
 
-std::optional<bool> SettingToBool(const util::SettingsValue& value)
+std::optional<bool> SettingToBool(const common::SettingsValue& value)
 {
     if (value.isNull()) return std::nullopt;
     if (value.isBool()) return value.get_bool();
     return InterpretBool(value.get_str());
 }
 
-bool SettingToBool(const util::SettingsValue& value, bool fDefault)
+bool SettingToBool(const common::SettingsValue& value, bool fDefault)
 {
     return SettingToBool(value).value_or(fDefault);
 }
@@ -738,7 +738,7 @@ std::variant<ChainType, std::string> ArgsManager::GetChainArg() const
 {
     auto get_net = [&](const std::string& arg) {
         LOCK(cs_args);
-        util::SettingsValue value = util::GetSetting(m_settings, /* section= */ "", SettingName(arg),
+        common::SettingsValue value = common::GetSetting(m_settings, /* section= */ "", SettingName(arg),
             /* ignore_default_section_config= */ false,
             /*ignore_nonpersistent=*/false,
             /* get_chain_type= */ true);
@@ -769,24 +769,24 @@ bool ArgsManager::UseDefaultSection(const std::string& arg) const
     return m_network == ChainTypeToString(ChainType::MAIN) || m_network_only_args.count(arg) == 0;
 }
 
-util::SettingsValue ArgsManager::GetSetting(const std::string& arg) const
+common::SettingsValue ArgsManager::GetSetting(const std::string& arg) const
 {
     LOCK(cs_args);
-    return util::GetSetting(
+    return common::GetSetting(
         m_settings, m_network, SettingName(arg), !UseDefaultSection(arg),
         /*ignore_nonpersistent=*/false, /*get_chain_type=*/false);
 }
 
-std::vector<util::SettingsValue> ArgsManager::GetSettingsList(const std::string& arg) const
+std::vector<common::SettingsValue> ArgsManager::GetSettingsList(const std::string& arg) const
 {
     LOCK(cs_args);
-    return util::GetSettingsList(m_settings, m_network, SettingName(arg), !UseDefaultSection(arg));
+    return common::GetSettingsList(m_settings, m_network, SettingName(arg), !UseDefaultSection(arg));
 }
 
 void ArgsManager::logArgsPrefix(
     const std::string& prefix,
     const std::string& section,
-    const std::map<std::string, std::vector<util::SettingsValue>>& args) const
+    const std::map<std::string, std::vector<common::SettingsValue>>& args) const
 {
     std::string section_str = section.empty() ? "" : "[" + section + "] ";
     for (const auto& arg : args) {

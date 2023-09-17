@@ -1,0 +1,5 @@
+include_HEADERS += include/secp256k1_ellswift.h
+noinst_HEADERS += src/modules/ellswift/bench_impl.h
+noinst_HEADERS += src/modules/ellswift/main_impl.h
+noinst_HEADERS += src/modules/ellswift/tests_impl.h
+noinst_HEADERS += src/modules/ellswift/tests_exhaustive_impl.h

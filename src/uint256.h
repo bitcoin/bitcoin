@@ -22,6 +22,7 @@ class base_blob
 {
 protected:
     static constexpr int WIDTH = BITS / 8;
+    static_assert(BITS % 8 == 0, "base_blob currently only supports whole bytes.");
     std::array<uint8_t, WIDTH> m_data;
     static_assert(WIDTH == sizeof(m_data), "Sanity check");
 
@@ -77,7 +78,7 @@ public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
-        s.write(MakeByteSpan(m_data));
+        s << Span(m_data);
     }
 
     template<typename Stream>

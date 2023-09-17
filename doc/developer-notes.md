@@ -217,13 +217,11 @@ apt install clang-tidy bear clang
 Then, pass clang as compiler to configure, and use bear to produce the `compile_commands.json`:
 
 ```sh
-./autogen.sh && ./configure CC=clang CXX=clang++ --enable-suppress-external-warnings
+./autogen.sh && ./configure CC=clang CXX=clang++
 make clean && bear --config src/.bear-tidy-config -- make -j $(nproc)
 ```
 
-The output is denoised of errors from external dependencies and includes with
-`--enable-suppress-external-warnings` and `--config src/.bear-tidy-config`. Both
-options may be omitted to view the full list of errors.
+The output is denoised of errors from external dependencies.
 
 To run clang-tidy on all source files:
 
@@ -623,8 +621,9 @@ Threads
   : Started from `main()` in `bitcoind.cpp`. Responsible for starting up and
   shutting down the application.
 
-- [ThreadImport (`b-loadblk`)](https://doxygen.bitcoincore.org/namespacenode.html#ab4305679079866f0f420f7dbf278381d)
-  : Loads blocks from `blk*.dat` files or `-loadblock=<file>` on startup.
+- [Init load (`b-initload`)](https://doxygen.bitcoincore.org/namespacenode.html#ab4305679079866f0f420f7dbf278381d)
+  : Performs various loading tasks that are part of init but shouldn't block the node from being started: external block import,
+   reindex, reindex-chainstate, main chain activation, spawn indexes background sync threads and mempool load.
 
 - [CCheckQueue::Loop (`b-scriptch.x`)](https://doxygen.bitcoincore.org/class_c_check_queue.html#a6e7fa51d3a25e7cb65446d4b50e6a987)
   : Parallel script validation threads for transactions in blocks.

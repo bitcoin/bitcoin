@@ -4,11 +4,14 @@
 
 #include <map>
 
+#include <clientversion.h>
 #include <common/args.h>
 #include <dbwrapper.h>
 #include <hash.h>
 #include <index/blockfilterindex.h>
+#include <logging.h>
 #include <node/blockstorage.h>
+#include <undo.h>
 #include <util/fs_helpers.h>
 #include <validation.h>
 
@@ -258,7 +261,7 @@ bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
     return true;
 }
 
-static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
+[[nodiscard]] static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
                                        const std::string& index_name,
                                        int start_height, int stop_height)
 {

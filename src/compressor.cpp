@@ -6,7 +6,7 @@
 #include <compressor.h>
 
 #include <pubkey.h>
-#include <script/standard.h>
+#include <script/script.h>
 
 /*
  * These check for scripts for which a special case with a shorter encoding is defined.

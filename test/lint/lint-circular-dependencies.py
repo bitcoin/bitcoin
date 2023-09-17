@@ -19,7 +19,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "qt/recentrequeststablemodel -> qt/walletmodel -> qt/recentrequeststablemodel",
     "qt/sendcoinsdialog -> qt/walletmodel -> qt/sendcoinsdialog",
     "qt/transactiontablemodel -> qt/walletmodel -> qt/transactiontablemodel",
-    "wallet/fees -> wallet/wallet -> wallet/fees",
     "wallet/wallet -> wallet/walletdb -> wallet/wallet",
     "kernel/coinstats -> validation -> kernel/coinstats",
     "kernel/mempool_persist -> validation -> kernel/mempool_persist",

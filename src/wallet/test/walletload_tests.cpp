@@ -4,6 +4,7 @@
 
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
+#include <test/util/logging.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
@@ -19,7 +20,7 @@ public:
     explicit DummyDescriptor(const std::string& descriptor) : desc(descriptor) {};
     ~DummyDescriptor() = default;
 
-    std::string ToString() const override { return desc; }
+    std::string ToString(bool compat_format) const override { return desc; }
     std::optional<OutputType> GetOutputType() const override { return OutputType::UNKNOWN; }
 
     bool IsRange() const override { return false; }
@@ -30,9 +31,12 @@ public:
     bool Expand(int pos, const SigningProvider& provider, std::vector<CScript>& output_scripts, FlatSigningProvider& out, DescriptorCache* write_cache = nullptr) const override { return false; };
     bool ExpandFromCache(int pos, const DescriptorCache& read_cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override { return false; }
     void ExpandPrivate(int pos, const SigningProvider& provider, FlatSigningProvider& out) const override {}
+    std::optional<int64_t> ScriptSize() const override { return {}; }
+    std::optional<int64_t> MaxSatisfactionWeight(bool) const override { return {}; }
+    std::optional<int64_t> MaxSatisfactionElems() const override { return {}; }
 };
 
-BOOST_FIXTURE_TEST_CASE(wallet_load_unknown_descriptor, TestingSetup)
+BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
 {
     std::unique_ptr<WalletDatabase> database = CreateMockableWalletDatabase();
     {
@@ -48,6 +52,33 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_unknown_descriptor, TestingSetup)
         // Now try to load the wallet and verify the error.
         const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::UNKNOWN_DESCRIPTOR);
+    }
+
+    // Test 2
+    // Now write a valid descriptor with an invalid ID.
+    // As the software produces another ID for the descriptor, the loading process must be aborted.
+    database = CreateMockableWalletDatabase();
+
+    // Verify the error
+    bool found = false;
+    DebugLogHelper logHelper("The descriptor ID calculated by the wallet differs from the one in DB", [&](const std::string* s) {
+        found = true;
+        return false;
+    });
+
+    {
+        // Write valid descriptor with invalid ID
+        WalletBatch batch(*database, false);
+        std::string desc = "wpkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#cjjspncu";
+        WalletDescriptor wallet_descriptor(std::make_shared<DummyDescriptor>(desc), 0, 0, 0, 0);
+        BOOST_CHECK(batch.WriteDescriptor(uint256::ONE, wallet_descriptor));
+    }
+
+    {
+        // Now try to load the wallet and verify the error.
+        const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
+        BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::CORRUPT);
+        BOOST_CHECK(found); // The error must be logged
     }
 }
 
@@ -169,7 +200,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_ckey, TestingSetup)
         // Fourth test case:
         // Verify that loading up a 'ckey' with an invalid pubkey throws an error
         CPubKey invalid_key;
-        BOOST_ASSERT(!invalid_key.IsValid());
+        BOOST_CHECK(!invalid_key.IsValid());
         SerializeData key = MakeSerializeData(DBKeys::CRYPTED_KEY, invalid_key);
         records[key] = ckey_record_value;
 

@@ -37,10 +37,10 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     const ChainstateLoadOptions& options) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     auto& pblocktree{chainman.m_blockman.m_block_tree_db};
-    // new CBlockTreeDB tries to delete the existing file, which
+    // new BlockTreeDB tries to delete the existing file, which
     // fails if it's still open from the previous loop. Close it first:
     pblocktree.reset();
-    pblocktree = std::make_unique<CBlockTreeDB>(DBParams{
+    pblocktree = std::make_unique<BlockTreeDB>(DBParams{
         .path = chainman.m_options.datadir / "blocks" / "index",
         .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
         .memory_only = options.block_tree_db_in_memory,
@@ -82,7 +82,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     // At this point blocktree args are consistent with what's on disk.
     // If we're not mid-reindex (based on disk + args), add a genesis block on disk
     // (otherwise we use the one already on disk).
-    // This is called again in ThreadImport after the reindex completes.
+    // This is called again in ImportBlocks after the reindex completes.
     if (!fReindex && !chainman.ActiveChainstate().LoadGenesisBlock()) {
         return {ChainstateLoadStatus::FAILURE, _("Error initializing block database")};
     }
@@ -207,7 +207,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     } else if (snapshot_completion == SnapshotCompletionResult::SUCCESS) {
         LogPrintf("[snapshot] cleaning up unneeded background chainstate, then reinitializing\n");
         if (!chainman.ValidatedSnapshotCleanup()) {
-            AbortNode("Background chainstate cleanup failed unexpectedly.");
+            return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated("Background chainstate cleanup failed unexpectedly.")};
         }
 
         // Because ValidatedSnapshotCleanup() has torn down chainstates with
@@ -221,7 +221,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
 
         // A reload of the block index is required to recompute setBlockIndexCandidates
         // for the fully validated chainstate.
-        chainman.ActiveChainstate().UnloadBlockIndex();
+        chainman.ActiveChainstate().ClearBlockIndexCandidates();
 
         auto [init_status, init_error] = CompleteChainstateInitialization(chainman, cache_sizes, options);
         if (init_status != ChainstateLoadStatus::SUCCESS) {

@@ -8,7 +8,7 @@
 #include <key_io.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
+#include <script/solver.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(bip341_spk_test_vectors)
     using control_set = decltype(TaprootSpendData::scripts)::mapped_type;
 
     UniValue tests;
-    tests.read((const char*)json_tests::bip341_wallet_vectors, sizeof(json_tests::bip341_wallet_vectors));
+    tests.read(json_tests::bip341_wallet_vectors);
 
     const auto& vectors = tests["scriptPubKey"];
 

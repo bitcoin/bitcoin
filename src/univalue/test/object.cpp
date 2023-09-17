@@ -86,7 +86,7 @@ void univalue_push_throw()
     UniValue j;
     BOOST_CHECK_THROW(j.push_back(1), std::runtime_error);
     BOOST_CHECK_THROW(j.push_backV({1}), std::runtime_error);
-    BOOST_CHECK_THROW(j.__pushKV("k", 1), std::runtime_error);
+    BOOST_CHECK_THROW(j.pushKVEnd("k", 1), std::runtime_error);
     BOOST_CHECK_THROW(j.pushKV("k", 1), std::runtime_error);
     BOOST_CHECK_THROW(j.pushKVs({}), std::runtime_error);
 }
@@ -364,7 +364,7 @@ void univalue_object()
     obj.setObject();
     UniValue uv;
     uv.setInt(42);
-    obj.__pushKV("age", uv);
+    obj.pushKVEnd("age", uv);
     BOOST_CHECK_EQUAL(obj.size(), 1);
     BOOST_CHECK_EQUAL(obj["age"].getValStr(), "42");
 

@@ -28,7 +28,7 @@ def check_fileopens():
         if e.returncode > 1:
             raise e
 
-    filtered_fileopens = [fileopen for fileopen in fileopens if not re.search(r"encoding=.(ascii|utf8|utf-8).|open\([^,]*, ['\"][^'\"]*b[^'\"]*['\"]", fileopen)]
+    filtered_fileopens = [fileopen for fileopen in fileopens if not re.search(r"encoding=.(ascii|utf8|utf-8).|open\([^,]*, (\*\*kwargs|['\"][^'\"]*b[^'\"]*['\"])", fileopen)]
 
     return filtered_fileopens
 

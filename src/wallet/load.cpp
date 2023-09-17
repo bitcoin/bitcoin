@@ -62,7 +62,7 @@ bool VerifyWallets(WalletContext& context)
         options.require_existing = true;
         options.verify = false;
         if (MakeWalletDatabase("", options, status, error_string)) {
-            util::SettingsValue wallets(util::SettingsValue::VARR);
+            common::SettingsValue wallets(common::SettingsValue::VARR);
             wallets.push_back(""); // Default wallet name is ""
             // Pass write=false because no need to write file and probably
             // better not to. If unnamed wallet needs to be added next startup

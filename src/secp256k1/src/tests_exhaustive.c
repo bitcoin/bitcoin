@@ -13,13 +13,22 @@
 #define EXHAUSTIVE_TEST_ORDER 13
 #endif
 
+/* These values of B are all values in [1, 8] that result in a curve with even order. */
+#define EXHAUSTIVE_TEST_CURVE_HAS_EVEN_ORDER (SECP256K1_B == 1 || SECP256K1_B == 6 || SECP256K1_B == 8)
+
+#ifdef USE_EXTERNAL_DEFAULT_CALLBACKS
+    #pragma message("Ignoring USE_EXTERNAL_CALLBACKS in exhaustive_tests.")
+    #undef USE_EXTERNAL_DEFAULT_CALLBACKS
+#endif
 #include "secp256k1.c"
+
 #include "../include/secp256k1.h"
 #include "assumptions.h"
 #include "group.h"
 #include "testrand_impl.h"
 #include "ecmult_compute_table_impl.h"
 #include "ecmult_gen_compute_table_impl.h"
+#include "util.h"
 
 static int count = 2;
 
@@ -29,8 +38,8 @@ static void ge_equals_ge(const secp256k1_ge *a, const secp256k1_ge *b) {
     if (a->infinity) {
         return;
     }
-    CHECK(secp256k1_fe_equal_var(&a->x, &b->x));
-    CHECK(secp256k1_fe_equal_var(&a->y, &b->y));
+    CHECK(secp256k1_fe_equal(&a->x, &b->x));
+    CHECK(secp256k1_fe_equal(&a->y, &b->y));
 }
 
 static void ge_equals_gej(const secp256k1_ge *a, const secp256k1_gej *b) {
@@ -43,18 +52,18 @@ static void ge_equals_gej(const secp256k1_ge *a, const secp256k1_gej *b) {
     /* Check a.x * b.z^2 == b.x && a.y * b.z^3 == b.y, to avoid inverses. */
     secp256k1_fe_sqr(&z2s, &b->z);
     secp256k1_fe_mul(&u1, &a->x, &z2s);
-    u2 = b->x; secp256k1_fe_normalize_weak(&u2);
+    u2 = b->x;
     secp256k1_fe_mul(&s1, &a->y, &z2s); secp256k1_fe_mul(&s1, &s1, &b->z);
-    s2 = b->y; secp256k1_fe_normalize_weak(&s2);
-    CHECK(secp256k1_fe_equal_var(&u1, &u2));
-    CHECK(secp256k1_fe_equal_var(&s1, &s2));
+    s2 = b->y;
+    CHECK(secp256k1_fe_equal(&u1, &u2));
+    CHECK(secp256k1_fe_equal(&s1, &s2));
 }
 
 static void random_fe(secp256k1_fe *x) {
     unsigned char bin[32];
     do {
         secp256k1_testrand256(bin);
-        if (secp256k1_fe_set_b32(x, bin)) {
+        if (secp256k1_fe_set_b32_limit(x, bin)) {
             return;
         }
     } while(1);
@@ -192,7 +201,7 @@ static void test_exhaustive_ecmult(const secp256k1_ge *group, const secp256k1_ge
     }
 
     for (j = 0; j < EXHAUSTIVE_TEST_ORDER; j++) {
-        for (i = 1; i < EXHAUSTIVE_TEST_ORDER; i++) {
+        for (i = 0; i < EXHAUSTIVE_TEST_ORDER; i++) {
             int ret;
             secp256k1_gej tmp;
             secp256k1_fe xn, xd, tmpf;
@@ -203,21 +212,21 @@ static void test_exhaustive_ecmult(const secp256k1_ge *group, const secp256k1_ge
             secp256k1_scalar_set_int(&ng, j);
 
             /* Test secp256k1_ecmult_const. */
-            secp256k1_ecmult_const(&tmp, &group[i], &ng, 256);
+            secp256k1_ecmult_const(&tmp, &group[i], &ng);
             ge_equals_gej(&group[(i * j) % EXHAUSTIVE_TEST_ORDER], &tmp);
 
-            if (j != 0) {
+            if (i != 0 && j != 0) {
                 /* Test secp256k1_ecmult_const_xonly with all curve X coordinates, and xd=NULL. */
-                ret = secp256k1_ecmult_const_xonly(&tmpf, &group[i].x, NULL, &ng, 256, 0);
+                ret = secp256k1_ecmult_const_xonly(&tmpf, &group[i].x, NULL, &ng, 0);
                 CHECK(ret);
-                CHECK(secp256k1_fe_equal_var(&tmpf, &group[(i * j) % EXHAUSTIVE_TEST_ORDER].x));
+                CHECK(secp256k1_fe_equal(&tmpf, &group[(i * j) % EXHAUSTIVE_TEST_ORDER].x));
 
                 /* Test secp256k1_ecmult_const_xonly with all curve X coordinates, with random xd. */
                 random_fe_non_zero(&xd);
                 secp256k1_fe_mul(&xn, &xd, &group[i].x);
-                ret = secp256k1_ecmult_const_xonly(&tmpf, &xn, &xd, &ng, 256, 0);
+                ret = secp256k1_ecmult_const_xonly(&tmpf, &xn, &xd, &ng, 0);
                 CHECK(ret);
-                CHECK(secp256k1_fe_equal_var(&tmpf, &group[(i * j) % EXHAUSTIVE_TEST_ORDER].x));
+                CHECK(secp256k1_fe_equal(&tmpf, &group[(i * j) % EXHAUSTIVE_TEST_ORDER].x));
             }
         }
     }
@@ -389,6 +398,10 @@ static void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_g
 #include "modules/schnorrsig/tests_exhaustive_impl.h"
 #endif
 
+#ifdef ENABLE_MODULE_ELLSWIFT
+#include "modules/ellswift/tests_exhaustive_impl.h"
+#endif
+
 int main(int argc, char** argv) {
     int i;
     secp256k1_gej groupj[EXHAUSTIVE_TEST_ORDER];
@@ -462,8 +475,8 @@ int main(int argc, char** argv) {
 
                 CHECK(group[i].infinity == 0);
                 CHECK(generated.infinity == 0);
-                CHECK(secp256k1_fe_equal_var(&generated.x, &group[i].x));
-                CHECK(secp256k1_fe_equal_var(&generated.y, &group[i].y));
+                CHECK(secp256k1_fe_equal(&generated.x, &group[i].x));
+                CHECK(secp256k1_fe_equal(&generated.y, &group[i].y));
             }
         }
 
@@ -483,6 +496,15 @@ int main(int argc, char** argv) {
 #endif
 #ifdef ENABLE_MODULE_SCHNORRSIG
         test_exhaustive_schnorrsig(ctx);
+#endif
+#ifdef ENABLE_MODULE_ELLSWIFT
+    /* The ellswift algorithm does have additional edge cases when operating on
+     * curves of even order, which are not included in the code as secp256k1 is
+     * of odd order. Skip the ellswift tests if the used exhaustive tests curve
+     * is even-ordered accordingly. */
+    #if !EXHAUSTIVE_TEST_CURVE_HAS_EVEN_ORDER
+        test_exhaustive_ellswift(ctx, group);
+    #endif
 #endif
 
         secp256k1_context_destroy(ctx);

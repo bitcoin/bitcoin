@@ -81,7 +81,7 @@ public:
     */
     void setClientModel(ClientModel *clientModel = nullptr, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
 #ifdef ENABLE_WALLET
-    void setWalletController(WalletController* wallet_controller);
+    void setWalletController(WalletController* wallet_controller, bool show_loading_minimized);
     WalletController* getWalletController();
 #endif
 

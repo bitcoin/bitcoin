@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -207,14 +207,11 @@ def build_release(tag, args) -> int:
             print('Tag {} not found'.format(tag))
             return 1
     ret = subprocess.run([
-        'git', 'clone', githubUrl, tag
+        'git', 'clone', f'--branch={tag}', '--depth=1', githubUrl, tag
     ]).returncode
     if ret:
         return ret
     with pushd(tag):
-        ret = subprocess.run(['git', 'checkout', tag]).returncode
-        if ret:
-            return ret
         host = args.host
         if args.depends:
             with pushd('depends'):
@@ -250,6 +247,8 @@ def check_host(args) -> int:
     if args.download_binary:
         platforms = {
             'aarch64-*-linux*': 'aarch64-linux-gnu',
+            'powerpc64le-*-linux-*': 'powerpc64le-linux-gnu',
+            'riscv64-*-linux*': 'riscv64-linux-gnu',
             'x86_64-*-linux*': 'x86_64-linux-gnu',
             'x86_64-apple-darwin*': 'x86_64-apple-darwin',
             'aarch64-apple-darwin*': 'arm64-apple-darwin',

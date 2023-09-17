@@ -7,10 +7,40 @@
 
 #include <consensus/amount.h>
 #include <random.h>
-#include <test/util/setup_common.h>
 #include <uint256.h>
 
 #include <cstdint>
+
+/**
+ * This global and the helpers that use it are not thread-safe.
+ *
+ * If thread-safety is needed, the global could be made thread_local (given
+ * that thread_local is supported on all architectures we support) or a
+ * per-thread instance could be used in the multi-threaded test.
+ */
+extern FastRandomContext g_insecure_rand_ctx;
+
+/**
+ * Flag to make GetRand in random.h return the same number
+ */
+extern bool g_mock_deterministic_tests;
+
+enum class SeedRand {
+    ZEROS, //!< Seed with a compile time constant of zeros
+    SEED,  //!< Call the Seed() helper
+};
+
+/** Seed the given random ctx or use the seed passed in via an environment var */
+void Seed(FastRandomContext& ctx);
+
+static inline void SeedInsecureRand(SeedRand seed = SeedRand::SEED)
+{
+    if (seed == SeedRand::ZEROS) {
+        g_insecure_rand_ctx = FastRandomContext(/*fDeterministic=*/true);
+    } else {
+        Seed(g_insecure_rand_ctx);
+    }
+}
 
 static inline uint32_t InsecureRand32()
 {

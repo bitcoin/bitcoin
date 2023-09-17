@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 export LC_ALL=C.UTF-8
 
-export CI_IMAGE_NAME_TAG="ubuntu:22.04"
-LIBCXX_DIR="${BASE_SCRATCH_DIR}/msan/cxx_build/"
+export CI_IMAGE_NAME_TAG="docker.io/ubuntu:22.04"
+LIBCXX_DIR="/msan/cxx_build/"
 export MSAN_FLAGS="-fsanitize=memory -fsanitize-memory-track-origins=2 -fno-omit-frame-pointer -g -O1 -fno-optimize-sibling-calls"
 LIBCXX_FLAGS="-nostdinc++ -nostdlib++ -isystem ${LIBCXX_DIR}include/c++/v1 -L${LIBCXX_DIR}lib -Wl,-rpath,${LIBCXX_DIR}lib -lc++ -lc++abi -lpthread -Wno-unused-command-line-argument"
 export MSAN_AND_LIBCXX_FLAGS="${MSAN_FLAGS} ${LIBCXX_FLAGS}"
@@ -22,4 +22,4 @@ export USE_MEMORY_SANITIZER="true"
 export RUN_UNIT_TESTS="false"
 export RUN_FUNCTIONAL_TESTS="false"
 export RUN_FUZZ_TESTS=true
-export CCACHE_SIZE=250M
+export CCACHE_MAXSIZE=250M

@@ -5,6 +5,7 @@
 #include <bench/bench.h>
 #include <kernel/mempool_entry.h>
 #include <policy/policy.h>
+#include <random.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
 #include <util/chaintype.h>
@@ -16,10 +17,11 @@ static void AddTx(const CTransactionRef& tx, CTxMemPool& pool) EXCLUSIVE_LOCKS_R
 {
     int64_t nTime = 0;
     unsigned int nHeight = 1;
+    uint64_t sequence = 0;
     bool spendsCoinbase = false;
     unsigned int sigOpCost = 4;
     LockPoints lp;
-    pool.addUnchecked(CTxMemPoolEntry(tx, 1000, nTime, nHeight, spendsCoinbase, sigOpCost, lp));
+    pool.addUnchecked(CTxMemPoolEntry(tx, 1000, nTime, nHeight, sequence, spendsCoinbase, sigOpCost, lp));
 }
 
 struct Available {

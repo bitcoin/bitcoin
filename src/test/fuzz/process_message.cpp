@@ -58,14 +58,14 @@ void initialize_process_message()
     SyncWithValidationInterfaceQueue();
 }
 
-FUZZ_TARGET_INIT(process_message, initialize_process_message)
+FUZZ_TARGET(process_message, .init = initialize_process_message)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     ConnmanTestMsg& connman = *static_cast<ConnmanTestMsg*>(g_setup->m_node.connman.get());
-    TestChainState& chainstate = *static_cast<TestChainState*>(&g_setup->m_node.chainman->ActiveChainstate());
+    auto& chainman = static_cast<TestChainstateManager&>(*g_setup->m_node.chainman);
     SetMockTime(1610000000); // any time to successfully reset ibd
-    chainstate.ResetIbd();
+    chainman.ResetIbd();
 
     LOCK(NetEventsInterface::g_msgproc_mutex);
 

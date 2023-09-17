@@ -8,7 +8,6 @@
 
 #include <policy/feerate.h>
 #include <policy/policy.h>
-#include <script/standard.h>
 
 #include <chrono>
 #include <cstdint>
@@ -24,6 +23,8 @@ static constexpr unsigned int DEFAULT_BLOCKSONLY_MAX_MEMPOOL_SIZE_MB{5};
 static constexpr unsigned int DEFAULT_MEMPOOL_EXPIRY_HOURS{336};
 /** Default for -mempoolfullrbf, if the transaction replaceability signaling is ignored */
 static constexpr bool DEFAULT_MEMPOOL_FULL_RBF{false};
+/** Default for -acceptnonstdtxn */
+static constexpr bool DEFAULT_ACCEPT_NON_STD_TXN{false};
 
 namespace kernel {
 /**

@@ -337,6 +337,15 @@ struct StackSize {
     StackSize(MaxInt<uint32_t> in_sat, MaxInt<uint32_t> in_dsat) : sat(in_sat), dsat(in_dsat) {};
 };
 
+struct WitnessSize {
+    //! Maximum witness size to satisfy;
+    MaxInt<uint32_t> sat;
+    //! Maximum witness size to dissatisfy;
+    MaxInt<uint32_t> dsat;
+
+    WitnessSize(MaxInt<uint32_t> in_sat, MaxInt<uint32_t> in_dsat) : sat(in_sat), dsat(in_dsat) {};
+};
+
 struct NoDupCheck {};
 
 } // namespace internal
@@ -360,6 +369,8 @@ private:
     const internal::Ops ops;
     //! Cached stack size bounds.
     const internal::StackSize ss;
+    //! Cached witness size bounds.
+    const internal::WitnessSize ws;
     //! Cached expression type (computed by CalcType and fed through SanitizeType).
     const Type typ;
     //! Cached script length (computed by CalcScriptLen).
@@ -846,6 +857,56 @@ private:
         assert(false);
     }
 
+    internal::WitnessSize CalcWitnessSize() const {
+        switch (fragment) {
+            case Fragment::JUST_0: return {{}, 0};
+            case Fragment::JUST_1:
+            case Fragment::OLDER:
+            case Fragment::AFTER: return {0, {}};
+            case Fragment::PK_K: return {1 + 72, 1};
+            case Fragment::PK_H: return {1 + 72 + 1 + 33, 1 + 1 + 33};
+            case Fragment::SHA256:
+            case Fragment::RIPEMD160:
+            case Fragment::HASH256:
+            case Fragment::HASH160: return {1 + 32, {}};
+            case Fragment::ANDOR: {
+                const auto sat{(subs[0]->ws.sat + subs[1]->ws.sat) | (subs[0]->ws.dsat + subs[2]->ws.sat)};
+                const auto dsat{subs[0]->ws.dsat + subs[2]->ws.dsat};
+                return {sat, dsat};
+            }
+            case Fragment::AND_V: return {subs[0]->ws.sat + subs[1]->ws.sat, {}};
+            case Fragment::AND_B: return {subs[0]->ws.sat + subs[1]->ws.sat, subs[0]->ws.dsat + subs[1]->ws.dsat};
+            case Fragment::OR_B: {
+                const auto sat{(subs[0]->ws.dsat + subs[1]->ws.sat) | (subs[0]->ws.sat + subs[1]->ws.dsat)};
+                const auto dsat{subs[0]->ws.dsat + subs[1]->ws.dsat};
+                return {sat, dsat};
+            }
+            case Fragment::OR_C: return {subs[0]->ws.sat | (subs[0]->ws.dsat + subs[1]->ws.sat), {}};
+            case Fragment::OR_D: return {subs[0]->ws.sat | (subs[0]->ws.dsat + subs[1]->ws.sat), subs[0]->ws.dsat + subs[1]->ws.dsat};
+            case Fragment::OR_I: return {(subs[0]->ws.sat + 1 + 1) | (subs[1]->ws.sat + 1), (subs[0]->ws.dsat + 1 + 1) | (subs[1]->ws.dsat + 1)};
+            case Fragment::MULTI: return {k * (1 + 72) + 1, k + 1};
+            case Fragment::WRAP_A:
+            case Fragment::WRAP_N:
+            case Fragment::WRAP_S:
+            case Fragment::WRAP_C: return subs[0]->ws;
+            case Fragment::WRAP_D: return {1 + 1 + subs[0]->ws.sat, 1};
+            case Fragment::WRAP_V: return {subs[0]->ws.sat, {}};
+            case Fragment::WRAP_J: return {subs[0]->ws.sat, 1};
+            case Fragment::THRESH: {
+                auto sats = Vector(internal::MaxInt<uint32_t>(0));
+                for (const auto& sub : subs) {
+                    auto next_sats = Vector(sats[0] + sub->ws.dsat);
+                    for (size_t j = 1; j < sats.size(); ++j) next_sats.push_back((sats[j] + sub->ws.dsat) | (sats[j - 1] + sub->ws.sat));
+                    next_sats.push_back(sats[sats.size() - 1] + sub->ws.sat);
+                    sats = std::move(next_sats);
+                }
+                assert(k <= sats.size());
+                return {sats[k], sats[0]};
+            }
+        }
+        assert(false);
+    }
+
     template<typename Ctx>
     internal::InputResult ProduceInput(const Ctx& ctx) const {
         using namespace internal;
@@ -1134,20 +1195,42 @@ public:
     size_t ScriptSize() const { return scriptlen; }
 
     //! Return the maximum number of ops needed to satisfy this script non-malleably.
-    uint32_t GetOps() const { return ops.count + ops.sat.value; }
+    std::optional<uint32_t> GetOps() const {
+        if (!ops.sat.valid) return {};
+        return ops.count + ops.sat.value;
+    }
 
     //! Return the number of ops in the script (not counting the dynamic ones that depend on execution).
     uint32_t GetStaticOps() const { return ops.count; }
 
     //! Check the ops limit of this script against the consensus limit.
-    bool CheckOpsLimit() const { return GetOps() <= MAX_OPS_PER_SCRIPT; }
+    bool CheckOpsLimit() const {
+        if (const auto ops = GetOps()) return *ops <= MAX_OPS_PER_SCRIPT;
+        return true;
+    }
 
-    /** Return the maximum number of stack elements needed to satisfy this script non-malleably, including
-     * the script push. */
-    uint32_t GetStackSize() const { return ss.sat.value + 1; }
+    /** Return the maximum number of stack elements needed to satisfy this script non-malleably.
+     * This does not account for the P2WSH script push. */
+    std::optional<uint32_t> GetStackSize() const {
+        if (!ss.sat.valid) return {};
+        return ss.sat.value;
+    }
 
     //! Check the maximum stack size for this script against the policy limit.
-    bool CheckStackSize() const { return GetStackSize() - 1 <= MAX_STANDARD_P2WSH_STACK_ITEMS; }
+    bool CheckStackSize() const {
+        if (const auto ss = GetStackSize()) return *ss <= MAX_STANDARD_P2WSH_STACK_ITEMS;
+        return true;
+    }
+
+    //! Whether no satisfaction exists for this node.
+    bool IsNotSatisfiable() const { return !GetStackSize(); }
+
+    /** Return the maximum size in bytes of a witness to satisfy this script non-malleably. Note this does
+     * not include the witness script push. */
+    std::optional<uint32_t> GetWitnessSize() const {
+        if (!ws.sat.valid) return {};
+        return ws.sat.value;
+    }
 
     //! Return the expression type.
     Type GetType() const { return typ; }
@@ -1245,12 +1328,12 @@ public:
     bool operator==(const Node<Key>& arg) const { return Compare(*this, arg) == 0; }
 
     // Constructors with various argument combinations, which bypass the duplicate key check.
-    Node(internal::NoDupCheck, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<unsigned char> arg, uint32_t val = 0) : fragment(nt), k(val), data(std::move(arg)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(internal::NoDupCheck, Fragment nt, std::vector<unsigned char> arg, uint32_t val = 0) : fragment(nt), k(val), data(std::move(arg)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(internal::NoDupCheck, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<Key> key, uint32_t val = 0) : fragment(nt), k(val), keys(std::move(key)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(internal::NoDupCheck, Fragment nt, std::vector<Key> key, uint32_t val = 0) : fragment(nt), k(val), keys(std::move(key)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(internal::NoDupCheck, Fragment nt, std::vector<NodeRef<Key>> sub, uint32_t val = 0) : fragment(nt), k(val), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(internal::NoDupCheck, Fragment nt, uint32_t val = 0) : fragment(nt), k(val), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(internal::NoDupCheck, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<unsigned char> arg, uint32_t val = 0) : fragment(nt), k(val), data(std::move(arg)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), ws(CalcWitnessSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(internal::NoDupCheck, Fragment nt, std::vector<unsigned char> arg, uint32_t val = 0) : fragment(nt), k(val), data(std::move(arg)), ops(CalcOps()), ss(CalcStackSize()), ws(CalcWitnessSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(internal::NoDupCheck, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<Key> key, uint32_t val = 0) : fragment(nt), k(val), keys(std::move(key)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), ws(CalcWitnessSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(internal::NoDupCheck, Fragment nt, std::vector<Key> key, uint32_t val = 0) : fragment(nt), k(val), keys(std::move(key)), ops(CalcOps()), ss(CalcStackSize()), ws(CalcWitnessSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(internal::NoDupCheck, Fragment nt, std::vector<NodeRef<Key>> sub, uint32_t val = 0) : fragment(nt), k(val), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), ws(CalcWitnessSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(internal::NoDupCheck, Fragment nt, uint32_t val = 0) : fragment(nt), k(val), ops(CalcOps()), ss(CalcStackSize()), ws(CalcWitnessSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
 
     // Constructors with various argument combinations, which do perform the duplicate key check.
     template <typename Ctx> Node(const Ctx& ctx, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<unsigned char> arg, uint32_t val = 0) : Node(internal::NoDupCheck{}, nt, std::move(sub), std::move(arg), val) { DuplicateKeyCheck(ctx); }

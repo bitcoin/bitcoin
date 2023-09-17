@@ -437,7 +437,7 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
                 if (options.exists(fr->first)) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + fr->first + " specified multiple times");
                 }
-                options.__pushKV(fr->first, *fr->second);
+                options.pushKVEnd(fr->first, *fr->second);
                 argsIn.erase(fr);
             }
             continue;

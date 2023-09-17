@@ -8,9 +8,11 @@
 #include <blockfilter.h>
 #include <crypto/siphash.h>
 #include <hash.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <streams.h>
+#include <undo.h>
 #include <util/golombrice.h>
 #include <util/string.h>
 
@@ -27,7 +29,7 @@ static const std::map<BlockFilterType, std::string> g_filter_types = {
 uint64_t GCSFilter::HashToRange(const Element& element) const
 {
     uint64_t hash = CSipHasher(m_params.m_siphash_k0, m_params.m_siphash_k1)
-        .Write(element.data(), element.size())
+        .Write(element)
         .Finalize();
     return FastRange64(hash, m_F);
 }

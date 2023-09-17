@@ -74,8 +74,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
     def nodes_wallet_dir(self, node):
         if node.version < 170000:
-            return os.path.join(node.datadir, "regtest")
-        return os.path.join(node.datadir, "regtest/wallets")
+            return node.chain_path
+        return node.wallets_path
 
     def run_test(self):
         node_miner = self.nodes[0]
@@ -157,10 +157,10 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         assert info['keypoolsize'] == 0
 
         # Unload wallets and copy to older nodes:
-        node_master_wallets_dir = os.path.join(node_master.datadir, "regtest/wallets")
-        node_v19_wallets_dir = os.path.join(node_v19.datadir, "regtest/wallets")
-        node_v17_wallets_dir = os.path.join(node_v17.datadir, "regtest/wallets")
-        node_v16_wallets_dir = os.path.join(node_v16.datadir, "regtest")
+        node_master_wallets_dir = node_master.wallets_path
+        node_v19_wallets_dir = node_v19.wallets_path
+        node_v17_wallets_dir = node_v17.wallets_path
+        node_v16_wallets_dir = node_v16.chain_path
         node_master.unloadwallet("w1")
         node_master.unloadwallet("w2")
         node_master.unloadwallet("w3")
@@ -264,10 +264,11 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                 os.path.join(node_master_wallets_dir, "u1_v16")
             )
             load_res = node_master.loadwallet("u1_v16")
-            # Make sure this wallet opens without warnings. See https://github.com/bitcoin/bitcoin/pull/19054
+            # Make sure this wallet opens with only the migration warning. See https://github.com/bitcoin/bitcoin/pull/19054
             if int(node_master.getnetworkinfo()["version"]) >= 249900:
                 # loadwallet#warnings (added in v25) -- only present if there is a warning
-                assert "warnings" not in load_res
+                # Legacy wallets will have only a deprecation warning
+                assert_equal(load_res["warnings"], ["Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet."])
             else:
                 # loadwallet#warning (deprecated in v25) -- always present, but empty string if no warning
                 assert_equal(load_res["warning"], '')

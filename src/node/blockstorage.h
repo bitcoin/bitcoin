@@ -7,24 +7,31 @@
 
 #include <attributes.h>
 #include <chain.h>
+#include <dbwrapper.h>
 #include <kernel/blockmanager_opts.h>
 #include <kernel/chainparams.h>
 #include <kernel/cs_main.h>
-#include <protocol.h>
+#include <kernel/messagestartchars.h>
 #include <sync.h>
-#include <txdb.h>
 #include <util/fs.h>
+#include <util/hasher.h>
 
 #include <atomic>
 #include <cstdint>
+#include <functional>
+#include <limits>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 class BlockValidationState;
 class CBlock;
 class CBlockFileInfo;
 class CBlockUndo;
-class CChain;
 class CChainParams;
 class Chainstate;
 class ChainstateManager;
@@ -33,8 +40,30 @@ struct FlatFilePos;
 namespace Consensus {
 struct Params;
 }
+namespace util {
+class SignalInterrupt;
+} // namespace util
+
+namespace kernel {
+/** Access to the block database (blocks/index/) */
+class BlockTreeDB : public CDBWrapper
+{
+public:
+    using CDBWrapper::CDBWrapper;
+    bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*>>& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
+    bool ReadBlockFileInfo(int nFile, CBlockFileInfo& info);
+    bool ReadLastBlockFile(int& nFile);
+    bool WriteReindexing(bool fReindexing);
+    void ReadReindexing(bool& fReindexing);
+    bool WriteFlag(const std::string& name, bool fValue);
+    bool ReadFlag(const std::string& name, bool& fValue);
+    bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex, const util::SignalInterrupt& interrupt)
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+};
+} // namespace kernel
 
 namespace node {
+using kernel::BlockTreeDB;
 
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
 static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
@@ -44,10 +73,9 @@ static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
 static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 
 /** Size of header written by WriteBlockToDisk before a serialized CBlock */
-static constexpr size_t BLOCK_SERIALIZATION_HEADER_SIZE = CMessageHeader::MESSAGE_START_SIZE + sizeof(unsigned int);
+static constexpr size_t BLOCK_SERIALIZATION_HEADER_SIZE = std::tuple_size_v<MessageStartChars> + sizeof(unsigned int);
 
 extern std::atomic_bool fReindex;
-extern std::atomic_bool g_indexes_ready_to_sync;
 
 // Because validation code takes pointers to the map's CBlockIndex objects, if
 // we ever switch to another associative container, we need to either use a
@@ -92,7 +120,7 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void FlushBlockFile(bool fFinalize = false, bool finalize_undo = false);
     void FlushUndoFile(int block_file, bool finalize = false);
-    bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, CChain& active_chain, uint64_t nTime, bool fKnown);
+    bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown);
     bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
 
     FlatFileSeq BlockFileSeq() const;
@@ -100,8 +128,8 @@ private:
 
     FILE* OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
 
-    bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos, const CMessageHeader::MessageStartChars& messageStart) const;
-    bool UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos, const uint256& hashBlock, const CMessageHeader::MessageStartChars& messageStart) const;
+    bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const;
+    bool UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos, const uint256& hashBlock) const;
 
     /* Calculate the block/rev files to delete based on height specified by user with RPC command pruneblockchain */
     void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight, int chain_tip_height);
@@ -126,6 +154,19 @@ private:
     RecursiveMutex cs_LastBlockFile;
     std::vector<CBlockFileInfo> m_blockfile_info;
     int m_last_blockfile = 0;
+
+    // Track the height of the highest block in m_last_blockfile whose undo
+    // data has been written. Block data is written to block files in download
+    // order, but is written to undo files in validation order, which is
+    // usually in order by height. To avoid wasting disk space, undo files will
+    // be trimmed whenever the corresponding block file is finalized and
+    // the height of the highest block written to the block file equals the
+    // height of the highest block written to the undo file. This is a
+    // heuristic and can sometimes preemptively trim undo files that will write
+    // more data later, and sometimes fail to trim undo files that can't have
+    // more data written later.
+    unsigned int m_undo_height_in_last_blockfile = 0;
+
     /** Global flag to indicate we should check to see if there are
      *  block/undo files that should be deleted.  Set on startup
      *  or if we allocate more file space when we're in prune mode
@@ -153,10 +194,12 @@ private:
 public:
     using Options = kernel::BlockManagerOpts;
 
-    explicit BlockManager(Options opts)
+    explicit BlockManager(const util::SignalInterrupt& interrupt, Options opts)
         : m_prune_mode{opts.prune_target > 0},
-          m_opts{std::move(opts)} {};
+          m_opts{std::move(opts)},
+          m_interrupt{interrupt} {};
 
+    const util::SignalInterrupt& m_interrupt;
     std::atomic<bool> m_importing{false};
 
     BlockMap m_block_index GUARDED_BY(cs_main);
@@ -169,7 +212,7 @@ public:
      */
     std::multimap<CBlockIndex*, CBlockIndex*> m_blocks_unlinked;
 
-    std::unique_ptr<CBlockTreeDB> m_block_tree_db GUARDED_BY(::cs_main);
+    std::unique_ptr<BlockTreeDB> m_block_tree_db GUARDED_BY(::cs_main);
 
     bool WriteBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool LoadBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -198,7 +241,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Store block on disk. If dbp is not nullptr, then it provides the known position of the block within a block file on disk. */
-    FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const FlatFilePos* dbp);
+    FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, const FlatFilePos* dbp);
 
     /** Whether running in -prune mode. */
     [[nodiscard]] bool IsPruneMode() const { return m_prune_mode; }
@@ -209,16 +252,21 @@ public:
 
     [[nodiscard]] bool LoadingBlocks() const { return m_importing || fReindex; }
 
-    [[nodiscard]] bool StopAfterBlockImport() const { return m_opts.stop_after_block_import; }
-
     /** Calculate the amount of disk space the block & undo files currently use */
     uint64_t CalculateCurrentUsage();
 
     //! Returns last CBlockIndex* that is a checkpoint
     const CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    //! Find the first block that is not pruned
-    const CBlockIndex* GetFirstStoredBlock(const CBlockIndex& start_block LIFETIMEBOUND) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    //! Check if all blocks in the [upper_block, lower_block] range have data available.
+    //! The caller is responsible for ensuring that lower_block is an ancestor of upper_block
+    //! (part of the same chain).
+    bool CheckBlockDataAvailability(const CBlockIndex& upper_block LIFETIMEBOUND, const CBlockIndex& lower_block LIFETIMEBOUND) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Find the first stored ancestor of start_block immediately after the last
+    //! pruned ancestor. Return value will never be null. Caller is responsible
+    //! for ensuring that start_block has data is not pruned.
+    const CBlockIndex* GetFirstStoredBlock(const CBlockIndex& start_block LIFETIMEBOUND, const CBlockIndex* lower_block=nullptr) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** True if any block files have ever been pruned. */
     bool m_have_pruned = false;
@@ -243,14 +291,14 @@ public:
     /** Functions for disk access for blocks */
     bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos) const;
     bool ReadBlockFromDisk(CBlock& block, const CBlockIndex& index) const;
-    bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, const CMessageHeader::MessageStartChars& message_start) const;
+    bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos) const;
 
     bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& index) const;
 
     void CleanupBlockRevFiles() const;
 };
 
-void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const fs::path& mempool_path);
+void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFiles);
 } // namespace node
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H

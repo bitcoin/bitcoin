@@ -19,7 +19,7 @@
 #include <pow.h>
 #include <protocol.h>
 #include <pubkey.h>
-#include <script/standard.h>
+#include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -46,7 +46,7 @@ void initialize_integer()
     SelectParams(ChainType::REGTEST);
 }
 
-FUZZ_TARGET_INIT(integer, initialize_integer)
+FUZZ_TARGET(integer, .init = initialize_integer)
 {
     if (buffer.size() < sizeof(uint256) + sizeof(uint160)) {
         return;

@@ -28,19 +28,26 @@ void initialize_connman()
     g_setup = testing_setup.get();
 }
 
-FUZZ_TARGET_INIT(connman, initialize_connman)
+FUZZ_TARGET(connman, .init = initialize_connman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
+    ConnmanTestMsg connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
                      fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
                      *g_setup->m_node.addrman,
                      *g_setup->m_node.netgroupman,
+                     Params(),
                      fuzzed_data_provider.ConsumeBool()};
     CNetAddr random_netaddr;
     CNode random_node = ConsumeNode(fuzzed_data_provider);
     CSubNet random_subnet;
     std::string random_string;
+
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
+        CNode& p2p_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider).release()};
+        connman.AddTestNode(p2p_node);
+    }
+
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
@@ -128,4 +135,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
     (void)connman.GetTotalBytesSent();
     (void)connman.GetTryNewOutboundPeer();
     (void)connman.GetUseAddrmanOutgoing();
+
+    connman.ClearTestNodes();
 }
