@@ -6,6 +6,7 @@
 #define SYSCOIN_DBWRAPPER_H
 
 #include <attributes.h>
+#include <clientversion.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
@@ -425,8 +426,8 @@ public:
 private:
     void SkipDeletedAndOverwritten() {
         while (parentIt->Valid()) {
-            parentKey = parentIt->GetKey();	            
-            if (!transaction.deletes.count(parentKey) && !transaction.writes.count(parentKey)) {	
+            parentKey = parentIt->GetKey();
+            if (!transaction.deletes.count(parentKey) && !transaction.writes.count(parentKey)) {
                 break;
             }
             parentIt->Next();
