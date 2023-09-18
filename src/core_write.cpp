@@ -214,12 +214,12 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
                 auto it = ptxSpentInfo->mSpentInfo.find(spentKey);
                 if (it != ptxSpentInfo->mSpentInfo.end()) {
                     auto spentInfo = it->second;
-                    in.pushKV("value", ValueFromAmount(spentInfo.satoshis));
-                    in.pushKV("valueSat", spentInfo.satoshis);
-                    if (spentInfo.addressType == AddressType::P2PK) {
-                        in.pushKV("address", EncodeDestination(PKHash(spentInfo.addressHash)));
-                    } else if (spentInfo.addressType == AddressType::P2SH) {
-                        in.pushKV("address", EncodeDestination(ScriptHash(spentInfo.addressHash)));
+                    in.pushKV("value", ValueFromAmount(spentInfo.m_amount));
+                    in.pushKV("valueSat", spentInfo.m_amount);
+                    if (spentInfo.m_address_type == AddressType::P2PK) {
+                        in.pushKV("address", EncodeDestination(PKHash(spentInfo.m_address_bytes)));
+                    } else if (spentInfo.m_address_type == AddressType::P2SH) {
+                        in.pushKV("address", EncodeDestination(ScriptHash(spentInfo.m_address_bytes)));
                     }
                 }
             }
@@ -249,9 +249,9 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
             auto it = ptxSpentInfo->mSpentInfo.find(spentKey);
             if (it != ptxSpentInfo->mSpentInfo.end()) {
                 auto spentInfo = it->second;
-                out.pushKV("spentTxId", spentInfo.txid.GetHex());
-                out.pushKV("spentIndex", (int)spentInfo.inputIndex);
-                out.pushKV("spentHeight", spentInfo.blockHeight);
+                out.pushKV("spentTxId", spentInfo.m_tx_hash.GetHex());
+                out.pushKV("spentIndex", (int)spentInfo.m_tx_index);
+                out.pushKV("spentHeight", spentInfo.m_block_height);
             }
         }
         vout.push_back(out);

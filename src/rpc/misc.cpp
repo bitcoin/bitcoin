@@ -655,7 +655,7 @@ static bool getAddressesFromParams(const UniValue& params, std::vector<std::pair
 
 static bool heightSort(std::pair<CAddressUnspentKey, CAddressUnspentValue> a,
                 std::pair<CAddressUnspentKey, CAddressUnspentValue> b) {
-    return a.second.blockHeight < b.second.blockHeight;
+    return a.second.m_block_height < b.second.m_block_height;
 }
 
 static bool timestampSort(std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> a,
@@ -786,16 +786,16 @@ static UniValue getaddressutxos(const JSONRPCRequest& request)
     for (std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> >::const_iterator it=unspentOutputs.begin(); it!=unspentOutputs.end(); it++) {
         UniValue output(UniValue::VOBJ);
         std::string address;
-        if (!getAddressFromIndex(it->first.type, it->first.hashBytes, address)) {
+        if (!getAddressFromIndex(it->first.m_address_type, it->first.m_address_bytes, address)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
         }
 
         output.pushKV("address", address);
-        output.pushKV("txid", it->first.txhash.GetHex());
-        output.pushKV("outputIndex", (int)it->first.index);
-        output.pushKV("script", HexStr(it->second.script));
-        output.pushKV("satoshis", it->second.satoshis);
-        output.pushKV("height", it->second.blockHeight);
+        output.pushKV("txid", it->first.m_tx_hash.GetHex());
+        output.pushKV("outputIndex", (int)it->first.m_tx_index);
+        output.pushKV("script", HexStr(it->second.m_tx_script));
+        output.pushKV("satoshis", it->second.m_amount);
+        output.pushKV("height", it->second.m_block_height);
         result.push_back(output);
     }
 
@@ -871,16 +871,16 @@ static UniValue getaddressdeltas(const JSONRPCRequest& request)
 
     for (std::vector<std::pair<CAddressIndexKey, CAmount> >::const_iterator it=addressIndex.begin(); it!=addressIndex.end(); it++) {
         std::string address;
-        if (!getAddressFromIndex(it->first.type, it->first.hashBytes, address)) {
+        if (!getAddressFromIndex(it->first.m_address_type, it->first.m_address_bytes, address)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
         }
 
         UniValue delta(UniValue::VOBJ);
         delta.pushKV("satoshis", it->second);
-        delta.pushKV("txid", it->first.txhash.GetHex());
-        delta.pushKV("index", (int)it->first.index);
-        delta.pushKV("blockindex", (int)it->first.txindex);
-        delta.pushKV("height", it->first.blockHeight);
+        delta.pushKV("txid", it->first.m_tx_hash.GetHex());
+        delta.pushKV("index", (int)it->first.m_tx_index);
+        delta.pushKV("blockindex", (int)it->first.m_block_tx_pos);
+        delta.pushKV("height", it->first.m_block_height);
         delta.pushKV("address", address);
         result.push_back(delta);
     }
@@ -939,7 +939,7 @@ static UniValue getaddressbalance(const JSONRPCRequest& request)
         if (it->second > 0) {
             received += it->second;
         }
-        if (it->first.txindex == 0 && nHeight - it->first.blockHeight < COINBASE_MATURITY) {
+        if (it->first.m_block_tx_pos == 0 && nHeight - it->first.m_block_height < COINBASE_MATURITY) {
             balance_immature += it->second;
         } else {
             balance_spendable += it->second;
@@ -1013,8 +1013,8 @@ static UniValue getaddresstxids(const JSONRPCRequest& request)
     UniValue result(UniValue::VARR);
 
     for (std::vector<std::pair<CAddressIndexKey, CAmount> >::const_iterator it=addressIndex.begin(); it!=addressIndex.end(); it++) {
-        int height = it->first.blockHeight;
-        std::string txid = it->first.txhash.GetHex();
+        int height = it->first.m_block_height;
+        std::string txid = it->first.m_tx_hash.GetHex();
 
         if (addresses.size() > 1) {
             txids.insert(std::make_pair(height, txid));
@@ -1078,9 +1078,9 @@ static UniValue getspentinfo(const JSONRPCRequest& request)
     }
 
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("txid", value.txid.GetHex());
-    obj.pushKV("index", (int)value.inputIndex);
-    obj.pushKV("height", value.blockHeight);
+    obj.pushKV("txid", value.m_tx_hash.GetHex());
+    obj.pushKV("index", (int)value.m_tx_index);
+    obj.pushKV("height", value.m_block_height);
 
     return obj;
 }
