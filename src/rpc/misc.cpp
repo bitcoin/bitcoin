@@ -660,7 +660,7 @@ static bool heightSort(std::pair<CAddressUnspentKey, CAddressUnspentValue> a,
 
 static bool timestampSort(std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> a,
                    std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> b) {
-    return a.second.time < b.second.time;
+    return a.second.m_time < b.second.m_time;
 }
 
 static UniValue getaddressmempool(const JSONRPCRequest& request)
@@ -715,19 +715,19 @@ static UniValue getaddressmempool(const JSONRPCRequest& request)
          it != indexes.end(); it++) {
 
         std::string address;
-        if (!getAddressFromIndex(it->first.type, it->first.addressBytes, address)) {
+        if (!getAddressFromIndex(it->first.m_address_type, it->first.m_address_bytes, address)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
         }
 
         UniValue delta(UniValue::VOBJ);
         delta.pushKV("address", address);
-        delta.pushKV("txid", it->first.txhash.GetHex());
-        delta.pushKV("index", (int)it->first.index);
-        delta.pushKV("satoshis", it->second.amount);
-        delta.pushKV("timestamp", count_seconds(it->second.time));
-        if (it->second.amount < 0) {
-            delta.pushKV("prevtxid", it->second.prevhash.GetHex());
-            delta.pushKV("prevout", (int)it->second.prevout);
+        delta.pushKV("txid", it->first.m_tx_hash.GetHex());
+        delta.pushKV("index", (int)it->first.m_tx_index);
+        delta.pushKV("satoshis", it->second.m_amount);
+        delta.pushKV("timestamp", count_seconds(it->second.m_time));
+        if (it->second.m_amount < 0) {
+            delta.pushKV("prevtxid", it->second.m_prev_hash.GetHex());
+            delta.pushKV("prevout", (int)it->second.m_prev_out);
         }
         result.push_back(delta);
     }
