@@ -5374,16 +5374,12 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
     // No addr messages to send
     if (peer.m_addrs_to_send.empty()) return;
 
-    const char* msg_type;
-    CNetAddr::Encoding ser_enc;
+    CNetMsgMaker mm(node.GetCommonVersion());
     if (peer.m_wants_addrv2) {
-        msg_type = NetMsgType::ADDRV2;
-        ser_enc = CNetAddr::Encoding::V2;
+        m_connman.PushMessage(&node, mm.Make(NetMsgType::ADDRV2, CAddress::V2_NETWORK(peer.m_addrs_to_send)));
     } else {
-        msg_type = NetMsgType::ADDR;
-        ser_enc = CNetAddr::Encoding::V1;
+        m_connman.PushMessage(&node, mm.Make(NetMsgType::ADDR, CAddress::V1_NETWORK(peer.m_addrs_to_send)));
     }
-    m_connman.PushMessage(&node, CNetMsgMaker(node.GetCommonVersion()).Make(msg_type, WithParams(CAddress::SerParams{{ser_enc}, CAddress::Format::Network}, peer.m_addrs_to_send)));
     peer.m_addrs_to_send.clear();
 
     // we only send the big addr message once
