@@ -24,7 +24,7 @@ FALSE_POSITIVES = [
     ("src/wallet/wallet.h", "LogPrintf((\"%s \" + std::string{fmt}).c_str(), GetDisplayName(), parameters...)"),
     ("src/wallet/scriptpubkeyman.h",  "WalletLogPrintf(const char* fmt, Params... parameters)"),
     ("src/wallet/scriptpubkeyman.h", "LogPrintf((\"%s \" + std::string{fmt}).c_str(), m_storage.GetDisplayName(), parameters...)"),
-    ("src/batchedlogger.h", "strprintf(std::string{fmt}, args...)"),
+    ("src/batchedlogger.h", "strprintf(fmt, args...)"),
 ]
 
 
