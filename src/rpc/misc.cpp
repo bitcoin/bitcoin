@@ -595,9 +595,9 @@ static UniValue mnauth(const JSONRPCRequest& request)
 
 static bool getAddressFromIndex(const int &type, const uint160 &hash, std::string &address)
 {
-    if (type == 2) {
+    if (type == AddressType::P2SH) {
         address = EncodeDestination(ScriptHash(hash));
-    } else if (type == 1) {
+    } else if (type == AddressType::P2PK) {
         address = EncodeDestination(PKHash(hash));
     } else {
         return false;
@@ -609,12 +609,12 @@ static bool getIndexKey(const std::string& str, uint160& hashBytes, int& type)
 {
     CTxDestination dest = DecodeDestination(str);
     if (!IsValidDestination(dest)) {
-        type = 0;
+        type = AddressType::UNKNOWN;
         return false;
     }
     const PKHash *pkhash = std::get_if<PKHash>(&dest);
     const ScriptHash *scriptID = std::get_if<ScriptHash>(&dest);
-    type = pkhash ? 1 : 2;
+    type = pkhash ? AddressType::P2PK : AddressType::P2SH;
     hashBytes = pkhash ? uint160(*pkhash) : uint160(*scriptID);
     return true;
 }
@@ -623,7 +623,7 @@ static bool getAddressesFromParams(const UniValue& params, std::vector<std::pair
 {
     if (params[0].isStr()) {
         uint160 hashBytes;
-        int type = 0;
+        int type{AddressType::UNKNOWN};
         if (!getIndexKey(params[0].get_str(), hashBytes, type)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
         }
@@ -640,7 +640,7 @@ static bool getAddressesFromParams(const UniValue& params, std::vector<std::pair
         for (std::vector<UniValue>::iterator it = values.begin(); it != values.end(); ++it) {
 
             uint160 hashBytes;
-            int type = 0;
+            int type{AddressType::UNKNOWN};
             if (!getIndexKey(it->get_str(), hashBytes, type)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
             }

@@ -14,6 +14,7 @@
 #include <univalue.h>
 #include <util/strencodings.h>
 
+#include <addressindex.h>
 #include <spentindex.h>
 
 #include <evo/assetlocktx.h>
@@ -215,9 +216,9 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
                     auto spentInfo = it->second;
                     in.pushKV("value", ValueFromAmount(spentInfo.satoshis));
                     in.pushKV("valueSat", spentInfo.satoshis);
-                    if (spentInfo.addressType == 1) {
+                    if (spentInfo.addressType == AddressType::P2PK) {
                         in.pushKV("address", EncodeDestination(PKHash(spentInfo.addressHash)));
-                    } else if (spentInfo.addressType == 2) {
+                    } else if (spentInfo.addressType == AddressType::P2SH) {
                         in.pushKV("address", EncodeDestination(ScriptHash(spentInfo.addressHash)));
                     }
                 }

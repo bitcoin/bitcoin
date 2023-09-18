@@ -6,10 +6,11 @@
 #ifndef BITCOIN_SPENTINDEX_H
 #define BITCOIN_SPENTINDEX_H
 
-#include <uint256.h>
+#include <addressindex.h>
 #include <amount.h>
 #include <script/script.h>
 #include <serialize.h>
+#include <uint256.h>
 
 struct CSpentIndexKey {
     uint256 txid;
@@ -67,7 +68,7 @@ struct CSpentIndexValue {
         inputIndex = 0;
         blockHeight = 0;
         satoshis = 0;
-        addressType = 0;
+        addressType = AddressType::UNKNOWN;
         addressHash.SetNull();
     }
 
@@ -189,7 +190,7 @@ struct CAddressUnspentKey {
     }
 
     void SetNull() {
-        type = 0;
+        type = AddressType::UNKNOWN;
         hashBytes.SetNull();
         txhash.SetNull();
         index = 0;
@@ -279,7 +280,7 @@ struct CAddressIndexKey {
     }
 
     void SetNull() {
-        type = 0;
+        type = AddressType::UNKNOWN;
         hashBytes.SetNull();
         blockHeight = 0;
         txindex = 0;
@@ -318,7 +319,7 @@ struct CAddressIndexIteratorKey {
     }
 
     void SetNull() {
-        type = 0;
+        type = AddressType::UNKNOWN;
         hashBytes.SetNull();
     }
 };
@@ -355,7 +356,7 @@ struct CAddressIndexIteratorHeightKey {
     }
 
     void SetNull() {
-        type = 0;
+        type = AddressType::UNKNOWN;
         hashBytes.SetNull();
         blockHeight = 0;
     }

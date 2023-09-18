@@ -11,6 +11,16 @@
 
 #include <chrono>
 
+namespace AddressType {
+enum AddressType {
+    P2PK = 1,
+    P2PKH = 1,
+    P2SH = 2,
+
+    UNKNOWN = 0
+};
+}; /* namespace AddressType */
+
 struct CMempoolAddressDelta
 {
     std::chrono::seconds time;
