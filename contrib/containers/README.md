@@ -2,7 +2,7 @@
 
 This directory contains configuration files for containerization utilities.
 
-Currently two Docker containers exist, `ci` defines how Dash's GitLab CI container is built and the `dev` builds on top of the `ci` to provide a containerized development environment that is as close as possible to CI for contributors!
+Currently two Docker containers exist, `ci` defines how Dash's GitLab CI container is built and the `dev` builds on top of the `ci` to provide a containerized development environment that is as close as possible to CI for contributors! See also [Dash on Docker Hub](https://hub.docker.com/u/dashpay) i.e. for the [dashd container](https://hub.docker.com/r/dashpay/dashd).
 
 ### Usage Guide
 
