@@ -162,11 +162,11 @@ bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid)
 }
 
 Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
-                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs, std::optional<uint32_t> reduce_output)
+                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs, std::optional<uint32_t> original_change_index)
 {
-    // Cannot both specify new outputs and an output to reduce
-    if (!outputs.empty() && reduce_output.has_value()) {
-        errors.push_back(Untranslated("Cannot specify both new outputs to use and an output index to reduce"));
+    // For now, cannot specify both new outputs to use and an output index to send change
+    if (!outputs.empty() && original_change_index.has_value()) {
+        errors.push_back(Untranslated("The options 'outputs' and 'original_change_index' are incompatible. You can only either specify a new set of outputs, or designate a change output to be recycled."));
         return Result::INVALID_PARAMETER;
     }
 
@@ -182,8 +182,8 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     }
     const CWalletTx& wtx = it->second;
 
-    // Make sure that reduce_output is valid
-    if (reduce_output.has_value() && reduce_output.value() >= wtx.tx->vout.size()) {
+    // Make sure that original_change_index is valid
+    if (original_change_index.has_value() && original_change_index.value() >= wtx.tx->vout.size()) {
         errors.push_back(Untranslated("Change position is out of range"));
         return Result::INVALID_PARAMETER;
     }
@@ -259,7 +259,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         const CTxOut& output = txouts.at(i);
         CTxDestination dest;
         ExtractDestination(output.scriptPubKey, dest);
-        if (reduce_output.has_value() ?  reduce_output.value() == i : OutputIsChange(wallet, output)) {
+        if (original_change_index.has_value() ?  original_change_index.value() == i : OutputIsChange(wallet, output)) {
             new_coin_control.destChange = dest;
         } else {
             CRecipient recipient = {dest, output.nValue, false};
