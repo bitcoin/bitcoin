@@ -295,6 +295,8 @@ public:
         ssKey2 << key_end;
         return EstimateSizeImpl(ssKey1, ssKey2);
     }
+    // SYSCOIN
+    void CompactFull() const;
 };
 // SYSCOIN
 
