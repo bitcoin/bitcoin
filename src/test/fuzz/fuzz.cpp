@@ -22,7 +22,7 @@
 #include <unistd.h>
 #include <vector>
 
-#ifdef __AFL_FUZZ_INIT
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && defined(__AFL_FUZZ_INIT)
 __AFL_FUZZ_INIT();
 #endif
 
