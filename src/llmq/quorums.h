@@ -274,6 +274,8 @@ private:
 
     void StartCachePopulatorThread(const CQuorumCPtr pQuorum) const;
     void StartQuorumDataRecoveryThread(const CQuorumCPtr pQuorum, const CBlockIndex* pIndex, uint16_t nDataMask) const;
+
+    void CleanupOldQuorumData(const CBlockIndex* pIndex) const;
 };
 
 extern std::unique_ptr<CQuorumManager> quorumManager;

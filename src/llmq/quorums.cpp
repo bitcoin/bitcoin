@@ -295,6 +295,7 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
     }
 
     TriggerQuorumDataRecoveryThreads(pindexNew);
+    CleanupOldQuorumData(pindexNew);
 }
 
 void CQuorumManager::CheckQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindexNew) const
@@ -956,6 +957,69 @@ void CQuorumManager::StartQuorumDataRecoveryThread(const CQuorumCPtr pQuorum, co
         pQuorum->fQuorumDataRecoveryThreadRunning = false;
         printLog("Done");
     });
+}
+
+static void DataCleanupHelper(CDBWrapper& db, std::set<uint256> skip_list)
+{
+    const auto prefixes = {DB_QUORUM_QUORUM_VVEC, DB_QUORUM_SK_SHARE};
+
+    CDBBatch batch(db);
+    std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
+
+    for (const auto& prefix : prefixes) {
+        auto start = std::make_tuple(prefix, uint256());
+        pcursor->Seek(start);
+
+        int count{0};
+        while (pcursor->Valid()) {
+            decltype(start) k;
+
+            if (!pcursor->GetKey(k) || std::get<0>(k) != prefix) {
+                break;
+            }
+
+            pcursor->Next();
+
+            if (skip_list.find(std::get<1>(k)) != skip_list.end()) continue;
+
+            ++count;
+            batch.Erase(k);
+
+            if (batch.SizeEstimate() >= (1 << 24)) {
+                db.WriteBatch(batch);
+                batch.Clear();
+            }
+        }
+
+        db.WriteBatch(batch);
+
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%d -- %s removed %d\n", __func__, prefix, count);
+    }
+
+    pcursor.reset();
+    db.CompactFull();
+}
+
+void CQuorumManager::CleanupOldQuorumData(const CBlockIndex* pIndex) const
+{
+    if (!fMasternodeMode || pIndex == nullptr || (pIndex->nHeight % 576 != 0)) {
+        return;
+    }
+
+    std::set<uint256> dbKeys;
+
+    LogPrint(BCLog::LLMQ, "CQuorumManager::%d -- start\n", __func__);
+
+    for (const auto& params : Params().GetConsensus().llmqs) {
+        const auto vecQuorums = ScanQuorums(params.type, pIndex, params.keepOldConnections);
+        for (const auto& pQuorum : vecQuorums) {
+            dbKeys.insert(MakeQuorumKey(*pQuorum));
+        }
+    }
+
+    DataCleanupHelper(m_evoDb.GetRawDB(), dbKeys);
+
+    LogPrint(BCLog::LLMQ, "CQuorumManager::%d -- done\n", __func__);
 }
 
 } // namespace llmq
