@@ -35,6 +35,8 @@ static const int64_t nMaxBlockDBCache = 2;
 // Unlike for the UTXO database, for the txindex scenario the leveldb cache make
 // a meaningful difference: https://github.com/bitcoin/bitcoin/pull/8273#issuecomment-229601991
 static const int64_t nMaxTxIndexCache = 1024;
+//! Max memory allocated to the txo spender cache
+static const int64_t nMaxSilentPaymentIndexCache = 1024;
 //! Max memory allocated to all block filter index caches combined in MiB.
 static const int64_t max_filter_index_cache = 1024;
 //! Max memory allocated to coin DB specific cache (MiB)
