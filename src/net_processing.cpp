@@ -5746,15 +5746,23 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                             continue;
                         }
                         // Not in the mempool anymore? don't bother sending it.
-                        auto txinfo = m_mempool.info(ToGenTxid(inv));
-                        if (!txinfo.tx) {
+                        auto txinfo = m_mempool.info_for_announcement(ToGenTxid(inv));
+                        if (!txinfo.has_value()) {
                             continue;
                         }
                         // Peer told you to not send transactions at that feerate? Don't bother sending it.
-                        if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
+                        if (txinfo->first.fee < filterrate.GetFee(txinfo->first.vsize)) {
                             continue;
                         }
-                        if (tx_relay->m_bloom_filter && !tx_relay->m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) continue;
+                        // Also don't bother sending if the transaction has any ancestors below
+                        // their fee filter. Otherwise, if this transaction is detected as an orphan
+                        // and the peer requests the missing parents, we'll waste bandwidth on
+                        // multiple transactions that they will ultimately reject.
+                        // TODO: relax this for peers with which we can relay packages
+                        if (txinfo->second < filterrate) {
+                            continue;
+                        }
+                        if (tx_relay->m_bloom_filter && !tx_relay->m_bloom_filter->IsRelevantAndUpdate(*(txinfo->first.tx))) continue;
                         // Send
                         vInv.push_back(inv);
                         nRelayedTransactions++;

@@ -178,8 +178,8 @@ class FeeFilterTest(BitcoinTestFramework):
         assert_greater_than(parent_low_prioritised["tx"].get_vsize() * peer_minfee_sat_vb, parent_low_prioritised["fee"] * COIN)
 
         # Check what was announced to peer_minfee_sat_vb
-        unexpected_invs = [int(tx["tx"].getwtxid(), 16) for tx in [parent_low, parent_low_prioritised]]
-        expected_invs = [int(tx["tx"].getwtxid(), 16) for tx in [parent_high, child_high]]
+        unexpected_invs = [int(tx["tx"].getwtxid(), 16) for tx in [parent_low, parent_low_prioritised, child_high]]
+        expected_invs = [int(tx["tx"].getwtxid(), 16) for tx in [parent_high]]
         for wtxid in unexpected_invs:
             assert wtxid not in peer_diff_policy.get_invs()
         for wtxid in expected_invs:
