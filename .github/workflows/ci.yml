@@ -23,6 +23,28 @@ env:
   MAKEJOBS: '-j10'
 
 jobs:
+  test-each-commit:
+    name: 'test each commit'
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'pull_request' && github.event.pull_request.commits != 1
+    timeout-minutes: 360  # Use maximum time, see https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes. Assuming a worst case time of 1 hour per commit, this leads to a --max-count=6 below.
+    env:
+      MAX_COUNT: 6
+    steps:
+      - run: echo "FETCH_DEPTH=$((${{ github.event.pull_request.commits }} + 2))" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: ${{ env.FETCH_DEPTH }}
+      - run: |
+          git checkout HEAD~
+          echo "COMMIT_AFTER_LAST_MERGE=$(git log $(git log --merges -1 --format=%H)..HEAD --format=%H --max-count=${{ env.MAX_COUNT }} | tail -1)" >> "$GITHUB_ENV"
+      - run: sudo apt install clang ccache build-essential libtool autotools-dev automake pkg-config bsdmainutils python3-zmq libevent-dev libboost-dev libsqlite3-dev libdb++-dev systemtap-sdt-dev libminiupnpc-dev libnatpmp-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools qtwayland5 libqrencode-dev -y
+      - name: Compile and run tests
+        run: |
+          # Use clang++, because it is a bit faster and uses less memory than g++
+          git rebase --exec "echo Running test-one-commit on \$( git log -1 ) && ./autogen.sh && CC=clang CXX=clang++ ./configure && make clean && make -j $(nproc) check && ./test/functional/test_runner.py -j $(( $(nproc) * 2 ))" ${{ env.COMMIT_AFTER_LAST_MERGE }}~1
+
   macos-native-x86_64:
     name: 'macOS 13 native, x86_64, no depends, sqlite only, gui'
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks).
