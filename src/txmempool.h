@@ -675,6 +675,10 @@ public:
         return m_total_fee;
     }
 
+    /** If the transaction is in mempool, returns the minimum base feerate of this transaction and
+     * all of its in-mempool ancestors. Otherwise, returns std::nullopt. */
+    std::optional<CFeeRate> GetMinimumAncestorFeerate(const GenTxid& gtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
     bool exists(const GenTxid& gtxid) const
     {
         LOCK(cs);
@@ -691,6 +695,10 @@ public:
         return mapTx.project<0>(mapTx.get<index_by_wtxid>().find(wtxid));
     }
     TxMempoolInfo info(const GenTxid& gtxid) const;
+
+    /** Returns TxMempoolInfo and MinimumAncestorFeerate of a tx if it is present in the mempool. If
+     * not, returns std::nullopt. */
+    std::optional<std::pair<TxMempoolInfo, CFeeRate>> info_for_announcement(const GenTxid& gtxid) const;
 
     /** Returns info for a transaction if its entry_sequence < last_sequence */
     TxMempoolInfo info_for_relay(const GenTxid& gtxid, uint64_t last_sequence) const;

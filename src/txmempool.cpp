@@ -868,6 +868,35 @@ TxMempoolInfo CTxMemPool::info(const GenTxid& gtxid) const
     return GetInfo(i);
 }
 
+std::optional<CFeeRate> CTxMemPool::GetMinimumAncestorFeerate(const GenTxid& gtxid) const
+{
+    AssertLockHeld(cs);
+    indexed_transaction_set::const_iterator i = (gtxid.IsWtxid() ? get_iter_from_wtxid(gtxid.GetHash()) : mapTx.find(gtxid.GetHash()));
+    if (i == mapTx.end()) return std::nullopt;
+
+    const auto ancestors{AssumeCalculateMemPoolAncestors(__func__, *i, m_limits)};
+
+    // Get minimum base feerate of all entries in this set
+    CFeeRate min_feerate(i->GetFee(), i->GetTxSize());
+    for (const auto& anc : ancestors) {
+        if (anc->GetFee() < min_feerate.GetFee(anc->GetTxSize())) {
+            min_feerate = CFeeRate(anc->GetFee(), anc->GetTxSize());
+        }
+    }
+    return min_feerate;
+}
+
+std::optional<std::pair<TxMempoolInfo, CFeeRate>> CTxMemPool::info_for_announcement(const GenTxid& gtxid) const
+{
+    LOCK(cs);
+    indexed_transaction_set::const_iterator i = (gtxid.IsWtxid() ? get_iter_from_wtxid(gtxid.GetHash()) : mapTx.find(gtxid.GetHash()));
+    if (i == mapTx.end()) return std::nullopt;
+
+    auto min_anc_feerate{GetMinimumAncestorFeerate(gtxid)};
+    if (!Assume(min_anc_feerate.has_value())) min_anc_feerate = CFeeRate(i->GetFee(), i->GetTxSize());
+    return std::make_pair(GetInfo(i), *min_anc_feerate);
+}
+
 TxMempoolInfo CTxMemPool::info_for_relay(const GenTxid& gtxid, uint64_t last_sequence) const
 {
     LOCK(cs);
