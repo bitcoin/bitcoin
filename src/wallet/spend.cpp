@@ -505,8 +505,15 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
     coins_params.skip_locked = false;
     for (const COutput& coin : AvailableCoins(wallet, &coin_control, /*feerate=*/std::nullopt, coins_params).All()) {
         CTxDestination address;
-        if ((coin.spendable || (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.solvable)) &&
-            ExtractDestination(FindNonChangeParentOutput(wallet, coin.outpoint).scriptPubKey, address)) {
+        if ((coin.spendable || (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.solvable))) {
+            if (!ExtractDestination(FindNonChangeParentOutput(wallet, coin.outpoint).scriptPubKey, address)) {
+                // For backwards compatibility, we convert P2PK output scripts into PKHash destinations
+                if (auto pk_dest = std::get_if<PubKeyDestination>(&address)) {
+                    address = PKHash(pk_dest->GetPubKey());
+                } else {
+                    continue;
+                }
+            }
             result[address].emplace_back(coin);
         }
     }
@@ -1073,9 +1080,10 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     for (const auto& recipient : vecSend)
     {
         // SYSCOIN
-        CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
+        const auto &destination = GetScriptForDestination(recipient.dest);
+        CTxOut txout(recipient.nAmount, destination);
         // add poda data to opreturn output
-        if(!coin_control.m_nevmdata.empty() && recipient.scriptPubKey.IsUnspendable()) {
+        if(!coin_control.m_nevmdata.empty() && destination.IsUnspendable()) {
             txout.vchNEVMData = coin_control.m_nevmdata;
         }
 
@@ -1330,7 +1338,9 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
         if(coinControl.m_nevmdata.empty() && !txOut.vchNEVMData.empty()) {
             coinControl.m_nevmdata = txOut.vchNEVMData; 
         }
-        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
+        CTxDestination dest;
+        ExtractDestination(txOut.scriptPubKey, dest);
+        CRecipient recipient = {dest, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
         vecSend.push_back(recipient);
     }
 
@@ -1400,9 +1410,10 @@ util::Result<CreatedTransactionResult> GetBudgetSystemCollateralTX(CWallet& wall
 
     CScript scriptChange;
     scriptChange << OP_RETURN << ToByteVector(hash);
-
-    std::vector< CRecipient > vecSend;
-    vecSend.push_back((CRecipient){scriptChange, amount, false});
+    CTxDestination dest;
+    ExtractDestination(scriptChange, dest);
+    std::vector<CRecipient> vecSend;
+    vecSend.push_back((CRecipient){dest, amount, false});
 
     CCoinControl coinControl;
     if (!outpoint.IsNull()) {
