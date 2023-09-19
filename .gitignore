@@ -111,6 +111,9 @@ qrc_*.cpp
 build
 *.dSYM
 
+# Previous releases
+releases
+
 #lcov
 *.gcno
 *.gcda

@@ -14,6 +14,7 @@ import logging
 import os
 import pdb
 import random
+import re
 import shutil
 import subprocess
 import sys
@@ -455,22 +456,47 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     # Public helper methods. These can be accessed by the subclass test scripts.
 
-    def add_nodes(self, num_nodes, extra_args=None, *, rpchost=None, binary=None):
+    def add_nodes(self, num_nodes, extra_args=None, *, rpchost=None, binary=None, binary_cli=None, versions=None):
         """Instantiate TestNode objects.
 
         Should only be called once after the nodes have been specified in
         set_test_params()."""
+        def get_bin_from_version(version, bin_name, bin_default):
+            if not version:
+                return bin_default
+            return os.path.join(
+                self.options.previous_releases_path,
+                re.sub(
+                    r'\.0$' if version != 150000 else r'^$',
+                    '',  # remove trailing .0 for point releases
+                    'v{}.{}.{}.{}'.format(
+                        (version % 100000000) // 1000000,
+                        (version % 1000000) // 10000,
+                        (version % 10000) // 100,
+                        (version % 100) // 1,
+                    ),
+                ),
+                'bin',
+                bin_name,
+            )
+
         if self.bind_to_localhost_only:
             extra_confs = [["bind=127.0.0.1"]] * num_nodes
         else:
             extra_confs = [[]] * num_nodes
         if extra_args is None:
             extra_args = [[]] * num_nodes
+        if versions is None:
+            versions = [None] * num_nodes
         if binary is None:
-            binary = [self.options.bitcoind] * num_nodes
+            binary = [get_bin_from_version(v, 'dashd', self.options.bitcoind) for v in versions]
+        if binary_cli is None:
+            binary_cli = [get_bin_from_version(v, 'dash-cli', self.options.bitcoincli) for v in versions]
         assert_equal(len(extra_confs), num_nodes)
         assert_equal(len(extra_args), num_nodes)
+        assert_equal(len(versions), num_nodes)
         assert_equal(len(binary), num_nodes)
+        assert_equal(len(binary_cli), num_nodes)
         old_num_nodes = len(self.nodes)
         for i in range(num_nodes):
             self.nodes.append(TestNode(
@@ -482,7 +508,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 timewait=self.rpc_timeout,
                 timeout_factor=self.options.timeout_factor,
                 bitcoind=binary[i],
-                bitcoin_cli=self.options.bitcoincli,
+                bitcoin_cli=binary_cli[i],
+                version=versions[i],
                 mocktime=self.mocktime,
                 coverage_dir=self.options.coveragedir,
                 cwd=self.options.tmpdir,
@@ -734,7 +761,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             if pool.count(pool[0]) == len(rpc_connections):
                 if flush_scheduler:
                     for r in rpc_connections:
-                        r.syncwithvalidationinterfacequeue()
+                        if r.version_is_at_least(170000):
+                            r.syncwithvalidationinterfacequeue()
                 return
             # Check that each peer has at least one connection
             assert (all([len(x.getpeerinfo()) for x in rpc_connections]))

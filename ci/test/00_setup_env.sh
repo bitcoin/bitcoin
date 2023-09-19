@@ -39,6 +39,7 @@ export USE_BUSY_BOX=${USE_BUSY_BOX:-false}
 export RUN_UNIT_TESTS=${RUN_UNIT_TESTS:-true}
 export RUN_INTEGRATION_TESTS=${RUN_INTEGRATION_TESTS:-true}
 export RUN_SECURITY_TESTS=${RUN_SECURITY_TESTS:-false}
+export TEST_PREVIOUS_RELEASES=${TEST_PREVIOUS_RELEASES:-false}
 export RUN_FUZZ_TESTS=${RUN_FUZZ_TESTS:-false}
 export RUN_SYMBOL_TESTS=${RUN_SYMBOL_TESTS:-true}
 export CONTAINER_NAME=${CONTAINER_NAME:-ci_unnamed}
@@ -59,6 +60,7 @@ export CCACHE_DIR=${CCACHE_DIR:-$CACHE_DIR/ccache}
 export DEPENDS_DIR=${DEPENDS_DIR:-$BASE_ROOT_DIR/depends}
 # Folder where the build is done (bin and lib).
 export BASE_OUTDIR=${BASE_OUTDIR:-$BASE_SCRATCH_DIR/out/$HOST}
+export PREVIOUS_RELEASES_DIR=${PREVIOUS_RELEASES_DIR:-$BASE_ROOT_DIR/releases/$HOST}
 export SDK_URL=${SDK_URL:-https://bitcoincore.org/depends-sources/sdks}
 export DOCKER_PACKAGES=${DOCKER_PACKAGES:-build-essential libtool autotools-dev automake pkg-config bsdmainutils curl ca-certificates ccache python3 rsync git procps}
 export GOAL=${GOAL:-install}
