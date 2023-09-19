@@ -186,7 +186,7 @@ FUZZ_TARGET(key, .init = initialize_key)
         const CTxDestination tx_destination = GetDestinationForKey(pubkey, output_type);
         assert(output_type == OutputType::LEGACY);
         assert(IsValidDestination(tx_destination));
-        assert(CTxDestination{PKHash{pubkey}} == tx_destination);
+        assert(PKHash{pubkey} == *std::get_if<PKHash>(&tx_destination));
 
         const CScript script_for_destination = GetScriptForDestination(tx_destination);
         assert(script_for_destination.size() == 25);

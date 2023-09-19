@@ -255,6 +255,11 @@ public:
         return UniValue(UniValue::VOBJ);
     }
 
+    UniValue operator()(const PubKeyDestination& dest) const
+    {
+        return UniValue(UniValue::VOBJ);
+    }
+
     UniValue operator()(const PKHash& keyID) const
     {
         UniValue obj(UniValue::VOBJ);
@@ -305,8 +310,8 @@ public:
     {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("iswitness", true);
-        obj.pushKV("witness_version", (int)id.version);
-        obj.pushKV("witness_program", HexStr({id.program, id.length}));
+        obj.pushKV("witness_version", id.GetWitnessVersion());
+        obj.pushKV("witness_program", HexStr(id.GetWitnessProgram()));
         return obj;
     }
 };
