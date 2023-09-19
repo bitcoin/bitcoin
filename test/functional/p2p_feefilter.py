@@ -5,12 +5,23 @@
 """Test processing of feefilter messages."""
 
 from decimal import Decimal
+import time
 
 from test_framework.messages import MSG_TX, MSG_WTX, msg_feefilter
-from test_framework.p2p import P2PInterface, p2p_lock
+from test_framework.p2p import (
+    P2PInterface,
+    P2PTxInvStore,
+    p2p_lock
+)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
-from test_framework.wallet import MiniWallet
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+)
+from test_framework.wallet import (
+    COIN,
+    MiniWallet
+)
 
 
 class FeefilterConn(P2PInterface):
@@ -62,6 +73,7 @@ class FeeFilterTest(BitcoinTestFramework):
         self.test_feefilter_forcerelay()
         self.test_feefilter()
         self.test_feefilter_blocksonly()
+        self.test_feefilter_cpfp()
 
     def test_feefilter_forcerelay(self):
         self.log.info('Check that peers without forcerelay permission (default) get a feefilter message')
@@ -129,6 +141,51 @@ class FeeFilterTest(BitcoinTestFramework):
         feefilter_peer = self.nodes[0].add_p2p_connection(FeefilterConn())
         feefilter_peer.sync_with_ping()
         feefilter_peer.assert_feefilter_received(False)
+
+    def test_feefilter_cpfp(self):
+        self.log.info("Test that node only announces a tx if it and its ancestors meet the fee filter")
+        node = self.nodes[0]
+        node.setmocktime(int(time.time()))
+        miniwallet = MiniWallet(node)
+        # These are 1sat/vB
+        parent_low = miniwallet.create_self_transfer(fee_rate=Decimal('0.00001'), confirmed_only=True)
+        parent_low_prioritised = miniwallet.create_self_transfer(fee_rate=Decimal('0.00001'), confirmed_only=True)
+        # The filter should be applied to base feerate, not modified feerate
+        node.prioritisetransaction(parent_low_prioritised["txid"], 0, COIN)
+        parent_high = miniwallet.create_self_transfer(fee_rate=Decimal('0.3'), confirmed_only=True)
+        child_high = miniwallet.create_self_transfer_multi(
+            utxos_to_spend=[parent_low["new_utxo"], parent_low_prioritised["new_utxo"], parent_high["new_utxo"]],
+            fee_per_output=COIN
+        )
+
+        # This peer's min fee filter is higher than the node's minimum feerate because it has a
+        # smaller mempool, sets a higher min relay feerate, doesn't support package relay, etc.
+        peer_diff_policy = node.add_p2p_connection(P2PTxInvStore())
+        peer_minfee_sat_vb = 2
+        peer_diff_policy.send_and_ping(msg_feefilter(peer_minfee_sat_vb * 1000))
+
+        # Submit transactions and wait for them to be announced (immediate due to noban permissions)
+        for tx in [parent_low, parent_low_prioritised, parent_high, child_high]:
+            node.sendrawtransaction(tx["hex"], maxfeerate=0)
+        node.bumpmocktime(60)
+        peer_diff_policy.sync_with_ping()
+
+        # Above the fee filter:
+        assert_greater_than(int(parent_high["fee"] * COIN), parent_high["tx"].get_vsize() * peer_minfee_sat_vb)
+        assert_greater_than(int(child_high["fee"] * COIN), child_high["tx"].get_vsize() * peer_minfee_sat_vb)
+        # Below the fee filter:
+        assert_greater_than(parent_low["tx"].get_vsize() * peer_minfee_sat_vb, parent_low["fee"] * COIN)
+        assert_greater_than(parent_low_prioritised["tx"].get_vsize() * peer_minfee_sat_vb, parent_low_prioritised["fee"] * COIN)
+
+        # Check what was announced to peer_minfee_sat_vb
+        unexpected_invs = [int(tx["tx"].getwtxid(), 16) for tx in [parent_low, parent_low_prioritised]]
+        expected_invs = [int(tx["tx"].getwtxid(), 16) for tx in [parent_high, child_high]]
+        for wtxid in unexpected_invs:
+            assert wtxid not in peer_diff_policy.get_invs()
+        for wtxid in expected_invs:
+            assert wtxid in peer_diff_policy.get_invs()
+
+        peer_diff_policy.peer_disconnect()
 
 
 if __name__ == '__main__':
