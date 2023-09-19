@@ -257,12 +257,12 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     const auto& txouts = outputs.empty() ? wtx.tx->vout : outputs;
     for (size_t i = 0; i < txouts.size(); ++i) {
         const CTxOut& output = txouts.at(i);
+        CTxDestination dest;
+        ExtractDestination(output.scriptPubKey, dest);
         if (reduce_output.has_value() ?  reduce_output.value() == i : OutputIsChange(wallet, output)) {
-            CTxDestination change_dest;
-            ExtractDestination(output.scriptPubKey, change_dest);
-            new_coin_control.destChange = change_dest;
+            new_coin_control.destChange = dest;
         } else {
-            CRecipient recipient = {output.scriptPubKey, output.nValue, false};
+            CRecipient recipient = {dest, output.nValue, false};
             recipients.push_back(recipient);
         }
         new_outputs_value += output.nValue;
@@ -278,7 +278,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
 
         // Add change as recipient with SFFO flag enabled, so fees are deduced from it.
         // If the output differs from the original tx output (because the user customized it) a new change output will be created.
-        recipients.emplace_back(CRecipient{GetScriptForDestination(new_coin_control.destChange), new_outputs_value, /*fSubtractFeeFromAmount=*/true});
+        recipients.emplace_back(CRecipient{new_coin_control.destChange, new_outputs_value, /*fSubtractFeeFromAmount=*/true});
         new_coin_control.destChange = CNoDestination();
     }
 
