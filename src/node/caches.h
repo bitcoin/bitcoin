@@ -16,6 +16,7 @@ struct CacheSizes {
     int64_t coins_db;
     int64_t coins;
     int64_t tx_index;
+    int64_t bip352_index;
     int64_t filter_index;
 };
 CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes = 0);

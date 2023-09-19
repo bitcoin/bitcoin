@@ -5,6 +5,7 @@
 #include <node/caches.h>
 
 #include <common/args.h>
+#include <index/bip352.h>
 #include <index/txindex.h>
 #include <txdb.h>
 
@@ -19,6 +20,8 @@ CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
     nTotalCache -= sizes.block_tree_db;
     sizes.tx_index = std::min(nTotalCache / 8, args.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? nMaxTxIndexCache << 20 : 0);
     nTotalCache -= sizes.tx_index;
+    sizes.bip352_index = std::min(nTotalCache / 8, args.GetBoolArg("-bip352index", DEFAULT_BIP352_INDEX) ? nMaxBIP352IndexCache << 20 : 0);
+    nTotalCache -= sizes.bip352_index;
     sizes.filter_index = 0;
     if (n_indexes > 0) {
         int64_t max_cache = std::min(nTotalCache / 8, max_filter_index_cache << 20);

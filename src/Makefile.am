@@ -169,6 +169,7 @@ BITCOIN_CORE_H = \
   index/blockfilterindex.h \
   index/coinstatsindex.h \
   index/disktxpos.h \
+  index/bip352.h \
   index/txindex.h \
   indirectmap.h \
   init.h \
@@ -405,6 +406,7 @@ libbitcoin_node_a_SOURCES = \
   index/blockfilterindex.cpp \
   index/coinstatsindex.cpp \
   index/txindex.cpp \
+  index/bip352.cpp \
   init.cpp \
   kernel/chain.cpp \
   kernel/checks.cpp \
