@@ -4,12 +4,14 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 '''
 rpc_verifychainlock.py
 
-Test verifychainlock rpc
+Test the following RPC:
+ - gettxchainlocks
+ - verifychainlock
 
 '''
 
@@ -56,6 +58,16 @@ class RPCVerifyChainLockTest(DashTestFramework):
         # But they should still both verify with the height provided
         assert node0.verifychainlock(block_hash, chainlock_signature, height)
         assert node1.verifychainlock(block_hash, chainlock_signature, height)
+
+        node1.generate(1)
+        height1 = node1.getblockcount()
+        tx0 = node0.getblock(node0.getbestblockhash())['tx'][0]
+        tx1 = node1.getblock(node1.getbestblockhash())['tx'][0]
+        locks0 = node0.gettxchainlocks([tx0, tx1])
+        locks1 = node1.gettxchainlocks([tx0, tx1])
+        unknown_cl_helper = {'height': -1, 'chainlock': False}
+        assert_equal(locks0, [{'height': height, 'chainlock': True}, unknown_cl_helper])
+        assert_equal(locks1, [unknown_cl_helper, {'height': height1, 'chainlock': False}])
 
 
 if __name__ == '__main__':

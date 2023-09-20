@@ -115,6 +115,10 @@ BOOST_AUTO_TEST_CASE(rpc_rawparams)
     BOOST_CHECK_THROW(CallRPC("getrawtransaction not_hex"), std::runtime_error);
     BOOST_CHECK_THROW(CallRPC("getrawtransaction a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed not_int"), std::runtime_error);
 
+    BOOST_CHECK_THROW(CallRPC("gettxchainlocks"), std::runtime_error);
+    BOOST_CHECK_THROW(CallRPC("gettxchainlocks not_array"), std::runtime_error);
+    BOOST_CHECK_THROW(CallRPC("gettxchainlocks [] extra"), std::runtime_error);
+
     BOOST_CHECK_THROW(CallRPC("createrawtransaction"), std::runtime_error);
     BOOST_CHECK_THROW(CallRPC("createrawtransaction null null"), std::runtime_error);
     BOOST_CHECK_THROW(CallRPC("createrawtransaction not_array"), std::runtime_error);

@@ -38,6 +38,7 @@
 #include <util/string.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <util/irange.h>
 
 #include <evo/specialtx.h>
 
@@ -259,6 +260,80 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
     if (blockindex) result.pushKV("in_active_chain", in_active_chain);
     TxToJSON(*tx, hash_block, mempool, chainman.ActiveChainstate(), *llmq_ctx.clhandler, *llmq_ctx.isman, result);
     return result;
+}
+
+static UniValue gettxchainlocks(const JSONRPCRequest& request)
+{
+    RPCHelpMan{
+        "gettxchainlocks",
+        "\nReturns the block height each transaction was mined at and whether it is chainlocked or not.\n",
+        {
+            {"txids", RPCArg::Type::ARR, RPCArg::Optional::NO, "The transaction ids (no more than 100)",
+                {
+                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A transaction hash"},
+                },
+            },
+        },
+        RPCResult{
+            RPCResult::Type::ARR, "", "Response is an array with the same size as the input txids",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::NUM, "height", "The block height"},
+                    {RPCResult::Type::BOOL, "chainlock", "Chainlock status for the block containing the transaction"},
+                }},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("gettxchainlocks", "'[\"mytxid\",...]'")
+        + HelpExampleRpc("gettxchainlocks", "[\"mytxid\",...]")
+        },
+    }.Check(request);
+
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    const ChainstateManager& chainman = EnsureChainman(node);
+    const CChainState& active_chainstate = chainman.ActiveChainstate();
+
+    UniValue result_arr(UniValue::VARR);
+    UniValue txids = request.params[0].get_array();
+    if (txids.size() > 100) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Up to 100 txids only");
+    }
+
+    if (g_txindex) {
+        g_txindex->BlockUntilSyncedToCurrentChain();
+    }
+
+    for (const auto idx : irange::range(txids.size())) {
+        UniValue result(UniValue::VOBJ);
+        const uint256 txid(ParseHashV(txids[idx], "txid"));
+        if (txid == Params().GenesisBlock().hashMerkleRoot) {
+            // Special exception for the genesis block coinbase transaction
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "The genesis block coinbase is not considered an ordinary transaction and cannot be retrieved");
+        }
+
+        uint256 hash_block;
+        int height{-1};
+        bool chainLock{false};
+
+        GetTransaction(nullptr, nullptr, txid, Params().GetConsensus(), hash_block);
+
+        if (!hash_block.IsNull()) {
+            LOCK(cs_main);
+            const CBlockIndex* pindex = active_chainstate.m_blockman.LookupBlockIndex(hash_block);
+            if (pindex && active_chainstate.m_chain.Contains(pindex)) {
+                height = pindex->nHeight;
+            }
+        }
+        if (height != -1) {
+            chainLock = llmq_ctx.clhandler->HasChainLock(height, hash_block);
+        }
+        result.pushKV("height", height);
+        result.pushKV("chainlock", chainLock);
+        result_arr.push_back(result);
+    }
+    return result_arr;
 }
 
 static UniValue gettxoutproof(const JSONRPCRequest& request)
@@ -1683,6 +1758,7 @@ static const CRPCCommand commands[] =
 { //  category              name                            actor (function)            argNames
   //  --------------------- ------------------------        -----------------------     ----------
     { "rawtransactions",    "getrawtransaction",            &getrawtransaction,         {"txid","verbose","blockhash"} },
+    { "rawtransactions",    "gettxchainlocks",              &gettxchainlocks,           {"txids"} },
     { "rawtransactions",    "createrawtransaction",         &createrawtransaction,      {"inputs","outputs","locktime"} },
     { "rawtransactions",    "decoderawtransaction",         &decoderawtransaction,      {"hexstring"} },
     { "rawtransactions",    "decodescript",                 &decodescript,              {"hexstring"} },
