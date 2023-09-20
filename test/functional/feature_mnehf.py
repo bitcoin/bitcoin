@@ -31,12 +31,21 @@ class MnehfTest(DashTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def restart_all_nodes(self):
+    def restart_all_nodes(self, params=None):
         for inode in range(self.num_nodes):
             self.log.info(f"Restart node {inode} with {self.extra_args[inode]}")
-            self.restart_node(inode, self.extra_args[inode])
-        for i in range(self.num_nodes - 1):
-            self.connect_nodes(i + 1, i)
+            if params is not None:
+                self.extra_args[inode][0] = f"-vbparams=testdummy:{params[0]}:{params[1]}:12:12:12:5:0"
+                self.log.info(f"Actual restart options: {self.extra_args[inode]}")
+
+        self.restart_node(0)
+        for mn in self.mninfo:
+            index = mn.node.index
+            self.stop_node(index)
+            self.start_masternode(mn)
+        for i in range(len(self.nodes)):
+                self.connect_nodes(i, 0)
+
 
     def create_mnehf(self, versionBit, pubkey=None):
         # request ID = sha256("mnhf", versionBit)
@@ -218,6 +227,26 @@ class MnehfTest(DashTestFramework):
         self.check_fork('active')
         self.restart_all_nodes()
         self.check_fork('active')
+
+        self.bump_mocktime(int(60 * 60 * 24 * 14))
+        node.generate(1)
+        self.sync_all()
+        self.restart_all_nodes(params=[self.mocktime, self.mocktime + 1000000])
+        self.mine_quorum()
+
+        ehf_tx_second = self.create_mnehf(28, pubkey)
+        assert_equal(get_bip9_details(node, 'testdummy')['status'], 'defined')
+        ehf_tx_sent = self.send_tx(ehf_tx_second)
+        node.generate(1)
+        self.sync_all()
+
+        self.check_fork('defined')
+        for i in range(10):
+            self.log.info(f"Generating {i} ...")
+            self.bump_mocktime(next)
+            node.generate(next)
+            self.sync_all()
+        self.check_fork('started')
 
 
 
