@@ -25,6 +25,7 @@ public:
 };
 
 class AddrManImpl;
+class AddrInfo;
 
 /** Default for -checkaddrman */
 static constexpr int32_t DEFAULT_ADDRMAN_CONSISTENCY_CHECKS{0};
@@ -167,6 +168,15 @@ public:
      * @return                   A vector of randomly selected addresses from vRandom.
      */
     std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const;
+
+    /**
+     * Return information, including bucket and position, about all entries of a addrman table.
+     *
+     * @param[in] from_tried     If tried table entries should be returned. Otherwise, new table entries.
+     *
+     * @return                   A vector of tuples consisting of the bucket, position and AddrInfo.
+     */
+    std::vector<std::tuple<int, int, AddrInfo>> GetEntries(bool from_tried) const;
 
     /** We have successfully connected to this peer. Calling this function
      *  updates the CAddress's nTime, which is used in our IsTerrible()

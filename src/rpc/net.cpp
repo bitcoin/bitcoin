@@ -5,6 +5,7 @@
 #include <rpc/server.h>
 
 #include <addrman.h>
+#include <addrman_impl.h>
 #include <banman.h>
 #include <chainparams.h>
 #include <clientversion.h>
@@ -1014,23 +1015,58 @@ static RPCHelpMan sendmsgtopeer()
     };
 }
 
+UniValue AddrmanEntryToJSON(unsigned int bucket, unsigned int position, const AddrInfo& info)
+{
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKV("address", info.ToStringAddrPort());
+    ret.pushKV("services", (uint64_t)info.nServices);
+    ret.pushKV("bucket", bucket);
+    ret.pushKV("position", position);
+    ret.pushKV("source", info.source.ToStringAddr());
+    return ret;
+}
+
 static RPCHelpMan getaddrmaninfo()
 {
     return RPCHelpMan{"getaddrmaninfo",
                       "\nProvides information about the node's address manager by returning the number of "
                       "addresses in the `new` and `tried` tables and their sum for all networks.\n"
+                      "When setting the verbose flag, the address manager entries for the new "
+                      "and tried table are also returned.\n"
                       "This RPC is for testing only.\n",
-                      {},
-                      RPCResult{
-                              RPCResult::Type::OBJ_DYN, "", "json object with network type as keys",
-                              {
-                                      {RPCResult::Type::OBJ, "network", "the network (" + Join(GetNetworkNames(), ", ") + ")",
-                                       {
-                                               {RPCResult::Type::NUM, "new", "number of addresses in the new table, which represent potential peers the node has discovered but hasn't yet successfully connected to."},
-                                               {RPCResult::Type::NUM, "tried", "number of addresses in the tried table, which represent peers the node has successfully connected to in the past."},
-                                               {RPCResult::Type::NUM, "total", "total number of addresses in both new/tried tables"},
-                                       }},
-                              }
+                      {
+                              {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "True for a list of the individual address manager entries, false for address counts only"},
+                      },
+                      {
+                              RPCResult{"for verbose = false",
+                                      RPCResult::Type::OBJ_DYN, "", "json object with network type as keys",
+                                      {
+                                              {RPCResult::Type::OBJ, "network", "the network (" + Join(GetNetworkNames(), ", ") + ")",
+                                               {
+                                                       {RPCResult::Type::NUM, "new", "number of addresses in the new table, which represent potential peers the node has discovered but hasn't yet successfully connected to."},
+                                                       {RPCResult::Type::NUM, "tried", "number of addresses in the tried table, which represent peers the node has successfully connected to in the past."},
+                                                       {RPCResult::Type::NUM, "total", "total number of addresses in both new/tried tables"},
+                                               }},
+                                      },
+                              },
+                              RPCResult{"for verbose = true",
+                                      RPCResult::Type::OBJ_DYN, "", "json object with network type, new_table and tried_table as keys",
+                                      {
+                                              {RPCResult::Type::ELISION, "", "The same output as verbose = false"},
+                                              {RPCResult::Type::ARR, "table", "list of addresses in a address manager table ( new_table, tried_table )",
+                                              {
+                                                {RPCResult::Type::OBJ, "", "an address manager table entry",
+                                                    {
+                                                        {RPCResult::Type::STR, "address", "the address"},
+                                                        {RPCResult::Type::NUM, "services", "the services the node might support"},
+                                                        {RPCResult::Type::NUM, "bucket", "the address manager bucket the address is placed in"},
+                                                        {RPCResult::Type::NUM, "position", "the bucket position the address is placed in"},
+                                                        {RPCResult::Type::STR, "source", "the address that relayed the address to us"},
+                                                    }},
+                                                },
+                                              },
+                                      },
+                              },
                       },
                       RPCExamples{
                               HelpExampleCli("getaddrmaninfo", "")
@@ -1041,6 +1077,11 @@ static RPCHelpMan getaddrmaninfo()
                           NodeContext& node = EnsureAnyNodeContext(request.context);
                           if (!node.addrman) {
                               throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
+                          }
+
+                          bool verbose = false;
+                          if (!request.params[0].isNull()) {
+                              verbose = request.params[0].get_bool();
                           }
 
                           UniValue ret(UniValue::VOBJ);
@@ -1058,6 +1099,23 @@ static RPCHelpMan getaddrmaninfo()
                           obj.pushKV("tried", node.addrman->Size(std::nullopt, false));
                           obj.pushKV("total", node.addrman->Size());
                           ret.pushKV("all_networks", obj);
+
+                          if (verbose) {
+                            std::vector<std::tuple<int, int, AddrInfo>> newTableAddrInfos = node.addrman->GetEntries(false);
+                            UniValue newTable(UniValue::VARR);
+                            for (const auto& e : newTableAddrInfos) {
+                                newTable.push_back(AddrmanEntryToJSON(std::get<0>(e), std::get<1>(e), std::get<2>(e)));
+                            }
+                            ret.pushKV("new_table", newTable);
+
+                            UniValue triedTable(UniValue::VARR);
+                            std::vector<std::tuple<int, int, AddrInfo>> triedTableAddrInfos = node.addrman->GetEntries(true);
+                            for (const auto& e : triedTableAddrInfos) {
+                                triedTable.push_back(AddrmanEntryToJSON(std::get<0>(e), std::get<1>(e), std::get<2>(e)));
+                            }
+                            ret.pushKV("tried_table", triedTable);
+                          }
+
                           return ret;
                       },
     };

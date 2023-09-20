@@ -838,6 +838,25 @@ std::vector<CAddress> AddrManImpl::GetAddr_(size_t max_addresses, size_t max_pct
     return addresses;
 }
 
+std::vector<std::tuple<int, int, AddrInfo>> AddrManImpl::GetEntries_(bool from_tried) const
+{
+    AssertLockHeld(cs);
+
+    const int bucketCount = (from_tried) ? ADDRMAN_TRIED_BUCKET_COUNT : ADDRMAN_NEW_BUCKET_COUNT;
+    std::vector<std::tuple<int, int, AddrInfo>> infos;
+    for (int bucket = 0; bucket < bucketCount; bucket++) {
+        for (int position = 0; position < ADDRMAN_BUCKET_SIZE; position++) {
+            int nid = GetEntry(from_tried, bucket, position);
+            if (nid >= 0) {
+                AddrInfo info = mapInfo.at(nid);
+                infos.push_back({bucket, position, info});
+            }
+        }
+    }
+
+    return infos;
+}
+
 void AddrManImpl::Connected_(const CService& addr, NodeSeconds time)
 {
     AssertLockHeld(cs);
@@ -1199,6 +1218,15 @@ std::vector<CAddress> AddrManImpl::GetAddr(size_t max_addresses, size_t max_pct,
     return addresses;
 }
 
+std::vector<std::tuple<int, int, AddrInfo>> AddrManImpl::GetEntries(bool from_tried) const
+{
+    LOCK(cs);
+    Check();
+    auto addrInfos = GetEntries_(from_tried);
+    Check();
+    return addrInfos;
+}
+
 void AddrManImpl::Connected(const CService& addr, NodeSeconds time)
 {
     LOCK(cs);
@@ -1287,6 +1315,11 @@ std::pair<CAddress, NodeSeconds> AddrMan::Select(bool new_only, std::optional<Ne
 std::vector<CAddress> AddrMan::GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const
 {
     return m_impl->GetAddr(max_addresses, max_pct, network);
+}
+
+std::vector<std::tuple<int, int, AddrInfo>> AddrMan::GetEntries(bool use_tried) const
+{
+    return m_impl->GetEntries(use_tried);
 }
 
 void AddrMan::Connected(const CService& addr, NodeSeconds time)
