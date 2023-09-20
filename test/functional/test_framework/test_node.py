@@ -33,6 +33,7 @@ from .util import (
     assert_equal,
     append_config,
     delete_cookie_file,
+    delete_pid_file,
     get_auth_cookie,
     get_rpc_proxy,
     rpc_url,
@@ -210,18 +211,29 @@ class TestNode():
         if cwd is None:
             cwd = self.cwd
 
-        # Delete any existing cookie file -- if such a file exists (eg due to
-        # unclean shutdown), it will get overwritten anyway by bitcoind, and
-        # potentially interfere with our attempt to authenticate
-        delete_cookie_file(self.datadir, self.chain)
-
         # add environment variable LIBC_FATAL_STDERR_=1 so that libc errors are written to stderr and not the terminal
         subp_env = dict(os.environ, LIBC_FATAL_STDERR_="1")
         if env is not None:
             subp_env.update(env)
 
-        self.process = subprocess.Popen(self.args + extra_args, env=subp_env, stdout=stdout, stderr=stderr, cwd=cwd, **kwargs)
+        max_attempts = 3
+        for _ in range(max_attempts):
+            delete_pid_file(self.datadir, self.chain)
+            # Delete any existing cookie file -- if such a file exists (eg due to
+            # unclean shutdown), it will get overwritten anyway by bitcoind, and
+            # potentially interfere with our attempt to authenticate
+            delete_cookie_file(self.datadir, self.chain)
+            process = subprocess.Popen(self.args + extra_args, env=subp_env, stdout=stdout, stderr=stderr, cwd=cwd, **kwargs)
+            if self.is_terminated_or_pid_available(process):
+                break
+            self.log.debug(f"subprocess.Popen({self.args + extra_args}) FAILED for unknown reasons")
+            process.kill()
+            process = None
 
+        if process is None:
+            self._raise_assertion_error(f"subprocess.Popen({self.args + extra_args}) FAILED after {max_attempts} attempts")
+
+        self.process = process
         self.running = True
         self.log.debug("bitcoind started, waiting for RPC to come up")
 
@@ -294,6 +306,44 @@ class TestNode():
                     raise
             time.sleep(1.0 / poll_per_s)
         self._raise_assertion_error("Unable to connect to bitcoind after {}s".format(self.rpc_timeout))
+
+    def is_terminated_or_pid_available(self, bitcoind_process):
+        """Checks for a created PID file."""
+        self.log.debug("Waiting for PID file")
+        timeout = 4 # seconds
+        # Poll at a rate of four times per second.
+        poll_per_s = 4
+        pid_file = os.path.join(self.datadir, self.chain, "bitcoind.pid")
+        for _ in range(poll_per_s * timeout):
+            time.sleep(1.0 / poll_per_s)
+            if bitcoind_process.poll() is not None:
+                # The process terminated.
+                return True
+            if not os.path.isfile(pid_file):
+                continue
+            try:
+                with open(pid_file, mode='r', encoding="utf8") as file:
+                    content = file.read().strip()
+            except FileNotFoundError:
+                # The next loop should find the process terminated.
+                continue
+            except PermissionError:
+                # The next loop should avoid this state.
+                continue
+            except Exception:
+                raise
+            try:
+                pid = int(content)
+            except ValueError:
+                # The next loop should avoid this state.
+                continue
+            except Exception:
+                raise
+            if pid != bitcoind_process.pid:
+                self._raise_assertion_error(f"PID inconsistency detected: expected {bitcoind_process.pid}, read from file {pid}")
+            return True
+        self.log.warning(f"PID file is not available after {timeout}s")
+        return False
 
     def wait_for_cookie_credentials(self):
         """Ensures auth cookie credentials can be read, e.g. for testing CLI with -rpcwait before RPC connection is up."""

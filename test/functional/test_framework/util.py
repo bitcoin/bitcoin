@@ -469,6 +469,13 @@ def delete_cookie_file(datadir, chain):
         os.remove(os.path.join(datadir, chain, ".cookie"))
 
 
+# If a PID file exists in the given datadir, delete it.
+def delete_pid_file(datadir, chain):
+    if os.path.isfile(os.path.join(datadir, chain, "bitcoind.pid")):
+        logger.debug("Deleting leftover PID file")
+        os.remove(os.path.join(datadir, chain, "bitcoind.pid"))
+
+
 def softfork_active(node, key):
     """Return whether a softfork is active."""
     return node.getdeploymentinfo()['deployments'][key]['active']
