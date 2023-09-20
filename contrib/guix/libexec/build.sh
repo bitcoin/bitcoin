@@ -315,7 +315,7 @@ mkdir -p "$DISTSRC"
                     | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST}-unsigned.tar.gz" \
                     || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST}-unsigned.tar.gz" && exit 1 )
             )
-            make deploy ${V:+V=1} OSX_DMG="${OUTDIR}/${DISTNAME}-${HOST}-unsigned.dmg"
+            make deploy ${V:+V=1} OSX_ZIP="${OUTDIR}/${DISTNAME}-${HOST}-unsigned.zip"
             ;;
     esac
     (
