@@ -41,6 +41,7 @@ using interfaces::Wallet;
 using interfaces::WalletAddress;
 using interfaces::WalletBalances;
 using interfaces::WalletLoader;
+using interfaces::WalletMigrationResult;
 using interfaces::WalletOrderForm;
 using interfaces::WalletTx;
 using interfaces::WalletTxOut;
@@ -629,6 +630,18 @@ public:
         } else {
             return util::Error{error};
         }
+    }
+    util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase) override
+    {
+        auto res = wallet::MigrateLegacyToDescriptor(name, passphrase, m_context);
+        if (!res) return util::Error{util::ErrorString(res)};
+        WalletMigrationResult out{
+            .wallet = MakeWallet(m_context, res->wallet),
+            .watchonly_wallet_name = res->watchonly_wallet ? std::make_optional(res->watchonly_wallet->GetName()) : std::nullopt,
+            .solvables_wallet_name = res->solvables_wallet ? std::make_optional(res->solvables_wallet->GetName()) : std::nullopt,
+            .backup_path = res->backup_path,
+        };
+        return {std::move(out)}; // std::move to work around clang bug
     }
     std::string getWalletDir() override
     {
