@@ -51,7 +51,7 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
     -DLLVM_ENABLE_RUNTIMES="compiler-rt;libcxx;libcxxabi;libunwind" \
     -S /msan/llvm-project/llvm
 
-  ninja -C /msan/clang_build/ "$MAKEJOBS"
+  ninja -C /msan/clang_build/ "-j$( nproc )"  # Use nproc, because MAKEJOBS is the default in docker image builds
   ninja -C /msan/clang_build/ install-runtimes
 
   update-alternatives --install /usr/bin/clang++ clang++ /msan/clang_build/bin/clang++ 100
@@ -69,13 +69,13 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
     -DLIBCXX_HARDENING_MODE=debug \
     -S /msan/llvm-project/runtimes
 
-  ninja -C /msan/cxx_build/ "$MAKEJOBS"
+  ninja -C /msan/cxx_build/ "-j$( nproc )"  # Use nproc, because MAKEJOBS is the default in docker image builds
 fi
 
 if [[ "${RUN_TIDY}" == "true" ]]; then
   git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_16 /include-what-you-use
   cmake -B /iwyu-build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-16 -S /include-what-you-use
-  make -C /iwyu-build/ install "$MAKEJOBS"
+  make -C /iwyu-build/ install "-j$( nproc )"  # Use nproc, because MAKEJOBS is the default in docker image builds
 fi
 
 mkdir -p "${DEPENDS_DIR}/SDKs" "${DEPENDS_DIR}/sdk-sources"
