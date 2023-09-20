@@ -43,7 +43,7 @@ threads take up 8MiB for the thread stack on a 64-bit system, and 4MiB in a
 
 ## Linux specific
 
-By default, glibc will create up to two heap arenas per core. This is known to cause excessive memory usage in some scenarios. To avoid this make a script that sets `MALLOC_ARENA_MAX` before starting bitcoind:
+By default, glibc's implementation of `malloc` may use more than one arena. This is known to cause excessive memory usage in some scenarios. To avoid this, make a script that sets `MALLOC_ARENA_MAX` before starting bitcoind:
 
 ```bash
 #!/usr/bin/env bash
