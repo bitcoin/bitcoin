@@ -516,6 +516,16 @@ public:
      */
     void UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main) LOCKS_EXCLUDED(m_epoch);
 
+    size_t GetUniqueClusterCount(const setEntries& iters_conflicting) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+        std::vector<const TxGraph::Ref *> entries;
+        entries.reserve(iters_conflicting.size());
+        for (auto it : iters_conflicting) {
+            entries.emplace_back(&*it);
+        }
+        Assume(!m_txgraph->IsOversized(TxGraph::Level::MAIN));
+        return m_txgraph->CountDistinctClusters(entries, TxGraph::Level::MAIN);
+    }
+
     /**
      * Try to calculate all in-mempool ancestors of entry.
      * (these are all calculated including the tx itself)
@@ -709,11 +719,6 @@ public:
     uint64_t GetSequence() const EXCLUSIVE_LOCKS_REQUIRED(cs) {
         return m_sequence_number;
     }
-
-    /* Check that all direct conflicts are in a cluster size of two or less. Each
-     * direct conflict may be in a separate cluster.
-     */
-    std::optional<std::string> CheckConflictTopology(const setEntries& direct_conflicts);
 
 private:
     /** Remove a set of transactions from the mempool.
