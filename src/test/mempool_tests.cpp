@@ -540,20 +540,23 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     // we only require this to remove, at max, 2 txn, because it's not clear what we're really optimizing for aside from that
     pool.TrimToSize(pool.DynamicMemoryUsage() - 1);
     BOOST_CHECK(pool.exists(tx4.GetHash()));
-    BOOST_CHECK(pool.exists(tx6.GetHash()));
+    // Tx6 should get "chunked" with tx7, so it should be evicted as well.
+    BOOST_CHECK(!pool.exists(tx6.GetHash()));
     BOOST_CHECK(!pool.exists(tx7.GetHash()));
 
     if (!pool.exists(tx5.GetHash()))
         AddToMempool(pool, entry.Fee(100LL).FromTx(tx5));
+    AddToMempool(pool, entry.Fee(110LL).FromTx(tx6));
     AddToMempool(pool, entry.Fee(900LL).FromTx(tx7));
 
     pool.TrimToSize(pool.DynamicMemoryUsage() / 2); // should maximize mempool size by only removing 5/7
     BOOST_CHECK(pool.exists(tx4.GetHash()));
     BOOST_CHECK(!pool.exists(tx5.GetHash()));
-    BOOST_CHECK(pool.exists(tx6.GetHash()));
+    BOOST_CHECK(!pool.exists(tx6.GetHash()));
     BOOST_CHECK(!pool.exists(tx7.GetHash()));
 
     AddToMempool(pool, entry.Fee(100LL).FromTx(tx5));
+    AddToMempool(pool, entry.Fee(110LL).FromTx(tx6));
     AddToMempool(pool, entry.Fee(900LL).FromTx(tx7));
 
     std::vector<CTransactionRef> vtx;
