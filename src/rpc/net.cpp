@@ -287,7 +287,7 @@ static RPCHelpMan addnode()
                 strprintf("Addnode connections are limited to %u at a time", MAX_ADDNODE_CONNECTIONS) +
                 " and are counted separately from the -maxconnections limit.\n",
                 {
-                    {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The node (see getpeerinfo for nodes)"},
+                    {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the peer to connect to"},
                     {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once"},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
@@ -297,10 +297,8 @@ static RPCHelpMan addnode()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::string strCommand;
-    if (!request.params[1].isNull())
-        strCommand = request.params[1].get_str();
-    if (strCommand != "onetry" && strCommand != "add" && strCommand != "remove") {
+    const std::string command{request.params[1].get_str()};
+    if (command != "onetry" && command != "add" && command != "remove") {
         throw std::runtime_error(
             self.ToString());
     }
@@ -308,24 +306,24 @@ static RPCHelpMan addnode()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     CConnman& connman = EnsureConnman(node);
 
-    std::string strNode = request.params[0].get_str();
+    const std::string node_arg{request.params[0].get_str()};
 
-    if (strCommand == "onetry")
+    if (command == "onetry")
     {
         CAddress addr;
-        connman.OpenNetworkConnection(addr, false, nullptr, strNode.c_str(), ConnectionType::MANUAL);
+        connman.OpenNetworkConnection(addr, /*fCountFailure=*/false, /*grantOutbound=*/nullptr, node_arg.c_str(), ConnectionType::MANUAL);
         return UniValue::VNULL;
     }
 
-    if (strCommand == "add")
+    if (command == "add")
     {
-        if (!connman.AddNode(strNode)) {
+        if (!connman.AddNode(node_arg)) {
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Node already added");
         }
     }
-    else if(strCommand == "remove")
+    else if (command == "remove")
     {
-        if (!connman.RemoveAddedNode(strNode)) {
+        if (!connman.RemoveAddedNode(node_arg)) {
             throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Error: Node could not be removed. It has not been added previously.");
         }
     }
