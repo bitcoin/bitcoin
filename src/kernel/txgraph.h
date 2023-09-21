@@ -242,6 +242,8 @@ public:
 
     std::vector<TxEntry::TxEntryRef> GetDescendants(const std::vector<TxEntry::TxEntryRef>& txs) const;
 
+    size_t GetUniqueClusterCount(const std::vector<TxEntry::TxEntryRef>& txs) const;
+
     // Return all transactions in the clusters that the given transactions are part of.
     std::vector<TxEntry::TxEntryRef> GatherAllClusterTransactions(const std::vector<TxEntry::TxEntryRef> &txs) const;
 

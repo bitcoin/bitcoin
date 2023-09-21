@@ -435,6 +435,19 @@ std::vector<TxEntry::TxEntryRef> TxGraph::GetDescendants(const std::vector<TxEnt
     return result;
 }
 
+size_t TxGraph::GetUniqueClusterCount(const std::vector<TxEntry::TxEntryRef>& txs) const
+{
+    size_t result = 0;
+    LOCK(cs);
+    WITH_FRESH_EPOCH(m_epoch);
+    for (auto tx : txs) {
+        if (!visited(tx.get().m_cluster)) {
+            ++result;
+        }
+    }
+    return result;
+}
+
 std::vector<TxEntry::TxEntryRef> TxGraph::GetAncestors(const std::vector<TxEntry::TxEntryRef>& parents) const
 {
     std::vector<TxEntry::TxEntryRef> result{}, work_queue{};

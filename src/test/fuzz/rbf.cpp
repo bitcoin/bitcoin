@@ -124,7 +124,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
 
     LOCK2(cs_main, pool.cs);
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), NUM_ITERS)
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), NUM_ITERS-1)
     {
         // Make sure txns only have one input, and that a unique input is given to avoid circular references
         CMutableTransaction parent;
@@ -143,9 +143,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
         }
         assert(!pool.GetIter(parent_entry.GetTx().GetHash()));
         AddToMempool(pool, parent_entry);
-        if (fuzzed_data_provider.ConsumeBool()) {
-            child.vin[0].prevout = COutPoint{mempool_txs.back().GetHash(), 0};
-        }
+        child.vin[0].prevout = COutPoint{mempool_txs.back().GetHash(), 0};
         mempool_txs.emplace_back(child);
         const auto child_entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, mempool_txs.back());
         running_vsize_total += child_entry.GetTxSize();

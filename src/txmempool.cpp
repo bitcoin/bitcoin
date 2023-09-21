@@ -317,6 +317,26 @@ util::Result<bool> CTxMemPool::CheckClusterSizeLimit(int64_t entry_size, size_t 
     return CheckClusterSizeAgainstLimits(parents, entry_count, entry_size, limits);
 }
 
+std::vector<TxEntry::TxEntryRef> CTxMemPool::CalculateParents(const CTransaction& tx) const
+{
+    std::vector<TxEntry::TxEntryRef> ret;
+    {
+        WITH_FRESH_EPOCH(m_epoch);
+        for (const CTxIn &txin : tx.vin) {
+            std::optional<txiter> piter = GetIter(txin.prevout.hash);
+            if (piter && !visited(*piter)) {
+                ret.emplace_back(**piter);
+            }
+        }
+    }
+    return ret;
+}
+
+std::vector<TxEntry::TxEntryRef> CTxMemPool::CalculateParents(const CTxMemPoolEntry &entry) const
+{
+    return CalculateParents(entry.GetTx());
+}
+
 util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateMemPoolAncestors(
     const CTxMemPoolEntry &entry,
     const Limits& limits,
@@ -512,7 +532,15 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
 void CTxMemPool::Apply(ChangeSet* changeset)
 {
     AssertLockHeld(cs);
-    RemoveStaged(changeset->m_to_remove, false, MemPoolRemovalReason::REPLACED);
+
+    Assume(changeset->m_txgraph_changeset);
+    changeset->m_txgraph_changeset->Apply();
+
+    UpdateForRemoveFromMempool(changeset->m_to_remove, false);
+
+    for (txiter it : changeset->m_to_remove) {
+        removeUnchecked(it, MemPoolRemovalReason::REPLACED);
+    }
 
     for (size_t i=0; i<changeset->m_entry_vec.size(); ++i) {
         auto tx_entry = changeset->m_entry_vec[i];
@@ -593,9 +621,6 @@ void CTxMemPool::addNewTransaction(CTxMemPool::txiter newit, CTxMemPool::setEntr
 
     txns_randomized.emplace_back(newit->GetSharedTx());
     newit->idx_randomized = txns_randomized.size() - 1;
-
-    // Add this transaction to the graph.
-    txgraph.AddTx(&(const_cast<CTxMemPoolEntry&>(*newit)), newit->GetTxSize(), newit->GetModifiedFee(), parents);
 
     TRACEPOINT(mempool, added,
         entry.GetTx().GetHash().data(),
@@ -1379,153 +1404,62 @@ std::vector<CTxMemPool::txiter> CTxMemPool::GatherClusters(const std::vector<uin
     return clustered_txs;
 }
 
-std::optional<std::string> CTxMemPool::CheckConflictTopology(const setEntries& direct_conflicts)
-{
-    for (const auto& direct_conflict : direct_conflicts) {
-        // Ancestor and descendant counts are inclusive of the tx itself.
-        const auto ancestor_count{direct_conflict->GetCountWithAncestors()};
-        const auto descendant_count{direct_conflict->GetCountWithDescendants()};
-        const bool has_ancestor{ancestor_count > 1};
-        const bool has_descendant{descendant_count > 1};
-        const auto& txid_string{direct_conflict->GetSharedTx()->GetHash().ToString()};
-        // The only allowed configurations are:
-        // 1 ancestor and 0 descendant
-        // 0 ancestor and 1 descendant
-        // 0 ancestor and 0 descendant
-        if (ancestor_count > 2) {
-            return strprintf("%s has %u ancestors, max 1 allowed", txid_string, ancestor_count - 1);
-        } else if (descendant_count > 2) {
-            return strprintf("%s has %u descendants, max 1 allowed", txid_string, descendant_count - 1);
-        } else if (has_ancestor && has_descendant) {
-            return strprintf("%s has both ancestor and descendant, exceeding cluster limit of 2", txid_string);
-        }
-        // Additionally enforce that:
-        // If we have a child,  we are its only parent.
-        // If we have a parent, we are its only child.
-        if (has_descendant) {
-            const auto& our_child = direct_conflict->GetMemPoolChildrenConst().begin();
-            if (our_child->get().GetCountWithAncestors() > 2) {
-                return strprintf("%s is not the only parent of child %s",
-                                 txid_string, our_child->get().GetSharedTx()->GetHash().ToString());
-            }
-        } else if (has_ancestor) {
-            const auto& our_parent = direct_conflict->GetMemPoolParentsConst().begin();
-            if (our_parent->get().GetCountWithDescendants() > 2) {
-                return strprintf("%s is not the only child of parent %s",
-                                 txid_string, our_parent->get().GetSharedTx()->GetHash().ToString());
-            }
-        }
-    }
-    return std::nullopt;
-}
-
 util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::ChangeSet::CalculateChunksForRBF()
 {
     LOCK(m_pool->cs);
-    FeeFrac replacement_feerate{0, 0};
-    for (auto it : m_entry_vec) {
-        replacement_feerate += {it->GetModifiedFee(), it->GetTxSize()};
+
+    std::vector<FeeFrac> old_diagram;
+    std::vector<FeeFrac> new_diagram;
+
+    if (!CheckMemPoolPolicyLimits()) {
+        return util::Error{Untranslated("cluster size limit exceeded")};
     }
 
-    auto err_string{m_pool->CheckConflictTopology(m_to_remove)};
-    if (err_string.has_value()) {
-        // Unsupported topology for calculating a feerate diagram
-        return util::Error{Untranslated(err_string.value())};
-    }
+    Assume(m_txgraph_changeset);
 
-    // new diagram will have chunks that consist of each ancestor of
-    // direct_conflicts that is at its own fee/size, along with the replacement
-    // tx/package at its own fee/size
+    m_txgraph_changeset->GetFeerateDiagramOld(old_diagram);
+    m_txgraph_changeset->GetFeerateDiagramNew(new_diagram);
 
-    // old diagram will consist of the ancestors and descendants of each element of
-    // all_conflicts.  every such transaction will either be at its own feerate (followed
-    // by any descendant at its own feerate), or as a single chunk at the descendant's
-    // ancestor feerate.
-
-    std::vector<FeeFrac> old_chunks;
-    // Step 1: build the old diagram.
-
-    // The above clusters are all trivially linearized;
-    // they have a strict topology of 1 or two connected transactions.
-
-    // OLD: Compute existing chunks from all affected clusters
-    for (auto txiter : m_to_remove) {
-        // Does this transaction have descendants?
-        if (txiter->GetCountWithDescendants() > 1) {
-            // Consider this tx when we consider the descendant.
-            continue;
-        }
-        // Does this transaction have ancestors?
-        FeeFrac individual{txiter->GetModifiedFee(), txiter->GetTxSize()};
-        if (txiter->GetCountWithAncestors() > 1) {
-            // We'll add chunks for either the ancestor by itself and this tx
-            // by itself, or for a combined package.
-            FeeFrac package{txiter->GetModFeesWithAncestors(), static_cast<int32_t>(txiter->GetSizeWithAncestors())};
-            if (individual >> package) {
-                // The individual feerate is higher than the package, and
-                // therefore higher than the parent's fee. Chunk these
-                // together.
-                old_chunks.emplace_back(package);
-            } else {
-                // Add two points, one for the parent and one for this child.
-                old_chunks.emplace_back(package - individual);
-                old_chunks.emplace_back(individual);
-            }
-        } else {
-            old_chunks.emplace_back(individual);
-        }
-    }
-
-    // No topology restrictions post-chunking; sort
-    std::sort(old_chunks.begin(), old_chunks.end(), std::greater());
-
-    std::vector<FeeFrac> new_chunks;
-
-    /* Step 2: build the NEW diagram
-     * CON = Conflicts of proposed chunk
-     * CNK = Proposed chunk
-     * NEW = OLD - CON + CNK: New diagram includes all chunks in OLD, minus
-     * the conflicts, plus the proposed chunk
-     */
-
-    // OLD - CON: Add any parents of direct conflicts that are not conflicted themselves
-    for (auto direct_conflict : m_to_remove) {
-        // If a direct conflict has an ancestor that is not in all_conflicts,
-        // it can be affected by the replacement of the child.
-        if (direct_conflict->GetMemPoolParentsConst().size() > 0) {
-            // Grab the parent.
-            const CTxMemPoolEntry& parent = direct_conflict->GetMemPoolParentsConst().begin()->get();
-            if (!m_to_remove.contains(m_pool->mapTx.iterator_to(parent))) {
-                // This transaction would be left over, so add to the NEW
-                // diagram.
-                new_chunks.emplace_back(parent.GetModifiedFee(), parent.GetTxSize());
-            }
-        }
-    }
-    // + CNK: Add the proposed chunk itself
-    new_chunks.emplace_back(replacement_feerate);
-
-    // No topology restrictions post-chunking; sort
-    std::sort(new_chunks.begin(), new_chunks.end(), std::greater());
-    return std::make_pair(old_chunks, new_chunks);
+    return std::make_pair(old_diagram, new_diagram);
 }
 
 CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp)
 {
     LOCK(m_pool->cs);
-    Assume(m_to_add.find(tx->GetHash()) == m_to_add.end());
+    {
+        auto res = m_pool->GetIter(tx->GetHash());
+        Assume(res == std::nullopt || m_to_remove.contains(res.value()));
+        Assume(m_to_add.find(tx->GetHash()) == m_to_add.end());
+    }
     auto newit = m_to_add.emplace(tx, fee, time, entry_height, entry_sequence, spends_coinbase, sigops_cost, lp).first;
     CAmount delta{0};
     m_pool->ApplyDelta(tx->GetHash(), delta);
     if (delta) m_to_add.modify(newit, [&delta](CTxMemPoolEntry& e) { e.UpdateModifiedFee(delta); });
 
     m_entry_vec.push_back(newit);
+
+    if (m_txgraph_changeset) {
+        m_txgraph_changeset.reset();
+    }
     return newit;
 }
 
 void CTxMemPool::ChangeSet::Apply()
 {
     LOCK(m_pool->cs);
+    // Create the graph changeset, if it doesn't exist.
+    if (!CheckMemPoolPolicyLimits()) {
+        // This is bad, but we have to just apply the changes.
+        m_txgraph_changeset.reset();
+        std::vector<TxEntry::TxEntryRef> txs_to_remove;
+        for (auto it : m_to_remove) {
+            txs_to_remove.emplace_back(*it);
+        }
+        m_txgraph_changeset = std::make_unique<TxGraphChangeSet>(&m_pool->txgraph, kernel::MemPoolLimits::NoLimits(), txs_to_remove);
+        for (const auto& entryptr : m_entry_vec) {
+            Assume(m_txgraph_changeset->AddTx(*entryptr, CalculateParentsOf(entryptr->GetSharedTx())));
+        }
+    }
     m_pool->Apply(this);
     m_to_add.clear();
     m_to_remove.clear();
@@ -1541,15 +1475,13 @@ std::vector<TxEntry::TxEntryRef> CTxMemPool::ChangeSet::CalculateParentsOf(const
         inputs.insert(txin.prevout.hash);
     }
     for (const uint256 &hash : inputs) {
-        std::optional<txiter> piter = m_pool->GetIter(hash);
-        if (piter) {
-            ret.emplace_back(**piter);
+        // Check the added transaction set first; then look in the mempool.
+        auto it = m_to_add.find(hash);
+        if (it != m_to_add.end()) {
+            ret.emplace_back(*it);
         } else {
-            // Check the change set for parents.
-            auto it = m_to_add.find(hash);
-            if (it != m_to_add.end()) {
-                ret.emplace_back(*it);
-            }
+            std::optional<txiter> piter = m_pool->GetIter(hash);
+            if (piter) ret.emplace_back(**piter);
         }
     }
     return ret;
@@ -1559,15 +1491,21 @@ bool CTxMemPool::ChangeSet::CheckMemPoolPolicyLimits()
 {
     LOCK(m_pool->cs);
 
-    std::vector<TxEntry::TxEntryRef> txs_to_remove;
-    for (auto it : m_to_remove) {
-        txs_to_remove.emplace_back(*it);
+    if (!m_txgraph_changeset) {
+        std::vector<TxEntry::TxEntryRef> txs_to_remove;
+        for (auto it : m_to_remove) {
+            txs_to_remove.emplace_back(*it);
+        }
+        m_txgraph_changeset = std::make_unique<TxGraphChangeSet>(&m_pool->txgraph, m_pool->m_opts.limits, txs_to_remove);
+        bool ret{true};
+        for (const auto& entryptr : m_entry_vec) {
+            ret = m_txgraph_changeset->AddTx(*entryptr, CalculateParentsOf(entryptr->GetSharedTx()));
+            if (!ret) break;
+        }
+        if (!ret) {
+            m_txgraph_changeset.reset();
+            return false;
+        }
     }
-    TxGraphChangeSet changeset(&m_pool->txgraph, m_pool->m_opts.limits, txs_to_remove);
-    bool ret{true};
-    for (const auto& entryptr : m_entry_vec) {
-        ret = changeset.AddTx(*entryptr, CalculateParentsOf(entryptr->GetSharedTx()));
-        if (!ret) break;
-    }
-    return ret;
+    return true;
 }

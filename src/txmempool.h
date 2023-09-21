@@ -433,6 +433,9 @@ private:
                                                               const Limits& limits
                                                               ) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    std::vector<TxEntry::TxEntryRef> CalculateParents(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::vector<TxEntry::TxEntryRef> CalculateParents(const CTxMemPoolEntry &entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
     std::map<uint256, CAmount> mapDeltas GUARDED_BY(cs);
@@ -546,6 +549,14 @@ public:
     util::Result<bool> CheckClusterSizeLimit(int64_t entry_size, size_t entry_count,
             const Limits& limits, CTxMemPoolEntry::Parents all_parents) const
         EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    size_t GetUniqueClusterCount(const setEntries& iters_conflicting) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+        std::vector<TxEntry::TxEntryRef> entries;
+        for (auto it : iters_conflicting) {
+            entries.emplace_back(*it);
+        }
+        return txgraph.GetUniqueClusterCount(entries);
+    }
 
 private:
     util::Result<bool> CheckClusterSizeAgainstLimits(const std::vector<TxEntry::TxEntryRef>& parents,
@@ -734,11 +745,6 @@ public:
         return m_sequence_number;
     }
 
-    /* Check that all direct conflicts are in a cluster size of two or less. Each
-     * direct conflict may be in a separate cluster.
-     */
-    std::optional<std::string> CheckConflictTopology(const setEntries& direct_conflicts);
-
 private:
     /** Remove a set of transactions from the mempool.
      *  If a transaction is in this set, then all in-mempool descendants must
@@ -901,6 +907,7 @@ public:
         void Apply() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     private:
+        std::unique_ptr<TxGraphChangeSet> m_txgraph_changeset;
         // Calculate the parents of a given transaction, looking in the mempool and in the change set.
         std::vector<TxEntry::TxEntryRef> CalculateParentsOf(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(m_pool->cs);
 
