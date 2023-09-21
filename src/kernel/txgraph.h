@@ -4,6 +4,7 @@
 #include <util/feefrac.h>
 #include <policy/feerate.h>
 #include <consensus/amount.h>
+#include <policy/policy.h>
 #include <util/epochguard.h>
 #include <memusage.h>
 #include <sync.h>
@@ -181,8 +182,10 @@ private:
 };
 
 struct GraphLimits {
-    int64_t cluster_count{100};
-    int64_t cluster_size_vbytes{101000};
+    //! The maximum number of transactions in a cluster.
+    int64_t cluster_count{DEFAULT_CLUSTER_LIMIT};
+    //! The maximum allowed size in virtual bytes of a cluster.
+    int64_t cluster_size_vbytes{DEFAULT_CLUSTER_SIZE_LIMIT_KVB*1'000};
 };
 
 class TxGraphChangeSet {
