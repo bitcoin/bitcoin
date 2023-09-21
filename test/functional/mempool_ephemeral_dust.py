@@ -419,8 +419,7 @@ class EphemeralDustTest(BitcoinTestFramework):
 
         res = self.nodes[0].submitpackage([dusty_tx["hex"] for dusty_tx in dusty_txs] + [insufficient_sweep_tx["hex"]])
         assert_equal(res['package_msg'], "transaction failed")
-        #assert_equal(res['tx-results'][insufficient_sweep_tx["wtxid"]]["error"], f"missing-ephemeral-spends, tx {insufficient_sweep_tx['txid']} (wtxid={insufficient_sweep_tx['wtxid']}) did not spend parent's ephemeral dust")
-        assert_equal(res['tx-results'][insufficient_sweep_tx["wtxid"]]["error"], f"replacement-adds-unconfirmed, replacement {insufficient_sweep_tx['txid']} adds unconfirmed input, idx 46")
+        assert_equal(res['tx-results'][insufficient_sweep_tx["wtxid"]]["error"], f"missing-ephemeral-spends, tx {insufficient_sweep_tx['txid']} (wtxid={insufficient_sweep_tx['wtxid']}) did not spend parent's ephemeral dust")
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"] for dusty_tx in dusty_txs] + [sweep_all_but_one_tx["tx"]])
 
         # Cycle out the partial sweep to avoid triggering package RBF behavior which limits package to no in-mempool ancestors
