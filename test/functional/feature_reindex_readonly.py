@@ -6,11 +6,11 @@
 - Start a node, generate blocks, then restart with -reindex after setting blk files to read-only
 """
 
-import os
-import platform
-import stat
-import subprocess
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    make_readonly,
+    make_readwrite,
+)
 
 
 class BlockstoreReindexTest(BitcoinTestFramework):
@@ -32,35 +32,14 @@ class BlockstoreReindexTest(BitcoinTestFramework):
 
         self.log.debug("Make the first block file read-only")
         filename = self.nodes[0].chain_path / "blocks" / "blk00000.dat"
-        filename.chmod(stat.S_IREAD)
-
-        used_chattr = False
-        if platform.system() == "Linux":
-            try:
-                subprocess.run(['chattr', '+i', filename], capture_output=True, check=True)
-                used_chattr = True
-                self.log.info("Made file immutable with chattr")
-            except subprocess.CalledProcessError as e:
-                self.log.warning(str(e))
-                if e.stdout:
-                    self.log.warning(f"stdout: {e.stdout}")
-                if e.stderr:
-                    self.log.warning(f"stderr: {e.stderr}")
-                if os.getuid() == 0:
-                    self.log.warning("Return early on Linux under root, because chattr failed.")
-                    self.log.warning("This should only happen due to missing capabilities in a container.")
-                    self.log.warning("Make sure to --cap-add LINUX_IMMUTABLE if you want to run this test.")
-                    return
 
         self.log.debug("Attempt to restart and reindex the node with the unwritable block file")
+        if not make_readonly(filename):
+            return
         with self.nodes[0].assert_debug_log(expected_msgs=['FlushStateToDisk', 'failed to open file'], unexpected_msgs=[]):
             self.nodes[0].assert_start_raises_init_error(extra_args=['-reindex', '-fastprune'],
                 expected_msg="Error: A fatal internal error occurred, see debug.log for details")
-
-        if used_chattr:
-            subprocess.check_call(['chattr', '-i', filename])
-
-        filename.chmod(0o777)
+        make_readwrite(filename)
 
     def run_test(self):
         self.reindex_readonly()
