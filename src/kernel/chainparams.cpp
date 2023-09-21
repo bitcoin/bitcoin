@@ -276,7 +276,6 @@ public:
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         nLLMQConnectionRetryTimeout = 60;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
-        m_is_test_chain = false;
         m_is_mockable_chain = false;
 
         checkpointData = {
@@ -425,7 +424,6 @@ public:
 
         fDefaultConsistencyChecks = false;
         fRequireRoutableExternalIP = true;
-        m_is_test_chain = true;
 
         // privKey: cU52TqHDWJg6HoL3keZHBvrJgsCLsduRvDFkPyZ5EmeMwoEHshiT
         vSporkAddresses = {"TCGpumHyMXC5BmfkaAQXwB7Bf4kbkhM9BX", "tsys1qgmafz3mqa7glqy92r549w8qmq5535uc2e8ahjm", "tsys1q68gu0fhcchr27w08sjdxwt3rtgwef0nyh9zwk0"};
@@ -560,7 +558,6 @@ public:
         bech32_hrp = "tb";
 
         fDefaultConsistencyChecks = false;
-        m_is_test_chain = true;
         m_is_mockable_chain = false;
     }
 };
@@ -683,7 +680,6 @@ public:
 
         fDefaultConsistencyChecks = true;
         fRequireRoutableExternalIP = false;
-        m_is_test_chain = true;
         m_is_mockable_chain = true;
         // privKey: cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW
         vSporkAddresses = {"mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z"};

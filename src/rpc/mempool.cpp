@@ -882,7 +882,7 @@ static RPCHelpMan submitpackage()
         },
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
         {
-            if (!Params().IsMockableChain()) {
+            if (Params().GetChainType() != ChainType::REGTEST) {
                 throw std::runtime_error("submitpackage is for regression testing (-regtest mode) only");
             }
             const UniValue raw_transactions = request.params[0].get_array();
