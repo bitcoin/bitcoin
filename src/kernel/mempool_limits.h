@@ -4,6 +4,7 @@
 #ifndef BITCOIN_KERNEL_MEMPOOL_LIMITS_H
 #define BITCOIN_KERNEL_MEMPOOL_LIMITS_H
 
+#include <kernel/txgraph.h>
 #include <policy/policy.h>
 
 #include <cstdint>
@@ -15,7 +16,7 @@ namespace kernel {
  *
  * Most of the time, this struct should be referenced as CTxMemPool::Limits.
  */
-struct MemPoolLimits {
+struct MemPoolLimits : GraphLimits {
     //! The maximum allowed number of transactions in a package including the entry and its ancestors.
     int64_t ancestor_count{DEFAULT_ANCESTOR_LIMIT};
     //! The maximum allowed size in virtual bytes of an entry and its ancestors within a package.
@@ -31,7 +32,7 @@ struct MemPoolLimits {
     static constexpr MemPoolLimits NoLimits()
     {
         int64_t no_limit{std::numeric_limits<int64_t>::max()};
-        return {no_limit, no_limit, no_limit, no_limit};
+        return {{no_limit, no_limit}, no_limit, no_limit, no_limit, no_limit};
     }
 };
 } // namespace kernel
