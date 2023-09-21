@@ -314,6 +314,26 @@ util::Result<bool> CTxMemPool::CheckClusterSizeLimit(int64_t entry_size, size_t 
     return CheckClusterSizeAgainstLimits(parents, entry_count, entry_size, limits);
 }
 
+std::vector<TxEntry::TxEntryRef> CTxMemPool::CalculateParents(const CTransaction& tx) const
+{
+    std::vector<TxEntry::TxEntryRef> ret;
+    {
+        WITH_FRESH_EPOCH(m_epoch);
+        for (const CTxIn &txin : tx.vin) {
+            std::optional<txiter> piter = GetIter(txin.prevout.hash);
+            if (piter && !visited(*piter)) {
+                ret.emplace_back(**piter);
+            }
+        }
+    }
+    return ret;
+}
+
+std::vector<TxEntry::TxEntryRef> CTxMemPool::CalculateParents(const CTxMemPoolEntry &entry) const
+{
+    return CalculateParents(entry.GetTx());
+}
+
 util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateMemPoolAncestors(
     const CTxMemPoolEntry &entry,
     const Limits& limits,
@@ -1348,129 +1368,56 @@ std::vector<CTxMemPool::txiter> CTxMemPool::GatherClusters(const std::vector<uin
     return clustered_txs;
 }
 
-std::optional<std::string> CTxMemPool::CheckConflictTopology(const setEntries& direct_conflicts)
+util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::CalculateChunksForRBF(std::vector<std::pair<CTxMemPoolEntry*, CAmount>> new_entries, const setEntries& direct_conflicts, const setEntries& all_conflicts)
 {
-    for (const auto& direct_conflict : direct_conflicts) {
-        // Ancestor and descendant counts are inclusive of the tx itself.
-        const auto ancestor_count{direct_conflict->GetCountWithAncestors()};
-        const auto descendant_count{direct_conflict->GetCountWithDescendants()};
-        const bool has_ancestor{ancestor_count > 1};
-        const bool has_descendant{descendant_count > 1};
-        const auto& txid_string{direct_conflict->GetSharedTx()->GetHash().ToString()};
-        // The only allowed configurations are:
-        // 1 ancestor and 0 descendant
-        // 0 ancestor and 1 descendant
-        // 0 ancestor and 0 descendant
-        if (ancestor_count > 2) {
-            return strprintf("%s has %u ancestors, max 1 allowed", txid_string, ancestor_count - 1);
-        } else if (descendant_count > 2) {
-            return strprintf("%s has %u descendants, max 1 allowed", txid_string, descendant_count - 1);
-        } else if (has_ancestor && has_descendant) {
-            return strprintf("%s has both ancestor and descendant, exceeding cluster limit of 2", txid_string);
-        }
-        // Additionally enforce that:
-        // If we have a child,  we are its only parent.
-        // If we have a parent, we are its only child.
-        if (has_descendant) {
-            const auto& our_child = direct_conflict->GetMemPoolChildrenConst().begin();
-            if (our_child->get().GetCountWithAncestors() > 2) {
-                return strprintf("%s is not the only parent of child %s",
-                                 txid_string, our_child->get().GetSharedTx()->GetHash().ToString());
-            }
-        } else if (has_ancestor) {
-            const auto& our_parent = direct_conflict->GetMemPoolParentsConst().begin();
-            if (our_parent->get().GetCountWithDescendants() > 2) {
-                return strprintf("%s is not the only child of parent %s",
-                                 txid_string, our_parent->get().GetSharedTx()->GetHash().ToString());
-            }
-        }
-    }
-    return std::nullopt;
-}
+    std::vector<FeeFrac> old_diagram;
+    std::vector<FeeFrac> new_diagram;
 
-util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::CalculateChunksForRBF(CAmount replacement_fees, int64_t replacement_vsize, const setEntries& direct_conflicts, const setEntries& all_conflicts)
-{
-    Assume(replacement_vsize > 0);
+    std::vector<CAmount> old_fees;
 
-    auto err_string{CheckConflictTopology(direct_conflicts)};
-    if (err_string.has_value()) {
-        // Unsupported topology for calculating a feerate diagram
-        return util::Error{Untranslated(err_string.value())};
+
+    for (auto& e : new_entries) {
+        CTxMemPoolEntry &entry = *e.first;
+        old_fees.push_back(entry.GetModifiedFee());
+        entry.m_modified_fee = e.second;
     }
 
-    // new diagram will have chunks that consist of each ancestor of
-    // direct_conflicts that is at its own fee/size, along with the replacement
-    // tx/package at its own fee/size
-
-    // old diagram will consist of the ancestors and descendants of each element of
-    // all_conflicts.  every such transaction will either be at its own feerate (followed
-    // by any descendant at its own feerate), or as a single chunk at the descendant's
-    // ancestor feerate.
-
-    std::vector<FeeFrac> old_chunks;
-    // Step 1: build the old diagram.
-
-    // The above clusters are all trivially linearized;
-    // they have a strict topology of 1 or two connected transactions.
-
-    // OLD: Compute existing chunks from all affected clusters
-    for (auto txiter : all_conflicts) {
-        // Does this transaction have descendants?
-        if (txiter->GetCountWithDescendants() > 1) {
-            // Consider this tx when we consider the descendant.
-            continue;
+    auto cleanup = [&]() {
+        for (size_t i = 0; i < new_entries.size(); i++) {
+            CTxMemPoolEntry &entry = *(new_entries[i].first);
+            entry.m_modified_fee = old_fees[i];
         }
-        // Does this transaction have ancestors?
-        FeeFrac individual{txiter->GetModifiedFee(), txiter->GetTxSize()};
-        if (txiter->GetCountWithAncestors() > 1) {
-            // We'll add chunks for either the ancestor by itself and this tx
-            // by itself, or for a combined package.
-            FeeFrac package{txiter->GetModFeesWithAncestors(), static_cast<int32_t>(txiter->GetSizeWithAncestors())};
-            if (individual >> package) {
-                // The individual feerate is higher than the package, and
-                // therefore higher than the parent's fee. Chunk these
-                // together.
-                old_chunks.emplace_back(package);
-            } else {
-                // Add two points, one for the parent and one for this child.
-                old_chunks.emplace_back(package - individual);
-                old_chunks.emplace_back(individual);
-            }
-        } else {
-            old_chunks.emplace_back(individual);
-        }
+    };
+
+    std::vector<TxEntry::TxEntryRef> to_remove;
+    for (auto it : all_conflicts) {
+        to_remove.emplace_back(*it);
     }
 
-    // No topology restrictions post-chunking; sort
-    std::sort(old_chunks.begin(), old_chunks.end(), std::greater());
-
-    std::vector<FeeFrac> new_chunks;
-
-    /* Step 2: build the NEW diagram
-     * CON = Conflicts of proposed chunk
-     * CNK = Proposed chunk
-     * NEW = OLD - CON + CNK: New diagram includes all chunks in OLD, minus
-     * the conflicts, plus the proposed chunk
-     */
-
-    // OLD - CON: Add any parents of direct conflicts that are not conflicted themselves
-    for (auto direct_conflict : direct_conflicts) {
-        // If a direct conflict has an ancestor that is not in all_conflicts,
-        // it can be affected by the replacement of the child.
-        if (direct_conflict->GetMemPoolParentsConst().size() > 0) {
-            // Grab the parent.
-            const CTxMemPoolEntry& parent = direct_conflict->GetMemPoolParentsConst().begin()->get();
-            if (!all_conflicts.count(mapTx.iterator_to(parent))) {
-                // This transaction would be left over, so add to the NEW
-                // diagram.
-                new_chunks.emplace_back(parent.GetModifiedFee(), parent.GetTxSize());
+    TxGraphChangeSet changeset(&txgraph, m_opts.limits, to_remove);
+    std::map<uint256, CTxMemPoolEntry*> new_entries_map;
+    for (auto& e : new_entries) {
+        auto parents = CalculateParents((*e.first));
+        // Add in any parents from new_entries
+        std::set<CTxMemPoolEntry*> additional_parents;
+        for (auto& input: e.first->GetTx().vin) {
+            auto it = new_entries_map.find(input.prevout.hash);
+            if (it != new_entries_map.end()) {
+                additional_parents.insert(it->second);
             }
         }
+        for (auto p : additional_parents) {
+            parents.emplace_back(*p);
+        }
+        if (!changeset.AddTx(*(e.first), parents)) {
+            cleanup();
+            return util::Error{Untranslated("cluster size limit exceeded")};
+        }
+        new_entries_map.insert({e.first->GetTx().GetHash(), e.first});
     }
-    // + CNK: Add the proposed chunk itself
-    new_chunks.emplace_back(replacement_fees, int32_t(replacement_vsize));
+    changeset.GetFeerateDiagramOld(old_diagram);
+    changeset.GetFeerateDiagramNew(new_diagram);
 
-    // No topology restrictions post-chunking; sort
-    std::sort(new_chunks.begin(), new_chunks.end(), std::greater());
-    return std::make_pair(old_chunks, new_chunks);
+    cleanup();
+    return std::make_pair(old_diagram, new_diagram);
 }

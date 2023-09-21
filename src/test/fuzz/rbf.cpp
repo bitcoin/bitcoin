@@ -73,7 +73,9 @@ FUZZ_TARGET(rbf, .init = initialize_rbf)
             mtx->vin[0].prevout = COutPoint{another_tx.GetHash(), 0};
         }
         LOCK2(cs_main, pool.cs);
-        pool.addUnchecked(ConsumeTxMemPoolEntry(fuzzed_data_provider, another_tx));
+        if (!pool.GetIter(another_tx.GetHash())) {
+            pool.addUnchecked(ConsumeTxMemPoolEntry(fuzzed_data_provider, another_tx));
+        }
     }
     const CTransaction tx{*mtx};
     if (fuzzed_data_provider.ConsumeBool()) {
@@ -104,15 +106,25 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
     std::vector<CTransaction> mempool_txs;
     size_t iter{0};
 
-    int32_t replacement_vsize = fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(1, 1000000);
 
     // Keep track of the total vsize of CTxMemPoolEntry's being added to the mempool to avoid overflow
     // Add replacement_vsize since this is added to new diagram during RBF check
+
+    std::optional<CMutableTransaction> replacement_tx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
+    if (!replacement_tx) {
+        return;
+    }
+    assert(iter <= g_outpoints.size());
+    replacement_tx->vin.resize(1);
+    replacement_tx->vin[0].prevout = g_outpoints[iter++];
+    CTransaction replacement_tx_final{*replacement_tx};
+    auto replacement_entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, replacement_tx_final);
+    int32_t replacement_vsize = replacement_entry.GetTxSize();
     int64_t running_vsize_total{replacement_vsize};
 
     LOCK2(cs_main, pool.cs);
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), NUM_ITERS)
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), NUM_ITERS-1)
     {
         // Make sure txns only have one input, and that a unique input is given to avoid circular references
         CMutableTransaction parent;
@@ -130,9 +142,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
             break;
         }
         pool.addUnchecked(parent_entry);
-        if (fuzzed_data_provider.ConsumeBool()) {
-            child.vin[0].prevout = COutPoint{mempool_txs.back().GetHash(), 0};
-        }
+        child.vin[0].prevout = COutPoint{mempool_txs.back().GetHash(), 0};
         mempool_txs.emplace_back(child);
         const auto child_entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, mempool_txs.back());
         running_vsize_total += child_entry.GetTxSize();
@@ -162,9 +172,10 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
         pool.CalculateDescendants(txiter, all_conflicts);
     }
 
-    // Calculate the chunks for a replacement.
+
     CAmount replacement_fees = ConsumeMoney(fuzzed_data_provider);
-    auto calc_results{pool.CalculateChunksForRBF(replacement_fees, replacement_vsize, direct_conflicts, all_conflicts)};
+    // Calculate the chunks for a replacement.
+    auto calc_results{pool.CalculateChunksForRBF({{&replacement_entry, replacement_fees}}, direct_conflicts, all_conflicts)};
 
     if (calc_results.has_value()) {
         // Sanity checks on the chunks.
@@ -192,7 +203,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
     }
 
     // If internals report error, wrapper should too
-    auto err_tuple{ImprovesFeerateDiagram(pool, direct_conflicts, all_conflicts, replacement_fees, replacement_vsize)};
+    auto err_tuple{ImprovesFeerateDiagram(pool, direct_conflicts, all_conflicts, {{&replacement_entry, replacement_fees}})};
     if (!calc_results.has_value()) {
          assert(err_tuple.value().first == DiagramCheckError::UNCALCULABLE);
     } else {
