@@ -71,8 +71,10 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
         assert(n_keys == 1);
     } else if (fragment == Fragment::MULTI) {
         assert(n_keys >= 1 && n_keys <= MAX_PUBKEYS_PER_MULTISIG);
+        assert(!IsTapscript(ms_ctx));
     } else if (fragment == Fragment::MULTI_A) {
         assert(n_keys >= 1 && n_keys <= MAX_PUBKEYS_PER_MULTI_A);
+        assert(IsTapscript(ms_ctx));
     } else {
         assert(n_keys == 0);
     }
@@ -215,8 +217,12 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
                 ((x << "h"_mst) && (y << "g"_mst)) ||
                 ((x << "i"_mst) && (y << "j"_mst)) ||
                 ((x << "j"_mst) && (y << "i"_mst)))); // k=k_x*k_y*k_z* !(g_x*h_y + h_x*g_y + i_x*j_y + j_x*i_y)
-        case Fragment::MULTI: return "Bnudemsk"_mst;
-        case Fragment::MULTI_A: return "Budemsk"_mst;
+        case Fragment::MULTI: {
+            return "Bnudemsk"_mst;
+        }
+        case Fragment::MULTI_A: {
+            return "Budemsk"_mst;
+        }
         case Fragment::THRESH: {
             bool all_e = true;
             bool all_m = true;
