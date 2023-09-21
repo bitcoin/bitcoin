@@ -158,39 +158,34 @@ uint16_t GetListenPort()
     return static_cast<uint16_t>(gArgs.GetIntArg("-port", Params().GetDefaultPort()));
 }
 
-// find 'best' local address for a particular peer
-bool GetLocal(CService& addr, const CNode& peer)
+// Determine the "best" local address for a particular peer.
+[[nodiscard]] static std::optional<CService> GetLocal(const CNode& peer)
 {
-    if (!fListen)
-        return false;
+    if (!fListen) return std::nullopt;
 
+    std::optional<CService> addr;
     int nBestScore = -1;
     int nBestReachability = -1;
     {
         LOCK(g_maplocalhost_mutex);
-        for (const auto& entry : mapLocalHost)
-        {
+        for (const auto& [local_addr, local_service_info] : mapLocalHost) {
             // For privacy reasons, don't advertise our privacy-network address
             // to other networks and don't advertise our other-network address
             // to privacy networks.
-            const Network our_net{entry.first.GetNetwork()};
-            const Network peers_net{peer.ConnectedThroughNetwork()};
-            if (our_net != peers_net &&
-                (our_net == NET_ONION || our_net == NET_I2P ||
-                 peers_net == NET_ONION || peers_net == NET_I2P)) {
+            if (local_addr.GetNetwork() != peer.ConnectedThroughNetwork()
+                && (local_addr.IsPrivacyNet() || peer.IsConnectedThroughPrivacyNet())) {
                 continue;
             }
-            int nScore = entry.second.nScore;
-            int nReachability = entry.first.GetReachabilityFrom(peer.addr);
-            if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore))
-            {
-                addr = CService(entry.first, entry.second.nPort);
+            const int nScore{local_service_info.nScore};
+            const int nReachability{local_addr.GetReachabilityFrom(peer.addr)};
+            if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore)) {
+                addr.emplace(CService{local_addr, local_service_info.nPort});
                 nBestReachability = nReachability;
                 nBestScore = nScore;
             }
         }
     }
-    return nBestScore >= 0;
+    return addr;
 }
 
 //! Convert the serialized seeds into usable address objects.
@@ -216,17 +211,13 @@ static std::vector<CAddress> ConvertSeeds(const std::vector<uint8_t> &vSeedsIn)
     return vSeedsOut;
 }
 
-// get best local address for a particular peer as a CAddress
-// Otherwise, return the unroutable 0.0.0.0 but filled in with
+// Determine the "best" local address for a particular peer.
+// If none, return the unroutable 0.0.0.0 but filled in with
 // the normal parameters, since the IP may be changed to a useful
 // one by discovery.
 CService GetLocalAddress(const CNode& peer)
 {
-    CService addr;
-    if (GetLocal(addr, peer)) {
-        return addr;
-    }
-    return CService{CNetAddr(), GetListenPort()};
+    return GetLocal(peer).value_or(CService{CNetAddr(), GetListenPort()});
 }
 
 static int GetnScore(const CService& addr)
@@ -237,7 +228,7 @@ static int GetnScore(const CService& addr)
 }
 
 // Is our peer's addrLocal potentially useful as an external IP source?
-bool IsPeerAddrLocalGood(CNode *pnode)
+[[nodiscard]] static bool IsPeerAddrLocalGood(CNode *pnode)
 {
     CService addrLocal = pnode->GetAddrLocal();
     return fDiscover && pnode->addr.IsRoutable() && addrLocal.IsRoutable() &&
@@ -289,7 +280,7 @@ std::optional<CService> GetLocalAddrForPeer(CNode& node)
 CService MaybeFlipIPv6toCJDNS(const CService& service)
 {
     CService ret{service};
-    if (ret.m_net == NET_IPV6 && ret.m_addr[0] == 0xfc && IsReachable(NET_CJDNS)) {
+    if (ret.IsIPv6() && ret.HasCJDNSPrefix() && IsReachable(NET_CJDNS)) {
         ret.m_net = NET_CJDNS;
     }
     return ret;
@@ -505,7 +496,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         const bool use_proxy{GetProxy(addrConnect.GetNetwork(), proxy)};
         bool proxyConnectionFailed = false;
 
-        if (addrConnect.GetNetwork() == NET_I2P && use_proxy) {
+        if (addrConnect.IsI2P() && use_proxy) {
             i2p::Connection conn;
 
             if (m_i2p_sam_session) {
@@ -635,6 +626,11 @@ void CNode::SetAddrLocal(const CService& addrLocalIn) {
 Network CNode::ConnectedThroughNetwork() const
 {
     return m_inbound_onion ? NET_ONION : addr.GetNetClass();
+}
+
+bool CNode::IsConnectedThroughPrivacyNet() const
+{
+    return m_inbound_onion || addr.IsPrivacyNet();
 }
 
 #undef X
@@ -3753,10 +3749,11 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& address) const
     return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup).Finalize();
 }
 
-void CaptureMessageToFile(const CAddress& addr,
-                          const std::string& msg_type,
-                          Span<const unsigned char> data,
-                          bool is_incoming)
+// Dump binary message to file, with timestamp.
+static void CaptureMessageToFile(const CAddress& addr,
+                                 const std::string& msg_type,
+                                 Span<const unsigned char> data,
+                                 bool is_incoming)
 {
     // Note: This function captures the message at the time of processing,
     // not at socket receive/send time.

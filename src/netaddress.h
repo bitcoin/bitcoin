@@ -154,8 +154,8 @@ public:
     bool SetSpecial(const std::string& addr);
 
     bool IsBindAny() const; // INADDR_ANY equivalent
-    bool IsIPv4() const;    // IPv4 mapped address (::FFFF:0:0/96, 0.0.0.0/0)
-    bool IsIPv6() const;    // IPv6 address (not mapped IPv4, not Tor)
+    [[nodiscard]] bool IsIPv4() const { return m_net == NET_IPV4; } // IPv4 mapped address (::FFFF:0:0/96, 0.0.0.0/0)
+    [[nodiscard]] bool IsIPv6() const { return m_net == NET_IPV6; } // IPv6 address (not mapped IPv4, not Tor)
     bool IsRFC1918() const; // IPv4 private networks (10.0.0.0/8, 192.168.0.0/16, 172.16.0.0/12)
     bool IsRFC2544() const; // IPv4 inter-network communications (198.18.0.0/15)
     bool IsRFC6598() const; // IPv4 ISP-level NAT (100.64.0.0/10)
@@ -171,13 +171,21 @@ public:
     bool IsRFC6052() const; // IPv6 well-known prefix for IPv4-embedded address (64:FF9B::/96)
     bool IsRFC6145() const; // IPv6 IPv4-translated address (::FFFF:0:0:0/96) (actually defined in RFC2765)
     bool IsHeNet() const;   // IPv6 Hurricane Electric - https://he.net (2001:0470::/36)
-    bool IsTor() const;
-    bool IsI2P() const;
-    bool IsCJDNS() const;
+    [[nodiscard]] bool IsTor() const { return m_net == NET_ONION; }
+    [[nodiscard]] bool IsI2P() const { return m_net == NET_I2P; }
+    [[nodiscard]] bool IsCJDNS() const { return m_net == NET_CJDNS; }
+    [[nodiscard]] bool HasCJDNSPrefix() const { return m_addr[0] == 0xfc; }
     bool IsLocal() const;
     bool IsRoutable() const;
     bool IsInternal() const;
     bool IsValid() const;
+
+    /**
+     * Whether this object is a privacy network.
+     * TODO: consider adding IsCJDNS() here when more peers adopt CJDNS, see:
+     * https://github.com/bitcoin/bitcoin/pull/27411#issuecomment-1497176155
+     */
+    [[nodiscard]] bool IsPrivacyNet() const { return IsTor() || IsI2P(); }
 
     /**
      * Check if the current object can be serialized in pre-ADDRv2/BIP155 format.
