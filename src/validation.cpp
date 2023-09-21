@@ -1094,6 +1094,7 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                              strprintf("too many potential replacements%s", ws.m_sibling_eviction ? " (including sibling eviction)" : ""), *err_string);
     }
+
     // Enforce Rule #2.
     if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, all_conflicts)}) {
         // Sibling eviction is only done for TRUC transactions, which cannot have multiple ancestors.
@@ -1450,6 +1451,12 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
             // Failed for incentives-based fee reasons. Provide the effective feerate and which tx was included.
             return MempoolAcceptResult::FeeFailure(ws.m_state, CFeeRate(ws.m_modified_fees, ws.m_vsize), single_wtxid);
         }
+        return MempoolAcceptResult::Failure(ws.m_state);
+    }
+
+    // Check if the transaction would exceed the cluster size limit.
+    if (!m_subpackage.m_changeset->CheckMemPoolPolicyLimits()) {
+        ws.m_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-large-cluster", "");
         return MempoolAcceptResult::Failure(ws.m_state);
     }
 

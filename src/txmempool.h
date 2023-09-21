@@ -532,6 +532,28 @@ public:
     std::vector<TxEntry::TxEntryRef> GetChildrenOf(const TxEntry& tx);
 
     /**
+     * Calculate whether cluster size limits would be exceeded if a new tx were
+     * added to the mempool (assuming no conflicts).
+     *
+     * @param[in] entry_size         vbytes of the new transaction(s)
+     * @param[in] entry_count        number of new transactions to be added
+     * @param[in] limits             Contains maximum cluster size/count
+     * @param[in] all_parents        All parents of entry/entries in the mempool
+     *
+     * @return true if cluster limits are respected, or an error if limits were
+     *         exceede
+     */
+    util::Result<bool> CheckClusterSizeLimit(int64_t entry_size, size_t entry_count,
+            const Limits& limits, CTxMemPoolEntry::Parents all_parents) const
+        EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+private:
+    util::Result<bool> CheckClusterSizeAgainstLimits(const std::vector<TxEntry::TxEntryRef>& parents,
+            int64_t count, int64_t vbytes, GraphLimits limits) const
+        EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+public:
+    /**
      * Try to calculate all in-mempool ancestors of entry.
      * (these are all calculated including the tx itself)
      *
@@ -840,6 +862,8 @@ public:
 
         const CTxMemPool::setEntries& GetRemovals() const { return m_to_remove; }
 
+        bool CheckMemPoolPolicyLimits();
+
         util::Result<CTxMemPool::setEntries> CalculateMemPoolAncestors(TxHandle tx, const Limits& limits)
         {
             // Look up transaction in our cache first
@@ -877,6 +901,9 @@ public:
         void Apply() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     private:
+        // Calculate the parents of a given transaction, looking in the mempool and in the change set.
+        std::vector<TxEntry::TxEntryRef> CalculateParentsOf(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(m_pool->cs);
+
         CTxMemPool* m_pool;
         CTxMemPool::indexed_transaction_set m_to_add;
         std::vector<CTxMemPool::txiter> m_entry_vec; // track the added transactions' insertion order

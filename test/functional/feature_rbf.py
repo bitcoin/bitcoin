@@ -27,6 +27,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [
             [
+                "-limitclustercount=200",
                 "-limitancestorcount=50",
                 "-limitancestorsize=101",
                 "-limitdescendantcount=200",
