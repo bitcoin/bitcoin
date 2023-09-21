@@ -839,6 +839,8 @@ public:
 
         const CTxMemPool::setEntries& GetRemovals() const { return m_to_remove; }
 
+        bool CheckMemPoolPolicyLimits();
+
         util::Result<CTxMemPool::setEntries> CalculateMemPoolAncestors(TxHandle tx, const Limits& limits)
         {
             // Look up transaction in our cache first
@@ -876,12 +878,15 @@ public:
         void Apply() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     private:
+        void ProcessDependencies();
+
         CTxMemPool* m_pool;
         CTxMemPool::indexed_transaction_set m_to_add;
         std::vector<CTxMemPool::txiter> m_entry_vec; // track the added transactions' insertion order
         // map from the m_to_add index to the ancestors for the transaction
         std::map<CTxMemPool::txiter, CTxMemPool::setEntries, CompareIteratorByHash> m_ancestors;
         CTxMemPool::setEntries m_to_remove;
+        bool m_dependencies_processed{false};
 
         friend class CTxMemPool;
     };
