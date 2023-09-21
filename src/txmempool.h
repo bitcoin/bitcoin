@@ -551,6 +551,28 @@ public:
     std::vector<TxEntry::TxEntryRef> GetChildrenOf(const TxEntry& tx);
 
     /**
+     * Calculate whether cluster size limits would be exceeded if a new tx were
+     * added to the mempool (assuming no conflicts).
+     *
+     * @param[in] entry_size         vbytes of the new transaction(s)
+     * @param[in] entry_count        number of new transactions to be added
+     * @param[in] limits             Contains maximum cluster size/count
+     * @param[in] all_parents        All parents of entry/entries in the mempool
+     *
+     * @return true if cluster limits are respected, or an error if limits were
+     *         exceeded
+     */
+    util::Result<bool> CheckClusterSizeLimit(int64_t entry_size, size_t entry_count,
+            const Limits& limits, CTxMemPoolEntry::Parents all_parents) const
+        EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+private:
+    util::Result<bool> CheckClusterSizeAgainstLimits(const std::vector<TxEntry::TxEntryRef>& parents,
+            int64_t count, int64_t vbytes, GraphLimits limits) const
+        EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+public:
+    /**
      * Try to calculate all in-mempool ancestors of entry.
      * (these are all calculated including the tx itself)
      *

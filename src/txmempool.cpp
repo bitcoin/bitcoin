@@ -182,9 +182,13 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256>& vHashes
 
     std::vector<TxEntry::TxEntryRef> txs_to_remove;
 
-    txgraph.AddParentTxs(parent_transactions, GraphLimits{std::numeric_limits<int64_t>::max(), std::numeric_limits<int64_t>::max()}, [&](const TxEntry &tx) {return this->GetChildrenOf(tx);}, txs_to_remove);
+    txgraph.AddParentTxs(parent_transactions, m_opts.limits, [&](const TxEntry &tx) {return this->GetChildrenOf(tx);}, txs_to_remove);
 
-    assert(txs_to_remove.size() == 0);
+    for (auto &tx : txs_to_remove) {
+        auto it = mapTx.iterator_to(dynamic_cast<const CTxMemPoolEntry&>(tx.get()));
+        UpdateForRemoveFromMempool({it}, false);
+        removeUnchecked(it, MemPoolRemovalReason::SIZELIMIT);
+    }
 
     for (const auto& txid : descendants_to_remove) {
         // This txid may have been removed already in a prior call to removeRecursive.
@@ -265,6 +269,11 @@ util::Result<void> CTxMemPool::CheckPackageLimits(const Package& package,
             }
         }
     }
+
+    auto cluster_result{CheckClusterSizeLimit(total_vsize, package.size(), m_opts.limits, staged_ancestors)};
+    if (!cluster_result) {
+        return util::Error{Untranslated(util::ErrorString(cluster_result).original)};
+    }
     // When multiple transactions are passed in, the ancestors and descendants of all transactions
     // considered together must be within limits even if they are not interdependent. This may be
     // stricter than the limits for each individual transaction.
@@ -273,6 +282,36 @@ util::Result<void> CTxMemPool::CheckPackageLimits(const Package& package,
     // It's possible to overestimate the ancestor/descendant totals.
     if (!ancestors.has_value()) return util::Error{Untranslated("possibly " + util::ErrorString(ancestors).original)};
     return {};
+}
+
+util::Result<bool> CTxMemPool::CheckClusterSizeAgainstLimits(const std::vector<TxEntry::TxEntryRef>& parents, int64_t count, int64_t vbytes, GraphLimits limits) const
+{
+    int64_t total_cluster_count{0};
+    int64_t total_cluster_vbytes{0};
+
+    txgraph.GetClusterSize(parents, total_cluster_vbytes, total_cluster_count);
+
+    total_cluster_count += count;
+    total_cluster_vbytes += vbytes;
+
+    if (total_cluster_count > limits.cluster_count) {
+        return util::Error{Untranslated(strprintf("too many unconfirmed transactions in the cluster [limit: %ld]", limits.cluster_count))};
+    }
+    if (total_cluster_vbytes > limits.cluster_size_vbytes) {
+        return util::Error{Untranslated(strprintf("exceeds cluster size limit [limit: %d]", limits.cluster_size_vbytes))};
+    }
+    return true;
+}
+
+util::Result<bool> CTxMemPool::CheckClusterSizeLimit(int64_t entry_size, size_t entry_count,
+        const Limits& limits, CTxMemPoolEntry::Parents all_parents) const
+{
+    std::vector<TxEntry::TxEntryRef> parents;
+    for (auto p : all_parents) {
+        parents.emplace_back(p.get());
+    }
+
+    return CheckClusterSizeAgainstLimits(parents, entry_count, entry_size, limits);
 }
 
 util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateMemPoolAncestors(
