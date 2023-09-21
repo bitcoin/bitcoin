@@ -68,7 +68,7 @@ jobs:
         run: clang --version
 
       - name: Install Homebrew packages
-        run: brew install boost libevent qt@5 miniupnpc libnatpmp ccache zeromq qrencode libtool automake gnu-getopt
+        run: brew install automake libtool pkg-config gnu-getopt ccache boost libevent miniupnpc libnatpmp zeromq qt@5 qrencode
 
       - name: Set Ccache directory
         run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
