@@ -18,15 +18,18 @@ tip or some preceding transaction in the package.
 
 The following rules are enforced for all packages:
 
-* Packages cannot exceed `MAX_PACKAGE_COUNT=25` count and `MAX_PACKAGE_SIZE=101KvB` total size
+* Packages cannot exceed `MAX_PACKAGE_COUNT=25` count and `MAX_PACKAGE_WEIGHT=404000` total weight
    (#20833)
 
-   - *Rationale*: This is already enforced as mempool ancestor/descendant limits. If
-     transactions in a package are all related, exceeding this limit would mean that the package
-     can either be split up or it wouldn't pass individual mempool policy.
+   - *Rationale*: We want package size to be as small as possible to mitigate DoS via package
+     validation. However, we want to make sure that the limit does not restrict ancestor
+     packages that would be allowed if submitted individually.
 
    - Note that, if these mempool limits change, package limits should be reconsidered. Users may
      also configure their mempool limits differently.
+
+   - Note that the this is transaction weight, not "virtual" size as with other limits to allow
+     simpler context-less checks.
 
 * Packages must be topologically sorted. (#20833)
 

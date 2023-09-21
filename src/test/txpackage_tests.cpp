@@ -51,14 +51,14 @@ BOOST_FIXTURE_TEST_CASE(package_sanitization_tests, TestChain100Setup)
     BOOST_CHECK_EQUAL(state_too_many.GetResult(), PackageValidationResult::PCKG_POLICY);
     BOOST_CHECK_EQUAL(state_too_many.GetRejectReason(), "package-too-many-transactions");
 
-    // Packages can't have a total size of more than 101KvB.
+    // Packages can't have a total weight of more than 404'000WU.
     CTransactionRef large_ptx = create_placeholder_tx(150, 150);
     Package package_too_large;
-    auto size_large = GetVirtualTransactionSize(*large_ptx);
-    size_t total_size{0};
-    while (total_size <= MAX_PACKAGE_SIZE * 1000) {
+    auto size_large = GetTransactionWeight(*large_ptx);
+    size_t total_weight{0};
+    while (total_weight <= MAX_PACKAGE_WEIGHT) {
         package_too_large.push_back(large_ptx);
-        total_size += size_large;
+        total_weight += size_large;
     }
     BOOST_CHECK(package_too_large.size() <= MAX_PACKAGE_COUNT);
     PackageValidationState state_too_large;
@@ -122,7 +122,7 @@ BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100Setup)
 
     // A single, giant transaction submitted through ProcessNewPackage fails on single tx policy.
     CTransactionRef giant_ptx = create_placeholder_tx(999, 999);
-    BOOST_CHECK(GetVirtualTransactionSize(*giant_ptx) > MAX_PACKAGE_SIZE * 1000);
+    BOOST_CHECK(GetVirtualTransactionSize(*giant_ptx) > DEFAULT_ANCESTOR_SIZE_LIMIT_KVB * 1000);
     auto result_single_large = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, {giant_ptx}, /*test_accept=*/true);
     BOOST_CHECK(result_single_large.m_state.IsInvalid());
     BOOST_CHECK_EQUAL(result_single_large.m_state.GetResult(), PackageValidationResult::PCKG_TX);
