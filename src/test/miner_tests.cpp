@@ -54,7 +54,10 @@ struct MinerTestingSetup : public TestingSetup {
         // instead.
         m_node.mempool.reset();
         bilingual_str error;
-        m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(m_node), error);
+        auto opts = MemPoolOptionsForTest(m_node);
+        opts.limits.cluster_size_vbytes = 1'250'000;
+        opts.limits.cluster_count = 1001;
+        m_node.mempool = std::make_unique<CTxMemPool>(opts, error);
         Assert(error.empty());
         return *m_node.mempool;
     }

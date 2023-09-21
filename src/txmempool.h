@@ -390,6 +390,7 @@ public:
      */
     mutable RecursiveMutex cs;
     std::unique_ptr<TxGraph> m_txgraph GUARDED_BY(cs);
+    mutable std::unique_ptr<TxGraph::BlockBuilder> m_builder GUARDED_BY(cs);
     indexed_transaction_set mapTx GUARDED_BY(cs);
 
     using txiter = indexed_transaction_set::nth_index<0>::type::const_iterator;
@@ -922,6 +923,20 @@ private:
     // callbacks).
     void addNewTransaction(CTxMemPool::txiter it) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void addNewTransaction(CTxMemPool::txiter it, CTxMemPool::setEntries& setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
+public:
+    void StartBlockBuilding() const EXCLUSIVE_LOCKS_REQUIRED(cs) { assert(!m_builder); m_builder = m_txgraph->GetBlockBuilder(); }
+    FeePerWeight GetBlockBuilderChunk(std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef>& entries) const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        if (!*m_builder) { return {}; }
+
+        for (TxGraph::Ref* ref : m_builder->GetCurrentChunk()) {
+            entries.emplace_back(dynamic_cast<const CTxMemPoolEntry&>(*ref));
+        }
+        return m_builder->GetCurrentChunkFeerate();
+    }
+    void IncludeBuilderChunk() const EXCLUSIVE_LOCKS_REQUIRED(cs) { m_builder->Include(); }
+    void SkipBuilderChunk() const EXCLUSIVE_LOCKS_REQUIRED(cs) { m_builder->Skip(); }
+    void StopBlockBuilding() const EXCLUSIVE_LOCKS_REQUIRED(cs) { m_builder.reset(); }
 };
 
 /**
