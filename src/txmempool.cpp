@@ -1167,29 +1167,38 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
 
     unsigned nTxnRemoved = 0;
     CFeeRate maxFeeRateRemoved(0);
+
     while (!mapTx.empty() && DynamicMemoryUsage() > sizelimit) {
-        indexed_transaction_set::index<descendant_score>::type::iterator it = mapTx.get<descendant_score>().begin();
+        const auto &[worst_chunk, feeperweight] = m_txgraph->GetWorstMainChunk();
+        FeePerVSize feerate = ToFeePerVSize(feeperweight);
+        CFeeRate removed{feerate.fee, feerate.size};
 
         // We set the new mempool min fee to the feerate of the removed set, plus the
         // "minimum reasonable fee rate" (ie some value under which we consider txn
         // to have 0 fee). This way, we don't allow txn to enter mempool with feerate
         // equal to txn which were removed with no block in between.
-        CFeeRate removed(it->GetModFeesWithDescendants(), it->GetSizeWithDescendants());
         removed += m_opts.incremental_relay_feerate;
         trackPackageRemoved(removed);
         maxFeeRateRemoved = std::max(maxFeeRateRemoved, removed);
 
-        setEntries stage;
-        CalculateDescendants(mapTx.project<0>(it), stage);
-        nTxnRemoved += stage.size();
+        nTxnRemoved += worst_chunk.size();
 
         std::vector<CTransaction> txn;
         if (pvNoSpendsRemaining) {
-            txn.reserve(stage.size());
-            for (txiter iter : stage)
-                txn.push_back(iter->GetTx());
+            txn.reserve(worst_chunk.size());
+            for (auto ref : worst_chunk) {
+                txn.emplace_back(static_cast<const CTxMemPoolEntry&>(*ref).GetTx());
+            }
         }
-        RemoveStaged(stage, false, MemPoolRemovalReason::SIZELIMIT);
+
+        setEntries stage;
+        for (auto ref : worst_chunk) {
+            stage.insert(mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*ref)));
+        }
+        UpdateForRemoveFromMempool(stage, false);
+        for (auto e : stage) {
+            removeUnchecked(e, MemPoolRemovalReason::SIZELIMIT);
+        }
         if (pvNoSpendsRemaining) {
             for (const CTransaction& tx : txn) {
                 for (const CTxIn& txin : tx.vin) {
