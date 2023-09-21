@@ -1064,8 +1064,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Funding should also work if the input weight is provided
         funded_tx = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": input_weight}])
-        signed_tx = wallet.signrawtransactionwithwallet(funded_tx["hex"])
-        signed_tx = self.nodes[0].signrawtransactionwithwallet(signed_tx["hex"])
+        signed_tx = self.nodes[0].signrawtransactionwithwallet(funded_tx["hex"])
         assert_equal(self.nodes[0].testmempoolaccept([signed_tx["hex"]])[0]["allowed"], True)
         assert_equal(signed_tx["complete"], True)
         # Reducing the weight should have a lower fee
