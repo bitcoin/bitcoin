@@ -90,37 +90,6 @@ struct mempoolentry_wtxid
     }
 };
 
-
-/** \class CompareTxMemPoolEntryByDescendantScore
- *
- *  Sort an entry by max(score/size of entry's tx, score/size with all descendants).
- */
-class CompareTxMemPoolEntryByDescendantScore
-{
-public:
-    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
-    {
-        FeeFrac f1 = GetModFeeAndSize(a);
-        FeeFrac f2 = GetModFeeAndSize(b);
-
-        if (FeeRateCompare(f1, f2) == 0) {
-            return a.GetTime() >= b.GetTime();
-        }
-        return f1 < f2;
-    }
-
-    // Return the fee/size we're using for sorting this entry.
-    FeeFrac GetModFeeAndSize(const CTxMemPoolEntry &a) const
-    {
-        // Compare feerate with descendants to feerate of the transaction, and
-        // return the fee/size for the max.
-        return std::max<FeeFrac>(
-            FeeFrac(a.GetModFeesWithDescendants(), a.GetSizeWithDescendants()),
-            FeeFrac(a.GetModifiedFee(), a.GetTxSize())
-        );
-    }
-};
-
 /** \class CompareTxMemPoolEntryByScore
  *
  *  Sort by feerate of entry (fee/size) in descending order
@@ -151,42 +120,8 @@ public:
     }
 };
 
-/** \class CompareTxMemPoolEntryByAncestorScore
- *
- *  Sort an entry by min(score/size of entry's tx, score/size with all ancestors).
- */
-class CompareTxMemPoolEntryByAncestorFee
-{
-public:
-    template<typename T>
-    bool operator()(const T& a, const T& b) const
-    {
-        FeeFrac f1 = GetModFeeAndSize(a);
-        FeeFrac f2 = GetModFeeAndSize(b);
-
-        if (FeeRateCompare(f1, f2) == 0) {
-            return a.GetTx().GetHash() < b.GetTx().GetHash();
-        }
-        return f1 > f2;
-    }
-
-    // Return the fee/size we're using for sorting this entry.
-    template <typename T>
-    FeeFrac GetModFeeAndSize(const T &a) const
-    {
-        // Compare feerate with ancestors to feerate of the transaction, and
-        // return the fee/size for the min.
-        return std::min<FeeFrac>(
-            FeeFrac(a.GetModFeesWithAncestors(), a.GetSizeWithAncestors()),
-            FeeFrac(a.GetModifiedFee(), a.GetTxSize())
-        );
-    }
-};
-
 // Multi_index tag names
-struct descendant_score {};
 struct entry_time {};
-struct ancestor_score {};
 struct index_by_wtxid {};
 
 /**
@@ -321,23 +256,11 @@ public:
                 mempoolentry_wtxid,
                 SaltedWtxidHasher
             >,
-            // sorted by fee rate
-            boost::multi_index::ordered_non_unique<
-                boost::multi_index::tag<descendant_score>,
-                boost::multi_index::identity<CTxMemPoolEntry>,
-                CompareTxMemPoolEntryByDescendantScore
-            >,
             // sorted by entry time
             boost::multi_index::ordered_non_unique<
                 boost::multi_index::tag<entry_time>,
                 boost::multi_index::identity<CTxMemPoolEntry>,
                 CompareTxMemPoolEntryByEntryTime
-            >,
-            // sorted by fee rate with ancestors
-            boost::multi_index::ordered_non_unique<
-                boost::multi_index::tag<ancestor_score>,
-                boost::multi_index::identity<CTxMemPoolEntry>,
-                CompareTxMemPoolEntryByAncestorFee
             >
         >
         {};
