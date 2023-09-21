@@ -145,9 +145,18 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToU
                     UpdateChild(it, childIter, true);
                     UpdateParent(childIter, it, true);
                 }
+                // Add dependencies that are discovered between transactions in the
+                // block and transactions that were in the mempool to txgraph.
+                m_txgraph->AddDependency(/*parent=*/*it, /*child=*/*childIter);
             }
         } // release epoch guard for UpdateForDescendants
         UpdateForDescendants(it, mapMemPoolDescendantsToUpdate, setAlreadyIncluded, descendants_to_remove);
+    }
+
+    auto txs_to_remove = m_txgraph->Trim(); // Enforce cluster size limits.
+    for (auto txptr : txs_to_remove) {
+        const CTxMemPoolEntry& entry = *(static_cast<const CTxMemPoolEntry*>(txptr));
+        descendants_to_remove.insert(entry.GetTx().GetHash());
     }
 
     for (const auto& txid : descendants_to_remove) {
@@ -229,6 +238,7 @@ util::Result<void> CTxMemPool::CheckPackageLimits(const Package& package,
             }
         }
     }
+
     // When multiple transactions are passed in, the ancestors and descendants of all transactions
     // considered together must be within limits even if they are not interdependent. This may be
     // stricter than the limits for each individual transaction.
@@ -413,7 +423,7 @@ static CTxMemPool::Options&& Flatten(CTxMemPool::Options&& opts, bilingual_str& 
 CTxMemPool::CTxMemPool(Options opts, bilingual_str& error)
     : m_opts{Flatten(std::move(opts), error)}
 {
-    m_txgraph = MakeTxGraph(64, 101'000, ACCEPTABLE_ITERS);
+    m_txgraph = MakeTxGraph(m_opts.limits.cluster_count, m_opts.limits.cluster_size_vbytes * WITNESS_SCALE_FACTOR, ACCEPTABLE_ITERS);
 }
 
 bool CTxMemPool::isSpent(const COutPoint& outpoint) const
@@ -1392,6 +1402,10 @@ CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTran
 {
     LOCK(m_pool->cs);
     Assume(m_to_add.find(tx->GetHash()) == m_to_add.end());
+    Assume(!m_dependencies_processed);
+
+    // We need to process dependencies after adding a new transaction.
+    m_dependencies_processed = false;
 
     CAmount delta{0};
     m_pool->ApplyDelta(tx->GetHash(), delta);
@@ -1417,9 +1431,44 @@ void CTxMemPool::ChangeSet::StageRemoval(CTxMemPool::txiter it)
 void CTxMemPool::ChangeSet::Apply()
 {
     LOCK(m_pool->cs);
+    if (!m_dependencies_processed) {
+        ProcessDependencies();
+    }
     m_pool->Apply(this);
     m_to_add.clear();
     m_to_remove.clear();
     m_entry_vec.clear();
     m_ancestors.clear();
+}
+
+void CTxMemPool::ChangeSet::ProcessDependencies()
+{
+    LOCK(m_pool->cs);
+    Assume(!m_dependencies_processed); // should only call this once.
+    for (const auto& entryptr : m_entry_vec) {
+        for (const auto &txin : entryptr->GetSharedTx()->vin) {
+            std::optional<txiter> piter = m_pool->GetIter(txin.prevout.hash);
+            if (!piter) {
+                auto it = m_to_add.find(txin.prevout.hash);
+                if (it != m_to_add.end()) {
+                    piter = std::make_optional(it);
+                }
+            }
+            if (piter) {
+                m_pool->m_txgraph->AddDependency(/*parent=*/**piter, /*child=*/*entryptr);
+            }
+        }
+    }
+    m_dependencies_processed = true;
+    return;
+ }
+
+bool CTxMemPool::ChangeSet::CheckMemPoolPolicyLimits()
+{
+    LOCK(m_pool->cs);
+    if (!m_dependencies_processed) {
+        ProcessDependencies();
+    }
+
+    return !m_pool->m_txgraph->IsOversized(TxGraph::Level::TOP);
 }
