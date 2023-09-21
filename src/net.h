@@ -64,7 +64,7 @@ static constexpr auto FEELER_INTERVAL = 2min;
 /** Run the extra block-relay-only connection loop once every 5 minutes. **/
 static constexpr auto EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL = 5min;
 // SYSCOIN
-/**  
+/**
  * Maximum length of incoming protocol messages (no message over 32 MiB is
  * currently acceptable).  Bitcoin has 4 MiB here, but we need more space
  * to allow for 2,000 block headers with auxpow.
@@ -175,7 +175,6 @@ enum
     LOCAL_MAX
 };
 
-bool IsPeerAddrLocalGood(CNode *pnode);
 /** Returns a local address that we should advertise to this peer. */
 std::optional<CService> GetLocalAddrForPeer(CNode& node);
 
@@ -193,10 +192,10 @@ bool AddLocal(const CService& addr, int nScore = LOCAL_NONE);
 bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
 void RemoveLocal(const CService& addr);
 bool SeenLocal(const CService& addr);
+bool IsLocal(const CService& addr);
 bool IsLocal(const CService& addr, bool bOverrideNetwork = false);
 // SYSCOIN
 bool GetLocal(CService &addr, const CNetAddr *paddrPeer);
-bool GetLocal(CService& addr, const CNode& peer);
 CService GetLocalAddress(const CNode& peer);
 CService MaybeFlipIPv6toCJDNS(const CService& service);
 
@@ -874,6 +873,9 @@ public:
      */
     Network ConnectedThroughNetwork() const;
 
+    /** Whether this peer connected through a privacy network. */
+    [[nodiscard]] bool IsConnectedThroughPrivacyNet() const;
+
     // We selected peer as (compact blocks) high-bandwidth peer (BIP152)
     std::atomic<bool> m_bip152_highbandwidth_to{false};
     // Peer selected us as (compact blocks) high-bandwidth peer (BIP152)
@@ -1277,7 +1279,7 @@ public:
                 func(node);
         }
     };
-    
+
     void ForEachNode(const NodeFn& func) const
     {
         ForEachNode(FullyConnectedOnly, func);
@@ -1768,12 +1770,6 @@ public:
     static void callCleanup();
 };
 /** Return a timestamp in the future (in microseconds) for exponentially distributed events. */
-
-/** Dump binary message to file, with timestamp */
-void CaptureMessageToFile(const CAddress& addr,
-                          const std::string& msg_type,
-                          Span<const unsigned char> data,
-                          bool is_incoming);
 
 /** Defaults to `CaptureMessageToFile()`, but can be overridden by unit tests. */
 extern std::function<void(const CAddress& addr,
