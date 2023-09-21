@@ -305,7 +305,7 @@ class WalletTaprootTest(BitcoinTestFramework):
             assert rpc_online.gettransaction(res)["confirmations"] > 0
 
         # Cleanup
-        txid = rpc_online.sendall(recipients=[self.boring.getnewaddress()])["txid"]
+        txid = rpc_online.sendall(recipients=[self.boring.getnewaddress()], fee_rate=200)["txid"]
         self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
         assert rpc_online.gettransaction(txid)["confirmations"] > 0
         rpc_online.unloadwallet()
