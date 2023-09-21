@@ -240,10 +240,7 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
             }
             dataDir = intro.getDataDirectory();
             try {
-                if (TryCreateDirectories(GUIUtil::QStringToPath(dataDir))) {
-                    // If a new data directory has been created, make wallets subdirectory too
-                    TryCreateDirectories(GUIUtil::QStringToPath(dataDir) / "wallets");
-                }
+                TryCreateDirectories(GUIUtil::QStringToPath(dataDir));
                 break;
             } catch (const fs::filesystem_error&) {
                 QMessageBox::critical(nullptr, PACKAGE_NAME,
