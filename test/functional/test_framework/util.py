@@ -12,14 +12,17 @@ import inspect
 import json
 import logging
 import os
-import pathlib
+import platform
 import random
 import re
+import stat
+import subprocess
 import sys
 import time
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
+from pathlib import Path
 from typing import Callable, Optional, Tuple
 
 logger = logging.getLogger("TestFramework.utils")
@@ -413,10 +416,10 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
 
 
 def get_datadir_path(dirname, n):
-    return pathlib.Path(dirname) / f"node{n}"
+    return Path(dirname) / f"node{n}"
 
 
-def get_temp_default_datadir(temp_dir: pathlib.Path) -> Tuple[dict, pathlib.Path]:
+def get_temp_default_datadir(temp_dir: Path) -> Tuple[dict, Path]:
     """Return os-specific environment variables that can be set to make the
     GetDefaultDataDir() function return a datadir path under the provided
     temp_dir, as well as the complete path it would return."""
@@ -469,6 +472,38 @@ def delete_cookie_file(datadir, chain):
         logger.debug("Deleting leftover cookie file")
         os.remove(os.path.join(datadir, chain, ".cookie"))
 
+def set_chmod(filename: Path, mode: int) -> None:
+    filename.chmod(mode)
+    logger.debug(f"Called chmod {oct(stat.S_IMODE(mode))[2:]} on {filename}")
+    result = os.stat(filename).st_mode
+    logger.debug(f"Result: mode {oct(stat.S_IMODE(result))[2:]} {stat.filemode(result)}")
+    assert (result & mode)
+
+def change_permissions(filename: Path, mode: int) -> bool:
+    readonly = mode == stat.S_IRUSR
+    if readonly:
+        set_chmod(filename, mode)
+    if platform.system() == "Linux":
+        attr = "+i" if readonly else "-i"
+        try:
+            subprocess.run(["chattr", attr, filename], capture_output=readonly, check=readonly)
+            logger.debug(f"Called chattr {attr} to make {'im' if readonly else ''}mutable {filename}")
+        except subprocess.CalledProcessError as e:
+            logger.warning(f"{repr(e)}\nstdout: {e.stdout}\nstderr: {e.stderr}")
+            if os.getuid() == 0:  # 0 implies user is root (Unix/Linux)
+                logger.warning("Return early on Linux under root, because chattr failed.")
+                logger.warning("This should only happen due to missing capabilities in a container.")
+                logger.warning("Make sure to --cap-add LINUX_IMMUTABLE if you want to run this test.")
+                return False
+    if not readonly:
+        set_chmod(filename, mode)
+    return True
+
+def make_readonly(filename: Path) -> bool:
+    return change_permissions(filename, mode=stat.S_IRUSR)
+
+def make_readwrite(filename: Path) -> bool:
+    return change_permissions(filename, mode=(stat.S_IRUSR | stat.S_IWUSR))
 
 def softfork_active(node, key):
     """Return whether a softfork is active."""
