@@ -8,9 +8,15 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\crypto\sha256_avx2.cpp" />
 @SOURCE_FILES@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="..\common.vcxproj" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>ENABLE_AVX2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
 </Project>
