@@ -192,6 +192,7 @@ public:
         consensus.DIP0024Height = 1737792; // 0000000000000001342be9c0b75ad40c276beaad91616423c4d9cb101b3db438
         consensus.V19Height = 1899072; // 0000000000000015e32e73052d663626327004c81c5c22cb8b42c361015c0eae
         consensus.MinBIP9WarningHeight = 1899072 + 2016; // V19 activation height + miner confirmation window
+        consensus.nExpireEHF = 576 * 365; // one year
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Dash: 1 day
         consensus.nPowTargetSpacing = 2.5 * 60; // Dash: 2.5 minutes
@@ -389,6 +390,7 @@ public:
         consensus.DIP0024Height = 769700; // 0000008d84e4efd890ae95c70a7a6126a70a80e5c19e4cb264a5b3469aeef172
         consensus.V19Height = 850100; // 000004728b8ff2a16b9d4eebb0fd61eeffadc9c7fe4b0ec0b5a739869401ab5b
         consensus.MinBIP9WarningHeight = 850100 + 2016;  // v19 activation height + miner confirmation window
+        consensus.nExpireEHF = 576 * 365; // one year
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Dash: 1 day
         consensus.nPowTargetSpacing = 2.5 * 60; // Dash: 2.5 minutes
@@ -560,6 +562,7 @@ public:
         consensus.DIP0024Height = 300;
         consensus.V19Height = 300;
         consensus.MinBIP9WarningHeight = 300 + 2016; // v19 activation height + miner confirmation window
+        consensus.nExpireEHF = 576 * 365; // one year
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Dash: 1 day
         consensus.nPowTargetSpacing = 2.5 * 60; // Dash: 2.5 minutes
@@ -798,6 +801,7 @@ public:
         consensus.DIP0024Height = 900;
         consensus.V19Height = 900;
         consensus.MinBIP9WarningHeight = 0;
+        consensus.nExpireEHF = 576; // one day for RegTest
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Dash: 1 day
         consensus.nPowTargetSpacing = 2.5 * 60; // Dash: 2.5 minutes

@@ -585,7 +585,9 @@ private:
     const std::unique_ptr<llmq::CChainLocksHandler>& m_clhandler;
     const std::unique_ptr<llmq::CInstantSendManager>& m_isman;
     const std::unique_ptr<llmq::CQuorumBlockProcessor>& m_quorum_block_processor;
+public:
     CMNHFManager& m_mnhfManager;
+private:
     CEvoDB& m_evoDb;
 
 public:

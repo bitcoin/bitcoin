@@ -11,6 +11,7 @@
 #include <threadsafety.h>
 #include <univalue.h>
 
+#include <optional>
 #include <saltedhasher.h>
 #include <unordered_map>
 #include <unordered_lru_cache.h>
@@ -31,7 +32,7 @@ public:
     CBLSSignature sig;
 
     MNHFTx() = default;
-    bool Verify(const CBlockIndex* pQuorumIndex, const uint256& msgHash, TxValidationState& state) const;
+    bool Verify(const CBlockIndex* const pQuorumIndex, const uint256& msgHash, TxValidationState& state) const;
 
     SERIALIZE_METHODS(MNHFTx, obj)
     {
@@ -93,7 +94,7 @@ private:
     unordered_lru_cache<uint256, Signals, StaticSaltedHasher> mnhfCache GUARDED_BY(cs_cache) {MNHFCacheSize};
 
 public:
-    explicit  CMNHFManager(CEvoDB& evoDb) :
+    explicit CMNHFManager(CEvoDB& evoDb) :
         m_evoDb(evoDb) {}
     ~CMNHFManager() = default;
 
@@ -113,11 +114,25 @@ public:
      */
     void UpdateChainParams(const CBlockIndex* const pindex, const CBlockIndex* const pindexOld) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    /**
+     * This function prepares signals for new block.
+     * This data is filterd expired signals from previous blocks.
+     * This member function is not const because it calls non-const GetFromCache()
+     */
+    Signals GetSignalsStage(const CBlockIndex* const pindexPrev);
 private:
     void AddToCache(const Signals& signals, const CBlockIndex* const pindex);
+
+    /**
+     * This function returns list of signals available on previous block.
+     * NOTE: that some signals could expired between blocks.
+     * validate them by
+     */
     Signals GetFromCache(const CBlockIndex* const pindex);
+
 };
 
+std::optional<uint8_t> extractEHFSignal(const CTransaction& tx);
 bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOIN_EVO_MNHFTX_H

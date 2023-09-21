@@ -24,6 +24,7 @@
 #include <evo/specialtx.h>
 #include <evo/cbtx.h>
 #include <evo/creditpool.h>
+#include <evo/mnhftx.h>
 #include <evo/simplifiedmns.h>
 #include <governance/governance.h>
 #include <llmq/blockprocessor.h>
@@ -174,7 +175,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         LogPrintf("%s: CCreditPool is %s\n", __func__, creditPool.ToString());
         creditPoolDiff.emplace(std::move(creditPool), pindexPrev, chainparams.GetConsensus());
     }
-    addPackageTxs(nPackagesSelected, nDescendantsUpdated, creditPoolDiff);
+    std::unordered_map<uint8_t, int> signals = m_chainstate.m_mnhfManager.GetSignalsStage(pindexPrev);
+    addPackageTxs(nPackagesSelected, nDescendantsUpdated, creditPoolDiff, signals);
 
     int64_t nTime1 = GetTimeMicros();
 
@@ -400,7 +402,7 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
 // Each time through the loop, we compare the best transaction in
 // mapModifiedTxs with the next transaction in the mempool to decide what
 // transaction package to work on next.
-void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, std::optional<CCreditPoolDiff>& creditPoolDiff)
+void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, std::optional<CCreditPoolDiff>& creditPoolDiff, std::unordered_map<uint8_t, int>& signals)
 {
     AssertLockHeld(m_mempool.cs);
 
@@ -460,7 +462,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         if (creditPoolDiff != std::nullopt) {
             // If one transaction is skipped due to limits, it is not a reason to interrupt
             // whole process of adding transactions.
-            // `state` is local here because used to log info about this specific tx
+            // `state` is local here because used only to log info about this specific tx
             TxValidationState state;
 
             if (!creditPoolDiff->ProcessLockUnlockTransaction(iter->GetTx(), state)) {
@@ -472,6 +474,14 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
                           __func__, iter->GetTx().GetHash().ToString(), state.ToString());
                 continue;
             }
+        }
+        if (std::optional<uint8_t> signal = extractEHFSignal(iter->GetTx()); signal != std::nullopt) {
+            if (signals.find(*signal) != signals.end()) {
+                LogPrintf("%s: ehf signal tx %s skipped due to duplicate %d\n",
+                          __func__, iter->GetTx().GetHash().ToString(), *signal);
+                continue;
+            }
+            signals.insert({*signal, 0});
         }
 
         // We skip mapTx entries that are inBlock, and mapModifiedTx shouldn't
