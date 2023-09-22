@@ -14,14 +14,11 @@ class GetGeneralInfoTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 1
-        self.mock_starttime = int(time.time())  # needs to be newer than blocks in db
-        self.extra_args = [
-            [f'-mocktime={self.mock_starttime}',]
-        ]
+        self.min_starttime = int(time.time())
 
     def run_test(self):
         """Test getgeneralinfo."""
-        self.nodes[0].setmocktime(self.mock_starttime + 20)
+        max_starttime = int(time.time()) + 1
 
         """Check if 'getgeneralinfo' is idempotent (multiple requests return same data)."""
         json1 = self.nodes[0].getgeneralinfo()
@@ -42,7 +39,8 @@ class GetGeneralInfoTest(BitcoinTestFramework):
         net_datadir = str(self.nodes[0].chain_path)
         assert_equal(json1['datadir'], net_datadir)
         assert_equal(json1['blocksdir'], os.path.join(net_datadir, "blocks"))
-        assert_equal(json1['startuptime'], self.mock_starttime)
+        # startuptime is set before mocktime param is loaded
+        assert json1['startuptime'] >= self.min_starttime and json1['startuptime'] <= max_starttime
 
 if __name__ == '__main__':
     GetGeneralInfoTest(__file__).main()
