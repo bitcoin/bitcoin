@@ -393,6 +393,7 @@ struct WalletTx
     CTransactionRef tx;
     std::vector<wallet::isminetype> txin_is_mine;
     std::vector<wallet::isminetype> txout_is_mine;
+    std::vector<bool> txout_is_change;
     std::vector<CTxDestination> txout_address;
     std::vector<wallet::isminetype> txout_address_is_mine;
     CAmount credit;
