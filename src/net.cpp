@@ -1002,8 +1002,7 @@ void V2Transport::StartSendingHandshake() noexcept
     m_send_buffer.resize(EllSwiftPubKey::size() + m_send_garbage.size());
     std::copy(std::begin(m_cipher.GetOurPubKey()), std::end(m_cipher.GetOurPubKey()), MakeWritableByteSpan(m_send_buffer).begin());
     std::copy(m_send_garbage.begin(), m_send_garbage.end(), m_send_buffer.begin() + EllSwiftPubKey::size());
-    // We cannot wipe m_send_garbage as it will still be used to construct the garbage
-    // authentication packet.
+    // We cannot wipe m_send_garbage as it will still be used as AAD later in the handshake.
 }
 
 V2Transport::V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in, const CKey& key, Span<const std::byte> ent32, std::vector<uint8_t> garbage) noexcept :
@@ -1037,9 +1036,6 @@ void V2Transport::SetReceiveState(RecvState recv_state) noexcept
         Assume(recv_state == RecvState::GARB_GARBTERM);
         break;
     case RecvState::GARB_GARBTERM:
-        Assume(recv_state == RecvState::GARBAUTH);
-        break;
-    case RecvState::GARBAUTH:
         Assume(recv_state == RecvState::VERSION);
         break;
     case RecvState::VERSION:
@@ -1171,24 +1167,15 @@ bool V2Transport::ProcessReceivedKeyBytes() noexcept
                   m_cipher.GetSendGarbageTerminator().end(),
                   MakeWritableByteSpan(m_send_buffer).last(BIP324Cipher::GARBAGE_TERMINATOR_LEN).begin());
 
-        // Construct garbage authentication packet in the send buffer (using the garbage data which
-        // is still there).
-        m_send_buffer.resize(m_send_buffer.size() + BIP324Cipher::EXPANSION);
-        m_cipher.Encrypt(
-            /*contents=*/{},
-            /*aad=*/MakeByteSpan(m_send_garbage),
-            /*ignore=*/false,
-            /*output=*/MakeWritableByteSpan(m_send_buffer).last(BIP324Cipher::EXPANSION));
-        // We no longer need the garbage.
-        ClearShrink(m_send_garbage);
-
-        // Construct version packet in the send buffer.
+        // Construct version packet in the send buffer, with the sent garbage data as AAD.
         m_send_buffer.resize(m_send_buffer.size() + BIP324Cipher::EXPANSION + VERSION_CONTENTS.size());
         m_cipher.Encrypt(
             /*contents=*/VERSION_CONTENTS,
-            /*aad=*/{},
+            /*aad=*/MakeByteSpan(m_send_garbage),
             /*ignore=*/false,
             /*output=*/MakeWritableByteSpan(m_send_buffer).last(BIP324Cipher::EXPANSION + VERSION_CONTENTS.size()));
+        // We no longer need the garbage.
+        ClearShrink(m_send_garbage);
     } else {
         // We still have to receive more key bytes.
     }
@@ -1202,11 +1189,11 @@ bool V2Transport::ProcessReceivedGarbageBytes() noexcept
     Assume(m_recv_buffer.size() <= MAX_GARBAGE_LEN + BIP324Cipher::GARBAGE_TERMINATOR_LEN);
     if (m_recv_buffer.size() >= BIP324Cipher::GARBAGE_TERMINATOR_LEN) {
         if (MakeByteSpan(m_recv_buffer).last(BIP324Cipher::GARBAGE_TERMINATOR_LEN) == m_cipher.GetReceiveGarbageTerminator()) {
-            // Garbage terminator received. Switch to receiving garbage authentication packet.
+            // Garbage terminator received. Store garbage to authenticate it as AAD later.
             m_recv_garbage = std::move(m_recv_buffer);
             m_recv_garbage.resize(m_recv_garbage.size() - BIP324Cipher::GARBAGE_TERMINATOR_LEN);
             m_recv_buffer.clear();
-            SetReceiveState(RecvState::GARBAUTH);
+            SetReceiveState(RecvState::VERSION);
         } else if (m_recv_buffer.size() == MAX_GARBAGE_LEN + BIP324Cipher::GARBAGE_TERMINATOR_LEN) {
             // We've reached the maximum length for garbage + garbage terminator, and the
             // terminator still does not match. Abort.
@@ -1225,8 +1212,7 @@ bool V2Transport::ProcessReceivedGarbageBytes() noexcept
 bool V2Transport::ProcessReceivedPacketBytes() noexcept
 {
     AssertLockHeld(m_recv_mutex);
-    Assume(m_recv_state == RecvState::GARBAUTH || m_recv_state == RecvState::VERSION ||
-           m_recv_state == RecvState::APP);
+    Assume(m_recv_state == RecvState::VERSION || m_recv_state == RecvState::APP);
 
     // The maximum permitted contents length for a packet, consisting of:
     // - 0x00 byte: indicating long message type encoding
@@ -1250,7 +1236,7 @@ bool V2Transport::ProcessReceivedPacketBytes() noexcept
         m_recv_decode_buffer.resize(m_recv_len);
         bool ignore{false};
         Span<const std::byte> aad;
-        if (m_recv_state == RecvState::GARBAUTH) aad = MakeByteSpan(m_recv_garbage);
+        if (m_recv_state == RecvState::VERSION) aad = MakeByteSpan(m_recv_garbage);
         bool ret = m_cipher.Decrypt(
             /*input=*/MakeByteSpan(m_recv_buffer).subspan(BIP324Cipher::LENGTH_LEN),
             /*aad=*/aad,
@@ -1266,18 +1252,16 @@ bool V2Transport::ProcessReceivedPacketBytes() noexcept
         // At this point we have a valid packet decrypted into m_recv_decode_buffer. Depending on
         // the current state, decide what to do with it.
         switch (m_recv_state) {
-        case RecvState::GARBAUTH:
-            // Ignore flag does not matter for garbage authentication. Any valid packet functions
-            // as authentication. Receive and process the version packet next.
-            SetReceiveState(RecvState::VERSION);
-            ClearShrink(m_recv_garbage);
-            break;
         case RecvState::VERSION:
             if (!ignore) {
                 // Version message received; transition to application phase. The contents is
                 // ignored, but can be used for future extensions.
                 SetReceiveState(RecvState::APP);
             }
+            // We have decrypted one valid packet (which may or may not have been a decoy) with the
+            // received garbage as AAD. We no longer need the received garbage and further packets
+            // are expected to use the empty string as AAD.
+            ClearShrink(m_recv_garbage);
             break;
         case RecvState::APP:
             if (!ignore) {
@@ -1323,7 +1307,6 @@ size_t V2Transport::GetMaxBytesToProcess() noexcept
     case RecvState::GARB_GARBTERM:
         // Process garbage bytes one by one (because terminator may appear anywhere).
         return 1;
-    case RecvState::GARBAUTH:
     case RecvState::VERSION:
     case RecvState::APP:
         // These three states all involve decoding a packet. Process the length descriptor first,
@@ -1377,7 +1360,6 @@ bool V2Transport::ReceivedBytes(Span<const uint8_t>& msg_bytes) noexcept
                 // bytes).
                 m_recv_buffer.reserve(MAX_GARBAGE_LEN + BIP324Cipher::GARBAGE_TERMINATOR_LEN);
                 break;
-            case RecvState::GARBAUTH:
             case RecvState::VERSION:
             case RecvState::APP: {
                 // During states where a packet is being received, as much as is expected but never
@@ -1421,7 +1403,6 @@ bool V2Transport::ReceivedBytes(Span<const uint8_t>& msg_bytes) noexcept
             if (!ProcessReceivedGarbageBytes()) return false;
             break;
 
-        case RecvState::GARBAUTH:
         case RecvState::VERSION:
         case RecvState::APP:
             if (!ProcessReceivedPacketBytes()) return false;

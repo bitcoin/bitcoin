@@ -460,10 +460,10 @@ private:
      *
      *   start(responder)
      *        |
-     *        |  start(initiator)                                       /---------\
-     *        |          |                                              |         |
-     *        v          v                                              v         |
-     *  KEY_MAYBE_V1 -> KEY -> GARB_GARBTERM -> GARBAUTH -> VERSION -> APP -> APP_READY
+     *        |  start(initiator)                           /---------\
+     *        |          |                                  |         |
+     *        v          v                                  v         |
+     *  KEY_MAYBE_V1 -> KEY -> GARB_GARBTERM -> VERSION -> APP -> APP_READY
      *        |
      *        \-------> V1
      */
@@ -485,24 +485,19 @@ private:
         /** Garbage and garbage terminator.
          *
          * Whenever a byte is received, the last 16 bytes are compared with the expected garbage
-         * terminator. When that happens, the state becomes GARBAUTH. If no matching terminator is
+         * terminator. When that happens, the state becomes VERSION. If no matching terminator is
          * received in 4111 bytes (4095 for the maximum garbage length, and 16 bytes for the
          * terminator), the connection aborts. */
         GARB_GARBTERM,
 
-        /** Garbage authentication packet.
-         *
-         * A packet is received, and decrypted/verified with AAD set to the garbage received during
-         * the GARB_GARBTERM state. If that succeeds, the state becomes VERSION. If it fails the
-         * connection aborts. */
-        GARBAUTH,
-
         /** Version packet.
          *
-         * A packet is received, and decrypted/verified. If that succeeds, the state becomes APP,
-         * and the decrypted contents is interpreted as version negotiation (currently, that means
-         * ignoring it, but it can be used for negotiating future extensions). If it fails, the
-         * connection aborts. */
+         * A packet is received, and decrypted/verified. If that fails, the connection aborts. The
+         * first received packet in this state (whether it's a decoy or not) is expected to
+         * authenticate the garbage received during the GARB_GARBTERM state as associated
+         * authenticated data (AAD). The first non-decoy packet in this state is interpreted as
+         * version negotiation (currently, that means ignoring the contents, but it can be used for
+         * negotiating future extensions), and afterwards the state becomes APP. */
         VERSION,
 
         /** Application packet.
@@ -556,9 +551,9 @@ private:
         /** Normal sending state.
          *
          * In this state, the ciphers are initialized, so packets can be sent. When this state is
-         * entered, the garbage terminator, garbage authentication packet, and version
-         * packet are appended to the send buffer (in addition to the key and garbage which may
-         * still be there). In this state a message can be provided if the send buffer is empty. */
+         * entered, the garbage terminator and version packet are appended to the send buffer (in
+         * addition to the key and garbage which may still be there). In this state a message can be
+         * provided if the send buffer is empty. */
         READY,
 
         /** This transport is using v1 fallback.
@@ -578,12 +573,12 @@ private:
 
     /** Lock for receiver-side fields. */
     mutable Mutex m_recv_mutex ACQUIRED_BEFORE(m_send_mutex);
-    /** In {GARBAUTH, VERSION, APP}, the decrypted packet length, if m_recv_buffer.size() >=
+    /** In {VERSION, APP}, the decrypted packet length, if m_recv_buffer.size() >=
      *  BIP324Cipher::LENGTH_LEN. Unspecified otherwise. */
     uint32_t m_recv_len GUARDED_BY(m_recv_mutex) {0};
     /** Receive buffer; meaning is determined by m_recv_state. */
     std::vector<uint8_t> m_recv_buffer GUARDED_BY(m_recv_mutex);
-    /** During GARBAUTH, the garbage received during GARB_GARBTERM. */
+    /** During VERSION, the garbage received during GARB_GARBTERM. */
     std::vector<uint8_t> m_recv_garbage GUARDED_BY(m_recv_mutex);
     /** Buffer to put decrypted contents in, for converting to CNetMessage. */
     std::vector<uint8_t> m_recv_decode_buffer GUARDED_BY(m_recv_mutex);
@@ -624,7 +619,7 @@ private:
     bool ProcessReceivedKeyBytes() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex, !m_send_mutex);
     /** Process bytes in m_recv_buffer, while in GARB_GARBTERM state. */
     bool ProcessReceivedGarbageBytes() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
-    /** Process bytes in m_recv_buffer, while in GARBAUTH/VERSION/APP state. */
+    /** Process bytes in m_recv_buffer, while in VERSION/APP state. */
     bool ProcessReceivedPacketBytes() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
 
 public:
