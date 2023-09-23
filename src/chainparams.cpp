@@ -12,6 +12,7 @@
 #include <util/ranges.h>
 #include <util/system.h>
 #include <util/underlying.h>
+#include <versionbits.h>
 #include <versionbitsinfo.h>
 
 #include <arith_uint256.h>
@@ -107,6 +108,8 @@ static CBlock FindDevNetGenesisBlock(const CBlock &prevBlock, const CAmount& rew
 
 bool CChainParams::UpdateMNActivationParam(int nBit, int height, int64_t timePast, bool fJustCheck) const
 {
+    assert(nBit < VERSIONBITS_NUM_BITS);
+
     for (int index = 0; index < Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++index) {
         if (consensus.vDeployments[index].bit == nBit) {
             auto& deployment = consensus.vDeployments[index];

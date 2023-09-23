@@ -175,7 +175,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         LogPrintf("%s: CCreditPool is %s\n", __func__, creditPool.ToString());
         creditPoolDiff.emplace(std::move(creditPool), pindexPrev, chainparams.GetConsensus());
     }
-    std::unordered_map<uint8_t, int> signals = m_chainstate.m_mnhfManager.GetSignalsStage(pindexPrev);
+    std::unordered_map<uint8_t, int> signals = m_chainstate.GetMNHFSignalsStage();
     addPackageTxs(nPackagesSelected, nDescendantsUpdated, creditPoolDiff, signals);
 
     int64_t nTime1 = GetTimeMicros();

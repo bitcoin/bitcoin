@@ -248,16 +248,16 @@ class MnehfTest(DashTestFramework):
         ehf_tx_second = self.create_mnehf(28, pubkey)
         assert_equal(get_bip9_details(node, 'testdummy')['status'], 'defined')
 
-        self.log.info("Ehf with same bit signal should fail after 575 blocks but be accepted after 576 on regnet.")
-        self.log.info(f"Current progress is from {ehf_height} to {node.getblockcount()}")
-        self.slowly_generate_batch(576 - (node.getblockcount() - ehf_height))
+        self.log.info("Testing EHF signal with same bit")
+        self.log.info(f"Previous signal at height={ehf_height}, total blocks={node.getblockcount()}, should success at {ehf_hight + 576}")
+        self.slowly_generate_batch(576 - (node.getblockcount() - ehf_height) - 1)
         ehf_tx_sent = self.send_tx(ehf_tx_second)
-        self.log.info(f"ehf tx sent: {ehf_tx_sent}")
-        self.log.info(f"block: {node.getblock(node.getbestblockhash())}")
+        self.log.info("Mine block and ensure not mined yet...")
+        node.generate(1)
         self.ensure_tx_is_not_mined(ehf_tx_sent)
         node.generate(1)
         self.sync_all()
-        self.log.info(f"block: {node.getblock(node.getbestblockhash())}")
+        self.log.info("Mine one more block and ensure it is mined")
         block = node.getblock(node.getbestblockhash())
         assert ehf_tx_sent in block['tx']
 

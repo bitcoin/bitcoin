@@ -117,7 +117,7 @@ std::optional<uint8_t> extractEHFSignal(const CTransaction& tx)
     return mnhfTx.signal.versionBit;
 }
 
-static bool extractSignals(const CBlock& block, const CBlockIndex* const pindex, std::vector<uint8_t>& signals_to_process, BlockValidationState& state)
+static bool extractSignals(const CBlock& block, const CBlockIndex* const pindex, std::vector<uint8_t>& new_signals, BlockValidationState& state)
 {
     AssertLockHeld(cs_main);
 
@@ -139,14 +139,11 @@ static bool extractSignals(const CBlock& block, const CBlockIndex* const pindex,
         if (!GetTxPayload(tx, mnhfTx)) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-mnhf-tx-payload");
         }
-        signals_to_process.push_back(mnhfTx.signal.versionBit);
-    }
-
-    // Checking that there's no any duplicates...
-    std::sort(signals_to_process.begin(), signals_to_process.end());
-    const auto it = std::unique(signals_to_process.begin(), signals_to_process.end());
-    if (std::distance(signals_to_process.begin(), it) != signals_to_process.size()) {
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-mnhf-duplicates-in-block");
+        const uint8_t bit = mnhfTx.signal.versionBit;
+        if (std::find(new_signals.begin(), new_signals.end(), bit) != new_signals.end()) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-mnhf-duplicates-in-block");
+        }
+        new_signals.push_back(bit);
     }
 
     return true;
@@ -162,7 +159,7 @@ bool CMNHFManager::ProcessBlock(const CBlock& block, const CBlockIndex* const pi
         }
         Signals signals = GetSignalsStage(pindex->pprev);
         if (new_signals.empty()) {
-            if (!fJustCheck) {
+            if (fJustCheck) {
                 AddToCache(signals, pindex);
             }
             return true;
@@ -217,8 +214,6 @@ bool CMNHFManager::UndoBlock(const CBlock& block, const CBlockIndex* const pinde
 
     const Signals signals = GetFromCache(pindex);
     for (const auto& versionBit : excluded_signals) {
-        assert(versionBit < VERSIONBITS_NUM_BITS);
-
         LogPrintf("%s: exclude mnhf bit=%d block:%s number of known signals:%lld\n", __func__, versionBit, pindex->GetBlockHash().ToString(), signals.size());
         assert(signals.find(versionBit) != signals.end());
 
@@ -236,8 +231,6 @@ void CMNHFManager::UpdateChainParams(const CBlockIndex* const pindex, const CBlo
     for (const auto& signal: signals_old) {
         const uint8_t versionBit = signal.first;
 
-        assert(versionBit < VERSIONBITS_NUM_BITS);
-
         LogPrintf("%s: unload mnhf bit=%d block:%s number of known signals:%lld\n", __func__, versionBit, pindex->GetBlockHash().ToString(), signals_old.size());
 
         bool update_ret = Params().UpdateMNActivationParam(versionBit, 0, pindex->GetMedianTimePast(), /* fJustCheck= */ false);
@@ -248,8 +241,6 @@ void CMNHFManager::UpdateChainParams(const CBlockIndex* const pindex, const CBlo
     for (const auto& signal: signals) {
         const uint8_t versionBit = signal.first;
         const int value = signal.second;
-
-        assert(versionBit < VERSIONBITS_NUM_BITS);
 
         LogPrintf("%s: load mnhf bit=%d block:%s number of known signals:%lld\n", __func__, versionBit, pindex->GetBlockHash().ToString(), signals.size());
 
