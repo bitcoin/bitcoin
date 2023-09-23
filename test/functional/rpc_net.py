@@ -26,6 +26,10 @@ from test_framework.util import (
 )
 from test_framework.wallet import MiniWallet
 
+# Address manager size constants as defined in addrman_impl.h
+ADDRMAN_NEW_BUCKET_COUNT = 1 << 10
+ADDRMAN_TRIED_BUCKET_COUNT = 1 << 8
+ADDRMAN_BUCKET_SIZE = 1 << 6
 
 def assert_net_servicesnames(servicesflag, servicenames):
     """Utility that checks if all flags are correctly decoded in
@@ -385,6 +389,66 @@ class NetTest(BitcoinTestFramework):
             assert_equal(res[net]["new"], 0)
             assert_equal(res[net]["tried"], 0)
             assert_equal(res[net]["total"], 0)
+
+        self.log.debug("Test that verbose keys are not in the default getaddrmaninfo")
+        assert "new_table" not in res
+        assert "tried_table" not in res
+
+        self.log.info("Test getaddrmaninfo verbose = True")
+        res = node.getaddrmaninfo(verbose = True)
+
+        # we expect one addrman new table entry added in a previous test
+        assert_equal(len(res["new_table"]), 1)
+        assert_equal(len(res["new_table"]), res["all_networks"]["new"])
+        assert_equal(res["new_table"][0]["address"], "2.0.0.0:8333")
+        assert_equal(res["new_table"][0]["services"], 9)
+        assert_equal(res["new_table"][0]["source"], "2.0.0.0")
+        assert 0 < res["new_table"][0]["bucket"] < ADDRMAN_NEW_BUCKET_COUNT
+        assert 0 < res["new_table"][0]["position"] < ADDRMAN_BUCKET_SIZE
+
+        # we expect one addrman tried table entry added in a previous test
+        assert_equal(len(res["tried_table"]), 1)
+        assert_equal(len(res["tried_table"]), res["all_networks"]["tried"])
+        assert_equal(res["tried_table"][0]["address"], "1.2.3.4:8333")
+        assert_equal(res["tried_table"][0]["services"], 9)
+        assert_equal(res["tried_table"][0]["source"], "1.2.3.4")
+        assert 0 <= res["tried_table"][0]["bucket"] < ADDRMAN_TRIED_BUCKET_COUNT
+        assert 0 <= res["tried_table"][0]["position"] < ADDRMAN_BUCKET_SIZE
+
+        self.log.debug("Add one new addresses to each addrman table")
+        port = 45324
+        for to_tried in [True, False]:
+            added = False
+            # There's a slight chance addrman entry collision (address doesn't get added) here.
+            # We try until an address has been added.
+            while not added:
+                result = node.addpeeraddress(address="2.4.8.16", tried=to_tried, port=port)
+                added = result["success"]
+            # We can't have the same ip:port combination in the new and tried table.
+            port += 1
+
+        self.log.debug("Add one new addresses to each addrman table")
+        res = node.getaddrmaninfo(verbose = True)
+
+        # we expect two addrman new table entries now
+        assert_equal(len(res["new_table"]), 2)
+        assert_equal(len(res["new_table"]), res["all_networks"]["new"])
+        added_entry = list(filter(lambda e: "2.4.8.16" in e["address"], res["new_table"]))[0]
+        assert_equal(added_entry["address"], "2.4.8.16:45325")
+        assert_equal(added_entry["services"], 9)
+        assert_equal(added_entry["source"], "2.4.8.16")
+        assert 0 <= added_entry["bucket"] < ADDRMAN_NEW_BUCKET_COUNT
+        assert 0 <= added_entry["position"] < ADDRMAN_BUCKET_SIZE
+
+        # we expect two addrman new table entries now
+        assert_equal(len(res["tried_table"]), 2)
+        assert_equal(len(res["tried_table"]), res["all_networks"]["tried"])
+        added_entry = list(filter(lambda e: "2.4.8.16" in e["address"], res["tried_table"]))[0]
+        assert_equal(added_entry["address"], "2.4.8.16:45324")
+        assert_equal(added_entry["services"], 9)
+        assert_equal(added_entry["source"], "2.4.8.16")
+        assert 0 <= added_entry["bucket"] < ADDRMAN_TRIED_BUCKET_COUNT
+        assert 0 <= added_entry["position"] < ADDRMAN_BUCKET_SIZE
 
 if __name__ == '__main__':
     NetTest().main()
