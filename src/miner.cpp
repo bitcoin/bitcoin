@@ -477,6 +477,10 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         }
         if (std::optional<uint8_t> signal = extractEHFSignal(iter->GetTx()); signal != std::nullopt) {
             if (signals.find(*signal) != signals.end()) {
+                if (fUsingModified) {
+                    mapModifiedTx.get<ancestor_score>().erase(modit);
+                    failedTx.insert(iter);
+                }
                 LogPrintf("%s: ehf signal tx %s skipped due to duplicate %d\n",
                           __func__, iter->GetTx().GetHash().ToString(), *signal);
                 continue;
