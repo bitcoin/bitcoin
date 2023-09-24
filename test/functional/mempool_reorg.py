@@ -68,8 +68,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getmempoolentry(tx_child["txid"])["ancestorcount"], 2)
         assert_equal(self.nodes[1].getmempoolentry(tx_before_reorg["txid"])["ancestorcount"], 1)
 
-        # peer1 should not have received an inv for any of the transactions during this time, as not
-        # enough time has elapsed for those transactions to be announced. Likewise, it cannot
+        # peer1 should not have received an inv for any of the transactions during this time, as no
+        # mocktime has elapsed for those transactions to be announced. Likewise, it cannot
         # request very recent, unanounced transactions.
         assert_equal(len(peer1.get_invs()), 0)
         # It's too early to request these two transactions
@@ -92,7 +92,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
             # However, the node will answer requests for the tx from the recently-disconnected block.
             assert_equal(peer1.last_message["tx"].tx.getwtxid(),tx_disconnected["tx"].getwtxid())
 
-        self.nodes[1].setmocktime(int(time.time()) + 30)
+        self.nodes[1].setmocktime(int(time.time()) + 300)
         peer1.sync_with_ping()
         # the transactions are now announced
         assert_equal(len(peer1.get_invs()), 3)

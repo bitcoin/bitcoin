@@ -51,6 +51,7 @@ struct WalletBalances;
 struct WalletTx;
 struct WalletTxOut;
 struct WalletTxStatus;
+struct WalletMigrationResult;
 
 using WalletOrderForm = std::vector<std::pair<std::string, std::string>>;
 using WalletValueMap = std::map<std::string, std::string>;
@@ -333,6 +334,9 @@ public:
     //! Restore backup wallet
     virtual util::Result<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings) = 0;
 
+    //! Migrate a wallet
+    virtual util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase) = 0;
+
     //! Return available wallets in wallet directory.
     virtual std::vector<std::string> listWalletDir() = 0;
 
@@ -389,6 +393,7 @@ struct WalletTx
     CTransactionRef tx;
     std::vector<wallet::isminetype> txin_is_mine;
     std::vector<wallet::isminetype> txout_is_mine;
+    std::vector<bool> txout_is_change;
     std::vector<CTxDestination> txout_address;
     std::vector<wallet::isminetype> txout_address_is_mine;
     CAmount credit;
@@ -422,6 +427,15 @@ struct WalletTxOut
     int64_t time;
     int depth_in_main_chain = -1;
     bool is_spent = false;
+};
+
+//! Migrated wallet info
+struct WalletMigrationResult
+{
+    std::unique_ptr<Wallet> wallet;
+    std::optional<std::string> watchonly_wallet_name;
+    std::optional<std::string> solvables_wallet_name;
+    fs::path backup_path;
 };
 
 //! Return implementation of Wallet interface. This function is defined in

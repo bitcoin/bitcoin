@@ -121,11 +121,11 @@ class NetTracepointTest(BitcoinTestFramework):
         checked_outbound_version_msg = 0
         events = []
 
-        def check_p2p_message(event, inbound):
+        def check_p2p_message(event, is_inbound):
             nonlocal checked_inbound_version_msg, checked_outbound_version_msg
             if event.msg_type.decode("utf-8") == "version":
                 self.log.info(
-                    f"check_p2p_message(): {'inbound' if inbound else 'outbound'} {event}")
+                    f"check_p2p_message(): {'inbound' if is_inbound else 'outbound'} {event}")
                 peer = self.nodes[0].getpeerinfo()[0]
                 msg = msg_version()
                 msg.deserialize(BytesIO(bytes(event.msg[:event.msg_size])))
@@ -133,13 +133,12 @@ class NetTracepointTest(BitcoinTestFramework):
                 assert_equal(peer["addr"], event.peer_addr.decode("utf-8"))
                 assert_equal(peer["connection_type"],
                              event.peer_conn_type.decode("utf-8"))
-                if inbound:
+                if is_inbound:
                     checked_inbound_version_msg += 1
                 else:
                     checked_outbound_version_msg += 1
 
         def handle_inbound(_, data, __):
-            nonlocal events
             event = ctypes.cast(data, ctypes.POINTER(P2PMessage)).contents
             events.append((event, True))
 
@@ -157,8 +156,8 @@ class NetTracepointTest(BitcoinTestFramework):
 
         self.log.info(
             "check receipt and content of in- and outbound version messages")
-        for event, inbound in events:
-            check_p2p_message(event, inbound)
+        for event, is_inbound in events:
+            check_p2p_message(event, is_inbound)
         assert_equal(EXPECTED_INOUTBOUND_VERSION_MSG,
                      checked_inbound_version_msg)
         assert_equal(EXPECTED_INOUTBOUND_VERSION_MSG,

@@ -249,28 +249,24 @@ class ConfArgsTest(BitcoinTestFramework):
         # No peers.dat exists and -dnsseed=0
         # We expect the node will fallback immediately to fixed seeds
         assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
-        start = time.time()
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Loaded 0 addresses from peers.dat",
                 "DNS seeding disabled",
                 "Adding fixed seeds as -dnsseed=0 (or IPv4/IPv6 connections are disabled via -onlynet) and neither -addnode nor -seednode are provided\n",
         ]):
             self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=1'])
-        assert time.time() - start < 60
         self.stop_node(0)
         self.nodes[0].assert_start_raises_init_error(['-dnsseed=1', '-onlynet=i2p', '-i2psam=127.0.0.1:7656'], "Error: Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6")
 
         # No peers.dat exists and dns seeds are disabled.
         # We expect the node will not add fixed seeds when explicitly disabled.
         assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
-        start = time.time()
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Loaded 0 addresses from peers.dat",
                 "DNS seeding disabled",
                 "Fixed seeds are disabled",
         ]):
             self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=0'])
-        assert time.time() - start < 60
         self.stop_node(0)
 
         # No peers.dat exists and -dnsseed=0, but a -addnode is provided
@@ -371,6 +367,14 @@ class ConfArgsTest(BitcoinTestFramework):
             f'is being used instead.') + r"[\s\S]*", env=env, match=ErrorMatch.FULL_REGEX)
         node.args = node_args
 
+    def test_acceptstalefeeestimates_arg_support(self):
+        self.log.info("Test -acceptstalefeeestimates option support")
+        conf_file = self.nodes[0].datadir_path / "bitcoin.conf"
+        for chain, chain_name in {("main", ""), ("test", "testnet3"), ("signet", "signet")}:
+            util.write_config(conf_file, n=0, chain=chain_name, extra_config='acceptstalefeeestimates=1\n')
+            self.nodes[0].assert_start_raises_init_error(expected_msg=f'Error: acceptstalefeeestimates is not supported on {chain} chain.')
+        util.write_config(conf_file, n=0, chain="regtest")  # Reset to regtest
+
     def run_test(self):
         self.test_log_buffer()
         self.test_args_log()
@@ -383,6 +387,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_invalid_command_line_options()
         self.test_ignored_conf()
         self.test_ignored_default_conf()
+        self.test_acceptstalefeeestimates_arg_support()
 
         # Remove the -datadir argument so it doesn't override the config file
         self.nodes[0].args = [arg for arg in self.nodes[0].args if not arg.startswith("-datadir")]

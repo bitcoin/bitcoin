@@ -3,39 +3,42 @@
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include <addresstype.h>
-#include <script/script.h>
-#include <script/solver.h>
+
+#include <crypto/sha256.h>
 #include <hash.h>
 #include <pubkey.h>
+#include <script/script.h>
+#include <script/solver.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
+#include <cassert>
 #include <vector>
 
 typedef std::vector<unsigned char> valtype;
 
 ScriptHash::ScriptHash(const CScript& in) : BaseHash(Hash160(in)) {}
-ScriptHash::ScriptHash(const CScriptID& in) : BaseHash(static_cast<uint160>(in)) {}
+ScriptHash::ScriptHash(const CScriptID& in) : BaseHash{in} {}
 
 PKHash::PKHash(const CPubKey& pubkey) : BaseHash(pubkey.GetID()) {}
 PKHash::PKHash(const CKeyID& pubkey_id) : BaseHash(pubkey_id) {}
 
 WitnessV0KeyHash::WitnessV0KeyHash(const CPubKey& pubkey) : BaseHash(pubkey.GetID()) {}
-WitnessV0KeyHash::WitnessV0KeyHash(const PKHash& pubkey_hash) : BaseHash(static_cast<uint160>(pubkey_hash)) {}
+WitnessV0KeyHash::WitnessV0KeyHash(const PKHash& pubkey_hash) : BaseHash{pubkey_hash} {}
 
 CKeyID ToKeyID(const PKHash& key_hash)
 {
-    return CKeyID{static_cast<uint160>(key_hash)};
+    return CKeyID{uint160{key_hash}};
 }
 
 CKeyID ToKeyID(const WitnessV0KeyHash& key_hash)
 {
-    return CKeyID{static_cast<uint160>(key_hash)};
+    return CKeyID{uint160{key_hash}};
 }
 
 CScriptID ToScriptID(const ScriptHash& script_hash)
 {
-    return CScriptID{static_cast<uint160>(script_hash)};
+    return CScriptID{uint160{script_hash}};
 }
 
 WitnessV0ScriptHash::WitnessV0ScriptHash(const CScript& in)
@@ -51,11 +54,12 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     switch (whichType) {
     case TxoutType::PUBKEY: {
         CPubKey pubKey(vSolutions[0]);
-        if (!pubKey.IsValid())
-            return false;
-
-        addressRet = PKHash(pubKey);
-        return true;
+        if (!pubKey.IsValid()) {
+            addressRet = CNoDestination(scriptPubKey);
+        } else {
+            addressRet = PubKeyDestination(pubKey);
+        }
+        return false;
     }
     case TxoutType::PUBKEYHASH: {
         addressRet = PKHash(uint160(vSolutions[0]));
@@ -84,16 +88,13 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         return true;
     }
     case TxoutType::WITNESS_UNKNOWN: {
-        WitnessUnknown unk;
-        unk.version = vSolutions[0][0];
-        std::copy(vSolutions[1].begin(), vSolutions[1].end(), unk.program);
-        unk.length = vSolutions[1].size();
-        addressRet = unk;
+        addressRet = WitnessUnknown{vSolutions[0][0], vSolutions[1]};
         return true;
     }
     case TxoutType::MULTISIG:
     case TxoutType::NULL_DATA:
     case TxoutType::NONSTANDARD:
+        addressRet = CNoDestination(scriptPubKey);
         return false;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
@@ -105,7 +106,12 @@ class CScriptVisitor
 public:
     CScript operator()(const CNoDestination& dest) const
     {
-        return CScript();
+        return dest.GetScript();
+    }
+
+    CScript operator()(const PubKeyDestination& dest) const
+    {
+        return CScript() << ToByteVector(dest.GetPubKey()) << OP_CHECKSIG;
     }
 
     CScript operator()(const PKHash& keyID) const
@@ -135,8 +141,21 @@ public:
 
     CScript operator()(const WitnessUnknown& id) const
     {
-        return CScript() << CScript::EncodeOP_N(id.version) << std::vector<unsigned char>(id.program, id.program + id.length);
+        return CScript() << CScript::EncodeOP_N(id.GetWitnessVersion()) << id.GetWitnessProgram();
     }
+};
+
+class ValidDestinationVisitor
+{
+public:
+    bool operator()(const CNoDestination& dest) const { return false; }
+    bool operator()(const PubKeyDestination& dest) const { return false; }
+    bool operator()(const PKHash& dest) const { return true; }
+    bool operator()(const ScriptHash& dest) const { return true; }
+    bool operator()(const WitnessV0KeyHash& dest) const { return true; }
+    bool operator()(const WitnessV0ScriptHash& dest) const { return true; }
+    bool operator()(const WitnessV1Taproot& dest) const { return true; }
+    bool operator()(const WitnessUnknown& dest) const { return true; }
 };
 } // namespace
 
@@ -146,5 +165,5 @@ CScript GetScriptForDestination(const CTxDestination& dest)
 }
 
 bool IsValidDestination(const CTxDestination& dest) {
-    return dest.index() != 0;
+    return std::visit(ValidDestinationVisitor(), dest);
 }

@@ -106,7 +106,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
 
         self.log.debug("Check that node[1] will send the tx to node[0] even though it is already in the mempool")
         self.connect_nodes(1, 0)
-        with self.nodes[1].assert_debug_log(["Force relaying tx {} from peer=0".format(txid)]):
+        with self.nodes[1].assert_debug_log(["Force relaying tx {} (wtxid={}) from peer=0".format(txid, tx.getwtxid())]):
             p2p_rebroadcast_wallet.send_txs_and_test([tx], self.nodes[1])
             self.wait_until(lambda: txid in self.nodes[0].getrawmempool())
 
@@ -119,14 +119,14 @@ class P2PPermissionsTests(BitcoinTestFramework):
             [tx],
             self.nodes[1],
             success=False,
-            reject_reason='{} from peer=0 was not accepted: txn-mempool-conflict'.format(txid)
+            reject_reason='{} (wtxid={}) from peer=0 was not accepted: txn-mempool-conflict'.format(txid, tx.getwtxid())
         )
 
         p2p_rebroadcast_wallet.send_txs_and_test(
             [tx],
             self.nodes[1],
             success=False,
-            reject_reason='Not relaying non-mempool transaction {} from forcerelay peer=0'.format(txid)
+            reject_reason='Not relaying non-mempool transaction {} (wtxid={}) from forcerelay peer=0'.format(txid, tx.getwtxid())
         )
 
     def checkpermission(self, args, expectedPermissions):

@@ -550,12 +550,10 @@ public:
 class CAutoFile : public AutoFile
 {
 private:
-    const int nType;
     const int nVersion;
 
 public:
-    explicit CAutoFile(std::FILE* file, int type, int version, std::vector<std::byte> data_xor = {}) : AutoFile{file, std::move(data_xor)}, nType{type}, nVersion{version} {}
-    int GetType() const          { return nType; }
+    explicit CAutoFile(std::FILE* file, int version, std::vector<std::byte> data_xor = {}) : AutoFile{file, std::move(data_xor)}, nVersion{version} {}
     int GetVersion() const       { return nVersion; }
 
     template<typename T>
@@ -579,10 +577,9 @@ public:
  *  Will automatically close the file when it goes out of scope if not null.
  *  If you need to close the file early, use file.fclose() instead of fclose(file).
  */
-class CBufferedFile
+class BufferedFile
 {
 private:
-    const int nType;
     const int nVersion;
 
     FILE *src;            //!< source file
@@ -603,7 +600,7 @@ private:
             return false;
         size_t nBytes = fread((void*)&vchBuf[pos], 1, readNow, src);
         if (nBytes == 0) {
-            throw std::ios_base::failure(feof(src) ? "CBufferedFile::Fill: end of file" : "CBufferedFile::Fill: fread failed");
+            throw std::ios_base::failure(feof(src) ? "BufferedFile::Fill: end of file" : "BufferedFile::Fill: fread failed");
         }
         nSrcPos += nBytes;
         return true;
@@ -632,25 +629,24 @@ private:
     }
 
 public:
-    CBufferedFile(FILE* fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nTypeIn, int nVersionIn)
-        : nType(nTypeIn), nVersion(nVersionIn), nReadLimit(std::numeric_limits<uint64_t>::max()), nRewind(nRewindIn), vchBuf(nBufSize, std::byte{0})
+    BufferedFile(FILE* fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nVersionIn)
+        : nVersion{nVersionIn}, nReadLimit{std::numeric_limits<uint64_t>::max()}, nRewind{nRewindIn}, vchBuf(nBufSize, std::byte{0})
     {
         if (nRewindIn >= nBufSize)
             throw std::ios_base::failure("Rewind limit must be less than buffer size");
         src = fileIn;
     }
 
-    ~CBufferedFile()
+    ~BufferedFile()
     {
         fclose();
     }
 
     // Disallow copies
-    CBufferedFile(const CBufferedFile&) = delete;
-    CBufferedFile& operator=(const CBufferedFile&) = delete;
+    BufferedFile(const BufferedFile&) = delete;
+    BufferedFile& operator=(const BufferedFile&) = delete;
 
     int GetVersion() const { return nVersion; }
-    int GetType() const { return nType; }
 
     void fclose()
     {
@@ -715,7 +711,7 @@ public:
     }
 
     template<typename T>
-    CBufferedFile& operator>>(T&& obj) {
+    BufferedFile& operator>>(T&& obj) {
         ::Unserialize(*this, obj);
         return (*this);
     }

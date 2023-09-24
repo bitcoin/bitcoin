@@ -5,51 +5,82 @@
 
 #include <wallet/wallet.h>
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+#include <addresstype.h>
 #include <blockfilter.h>
 #include <chain.h>
+#include <coins.h>
 #include <common/args.h>
+#include <common/settings.h>
+#include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <external_signer.h>
 #include <interfaces/chain.h>
+#include <interfaces/handler.h>
 #include <interfaces/wallet.h>
+#include <kernel/mempool_removal_reason.h>
 #include <key.h>
 #include <key_io.h>
+#include <logging.h>
 #include <outputtype.h>
-#include <policy/fees.h>
-#include <policy/policy.h>
+#include <policy/feerate.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <psbt.h>
+#include <pubkey.h>
 #include <random.h>
 #include <script/descriptor.h>
+#include <script/interpreter.h>
 #include <script/script.h>
+#include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
+#include <serialize.h>
+#include <span.h>
+#include <streams.h>
+#include <support/allocators/secure.h>
+#include <support/allocators/zeroafterfree.h>
 #include <support/cleanse.h>
-#include <txmempool.h>
-#include <util/bip32.h>
+#include <sync.h>
+#include <tinyformat.h>
+#include <uint256.h>
+#include <univalue.h>
 #include <util/check.h>
 #include <util/error.h>
-#include <util/fees.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
+#include <util/message.h>
 #include <util/moneystr.h>
-#include <util/rbf.h>
+#include <util/result.h>
 #include <util/string.h>
+#include <util/time.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/context.h>
+#include <wallet/crypter.h>
+#include <wallet/db.h>
 #include <wallet/external_signer_scriptpubkeyman.h>
-#include <wallet/fees.h>
 #include <wallet/scriptpubkeyman.h>
-
-#include <univalue.h>
+#include <wallet/transaction.h>
+#include <wallet/types.h>
+#include <wallet/walletdb.h>
+#include <wallet/walletutil.h>
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
+#include <condition_variable>
+#include <exception>
 #include <optional>
+#include <stdexcept>
+#include <thread>
+#include <tuple>
+#include <variant>
+
+struct KeyOriginInfo;
 
 using interfaces::FoundBlock;
 
@@ -1672,96 +1703,6 @@ void CWallet::InitWalletFlags(uint64_t flags)
     if (!LoadWalletFlags(flags)) assert(false);
 }
 
-// Helper for producing a max-sized low-S low-R signature (eg 71 bytes)
-// or a max-sized low-S signature (e.g. 72 bytes) depending on coin_control
-bool DummySignInput(const SigningProvider& provider, CTxIn &tx_in, const CTxOut &txout, bool can_grind_r, const CCoinControl* coin_control)
-{
-    // Fill in dummy signatures for fee calculation.
-    const CScript& scriptPubKey = txout.scriptPubKey;
-    SignatureData sigdata;
-
-    // Use max sig if watch only inputs were used, if this particular input is an external input,
-    // or if this wallet uses an external signer, to ensure a sufficient fee is attained for the requested feerate.
-    const bool use_max_sig = coin_control && (coin_control->fAllowWatchOnly || coin_control->IsExternalSelected(tx_in.prevout) || !can_grind_r);
-    if (!ProduceSignature(provider, use_max_sig ? DUMMY_MAXIMUM_SIGNATURE_CREATOR : DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata)) {
-        return false;
-    }
-    UpdateInput(tx_in, sigdata);
-    return true;
-}
-
-bool FillInputToWeight(CTxIn& txin, int64_t target_weight)
-{
-    assert(txin.scriptSig.empty());
-    assert(txin.scriptWitness.IsNull());
-
-    int64_t txin_weight = GetTransactionInputWeight(txin);
-
-    // Do nothing if the weight that should be added is less than the weight that already exists
-    if (target_weight < txin_weight) {
-        return false;
-    }
-    if (target_weight == txin_weight) {
-        return true;
-    }
-
-    // Subtract current txin weight, which should include empty witness stack
-    int64_t add_weight = target_weight - txin_weight;
-    assert(add_weight > 0);
-
-    // We will want to subtract the size of the Compact Size UInt that will also be serialized.
-    // However doing so when the size is near a boundary can result in a problem where it is not
-    // possible to have a stack element size and combination to exactly equal a target.
-    // To avoid this possibility, if the weight to add is less than 10 bytes greater than
-    // a boundary, the size will be split so that 2/3rds will be in one stack element, and
-    // the remaining 1/3rd in another. Using 3rds allows us to avoid additional boundaries.
-    // 10 bytes is used because that accounts for the maximum size. This does not need to be super precise.
-    if ((add_weight >= 253 && add_weight < 263)
-        || (add_weight > std::numeric_limits<uint16_t>::max() && add_weight <= std::numeric_limits<uint16_t>::max() + 10)
-        || (add_weight > std::numeric_limits<uint32_t>::max() && add_weight <= std::numeric_limits<uint32_t>::max() + 10)) {
-        int64_t first_weight = add_weight / 3;
-        add_weight -= first_weight;
-
-        first_weight -= GetSizeOfCompactSize(first_weight);
-        txin.scriptWitness.stack.emplace(txin.scriptWitness.stack.end(), first_weight, 0);
-    }
-
-    add_weight -= GetSizeOfCompactSize(add_weight);
-    txin.scriptWitness.stack.emplace(txin.scriptWitness.stack.end(), add_weight, 0);
-    assert(GetTransactionInputWeight(txin) == target_weight);
-
-    return true;
-}
-
-// Helper for producing a bunch of max-sized low-S low-R signatures (eg 71 bytes)
-bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> &txouts, const CCoinControl* coin_control) const
-{
-    // Fill in dummy signatures for fee calculation.
-    int nIn = 0;
-    const bool can_grind_r = CanGrindR();
-    for (const auto& txout : txouts)
-    {
-        CTxIn& txin = txNew.vin[nIn];
-        // If weight was provided, fill the input to that weight
-        if (coin_control && coin_control->HasInputWeight(txin.prevout)) {
-            if (!FillInputToWeight(txin, coin_control->GetInputWeight(txin.prevout))) {
-                return false;
-            }
-            nIn++;
-            continue;
-        }
-        const std::unique_ptr<SigningProvider> provider = GetSolvingProvider(txout.scriptPubKey);
-        if (!provider || !DummySignInput(*provider, txin, txout, can_grind_r, coin_control)) {
-            if (!coin_control || !DummySignInput(coin_control->m_external_provider, txin, txout, can_grind_r, coin_control)) {
-                return false;
-            }
-        }
-
-        nIn++;
-    }
-    return true;
-}
-
 bool CWallet::ImportScripts(const std::set<CScript> scripts, int64_t timestamp)
 {
     auto spk_man = GetLegacyScriptPubKeyMan();
@@ -2272,15 +2213,13 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     bool any_pkh{false};
 
     for (const auto& recipient : vecSend) {
-        std::vector<std::vector<uint8_t>> dummy;
-        const TxoutType type{Solver(recipient.scriptPubKey, dummy)};
-        if (type == TxoutType::WITNESS_V1_TAPROOT) {
+        if (std::get_if<WitnessV1Taproot>(&recipient.dest)) {
             any_tr = true;
-        } else if (type == TxoutType::WITNESS_V0_KEYHASH) {
+        } else if (std::get_if<WitnessV0KeyHash>(&recipient.dest)) {
             any_wpkh = true;
-        } else if (type == TxoutType::SCRIPTHASH) {
+        } else if (std::get_if<ScriptHash>(&recipient.dest)) {
             any_sh = true;
-        } else if (type == TxoutType::PUBKEYHASH) {
+        } else if (std::get_if<PKHash>(&recipient.dest)) {
             any_pkh = true;
         }
     }
@@ -3921,6 +3860,13 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         return false;
     }
 
+    // Get all invalid or non-watched scripts that will not be migrated
+    std::set<CTxDestination> not_migrated_dests;
+    for (const auto& script : legacy_spkm->GetNotMineScriptPubKeys()) {
+        CTxDestination dest;
+        if (ExtractDestination(script, dest)) not_migrated_dests.emplace(dest);
+    }
+
     for (auto& desc_spkm : data.desc_spkms) {
         if (m_spk_managers.count(desc_spkm->GetID()) > 0) {
             error = _("Error: Duplicate descriptors created during migration. Your wallet may be corrupted.");
@@ -4027,6 +3973,13 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                         continue;
                     }
                 }
+
+                // Skip invalid/non-watched scripts that will not be migrated
+                if (not_migrated_dests.count(addr_pair.first) > 0) {
+                    dests_to_delete.push_back(addr_pair.first);
+                    continue;
+                }
+
                 // Not ours, not in watchonly wallet, and not in solvable
                 error = _("Error: Address book data in wallet cannot be identified to belong to migrated wallets");
                 return false;
@@ -4260,7 +4213,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         // Migration successful, unload the wallet locally, then reload it.
         assert(local_wallet.use_count() == 1);
         local_wallet.reset();
-        LoadWallet(context, wallet_name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
+        res.wallet = LoadWallet(context, wallet_name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
         res.wallet_name = wallet_name;
     } else {
         // Migration failed, cleanup

@@ -146,6 +146,18 @@ struct Descriptor {
 
     /** @return The OutputType of the scriptPubKey(s) produced by this descriptor. Or nullopt if indeterminate (multiple or none) */
     virtual std::optional<OutputType> GetOutputType() const = 0;
+
+    /** Get the size of the scriptPubKey for this descriptor. */
+    virtual std::optional<int64_t> ScriptSize() const = 0;
+
+    /** Get the maximum size of a satisfaction for this descriptor, in weight units.
+     *
+     * @param use_max_sig Whether to assume ECDSA signatures will have a high-r.
+     */
+    virtual std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const = 0;
+
+    /** Get the maximum size number of stack elements for satisfying this descriptor. */
+    virtual std::optional<int64_t> MaxSatisfactionElems() const = 0;
 };
 
 /** Parse a `descriptor` string. Included private keys are put in `out`.

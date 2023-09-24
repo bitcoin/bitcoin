@@ -7,9 +7,7 @@
 #include <consensus/amount.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
-#include <timedata.h>
 #include <util/check.h>
-#include <util/moneystr.h>
 
 #include <algorithm>
 #include <numeric>
@@ -171,9 +169,8 @@ void MiniMiner::DeleteAncestorPackage(const std::set<MockEntryMap::iterator, Ite
         for (auto& descendant : it->second) {
             // If these fail, we must be double-deducting.
             Assume(descendant->second.GetModFeesWithAncestors() >= anc->second.GetModifiedFee());
-            Assume(descendant->second.vsize_with_ancestors >= anc->second.GetTxSize());
-            descendant->second.fee_with_ancestors -= anc->second.GetModifiedFee();
-            descendant->second.vsize_with_ancestors -= anc->second.GetTxSize();
+            Assume(descendant->second.GetSizeWithAncestors() >= anc->second.GetTxSize());
+            descendant->second.UpdateAncestorState(-anc->second.GetTxSize(), -anc->second.GetModifiedFee());
         }
     }
     // Delete these entries.

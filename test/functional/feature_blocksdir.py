@@ -18,7 +18,7 @@ class BlocksdirTest(BitcoinTestFramework):
 
     def run_test(self):
         self.stop_node(0)
-        assert os.path.isdir(os.path.join(self.nodes[0].chain_path, "blocks"))
+        assert os.path.isdir(os.path.join(self.nodes[0].blocks_path))
         assert not os.path.isdir(os.path.join(self.nodes[0].datadir, "blocks"))
         shutil.rmtree(self.nodes[0].datadir)
         initialize_datadir(self.options.tmpdir, 0, self.chain)
@@ -31,7 +31,7 @@ class BlocksdirTest(BitcoinTestFramework):
         self.log.info("mining blocks..")
         self.generatetoaddress(self.nodes[0], 10, self.nodes[0].get_deterministic_priv_key().address)
         assert os.path.isfile(os.path.join(blocksdir_path, self.chain, "blocks", "blk00000.dat"))
-        assert os.path.isdir(os.path.join(self.nodes[0].chain_path, "blocks", "index"))
+        assert os.path.isdir(os.path.join(self.nodes[0].blocks_path, "index"))
 
 
 if __name__ == '__main__':

@@ -18,10 +18,10 @@ FUZZ_TARGET(buffered_file)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     FuzzedFileProvider fuzzed_file_provider = ConsumeFile(fuzzed_data_provider);
-    std::optional<CBufferedFile> opt_buffered_file;
+    std::optional<BufferedFile> opt_buffered_file;
     FILE* fuzzed_file = fuzzed_file_provider.open();
     try {
-        opt_buffered_file.emplace(fuzzed_file, fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(0, 4096), fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(0, 4096), fuzzed_data_provider.ConsumeIntegral<int>(), fuzzed_data_provider.ConsumeIntegral<int>());
+        opt_buffered_file.emplace(fuzzed_file, fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(0, 4096), fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(0, 4096), fuzzed_data_provider.ConsumeIntegral<int>());
     } catch (const std::ios_base::failure&) {
         if (fuzzed_file != nullptr) {
             fclose(fuzzed_file);
@@ -62,7 +62,6 @@ FUZZ_TARGET(buffered_file)
                 });
         }
         opt_buffered_file->GetPos();
-        opt_buffered_file->GetType();
         opt_buffered_file->GetVersion();
     }
 }

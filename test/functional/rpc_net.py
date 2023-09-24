@@ -61,10 +61,12 @@ class NetTest(BitcoinTestFramework):
         self.test_getpeerinfo()
         self.test_getnettotals()
         self.test_getnetworkinfo()
-        self.test_getaddednodeinfo()
+        self.test_addnode_getaddednodeinfo()
         self.test_service_flags()
         self.test_getnodeaddresses()
         self.test_addpeeraddress()
+        self.test_sendmsgtopeer()
+        self.test_getaddrmaninfo()
 
     def test_connection_count(self):
         self.log.info("Test getconnectioncount")
@@ -203,8 +205,8 @@ class NetTest(BitcoinTestFramework):
         # Check dynamically generated networks list in getnetworkinfo help output.
         assert "(ipv4, ipv6, onion, i2p, cjdns)" in self.nodes[0].help("getnetworkinfo")
 
-    def test_getaddednodeinfo(self):
-        self.log.info("Test getaddednodeinfo")
+    def test_addnode_getaddednodeinfo(self):
+        self.log.info("Test addnode and getaddednodeinfo")
         assert_equal(self.nodes[0].getaddednodeinfo(), [])
         # add a node (node2) to node0
         ip_port = "127.0.0.1:{}".format(p2p_port(2))
@@ -218,6 +220,8 @@ class NetTest(BitcoinTestFramework):
         # check that node can be removed
         self.nodes[0].addnode(node=ip_port, command='remove')
         assert_equal(self.nodes[0].getaddednodeinfo(), [])
+        # check that an invalid command returns an error
+        assert_raises_rpc_error(-1, 'addnode "node" "command"', self.nodes[0].addnode, node=ip_port, command='abc')
         # check that trying to remove the node again returns an error
         assert_raises_rpc_error(-24, "Node could not be removed", self.nodes[0].addnode, node=ip_port, command='remove')
         # check that a non-existent node returns an error
@@ -328,6 +332,59 @@ class NetTest(BitcoinTestFramework):
             addrs = node.getnodeaddresses(count=0)  # getnodeaddresses re-runs the addrman checks
             assert_equal(len(addrs), 2)
 
+    def test_sendmsgtopeer(self):
+        node = self.nodes[0]
+
+        self.restart_node(0)
+        self.connect_nodes(0, 1)
+
+        self.log.info("Test sendmsgtopeer")
+        self.log.debug("Send a valid message")
+        with self.nodes[1].assert_debug_log(expected_msgs=["received: addr"]):
+            node.sendmsgtopeer(peer_id=0, msg_type="addr", msg="FFFFFF")
+
+        self.log.debug("Test error for sending to non-existing peer")
+        assert_raises_rpc_error(-1, "Error: Could not send message to peer", node.sendmsgtopeer, peer_id=100, msg_type="addr", msg="FF")
+
+        self.log.debug("Test that zero-length msg_type is allowed")
+        node.sendmsgtopeer(peer_id=0, msg_type="addr", msg="")
+
+        self.log.debug("Test error for msg_type that is too long")
+        assert_raises_rpc_error(-8, "Error: msg_type too long, max length is 12", node.sendmsgtopeer, peer_id=0, msg_type="long_msg_type", msg="FF")
+
+        self.log.debug("Test that unknown msg_type is allowed")
+        node.sendmsgtopeer(peer_id=0, msg_type="unknown", msg="FF")
+
+        self.log.debug("Test that empty msg is allowed")
+        node.sendmsgtopeer(peer_id=0, msg_type="addr", msg="FF")
+
+        self.log.debug("Test that oversized messages are allowed, but get us disconnected")
+        zero_byte_string = b'\x00' * 4000001
+        node.sendmsgtopeer(peer_id=0, msg_type="addr", msg=zero_byte_string.hex())
+        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0, timeout=10)
+
+    def test_getaddrmaninfo(self):
+        self.log.info("Test getaddrmaninfo")
+        node = self.nodes[1]
+
+        self.log.debug("Test that getaddrmaninfo is a hidden RPC")
+        # It is hidden from general help, but its detailed help may be called directly.
+        assert "getaddrmaninfo" not in node.help()
+        assert "getaddrmaninfo" in node.help("getaddrmaninfo")
+
+        # current count of ipv4 addresses in addrman is {'new':1, 'tried':1}
+        self.log.info("Test that count of addresses in addrman match expected values")
+        res = node.getaddrmaninfo()
+        assert_equal(res["ipv4"]["new"], 1)
+        assert_equal(res["ipv4"]["tried"], 1)
+        assert_equal(res["ipv4"]["total"], 2)
+        assert_equal(res["all_networks"]["new"], 1)
+        assert_equal(res["all_networks"]["tried"], 1)
+        assert_equal(res["all_networks"]["total"], 2)
+        for net in ["ipv6", "onion", "i2p", "cjdns"]:
+            assert_equal(res[net]["new"], 0)
+            assert_equal(res[net]["tried"], 0)
+            assert_equal(res[net]["total"], 0)
 
 if __name__ == '__main__':
     NetTest().main()

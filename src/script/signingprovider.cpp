@@ -225,6 +225,61 @@ CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& 
     }
     return CKeyID();
 }
+
+void MultiSigningProvider::AddProvider(std::unique_ptr<SigningProvider> provider)
+{
+    m_providers.push_back(std::move(provider));
+}
+
+bool MultiSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const
+{
+    for (const auto& provider: m_providers) {
+        if (provider->GetCScript(scriptid, script)) return true;
+    }
+    return false;
+}
+
+bool MultiSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const
+{
+    for (const auto& provider: m_providers) {
+        if (provider->GetPubKey(keyid, pubkey)) return true;
+    }
+    return false;
+}
+
+
+bool MultiSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const
+{
+    for (const auto& provider: m_providers) {
+        if (provider->GetKeyOrigin(keyid, info)) return true;
+    }
+    return false;
+}
+
+bool MultiSigningProvider::GetKey(const CKeyID& keyid, CKey& key) const
+{
+    for (const auto& provider: m_providers) {
+        if (provider->GetKey(keyid, key)) return true;
+    }
+    return false;
+}
+
+bool MultiSigningProvider::GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const
+{
+    for (const auto& provider: m_providers) {
+        if (provider->GetTaprootSpendData(output_key, spenddata)) return true;
+    }
+    return false;
+}
+
+bool MultiSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const
+{
+    for (const auto& provider: m_providers) {
+        if (provider->GetTaprootBuilder(output_key, builder)) return true;
+    }
+    return false;
+}
+
 /*static*/ TaprootBuilder::NodeInfo TaprootBuilder::Combine(NodeInfo&& a, NodeInfo&& b)
 {
     NodeInfo ret;

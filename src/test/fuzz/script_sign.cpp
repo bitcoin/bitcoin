@@ -36,7 +36,8 @@ FUZZ_TARGET(script_sign, .init = initialize_script_sign)
     const std::vector<uint8_t> key = ConsumeRandomLengthByteVector(fuzzed_data_provider, 128);
 
     {
-        CDataStream random_data_stream = ConsumeDataStream(fuzzed_data_provider);
+        DataStream stream{ConsumeDataStream(fuzzed_data_provider)};
+        CDataStream random_data_stream{stream, SER_NETWORK, INIT_PROTO_VERSION}; // temporary copy, to be removed along with the version flag SERIALIZE_TRANSACTION_NO_WITNESS
         std::map<CPubKey, KeyOriginInfo> hd_keypaths;
         try {
             DeserializeHDKeypaths(random_data_stream, key, hd_keypaths);
@@ -79,9 +80,7 @@ FUZZ_TARGET(script_sign, .init = initialize_script_sign)
     }
 
     FillableSigningProvider provider;
-    CKey k;
-    const std::vector<uint8_t> key_data = ConsumeRandomLengthByteVector(fuzzed_data_provider);
-    k.Set(key_data.begin(), key_data.end(), fuzzed_data_provider.ConsumeBool());
+    CKey k = ConsumePrivateKey(fuzzed_data_provider);
     if (k.IsValid()) {
         provider.AddKey(k);
     }

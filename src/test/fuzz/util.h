@@ -11,6 +11,7 @@
 #include <compat/compat.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <key.h>
 #include <merkleblock.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -70,9 +71,9 @@ template<typename B = uint8_t>
     return BytesToBits(ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length));
 }
 
-[[nodiscard]] inline CDataStream ConsumeDataStream(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
+[[nodiscard]] inline DataStream ConsumeDataStream(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
-    return CDataStream{ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length), SER_NETWORK, INIT_PROTO_VERSION};
+    return DataStream{ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length)};
 }
 
 [[nodiscard]] inline std::vector<std::string> ConsumeRandomLengthStringVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_vector_size = 16, const size_t max_string_length = 16) noexcept
@@ -94,6 +95,23 @@ template <typename T>
         r.push_back(fuzzed_data_provider.ConsumeIntegral<T>());
     }
     return r;
+}
+
+template <typename P>
+[[nodiscard]] P ConsumeDeserializationParams(FuzzedDataProvider& fuzzed_data_provider) noexcept;
+
+template <typename T, typename P>
+[[nodiscard]] std::optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const P& params, const std::optional<size_t>& max_length = std::nullopt) noexcept
+{
+    const std::vector<uint8_t> buffer{ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length)};
+    DataStream ds{buffer};
+    T obj;
+    try {
+        ds >> WithParams(params, obj);
+    } catch (const std::ios_base::failure&) {
+        return std::nullopt;
+    }
+    return obj;
 }
 
 template <typename T>
@@ -164,6 +182,8 @@ template <typename WeakEnumType, size_t size>
 }
 
 [[nodiscard]] CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept;
+
+[[nodiscard]] CKey ConsumePrivateKey(FuzzedDataProvider& fuzzed_data_provider, std::optional<bool> compressed = std::nullopt) noexcept;
 
 template <typename T>
 [[nodiscard]] bool MultiplicationOverflow(const T i, const T j) noexcept

@@ -106,7 +106,7 @@ class WalletPruningTest(BitcoinTestFramework):
 
     def has_block(self, block_index):
         """Checks if the pruned node has the specific blk0000*.dat file"""
-        return os.path.isfile(os.path.join(self.nodes[1].chain_path, "blocks", f"blk{block_index:05}.dat"))
+        return os.path.isfile(os.path.join(self.nodes[1].blocks_path, f"blk{block_index:05}.dat"))
 
     def create_wallet(self, wallet_name, *, unload=False):
         """Creates and dumps a wallet on the non-pruned node0 to be later import by the pruned node"""

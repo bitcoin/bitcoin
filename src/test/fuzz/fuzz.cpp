@@ -29,6 +29,10 @@
 #include <utility>
 #include <vector>
 
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && defined(__AFL_FUZZ_INIT)
+__AFL_FUZZ_INIT();
+#endif
+
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
 /**
@@ -188,21 +192,13 @@ int main(int argc, char** argv)
 {
     initialize();
     static const auto& test_one_input = *Assert(g_test_one_input);
-#ifdef __AFL_INIT
-    // Enable AFL deferred forkserver mode. Requires compilation using
-    // afl-clang-fast++. See fuzzing.md for details.
-    __AFL_INIT();
-#endif
-
 #ifdef __AFL_LOOP
     // Enable AFL persistent mode. Requires compilation using afl-clang-fast++.
     // See fuzzing.md for details.
-    while (__AFL_LOOP(1000)) {
-        std::vector<uint8_t> buffer;
-        if (!read_stdin(buffer)) {
-            continue;
-        }
-        test_one_input(buffer);
+    const uint8_t* buffer = __AFL_FUZZ_TESTCASE_BUF;
+    while (__AFL_LOOP(100000)) {
+        size_t buffer_len = __AFL_FUZZ_TESTCASE_LEN;
+        test_one_input({buffer, buffer_len});
     }
 #else
     std::vector<uint8_t> buffer;

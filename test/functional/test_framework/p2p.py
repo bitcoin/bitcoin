@@ -95,6 +95,12 @@ P2P_SUBVERSION = "/python-p2p-tester:0.0.3/"
 P2P_VERSION_RELAY = 1
 # Delay after receiving a tx inv before requesting transactions from non-preferred peers, in seconds
 NONPREF_PEER_TX_DELAY = 2
+# Delay for requesting transactions via txids if we have wtxid-relaying peers, in seconds
+TXID_RELAY_DELAY = 2
+# Delay for requesting transactions if the peer has MAX_PEER_TX_REQUEST_IN_FLIGHT or more requests
+OVERLOADED_PEER_TX_DELAY = 2
+# How long to wait before downloading a transaction from an additional peer
+GETDATA_TX_INTERVAL = 60
 
 MESSAGEMAP = {
     b"addr": msg_addr,
@@ -552,16 +558,12 @@ class P2PInterface(P2PConnection):
         self.send_message(message)
         self.sync_with_ping(timeout=timeout)
 
-    def sync_send_with_ping(self, timeout=60):
-        """Ensure SendMessages is called on this connection"""
-        # Calling sync_with_ping twice requires that the node calls
+    def sync_with_ping(self, timeout=60):
+        """Ensure ProcessMessages and SendMessages is called on this connection"""
+        # Sending two pings back-to-back, requires that the node calls
         # `ProcessMessage` twice, and thus ensures `SendMessages` must have
         # been called at least once
-        self.sync_with_ping()
-        self.sync_with_ping()
-
-    def sync_with_ping(self, timeout=60):
-        """Ensure ProcessMessages is called on this connection"""
+        self.send_message(msg_ping(nonce=0))
         self.send_message(msg_ping(nonce=self.ping_counter))
 
         def test_function():

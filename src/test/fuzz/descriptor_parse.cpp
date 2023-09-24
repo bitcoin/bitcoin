@@ -8,6 +8,7 @@
 #include <script/descriptor.h>
 #include <test/fuzz/fuzz.h>
 #include <util/chaintype.h>
+#include <util/strencodings.h>
 
 //! Types are raw (un)compressed pubkeys, raw xonly pubkeys, raw privkeys (WIF), xpubs, xprvs.
 static constexpr uint8_t KEY_TYPES_COUNT{6};
@@ -112,7 +113,7 @@ static void TestDescriptor(const Descriptor& desc, FlatSigningProvider& sig_prov
 {
     // Trivial helpers.
     (void)desc.IsRange();
-    (void)desc.IsSolvable();
+    const bool is_solvable{desc.IsSolvable()};
     (void)desc.IsSingleType();
     (void)desc.GetOutputType();
 
@@ -131,7 +132,19 @@ static void TestDescriptor(const Descriptor& desc, FlatSigningProvider& sig_prov
     // If we could serialize to script we must be able to infer using the same provider.
     if (!out_scripts.empty()) {
         assert(InferDescriptor(out_scripts.back(), sig_provider));
+
+        // The ScriptSize() must match the size of the serialized Script. (ScriptSize() is set for all descs but 'combo()'.)
+        const bool is_combo{!desc.IsSingleType()};
+        assert(is_combo || desc.ScriptSize() == out_scripts.back().size());
     }
+
+    const auto max_sat_maxsig{desc.MaxSatisfactionWeight(true)};
+    const auto max_sat_nonmaxsig{desc.MaxSatisfactionWeight(true)};
+    const auto max_elems{desc.MaxSatisfactionElems()};
+    // We must be able to estimate the max satisfaction size for any solvable descriptor (but combo).
+    const bool is_nontop_or_nonsolvable{!is_solvable || !desc.GetOutputType()};
+    const bool is_input_size_info_set{max_sat_maxsig && max_sat_nonmaxsig && max_elems};
+    assert(is_input_size_info_set || is_nontop_or_nonsolvable);
 }
 
 void initialize_descriptor_parse()

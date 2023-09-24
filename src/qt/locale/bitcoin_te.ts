@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">చిరునామా లేదా లేబుల్ సవరించు -క్లిక్ చేయండి</translation>
+        <translation type="unfinished">చిరునామా లేదా లేబుల్ సావరించుటకు రైట్-క్లిక్ చేయండి</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">క్రొత్త చిరునామా సృష్టించు</translation>
+        <translation type="unfinished">క్రొత్త చిరునామా సృష్టించుము</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">C&amp;కోల్పోవు</translation>
+        <translation type="unfinished">క్లో&amp;జ్</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -55,7 +55,7 @@
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished">ఎంచుకోండి</translation>
+        <translation type="unfinished">ఎం&amp;చుకోండి</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -275,14 +275,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ఘోరమైన లోపం సంభవించింది. సెట్టింగుల ఫైల్ వ్రాయదగినదో లేదో తనిఖీ చేయండి లేదా - నోసెట్టింగ్స్ తో అమలు చేయడానికి ప్రయత్నించండి.</translation>
     </message>
     <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation type="unfinished">లోపం: పేర్కొన్న డేటా డైరెక్టరీ " %1 " లేదు.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1.</source>
-        <translation type="unfinished">లోపం: కాన్ఫిగరేషన్ ఫైల్‌ను అన్వయించలేరు: %1.</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">లోపం: %1</translation>
     </message>
@@ -305,10 +297,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Unroutable</source>
         <translation type="unfinished">రూట్ చేయలేనిది</translation>
-    </message>
-    <message>
-        <source>Internal</source>
-        <translation type="unfinished">అంతర్గత</translation>
     </message>
     <message>
         <source>Inbound</source>
@@ -401,193 +389,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Settings file could not be read</source>
-        <translation type="unfinished">సెట్టింగ్‌ల ఫైల్ చదవడం సాధ్యం కాలేదు</translation>
-    </message>
-    <message>
-        <source>Settings file could not be written</source>
-        <translation type="unfinished">సెట్టింగుల ఫైల్ వ్రాయబడదు</translation>
-    </message>
-    <message>
-        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
-        <translation type="unfinished">-blockfilterindex లేకుండా -peerblockfilters సెట్ చేయలేము.</translation>
-    </message>
-    <message>
-        <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished">డేటాబేస్ నుండి చదవడంలో లోపం, షట్ డౌన్.</translation>
-    </message>
-    <message>
-        <source>Missing solving data for estimating transaction size</source>
-        <translation type="unfinished">లావాదేవీ పరిమాణాన్ని అంచనా వేయడానికి పరిష్కార డేటా లేదు</translation>
-    </message>
-    <message>
-        <source>Prune cannot be configured with a negative value.</source>
-        <translation type="unfinished">ప్రూనే ప్రతికూల విలువతో కాన్ఫిగర్ చేయబడదు.</translation>
-    </message>
-    <message>
-        <source>Prune mode is incompatible with -txindex.</source>
-        <translation type="unfinished">ప్రూన్ మోడ్ -txindexకి అనుకూలంగా లేదు.</translation>
-    </message>
-    <message>
-        <source>Section [%s] is not recognized.</source>
-        <translation type="unfinished">విభాగం [%s] గుర్తించబడలేదు.</translation>
-    </message>
-    <message>
-        <source>Specified blocks directory "%s" does not exist.</source>
-        <translation type="unfinished">పేర్కొన్న బ్లాక్‌ల డైరెక్టరీ "%s" ఉనికిలో లేదు.</translation>
-    </message>
-    <message>
-        <source>Starting network threads…</source>
-        <translation type="unfinished">నెట్‌వర్క్ థ్రెడ్‌లను ప్రారంభిస్తోంది…</translation>
-    </message>
-    <message>
-        <source>The source code is available from %s.</source>
-        <translation type="unfinished">%s నుండి సోర్స్ కోడ్ అందుబాటులో ఉంది.</translation>
-    </message>
-    <message>
-        <source>The specified config file %s does not exist</source>
-        <translation type="unfinished">పేర్కొన్న కాన్ఫిగర్ ఫైల్ %s ఉనికిలో లేదు</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation type="unfinished">రుసుము చెల్లించడానికి లావాదేవీ మొత్తం చాలా చిన్నది</translation>
-    </message>
-    <message>
-        <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation type="unfinished">వాలెట్ కనీస రిలే రుసుము కంటే తక్కువ చెల్లించడాన్ని నివారిస్తుంది.</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation type="unfinished">ఇది ప్రయోగాత్మక సాఫ్ట్‌వేర్.</translation>
-    </message>
-    <message>
-        <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation type="unfinished">ఇది ప్రతి లావాదేవీకి మీరు చెల్లించే కనీస లావాదేవీ రుసుము.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">మీరు లావాదేవీని పంపితే మీరు చెల్లించే లావాదేవీ రుసుము ఇది.</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation type="unfinished">లావాదేవీ మొత్తం చాలా చిన్నది</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must not be negative</source>
-        <translation type="unfinished">లావాదేవీ మొత్తాలు ప్రతికూలంగా ఉండకూడదు</translation>
-    </message>
-    <message>
-        <source>Transaction change output index out of range</source>
-        <translation type="unfinished">లావాదేవీ మార్పు అవుట్‌పుట్ సూచిక పరిధి వెలుపల ఉంది</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">లావాదేవీ మెంపూల్ చైన్‌లో చాలా పొడవుగా ఉంది</translation>
-    </message>
-    <message>
-        <source>Transaction must have at least one recipient</source>
-        <translation type="unfinished">లావాదేవీకి కనీసం ఒక గ్రహీత ఉండాలి</translation>
-    </message>
-    <message>
-        <source>Transaction needs a change address, but we can't generate it.</source>
-        <translation type="unfinished">లావాదేవీకి చిరునామా మార్పు అవసరం, కానీ మేము దానిని రూపొందించలేము.</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation type="unfinished">లావాదేవీ చాలా పెద్దది</translation>
-    </message>
-    <message>
-        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
-        <translation type="unfinished">-maxsigcacheize కోసం మెమరీని కేటాయించడం సాధ్యం కాలేదు: '%s' MiB</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished">బైండ్ చేయడం సాధ్యపడలేదు %s ఈ కంప్యూటర్‌లో  (బైండ్ రిటర్న్ ఎర్రర్ %s)</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
-        <translation type="unfinished">బైండ్ చేయడం సాధ్యపడలేదు %s ఈ కంప్యూటర్‌లో. %s బహుశా ఇప్పటికే అమలులో ఉంది.</translation>
-    </message>
-    <message>
-        <source>Unable to create the PID file '%s': %s</source>
-        <translation type="unfinished">PID ఫైల్‌ని సృష్టించడం సాధ్యం కాలేదు '%s': %s</translation>
-    </message>
-    <message>
-        <source>Unable to find UTXO for external input</source>
-        <translation type="unfinished">బాహ్య ఇన్‌పుట్ కోసం UTXOని కనుగొనడం సాధ్యం కాలేదు</translation>
-    </message>
-    <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">ప్రారంభ కీలను రూపొందించడం సాధ్యం కాలేదు</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">కీలను రూపొందించడం సాధ్యం కాలేదు</translation>
-    </message>
-    <message>
-        <source>Unable to open %s for writing</source>
-        <translation type="unfinished">తెరవడం సాధ్యం కాదు %s రాయడం కోసం</translation>
-    </message>
-    <message>
-        <source>Unable to parse -maxuploadtarget: '%s'</source>
-        <translation type="unfinished">-maxuploadtarget అన్వయించడం సాధ్యం కాలేదు: '%s'</translation>
-    </message>
-    <message>
-        <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation type="unfinished">HTTP సర్వర్‌ని ప్రారంభించడం సాధ్యం కాలేదు. వివరాల కోసం డీబగ్ లాగ్ చూడండి.</translation>
-    </message>
-    <message>
-        <source>Unable to unload the wallet before migrating</source>
-        <translation type="unfinished">తరలించడానికి ముందు వాలెట్‌ని అన్‌లోడ్ చేయడం సాధ్యపడలేదు</translation>
-    </message>
-    <message>
-        <source>Unknown -blockfilterindex value %s.</source>
-        <translation type="unfinished">తెలియని -blockfilterindex విలువ %s.</translation>
-    </message>
-    <message>
-        <source>Unknown address type '%s'</source>
-        <translation type="unfinished">తెలియని చిరునామా రకం '%s'</translation>
-    </message>
-    <message>
-        <source>Unknown change type '%s'</source>
-        <translation type="unfinished">తెలియని మార్పు రకం '%s'</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation type="unfinished">తెలియని నెట్‌వర్క్ -onlynetలో పేర్కొనబడింది: '%s'</translation>
-    </message>
-    <message>
-        <source>Unknown new rules activated (versionbit %i)</source>
-        <translation type="unfinished">తెలియని కొత్త నియమాలు (వెర్షన్‌బిట్‌ %i)ని యాక్టివేట్ చేశాయి</translation>
-    </message>
-    <message>
-        <source>Unsupported global logging level -loglevel=%s. Valid values: %s.</source>
-        <translation type="unfinished">మద్దతు లేని గ్లోబల్ లాగింగ్ స్థాయి -లాగ్‌లెవెల్=%s. చెల్లుబాటు అయ్యే విలువలు: %s.</translation>
-    </message>
-    <message>
-        <source>Unsupported logging category %s=%s.</source>
-        <translation type="unfinished">మద్దతు లేని లాగింగ్ వర్గం %s=%s</translation>
-    </message>
-    <message>
-        <source>User Agent comment (%s) contains unsafe characters.</source>
-        <translation type="unfinished">వినియోగదారు ఏజెంట్ వ్యాఖ్య (%s)లో అసురక్షిత అక్షరాలు ఉన్నాయి.</translation>
-    </message>
-    <message>
-        <source>Verifying blocks…</source>
-        <translation type="unfinished">బ్లాక్‌లను ధృవీకరిస్తోంది…</translation>
-    </message>
-    <message>
-        <source>Verifying wallet(s)…</source>
-        <translation type="unfinished">వాలెట్(ల)ని ధృవీకరిస్తోంది...</translation>
-    </message>
-    <message>
-        <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation type="unfinished">వాలెట్‌ని మళ్లీ వ్రాయాలి: పూర్తి చేయడానికి పునఃప్రారంభించండి %s</translation>
-    </message>
-</context>
-<context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
@@ -643,7 +444,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Wallet:</source>
-        <translation type="unfinished">వాలెట్‌:</translation>
+        <translation type="unfinished">ధనమును తీసుకొనిపోవు సంచి</translation>
     </message>
     <message>
         <source>Network activity disabled.</source>
@@ -680,7 +481,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Encrypt Wallet…</source>
-        <translation type="unfinished">&amp;వాలెట్‌ని గుప్తీకరించు...</translation>
+        <translation type="unfinished">&amp;వాలెట్‌ని ఎన్‌క్రిప్ట్ చేయండి...</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -763,10 +564,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">డిస్క్‌లో బ్లాక్‌లను ప్రాసెస్ చేస్తోంది...</translation>
     </message>
     <message>
-        <source>Reindexing blocks on disk…</source>
-        <translation type="unfinished">డిస్క్‌లోని బ్లాక్‌లను రీఇండెక్సింగ్ చేస్తోంది...</translation>
-    </message>
-    <message>
         <source>Connecting to peers…</source>
         <translation type="unfinished">తోటివారితో కలుస్తుంది…</translation>
     </message>
@@ -789,8 +586,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform>లావాదేవీ %n చరిత్ర యొక్క ప్రాసెస్ చేయబడిన బ్లాక్(లు).</numerusform>
-            <numerusform>లావాదేవీ %n చరిత్ర యొక్క ప్రాసెస్ చేయబడిన బ్లాక్(లు).</numerusform>
+            <numerusform>లావాదేవీ చరిత్ర యొక్క %n బ్లాక్(లు) ప్రాసెస్ చేయబడింది.</numerusform>
+            <numerusform>లావాదేవీ చరిత్ర యొక్క %n బ్లాక్(లు) ప్రాసెస్ చేయబడింది.</numerusform>
         </translation>
     </message>
     <message>
@@ -945,7 +742,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>S&amp;how</source>
-        <translation type="unfinished">S&amp;ఎలా</translation>
+        <translation type="unfinished">&amp;చూపించు</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -1509,8 +1306,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform>(బ్యాకప్‌లను పునరుద్ధరించడానికి సరిపోతుంది %n రోజు(లు) పాతది)</numerusform>
-            <numerusform>(బ్యాకప్‌లను పునరుద్ధరించడానికి సరిపోతుంది %n రోజు(లు) పాతది)</numerusform>
+            <numerusform>(బ్యాకప్ %n రోజులను పునరుద్ధరించడానికి సరిపోతుంది) పాతది)</numerusform>
+            <numerusform>(బ్యాకప్ %n రోజులను పునరుద్ధరించడానికి సరిపోతుంది) పాతది)</numerusform>
         </translation>
     </message>
     <message>
@@ -1756,10 +1553,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;బాహ్య సంతకం స్క్రిప్ట్ మార్గం</translation>
     </message>
     <message>
-        <source>Full path to a Bitcoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
-        <translation type="unfinished">బిట్‌కాయిన్ కోర్ అనుకూల స్క్రిప్ట్‌కి పూర్తి మార్గం (ఉదా. C:\Downloads\hwi.exe లేదా /Users/you/Downloads/hwi.py). జాగ్రత్త: మాల్వేర్ మీ నాణేలను దొంగిలించగలదు!</translation>
-    </message>
-    <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation type="unfinished">రౌటర్‌లో బిట్‌కాయిన్ క్లయింట్ పోర్ట్‌ను స్వయంచాలకంగా తెరవండి. ఇది మీ రూటర్ UPnPకి మద్దతు ఇచ్చినప్పుడు మరియు అది ప్రారంభించబడినప్పుడు మాత్రమే పని చేస్తుంది.</translation>
     </message>
@@ -1777,7 +1570,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Allow incomin&amp;g connections</source>
-        <translation type="unfinished">ఇన్‌కమిం&amp;g కనెక్షన్‌లను అనుమతించండి</translation>
+        <translation type="unfinished">&amp;ఇన్‌కమింగ్ కనెక్షన్‌లను అనుమతించండి</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
@@ -2039,10 +1832,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </context>
 <context>
     <name>PSBTOperationsDialog</name>
-    <message>
-        <source>Dialog</source>
-        <translation type="unfinished">డైలాగ్</translation>
-    </message>
     <message>
         <source>Sign Tx</source>
         <translation type="unfinished">లావాదేవీ పై సంతకం చేయండి</translation>
@@ -2746,7 +2535,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">లేబుల్</translation>
+        <translation type="unfinished">ఉల్లాకు</translation>
     </message>
     <message>
         <source>Address</source>
@@ -2801,6 +2590,193 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Cancel</source>
         <translation type="unfinished">రద్దు చేయండి</translation>
+    </message>
+</context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation type="unfinished">-blockfilterindex లేకుండా -peerblockfilters సెట్ చేయలేము.</translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation type="unfinished">డేటాబేస్ నుండి చదవడంలో లోపం, షట్ డౌన్.</translation>
+    </message>
+    <message>
+        <source>Missing solving data for estimating transaction size</source>
+        <translation type="unfinished">లావాదేవీ పరిమాణాన్ని అంచనా వేయడానికి పరిష్కార డేటా లేదు</translation>
+    </message>
+    <message>
+        <source>Prune cannot be configured with a negative value.</source>
+        <translation type="unfinished">ప్రూనే ప్రతికూల విలువతో కాన్ఫిగర్ చేయబడదు.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation type="unfinished">ప్రూన్ మోడ్ -txindexకి అనుకూలంగా లేదు.</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation type="unfinished">విభాగం [%s] గుర్తించబడలేదు.</translation>
+    </message>
+    <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation type="unfinished">పేర్కొన్న బ్లాక్‌ల డైరెక్టరీ "%s" ఉనికిలో లేదు.</translation>
+    </message>
+    <message>
+        <source>Starting network threads…</source>
+        <translation type="unfinished">నెట్‌వర్క్ థ్రెడ్‌లను ప్రారంభిస్తోంది…</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation type="unfinished">%s నుండి సోర్స్ కోడ్ అందుబాటులో ఉంది.</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist</source>
+        <translation type="unfinished">పేర్కొన్న కాన్ఫిగర్ ఫైల్ %s ఉనికిలో లేదు</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation type="unfinished">రుసుము చెల్లించడానికి లావాదేవీ మొత్తం చాలా చిన్నది</translation>
+    </message>
+    <message>
+        <source>The wallet will avoid paying less than the minimum relay fee.</source>
+        <translation type="unfinished">వాలెట్ కనీస రిలే రుసుము కంటే తక్కువ చెల్లించడాన్ని నివారిస్తుంది.</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation type="unfinished">ఇది ప్రయోగాత్మక సాఫ్ట్‌వేర్.</translation>
+    </message>
+    <message>
+        <source>This is the minimum transaction fee you pay on every transaction.</source>
+        <translation type="unfinished">ఇది ప్రతి లావాదేవీకి మీరు చెల్లించే కనీస లావాదేవీ రుసుము.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you will pay if you send a transaction.</source>
+        <translation type="unfinished">మీరు లావాదేవీని పంపితే మీరు చెల్లించే లావాదేవీ రుసుము ఇది.</translation>
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished">లావాదేవీ మొత్తం చాలా చిన్నది</translation>
+    </message>
+    <message>
+        <source>Transaction amounts must not be negative</source>
+        <translation type="unfinished">లావాదేవీ మొత్తాలు ప్రతికూలంగా ఉండకూడదు</translation>
+    </message>
+    <message>
+        <source>Transaction change output index out of range</source>
+        <translation type="unfinished">లావాదేవీ మార్పు అవుట్‌పుట్ సూచిక పరిధి వెలుపల ఉంది</translation>
+    </message>
+    <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation type="unfinished">లావాదేవీ మెంపూల్ చైన్‌లో చాలా పొడవుగా ఉంది</translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation type="unfinished">లావాదేవీకి కనీసం ఒక గ్రహీత ఉండాలి</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it.</source>
+        <translation type="unfinished">లావాదేవీకి చిరునామా మార్పు అవసరం, కానీ మేము దానిని రూపొందించలేము.</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation type="unfinished">లావాదేవీ చాలా పెద్దది</translation>
+    </message>
+    <message>
+        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
+        <translation type="unfinished">-maxsigcacheize కోసం మెమరీని కేటాయించడం సాధ్యం కాలేదు: '%s' MiB</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
+        <translation type="unfinished">బైండ్ చేయడం సాధ్యపడలేదు %s ఈ కంప్యూటర్‌లో  (బైండ్ రిటర్న్ ఎర్రర్ %s)</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
+        <translation type="unfinished">బైండ్ చేయడం సాధ్యపడలేదు %s ఈ కంప్యూటర్‌లో. %s బహుశా ఇప్పటికే అమలులో ఉంది.</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation type="unfinished">PID ఫైల్‌ని సృష్టించడం సాధ్యం కాలేదు '%s': %s</translation>
+    </message>
+    <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation type="unfinished">బాహ్య ఇన్‌పుట్ కోసం UTXOని కనుగొనడం సాధ్యం కాలేదు</translation>
+    </message>
+    <message>
+        <source>Unable to generate initial keys</source>
+        <translation type="unfinished">ప్రారంభ కీలను రూపొందించడం సాధ్యం కాలేదు</translation>
+    </message>
+    <message>
+        <source>Unable to generate keys</source>
+        <translation type="unfinished">కీలను రూపొందించడం సాధ్యం కాలేదు</translation>
+    </message>
+    <message>
+        <source>Unable to open %s for writing</source>
+        <translation type="unfinished">వ్రాయుటకు %s తెరవుట కుదరలేదు</translation>
+    </message>
+    <message>
+        <source>Unable to parse -maxuploadtarget: '%s'</source>
+        <translation type="unfinished">-maxuploadtarget అన్వయించడం సాధ్యం కాలేదు: '%s'</translation>
+    </message>
+    <message>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation type="unfinished">HTTP సర్వర్‌ని ప్రారంభించడం సాధ్యం కాలేదు. వివరాల కోసం డీబగ్ లాగ్ చూడండి.</translation>
+    </message>
+    <message>
+        <source>Unable to unload the wallet before migrating</source>
+        <translation type="unfinished">తరలించడానికి ముందు వాలెట్‌ని అన్‌లోడ్ చేయడం సాధ్యపడలేదు</translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation type="unfinished">తెలియని -blockfilterindex విలువ %s.</translation>
+    </message>
+    <message>
+        <source>Unknown address type '%s'</source>
+        <translation type="unfinished">తెలియని చిరునామా రకం '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation type="unfinished">తెలియని మార్పు రకం '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation type="unfinished">తెలియని నెట్‌వర్క్ -onlynetలో పేర్కొనబడింది: '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown new rules activated (versionbit %i)</source>
+        <translation type="unfinished">తెలియని కొత్త నియమాలు (వెర్షన్‌బిట్‌ %i)ని యాక్టివేట్ చేశాయి</translation>
+    </message>
+    <message>
+        <source>Unsupported global logging level -loglevel=%s. Valid values: %s.</source>
+        <translation type="unfinished">మద్దతు లేని గ్లోబల్ లాగింగ్ స్థాయి -లాగ్‌లెవెల్=%s. చెల్లుబాటు అయ్యే విలువలు: %s.</translation>
+    </message>
+    <message>
+        <source>Unsupported logging category %s=%s.</source>
+        <translation type="unfinished">మద్దతు లేని లాగింగ్ వర్గం %s=%s</translation>
+    </message>
+    <message>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation type="unfinished">వినియోగదారు ఏజెంట్ వ్యాఖ్య (%s)లో అసురక్షిత అక్షరాలు ఉన్నాయి.</translation>
+    </message>
+    <message>
+        <source>Verifying blocks…</source>
+        <translation type="unfinished">బ్లాక్‌లను ధృవీకరిపబచున్నవి…</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)…</source>
+        <translation type="unfinished">వాలెట్(ల)ని ధృవీకరిస్తోంది...</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation type="unfinished">వాలెట్‌ని మళ్లీ వ్రాయాలి: పూర్తి చేయడానికి పునఃప్రారంభించండి %s</translation>
+    </message>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">సెట్టింగ్‌ల ఫైల్ చదవడం సాధ్యం కాలేదు</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">సెట్టింగుల ఫైల్ వ్రాయబడదు</translation>
     </message>
 </context>
 </TS>

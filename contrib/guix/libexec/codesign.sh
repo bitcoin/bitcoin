@@ -85,11 +85,8 @@ mkdir -p "$DISTSRC"
             # Apply detached codesignatures to dist/ (in-place)
             signapple apply dist/Bitcoin-Qt.app codesignatures/osx/dist
 
-            # Make a DMG from dist/
-            xorrisofs -D -l -V "$(< osx_volname)" -no-pad -r -dir-mode 0755 \
-                      -o "${OUTDIR}/${DISTNAME}-${HOST}.dmg" \
-                      dist \
-                      -- -volume_date all_file_dates ="$SOURCE_DATE_EPOCH"
+            # Make a .zip from dist/
+            zip "${OUTDIR}/${DISTNAME}-${HOST}.zip" dist/*
             ;;
         *)
             exit 1

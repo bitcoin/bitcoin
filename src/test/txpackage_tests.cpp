@@ -51,20 +51,31 @@ BOOST_FIXTURE_TEST_CASE(package_sanitization_tests, TestChain100Setup)
     BOOST_CHECK_EQUAL(state_too_many.GetResult(), PackageValidationResult::PCKG_POLICY);
     BOOST_CHECK_EQUAL(state_too_many.GetRejectReason(), "package-too-many-transactions");
 
-    // Packages can't have a total size of more than 101KvB.
+    // Packages can't have a total weight of more than 404'000WU.
     CTransactionRef large_ptx = create_placeholder_tx(150, 150);
     Package package_too_large;
-    auto size_large = GetVirtualTransactionSize(*large_ptx);
-    size_t total_size{0};
-    while (total_size <= MAX_PACKAGE_SIZE * 1000) {
+    auto size_large = GetTransactionWeight(*large_ptx);
+    size_t total_weight{0};
+    while (total_weight <= MAX_PACKAGE_WEIGHT) {
         package_too_large.push_back(large_ptx);
-        total_size += size_large;
+        total_weight += size_large;
     }
     BOOST_CHECK(package_too_large.size() <= MAX_PACKAGE_COUNT);
     PackageValidationState state_too_large;
     BOOST_CHECK(!CheckPackage(package_too_large, state_too_large));
     BOOST_CHECK_EQUAL(state_too_large.GetResult(), PackageValidationResult::PCKG_POLICY);
     BOOST_CHECK_EQUAL(state_too_large.GetRejectReason(), "package-too-large");
+
+    // Packages can't contain transactions with the same txid.
+    Package package_duplicate_txids_empty;
+    for (auto i{0}; i < 3; ++i) {
+        CMutableTransaction empty_tx;
+        package_duplicate_txids_empty.emplace_back(MakeTransactionRef(empty_tx));
+    }
+    PackageValidationState state_duplicates;
+    BOOST_CHECK(!CheckPackage(package_duplicate_txids_empty, state_duplicates));
+    BOOST_CHECK_EQUAL(state_duplicates.GetResult(), PackageValidationResult::PCKG_POLICY);
+    BOOST_CHECK_EQUAL(state_duplicates.GetRejectReason(), "package-contains-duplicates");
 }
 
 BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100Setup)
@@ -111,7 +122,7 @@ BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100Setup)
 
     // A single, giant transaction submitted through ProcessNewPackage fails on single tx policy.
     CTransactionRef giant_ptx = create_placeholder_tx(999, 999);
-    BOOST_CHECK(GetVirtualTransactionSize(*giant_ptx) > MAX_PACKAGE_SIZE * 1000);
+    BOOST_CHECK(GetVirtualTransactionSize(*giant_ptx) > DEFAULT_ANCESTOR_SIZE_LIMIT_KVB * 1000);
     auto result_single_large = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, {giant_ptx}, /*test_accept=*/true);
     BOOST_CHECK(result_single_large.m_state.IsInvalid());
     BOOST_CHECK_EQUAL(result_single_large.m_state.GetResult(), PackageValidationResult::PCKG_TX);
@@ -809,18 +820,20 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
         expected_pool_size += 1;
         BOOST_CHECK_MESSAGE(submit_rich_parent.m_state.IsInvalid(), "Package validation unexpectedly succeeded");
 
-        // The child would have been validated on its own and failed, then submitted as a "package" of 1.
+        // The child would have been validated on its own and failed.
         BOOST_CHECK_EQUAL(submit_rich_parent.m_state.GetResult(), PackageValidationResult::PCKG_TX);
         BOOST_CHECK_EQUAL(submit_rich_parent.m_state.GetRejectReason(), "transaction failed");
 
         auto it_parent = submit_rich_parent.m_tx_results.find(tx_parent_rich->GetWitnessHash());
+        auto it_child = submit_rich_parent.m_tx_results.find(tx_child_poor->GetWitnessHash());
         BOOST_CHECK(it_parent != submit_rich_parent.m_tx_results.end());
+        BOOST_CHECK(it_child != submit_rich_parent.m_tx_results.end());
         BOOST_CHECK(it_parent->second.m_result_type == MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK(it_child->second.m_result_type == MempoolAcceptResult::ResultType::INVALID);
         BOOST_CHECK(it_parent->second.m_state.GetRejectReason() == "");
         BOOST_CHECK_MESSAGE(it_parent->second.m_base_fees.value() == high_parent_fee,
                 strprintf("rich parent: expected fee %s, got %s", high_parent_fee, it_parent->second.m_base_fees.value()));
         BOOST_CHECK(it_parent->second.m_effective_feerate == CFeeRate(high_parent_fee, GetVirtualTransactionSize(*tx_parent_rich)));
-        auto it_child = submit_rich_parent.m_tx_results.find(tx_child_poor->GetWitnessHash());
         BOOST_CHECK(it_child != submit_rich_parent.m_tx_results.end());
         BOOST_CHECK_EQUAL(it_child->second.m_result_type, MempoolAcceptResult::ResultType::INVALID);
         BOOST_CHECK_EQUAL(it_child->second.m_state.GetResult(), TxValidationResult::TX_MEMPOOL_POLICY);

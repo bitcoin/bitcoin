@@ -8,6 +8,11 @@ export LC_ALL=C.UTF-8
 
 set -ex
 
+export ASAN_OPTIONS="detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1"
+export LSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/lsan"
+export TSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/tsan:halt_on_error=1:log_path=${BASE_SCRATCH_DIR}/sanitizer-output/tsan"
+export UBSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
+
 if [ "$CI_OS_NAME" == "macos" ]; then
   top -l 1 -s 0 | awk ' /PhysMem/ {print}'
   echo "Number of CPUs: $(sysctl -n hw.logicalcpu)"
@@ -23,6 +28,29 @@ df -h
 # Tests that need cross-compilation export the appropriate HOST.
 # Tests that run natively guess the host
 export HOST=${HOST:-$("$BASE_ROOT_DIR/depends/config.guess")}
+
+(
+  # compact->outputs[i].file_size is uninitialized memory, so reading it is UB.
+  # The statistic bytes_written is only used for logging, which is disabled in
+  # CI, so as a temporary minimal fix to work around UB and CI failures, leave
+  # bytes_written unmodified.
+  # See https://github.com/bitcoin/bitcoin/pull/28359#issuecomment-1698694748
+  echo 'diff --git a/src/leveldb/db/db_impl.cc b/src/leveldb/db/db_impl.cc
+index 65e31724bc..f61b471953 100644
+--- a/src/leveldb/db/db_impl.cc
++++ b/src/leveldb/db/db_impl.cc
+@@ -1028,9 +1028,6 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
+       stats.bytes_read += compact->compaction->input(which, i)->file_size;
+     }
+   }
+-  for (size_t i = 0; i < compact->outputs.size(); i++) {
+-    stats.bytes_written += compact->outputs[i].file_size;
+-  }
+
+   mutex_.Lock();
+   stats_[compact->compaction->level() + 1].Add(stats);' | patch -p1
+  git diff
+)
 
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/

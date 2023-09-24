@@ -151,11 +151,11 @@ class BIP65Test(BitcoinTestFramework):
             cltv_invalidate(spendtx, i)
 
             expected_cltv_reject_reason = [
-                "non-mandatory-script-verify-flag (Operation not valid with the current stack size)",
-                "non-mandatory-script-verify-flag (Negative locktime)",
-                "non-mandatory-script-verify-flag (Locktime requirement not satisfied)",
-                "non-mandatory-script-verify-flag (Locktime requirement not satisfied)",
-                "non-mandatory-script-verify-flag (Locktime requirement not satisfied)",
+                "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)",
+                "mandatory-script-verify-flag-failed (Negative locktime)",
+                "mandatory-script-verify-flag-failed (Locktime requirement not satisfied)",
+                "mandatory-script-verify-flag-failed (Locktime requirement not satisfied)",
+                "mandatory-script-verify-flag-failed (Locktime requirement not satisfied)",
             ][i]
             # First we show that this tx is valid except for CLTV by getting it
             # rejected from the mempool for exactly that reason.
