@@ -140,7 +140,7 @@ std::string DescriptorChecksum(const Span<const char>& span)
     return ret;
 }
 
-std::string AddChecksum(const std::string& str) { return str + "#" + DescriptorChecksum(MakeSpan(str)); }
+std::string AddChecksum(const std::string& str) { return str + "#" + DescriptorChecksum(str); }
 
 ////////////////////////////////////////////////////////////////////////////
 // Internal representation                                                //
@@ -759,10 +759,10 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(uint32_t key_exp_index, const S
     }
     KeyPath path;
     DeriveType type = DeriveType::NO;
-    if (split.back() == MakeSpan("*").first(1)) {
+    if (split.back() == Span{"*"}.first(1)) {
         split.pop_back();
         type = DeriveType::UNHARDENED;
-    } else if (split.back() == MakeSpan("*'").first(2) || split.back() == MakeSpan("*h").first(2)) {
+    } else if (split.back() == Span{"*'"}.first(2) || split.back() == Span{"*h"}.first(2)) {
         split.pop_back();
         type = DeriveType::HARDENED;
     }
@@ -1012,7 +1012,7 @@ bool CheckChecksum(Span<const char>& sp, bool require_checksum, std::string& err
 
 std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum)
 {
-    Span<const char> sp(descriptor.data(), descriptor.size());
+    Span<const char> sp{descriptor};
     if (!CheckChecksum(sp, require_checksum, error)) return nullptr;
     auto ret = ParseScript(0, sp, ParseScriptContext::TOP, out, error);
     if (sp.size() == 0 && ret) return std::unique_ptr<Descriptor>(std::move(ret));
@@ -1023,7 +1023,7 @@ std::string GetDescriptorChecksum(const std::string& descriptor)
 {
     std::string ret;
     std::string error;
-    Span<const char> sp(descriptor.data(), descriptor.size());
+    Span<const char> sp{descriptor};
     if (!CheckChecksum(sp, false, error, &ret)) return "";
     return ret;
 }

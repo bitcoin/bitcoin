@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(floats)
     for (int i = 0; i < 1000; i++) {
         ss << float(i);
     }
-    BOOST_CHECK(Hash(ss.begin(), ss.end()) == uint256S("8e8b4cf3e4df8b332057e3e23af42ebc663b61e0495d5e7e32d85099d7f3fe0c"));
+    BOOST_CHECK(Hash(ss) == uint256S("8e8b4cf3e4df8b332057e3e23af42ebc663b61e0495d5e7e32d85099d7f3fe0c"));
 
     // decode
     for (int i = 0; i < 1000; i++) {
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(doubles)
     for (int i = 0; i < 1000; i++) {
         ss << double(i);
     }
-    BOOST_CHECK(Hash(ss.begin(), ss.end()) == uint256S("43d0c82591953c4eafe114590d392676a01585d25b25d433557f0d7878b23f96"));
+    BOOST_CHECK(Hash(ss) == uint256S("43d0c82591953c4eafe114590d392676a01585d25b25d433557f0d7878b23f96"));
 
     // decode
     for (int i = 0; i < 1000; i++) {
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(insert_delete)
 
     ss.insert(ss.end(), c);
     BOOST_CHECK_EQUAL(ss.size(), 6U);
-    BOOST_CHECK_EQUAL(ss[4], (char)0xff);
+    BOOST_CHECK_EQUAL(ss[4], 0xff);
     BOOST_CHECK_EQUAL(ss[5], c);
 
     ss.insert(ss.begin()+2, c);
@@ -334,19 +334,14 @@ BOOST_AUTO_TEST_CASE(insert_delete)
 
     ss.erase(ss.begin()+ss.size()-1);
     BOOST_CHECK_EQUAL(ss.size(), 5U);
-    BOOST_CHECK_EQUAL(ss[4], (char)0xff);
+    BOOST_CHECK_EQUAL(ss[4], 0xff);
 
     ss.erase(ss.begin()+1);
     BOOST_CHECK_EQUAL(ss.size(), 4U);
     BOOST_CHECK_EQUAL(ss[0], 0);
     BOOST_CHECK_EQUAL(ss[1], 1);
     BOOST_CHECK_EQUAL(ss[2], 2);
-    BOOST_CHECK_EQUAL(ss[3], (char)0xff);
-
-    // Make sure GetAndClear does the right thing:
-    CSerializeData d;
-    ss.GetAndClear(d);
-    BOOST_CHECK_EQUAL(ss.size(), 0U);
+    BOOST_CHECK_EQUAL(ss[3], 0xff);
 }
 
 // Change struct size and check if it can be deserialized

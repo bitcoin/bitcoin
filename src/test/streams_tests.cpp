@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
 
 BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 {
-    std::vector<char> in;
+    std::vector<uint8_t> in;
     std::vector<char> expected_xor;
     std::vector<unsigned char> key;
     CDataStream ds(in, 0, 0);
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     ds.Xor(key);
     BOOST_CHECK_EQUAL(
             std::string(expected_xor.begin(), expected_xor.end()),
-            std::string(ds.begin(), ds.end()));
+            ds.str());
 
     in.push_back('\x0f');
     in.push_back('\xf0');
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     ds.Xor(key);
     BOOST_CHECK_EQUAL(
             std::string(expected_xor.begin(), expected_xor.end()),
-            std::string(ds.begin(), ds.end()));
+            ds.str());
 
     // Multi character key
 
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     ds.Xor(key);
     BOOST_CHECK_EQUAL(
             std::string(expected_xor.begin(), expected_xor.end()),
-            std::string(ds.begin(), ds.end()));
+            ds.str());
 }
 
 BOOST_AUTO_TEST_CASE(streams_buffered_file)

@@ -177,21 +177,32 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
         "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f");
 
     BOOST_CHECK_EQUAL(
-        HexStr(Span<const unsigned char>(
-               ParseHex_expected + sizeof(ParseHex_expected),
-               ParseHex_expected + sizeof(ParseHex_expected))),
+        HexStr(Span{ParseHex_expected}.last(0)),
         "");
 
     BOOST_CHECK_EQUAL(
-        HexStr(Span<const unsigned char>(ParseHex_expected, ParseHex_expected)),
+        HexStr(Span{ParseHex_expected}.first(0)),
         "");
 
-    std::vector<unsigned char> ParseHex_vec(ParseHex_expected, ParseHex_expected + 5);
+    {
+        const std::vector<char> in_s{ParseHex_expected, ParseHex_expected + 5};
+        const Span<const uint8_t> in_u{MakeUCharSpan(in_s)};
+        const Span<const std::byte> in_b{MakeByteSpan(in_s)};
+        const std::string out_exp{"04678afdb0"};
 
-    BOOST_CHECK_EQUAL(
-        HexStr(ParseHex_vec),
-        "04678afdb0"
-    );
+        BOOST_CHECK_EQUAL(HexStr(in_u), out_exp);
+        BOOST_CHECK_EQUAL(HexStr(in_s), out_exp);
+        BOOST_CHECK_EQUAL(HexStr(in_b), out_exp);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(span_write_bytes)
+{
+    std::array mut_arr{uint8_t{0xaa}, uint8_t{0xbb}};
+    const auto mut_bytes{MakeWritableByteSpan(mut_arr)};
+    mut_bytes[1] = std::byte{0x11};
+    BOOST_CHECK_EQUAL(mut_arr.at(0), 0xaa);
+    BOOST_CHECK_EQUAL(mut_arr.at(1), 0x11);
 }
 
 BOOST_AUTO_TEST_CASE(util_Join)
@@ -2295,7 +2306,7 @@ BOOST_AUTO_TEST_CASE(test_spanparsing)
 
     // Const(...): parse a constant, update span to skip it if successful
     input = "MilkToastHoney";
-    sp = MakeSpan(input);
+    sp = input;
     success = Const("", sp); // empty
     BOOST_CHECK(success);
     BOOST_CHECK_EQUAL(SpanToStr(sp), "MilkToastHoney");
@@ -2320,7 +2331,7 @@ BOOST_AUTO_TEST_CASE(test_spanparsing)
 
     // Func(...): parse a function call, update span to argument if successful
     input = "Foo(Bar(xy,z()))";
-    sp = MakeSpan(input);
+    sp = input;
 
     success = Func("FooBar", sp);
     BOOST_CHECK(!success);
@@ -2343,31 +2354,31 @@ BOOST_AUTO_TEST_CASE(test_spanparsing)
     Span<const char> result;
 
     input = "(n*(n-1))/2";
-    sp = MakeSpan(input);
+    sp = input;
     result = Expr(sp);
     BOOST_CHECK_EQUAL(SpanToStr(result), "(n*(n-1))/2");
     BOOST_CHECK_EQUAL(SpanToStr(sp), "");
 
     input = "foo,bar";
-    sp = MakeSpan(input);
+    sp = input;
     result = Expr(sp);
     BOOST_CHECK_EQUAL(SpanToStr(result), "foo");
     BOOST_CHECK_EQUAL(SpanToStr(sp), ",bar");
 
     input = "(aaaaa,bbbbb()),c";
-    sp = MakeSpan(input);
+    sp = input;
     result = Expr(sp);
     BOOST_CHECK_EQUAL(SpanToStr(result), "(aaaaa,bbbbb())");
     BOOST_CHECK_EQUAL(SpanToStr(sp), ",c");
 
     input = "xyz)foo";
-    sp = MakeSpan(input);
+    sp = input;
     result = Expr(sp);
     BOOST_CHECK_EQUAL(SpanToStr(result), "xyz");
     BOOST_CHECK_EQUAL(SpanToStr(sp), ")foo");
 
     input = "((a),(b),(c)),xxx";
-    sp = MakeSpan(input);
+    sp = input;
     result = Expr(sp);
     BOOST_CHECK_EQUAL(SpanToStr(result), "((a),(b),(c))");
     BOOST_CHECK_EQUAL(SpanToStr(sp), ",xxx");
@@ -2376,7 +2387,7 @@ BOOST_AUTO_TEST_CASE(test_spanparsing)
     std::vector<Span<const char>> results;
 
     input = "xxx";
-    results = Split(MakeSpan(input), 'x');
+    results = Split(input, 'x');
     BOOST_CHECK_EQUAL(results.size(), 4);
     BOOST_CHECK_EQUAL(SpanToStr(results[0]), "");
     BOOST_CHECK_EQUAL(SpanToStr(results[1]), "");
@@ -2384,19 +2395,19 @@ BOOST_AUTO_TEST_CASE(test_spanparsing)
     BOOST_CHECK_EQUAL(SpanToStr(results[3]), "");
 
     input = "one#two#three";
-    results = Split(MakeSpan(input), '-');
+    results = Split(input, '-');
     BOOST_CHECK_EQUAL(results.size(), 1);
     BOOST_CHECK_EQUAL(SpanToStr(results[0]), "one#two#three");
 
     input = "one#two#three";
-    results = Split(MakeSpan(input), '#');
+    results = Split(input, '#');
     BOOST_CHECK_EQUAL(results.size(), 3);
     BOOST_CHECK_EQUAL(SpanToStr(results[0]), "one");
     BOOST_CHECK_EQUAL(SpanToStr(results[1]), "two");
     BOOST_CHECK_EQUAL(SpanToStr(results[2]), "three");
 
     input = "*foo*bar*";
-    results = Split(MakeSpan(input), '*');
+    results = Split(input, '*');
     BOOST_CHECK_EQUAL(results.size(), 4);
     BOOST_CHECK_EQUAL(SpanToStr(results[0]), "");
     BOOST_CHECK_EQUAL(SpanToStr(results[1]), "foo");
@@ -2576,8 +2587,8 @@ BOOST_AUTO_TEST_CASE(message_hash)
         std::string(1, (char)unsigned_tx.length()) +
         unsigned_tx;
 
-    const uint256 signature_hash = Hash(unsigned_tx.begin(), unsigned_tx.end());
-    const uint256 message_hash1 = Hash(prefixed_message.begin(), prefixed_message.end());
+    const uint256 signature_hash = Hash(unsigned_tx);
+    const uint256 message_hash1 = Hash(prefixed_message);
     const uint256 message_hash2 = MessageHash(unsigned_tx);
 
     BOOST_CHECK_EQUAL(message_hash1, message_hash2);

@@ -181,7 +181,7 @@ void RecentRequestsTableModel::addNewRequest(const SendCoinsRecipient &recipient
 // called from ctor when loading from wallet
 void RecentRequestsTableModel::addNewRequest(const std::string &recipient)
 {
-    std::vector<char> data(recipient.begin(), recipient.end());
+    std::vector<uint8_t> data(recipient.begin(), recipient.end());
     CDataStream ss(data, SER_DISK, CLIENT_VERSION);
 
     RecentRequestEntry entry;

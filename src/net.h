@@ -572,6 +572,11 @@ private:
     void RecordBytesRecv(uint64_t bytes);
     void RecordBytesSent(uint64_t bytes);
 
+    /**
+     * Return vector of current BLOCK_RELAY peers.
+     */
+    std::vector<CAddress> GetCurrentBlockRelayOnlyConns() const;
+
     // Whether the node should be passed out in ForEach* callbacks
     static bool NodeFullyConnected(const CNode* pnode);
 
@@ -678,6 +683,12 @@ private:
     CClientUIInterface* clientInterface;
     NetEventsInterface* m_msgproc;
     BanMan* m_banman;
+
+    /**
+     * Addresses that were saved during the previous clean shutdown. We'll
+     * attempt to make block-relay-only connections to them.
+     */
+    std::vector<CAddress> m_anchors;
 
     /** SipHasher seeds for deterministic randomness */
     const uint64_t nSeed0, nSeed1;

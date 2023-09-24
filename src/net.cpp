@@ -64,6 +64,12 @@
 
 #include <math.h>
 
+/** Maximum number of block-relay-only anchor connections */
+static constexpr size_t MAX_BLOCK_RELAY_ONLY_ANCHORS = 2;
+static_assert (MAX_BLOCK_RELAY_ONLY_ANCHORS <= static_cast<size_t>(MAX_BLOCK_RELAY_ONLY_CONNECTIONS), "MAX_BLOCK_RELAY_ONLY_ANCHORS must not exceed MAX_BLOCK_RELAY_ONLY_CONNECTIONS.");
+/** Anchor IP address database file name */
+const char* const ANCHORS_DATABASE_FILENAME = "anchors.dat";
+
 // How often to dump addresses to peers.dat
 static constexpr std::chrono::minutes DUMP_PEERS_INTERVAL{15};
 
@@ -166,8 +172,8 @@ bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
     return nBestScore >= 0;
 }
 
-//! Convert the pnSeed6 array into usable address objects.
-static std::vector<CAddress> convertSeed6(const std::vector<SeedSpec6> &vSeedsIn)
+//! Convert the serialized seeds into usable address objects.
+static std::vector<CAddress> ConvertSeeds(const std::vector<uint8_t> &vSeedsIn)
 {
     // It'll only connect to one or two seed nodes because once it connects,
     // it'll get a pile of addresses with newer timestamps.
@@ -175,13 +181,14 @@ static std::vector<CAddress> convertSeed6(const std::vector<SeedSpec6> &vSeedsIn
     // weeks ago.
     const int64_t nOneWeek = 7*24*60*60;
     std::vector<CAddress> vSeedsOut;
-    vSeedsOut.reserve(vSeedsIn.size());
     FastRandomContext rng;
-    for (const auto& seed_in : vSeedsIn) {
-        struct in6_addr ip;
-        memcpy(&ip, seed_in.addr, sizeof(ip));
-        CAddress addr(CService(ip, seed_in.port), GetDesirableServiceFlags(NODE_NONE));
+    CDataStream s(vSeedsIn, SER_NETWORK, PROTOCOL_VERSION | ADDRV2_FORMAT);
+    while (!s.eof()) {
+        CService endpoint;
+        s >> endpoint;
+        CAddress addr{endpoint, GetDesirableServiceFlags(NODE_NONE)};
         addr.nTime = GetTime() - rng.randrange(nOneWeek) - nOneWeek;
+        LogPrint(BCLog::NET, "Added hardcoded seed: %s\n", addr.ToString());
         vSeedsOut.push_back(addr);
     }
     return vSeedsOut;
@@ -831,8 +838,8 @@ std::optional<CNetMessage> V1TransportDeserializer::GetMessage(int64_t time, uin
     if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
         LogPrint(BCLog::NET, "CHECKSUM ERROR (%s, %u bytes), expected %s was %s, peer=%d\n",
                  SanitizeString(msg->m_command), msg->m_message_size,
-                 HexStr(Span<uint8_t>(hash.begin(), hash.begin()+CMessageHeader::CHECKSUM_SIZE)),
-                 HexStr(Span<uint8_t>(hdr.pchChecksum, hdr.pchChecksum+CMessageHeader::CHECKSUM_SIZE)),
+                 HexStr(Span{hash}.first(CMessageHeader::CHECKSUM_SIZE)),
+                 HexStr(hdr.pchChecksum),
                  m_node_id);
         out_err_raw_size = msg->m_raw_message_size;
         msg.reset();
@@ -850,7 +857,7 @@ std::optional<CNetMessage> V1TransportDeserializer::GetMessage(int64_t time, uin
 
 void V1TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) {
     // create dbl-sha256 checksum
-    uint256 hash = Hash(msg.data.begin(), msg.data.end());
+    uint256 hash = Hash(msg.data);
 
     // create header
     CMessageHeader hdr(Params().MessageStart(), msg.command.c_str(), msg.data.size());
@@ -2258,7 +2265,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 LogPrintf("Adding fixed seed nodes as DNS doesn't seem to be available.\n");
                 CNetAddr local;
                 local.SetInternal("fixedseeds");
-                addrman.Add(convertSeed6(Params().FixedSeeds()), local);
+                addrman.Add(ConvertSeeds(Params().FixedSeeds()), local);
                 done = true;
             }
         }
@@ -2335,6 +2342,13 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         int nTries = 0;
         while (!interruptNet)
         {
+            // If we didn't find an appropriate destination after trying 100 addresses fetched from addrman,
+            // stop this loop, and let the outer loop run again (which sleeps, adds seed nodes, recalculates
+            // already-connected network ranges, ...) before trying new addrman addresses.
+            nTries++;
+            if (nTries > 100)
+                break;
+
             CAddrInfo addr = addrman.SelectTriedCollision();
 
             // SelectTriedCollision returns an invalid address if it is empty.
@@ -2363,13 +2377,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             if (!fAllowLocal && IsLocal(addrConnect)) {
                 break;
             }
-
-            // If we didn't find an appropriate destination after trying 100 addresses fetched from addrman,
-            // stop this loop, and let the outer loop run again (which sleeps, adds seed nodes, recalculates
-            // already-connected network ranges, ...) before trying new addrman addresses.
-            nTries++;
-            if (nTries > 100)
-                break;
 
             if (!IsReachable(addr))
                 continue;
@@ -2424,6 +2431,19 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             OpenNetworkConnection(addrConnect, (int)setConnected.size() >= std::min(nMaxConnections - 1, 2), &grant, nullptr, false, fFeeler, false, block_relay_only);
         }
     }
+}
+
+std::vector<CAddress> CConnman::GetCurrentBlockRelayOnlyConns() const
+{
+    std::vector<CAddress> ret;
+    LOCK(cs_vNodes);
+    for (const CNode* pnode : vNodes) {
+        if (pnode->IsBlockRelayOnly()) {
+            ret.push_back(pnode->addr);
+        }
+    }
+
+    return ret;
 }
 
 std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo()
@@ -3130,6 +3150,15 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         }
     }
 
+    if (m_use_addrman_outgoing) {
+        // Load addresses from anchors.dat
+        m_anchors = ReadAnchors(GetDataDir() / ANCHORS_DATABASE_FILENAME);
+        if (m_anchors.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
+            m_anchors.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
+        }
+        LogPrintf("%i block-relay-only anchors will be tried for connections.\n", m_anchors.size());
+    }
+
     uiInterface.InitMessage(_("Starting network threads...").translated);
 
     fAddressesInitialized = true;
@@ -3310,6 +3339,15 @@ void CConnman::StopNodes()
     if (fAddressesInitialized) {
         DumpAddresses();
         fAddressesInitialized = false;
+
+        if (m_use_addrman_outgoing) {
+            // Anchor connections are only dumped during clean shutdown.
+            std::vector<CAddress> anchors_to_dump = GetCurrentBlockRelayOnlyConns();
+            if (anchors_to_dump.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
+                anchors_to_dump.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
+            }
+            DumpAnchors(GetDataDir() / ANCHORS_DATABASE_FILENAME, anchors_to_dump);
+        }
     }
 
     {

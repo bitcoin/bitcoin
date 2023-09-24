@@ -4272,6 +4272,5 @@ static const CRPCCommand commands[] =
     { "wallet",             "wipewallettxes",                   &wipewallettxes,                {"keep_confirmed"} },
 };
 // clang-format on
-
-    return MakeSpan(commands);
+    return commands;
 }

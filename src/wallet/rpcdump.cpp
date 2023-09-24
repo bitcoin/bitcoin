@@ -34,7 +34,7 @@ std::string static EncodeDumpString(const std::string &str) {
     std::stringstream ret;
     for (const unsigned char c : str) {
         if (c <= 32 || c >= 128 || c == '%') {
-            ret << '%' << HexStr(Span<const unsigned char>(&c, 1));
+            ret << '%' << HexStr({&c, 1});
         } else {
             ret << c;
         }
@@ -982,7 +982,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         file << "# HD seed: " << HexStr(vchSeed) << "\n\n";
 
         CExtKey masterKey;
-        masterKey.SetSeed(&vchSeed[0], vchSeed.size());
+        masterKey.SetSeed(vchSeed);
 
         file << "# extended private masterkey: " << EncodeExtKey(masterKey) << "\n";
 

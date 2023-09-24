@@ -139,7 +139,7 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        unsigned int len = ::ReadCompactSize(s);
+        const unsigned int len(::ReadCompactSize(s));
         if (len <= SIZE) {
             s.read((char*)vch, len);
             if (len != size()) {
@@ -147,9 +147,7 @@ public:
             }
         } else {
             // invalid pubkey, skip available data
-            char dummy;
-            while (len--)
-                s.read(&dummy, 1);
+            s.ignore(len);
             Invalidate();
         }
     }
@@ -157,13 +155,13 @@ public:
     //! Get the KeyID of this public key (hash of its serialization)
     CKeyID GetID() const
     {
-        return CKeyID(Hash160(vch, vch + size()));
+        return CKeyID(Hash160(Span{vch}.first(size())));
     }
 
     //! Get the 256-bit hash of this public key.
     uint256 GetHash() const
     {
-        return Hash(vch, vch + size());
+        return Hash(Span{vch}.first(size()));
     }
 
     /*

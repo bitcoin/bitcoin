@@ -19,11 +19,6 @@
 #include <string>
 #include <vector>
 
-struct SeedSpec6 {
-    uint8_t addr[16];
-    uint16_t port;
-};
-
 typedef std::map<int, uint256> MapCheckpoints;
 
 struct CCheckpointData {
@@ -127,7 +122,7 @@ public:
     const std::vector<std::string>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     int ExtCoinType() const { return nExtCoinType; }
-    const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
+    const std::vector<uint8_t>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
 
     //! Get allowed assumeutxo configuration.
@@ -161,7 +156,7 @@ protected:
     std::string strNetworkID;
     CBlock genesis;
     CBlock devnetGenesis;
-    std::vector<SeedSpec6> vFixedSeeds;
+    std::vector<uint8_t> vFixedSeeds;
     bool fDefaultConsistencyChecks;
     bool fRequireStandard;
     bool fRequireRoutableExternalIP;
