@@ -199,7 +199,7 @@ bool CGovernanceObject::ProcessVote(const CGovernanceVote& vote, CGovernanceExce
         return false;
     }
 
-    if (!mmetaman.AddGovernanceVote(dmn->proTxHash, vote.GetParentHash())) {
+    if (!mmetaman->AddGovernanceVote(dmn->proTxHash, vote.GetParentHash())) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Unable to add governance vote"
              << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort()

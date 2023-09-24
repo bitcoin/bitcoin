@@ -13,6 +13,8 @@
 
 class CBloomFilter;
 class CBlockIndex;
+template<typename T>
+class CFlatDB;
 class CInv;
 
 class CGovernanceManager;
@@ -124,14 +126,9 @@ public:
     }
 };
 
-//
-// Governance Manager : Contains all proposals for the budget
-//
-class CGovernanceManager
+class GovernanceStore
 {
-    friend class CGovernanceObject;
-
-public: // Types
+protected:
     struct last_object_rec {
         explicit last_object_rec(bool fStatusOKIn = true) :
             triggerBuffer(),
@@ -148,57 +145,95 @@ public: // Types
         bool fStatusOK;
     };
 
-
     using object_ref_cm_t = CacheMap<uint256, CGovernanceObject*>;
-
+    using txout_m_t = std::map<COutPoint, last_object_rec>;
     using vote_cmm_t = CacheMultiMap<uint256, vote_time_pair_t>;
 
-    using txout_m_t = std::map<COutPoint, last_object_rec>;
-
-    using hash_s_t = std::set<uint256>;
-
-private:
+protected:
     static constexpr int MAX_CACHE_SIZE = 1000000;
-
     static const std::string SERIALIZATION_VERSION_STRING;
 
-    static const int MAX_TIME_FUTURE_DEVIATION;
-    static const int RELIABLE_PROPAGATION_TIME;
+public:
+    // critical section to protect the inner data structures
+    mutable RecursiveMutex cs;
 
-    int64_t nTimeLastDiff;
-
-    // keep track of current block height
-    int nCachedBlockHeight;
-
+protected:
     // keep track of the scanning errors
     std::map<uint256, CGovernanceObject> mapObjects GUARDED_BY(cs);
-
     // mapErasedGovernanceObjects contains key-value pairs, where
     //   key   - governance object's hash
     //   value - expiration time for deleted objects
     std::map<uint256, int64_t> mapErasedGovernanceObjects;
-
-    std::map<uint256, CGovernanceObject> mapPostponedObjects;
-    hash_s_t setAdditionalRelayObjects;
-
     object_ref_cm_t cmapVoteToObject;
-
     CacheMap<uint256, CGovernanceVote> cmapInvalidVotes;
-
     vote_cmm_t cmmapOrphanVotes;
-
     txout_m_t mapLastMasternodeObject;
-
-    hash_s_t setRequestedObjects;
-
-    hash_s_t setRequestedVotes;
-
-    bool fRateChecksEnabled;
-
     // used to check for changed voting keys
     CDeterministicMNListPtr lastMNListForVotingKeys;
 
-    std::optional<uint256> votedFundingYesTriggerHash;
+public:
+    GovernanceStore();
+    ~GovernanceStore() = default;
+
+    template<typename Stream>
+    void Serialize(Stream &s) const
+    {
+        LOCK(cs);
+        s   << SERIALIZATION_VERSION_STRING
+            << mapErasedGovernanceObjects
+            << cmapInvalidVotes
+            << cmmapOrphanVotes
+            << mapObjects
+            << mapLastMasternodeObject
+            << *lastMNListForVotingKeys;
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream &s)
+    {
+        Clear();
+
+        LOCK(cs);
+        std::string strVersion;
+        s >> strVersion;
+        if (strVersion != SERIALIZATION_VERSION_STRING) {
+            return;
+        }
+
+        s   >> mapErasedGovernanceObjects
+            >> cmapInvalidVotes
+            >> cmmapOrphanVotes
+            >> mapObjects
+            >> mapLastMasternodeObject
+            >> *lastMNListForVotingKeys;
+    }
+
+    void Clear()
+    {
+        LOCK(cs);
+
+        LogPrint(BCLog::GOBJECT, "Governance object manager was cleared\n");
+        mapObjects.clear();
+        mapErasedGovernanceObjects.clear();
+        cmapVoteToObject.Clear();
+        cmapInvalidVotes.Clear();
+        cmmapOrphanVotes.Clear();
+        mapLastMasternodeObject.clear();
+    }
+
+    std::string ToString() const;
+};
+
+//
+// Governance Manager : Contains all proposals for the budget
+//
+class CGovernanceManager : public GovernanceStore
+{
+    friend class CGovernanceObject;
+
+private:
+    using hash_s_t = std::set<uint256>;
+    using db_type = CFlatDB<GovernanceStore>;
 
     class ScopedLockBool
     {
@@ -220,13 +255,31 @@ private:
         }
     };
 
+private:
+    static const int MAX_TIME_FUTURE_DEVIATION;
+    static const int RELIABLE_PROPAGATION_TIME;
+
+private:
+    const std::unique_ptr<db_type> m_db;
+    bool is_valid{false};
+
+    int64_t nTimeLastDiff;
+    // keep track of current block height
+    int nCachedBlockHeight;
+    std::map<uint256, CGovernanceObject> mapPostponedObjects;
+    hash_s_t setAdditionalRelayObjects;
+    hash_s_t setRequestedObjects;
+    hash_s_t setRequestedVotes;
+    bool fRateChecksEnabled;
+    std::optional<uint256> votedFundingYesTriggerHash;
+
 public:
-    // critical section to protect the inner data structures
-    mutable RecursiveMutex cs;
-
     CGovernanceManager();
+    ~CGovernanceManager();
 
-    virtual ~CGovernanceManager() = default;
+    bool LoadCache(bool load_cache);
+
+    bool IsValid() const { return is_valid; }
 
     /**
      * This is called by AlreadyHave in net_processing.cpp as part of the inventory
@@ -263,54 +316,7 @@ public:
 
     void CheckAndRemove() { UpdateCachesAndClean(); }
 
-    void Clear()
-    {
-        LOCK(cs);
-
-        LogPrint(BCLog::GOBJECT, "Governance object manager was cleared\n");
-        mapObjects.clear();
-        mapErasedGovernanceObjects.clear();
-        cmapVoteToObject.Clear();
-        cmapInvalidVotes.Clear();
-        cmmapOrphanVotes.Clear();
-        mapLastMasternodeObject.clear();
-    }
-
-    std::string ToString() const;
     UniValue ToJson() const;
-
-    template<typename Stream>
-    void Serialize(Stream &s) const
-    {
-        LOCK(cs);
-        s   << SERIALIZATION_VERSION_STRING
-            << mapErasedGovernanceObjects
-            << cmapInvalidVotes
-            << cmmapOrphanVotes
-            << mapObjects
-            << mapLastMasternodeObject
-            << *lastMNListForVotingKeys;
-    }
-
-    template<typename Stream>
-    void Unserialize(Stream &s)
-    {
-        LOCK(cs);
-        Clear();
-
-        std::string strVersion;
-        s >> strVersion;
-        if (strVersion != SERIALIZATION_VERSION_STRING) {
-            return;
-        }
-
-        s   >> mapErasedGovernanceObjects
-            >> cmapInvalidVotes
-            >> cmmapOrphanVotes
-            >> mapObjects
-            >> mapLastMasternodeObject
-            >> *lastMNListForVotingKeys;
-    }
 
     void UpdatedBlockTip(const CBlockIndex* pindex, CConnman& connman);
     int64_t GetLastDiffTime() const { return nTimeLastDiff; }

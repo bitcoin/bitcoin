@@ -11,10 +11,13 @@
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
+#include <flat-database.h>
 #include <governance/governance.h>
 #include <index/txindex.h>
 #include <init.h>
 #include <interfaces/chain.h>
+#include <masternode/meta.h>
+#include <netfulfilledman.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>
@@ -206,6 +209,8 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     ::sporkManager = std::make_unique<CSporkManager>();
     ::governance = std::make_unique<CGovernanceManager>();
     ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman, *::governance);
+    ::mmetaman = std::make_unique<CMasternodeMetaMan>(/* load_cache */ false);
+    ::netfulfilledman = std::make_unique<CNetFulfilledRequestManager>(/* load_cache */ false);
 
     m_node.creditPoolManager = std::make_unique<CCreditPoolManager>(*m_node.evodb);
 
@@ -222,6 +227,8 @@ ChainTestingSetup::~ChainTestingSetup()
     StopScriptCheckWorkerThreads();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
+    ::netfulfilledman.reset();
+    ::mmetaman.reset();
     ::masternodeSync.reset();
     ::governance.reset();
     ::sporkManager.reset();

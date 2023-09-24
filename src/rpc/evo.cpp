@@ -1303,7 +1303,8 @@ static UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMN& dmn,
     }
 #endif
 
-    auto metaInfo = mmetaman.GetMetaInfo(dmn.proTxHash);
+    CHECK_NONFATAL(mmetaman != nullptr);
+    auto metaInfo = mmetaman->GetMetaInfo(dmn.proTxHash);
     o.pushKV("metaInfo", metaInfo->ToJson());
 
     return o;

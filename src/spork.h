@@ -20,6 +20,8 @@
 #include <vector>
 
 class CConnman;
+template<typename T>
+class CFlatDB;
 class CNode;
 class CDataStream;
 class PeerManager;
@@ -155,41 +157,17 @@ public:
     void Relay(CConnman& connman) const;
 };
 
-/**
- * CSporkManager is a higher-level class which manages the node's spork
- * messages, rules for which sporks should be considered active/inactive, and
- * processing for certain sporks (e.g. spork 12).
- */
-class CSporkManager
+class SporkStore
 {
-private:
-    static constexpr std::string_view SERIALIZATION_VERSION_STRING = "CSporkManager-Version-2";
-
-    mutable Mutex cs_mapSporksCachedActive;
-    mutable std::unordered_map<const SporkId, bool> mapSporksCachedActive GUARDED_BY(cs_mapSporksCachedActive);
-
-    mutable Mutex cs_mapSporksCachedValues;
-    mutable std::unordered_map<SporkId, SporkValue> mapSporksCachedValues GUARDED_BY(cs_mapSporksCachedValues);
+protected:
+    static const std::string SERIALIZATION_VERSION_STRING;
 
     mutable Mutex cs;
 
     std::unordered_map<uint256, CSporkMessage, StaticSaltedHasher> mapSporksByHash GUARDED_BY(cs);
     std::unordered_map<SporkId, std::map<CKeyID, CSporkMessage> > mapSporksActive GUARDED_BY(cs);
 
-    std::set<CKeyID> setSporkPubKeyIDs GUARDED_BY(cs);
-    int nMinSporkKeys GUARDED_BY(cs) {std::numeric_limits<int>::max()};
-    CKey sporkPrivKey GUARDED_BY(cs);
-
-    /**
-     * SporkValueIfActive is used to get the value agreed upon by the majority
-     * of signed spork messages for a given Spork ID.
-     */
-    std::optional<SporkValue> SporkValueIfActive(SporkId nSporkID) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-
 public:
-
-    CSporkManager() = default;
-
     template<typename Stream>
     void Serialize(Stream &s) const LOCKS_EXCLUDED(cs)
     {
@@ -222,6 +200,50 @@ public:
     void Clear() LOCKS_EXCLUDED(cs);
 
     /**
+     * ToString returns the string representation of the SporkManager.
+     */
+    std::string ToString() const LOCKS_EXCLUDED(cs);
+};
+
+/**
+ * CSporkManager is a higher-level class which manages the node's spork
+ * messages, rules for which sporks should be considered active/inactive, and
+ * processing for certain sporks (e.g. spork 12).
+ */
+class CSporkManager : public SporkStore
+{
+private:
+    using db_type = CFlatDB<SporkStore>;
+
+private:
+    const std::unique_ptr<db_type> m_db;
+    bool is_valid{false};
+
+    mutable Mutex cs_mapSporksCachedActive;
+    mutable std::unordered_map<const SporkId, bool> mapSporksCachedActive GUARDED_BY(cs_mapSporksCachedActive);
+
+    mutable Mutex cs_mapSporksCachedValues;
+    mutable std::unordered_map<SporkId, SporkValue> mapSporksCachedValues GUARDED_BY(cs_mapSporksCachedValues);
+
+    std::set<CKeyID> setSporkPubKeyIDs GUARDED_BY(cs);
+    int nMinSporkKeys GUARDED_BY(cs) {std::numeric_limits<int>::max()};
+    CKey sporkPrivKey GUARDED_BY(cs);
+
+    /**
+     * SporkValueIfActive is used to get the value agreed upon by the majority
+     * of signed spork messages for a given Spork ID.
+     */
+    std::optional<SporkValue> SporkValueIfActive(SporkId nSporkID) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+public:
+    CSporkManager();
+    ~CSporkManager();
+
+    bool LoadCache();
+
+    bool IsValid() const { return is_valid; }
+
+    /**
      * CheckAndRemove is defined to fulfill an interface as part of the on-disk
      * cache used to cache sporks between runs. If sporks that are restored
      * from cache do not have valid signatures when compared against the
@@ -243,7 +265,6 @@ public:
      * performs any necessary processing.
      */
     void ProcessSpork(const CNode& peer, PeerManager& peerman, CConnman& connman, CDataStream& vRecv) LOCKS_EXCLUDED(cs);
-
 
     /**
      * ProcessGetSporks is used to handle the 'getsporks' p2p message.
@@ -315,11 +336,6 @@ public:
      * address in the set of valid spork signers (see SetSporkAddress).
      */
     bool SetPrivKey(const std::string& strPrivKey) LOCKS_EXCLUDED(cs);
-
-    /**
-     * ToString returns the string representation of the SporkManager.
-     */
-    std::string ToString() const LOCKS_EXCLUDED(cs);
 };
 
 #endif // BITCOIN_SPORK_H

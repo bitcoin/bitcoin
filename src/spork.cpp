@@ -6,6 +6,7 @@
 
 #include <chainparams.h>
 #include <consensus/params.h>
+#include <flat-database.h>
 #include <key_io.h>
 #include <logging.h>
 #include <messagesigner.h>
@@ -24,6 +25,8 @@
 #include <string>
 
 std::unique_ptr<CSporkManager> sporkManager;
+
+const std::string SporkStore::SERIALIZATION_VERSION_STRING = "CSporkManager-Version-2";
 
 std::optional<SporkValue> CSporkManager::SporkValueIfActive(SporkId nSporkID) const
 {
@@ -56,7 +59,7 @@ std::optional<SporkValue> CSporkManager::SporkValueIfActive(SporkId nSporkID) co
     return std::nullopt;
 }
 
-void CSporkManager::Clear()
+void SporkStore::Clear()
 {
     LOCK(cs);
     mapSporksActive.clear();
@@ -65,10 +68,32 @@ void CSporkManager::Clear()
     // we should not alter them here.
 }
 
+CSporkManager::CSporkManager() :
+    m_db{std::make_unique<db_type>("sporks.dat", "magicSporkCache")}
+{
+}
+
+CSporkManager::~CSporkManager()
+{
+    if (!is_valid) return;
+    m_db->Store(*this);
+}
+
+bool CSporkManager::LoadCache()
+{
+    assert(m_db != nullptr);
+    is_valid = m_db->Load(*this);
+    if (is_valid) {
+        CheckAndRemove();
+    }
+    return is_valid;
+}
+
 void CSporkManager::CheckAndRemove()
 {
     LOCK(cs);
-    assert(!setSporkPubKeyIDs.empty());
+
+    if (setSporkPubKeyIDs.empty()) return;
 
     for (auto itActive = mapSporksActive.begin(); itActive != mapSporksActive.end();) {
         auto itSignerPair = itActive->second.begin();
@@ -327,7 +352,7 @@ bool CSporkManager::SetPrivKey(const std::string& strPrivKey)
     return true;
 }
 
-std::string CSporkManager::ToString() const
+std::string SporkStore::ToString() const
 {
     LOCK(cs);
     return strprintf("Sporks: %llu", mapSporksActive.size());

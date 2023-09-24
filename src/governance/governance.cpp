@@ -9,6 +9,7 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <evo/deterministicmns.h>
+#include <flat-database.h>
 #include <governance/classes.h>
 #include <governance/validators.h>
 #include <masternode/meta.h>
@@ -26,25 +27,47 @@ std::unique_ptr<CGovernanceManager> governance;
 
 int nSubmittedFinalBudget;
 
-const std::string CGovernanceManager::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-16";
+const std::string GovernanceStore::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-16";
 const int CGovernanceManager::MAX_TIME_FUTURE_DEVIATION = 60 * 60;
 const int CGovernanceManager::RELIABLE_PROPAGATION_TIME = 60;
 
-CGovernanceManager::CGovernanceManager() :
-    nTimeLastDiff(0),
-    nCachedBlockHeight(0),
+GovernanceStore::GovernanceStore() :
+    cs(),
     mapObjects(),
     mapErasedGovernanceObjects(),
     cmapVoteToObject(MAX_CACHE_SIZE),
     cmapInvalidVotes(MAX_CACHE_SIZE),
     cmmapOrphanVotes(MAX_CACHE_SIZE),
     mapLastMasternodeObject(),
+    lastMNListForVotingKeys(std::make_shared<CDeterministicMNList>())
+{
+}
+
+CGovernanceManager::CGovernanceManager() :
+    m_db{std::make_unique<db_type>("governance.dat", "magicGovernanceCache")},
+    nTimeLastDiff(0),
+    nCachedBlockHeight(0),
     setRequestedObjects(),
     fRateChecksEnabled(true),
-    lastMNListForVotingKeys(std::make_shared<CDeterministicMNList>()),
-    votedFundingYesTriggerHash(std::nullopt),
-    cs()
+    votedFundingYesTriggerHash(std::nullopt)
 {
+}
+
+CGovernanceManager::~CGovernanceManager()
+{
+    if (!is_valid) return;
+    m_db->Store(*this);
+}
+
+bool CGovernanceManager::LoadCache(bool load_cache)
+{
+    assert(m_db != nullptr);
+    is_valid = load_cache ? m_db->Load(*this) : m_db->Store(*this);
+    if (is_valid && load_cache) {
+        CheckAndRemove();
+        InitOnLoad();
+    }
+    return is_valid;
 }
 
 // Accessors for thread-safe access to maps
@@ -318,7 +341,7 @@ void CGovernanceManager::UpdateCachesAndClean()
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean\n");
 
-    std::vector<uint256> vecDirtyHashes = mmetaman.GetAndClearDirtyGovernanceObjectHashes();
+    std::vector<uint256> vecDirtyHashes = mmetaman->GetAndClearDirtyGovernanceObjectHashes();
 
     LOCK2(cs_main, cs);
 
@@ -368,7 +391,7 @@ void CGovernanceManager::UpdateCachesAndClean()
         if ((pObj->IsSetCachedDelete() || pObj->IsSetExpired()) &&
             (nTimeSinceDeletion >= GOVERNANCE_DELETION_DELAY)) {
             LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean -- erase obj %s\n", (*it).first.ToString());
-            mmetaman.RemoveGovernanceObject(pObj->GetHash());
+            mmetaman->RemoveGovernanceObject(pObj->GetHash());
 
             // Remove vote references
             const object_ref_cm_t::list_t& listItems = cmapVoteToObject.GetItemList();
@@ -850,13 +873,13 @@ void CGovernanceManager::SyncObjects(CNode& peer, PeerManager& peerman, CConnman
     // do not provide any data until our node is synced
     if (!::masternodeSync->IsSynced()) return;
 
-    if (netfulfilledman.HasFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC)) {
+    if (netfulfilledman->HasFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC)) {
         // Asking for the whole list multiple times in a short period of time is no good
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- peer already asked me for the list\n", __func__);
         peerman.Misbehaving(peer.GetId(), 20);
         return;
     }
-    netfulfilledman.AddFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC);
+    netfulfilledman->AddFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC);
 
     int nObjCount = 0;
 
@@ -1323,7 +1346,7 @@ void CGovernanceManager::InitOnLoad()
     LogPrintf("     %s\n", ToString());
 }
 
-std::string CGovernanceManager::ToString() const
+std::string GovernanceStore::ToString() const
 {
     LOCK(cs);
 

@@ -6,14 +6,17 @@
 #define BITCOIN_MASTERNODE_META_H
 
 #include <serialize.h>
+#include <sync.h>
+#include <uint256.h>
 
 #include <univalue.h>
 
 #include <atomic>
-#include <uint256.h>
-#include <sync.h>
+#include <memory>
 
 class CConnman;
+template<typename T>
+class CFlatDB;
 
 static constexpr int MASTERNODE_MAX_MIXING_TXES{5};
 static constexpr int MASTERNODE_MAX_FAILED_OUTBOUND_ATTEMPTS{5};
@@ -89,16 +92,13 @@ public:
 };
 using CMasternodeMetaInfoPtr = std::shared_ptr<CMasternodeMetaInfo>;
 
-class CMasternodeMetaMan
+class MasternodeMetaStore
 {
-private:
+protected:
     static const std::string SERIALIZATION_VERSION_STRING;
 
     mutable RecursiveMutex cs;
-
     std::map<uint256, CMasternodeMetaInfoPtr> metaInfos GUARDED_BY(cs);
-    std::vector<uint256> vecDirtyGovernanceObjectHashes GUARDED_BY(cs);
-
     // keep track of dsq count to prevent masternodes from gaming coinjoin queue
     std::atomic<int64_t> nDsqCount{0};
 
@@ -117,8 +117,9 @@ public:
     template<typename Stream>
     void Unserialize(Stream &s)
     {
-        LOCK(cs);
         Clear();
+
+        LOCK(cs);
         std::string strVersion;
         s >> strVersion;
         if (strVersion != SERIALIZATION_VERSION_STRING) {
@@ -132,7 +133,33 @@ public:
         }
     }
 
+    void Clear()
+    {
+        LOCK(cs);
+
+        metaInfos.clear();
+    }
+
+    std::string ToString() const;
+};
+
+class CMasternodeMetaMan : public MasternodeMetaStore
+{
+private:
+    using db_type = CFlatDB<MasternodeMetaStore>;
+
+private:
+    const std::unique_ptr<db_type> m_db;
+    const bool is_valid{false};
+
+    std::vector<uint256> vecDirtyGovernanceObjectHashes GUARDED_BY(cs);
+
 public:
+    explicit CMasternodeMetaMan(bool load_cache);
+    ~CMasternodeMetaMan();
+
+    bool IsValid() const { return is_valid; }
+
     CMasternodeMetaInfoPtr GetMetaInfo(const uint256& proTxHash, bool fCreate = true);
 
     int64_t GetDsqCount() const { return nDsqCount; }
@@ -145,14 +172,8 @@ public:
     void RemoveGovernanceObject(const uint256& nGovernanceObjectHash);
 
     std::vector<uint256> GetAndClearDirtyGovernanceObjectHashes();
-
-    void Clear();
-    // Needed to avoid errors in flat-database.h
-    void CheckAndRemove() const {};
-
-    std::string ToString() const;
 };
 
-extern CMasternodeMetaMan mmetaman;
+extern std::unique_ptr<CMasternodeMetaMan> mmetaman;
 
 #endif // BITCOIN_MASTERNODE_META_H

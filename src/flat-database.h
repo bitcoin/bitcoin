@@ -6,6 +6,7 @@
 #define BITCOIN_FLAT_DATABASE_H
 
 #include <clientversion.h>
+#include <chainparams.h>
 #include <fs.h>
 #include <hash.h>
 #include <streams.h>
@@ -35,7 +36,7 @@ private:
     std::string strFilename;
     std::string strMagicMessage;
 
-    bool Write(const T& objToSave)
+    bool CoreWrite(const T& objToSave)
     {
         // LOCK(objToSave.cs);
 
@@ -70,7 +71,7 @@ private:
         return true;
     }
 
-    ReadResult Read(T& objToLoad, bool fDryRun = false)
+    ReadResult CoreRead(T& objToLoad)
     {
         //LOCK(objToLoad.cs);
 
@@ -151,28 +152,13 @@ private:
 
         LogPrintf("Loaded info from %s  %dms\n", strFilename, GetTimeMillis() - nStart);
         LogPrintf("     %s\n", objToLoad.ToString());
-        if(!fDryRun) {
-            LogPrintf("%s: Cleaning....\n", __func__);
-            objToLoad.CheckAndRemove();
-            LogPrintf("     %s\n", objToLoad.ToString());
-        }
 
         return Ok;
     }
 
-
-public:
-    CFlatDB(std::string strFilenameIn, std::string strMagicMessageIn)
+    bool Read(T& objToLoad)
     {
-        pathDB = GetDataDir() / strFilenameIn;
-        strFilename = strFilenameIn;
-        strMagicMessage = strMagicMessageIn;
-    }
-
-    bool Load(T& objToLoad)
-    {
-        LogPrintf("Reading info from %s...\n", strFilename);
-        ReadResult readResult = Read(objToLoad);
+        ReadResult readResult = CoreRead(objToLoad);
         if (readResult == FileError)
             LogPrintf("Missing file %s, will try to recreate\n", strFilename);
         else if (readResult != Ok)
@@ -191,36 +177,34 @@ public:
         return true;
     }
 
-    bool Dump(T& objToSave)
+public:
+    CFlatDB(std::string strFilenameIn, std::string strMagicMessageIn)
     {
-        int64_t nStart = GetTimeMillis();
+        pathDB = GetDataDir() / strFilenameIn;
+        strFilename = strFilenameIn;
+        strMagicMessage = strMagicMessageIn;
+    }
 
+    bool Load(T& objToLoad)
+    {
+        LogPrintf("Reading info from %s...\n", strFilename);
+        return Read(objToLoad);
+    }
+
+    bool Store(T& objToSave)
+    {
         LogPrintf("Verifying %s format...\n", strFilename);
         T tmpObjToLoad;
-        ReadResult readResult = Read(tmpObjToLoad, true);
+        if (!Read(tmpObjToLoad)) return false;
 
-        // there was an error and it was not an error on file opening => do not proceed
-        if (readResult == FileError)
-            LogPrintf("Missing file %s, will try to recreate\n", strFilename);
-        else if (readResult != Ok)
-        {
-            LogPrintf("Error reading %s: ", strFilename);
-            if(readResult == IncorrectFormat)
-                LogPrintf("%s: Magic is ok but data has invalid format, will try to recreate\n", __func__);
-            else
-            {
-                LogPrintf("%s: File format is unknown or invalid, please fix it manually\n", __func__);
-                return false;
-            }
-        }
+        int64_t nStart = GetTimeMillis();
 
         LogPrintf("Writing info to %s...\n", strFilename);
-        Write(objToSave);
+        CoreWrite(objToSave);
         LogPrintf("%s dump finished  %dms\n", strFilename, GetTimeMillis() - nStart);
 
         return true;
     }
-
 };
 
 

@@ -2731,6 +2731,8 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& peer, CDataStream& vRecv, const
 
 std::pair<bool /*ret*/, bool /*do_return*/> static ValidateDSTX(CTxMemPool& mempool, ChainstateManager& chainman, CCoinJoinBroadcastTx& dstx, uint256 hashTx)
 {
+    assert(::mmetaman != nullptr);
+
     if (!dstx.IsValidStructure()) {
         LogPrint(BCLog::COINJOIN, "DSTX -- Invalid DSTX structure: %s\n", hashTx.ToString());
         return {false, true};
@@ -2773,7 +2775,7 @@ std::pair<bool /*ret*/, bool /*do_return*/> static ValidateDSTX(CTxMemPool& memp
         return {false, true};
     }
 
-    if (!mmetaman.GetMetaInfo(dmn->proTxHash)->IsValidForMixingTxes()) {
+    if (!mmetaman->GetMetaInfo(dmn->proTxHash)->IsValidForMixingTxes()) {
         LogPrint(BCLog::COINJOIN, "DSTX -- Masternode %s is sending too many transactions %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
         return {true, true};
         // TODO: Not an error? Could it be that someone is relaying old DSTXes
@@ -2787,7 +2789,7 @@ std::pair<bool /*ret*/, bool /*do_return*/> static ValidateDSTX(CTxMemPool& memp
 
     LogPrint(BCLog::COINJOIN, "DSTX -- Got Masternode transaction %s\n", hashTx.ToString());
     mempool.PrioritiseTransaction(hashTx, 0.1*COIN);
-    mmetaman.DisallowMixing(dmn->proTxHash);
+    mmetaman->DisallowMixing(dmn->proTxHash);
 
     return {true, false};
 }
