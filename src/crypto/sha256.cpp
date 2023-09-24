@@ -653,6 +653,10 @@ std::string SHA256AutoDetect(sha256_implementation::UseImplementation use_implem
         ret = "sse4(1way)";
 #endif
 #if defined(ENABLE_SSE41)
+#if defined(_MSC_VER)
+        Transform = sha256_sse41::Transform;
+        ret = "sse41(1way)";
+#endif
         TransformD64_4way = sha256d64_sse41::Transform_4way;
         ret += ",sse41(4way)";
 #endif
