@@ -1709,16 +1709,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                 uint8_t address_type{0};
                 uint160 address_bytes;
 
-                if (out.scriptPubKey.IsPayToScriptHash()) {
-                    address_type  = AddressType::P2SH;
-                    address_bytes = uint160(TrimScriptP2SH(out.scriptPubKey));
-                } else if (out.scriptPubKey.IsPayToPublicKeyHash()) {
-                    address_type  = AddressType::P2PKH;
-                    address_bytes = uint160(TrimScriptP2PKH(out.scriptPubKey));
-                } else if (out.scriptPubKey.IsPayToPublicKey()) {
-                    address_type  = AddressType::P2PK;
-                    address_bytes = Hash160(TrimScriptP2PK(out.scriptPubKey));
-                } else {
+                if (!AddressBytesFromScript(out.scriptPubKey, address_type, address_bytes)) {
                     continue;
                 }
 
@@ -1771,16 +1762,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                     uint8_t address_type{0};
                     uint160 address_bytes;
 
-                    if (prevout.scriptPubKey.IsPayToScriptHash()) {
-                        address_type  = AddressType::P2SH;
-                        address_bytes = uint160(TrimScriptP2SH(prevout.scriptPubKey));
-                    } else if (prevout.scriptPubKey.IsPayToPublicKeyHash()) {
-                        address_type  = AddressType::P2PKH;
-                        address_bytes = uint160(TrimScriptP2PKH(prevout.scriptPubKey));
-                    } else if (prevout.scriptPubKey.IsPayToPublicKey()) {
-                        address_type  = AddressType::P2PK;
-                        address_bytes = Hash160(TrimScriptP2PK(prevout.scriptPubKey));
-                    } else {
+                    if (!AddressBytesFromScript(prevout.scriptPubKey, address_type, address_bytes)) {
                         continue;
                     }
 
@@ -2245,19 +2227,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                     uint8_t address_type{0};
                     uint160 address_bytes;
 
-                    if (prevout.scriptPubKey.IsPayToScriptHash()) {
-                        address_type  = AddressType::P2SH;
-                        address_bytes = uint160(TrimScriptP2SH(prevout.scriptPubKey));
-                    } else if (prevout.scriptPubKey.IsPayToPublicKeyHash()) {
-                        address_type  = AddressType::P2PKH;
-                        address_bytes = uint160(TrimScriptP2PKH(prevout.scriptPubKey));
-                    } else if (prevout.scriptPubKey.IsPayToPublicKey()) {
-                        address_type  = AddressType::P2PK;
-                        address_bytes = Hash160(TrimScriptP2PK(prevout.scriptPubKey));
-                    } else {
-                        address_type  = AddressType::UNKNOWN;
-                        address_bytes.SetNull();
-                    }
+                    AddressBytesFromScript(prevout.scriptPubKey, address_type, address_bytes);
 
                     if (fAddressIndex && address_type != AddressType::UNKNOWN) {
                         // record spending activity
@@ -2311,16 +2281,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                 uint8_t address_type{0};
                 uint160 address_bytes;
 
-                if (out.scriptPubKey.IsPayToScriptHash()) {
-                    address_type  = AddressType::P2SH;
-                    address_bytes = uint160(TrimScriptP2SH(out.scriptPubKey));
-                } else if (out.scriptPubKey.IsPayToPublicKeyHash()) {
-                    address_type  = AddressType::P2PKH;
-                    address_bytes = uint160(TrimScriptP2PKH(out.scriptPubKey));
-                } else if (out.scriptPubKey.IsPayToPublicKey()) {
-                    address_type  = AddressType::P2PK;
-                    address_bytes = Hash160(TrimScriptP2PK(out.scriptPubKey));
-                } else {
+                if (!AddressBytesFromScript(out.scriptPubKey, address_type, address_bytes)) {
                     continue;
                 }
 
@@ -4847,19 +4808,7 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
                     uint8_t address_type{0};
                     uint160 address_bytes;
 
-                    if (prevout.scriptPubKey.IsPayToScriptHash()) {
-                        address_type  = AddressType::P2SH;
-                        address_bytes = uint160(TrimScriptP2SH(prevout.scriptPubKey));
-                    } else if (prevout.scriptPubKey.IsPayToPublicKeyHash()) {
-                        address_type  = AddressType::P2PKH;
-                        address_bytes = uint160(TrimScriptP2PKH(prevout.scriptPubKey));
-                    } else if (prevout.scriptPubKey.IsPayToPublicKey()) {
-                        address_type  = AddressType::P2PK;
-                        address_bytes = Hash160(TrimScriptP2PK(prevout.scriptPubKey));
-                    } else {
-                        address_type  = AddressType::UNKNOWN;
-                        address_bytes.SetNull();
-                    }
+                    AddressBytesFromScript(prevout.scriptPubKey, address_type, address_bytes);
 
                     if (fAddressIndex && address_type != AddressType::UNKNOWN) {
                         // record spending activity
@@ -4884,16 +4833,7 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
                     uint8_t address_type{0};
                     uint160 address_bytes;
 
-                    if (out.scriptPubKey.IsPayToScriptHash()) {
-                        address_type  = AddressType::P2SH;
-                        address_bytes = uint160(TrimScriptP2SH(out.scriptPubKey));
-                    } else if (out.scriptPubKey.IsPayToPublicKeyHash()) {
-                        address_type  = AddressType::P2PKH;
-                        address_bytes = uint160(TrimScriptP2PKH(out.scriptPubKey));
-                    } else if (out.scriptPubKey.IsPayToPublicKey()) {
-                        address_type  = AddressType::P2PK;
-                        address_bytes = Hash160(TrimScriptP2PK(out.scriptPubKey));
-                    } else {
+                    if (!AddressBytesFromScript(out.scriptPubKey, address_type, address_bytes)) {
                         continue;
                     }
 
