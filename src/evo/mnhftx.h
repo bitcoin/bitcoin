@@ -28,11 +28,11 @@ class MNHFTx
 {
 public:
     uint8_t versionBit{0};
-    uint256 quorumHash;
-    CBLSSignature sig;
+    uint256 quorumHash{0};
+    CBLSSignature sig{};
 
     MNHFTx() = default;
-    bool Verify(const CBlockIndex* const pQuorumIndex, const uint256& msgHash, TxValidationState& state) const;
+    bool Verify(const uint256& quorumHash, const uint256& msgHash, TxValidationState& state) const;
 
     SERIALIZE_METHODS(MNHFTx, obj)
     {
