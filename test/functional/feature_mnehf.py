@@ -103,9 +103,9 @@ class MnehfTest(DashTestFramework):
 
     def ensure_tx_is_not_mined(self, tx_id):
         try:
-            assert_equal(self.nodes[0].getrawtransaction(tx_id, 1)['height'], -1);
+            assert_equal(self.nodes[0].getrawtransaction(tx_id, 1)['height'], -1)
             raise AssertionError("Transaction should not be mined")
-        except KeyError as e:
+        except KeyError:
             # KeyError is expected
             pass
 
@@ -249,7 +249,7 @@ class MnehfTest(DashTestFramework):
         assert_equal(get_bip9_details(node, 'testdummy')['status'], 'defined')
 
         self.log.info("Testing EHF signal with same bit")
-        self.log.info(f"Previous signal at height={ehf_height}, total blocks={node.getblockcount()}, should success at {ehf_hight + 576}")
+        self.log.info(f"Previous signal at height={ehf_height}, total blocks={node.getblockcount()}, should success at {ehf_height + 576}")
         self.slowly_generate_batch(576 - (node.getblockcount() - ehf_height) - 1)
         ehf_tx_sent = self.send_tx(ehf_tx_second)
         self.log.info("Mine block and ensure not mined yet...")

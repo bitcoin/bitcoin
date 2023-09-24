@@ -159,7 +159,7 @@ bool CMNHFManager::ProcessBlock(const CBlock& block, const CBlockIndex* const pi
         }
         Signals signals = GetSignalsStage(pindex->pprev);
         if (new_signals.empty()) {
-            if (fJustCheck) {
+            if (!fJustCheck) {
                 AddToCache(signals, pindex);
             }
             return true;
