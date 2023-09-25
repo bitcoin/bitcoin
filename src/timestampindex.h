@@ -8,6 +8,7 @@
 #ifndef BITCOIN_TIMESTAMPINDEX_H
 #define BITCOIN_TIMESTAMPINDEX_H
 
+#include <serialize.h>
 #include <uint256.h>
 
 struct CTimestampIndexIteratorKey {
