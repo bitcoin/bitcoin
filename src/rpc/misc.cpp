@@ -708,19 +708,16 @@ static UniValue getaddressmempool(const JSONRPCRequest& request)
 
     UniValue result(UniValue::VARR);
 
-    for (const auto& index : indexes) {
-        const auto& mempoolAddressDeltaKey = index.first;
-        const auto& mempoolAddressDelta = index.second;
-
+    for (const auto& [mempoolAddressKey, mempoolAddressDelta] : indexes) {
         std::string address;
-        if (!getAddressFromIndex(mempoolAddressDeltaKey.m_address_type, mempoolAddressDeltaKey.m_address_bytes, address)) {
+        if (!getAddressFromIndex(mempoolAddressKey.m_address_type, mempoolAddressKey.m_address_bytes, address)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
         }
 
         UniValue delta(UniValue::VOBJ);
         delta.pushKV("address", address);
-        delta.pushKV("txid", mempoolAddressDeltaKey.m_tx_hash.GetHex());
-        delta.pushKV("index", (int)mempoolAddressDeltaKey.m_tx_index);
+        delta.pushKV("txid", mempoolAddressKey.m_tx_hash.GetHex());
+        delta.pushKV("index", (int)mempoolAddressKey.m_tx_index);
         delta.pushKV("satoshis", mempoolAddressDelta.m_amount);
         delta.pushKV("timestamp", count_seconds(mempoolAddressDelta.m_time));
         if (mempoolAddressDelta.m_amount < 0) {
@@ -781,10 +778,7 @@ static UniValue getaddressutxos(const JSONRPCRequest& request)
 
     UniValue result(UniValue::VARR);
 
-    for (const auto& unspentOutput : unspentOutputs) {
-        const auto& unspentKey = unspentOutput.first;
-        const auto& unspentValue = unspentOutput.second;
-
+    for (const auto& [unspentKey, unspentValue] : unspentOutputs) {
         UniValue output(UniValue::VOBJ);
         std::string address;
         if (!getAddressFromIndex(unspentKey.m_address_type, unspentKey.m_address_bytes, address)) {
@@ -870,9 +864,7 @@ static UniValue getaddressdeltas(const JSONRPCRequest& request)
 
     UniValue result(UniValue::VARR);
 
-    for (const auto& index : addressIndex) {
-        const auto& indexKey = index.first;
-        const auto& indexDelta = index.second;
+    for (const auto& [indexKey, indexDelta] : addressIndex) {
         std::string address;
         if (!getAddressFromIndex(indexKey.m_address_type, indexKey.m_address_bytes, address)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
@@ -938,9 +930,7 @@ static UniValue getaddressbalance(const JSONRPCRequest& request)
     CAmount balance_immature = 0;
     CAmount received = 0;
 
-    for (const auto& index : addressIndex) {
-        const auto& indexKey = index.first;
-        const auto& indexDelta = index.second;
+    for (const auto& [indexKey, indexDelta] : addressIndex) {
         if (indexDelta > 0) {
             received += indexDelta;
         }
@@ -1017,9 +1007,7 @@ static UniValue getaddresstxids(const JSONRPCRequest& request)
     std::set<std::pair<int, std::string> > txids;
     UniValue result(UniValue::VARR);
 
-    for (const auto& index : addressIndex) {
-        const auto& indexKey = index.first;
-
+    for (const auto& [indexKey, _]: addressIndex) {
         int height = indexKey.m_block_height;
         std::string txid = indexKey.m_tx_hash.GetHex();
 
