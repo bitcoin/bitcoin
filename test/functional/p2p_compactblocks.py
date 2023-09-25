@@ -58,6 +58,9 @@ from test_framework.script import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
+    assert_greater_than_or_equal,
+    assert_not_equal,
     softfork_active,
 )
 from test_framework.wallet import MiniWallet
@@ -159,7 +162,7 @@ class CompactBlocksTest(BitcoinTestFramework):
     def make_utxos(self):
         block = self.build_block_on_tip(self.nodes[0])
         self.segwit_node.send_and_ping(msg_no_witness_block(block))
-        assert int(self.nodes[0].getbestblockhash(), 16) == block.sha256
+        assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.sha256)
         self.generate(self.wallet, COINBASE_MATURITY)
 
         total_value = block.vtx[0].vout[0].nValue
@@ -342,7 +345,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(header_and_shortids.header.sha256, block_hash)
 
         # Make sure the prefilled_txn appears to have included the coinbase
-        assert len(header_and_shortids.prefilled_txn) >= 1
+        assert_greater_than_or_equal(len(header_and_shortids.prefilled_txn), 1)
         assert_equal(header_and_shortids.prefilled_txn[0].index, 0)
 
         # Check that all prefilled_txn entries match what's in the block.
@@ -719,7 +722,7 @@ class CompactBlocksTest(BitcoinTestFramework):
     # but invalid transactions.
     def test_invalid_tx_in_compactblock(self, test_node):
         node = self.nodes[0]
-        assert len(self.utxos)
+        assert_greater_than(len(self.utxos), 0)
         utxo = self.utxos[0]
 
         block = self.build_block_with_transactions(node, utxo, 5)
@@ -751,7 +754,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
     def test_compactblock_reconstruction_stalling_peer(self, stalling_peer, delivery_peer):
         node = self.nodes[0]
-        assert len(self.utxos)
+        assert_greater_than(len(self.utxos), 0)
 
         def announce_cmpct_block(node, peer):
             utxo = self.utxos.pop(0)
@@ -791,7 +794,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         cmpct_block.use_witness = True
         delivery_peer.send_and_ping(msg_cmpctblock(cmpct_block.to_p2p()))
-        assert int(node.getbestblockhash(), 16) != block.sha256
+        assert_not_equal(int(node.getbestblockhash(), 16), block.sha256)
 
         msg = msg_no_witness_blocktxn()
         msg.block_transactions.blockhash = block.sha256

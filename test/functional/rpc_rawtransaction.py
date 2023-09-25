@@ -221,7 +221,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             if missing_fields:
                 raise AssertionError(f"fields {', '.join(missing_fields)} are not in transaction")
 
-            assert len(gottx['vin']) > 0
+            assert_greater_than(len(gottx['vin']), 0)
             if v == 1:
                 assert 'fee' not in gottx
                 assert 'prevout' not in gottx['vin'][0]

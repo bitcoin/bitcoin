@@ -27,6 +27,9 @@ import re
 import logging
 import unittest
 
+from test_framework.util import assert_greater_than_or_equal
+
+
 os.environ["REQUIRE_WALLET_TYPE_SET"] = "1"
 
 # Formatting. Default colors to empty strings.
@@ -686,7 +689,7 @@ class TestHandler:
     """
 
     def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, use_term_control):
-        assert num_tests_parallel >= 1
+        assert_greater_than_or_equal(num_tests_parallel, 1)
         self.num_jobs = num_tests_parallel
         self.tests_dir = tests_dir
         self.tmpdir = tmpdir

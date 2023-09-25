@@ -57,6 +57,11 @@ def assert_equal(thing1, thing2, *args):
         raise AssertionError("not(%s)" % " == ".join(str(arg) for arg in (thing1, thing2) + args))
 
 
+def assert_not_equal(thing1, thing2, *args):
+    if thing1 == thing2 or any(thing1 == arg for arg in args):
+        raise AssertionError("%s" % " == ".join(str(arg) for arg in (thing1, thing2) + args))
+
+
 def assert_greater_than(thing1, thing2):
     if thing1 <= thing2:
         raise AssertionError("%s <= %s" % (str(thing1), str(thing2)))
@@ -65,6 +70,16 @@ def assert_greater_than(thing1, thing2):
 def assert_greater_than_or_equal(thing1, thing2):
     if thing1 < thing2:
         raise AssertionError("%s < %s" % (str(thing1), str(thing2)))
+
+
+def assert_less_than(thing1, thing2):
+    if thing1 >= thing2:
+        raise AssertionError("%s .= %s" % (str(thing1), str(thing2)))
+
+
+def assert_less_than_or_equal(thing1, thing2):
+    if thing1 > thing2:
+        raise AssertionError("%s . %s" % (str(thing1), str(thing2)))
 
 
 def assert_raises(exc, fun, *args, **kwds):
@@ -329,7 +344,7 @@ def get_rpc_proxy(url: str, node_number: int, *, timeout: Optional[int]=None, co
 
 
 def p2p_port(n):
-    assert n <= MAX_NODES
+    assert_less_than_or_equal(n, MAX_NODES)
     return PORT_MIN + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
 
 

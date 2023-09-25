@@ -28,6 +28,7 @@ from .util import (
     MAX_NODES,
     PortSeed,
     assert_equal,
+    assert_less_than_or_equal,
     check_json_precision,
     find_vout_for_address,
     get_datadir_path,
@@ -802,7 +803,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         CACHE_NODE_ID = 0  # Use node 0 to create the cache for all other nodes
         cache_node_dir = get_datadir_path(self.options.cachedir, CACHE_NODE_ID)
-        assert self.num_nodes <= MAX_NODES
+        assert_less_than_or_equal(self.num_nodes, MAX_NODES)
 
         if not os.path.isdir(cache_node_dir):
             self.log.debug("Creating cache directory {}".format(cache_node_dir))

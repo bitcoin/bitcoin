@@ -84,6 +84,10 @@ from test_framework.script_util import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_less_than,
+    assert_greater_than,
+    assert_greater_than_or_equal,
+    assert_not_equal,
     softfork_active,
     assert_raises_rpc_error,
 )
@@ -248,7 +252,7 @@ class SegWitTest(BitcoinTestFramework):
         # self.std_wtx_node is for testing node1 with wtxid relay
         self.std_wtx_node = self.nodes[1].add_p2p_connection(TestP2PConn(wtxidrelay=True), services=P2P_SERVICES)
 
-        assert self.test_node.nServices & NODE_WITNESS != 0
+        assert_not_equal(self.test_node.nServices & NODE_WITNESS, 0)
 
         # Keep a place to store utxo's that can be used in later tests
         self.utxo = []
@@ -335,7 +339,7 @@ class SegWitTest(BitcoinTestFramework):
         # Verify the hash with witness differs from the txid
         # (otherwise our testing framework must be broken!)
         tx.rehash()
-        assert tx.sha256 != tx.calc_sha256(with_witness=True)
+        assert_not_equal(tx.sha256, tx.calc_sha256(with_witness=True))
 
         # Construct a block that includes the transaction.
         block = self.build_next_block()
@@ -374,14 +378,14 @@ class SegWitTest(BitcoinTestFramework):
         self.test_node.send_message(msg_headers())
 
         self.test_node.announce_block_and_wait_for_getdata(block1, use_header=False)
-        assert self.test_node.last_message["getdata"].inv[0].type == blocktype
+        assert_equal(self.test_node.last_message["getdata"].inv[0].type, blocktype)
         test_witness_block(self.nodes[0], self.test_node, block1, True)
 
         block2 = self.build_next_block()
         block2.solve()
 
         self.test_node.announce_block_and_wait_for_getdata(block2, use_header=True)
-        assert self.test_node.last_message["getdata"].inv[0].type == blocktype
+        assert_equal(self.test_node.last_message["getdata"].inv[0].type, blocktype)
         test_witness_block(self.nodes[0], self.test_node, block2, True)
 
         # Check that we can getdata for witness blocks or regular blocks,
@@ -410,8 +414,8 @@ class SegWitTest(BitcoinTestFramework):
             block = self.build_next_block()
             self.update_witness_block_with_transactions(block, [])
             # This gives us a witness commitment.
-            assert len(block.vtx[0].wit.vtxinwit) == 1
-            assert len(block.vtx[0].wit.vtxinwit[0].scriptWitness.stack) == 1
+            assert_equal(len(block.vtx[0].wit.vtxinwit), 1)
+            assert_equal(len(block.vtx[0].wit.vtxinwit[0].scriptWitness.stack), 1)
             test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
             # Now try to retrieve it...
             rpc_block = self.nodes[0].getblock(block.hash, False)
@@ -537,7 +541,7 @@ class SegWitTest(BitcoinTestFramework):
         # Verify that if a peer doesn't set nServices to include NODE_WITNESS,
         # the getdata is just for the non-witness portion.
         self.old_node.announce_tx_and_wait_for_getdata(tx)
-        assert self.old_node.last_message["getdata"].inv[0].type == MSG_TX
+        assert_equal(self.old_node.last_message["getdata"].inv[0].type, MSG_TX)
 
         # Since we haven't delivered the tx yet, inv'ing the same tx from
         # a witness transaction ought not result in a getdata.
@@ -750,7 +754,7 @@ class SegWitTest(BitcoinTestFramework):
         block.solve()
 
         # Test the test -- witness serialization should be different
-        assert msg_block(block).serialize() != msg_no_witness_block(block).serialize()
+        assert_not_equal(msg_block(block).serialize(), msg_no_witness_block(block).serialize())
 
         # This empty block should be valid.
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
@@ -761,7 +765,7 @@ class SegWitTest(BitcoinTestFramework):
         block_2.solve()
 
         # The commitment should have changed!
-        assert block_2.vtx[0].vout[-1] != block.vtx[0].vout[-1]
+        assert_not_equal(block_2.vtx[0].vout[-1], block.vtx[0].vout[-1])
 
         # This should also be valid.
         test_witness_block(self.nodes[0], self.test_node, block_2, accepted=True)
@@ -805,7 +809,7 @@ class SegWitTest(BitcoinTestFramework):
         block_3.vtx[0].vout[-1].nValue += 1
         block_3.vtx[0].rehash()
         block_3.hashMerkleRoot = block_3.calc_merkle_root()
-        assert len(block_3.vtx[0].vout) == 4  # 3 OP_returns
+        assert_equal(len(block_3.vtx[0].vout), 4)  # 3 OP_returns
         block_3.solve()
         test_witness_block(self.nodes[0], self.test_node, block_3, accepted=True)
 
@@ -836,19 +840,19 @@ class SegWitTest(BitcoinTestFramework):
         block.solve()
 
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.append(b'a' * 5000000)
-        assert block.get_weight() > MAX_BLOCK_WEIGHT
+        assert_greater_than(block.get_weight(), MAX_BLOCK_WEIGHT)
 
         # We can't send over the p2p network, because this is too big to relay
         # TODO: repeat this test with a block that can be relayed
         assert_equal('bad-witness-nonce-size', self.nodes[0].submitblock(block.serialize().hex()))
 
-        assert self.nodes[0].getbestblockhash() != block.hash
+        assert_not_equal(self.nodes[0].getbestblockhash(), block.hash)
 
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.pop()
-        assert block.get_weight() < MAX_BLOCK_WEIGHT
+        assert_less_than(block.get_weight(), MAX_BLOCK_WEIGHT)
         assert_equal(None, self.nodes[0].submitblock(block.serialize().hex()))
 
-        assert self.nodes[0].getbestblockhash() == block.hash
+        assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
         # Now make sure that malleating the witness reserved value doesn't
         # result in a block permanently marked bad.
@@ -873,7 +877,7 @@ class SegWitTest(BitcoinTestFramework):
         # Test that witness-bearing blocks are limited at ceil(base + wit/4) <= 1MB.
         block = self.build_next_block()
 
-        assert len(self.utxo) > 0
+        assert_greater_than(len(self.utxo), 0)
 
         # Create a P2WSH transaction.
         # The witness script will be a bunch of OP_2DROP's, followed by OP_TRUE.
@@ -894,7 +898,7 @@ class SegWitTest(BitcoinTestFramework):
         for _ in range(NUM_OUTPUTS):
             parent_tx.vout.append(CTxOut(child_value, script_pubkey))
         parent_tx.vout[0].nValue -= 50000
-        assert parent_tx.vout[0].nValue > 0
+        assert_greater_than(parent_tx.vout[0].nValue, 0)
         parent_tx.rehash()
 
         child_tx = CTransaction()
@@ -922,7 +926,7 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(block.get_weight(), MAX_BLOCK_WEIGHT + 1)
         # Make sure that our test case would exceed the old max-network-message
         # limit
-        assert len(block.serialize()) > 2 * 1024 * 1024
+        assert_greater_than(len(block.serialize()), 2 * 1024 * 1024)
 
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False, reason='bad-blk-weight')
 
@@ -932,7 +936,7 @@ class SegWitTest(BitcoinTestFramework):
         block.vtx[0].vout.pop()
         add_witness_commitment(block)
         block.solve()
-        assert block.get_weight() == MAX_BLOCK_WEIGHT
+        assert_equal(block.get_weight(), MAX_BLOCK_WEIGHT)
 
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
 
@@ -951,7 +955,7 @@ class SegWitTest(BitcoinTestFramework):
         block.vtx[0].wit = CTxWitness()  # drop the nonce
         block.solve()
         assert_equal('bad-witness-merkle-match', self.nodes[0].submitblock(block.serialize().hex()))
-        assert self.nodes[0].getbestblockhash() != block.hash
+        assert_not_equal(self.nodes[0].getbestblockhash(), block.hash)
 
         # Now redo commitment with the standard nonce, but let bitcoind fill it in.
         add_witness_commitment(block, nonce=0)
@@ -974,7 +978,7 @@ class SegWitTest(BitcoinTestFramework):
 
         assert_equal('bad-txnmrklroot', self.nodes[0].submitblock(block_2.serialize().hex()))
         # Tip should not advance!
-        assert self.nodes[0].getbestblockhash() != block_2.hash
+        assert_not_equal(self.nodes[0].getbestblockhash(), block_2.hash)
 
     @subtest
     def test_extra_witness_data(self):
@@ -1096,7 +1100,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # This script is 19 max pushes (9937 bytes), then 64 more opcode-bytes.
         long_witness_script = CScript([b'a' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [OP_DROP] * 63 + [OP_TRUE])
-        assert len(long_witness_script) == MAX_WITNESS_SCRIPT_LENGTH + 1
+        assert_equal(len(long_witness_script), MAX_WITNESS_SCRIPT_LENGTH + 1)
         long_script_pubkey = script_to_p2wsh_script(long_witness_script)
 
         block = self.build_next_block()
@@ -1120,7 +1124,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Try again with one less byte in the witness script
         witness_script = CScript([b'a' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [OP_DROP] * 62 + [OP_TRUE])
-        assert len(witness_script) == MAX_WITNESS_SCRIPT_LENGTH
+        assert_equal(len(witness_script), MAX_WITNESS_SCRIPT_LENGTH)
         script_pubkey = script_to_p2wsh_script(witness_script)
 
         tx.vout[0] = CTxOut(tx.vout[0].nValue, script_pubkey)
@@ -1149,7 +1153,7 @@ class SegWitTest(BitcoinTestFramework):
         for _ in range(10):
             tx.vout.append(CTxOut(int(value / 10), script_pubkey))
         tx.vout[0].nValue -= 1000
-        assert tx.vout[0].nValue >= 0
+        assert_greater_than_or_equal(tx.vout[0].nValue, 0)
 
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx])
@@ -1302,7 +1306,7 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(raw_tx["weight"], tx3.get_weight())
         assert_equal(len(raw_tx["vin"][0]["txinwitness"]), 1)
         assert_equal(raw_tx["vin"][0]["txinwitness"][0], witness_script.hex())
-        assert vsize != raw_tx["size"]
+        assert_not_equal(vsize, raw_tx["size"])
 
         # Cleanup: mine the transactions and update utxo for next test
         self.generate(self.nodes[0], 1)
@@ -1356,7 +1360,7 @@ class SegWitTest(BitcoinTestFramework):
             temp_utxo.append(UTXO(tx.sha256, 0, tx.vout[0].nValue))
 
         self.generate(self.nodes[0], 1)  # Mine all the transactions
-        assert len(self.nodes[0].getrawmempool()) == 0
+        assert_equal(len(self.nodes[0].getrawmempool()), 0)
 
         # Finally, verify that version 0 -> version 2 transactions
         # are standard
@@ -1620,7 +1624,7 @@ class SegWitTest(BitcoinTestFramework):
             # Create a slight bias for producing more utxos
             num_outputs = random.randint(1, 11)
             random.shuffle(temp_utxos)
-            assert len(temp_utxos) > num_inputs
+            assert_greater_than(len(temp_utxos), num_inputs)
             tx = CTransaction()
             total_value = 0
             for i in range(num_inputs):
@@ -1883,7 +1887,7 @@ class SegWitTest(BitcoinTestFramework):
         extra_sigops_available = MAX_SIGOP_COST % sigops_per_script
 
         # We chose the number of checkmultisigs/checksigs to make this work:
-        assert extra_sigops_available < 100  # steer clear of MAX_OPS_PER_SCRIPT
+        assert_less_than(extra_sigops_available, 100)  # steer clear of MAX_OPS_PER_SCRIPT
 
         # This script, when spent with the first
         # N(=MAX_SIGOP_COST//sigops_per_script) outputs of our transaction,

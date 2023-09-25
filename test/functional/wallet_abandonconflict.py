@@ -16,6 +16,7 @@ from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_less_than,
     assert_raises_rpc_error,
 )
 
@@ -54,7 +55,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         assert_raises_rpc_error(-5, 'Transaction not eligible for abandonment', lambda: alice.abandontransaction(txid=txA))
 
         newbalance = alice.getbalance()
-        assert balance - newbalance < Decimal("0.001")  #no more than fees lost
+        assert_less_than(balance - newbalance, Decimal("0.001"))  #no more than fees lost
         balance = newbalance
 
         # Disconnect nodes so node0's transactions don't get into node1's mempool

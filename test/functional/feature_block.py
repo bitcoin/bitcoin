@@ -51,6 +51,8 @@ from test_framework.script_util import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_less_than,
+    assert_less_than_or_equal,
     assert_greater_than,
 )
 from test_framework.wallet_util import generate_keypair
@@ -527,7 +529,7 @@ class FullBlockTest(BitcoinTestFramework):
         b40 = self.next_block(40, spend=out[12])
         sigops = get_legacy_sigopcount_block(b40)
         numTxes = (MAX_BLOCK_SIGOPS - sigops) // b39_sigops_per_output
-        assert_equal(numTxes <= b39_outputs, True)
+        assert_less_than_or_equal(numTxes, b39_outputs)
 
         lastOutpoint = COutPoint(b40.vtx[1].sha256, 0)
         new_txs = []
@@ -798,7 +800,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(57)
         self.next_block(58, spend=out[17])
         tx = CTransaction()
-        assert len(out[17].vout) < 42
+        assert_less_than(len(out[17].vout), 42)
         tx.vin.append(CTxIn(COutPoint(out[17].sha256, 42), CScript([OP_TRUE]), SEQUENCE_FINAL))
         tx.vout.append(CTxOut(0, b""))
         tx.calc_sha256()

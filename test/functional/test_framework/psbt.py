@@ -11,6 +11,7 @@ from .messages import (
     from_binary,
     ser_compact_size,
 )
+from .util import assert_equal
 
 
 # global types
@@ -103,7 +104,7 @@ class PSBT:
         self.tx = None
 
     def deserialize(self, f):
-        assert f.read(5) == b"psbt\xff"
+        assert_equal(f.read(5), b"psbt\xff")
         self.g = from_binary(PSBTMap, f)
         assert PSBT_GLOBAL_UNSIGNED_TX in self.g.map
         self.tx = from_binary(CTransaction, self.g.map[PSBT_GLOBAL_UNSIGNED_TX])
@@ -117,8 +118,8 @@ class PSBT:
         assert isinstance(self.o, list) and all(isinstance(x, PSBTMap) for x in self.o)
         assert PSBT_GLOBAL_UNSIGNED_TX in self.g.map
         tx = from_binary(CTransaction, self.g.map[PSBT_GLOBAL_UNSIGNED_TX])
-        assert len(tx.vin) == len(self.i)
-        assert len(tx.vout) == len(self.o)
+        assert_equal(len(tx.vin), len(self.i))
+        assert_equal(len(tx.vout), len(self.o))
 
         psbt = [x.serialize() for x in [self.g] + self.i + self.o]
         return b"psbt\xff" + b"".join(psbt)

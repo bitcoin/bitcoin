@@ -9,6 +9,7 @@ import os
 import stat
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal
 
 
 class PosixFsPermissionsTest(BitcoinTestFramework):
@@ -22,12 +23,12 @@ class PosixFsPermissionsTest(BitcoinTestFramework):
     def check_directory_permissions(self, dir):
         mode = os.lstat(dir).st_mode
         self.log.info(f"{stat.filemode(mode)} {dir}")
-        assert mode == (stat.S_IFDIR | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+        assert_equal(mode, (stat.S_IFDIR | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR))
 
     def check_file_permissions(self, file):
         mode = os.lstat(file).st_mode
         self.log.info(f"{stat.filemode(mode)} {file}")
-        assert mode == (stat.S_IFREG | stat.S_IRUSR | stat.S_IWUSR)
+        assert_equal(mode, (stat.S_IFREG | stat.S_IRUSR | stat.S_IWUSR))
 
     def run_test(self):
         self.stop_node(0)

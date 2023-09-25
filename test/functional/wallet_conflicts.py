@@ -12,6 +12,8 @@ from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
         assert_equal,
+        assert_greater_than,
+        assert_less_than,
 )
 
 class TxConflicts(BitcoinTestFramework):
@@ -89,8 +91,8 @@ class TxConflicts(BitcoinTestFramework):
 
         self.log.info("Verify, after the reorg, that Tx_A was accepted, and tx_AB and its Child_Tx are conflicting now")
         # Tx A was accepted, Tx AB was not.
-        assert conflicted_AB_tx["confirmations"] < 0
-        assert conflicted_A_tx["confirmations"] > 0
+        assert_less_than(conflicted_AB_tx["confirmations"], 0)
+        assert_greater_than(conflicted_A_tx["confirmations"], 0)
 
         # Conflicted tx should have confirmations set to the confirmations of the most conflicting tx
         assert_equal(-conflicted_AB_tx["confirmations"], conflicted_A_tx["confirmations"])

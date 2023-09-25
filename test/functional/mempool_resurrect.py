@@ -5,7 +5,10 @@
 """Test resurrection of mined transactions when the blockchain is re-organized."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_less_than,
+)
 from test_framework.wallet import MiniWallet
 
 
@@ -38,7 +41,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_equal(set(node.getrawmempool()), set())
         confirmed_txns = set(node.getblock(blocks[0])['tx'] + node.getblock(blocks[1])['tx'])
         # Checks that all spend txns are contained in the mined blocks
-        assert spends_ids < confirmed_txns
+        assert_less_than(spends_ids, confirmed_txns)
 
         # Use invalidateblock to re-org back
         node.invalidateblock(blocks[0])
@@ -51,7 +54,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # mempool should be empty, all txns confirmed
         assert_equal(set(node.getrawmempool()), set())
         confirmed_txns = set(node.getblock(blocks[0])['tx'])
-        assert spends_ids < confirmed_txns
+        assert_less_than(spends_ids, confirmed_txns)
 
 
 if __name__ == '__main__':

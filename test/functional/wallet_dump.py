@@ -9,6 +9,7 @@ import time
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_not_equal,
     assert_raises_rpc_error,
 )
 from test_framework.wallet_util import WalletUnlock
@@ -53,10 +54,10 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                 keypath = None
                 if keytype == "inactivehdseed=1":
                     # ensure the old master is still available
-                    assert hd_master_addr_old == addr
+                    assert_equal(hd_master_addr_old, addr)
                 elif keytype == "hdseed=1":
                     # ensure we have generated a new hd master key
-                    assert hd_master_addr_old != addr
+                    assert_not_equal(hd_master_addr_old, addr)
                     hd_master_addr_ret = addr
                 elif keytype == "script=1":
                     # scripts don't have keypaths

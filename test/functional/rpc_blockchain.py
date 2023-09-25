@@ -45,6 +45,8 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_less_than,
+    assert_less_than_or_equal,
     assert_raises,
     assert_raises_rpc_error,
     assert_is_hex_string,
@@ -192,7 +194,8 @@ class BlockchainTest(BitcoinTestFramework):
         assert_greater_than(res['size_on_disk'], 0)
 
     def check_signalling_deploymentinfo_result(self, gdi_result, height, blockhash, status_next):
-        assert height >= 144 and height <= 287
+        assert_greater_than_or_equal(height, 144)
+        assert_less_than_or_equal(height, 287)
 
         assert_equal(gdi_result, {
           "hash": blockhash,
@@ -338,8 +341,8 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res['bogosize'], 16800),
         assert_equal(res['bestblock'], node.getblockhash(HEIGHT))
         size = res['disk_size']
-        assert size > 6400
-        assert size < 64000
+        assert_greater_than(size, 6400)
+        assert_less_than(size, 64000)
         assert_equal(len(res['bestblock']), 64)
         assert_equal(len(res['hash_serialized_3']), 64)
 
@@ -433,7 +436,7 @@ class BlockchainTest(BitcoinTestFramework):
         difficulty = self.nodes[0].getdifficulty()
         # 1 hash in 2 should be valid, so difficulty should be 1/2**31
         # binary => decimal => binary math is why we do this check
-        assert abs(difficulty * 2**31 - 1) < 0.0001
+        assert_less_than(abs(difficulty * 2**31 - 1), 0.0001)
 
     def _test_getnetworkhashps(self):
         self.log.info("Test getnetworkhashps")
@@ -475,7 +478,7 @@ class BlockchainTest(BitcoinTestFramework):
 
         # This should be 2 hashes every 10 minutes or 1/300
         hashes_per_second = self.nodes[0].getnetworkhashps()
-        assert abs(hashes_per_second * 300 - 1) < 0.0001
+        assert_less_than(abs(hashes_per_second * 300 - 1), 0.0001)
 
         # Test setting the first param of getnetworkhashps to -1 returns the average network
         # hashes per second from the last difficulty change.
@@ -487,7 +490,7 @@ class BlockchainTest(BitcoinTestFramework):
 
         # Ensure long lookups get truncated to chain length
         hashes_per_second = self.nodes[0].getnetworkhashps(self.nodes[0].getblockcount() + 1000)
-        assert hashes_per_second > 0.003
+        assert_greater_than(hashes_per_second,0.003)
 
     def _test_stopatheight(self):
         self.log.info("Test stopping at height")

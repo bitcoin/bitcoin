@@ -15,7 +15,10 @@ except ImportError:
     pass
 from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+)
 from test_framework.wallet import MiniWallet
 
 utxocache_changes_program = """
@@ -354,8 +357,8 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
             })
             # sanity checks only
             try:
-                assert event.memory > 0
-                assert event.duration > 0
+                assert_greater_than(event.memory, 0)
+                assert_greater_than(event.duration, 0)
             except AssertionError:
                 self.log.exception("Assertion error")
             else:

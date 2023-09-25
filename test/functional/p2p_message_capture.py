@@ -13,7 +13,10 @@ import os
 
 from test_framework.p2p import P2PDataStore, MESSAGEMAP
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than_or_equal,
+)
 
 TIME_SIZE = 8
 LENGTH_SIZE = 4
@@ -36,7 +39,7 @@ def mini_parser(dat_file: str) -> None:
     """
     with open(dat_file, 'rb') as f_in:
         # This should have at least one message in it
-        assert os.fstat(f_in.fileno()).st_size >= TIME_SIZE + LENGTH_SIZE + MSGTYPE_SIZE
+        assert_greater_than_or_equal(os.fstat(f_in.fileno()).st_size, TIME_SIZE + LENGTH_SIZE + MSGTYPE_SIZE)
         while True:
             tmp_header_raw = f_in.read(TIME_SIZE + LENGTH_SIZE + MSGTYPE_SIZE)
             if not tmp_header_raw:

@@ -17,7 +17,10 @@ except ImportError:
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+)
 
 
 validation_blockconnected_program = """
@@ -122,7 +125,7 @@ class ValidationTracepointTest(BitcoinTestFramework):
             assert_equal(len([tx["vin"] for tx in block["tx"]]), event.inputs)
             assert_equal(0, event.sigops)  # no sigops in coinbase tx
             # only plausibility checks
-            assert event.duration > 0
+            assert_greater_than(event.duration, 0)
             del expected_blocks[block_hash]
         assert_equal(BLOCKS_EXPECTED, len(events))
         assert_equal(0, len(expected_blocks))

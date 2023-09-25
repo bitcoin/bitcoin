@@ -104,7 +104,7 @@ class ListTransactionsTest(BitcoinTestFramework):
             self.generate(self.nodes[1], 1)
             assert_equal(len(self.nodes[0].listtransactions(label="watchonly", include_watchonly=True)), 1)
             assert_equal(len(self.nodes[0].listtransactions(dummy="watchonly", include_watchonly=True)), 1)
-            assert len(self.nodes[0].listtransactions(label="watchonly", count=100, include_watchonly=False)) == 0
+            assert_equal(len(self.nodes[0].listtransactions(label="watchonly", count=100, include_watchonly=False)), 0)
             assert_array_result(self.nodes[0].listtransactions(label="watchonly", count=100, include_watchonly=True),
                                 {"category": "receive", "amount": Decimal("0.1")},
                                 {"txid": txid, "label": "watchonly"})

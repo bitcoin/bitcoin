@@ -20,7 +20,11 @@ from .script import (
     sha256,
     taproot_construct,
 )
-from .util import assert_equal
+from .util import (
+    assert_equal,
+    assert_greater_than_or_equal,
+    assert_less_than_or_equal,
+)
 from test_framework.script_util import (
     keyhash_to_p2pkh_script,
     program_to_witness_script,
@@ -106,12 +110,12 @@ def base58_to_byte(s):
 
 
 def keyhash_to_p2pkh(hash, main=False):
-    assert len(hash) == 20
+    assert_equal(len(hash), 20)
     version = 0 if main else 111
     return byte_to_base58(hash, version)
 
 def scripthash_to_p2sh(hash, main=False):
-    assert len(hash) == 20
+    assert_equal(len(hash), 20)
     version = 5 if main else 196
     return byte_to_base58(hash, version)
 
@@ -131,8 +135,10 @@ def key_to_p2sh_p2wpkh(key, main=False):
 def program_to_witness(version, program, main=False):
     if (type(program) is str):
         program = bytes.fromhex(program)
-    assert 0 <= version <= 16
-    assert 2 <= len(program) <= 40
+    assert_greater_than_or_equal(version, 0)
+    assert_less_than_or_equal(version, 16)
+    assert_greater_than_or_equal(len(program), 2)
+    assert_less_than_or_equal(len(program), 40)
     assert version > 0 or len(program) in [20, 32]
     return encode_segwit_address("bc" if main else "bcrt", version, program)
 
@@ -150,7 +156,7 @@ def script_to_p2sh_p2wsh(script, main=False):
     return script_to_p2sh(p2shscript, main)
 
 def output_key_to_p2tr(key, main=False):
-    assert len(key) == 32
+    assert_equal(len(key), 32)
     return program_to_witness(1, key, main)
 
 def check_key(key):

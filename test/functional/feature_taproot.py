@@ -95,6 +95,8 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
     assert_equal,
+    assert_greater_than_or_equal,
+    assert_not_equal,
 )
 from test_framework.wallet_util import generate_keypair
 from test_framework.key import (
@@ -818,7 +820,7 @@ def spenders_taproot_active():
             for witlen in [20, 31, 32, 33]:
                 def mutate(spk):
                     prog = spk[2:]
-                    assert len(prog) == 32
+                    assert_equal(len(prog), 32)
                     if witlen < 32:
                         prog = prog[0:witlen]
                     elif witlen > 32:
@@ -1404,7 +1406,7 @@ class TaprootTest(BitcoinTestFramework):
         self.log.info("- Running %i spending tests" % done)
         random.shuffle(normal_utxos)
         random.shuffle(mismatching_utxos)
-        assert done == len(normal_utxos) + len(mismatching_utxos)
+        assert_equal(done, len(normal_utxos) + len(mismatching_utxos))
 
         left = done
         while left:
@@ -1456,7 +1458,8 @@ class TaprootTest(BitcoinTestFramework):
 
             # Add 1 to 4 random outputs (but constrained by inputs that require mismatching outputs)
             num_outputs = random.choice(range(1, 1 + min(4, 4 if first_mismatch_input is None else first_mismatch_input)))
-            assert in_value >= 0 and fee - num_outputs * DUST_LIMIT >= MIN_FEE
+            assert_greater_than_or_equal(in_value, 0)
+            assert_greater_than_or_equal(fee - num_outputs * DUST_LIMIT, MIN_FEE)
             for i in range(num_outputs):
                 tx.vout.append(CTxOut())
                 if in_value <= DUST_LIMIT:
@@ -1469,7 +1472,7 @@ class TaprootTest(BitcoinTestFramework):
                 tx.vout[-1].scriptPubKey = random.choice(host_spks)
                 sigops_weight += CScript(tx.vout[-1].scriptPubKey).GetSigOpCount(False) * WITNESS_SCALE_FACTOR
             fee += in_value
-            assert fee >= 0
+            assert_greater_than_or_equal(fee, 0)
 
             # Select coinbase pubkey
             cb_pubkey = random.choice(host_pubkeys)
@@ -1517,9 +1520,9 @@ class TaprootTest(BitcoinTestFramework):
             if (len(spenders) - left) // 200 > (len(spenders) - left - len(input_utxos)) // 200:
                 self.log.info("  - %i tests done" % (len(spenders) - left))
 
-        assert left == 0
-        assert len(normal_utxos) == 0
-        assert len(mismatching_utxos) == 0
+        assert_equal(left, 0)
+        assert_equal(len(normal_utxos), 0)
+        assert_equal(len(mismatching_utxos), 0)
         self.log.info("  - Done")
 
     def gen_test_vectors(self):
@@ -1535,7 +1538,7 @@ class TaprootTest(BitcoinTestFramework):
         coinbase.vout = [CTxOut(5000000000, CScript([OP_1]))]
         coinbase.nLockTime = 0
         coinbase.rehash()
-        assert coinbase.hash == "f60c73405d499a956d3162e3483c395526ef78286458a4cb17b125aa92e49b20"
+        assert_equal(coinbase.hash, "f60c73405d499a956d3162e3483c395526ef78286458a4cb17b125aa92e49b20")
         # Mine it
         block = create_block(hashprev=int(self.nodes[0].getbestblockhash(), 16), coinbase=coinbase)
         block.rehash()
@@ -1571,20 +1574,20 @@ class TaprootTest(BitcoinTestFramework):
         # Require negated taps[0]
         assert taps[0].negflag
         # Require one negated and one non-negated in taps 1 and 2.
-        assert taps[1].negflag != taps[2].negflag
+        assert_not_equal(taps[1].negflag, taps[2].negflag)
         # Require one negated and one non-negated in taps 3 and 4.
-        assert taps[3].negflag != taps[4].negflag
+        assert_not_equal(taps[3].negflag, taps[4].negflag)
         # Require one negated and one non-negated in taps 5 and 6.
-        assert taps[5].negflag != taps[6].negflag
+        assert_not_equal(taps[5].negflag, taps[6].negflag)
 
         cblks = [{leaf: get({**DEFAULT_CONTEXT, 'tap': taps[i], 'leaf': leaf}, 'controlblock') for leaf in taps[i].leaves} for i in range(7)]
         # Require one swapped and one unswapped in taps 3 and 4.
-        assert (cblks[3]['0'][33:65] < cblks[3]['1'][33:65]) != (cblks[4]['0'][33:65] < cblks[4]['1'][33:65])
+        assert_not_equal((cblks[3]['0'][33:65] < cblks[3]['1'][33:65]), (cblks[4]['0'][33:65] < cblks[4]['1'][33:65]))
         # Require one swapped and one unswapped in taps 5 and 6, both at the top and child level.
-        assert (cblks[5]['0'][33:65] < cblks[5]['1'][65:]) != (cblks[6]['0'][33:65] < cblks[6]['1'][65:])
-        assert (cblks[5]['1'][33:65] < cblks[5]['2'][33:65]) != (cblks[6]['1'][33:65] < cblks[6]['2'][33:65])
+        assert_not_equal((cblks[5]['0'][33:65] < cblks[5]['1'][65:]), (cblks[6]['0'][33:65] < cblks[6]['1'][65:]))
+        assert_not_equal((cblks[5]['1'][33:65] < cblks[5]['2'][33:65]), (cblks[6]['1'][33:65] < cblks[6]['2'][33:65]))
         # Require within taps 5 (and thus also 6) that one level is swapped and the other is not.
-        assert (cblks[5]['0'][33:65] < cblks[5]['1'][65:]) != (cblks[5]['1'][33:65] < cblks[5]['2'][33:65])
+        assert_not_equal((cblks[5]['0'][33:65] < cblks[5]['1'][65:]), (cblks[5]['1'][33:65] < cblks[5]['2'][33:65]))
 
         # Compute a deterministic set of scriptPubKeys
         tap_spks = []

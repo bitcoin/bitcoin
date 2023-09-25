@@ -22,6 +22,7 @@ from test_framework.messages import (
 )
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_raises_rpc_error,
     p2p_port,
 )
@@ -378,7 +379,7 @@ class ZMQTest (BitcoinTestFramework):
 
         # Make sure getrawmempool mempool_sequence results aren't "queued" but immediately reflective
         # of the time they were gathered.
-        assert self.nodes[0].getrawmempool(mempool_sequence=True)["mempool_sequence"] > seq_num
+        assert_greater_than(self.nodes[0].getrawmempool(mempool_sequence=True)["mempool_sequence"], seq_num)
 
         assert_equal((best_hash, "D", None), seq.receive_sequence())
         assert_equal((rbf_txid, "A", seq_num), seq.receive_sequence())
@@ -508,7 +509,7 @@ class ZMQTest (BitcoinTestFramework):
                     # Detected "R" gap, means this a conflict eviction, and mempool tx are being evicted before its
                     # position in the incoming block message "C"
                     if label == "R":
-                        assert mempool_sequence > expected_sequence
+                        assert_greater_than(mempool_sequence, expected_sequence)
                         r_gap += mempool_sequence - expected_sequence
                     else:
                         raise Exception(f"WARNING: txhash has unexpected mempool sequence value: {mempool_sequence} vs expected {expected_sequence}")

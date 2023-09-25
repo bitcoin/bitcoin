@@ -31,6 +31,7 @@ from .p2p import P2P_SUBVERSION
 from .util import (
     MAX_NODES,
     assert_equal,
+    assert_not_equal,
     append_config,
     delete_cookie_file,
     get_auth_cookie,
@@ -170,7 +171,7 @@ class TestNode():
 
     def get_deterministic_priv_key(self):
         """Return a deterministic priv key in base58, that only depends on the node's index"""
-        assert len(self.PRIV_KEYS) == MAX_NODES
+        assert_equal(len(self.PRIV_KEYS), MAX_NODES)
         return self.PRIV_KEYS[self.index]
 
     def _node_msg(self, msg: str) -> str:
@@ -630,7 +631,7 @@ class TestNode():
                 self.start(extra_args, stdout=log_stdout, stderr=log_stderr, *args, **kwargs)
                 ret = self.process.wait(timeout=self.rpc_timeout)
                 self.log.debug(self._node_msg(f'bitcoind exited with status {ret} during initialization'))
-                assert ret != 0  # Exit code must indicate failure
+                assert_not_equal(ret, 0)  # Exit code must indicate failure
                 self.running = False
                 self.process = None
                 # Check stderr for expected message

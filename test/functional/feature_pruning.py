@@ -197,7 +197,7 @@ class PruneTest(BitcoinTestFramework):
             self.nodes[1].invalidateblock(curhash)
             curhash = self.nodes[1].getblockhash(self.forkheight - 1)
 
-        assert self.nodes[1].getblockcount() == self.forkheight - 1
+        assert_equal(self.nodes[1].getblockcount(), self.forkheight - 1)
         self.log.info(f"New best height: {self.nodes[1].getblockcount()}")
 
         # Disconnect node1 and generate the new chain

@@ -38,6 +38,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_not_equal,
     assert_raises_rpc_error,
     find_vout_for_address,
 )
@@ -226,8 +227,8 @@ class PSBTTest(BitcoinTestFramework):
         processed_finalized_psbt = self.nodes[0].walletprocesspsbt(psbt=psbtx, finalize=True)
         finalized_psbt = processed_finalized_psbt['psbt']
         finalized_psbt_hex = processed_finalized_psbt['hex']
-        assert signed_psbt != finalized_psbt
-        assert finalized_psbt_hex == finalized_hex
+        assert_not_equal(signed_psbt, finalized_psbt)
+        assert_equal(finalized_psbt_hex, finalized_hex)
 
         # Manually selected inputs can be locked:
         assert_equal(len(self.nodes[0].listlockunspent()), 0)

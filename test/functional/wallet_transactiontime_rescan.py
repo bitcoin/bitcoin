@@ -211,12 +211,14 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
                 try:
                     minernode.cli("-rpcwallet=encrypted_wallet").walletlock()
                 except JSONRPCException as e:
-                    assert e.error["code"] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before locking the wallet." in e.error["message"]
+                    assert_equal(e.error["code"], -4)
+                    assert "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before locking the wallet." in e.error["message"]
 
                 try:
                     minernode.cli("-rpcwallet=encrypted_wallet").walletpassphrasechange("passphrase", "newpassphrase")
                 except JSONRPCException as e:
-                    assert e.error["code"] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase." in e.error["message"]
+                    assert_equal(e.error["code"], -4)
+                    assert "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase." in e.error["message"]
 
                 assert_equal(rescanning.result(), {"start_height": 0, "stop_height": 803})
 

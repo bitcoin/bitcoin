@@ -14,6 +14,7 @@ from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than_or_equal,
     assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
@@ -21,7 +22,7 @@ from test_framework.wallet import MiniWallet
 # custom limits for node1
 CUSTOM_ANCESTOR_LIMIT = 5
 CUSTOM_DESCENDANT_LIMIT = 10
-assert CUSTOM_DESCENDANT_LIMIT >= CUSTOM_ANCESTOR_LIMIT
+assert_greater_than_or_equal(CUSTOM_DESCENDANT_LIMIT, CUSTOM_ANCESTOR_LIMIT)
 
 
 class MempoolPackagesTest(BitcoinTestFramework):

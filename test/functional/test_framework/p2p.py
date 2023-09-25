@@ -75,6 +75,9 @@ from test_framework.messages import (
     sha256,
 )
 from test_framework.util import (
+    assert_not_equal,
+    assert_greater_than,
+    assert_less_than_or_equal,
     MAX_NODES,
     p2p_port,
     wait_until_helper_internal,
@@ -616,7 +619,8 @@ class NetworkThread(threading.Thread):
         for connections, call `callback`."""
 
         if port is None:
-            assert 0 < idx <= MAX_NODES
+            assert_greater_than(idx, 0)
+            assert_less_than_or_equal(idx, MAX_NODES)
             port = p2p_port(MAX_NODES - idx)
         if addr is None:
             addr = '127.0.0.1'
@@ -745,7 +749,7 @@ class P2PDataStore(P2PInterface):
             if success:
                 self.wait_until(lambda: node.getbestblockhash() == blocks[-1].hash, timeout=timeout)
             else:
-                assert node.getbestblockhash() != blocks[-1].hash
+                assert_not_equal(node.getbestblockhash(), blocks[-1].hash)
 
     def send_txs_and_test(self, txs, node, *, success=True, expect_disconnect=False, reject_reason=None):
         """Send txs to test node and test whether they're accepted to the mempool.

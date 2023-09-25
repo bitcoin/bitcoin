@@ -17,6 +17,7 @@ from test_framework.util import (
     assert_array_result,
     assert_equal,
     assert_fee_amount,
+    assert_greater_than,
     assert_raises_rpc_error,
 )
 from test_framework.wallet_util import test_address
@@ -477,7 +478,7 @@ class WalletTest(BitcoinTestFramework):
 
             self.log.info("Test sendtoaddress with fee_rate param (explicit fee rate in sat/vB)")
             prebalance = self.nodes[2].getbalance()
-            assert prebalance > 2
+            assert_greater_than(prebalance, 2)
             address = self.nodes[1].getnewaddress()
             amount = 3
             fee_rate_sat_vb = 2
@@ -660,7 +661,7 @@ class WalletTest(BitcoinTestFramework):
         txid = self.nodes[0].sendtoaddress(destination, 0.123)
         tx = self.nodes[0].gettransaction(txid=txid, verbose=True)['decoded']
         output_addresses = [vout['scriptPubKey']['address'] for vout in tx["vout"]]
-        assert len(output_addresses) > 1
+        assert_greater_than(len(output_addresses), 1)
         for address in output_addresses:
             ischange = self.nodes[0].getaddressinfo(address)['ischange']
             assert_equal(ischange, address != destination)

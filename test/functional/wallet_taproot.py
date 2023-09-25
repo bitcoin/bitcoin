@@ -22,6 +22,7 @@ from test_framework.script import (
     taproot_construct,
 )
 from test_framework.segwit_addr import encode_segwit_address
+from test_framework.util import assert_greater_than
 
 # xprvs/xpubs, and m/* derived x-only pubkeys (created using independent implementation)
 KEYS = [
@@ -302,12 +303,12 @@ class WalletTaprootTest(BitcoinTestFramework):
             # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
             res = rpc_online.sendtoaddress(address=self.boring.getnewaddress(), amount=Decimal(ret_amnt) / 100000000, subtractfeefromamount=True, fee_rate=200)
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
-            assert rpc_online.gettransaction(res)["confirmations"] > 0
+            assert_greater_than(rpc_online.gettransaction(res)["confirmations"], 0)
 
         # Cleanup
         txid = rpc_online.sendall(recipients=[self.boring.getnewaddress()])["txid"]
         self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
-        assert rpc_online.gettransaction(txid)["confirmations"] > 0
+        assert_greater_than(rpc_online.gettransaction(txid)["confirmations"], 0)
         rpc_online.unloadwallet()
 
     def do_test_psbt(self, comment, pattern, privmap, treefn, keys_pay, keys_change):
@@ -375,7 +376,7 @@ class WalletTaprootTest(BitcoinTestFramework):
 
             txid = self.nodes[0].sendrawtransaction(rawtx)
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
-            assert psbt_online.gettransaction(txid)['confirmations'] > 0
+            assert_greater_than(psbt_online.gettransaction(txid)['confirmations'], 0)
 
         # Cleanup
         psbt = psbt_online.sendall(recipients=[self.boring.getnewaddress()], psbt=True)["psbt"]
@@ -383,7 +384,7 @@ class WalletTaprootTest(BitcoinTestFramework):
         rawtx = self.nodes[0].finalizepsbt(res['psbt'])['hex']
         txid = self.nodes[0].sendrawtransaction(rawtx)
         self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
-        assert psbt_online.gettransaction(txid)['confirmations'] > 0
+        assert_greater_than(psbt_online.gettransaction(txid)['confirmations'], 0)
         psbt_online.unloadwallet()
         psbt_offline.unloadwallet()
 

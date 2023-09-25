@@ -50,6 +50,7 @@ from test_framework.script_util import (
 )
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_greater_than_or_equal,
 )
 from test_framework.wallet_util import generate_keypair
@@ -305,7 +306,7 @@ class MiniWallet:
         inputs_value_total = sum([int(COIN * utxo['value']) for utxo in utxos_to_spend])
         outputs_value_total = inputs_value_total - fee_per_output * num_outputs
         amount_per_output = amount_per_output or (outputs_value_total // num_outputs)
-        assert amount_per_output > 0
+        assert_greater_than(amount_per_output, 0)
         outputs_value_total = amount_per_output * num_outputs
         fee = Decimal(inputs_value_total - outputs_value_total) / COIN
 
@@ -348,8 +349,8 @@ class MiniWallet:
     ):
         """Create and return a tx with the specified fee. If fee is 0, use fee_rate, where the resulting fee may be exact or at most one satoshi higher than needed."""
         utxo_to_spend = utxo_to_spend or self.get_utxo(confirmed_only=confirmed_only)
-        assert fee_rate >= 0
-        assert fee >= 0
+        assert_greater_than_or_equal(fee_rate, 0)
+        assert_greater_than_or_equal(fee, 0)
         # calculate fee
         if self._mode in (MiniWalletMode.RAW_OP_TRUE, MiniWalletMode.ADDRESS_OP_TRUE):
             vsize = Decimal(104)  # anyone-can-spend

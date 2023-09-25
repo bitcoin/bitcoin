@@ -9,7 +9,10 @@
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_raises_rpc_error
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+)
 
 class DisableWalletTest (BitcoinTestFramework):
     def set_test_params(self):
@@ -22,9 +25,9 @@ class DisableWalletTest (BitcoinTestFramework):
         # Make sure wallet is really disabled
         assert_raises_rpc_error(-32601, 'Method not found', self.nodes[0].getwalletinfo)
         x = self.nodes[0].validateaddress('3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
-        assert x['isvalid'] == False
+        assert_equal(x['isvalid'], False)
         x = self.nodes[0].validateaddress('mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')
-        assert x['isvalid'] == True
+        assert_equal(x['isvalid'], True)
 
 
 if __name__ == '__main__':

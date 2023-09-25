@@ -53,6 +53,7 @@ from test_framework.script import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than_or_equal,
     softfork_active,
 )
 from test_framework.wallet import (
@@ -131,7 +132,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
     def create_bip68txs(self, bip68inputs, txversion, locktime_delta=0):
         """Returns a list of bip68 transactions with different bits set."""
         txs = []
-        assert len(bip68inputs) >= 16
+        assert_greater_than_or_equal(len(bip68inputs), 16)
         for i, (sdf, srhb, stf, srlb) in enumerate(product(*[[True, False]] * 4)):
             locktime = relative_locktime(sdf, srhb, stf, srlb)
             tx = self.create_self_transfer_from_utxo(bip68inputs[i])
@@ -145,7 +146,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
     def create_bip112txs(self, bip112inputs, varyOP_CSV, txversion, locktime_delta=0):
         """Returns a list of bip68 transactions with different bits set."""
         txs = []
-        assert len(bip112inputs) >= 16
+        assert_greater_than_or_equal(len(bip112inputs), 16)
         for i, (sdf, srhb, stf, srlb) in enumerate(product(*[[True, False]] * 4)):
             locktime = relative_locktime(sdf, srhb, stf, srlb)
             tx = self.create_self_transfer_from_utxo(bip112inputs[i])

@@ -19,7 +19,11 @@ from test_framework.p2p import (
     P2P_VERSION,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_less_than,
+    assert_not_equal,
+)
 
 class PeerNoVerack(P2PInterface):
     def __init__(self, wtxidrelay=True):
@@ -80,7 +84,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         peer.wait_for_verack()
         verack_index = [i for i, msg in enumerate(peer.messages) if msg.msgtype == b'verack'][0]
         sendtxrcncl_index = [i for i, msg in enumerate(peer.messages) if msg.msgtype == b'sendtxrcncl'][0]
-        assert sendtxrcncl_index < verack_index
+        assert_less_than(sendtxrcncl_index, verack_index)
         self.nodes[0].disconnect_p2ps()
 
         self.log.info('SENDTXRCNCL on pre-WTXID version should not be sent')
@@ -117,7 +121,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         no_txrelay_version_msg.relay = 0
         peer.send_message(no_txrelay_version_msg)
         peer.wait_for_verack()
-        assert peer.nServices & NODE_BLOOM != 0
+        assert_not_equal(peer.nServices & NODE_BLOOM, 0)
         assert not peer.sendtxrcncl_msg_received
         self.nodes[0].disconnect_p2ps()
 

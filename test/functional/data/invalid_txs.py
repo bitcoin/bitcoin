@@ -57,6 +57,9 @@ from test_framework.script_util import (
     MIN_STANDARD_TX_NONWITNESS_SIZE,
     script_to_p2sh_script,
 )
+from test_framework.util import (
+    assert_equal,
+)
 basic_p2sh = script_to_p2sh_script(CScript([OP_0]))
 
 class BadTxTemplate:
@@ -124,8 +127,8 @@ class SizeTooSmall(BadTxTemplate):
         tx = CTransaction()
         tx.vin.append(self.valid_txin)
         tx.vout.append(CTxOut(0, CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 2)))))
-        assert len(tx.serialize_without_witness()) == 64
-        assert MIN_STANDARD_TX_NONWITNESS_SIZE - 1 == 64
+        assert_equal(len(tx.serialize_without_witness()), 64)
+        assert_equal(MIN_STANDARD_TX_NONWITNESS_SIZE - 1, 64)
         tx.calc_sha256()
         return tx
 

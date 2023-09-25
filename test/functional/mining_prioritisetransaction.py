@@ -14,6 +14,8 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
+    assert_not_equal,
     assert_raises_rpc_error,
     create_lots_of_big_transactions,
     gen_return_txouts,
@@ -211,7 +213,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
             for j in txids[i]:
                 assert j in mempool
                 sizes[i] += mempool[j]['vsize']
-            assert sizes[i] > MAX_BLOCK_WEIGHT // 4  # Fail => raise utxo_count
+            assert_greater_than(sizes[i], MAX_BLOCK_WEIGHT // 4)  # Fail => raise utxo_count
 
         assert_equal(self.nodes[0].getprioritisedtransactions(), {})
         # add a fee delta to something in the cheapest bucket and make sure it gets mined
@@ -302,7 +304,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(mock_time+10)
         new_template = self.nodes[0].getblocktemplate({'rules': ['segwit']})
 
-        assert template != new_template
+        assert_not_equal(template, new_template)
 
 if __name__ == '__main__':
     PrioritiseTransactionTest().main()

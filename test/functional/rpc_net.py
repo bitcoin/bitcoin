@@ -22,6 +22,8 @@ from test_framework.util import (
     assert_approx,
     assert_equal,
     assert_greater_than,
+    assert_less_than,
+    assert_less_than_or_equal,
     assert_raises_rpc_error,
     p2p_port,
 )
@@ -38,7 +40,7 @@ def assert_net_servicesnames(servicesflag, servicenames):
     servicesflag_generated = 0
     for servicename in servicenames:
         servicesflag_generated |= getattr(test_framework.messages, 'NODE_' + servicename)
-    assert servicesflag_generated == servicesflag
+    assert_equal(servicesflag_generated, servicesflag)
 
 
 class NetTest(BitcoinTestFramework):
@@ -430,8 +432,10 @@ class NetTest(BitcoinTestFramework):
 
                     # bucket and position only be sanity checked here as the
                     # test-addrman isn't deterministic
-                    assert 0 <= int(bucket) < table_info["bucket_count"]
-                    assert 0 <= int(position) < ADDRMAN_BUCKET_SIZE
+                    assert_less_than_or_equal(0, int(bucket))
+                    assert_less_than(int(bucket), table_info["bucket_count"])
+                    assert_less_than_or_equal(0, int(position))
+                    assert_less_than(int(position), ADDRMAN_BUCKET_SIZE)
 
                     entry = getrawaddrman[table_name][bucket_position]
                     expected_entry = list(filter(lambda e: e["address"] == entry["address"], table_info["entries"]))[0]

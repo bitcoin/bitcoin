@@ -14,6 +14,9 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
+    assert_less_than,
+    assert_less_than_or_equal,
     assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
@@ -102,7 +105,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                 new_size = len(node.getrawmempool())
                 # Error out if we have something stuck in the mempool, as this
                 # would likely be a bug.
-                assert new_size < mempool_size
+                assert_less_than(new_size, mempool_size)
                 mempool_size = new_size
 
         return self.wallet.get_utxo(txid=tx["txid"], vout=tx["sent_vout"])
@@ -445,9 +448,9 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             num_txs_invalidated = len(root_utxos) + (num_tx_graphs * txs_per_graph)
 
             if failure_expected:
-                assert num_txs_invalidated > MAX_REPLACEMENT_LIMIT
+                assert_greater_than(num_txs_invalidated, MAX_REPLACEMENT_LIMIT)
             else:
-                assert num_txs_invalidated <= MAX_REPLACEMENT_LIMIT
+                assert_less_than_or_equal(num_txs_invalidated, MAX_REPLACEMENT_LIMIT)
 
             # Now attempt to submit a tx that double-spends all the root tx inputs, which
             # would invalidate `num_txs_invalidated` transactions.

@@ -43,7 +43,10 @@ from .script_util import (
     keys_to_multisig_script,
     script_to_p2wsh_script,
 )
-from .util import assert_equal
+from .util import (
+    assert_equal,
+    assert_less_than,
+)
 
 WITNESS_SCALE_FACTOR = 4
 MAX_BLOCK_SIGOPS = 20000
@@ -160,7 +163,7 @@ def create_tx_with_script(prevtx, n, script_sig=b"", *, amount, script_pub_key=C
        Can optionally pass scriptPubKey and scriptSig, default is anyone-can-spend output.
     """
     tx = CTransaction()
-    assert n < len(prevtx.vout)
+    assert_less_than(n, len(prevtx.vout))
     tx.vin.append(CTxIn(COutPoint(prevtx.sha256, n), script_sig, SEQUENCE_FINAL))
     tx.vout.append(CTxOut(amount, script_pub_key))
     tx.calc_sha256()

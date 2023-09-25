@@ -11,6 +11,7 @@ from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than_or_equal,
     assert_is_hash_string,
     assert_raises_rpc_error,
 )
@@ -31,7 +32,7 @@ def create_transactions(node, address, amt, fees):
         if ins_total >= amt + max(fees):
             break
     # make sure there was enough utxos
-    assert ins_total >= amt + max(fees)
+    assert_greater_than_or_equal(ins_total, amt + max(fees))
 
     txs = []
     for fee in fees:

@@ -15,6 +15,11 @@ Exports:
 * G: the secp256k1 generator point
 """
 
+from test_framework.util import (
+    assert_equal,
+    assert_not_equal,
+)
+
 
 class FE:
     """Objects of this class represent elements of the field GF(2**256 - 2**32 - 977).
@@ -38,7 +43,7 @@ class FE:
             num = (num * b._den) % FE.SIZE
         else:
             den = (den * b) % FE.SIZE
-        assert den != 0
+        assert_not_equal(den, 0)
         if num == 0:
             den = 1
         self._num = num
@@ -176,7 +181,7 @@ class GE:
             # Initialize as point on the curve (and check that it is).
             fx = FE(x)
             fy = FE(y)
-            assert fy**2 == fx**3 + 7
+            assert_equal(fy**2, fx**3 + 7)
             self.infinity = False
             self.x = fx
             self.y = fy
@@ -191,7 +196,7 @@ class GE:
         if self.x == a.x:
             if self.y != a.y:
                 # A point added to its own negation is infinity.
-                assert self.y + a.y == 0
+                assert_equal(self.y + a.y, 0)
                 return GE()
             else:
                 # For identical inputs, use the tangent (doubling formula).
@@ -289,7 +294,7 @@ class GE:
     @staticmethod
     def from_bytes_xonly(b):
         """Convert a point given in xonly encoding to a group element."""
-        assert len(b) == 32
+        assert_equal(len(b), 32)
         x = FE.from_bytes(b)
         if x is None:
             return None

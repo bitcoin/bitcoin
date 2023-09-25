@@ -17,6 +17,11 @@ from test_framework.script import (
     hash160,
     sha256,
 )
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than_or_equal,
+    assert_less_than_or_equal,
+)
 
 # To prevent a "tx-size-small" policy rule error, a transaction has to have a
 # non-witness size of at least 65 bytes (MIN_STANDARD_TX_NONWITNESS_SIZE in
@@ -32,12 +37,12 @@ from test_framework.script import (
 # least 5 bytes.
 MIN_STANDARD_TX_NONWITNESS_SIZE = 65
 MIN_PADDING = MIN_STANDARD_TX_NONWITNESS_SIZE - 10 - 41 - 9
-assert MIN_PADDING == 5
+assert_equal(MIN_PADDING, 5)
 
 # This script cannot be spent, allowing dust output values under
 # standardness checks
 DUMMY_MIN_OP_RETURN_SCRIPT = CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 1)))
-assert len(DUMMY_MIN_OP_RETURN_SCRIPT) == MIN_PADDING
+assert_equal(len(DUMMY_MIN_OP_RETURN_SCRIPT), MIN_PADDING)
 
 def key_to_p2pk_script(key):
     key = check_key(key)
@@ -48,7 +53,7 @@ def keys_to_multisig_script(keys, *, k=None):
     n = len(keys)
     if k is None:  # n-of-n multisig by default
         k = n
-    assert k <= n
+    assert_less_than_or_equal(k, n)
     op_k = CScriptOp.encode_op_n(k)
     op_n = CScriptOp.encode_op_n(n)
     checked_keys = [check_key(key) for key in keys]
@@ -56,12 +61,12 @@ def keys_to_multisig_script(keys, *, k=None):
 
 
 def keyhash_to_p2pkh_script(hash):
-    assert len(hash) == 20
+    assert_equal(len(hash), 20)
     return CScript([OP_DUP, OP_HASH160, hash, OP_EQUALVERIFY, OP_CHECKSIG])
 
 
 def scripthash_to_p2sh_script(hash):
-    assert len(hash) == 20
+    assert_equal(len(hash), 20)
     return CScript([OP_HASH160, hash, OP_EQUAL])
 
 
@@ -84,8 +89,10 @@ def key_to_p2sh_p2wpkh_script(key):
 def program_to_witness_script(version, program):
     if isinstance(program, str):
         program = bytes.fromhex(program)
-    assert 0 <= version <= 16
-    assert 2 <= len(program) <= 40
+    assert_greater_than_or_equal(version, 0)
+    assert_less_than_or_equal(version, 16)
+    assert_greater_than_or_equal(len(program), 2)
+    assert_less_than_or_equal(len(program), 40)
     assert version > 0 or len(program) in [20, 32]
     return CScript([version, program])
 
@@ -107,7 +114,7 @@ def script_to_p2sh_p2wsh_script(script):
 
 
 def output_key_to_p2tr_script(key):
-    assert len(key) == 32
+    assert_equal(len(key), 32)
     return program_to_witness_script(1, key)
 
 

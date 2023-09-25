@@ -24,7 +24,8 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
-    assert_greater_than_or_equal
+    assert_greater_than_or_equal,
+    assert_less_than,
 )
 
 ONE_MINUTE  = 60
@@ -112,7 +113,7 @@ class AddrTest(BitcoinTestFramework):
             addr.time = self.mocktime + random.randrange(-100, 100)
             addr.nServices = P2P_SERVICES
             if sequential_ips:
-                assert self.counter < 256 ** 2  # Don't allow the returned ip addresses to wrap.
+                assert_less_than(self.counter, 256 ** 2)  # Don't allow the returned ip addresses to wrap.
                 addr.ip = f"123.123.{self.counter // 256}.{self.counter % 256}"
                 self.counter += 1
             else:
@@ -298,7 +299,7 @@ class AddrTest(BitcoinTestFramework):
 
         assert_equal(full_outbound_peer.num_ipv4_received, 0)
         assert_equal(block_relay_peer.num_ipv4_received, 0)
-        assert inbound_peer.num_ipv4_received > 100
+        assert_greater_than(inbound_peer.num_ipv4_received, 100)
 
         self.log.info('Check that we answer getaddr messages only once per connection')
         received_addrs_before = inbound_peer.num_ipv4_received

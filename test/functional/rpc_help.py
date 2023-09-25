@@ -13,8 +13,8 @@ import re
 
 
 def parse_string(s):
-    assert s[0] == '"'
-    assert s[-1] == '"'
+    assert_equal(s[0], '"')
+    assert_equal(s[-1], '"')
     return s[1:-1]
 
 
