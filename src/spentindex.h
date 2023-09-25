@@ -12,6 +12,8 @@
 #include <serialize.h>
 #include <uint256.h>
 
+#include <tuple>
+
 struct CSpentIndexKey {
     uint256 txid;
     unsigned int outputIndex;
@@ -80,11 +82,10 @@ struct CSpentIndexValue {
 struct CSpentIndexKeyCompare
 {
     bool operator()(const CSpentIndexKey& a, const CSpentIndexKey& b) const {
-        if (a.txid == b.txid) {
-            return a.outputIndex < b.outputIndex;
-        } else {
-            return a.txid < b.txid;
-        }
+        auto to_tuple = [](const CSpentIndexKey& obj) {
+            return std::tie(obj.txid, obj.outputIndex);
+        };
+        return to_tuple(a) < to_tuple(b);
     }
 };
 
