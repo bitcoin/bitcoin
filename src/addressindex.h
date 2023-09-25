@@ -121,8 +121,7 @@ public:
         ser_writedata32be(s, m_block_tx_pos);
         m_tx_hash.Serialize(s);
         ser_writedata32(s, m_tx_index);
-        char f = m_tx_spent;
-        ser_writedata8(s, f);
+        ser_writedata8(s, static_cast<uint8_t>(m_tx_spent));
     }
 
     template<typename Stream>
@@ -133,8 +132,7 @@ public:
         m_block_tx_pos = ser_readdata32be(s);
         m_tx_hash.Unserialize(s);
         m_tx_index = ser_readdata32(s);
-        char f = ser_readdata8(s);
-        m_tx_spent = f;
+        m_tx_spent = static_cast<bool>(ser_readdata8(s));
     }
 };
 
