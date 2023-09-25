@@ -98,7 +98,7 @@ def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     # txs with just the mempoolminfee without immediate eviction ("mempool full" error).
     if node.getmempoolinfo()['usage'] >= 4_990_000:
         ephemeral_miniwallet.send_self_transfer(from_node=node, fee=num_of_batches * (base_fee / 2),
-                                                utxo_to_spend=confirmed_utxos.pop(0), target_weight = 32500 * 4)
+                                                utxo_to_spend=confirmed_utxos.pop(0), target_vsize = 32500)
         assert_greater_than(4_990_000, node.getmempoolinfo()['usage'])
 
     test_framework.log.debug("The tx should be evicted by now")
