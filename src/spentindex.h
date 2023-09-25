@@ -47,7 +47,7 @@ public:
     uint32_t m_tx_index{0};
     int32_t m_block_height{0};
     CAmount m_amount{0};
-    uint8_t m_address_type{AddressType::UNKNOWN};
+    AddressType m_address_type{AddressType::UNKNOWN};
     uint160 m_address_bytes;
 
 public:
@@ -55,7 +55,7 @@ public:
         SetNull();
     }
 
-    CSpentIndexValue(uint256 txin_hash, uint32_t txin_index, int32_t block_height, CAmount amount, uint8_t address_type,
+    CSpentIndexValue(uint256 txin_hash, uint32_t txin_index, int32_t block_height, CAmount amount, AddressType address_type,
                      uint160 address_bytes) :
         m_tx_hash{txin_hash},
         m_tx_index{txin_index},
@@ -101,7 +101,7 @@ struct CSpentIndexTxInfo
 
 struct CAddressUnspentKey {
 public:
-    uint8_t m_address_type{AddressType::UNKNOWN};
+    AddressType m_address_type{AddressType::UNKNOWN};
     uint160 m_address_bytes;
     uint256 m_tx_hash;
     uint32_t m_tx_index{0};
@@ -111,7 +111,7 @@ public:
         SetNull();
     }
 
-    CAddressUnspentKey(uint8_t address_type, uint160 address_bytes, uint256 tx_hash, uint32_t tx_index) :
+    CAddressUnspentKey(AddressType address_type, uint160 address_bytes, uint256 tx_hash, uint32_t tx_index) :
         m_address_type{address_type}, m_address_bytes{address_bytes}, m_tx_hash{tx_hash}, m_tx_index{tx_index} {};
 
     void SetNull() {
@@ -128,7 +128,7 @@ public:
 
     template<typename Stream>
     void Serialize(Stream& s) const {
-        ser_writedata8(s, m_address_type);
+        ser_writedata8(s, ToUnderlying(m_address_type));
         m_address_bytes.Serialize(s);
         m_tx_hash.Serialize(s);
         ser_writedata32(s, m_tx_index);
@@ -136,7 +136,7 @@ public:
 
     template<typename Stream>
     void Unserialize(Stream& s) {
-        m_address_type = ser_readdata8(s);
+        m_address_type = static_cast<AddressType>(ser_readdata8(s));
         m_address_bytes.Unserialize(s);
         m_tx_hash.Unserialize(s);
         m_tx_index = ser_readdata32(s);

@@ -24,7 +24,7 @@ inline std::vector<uint8_t> TrimScriptP2PK(const T1& input) {
     return std::vector<uint8_t>(input.begin() + 1, input.end() - 1);
 };
 
-bool AddressBytesFromScript(const CScript& script, uint8_t& address_type, uint160& address_bytes) {
+bool AddressBytesFromScript(const CScript& script, AddressType& address_type, uint160& address_bytes) {
     if (script.IsPayToScriptHash()) {
         address_type  = AddressType::P2SH;
         address_bytes = uint160(TrimScriptP2SH(script));

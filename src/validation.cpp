@@ -1037,7 +1037,7 @@ bool GetSpentIndex(CTxMemPool& mempool, CSpentIndexKey &key, CSpentIndexValue &v
     return true;
 }
 
-bool GetAddressIndex(uint160 addressHash, int type,
+bool GetAddressIndex(uint160 addressHash, AddressType type,
                      std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex, int start, int end)
 {
     if (!fAddressIndex)
@@ -1049,7 +1049,7 @@ bool GetAddressIndex(uint160 addressHash, int type,
     return true;
 }
 
-bool GetAddressUnspent(uint160 addressHash, int type,
+bool GetAddressUnspent(uint160 addressHash, AddressType type,
                        std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &unspentOutputs)
 {
     if (!fAddressIndex)
@@ -1706,7 +1706,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             for (unsigned int k = tx.vout.size(); k-- > 0;) {
                 const CTxOut &out = tx.vout[k];
 
-                uint8_t address_type{0};
+                AddressType address_type{AddressType::UNKNOWN};
                 uint160 address_bytes;
 
                 if (!AddressBytesFromScript(out.scriptPubKey, address_type, address_bytes)) {
@@ -1759,7 +1759,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                     const Coin &coin = view.AccessCoin(tx.vin[j].prevout);
                     const CTxOut &prevout = coin.out;
 
-                    uint8_t address_type{0};
+                    AddressType address_type{AddressType::UNKNOWN};
                     uint160 address_bytes;
 
                     if (!AddressBytesFromScript(prevout.scriptPubKey, address_type, address_bytes)) {
@@ -2224,7 +2224,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
                     const Coin& coin = view.AccessCoin(tx.vin[j].prevout);
                     const CTxOut &prevout = coin.out;
 
-                    uint8_t address_type{0};
+                    AddressType address_type{AddressType::UNKNOWN};
                     uint160 address_bytes;
 
                     AddressBytesFromScript(prevout.scriptPubKey, address_type, address_bytes);
@@ -2278,7 +2278,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             for (unsigned int k = 0; k < tx.vout.size(); k++) {
                 const CTxOut &out = tx.vout[k];
 
-                uint8_t address_type{0};
+                AddressType address_type{AddressType::UNKNOWN};
                 uint160 address_bytes;
 
                 if (!AddressBytesFromScript(out.scriptPubKey, address_type, address_bytes)) {
@@ -4805,7 +4805,7 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
                     const Coin& coin = inputs.AccessCoin(tx->vin[j].prevout);
                     const CTxOut& prevout = coin.out;
 
-                    uint8_t address_type{0};
+                    AddressType address_type{AddressType::UNKNOWN};
                     uint160 address_bytes;
 
                     AddressBytesFromScript(prevout.scriptPubKey, address_type, address_bytes);
@@ -4830,7 +4830,7 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
                 for (size_t k = 0; k < tx->vout.size(); k++) {
                     const CTxOut& out = tx->vout[k];
 
-                    uint8_t address_type{0};
+                    AddressType address_type{AddressType::UNKNOWN};
                     uint160 address_bytes;
 
                     if (!AddressBytesFromScript(out.scriptPubKey, address_type, address_bytes)) {

@@ -4,6 +4,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addressindex.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
 #include <evo/mnauth.h>
@@ -593,7 +594,7 @@ static UniValue mnauth(const JSONRPCRequest& request)
     return fSuccess;
 }
 
-static bool getAddressFromIndex(const int &type, const uint160 &hash, std::string &address)
+static bool getAddressFromIndex(const AddressType& type, const uint160 &hash, std::string &address)
 {
     if (type == AddressType::P2SH) {
         address = EncodeDestination(ScriptHash(hash));
@@ -605,7 +606,7 @@ static bool getAddressFromIndex(const int &type, const uint160 &hash, std::strin
     return true;
 }
 
-static bool getIndexKey(const std::string& str, uint160& hashBytes, int& type)
+static bool getIndexKey(const std::string& str, uint160& hashBytes, AddressType& type)
 {
     CTxDestination dest = DecodeDestination(str);
     if (!IsValidDestination(dest)) {
@@ -619,11 +620,11 @@ static bool getIndexKey(const std::string& str, uint160& hashBytes, int& type)
     return true;
 }
 
-static bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint160, int> > &addresses)
+static bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint160, AddressType> > &addresses)
 {
     if (params[0].isStr()) {
         uint160 hashBytes;
-        int type{AddressType::UNKNOWN};
+        AddressType type{AddressType::UNKNOWN};
         if (!getIndexKey(params[0].get_str(), hashBytes, type)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
         }
@@ -637,7 +638,7 @@ static bool getAddressesFromParams(const UniValue& params, std::vector<std::pair
 
         for (const auto& address : addressValues.getValues()) {
             uint160 hashBytes;
-            int type{AddressType::UNKNOWN};
+            AddressType type{AddressType::UNKNOWN};
             if (!getIndexKey(address.get_str(), hashBytes, type)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
             }
@@ -691,7 +692,7 @@ static UniValue getaddressmempool(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    std::vector<std::pair<uint160, int> > addresses;
+    std::vector<std::pair<uint160, AddressType> > addresses;
 
     if (!getAddressesFromParams(request.params, addresses)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
@@ -760,7 +761,7 @@ static UniValue getaddressutxos(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    std::vector<std::pair<uint160, int> > addresses;
+    std::vector<std::pair<uint160, AddressType> > addresses;
 
     if (!getAddressesFromParams(request.params, addresses)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
@@ -842,7 +843,7 @@ static UniValue getaddressdeltas(const JSONRPCRequest& request)
         }
     }
 
-    std::vector<std::pair<uint160, int> > addresses;
+    std::vector<std::pair<uint160, AddressType> > addresses;
 
     if (!getAddressesFromParams(request.params, addresses)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
@@ -908,7 +909,7 @@ static UniValue getaddressbalance(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    std::vector<std::pair<uint160, int> > addresses;
+    std::vector<std::pair<uint160, AddressType> > addresses;
 
     if (!getAddressesFromParams(request.params, addresses)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
@@ -973,7 +974,7 @@ static UniValue getaddresstxids(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    std::vector<std::pair<uint160, int> > addresses;
+    std::vector<std::pair<uint160, AddressType> > addresses;
 
     if (!getAddressesFromParams(request.params, addresses)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
