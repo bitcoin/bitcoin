@@ -838,8 +838,8 @@ static UniValue getblockhashes(const JSONRPCRequest& request)
     }
 
     UniValue result(UniValue::VARR);
-    for (std::vector<uint256>::const_iterator it=blockHashes.begin(); it!=blockHashes.end(); it++) {
-        result.push_back(it->GetHex());
+    for (const auto& hash : blockHashes) {
+        result.push_back(hash.GetHex());
     }
 
     return result;
@@ -1828,9 +1828,9 @@ static UniValue getchaintips(const JSONRPCRequest& request)
         }
     }
 
-    for (std::set<const CBlockIndex*>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it) {
-        if (setPrevs.erase(*it) == 0) {
-            setTips.insert(*it);
+    for (const auto& orphan : setOrphans) {
+        if (setPrevs.erase(orphan) == 0) {
+            setTips.insert(orphan);
         }
     }
 
