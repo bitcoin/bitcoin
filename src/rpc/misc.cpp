@@ -598,7 +598,7 @@ static bool getAddressFromIndex(const AddressType& type, const uint160 &hash, st
 {
     if (type == AddressType::P2SH) {
         address = EncodeDestination(ScriptHash(hash));
-    } else if (type == AddressType::P2PK) {
+    } else if (type == AddressType::P2PK_OR_P2PKH) {
         address = EncodeDestination(PKHash(hash));
     } else {
         return false;
@@ -615,7 +615,7 @@ static bool getIndexKey(const std::string& str, uint160& hashBytes, AddressType&
     }
     const PKHash *pkhash = std::get_if<PKHash>(&dest);
     const ScriptHash *scriptID = std::get_if<ScriptHash>(&dest);
-    type = pkhash ? AddressType::P2PK : AddressType::P2SH;
+    type = pkhash ? AddressType::P2PK_OR_P2PKH : AddressType::P2SH;
     hashBytes = pkhash ? uint160(*pkhash) : uint160(*scriptID);
     return true;
 }

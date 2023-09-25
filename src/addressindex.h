@@ -19,8 +19,7 @@
 class CScript;
 
 enum class AddressType : uint8_t {
-    P2PK = 1,
-    P2PKH = 1,
+    P2PK_OR_P2PKH = 1,
     P2SH = 2,
 
     UNKNOWN = 0

@@ -216,7 +216,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
                     auto spentInfo = it->second;
                     in.pushKV("value", ValueFromAmount(spentInfo.m_amount));
                     in.pushKV("valueSat", spentInfo.m_amount);
-                    if (spentInfo.m_address_type == AddressType::P2PK) {
+                    if (spentInfo.m_address_type == AddressType::P2PK_OR_P2PKH) {
                         in.pushKV("address", EncodeDestination(PKHash(spentInfo.m_address_bytes)));
                     } else if (spentInfo.m_address_type == AddressType::P2SH) {
                         in.pushKV("address", EncodeDestination(ScriptHash(spentInfo.m_address_bytes)));

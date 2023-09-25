@@ -29,10 +29,10 @@ bool AddressBytesFromScript(const CScript& script, AddressType& address_type, ui
         address_type  = AddressType::P2SH;
         address_bytes = uint160(TrimScriptP2SH(script));
     } else if (script.IsPayToPublicKeyHash()) {
-        address_type  = AddressType::P2PKH;
+        address_type  = AddressType::P2PK_OR_P2PKH;
         address_bytes = uint160(TrimScriptP2PKH(script));
     } else if (script.IsPayToPublicKey()) {
-        address_type  = AddressType::P2PK;
+        address_type  = AddressType::P2PK_OR_P2PKH;
         address_bytes = Hash160(TrimScriptP2PK(script));
     } else {
         address_type  = AddressType::UNKNOWN;
