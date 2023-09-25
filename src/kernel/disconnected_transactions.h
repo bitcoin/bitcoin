@@ -14,8 +14,8 @@
 #include <unordered_map>
 #include <vector>
 
-/** Maximum kilobytes for transactions to store for processing during reorg */
-static const unsigned int MAX_DISCONNECTED_TX_POOL_SIZE = 20'000;
+/** Maximum bytes for transactions to store for processing during reorg */
+static const unsigned int MAX_DISCONNECTED_TX_POOL_BYTES{20'000'000};
 /**
  * DisconnectedBlockTransactions
 
