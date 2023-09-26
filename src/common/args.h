@@ -180,6 +180,7 @@ protected:
      * Return config file path (read-only)
      */
     fs::path GetConfigFilePath() const;
+    void SetConfigFilePath(fs::path);
     [[nodiscard]] bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
 
     /**
