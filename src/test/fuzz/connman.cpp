@@ -123,7 +123,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
             });
     }
     (void)connman.GetAddedNodeInfo(fuzzed_data_provider.ConsumeBool());
-    (void)connman.GetExtraFullOutboundCount();
+    (void)connman.GetFullOutboundDelta();
     (void)connman.GetLocalServices();
     (void)connman.GetMaxOutboundTarget();
     (void)connman.GetMaxOutboundTimeframe();

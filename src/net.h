@@ -1173,7 +1173,8 @@ public:
     // return a value less than (num_outbound_connections - num_outbound_slots)
     // in cases where some outbound connections are not yet fully connected, or
     // not yet fully disconnected.
-    int GetExtraFullOutboundCount() const;
+    // Returns 0 if we are at the target, and a negative number if below.
+    int GetFullOutboundDelta() const;
     // Count the number of block-relay-only peers we have over our limit.
     int GetExtraBlockRelayCount() const;
 

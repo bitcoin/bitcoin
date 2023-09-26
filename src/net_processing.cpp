@@ -5183,7 +5183,8 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
     }
 
     // Check whether we have too many outbound-full-relay peers
-    if (m_connman.GetExtraFullOutboundCount() > 0) {
+    int full_outbound_delta{m_connman.GetFullOutboundDelta()};
+    if (full_outbound_delta > 0) {
         // If we have more outbound-full-relay peers than we target, disconnect one.
         // Pick the outbound-full-relay peer that least recently announced
         // us a new block, with ties broken by choosing the more recent
@@ -5239,6 +5240,27 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
                 // network from these extra connections.
                 m_connman.SetTryNewOutboundPeer(false);
             }
+        }
+    }
+    // If we are at the max full outbound limit but not above, check if any peers
+    // don't support tx relay (they might be in -blocksonly mode) - if so,
+    // evict the newest of them (highest Node Id) so we can fill the slot with a tx-relaying outbound peer
+    // This is not done if we are in -blocksonly mode ourselves or still in IBD,
+    // because then we don't care if our peer supports tx relay.
+    else if (full_outbound_delta == 0 && !m_opts.ignore_incoming_txs && !m_chainman.IsInitialBlockDownload()) {
+        std::optional<NodeId> node_to_evict;
+        m_connman.ForEachNode([&node_to_evict](CNode* node) {
+            if (!node->IsFullOutboundConn() || node->m_relays_txs) return;
+            if (!node_to_evict.has_value() || *node_to_evict < node->GetId()) {
+                node_to_evict = node->GetId();
+            }
+        });
+        if (node_to_evict.has_value()) {
+            LogPrint(BCLog::NET, "disconnecting full outbound peer not participating in tx relay: peer=%d\n", *node_to_evict);
+            m_connman.ForNode(*node_to_evict, [](CNode* node) {
+                node->fDisconnect = true;
+                return true;
+            });
         }
     }
 }
