@@ -18,6 +18,7 @@
 #include <test/fuzz/util/net.h>
 #include <test/util/mining.h>
 #include <test/util/net.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
 #include <util/chaintype.h>
@@ -61,6 +62,11 @@ void initialize_process_message()
 FUZZ_TARGET(process_message, .init = initialize_process_message)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+
+    g_mock_get_rand = [&](uint64_t max) -> uint64_t {
+        if (fuzzed_data_provider.remaining_bytes() == 0) return 1;
+        return fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(0, max - 1);
+    };
 
     ConnmanTestMsg& connman = *static_cast<ConnmanTestMsg*>(g_setup->m_node.connman.get());
     auto& chainman = static_cast<TestChainstateManager&>(*g_setup->m_node.chainman);
