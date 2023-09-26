@@ -259,7 +259,7 @@ FUZZ_TARGET(netaddr_deserialize, .init = initialize_deserialize)
 FUZZ_TARGET(service_deserialize, .init = initialize_deserialize)
 {
     FuzzedDataProvider fdp{buffer.data(), buffer.size()};
-    const auto ser_params{ConsumeDeserializationParams<CNetAddr::SerParams*>(fdp)};
+    const auto ser_params{ConsumeDeserializationParams<CNetAddr::SerParams>(fdp)};
     const auto maybe_s{ConsumeDeserializable<CService>(fdp, ser_params)};
     if (!maybe_s) return;
     const CService& s{*maybe_s};
@@ -267,7 +267,7 @@ FUZZ_TARGET(service_deserialize, .init = initialize_deserialize)
         AssertEqualAfterSerializeDeserialize(s, CNetAddr::V1);
     }
     AssertEqualAfterSerializeDeserialize(s, CNetAddr::V2);
-    if (ser_params->enc == CNetAddr::Encoding::V1) {
+    if (ser_params.enc == CNetAddr::Encoding::V1) {
         assert(s.IsAddrV1Compatible());
     }
 }
