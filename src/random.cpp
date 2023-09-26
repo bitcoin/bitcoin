@@ -21,6 +21,7 @@
 #include <array>
 #include <cmath>
 #include <cstdlib>
+#include <functional>
 #include <thread>
 
 #ifdef WIN32
@@ -564,9 +565,11 @@ void RandAddPeriodic() noexcept { ProcRand(nullptr, 0, RNGLevel::PERIODIC); }
 void RandAddEvent(const uint32_t event_info) noexcept { GetRNGState().AddEvent(event_info); }
 
 bool g_mock_deterministic_tests{false};
-
+std::function<uint64_t(uint64_t)> g_mock_get_rand{nullptr};
 uint64_t GetRandInternal(uint64_t nMax) noexcept
 {
+    if (g_mock_get_rand) return g_mock_get_rand(nMax);
+
     return FastRandomContext(g_mock_deterministic_tests).randrange(nMax);
 }
 

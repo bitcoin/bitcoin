@@ -10,6 +10,7 @@
 #include <uint256.h>
 
 #include <cstdint>
+#include <functional>
 
 /**
  * This global and the helpers that use it are not thread-safe.
@@ -24,6 +25,8 @@ extern FastRandomContext g_insecure_rand_ctx;
  * Flag to make GetRand in random.h return the same number
  */
 extern bool g_mock_deterministic_tests;
+/** Function to mock GetRand. */
+extern std::function<uint64_t(uint64_t)> g_mock_get_rand;
 
 enum class SeedRand {
     ZEROS, //!< Seed with a compile time constant of zeros
