@@ -578,8 +578,8 @@ private:
     uint32_t m_recv_len GUARDED_BY(m_recv_mutex) {0};
     /** Receive buffer; meaning is determined by m_recv_state. */
     std::vector<uint8_t> m_recv_buffer GUARDED_BY(m_recv_mutex);
-    /** During VERSION, the garbage received during GARB_GARBTERM. */
-    std::vector<uint8_t> m_recv_garbage GUARDED_BY(m_recv_mutex);
+    /** AAD expected in next received packet (currently used only for garbage). */
+    std::vector<uint8_t> m_recv_aad GUARDED_BY(m_recv_mutex);
     /** Buffer to put decrypted contents in, for converting to CNetMessage. */
     std::vector<uint8_t> m_recv_decode_buffer GUARDED_BY(m_recv_mutex);
     /** Deserialization type. */
