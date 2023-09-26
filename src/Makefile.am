@@ -67,7 +67,7 @@ LIBBITCOIN_CRYPTO_ARM_SHANI = crypto/libbitcoin_crypto_arm_shani.la
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_ARM_SHANI)
 endif
 if ENABLE_POWER8
-LIBBITCOIN_CRYPTO_POWER8 = crypto/libbitcoin_crypto_power8.a
+LIBBITCOIN_CRYPTO_POWER8 = crypto/libbitcoin_crypto_power8.la
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_POWER8)
 endif
 noinst_LTLIBRARIES += $(LIBBITCOIN_CRYPTO)
@@ -629,11 +629,15 @@ crypto_libbitcoin_crypto_arm_shani_la_CPPFLAGS += -DENABLE_ARM_SHANI
 crypto_libbitcoin_crypto_arm_shani_la_SOURCES = crypto/sha256_arm_shani.cpp
 #
 
-crypto_libbitcoin_crypto_power8_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libbitcoin_crypto_power8_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libbitcoin_crypto_power8_a_CXXFLAGS += $(POWER8_CXXFLAGS)
-crypto_libbitcoin_crypto_power8_a_CPPFLAGS += -DENABLE_POWER8
-crypto_libbitcoin_crypto_power8_a_SOURCES = crypto/sha256_power8.cpp
+# See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
+# CXXFLAGS above
+crypto_libbitcoin_crypto_power8_la_LDFLAGS = $(AM_LDFLAGS) -static
+crypto_libbitcoin_crypto_power8_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -static
+crypto_libbitcoin_crypto_power8_la_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libbitcoin_crypto_power8_la_CXXFLAGS += $(POWER8_CXXFLAGS)
+crypto_libbitcoin_crypto_power8_la_CPPFLAGS += -DENABLE_POWER8
+crypto_libbitcoin_crypto_power8_la_SOURCES = crypto/sha256_power8.cpp
+#
 
 # consensus #
 libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
