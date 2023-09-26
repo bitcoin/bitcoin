@@ -27,12 +27,28 @@ CMNHFManager::Signals CMNHFManager::GetSignalsStage(const CBlockIndex* const pin
     Signals signals = GetFromCache(pindexPrev);
     const int height = pindexPrev->nHeight + 1;
     for (auto it = signals.begin(); it != signals.end(); ) {
-         if (height > it->second + Params().GetConsensus().nExpireEHF) {
-            LogPrintf("CMNHFManager::GetSignalsStage: mnhf signal bit=%d height:%d is expired at height=%d\n", it->first, it->second, height);
+        bool found{false};
+        const auto signal_pindex = pindexPrev->GetAncestor(it->second);
+        assert(signal_pindex != nullptr);
+        const int64_t signal_time = signal_pindex->GetMedianTimePast();
+        for (int index = 0; index < Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++index) {
+            const auto& deployment = Params().GetConsensus().vDeployments[index];
+            if (deployment.bit != it->first) continue;
+            if (signal_time < deployment.nStartTime) {
+                // new deployment is using the same bit as the old one
+                LogPrintf("CMNHFManager::GetSignalsStage: mnhf signal bit=%d height:%d is expired at height=%d\n", it->first, it->second, height);
+                it = signals.erase(it);
+            } else {
+                ++it;
+            }
+            found = true;
+            break;
+        }
+        if (!found) {
+            // no deployment means we buried it and aren't using the same bit (yet)
+            LogPrintf("CMNHFManager::GetSignalsStage: mnhf signal bit=%d height:%d is not known at height=%d\n", it->first, it->second, height);
             it = signals.erase(it);
-         } else {
-             ++it;
-         }
+        }
     }
     return signals;
 }

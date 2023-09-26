@@ -25,7 +25,7 @@ from test_framework.util import (
 
 class MnehfTest(DashTestFramework):
     def set_test_params(self):
-        extra_args = [["-vbparams=testdummy:0:999999999999:12:12:12:5:0"] for _ in range(4)]
+        extra_args = [["-vbparams=testdummy:0:999999999999:12:12:12:5:0", "-persistmempool=0"] for _ in range(4)]
         self.set_dash_test_params(4, 3, fast_dip3_enforcement=True, extra_args=extra_args)
 
     def skip_test_if_missing_module(self):
@@ -164,14 +164,12 @@ class MnehfTest(DashTestFramework):
         ehf_tx_sent = self.send_tx(ehf_tx)
         ehf_unknown_tx_sent = self.send_tx(ehf_unknown_tx)
         self.send_tx(ehf_invalid_tx, expected_error='bad-mnhf-non-ehf')
-        node.generate(1)
-        ehf_height = node.getblockcount()
+        ehf_blockhash = node.generate(1)[0]
         self.sync_all()
 
-        ehf_block = node.getbestblockhash()
-        self.log.info(f"Check MnEhfTx {ehf_tx_sent} was mined in {ehf_block}")
-        assert ehf_tx_sent in node.getblock(ehf_block)['tx']
-        assert ehf_unknown_tx_sent in node.getblock(ehf_block)['tx']
+        self.log.info(f"Check MnEhfTx {ehf_tx_sent} was mined in {ehf_blockhash}")
+        assert ehf_tx_sent in node.getblock(ehf_blockhash)['tx']
+        assert ehf_unknown_tx_sent in node.getblock(ehf_blockhash)['tx']
 
         self.log.info(f"MnEhf tx: '{ehf_tx}' is sent: {ehf_tx_sent}")
         self.log.info(f"MnEhf 'unknown' tx: '{ehf_unknown_tx}' is sent: {ehf_unknown_tx_sent}")
@@ -201,10 +199,10 @@ class MnehfTest(DashTestFramework):
 
         self.check_fork('active')
 
-        block_fork_active = node.getbestblockhash()
-        self.log.info(f"Invalidate block: {ehf_block} with tip {block_fork_active}")
+        fork_active_blockhash = node.getbestblockhash()
+        self.log.info(f"Invalidate block: {ehf_blockhash} with tip {fork_active_blockhash}")
         for inode in self.nodes:
-            inode.invalidateblock(ehf_block)
+            inode.invalidateblock(ehf_blockhash)
 
         self.log.info("Expecting for fork to be defined in next blocks because no MnEHF tx here")
         for i in range(12):
@@ -215,12 +213,11 @@ class MnehfTest(DashTestFramework):
 
         self.log.info("Re-sending MnEHF for new fork")
         tx_sent_2 = self.send_tx(ehf_tx)
-        node.generate(1)
+        ehf_blockhash_2 = node.generate(1)[0]
         self.sync_all()
 
-        ehf_block_2 = node.getbestblockhash()
-        self.log.info(f"Check MnEhfTx again {tx_sent_2} was mined in {ehf_block_2}")
-        assert tx_sent_2 in node.getblock(ehf_block_2)['tx']
+        self.log.info(f"Check MnEhfTx again {tx_sent_2} was mined in {ehf_blockhash_2}")
+        assert tx_sent_2 in node.getblock(ehf_blockhash_2)['tx']
 
         self.log.info(f"Generate some more block to jump to `started` status")
         for i in range(12):
@@ -230,41 +227,42 @@ class MnehfTest(DashTestFramework):
         self.check_fork('started')
 
 
-        self.log.info(f"Re-consider block {ehf_block} to the old MnEHF and forget new fork")
+        self.log.info(f"Re-consider block {ehf_blockhash} to the old MnEHF and forget new fork")
         for inode in self.nodes:
-            inode.reconsiderblock(ehf_block)
-        assert_equal(node.getbestblockhash(), block_fork_active)
+            inode.reconsiderblock(ehf_blockhash)
+        assert_equal(node.getbestblockhash(), fork_active_blockhash)
 
         self.check_fork('active')
         self.restart_all_nodes()
         self.check_fork('active')
 
+        self.log.info("Testing duplicate EHF signal with same bit")
+        ehf_tx_duplicate = self.send_tx(self.create_mnehf(28, pubkey))
+        tip_blockhash = node.generate(1)[0]
+        self.sync_blocks()
+        block = node.getblock(tip_blockhash)
+        assert ehf_tx_duplicate in node.getrawmempool() and ehf_tx_duplicate not in block['tx']
+
+        self.log.info("Testing EHF signal with same bit but with newer start time")
         self.bump_mocktime(int(60 * 60 * 24 * 14))
         node.generate(1)
-        self.sync_all()
+        self.sync_blocks()
         self.restart_all_nodes(params=[self.mocktime, self.mocktime + 1000000])
         self.mine_quorum()
 
-        ehf_tx_second = self.create_mnehf(28, pubkey)
-        assert_equal(get_bip9_details(node, 'testdummy')['status'], 'defined')
+        ehf_tx_new_start = self.create_mnehf(28, pubkey)
+        self.check_fork('defined')
 
-        self.log.info("Testing EHF signal with same bit")
-        self.log.info(f"Previous signal at height={ehf_height}, total blocks={node.getblockcount()}, should success at {ehf_height + 576}")
-        self.slowly_generate_batch(576 - (node.getblockcount() - ehf_height) - 1)
-        ehf_tx_sent = self.send_tx(ehf_tx_second)
-        self.log.info("Mine block and ensure not mined yet...")
-        node.generate(1)
-        self.ensure_tx_is_not_mined(ehf_tx_sent)
-        node.generate(1)
+        self.log.info("Mine one block and ensure EHF tx for the new deployment is mined")
+        ehf_tx_sent = self.send_tx(ehf_tx_new_start)
+        tip_blockhash = node.generate(1)[0]
         self.sync_all()
-        self.log.info("Mine one more block and ensure it is mined")
-        block = node.getblock(node.getbestblockhash())
+        block = node.getblock(tip_blockhash)
         assert ehf_tx_sent in block['tx']
 
         self.check_fork('defined')
         self.slowly_generate_batch(12 * 4)
         self.check_fork('active')
-
 
 
 if __name__ == '__main__':
