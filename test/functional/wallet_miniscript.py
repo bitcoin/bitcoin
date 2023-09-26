@@ -205,6 +205,7 @@ DESCS_PRIV = [
 class WalletMiniscriptTest(BitcoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser, legacy=False)
+        self.rpc_timeout = 480
 
     def set_test_params(self):
         self.num_nodes = 1
@@ -372,6 +373,31 @@ class WalletMiniscriptTest(BitcoinTestFramework):
                 desc["stack_size"],
                 desc.get("sha256_preimages"),
             )
+
+        # Test we can sign for a max-size TapMiniscript. Recompute the maximum accepted size
+        # for a TapMiniscript (see cpp file for details). Then pad a simple pubkey check up
+        # to the maximum size. Make sure we can import and spend this script.
+        leeway_weight = (4 + 4 + 1 + 36 + 4 + 1 + 1 + 8 + 1 + 1 + 33) * 4 + 2
+        max_tapmini_size = 400_000 - 3 - (1 + 65) * 1_000 - 3 - (33 + 32 * 128) - leeway_weight - 5
+        padding = max_tapmini_size - 33 - 1
+        ms = f"pk({TPRVS[0]}/*)"
+        ms = "n" * padding + ":" + ms
+        desc = f"tr({PUBKEYS[0]},{ms})"
+        self.signing_test(desc, None, None, 1, 3, None)
+        # This was really the maximum size, one more byte and we can't import it.
+        ms = "n" + ms
+        desc = f"tr({PUBKEYS[0]},{ms})"
+        res = self.ms_wo_wallet.importdescriptors(
+            [
+                {
+                    "desc": descsum_create(desc),
+                    "active": False,
+                    "timestamp": "now",
+                }
+            ]
+        )[0]
+        assert not res["success"]
+        assert "is not a valid descriptor function" in res["error"]["message"]
 
 
 if __name__ == "__main__":

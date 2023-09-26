@@ -105,6 +105,7 @@ BASE_SCRIPTS = [
     'feature_maxuploadtarget.py',
     'mempool_updatefromblock.py',
     'mempool_persist.py --descriptors',
+    'wallet_miniscript.py --descriptors',
     # vv Tests less than 60s vv
     'rpc_psbt.py --legacy-wallet',
     'rpc_psbt.py --descriptors',
@@ -242,7 +243,6 @@ BASE_SCRIPTS = [
     'wallet_keypool.py --legacy-wallet',
     'wallet_keypool.py --descriptors',
     'wallet_descriptor.py --descriptors',
-    'wallet_miniscript.py --descriptors',
     'p2p_nobloomfilter_messages.py',
     'p2p_filter.py',
     'rpc_setban.py',
