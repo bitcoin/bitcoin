@@ -998,7 +998,7 @@ static RPCHelpMan sendmsgtopeer()
         RPCResult{RPCResult::Type::OBJ, "", "", std::vector<RPCResult>{}},
         RPCExamples{
             HelpExampleCli("sendmsgtopeer", "0 \"addr\" \"ffffff\"") + HelpExampleRpc("sendmsgtopeer", "0 \"addr\" \"ffffff\"")},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+        [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue {
             const NodeId peer_id{request.params[0].getInt<int64_t>()};
             const std::string& msg_type{request.params[1].get_str()};
             if (msg_type.size() > CMessageHeader::COMMAND_SIZE) {
@@ -1009,7 +1009,7 @@ static RPCHelpMan sendmsgtopeer()
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Error parsing input for msg");
             }
 
-            NodeContext& node = EnsureAnyNodeContext(request.context);
+            node::NodeContext& node = EnsureAnyNodeContext(request.context);
             CConnman& connman = EnsureConnman(node);
 
             CSerializedNetMsg msg_ser;
@@ -1053,9 +1053,9 @@ static RPCHelpMan getaddrmaninfo()
                               HelpExampleCli("getaddrmaninfo", "")
                               + HelpExampleRpc("getaddrmaninfo", "")
                       },
-                      [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+                      [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
                       {
-                          NodeContext& node = EnsureAnyNodeContext(request.context);
+                          node::NodeContext& node = EnsureAnyNodeContext(request.context);
                           if (!node.addrman) {
                               throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
                           }

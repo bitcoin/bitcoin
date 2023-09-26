@@ -83,11 +83,13 @@ public:
     int GetVersion() const { return nVersion; }
     int GetType() const { return nType; }
     // SYSCOIN
+    const void* GetParams() const { return nullptr; }
     void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
     int GetTxVersion()           { return nTxVersion; }
     void seek(size_t _nSize) {return;}
     size_t size() const { return stream->size(); }
     void ignore(size_t size) { return stream->ignore(size); }
+    
 };
 
 /* Minimal stream for overwriting and/or appending to an existing byte vector
@@ -146,6 +148,7 @@ class CVectorWriter
         return nType;
     }
     // SYSCOIN
+    const void* GetParams() const { return nullptr; }
     void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
     int GetTxVersion()           { return nTxVersion; }
     void seek(size_t _nSize) {return;}
@@ -186,6 +189,7 @@ public:
     int GetVersion() const { return m_version; }
     int GetType() const { return m_type; }
     // SYSCOIN
+    const void* GetParams() const { return nullptr; }
     void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
     int GetTxVersion()           { return nTxVersion; }
     void seek(size_t _nSize) {return;}
@@ -237,6 +241,7 @@ public:
     explicit DataStream(Span<const uint8_t> sp) : DataStream{AsBytes(sp)} {}
     explicit DataStream(Span<const value_type> sp) : vch(sp.data(), sp.data() + sp.size()) {}
     // SYSCOIN
+    const void* GetParams() const { return nullptr; }
     void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
     int GetTxVersion()           { return nTxVersion; }
     void seek(size_t _nSize) {return;}
@@ -366,21 +371,20 @@ public:
 class CDataStream : public DataStream
 {
 private:
-    int nType;
     int nVersion;
 
 public:
     explicit CDataStream(int nTypeIn, int nVersionIn)
-        : nType{nTypeIn},
-          nVersion{nVersionIn} {}
+        : nVersion{nVersionIn} {nType = nTypeIn;}
 
     explicit CDataStream(Span<const uint8_t> sp, int type, int version) : CDataStream{AsBytes(sp), type, version} {}
     explicit CDataStream(Span<const value_type> sp, int nTypeIn, int nVersionIn)
         : DataStream{sp},
-          nType{nTypeIn},
-          nVersion{nVersionIn} {}
+          nVersion{nVersionIn} {nType = nTypeIn;}
 
     int GetType() const          { return nType; }
+    // SYSCOIN
+    const void* GetParams() const { return nullptr; }
     void SetVersion(int n)       { nVersion = n; }
     int GetVersion() const       { return nVersion; }
 
@@ -574,13 +578,17 @@ public:
     }
 };
 
+
 class CAutoFile : public AutoFile
 {
 private:
+    const int nType;
     const int nVersion;
     int nTxVersion{0};
 public:
-    explicit CAutoFile(std::FILE* file, int version, std::vector<std::byte> data_xor = {}) : AutoFile{file, std::move(data_xor)}, nVersion{version} {}
+    // SYSCOIN
+    explicit CAutoFile(std::FILE* file, int version, std::vector<std::byte> data_xor = {}) : AutoFile{file, std::move(data_xor)}, nType{SER_DISK}, nVersion{version} {}
+    int GetType() const          { return nType; }
     int GetVersion() const       { return nVersion; }
 
     template<typename T>
@@ -597,6 +605,7 @@ public:
         return (*this);
     }
     // SYSCOIN
+    const void* GetParams() const { return nullptr; }
     void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
     int GetTxVersion()           { return nTxVersion; }
     void seek(size_t _nSize) {return;}
@@ -611,6 +620,7 @@ public:
 class BufferedFile
 {
 private:
+    const int nType;
     const int nVersion;
     int nTxVersion{0};
     FILE *src;            //!< source file
@@ -661,7 +671,7 @@ private:
 
 public:
     BufferedFile(FILE* fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nVersionIn)
-        : nVersion{nVersionIn}, nReadLimit{std::numeric_limits<uint64_t>::max()}, nRewind{nRewindIn}, vchBuf(nBufSize, std::byte{0})
+        : nType{SER_DISK}, nVersion(nVersionIn), nReadLimit(std::numeric_limits<uint64_t>::max()), nRewind(nRewindIn), vchBuf(nBufSize, std::byte{0})
     {
         if (nRewindIn >= nBufSize)
             throw std::ios_base::failure("Rewind limit must be less than buffer size");
@@ -678,11 +688,12 @@ public:
     BufferedFile& operator=(const BufferedFile&) = delete;
 
     int GetVersion() const { return nVersion; }
+    int GetType() const { return nType; }
     // SYSCOIN
+    const void* GetParams() const { return nullptr; }
     void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
     int GetTxVersion()           { return nTxVersion; }
     void seek(size_t _nSize) {return;}
-
     void fclose()
     {
         if (src) {

@@ -99,7 +99,6 @@ HANDLE hProcessGeth = NULL;
 #endif
 RecursiveMutex cs_geth;
 NEVMMintTxMap mapMintKeysMempool;
-std::vector<CInv> vInvToSend;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 bool fTestSetting{false};
 using kernel::CCoinsStats;
@@ -4084,7 +4083,7 @@ bool Chainstate::MarkConflictingBlock(BlockValidationState& state, CBlockIndex *
     if (pindex == m_chainman.m_best_header) {
         m_chainman.m_best_header = m_chainman.m_best_header->pprev;
     }
-    DisconnectedBlockTransactions disconnectpool;
+    DisconnectedBlockTransactions disconnectpool{MAX_DISCONNECTED_TX_POOL_SIZE * 1000};
     while (true) {
         if (m_chainman.m_interrupt) break;
 

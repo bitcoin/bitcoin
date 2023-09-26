@@ -121,7 +121,8 @@ int main(int argc, char* argv[])
 
 
     // SETUP: Chainstate
-    auto chainparams = CChainParams::Main();
+    // SYSCOIN
+    auto chainparams = CChainParams::Main(CChainParams::MainNetOptions{});
     const ChainstateManager::Options chainman_opts{
         .chainparams = *chainparams,
         .datadir = abs_datadir,

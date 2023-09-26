@@ -28,7 +28,7 @@ struct ReorgTxns {
 static BlockTxns CreateRandomTransactions(size_t num_txns)
 {
     // Ensure every transaction has a different txid by having each one spend the previous one.
-    static uint256 prevout_hash{uint256::ZERO};
+    static uint256 prevout_hash{uint256::ZEROV};
 
     BlockTxns txns;
     txns.reserve(num_txns);
