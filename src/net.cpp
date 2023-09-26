@@ -1297,9 +1297,10 @@ bool V2Transport::ProcessReceivedPacketBytes() noexcept
     // - 0x00 byte: indicating long message type encoding
     // - 12 bytes of message type
     // - payload
+    // SYSCOIN
     static constexpr size_t MAX_CONTENTS_LEN =
         1 + CMessageHeader::COMMAND_SIZE +
-        std::min<size_t>(MAX_SIZE, MAX_PROTOCOL_MESSAGE_LENGTH);
+        MAX_PROTOCOL_MESSAGE_LENGTH;
 
     if (m_recv_buffer.size() == BIP324Cipher::LENGTH_LEN) {
         // Length descriptor received.
