@@ -18,7 +18,6 @@
 
 #include <string>
 #include <vector>
-
 typedef uint256 ChainCode;
 
 /** A hasher class for Syscoin's 256-bit hash (double SHA-256). */
@@ -153,6 +152,7 @@ public:
     void seek(size_t _nSize) {return;}
     int GetTxVersion() { return nTxVersion; }
     int GetType() const { return nType; }
+    const void* GetParams() const { return nullptr; }
 };
 
 class CHashWriter : public HashWriter

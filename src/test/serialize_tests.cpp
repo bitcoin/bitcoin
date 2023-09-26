@@ -272,7 +272,7 @@ public:
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        if (s.GetParams() == BaseFormat::RAW) {
+        if (*s.GetParams() == BaseFormat::RAW) {
             s << m_base_data;
         } else {
             s << Span{HexStr(Span{&m_base_data, 1})};
@@ -282,7 +282,7 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        if (s.GetParams() == BaseFormat::RAW) {
+        if (*s.GetParams() == BaseFormat::RAW) {
             s >> m_base_data;
         } else {
             std::string hex{"aa"};
@@ -310,14 +310,14 @@ public:
 
     SERIALIZE_METHODS_PARAMS(Derived, obj, DerivedAndBaseFormat, fmt)
     {
-        READWRITE(WithParams(fmt.m_base_format, AsBase<Base>(obj)));
+        READWRITE(WithParams(fmt->m_base_format, AsBase<Base>(obj)));
 
         if (ser_action.ForRead()) {
             std::string str;
             s >> str;
             SER_READ(obj, obj.m_derived_data = str);
         } else {
-            s << (fmt.m_derived_format == DerivedAndBaseFormat::DerivedFormat::LOWER ?
+            s << (fmt->m_derived_format == DerivedAndBaseFormat::DerivedFormat::LOWER ?
                       ToLower(obj.m_derived_data) :
                       ToUpper(obj.m_derived_data));
         }

@@ -429,29 +429,29 @@ public:
 
     SERIALIZE_METHODS_PARAMS(CAddress, obj, SerParams, params)
     {
-        bool use_v2;
-        if (params.fmt == Format::Disk) {
+        bool use_v2{false};
+        if (params && params->fmt == Format::Disk) {
             // In the disk serialization format, the encoding (v1 or v2) is determined by a flag version
             // that's part of the serialization itself. ADDRV2_FORMAT in the stream version only determines
             // whether V2 is chosen/permitted at all.
             uint32_t stored_format_version = DISK_VERSION_INIT;
-            if (params.enc == Encoding::V2) stored_format_version |= DISK_VERSION_ADDRV2;
+            if (params->enc == Encoding::V2) stored_format_version |= DISK_VERSION_ADDRV2;
             READWRITE(stored_format_version);
             stored_format_version &= ~DISK_VERSION_IGNORE_MASK; // ignore low bits
             if (stored_format_version == 0) {
                 use_v2 = false;
-            } else if (stored_format_version == DISK_VERSION_ADDRV2 && params.enc == Encoding::V2) {
+            } else if (stored_format_version == DISK_VERSION_ADDRV2 && params->enc == Encoding::V2) {
                 // Only support v2 deserialization if V2 is set.
                 use_v2 = true;
             } else {
                 throw std::ios_base::failure("Unsupported CAddress disk format version");
             }
-        } else {
-            assert(params.fmt == Format::Network);
+        } else if(params) {
+            assert(params->fmt == Format::Network);
             // In the network serialization format, the encoding (v1 or v2) is determined directly by
             // the value of enc in the stream params, as no explicitly encoded version
             // exists in the stream.
-            use_v2 = params.enc == Encoding::V2;
+            use_v2 = params->enc == Encoding::V2;
         }
 
         READWRITE(Using<LossyChronoFormatter<uint32_t>>(obj.nTime));

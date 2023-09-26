@@ -250,7 +250,7 @@ const Out& AsBase(const In& x)
     template <typename Stream>                                                                                 \
     static void Unser(Stream& s, cls& obj) { SerializationOps(obj, s, ActionUnserialize{}, s.GetParams()); }   \
     template <typename Stream, typename Type, typename Operation>                                              \
-    static void SerializationOps(Type& obj, Stream& s, Operation ser_action, const paramcls& paramobj)
+    static void SerializationOps(Type& obj, Stream& s, Operation ser_action, const paramcls* paramobj)
 
 #define BASE_SERIALIZE_METHODS(cls)                                                                 \
     template <typename Stream>                                                                      \
@@ -1466,8 +1466,9 @@ public:
     }
 
     int GetVersion() const { return nVersion; }
-    // SYSCOIN
     int GetType() const { return nProtocol; }
+    // SYSCOIN
+    const void* GetParams() const { return nullptr; }
     void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
     int GetTxVersion() const { return nTxVersion; }
 };
@@ -1524,7 +1525,8 @@ public:
     void ignore(size_t num) { m_substream.ignore(num); }
     bool eof() const { return m_substream.eof(); }
     size_t size() const { return m_substream.size(); }
-    const Params& GetParams() const { return m_params; }
+    // SYSCOIN
+    const Params* GetParams() const { return &m_params; }
     int GetVersion() = delete; // Deprecated with Params usage
     int GetType() = delete;    // Deprecated with Params usage
 };
