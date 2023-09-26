@@ -1336,7 +1336,7 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
         const CTxOut& txOut = tx.vout[idx];
         // SYSCOIN
         if(coinControl.m_nevmdata.empty() && !txOut.vchNEVMData.empty()) {
-            coinControl.m_nevmdata = txOut.vchNEVMData; 
+            coinControl.m_nevmdata = txOut.vchNEVMData;
         }
         CTxDestination dest;
         ExtractDestination(txOut.scriptPubKey, dest);

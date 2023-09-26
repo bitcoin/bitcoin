@@ -264,7 +264,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         } else {
             // SYSCOIN
             if(new_coin_control.m_nevmdata.empty() && !output.vchNEVMData.empty()) {
-                new_coin_control.m_nevmdata = output.vchNEVMData; 
+                new_coin_control.m_nevmdata = output.vchNEVMData;
             }
             CRecipient recipient = {dest, output.nValue, false};
             recipients.push_back(recipient);

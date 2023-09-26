@@ -64,7 +64,7 @@ static constexpr auto FEELER_INTERVAL = 2min;
 /** Run the extra block-relay-only connection loop once every 5 minutes. **/
 static constexpr auto EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL = 5min;
 // SYSCOIN
-/**  
+/**
  * Maximum length of incoming protocol messages (no message over 32 MiB is
  * currently acceptable).  Bitcoin has 4 MiB here, but we need more space
  * to allow for 2,000 block headers with auxpow.
@@ -1278,7 +1278,7 @@ public:
                 func(node);
         }
     };
-    
+
     void ForEachNode(const NodeFn& func) const
     {
         ForEachNode(FullyConnectedOnly, func);
