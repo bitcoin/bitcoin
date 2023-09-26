@@ -1609,7 +1609,9 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
             // Notify transport that bytes have been processed.
             node.m_transport->MarkBytesSent(nBytes);
             // Update statistics per message type.
-            node.AccountForSentBytes(msg_type, nBytes);
+            if (!msg_type.empty()) { // don't report v2 handshake bytes for now
+                node.AccountForSentBytes(msg_type, nBytes);
+            }
             nSentSize += nBytes;
             if ((size_t)nBytes != data.size()) {
                 // could not send full message; stop sending more
