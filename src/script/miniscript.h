@@ -1727,7 +1727,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
         case ParseContext::AND_N: {
             auto mid = std::move(constructed.back());
             constructed.pop_back();
-            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::ANDOR, Vector(std::move(constructed.back()), std::move(mid), MakeNodeRef<Key>(ctx, Fragment::JUST_0)));
+            constructed.back() = MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::ANDOR, Vector(std::move(constructed.back()), std::move(mid), MakeNodeRef<Key>(internal::NoDupCheck{}, Fragment::JUST_0)));
             break;
         }
         case ParseContext::AND_V: {
