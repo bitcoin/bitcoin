@@ -89,7 +89,7 @@ public:
     void seek(size_t _nSize) {return;}
     size_t size() const { return stream->size(); }
     void ignore(size_t size) { return stream->ignore(size); }
-    
+
 };
 
 /* Minimal stream for overwriting and/or appending to an existing byte vector
@@ -611,7 +611,7 @@ public:
     void seek(size_t _nSize) {return;}
 };
 
-/** Non-refcounted RAII wrapper around a FILE* that implements a ring buffer to
+/** Wrapper around a CAutoFile& that implements a ring buffer to
  *  deserialize from. It guarantees the ability to rewind a given number of bytes.
  *
  *  Will automatically close the file when it goes out of scope if not null.
@@ -621,9 +621,8 @@ class BufferedFile
 {
 private:
     const int nType;
-    const int nVersion;
     int nTxVersion{0};
-    FILE *src;            //!< source file
+    CAutoFile& m_src;
     uint64_t nSrcPos{0};  //!< how many bytes have been read from source
     uint64_t m_read_pos{0}; //!< how many bytes have been read from this
     uint64_t nReadLimit;  //!< up to which position we're allowed to read
@@ -639,9 +638,9 @@ private:
             readNow = nAvail;
         if (readNow == 0)
             return false;
-        size_t nBytes = fread((void*)&vchBuf[pos], 1, readNow, src);
+        size_t nBytes{m_src.detail_fread(Span{vchBuf}.subspan(pos, readNow))};
         if (nBytes == 0) {
-            throw std::ios_base::failure(feof(src) ? "BufferedFile::Fill: end of file" : "BufferedFile::Fill: fread failed");
+            throw std::ios_base::failure{m_src.feof() ? "BufferedFile::Fill: end of file" : "BufferedFile::Fill: fread failed"};
         }
         nSrcPos += nBytes;
         return true;
@@ -670,41 +669,24 @@ private:
     }
 
 public:
-    BufferedFile(FILE* fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nVersionIn)
-        : nType{SER_DISK}, nVersion(nVersionIn), nReadLimit(std::numeric_limits<uint64_t>::max()), nRewind(nRewindIn), vchBuf(nBufSize, std::byte{0})
+    BufferedFile(CAutoFile& file, uint64_t nBufSize, uint64_t nRewindIn)
+        : m_src{file}, nReadLimit{std::numeric_limits<uint64_t>::max()}, nRewind{nRewindIn}, vchBuf(nBufSize, std::byte{0})
     {
         if (nRewindIn >= nBufSize)
             throw std::ios_base::failure("Rewind limit must be less than buffer size");
-        src = fileIn;
     }
 
-    ~BufferedFile()
-    {
-        fclose();
-    }
-
-    // Disallow copies
-    BufferedFile(const BufferedFile&) = delete;
-    BufferedFile& operator=(const BufferedFile&) = delete;
-
-    int GetVersion() const { return nVersion; }
+    int GetVersion() const { return m_src.GetVersion(); }
     int GetType() const { return nType; }
     // SYSCOIN
     const void* GetParams() const { return nullptr; }
     void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
     int GetTxVersion()           { return nTxVersion; }
     void seek(size_t _nSize) {return;}
-    void fclose()
-    {
-        if (src) {
-            ::fclose(src);
-            src = nullptr;
-        }
-    }
 
     //! check whether we're at the end of the source file
     bool eof() const {
-        return m_read_pos == nSrcPos && feof(src);
+        return m_read_pos == nSrcPos && m_src.feof();
     }
 
     //! read a number of bytes

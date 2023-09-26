@@ -249,18 +249,18 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 BOOST_AUTO_TEST_CASE(streams_buffered_file)
 {
     fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
-    FILE* file = fsbridge::fopen(streams_test_filename, "w+b");
+    CAutoFile file{fsbridge::fopen(streams_test_filename, "w+b"), 333};
 
     // The value at each offset is the offset.
     for (uint8_t j = 0; j < 40; ++j) {
-        fwrite(&j, 1, 1, file);
+        file << j;
     }
-    rewind(file);
+    std::rewind(file.Get());
 
     // The buffer size (second arg) must be greater than the rewind
     // amount (third arg).
     try {
-        BufferedFile bfbad{file, 25, 25, 333};
+        BufferedFile bfbad{file, 25, 25};
         BOOST_CHECK(false);
     } catch (const std::exception& e) {
         BOOST_CHECK(strstr(e.what(),
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     }
 
     // The buffer is 25 bytes, allow rewinding 10 bytes.
-    BufferedFile bf{file, 25, 10, 333};
+    BufferedFile bf{file, 25, 10};
     BOOST_CHECK(!bf.eof());
 
     // This member has no functional effect.
@@ -375,7 +375,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     BOOST_CHECK(bf.GetPos() <= 30U);
 
     // We can explicitly close the file, or the destructor will do it.
-    bf.fclose();
+    file.fclose();
 
     fs::remove(streams_test_filename);
 }
@@ -383,15 +383,15 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
 BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
 {
     fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
-    FILE* file = fsbridge::fopen(streams_test_filename, "w+b");
+    CAutoFile file{fsbridge::fopen(streams_test_filename, "w+b"), 333};
     // The value at each offset is the byte offset (e.g. byte 1 in the file has the value 0x01).
     for (uint8_t j = 0; j < 40; ++j) {
-        fwrite(&j, 1, 1, file);
+        file << j;
     }
-    rewind(file);
+    std::rewind(file.Get());
 
     // The buffer is 25 bytes, allow rewinding 10 bytes.
-    BufferedFile bf{file, 25, 10, 333};
+    BufferedFile bf{file, 25, 10};
 
     uint8_t i;
     // This is like bf >> (7-byte-variable), in that it will cause data
@@ -425,7 +425,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
     bf.SkipTo(13);
     BOOST_CHECK_EQUAL(bf.GetPos(), 13U);
 
-    bf.fclose();
+    file.fclose();
     fs::remove(streams_test_filename);
 }
 
@@ -436,16 +436,16 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
 
     fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
     for (int rep = 0; rep < 50; ++rep) {
-        FILE* file = fsbridge::fopen(streams_test_filename, "w+b");
+        CAutoFile file{fsbridge::fopen(streams_test_filename, "w+b"), 333};
         size_t fileSize = InsecureRandRange(256);
         for (uint8_t i = 0; i < fileSize; ++i) {
-            fwrite(&i, 1, 1, file);
+            file << i;
         }
-        rewind(file);
+        std::rewind(file.Get());
 
         size_t bufSize = InsecureRandRange(300) + 1;
         size_t rewindSize = InsecureRandRange(bufSize);
-        BufferedFile bf{file, bufSize, rewindSize, 333};
+        BufferedFile bf{file, bufSize, rewindSize};
         size_t currentPos = 0;
         size_t maxPos = 0;
         for (int step = 0; step < 100; ++step) {
