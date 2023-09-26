@@ -22,7 +22,7 @@ public:
     static constexpr unsigned SESSION_ID_LEN{32};
     static constexpr unsigned GARBAGE_TERMINATOR_LEN{16};
     static constexpr unsigned REKEY_INTERVAL{224};
-    static constexpr unsigned LENGTH_LEN{3};
+    static constexpr unsigned LENGTH_LEN{4};
     static constexpr unsigned HEADER_LEN{1};
     static constexpr unsigned EXPANSION = LENGTH_LEN + HEADER_LEN + FSChaCha20Poly1305::EXPANSION;
     static constexpr std::byte IGNORE_BIT{0x80};
