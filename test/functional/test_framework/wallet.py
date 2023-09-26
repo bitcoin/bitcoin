@@ -36,12 +36,11 @@ from test_framework.messages import (
 )
 from test_framework.script import (
     CScript,
-    LegacySignatureHash,
     LEAF_VERSION_TAPSCRIPT,
     OP_NOP,
     OP_RETURN,
     OP_TRUE,
-    SIGHASH_ALL,
+    sign_input_legacy,
     taproot_construct,
 )
 from test_framework.script_util import (
@@ -166,18 +165,16 @@ class MiniWallet:
 
     def sign_tx(self, tx, fixed_length=True):
         if self._mode == MiniWalletMode.RAW_P2PK:
-            (sighash, err) = LegacySignatureHash(CScript(self._scriptPubKey), tx, 0, SIGHASH_ALL)
-            assert err is None
             # for exact fee calculation, create only signatures with fixed size by default (>49.89% probability):
             # 65 bytes: high-R val (33 bytes) + low-S val (32 bytes)
-            # with the DER header/skeleton data of 6 bytes added, this leads to a target size of 71 bytes
-            der_sig = b''
-            while not len(der_sig) == 71:
-                der_sig = self._priv_key.sign_ecdsa(sighash)
+            # with the DER header/skeleton data of 6 bytes added, plus 2 bytes scriptSig overhead
+            # (OP_PUSHn and SIGHASH_ALL), this leads to a scriptSig target size of 73 bytes
+            tx.vin[0].scriptSig = b''
+            while not len(tx.vin[0].scriptSig) == 73:
+                tx.vin[0].scriptSig = b''
+                sign_input_legacy(tx, 0, self._scriptPubKey, self._priv_key)
                 if not fixed_length:
                     break
-            tx.vin[0].scriptSig = CScript([der_sig + bytes(bytearray([SIGHASH_ALL]))])
-            tx.rehash()
         elif self._mode == MiniWalletMode.RAW_OP_TRUE:
             for i in tx.vin:
                 i.scriptSig = CScript([OP_NOP] * 43)  # pad to identical size
