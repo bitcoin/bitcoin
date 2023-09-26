@@ -244,7 +244,7 @@ public:
     //  outputs in the same transaction) or have shared ancestry, the bump fees are calculated
     //  independently, i.e. as if only one of them is spent. This may result in double-fee-bumping. This
     //  caveat can be rectified per use of the sister-function CalculateCombinedBumpFee(…).
-    virtual std::map<COutPoint, CAmount> CalculateIndividualBumpFees(const std::vector<COutPoint>& outpoints, const CFeeRate& target_feerate) = 0;
+    virtual std::map<COutPoint, CAmount> calculateIndividualBumpFees(const std::vector<COutPoint>& outpoints, const CFeeRate& target_feerate) = 0;
 
     //! Calculate the combined bump fee for an input set per the same strategy
     //  as in CalculateIndividualBumpFees(…).
@@ -252,7 +252,7 @@ public:
     //  bump fees per outpoint, but a single bump fee for the shared ancestry.
     //  The combined bump fee may be used to correct overestimation due to
     //  shared ancestry by multiple UTXOs after coin selection.
-    virtual std::optional<CAmount> CalculateCombinedBumpFee(const std::vector<COutPoint>& outpoints, const CFeeRate& target_feerate) = 0;
+    virtual std::optional<CAmount> calculateCombinedBumpFee(const std::vector<COutPoint>& outpoints, const CFeeRate& target_feerate) = 0;
 
     //! Get the node's package limits.
     //! Currently only returns the ancestor and descendant count limits, but could be enhanced to
