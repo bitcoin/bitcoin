@@ -19,15 +19,12 @@ FUZZ_TARGET(buffered_file)
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     FuzzedFileProvider fuzzed_file_provider = ConsumeFile(fuzzed_data_provider);
     std::optional<BufferedFile> opt_buffered_file;
-    FILE* fuzzed_file = fuzzed_file_provider.open();
+    CAutoFile fuzzed_file{fuzzed_file_provider.open(), 0};
     try {
-        opt_buffered_file.emplace(fuzzed_file, fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(0, 4096), fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(0, 4096), fuzzed_data_provider.ConsumeIntegral<int>());
+        opt_buffered_file.emplace(fuzzed_file, fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(0, 4096), fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(0, 4096));
     } catch (const std::ios_base::failure&) {
-        if (fuzzed_file != nullptr) {
-            fclose(fuzzed_file);
-        }
     }
-    if (opt_buffered_file && fuzzed_file != nullptr) {
+    if (opt_buffered_file && !fuzzed_file.IsNull()) {
         bool setpos_fail = false;
         LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
             CallOneOf(
