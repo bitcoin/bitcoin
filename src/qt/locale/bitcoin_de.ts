@@ -358,6 +358,10 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <translation type="unfinished">%1 T</translation>
     </message>
     <message>
+        <source>%1 h</source>
+        <translation type="unfinished">%1 S</translation>
+    </message>
+    <message>
         <source>%1 m</source>
         <translation type="unfinished">%1 min</translation>
     </message>
@@ -386,14 +390,14 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform>%nStunde</numerusform>
+            <numerusform>%n Stunde</numerusform>
             <numerusform>%n Stunden</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform>%nTag</numerusform>
+            <numerusform>%n Tag</numerusform>
             <numerusform>%n Tage</numerusform>
         </translation>
     </message>
@@ -411,7 +415,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform>%nJahr</numerusform>
+            <numerusform>%n Jahr</numerusform>
             <numerusform>%n Jahre</numerusform>
         </translation>
     </message>
@@ -419,12 +423,185 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
 <context>
     <name>BitcoinGUI</name>
     <message>
+        <source>&amp;Overview</source>
+        <translation type="unfinished">&amp;Übersicht</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation type="unfinished">Allgemeine Übersicht des Wallets anzeigen.</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation type="unfinished">&amp;Transaktionen</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation type="unfinished">Transaktionsverlauf anschauen</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation type="unfinished">&amp;Beenden</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation type="unfinished">Anwendung beenden</translation>
+    </message>
+    <message>
+        <source>&amp;About %1</source>
+        <translation type="unfinished">&amp;Über %1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation type="unfinished">Informationen anzeigen über %1</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation type="unfinished">Über &amp;Qt</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation type="unfinished">Informationen anzeigen über Qt</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation type="unfinished">Konfiguration von %1 bearbeiten</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">Neues Wallet erstellen</translation>
+    </message>
+    <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;Minimieren</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation type="unfinished">Wallet: </translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <extracomment>A substring of the tooltip.</extracomment>
+        <translation type="unfinished">Netzwerkaktivität deaktiviert.</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation type="unfinished">Proxy ist &lt;b&gt;aktiviert&lt;/b&gt;: %1</translation>
+    </message>
+    <message>
+        <source>Send coins to a Bitcoin address</source>
+        <translation type="unfinished">Bitcoins an eine Bitcoin-Adresse überweisen</translation>
+    </message>
+    <message>
+        <source>Backup wallet to another location</source>
+        <translation type="unfinished">Eine Wallet-Sicherungskopie erstellen und abspeichern</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation type="unfinished">Die Passphrase ändern, die für die Wallet-Verschlüsselung benutzt wird</translation>
+    </message>
+    <message>
+        <source>&amp;Send</source>
+        <translation type="unfinished">&amp;Überweisen</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation type="unfinished">&amp;Empfangen</translation>
+    </message>
+    <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">&amp;Optionen…</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation type="unfinished">Wallet &amp;verschlüsseln…</translation>
+    </message>
+    <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation type="unfinished">Die zu Ihrer Wallet gehörenden privaten Schlüssel verschlüsseln</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation type="unfinished">Wallet &amp;sichern…</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation type="unfinished">Passphrase &amp;ändern…</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation type="unfinished">&amp;Nachricht signieren</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <translation type="unfinished">Nachrichten signieren, um den Besitz Ihrer Bitcoin-Adressen zu beweisen</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message…</source>
+        <translation type="unfinished">Nachricht &amp;verifizieren…</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <translation type="unfinished">Nachrichten verifizieren, um sicherzustellen, dass diese mit den angegebenen Bitcoin-Adressen signiert wurden</translation>
+    </message>
+    <message>
+        <source>&amp;Load PSBT from file…</source>
+        <translation type="unfinished">&amp;Lade PSBT aus Datei…</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI…</source>
+        <translation type="unfinished">Öffne &amp;URI…</translation>
+    </message>
+    <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">Wallet schließen</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">Wallet erstellen…</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">Schließe alle Wallets…</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation type="unfinished">&amp;Datei</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation type="unfinished">&amp;Einstellungen</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation type="unfinished">&amp;Hilfe</translation>
+    </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation type="unfinished">Registerkartenleiste</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)…</source>
+        <translation type="unfinished">Synchronisiere Header (%1%)…</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation type="unfinished">Synchronisiere mit Netzwerk...</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk…</source>
+        <translation type="unfinished">Indiziere Blöcke auf Datenträger...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk…</source>
+        <translation type="unfinished">Verarbeite Blöcke auf Datenträger...</translation>
+    </message>
+    <message>
         <source>Connecting to peers…</source>
-        <translation type="unfinished">Verbinde mit Peers...</translation>
+        <translation type="unfinished">Verbinde mit Gegenstellen...</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Zahlungen anfordern (erzeugt QR-Codes und "bitcoin:"-URIs)</translation>
+        <translation type="unfinished">Zahlungen anfordern (erzeugt QR-Codes und bitcoin: URIs)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -441,7 +618,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform> %n Block der Transaktionshistorie verarbeitet.</numerusform>
+            <numerusform>Processed %n block(s) of transaction history.</numerusform>
             <numerusform> %n Blöcke der Transaktionshistorie verarbeitet.</numerusform>
         </translation>
     </message>
@@ -455,7 +632,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation type="unfinished">Der letzte empfangene Block ist %1 alt.</translation>
+        <translation type="unfinished">Zuletzt empfangener Block wurde generiert vor %1 .</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
@@ -471,7 +648,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation type="unfinished">Hinweis</translation>
+        <translation type="unfinished">Informationen</translation>
     </message>
     <message>
         <source>Up to date</source>
@@ -479,7 +656,51 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Ctrl+Q</source>
-        <translation type="unfinished">STRG+Q</translation>
+        <translation type="unfinished">STRG+B</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction</source>
+        <translation type="unfinished">Lade teilsignierte Bitcoin-Transaktion</translation>
+    </message>
+    <message>
+        <source>Load PSBT from &amp;clipboard…</source>
+        <translation type="unfinished">Lade PSBT aus Zwischenablage…</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation type="unfinished">Lade teilsignierte Bitcoin-Transaktion aus Zwischenablage</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation type="unfinished">Node-Fenster</translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation type="unfinished">Öffne Node-Konsole für Fehlersuche und Diagnose</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses</source>
+        <translation type="unfinished">&amp;Versandadressen</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation type="unfinished">&amp;Empfangsadressen</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI</source>
+        <translation type="unfinished">Öffne bitcoin: URI</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation type="unfinished">Wallet öffnen</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation type="unfinished">Eine Wallet öffnen</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation type="unfinished">Wallet schließen</translation>
     </message>
     <message>
         <source>Restore Wallet…</source>
@@ -540,10 +761,6 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <translation type="unfinished">&amp;Programmfenster</translation>
     </message>
     <message>
-        <source>Ctrl+M</source>
-        <translation type="unfinished">STRG+M</translation>
-    </message>
-    <message>
         <source>Zoom</source>
         <translation type="unfinished">Vergrößern</translation>
     </message>
@@ -567,7 +784,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>%n aktive Verbindung zum Bitcoin-Netzwerk</numerusform>
+            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
             <numerusform>%n aktive Verbindung(en) zum Bitcoin-Netzwerk</numerusform>
         </translation>
     </message>
@@ -593,7 +810,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Pre-syncing Headers (%1%)…</source>
-        <translation type="unfinished">Synchronisiere Header (%1%)…</translation>
+        <translation type="unfinished">Synchronisiere Header vorab (%1%)…</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -953,12 +1170,8 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <translation type="unfinished">Wallet-Name</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation type="unfinished">Brieftasche</translation>
-    </message>
-    <message>
         <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
-        <translation type="unfinished">Verschlüssele das Wallet. Das Wallet wird mit einer Passphrase deiner Wahl verschlüsselt.</translation>
+        <translation type="unfinished">Wallet verschlüsseln. Das Wallet wird mit einer Passphrase deiner Wahl verschlüsselt.</translation>
     </message>
     <message>
         <source>Encrypt Wallet</source>
@@ -990,7 +1203,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Descriptor Wallet</source>
-        <translation type="unfinished">Deskriptor-Brieftasche</translation>
+        <translation type="unfinished">Deskriptor-Wallet</translation>
     </message>
     <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
@@ -1006,7 +1219,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Ohne SQLite-Unterstützung (erforderlich für Deskriptor-Brieftaschen) kompiliert</translation>
+        <translation type="unfinished">Ohne SQLite-Unterstützung (erforderlich für Deskriptor-Wallets) kompiliert</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
@@ -1097,21 +1310,21 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform>%n GB Speicherplatz verfügbar</numerusform>
+            <numerusform>%n GB of space available</numerusform>
             <numerusform>%n GB Speicherplatz verfügbar</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform>(von %n GB benötigt)</numerusform>
+            <numerusform>(of %n GB needed)</numerusform>
             <numerusform>(von %n GB benötigt)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform>(%n GB benötigt für komplette Blockchain)</numerusform>
+            <numerusform>(%n GB needed for full chain)</numerusform>
             <numerusform>(%n GB benötigt für komplette Blockchain)</numerusform>
         </translation>
     </message>
@@ -1131,7 +1344,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform>(für Wiederherstellung ausreichende Sicherung %n Tag alt)</numerusform>
+            <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
             <numerusform>(für Wiederherstellung ausreichende Sicherung %n Tage alt)</numerusform>
         </translation>
     </message>
@@ -1157,7 +1370,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Welcome to %1.</source>
-        <translation type="unfinished">Willkommen zu %1.</translation>
+        <translation type="unfinished">Willkommen bei %1.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
@@ -1169,11 +1382,11 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation type="unfinished">Um diese Einstellung wiederherzustellen, muss die gesamte Blockchain neu heruntergeladen werden. Es ist schneller, die gesamte Chain zuerst herunterzuladen und später zu bearbeiten. Deaktiviert einige erweiterte Funktionen.</translation>
+        <translation type="unfinished">Um diese Einstellung wiederherzustellen, muss die gesamte Blockchain neu heruntergeladen werden. Es ist schneller, die gesamte Chain zuerst herunterzuladen und später zu stutzen. Deaktiviert einige erweiterte Funktionen.</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation type="unfinished">Diese initiale Synchronisation führt zur hohen Last und kann Hardwareprobleme, die bisher nicht aufgetreten sind, mit ihrem Computer verursachen. Jedes Mal, wenn Sie %1 ausführen, wird der Download zum letzten Synchronisationspunkt fortgesetzt.</translation>
+        <translation type="unfinished">Diese initiale Synchronisation führt zu hoher Last und kann Hardwareprobleme, die bisher nicht aufgetreten sind, bei ihrem Computer verursachen. Jedes Mal, wenn Sie %1 ausführen, wird der Download zum letzten Synchronisationspunkt fortgesetzt.</translation>
     </message>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
@@ -1181,7 +1394,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">Wenn Sie bewusst den Blockchain-Speicher begrenzen (pruning), müssen die historischen Daten dennoch heruntergeladen und verarbeitet werden. Diese Daten werden aber zum späteren Zeitpunkt gelöscht, um die Festplattennutzung niedrig zu halten.</translation>
+        <translation type="unfinished">Wenn Sie bewusst den Blockchain-Speicher begrenzen (pruning), müssen die historischen Daten dennoch heruntergeladen und verarbeitet werden. Diese Daten werden aber zu einem späteren Zeitpunkt gelöscht, um die Festplattennutzung niedrig zu halten.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1258,7 +1471,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Estimated time left until synced</source>
-        <translation type="unfinished">Abschätzung der verbleibenden Zeit bis synchronisiert</translation>
+        <translation type="unfinished">Geschätzt verbleibende Zeit bis synchronisiert</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -1266,11 +1479,11 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
-        <translation type="unfinished">%1 synchronisiert gerade. Es lädt Header und Blöcke von Gegenstellen und validiert sie bis zum Erreichen der Spitze der Blockkette.</translation>
+        <translation type="unfinished">%1 synchronisiert gerade. Es lädt Header und Blöcke von Gegenstellen und validiert sie bis zum Erreichen der Spitze der Blockchain.</translation>
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
-        <translation type="unfinished">Unbekannt. Synchronisiere Headers (%1, %2%)...</translation>
+        <translation type="unfinished">Unbekannt. Synchronisiere Header (%1, %2%)...</translation>
     </message>
     <message>
         <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
@@ -1390,10 +1603,6 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <source>Enable R&amp;PC server</source>
         <extracomment>An Options window setting to enable the RPC server.</extracomment>
         <translation type="unfinished">RPC-Server aktivieren</translation>
-    </message>
-    <message>
-        <source>W&amp;allet</source>
-        <translation type="unfinished">B&amp;rieftasche</translation>
     </message>
     <message>
         <source>Whether to set subtract fee from amount as default or not.</source>
@@ -2131,6 +2340,10 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
         <translation type="unfinished">User-Agent</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation type="unfinished">Node-Fenster</translation>
+    </message>
+    <message>
         <source>Current block height</source>
         <translation type="unfinished">Aktuelle Blockhöhe</translation>
     </message>
@@ -2237,7 +2450,7 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     </message>
     <message>
         <source>Totals</source>
-        <translation type="unfinished">Gesamtbetrag:</translation>
+        <translation type="unfinished">Gesamtbetrag</translation>
     </message>
     <message>
         <source>Debug log file</source>
@@ -2249,11 +2462,11 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     </message>
     <message>
         <source>In:</source>
-        <translation type="unfinished">Eingehend:</translation>
+        <translation type="unfinished">Ein:</translation>
     </message>
     <message>
         <source>Out:</source>
-        <translation type="unfinished">Ausgehend:</translation>
+        <translation type="unfinished">Aus:</translation>
     </message>
     <message>
         <source>Inbound: initiated by peer</source>
@@ -2703,7 +2916,7 @@ Für weitere Informationen über diese Konsole, tippe %6.
     </message>
     <message>
         <source>Recommended:</source>
-        <translation type="unfinished">Empfehlungen:</translation>
+        <translation type="unfinished">Empfohlen:</translation>
     </message>
     <message>
         <source>Custom:</source>
@@ -2980,7 +3193,7 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform>Voraussichtlicher Beginn der Bestätigung innerhalb von %n Block</numerusform>
+            <numerusform>Estimated to begin confirmation within %n block(s).</numerusform>
             <numerusform>Voraussichtlicher Beginn der Bestätigung innerhalb von %n Blöcken</numerusform>
         </translation>
     </message>
@@ -3304,7 +3517,7 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform>reift noch %n weiteren Block</numerusform>
+            <numerusform>matures in %n more block(s)</numerusform>
             <numerusform>reift noch %n weitere Blöcken</numerusform>
         </translation>
     </message>
@@ -3753,7 +3966,7 @@ Gehen Sie zu Datei &gt; Wallet Öffnen, um eine Wallet zu laden.
     <message>
         <source>Copied to clipboard</source>
         <comment>Fee-bump PSBT saved</comment>
-        <translation type="unfinished">In die Zwischenablage kopiert </translation>
+        <translation type="unfinished">In die Zwischenablage kopiert</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>
@@ -4513,15 +4726,15 @@ Verifikations-Error: %s</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" does not exist</source>
-        <translation type="unfinished">Angegebenes Verzeichnis "%s" existiert nicht</translation>
+        <translation type="unfinished">Angegebenes -walletdir "%s" existiert nicht</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" is a relative path</source>
-        <translation type="unfinished">Angegebenes Verzeichnis "%s" ist ein relativer Pfad</translation>
+        <translation type="unfinished">Angegebenes -walletdir "%s" ist ein relativer Pfad</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
-        <translation type="unfinished">Angegebenes Verzeichnis "%s" ist kein Verzeichnis</translation>
+        <translation type="unfinished">Angegebenes -walletdir "%s" ist kein Verzeichnis</translation>
     </message>
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>

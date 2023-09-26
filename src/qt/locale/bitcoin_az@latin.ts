@@ -283,6 +283,10 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
         <translation type="unfinished">%1 hələ də təhlükəsiz bağlanmayıb...</translation>
     </message>
     <message>
+        <source>unknown</source>
+        <translation type="unfinished">naməlum</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation type="unfinished">Məbləğ</translation>
     </message>
@@ -1515,6 +1519,10 @@ Daxil olma, yalnız 'qanuni' tipli ünvanlar ilə mümkündür.</translation>
     <message>
         <source>Date</source>
         <translation type="unfinished">Tarix</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation type="unfinished">naməlum</translation>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>

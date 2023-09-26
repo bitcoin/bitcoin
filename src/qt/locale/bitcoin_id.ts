@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Klik kanan untuk mengedit alamat atau label</translation>
+        <translation type="unfinished">Klik kanan untuk mengedit atau label</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Buat alamat baru</translation>
+        <translation type="unfinished">O3@outlook.co.id</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -38,6 +38,10 @@
         <translation type="unfinished">Pilih alamat untuk menerima koin dengan</translation>
     </message>
     <message>
+        <source>C&amp;hoose</source>
+        <translation type="unfinished">&amp;Choose</translation>
+    </message>
+    <message>
         <source>Sending addresses</source>
         <translation type="unfinished">Alamat pengirim</translation>
     </message>
@@ -50,6 +54,20 @@
         <translation type="unfinished">Ini adalah alamat Bitcoin Anda untuk mengirim pembayaran. Selalu periksa jumlah dan alamat penerima sebelum mengirim koin.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">Berikut ini adalah alamat-alamat bitcoinmu untuk menerima pembayaran. Gunakan tombol 'Buat alamat penerima baru' di tab menerima untuk membuat alamat baru.
+Tanda tangan hanya bisa digunakan dengan tipe alamat 'warisan'</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation type="unfinished">&amp;Copy Alamat</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation type="unfinished">Salin &amp;Label</translation>
+    </message>
+    <message>
         <source>Export Address List</source>
         <translation type="unfinished">Daftar Alamat Ekspor</translation>
     </message>
@@ -58,9 +76,129 @@
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
         <translation type="unfinished">File yang dipisahkan koma</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
+        <translation type="unfinished">Terjadi sebuah kesalahan saat mencoba menyimpan daftar alamat ke %1. Silakan coba lagi.</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">Gagal Mengekspor</translation>
+    </message>
+</context>
+<context>
+    <name>AddressTableModel</name>
+    <message>
+        <source>Address</source>
+        <translation type="unfinished">Alamat</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">(tidak ada label)</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
+    <message>
+        <source>Passphrase Dialog</source>
+        <translation type="unfinished">Dialog passphrase</translation>
+    </message>
+    <message>
+        <source>Enter passphrase</source>
+        <translation type="unfinished">Masukan passphrase</translation>
+    </message>
+    <message>
+        <source>New passphrase</source>
+        <translation type="unfinished">Passphrase baru</translation>
+    </message>
+    <message>
+        <source>Repeat new passphrase</source>
+        <translation type="unfinished">Ulangi passphrase baru</translation>
+    </message>
+    <message>
+        <source>Show passphrase</source>
+        <translation type="unfinished">Perlihatkan passphrase</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation type="unfinished">Enkripsi dompet</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation type="unfinished">Operasi ini memerlukan passphrase dompet Anda untuk membuka dompet.</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation type="unfinished">Buka dompet</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation type="unfinished">Ganti passphrase</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation type="unfinished">Konfirmasi pengenkripsian dompet</translation>
+    </message>
+    <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation type="unfinished">Peringatan: Jika Anda mengenkripsi dompet Anda dan lupa kata sandi Anda, Anda akan &lt;b&gt;KEHILANGAN SEMUA BITCOIN ANDA&lt;/b&gt;!</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation type="unfinished">Apa Anda yakin ingin mengenkripsi dompet Anda?</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation type="unfinished">Dompet terenkripsi</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation type="unfinished">Masukkan passphrase baru ke dompet.&lt;br/&gt;Harap gunakan passphrase dari &lt;b&gt;sepuluh atau lebih karakter acak&lt;/b&gt;, or &lt;b&gt;delapan atau lebih kata&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation type="unfinished">Masukan passphrase lama dan passphrase baru ke dompet.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation type="unfinished">Ingat mengenkripsi dompet Anda tidak dapat sepenuhnya melindungi bitcoin Anda dari pencurian oleh malware yang menginfeksi komputer Anda.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">Dompet yang akan dienkripsi</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation type="unfinished">Dompet anda akan dienkripsi.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation type="unfinished">Dompet anda sudah dienkripsi.</translation>
+    </message>
+    <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation type="unfinished">PENTING: Backup sebelumnya yang Anda buat dari file dompet Anda harus diganti dengan file dompet terenkripsi yang baru dibuat. Demi keamanan, backup file dompet sebelumnya yang tidak dienkripsi sebelumnya akan menjadi tidak berguna begitu Anda mulai menggunakan dompet terenkripsi yang baru.</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation type="unfinished">Pengenkripsian dompet gagal</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation type="unfinished">Pengenkripsian dompet gagal karena kesalahan internal. Dompet Anda tidak dienkripsi.</translation>
+    </message>
+    <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation type="unfinished">Passphrase yang dimasukan tidak cocok.</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation type="unfinished">Gagal membuka wallet</translation>
+    </message>
+    <message>
+        <source>The passphrase entered for the wallet decryption was incorrect.</source>
+        <translation type="unfinished">Passphrase yang dimasukan untuk dekripsi dompet salah</translation>
+    </message>
     <message>
         <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
         <translation type="unfinished">Frasa sandi yang dimasukkan untuk membuka dompet salah. Mengandung karakter kosong (contoh - sebuah bit kosong). Apabila frasa sandi di atur menggunakan piranti lunak sebelum versi 25.0, silahkan coba kembali dengan karakter hanya sampai dengan - tetapi tidak termasuk - karakter kosong yang pertama. Jika hal ini berhasil, silahkan atur frasa sandi yang baru untuk menghindari masalah yang sama di kemudian hari.</translation>
@@ -77,12 +215,35 @@
         <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
         <translation type="unfinished">Frasa sandi lama yang dimasukkan untuk membuka dompet salah. Mengandung karakter kosong (contoh - sebuah bit kosong). Apabila frasa sandi di atur menggunakan piranti lunak sebelum versi 25.0, silahkan coba kembali  dengan karakter hanya sampai dengan - tetapi tidak termasuk - karakter kosong yang pertama.</translation>
     </message>
-    </context>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation type="unfinished">Peringatan: Tombol Caps Lock aktif!</translation>
+    </message>
+</context>
+<context>
+    <name>BanTableModel</name>
+    <message>
+        <source>Banned Until</source>
+        <translation type="unfinished">Di banned sampai</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinApplication</name>
     <message>
         <source>Settings file %1 might be corrupt or invalid.</source>
         <translation type="unfinished">File pengaturan %1 mungkin rusak atau tidak valid.</translation>
+    </message>
+    <message>
+        <source>Runaway exception</source>
+        <translation type="unfinished">Pengecualian pelarian</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation type="unfinished">Error yang fatal telah terjadi. %1 tidak bisa berlanjut dengan selamat dan akan keluar.</translation>
+    </message>
+    <message>
+        <source>Internal error</source>
+        <translation type="unfinished">Kesalahan internal</translation>
     </message>
     <message>
         <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
@@ -91,6 +252,16 @@
 </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">Apakah Anda ingin mereset pengaturan ke nilai default, atau membatalkan tanpa membuat perubahan?</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">Error yang fatal telah terjadi. Periksa bahwa file pengaturan dapat ditulis atau coba jalankan dengan -nosettings</translation>
+    </message>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
@@ -507,6 +678,10 @@
         </translation>
     </message>
     <message>
+        <source>Choose data directory</source>
+        <translation type="unfinished">Pilih direktori data</translation>
+    </message>
+    <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">Setidaknya %1 GB data akan disimpan di direktori ini dan akan berkembang seiring berjalannya waktu.</translation>
     </message>
@@ -815,6 +990,13 @@
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>PSBT Operations</source>
+        <translation type="unfinished">Operasi PBST</translation>
+    </message>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>Age</source>
@@ -844,10 +1026,43 @@
     </message>
     </context>
 <context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>Not recommended due to higher fees and less protection against typos.</source>
+        <translation type="unfinished">Tidak direkomendasikan karena tingginya biaya dan kurang perlindungan terhadap salah ketik.</translation>
+    </message>
+    <message>
+        <source>Generates an address compatible with older wallets.</source>
+        <translation type="unfinished">Menghasilkan sebuah alamat yang kompatibel dengan dompet lama.</translation>
+    </message>
+    <message>
+        <source>Generates a native segwit address (BIP-173). Some old wallets don't support it.</source>
+        <translation type="unfinished">Menghasilkan alamat segwit asli (BIP-173). Beberapa dompet lama tidak mendukungnya. </translation>
+    </message>
+    <message>
+        <source>Bech32m (BIP-350) is an upgrade to Bech32, wallet support is still limited.</source>
+        <translation type="unfinished">Bech32m (BIP-350) adalah peningkatan terhadap Bech32, dukungan dompet masih terbatas.</translation>
+    </message>
+    </context>
+<context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Hide</source>
         <translation type="unfinished">Sembunyikan</translation>
+    </message>
+    <message>
+        <source>Unsigned Transaction</source>
+        <comment>PSBT copied</comment>
+        <extracomment>Caption of "PSBT has been copied" messagebox</extracomment>
+        <translation type="unfinished">Transaksi tidak Tertandatangani</translation>
+    </message>
+    <message>
+        <source>The PSBT has been copied to the clipboard. You can also save it.</source>
+        <translation type="unfinished">PSBT telah disalin ke clipboard. Anda juga dapat menyimpannya.</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk</source>
+        <translation type="unfinished">PSBT disimpan ke disk.</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -892,6 +1107,11 @@
     </context>
 <context>
     <name>WalletModel</name>
+    <message>
+        <source>Copied to clipboard</source>
+        <comment>Fee-bump PSBT saved</comment>
+        <translation type="unfinished">Disalin ke clipboard</translation>
+    </message>
     <message>
         <source>default wallet</source>
         <translation type="unfinished">wallet default</translation>

@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Десен клик за промяна на адреса или името</translation>
+        <translation type="unfinished">Десен клик за промяна на адреса или етикета</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -19,7 +19,7 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">Копирай</translation>
+        <translation type="unfinished">&amp;Копирай</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
@@ -31,7 +31,7 @@
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Търсене по адрес или име</translation>
+        <translation type="unfinished">Търсене по адрес или етикет</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -225,6 +225,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation type="unfinished">Паролата на портфейла беше променена успешно.</translation>
+    </message>
+    <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">Неуспешна промяна на фраза за достъп</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -1100,9 +1104,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Възстановяване на Портфейл</translation>
     </message>
     <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Възстановяване на портфейл &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
         <source>Restore wallet failed</source>
         <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
         <translation type="unfinished">Възстановяването на портфейла не бе успешно</translation>
+    </message>
+    <message>
+        <source>Restore wallet warning</source>
+        <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
+        <translation type="unfinished">Предупреждение за възстановяване на портфейл</translation>
     </message>
     <message>
         <source>Restore wallet message</source>
@@ -1292,8 +1306,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n ГБ свободни</numerusform>
+            <numerusform>%nГигабайти свободни</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -1748,6 +1762,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Опции за конфигуриране</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">Продължи</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Отказ</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation type="unfinished">грешка</translation>
     </message>
@@ -1818,12 +1840,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
+        <source>Sign Tx</source>
+        <translation type="unfinished">Подпиши Тх</translation>
+    </message>
+    <message>
         <source>Save…</source>
         <translation type="unfinished">Запази...</translation>
     </message>
     <message>
         <source>Close</source>
         <translation type="unfinished">Затвори</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation type="unfinished">Тотално количество</translation>
     </message>
     <message>
         <source>or</source>
@@ -1860,6 +1890,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Ping</source>
         <extracomment>Title of Peers Table column which indicates the current latency of the connection with the peer.</extracomment>
         <translation type="unfinished">пинг</translation>
+    </message>
+    <message>
+        <source>Age</source>
+        <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
+        <translation type="unfinished">Възраст</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -2062,6 +2097,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Out:</source>
         <translation type="unfinished">Изходящи</translation>
+    </message>
+    <message>
+        <source>Ctrl++</source>
+        <extracomment>Main shortcut to increase the RPC console font size.</extracomment>
+        <translation type="unfinished">Контрол++</translation>
+    </message>
+    <message>
+        <source>Ctrl+=</source>
+        <extracomment>Secondary shortcut to increase the RPC console font size.</extracomment>
+        <translation type="unfinished">Контрол+=</translation>
     </message>
     <message>
         <source>&amp;Copy address</source>
@@ -2351,6 +2396,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Transaction fee</source>
         <translation type="unfinished">Такса</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation type="unfinished">Тотално количество</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2925,7 +2974,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>The wallet data was successfully saved to %1.</source>
         <translation type="unfinished">Информацията за портфейла беше успешно запазена в %1.</translation>
     </message>
-    </context>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Отказ</translation>
+    </message>
+</context>
 <context>
     <name>bitcoin-core</name>
     <message>

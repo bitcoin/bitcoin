@@ -225,6 +225,10 @@
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">සැකසීම් ගොනුව %1 දූෂිත හෝ අවලංගු විය හැක.</translation>
+    </message>
+    <message>
         <source>Internal error</source>
         <translation type="unfinished">අභ්‍යන්තර දෝෂයකි</translation>
     </message>
@@ -945,6 +949,11 @@
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
+        <extracomment>Tooltip text for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
+        <translation type="unfinished">සකසන ලද මෙම සම වයසේ මිතුරාගෙන් ලැබුණු මුළු ලිපින ගණන (අනුපාත සීමා කිරීම හේතුවෙන් අතහැර දැමූ ලිපින හැර).</translation>
+    </message>
     <message>
         <source>&amp;Copy address</source>
         <extracomment>Context menu action to copy the address of a peer.</extracomment>

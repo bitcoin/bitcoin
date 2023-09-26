@@ -371,6 +371,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Gumawa ng bagong pitaka</translation>
     </message>
     <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">Bawasan</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation type="unfinished">Pitaka:</translation>
     </message>
@@ -541,6 +545,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Information</source>
         <translation type="unfinished">Impormasyon</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation type="unfinished">napapapanahon</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction</source>

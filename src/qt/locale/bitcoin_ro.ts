@@ -262,6 +262,16 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
 <context>
     <name>QObject</name>
     <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">Vrei să resetezi opțiunile la valorile predeterminate sau sa abordezi fără a face schimbări?</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">A apărut o eroare fatală. Verificați dacă se poate scrie în fișierul de setări sau încercați să rulați cu -nosettings.</translation>
+    </message>
+    <message>
         <source>Error: %1</source>
         <translation type="unfinished">Eroare: %1</translation>
     </message>
@@ -652,6 +662,16 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Niciun portofel disponibil</translation>
     </message>
     <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">Datele de portmoneu</translation>
+    </message>
+    <message>
+        <source>Load Wallet Backup</source>
+        <extracomment>The title for Restore Wallet File Windows</extracomment>
+        <translation type="unfinished">Încarcă backup-ul portmoneului</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
         <translation type="unfinished">Numele portofelului</translation>
@@ -676,6 +696,11 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
             <numerusform />
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Click for more actions.</source>
+        <extracomment>A substring of the tooltip. "More actions" are available via the context menu.</extracomment>
+        <translation type="unfinished">Pulsează pentru mai multe acțiuni.</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -909,6 +934,19 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     </message>
     </context>
 <context>
+    <name>LoadWalletsActivity</name>
+    <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation type="unfinished">Încarcă portmonee</translation>
+    </message>
+    <message>
+        <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
+        <translation type="unfinished">Încărcând portmonee</translation>
+    </message>
+</context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open wallet failed</source>
@@ -937,6 +975,10 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message>
         <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
         <translation type="unfinished">Esti sigur ca doresti sa inchizi portofelul&lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation type="unfinished">A închide portmoneul pentru prea mult timp poate rezulta în a trebui să resincronizezi lanțul complet daca "pruning" este activat.  </translation>
     </message>
     <message>
         <source>Close all wallets</source>
@@ -1266,6 +1308,10 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message>
         <source>&amp;Start %1 on system login</source>
         <translation type="unfinished">&amp;Porneste %1 la logarea in sistem.</translation>
+    </message>
+    <message>
+        <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation type="unfinished">A activa "pruning" reduce signifiant spațiul pe disk pentru a stoca tranzacțiile.</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -2915,6 +2961,11 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message>
         <source>Backup Wallet</source>
         <translation type="unfinished">Backup portofelul electronic</translation>
+    </message>
+    <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">Datele de portmoneu</translation>
     </message>
     <message>
         <source>Backup Failed</source>

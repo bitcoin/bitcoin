@@ -2381,7 +2381,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
     <message>
         <source>The direction and type of peer connection: %1</source>
-        <translation type="unfinished">A csomóponti kapcsolat iránya és típusa: %1</translation>
+        <translation type="unfinished">A partneri kapcsolat iránya és típusa: %1</translation>
     </message>
     <message>
         <source>Direction/Type</source>
@@ -2571,6 +2571,22 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Executing command using "%1" wallet</source>
         <translation type="unfinished">Parancs végrehajtása a "%1" tárca használatával</translation>
+    </message>
+    <message>
+        <source>Welcome to the %1 RPC console.
+Use up and down arrows to navigate history, and %2 to clear screen.
+Use %3 and %4 to increase or decrease the font size.
+Type %5 for an overview of available commands.
+For more information on using this console, type %6.
+
+%7WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.%8</source>
+        <extracomment>RPC console welcome message. Placeholders %7 and %8 are style tags for the warning content, and they are not space separated from the rest of the text intentionally.</extracomment>
+        <translation type="unfinished">Üdv a(z) %1 RPC konzoljában.
+Használja a fel- és le nyilakat az előzményekben való navigáláshoz, és %2-t a képernyő törléséhez. 
+Használja %3-t és %4-t a betűméret növeléséhez vagy csökkentéséhez.
+Gépeljen %5 az elérhető parancsok áttekintéséhez. Több információért a konzol használatáról, gépeljen %6.
+
+%7FIGYELMEZTETÉS: Csalók megpróbálnak felhasználókat rávenni, hogy parancsokat írjanak be ide, és ellopják a tárcájuk tartalmát. Ne használja ezt a konzolt akkor, ha nincs teljes mértékben tisztában egy-egy parancs kiadásának a következményeivel.%8</translation>
     </message>
     <message>
         <source>Executing…</source>

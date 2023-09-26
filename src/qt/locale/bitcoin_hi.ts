@@ -2212,11 +2212,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">डेट</translation>
+        <translation type="unfinished">तारीख़</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished">टाइप</translation>
+        <translation type="unfinished">प्रकार</translation>
     </message>
     <message>
         <source>Label</source>
@@ -2228,7 +2228,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Abandoned</source>
-        <translation type="unfinished">अबॅन्डन्ड</translation>
+        <translation type="unfinished">छोड़ दिया </translation>
     </message>
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
@@ -2240,7 +2240,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Conflicted</source>
-        <translation type="unfinished">विरोध हुआ</translation>
+        <translation type="unfinished">एक दूसरे के विरोध में</translation>
     </message>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
@@ -2248,19 +2248,115 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Generated but not accepted</source>
-        <translation type="unfinished">जनरेट किया गया लेकिन स्वीकार नहीं किया गया</translation>
+        <translation type="unfinished">निकाला गया पर स्वीकार नहीं </translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation type="unfinished">के साथ मिला</translation>
+    </message>
+    <message>
+        <source>Received from</source>
+        <translation type="unfinished">से मिला</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation type="unfinished">को भेजा</translation>
+    </message>
+    <message>
+        <source>Payment to yourself</source>
+        <translation type="unfinished">स्वयं को भुगतान</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation type="unfinished">माइन किया गया</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation type="unfinished">निगरानी-केवल</translation>
+        <translation type="unfinished">केवल निगरानी</translation>
+    </message>
+    <message>
+        <source>(n/a)</source>
+        <translation type="unfinished">(असंबंधित)</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(नो लेबल)</translation>
+        <translation type="unfinished">(कोई लेबल नहीं)</translation>
     </message>
-    </context>
+    <message>
+        <source>Transaction status. Hover over this field to show number of confirmations.</source>
+        <translation type="unfinished">लेनदेन की जानकारी. इस फ़ील्ड पर कर्सर लाएं ताकि कन्फ़र्मेशन की संख्या पता चले.</translation>
+    </message>
+    <message>
+        <source>Date and time that the transaction was received.</source>
+        <translation type="unfinished">तारीख़ और समय जब आपको ट्रांज़ेक्शन मिला. </translation>
+    </message>
+    <message>
+        <source>Type of transaction.</source>
+        <translation type="unfinished">ट्रांज़ेक्शन का प्रकार</translation>
+    </message>
+    <message>
+        <source>Amount removed from or added to balance.</source>
+        <translation type="unfinished">पैसा बैलेंस से हटाया या जोड़ा गया.</translation>
+    </message>
+</context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>All</source>
+        <translation type="unfinished">सभी</translation>
+    </message>
+    <message>
+        <source>Today</source>
+        <translation type="unfinished">आज</translation>
+    </message>
+    <message>
+        <source>This week</source>
+        <translation type="unfinished">इस हफ़्ते</translation>
+    </message>
+    <message>
+        <source>This month</source>
+        <translation type="unfinished">इस महीने</translation>
+    </message>
+    <message>
+        <source>Last month</source>
+        <translation type="unfinished">पिछले महीने</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation type="unfinished">इस साल</translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation type="unfinished">के साथ प्राप्त हुए</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation type="unfinished">को भेजा</translation>
+    </message>
+    <message>
+        <source>To yourself</source>
+        <translation type="unfinished">खुद को </translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation type="unfinished">माइन किया</translation>
+    </message>
+    <message>
+        <source>Other</source>
+        <translation type="unfinished">दूसरा</translation>
+    </message>
+    <message>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation type="unfinished">सर्च करने के लिए अपना पता, ट्रांज़ेक्शन आईडी या लेबल डालें</translation>
+    </message>
+    <message>
+        <source>Min amount</source>
+        <translation type="unfinished">कम से कम राशि</translation>
+    </message>
+    <message>
+        <source>Range…</source>
+        <translation type="unfinished">सीमा...</translation>
+    </message>
     <message>
         <source>&amp;Copy address</source>
         <translation type="unfinished">&amp;कॉपी पता</translation>

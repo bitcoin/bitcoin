@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Fai clic con il tasto destro del mouse per modificare l'indirizzo oppure l'etichetta</translation>
+        <translation type="unfinished">Click destro del mouse per modificare l'indirizzo oppure l'etichetta.</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -1298,6 +1298,10 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
         </translation>
     </message>
     <message>
+        <source>Choose data directory</source>
+        <translation type="unfinished">Specifica la cartella dati</translation>
+    </message>
+    <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">Almeno %1 GB di dati verrà salvato in questa cartella e continuerà ad aumentare col tempo.</translation>
     </message>
@@ -1901,6 +1905,10 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
 </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message>
+        <source>PSBT Operations</source>
+        <translation type="unfinished">Operazioni PSBT</translation>
+    </message>
     <message>
         <source>Sign Tx</source>
         <translation type="unfinished">Firma Tx</translation>
@@ -2650,6 +2658,22 @@ Per ulteriori informazioni su come usare la console, premi %6.
         <translation type="unfinished">Copi&amp;a importo</translation>
     </message>
     <message>
+        <source>Not recommended due to higher fees and less protection against typos.</source>
+        <translation type="unfinished">Sconsigliato a causa delle commissioni più elevate e della minore protezione contro gli errori di battitura.</translation>
+    </message>
+    <message>
+        <source>Generates an address compatible with older wallets.</source>
+        <translation type="unfinished">Genera un indirizzo compatibile con i wallets meno recenti.</translation>
+    </message>
+    <message>
+        <source>Generates a native segwit address (BIP-173). Some old wallets don't support it.</source>
+        <translation type="unfinished">Genera un indirizzo segwit nativo (BIP-173). Alcuni vecchi wallets non lo supportano.</translation>
+    </message>
+    <message>
+        <source>Bech32m (BIP-350) is an upgrade to Bech32, wallet support is still limited.</source>
+        <translation type="unfinished">Bech32m (BIP-350) è un aggiornamento di Bech32, il supporto dei portafogli è ancora limitato.</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation type="unfinished">Impossibile sbloccare il portafoglio.</translation>
     </message>
@@ -3031,6 +3055,20 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>Total Amount</source>
         <translation type="unfinished">Importo totale</translation>
+    </message>
+    <message>
+        <source>Unsigned Transaction</source>
+        <comment>PSBT copied</comment>
+        <extracomment>Caption of "PSBT has been copied" messagebox</extracomment>
+        <translation type="unfinished">Transazione non firmata</translation>
+    </message>
+    <message>
+        <source>The PSBT has been copied to the clipboard. You can also save it.</source>
+        <translation type="unfinished">Il PSBT è stato copiato negli appunti. Puoi anche salvarlo.</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk</source>
+        <translation type="unfinished">PSBT salvato su disco.</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3846,6 +3884,11 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
         <translation type="unfinished">PSBT copiata</translation>
     </message>
     <message>
+        <source>Copied to clipboard</source>
+        <comment>Fee-bump PSBT saved</comment>
+        <translation type="unfinished">Copiato negli appunti</translation>
+    </message>
+    <message>
         <source>Can't sign transaction.</source>
         <translation type="unfinished">Non è possibile firmare la transazione.</translation>
     </message>
@@ -4121,6 +4164,14 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
         <translation type="unfinished">L'upgrade -txindex avviato su una versione precedente non può essere completato. Riavviare con la versione precedente o eseguire un -reindex completo.</translation>
     </message>
     <message>
+        <source>%s failed to validate the -assumeutxo snapshot state. This indicates a hardware problem, or a bug in the software, or a bad software modification that allowed an invalid snapshot to be loaded. As a result of this, the node will shut down and stop using any state that was built on the snapshot, resetting the chain height from %d to %d. On the next restart, the node will resume syncing from %d without using any snapshot data. Please report this incident to %s, including how you obtained the snapshot. The invalid snapshot chainstate has been left on disk in case it is helpful in diagnosing the issue that caused this error.</source>
+        <translation type="unfinished">%s non è riuscito a convalidare lo stato dell'istantanea -assumeutxo. Questo indica un problema hardware, un bug nel software o una modifica errata del software che ha permesso di caricare un'istantanea non valida.  Di conseguenza, il nodo si spegnerà e smetterà di usare qualsiasi stato costruito sull'istantanea, azzerando l'altezza della catena da %d a %d. Al successivo riavvio, il nodo riprenderà la sincronizzazione da %d senza utilizzare i dati dell'istantanea. Per cortesia segnala l'incidente a %s, indicando anche come si è ottenuta l'istantanea. Lo stato della catena di istantanee non valido è stato lasciato sul disco nel caso in cui sia utile per diagnosticare il problema che ha causato questo errore.</translation>
+    </message>
+    <message>
+        <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation type="unfinished">%s è impostato molto alto! Commissioni così alte potrebbero essere pagate su una singola transazione.</translation>
+    </message>
+    <message>
         <source>-reindex-chainstate option is not compatible with -blockfilterindex. Please temporarily disable blockfilterindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
         <translation type="unfinished">L'opzione -reindex-chainstate non è compatibile con -blockfilterindex. Disattivare temporaneamente blockfilterindex mentre si usa -reindex-chainstate, oppure sostituire -reindex-chainstate con -reindex per ricostruire completamente tutti gli indici.</translation>
     </message>
@@ -4157,8 +4208,16 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
         <translation type="unfinished">Mancata rinominazione del file peers.dat non valido. Per favore spostarlo o eliminarlo e provare di nuovo.</translation>
     </message>
     <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable %s.</source>
+        <translation type="unfinished">La stima della tariffa non è riuscita. La Commissione di riserva è disabilitata. Attendere qualche blocco o abilitare %s.</translation>
+    </message>
+    <message>
         <source>Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6</source>
         <translation type="unfinished">Opzioni incompatibili: -dnsseed=1 è stato specificato esplicitamente, ma -onlynet vieta le connessioni a IPv4/IPv6</translation>
+    </message>
+    <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation type="unfinished">Importo non valido per %s=&lt;amount&gt;: '%s' (deve essere almeno la commissione minrelay di %s per evitare transazioni bloccate)</translation>
     </message>
     <message>
         <source>Outbound connections restricted to CJDNS (-onlynet=cjdns) but -cjdnsreachable is not provided</source>
@@ -4183,6 +4242,18 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
     <message>
         <source>The preselected coins total amount does not cover the transaction target. Please allow other inputs to be automatically selected or include more coins manually</source>
         <translation type="unfinished">L'importo totale delle monete preselezionate non copre l'obiettivo della transazione. Si prega di consentire la selezione automatica di altri input o di includere manualmente un numero maggiore di monete.</translation>
+    </message>
+    <message>
+        <source>Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input</source>
+        <translation type="unfinished">La transazione richiede una destinazione di valore diverso da -0, una tariffa diversa da -0 o un input preselezionato</translation>
+    </message>
+    <message>
+        <source>UTXO snapshot failed to validate. Restart to resume normal initial block download, or try loading a different snapshot.</source>
+        <translation type="unfinished">Impossibile convalidare lo snapshot UTXO. Riavvia per riprendere il normale download del blocco iniziale o prova a caricare uno snapshot diverso.</translation>
+    </message>
+    <message>
+        <source>Unconfirmed UTXOs are available, but spending them creates a chain of transactions that will be rejected by the mempool</source>
+        <translation type="unfinished">Sono disponibili UTXO non confermati, ma spenderli crea una catena di transazioni che verranno rifiutate dalla mempool</translation>
     </message>
     <message>
         <source>Unexpected legacy entry in descriptor wallet found. Loading wallet %s
@@ -4221,6 +4292,10 @@ Non in grado di pulire la migrazione fallita</translation>
 Unable to restore backup of wallet.</source>
         <translation type="unfinished">
 Non in grado di ripristinare il backup del portafoglio.</translation>
+    </message>
+    <message>
+        <source>Block verification was interrupted</source>
+        <translation type="unfinished">La verifica del blocco è stata interrotta</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
@@ -4293,6 +4368,10 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     <message>
         <source>Error opening block database</source>
         <translation type="unfinished">Errore durante l'apertura del database blocchi</translation>
+    </message>
+    <message>
+        <source>Error reading configuration file: %s</source>
+        <translation type="unfinished">Errore di lettura del file di configurazione: %s</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -4443,6 +4522,14 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
         <translation type="unfinished">Permesso P2P non valido: '%s'</translation>
     </message>
     <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
+        <translation type="unfinished">Importo non valido per %s=&lt;amount&gt;: '%s' (deve essere almeno %s)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
+        <translation type="unfinished">Importo non valido per %s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation type="unfinished">Importo non valido per -%s=&lt;amount&gt;: '%s'</translation>
     </message>
@@ -4569,6 +4656,10 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation type="unfinished">La cartella specificata "%s" non esiste.</translation>
+    </message>
+    <message>
+        <source>Specified data directory "%s" does not exist.</source>
+        <translation type="unfinished">La directory dei dati specificata "%s" non esiste.</translation>
     </message>
     <message>
         <source>Starting network threads…</source>
