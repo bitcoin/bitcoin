@@ -620,7 +620,7 @@ public:
 class BufferedFile
 {
 private:
-    const int nType;
+    int nType;
     int nTxVersion{0};
     CAutoFile& m_src;
     uint64_t nSrcPos{0};  //!< how many bytes have been read from source
