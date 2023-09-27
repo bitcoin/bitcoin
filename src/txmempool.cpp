@@ -803,24 +803,20 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
     assert(innerUsage == cachedInnerUsage);
 }
 
-bool CTxMemPool::CompareDepthAndScore(const Wtxid& hasha, const Wtxid& hashb) const
+bool CTxMemPool::CompareMiningScoreWithTopology(const Wtxid& hasha, const Wtxid& hashb) const
 {
-    /* Return `true` if hasha should be considered sooner than hashb. Namely when:
-     *   a is not in the mempool, but b is
-     *   both are in the mempool and a has fewer ancestors than b
-     *   both are in the mempool and a has a higher score than b
+    /* Return `true` if hasha should be considered sooner than hashb, namely when:
+     *     a is not in the mempool but b is, or
+     *     both are in the mempool but a is sorted before b in the total mempool ordering
+     *     (which takes dependencies and (chunk) feerates into account).
      */
     LOCK(cs);
     auto j{GetIter(hashb)};
     if (!j.has_value()) return false;
     auto i{GetIter(hasha)};
     if (!i.has_value()) return true;
-    uint64_t counta = i.value()->GetCountWithAncestors();
-    uint64_t countb = j.value()->GetCountWithAncestors();
-    if (counta == countb) {
-        return CompareTxMemPoolEntryByScore()(*i.value(), *j.value());
-    }
-    return counta < countb;
+
+    return m_txgraph->CompareMainOrder(*i.value(), *j.value()) < 0;
 }
 
 namespace {
