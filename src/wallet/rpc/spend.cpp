@@ -1016,10 +1016,14 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                     {"outputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "The outputs specified as key-value pairs.\n"
                              "Each key may only appear once, i.e. there can only be one 'data' output, and no address may be duplicated.\n"
                              "At least one output of either type must be specified.\n"
-                             "Cannot be provided if 'reduce_output' is specified.",
+                             "Cannot be provided if 'original_change_index' is specified.",
                         OutputsDoc(),
                         RPCArgOptions{.skip_type_check = true}},
-                    {"reduce_output", RPCArg::Type::NUM, RPCArg::DefaultHint{"not set, detect change automatically"}, "The 0-based index of the output from which the additional fees will be deducted. In general, this should be the position of change output. Cannot be provided if 'outputs' is specified."},
+                    {"original_change_index", RPCArg::Type::NUM, RPCArg::DefaultHint{"not set, detect change automatically"}, "The 0-based index of the change output on the original transaction. "
+                                                                                                                            "The indicated output will be recycled into the new change output on the bumped transaction. "
+                                                                                                                            "The remainder after paying the recipients and fees will be sent to the output script of the "
+                                                                                                                            "original change output. The change output’s amount can increase if bumping the transaction "
+                                                                                                                            "adds new inputs, otherwise it will decrease. Cannot be used in combination with the 'outputs' option."},
                 },
                 RPCArgOptions{.oneline_description="options"}},
         },
@@ -1058,7 +1062,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     coin_control.m_signal_bip125_rbf = true;
     std::vector<CTxOut> outputs;
 
-    std::optional<uint32_t> reduce_output;
+    std::optional<uint32_t> original_change_index;
 
     if (!request.params[1].isNull()) {
         UniValue options = request.params[1];
@@ -1070,7 +1074,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
                 {"outputs", UniValueType()}, // will be checked by AddOutputs()
-                {"reduce_output", UniValueType(UniValue::VNUM)},
+                {"original_change_index", UniValueType(UniValue::VNUM)},
             },
             true, true);
 
@@ -1095,8 +1099,8 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
             outputs = tempTx.vout;
         }
 
-        if (options.exists("reduce_output")) {
-            reduce_output = options["reduce_output"].getInt<uint32_t>();
+        if (options.exists("original_change_index")) {
+            original_change_index = options["original_change_index"].getInt<uint32_t>();
         }
     }
 
@@ -1115,7 +1119,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     CMutableTransaction mtx;
     feebumper::Result res;
     // Targeting feerate bump.
-    res = feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, errors, old_fee, new_fee, mtx, /*require_mine=*/ !want_psbt, outputs, reduce_output);
+    res = feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, errors, old_fee, new_fee, mtx, /*require_mine=*/ !want_psbt, outputs, original_change_index);
     if (res != feebumper::Result::OK) {
         switch(res) {
             case feebumper::Result::INVALID_ADDRESS_OR_KEY:
