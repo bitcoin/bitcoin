@@ -6,6 +6,7 @@
 - Start a node, generate blocks, then restart with -reindex after setting blk files to read-only
 """
 
+import os
 import platform
 import stat
 import subprocess
@@ -45,6 +46,11 @@ class BlockstoreReindexTest(BitcoinTestFramework):
                     self.log.warning(f"stdout: {e.stdout}")
                 if e.stderr:
                     self.log.warning(f"stderr: {e.stderr}")
+                if os.getuid() == 0:
+                    self.log.warning("Return early on Linux under root, because chattr failed.")
+                    self.log.warning("This should only happen due to missing capabilities in a container.")
+                    self.log.warning("Make sure to --cap-add LINUX_IMMUTABLE if you want to run this test.")
+                    return
 
         self.log.debug("Attempt to restart and reindex the node with the unwritable block file")
         with self.nodes[0].assert_debug_log(expected_msgs=['FlushStateToDisk', 'failed to open file'], unexpected_msgs=[]):
