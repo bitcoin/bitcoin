@@ -245,21 +245,17 @@ class MempoolPackagesTest(BitcoinTestFramework):
         mempool1 = self.nodes[1].getrawmempool(False)
         assert set(mempool1).issubset(set(mempool0))
         assert parent_transaction in mempool1
-        # Note: this test is brittle, because it relies on the relay sort order
-        # of node0 to be based on ancestor count (so that the first 10
-        # descendants of parent_transaction relay before the later ones).
-        for tx in chain[:CUSTOM_DESCENDANT_LIMIT-1]:
-            assert tx in mempool1
-        for tx in chain[CUSTOM_DESCENDANT_LIMIT:]:
-            assert tx not in mempool1
-        for tx in mempool1:
-            entry0 = self.nodes[0].getmempoolentry(tx)
-            entry1 = self.nodes[1].getmempoolentry(tx)
-            assert not entry0['unbroadcast']
-            assert not entry1['unbroadcast']
-            assert_equal(entry1['fees']['base'], entry0['fees']['base'])
-            assert_equal(entry1['vsize'], entry0['vsize'])
-            assert_equal(entry1['depends'], entry0['depends'])
+        for tx in chain:
+            if tx in mempool1:
+                entry0 = self.nodes[0].getmempoolentry(tx)
+                entry1 = self.nodes[1].getmempoolentry(tx)
+                assert not entry0['unbroadcast']
+                assert not entry1['unbroadcast']
+                assert entry1["descendantcount"] <= CUSTOM_DESCENDANT_LIMIT
+                assert_equal(entry1['fees']['base'], entry0['fees']['base'])
+                assert_equal(entry1['vsize'], entry0['vsize'])
+                assert_equal(entry1['depends'], entry0['depends'])
+
         # Test reorg handling
         # First, the basics:
         self.generate(self.nodes[0], 1)
