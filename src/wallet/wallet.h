@@ -503,6 +503,13 @@ public:
      * <0  : conflicts with a transaction this deep in the blockchain
      *  0  : in memory pool, waiting to be included in a block
      * >=1 : this many blocks deep in the main chain
+     *
+     * Preconditions: it is only valid to call this function when the wallet is
+     * online and the block index is loaded. So this cannot be called by
+     * bitcoin-wallet tool code or by wallet migration code. If this is called
+     * without the wallet being online, it won't be able able to determine the
+     * the height of the last block processed, or the heights of blocks
+     * referenced in transaction, and might cause assert failures.
      */
     int GetTxDepthInMainChain(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool IsTxInMainChain(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)

@@ -3303,8 +3303,10 @@ int CWallet::GetTxDepthInMainChain(const CWalletTx& wtx) const
 {
     AssertLockHeld(cs_wallet);
     if (auto* conf = wtx.state<TxStateConfirmed>()) {
+        assert(conf->confirmed_block_height >= 0);
         return GetLastBlockHeight() - conf->confirmed_block_height + 1;
     } else if (auto* conf = wtx.state<TxStateConflicted>()) {
+        assert(conf->conflicting_block_height >= 0);
         return -1 * (GetLastBlockHeight() - conf->conflicting_block_height + 1);
     } else {
         return 0;
