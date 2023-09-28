@@ -72,7 +72,7 @@ static UniValue debug(const JSONRPCRequest& request)
         }
     }
 
-    return "Debug mode: " + LogInstance().LogCategoriesString();
+    return "Debug mode: " + LogInstance().LogCategoriesString(/*enabled_only=*/true);
 }
 
 static UniValue mnsync(const JSONRPCRequest& request)

@@ -158,11 +158,11 @@ namespace BCLog {
 
         bool WillLogCategory(LogFlags category) const;
         /** Returns a vector of the log categories */
-        std::vector<LogCategory> LogCategoriesList() const;
+        std::vector<LogCategory> LogCategoriesList(bool enabled_only = false) const;
         /** Returns a string with the log categories */
-        std::string LogCategoriesString() const
+        std::string LogCategoriesString(bool enabled_only = false) const
         {
-            return Join(LogCategoriesList(), ", ", [&](const LogCategory& i) { return i.category; });
+            return Join(LogCategoriesList(enabled_only), ", ", [&](const LogCategory& i) { return i.category; });
         };
 
         bool DefaultShrinkDebugFile() const;

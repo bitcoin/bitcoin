@@ -197,7 +197,7 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
     return false;
 }
 
-std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
+std::vector<LogCategory> BCLog::Logger::LogCategoriesList(bool enabled_only) const
 {
     std::vector<LogCategory> ret;
     for (const CLogCategoryDesc& category_desc : LogCategories) {
@@ -206,7 +206,9 @@ std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
             LogCategory catActive;
             catActive.category = category_desc.category;
             catActive.active = WillLogCategory(category_desc.flag);
-            ret.push_back(catActive);
+            if (!enabled_only || catActive.active) {
+                ret.push_back(catActive);
+            }
         }
     }
     return ret;
