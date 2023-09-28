@@ -2934,6 +2934,9 @@ static UniValue createwallet(const JSONRPCRequest& request)
         flags |= WALLET_FLAG_AVOID_REUSE;
     }
     if (!request.params[5].isNull() && request.params[5].get_bool()) {
+#ifndef USE_SQLITE
+        throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without sqlite support (required for descriptor wallets)");
+#endif
         flags |= WALLET_FLAG_DESCRIPTORS;
         warnings.emplace_back(Untranslated("Wallet is an experimental descriptor wallet"));
     }
