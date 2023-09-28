@@ -301,6 +301,8 @@ public:
 
     uint64_t CalculateDescendantMaximum(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    void CalculateAncestorData(const CTxMemPoolEntry& entry, size_t& ancestor_count, size_t& ancestor_size, CAmount& ancestor_fees) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
 
