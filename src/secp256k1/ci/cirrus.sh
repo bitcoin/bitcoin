@@ -109,8 +109,8 @@ fi
 # Rebuild precomputed files (if not cross-compiling).
 if [ -z "$HOST" ]
 then
-    make clean-precomp
-    make precomp
+    make clean-precomp clean-testvectors
+    make precomp testvectors
 fi
 
 # Check that no repo files have been modified by the build.

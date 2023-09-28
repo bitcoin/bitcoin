@@ -4452,6 +4452,68 @@ static void ecmult_const_mult_zero_one(void) {
     ge_equals_ge(&res2, &point);
 }
 
+static void ecmult_const_mult_xonly(void) {
+    int i;
+
+    /* Test correspondence between secp256k1_ecmult_const and secp256k1_ecmult_const_xonly. */
+    for (i = 0; i < 2*COUNT; ++i) {
+        secp256k1_ge base;
+        secp256k1_gej basej, resj;
+        secp256k1_fe n, d, resx, v;
+        secp256k1_scalar q;
+        int res;
+        /* Random base point. */
+        random_group_element_test(&base);
+        /* Random scalar to multiply it with. */
+        random_scalar_order_test(&q);
+        /* If i is odd, n=d*base.x for random non-zero d */
+        if (i & 1) {
+            do {
+                random_field_element_test(&d);
+            } while (secp256k1_fe_normalizes_to_zero_var(&d));
+            secp256k1_fe_mul(&n, &base.x, &d);
+        } else {
+            n = base.x;
+        }
+        /* Perform x-only multiplication. */
+        res = secp256k1_ecmult_const_xonly(&resx, &n, (i & 1) ? &d : NULL, &q, 256, i & 2);
+        CHECK(res);
+        /* Perform normal multiplication. */
+        secp256k1_gej_set_ge(&basej, &base);
+        secp256k1_ecmult(&resj, &basej, &q, NULL);
+        /* Check that resj's X coordinate corresponds with resx. */
+        secp256k1_fe_sqr(&v, &resj.z);
+        secp256k1_fe_mul(&v, &v, &resx);
+        CHECK(check_fe_equal(&v, &resj.x));
+    }
+
+    /* Test that secp256k1_ecmult_const_xonly correctly rejects X coordinates not on curve. */
+    for (i = 0; i < 2*COUNT; ++i) {
+        secp256k1_fe x, n, d, c, r;
+        int res;
+        secp256k1_scalar q;
+        random_scalar_order_test(&q);
+        /* Generate random X coordinate not on the curve. */
+        do {
+            random_field_element_test(&x);
+            secp256k1_fe_sqr(&c, &x);
+            secp256k1_fe_mul(&c, &c, &x);
+            secp256k1_fe_add(&c, &secp256k1_fe_const_b);
+        } while (secp256k1_fe_is_square_var(&c));
+        /* If i is odd, n=d*x for random non-zero d. */
+        if (i & 1) {
+            do {
+                random_field_element_test(&d);
+            } while (secp256k1_fe_normalizes_to_zero_var(&d));
+            secp256k1_fe_mul(&n, &x, &d);
+        } else {
+            n = x;
+        }
+        res = secp256k1_ecmult_const_xonly(&r, &n, (i & 1) ? &d : NULL, &q, 256, 0);
+        CHECK(res == 0);
+    }
+}
+
 static void ecmult_const_chain_multiply(void) {
     /* Check known result (randomly generated test problem from sage) */
     const secp256k1_scalar scalar = SECP256K1_SCALAR_CONST(
@@ -4483,6 +4545,7 @@ static void run_ecmult_const_tests(void) {
     ecmult_const_random_mult();
     ecmult_const_commutativity();
     ecmult_const_chain_multiply();
+    ecmult_const_mult_xonly();
 }
 
 typedef struct {
@@ -7306,6 +7369,44 @@ static void run_ecdsa_edge_cases(void) {
     test_ecdsa_edge_cases();
 }
 
+/** Wycheproof tests
+
+The tests check for known attacks (range checks in (r,s), arithmetic errors, malleability).
+*/
+static void test_ecdsa_wycheproof(void) {
+    #include "wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h"
+
+    int t;
+    for (t = 0; t < SECP256K1_ECDSA_WYCHEPROOF_NUMBER_TESTVECTORS; t++) {
+        secp256k1_ecdsa_signature signature;
+        secp256k1_sha256 hasher;
+        secp256k1_pubkey pubkey;
+        const unsigned char *msg, *sig, *pk;
+        unsigned char out[32] = {0};
+        int actual_verify = 0;
+
+        memset(&pubkey, 0, sizeof(pubkey));
+        pk = &wycheproof_ecdsa_public_keys[testvectors[t].pk_offset];
+        CHECK(secp256k1_ec_pubkey_parse(CTX, &pubkey, pk, 65) == 1);
+
+        secp256k1_sha256_initialize(&hasher);
+        msg = &wycheproof_ecdsa_messages[testvectors[t].msg_offset];
+        secp256k1_sha256_write(&hasher, msg, testvectors[t].msg_len);
+        secp256k1_sha256_finalize(&hasher, out);
+
+        sig = &wycheproof_ecdsa_signatures[testvectors[t].sig_offset];
+        if (secp256k1_ecdsa_signature_parse_der(CTX, &signature, sig, testvectors[t].sig_len) == 1) {
+            actual_verify = secp256k1_ecdsa_verify(CTX, (const secp256k1_ecdsa_signature *)&signature, out, &pubkey);
+        }
+        CHECK(testvectors[t].expected_verify == actual_verify);
+    }
+}
+
+/* Tests cases from Wycheproof test suite. */
+static void run_ecdsa_wycheproof(void) {
+    test_ecdsa_wycheproof();
+}
+
 #ifdef ENABLE_MODULE_ECDH
 # include "modules/ecdh/tests_impl.h"
 #endif
@@ -7638,6 +7739,7 @@ int main(int argc, char **argv) {
     run_ecdsa_sign_verify();
     run_ecdsa_end_to_end();
     run_ecdsa_edge_cases();
+    run_ecdsa_wycheproof();
 
 #ifdef ENABLE_MODULE_RECOVERY
     /* ECDSA pubkey recovery tests */
