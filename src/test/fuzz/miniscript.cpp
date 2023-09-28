@@ -257,10 +257,11 @@ using NodeRef = miniscript::NodeRef<CPubKey>;
 using Node = miniscript::Node<CPubKey>;
 using Type = miniscript::Type;
 using miniscript::operator"" _mst;
+using MsCtx = miniscript::MiniscriptContext;
 
 //! Construct a miniscript node as a shared_ptr.
 template<typename... Args> NodeRef MakeNodeRef(Args&&... args) {
-    return miniscript::MakeNodeRef<CPubKey>(miniscript::internal::NoDupCheck{}, std::forward<Args>(args)...);
+    return miniscript::MakeNodeRef<CPubKey>(miniscript::internal::NoDupCheck{}, MsCtx::P2WSH, std::forward<Args>(args)...);
 }
 
 /** Information about a yet to be constructed Miniscript node. */
