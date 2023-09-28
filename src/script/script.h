@@ -545,9 +545,10 @@ public:
     bool HasValidOps() const;
 
     /**
-     * Returns whether the script is guaranteed to fail at execution,
+     * Returns whether the scriptPubKey is guaranteed to fail at execution,
      * regardless of the initial stack. This allows outputs to be pruned
-     * instantly when entering the UTXO set.
+     * instantly when entering the UTXO set. Note that this is incorrect for
+     * witness scripts, which are not always limited by MAX_SCRIPT_SIZE.
      */
     bool IsUnspendable() const
     {
