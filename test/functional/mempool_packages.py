@@ -7,8 +7,9 @@
 from decimal import Decimal
 
 from test_framework.messages import (
-    DEFAULT_ANCESTOR_LIMIT,
     DEFAULT_DESCENDANT_LIMIT,
+    DEFAULT_DESCENDANT_LIMIT,
+    DEFAULT_CLUSTER_LIMIT,
 )
 from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
@@ -19,10 +20,7 @@ from test_framework.util import (
 from test_framework.wallet import MiniWallet
 
 # custom limits for node1
-CUSTOM_ANCESTOR_LIMIT = 5
 CUSTOM_DESCENDANT_LIMIT = 11
-assert CUSTOM_DESCENDANT_LIMIT >= CUSTOM_ANCESTOR_LIMIT
-
 
 class MempoolPackagesTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -33,7 +31,6 @@ class MempoolPackagesTest(BitcoinTestFramework):
             [
             ],
             [
-                "-limitancestorcount={}".format(CUSTOM_ANCESTOR_LIMIT),
                 "-limitdescendantcount={}".format(CUSTOM_DESCENDANT_LIMIT),
             ],
         ]
@@ -44,8 +41,8 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
         peer_inv_store = self.nodes[0].add_p2p_connection(P2PTxInvStore()) # keep track of invs
 
-        # DEFAULT_ANCESTOR_LIMIT transactions off a confirmed tx should be fine
-        chain = self.wallet.create_self_transfer_chain(chain_length=DEFAULT_ANCESTOR_LIMIT)
+        # DEFAULT_DESCENDANT_LIMIT transactions off a confirmed tx should be fine
+        chain = self.wallet.create_self_transfer_chain(chain_length=DEFAULT_DESCENDANT_LIMIT)
         witness_chain = [t["wtxid"] for t in chain]
         ancestor_vsize = 0
         ancestor_fees = Decimal(0)
@@ -59,16 +56,16 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # Otherwise, getrawmempool may be inconsistent with getmempoolentry if unbroadcast changes in between
         peer_inv_store.wait_for_broadcast(witness_chain)
 
-        # Check mempool has DEFAULT_ANCESTOR_LIMIT transactions in it, and descendant and ancestor
+        # Check mempool has DEFAULT_DESCENDANT_LIMIT transactions in it, and descendant and ancestor
         # count and fees should look correct
         mempool = self.nodes[0].getrawmempool(True)
-        assert_equal(len(mempool), DEFAULT_ANCESTOR_LIMIT)
+        assert_equal(len(mempool), DEFAULT_DESCENDANT_LIMIT)
         descendant_count = 1
         descendant_fees = 0
         descendant_vsize = 0
 
         assert_equal(ancestor_vsize, sum([mempool[tx]['vsize'] for tx in mempool]))
-        ancestor_count = DEFAULT_ANCESTOR_LIMIT
+        ancestor_count = DEFAULT_DESCENDANT_LIMIT
         assert_equal(ancestor_fees, sum([mempool[tx]['fees']['base'] for tx in mempool]))
 
         # Adding one more transaction on to the chain should fail.
@@ -193,9 +190,9 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # Check that node1's mempool is as expected (-> custom ancestor limit)
         mempool0 = self.nodes[0].getrawmempool(False)
         mempool1 = self.nodes[1].getrawmempool(False)
-        assert_equal(len(mempool1), CUSTOM_ANCESTOR_LIMIT)
+        assert_equal(len(mempool1), CUSTOM_DESCENDANT_LIMIT)
         assert set(mempool1).issubset(set(mempool0))
-        for tx in chain[:CUSTOM_ANCESTOR_LIMIT]:
+        for tx in chain[:CUSTOM_DESCENDANT_LIMIT]:
             assert tx in mempool1
             entry0 = self.nodes[0].getmempoolentry(tx)
             entry1 = self.nodes[1].getmempoolentry(tx)
@@ -240,7 +237,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # - parent tx for descendant test
         # - txs chained off parent tx (-> custom descendant limit)
         self.wait_until(lambda: len(self.nodes[1].getrawmempool()) ==
-                                CUSTOM_ANCESTOR_LIMIT + CUSTOM_DESCENDANT_LIMIT, timeout=10)
+                                2*CUSTOM_DESCENDANT_LIMIT, timeout=10)
         mempool0 = self.nodes[0].getrawmempool(False)
         mempool1 = self.nodes[1].getrawmempool(False)
         assert set(mempool1).issubset(set(mempool0))
