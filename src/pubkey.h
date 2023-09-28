@@ -11,6 +11,7 @@
 #include <serialize.h>
 #include <uint256.h>
 
+#include <array>
 #include <stdexcept>
 #include <vector>
 
