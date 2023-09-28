@@ -138,6 +138,7 @@ BITCOIN_CORE_H = \
   common/args.h \
   common/bloom.h \
   common/init.h \
+  common/message.h \
   common/run_command.h \
   common/url.h \
   compat/assumptions.h \
@@ -309,7 +310,6 @@ BITCOIN_CORE_H = \
   util/hasher.h \
   util/insert.h \
   util/macros.h \
-  util/message.h \
   util/moneystr.h \
   util/overflow.h \
   util/overloaded.h \
@@ -674,6 +674,7 @@ libbitcoin_common_a_SOURCES = \
   common/config.cpp \
   common/init.cpp \
   common/interfaces.cpp \
+  common/message.cpp \
   common/run_command.cpp \
   common/settings.cpp \
   common/system.cpp \
@@ -743,7 +744,6 @@ libbitcoin_util_a_SOURCES = \
   util/hasher.cpp \
   util/sock.cpp \
   util/syserror.cpp \
-  util/message.cpp \
   util/moneystr.cpp \
   util/rbf.cpp \
   util/readwritefile.cpp \
