@@ -57,6 +57,10 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
     ui->descriptor_checkbox->setEnabled(false);
     ui->descriptor_checkbox->setChecked(false);
 #endif
+#ifndef USE_BDB
+    ui->descriptor_checkbox->setEnabled(false);
+    ui->descriptor_checkbox->setChecked(true);
+#endif
 }
 
 CreateWalletDialog::~CreateWalletDialog()

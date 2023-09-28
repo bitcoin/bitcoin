@@ -2941,6 +2941,11 @@ static UniValue createwallet(const JSONRPCRequest& request)
         warnings.emplace_back(Untranslated("Wallet is an experimental descriptor wallet"));
     }
 
+#ifndef USE_BDB
+    if (!(flags & WALLET_FLAG_DESCRIPTORS)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without bdb support (required for legacy wallets)");
+    }
+#endif
     DatabaseOptions options;
     DatabaseStatus status;
     options.require_create = true;
