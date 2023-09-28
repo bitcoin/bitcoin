@@ -714,11 +714,12 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
     uint64_t checkTotal = 0;
     CAmount check_total_fee{0};
     uint64_t innerUsage = 0;
-    uint64_t prev_ancestor_count{0};
+
+    assert(!m_txgraph->IsOversized(TxGraph::Level::MAIN));
 
     CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(&active_coins_tip));
 
-    for (const auto& it : GetSortedDepthAndScore()) {
+    for (const auto& it : GetSortedScoreWithTopology()) {
         checkTotal += it->GetTxSize();
         check_total_fee += it->GetFee();
         innerUsage += it->DynamicMemoryUsage();
@@ -733,9 +734,10 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
                 assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
                 setParentCheck.insert(*it2);
             }
-            // We are iterating through the mempool entries sorted in order by ancestor count.
-            // All parents must have been checked before their children and their coins added to
-            // the mempoolDuplicate coins cache.
+            // We are iterating through the mempool entries sorted
+            // topologically and by mining score. All parents must have been
+            // checked before their children and their coins added to the
+            // mempoolDuplicate coins cache.
             assert(mempoolDuplicate.HaveCoin(txin.prevout));
             // Check whether its inputs are marked in mapNextTx.
             auto it3 = mapNextTx.find(txin.prevout);
@@ -765,9 +767,6 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
         assert(it->GetSizeWithAncestors() == nSizeCheck);
         assert(it->GetSigOpCostWithAncestors() == nSigOpCheck);
         assert(it->GetModFeesWithAncestors() == nFeesCheck);
-        // Sanity check: we are walking in ascending ancestor count order.
-        assert(prev_ancestor_count <= it->GetCountWithAncestors());
-        prev_ancestor_count = it->GetCountWithAncestors();
 
         // Check children against mapNextTx
         CTxMemPoolEntry::Children setChildrenCheck;
@@ -819,23 +818,7 @@ bool CTxMemPool::CompareMiningScoreWithTopology(const Wtxid& hasha, const Wtxid&
     return m_txgraph->CompareMainOrder(*i.value(), *j.value()) < 0;
 }
 
-namespace {
-class DepthAndScoreComparator
-{
-public:
-    bool operator()(const CTxMemPool::indexed_transaction_set::const_iterator& a, const CTxMemPool::indexed_transaction_set::const_iterator& b)
-    {
-        uint64_t counta = a->GetCountWithAncestors();
-        uint64_t countb = b->GetCountWithAncestors();
-        if (counta == countb) {
-            return CompareTxMemPoolEntryByScore()(*a, *b);
-        }
-        return counta < countb;
-    }
-};
-} // namespace
-
-std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::GetSortedDepthAndScore() const
+std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::GetSortedScoreWithTopology() const
 {
     std::vector<indexed_transaction_set::const_iterator> iters;
     AssertLockHeld(cs);
@@ -845,7 +828,9 @@ std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::Get
     for (indexed_transaction_set::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi) {
         iters.push_back(mi);
     }
-    std::sort(iters.begin(), iters.end(), DepthAndScoreComparator());
+    std::sort(iters.begin(), iters.end(), [this](const auto& a, const auto& b) EXCLUSIVE_LOCKS_REQUIRED(cs) noexcept {
+        return m_txgraph->CompareMainOrder(*a, *b) < 0;
+    });
     return iters;
 }
 
@@ -855,7 +840,7 @@ std::vector<CTxMemPoolEntryRef> CTxMemPool::entryAll() const
 
     std::vector<CTxMemPoolEntryRef> ret;
     ret.reserve(mapTx.size());
-    for (const auto& it : GetSortedDepthAndScore()) {
+    for (const auto& it : GetSortedScoreWithTopology()) {
         ret.emplace_back(*it);
     }
     return ret;
@@ -864,7 +849,7 @@ std::vector<CTxMemPoolEntryRef> CTxMemPool::entryAll() const
 std::vector<TxMempoolInfo> CTxMemPool::infoAll() const
 {
     LOCK(cs);
-    auto iters = GetSortedDepthAndScore();
+    auto iters = GetSortedScoreWithTopology();
 
     std::vector<TxMempoolInfo> ret;
     ret.reserve(mapTx.size());

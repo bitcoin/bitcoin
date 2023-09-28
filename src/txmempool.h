@@ -90,27 +90,6 @@ struct mempoolentry_wtxid
     }
 };
 
-/** \class CompareTxMemPoolEntryByScore
- *
- *  Sort by feerate of entry (fee/size) in descending order
- *  This is only used for transaction relay, so we use GetFee()
- *  instead of GetModifiedFee() to avoid leaking prioritization
- *  information via the sort order.
- */
-class CompareTxMemPoolEntryByScore
-{
-public:
-    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
-    {
-        FeeFrac f1(a.GetFee(), a.GetTxSize());
-        FeeFrac f2(b.GetFee(), b.GetTxSize());
-        if (FeeRateCompare(f1, f2) == 0) {
-            return b.GetTx().GetHash() < a.GetTx().GetHash();
-        }
-        return f1 > f2;
-    }
-};
-
 class CompareTxMemPoolEntryByEntryTime
 {
 public:
@@ -313,7 +292,7 @@ private:
     void UpdateParent(txiter entry, txiter parent, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void UpdateChild(txiter entry, txiter child, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    std::vector<indexed_transaction_set::const_iterator> GetSortedDepthAndScore() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::vector<indexed_transaction_set::const_iterator> GetSortedScoreWithTopology() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /**
      * Track locally submitted transactions to periodically retry initial broadcast.
