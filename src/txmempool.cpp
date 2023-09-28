@@ -1296,14 +1296,28 @@ uint64_t CTxMemPool::CalculateDescendantMaximum(txiter entry) const {
     return maximum;
 }
 
+void CTxMemPool::CalculateAncestorData(const CTxMemPoolEntry& entry, size_t& ancestor_count, size_t& ancestor_size, CAmount& ancestor_fees) const
+{
+    std::vector<TxEntry::TxEntryRef> ancestors = txgraph.GetAncestors({entry});
+
+    ancestor_count = ancestors.size();
+    ancestor_size = 0;
+    ancestor_fees = 0;
+    for (auto tx: ancestors) {
+        ancestor_size += tx.get().GetTxSize();
+        ancestor_fees += tx.get().GetModifiedFee();
+    }
+}
+
 void CTxMemPool::GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants, size_t* const ancestorsize, CAmount* const ancestorfees) const {
     LOCK(cs);
     auto it = mapTx.find(txid);
     ancestors = descendants = 0;
     if (it != mapTx.end()) {
-        ancestors = it->GetCountWithAncestors();
-        if (ancestorsize) *ancestorsize = it->GetSizeWithAncestors();
-        if (ancestorfees) *ancestorfees = it->GetModFeesWithAncestors();
+        size_t dummysize{0};
+        CAmount dummyfees{0};
+        CalculateAncestorData(*it, ancestors, ancestorsize ? *ancestorsize :
+                dummysize, ancestorfees ? *ancestorfees : dummyfees);
         descendants = CalculateDescendantMaximum(it);
     }
 }
