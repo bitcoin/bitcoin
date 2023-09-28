@@ -1204,14 +1204,29 @@ uint64_t CTxMemPool::CalculateDescendantMaximum(txiter entry) const {
     return maximum;
 }
 
+void CTxMemPool::CalculateAncestorData(const CTxMemPoolEntry& entry, size_t& ancestor_count, size_t& ancestor_size, CAmount& ancestor_fees) const
+{
+    auto ancestors = m_txgraph->GetAncestors(entry, /*main_only=*/true);
+
+    ancestor_count = ancestors.size();
+    ancestor_size = 0;
+    ancestor_fees = 0;
+    for (auto tx: ancestors) {
+        const CTxMemPoolEntry& anc = static_cast<const CTxMemPoolEntry&>(*tx);
+        ancestor_size += anc.GetTxSize();
+        ancestor_fees += anc.GetModifiedFee();
+    }
+}
+
 void CTxMemPool::GetTransactionAncestry(const Txid& txid, size_t& ancestors, size_t& descendants, size_t* const ancestorsize, CAmount* const ancestorfees) const {
     LOCK(cs);
     auto it = mapTx.find(txid);
     ancestors = descendants = 0;
     if (it != mapTx.end()) {
-        ancestors = it->GetCountWithAncestors();
-        if (ancestorsize) *ancestorsize = it->GetSizeWithAncestors();
-        if (ancestorfees) *ancestorfees = it->GetModFeesWithAncestors();
+        size_t dummysize{0};
+        CAmount dummyfees{0};
+        CalculateAncestorData(*it, ancestors, ancestorsize ? *ancestorsize :
+                dummysize, ancestorfees ? *ancestorfees : dummyfees);
         descendants = CalculateDescendantMaximum(it);
     }
 }
