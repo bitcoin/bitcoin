@@ -68,3 +68,10 @@ CI_EXEC "${BASE_ROOT_DIR}/ci/test/01_base_install.sh"
 CI_EXEC git config --global --add safe.directory \"*\"
 
 CI_EXEC mkdir -p "${BINS_SCRATCH_DIR}"
+
+CI_EXEC "${BASE_ROOT_DIR}/ci/test/06_script_b.sh"
+
+if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
+  echo "Stop and remove CI container by ID"
+  docker container kill "${CI_CONTAINER_ID}"
+fi

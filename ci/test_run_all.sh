@@ -7,11 +7,5 @@
 export LC_ALL=C.UTF-8
 
 set -o errexit; source ./ci/test/00_setup_env.sh
-set -o errexit; source "./ci/test/02_run_container.sh"
 set -o errexit
-CI_EXEC "${BASE_ROOT_DIR}/ci/test/06_script_b.sh"
-
-if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
-  echo "Stop and remove CI container by ID"
-  docker container kill "${CI_CONTAINER_ID}"
-fi
+"./ci/test/02_run_container.sh"
