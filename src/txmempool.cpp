@@ -55,7 +55,7 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
 }
 
 void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap& cachedDescendants,
-                                      const std::set<Txid>& setExclude, std::set<Txid>& descendants_to_remove)
+                                      const std::set<Txid>& setExclude)
 {
     CTxMemPoolEntry::Children stageEntries, descendants;
     stageEntries = updateIt->GetMemPoolChildrenConst();
@@ -94,12 +94,6 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap& cachedDescendan
             mapTx.modify(mapTx.iterator_to(descendant), [=](CTxMemPoolEntry& e) {
               e.UpdateAncestorState(updateIt->GetTxSize(), updateIt->GetModifiedFee(), 1, updateIt->GetSigOpCost());
             });
-            // Don't directly remove the transaction here -- doing so would
-            // invalidate iterators in cachedDescendants. Mark it for removal
-            // by inserting into descendants_to_remove.
-            if (descendant.GetCountWithAncestors() > uint64_t(m_opts.limits.ancestor_count) || descendant.GetSizeWithAncestors() > m_opts.limits.ancestor_size_vbytes) {
-                descendants_to_remove.insert(descendant.GetTx().GetHash());
-            }
         }
     }
     mapTx.modify(updateIt, [=](CTxMemPoolEntry& e) { e.UpdateDescendantState(modifySize, modifyFee, modifyCount); });
@@ -150,7 +144,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToU
                 m_txgraph->AddDependency(/*parent=*/*it, /*child=*/*childIter);
             }
         } // release epoch guard for UpdateForDescendants
-        UpdateForDescendants(it, mapMemPoolDescendantsToUpdate, setAlreadyIncluded, descendants_to_remove);
+        UpdateForDescendants(it, mapMemPoolDescendantsToUpdate, setAlreadyIncluded);
     }
 
     auto txs_to_remove = m_txgraph->Trim(); // Enforce cluster size limits.
@@ -174,7 +168,6 @@ util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateAncestorsAndCheckLimit
     CTxMemPoolEntry::Parents& staged_ancestors,
     const Limits& limits) const
 {
-    int64_t totalSizeWithAncestors = entry_size;
     setEntries ancestors;
 
     while (!staged_ancestors.empty()) {
@@ -183,14 +176,11 @@ util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateAncestorsAndCheckLimit
 
         ancestors.insert(stageit);
         staged_ancestors.erase(stage);
-        totalSizeWithAncestors += stageit->GetTxSize();
 
         if (stageit->GetSizeWithDescendants() + entry_size > limits.descendant_size_vbytes) {
             return util::Error{Untranslated(strprintf("exceeds descendant size limit for tx %s [limit: %u]", stageit->GetTx().GetHash().ToString(), limits.descendant_size_vbytes))};
         } else if (stageit->GetCountWithDescendants() + entry_count > static_cast<uint64_t>(limits.descendant_count)) {
             return util::Error{Untranslated(strprintf("too many descendants for tx %s [limit: %u]", stageit->GetTx().GetHash().ToString(), limits.descendant_count))};
-        } else if (totalSizeWithAncestors > limits.ancestor_size_vbytes) {
-            return util::Error{Untranslated(strprintf("exceeds ancestor size limit [limit: %u]", limits.ancestor_size_vbytes))};
         }
 
         const CTxMemPoolEntry::Parents& parents = stageit->GetMemPoolParentsConst();
@@ -200,9 +190,6 @@ util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateAncestorsAndCheckLimit
             // If this is a new ancestor, add it.
             if (ancestors.count(parent_it) == 0) {
                 staged_ancestors.insert(parent);
-            }
-            if (staged_ancestors.size() + ancestors.size() + entry_count > static_cast<uint64_t>(limits.ancestor_count)) {
-                return util::Error{Untranslated(strprintf("too many unconfirmed ancestors [limit: %u]", limits.ancestor_count))};
             }
         }
     }
@@ -216,12 +203,8 @@ util::Result<void> CTxMemPool::CheckPackageLimits(const Package& package,
     size_t pack_count = package.size();
 
     // Package itself is busting mempool limits; should be rejected even if no staged_ancestors exist
-    if (pack_count > static_cast<uint64_t>(m_opts.limits.ancestor_count)) {
-        return util::Error{Untranslated(strprintf("package count %u exceeds ancestor count limit [limit: %u]", pack_count, m_opts.limits.ancestor_count))};
-    } else if (pack_count > static_cast<uint64_t>(m_opts.limits.descendant_count)) {
+    if (pack_count > static_cast<uint64_t>(m_opts.limits.descendant_count)) {
         return util::Error{Untranslated(strprintf("package count %u exceeds descendant count limit [limit: %u]", pack_count, m_opts.limits.descendant_count))};
-    } else if (total_vsize > m_opts.limits.ancestor_size_vbytes) {
-        return util::Error{Untranslated(strprintf("package size %u exceeds ancestor size limit [limit: %u]", total_vsize, m_opts.limits.ancestor_size_vbytes))};
     } else if (total_vsize > m_opts.limits.descendant_size_vbytes) {
         return util::Error{Untranslated(strprintf("package size %u exceeds descendant size limit [limit: %u]", total_vsize, m_opts.limits.descendant_size_vbytes))};
     }
@@ -232,9 +215,6 @@ util::Result<void> CTxMemPool::CheckPackageLimits(const Package& package,
             std::optional<txiter> piter = GetIter(input.prevout.hash);
             if (piter) {
                 staged_ancestors.insert(**piter);
-                if (staged_ancestors.size() + package.size() > static_cast<uint64_t>(m_opts.limits.ancestor_count)) {
-                    return util::Error{Untranslated(strprintf("too many unconfirmed parents [limit: %u]", m_opts.limits.ancestor_count))};
-                }
             }
         }
     }
@@ -265,9 +245,6 @@ util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateMemPoolAncestors(
             std::optional<txiter> piter = GetIter(tx.vin[i].prevout.hash);
             if (piter) {
                 staged_ancestors.insert(**piter);
-                if (staged_ancestors.size() + 1 > static_cast<uint64_t>(limits.ancestor_count)) {
-                    return util::Error{Untranslated(strprintf("too many unconfirmed parents [limit: %u]", limits.ancestor_count))};
-                }
             }
         }
     } else {

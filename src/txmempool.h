@@ -647,8 +647,6 @@ private:
      *      be removed for violation of ancestor limits.
      * @post if updateIt has any non-excluded descendants, cachedDescendants has
      *       a new cache line for updateIt.
-     * @post descendants_to_remove has a new entry for any descendant which exceeded
-     *       ancestor limits relative to updateIt.
      *
      * @param[in] updateIt the entry to update for its descendants
      * @param[in,out] cachedDescendants a cache where each line corresponds to all
@@ -659,12 +657,9 @@ private:
      *     that must not be accounted for (because any descendants in setExclude
      *     were added to the mempool after the transaction being updated and hence
      *     their state is already reflected in the parent state).
-     * @param[out] descendants_to_remove Populated with the txids of entries that
-     *     exceed ancestor limits. It's the responsibility of the caller to
-     *     removeRecursive them.
      */
     void UpdateForDescendants(txiter updateIt, cacheMap& cachedDescendants,
-                              const std::set<Txid>& setExclude, std::set<Txid>& descendants_to_remove) EXCLUSIVE_LOCKS_REQUIRED(cs);
+                              const std::set<Txid>& setExclude) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Update ancestors of hash to add/remove it as a descendant transaction. */
     void UpdateAncestorsOf(bool add, txiter hash, setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Set ancestor state for an entry */
