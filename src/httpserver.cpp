@@ -27,7 +27,6 @@
 #include <cstdlib>
 #include <deque>
 #include <memory>
-#include <numeric>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -192,13 +191,6 @@ public:
         LOCK(m_mutex);
         auto it{m_tracker.find(Assert(conn))};
         if (it != m_tracker.end()) RemoveConnectionInternal(it);
-    }
-
-    size_t CountActiveRequests() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
-    {
-        LOCK(m_mutex);
-        return std::accumulate(m_tracker.begin(), m_tracker.end(), size_t(0),
-            [](size_t acc_count, const auto& pair) { return acc_count + pair.second; });
     }
     size_t CountActiveConnections() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
@@ -530,8 +522,8 @@ void StopHTTPServer()
     }
     boundSockets.clear();
     {
-        if (g_requests.CountActiveConnections() != 0) {
-            LogPrint(BCLog::HTTP, "Waiting for %d requests to stop HTTP server\n", g_requests.CountActiveRequests());
+        if (const auto n_connections{g_requests.CountActiveConnections()}; n_connections != 0) {
+            LogPrint(BCLog::HTTP, "Waiting for %d connections to stop HTTP server\n", n_connections);
         }
         g_requests.WaitUntilEmpty();
     }
