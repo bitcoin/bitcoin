@@ -861,11 +861,9 @@ private:
      *  - m_recent_rejects
      *  - m_recent_rejects_reconsiderable (if include_reconsiderable = true)
      *  - m_recent_confirmed_transactions
-     * Also responsible for resetting m_recent_rejects and m_recent_rejects_reconsiderable if the
-     * chain tip has changed.
      *  */
     bool AlreadyHaveTx(const GenTxid& gtxid, bool include_reconsiderable)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_recent_confirmed_transactions_mutex, m_tx_download_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_recent_confirmed_transactions_mutex, m_tx_download_mutex);
 
     /**
      * Filter for transactions that were recently rejected by the mempool.
@@ -902,9 +900,6 @@ private:
      * Memory used: 1.3 MB
      */
     CRollingBloomFilter m_recent_rejects GUARDED_BY(m_tx_download_mutex){120'000, 0.000'001};
-    /** Block hash of chain tip the last time we reset m_recent_rejects and
-     * m_recent_rejects_reconsiderable. */
-    uint256 hashRecentRejectsChainTip GUARDED_BY(m_tx_download_mutex);
 
     /**
      * Filter for:
@@ -2088,7 +2083,6 @@ void PeerManagerImpl::ActiveTipChange(const CBlockIndex* new_tip, bool is_ibd)
         // see them again.
         m_recent_rejects.reset();
         m_recent_rejects_reconsiderable.reset();
-        hashRecentRejectsChainTip = new_tip->GetBlockHash();
     }
 }
 
@@ -2292,22 +2286,7 @@ void PeerManagerImpl::BlockChecked(const CBlock& block, const BlockValidationSta
 
 bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_reconsiderable)
 {
-    AssertLockHeld(::cs_main);
     AssertLockHeld(m_tx_download_mutex);
-
-    // Since recent_rejects is updated whenever the tip changes, and hashRecentRejectsChainTip is
-    // not set until the first time it is called outside of IBD, hashRecentRejectsChainTip should
-    // always be up to date with the current chain tip.
-    if (!Assume(hashRecentRejectsChainTip == uint256::ZERO ||
-                hashRecentRejectsChainTip == m_chainman.ActiveChain().Tip()->GetBlockHash())) {
-        // If the chain tip has changed previously rejected transactions
-        // might be now valid, e.g. due to a nLockTime'd tx becoming valid,
-        // or a double-spend. Reset the rejects filter and give those
-        // txs a second chance.
-        hashRecentRejectsChainTip = m_chainman.ActiveChain().Tip()->GetBlockHash();
-        m_recent_rejects.reset();
-        m_recent_rejects_reconsiderable.reset();
-    }
 
     const uint256& hash = gtxid.GetHash();
 
