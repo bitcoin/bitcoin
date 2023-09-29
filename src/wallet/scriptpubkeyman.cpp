@@ -2275,7 +2275,7 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
     }
 }
 
-bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_key, OutputType addr_type, bool internal)
+bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal)
 {
     LOCK(cs_desc_man);
     assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
@@ -2336,9 +2336,6 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     m_wallet_descriptor = w_desc;
 
     // Store the master private key, and descriptor
-    WalletBatch batch(m_storage.GetDatabase());
-    if (!batch.TxnBegin()) throw std::runtime_error(std::string(__func__) + ": cannot start db transaction");
-
     if (!AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey())) {
         throw std::runtime_error(std::string(__func__) + ": writing descriptor master private key failed");
     }
@@ -2350,8 +2347,6 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     TopUpWithDB(batch);
 
     m_storage.UnsetBlankWalletFlag(batch);
-
-    if (!batch.TxnCommit()) throw std::runtime_error(std::string(__func__) + ": error committing db transaction");
     return true;
 }
 
