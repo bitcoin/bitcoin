@@ -266,17 +266,20 @@ std::string RequestMethodString(HTTPRequest::RequestMethod m)
 /** HTTP request callback */
 static void http_request_cb(struct evhttp_request* req, void* arg)
 {
+    evhttp_connection* conn{evhttp_request_get_connection(req)};
     // Track active requests
     {
         g_requests.AddRequest(req);
         evhttp_request_set_on_complete_cb(req, [](struct evhttp_request* req, void*) {
             g_requests.RemoveRequest(req);
         }, nullptr);
+        evhttp_connection_set_closecb(conn, [](evhttp_connection* conn, void* arg) {
+            g_requests.RemoveConnection(conn);
+        }, nullptr);
     }
 
     // Disable reading to work around a libevent bug, fixed in 2.2.0.
     if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02020001) {
-        evhttp_connection* conn = evhttp_request_get_connection(req);
         if (conn) {
             bufferevent* bev = evhttp_connection_get_bufferevent(conn);
             if (bev) {
