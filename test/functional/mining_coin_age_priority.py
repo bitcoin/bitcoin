@@ -41,24 +41,17 @@ def assert_approximate(a, b):
 BTC = Decimal('100000000')
 
 class PriorityTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
 
     def set_test_params(self):
         self.num_nodes = 3
         self.testmsg_num = 0
 
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-        parser.add_argument("--gbt", dest="test_gbt", default=False, action="store_true",
-                            help="Test priorities used by GBT")
-
     def setup_nodes(self):
-        ppopt = []
-        if self.options.test_gbt:
-            ppopt.append('-printpriority')
-
         self.extra_args = [
             ['-blockmaxsize=0'],
-            ['-blockprioritysize=1000000', '-blockmaxsize=1000000'] + ppopt,
+            ['-blockprioritysize=1000000', '-blockmaxsize=1000000', '-printpriority'],
             ['-blockmaxsize=0'],
         ]
 
@@ -67,19 +60,18 @@ class PriorityTest(BitcoinTestFramework):
     def assert_prio(self, txid, starting, current):
         node = self.nodes[1]
 
-        if self.options.test_gbt:
-            tmpl = node.getblocktemplate({'rules':('segwit',)})
-            tmplentry = None
-            for tx in tmpl['transactions']:
-                if tx['txid'] == txid:
-                    tmplentry = tx
-                    break
-            # GBT does not expose starting priority, so we don't check that
-            assert_approximate(tmplentry['priority'], current)
-        else:
-            mempoolentry = node.getrawmempool(True)[txid]
-            assert_approximate(mempoolentry['startingpriority'], starting)
-            assert_approximate(mempoolentry['currentpriority'], current)
+        tmpl = node.getblocktemplate({'rules':('segwit',)})
+        tmplentry = None
+        for tx in tmpl['transactions']:
+            if tx['txid'] == txid:
+                tmplentry = tx
+                break
+        # GBT does not expose starting priority, so we don't check that
+        assert_approximate(tmplentry['priority'], current)
+
+        mempoolentry = node.getrawmempool(True)[txid]
+        assert_approximate(mempoolentry['startingpriority'], starting)
+        assert_approximate(mempoolentry['currentpriority'], current)
 
     def testmsg(self, msg):
         self.testmsg_num += 1
