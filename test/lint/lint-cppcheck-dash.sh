@@ -27,17 +27,9 @@ ENABLED_CHECKS=(
 
 IGNORED_WARNINGS=(
     "src/bls/bls.h:.* Struct 'CBLSIdImplicit' has a constructor with 1 argument that is not explicit."
-    "src/llmq/dkgsessionmgr.h:.* warning: struct member 'ContributionsCacheEntry::entryTime' is never used."
-    "src/llmq/instantsend.h:.* warning: struct member 'NonLockedTxInfo::pindexMined' is never used."
     "src/rpc/masternode.cpp:.*:21: warning: Consider using std::copy algorithm instead of a raw loop." # UniValue doesn't support std::copy
-    "src/spork.h:.* warning: struct member 'CSporkDef::defaultValue' is never used."
-    "src/test/dip0020opcodes_tests.cpp:.* warning: There is an unknown macro here somewhere. Configuration is required. If BOOST_FIXTURE_TEST_SUITE is a macro then please configure it."
-    "src/ctpl_stl.h:.*22: warning: Dereferencing '_f' after it is deallocated / released"
     "src/cachemultimap.h:.*: warning: Variable 'mapIt' can be declared as reference to const"
     "src/evo/simplifiedmns.cpp:.*:20: warning: Consider using std::copy algorithm instead of a raw loop."
-#    "src/llmq/snapshot.cpp:.*:17: warning: Consider using std::copy algorithm instead of a raw loop."
-#    "src/llmq/snapshot.cpp:.*:18: warning: Consider using std::copy algorithm instead of a raw loop."
-
 # General catchall, for some reason any value named 'hash' is viewed as never used.
     "Variable 'hash' is assigned a value that is never used."
 
