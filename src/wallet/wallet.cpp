@@ -1702,9 +1702,15 @@ bool CWallet::CanGetAddresses(bool internal) const
 
 void CWallet::SetWalletFlag(uint64_t flags)
 {
+    WalletBatch batch(GetDatabase());
+    return SetWalletFlagWithDB(batch, flags);
+}
+
+void CWallet::SetWalletFlagWithDB(WalletBatch& batch, uint64_t flags)
+{
     LOCK(cs_wallet);
     m_wallet_flags |= flags;
-    if (!WalletBatch(GetDatabase()).WriteWalletFlags(m_wallet_flags))
+    if (!batch.WriteWalletFlags(m_wallet_flags))
         throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
 }
 
