@@ -88,9 +88,9 @@ public:
 
     std::string ToString() const;
 
-    void ToJson(UniValue& obj) const
+    [[nodiscard]] UniValue ToJson() const
     {
-        obj.clear();
+        UniValue obj;
         obj.setObject();
         obj.pushKV("version", nVersion);
         obj.pushKV("type", ToUnderlying(nType));
@@ -112,6 +112,7 @@ public:
             obj.pushKV("platformHTTPPort", platformHTTPPort);
         }
         obj.pushKV("inputsHash", inputsHash.ToString());
+        return obj;
     }
 
     bool IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const;
@@ -174,9 +175,9 @@ public:
 
     std::string ToString() const;
 
-    void ToJson(UniValue& obj) const
+    [[nodiscard]] UniValue ToJson() const
     {
-        obj.clear();
+        UniValue obj;
         obj.setObject();
         obj.pushKV("version", nVersion);
         obj.pushKV("type", ToUnderlying(nType));
@@ -192,6 +193,7 @@ public:
             obj.pushKV("platformHTTPPort", platformHTTPPort);
         }
         obj.pushKV("inputsHash", inputsHash.ToString());
+        return obj;
     }
 
     bool IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const;
@@ -244,9 +246,9 @@ public:
 
     std::string ToString() const;
 
-    void ToJson(UniValue& obj) const
+    [[nodiscard]] UniValue ToJson() const
     {
-        obj.clear();
+        UniValue obj;
         obj.setObject();
         obj.pushKV("version", nVersion);
         obj.pushKV("proTxHash", proTxHash.ToString());
@@ -257,6 +259,7 @@ public:
         }
         obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
         obj.pushKV("inputsHash", inputsHash.ToString());
+        return obj;
     }
 
     bool IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const;
@@ -312,14 +315,15 @@ public:
 
     std::string ToString() const;
 
-    void ToJson(UniValue& obj) const
+    [[nodiscard]] UniValue ToJson() const
     {
-        obj.clear();
+        UniValue obj;
         obj.setObject();
         obj.pushKV("version", nVersion);
         obj.pushKV("proTxHash", proTxHash.ToString());
         obj.pushKV("reason", (int)nReason);
         obj.pushKV("inputsHash", inputsHash.ToString());
+        return obj;
     }
 
     bool IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const;

@@ -264,67 +264,40 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     }
 
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
-        CProRegTx proTx;
-        if (GetTxPayload(tx, proTx)) {
-            UniValue obj;
-            proTx.ToJson(obj);
-            entry.pushKV("proRegTx", obj);
+        if (CProRegTx proTx; GetTxPayload(tx, proTx)) {
+            entry.pushKV("proRegTx", proTx.ToJson());
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
-        CProUpServTx proTx;
-        if (GetTxPayload(tx, proTx)) {
-            UniValue obj;
-            proTx.ToJson(obj);
-            entry.pushKV("proUpServTx", obj);
+        if (CProUpServTx proTx; GetTxPayload(tx, proTx)) {
+            entry.pushKV("proUpServTx", proTx.ToJson());
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
-        CProUpRegTx proTx;
-        if (GetTxPayload(tx, proTx)) {
-            UniValue obj;
-            proTx.ToJson(obj);
-            entry.pushKV("proUpRegTx", obj);
+        if (CProUpRegTx proTx; GetTxPayload(tx, proTx)) {
+            entry.pushKV("proUpRegTx", proTx.ToJson());
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
-        CProUpRevTx proTx;
-        if (GetTxPayload(tx, proTx)) {
-            UniValue obj;
-            proTx.ToJson(obj);
-            entry.pushKV("proUpRevTx", obj);
+        if (CProUpRevTx proTx; GetTxPayload(tx, proTx)) {
+            entry.pushKV("proUpRevTx", proTx.ToJson());
         }
     } else if (tx.nType == TRANSACTION_COINBASE) {
-        CCbTx cbTx;
-        if (GetTxPayload(tx, cbTx)) {
-            UniValue obj;
-            cbTx.ToJson(obj);
-            entry.pushKV("cbTx", obj);
+        if (CCbTx cbTx; GetTxPayload(tx, cbTx)) {
+            entry.pushKV("cbTx", cbTx.ToJson());
         }
     } else if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
-        llmq::CFinalCommitmentTxPayload qcTx;
-        if (GetTxPayload(tx, qcTx)) {
-            UniValue obj;
-            qcTx.ToJson(obj);
-            entry.pushKV("qcTx", obj);
+        if (llmq::CFinalCommitmentTxPayload qcTx; GetTxPayload(tx, qcTx)) {
+            entry.pushKV("qcTx", qcTx.ToJson());
         }
     } else if (tx.nType == TRANSACTION_MNHF_SIGNAL) {
-        MNHFTxPayload mnhfTx;
-        if (GetTxPayload(tx, mnhfTx)) {
-            UniValue obj;
-            mnhfTx.ToJson(obj);
-            entry.pushKV("mnhfTx", obj);
+        if (MNHFTxPayload mnhfTx; GetTxPayload(tx, mnhfTx)) {
+            entry.pushKV("mnhfTx", mnhfTx.ToJson());
         }
     } else if (tx.nType == TRANSACTION_ASSET_LOCK) {
-        CAssetLockPayload assetLockTx;
-        if (!GetTxPayload(tx, assetLockTx)) {
-            UniValue obj;
-            assetLockTx.ToJson(obj);
-            entry.pushKV("assetLockTx", obj);
+        if (CAssetLockPayload assetLockTx; !GetTxPayload(tx, assetLockTx)) {
+            entry.pushKV("assetLockTx", assetLockTx.ToJson());
         }
     } else if (tx.nType == TRANSACTION_ASSET_UNLOCK) {
-        CAssetUnlockPayload assetUnlockTx;
-        if (!GetTxPayload(tx, assetUnlockTx)) {
-            UniValue obj;
-            assetUnlockTx.ToJson(obj);
-            entry.pushKV("assetUnlockTx", obj);
+        if (CAssetUnlockPayload assetUnlockTx; !GetTxPayload(tx, assetUnlockTx)) {
+            entry.pushKV("assetUnlockTx", assetUnlockTx.ToJson());
         }
     }
 

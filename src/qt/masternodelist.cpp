@@ -360,8 +360,7 @@ void MasternodeList::extraInfoDIP3_clicked()
         return;
     }
 
-    UniValue json(UniValue::VOBJ);
-    dmn->ToJson(json);
+    UniValue json = dmn->ToJson();
 
     // Title of popup window
     QString strWindowtitle = tr("Additional information for DIP3 Masternode %1").arg(QString::fromStdString(dmn->proTxHash.ToString()));

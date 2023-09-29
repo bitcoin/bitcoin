@@ -82,7 +82,7 @@ public:
         }
     }
 
-    void ToJson(UniValue& obj) const;
+    [[nodiscard]] UniValue ToJson() const;
 };
 
 class CGetQuorumRotationInfo
@@ -204,7 +204,7 @@ public:
     CQuorumRotationInfo() = default;
     CQuorumRotationInfo(const CQuorumRotationInfo& dmn) {}
 
-    void ToJson(UniValue& obj) const;
+    [[nodiscard]] UniValue ToJson() const;
 };
 
 bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotationInfo& response,

@@ -242,9 +242,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     if (!block.vtx[0]->vExtraPayload.empty()) {
         CCbTx cbTx;
         if (GetTxPayload(block.vtx[0]->vExtraPayload, cbTx)) {
-            UniValue cbTxObj;
-            cbTx.ToJson(cbTxObj);
-            result.pushKV("cbTx", cbTxObj);
+            result.pushKV("cbTx", cbTx.ToJson());
         }
     }
     result.pushKV("time", block.GetBlockTime());

@@ -66,9 +66,9 @@ std::string CSimplifiedMNListEntry::ToString() const
                      nVersion, ToUnderlying(nType), proRegTxHash.ToString(), confirmedHash.ToString(), service.ToString(false), pubKeyOperator.ToString(), EncodeDestination(PKHash(keyIDVoting)), isValid, payoutAddress, operatorPayoutAddress, platformHTTPPort, platformNodeID.ToString());
 }
 
-void CSimplifiedMNListEntry::ToJson(UniValue& obj, bool extended) const
+UniValue CSimplifiedMNListEntry::ToJson(bool extended) const
 {
-    obj.clear();
+    UniValue obj;
     obj.setObject();
     obj.pushKV("nVersion", nVersion);
     obj.pushKV("nType", ToUnderlying(nType));
@@ -83,15 +83,16 @@ void CSimplifiedMNListEntry::ToJson(UniValue& obj, bool extended) const
         obj.pushKV("platformNodeID", platformNodeID.ToString());
     }
 
-    if (!extended) return;
-
-    CTxDestination dest;
-    if (ExtractDestination(scriptPayout, dest)) {
-        obj.pushKV("payoutAddress", EncodeDestination(dest));
+    if (extended) {
+        CTxDestination dest;
+        if (ExtractDestination(scriptPayout, dest)) {
+            obj.pushKV("payoutAddress", EncodeDestination(dest));
+        }
+        if (ExtractDestination(scriptOperatorPayout, dest)) {
+            obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
+        }
     }
-    if (ExtractDestination(scriptOperatorPayout, dest)) {
-        obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
-    }
+    return obj;
 }
 
 // TODO: Invistigate if we can delete this constructor
@@ -226,8 +227,9 @@ bool CSimplifiedMNListDiff::BuildQuorumChainlockInfo(const CBlockIndex* blockInd
     return true;
 }
 
-void CSimplifiedMNListDiff::ToJson(UniValue& obj, bool extended) const
+UniValue CSimplifiedMNListDiff::ToJson(bool extended) const
 {
+    UniValue obj;
     obj.setObject();
 
     obj.pushKV("nVersion", nVersion);
@@ -248,9 +250,7 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj, bool extended) const
 
     UniValue mnListArr(UniValue::VARR);
     for (const auto& e : mnList) {
-        UniValue eObj;
-        e.ToJson(eObj, extended);
-        mnListArr.push_back(eObj);
+        mnListArr.push_back(e.ToJson(extended));
     }
     obj.pushKV("mnList", mnListArr);
 
@@ -265,9 +265,7 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj, bool extended) const
 
     UniValue newQuorumsArr(UniValue::VARR);
     for (const auto& e : newQuorums) {
-        UniValue eObj;
-        e.ToJson(eObj);
-        newQuorumsArr.push_back(eObj);
+        newQuorumsArr.push_back(e.ToJson());
     }
     obj.pushKV("newQuorums", newQuorumsArr);
 
@@ -290,6 +288,7 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj, bool extended) const
         quorumsCLSigsArr.push_back(j);
     }
     obj.pushKV("quorumsCLSigs", quorumsCLSigsArr);
+    return obj;
 }
 
 CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& from, const CDeterministicMNList& to, bool extended)

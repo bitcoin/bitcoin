@@ -46,9 +46,9 @@ public:
 
     std::string ToString() const;
 
-    void ToJson(UniValue& obj) const
+    [[nodiscard]] UniValue ToJson() const
     {
-        obj.clear();
+        UniValue obj;
         obj.setObject();
         obj.pushKV("version", int(nVersion));
         UniValue outputs;
@@ -57,6 +57,7 @@ public:
             outputs.push_back(out.ToString());
         }
         obj.pushKV("creditOutputs", outputs);
+        return obj;
     }
 
     // getters
@@ -114,9 +115,9 @@ public:
 
     std::string ToString() const;
 
-    void ToJson(UniValue& obj) const
+    [[nodiscard]] UniValue ToJson() const
     {
-        obj.clear();
+        UniValue obj;
         obj.setObject();
         obj.pushKV("version", int(nVersion));
         obj.pushKV("index", int(index));
@@ -124,6 +125,7 @@ public:
         obj.pushKV("requestedHeight", int(requestedHeight));
         obj.pushKV("quorumHash", quorumHash.ToString());
         obj.pushKV("quorumSig", quorumSig.ToString());
+        return obj;
     }
 
     bool VerifySig(const uint256& msgHash, const CBlockIndex* pindexTip, TxValidationState& state) const;

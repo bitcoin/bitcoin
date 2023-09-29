@@ -31,9 +31,9 @@ std::string CDeterministicMNState::ToString() const
                      EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(), EncodeDestination(PKHash(keyIDVoting)), addr.ToStringIPPort(false), payoutAddress, operatorPayoutAddress);
 }
 
-void CDeterministicMNState::ToJson(UniValue& obj, MnType nType) const
+UniValue CDeterministicMNState::ToJson(MnType nType) const
 {
-    obj.clear();
+    UniValue obj;
     obj.setObject();
     obj.pushKV("version", nVersion);
     obj.pushKV("service", addr.ToStringIPPort(false));
@@ -60,11 +60,12 @@ void CDeterministicMNState::ToJson(UniValue& obj, MnType nType) const
     if (ExtractDestination(scriptOperatorPayout, dest)) {
         obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
     }
+    return obj;
 }
 
-void CDeterministicMNStateDiff::ToJson(UniValue& obj, MnType nType) const
+UniValue CDeterministicMNStateDiff::ToJson(MnType nType) const
 {
-    obj.clear();
+    UniValue obj;
     obj.setObject();
     if (fields & Field_nVersion) {
         obj.pushKV("version", state.nVersion);
@@ -125,4 +126,5 @@ void CDeterministicMNStateDiff::ToJson(UniValue& obj, MnType nType) const
             obj.pushKV("platformHTTPPort", state.platformHTTPPort);
         }
     }
+    return obj;
 }

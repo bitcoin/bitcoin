@@ -283,7 +283,7 @@ public:
 
 public:
     std::string ToString() const;
-    void ToJson(UniValue& obj, MnType nType) const;
+    [[nodiscard]] UniValue ToJson(MnType nType) const;
 };
 
 class CDeterministicMNStateDiff
@@ -347,7 +347,7 @@ public:
         if (fields & Field_pubKeyOperator) { state.nVersion = b.nVersion; fields |= Field_nVersion; }
     }
 
-    void ToJson(UniValue& obj, MnType nType) const;
+    [[nodiscard]] UniValue ToJson(MnType nType) const;
 
     SERIALIZE_METHODS(CDeterministicMNStateDiff, obj)
     {

@@ -91,7 +91,7 @@ public:
     uint256 CalcHash() const;
 
     std::string ToString() const;
-    void ToJson(UniValue& obj, bool extended = false) const;
+    [[nodiscard]] UniValue ToJson(bool extended = false) const;
 };
 
 class CSimplifiedMNList
@@ -164,7 +164,7 @@ public:
                           const llmq::CQuorumBlockProcessor& quorum_block_processor);
     bool BuildQuorumChainlockInfo(const CBlockIndex* blockIndex);
 
-    void ToJson(UniValue& obj, bool extended = false) const;
+    [[nodiscard]] UniValue ToJson(bool extended = false) const;
 };
 
 bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet,

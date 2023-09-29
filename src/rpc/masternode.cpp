@@ -268,9 +268,7 @@ static UniValue masternode_status(const JSONRPCRequest& request)
         mnObj.pushKV("type", std::string(GetMnType(dmn->nType).description));
         mnObj.pushKV("collateralHash", dmn->collateralOutpoint.hash.ToString());
         mnObj.pushKV("collateralIndex", (int)dmn->collateralOutpoint.n);
-        UniValue stateObj;
-        dmn->pdmnState->ToJson(stateObj, dmn->nType);
-        mnObj.pushKV("dmnState", stateObj);
+        mnObj.pushKV("dmnState", dmn->pdmnState->ToJson(dmn->nType));
     }
     mnObj.pushKV("state", activeMasternodeManager->GetStateString());
     mnObj.pushKV("status", activeMasternodeManager->GetStatus());

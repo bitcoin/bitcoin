@@ -58,9 +58,9 @@ public:
 
     std::string ToString() const;
 
-    void ToJson(UniValue& obj) const
+    [[nodiscard]] UniValue ToJson() const
     {
-        obj.clear();
+        UniValue obj;
         obj.setObject();
         obj.pushKV("version", (int)nVersion);
         obj.pushKV("height", nHeight);
@@ -73,6 +73,7 @@ public:
                 obj.pushKV("creditPoolBalance", ValueFromAmount(creditPoolBalance));
             }
         }
+        return obj;
     }
 };
 

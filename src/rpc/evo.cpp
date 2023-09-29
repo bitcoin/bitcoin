@@ -1273,9 +1273,7 @@ static UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMN& dmn,
         return dmn.proTxHash.ToString();
     }
 
-    UniValue o(UniValue::VOBJ);
-
-    dmn.ToJson(o);
+    UniValue o = dmn.ToJson();
 
     int confirmations = GetUTXOConfirmations(dmn.collateralOutpoint);
     o.pushKV("confirmations", confirmations);
@@ -1489,9 +1487,7 @@ static UniValue protx_diff(const JSONRPCRequest& request, const ChainstateManage
         throw std::runtime_error(strError);
     }
 
-    UniValue ret;
-    mnListDiff.ToJson(ret, extended);
-    return ret;
+    return mnListDiff.ToJson(extended);
 }
 
 static void protx_listdiff_help(const JSONRPCRequest& request)
@@ -1553,9 +1549,7 @@ static UniValue protx_listdiff(const JSONRPCRequest& request, const ChainstateMa
 
     UniValue jaddedMNs(UniValue::VARR);
     for(const auto& mn : mnDiff.addedMNs) {
-        UniValue obj;
-        mn->ToJson(obj);
-        jaddedMNs.push_back(obj);
+        jaddedMNs.push_back(mn->ToJson());
     }
     ret.pushKV("addedMNs", jaddedMNs);
 
@@ -1569,10 +1563,8 @@ static UniValue protx_listdiff(const JSONRPCRequest& request, const ChainstateMa
     UniValue jupdatedMNs(UniValue::VARR);
     for(const auto& [internal_id, stateDiff] : mnDiff.updatedMNs) {
         auto dmn = baseBlockMNList.GetMNByInternalId(internal_id);
-        UniValue s(UniValue::VOBJ);
-        stateDiff.ToJson(s, dmn->nType);
         UniValue obj(UniValue::VOBJ);
-        obj.pushKV(dmn->proTxHash.ToString(), s);
+        obj.pushKV(dmn->proTxHash.ToString(), stateDiff.ToJson(dmn->nType));
         jupdatedMNs.push_back(obj);
     }
     ret.pushKV("updatedMNs", jupdatedMNs);

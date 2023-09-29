@@ -34,13 +34,15 @@ public:
 
     std::string ToString() const;
 
-    void ToJson(UniValue& obj) const
+    [[nodiscard]] UniValue ToJson() const
     {
+        UniValue obj;
         obj.clear();
         obj.setObject();
         obj.pushKV("versionBit", (int)versionBit);
         obj.pushKV("quorumHash", quorumHash.ToString());
         obj.pushKV("sig", sig.ToString());
+        return obj;
     }
 };
 
@@ -60,14 +62,13 @@ public:
 
     std::string ToString() const;
 
-    void ToJson(UniValue& obj) const
+    [[nodiscard]] UniValue ToJson() const
     {
+        UniValue obj;
         obj.setObject();
         obj.pushKV("version", (int)nVersion);
-
-        UniValue mnhfObj;
-        signal.ToJson(mnhfObj);
-        obj.pushKV("signal", mnhfObj);
+        obj.pushKV("signal", signal.ToJson());
+        return obj;
     }
 };
 

@@ -349,9 +349,7 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request, const Chainstate
         std::optional<std::vector<llmq::CFinalCommitment>> vfqc = llmq_ctx.quorum_block_processor->GetMineableCommitments(llmq_params, tipHeight);
         if (vfqc.has_value()) {
             for (const auto& fqc : vfqc.value()) {
-                UniValue obj(UniValue::VOBJ);
-                fqc.ToJson(obj);
-                minableCommitments.push_back(obj);
+                minableCommitments.push_back(fqc.ToJson());
             }
         }
     }
@@ -780,9 +778,7 @@ static UniValue quorum_rotationinfo(const JSONRPCRequest& request, const LLMQCon
         throw JSONRPCError(RPC_INVALID_REQUEST, strError);
     }
 
-    UniValue ret(UniValue::VOBJ);
-    quorumRotationInfoRet.ToJson(ret);
-    return ret;
+    return quorumRotationInfoRet.ToJson();
 }
 
 

@@ -40,13 +40,10 @@ std::string CDeterministicMN::ToString() const
     return strprintf("CDeterministicMN(proTxHash=%s, collateralOutpoint=%s, nOperatorReward=%f, state=%s", proTxHash.ToString(), collateralOutpoint.ToStringShort(), (double)nOperatorReward / 100, pdmnState->ToString());
 }
 
-void CDeterministicMN::ToJson(UniValue& obj) const
+UniValue CDeterministicMN::ToJson() const
 {
-    obj.clear();
+    UniValue obj;
     obj.setObject();
-
-    UniValue stateObj;
-    pdmnState->ToJson(stateObj, nType);
 
     obj.pushKV("type", std::string(GetMnType(nType).description));
     obj.pushKV("proTxHash", proTxHash.ToString());
@@ -62,7 +59,8 @@ void CDeterministicMN::ToJson(UniValue& obj) const
     }
 
     obj.pushKV("operatorReward", (double)nOperatorReward / 100);
-    obj.pushKV("state", stateObj);
+    obj.pushKV("state", pdmnState->ToJson(nType));
+    return obj;
 }
 
 bool CDeterministicMNList::IsMNValid(const uint256& proTxHash) const

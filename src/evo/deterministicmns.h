@@ -117,7 +117,7 @@ public:
     [[nodiscard]] uint64_t GetInternalId() const;
 
     [[nodiscard]] std::string ToString() const;
-    void ToJson(UniValue& obj) const;
+    [[nodiscard]] UniValue ToJson() const;
 };
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 

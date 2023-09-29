@@ -111,8 +111,9 @@ public:
         return true;
     }
 
-    void ToJson(UniValue& obj) const
+    [[nodiscard]] UniValue ToJson() const
     {
+        UniValue obj;
         obj.setObject();
         obj.pushKV("version", int{nVersion});
         obj.pushKV("llmqType", ToUnderlying(llmqType));
@@ -126,6 +127,7 @@ public:
         obj.pushKV("quorumVvecHash", quorumVvecHash.ToString());
         obj.pushKV("quorumSig", quorumSig.ToString(nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION || nVersion == LEGACY_BLS_INDEXED_QUORUM_VERSION));
         obj.pushKV("membersSig", membersSig.ToString(nVersion == LEGACY_BLS_NON_INDEXED_QUORUM_VERSION || nVersion == LEGACY_BLS_INDEXED_QUORUM_VERSION));
+        return obj;
     }
 
 private:
@@ -156,15 +158,14 @@ public:
         READWRITE(obj.nVersion, obj.nHeight, obj.commitment);
     }
 
-    void ToJson(UniValue& obj) const
+    [[nodiscard]] UniValue ToJson() const
     {
+        UniValue obj;
         obj.setObject();
         obj.pushKV("version", int{nVersion});
         obj.pushKV("height", int(nHeight));
-
-        UniValue qcObj;
-        commitment.ToJson(qcObj);
-        obj.pushKV("commitment", qcObj);
+        obj.pushKV("commitment", commitment.ToJson());
+        return obj;
     }
 };
 
