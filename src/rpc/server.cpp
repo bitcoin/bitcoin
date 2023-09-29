@@ -261,6 +261,10 @@ static RPCHelpMan getrpcwhitelist()
                         {
                             {RPCResult::Type::NONE, "rpc", "Key is name of RPC method, value is null"},
                         }},
+                        {RPCResult::Type::OBJ_DYN, "wallets", "List of wallets that the user is allowed to access",
+                        {
+                            {RPCResult::Type::NONE, "wallet_name", "Key is name of wallet, value is null"},
+                        }},
                     }
                 },
                 RPCExamples{
