@@ -68,7 +68,7 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
 
     def test_validateaddress(self):
         # Invalid deprecated address_type field
-        assert_raises_rpc_error(-5, "Unknown address type 'nonsense'", self.nodes[0].validateaddress, address=BECH32_INVALID_SIZE, address_type='nonsense')
+        assert_raises_rpc_error(-8, "Unknown address type 'nonsense'", self.nodes[0].validateaddress, address=BECH32_INVALID_SIZE, address_type='nonsense')
         for inv_addrtype in (7, True, {}, [], ['bech32']):
             assert_raises_rpc_error(-3, "is not of expected type string", self.nodes[0].validateaddress, address=BECH32_INVALID_SIZE, address_type=inv_addrtype)
 

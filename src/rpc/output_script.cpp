@@ -66,7 +66,7 @@ static RPCHelpMan validateaddress()
             // Merely validate address_type is an actual address type, so we don't silently ignore potential future parameters
             if (!request.params[1].isNull()) {
                 if (!ParseOutputType(request.params[1].get_str())) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[1].get_str()));
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown address type '%s'", request.params[1].get_str()));
                 }
             }
 
