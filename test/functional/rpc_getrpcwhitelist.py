@@ -66,5 +66,9 @@ class RPCWhitelistTest(BitcoinTestFramework):
         result = call_rpc(self.nodes[0], self.settings_forbidden, 'getrpcwhitelist')
         assert_equal(result['status'], 403)
 
+        # should return a long list of allowed RPC methods (ie, all of them)
+        result = self.nodes[0].getrpcwhitelist()
+        assert len(result['methods']) > 10
+
 if __name__ == "__main__":
     RPCWhitelistTest(__file__).main()

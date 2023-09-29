@@ -35,6 +35,6 @@ void StopREST();
 
 /** Returns a collection of whitelisted RPCs for the given user
  */
-const std::set<std::string>& GetWhitelistedRpcs(const std::string& user_name);
+std::set<std::string> GetWhitelistedRpcs(const std::string& user_name);
 
 #endif // BITCOIN_HTTPRPC_H
