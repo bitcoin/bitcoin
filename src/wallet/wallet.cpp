@@ -3754,21 +3754,28 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
     if (!batch.TxnCommit()) throw std::runtime_error("Error: cannot commit db transaction for descriptors setup");
 }
 
+void CWallet::SetupOwnDescriptorScriptPubKeyMans()
+{
+    AssertLockHeld(cs_wallet);
+    assert(!IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
+    // Make a seed
+    CKey seed_key = GenerateRandomKey();
+    CPubKey seed = seed_key.GetPubKey();
+    assert(seed_key.VerifyPubKey(seed));
+
+    // Get the extended key
+    CExtKey master_key;
+    master_key.SetSeed(seed_key);
+
+    SetupDescriptorScriptPubKeyMans(master_key);
+}
+
 void CWallet::SetupDescriptorScriptPubKeyMans()
 {
     AssertLockHeld(cs_wallet);
 
     if (!IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
-        // Make a seed
-        CKey seed_key = GenerateRandomKey();
-        CPubKey seed = seed_key.GetPubKey();
-        assert(seed_key.VerifyPubKey(seed));
-
-        // Get the extended key
-        CExtKey master_key;
-        master_key.SetSeed(seed_key);
-
-        SetupDescriptorScriptPubKeyMans(master_key);
+        SetupOwnDescriptorScriptPubKeyMans();
     } else {
         ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
 
@@ -4102,7 +4109,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
             SetupDescriptorScriptPubKeyMans(data.master_key);
         } else {
             // Setup with a new seed if we don't.
-            SetupDescriptorScriptPubKeyMans();
+            SetupOwnDescriptorScriptPubKeyMans();
         }
     }
 
