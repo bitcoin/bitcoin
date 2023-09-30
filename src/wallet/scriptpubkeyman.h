@@ -559,6 +559,7 @@ public:
 
 class DescriptorScriptPubKeyMan : public ScriptPubKeyMan
 {
+    friend class LegacyScriptPubKeyMan;
 private:
     using ScriptPubKeyMap = std::map<CScript, int32_t>; // Map of scripts to descriptor range index
     using PubKeyMap = std::map<CPubKey, int32_t>; // Map of pubkeys involved in scripts to descriptor range index
