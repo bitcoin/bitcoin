@@ -94,11 +94,7 @@ bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
         if (out.scriptPubKey.size() < 5) continue;
         if (out.scriptPubKey[0] != OP_RETURN) continue;
         // FIXME: The rest should probably be serialised, but neither BIP300 nor its reference implementation does that
-        static constexpr uint8_t BIP300_HEADER_SIDECHAIN_PROPOSE[] = {0xd5, 0xe0, 0xc4, 0xaf};  // n.b. 20 sigops
-        static constexpr uint8_t BIP300_HEADER_SIDECHAIN_ACK[]     = {0xd6, 0xe1, 0xc5, 0xbf};
-        static constexpr uint8_t BIP300_HEADER_WITHDRAW_PROPOSE[]  = {0xd4, 0x5a, 0xa9, 0x43};  // n.b. 67 byte push followed by only 32 bytes
-        static constexpr uint8_t BIP300_HEADER_WITHDRAW_ACK[]      = {0xd7, 0x7d, 0x17, 0x76};  // n.b. 23-byte push followed by variable bytes
-        if (std::equal(&out.scriptPubKey[1], &out.scriptPubKey[5], BIP300_HEADER_WITHDRAW_ACK)) {
+        if (out.scriptPubKey.IsDrivechainWithdrawProposalACK()) {
             const uint8_t data_format = out.scriptPubKey[6];
             // TODO: Implement formats 3+? Or at least validate
                 // NOTE data_format 2 changed to 0 FIXME
@@ -132,7 +128,7 @@ bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
                     return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-withdraw-ack-nonexistent");
                 }
             }
-        } else if (std::equal(&out.scriptPubKey[1], &out.scriptPubKey[5], BIP300_HEADER_WITHDRAW_PROPOSE)) {
+        } else if (out.scriptPubKey.IsDrivechainWithdrawProposal()) {
             if (out.scriptPubKey.size() != 0x26) {
                 // "M3 is ignored if it does not parse"
                 continue;
@@ -180,7 +176,7 @@ bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
 
             withdraw_proposal_list.resize(withdraw_proposal_list.size() + bundle_hash.size());
             memcpy(&withdraw_proposal_list.data()[withdraw_proposal_list.size() - bundle_hash.size()], bundle_hash.data(), bundle_hash.size());  // FIXME: C++ify
-        } else if (std::equal(&out.scriptPubKey[1], &out.scriptPubKey[5], BIP300_HEADER_SIDECHAIN_ACK)) {
+        } else if (out.scriptPubKey.IsDrivechainProposalACK()) {
             if (saw_sidechain_acks) {
                 // FIXME: shouldn't it be possible to ACK multiple proposals for different sidechain ids??
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-sidechain-ack-multiple");
@@ -196,7 +192,7 @@ bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
             } catch (...) {  // TODO: make this explicitly for a non-existent entry
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-sidechain-ack-unknown");
             }
-        } else if (std::equal(&out.scriptPubKey[1], &out.scriptPubKey[5], BIP300_HEADER_SIDECHAIN_PROPOSE)) {
+        } else if (out.scriptPubKey.IsDrivechainProposal()) {
             if (proposed_a_sidechain) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-sidechain-propose-multiple");
             }

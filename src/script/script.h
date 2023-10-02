@@ -538,6 +538,11 @@ public:
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
     bool IsDrivechain() const;
 
+    bool IsDrivechainProposal() const;
+    bool IsDrivechainProposalACK() const;
+    bool IsDrivechainWithdrawProposal() const;
+    bool IsDrivechainWithdrawProposalACK() const;
+
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;
     bool IsPushOnly() const;

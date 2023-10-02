@@ -245,6 +245,66 @@ bool CScript::IsDrivechain() const
             (*this)[3] == OP_TRUE);
 }
 
+bool CScript::IsDrivechainWithdrawProposal() const
+{
+    if (this->size() < 5)
+        return false;
+
+    if ((*this)[0] != OP_RETURN ||
+            (*this)[1] != 0xD4 ||
+            (*this)[2] != 0x5A ||
+            (*this)[3] != 0xA9 ||
+            (*this)[4] != 0x43)
+        return false;
+
+    return true;
+}
+
+bool CScript::IsDrivechainProposal() const
+{
+    if (this->size() < 5)
+        return false;
+
+    if ((*this)[0] != OP_RETURN ||
+            (*this)[1] != 0xD5 ||
+            (*this)[2] != 0xE0 ||
+            (*this)[3] != 0xC4 ||
+            (*this)[4] != 0xAF)
+        return false;
+
+    return true;
+}
+
+bool CScript::IsDrivechainProposalACK() const
+{
+    if (this->size() < 5)
+        return false;
+
+    if ((*this)[0] != OP_RETURN ||
+            (*this)[1] != 0xD6 ||
+            (*this)[2] != 0xE1 ||
+            (*this)[3] != 0xC5 ||
+            (*this)[4] != 0xBF)
+        return false;
+
+    return true;
+}
+
+bool CScript::IsDrivechainWithdrawProposalACK() const
+{
+    if (this->size() < 5)
+        return false;
+
+    if ((*this)[0] != OP_RETURN ||
+            (*this)[1] != 0xD7 ||
+            (*this)[2] != 0x7D ||
+            (*this)[3] != 0x17 ||
+            (*this)[4] != 0x76)
+        return false;
+
+    return true;
+}
+
 bool CScript::IsPushOnly(const_iterator pc) const
 {
     while (pc < end())
