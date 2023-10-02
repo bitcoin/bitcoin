@@ -159,21 +159,21 @@ bool CKey::Check(const unsigned char *vch) {
 }
 
 void CKey::MakeNewKey(bool fCompressedIn) {
+    MakeKeyData();
     do {
-        GetStrongRandBytes(keydata);
-    } while (!Check(keydata.data()));
-    fValid = true;
+        GetStrongRandBytes(*keydata);
+    } while (!Check(keydata->data()));
     fCompressed = fCompressedIn;
 }
 
 bool CKey::Negate()
 {
-    assert(fValid);
-    return secp256k1_ec_seckey_negate(secp256k1_context_sign, keydata.data());
+    assert(keydata);
+    return secp256k1_ec_seckey_negate(secp256k1_context_sign, keydata->data());
 }
 
 CPrivKey CKey::GetPrivKey() const {
-    assert(fValid);
+    assert(keydata);
     CPrivKey seckey;
     int ret;
     size_t seckeylen;
@@ -186,7 +186,7 @@ CPrivKey CKey::GetPrivKey() const {
 }
 
 CPubKey CKey::GetPubKey() const {
-    assert(fValid);
+    assert(keydata);
     secp256k1_pubkey pubkey;
     size_t clen = CPubKey::SIZE;
     CPubKey result;
@@ -212,7 +212,7 @@ bool SigHasLowR(const secp256k1_ecdsa_signature* sig)
 }
 
 bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool grind, uint32_t test_case) const {
-    if (!fValid)
+    if (!keydata)
         return false;
     vchSig.resize(CPubKey::SIGNATURE_SIZE);
     size_t nSigLen = CPubKey::SIGNATURE_SIZE;
@@ -253,7 +253,7 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
 }
 
 bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) const {
-    if (!fValid)
+    if (!keydata)
         return false;
     vchSig.resize(CPubKey::COMPACT_SIGNATURE_SIZE);
     int rec = -1;
@@ -301,10 +301,12 @@ bool CKey::SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint2
 }
 
 bool CKey::Load(const CPrivKey &seckey, const CPubKey &vchPubKey, bool fSkipCheck=false) {
-    if (!ec_seckey_import_der(secp256k1_context_sign, (unsigned char*)begin(), seckey.data(), seckey.size()))
+    MakeKeyData();
+    if (!ec_seckey_import_der(secp256k1_context_sign, (unsigned char*)begin(), seckey.data(), seckey.size())) {
+        ClearKeyData();
         return false;
+    }
     fCompressed = vchPubKey.IsCompressed();
-    fValid = true;
 
     if (fSkipCheck)
         return true;
@@ -325,22 +327,21 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
         BIP32Hash(cc, nChild, 0, begin(), vout.data());
     }
     memcpy(ccChild.begin(), vout.data()+32, 32);
-    memcpy((unsigned char*)keyChild.begin(), begin(), 32);
+    keyChild.Set(begin(), begin() + 32, true);
     bool ret = secp256k1_ec_seckey_tweak_add(secp256k1_context_sign, (unsigned char*)keyChild.begin(), vout.data());
-    keyChild.fCompressed = true;
-    keyChild.fValid = ret;
+    if (!ret) keyChild.ClearKeyData();
     return ret;
 }
 
 EllSwiftPubKey CKey::EllSwiftCreate(Span<const std::byte> ent32) const
 {
-    assert(fValid);
+    assert(keydata);
     assert(ent32.size() == 32);
     std::array<std::byte, EllSwiftPubKey::size()> encoded_pubkey;
 
     auto success = secp256k1_ellswift_create(secp256k1_context_sign,
                                              UCharCast(encoded_pubkey.data()),
-                                             keydata.data(),
+                                             keydata->data(),
                                              UCharCast(ent32.data()));
 
     // Should always succeed for valid keys (asserted above).
@@ -350,7 +351,7 @@ EllSwiftPubKey CKey::EllSwiftCreate(Span<const std::byte> ent32) const
 
 ECDHSecret CKey::ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift, const EllSwiftPubKey& our_ellswift, bool initiating) const
 {
-    assert(fValid);
+    assert(keydata);
 
     ECDHSecret output;
     // BIP324 uses the initiator as party A, and the responder as party B. Remap the inputs
@@ -359,7 +360,7 @@ ECDHSecret CKey::ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift, c
                                           UCharCast(output.data()),
                                           UCharCast(initiating ? our_ellswift.data() : their_ellswift.data()),
                                           UCharCast(initiating ? their_ellswift.data() : our_ellswift.data()),
-                                          keydata.data(),
+                                          keydata->data(),
                                           initiating ? 0 : 1,
                                           secp256k1_ellswift_xdh_hash_function_bip324,
                                           nullptr);
