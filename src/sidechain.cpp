@@ -17,7 +17,7 @@
 #include <cstdint>
 
 void CreateDBUndoData(CTxUndo &txundo, const uint8_t type, const COutPoint& record_id, const Coin& encoded_data) {
-    Assert(record_id.n <= COutPoint::MAX_INDEX);
+    Assert(record_id.n > COutPoint::MAX_INDEX);
     Coin& undo = txundo.vprevout.emplace_back();
     undo = encoded_data;
     CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
