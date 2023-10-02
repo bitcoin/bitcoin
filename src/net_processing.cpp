@@ -697,6 +697,8 @@ private:
 
     FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
+    FeeFilterRounder m_fee_filter_rounder GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
+
     const CChainParams& m_chainparams;
     CConnman& m_connman;
     AddrMan& m_addrman;
@@ -1811,6 +1813,7 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
                                  BanMan* banman, ChainstateManager& chainman,
                                  CTxMemPool& pool, Options opts)
     : m_rng{opts.deterministic_rng},
+      m_fee_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}},
       m_chainparams(chainman.GetParams()),
       m_connman(connman),
       m_addrman(addrman),
@@ -5338,14 +5341,13 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, Peer& peer, std::chrono::mi
     if (pto.IsBlockOnlyConn()) return;
 
     CAmount currentFilter = m_mempool.GetMinFee().GetFeePerK();
-    static FeeFilterRounder g_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}};
 
     if (m_chainman.IsInitialBlockDownload()) {
         // Received tx-inv messages are discarded when the active
         // chainstate is in IBD, so tell the peer to not send them.
         currentFilter = MAX_MONEY;
     } else {
-        static const CAmount MAX_FILTER{g_filter_rounder.round(MAX_MONEY)};
+        static const CAmount MAX_FILTER{m_fee_filter_rounder.round(MAX_MONEY)};
         if (peer.m_fee_filter_sent == MAX_FILTER) {
             // Send the current filter if we sent MAX_FILTER previously
             // and made it out of IBD.
@@ -5353,7 +5355,7 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, Peer& peer, std::chrono::mi
         }
     }
     if (current_time > peer.m_next_send_feefilter) {
-        CAmount filterToSend = g_filter_rounder.round(currentFilter);
+        CAmount filterToSend = m_fee_filter_rounder.round(currentFilter);
         // We always have a fee filter of at least the min relay fee
         filterToSend = std::max(filterToSend, m_mempool.m_min_relay_feerate.GetFeePerK());
         if (filterToSend != peer.m_fee_filter_sent) {
