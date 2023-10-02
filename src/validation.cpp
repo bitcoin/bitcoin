@@ -68,8 +68,8 @@
 #include <numeric>
 #include <optional>
 #include <string>
-#include <utility>
 #include <tuple>
+#include <utility>
 
 using kernel::CCoinsStats;
 using kernel::CoinStatsHashType;
@@ -5367,7 +5367,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     // ActivateSnapshot(), but is done so that we avoid doing the long work of staging
     // a snapshot that isn't actually usable.
     if (WITH_LOCK(::cs_main, return !CBlockIndexWorkComparator()(ActiveTip(), snapshot_start_block))) {
-        LogPrintf("[snapshot] activation failed - height does not exceed active chainstate\n");
+        LogPrintf("[snapshot] activation failed - work does not exceed active chainstate\n");
         return false;
     }
 
