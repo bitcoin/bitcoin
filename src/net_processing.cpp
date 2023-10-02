@@ -695,6 +695,8 @@ private:
     /** Send `feefilter` message. */
     void MaybeSendFeefilter(CNode& node, Peer& peer, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
+    FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
+
     const CChainParams& m_chainparams;
     CConnman& m_connman;
     AddrMan& m_addrman;
@@ -1808,7 +1810,8 @@ std::unique_ptr<PeerManager> PeerManager::make(CConnman& connman, AddrMan& addrm
 PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
                                  BanMan* banman, ChainstateManager& chainman,
                                  CTxMemPool& pool, Options opts)
-    : m_chainparams(chainman.GetParams()),
+    : m_rng{opts.deterministic_rng},
+      m_chainparams(chainman.GetParams()),
       m_connman(connman),
       m_addrman(addrman),
       m_banman(banman),
