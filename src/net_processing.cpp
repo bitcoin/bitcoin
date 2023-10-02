@@ -1813,7 +1813,7 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
                                  BanMan* banman, ChainstateManager& chainman,
                                  CTxMemPool& pool, Options opts)
     : m_rng{opts.deterministic_rng},
-      m_fee_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}},
+      m_fee_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}, m_rng},
       m_chainparams(chainman.GetParams()),
       m_connman(connman),
       m_addrman(addrman),

@@ -1054,8 +1054,9 @@ static std::set<double> MakeFeeSet(const CFeeRate& min_incremental_fee,
     return fee_set;
 }
 
-FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
-    : m_fee_set{MakeFeeSet(minIncrementalFee, MAX_FILTER_FEERATE, FEE_FILTER_SPACING)}
+FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee, FastRandomContext& rng)
+    : m_fee_set{MakeFeeSet(minIncrementalFee, MAX_FILTER_FEERATE, FEE_FILTER_SPACING)},
+      insecure_rand{rng}
 {
 }
 
