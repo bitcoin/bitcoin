@@ -77,6 +77,38 @@ std::set<int> ParseSubtractFeeFromOutputs(const UniValue& subtract_fee_from_outp
     return set_sffo;
 }
 
+std::vector<CRecipient> ParseOutputs(const UniValue& outputs_in, const UniValue& options)
+{
+    if (outputs_in.isNull()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output argument must be non-null");
+    }
+
+    const bool outputs_is_obj = outputs_in.isObject();
+    UniValue outputs = outputs_is_obj ? outputs_in.get_obj() : outputs_in.get_array();
+
+    if (!outputs_is_obj) {
+        // Translate array of key-value pairs into dict
+        UniValue outputs_dict = UniValue(UniValue::VOBJ);
+        for (size_t i = 0; i < outputs.size(); ++i) {
+            const UniValue& output = outputs[i];
+            if (!output.isObject()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, key-value pair not an object as expected");
+            }
+            if (output.size() != 1) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, key-value pair must contain exactly one key");
+            }
+            outputs_dict.pushKVs(output);
+        }
+        outputs = std::move(outputs_dict);
+    }
+    std::set<int> set_sffo;
+    if (options.exists("subtractFeeFromOutputs") || options.exists("subtract_fee_from_outputs") ) {
+        UniValue sffo = (options.exists("subtract_fee_from_outputs") ? options["subtract_fee_from_outputs"] : options["subtractFeeFromOutputs"]).get_array();
+        set_sffo = ParseSubtractFeeFromOutputs(sffo, outputs.getKeys());
+    }
+    return ParseRecipients(outputs, set_sffo);
+}
+
 static void InterpretFeeEstimationInstructions(const UniValue& conf_target, const UniValue& estimate_mode, const UniValue& fee_rate, UniValue& options)
 {
     if (options.exists("conf_target") || options.exists("estimate_mode")) {
