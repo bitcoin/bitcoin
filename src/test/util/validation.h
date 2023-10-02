@@ -19,7 +19,11 @@ struct TestChainstateManager : public ChainstateManager {
 class ValidationInterfaceTest
 {
 public:
-    static void BlockConnected(CValidationInterface& obj, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex);
+    static void BlockConnected(
+        ChainstateRole role,
+        CValidationInterface& obj,
+        const std::shared_ptr<const CBlock>& block,
+        const CBlockIndex* pindex);
 };
 
 #endif // BITCOIN_TEST_UTIL_VALIDATION_H
