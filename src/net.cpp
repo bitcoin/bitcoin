@@ -855,7 +855,7 @@ bool V1Transport::SetMessageToSend(CSerializedNetMsg& msg) noexcept
 
     // serialize header
     m_header_to_send.clear();
-    CVectorWriter{SER_NETWORK, INIT_PROTO_VERSION, m_header_to_send, 0, hdr};
+    CVectorWriter{INIT_PROTO_VERSION, m_header_to_send, 0, hdr};
 
     // update state
     m_message_to_send = std::move(msg);

@@ -51,7 +51,7 @@ FUZZ_TARGET(golomb_rice)
         for (int i = 0; i < n; ++i) {
             elements.insert(ConsumeRandomLengthByteVector(fuzzed_data_provider, 16));
         }
-        CVectorWriter stream(SER_NETWORK, 0, golomb_rice_data, 0);
+        CVectorWriter stream{0, golomb_rice_data, 0};
         WriteCompactSize(stream, static_cast<uint32_t>(elements.size()));
         BitStreamWriter<CVectorWriter> bitwriter(stream);
         if (!elements.empty()) {
@@ -68,7 +68,7 @@ FUZZ_TARGET(golomb_rice)
 
     std::vector<uint64_t> decoded_deltas;
     {
-        SpanReader stream{SER_NETWORK, 0, golomb_rice_data};
+        SpanReader stream{0, golomb_rice_data};
         BitStreamReader<SpanReader> bitreader{stream};
         const uint32_t n = static_cast<uint32_t>(ReadCompactSize(stream));
         for (uint32_t i = 0; i < n; ++i) {
@@ -80,7 +80,7 @@ FUZZ_TARGET(golomb_rice)
 
     {
         const std::vector<uint8_t> random_bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider, 1024);
-        SpanReader stream{SER_NETWORK, 0, random_bytes};
+        SpanReader stream{0, random_bytes};
         uint32_t n;
         try {
             n = static_cast<uint32_t>(ReadCompactSize(stream));
