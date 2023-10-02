@@ -29,16 +29,27 @@ std::vector<CRecipient> ParseRecipients(const UniValue& address_amounts, const s
     std::set<CTxDestination> destinations;
     std::vector<CRecipient> recipients;
     int idx{0};
+    bool has_data{false};
     for (const std::string& address: address_amounts.getKeys()) {
-        CTxDestination dest = DecodeDestination(address);
-        if (!IsValidDestination(dest)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + address);
+        CTxDestination dest;
+        CAmount amount{0};
+        if (address == "data") {
+            if (has_data) {
+               throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, duplicate key: data");
+            }
+            std::vector<unsigned char> data = ParseHexV(address_amounts[address].getValStr(), "Data");
+            dest = CNoDestination{CScript() << OP_RETURN << data};
+        } else {
+            dest = DecodeDestination(address);
+            if (!IsValidDestination(dest)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + address);
+            }
+            if (destinations.count(dest)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + address);
+            }
+            destinations.insert(dest);
+            amount = AmountFromValue(address_amounts[address]);
         }
-        if (destinations.count(dest)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + address);
-        }
-        destinations.insert(dest);
-        CAmount amount = AmountFromValue(address_amounts[address]);
         CRecipient recipient = {dest, amount, subtract_fee_outputs.count(idx) == 1};
         recipients.push_back(recipient);
         idx++;
@@ -536,7 +547,7 @@ static std::vector<RPCArg> FundTxDoc(bool solving_data = true)
     return args;
 }
 
-CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransaction& tx, const UniValue& options, CCoinControl& coinControl, bool override_min_fee)
+CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransaction& tx, const std::vector<CRecipient>& recipients, const UniValue& options, CCoinControl& coinControl, bool override_min_fee)
 {
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -544,9 +555,6 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
 
     std::optional<unsigned int> change_position;
     bool lockUnspents = false;
-    UniValue subtractFeeFromOutputs;
-    std::set<int> setSubtractFeeFromOutputs;
-
     if (!options.isNull()) {
       if (options.type() == UniValue::VBOOL) {
         // backward compatibility bool only fallback
@@ -642,9 +650,6 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
             coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
             coinControl.fOverrideFeeRate = true;
         }
-
-        if (options.exists("subtractFeeFromOutputs") || options.exists("subtract_fee_from_outputs") )
-            subtractFeeFromOutputs = (options.exists("subtract_fee_from_outputs") ? options["subtract_fee_from_outputs"] : options["subtractFeeFromOutputs"]).get_array();
 
         if (options.exists("replaceable")) {
             coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
@@ -754,18 +759,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
     if (tx.vout.size() == 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
-    for (unsigned int idx = 0; idx < subtractFeeFromOutputs.size(); idx++) {
-        int pos = subtractFeeFromOutputs[idx].getInt<int>();
-        if (setSubtractFeeFromOutputs.count(pos))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, duplicated position: %d", pos));
-        if (pos < 0)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, negative position: %d", pos));
-        if (pos >= int(tx.vout.size()))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, position too large: %d", pos));
-        setSubtractFeeFromOutputs.insert(pos);
-    }
-
-    auto txr = FundTransaction(wallet, tx, change_position, lockUnspents, setSubtractFeeFromOutputs, coinControl);
+    auto txr = FundTransaction(wallet, tx, recipients, change_position, lockUnspents, coinControl);
     if (!txr) {
         throw JSONRPCError(RPC_WALLET_ERROR, ErrorString(txr).original);
     }
@@ -891,11 +885,29 @@ RPCHelpMan fundrawtransaction()
     if (!DecodeHexTx(tx, request.params[0].get_str(), try_no_witness, try_witness)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     }
-
+    UniValue options = request.params[1];
+    std::set<int> setSubtractFeeFromOutputs;
+    if (options.exists("subtractFeeFromOutputs") || options.exists("subtract_fee_from_outputs") ) {
+        UniValue subtractFeeFromOutputs = (options.exists("subtract_fee_from_outputs") ? options["subtract_fee_from_outputs"] : options["subtractFeeFromOutputs"]).get_array();
+        // We need to know the number of destinations for the transaction in order to create the CRecipient vector with
+        // the correct SFFO information. To do this, pass a dummy vector with the correct number of destinations
+        //
+        // This works because fundrawtransaction can only take integers for specifying SFFO
+        std::vector<std::string> destinations(tx.vout.size(), "dummy");
+        setSubtractFeeFromOutputs = ParseSubtractFeeFromOutputs(subtractFeeFromOutputs, destinations);
+    }
+    std::vector<CRecipient> recipients;
+    for (size_t idx = 0; idx < tx.vout.size(); idx++) {
+        const CTxOut& txOut = tx.vout[idx];
+        CTxDestination dest;
+        ExtractDestination(txOut.scriptPubKey, dest);
+        CRecipient recipient = {dest, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
+        recipients.push_back(recipient);
+    }
     CCoinControl coin_control;
     // Automatically select (additional) coins. Can be overridden by options.add_inputs.
     coin_control.m_allow_other_inputs = true;
-    auto txr = FundTransaction(*pwallet, tx, request.params[1], coin_control, /*override_min_fee=*/true);
+    auto txr = FundTransaction(*pwallet, tx, recipients, options, coin_control, /*override_min_fee=*/true);
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("hex", EncodeHexTx(*txr.tx));
@@ -1323,13 +1335,14 @@ RPCHelpMan send()
 
 
             bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
+            std::vector<CRecipient> recipients = ParseOutputs(request.params[0], options);
             CMutableTransaction rawTx = ConstructTransaction(options["inputs"], request.params[0], options["locktime"], rbf);
             CCoinControl coin_control;
             // Automatically select coins, unless at least one is manually selected. Can
             // be overridden by options.add_inputs.
             coin_control.m_allow_other_inputs = rawTx.vin.size() == 0;
             SetOptionsInputWeights(options["inputs"], options);
-            auto txr = FundTransaction(*pwallet, rawTx, options, coin_control, /*override_min_fee=*/false);
+            auto txr = FundTransaction(*pwallet, rawTx, recipients, options, coin_control, /*override_min_fee=*/false);
 
             return FinishTransaction(pwallet, options, CMutableTransaction(*txr.tx));
         }
@@ -1759,12 +1772,13 @@ RPCHelpMan walletcreatefundedpsbt()
     const UniValue &replaceable_arg = options["replaceable"];
     const bool rbf{replaceable_arg.isNull() ? wallet.m_signal_rbf : replaceable_arg.get_bool()};
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf);
+    std::vector<CRecipient> recipients = ParseOutputs(request.params[1], options);
     CCoinControl coin_control;
     // Automatically select coins, unless at least one is manually selected. Can
     // be overridden by options.add_inputs.
     coin_control.m_allow_other_inputs = rawTx.vin.size() == 0;
     SetOptionsInputWeights(request.params[0], options);
-    auto txr = FundTransaction(wallet, rawTx, options, coin_control, /*override_min_fee=*/true);
+    auto txr = FundTransaction(wallet, rawTx, recipients, options, coin_control, /*override_min_fee=*/true);
 
     // Make a blank psbt
     PartiallySignedTransaction psbtx(CMutableTransaction(*txr.tx));
