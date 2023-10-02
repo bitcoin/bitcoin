@@ -4,6 +4,7 @@
 
 #include <consensus/validation.h>
 #include <key_io.h>
+#include <policy/ancestor_packages.h>
 #include <policy/packages.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
@@ -38,6 +39,53 @@ inline CTransactionRef create_placeholder_tx(size_t num_inputs, size_t num_outpu
         mtx.vout[o].scriptPubKey = random_script;
     }
     return MakeTransactionRef(mtx);
+}
+static inline CTransactionRef make_tx(const std::vector<COutPoint>& inputs, const std::vector<CAmount>& output_amounts)
+{
+    CMutableTransaction tx = CMutableTransaction();
+    tx.vin.resize(inputs.size());
+    tx.vout.resize(output_amounts.size());
+    for (size_t i = 0; i < inputs.size(); ++i) {
+        tx.vin[i].prevout = inputs[i];
+    }
+    for (size_t o = 0; o < output_amounts.size(); ++o) {
+        tx.vout[o].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+        tx.vout[o].nValue = output_amounts.at(o);
+    }
+    return MakeTransactionRef(tx);
+}
+
+// Context-free check that a package only contains a tx (the last tx in the package) with its
+// ancestors. Not all of the tx's ancestors need to be present.
+bool TestIsAncestorPackage(const Package& package)
+{
+    if (package.empty()) return false;
+    if (!IsTopoSortedPackage(package)) return false;
+    if (!IsConsistentPackage(package)) return false;
+    const auto& dependent = package.back();
+    std::unordered_set<uint256, SaltedTxidHasher> dependency_txids;
+    for (auto it = package.rbegin(); it != package.rend(); ++it) {
+        const auto& tx = *it;
+        // Each transaction must be a dependency of the last transaction.
+        if (tx->GetWitnessHash() != dependent->GetWitnessHash() &&
+            dependency_txids.count(tx->GetHash()) == 0) {
+            return false;
+        }
+        // Add each transaction's dependencies to allow transactions which are ancestors but not
+        // necessarily direct parents of the last transaction.
+        std::transform(tx->vin.cbegin(), tx->vin.cend(),
+                       std::inserter(dependency_txids, dependency_txids.end()),
+                       [](const auto& input) { return input.prevout.hash; });
+    }
+    return true;
+}
+bool PackageSorted(const Package& package_to_check, const Package& sorted)
+{
+    if (package_to_check.size() != sorted.size()) return false;
+    for (size_t i{0}; i < sorted.size(); ++i) {
+        if (package_to_check.at(i) != sorted.at(i)) return false;
+    }
+    return true;
 }
 
 BOOST_FIXTURE_TEST_CASE(package_sanitization_tests, TestChain100Setup)
@@ -108,6 +156,245 @@ BOOST_FIXTURE_TEST_CASE(package_sanitization_tests, TestChain100Setup)
     BOOST_CHECK(IsConsistentPackage(package_with_dup_tx));
     package_with_dup_tx.emplace_back(create_placeholder_tx(1, 1));
     BOOST_CHECK(IsConsistentPackage(package_with_dup_tx));
+}
+BOOST_FIXTURE_TEST_CASE(ancestorpackage, TestChain100Setup)
+{
+    CKey placeholder_key;
+    placeholder_key.MakeNewKey(true);
+    CScript spk = GetScriptForDestination(PKHash(placeholder_key.GetPubKey()));
+    FastRandomContext det_rand{true};
+    // Basic chain of 25 transactions
+    {
+        Package package;
+        CTransactionRef last_tx = m_coinbase_txns[0];
+        CKey signing_key = coinbaseKey;
+        for (int i{0}; i < 24; ++i) {
+            auto tx = MakeTransactionRef(CreateValidMempoolTransaction(last_tx, 0, 0, signing_key, spk, CAmount((49-i) * COIN), false));
+            package.emplace_back(tx);
+            last_tx = tx;
+            if (i == 0) signing_key = placeholder_key;
+        }
+        BOOST_CHECK(!IsChildWithParents(package));
+        BOOST_CHECK(TestIsAncestorPackage(package));
+
+        Package package_copy = package;
+        Shuffle(package_copy.begin(), package_copy.end(), det_rand);
+        AncestorPackage packageified(package_copy);
+        BOOST_CHECK(TestIsAncestorPackage(packageified.Txns()));
+        for (auto i{0}; i < 24; ++i) {
+            BOOST_CHECK_EQUAL(packageified.FilteredAncestorSet(package[i])->size(), i + 1);
+            BOOST_CHECK(TestIsAncestorPackage(*packageified.FilteredAncestorSet(package[i])));
+        }
+        for (auto i{0}; i < 10; ++i) packageified.MarkAsInMempool(package[i]);
+        packageified.IsDanglingWithDescendants(package[20]);
+        for (auto i{10}; i < 20; ++i) {
+            const auto& tx = package[i];
+            BOOST_CHECK_EQUAL(packageified.FilteredAncestorSet(tx)->size(), i - 9);
+            BOOST_CHECK(TestIsAncestorPackage(*packageified.FilteredAncestorSet(tx)));
+        }
+        for (auto i{20}; i < 24; ++i) {
+            BOOST_CHECK(!packageified.FilteredAncestorSet(package[i]));
+        }
+    }
+    // 99 Parents and 1 Child
+    {
+        Package package;
+        CMutableTransaction child;
+        for (int parent_idx{0}; parent_idx < 99; ++parent_idx) {
+            auto parent = MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[parent_idx + 1],
+                                             0, 0, coinbaseKey, spk, CAmount(49 * COIN), false));
+            package.emplace_back(parent);
+            child.vin.emplace_back(parent->GetHash(), 0);
+        }
+        child.vout.emplace_back(49 * COIN * 99, spk);
+        package.emplace_back(MakeTransactionRef(child));
+
+        Package package_copy(package);
+        Shuffle(package_copy.begin(), package_copy.end(), det_rand);
+        AncestorPackage packageified(package_copy);
+        BOOST_CHECK(TestIsAncestorPackage(packageified.Txns()));
+        BOOST_CHECK(IsChildWithParents(packageified.Txns()));
+
+        // Note that AncestorPackage will sort the package so that parents are before the child, but
+        // this does not necessarily mean that the ith parent in packageified matches the ith parent
+        // in package.
+        for (auto i{0}; i < 99; ++i) {
+            auto filtered_ancestors{packageified.FilteredAncestorSet(package.at(i))};
+            BOOST_CHECK(filtered_ancestors.has_value());
+            BOOST_CHECK_EQUAL(filtered_ancestors->size(), 1);
+            BOOST_CHECK(TestIsAncestorPackage(filtered_ancestors.value()));
+            if (i < 50) packageified.MarkAsInMempool(package.at(i));
+        }
+
+        // After excluding 50 of the parents, the child's ancestor set has size 50.
+        auto last_filtered_ancestors{packageified.FilteredAncestorSet(package.back())};
+        BOOST_CHECK(last_filtered_ancestors.has_value());
+        BOOST_CHECK_EQUAL(last_filtered_ancestors->size(), 50);
+        BOOST_CHECK(TestIsAncestorPackage(last_filtered_ancestors.value()));
+
+        packageified.IsDanglingWithDescendants(package.at(75));
+        for (auto i{50}; i < 99; ++i) {
+            if (i == 75) {
+                BOOST_CHECK(!packageified.FilteredAncestorSet(package.at(i)));
+            } else {
+                auto filtered_ancestors{packageified.FilteredAncestorSet(package.at(i))};
+                BOOST_CHECK(filtered_ancestors.has_value());
+                BOOST_CHECK_EQUAL(filtered_ancestors->size(), 1);
+            }
+        }
+        BOOST_CHECK(!packageified.FilteredAncestorSet(package.back()));
+    }
+
+    // Mini differential "fuzz" of AncestorPackage handling a set of 50 heavily inter-connected
+    // transactions, checking that its ancestor/descendant sets are the same as what CTxMemPool
+    // would calculate.
+    LOCK2(cs_main, m_node.mempool->cs);
+    auto transactions{PopulateMempool(det_rand, /*num_transactions=*/50, /*submit=*/true)};
+    Shuffle(transactions.begin(), transactions.end(), det_rand);
+    AncestorPackage packageified{transactions};
+    const auto sorted_transactions{packageified.Txns()};
+    BOOST_CHECK(IsTopoSortedPackage(sorted_transactions));
+    for (const auto& tx : sorted_transactions) {
+        const auto packageified_ancestors{packageified.FilteredAncestorSet(tx)};
+        BOOST_CHECK(TestIsAncestorPackage(*packageified_ancestors));
+        auto mempool_ancestors{m_node.mempool->CalculateMemPoolAncestors(*m_node.mempool->GetIter(tx->GetHash()).value(),
+                               CTxMemPool::Limits::NoLimits(), /*fSearchForParents=*/false)};
+        // Add 1 because CMPA doesn't include the tx itself in its ancestor set.
+        BOOST_CHECK_EQUAL(mempool_ancestors->size() + 1, packageified_ancestors->size());
+        std::set<uint256> packageified_ancestors_wtxids;
+        for (const auto& tx : packageified_ancestors.value()) packageified_ancestors_wtxids.insert(tx->GetWitnessHash());
+        for (const auto& mempool_iter : *mempool_ancestors) {
+            BOOST_CHECK(packageified_ancestors_wtxids.count(mempool_iter->GetTx().GetWitnessHash()) > 0);
+        }
+    }
+    // Skip the 20th transaction. All of its descendants should have 1 fewer tx in their ancestor sets.
+    const auto& tx_20{sorted_transactions[20]};
+    CTxMemPool::setEntries descendants_20;
+    m_node.mempool->CalculateDescendants(m_node.mempool->GetIter(tx_20->GetHash()).value(), descendants_20);
+    packageified.MarkAsInMempool(tx_20);
+    for (const auto& desc_iter : descendants_20) {
+        BOOST_CHECK_EQUAL(packageified.FilteredAncestorSet(m_node.mempool->info(GenTxid::Txid(desc_iter->GetTx().GetHash())).tx)->size(),
+                          desc_iter->GetCountWithAncestors() - 1);
+    }
+    // IsDanglingWithDescendants the 40th transaction. FilteredAncestorSet() for all of its descendants should return std::nullopt.
+    const auto& tx_40{sorted_transactions[40]};
+    CTxMemPool::setEntries descendants_40;
+    m_node.mempool->CalculateDescendants(m_node.mempool->GetIter(tx_40->GetHash()).value(), descendants_40);
+    packageified.IsDanglingWithDescendants(tx_40);
+    for (const auto& desc_iter : descendants_40) {
+        BOOST_CHECK(!packageified.FilteredAncestorSet(m_node.mempool->info(GenTxid::Txid(desc_iter->GetTx().GetHash())).tx));
+    }
+
+    // Linearization tests.
+    const CAmount coinbase_amount{50 * COIN};
+    const CAmount low_fee_amt{500};
+    const CAmount double_low_fee_amt{low_fee_amt * 2};
+    const CAmount med_fee_amt{low_fee_amt * 10};
+    const CAmount high_fee_amt{low_fee_amt * 100};
+    {
+        // 24 parents (each of different feerate) and 1 fee-bumping child.
+        Package package;
+        CMutableTransaction child;
+        const auto num_parents{24};
+        // The first tx pays 2400sat in fees. Each parent pays 100sat less than the previous one.
+        for (int parent_idx{0}; parent_idx < num_parents; ++parent_idx) {
+            auto parent = MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[parent_idx + 1],
+                                             0, 0, coinbaseKey, spk, CAmount(coinbase_amount - (num_parents - parent_idx) * 100), false));
+            package.emplace_back(parent);
+            child.vin.emplace_back(parent->GetHash(), 0);
+        }
+        child.vout.emplace_back(coinbase_amount * num_parents - CENT, spk);
+        package.emplace_back(MakeTransactionRef(child));
+
+        Package package_copy = package;
+        Shuffle(package_copy.begin(), package_copy.end(), det_rand);
+        AncestorPackage packageified(package_copy);
+        // Before child and vsize information for all non-skipped transactions are added, we cannot linearize.
+        BOOST_CHECK(!packageified.LinearizeWithFees());
+        // The first tx pays 2400sat in fees. Each parent pays 100sat less than the previous one.
+        for (int parent_idx{0}; parent_idx < num_parents; ++parent_idx) {
+            packageified.AddFeeAndVsize(package.at(parent_idx)->GetHash(), CAmount((num_parents - parent_idx) * 100),
+                                        GetVirtualTransactionSize(*package.at(parent_idx)));
+        }
+        BOOST_CHECK(!packageified.LinearizeWithFees());
+        // Total parent fees is 100sat * (1 + ... + 24) = 100sat * (25 * 24 / 2) = 30,000sat.
+        // Child pays 1,000,000sat - 30,000sat = 970,000sat.
+        packageified.AddFeeAndVsize(package.back()->GetHash(), CAmount(CENT - 100 * (num_parents + 1) * num_parents / 2),
+                                    GetVirtualTransactionSize(*package.back()));
+        BOOST_CHECK(packageified.LinearizeWithFees());
+        const auto ancestorscore_linearized = packageified.Txns();
+        // Ties should be broken by a transaction's base feerate, so the order should be identical.
+        for (int idx{0}; idx < num_parents + 1; ++idx) {
+            BOOST_CHECK_EQUAL(package.at(idx), ancestorscore_linearized.at(idx));
+        }
+    }
+    {
+        // 2 parents (each high feerate) and 1 low-feerate child.
+        auto parent_med_feerate = make_tx({{m_coinbase_txns.at(0)->GetHash(), 0}}, {coinbase_amount - med_fee_amt});
+        auto parent_high_feerate = make_tx({{m_coinbase_txns.at(1)->GetHash(), 0}}, {coinbase_amount - high_fee_amt});
+        auto child = make_tx({{parent_med_feerate->GetHash(), 0}, {parent_high_feerate->GetHash(), 0}},
+                             {coinbase_amount * 2 - med_fee_amt - high_fee_amt - low_fee_amt});
+        AncestorPackage packageified({child, parent_med_feerate, parent_high_feerate});
+        packageified.AddFeeAndVsize(parent_high_feerate->GetHash(), high_fee_amt, GetVirtualTransactionSize(*parent_high_feerate));
+        packageified.AddFeeAndVsize(parent_med_feerate->GetHash(), med_fee_amt, GetVirtualTransactionSize(*parent_med_feerate));
+        packageified.AddFeeAndVsize(child->GetHash(), low_fee_amt, GetVirtualTransactionSize(*child));
+        BOOST_CHECK(packageified.LinearizeWithFees());
+        Package package_sorted{parent_high_feerate, parent_med_feerate, child};
+        BOOST_CHECK(PackageSorted(packageified.Txns(), package_sorted));
+        BOOST_CHECK(PackageSorted(packageified.FilteredAncestorSet(child).value(), package_sorted));
+    }
+    {
+        // 3 pairs of fee-bumping grandparent + parent, plus 1 low-feerate child.
+        // 0 fee + high fee
+        auto grandparent_zero_fee = make_tx({{m_coinbase_txns.at(0)->GetHash(), 0}}, {coinbase_amount});
+        auto parent_high_feerate = make_tx({{grandparent_zero_fee->GetHash(), 0}}, {coinbase_amount - high_fee_amt});
+        // double low fee + med fee
+        auto grandparent_double_low_feerate = make_tx({{m_coinbase_txns.at(2)->GetHash(), 0}}, {coinbase_amount - double_low_fee_amt});
+        auto parent_med_feerate = make_tx({{grandparent_double_low_feerate->GetHash(), 0}}, {coinbase_amount - double_low_fee_amt - med_fee_amt});
+        // low fee + med fee
+        auto grandparent_low_feerate = make_tx({{m_coinbase_txns.at(1)->GetHash(), 0}}, {coinbase_amount - low_fee_amt});
+        auto parent_med_feerate_add100 = make_tx({{grandparent_low_feerate->GetHash(), 0}}, {coinbase_amount - low_fee_amt - med_fee_amt - 100});
+        // child is below the cpfp package feerates
+        auto child = make_tx({{parent_high_feerate->GetHash(), 0}, {parent_med_feerate_add100->GetHash(), 0}, {parent_med_feerate->GetHash(), 0}},
+                             {coinbase_amount * 3 - high_fee_amt - double_low_fee_amt - med_fee_amt - low_fee_amt - med_fee_amt - low_fee_amt});
+        AncestorPackage packageified7({child, parent_med_feerate, grandparent_low_feerate, grandparent_zero_fee,
+                                     parent_high_feerate, parent_med_feerate_add100, grandparent_double_low_feerate});
+        BOOST_CHECK(packageified7.IsAncestorPackage());
+        packageified7.AddFeeAndVsize(grandparent_zero_fee->GetHash(), 0, GetVirtualTransactionSize(*grandparent_zero_fee));
+        packageified7.AddFeeAndVsize(parent_high_feerate->GetHash(), high_fee_amt, GetVirtualTransactionSize(*parent_high_feerate));
+        packageified7.AddFeeAndVsize(grandparent_low_feerate->GetHash(), low_fee_amt, GetVirtualTransactionSize(*grandparent_low_feerate));
+        packageified7.AddFeeAndVsize(parent_med_feerate_add100->GetHash(), med_fee_amt + 100, GetVirtualTransactionSize(*parent_med_feerate_add100));
+        packageified7.AddFeeAndVsize(grandparent_double_low_feerate->GetHash(), double_low_fee_amt, GetVirtualTransactionSize(*grandparent_double_low_feerate));
+        packageified7.AddFeeAndVsize(parent_med_feerate->GetHash(), med_fee_amt, GetVirtualTransactionSize(*parent_med_feerate));
+        packageified7.AddFeeAndVsize(child->GetHash(), low_fee_amt, GetVirtualTransactionSize(*child));
+
+        BOOST_CHECK(packageified7.LinearizeWithFees());
+        Package package_sorted{grandparent_zero_fee, parent_high_feerate, grandparent_double_low_feerate, parent_med_feerate,
+                               grandparent_low_feerate, parent_med_feerate_add100, child};
+        BOOST_CHECK(PackageSorted(packageified7.Txns(), package_sorted));
+        BOOST_CHECK(PackageSorted(packageified7.FilteredAncestorSet(child).value(), package_sorted));
+
+        // Packageify 1 grandparent_low_feerate, the parents, and the child.
+        // If grandparent_low_feerate is included, parent_med_feerate comes before
+        // parent_med_feerate_add100.
+        AncestorPackage packageified5({child, parent_med_feerate, parent_med_feerate_add100, grandparent_low_feerate, parent_high_feerate});
+        packageified5.AddFeeAndVsize(parent_high_feerate->GetHash(), high_fee_amt, GetVirtualTransactionSize(*parent_high_feerate));
+        packageified5.AddFeeAndVsize(parent_med_feerate_add100->GetHash(), med_fee_amt + 1000, GetVirtualTransactionSize(*parent_med_feerate_add100));
+        packageified5.AddFeeAndVsize(parent_med_feerate->GetHash(), med_fee_amt, GetVirtualTransactionSize(*parent_med_feerate));
+        packageified5.AddFeeAndVsize(child->GetHash(), low_fee_amt, GetVirtualTransactionSize(*child));
+        BOOST_CHECK(!packageified5.LinearizeWithFees());
+
+        // If grandparent_low_feerate is skipped, parent_med_feerate_add100 comes before parent_med_feerate.
+        packageified5.MarkAsInMempool(grandparent_low_feerate);
+        BOOST_CHECK(packageified5.LinearizeWithFees());
+
+        Package package5_sorted{grandparent_low_feerate, parent_high_feerate, parent_med_feerate_add100, parent_med_feerate, child};
+        BOOST_CHECK(PackageSorted(packageified5.Txns(), package5_sorted));
+
+        Package package_sorted_with_skip{parent_high_feerate, parent_med_feerate_add100, parent_med_feerate, child};
+        BOOST_CHECK(PackageSorted(packageified5.FilteredAncestorSet(child).value(), package_sorted_with_skip));
+        BOOST_CHECK(PackageSorted(packageified5.FilteredTxns(), package_sorted_with_skip));
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100Setup)
@@ -257,6 +544,7 @@ BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100Setup)
         BOOST_CHECK(IsChildWithParents({tx_parent_also_child, tx_parent, tx_child}));
         BOOST_CHECK(IsWellFormedPackage({tx_parent, tx_parent_also_child, tx_child}, state, /*require_sorted=*/true));
         BOOST_CHECK(!IsWellFormedPackage({tx_parent_also_child, tx_parent, tx_child}, state, /*require_sorted=*/true));
+        BOOST_CHECK(!IsTopoSortedPackage({tx_parent_also_child, tx_parent, tx_child}));
         BOOST_CHECK_EQUAL(state.GetResult(), PackageValidationResult::PCKG_POLICY);
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "package-not-sorted");
     }
