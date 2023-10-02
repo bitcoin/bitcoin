@@ -98,7 +98,7 @@ static void AddAndRemoveDisconnectedBlockTransactionsAll(benchmark::Bench& bench
     const auto chains{CreateBlocks(/*num_not_shared=*/1)};
     assert(chains.num_shared == BLOCK_VTX_COUNT - 1);
 
-    bench.minEpochIterations(10).run([&]() NO_THREAD_SAFETY_ANALYSIS {
+    bench.minEpochIterations(10).run([&]() {
         Reorg(chains);
     });
 }
@@ -109,7 +109,7 @@ static void AddAndRemoveDisconnectedBlockTransactions90(benchmark::Bench& bench)
     const auto chains{CreateBlocks(/*num_not_shared=*/BLOCK_VTX_COUNT_10PERCENT)};
     assert(chains.num_shared == BLOCK_VTX_COUNT - BLOCK_VTX_COUNT_10PERCENT);
 
-    bench.minEpochIterations(10).run([&]() NO_THREAD_SAFETY_ANALYSIS {
+    bench.minEpochIterations(10).run([&]() {
         Reorg(chains);
     });
 }
@@ -120,7 +120,7 @@ static void AddAndRemoveDisconnectedBlockTransactions10(benchmark::Bench& bench)
     const auto chains{CreateBlocks(/*num_not_shared=*/BLOCK_VTX_COUNT - BLOCK_VTX_COUNT_10PERCENT)};
     assert(chains.num_shared == BLOCK_VTX_COUNT_10PERCENT);
 
-    bench.minEpochIterations(10).run([&]() NO_THREAD_SAFETY_ANALYSIS {
+    bench.minEpochIterations(10).run([&]() {
         Reorg(chains);
     });
 }
