@@ -218,11 +218,11 @@ bool AncestorPackage::LinearizeWithFees()
 
         auto fee_and_vsize_info = FilteredSubpackageInfo(entry.tx);
         if (!Assume(fee_and_vsize_info.has_value())) continue;
-        miniminer_info.emplace_back(/*fee_self=*/fee_and_vsize_info->m_self_fee,
-                                    /*fee_ancestor=*/fee_and_vsize_info->m_ancestor_fee,
+        miniminer_info.emplace_back(/*tx_in=*/entry.tx,
                                     /*vsize_self=*/fee_and_vsize_info->m_self_vsize,
                                     /*vsize_ancestor=*/fee_and_vsize_info->m_ancestor_vsize,
-                                    /*tx_in=*/entry.tx);
+                                    /*fee_self=*/fee_and_vsize_info->m_self_fee,
+                                    /*fee_ancestor=*/fee_and_vsize_info->m_ancestor_fee);
 
         // Provide descendant cache, again skipping transactions that are MEMPOOL or DANGLING.
         std::set<Txid>& descendant_cache_to_populate = descendant_caches.try_emplace(txid).first->second;
