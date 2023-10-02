@@ -4844,10 +4844,14 @@ void ChainstateManager::CheckBlockIndex()
     CBlockIndex* pindexFirstAssumeValid = nullptr; // Oldest ancestor of pindex which has BLOCK_ASSUMED_VALID
     while (pindex != nullptr) {
         nNodes++;
-        if (pindex->pprev && pindex->nTx > 0) {
-            // nChainTx should increase monotonically
-            assert(pindex->pprev->nChainTx <= pindex->nChainTx);
-        }
+        // Make sure nChainTx sum is correctly computed.
+        unsigned int prev_chain_tx = pindex->pprev ? pindex->pprev->nChainTx : 0;
+        assert((pindex->nChainTx == pindex->nTx + prev_chain_tx)
+               // For testing, allow transaction counts to be completely unset.
+               || (pindex->nChainTx == 0 && pindex->nTx == 0)
+               // For testing, allow this nChainTx to be unset if previous is also unset.
+               || (pindex->nChainTx == 0 && prev_chain_tx == 0 && pindex->pprev));
+
         if (pindexFirstAssumeValid == nullptr && pindex->nStatus & BLOCK_ASSUMED_VALID) pindexFirstAssumeValid = pindex;
         if (pindexFirstInvalid == nullptr && pindex->nStatus & BLOCK_FAILED_VALID) pindexFirstInvalid = pindex;
         if (pindexFirstMissing == nullptr && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
