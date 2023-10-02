@@ -2299,6 +2299,9 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
         desc_prefix = "tr(" + xpub + "/86h";
         break;
     }
+    case OutputType::SILENT_PAYMENT:
+        // We don't have a descriptor for silent payments defined yet,
+        // so let this fall through as an unknown
     case OutputType::UNKNOWN: {
         // We should never have a DescriptorScriptPubKeyMan for an UNKNOWN OutputType,
         // so if we get to this point something is wrong
@@ -2650,6 +2653,32 @@ bool DescriptorScriptPubKeyMan::AddCryptedKey(const CKeyID& key_id, const CPubKe
 
     m_map_crypted_keys[key_id] = make_pair(pubkey, crypted_key);
     return true;
+}
+
+std::pair<CKey,bool> DescriptorScriptPubKeyMan::GetPrivKeyForSilentPayment(const CScript& scriptPubKey) const
+{
+    std::vector<std::vector<unsigned char>> solutions;
+    TxoutType whichType = Solver(scriptPubKey, solutions);
+    if (whichType == TxoutType::NONSTANDARD || whichType == TxoutType::MULTISIG || whichType == TxoutType::WITNESS_UNKNOWN ) return {};
+    std::unique_ptr<FlatSigningProvider> coin_keys = GetSigningProvider(scriptPubKey, true);
+    if (!coin_keys || coin_keys->keys.size() != 1) return {};
+    const auto& [_, key] = *coin_keys->keys.begin();
+    (void) _;
+
+    if (whichType == TxoutType::WITNESS_V1_TAPROOT) {
+        auto pubKeyFromScriptPubKey = XOnlyPubKey(solutions[0]);
+        // this means it is a "rawtr" output
+        if (XOnlyPubKey(key.GetPubKey()) == pubKeyFromScriptPubKey) return {key, true};
+
+        // Otherwise, tweak with the merkle root
+        TaprootSpendData spenddata;
+        coin_keys->GetTaprootSpendData(pubKeyFromScriptPubKey, spenddata);
+        CKey tweaked_key;
+        if(!key.ApplyTapTweak(&spenddata.merkle_root, tweaked_key)) return {};
+        if (XOnlyPubKey(tweaked_key.GetPubKey()) ==  pubKeyFromScriptPubKey) return {tweaked_key, true};
+        return {};
+    }
+    return {key, false};
 }
 
 bool DescriptorScriptPubKeyMan::HasWalletDescriptor(const WalletDescriptor& desc) const

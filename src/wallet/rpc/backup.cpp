@@ -1572,6 +1572,10 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             if (!w_desc.descriptor->GetOutputType()) {
                 warnings.push_back("Unknown output type, cannot set descriptor to active.");
             } else {
+                // If this spkm is set as active for the other internal-ness, deactivate it first
+                if (wallet.GetScriptPubKeyMan(*w_desc.descriptor->GetOutputType(), !internal) == spk_manager) {
+                    wallet.DeactivateScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), !internal);
+                }
                 wallet.AddActiveScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), internal);
             }
         } else {
@@ -1807,7 +1811,8 @@ RPCHelpMan listdescriptors()
     for (const auto& spk_man : wallet->GetAllScriptPubKeyMans()) {
         const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
         if (!desc_spk_man) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Unexpected ScriptPubKey manager type.");
+            // We can have silent payments spkms when descriptors, so just silently ignore
+            continue;
         }
         LOCK(desc_spk_man->cs_desc_man);
         const auto& wallet_descriptor = desc_spk_man->GetWalletDescriptor();

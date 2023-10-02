@@ -7,6 +7,7 @@
 
 #include <attributes.h>
 #include <chain.h>
+#include <coins.h>
 #include <consensus/validation.h>
 #include <logging.h>
 #include <primitives/block.h>
@@ -204,9 +205,9 @@ void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockInd
                           fInitialDownload);
 }
 
-void CMainSignals::TransactionAddedToMempool(const CTransactionRef& tx, uint64_t mempool_sequence) {
-    auto event = [tx, mempool_sequence, this] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionAddedToMempool(tx, mempool_sequence); });
+void CMainSignals::TransactionAddedToMempool(const CTransactionRef& tx, uint64_t mempool_sequence,const std::map<COutPoint, Coin>& spent_coins) {
+    auto event = [tx, mempool_sequence, spent_coins, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionAddedToMempool(tx, mempool_sequence, spent_coins); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: txid=%s wtxid=%s", __func__,
                           tx->GetHash().ToString(),

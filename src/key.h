@@ -94,6 +94,13 @@ public:
             memcmp(a.data(), b.data(), a.size()) == 0;
     }
 
+    void Invalidate()
+    {
+        keydata.clear();
+        keydata.resize(32);
+        fValid = false;
+    }
+
     //! Initialize using begin and end iterators to byte data.
     template <typename T>
     void Set(const T pbegin, const T pend, bool fCompressedIn)
@@ -126,6 +133,21 @@ public:
 
     //! Negate private key
     bool Negate();
+
+    //! Tweak a secret key by adding a scalar value to it.
+    //
+    bool TweakAdd(const unsigned char *tweak32);
+    bool ApplyTapTweak(const uint256*, CKey&) const;
+
+    //! Tweak a secret key by multiplying it by a scalar value.
+    bool TweakMultiply(const unsigned char *tweak32);
+
+    /**
+     * Compute a public key via ECDH for Silent Payments.
+     * This returns the un-hashed ECDH result and should not be used
+     * outside of silent payments
+     */
+    CPubKey UnhashedECDH(const CPubKey& pubkey) const;
 
     /**
      * Convert the private key to a CPrivKey (serialized OpenSSL private key data).

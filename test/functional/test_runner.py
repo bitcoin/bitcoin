@@ -148,6 +148,7 @@ BASE_SCRIPTS = [
     'wallet_listtransactions.py --legacy-wallet',
     'wallet_listtransactions.py --descriptors',
     # vv Tests less than 30s vv
+    'wallet_silentpayments_sending.py',
     'p2p_invalid_messages.py',
     'rpc_createmultisig.py',
     'p2p_timeouts.py',
@@ -195,6 +196,7 @@ BASE_SCRIPTS = [
     'wallet_avoid_mixing_output_types.py --descriptors',
     'mempool_reorg.py',
     'p2p_block_sync.py',
+    'wallet_silentpayments_receiving.py --descriptors',
     'wallet_createwallet.py --legacy-wallet',
     'wallet_createwallet.py --usecli',
     'wallet_createwallet.py --descriptors',

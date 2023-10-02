@@ -65,6 +65,8 @@ public:
     //! Read block data from disk. If the block exists but doesn't have data
     //! (for example due to pruning), the CBlock variable will be set to null.
     FoundBlock& data(CBlock& data) { m_data = &data; return *this; }
+    //! Read block's undo data from disk.
+    FoundBlock& undoData(CBlockUndo& undo) { m_undo = &undo; return *this; }
 
     uint256* m_hash = nullptr;
     int* m_height = nullptr;
@@ -75,6 +77,7 @@ public:
     CBlockLocator* m_locator = nullptr;
     const FoundBlock* m_next_block = nullptr;
     CBlock* m_data = nullptr;
+    CBlockUndo* m_undo = nullptr;
     mutable bool found = false;
 };
 
@@ -308,7 +311,7 @@ public:
     {
     public:
         virtual ~Notifications() {}
-        virtual void transactionAddedToMempool(const CTransactionRef& tx) {}
+        virtual void transactionAddedToMempool(const CTransactionRef& tx, const std::map<COutPoint, Coin>& spent_coins) {}
         virtual void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {}
         virtual void blockConnected(const BlockInfo& block) {}
         virtual void blockDisconnected(const BlockInfo& block) {}
