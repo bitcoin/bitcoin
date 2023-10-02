@@ -3714,7 +3714,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const bool rate_limited = !pfrom.HasPermission(NetPermissionFlags::Addr);
         uint64_t num_proc = 0;
         uint64_t num_rate_limit = 0;
-        Shuffle(vAddr.begin(), vAddr.end(), FastRandomContext());
+        Shuffle(vAddr.begin(), vAddr.end(), m_rng);
         for (CAddress& addr : vAddr)
         {
             if (interruptMsgProc)
