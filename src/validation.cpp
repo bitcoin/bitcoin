@@ -5768,7 +5768,7 @@ ChainstateManager::~ChainstateManager()
     m_versionbitscache.Clear();
 }
 
-bool ChainstateManager::DetectSnapshotChainstate(CTxMemPool* mempool)
+bool ChainstateManager::DetectSnapshotChainstate()
 {
     assert(!m_snapshot_chainstate);
     std::optional<fs::path> path = node::FindSnapshotChainstateDir(m_options.datadir);
