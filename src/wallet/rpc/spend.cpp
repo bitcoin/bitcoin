@@ -54,6 +54,37 @@ static void ParseRecipients(const UniValue& address_amounts, const UniValue& sub
     }
 }
 
+std::set<int> ParseSubtractFeeFromOutputs(const UniValue& subtract_fee_from_outputs, const std::vector<std::string> destinations)
+{
+    std::set<int> set_sffo;
+    for (const auto& sffo : subtract_fee_from_outputs.getValues()) {
+        int pos{0};
+        if (sffo.isNum()) {
+            pos = sffo.getInt<int>();
+            if (set_sffo.count(pos))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, duplicated position: %d", pos));
+            if (pos < 0)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, negative position: %d", pos));
+            if (pos >= int(destinations.size()))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, position too large: %d", pos));
+        } else if (sffo.isStr()) {
+            const std::string& address = sffo.get_str();
+            bool found{false};
+            for (; pos < int(destinations.size()); pos++) {
+                if (address == destinations[pos]) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Address not found in outputs");
+            }
+        }
+        set_sffo.insert(pos);
+    }
+    return set_sffo;
+}
+
 static void InterpretFeeEstimationInstructions(const UniValue& conf_target, const UniValue& estimate_mode, const UniValue& fee_rate, UniValue& options)
 {
     if (options.exists("conf_target") || options.exists("estimate_mode")) {
