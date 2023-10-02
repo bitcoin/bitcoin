@@ -24,34 +24,26 @@
 
 
 namespace wallet {
-static void ParseRecipients(const UniValue& address_amounts, const UniValue& subtract_fee_outputs, std::vector<CRecipient>& recipients)
+std::vector<CRecipient> ParseRecipients(const UniValue& address_amounts, const std::set<int>& subtract_fee_outputs)
 {
     std::set<CTxDestination> destinations;
-    int i = 0;
+    std::vector<CRecipient> recipients;
+    int idx{0};
     for (const std::string& address: address_amounts.getKeys()) {
         CTxDestination dest = DecodeDestination(address);
         if (!IsValidDestination(dest)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + address);
         }
-
         if (destinations.count(dest)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + address);
         }
         destinations.insert(dest);
-
-        CAmount amount = AmountFromValue(address_amounts[i++]);
-
-        bool subtract_fee = false;
-        for (unsigned int idx = 0; idx < subtract_fee_outputs.size(); idx++) {
-            const UniValue& addr = subtract_fee_outputs[idx];
-            if (addr.get_str() == address) {
-                subtract_fee = true;
-            }
-        }
-
-        CRecipient recipient = {dest, amount, subtract_fee};
+        CAmount amount = AmountFromValue(address_amounts[address]);
+        CRecipient recipient = {dest, amount, subtract_fee_outputs.count(idx) == 1};
         recipients.push_back(recipient);
+        idx++;
     }
+    return recipients;
 }
 
 std::set<int> ParseSubtractFeeFromOutputs(const UniValue& subtract_fee_from_outputs, const std::vector<std::string> destinations)
@@ -306,11 +298,6 @@ RPCHelpMan sendtoaddress()
     if (!request.params[3].isNull() && !request.params[3].get_str().empty())
         mapValue["to"] = request.params[3].get_str();
 
-    bool fSubtractFeeFromAmount = false;
-    if (!request.params[4].isNull()) {
-        fSubtractFeeFromAmount = request.params[4].get_bool();
-    }
-
     CCoinControl coin_control;
     if (!request.params[5].isNull()) {
         coin_control.m_signal_bip125_rbf = request.params[5].get_bool();
@@ -327,13 +314,12 @@ RPCHelpMan sendtoaddress()
     UniValue address_amounts(UniValue::VOBJ);
     const std::string address = request.params[0].get_str();
     address_amounts.pushKV(address, request.params[1]);
-    UniValue subtractFeeFromAmount(UniValue::VARR);
-    if (fSubtractFeeFromAmount) {
-        subtractFeeFromAmount.push_back(address);
+    std::set<int> subtractFeeFromAmount;
+    if (!request.params[4].isNull()) {
+        if (request.params[4].get_bool())
+            subtractFeeFromAmount.insert(0);
     }
-
-    std::vector<CRecipient> recipients;
-    ParseRecipients(address_amounts, subtractFeeFromAmount, recipients);
+    std::vector<CRecipient> recipients = ParseRecipients(address_amounts, subtractFeeFromAmount);
     const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
 
     return SendMoney(*pwallet, coin_control, recipients, mapValue, verbose);
@@ -417,9 +403,9 @@ RPCHelpMan sendmany()
     if (!request.params[3].isNull() && !request.params[3].get_str().empty())
         mapValue["comment"] = request.params[3].get_str();
 
-    UniValue subtractFeeFromAmount(UniValue::VARR);
+    std::set<int> setSubtractFeeFromOutputs;
     if (!request.params[4].isNull())
-        subtractFeeFromAmount = request.params[4].get_array();
+        setSubtractFeeFromOutputs = ParseSubtractFeeFromOutputs(request.params[4].get_array(), sendTo.getKeys());
 
     CCoinControl coin_control;
     if (!request.params[5].isNull()) {
@@ -428,8 +414,7 @@ RPCHelpMan sendmany()
 
     SetFeeEstimateMode(*pwallet, coin_control, /*conf_target=*/request.params[6], /*estimate_mode=*/request.params[7], /*fee_rate=*/request.params[8], /*override_min_fee=*/false);
 
-    std::vector<CRecipient> recipients;
-    ParseRecipients(sendTo, subtractFeeFromAmount, recipients);
+    std::vector<CRecipient> recipients = ParseRecipients(sendTo, setSubtractFeeFromOutputs);
     const bool verbose{request.params[9].isNull() ? false : request.params[9].get_bool()};
 
     return SendMoney(*pwallet, coin_control, recipients, std::move(mapValue), verbose);
