@@ -202,7 +202,11 @@ bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
             }
             proposed_a_sidechain = true;
 
-            CDataStream s(MakeByteSpan(out.scriptPubKey).subspan(5), SER_NETWORK, PROTOCOL_VERSION);
+            // Sidechain proposal serialization bytes from script
+            Span<const std::byte> bytes = MakeByteSpan(out.scriptPubKey).subspan(5);
+
+            // Test deserializing sidechain proposal
+            CDataStream s(bytes, SER_NETWORK, PROTOCOL_VERSION);
             Sidechain proposed;
             try {
                 s >> proposed;
@@ -214,7 +218,7 @@ bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
 
             uint256 sidechain_proposal_hash;
             CSHA256().Write(out.scriptPubKey.data() + 5, out.scriptPubKey.size() - 5).Finalize(sidechain_proposal_hash.data());
-            CreateDBEntry(view, txundo, block_height, {sidechain_proposal_hash, DBIDX_SIDECHAIN_PROPOSAL}, s);
+            CreateDBEntry(view, txundo, block_height, {sidechain_proposal_hash, DBIDX_SIDECHAIN_PROPOSAL}, CDataStream(bytes, SER_NETWORK, PROTOCOL_VERSION));
 
             s.clear();
             s << uint16_t{0};
