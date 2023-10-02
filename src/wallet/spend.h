@@ -224,7 +224,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const 
  * Insert additional inputs into the transaction by
  * calling CreateTransaction();
  */
-util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CMutableTransaction& tx, std::optional<unsigned int> change_pos, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
+util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CMutableTransaction& tx, const std::vector<CRecipient>& recipients, std::optional<unsigned int> change_pos, bool lockUnspents, CCoinControl);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_SPEND_H
