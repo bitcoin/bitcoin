@@ -580,6 +580,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
         <translation type="unfinished">要求付款 (產生QR碼 bitcoin: URIs)</translation>
     </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation type="unfinished">显示用过的付款地址和标签的列表</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation type="unfinished">显示用过的收款地址和标签的列表</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation type="unfinished">命令行选项(&amp;C)</translation>
+    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
@@ -587,8 +599,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     <message>
+        <source>%1 behind</source>
+        <translation type="unfinished">落后 %1</translation>
+    </message>
+    <message>
         <source>Catching up…</source>
         <translation type="unfinished">赶上...</translation>
+    </message>
+    <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation type="unfinished">最新接收到的区块是在%1之前生成的。</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation type="unfinished">在此之后的交易尚不可见。</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1025,6 +1049,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Close wallet</source>
         <translation type="unfinished">卸载钱包</translation>
     </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation type="unfinished">启用修剪时，如果一个钱包被卸载太久，就必须重新同步整条区块链才能再次加载它。</translation>
+    </message>
     </context>
 <context>
     <name>CreateWalletDialog</name>
@@ -1045,8 +1073,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">加密錢包。 錢包將使用您選擇的密碼進行加密。</translation>
     </message>
     <message>
+        <source>Advanced Options</source>
+        <translation type="unfinished">进阶设定</translation>
+    </message>
+    <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
         <translation type="unfinished">禁用此錢包的私鑰。取消了私鑰的錢包將沒有私鑰，並且不能有HD種子或匯入的私鑰。這是只能看的錢包的理想選擇。</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation type="unfinished">禁用私钥</translation>
     </message>
     <message>
         <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
@@ -1056,12 +1092,36 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Make Blank Wallet</source>
         <translation type="unfinished">製作空白錢包</translation>
     </message>
+    <message>
+        <source>Use descriptors for scriptPubKey management</source>
+        <translation type="unfinished">使用输出描述符进行scriptPubKey管理</translation>
+    </message>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">编译时未启用SQLite支持（输出描述符钱包需要它）</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
+        <source>Edit Address</source>
+        <translation type="unfinished">编辑地址</translation>
+    </message>
+    <message>
+        <source>&amp;Label</source>
+        <translation type="unfinished">标签(&amp;L)</translation>
+    </message>
+    <message>
+        <source>The label associated with this address list entry</source>
+        <translation type="unfinished">与此地址关联的标签</translation>
+    </message>
+    <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
         <translation type="unfinished">跟這個地址清單關聯的地址。只有發送地址能被修改。</translation>
+    </message>
+    <message>
+        <source>New sending address</source>
+        <translation type="unfinished">新建付款地址</translation>
     </message>
     <message>
         <source>Edit receiving address</source>
@@ -1070,6 +1130,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Edit sending address</source>
         <translation type="unfinished">编辑付款地址</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation type="unfinished">输入的地址“%1”已经存在于地址簿中，标签为“%2”。</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation type="unfinished">无法解锁钱包。</translation>
     </message>
     <message>
         <source>New key generation failed.</source>
@@ -1086,7 +1154,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
         <translation type="unfinished">已經有這個目錄了。如果你要在裡面造出新的目錄的話，請加上 %1.</translation>
     </message>
-    </context>
+    <message>
+        <source>Cannot create data directory here.</source>
+        <translation type="unfinished">无法在此创建数据目录。</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message numerus="yes">
@@ -1153,6 +1225,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
         <translation type="unfinished">由于这是第一次启动此程序，您可以选择%1存储数据的位置</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">初始化同步过程是非常吃力的，同时可能会暴露您之前没有注意到的电脑硬件问题。你每次启动%1时，它都会从之前中断的地方继续下载。</translation>
     </message>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>

@@ -652,7 +652,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation type="unfinished">%1 позади</translation>
+        <translation type="unfinished">Отстаём на %1</translation>
     </message>
     <message>
         <source>Catching up…</source>
@@ -1471,7 +1471,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>ShutdownWindow</name>
     <message>
         <source>%1 is shutting down…</source>
-        <translation type="unfinished">%1завершает процесс...</translation>
+        <translation type="unfinished">%1 выключается…</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>

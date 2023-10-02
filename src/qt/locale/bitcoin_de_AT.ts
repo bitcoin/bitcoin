@@ -419,6 +419,34 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
 <context>
     <name>BitcoinGUI</name>
     <message>
+        <source>&amp;Overview</source>
+        <translation type="unfinished">und Übersicht</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation type="unfinished">Allgemeine Übersicht des Wallets anzeigen.</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation type="unfinished">Und Überträgen </translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">Neues Wallet erstellen</translation>
+    </message>
+    <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">weitere Möglichkeiten/Einstellungen </translation>
+    </message>
+    <message>
+        <source>&amp;Verify message…</source>
+        <translation type="unfinished">Nachricht bestätigen </translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation type="unfinished">&amp;Hilfe</translation>
+    </message>
+    <message>
         <source>Connecting to peers…</source>
         <translation type="unfinished">Verbinde mit Peers...</translation>
     </message>

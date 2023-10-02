@@ -227,6 +227,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">والیٹ کا پاسفریز کامیابی کے ساتھ تبدیل کردیا گیا تھا۔</translation>
     </message>
     <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">پاس فریز کی تبدیلی ناکام ہوگئی</translation>
+    </message>
+    <message>
+        <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
+        <translation type="unfinished">بٹوے کے ڈکرپشن کے لیے درج کیا گیا پرانا پاس فریز غلط ہے۔ اس میں ایک خالی کریکٹر ہے (یعنی - ایک صفر بائٹ)۔ اگر پاس فریز 25.0 سے پہلے اس سافٹ ویئر کے ورژن کے ساتھ سیٹ کیا گیا تھا، تو براہ کرم صرف حروف کے ساتھ دوبارہ کوشش کریں — لیکن شامل نہیں — پہلے خالی کریکٹر۔</translation>
+    </message>
+    <message>
         <source>Warning: The Caps Lock key is on!</source>
         <translation type="unfinished">انتباہ: کیپس لاک کی آن ہے!</translation>
     </message>

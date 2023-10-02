@@ -384,7 +384,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform>%n 記録</numerusform>
+            <numerusform>%n 分</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -1334,6 +1334,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     <message>
+        <source>Choose data directory</source>
+        <translation type="unfinished">データ ディレクトリを選択</translation>
+    </message>
+    <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">最低でも%1 GBのデータをこのディレクトリに保存する必要があります。またこのデータは時間とともに増加していきます。</translation>
     </message>
@@ -1932,6 +1936,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message>
+        <source>PSBT Operations</source>
+        <translation type="unfinished">PSBTの処理</translation>
+    </message>
     <message>
         <source>Sign Tx</source>
         <translation type="unfinished">署名されたトランザクション</translation>
@@ -2714,6 +2722,22 @@ For more information on using this console, type %6.
         <translation type="unfinished">金額をコピー(&amp;a)</translation>
     </message>
     <message>
+        <source>Not recommended due to higher fees and less protection against typos.</source>
+        <translation type="unfinished">料金が高く、タイプミスに対する保護が少ないため、お勧めできません。</translation>
+    </message>
+    <message>
+        <source>Generates an address compatible with older wallets.</source>
+        <translation type="unfinished">古いウォレットでも使用可能なアドレスを生成します。</translation>
+    </message>
+    <message>
+        <source>Generates a native segwit address (BIP-173). Some old wallets don't support it.</source>
+        <translation type="unfinished">ネイティブSegwitアドレス(BIP-173)を生成します。古いウォレットではサポートされていません。</translation>
+    </message>
+    <message>
+        <source>Bech32m (BIP-350) is an upgrade to Bech32, wallet support is still limited.</source>
+        <translation type="unfinished">Bech32m (BIP-350) はBech32のアップグレード版です。サポートしているウォレットはまだ限定的です。</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation type="unfinished">ウォレットをアンロックできませんでした。</translation>
     </message>
@@ -3097,12 +3121,32 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">取引手数料</translation>
     </message>
     <message>
+        <source>%1 kvB</source>
+        <comment>PSBT transaction creation</comment>
+        <extracomment>When reviewing a newly created PSBT (via Send flow), the transaction fee is shown, with "virtual size" of the transaction displayed for context</extracomment>
+        <translation type="unfinished"> %1 kvB</translation>
+    </message>
+    <message>
         <source>Not signalling Replace-By-Fee, BIP-125.</source>
         <translation type="unfinished">Replace-By-Fee(手数料の上乗せ: BIP-125)機能は有効になっていません。</translation>
     </message>
     <message>
         <source>Total Amount</source>
         <translation type="unfinished">合計</translation>
+    </message>
+    <message>
+        <source>Unsigned Transaction</source>
+        <comment>PSBT copied</comment>
+        <extracomment>Caption of "PSBT has been copied" messagebox</extracomment>
+        <translation type="unfinished">未署名の取引</translation>
+    </message>
+    <message>
+        <source>The PSBT has been copied to the clipboard. You can also save it.</source>
+        <translation type="unfinished">PSBTはクリップボードにコピーされました。PSBTを保存することも可能です。</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk</source>
+        <translation type="unfinished">PSBTはディスクに保存されました</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3139,6 +3183,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation type="unfinished">%1 よりも高い手数料は、異常に高すぎです。</translation>
+    </message>
+    <message>
+        <source>%1/kvB</source>
+        <translation type="unfinished">%1 /kvB</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -3919,6 +3967,11 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">PSBTがコピーされました</translation>
     </message>
     <message>
+        <source>Copied to clipboard</source>
+        <comment>Fee-bump PSBT saved</comment>
+        <translation type="unfinished">クリップボードにコピーしました</translation>
+    </message>
+    <message>
         <source>Can't sign transaction.</source>
         <translation type="unfinished">トランザクションを署名できませんでした。</translation>
     </message>
@@ -4194,6 +4247,14 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">以前のバージョンで開始された -txindex アップグレードを完了できません。 以前のバージョンで再起動するか、 -reindex を実行してください。</translation>
     </message>
     <message>
+        <source>%s failed to validate the -assumeutxo snapshot state. This indicates a hardware problem, or a bug in the software, or a bad software modification that allowed an invalid snapshot to be loaded. As a result of this, the node will shut down and stop using any state that was built on the snapshot, resetting the chain height from %d to %d. On the next restart, the node will resume syncing from %d without using any snapshot data. Please report this incident to %s, including how you obtained the snapshot. The invalid snapshot chainstate has been left on disk in case it is helpful in diagnosing the issue that caused this error.</source>
+        <translation type="unfinished">%s は、-assumeutxo スナップショットの状態を検証できませんでした。 これは、ハードウェアの問題、ソフトウェアのバグ、または無効なスナップショットのロードを可能にした不適切なソフトウェアの変更を示しています。 この結果、ノードはシャットダウンし、スナップショット上に構築された状態の使用を停止し、チェーンの高さを %d から %d にリセットします。 次回の再起動時に、ノードはスナップショット データを使用せずに %d から同期を再開します。 スナップショットの取得方法も含めて、このインシデントを %s に報告してください。 このエラーの原因となった問題の診断に役立つように、無効なスナップショット チェーン状態がディスク上に残されています。</translation>
+    </message>
+    <message>
+        <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation type="unfinished">%s が非常に高く設定されています！ ひとつの取引でこの金額の手数料が支払われてしまうことがあります。</translation>
+    </message>
+    <message>
         <source>-reindex-chainstate option is not compatible with -blockfilterindex. Please temporarily disable blockfilterindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
         <translation type="unfinished">-reindex-chainstate オプションは -blockfilterindex と互換性がありません。 -reindex-chainstate の使用中は blockfilterindex を一時的に無効にするか、-reindex-chainstate を -reindex に置き換えてすべてのインデックスを完全に再構築してください。</translation>
     </message>
@@ -4230,8 +4291,16 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">無効な peers.dat ファイルの名前を変更できませんでした。移動または削除してから、もう一度お試しください。</translation>
     </message>
     <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable %s.</source>
+        <translation type="unfinished">手数料推定に失敗しました。代替手数料が無効です。数ブロック待つか、%s オプションを有効にしてください。</translation>
+    </message>
+    <message>
         <source>Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6</source>
         <translation type="unfinished">互換性のないオプション: -dnsseed=1 が明示的に指定されましたが、-onlynet は IPv4/IPv6 への接続を禁止します</translation>
+    </message>
+    <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation type="unfinished">%s=&lt;amount&gt; オプションに対する不正な設定: '%s' （取引の停滞防止のため、最小中継手数料の %s より大きい必要があります）</translation>
     </message>
     <message>
         <source>Outbound connections restricted to CJDNS (-onlynet=cjdns) but -cjdnsreachable is not provided</source>
@@ -4256,6 +4325,18 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>The preselected coins total amount does not cover the transaction target. Please allow other inputs to be automatically selected or include more coins manually</source>
         <translation type="unfinished">あらかじめ選択されたコインの合計額が、取引対象額に達していません。他のインプットを自動選択させるか、手動でコインを追加してください。</translation>
+    </message>
+    <message>
+        <source>Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input</source>
+        <translation type="unfinished">取引には、0 でない送金額の宛先、0 でない手数料率、あるいは事前に選択された入力が必要です</translation>
+    </message>
+    <message>
+        <source>UTXO snapshot failed to validate. Restart to resume normal initial block download, or try loading a different snapshot.</source>
+        <translation type="unfinished">UTXO スナップショットの検証に失敗しました。 再起動して通常の初期ブロックダウンロードを再開するか、別のスナップショットをロードしてみてください。</translation>
+    </message>
+    <message>
+        <source>Unconfirmed UTXOs are available, but spending them creates a chain of transactions that will be rejected by the mempool</source>
+        <translation type="unfinished">未確認の UTXO は利用可能ですが、それらを使用すると取引の連鎖が形成されるので、メモリプールによって拒否されます。</translation>
     </message>
     <message>
         <source>Unexpected legacy entry in descriptor wallet found. Loading wallet %s
@@ -4293,6 +4374,10 @@ Unable to cleanup failed migration</source>
 Unable to restore backup of wallet.</source>
         <translation type="unfinished">
 ウォレットのバックアップを復元できません。</translation>
+    </message>
+    <message>
+        <source>Block verification was interrupted</source>
+        <translation type="unfinished">ブロック検証が中断されました</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
@@ -4361,6 +4446,10 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Error opening block database</source>
         <translation type="unfinished">ブロックデータベースのオープン時にエラーが発生しました</translation>
+    </message>
+    <message>
+        <source>Error reading configuration file: %s</source>
+        <translation type="unfinished">エラー: 設定ファイルの読み込み: %s</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -4515,6 +4604,14 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">無効なP2Pアクセス権: '%s'</translation>
     </message>
     <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
+        <translation type="unfinished">%s=&lt;amount&gt; オプションに対する不正な設定: '%s'（最低でも %s が必要です）</translation>
+    </message>
+    <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
+        <translation type="unfinished">%s=&lt;amount&gt; オプションに対する不正な設定: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation type="unfinished">-%s=&lt;amount&gt; オプションに対する不正な amount: '%s'</translation>
     </message>
@@ -4641,6 +4738,10 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation type="unfinished">指定されたブロックディレクトリ "%s" は存在しません</translation>
+    </message>
+    <message>
+        <source>Specified data directory "%s" does not exist.</source>
+        <translation type="unfinished">指定されたデータディレクトリ "%s" は存在しません。</translation>
     </message>
     <message>
         <source>Starting network threads…</source>

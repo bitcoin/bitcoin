@@ -50,6 +50,10 @@
         <translation type="unfinished">Coin gönderilecek adresi seçiniz</translation>
     </message>
     <message>
+        <source>Choose the address to receive coins with</source>
+        <translation type="unfinished">Coinleri alacak adresi seçin</translation>
+    </message>
+    <message>
         <source>C&amp;hoose</source>
         <translation type="unfinished">S&amp;eç</translation>
     </message>
@@ -63,8 +67,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Bunlar Bitcoinleriniz için gönderici adreslerinizdir.
-Gönderim yapmadan önce her zaman tutarı ve alıcı adresi kontrol ediniz.</translation>
+        <translation type="unfinished">Bunlar ödemeleri gönderdiğiniz Bitcoin adreslerinizdir. Para göndermeden önce her zaman tutarı ve alıcı adresi kontrol ediniz.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
@@ -1281,6 +1284,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Bu ayarın geri döndürülmesi, tüm blok zincirinin yeniden indirilmesini gerektirir. Önce tüm zinciri indirmek ve daha sonra veri budamak daha hızlıdır. Bazı gelişmiş özellikleri devre dışı bırakır.</translation>
     </message>
     <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">Tamam'ı tıklattığınızda, %1, %4 ilk başlatıldığında %3'teki en eski işlemlerden başlayarak tam %4 blok zincirini (%2 GB) indirmeye ve işlemeye başlayacak.</translation>
+    </message>
+    <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
         <translation type="unfinished">Blok zinciri depolamayı (veri budama) sınırlamayı seçtiyseniz, geçmiş veriler yine de indirilmeli ve işlenmelidir, ancak disk kullanımınızı düşük tutmak için daha sonra silinecektir.</translation>
     </message>
@@ -1361,7 +1368,11 @@ Cüzdan kilidini aç.</translation>
         <source>Hide</source>
         <translation type="unfinished">Gizle</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">Bilinmeyen. Ön eşitleme Başlıkları (%1,%2 %)…</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -2083,6 +2094,16 @@ Cüzdan kilidini aç.</translation>
         <source>Address Relay</source>
         <extracomment>Text title for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
         <translation type="unfinished">Adres Aktarımı</translation>
+    </message>
+    <message>
+        <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
+        <extracomment>Tooltip text for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
+        <translation type="unfinished">Bu eşten alınan ve işlenen toplam adres sayısı (hız sınırlaması nedeniyle bırakılan adresler hariç).</translation>
+    </message>
+    <message>
+        <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
+        <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
+        <translation type="unfinished">Bu eşten alınan ve hız sınırlaması nedeniyle bırakılan (işlenmeyen) adreslerin toplam sayısı.</translation>
     </message>
     <message>
         <source>Addresses Processed</source>
@@ -3492,6 +3513,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
         <translation type="unfinished">Budama, en düşük değer olan %d MiB'den düşük olarak ayarlanmıştır. Lütfen daha yüksek bir sayı kullanınız.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead.</source>
+        <translation type="unfinished">Prune modu -reindex-chainstate ile uyumlu değil. Bunun yerine tam -reindex kullanın.</translation>
     </message>
     <message>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>

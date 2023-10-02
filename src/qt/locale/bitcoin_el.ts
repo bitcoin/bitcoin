@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Δεξί-κλικ για επεξεργασία της διεύθυνσης ή της ετικέτας</translation>
+        <translation type="unfinished">Δεξί-κλικ για επεξεργασία της διεύθυνσης ή  ετικέτας</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -222,6 +222,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
         <translation type="unfinished">Η φράση πρόσβασης που καταχωρήθηκε για την αποκρυπτογράφηση του πορτοφολιού δεν ήταν σωστή.</translation>
+    </message>
+    <message>
+        <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <translation type="unfinished">Η φράση πρόσβασης που εισήχθη για την αποκρυπτογράφηση του πορτοφολιού είναι εσφαλμένη. Περιέχει έναν μηδενικό χαρακτήρα (δηλαδή - ένα byte μηδέν). Εάν η φράση πρόσβασης ορίστηκε με μια έκδοση αυτού του λογισμικού πριν από την 25.0, δοκιμάστε ξανά μόνο με τους χαρακτήρες έως — αλλά χωρίς να συμπεριλαμβάνεται — ο πρώτος μηδενικός χαρακτήρας. Εάν αυτό είναι επιτυχές, ορίστε μια νέα φράση πρόσβασης για να αποφύγετε αυτό το ζήτημα στο μέλλον.</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
@@ -3856,6 +3860,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
         <translation type="unfinished">Αδύνατη η εγγραφή στον κατάλογο δεδομένων '%s'. Ελέγξτε τα δικαιώματα.</translation>
+    </message>
+    <message>
+        <source>The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.</source>
+        <translation type="unfinished">Η αναβάθμιση -txindex που άρχισε από προηγούμενη έκδοση δεν μπορεί να ολοκληρωθεί. Επανεκινήστε με προηγούμενη έκδοση ή τρέξτε ένα ολοκληρωμένο -renindex</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>

@@ -199,12 +199,26 @@
 <context>
     <name>QObject</name>
     <message>
+        <source>unknown</source>
+        <translation type="unfinished">थाहा नभयेको</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation type="unfinished">रकम</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. %1)</source>
         <translation type="unfinished">कृपया बिटकोइन ठेगाना प्रवेश गर्नुहोस् (उदाहरण %1)</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <extracomment>An inbound connection from a peer. An inbound connection is a connection initiated by a peer.</extracomment>
+        <translation type="unfinished">भित्री</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An outbound connection to a peer. An outbound connection is a connection initiated by us.</extracomment>
+        <translation type="unfinished">आउटबाउन्ड</translation>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
@@ -448,7 +462,33 @@
     </message>
     </context>
 <context>
+    <name>EditAddressDialog</name>
+    <message>
+        <source>Edit Address</source>
+        <translation type="unfinished">ठेगाना जाँच गर्नुहोस्</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation type="unfinished">&amp;ठेगाना </translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation type="unfinished">वालेट अनलक गर्न सकेन</translation>
+    </message>
+    </context>
+<context>
+    <name>FreespaceChecker</name>
+    <message>
+        <source>name</source>
+        <translation type="unfinished">नाम</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Bitcoin</source>
+        <translation type="unfinished">बिटकोइन</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -478,16 +518,75 @@
             <numerusform />
         </translation>
     </message>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">स्वागत छ</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">स्वागत छ %1 .</translation>
+    </message>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">फारम</translation>
+    </message>
+    <message>
+        <source>Number of blocks left</source>
+        <translation type="unfinished">बाँकी ब्लकहरूको संख्या</translation>
+    </message>
+    <message>
+        <source>Unknown…</source>
+        <translation type="unfinished">थाहा नभाको</translation>
+    </message>
+    <message>
+        <source>calculating…</source>
+        <translation type="unfinished">हिसाब...</translation>
+    </message>
+    <message>
+        <source>Progress</source>
+        <translation type="unfinished">प्रगति</translation>
+    </message>
+    <message>
+        <source>Progress increase per hour</source>
+        <translation type="unfinished">प्रति घण्टा प्रगति वृद्धि</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation type="unfinished">लुकाउनुहोस्</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
     <message>
+        <source>Options</source>
+        <translation type="unfinished">विकल्प</translation>
+    </message>
+    <message>
+        <source>&amp;Main</source>
+        <translation type="unfinished">&amp;मुख्य</translation>
+    </message>
+    <message>
+        <source>&amp;Network</source>
+        <translation type="unfinished">&amp;नेटवर्क</translation>
+    </message>
+    <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
         <translation type="unfinished">इन्टरफेसमा र सिक्का पठाउँदा देखिने डिफल्ट उपविभाजन एकाइ चयन गर्नुहोस् ।</translation>
+    </message>
+    <message>
+        <source>&amp;OK</source>
+        <translation type="unfinished">&amp;ठिक छ</translation>
     </message>
     </context>
 <context>
     <name>OverviewPage</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">फारम</translation>
+    </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation type="unfinished">देखाइएको सूचना पूरानो हुन सक्छ । कनेक्सन स्थापित भएपछि, तपाईंको वालेट बिटकोइन नेटवर्कमा स्वचालित रूपमा समिकरण हुन्छ , तर यो प्रक्रिया अहिले सम्म पूरा भएको छैन ।</translation>
@@ -525,12 +624,39 @@
         <translation type="unfinished">ब्यालेन्सहरु</translation>
     </message>
     <message>
+        <source>Total:</source>
+        <translation type="unfinished">सम्पूर्ण:</translation>
+    </message>
+    <message>
+        <source>Your current total balance</source>
+        <translation type="unfinished">तपाईंको हालको सम्पूर्ण ब्यालेन्स</translation>
+    </message>
+    <message>
+        <source>Spendable:</source>
+        <translation type="unfinished">खर्च उपलब्ध:</translation>
+    </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation type="unfinished">भर्खरको ट्राजेक्शनहरू</translation>
+    </message>
+    <message>
         <source>Mined balance in watch-only addresses that has not yet matured</source>
         <translation type="unfinished">अहिलेसम्म परिपक्व नभएको खनन गरिएको, हेर्ने-मात्र ठेगानामा रहेको ब्यालेन्स</translation>
     </message>
     <message>
         <source>Current total balance in watch-only addresses</source>
         <translation type="unfinished">हेर्ने-मात्र ठेगानामा रहेको हालको जम्मा ब्यालेन्स</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Save…</source>
+        <translation type="unfinished">राख्नुहोस्...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">बन्द गर्नुहोस् </translation>
     </message>
     </context>
 <context>
@@ -545,9 +671,33 @@
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
         <translation type="unfinished">ठेगाना</translation>
     </message>
-    </context>
+    <message>
+        <source>Type</source>
+        <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
+        <translation type="unfinished">टाइप गर्नुहोस्</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
+        <translation type="unfinished">नेटवर्क</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <extracomment>An Inbound Connection from a Peer.</extracomment>
+        <translation type="unfinished">भित्री</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An Outbound Connection to a Peer.</extracomment>
+        <translation type="unfinished">आउटबाउन्ड</translation>
+    </message>
+</context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>Network</source>
+        <translation type="unfinished">नेटवर्क</translation>
+    </message>
     <message>
         <source>User Agent</source>
         <translation type="unfinished">प्रयोगकर्ता एजेन्ट</translation>
@@ -555,6 +705,13 @@
     <message>
         <source>Ping Time</source>
         <translation type="unfinished">पिङ समय</translation>
+    </message>
+    </context>
+<context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation type="unfinished">वालेट अनलक गर्न सकेन</translation>
     </message>
     </context>
 <context>
@@ -577,6 +734,10 @@
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Hide</source>
+        <translation type="unfinished">लुकाउनुहोस्</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
@@ -629,6 +790,10 @@
         <source>Date</source>
         <translation type="unfinished">मिति</translation>
     </message>
+    <message>
+        <source>unknown</source>
+        <translation type="unfinished">थाहा नभयेको</translation>
+    </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
@@ -646,6 +811,10 @@
     <message>
         <source>Date</source>
         <translation type="unfinished">मिति</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation type="unfinished">टाइप गर्नुहोस्</translation>
     </message>
     <message>
         <source>Label</source>
@@ -666,6 +835,10 @@
     <message>
         <source>Date</source>
         <translation type="unfinished">मिति</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation type="unfinished">टाइप गर्नुहोस्</translation>
     </message>
     <message>
         <source>Label</source>
