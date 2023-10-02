@@ -2503,7 +2503,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
                             {RPCResult::Type::NUM_TIME, "unlocked_until", /* optional */ true, "the " + UNIX_EPOCH_TIME + " until which the wallet is unlocked for transfers, or 0 if the wallet is locked (only present for passphrase-encrypted wallets)"},
                             {RPCResult::Type::STR_AMOUNT, "paytxfee", "the transaction fee configuration, set in " + CURRENCY_UNIT + "/kB"},
                             {RPCResult::Type::STR_HEX, "hdchainid", "the ID of the HD chain"},
-                            {RPCResult::Type::STR, "hdaccountcount", "how many accounts of the HD chain are in this wallet"},
+                            {RPCResult::Type::NUM, "hdaccountcount", "how many accounts of the HD chain are in this wallet"},
                             {RPCResult::Type::ARR, "hdaccounts", "",
                                 {
                                 {RPCResult::Type::OBJ, "", "",
