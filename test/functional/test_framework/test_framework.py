@@ -999,6 +999,10 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         """Checks whether the wallet module was compiled with BDB support."""
         return self.config["components"].getboolean("USE_BDB")
 
+    def has_blockfile(self, node, filenum: str):
+        blocksdir = os.path.join(node.datadir, self.chain, 'blocks', '')
+        return os.path.isfile(os.path.join(blocksdir, f"blk{filenum}.dat"))
+
     def bump_mocktime(self, t, nodes=None):
         if self.mocktime is None:
             self.mocktime = int(time.time())
