@@ -767,7 +767,8 @@ bool BlockManager::FlushChainstateBlockFile(int tip_height)
     if (cursor) {
         return FlushBlockFile(cursor->file_num, /*fFinalize=*/false, /*finalize_undo=*/false);
     }
-    return false;
+    // No need to log warnings in this case.
+    return true;
 }
 
 uint64_t BlockManager::CalculateCurrentUsage()
