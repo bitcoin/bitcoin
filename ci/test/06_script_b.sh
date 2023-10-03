@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,6 +19,7 @@ if [ "$CI_OS_NAME" == "macos" ]; then
 else
   free -m -h
   echo "Number of CPUs (nproc): $(nproc)"
+  echo "System info: $(uname --kernel-name --kernel-release)"
   lscpu
 fi
 echo "Free disk space:"
