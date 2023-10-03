@@ -254,7 +254,6 @@ BASE_SCRIPTS = [
     'feature_utxo_set_hash.py',
     'feature_rbf.py',
     'mempool_packages.py',
-    'mempool_package_onemore.py',
     'mempool_package_limits.py',
     'mempool_package_rbf.py',
     'tool_utxo_to_sqlite.py',
