@@ -5,6 +5,7 @@
 #include <rpc/server.h>
 
 #include <addrman.h>
+#include <addrman_impl.h>
 #include <banman.h>
 #include <chainparams.h>
 #include <clientversion.h>
@@ -1079,6 +1080,74 @@ static RPCHelpMan getaddrmaninfo()
     };
 }
 
+UniValue AddrmanEntryToJSON(const AddrInfo& info)
+{
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKV("address", info.ToStringAddr());
+    ret.pushKV("port", info.GetPort());
+    ret.pushKV("services", (uint64_t)info.nServices);
+    ret.pushKV("time", int64_t{TicksSinceEpoch<std::chrono::seconds>(info.nTime)});
+    ret.pushKV("network", GetNetworkName(info.GetNetClass()));
+    ret.pushKV("source", info.source.ToStringAddr());
+    ret.pushKV("source_network", GetNetworkName(info.source.GetNetClass()));
+    return ret;
+}
+
+UniValue AddrmanTableToJSON(const std::vector<std::pair<AddrInfo, AddressPosition>>& tableInfos)
+{
+    UniValue table(UniValue::VOBJ);
+    for (const auto& e : tableInfos) {
+        AddrInfo info = e.first;
+        AddressPosition location = e.second;
+        std::ostringstream key;
+        key << location.bucket << "/" << location.position;
+        // Address manager tables have unique entries so there is no advantage
+        // in using UniValue::pushKV, which checks if the key already exists
+        // in O(N). UniValue::pushKVEnd is used instead which currently is O(1).
+        table.pushKVEnd(key.str(), AddrmanEntryToJSON(info));
+    }
+    return table;
+}
+
+static RPCHelpMan getrawaddrman()
+{
+    return RPCHelpMan{"getrawaddrman",
+        "EXPERIMENTAL warning: this call may be changed in future releases.\n"
+        "\nReturns information on all address manager entries for the new and tried tables.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ_DYN, "", "", {
+                {RPCResult::Type::OBJ_DYN, "table", "buckets with addresses in the address manager table ( new, tried )", {
+                    {RPCResult::Type::OBJ, "bucket/position", "the location in the address manager table (<bucket>/<position>)", {
+                        {RPCResult::Type::STR, "address", "The address of the node"},
+                        {RPCResult::Type::NUM, "port", "The port number of the node"},
+                        {RPCResult::Type::STR, "network", "The network (" + Join(GetNetworkNames(), ", ") + ") of the address"},
+                        {RPCResult::Type::NUM, "services", "The services offered by the node"},
+                        {RPCResult::Type::NUM_TIME, "time", "The " + UNIX_EPOCH_TIME + " when the node was last seen"},
+                        {RPCResult::Type::STR, "source", "The address that relayed the address to us"},
+                        {RPCResult::Type::STR, "source_network", "The network (" + Join(GetNetworkNames(), ", ") + ") of the source address"},
+                    }}
+                }}
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("getrawaddrman", "")
+            + HelpExampleRpc("getrawaddrman", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            NodeContext& node = EnsureAnyNodeContext(request.context);
+            if (!node.addrman) {
+                throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
+            }
+
+            UniValue ret(UniValue::VOBJ);
+            ret.pushKV("new", AddrmanTableToJSON(node.addrman->GetEntries(false)));
+            ret.pushKV("tried", AddrmanTableToJSON(node.addrman->GetEntries(true)));
+            return ret;
+        },
+    };
+}
+
 void RegisterNetRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
@@ -1099,6 +1168,7 @@ void RegisterNetRPCCommands(CRPCTable& t)
         {"hidden", &addpeeraddress},
         {"hidden", &sendmsgtopeer},
         {"hidden", &getaddrmaninfo},
+        {"hidden", &getrawaddrman},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);

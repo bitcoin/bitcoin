@@ -12,6 +12,7 @@ from itertools import product
 import time
 
 import test_framework.messages
+from test_framework.netutil import ADDRMAN_NEW_BUCKET_COUNT, ADDRMAN_TRIED_BUCKET_COUNT, ADDRMAN_BUCKET_SIZE
 from test_framework.p2p import (
     P2PInterface,
     P2P_SERVICES,
@@ -67,6 +68,7 @@ class NetTest(BitcoinTestFramework):
         self.test_addpeeraddress()
         self.test_sendmsgtopeer()
         self.test_getaddrmaninfo()
+        self.test_getrawaddrman()
 
     def test_connection_count(self):
         self.log.info("Test getconnectioncount")
@@ -387,6 +389,116 @@ class NetTest(BitcoinTestFramework):
             assert_equal(res[net]["new"], 0)
             assert_equal(res[net]["tried"], 0)
             assert_equal(res[net]["total"], 0)
+
+    def test_getrawaddrman(self):
+        self.log.info("Test getrawaddrman")
+        node = self.nodes[1]
+
+        self.log.debug("Test that getrawaddrman is a hidden RPC")
+        # It is hidden from general help, but its detailed help may be called directly.
+        assert "getrawaddrman" not in node.help()
+        assert "getrawaddrman" in node.help("getrawaddrman")
+
+        def check_addr_information(result, expected):
+            """Utility to compare a getrawaddrman result entry with an expected entry"""
+            assert_equal(result["address"], expected["address"])
+            assert_equal(result["port"], expected["port"])
+            assert_equal(result["services"], expected["services"])
+            assert_equal(result["network"], expected["network"])
+            assert_equal(result["source"], expected["source"])
+            assert_equal(result["source_network"], expected["source_network"])
+            # To avoid failing on slow test runners, use a 10s vspan here.
+            assert_approx(result["time"], time.time(), vspan=10)
+
+        def check_getrawaddrman_entries(expected):
+            """Utility to compare a getrawaddrman result with expected addrman contents"""
+            getrawaddrman = node.getrawaddrman()
+            getaddrmaninfo = node.getaddrmaninfo()
+            for (table_name, table_info) in expected.items():
+                assert_equal(len(getrawaddrman[table_name]), len(table_info["entries"]))
+                assert_equal(len(getrawaddrman[table_name]), getaddrmaninfo["all_networks"][table_name])
+
+                for bucket_position in getrawaddrman[table_name].keys():
+                    bucket = int(bucket_position.split("/")[0])
+                    position = int(bucket_position.split("/")[1])
+
+                    # bucket and position only be sanity checked here as the
+                    # test-addrman isn't deterministic
+                    assert 0 <= int(bucket) < table_info["bucket_count"]
+                    assert 0 <= int(position) < ADDRMAN_BUCKET_SIZE
+
+                    entry = getrawaddrman[table_name][bucket_position]
+                    expected_entry = list(filter(lambda e: e["address"] == entry["address"], table_info["entries"]))[0]
+                    check_addr_information(entry, expected_entry)
+
+        # we expect one addrman new and tried table entry, which were added in a previous test
+        expected = {
+            "new": {
+                "bucket_count": ADDRMAN_NEW_BUCKET_COUNT,
+                "entries": [
+                    {
+                        "address": "2.0.0.0",
+                        "port": 8333,
+                        "services": 9,
+                        "network": "ipv4",
+                        "source": "2.0.0.0",
+                        "source_network": "ipv4",
+                    }
+                ]
+            },
+            "tried": {
+                "bucket_count": ADDRMAN_TRIED_BUCKET_COUNT,
+                "entries": [
+                    {
+                        "address": "1.2.3.4",
+                        "port": 8333,
+                        "services": 9,
+                        "network": "ipv4",
+                        "source": "1.2.3.4",
+                        "source_network": "ipv4",
+                    }
+                ]
+            }
+        }
+
+        self.log.debug("Test that the getrawaddrman contains information about the addresses added in a previous test")
+        check_getrawaddrman_entries(expected)
+
+        self.log.debug("Add one new address to each addrman table")
+        expected["new"]["entries"].append({
+            "address": "2803:0:1234:abcd::1",
+            "services": 9,
+            "network": "ipv6",
+            "source": "2803:0:1234:abcd::1",
+            "source_network": "ipv6",
+            "port": -1,  # set once addpeeraddress is successful
+        })
+        expected["tried"]["entries"].append({
+            "address": "nrfj6inpyf73gpkyool35hcmne5zwfmse3jl3aw23vk7chdemalyaqad.onion",
+            "services": 9,
+            "network": "onion",
+            "source": "nrfj6inpyf73gpkyool35hcmne5zwfmse3jl3aw23vk7chdemalyaqad.onion",
+            "source_network": "onion",
+            "port": -1,  # set once addpeeraddress is successful
+        })
+
+        port = 0
+        for (table_name, table_info) in expected.items():
+            # There's a slight chance that the to-be-added address collides with an already
+            # present table entry. To avoid this, we increment the port until an address has been
+            # added. Incrementing the port changes the position in the new table bucket (bucket
+            # stays the same) and changes both the bucket and the position in the tried table.
+            while True:
+                if node.addpeeraddress(address=table_info["entries"][1]["address"], port=port, tried=table_name == "tried")["success"]:
+                    table_info["entries"][1]["port"] = port
+                    self.log.debug(f"Added {table_info['entries'][1]['address']} to {table_name} table")
+                    break
+                else:
+                    port += 1
+
+        self.log.debug("Test that the newly added addresses appear in getrawaddrman")
+        check_getrawaddrman_entries(expected)
+
 
 if __name__ == '__main__':
     NetTest().main()
