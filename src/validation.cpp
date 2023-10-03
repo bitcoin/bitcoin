@@ -59,6 +59,7 @@
 
 #include <llmq/instantsend.h>
 #include <llmq/chainlocks.h>
+#include <llmq/utils.h>
 
 #include <statsd_client.h>
 
@@ -1113,7 +1114,7 @@ NOTE:   unlike bitcoin we are using PREVIOUS block height here,
         might be a good idea to change this to use prev bits
         but current height to avoid confusion.
 */
-CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly)
+CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fMNRewardReallocated, bool fSuperblockPartOnly)
 {
     double dDiff;
     CAmount nSubsidyBase;
@@ -1157,19 +1158,22 @@ CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Pa
         nSubsidy *= consensusParams.nHighSubsidyFactor;
     }
 
+    CAmount nSuperblockPart{};
     // Hard fork to reduce the block reward by 10 extra percent (allowing budget/superblocks)
-    CAmount nSuperblockPart = (nPrevHeight > consensusParams.nBudgetPaymentsStartBlock) ? nSubsidy/10 : 0;
-
+    if (nPrevHeight > consensusParams.nBudgetPaymentsStartBlock) {
+        // Once MNRewardReallocated is active, the treasury is 20% instead of 10%
+        nSuperblockPart = nSubsidy / (fMNRewardReallocated ? 5 : 10);
+    }
     return fSuperblockPartOnly ? nSuperblockPart : nSubsidy - nSuperblockPart;
 }
 
 CAmount GetBlockSubsidy(const CBlockIndex* const pindex, const Consensus::Params& consensusParams)
 {
     if (pindex->pprev == nullptr) return Params().GenesisBlock().vtx[0]->GetValueOut();
-    return GetBlockSubsidyInner(pindex->pprev->nBits, pindex->pprev->nHeight, consensusParams);
+    return GetBlockSubsidyInner(pindex->pprev->nBits, pindex->pprev->nHeight, consensusParams, llmq::utils::IsMNRewardReallocationActive(pindex->pprev));
 }
 
-CAmount GetMasternodePayment(int nHeight, CAmount blockValue, int nReallocActivationHeight)
+CAmount GetMasternodePayment(int nHeight, CAmount blockValue, int nReallocActivationHeight, bool fMNRewardReallocated)
 {
     CAmount ret = blockValue/5; // start at 20%
 
@@ -1199,6 +1203,13 @@ CAmount GetMasternodePayment(int nHeight, CAmount blockValue, int nReallocActiva
     if (nHeight < nReallocStart) {
         // Activated but we have to wait for the next cycle to start realocation, nothing to do
         return ret;
+    }
+
+    if (fMNRewardReallocated) {
+        // Once MNRewardReallocated activates, block reward is 80% of block subsidy (+ tx fees) since treasury is 20%
+        // Since the MN reward needs to be equal to 60% of the block subsidy (according to the proposal), MN reward is set to 75% of the block reward.
+        // Previous reallocation periods are dropped.
+        return blockValue * 3 / 4;
     }
 
     // Periods used to reallocate the masternode reward from 50% to 60%

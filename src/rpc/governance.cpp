@@ -1023,6 +1023,7 @@ static UniValue getgovernanceinfo(const JSONRPCRequest& request)
                 {RPCResult::Type::NUM, "lastsuperblock", "the block number of the last superblock"},
                 {RPCResult::Type::NUM, "nextsuperblock", "the block number of the next superblock"},
                 {RPCResult::Type::NUM, "fundingthreshold", "the number of absolute yes votes required for a proposal to be passing"},
+                {RPCResult::Type::NUM, "governancebudget", "the governance budget for the next superblock in " + CURRENCY_UNIT + ""},
             }},
         RPCExamples{
             HelpExampleCli("getgovernanceinfo", "")
@@ -1047,6 +1048,7 @@ static UniValue getgovernanceinfo(const JSONRPCRequest& request)
     obj.pushKV("lastsuperblock", nLastSuperblock);
     obj.pushKV("nextsuperblock", nNextSuperblock);
     obj.pushKV("fundingthreshold", int(deterministicMNManager->GetListAtChainTip().GetValidWeightedMNsCount() / 10));
+    obj.pushKV("governancebudget", ValueFromAmount(CSuperblock::GetPaymentsLimit(nNextSuperblock)));
 
     return obj;
 }

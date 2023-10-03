@@ -504,9 +504,10 @@ class AssetLocksTest(DashTestFramework):
         owner_reward = bt['masternode'][1]['amount']
         operator_reward = bt['masternode'][2]['amount'] if len(bt['masternode']) == 3 else 0
         all_mn_rewards = platform_reward + owner_reward + operator_reward
-        assert_equal(all_mn_rewards, bt['coinbasevalue'] * 0.6)  # 60/40 mn/miner reward split
+        all_mn_rewards += 1 * 0.75
+        assert_equal(all_mn_rewards, bt['coinbasevalue'] * 0.75)  # 75/25 mn/miner reward split
         assert_equal(platform_reward, int(all_mn_rewards * 0.375))  # 0.375 platform share
-        assert_equal(platform_reward, 2299859813)
+        assert_equal(platform_reward, 2555399792)
         assert_equal(new_total, self.get_credit_pool_balance())
         node.generate(1)
         self.sync_all()

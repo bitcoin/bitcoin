@@ -206,9 +206,11 @@ double ConvertBitsToDouble(unsigned int nBits);
  * When pindex points to a genesis block GetBlockSubsidy() returns a pre-calculated value.
  * For other blocks it calls GetBlockSubsidyInner() using nBits and nHeight of a pindex->pprev block.
  */
-CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly = false);
+CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fMNRewardReallocated, bool fSuperblockPartOnly = false);
 CAmount GetBlockSubsidy(const CBlockIndex* const pindex, const Consensus::Params& consensusParams);
-CAmount GetMasternodePayment(int nHeight, CAmount blockValue, int nReallocActivationHeight = std::numeric_limits<int>::max() /* not activated */);
+/** nReallocActivationHeight refers to BRR (Block Reward Reallocation) activation height. */
+/** fMNRewardReallocated refers to Masternode Reward Location Reallocation activation. */
+CAmount GetMasternodePayment(int nHeight, CAmount blockValue, int nReallocActivationHeight, bool fMNRewardReallocated);
 
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
 double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex* pindex);

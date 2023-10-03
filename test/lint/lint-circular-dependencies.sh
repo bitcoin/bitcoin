@@ -103,6 +103,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "llmq/signing -> masternode/node -> validationinterface -> llmq/signing"
     "llmq/debug -> llmq/dkgsessionhandler -> llmq/debug"
     "llmq/debug -> llmq/dkgsessionhandler -> llmq/dkgsession -> llmq/debug"
+    "llmq/utils -> validation -> llmq/utils"
 )
 
 EXIT_CODE=0

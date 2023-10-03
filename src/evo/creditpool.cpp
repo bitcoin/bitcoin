@@ -246,7 +246,7 @@ bool CCreditPoolDiff::SetTarget(const CTransaction& tx, TxValidationState& state
     for (const CTxOut& txout : tx.vout) {
         blockReward += txout.nValue;
     }
-    platformReward = MasternodePayments::PlatformShare(GetMasternodePayment(cbTx.nHeight, blockReward, params.BRRHeight));
+    platformReward = MasternodePayments::PlatformShare(GetMasternodePayment(cbTx.nHeight, blockReward, params.BRRHeight, true));
     LogPrintf("CreditPool: set target to %lld with MN reward %lld\n", *targetBalance, platformReward);
 
     return true;
