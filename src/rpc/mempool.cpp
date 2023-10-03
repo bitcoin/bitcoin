@@ -291,13 +291,14 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     AssertLockHeld(pool.cs);
 
     auto [ancestor_count, ancestor_size, ancestor_fees] = pool.CalculateAncestorData(e);
+    auto [descendant_count, descendant_size, descendant_fees] = pool.CalculateDescendantData(e);
 
     info.pushKV("vsize", (int)e.GetTxSize());
     info.pushKV("weight", (int)e.GetTxWeight());
     info.pushKV("time", count_seconds(e.GetTime()));
     info.pushKV("height", (int)e.GetHeight());
-    info.pushKV("descendantcount", e.GetCountWithDescendants());
-    info.pushKV("descendantsize", e.GetSizeWithDescendants());
+    info.pushKV("descendantcount", descendant_count);
+    info.pushKV("descendantsize", descendant_size);
     info.pushKV("ancestorcount", ancestor_count);
     info.pushKV("ancestorsize", ancestor_size);
     info.pushKV("wtxid", e.GetTx().GetWitnessHash().ToString());
@@ -306,7 +307,7 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     fees.pushKV("base", ValueFromAmount(e.GetFee()));
     fees.pushKV("modified", ValueFromAmount(e.GetModifiedFee()));
     fees.pushKV("ancestor", ValueFromAmount(ancestor_fees));
-    fees.pushKV("descendant", ValueFromAmount(e.GetModFeesWithDescendants()));
+    fees.pushKV("descendant", ValueFromAmount(descendant_fees));
     info.pushKV("fees", std::move(fees));
 
     const CTransaction& tx = e.GetTx();

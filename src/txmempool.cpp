@@ -1217,6 +1217,21 @@ std::tuple<size_t, size_t, CAmount> CTxMemPool::CalculateAncestorData(const CTxM
     return {ancestor_count, ancestor_size, ancestor_fees};
 }
 
+std::tuple<size_t, size_t, CAmount> CTxMemPool::CalculateDescendantData(const CTxMemPoolEntry& entry) const
+{
+    auto descendants = m_txgraph->GetDescendants(entry, TxGraph::Level::MAIN);
+    size_t descendant_count = descendants.size();
+    size_t descendant_size = 0;
+    CAmount descendant_fees = 0;
+
+    for (auto tx: descendants) {
+        const CTxMemPoolEntry &desc = static_cast<const CTxMemPoolEntry&>(*tx);
+        descendant_size += desc.GetTxSize();
+        descendant_fees += desc.GetModifiedFee();
+    }
+    return {descendant_count, descendant_size, descendant_fees};
+}
+
 void CTxMemPool::GetTransactionAncestry(const Txid& txid, size_t& ancestors, size_t& descendants, size_t* const ancestorsize, CAmount* const ancestorfees) const {
     LOCK(cs);
     auto it = mapTx.find(txid);
