@@ -27,8 +27,7 @@ CUSTOM_DESCENDANT_COUNT = CUSTOM_ANCESTOR_COUNT
 class MempoolUpdateFromBlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        # Ancestor and descendant limits depend on transaction_graph_test requirements
-        self.extra_args = [['-limitdescendantsize=1000', '-limitancestorsize=1000', f'-limitancestorcount={CUSTOM_ANCESTOR_COUNT}', f'-limitdescendantcount={CUSTOM_DESCENDANT_COUNT}', "-limitclustersize=1000"]]
+        self.extra_args = [['-limitclustersize=1000']]
 
     def create_empty_fork(self, fork_length):
         '''

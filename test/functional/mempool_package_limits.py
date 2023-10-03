@@ -15,7 +15,7 @@ from test_framework.wallet import MiniWallet
 # 2) run the subtest, which may submit some transaction(s) to the mempool and
 #    create a list of hex transactions
 # 3) testmempoolaccept the package hex and check that it fails with the error
-#    "package-mempool-limits" for each tx
+#    "too-large-cluster" for each tx
 # 4) after mining a block, clearing the pre-submitted transactions from mempool,
 #    check that submitting the created package succeeds
 def check_package_limits(func):
@@ -26,7 +26,7 @@ def check_package_limits(func):
         testres_error_expected = node.testmempoolaccept(rawtxs=package_hex)
         assert_equal(len(testres_error_expected), len(package_hex))
         for txres in testres_error_expected:
-            assert "package-mempool-limits" in txres["package-error"]
+            assert "too-large-cluster" in txres["package-error"]
 
         # Clear mempool and check that the package passes now
         self.generate(node, 1)
@@ -39,6 +39,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+        self.extra_args = [["-limitclustercount=25"]]
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])

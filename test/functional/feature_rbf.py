@@ -27,15 +27,6 @@ MAX_CLUSTER_LIMIT = 64
 class ReplaceByFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.extra_args = [
-            [
-                "-limitancestorcount=64",
-                "-limitdescendantcount=64",
-            ],
-            # second node has default mempool parameters
-            [
-            ],
-        ]
         self.uses_wallet = None
 
     def run_test(self):
