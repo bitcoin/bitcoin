@@ -1455,7 +1455,7 @@ static RPCHelpMan getchaintips()
         } else if (block->nStatus & BLOCK_FAILED_MASK) {
             // This block or one of its ancestors is invalid.
             status = "invalid";
-        } else if (!block->HaveTxsDownloaded()) {
+        } else if (!block->HaveNumChainTxs()) {
             // This block cannot be connected because full block data for it or one of its parents is missing.
             status = "headers-only";
         } else if (block->IsValid(BLOCK_VALID_SCRIPTS)) {

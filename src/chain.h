@@ -280,10 +280,8 @@ public:
      * Note that this will be true for the snapshot base block, if one is loaded (and
      * all subsequent assumed-valid blocks) since its nChainTx value will have been set
      * manually based on the related AssumeutxoData entry.
-     *
-     * TODO: potentially change the name of this based on the fact above.
      */
-    bool HaveTxsDownloaded() const { return nChainTx != 0; }
+    bool HaveNumChainTxs() const { return nChainTx != 0; }
 
     NodeSeconds Time() const
     {
