@@ -1202,6 +1202,20 @@ void CTxMemPool::CalculateAncestorData(const CTxMemPoolEntry& entry, size_t& anc
     }
 }
 
+void CTxMemPool::CalculateDescendantData(const CTxMemPoolEntry& entry, size_t& descendant_count, size_t& descendant_size, CAmount& descendant_fees) const
+{
+    auto descendants = m_txgraph->GetDescendants(entry, TxGraph::Level::MAIN);
+    descendant_count = descendants.size();
+    descendant_size = 0;
+    descendant_fees = 0;
+
+    for (auto tx: descendants) {
+        const CTxMemPoolEntry &desc = static_cast<const CTxMemPoolEntry&>(*tx);
+        descendant_size += desc.GetTxSize();
+        descendant_fees += desc.GetModifiedFee();
+    }
+}
+
 void CTxMemPool::GetTransactionAncestry(const Txid& txid, size_t& ancestors, size_t& descendants, size_t* const ancestorsize, CAmount* const ancestorfees) const {
     LOCK(cs);
     auto it = mapTx.find(txid);
