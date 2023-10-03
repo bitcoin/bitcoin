@@ -229,6 +229,14 @@ util::Result<void> CTxMemPool::CheckPackageLimits(const Package& package,
     return {};
 }
 
+bool CTxMemPool::HasDescendants(const Txid& txid) const
+{
+    LOCK(cs);
+    auto entry = GetEntry(txid);
+    if (!entry) return false;
+    return m_txgraph->GetDescendants(*entry, /*main_only=*/true).size() > 1;
+}
+
 util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateMemPoolAncestors(
     const CTxMemPoolEntry &entry,
     const Limits& limits,
