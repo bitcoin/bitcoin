@@ -371,11 +371,6 @@ class NetTest(BitcoinTestFramework):
         self.log.info("Test getaddrmaninfo")
         node = self.nodes[1]
 
-        self.log.debug("Test that getaddrmaninfo is a hidden RPC")
-        # It is hidden from general help, but its detailed help may be called directly.
-        assert "getaddrmaninfo" not in node.help()
-        assert "getaddrmaninfo" in node.help("getaddrmaninfo")
-
         # current count of ipv4 addresses in addrman is {'new':1, 'tried':1}
         self.log.info("Test that count of addresses in addrman match expected values")
         res = node.getaddrmaninfo()
