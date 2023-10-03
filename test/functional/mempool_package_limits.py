@@ -39,6 +39,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+        self.extra_args = [["-limitclustercount=25"]]
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
