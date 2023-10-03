@@ -1294,6 +1294,19 @@ void CTxMemPool::CalculateAncestorData(const CTxMemPoolEntry& entry, size_t& anc
     }
 }
 
+void CTxMemPool::CalculateDescendantData(const CTxMemPoolEntry& entry, size_t& descendant_count, size_t& descendant_size, CAmount& descendant_fees) const
+{
+    std::vector<TxEntry::TxEntryRef> descendants = txgraph.GetDescendants({entry});
+    descendant_count = descendants.size();
+    descendant_size = 0;
+    descendant_fees = 0;
+
+    for (auto tx: descendants) {
+        descendant_size += tx.get().GetTxSize();
+        descendant_fees += tx.get().GetModifiedFee();
+    }
+}
+
 void CTxMemPool::GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants, size_t* const ancestorsize, CAmount* const ancestorfees) const {
     LOCK(cs);
     auto it = mapTx.find(txid);
