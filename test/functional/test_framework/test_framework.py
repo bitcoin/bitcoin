@@ -196,6 +196,8 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         parser.add_argument("--randomseed", type=int,
                             help="set a random seed for deterministically reproducing a previous test run")
         parser.add_argument("--timeout-factor", dest="timeout_factor", type=float, help="adjust test timeouts by a factor. Setting it to 0 disables all timeouts")
+        parser.add_argument("--v2transport", dest="v2transport", default=False, action="store_true",
+                            help="use BIP324 v2 connections between all nodes by default")
 
         self.add_options(parser)
         # Running TestShell in a Jupyter notebook causes an additional -f argument
@@ -511,6 +513,9 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
             offsetNum = offset
         for i in range(num_nodes):
             index = i + offsetNum
+            args = list(extra_args[i])
+            if self.options.v2transport and ("-v2transport=0" not in args):
+                args.append("-v2transport=1")
             test_node_i = TestNode(
                 index,
                 get_datadir_path(self.options.tmpdir, index),
@@ -524,7 +529,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
                 coverage_dir=self.options.coveragedir,
                 cwd=self.options.tmpdir,
                 extra_conf=extra_confs[i],
-                extra_args=extra_args[i],
+                extra_args=args,
                 use_cli=self.options.usecli,
                 start_perf=self.options.perf,
                 use_valgrind=self.options.valgrind,
@@ -588,11 +593,21 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
     def wait_for_node_exit(self, i, timeout):
         self.nodes[i].process.wait(timeout)
 
-    def connect_nodes(self, a, b):
+    def connect_nodes(self, a, b, *, peer_advertises_v2=None):
         from_connection = self.nodes[a]
         to_connection = self.nodes[b]
         ip_port = "127.0.0.1:" + str(p2p_port(b))
-        from_connection.addnode(ip_port, "onetry")
+
+        if peer_advertises_v2 is None:
+            peer_advertises_v2 = self.options.v2transport
+
+        if peer_advertises_v2:
+            from_connection.addnode(node=ip_port, command="onetry", v2transport=True)
+        else:
+            # skip the optional third argument (default false) for
+            # compatibility with older clients
+            from_connection.addnode(ip_port, "onetry")
+
         # poll until version handshake complete to avoid race conditions
         # with transaction relaying
         # See comments in net_processing:
@@ -600,12 +615,12 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         # * Must have a verack message before anything else
         wait_until_helper(lambda: all(peer['version'] != 0 for peer in from_connection.getpeerinfo()))
         wait_until_helper(lambda: all(peer['version'] != 0 for peer in to_connection.getpeerinfo()))
-        wait_until_helper(lambda: all(peer['bytesrecv_per_msg'].pop('verack', 0) == 24 for peer in from_connection.getpeerinfo()))
-        wait_until_helper(lambda: all(peer['bytesrecv_per_msg'].pop('verack', 0) == 24 for peer in to_connection.getpeerinfo()))
+        wait_until_helper(lambda: all(peer['bytesrecv_per_msg'].pop('verack', 0) >= 21 for peer in from_connection.getpeerinfo()))
+        wait_until_helper(lambda: all(peer['bytesrecv_per_msg'].pop('verack', 0) >= 21 for peer in to_connection.getpeerinfo()))
         # The message bytes are counted before processing the message, so make
         # sure it was fully processed by waiting for a ping.
-        wait_until_helper(lambda: all(peer["bytesrecv_per_msg"].pop("pong", 0) >= 32 for peer in from_connection.getpeerinfo()))
-        wait_until_helper(lambda: all(peer["bytesrecv_per_msg"].pop("pong", 0) >= 32 for peer in to_connection.getpeerinfo()))
+        wait_until_helper(lambda: all(peer["bytesrecv_per_msg"].pop("pong", 0) >= 29 for peer in from_connection.getpeerinfo()))
+        wait_until_helper(lambda: all(peer["bytesrecv_per_msg"].pop("pong", 0) >= 29 for peer in to_connection.getpeerinfo()))
 
     def disconnect_nodes(self, a, b):
         def disconnect_nodes_helper(node_a, node_b):

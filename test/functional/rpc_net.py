@@ -142,6 +142,7 @@ class NetTest(SyscoinTestFramework):
                 "relaytxes": False,
                 "services": "0000000000000000",
                 "servicesnames": [],
+                "session_id": "",
                 # SYSCOIN
                 'masternode': False,
                 "startingheight": -1,
@@ -149,6 +150,7 @@ class NetTest(SyscoinTestFramework):
                 "synced_blocks": -1,
                 "synced_headers": -1,
                 "timeoffset": 0,
+                "transport_protocol_type": "v1",
                 "version": 0,
             },
         )
