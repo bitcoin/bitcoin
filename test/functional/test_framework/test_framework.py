@@ -100,6 +100,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.extra_args = None
         self.network_thread = None
         self.rpc_timeout = 60  # Wait for up to 60 seconds for the RPC server to respond
+        self.wait_timeout = 60  # Test case wide default for the wait_until helper
         self.supports_cli = True
         self.bind_to_localhost_only = True
         self.parse_args()
@@ -515,6 +516,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 chain=self.chain,
                 rpchost=rpchost,
                 timewait=self.rpc_timeout,
+                wait_timeout=self.wait_timeout,
                 timeout_factor=self.options.timeout_factor,
                 bitcoind=binary[i],
                 bitcoin_cli=binary_cli[i],
@@ -736,7 +738,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.sync_blocks(nodes)
         self.sync_mempools(nodes)
 
-    def wait_until(self, test_function, timeout=60):
+    def wait_until(self, test_function, timeout=None):
+        if timeout is None:
+            timeout = self.wait_timeout
         return wait_until_helper(test_function, timeout=timeout, timeout_factor=self.options.timeout_factor)
 
     # Private helper methods. These should not be accessed by the subclass test scripts.
@@ -792,6 +796,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     extra_args=['-disablewallet'],
                     rpchost=None,
                     timewait=self.rpc_timeout,
+                    wait_timeout=self.wait_timeout,
                     timeout_factor=self.options.timeout_factor,
                     bitcoind=self.options.bitcoind,
                     bitcoin_cli=self.options.bitcoincli,
