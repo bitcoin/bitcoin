@@ -321,7 +321,7 @@ bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotat
     return true;
 }
 
-uint256 GetLastBaseBlockHash(const std::vector<const CBlockIndex*>& baseBlockIndexes, const CBlockIndex* blockIndex)
+uint256 GetLastBaseBlockHash(Span<const CBlockIndex*> baseBlockIndexes, const CBlockIndex* blockIndex)
 {
     uint256 hash;
     for (const auto baseBlock : baseBlockIndexes) {

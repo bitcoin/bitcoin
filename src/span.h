@@ -280,4 +280,14 @@ template <typename T> constexpr auto UCharSpanCast(Span<T> s) -> Span<typename s
 /** Like the Span constructor, but for (const) unsigned char member types only. Only works for (un)signed char containers. */
 template <typename V> constexpr auto MakeUCharSpan(V&& v) -> decltype(UCharSpanCast(Span{std::forward<V>(v)})) { return UCharSpanCast(Span{std::forward<V>(v)}); }
 
+template<typename C>
+[[nodiscard]] constexpr auto begin(const Span<C>& span) noexcept -> C* {
+    return span.begin();
+}
+
+template<typename C>
+[[nodiscard]] constexpr auto end(const Span<C>& span) noexcept -> C* {
+    return span.end();
+}
+
 #endif

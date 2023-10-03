@@ -65,7 +65,7 @@ bool CCoinJoinQueue::Sign()
 bool CCoinJoinQueue::CheckSignature(const CBLSPublicKey& blsPubKey) const
 {
     bool legacy_bls_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
-    if (!CBLSSignature(vchSig).VerifyInsecure(blsPubKey, GetSignatureHash(legacy_bls_scheme))) {
+    if (!CBLSSignature(Span{vchSig}).VerifyInsecure(blsPubKey, GetSignatureHash(legacy_bls_scheme))) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinQueue::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }
@@ -114,7 +114,7 @@ bool CCoinJoinBroadcastTx::Sign()
 bool CCoinJoinBroadcastTx::CheckSignature(const CBLSPublicKey& blsPubKey) const
 {
     bool legacy_bls_scheme = !llmq::utils::IsV19Active(::ChainActive().Tip());
-    if (!CBLSSignature(vchSig).VerifyInsecure(blsPubKey, GetSignatureHash(legacy_bls_scheme))) {
+    if (!CBLSSignature(Span{vchSig}).VerifyInsecure(blsPubKey, GetSignatureHash(legacy_bls_scheme))) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinBroadcastTx::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }

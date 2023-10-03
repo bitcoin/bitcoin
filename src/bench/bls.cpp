@@ -10,7 +10,7 @@
 #include <iostream>
 
 static void BuildTestVectors(size_t count, size_t invalidCount,
-                             BLSPublicKeyVector& pubKeys, BLSSecretKeyVector& secKeys, BLSSignatureVector& sigs,
+                             std::vector<CBLSPublicKey>& pubKeys, std::vector<CBLSSecretKey>& secKeys, std::vector<CBLSSignature>& sigs,
                              std::vector<uint256>& msgHashes,
                              std::vector<bool>& invalid)
 {
@@ -95,9 +95,9 @@ static void BLS_Sign_Normal(benchmark::Bench& bench)
 
 static void BLS_Verify_Normal(benchmark::Bench& bench)
 {
-    BLSPublicKeyVector pubKeys;
-    BLSSecretKeyVector secKeys;
-    BLSSignatureVector sigs;
+    std::vector<CBLSPublicKey> pubKeys;
+    std::vector<CBLSSecretKey> secKeys;
+    std::vector<CBLSSignature> sigs;
     std::vector<uint256> msgHashes;
     std::vector<bool> invalid;
     BuildTestVectors(1000, 10, pubKeys, secKeys, sigs, msgHashes, invalid);
@@ -120,9 +120,9 @@ static void BLS_Verify_Normal(benchmark::Bench& bench)
 
 static void BLS_Verify_LargeBlock(size_t txCount, benchmark::Bench& bench, uint32_t epoch_iters)
 {
-    BLSPublicKeyVector pubKeys;
-    BLSSecretKeyVector secKeys;
-    BLSSignatureVector sigs;
+    std::vector<CBLSPublicKey> pubKeys;
+    std::vector<CBLSSecretKey> secKeys;
+    std::vector<CBLSSignature> sigs;
     std::vector<uint256> msgHashes;
     std::vector<bool> invalid;
     BuildTestVectors(txCount, 0, pubKeys, secKeys, sigs, msgHashes, invalid);
@@ -148,9 +148,9 @@ static void BLS_Verify_LargeBlock1000(benchmark::Bench& bench)
 
 static void BLS_Verify_LargeBlockSelfAggregated(size_t txCount, benchmark::Bench& bench, uint32_t epoch_iters)
 {
-    BLSPublicKeyVector pubKeys;
-    BLSSecretKeyVector secKeys;
-    BLSSignatureVector sigs;
+    std::vector<CBLSPublicKey> pubKeys;
+    std::vector<CBLSSecretKey> secKeys;
+    std::vector<CBLSSignature> sigs;
     std::vector<uint256> msgHashes;
     std::vector<bool> invalid;
     BuildTestVectors(txCount, 0, pubKeys, secKeys, sigs, msgHashes, invalid);
@@ -175,9 +175,9 @@ static void BLS_Verify_LargeBlockSelfAggregated1000(benchmark::Bench& bench)
 
 static void BLS_Verify_LargeAggregatedBlock(size_t txCount, benchmark::Bench& bench, uint32_t epoch_iters)
 {
-    BLSPublicKeyVector pubKeys;
-    BLSSecretKeyVector secKeys;
-    BLSSignatureVector sigs;
+    std::vector<CBLSPublicKey> pubKeys;
+    std::vector<CBLSSecretKey> secKeys;
+    std::vector<CBLSSignature> sigs;
     std::vector<uint256> msgHashes;
     std::vector<bool> invalid;
     BuildTestVectors(txCount, 0, pubKeys, secKeys, sigs, msgHashes, invalid);
@@ -203,9 +203,9 @@ static void BLS_Verify_LargeAggregatedBlock1000(benchmark::Bench& bench)
 
 static void BLS_Verify_LargeAggregatedBlock1000PreVerified(benchmark::Bench& bench)
 {
-    BLSPublicKeyVector pubKeys;
-    BLSSecretKeyVector secKeys;
-    BLSSignatureVector sigs;
+    std::vector<CBLSPublicKey> pubKeys;
+    std::vector<CBLSSecretKey> secKeys;
+    std::vector<CBLSSignature> sigs;
     std::vector<uint256> msgHashes;
     std::vector<bool> invalid;
     BuildTestVectors(1000, 0, pubKeys, secKeys, sigs, msgHashes, invalid);
@@ -224,7 +224,7 @@ static void BLS_Verify_LargeAggregatedBlock1000PreVerified(benchmark::Bench& ben
 
     // Benchmark.
     bench.minEpochIterations(10).run([&] {
-        BLSPublicKeyVector nonvalidatedPubKeys;
+        std::vector<CBLSPublicKey> nonvalidatedPubKeys;
         std::vector<uint256> nonvalidatedHashes;
         nonvalidatedPubKeys.reserve(pubKeys.size());
         nonvalidatedHashes.reserve(msgHashes.size());
@@ -249,9 +249,9 @@ static void BLS_Verify_LargeAggregatedBlock1000PreVerified(benchmark::Bench& ben
 
 static void BLS_Verify_Batched(benchmark::Bench& bench)
 {
-    BLSPublicKeyVector pubKeys;
-    BLSSecretKeyVector secKeys;
-    BLSSignatureVector sigs;
+    std::vector<CBLSPublicKey> pubKeys;
+    std::vector<CBLSSecretKey> secKeys;
+    std::vector<CBLSSignature> sigs;
     std::vector<uint256> msgHashes;
     std::vector<bool> invalid;
     BuildTestVectors(1000, 10, pubKeys, secKeys, sigs, msgHashes, invalid);
@@ -266,8 +266,8 @@ static void BLS_Verify_Batched(benchmark::Bench& bench)
             return;
         }
 
-        BLSPublicKeyVector testPubKeys;
-        BLSSignatureVector testSigs;
+        std::vector<CBLSPublicKey> testPubKeys;
+        std::vector<CBLSSignature> testSigs;
         std::vector<uint256> testMsgHashes;
         testPubKeys.reserve(batchSize);
         testSigs.reserve(batchSize);
@@ -305,9 +305,9 @@ static void BLS_Verify_Batched(benchmark::Bench& bench)
 
 static void BLS_Verify_BatchedParallel(benchmark::Bench& bench)
 {
-    BLSPublicKeyVector pubKeys;
-    BLSSecretKeyVector secKeys;
-    BLSSignatureVector sigs;
+    std::vector<CBLSPublicKey> pubKeys;
+    std::vector<CBLSSecretKey> secKeys;
+    std::vector<CBLSSignature> sigs;
     std::vector<uint256> msgHashes;
     std::vector<bool> invalid;
     BuildTestVectors(1000, 10, pubKeys, secKeys, sigs, msgHashes, invalid);

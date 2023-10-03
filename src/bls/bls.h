@@ -57,7 +57,7 @@ public:
     static constexpr size_t SerSize = _SerSize;
 
     explicit CBLSWrapper() = default;
-    explicit CBLSWrapper(const std::vector<unsigned char>& vecBytes) : CBLSWrapper<ImplType, _SerSize, C>()
+    explicit CBLSWrapper(Span<const unsigned char> vecBytes) : CBLSWrapper<ImplType, _SerSize, C>()
     {
         SetByteVector(vecBytes, bls::bls_legacy_scheme.load());
     }
@@ -103,7 +103,7 @@ public:
         *(static_cast<C*>(this)) = C();
     }
 
-    void SetByteVector(const std::vector<uint8_t>& vecBytes, const bool specificLegacyScheme)
+    void SetByteVector(Span<const uint8_t> vecBytes, const bool specificLegacyScheme)
     {
         if (vecBytes.size() != SerSize) {
             Reset();
@@ -114,7 +114,7 @@ public:
             Reset();
         } else {
             try {
-                impl = ImplType::FromBytes(bls::Bytes(vecBytes), specificLegacyScheme);
+                impl = ImplType::FromBytes(bls::Bytes(vecBytes.data(), vecBytes.size()), specificLegacyScheme);
                 fValid = true;
             } catch (...) {
                 Reset();
@@ -179,7 +179,7 @@ public:
     template <typename Stream>
     inline void Unserialize(Stream& s, const bool specificLegacyScheme)
     {
-        std::vector<uint8_t> vecBytes(SerSize, 0);
+        std::array<uint8_t, SerSize> vecBytes{};
         s.read(reinterpret_cast<char*>(vecBytes.data()), SerSize);
         SetByteVector(vecBytes, specificLegacyScheme);
 
@@ -586,13 +586,7 @@ public:
 };
 #endif
 
-using BLSIdVector = std::vector<CBLSId>;
-using BLSVerificationVector = std::vector<CBLSPublicKey>;
-using BLSPublicKeyVector = std::vector<CBLSPublicKey>;
-using BLSSecretKeyVector = std::vector<CBLSSecretKey>;
-using BLSSignatureVector = std::vector<CBLSSignature>;
-
-using BLSVerificationVectorPtr = std::shared_ptr<BLSVerificationVector>;
+using BLSVerificationVectorPtr = std::shared_ptr<std::vector<CBLSPublicKey>>;
 
 bool BLSInit();
 

@@ -76,15 +76,15 @@ CQuorum::CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker) :
 {
 }
 
-void CQuorum::Init(CFinalCommitmentPtr _qc, const CBlockIndex* _pQuorumBaseBlockIndex, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members)
+void CQuorum::Init(CFinalCommitmentPtr _qc, const CBlockIndex* _pQuorumBaseBlockIndex, const uint256& _minedBlockHash, Span<CDeterministicMNCPtr> _members)
 {
     qc = std::move(_qc);
     m_quorum_base_block_index = _pQuorumBaseBlockIndex;
-    members = _members;
+    members = std::vector(_members.begin(), _members.end());
     minedBlockHash = _minedBlockHash;
 }
 
-bool CQuorum::SetVerificationVector(const BLSVerificationVector& quorumVecIn)
+bool CQuorum::SetVerificationVector(const std::vector<CBLSPublicKey>& quorumVecIn)
 {
     const auto quorumVecInSerialized = ::SerializeHash(quorumVecIn);
 
@@ -92,7 +92,7 @@ bool CQuorum::SetVerificationVector(const BLSVerificationVector& quorumVecIn)
     if (quorumVecInSerialized != qc->quorumVvecHash) {
         return false;
     }
-    quorumVvec = std::make_shared<BLSVerificationVector>(quorumVecIn);
+    quorumVvec = std::make_shared<std::vector<CBLSPublicKey>>(quorumVecIn);
     return true;
 }
 
@@ -173,9 +173,9 @@ bool CQuorum::ReadContributions(CEvoDB& evoDb)
 {
     uint256 dbKey = MakeQuorumKey(*this);
 
-    BLSVerificationVector qv;
+    std::vector<CBLSPublicKey> qv;
     if (evoDb.Read(std::make_pair(DB_QUORUM_QUORUM_VVEC, dbKey), qv)) {
-        WITH_LOCK(cs, quorumVvec = std::make_shared<BLSVerificationVector>(std::move(qv)));
+        WITH_LOCK(cs, quorumVvec = std::make_shared<std::vector<CBLSPublicKey>>(std::move(qv)));
     } else {
         return false;
     }
@@ -411,7 +411,7 @@ bool CQuorumManager::BuildQuorumContributions(const CFinalCommitmentPtr& fqc, co
 {
     std::vector<uint16_t> memberIndexes;
     std::vector<BLSVerificationVectorPtr> vvecs;
-    BLSSecretKeyVector skContributions;
+    std::vector<CBLSSecretKey> skContributions;
     if (!dkgManager.GetVerifiedContributions((Consensus::LLMQType)fqc->llmqType, quorum->m_quorum_base_block_index, fqc->validMembers, memberIndexes, vvecs, skContributions)) {
         return false;
     }
@@ -766,7 +766,7 @@ void CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, C
         // Check if request has QUORUM_VERIFICATION_VECTOR data
         if (request.GetDataMask() & CQuorumDataRequest::QUORUM_VERIFICATION_VECTOR) {
 
-            BLSVerificationVector verificationVector;
+            std::vector<CBLSPublicKey> verificationVector;
             vRecv >> verificationVector;
 
             if (pQuorum->SetVerificationVector(verificationVector)) {
@@ -794,7 +794,7 @@ void CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, C
             std::vector<CBLSIESEncryptedObject<CBLSSecretKey>> vecEncrypted;
             vRecv >> vecEncrypted;
 
-            BLSSecretKeyVector vecSecretKeys;
+            std::vector<CBLSSecretKey> vecSecretKeys;
             vecSecretKeys.resize(vecEncrypted.size());
             auto secret = WITH_LOCK(activeMasternodeInfoCs, return *activeMasternodeInfo.blsKeyOperator);
             for (const auto i : irange::range(vecEncrypted.size())) {

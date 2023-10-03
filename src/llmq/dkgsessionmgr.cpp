@@ -67,7 +67,7 @@ void CDKGSessionManager::MigrateDKG()
 
     while (pcursor->Valid()) {
         decltype(start_vvec) k;
-        BLSVerificationVector v;
+        std::vector<CBLSPublicKey> v;
 
         if (!pcursor->GetKey(k) || std::get<0>(k) != DB_VVEC) {
             break;
@@ -377,7 +377,7 @@ void CDKGSessionManager::WriteEncryptedContributions(Consensus::LLMQType llmqTyp
     db->Write(std::make_tuple(DB_ENC_CONTRIB, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), contributions);
 }
 
-bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, BLSSecretKeyVector& skContributionsRet) const
+bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, std::vector<CBLSSecretKey>& skContributionsRet) const
 {
     LOCK(contributionsCacheCs);
     auto members = utils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex);
@@ -394,7 +394,7 @@ bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, 
             ContributionsCacheKey cacheKey = {llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash};
             auto it = contributionsCache.find(cacheKey);
             if (it == contributionsCache.end()) {
-                auto vvecPtr = std::make_shared<BLSVerificationVector>();
+                auto vvecPtr = std::make_shared<std::vector<CBLSPublicKey>>();
                 CBLSSecretKey skContribution;
                 if (!db->Read(std::make_tuple(DB_VVEC, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), *vvecPtr)) {
                     return false;
