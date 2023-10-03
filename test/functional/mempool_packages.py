@@ -20,7 +20,7 @@ from test_framework.wallet import MiniWallet
 
 # custom limits for node1
 CUSTOM_ANCESTOR_LIMIT = 5
-CUSTOM_DESCENDANT_LIMIT = 10
+CUSTOM_DESCENDANT_LIMIT = 11
 assert CUSTOM_DESCENDANT_LIMIT >= CUSTOM_ANCESTOR_LIMIT
 
 
@@ -240,12 +240,15 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # - parent tx for descendant test
         # - txs chained off parent tx (-> custom descendant limit)
         self.wait_until(lambda: len(self.nodes[1].getrawmempool()) ==
-                                CUSTOM_ANCESTOR_LIMIT + 1 + CUSTOM_DESCENDANT_LIMIT, timeout=10)
+                                CUSTOM_ANCESTOR_LIMIT + CUSTOM_DESCENDANT_LIMIT, timeout=10)
         mempool0 = self.nodes[0].getrawmempool(False)
         mempool1 = self.nodes[1].getrawmempool(False)
         assert set(mempool1).issubset(set(mempool0))
         assert parent_transaction in mempool1
-        for tx in chain[:CUSTOM_DESCENDANT_LIMIT]:
+        # Note: this test is brittle, because it relies on the relay sort order
+        # of node0 to be based on ancestor count (so that the first 10
+        # descendants of parent_transaction relay before the later ones).
+        for tx in chain[:CUSTOM_DESCENDANT_LIMIT-1]:
             assert tx in mempool1
         for tx in chain[CUSTOM_DESCENDANT_LIMIT:]:
             assert tx not in mempool1
