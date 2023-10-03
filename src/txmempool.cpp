@@ -294,6 +294,14 @@ util::Result<bool> CTxMemPool::CheckClusterSizeLimit(int64_t entry_size, size_t 
     return CheckClusterSizeAgainstLimits(parents, entry_count, entry_size, limits);
 }
 
+bool CTxMemPool::HasDescendants(const Txid& txid) const
+{
+    LOCK(cs);
+    auto entry = GetEntry(txid);
+    if (!entry) return false;
+    return txgraph.HasDescendants(*entry);
+}
+
 std::vector<TxEntry::TxEntryRef> CTxMemPool::CalculateParents(const CTransaction& tx) const
 {
     std::vector<TxEntry::TxEntryRef> ret;
