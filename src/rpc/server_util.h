@@ -7,6 +7,7 @@
 
 #include <any>
 
+class AddrMan;
 class ArgsManager;
 class CBlockPolicyEstimator;
 class CConnman;
@@ -31,5 +32,7 @@ CBlockPolicyEstimator& EnsureFeeEstimator(const node::NodeContext& node);
 CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context);
 CConnman& EnsureConnman(const node::NodeContext& node);
 PeerManager& EnsurePeerman(const node::NodeContext& node);
+AddrMan& EnsureAddrman(const node::NodeContext& node);
+AddrMan& EnsureAnyAddrman(const std::any& context);
 
 #endif // BITCOIN_RPC_SERVER_UTIL_H
