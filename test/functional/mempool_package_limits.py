@@ -26,7 +26,7 @@ def check_package_limits(func):
         testres_error_expected = node.testmempoolaccept(rawtxs=package_hex)
         assert_equal(len(testres_error_expected), len(package_hex))
         for txres in testres_error_expected:
-            assert "package-mempool-limits" in txres["package-error"]
+            assert "too-large-cluster" in txres["package-error"]
 
         # Clear mempool and check that the package passes now
         self.generate(node, 1)
@@ -39,6 +39,7 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+        self.extra_args = [["-limitclustercount=25"]]
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
