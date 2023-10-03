@@ -1292,16 +1292,16 @@ void CTxMemPool::CalculateDescendantData(const CTxMemPoolEntry& entry, size_t& d
     }
 }
 
-void CTxMemPool::GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants, size_t* const ancestorsize, CAmount* const ancestorfees) const {
+void CTxMemPool::GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& clustersize, size_t* const ancestorsize, CAmount* const ancestorfees) const {
     LOCK(cs);
     auto it = mapTx.find(txid);
-    ancestors = descendants = 0;
+    ancestors = clustersize = 0;
     if (it != mapTx.end()) {
         size_t dummysize{0};
         CAmount dummyfees{0};
         CalculateAncestorData(*it, ancestors, ancestorsize ? *ancestorsize :
                 dummysize, ancestorfees ? *ancestorfees : dummyfees);
-        descendants = CalculateDescendantMaximum(it);
+        clustersize = txgraph.GetClusterCount(*it);
     }
 }
 
