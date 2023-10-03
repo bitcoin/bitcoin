@@ -208,15 +208,15 @@ class MempoolAcceptV3(BitcoinTestFramework):
         node.reconsiderblock(block[0])
 
 
-    @cleanup(extra_args=["-limitdescendantsize=10", "-datacarriersize=40000"])
+    @cleanup(extra_args=["-limitclustercount=1", "-datacarriersize=40000"])
     def test_nondefault_package_limits(self):
         """
-        Max standard tx size + v3 rules imply the ancestor/descendant rules (at their default
+        Max standard tx size + v3 rules imply the cluster rules (at their default
         values), but those checks must not be skipped. Ensure both sets of checks are done by
-        changing the ancestor/descendant limit configurations.
+        changing the cluster limit configurations.
         """
         node = self.nodes[0]
-        self.log.info("Test that a decreased limitdescendantsize also applies to v3 child")
+        self.log.info("Test that a decreased cluster size limit also applies to v3 child")
         parent_target_weight = 9990 * WITNESS_SCALE_FACTOR
         child_target_weight = 500 * WITNESS_SCALE_FACTOR
         tx_v3_parent_large1 = self.wallet.send_self_transfer(
@@ -235,7 +235,7 @@ class MempoolAcceptV3(BitcoinTestFramework):
         assert_greater_than_or_equal(1000, tx_v3_child_large1["tx"].get_vsize())
         assert_greater_than(tx_v3_parent_large1["tx"].get_vsize() + tx_v3_child_large1["tx"].get_vsize(), 10000)
 
-        assert_raises_rpc_error(-26, f"too-long-mempool-chain, exceeds descendant size limit for tx {tx_v3_parent_large1['txid']}", node.sendrawtransaction, tx_v3_child_large1["hex"])
+        assert_raises_rpc_error(-26, f"too-large-cluster, too many unconfirmed transactions in the cluster [limit: 1]", node.sendrawtransaction, tx_v3_child_large1["hex"])
         self.check_mempool([tx_v3_parent_large1["txid"]])
         assert_equal(node.getmempoolentry(tx_v3_parent_large1["txid"])["descendantcount"], 1)
         self.generate(node, 1)
