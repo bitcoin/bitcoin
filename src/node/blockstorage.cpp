@@ -294,7 +294,7 @@ void BlockManager::FindFilesToPruneManual(
         count++;
     }
     LogPrintf("[%s] Prune (Manual): prune_height=%d removed %d blk/rev pairs\n",
-        chain.GetRole(), last_block_can_prune, count);
+        chain.GetName(), last_block_can_prune, count);
 }
 
 void BlockManager::FindFilesToPrune(
@@ -305,8 +305,9 @@ void BlockManager::FindFilesToPrune(
 {
     LOCK2(cs_main, cs_LastBlockFile);
     // Distribute our -prune budget over all chainstates.
+    const int num_chainstates = chainman.HistoricalChainstate() ? 2 : 1;
     const auto target = std::max(
-        MIN_DISK_SPACE_FOR_BLOCK_FILES, GetPruneTarget() / chainman.GetAll().size());
+        MIN_DISK_SPACE_FOR_BLOCK_FILES, GetPruneTarget() / num_chainstates);
     const uint64_t target_sync_height = chainman.m_best_header->nHeight;
 
     if (chain.m_chain.Height() < 0 || target == 0) {
@@ -366,7 +367,7 @@ void BlockManager::FindFilesToPrune(
     }
 
     LogPrint(BCLog::PRUNE, "[%s] target=%dMiB actual=%dMiB diff=%dMiB min_height=%d max_prune_height=%d removed %d blk/rev pairs\n",
-             chain.GetRole(), target / 1024 / 1024, nCurrentUsage / 1024 / 1024,
+             chain.GetName(), target / 1024 / 1024, nCurrentUsage / 1024 / 1024,
              (int64_t(target) - int64_t(nCurrentUsage)) / 1024 / 1024,
              min_block_to_prune, last_block_can_prune, count);
 }
@@ -1199,16 +1200,8 @@ void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFile
         }
 
         // scan for better chains in the block chain database, that are not yet connected in the active best chain
-
-        // We can't hold cs_main during ActivateBestChain even though we're accessing
-        // the chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
-        // the relevant pointers before the ABC call.
-        for (Chainstate* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
-            BlockValidationState state;
-            if (!chainstate->ActivateBestChain(state, nullptr)) {
-                chainman.GetNotifications().fatalError(strprintf("Failed to connect best block (%s)", state.ToString()));
-                return;
-            }
+        if (auto result = chainman.ActivateBestChains(); !result) {
+            chainman.GetNotifications().fatalError(util::ErrorString(result).original);
         }
     } // End scope of ImportingNow
 }

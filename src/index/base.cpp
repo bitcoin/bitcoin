@@ -86,7 +86,7 @@ bool BaseIndex::Init()
     // m_chainstate member gives indexing code access to node internals. It is
     // removed in followup https://github.com/bitcoin/bitcoin/pull/24230
     m_chainstate = WITH_LOCK(::cs_main,
-        return &m_chain->context()->chainman->GetChainstateForIndexing());
+        return &m_chain->context()->chainman->ValidatedChainstate());
     // Register to validation interface before setting the 'm_synced' flag, so that
     // callbacks are not missed once m_synced is true.
     RegisterValidationInterface(this);
@@ -260,13 +260,11 @@ bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_ti
 
 void BaseIndex::BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex)
 {
-    // Ignore events from the assumed-valid chain; we will process its blocks
-    // (sequentially) after it is fully verified by the background chainstate. This
-    // is to avoid any out-of-order indexing.
+    // Ignore events from not fully validated chains to avoid out-of-order indexing.
     //
     // TODO at some point we could parameterize whether a particular index can be
     // built out of order, but for now just do the conservative simple thing.
-    if (role == ChainstateRole::ASSUMEDVALID) {
+    if (!role.validated) {
         return;
     }
 
@@ -317,9 +315,8 @@ void BaseIndex::BlockConnected(ChainstateRole role, const std::shared_ptr<const 
 
 void BaseIndex::ChainStateFlushed(ChainstateRole role, const CBlockLocator& locator)
 {
-    // Ignore events from the assumed-valid chain; we will process its blocks
-    // (sequentially) after it is fully verified by the background chainstate.
-    if (role == ChainstateRole::ASSUMEDVALID) {
+    // Ignore events from not fully validated chains to avoid out-of-order indexing.
+    if (!role.validated) {
         return;
     }
 

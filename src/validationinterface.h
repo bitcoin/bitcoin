@@ -7,7 +7,6 @@
 #define BITCOIN_VALIDATIONINTERFACE_H
 
 #include <kernel/cs_main.h>
-#include <kernel/chain.h>
 #include <primitives/transaction.h> // CTransaction(Ref)
 #include <sync.h>
 
@@ -60,6 +59,19 @@ void CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
  *     promise.get_future().wait();
  */
 void SyncWithValidationInterfaceQueue() LOCKS_EXCLUDED(cs_main);
+
+//! Information about chainstate that notifications are sent from.
+struct ChainstateRole {
+    //! Whether this is a notification from the chainstate syncing to the
+    //! most-work block, as opposed a chainstate downloading historic blocks and
+    //! being used to validate an assumeutxo snapshot.
+    bool most_work{true};
+
+    //! Whether this is a notification from chainstate that's been fully
+    //! validated starting from the genesis block. False if is from an
+    //! assumeutxo snapshot chainstate that has not been validated yet.
+    bool validated{true};
+};
 
 /**
  * Implement this to subscribe to events generated in validation and mempool

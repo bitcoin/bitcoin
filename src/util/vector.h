@@ -80,4 +80,11 @@ inline std::optional<V> FindFirst(const std::vector<V>& vec, const L fnc)
     return std::nullopt;
 }
 
+template<typename V, typename P>
+inline auto FindFirstPtr(V&& v, P&& predicate)
+{
+    auto it = std::find_if(v.begin(), v.end(), predicate);
+    return it != v.end() ? &*it : nullptr;
+}
+
 #endif // BITCOIN_UTIL_VECTOR_H

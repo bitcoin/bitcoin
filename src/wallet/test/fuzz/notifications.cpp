@@ -245,8 +245,8 @@ FUZZ_TARGET(wallet_notifications, .init = initialize_setup)
                 // time to the maximum value. This ensures that the wallet's birth time is always
                 // earlier than this maximum time.
                 info.chain_time_max = std::numeric_limits<unsigned int>::max();
-                a.wallet->blockConnected(ChainstateRole::NORMAL, info);
-                b.wallet->blockConnected(ChainstateRole::NORMAL, info);
+                a.wallet->blockConnected({}, info);
+                b.wallet->blockConnected({}, info);
                 // Store the coins for the next block
                 Coins coins_new;
                 for (const auto& tx : block.vtx) {

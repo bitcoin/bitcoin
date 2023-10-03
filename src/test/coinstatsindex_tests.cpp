@@ -105,7 +105,7 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_unclean_shutdown, TestChain100Setup)
         // Send block connected notification, then stop the index without
         // sending a chainstate flushed notification. Prior to #24138, this
         // would cause the index to be corrupted and fail to reload.
-        ValidationInterfaceTest::BlockConnected(ChainstateRole::NORMAL, index, new_block, new_block_index);
+        ValidationInterfaceTest::BlockConnected({}, index, new_block, new_block_index);
         index.Stop();
     }
 

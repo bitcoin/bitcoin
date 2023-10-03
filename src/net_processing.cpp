@@ -1987,7 +1987,7 @@ void PeerManagerImpl::BlockConnected(
 
     // The following task can be skipped since we don't maintain a mempool for
     // the ibd/background chainstate.
-    if (role == ChainstateRole::BACKGROUND) {
+    if (!role.most_work) {
         return;
     }
     m_orphanage.EraseForBlock(*pblock);
@@ -5964,12 +5964,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             // If a snapshot chainstate is in use, we want to find its next blocks
             // before the background chainstate to prioritize getting to network tip.
             FindNextBlocksToDownload(*peer, get_inflight_budget(), vToDownload, staller);
-            if (m_chainman.BackgroundSyncInProgress() && !IsLimitedPeer(*peer)) {
+            auto historical_blocks = m_chainman.GetHistoricalBlockRange();
+            if (historical_blocks && !IsLimitedPeer(*peer)) {
                 TryDownloadingHistoricalBlocks(
                     *peer,
                     get_inflight_budget(),
-                    vToDownload, m_chainman.GetBackgroundSyncTip(),
-                    Assert(m_chainman.GetSnapshotBaseBlock()));
+                    vToDownload, historical_blocks->first, historical_blocks->second);
             }
             for (const CBlockIndex *pindex : vToDownload) {
                 uint32_t nFetchFlags = GetFetchFlags(*peer);

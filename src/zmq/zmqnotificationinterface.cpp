@@ -174,7 +174,7 @@ void CZMQNotificationInterface::TransactionRemovedFromMempool(const CTransaction
 
 void CZMQNotificationInterface::BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected)
 {
-    if (role == ChainstateRole::BACKGROUND) {
+    if (!role.most_work) {
         return;
     }
     for (const CTransactionRef& ptx : pblock->vtx) {

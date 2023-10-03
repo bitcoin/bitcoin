@@ -9,6 +9,7 @@
 #include <common/settings.h>
 #include <primitives/transaction.h> // For CTransactionRef
 #include <util/result.h>
+#include <validationinterface.h>
 
 #include <functional>
 #include <memory>
@@ -28,7 +29,6 @@ class Coin;
 class uint256;
 enum class MemPoolRemovalReason;
 enum class RBFTransactionState;
-enum class ChainstateRole;
 struct bilingual_str;
 struct CBlockLocator;
 struct FeeCalculation;

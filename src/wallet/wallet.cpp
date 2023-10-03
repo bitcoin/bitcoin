@@ -631,7 +631,7 @@ void CWallet::chainStateFlushed(ChainstateRole role, const CBlockLocator& loc)
 {
     // Don't update the best block until the chain is attached so that in case of a shutdown,
     // the rescan will be restarted at next startup.
-    if (m_attaching_chain || role == ChainstateRole::BACKGROUND) {
+    if (m_attaching_chain || !role.most_work) {
         return;
     }
     WalletBatch batch(GetDatabase());
@@ -1459,7 +1459,7 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
 
 void CWallet::blockConnected(ChainstateRole role, const interfaces::BlockInfo& block)
 {
-    if (role == ChainstateRole::BACKGROUND) {
+    if (!role.most_work) {
         return;
     }
     assert(block.data);
@@ -2941,7 +2941,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         }
 
         if (chain) {
-            walletInstance->chainStateFlushed(ChainstateRole::NORMAL, chain->getTipLocator());
+            walletInstance->chainStateFlushed({}, chain->getTipLocator());
         }
     } else if (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS) {
         // Make it impossible to disable private keys after creation
@@ -3228,7 +3228,7 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
             }
         }
         walletInstance->m_attaching_chain = false;
-        walletInstance->chainStateFlushed(ChainstateRole::NORMAL, chain.getTipLocator());
+        walletInstance->chainStateFlushed({}, chain.getTipLocator());
         walletInstance->GetDatabase().IncrementUpdateCounter();
     }
     walletInstance->m_attaching_chain = false;
