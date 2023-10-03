@@ -665,10 +665,7 @@ public:
     bool hasDescendantsInMempool(const Txid& txid) override
     {
         if (!m_node.mempool) return false;
-        LOCK(m_node.mempool->cs);
-        const auto entry{m_node.mempool->GetEntry(txid)};
-        if (entry == nullptr) return false;
-        return entry->GetCountWithDescendants() > 1;
+        return m_node.mempool->HasDescendants(txid);
     }
     bool broadcastTransaction(const CTransactionRef& tx,
         const CAmount& max_tx_fee,
