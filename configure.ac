@@ -1276,11 +1276,9 @@ fi
 
 if test "$enable_fuzz_binary" = "yes"; then
   AC_MSG_CHECKING([whether main function is needed for fuzz binary])
-  AX_CHECK_LINK_FLAG(
-    [],
-    [AC_MSG_RESULT([no])],
-    [AC_MSG_RESULT([yes]); CORE_CPPFLAGS="$CORE_CPPFLAGS -DPROVIDE_FUZZ_MAIN_FUNCTION"],
-    [$SANITIZER_LDFLAGS],
+  TEMP_LDFLAGS="$LDFLAGS"
+  LDFLAGS="$LDFLAGS $SANITIZER_LDFLAGS"
+  AC_LINK_IFELSE(
     [AC_LANG_PROGRAM([[
       #include <cstdint>
       #include <cstddef>
@@ -1288,7 +1286,11 @@ if test "$enable_fuzz_binary" = "yes"; then
       /* comment to remove the main function ...
      ]],[[
       */ int not_main() {
-     ]])])
+     ]])],
+    [AC_MSG_RESULT([no])],
+    [AC_MSG_RESULT([yes]); CORE_CPPFLAGS="$CORE_CPPFLAGS -DPROVIDE_FUZZ_MAIN_FUNCTION"]
+    )
+  LDFLAGS="$TEMP_LDFLAGS"
 fi
 
 if test "$enable_wallet" != "no"; then
