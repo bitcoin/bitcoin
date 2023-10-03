@@ -1435,6 +1435,17 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
               feeCalc.est.fail.start, feeCalc.est.fail.end,
               (feeCalc.est.fail.totalConfirmed + feeCalc.est.fail.inMempool + feeCalc.est.fail.leftMempool) > 0.0 ? 100 * feeCalc.est.fail.withinTarget / (feeCalc.est.fail.totalConfirmed + feeCalc.est.fail.inMempool + feeCalc.est.fail.leftMempool) : 0.0,
               feeCalc.est.fail.withinTarget, feeCalc.est.fail.totalConfirmed, feeCalc.est.fail.inMempool, feeCalc.est.fail.leftMempool);
+
+    if (coin_control.m_silent_payment && wallet.IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENTS)) {
+        // If our wallet supports receiving silent payments, check if this transaction is a self transfer
+        std::map<COutPoint, Coin> spent_coins;
+        for (const auto& utxo : result.GetInputSet()) {
+            spent_coins[utxo->outpoint] = Coin{utxo->txout, 0, tx->IsCoinBase()};
+        }
+        for (SilentPaymentsSPKM* sp_spkm : wallet.GetSilentPaymentsSPKMs()) {
+            sp_spkm->IsMineSilentPayments(*tx, spent_coins);
+        }
+    }
     return CreatedTransactionResult(tx, current_fee, change_pos, feeCalc);
 }
 
