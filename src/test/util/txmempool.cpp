@@ -89,11 +89,14 @@ std::optional<std::string> CheckPackageMempoolAcceptResult(const Package& txns,
         }
 
         // m_effective_feerate and m_wtxids_fee_calculations should exist iff the result was valid
-        if (atmp_result.m_effective_feerate.has_value() != valid) {
+        // or if the failure was TX_RECONSIDERABLE
+        const bool valid_or_reconsiderable{atmp_result.m_result_type == MempoolAcceptResult::ResultType::VALID ||
+                    atmp_result.m_state.GetResult() == TxValidationResult::TX_RECONSIDERABLE};
+        if (atmp_result.m_effective_feerate.has_value() != valid_or_reconsiderable) {
             return strprintf("tx %s result should %shave m_effective_feerate",
                                     wtxid.ToString(), valid ? "" : "not ");
         }
-        if (atmp_result.m_wtxids_fee_calculations.has_value() != valid) {
+        if (atmp_result.m_wtxids_fee_calculations.has_value() != valid_or_reconsiderable) {
             return strprintf("tx %s result should %shave m_effective_feerate",
                                     wtxid.ToString(), valid ? "" : "not ");
         }

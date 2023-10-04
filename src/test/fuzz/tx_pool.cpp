@@ -154,12 +154,15 @@ void CheckATMPInvariants(const MempoolAcceptResult& res, bool txid_in_mempool, b
         // It may be already in the mempool since in ATMP cases we don't set MEMPOOL_ENTRY or DIFFERENT_WITNESS
         Assert(!res.m_state.IsValid());
         Assert(res.m_state.IsInvalid());
+
+        const bool is_reconsiderable{res.m_state.GetResult() == TxValidationResult::TX_RECONSIDERABLE};
         Assert(!res.m_replaced_transactions);
         Assert(!res.m_vsize);
         Assert(!res.m_base_fees);
-        // Unable or unwilling to calculate fees
-        Assert(!res.m_effective_feerate);
-        Assert(!res.m_wtxids_fee_calculations);
+        // Fee information is provided if the failure is TX_RECONSIDERABLE.
+        // In other cases, validation may be unable or unwilling to calculate the fees.
+        Assert(res.m_effective_feerate.has_value() == is_reconsiderable);
+        Assert(res.m_wtxids_fee_calculations.has_value() == is_reconsiderable);
         Assert(!res.m_other_wtxid);
         break;
     }
