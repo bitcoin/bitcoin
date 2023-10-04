@@ -6,6 +6,8 @@
 
 export LC_ALL=C.UTF-8
 
+set -ex
+
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   # Export all env vars to avoid missing some.
   # Though, exclude those with newlines to avoid parsing problems.
