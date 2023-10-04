@@ -42,7 +42,7 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <undo.h>
-#include <util/check.h> // For NDEBUG compile time check
+#include <util/check.h>
 #include <util/hasher.h>
 #include <util/strencodings.h>
 #include <util/trace.h>
