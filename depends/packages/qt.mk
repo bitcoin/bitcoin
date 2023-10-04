@@ -11,6 +11,7 @@ $(package)_patches = qt.pro
 $(package)_patches += qttools_src.pro
 $(package)_patches += mac-qmake.conf
 $(package)_patches += fix_qt_pkgconfig.patch
+$(package)_patches += fix_qt_placeholders.patch
 $(package)_patches += no-xlib.patch
 $(package)_patches += dont_hardcode_x86_64.patch
 $(package)_patches += fix_montery_include.patch
@@ -245,6 +246,7 @@ define $(package)_preprocess_cmds
   cp $($(package)_patch_dir)/qttools_src.pro qttools/src/src.pro && \
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_qt_pkgconfig.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix_qt_placeholders.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_android_jni_static.patch && \
   patch -p1 -i $($(package)_patch_dir)/no-xlib.patch && \
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_x86_64.patch && \
