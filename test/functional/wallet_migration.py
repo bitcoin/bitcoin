@@ -6,6 +6,7 @@
 
 import os
 import random
+from test_framework.address import script_to_p2sh
 from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import COIN, CTransaction, CTxOut
@@ -640,6 +641,21 @@ class WalletMigrationTest(BitcoinTestFramework):
         wallet.rpc.importaddress(address=script_wsh_pkh.hex(), label="raw_spk2", rescan=True, p2sh=False)
         assert_equal(wallet.getbalances()['watchonly']['trusted'], 5)
 
+        # Import sh(pkh()) script, by using importaddress(), with the p2sh flag enabled.
+        # This will wrap the script under another sh level, which is invalid!, and store it inside the wallet.
+        # The migration process must skip the invalid scripts and the addressbook records linked to them.
+        # They are not being watched by the current wallet, nor should be watched by the migrated one.
+        label_sh_pkh = "raw_sh_pkh"
+        script_pkh = key_to_p2pkh_script(df_wallet.getaddressinfo(df_wallet.getnewaddress())["pubkey"])
+        script_sh_pkh = script_to_p2sh_script(script_pkh)
+        addy_script_sh_pkh = script_to_p2sh(script_pkh)  # valid script address
+        addy_script_double_sh_pkh = script_to_p2sh(script_sh_pkh)  # invalid script address
+
+        # Note: 'importaddress()' will add two scripts, a valid one sh(pkh()) and an invalid one 'sh(sh(pkh()))'.
+        #       Both of them will be stored with the same addressbook label. And only the latter one should
+        #       be discarded during migration. The first one must be migrated.
+        wallet.rpc.importaddress(address=script_sh_pkh.hex(), label=label_sh_pkh, rescan=False, p2sh=True)
+
         # Migrate wallet and re-check balance
         info_migration = wallet.migratewallet()
         wallet_wo = self.nodes[0].get_wallet_rpc(info_migration["watchonly_name"])
@@ -649,10 +665,67 @@ class WalletMigrationTest(BitcoinTestFramework):
         # The watch-only scripts are no longer part of the main wallet
         assert_equal(wallet.getbalances()['mine']['trusted'], 0)
 
+        # The invalid sh(sh(pk())) script label must not be part of the main wallet anymore
+        assert label_sh_pkh not in wallet.listlabels()
+        # But, the standard sh(pkh()) script should be part of the watch-only wallet.
+        addrs_by_label = wallet_wo.getaddressesbylabel(label_sh_pkh)
+        assert addy_script_sh_pkh in addrs_by_label
+        assert addy_script_double_sh_pkh not in addrs_by_label
+
+        # Also, the watch-only wallet should have the descriptor for the standard sh(pkh())
+        desc = descsum_create(f"addr({addy_script_sh_pkh})")
+        assert next(it['desc'] for it in wallet_wo.listdescriptors()['descriptors'] if it['desc'] == desc)
+        # And doesn't have a descriptor for the invalid one
+        desc_invalid = descsum_create(f"addr({addy_script_double_sh_pkh})")
+        assert_equal(next((it['desc'] for it in wallet_wo.listdescriptors()['descriptors'] if it['desc'] == desc_invalid), None), None)
+
         # Just in case, also verify wallet restart
         self.nodes[0].unloadwallet(info_migration["watchonly_name"])
         self.nodes[0].loadwallet(info_migration["watchonly_name"])
         assert_equal(wallet_wo.getbalances()['mine']['trusted'], 5)
+
+    def test_conflict_txs(self):
+        self.log.info("Test migration when wallet contains conflicting transactions")
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        wallet = self.create_legacy_wallet("conflicts")
+        def_wallet.sendtoaddress(wallet.getnewaddress(), 10)
+        self.generate(self.nodes[0], 1)
+
+        # parent tx
+        parent_txid = wallet.sendtoaddress(wallet.getnewaddress(), 9)
+        parent_txid_bytes = bytes.fromhex(parent_txid)[::-1]
+        conflict_utxo = wallet.gettransaction(txid=parent_txid, verbose=True)["decoded"]["vin"][0]
+
+        # The specific assertion in MarkConflicted being tested requires that the parent tx is already loaded
+        # by the time the child tx is loaded. Since transactions end up being loaded in txid order due to how both
+        # and sqlite store things, we can just grind the child tx until it has a txid that is greater than the parent's.
+        locktime = 500000000 # Use locktime as nonce, starting at unix timestamp minimum
+        addr = wallet.getnewaddress()
+        while True:
+            child_send_res = wallet.send(outputs=[{addr: 8}], options={"add_to_wallet": False, "locktime": locktime})
+            child_txid = child_send_res["txid"]
+            child_txid_bytes = bytes.fromhex(child_txid)[::-1]
+            if (child_txid_bytes > parent_txid_bytes):
+                wallet.sendrawtransaction(child_send_res["hex"])
+                break
+            locktime += 1
+
+        # conflict with parent
+        conflict_unsigned = self.nodes[0].createrawtransaction(inputs=[conflict_utxo], outputs=[{wallet.getnewaddress(): 9.9999}])
+        conflict_signed = wallet.signrawtransactionwithwallet(conflict_unsigned)["hex"]
+        conflict_txid = self.nodes[0].sendrawtransaction(conflict_signed)
+        self.generate(self.nodes[0], 1)
+        assert_equal(wallet.gettransaction(txid=parent_txid)["confirmations"], -1)
+        assert_equal(wallet.gettransaction(txid=child_txid)["confirmations"], -1)
+        assert_equal(wallet.gettransaction(txid=conflict_txid)["confirmations"], 1)
+
+        wallet.migratewallet()
+        assert_equal(wallet.gettransaction(txid=parent_txid)["confirmations"], -1)
+        assert_equal(wallet.gettransaction(txid=child_txid)["confirmations"], -1)
+        assert_equal(wallet.gettransaction(txid=conflict_txid)["confirmations"], 1)
+
+        wallet.unloadwallet()
 
     def run_test(self):
         self.generate(self.nodes[0], 101)
@@ -668,6 +741,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_unloaded_by_path()
         self.test_addressbook()
         self.test_migrate_raw_p2sh()
+        self.test_conflict_txs()
 
 if __name__ == '__main__':
     WalletMigrationTest().main()

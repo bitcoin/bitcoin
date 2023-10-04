@@ -1323,11 +1323,14 @@ void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, c
 {
     LOCK(cs_wallet);
 
-    int conflictconfirms = (m_last_block_processed_height - conflicting_height + 1) * -1;
     // If number of conflict confirms cannot be determined, this means
     // that the block is still unknown or not yet part of the main chain,
     // for example when loading the wallet during a reindex. Do nothing in that
     // case.
+    if (m_last_block_processed_height < 0 || conflicting_height < 0) {
+        return;
+    }
+    int conflictconfirms = (m_last_block_processed_height - conflicting_height + 1) * -1;
     if (conflictconfirms >= 0)
         return;
 
@@ -3899,6 +3902,13 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         return false;
     }
 
+    // Get all invalid or non-watched scripts that will not be migrated
+    std::set<CTxDestination> not_migrated_dests;
+    for (const auto& script : legacy_spkm->GetNotMineScriptPubKeys()) {
+        CTxDestination dest;
+        if (ExtractDestination(script, dest)) not_migrated_dests.emplace(dest);
+    }
+
     for (auto& desc_spkm : data.desc_spkms) {
         if (m_spk_managers.count(desc_spkm->GetID()) > 0) {
             error = _("Error: Duplicate descriptors created during migration. Your wallet may be corrupted.");
@@ -4004,6 +4014,13 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                         continue;
                     }
                 }
+
+                // Skip invalid/non-watched scripts that will not be migrated
+                if (not_migrated_dests.count(addr_pair.first) > 0) {
+                    dests_to_delete.push_back(addr_pair.first);
+                    continue;
+                }
+
                 // Not ours, not in watchonly wallet, and not in solvable
                 error = _("Error: Address book data in wallet cannot be identified to belong to migrated wallets");
                 return false;

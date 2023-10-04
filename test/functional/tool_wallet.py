@@ -400,6 +400,62 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error('Error: Checksum is not the correct size', '-wallet=badload', '-dumpfile={}'.format(bad_sum_wallet_dump), 'createfromdump')
         assert not os.path.isdir(os.path.join(self.nodes[0].datadir, "regtest/wallets", "badload"))
 
+    def test_chainless_conflicts(self):
+        self.log.info("Test wallet tool when wallet contains conflicting transactions")
+        self.restart_node(0)
+        self.generate(self.nodes[0], 101)
+
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        self.nodes[0].createwallet("conflicts")
+        wallet = self.nodes[0].get_wallet_rpc("conflicts")
+        def_wallet.sendtoaddress(wallet.getnewaddress(), 10)
+        self.generate(self.nodes[0], 1)
+
+        # parent tx
+        parent_txid = wallet.sendtoaddress(wallet.getnewaddress(), 9)
+        parent_txid_bytes = bytes.fromhex(parent_txid)[::-1]
+        conflict_utxo = wallet.gettransaction(txid=parent_txid, verbose=True)["decoded"]["vin"][0]
+
+        # The specific assertion in MarkConflicted being tested requires that the parent tx is already loaded
+        # by the time the child tx is loaded. Since transactions end up being loaded in txid order due to how both
+        # and sqlite store things, we can just grind the child tx until it has a txid that is greater than the parent's.
+        locktime = 500000000 # Use locktime as nonce, starting at unix timestamp minimum
+        addr = wallet.getnewaddress()
+        while True:
+            child_send_res = wallet.send(outputs=[{addr: 8}], options={"add_to_wallet": False, "locktime": locktime})
+            child_txid = child_send_res["txid"]
+            child_txid_bytes = bytes.fromhex(child_txid)[::-1]
+            if (child_txid_bytes > parent_txid_bytes):
+                wallet.sendrawtransaction(child_send_res["hex"])
+                break
+            locktime += 1
+
+        # conflict with parent
+        conflict_unsigned = self.nodes[0].createrawtransaction(inputs=[conflict_utxo], outputs=[{wallet.getnewaddress(): 9.9999}])
+        conflict_signed = wallet.signrawtransactionwithwallet(conflict_unsigned)["hex"]
+        conflict_txid = self.nodes[0].sendrawtransaction(conflict_signed)
+        self.generate(self.nodes[0], 1)
+        assert_equal(wallet.gettransaction(txid=parent_txid)["confirmations"], -1)
+        assert_equal(wallet.gettransaction(txid=child_txid)["confirmations"], -1)
+        assert_equal(wallet.gettransaction(txid=conflict_txid)["confirmations"], 1)
+
+        self.stop_node(0)
+
+        # Wallet tool should successfully give info for this wallet
+        expected_output = textwrap.dedent(f'''\
+            Wallet info
+            ===========
+            Name: conflicts
+            Format: {"sqlite" if self.options.descriptors else "bdb"}
+            Descriptors: {"yes" if self.options.descriptors else "no"}
+            Encrypted: no
+            HD (hd seed available): yes
+            Keypool Size: {"8" if self.options.descriptors else "1"}
+            Transactions: 4
+            Address Book: 4
+        ''')
+        self.assert_tool_output(expected_output, "-wallet=conflicts", "info")
 
     def run_test(self):
         self.wallet_path = os.path.join(self.nodes[0].datadir, self.chain, 'wallets', self.default_wallet_name, self.wallet_data_filename)
@@ -413,6 +469,7 @@ class ToolWalletTest(BitcoinTestFramework):
             # Salvage is a legacy wallet only thing
             self.test_salvage()
         self.test_dump_createfromdump()
+        self.test_chainless_conflicts()
 
 if __name__ == '__main__':
     ToolWalletTest().main()
