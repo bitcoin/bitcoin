@@ -142,7 +142,10 @@ class AssumeutxoTest(BitcoinTestFramework):
             f"-stopatheight={PAUSE_HEIGHT}", *self.extra_args[1]])
 
         # Finally connect the nodes and let them sync.
-        self.connect_nodes(0, 1)
+        #
+        # Set `wait_for_connect=False` to avoid a race between performing connection
+        # assertions and the -stopatheight tripping.
+        self.connect_nodes(0, 1, wait_for_connect=False)
 
         n1.wait_until_stopped(timeout=5)
 
