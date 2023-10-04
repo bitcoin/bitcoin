@@ -350,7 +350,6 @@ public:
      */
     void check(const CCoinsViewCache& active_coins_tip, int64_t spendheight) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-
     void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** After reorg, filter the entries that would no longer be valid in the next block, and update
      * the entries' cached LockPoints if needed.  The mempool does not have any knowledge of
@@ -639,35 +638,8 @@ private:
      */
     void RemoveStaged(setEntries& stage, bool updateDescendants, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    /** UpdateForDescendants is used by UpdateTransactionsFromBlock to update
-     *  the descendants for a single transaction that has been added to the
-     *  mempool but may have child transactions in the mempool, eg during a
-     *  chain reorg.
-     *
-     * @pre CTxMemPoolEntry::m_children is correct for the given tx and all
-     *      descendants.
-     * @pre cachedDescendants is an accurate cache where each entry has all
-     *      descendants of the corresponding key, including those that should
-     *      be removed for violation of ancestor limits.
-     * @post if updateIt has any non-excluded descendants, cachedDescendants has
-     *       a new cache line for updateIt.
-     *
-     * @param[in] updateIt the entry to update for its descendants
-     * @param[in,out] cachedDescendants a cache where each line corresponds to all
-     *     descendants. It will be updated with the descendants of the transaction
-     *     being updated, so that future invocations don't need to walk the same
-     *     transaction again, if encountered in another transaction chain.
-     * @param[in] setExclude the set of descendant transactions in the mempool
-     *     that must not be accounted for (because any descendants in setExclude
-     *     were added to the mempool after the transaction being updated and hence
-     *     their state is already reflected in the parent state).
-     */
-    void UpdateForDescendants(txiter updateIt, cacheMap& cachedDescendants,
-                              const std::set<Txid>& setExclude) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Update ancestors of hash to add/remove it as a descendant transaction. */
-    void UpdateAncestorsOf(bool add, txiter hash, setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    /** Set ancestor state for an entry */
-    void UpdateEntryForAncestors(txiter it, const setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void UpdateAncestorsOf(bool add, txiter hash) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** For each transaction being removed, update ancestors and any direct children.
       * If updateDescendants is true, then also update in-mempool descendants'
       * ancestor state. */
