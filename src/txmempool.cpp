@@ -361,22 +361,10 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, b
 
 void CTxMemPoolEntry::UpdateDescendantState(int32_t modifySize, CAmount modifyFee, int64_t modifyCount)
 {
-    nSizeWithDescendants += modifySize;
-    assert(nSizeWithDescendants > 0);
-    nModFeesWithDescendants = SaturatingAdd(nModFeesWithDescendants, modifyFee);
-    m_count_with_descendants += modifyCount;
-    assert(m_count_with_descendants > 0);
 }
 
 void CTxMemPoolEntry::UpdateAncestorState(int32_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps)
 {
-    nSizeWithAncestors += modifySize;
-    assert(nSizeWithAncestors > 0);
-    nModFeesWithAncestors = SaturatingAdd(nModFeesWithAncestors, modifyFee);
-    m_count_with_ancestors += modifyCount;
-    assert(m_count_with_ancestors > 0);
-    nSigOpCostWithAncestors += modifySigOps;
-    assert(int(nSigOpCostWithAncestors) >= 0);
 }
 
 //! Clamp option values and populate the error if options are not valid.
