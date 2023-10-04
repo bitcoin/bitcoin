@@ -11,13 +11,6 @@
 #include <cstddef>
 #include <limits>
 
-// Assumption: We assume that the macro NDEBUG is not defined.
-// Example(s): We use assert(...) extensively with the assumption of it never
-//             being a noop at runtime.
-#if defined(NDEBUG)
-# error "Bitcoin cannot be compiled without assertions."
-#endif
-
 // Assumption: We assume a C++17 (ISO/IEC 14882:2017) compiler (minimum requirement).
 // Example(s): We assume the presence of C++17 features everywhere :-)
 // ISO Standard C++17 [cpp.predefined]p1:
