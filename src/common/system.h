@@ -10,7 +10,6 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <compat/assumptions.h>
 #include <compat/compat.h>
 
 #include <set>
