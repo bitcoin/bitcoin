@@ -5,10 +5,16 @@
 """
 Test v2 transport
 """
+import socket
 
 from test_framework.messages import NODE_P2P_V2
+from test_framework.p2p import MAGIC_BYTES
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    p2p_port,
+)
+
 
 class V2TransportTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -122,6 +128,26 @@ class V2TransportTest(BitcoinTestFramework):
             self.connect_nodes(1, 4, peer_advertises_v2=True)
         self.sync_all()
         assert_equal(self.nodes[4].getblockcount(), 11)
+
+        # Check v1 prefix detection
+        V1_PREFIX = MAGIC_BYTES["regtest"] + b"version\x00\x00\x00\x00\x00"
+        assert_equal(len(V1_PREFIX), 16)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            num_peers = len(self.nodes[0].getpeerinfo())
+            s.connect(("127.0.0.1", p2p_port(0)))
+            self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == num_peers + 1)
+            s.sendall(V1_PREFIX[:-1])
+            assert_equal(self.nodes[0].getpeerinfo()[-1]["transport_protocol_type"], "detecting")
+            s.sendall(bytes([V1_PREFIX[-1]]))  # send out last prefix byte
+            self.wait_until(lambda: self.nodes[0].getpeerinfo()[-1]["transport_protocol_type"] == "v1")
+
+        # Check wrong network prefix detection (hits if the next 12 bytes correspond to a v1 version message)
+        wrong_network_magic_prefix = MAGIC_BYTES["signet"] + V1_PREFIX[4:]
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect(("127.0.0.1", p2p_port(0)))
+            with self.nodes[0].assert_debug_log("V2 transport error: V1 peer with wrong MessageStart"):
+                s.sendall(wrong_network_magic_prefix + b"somepayload")
+
 
 if __name__ == '__main__':
     V2TransportTest().main()
