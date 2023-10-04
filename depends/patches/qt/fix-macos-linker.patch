@@ -29,7 +29,7 @@ https://codereview.qt-project.org/q/I2347b26e2df0828471373b0e15b8c9089274c65d
 
 --- old/qtbase/mkspecs/features/toolchain.prf
 +++ new/qtbase/mkspecs/features/toolchain.prf
-@@ -283,9 +283,12 @@ isEmpty($${target_prefix}.INCDIRS) {
+@@ -288,9 +288,12 @@ isEmpty($${target_prefix}.INCDIRS) {
                  }
              }
          }
@@ -44,7 +44,7 @@ https://codereview.qt-project.org/q/I2347b26e2df0828471373b0e15b8c9089274c65d
          QMAKE_DEFAULT_LIBDIRS = $$unique(QMAKE_DEFAULT_LIBDIRS)
      } else: ghs {
          cmd = $$QMAKE_CXX $$QMAKE_CXXFLAGS -$${LITERAL_HASH} -o /tmp/fake_output /tmp/fake_input.cpp
-@@ -407,7 +410,7 @@ isEmpty($${target_prefix}.INCDIRS) {
+@@ -412,7 +415,7 @@ isEmpty($${target_prefix}.INCDIRS) {
          QMAKE_DEFAULT_INCDIRS = $$split(INCLUDE, $$QMAKE_DIRLIST_SEP)
      }
  
