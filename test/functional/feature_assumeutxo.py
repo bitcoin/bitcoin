@@ -142,7 +142,10 @@ class AssumeutxoTest(BitcoinTestFramework):
             f"-stopatheight={PAUSE_HEIGHT}", *self.extra_args[1]])
 
         # Finally connect the nodes and let them sync.
-        self.connect_nodes(0, 1)
+        #
+        # Set `wait_for_connect=False` to avoid a race between performing connection
+        # assertions and the -stopatheight tripping.
+        self.connect_nodes(0, 1, wait_for_connect=False)
 
         n1.wait_until_stopped(timeout=5)
 
@@ -156,7 +159,15 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
 
         self.log.info(f"Ensuring snapshot chain syncs to tip. ({FINAL_HEIGHT})")
-        wait_until_helper(lambda: n1.getchainstates()['snapshot']['blocks'] == FINAL_HEIGHT)
+
+        def check_for_final_height():
+            chainstates = n1.getchainstates()
+            # The background validation may have completed before we run our first
+            # check, so accept a final blockheight from either chainstate type.
+            cs = chainstates.get('snapshot') or chainstates.get('normal')
+            return cs['blocks'] == FINAL_HEIGHT
+
+        wait_until_helper(check_for_final_height)
         self.sync_blocks(nodes=(n0, n1))
 
         self.log.info("Ensuring background validation completes")
