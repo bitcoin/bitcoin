@@ -1165,28 +1165,6 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
     }
 }
 
-uint64_t CTxMemPool::CalculateDescendantMaximum(txiter entry) const {
-    // find parent with highest descendant count
-    std::vector<txiter> candidates;
-    setEntries counted;
-    candidates.push_back(entry);
-    uint64_t maximum = 0;
-    while (candidates.size()) {
-        txiter candidate = candidates.back();
-        candidates.pop_back();
-        if (!counted.insert(candidate).second) continue;
-        const CTxMemPoolEntry::Parents& parents = candidate->GetMemPoolParentsConst();
-        if (parents.size() == 0) {
-            maximum = std::max(maximum, candidate->GetCountWithDescendants());
-        } else {
-            for (const CTxMemPoolEntry& i : parents) {
-                candidates.push_back(mapTx.iterator_to(i));
-            }
-        }
-    }
-    return maximum;
-}
-
 std::tuple<size_t, size_t, CAmount> CTxMemPool::CalculateAncestorData(const CTxMemPoolEntry& entry) const
 {
     auto ancestors = m_txgraph->GetAncestors(entry, TxGraph::Level::MAIN);
