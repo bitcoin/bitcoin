@@ -228,8 +228,8 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTra
             // only permitting 1 descendant, as otherwise we would need to have logic for deciding
             // which descendant to evict. Skip if this isn't true, e.g. if the transaction has
             // multiple children or the sibling also has descendants due to a reorg.
-            const bool consider_sibling_eviction{parent_entry->GetCountWithDescendants() == 2 &&
-                children.begin()->get().GetCountWithAncestors() == 2};
+            const bool consider_sibling_eviction{parent_entry->GetNumChildren() == 1 &&
+                children.begin()->get().GetNumChildren() == 0};
 
             // Return the sibling if its eviction can be considered. Provide the "descendant count
             // limit" string either way, as the caller may decide not to do sibling eviction.

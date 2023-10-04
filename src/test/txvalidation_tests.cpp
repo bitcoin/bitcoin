@@ -354,7 +354,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         pool.addUnchecked(entry.FromTx(tx_v3_child2));
         auto tx_v3_child3 = make_tx({COutPoint{mempool_tx_v3->GetHash(), 24}}, /*version=*/3);
         auto entry_mempool_parent = pool.GetIter(mempool_tx_v3->GetHash().ToUint256()).value();
-        BOOST_CHECK_EQUAL(entry_mempool_parent->GetCountWithDescendants(), 3);
+        BOOST_CHECK_EQUAL(entry_mempool_parent->GetNumChildren(), 2);
         auto ancestors_2siblings{pool.CalculateMemPoolAncestors(entry.FromTx(tx_v3_child3), m_limits)};
 
         auto result_2children{SingleV3Checks(tx_v3_child3, *ancestors_2siblings, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_child3))};

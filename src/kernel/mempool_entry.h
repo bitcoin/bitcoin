@@ -164,16 +164,7 @@ public:
         lockPoints = lp;
     }
 
-    uint64_t GetCountWithDescendants() const { return m_count_with_descendants; }
-    int64_t GetSizeWithDescendants() const { return nSizeWithDescendants; }
-    CAmount GetModFeesWithDescendants() const { return nModFeesWithDescendants; }
-
     bool GetSpendsCoinbase() const { return spendsCoinbase; }
-
-    uint64_t GetCountWithAncestors() const { return m_count_with_ancestors; }
-    int64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
-    CAmount GetModFeesWithAncestors() const { return nModFeesWithAncestors; }
-    int64_t GetSigOpCostWithAncestors() const { return nSigOpCostWithAncestors; }
 
     const Parents& GetMemPoolParentsConst() const { return m_parents; }
     const Children& GetMemPoolChildrenConst() const { return m_children; }
