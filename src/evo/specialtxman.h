@@ -30,5 +30,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, ll
                             const Consensus::Params& consensusParams, const CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots,
                             BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq::CQuorumBlockProcessor& quorum_block_processor) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams,
+                                const CAmount blockReward, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOIN_EVO_SPECIALTXMAN_H

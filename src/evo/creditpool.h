@@ -78,11 +78,18 @@ public:
     explicit CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindex, const Consensus::Params& consensusParams);
 
     /**
+     * This function should be called for each block's coinbase transaction
+     * to change amount of credit pool
+     * coinbase transaction's Payload must be valid if nVersion of coinbase transaction equals 3
+     */
+    bool ProcessCoinbaseTransaction(const CTransaction& tx, const CAmount blockReward, TxValidationState& state);
+
+    /**
      * This function should be called for each Asset Lock/Unlock tx
      * to change amount of credit pool
      * @return true if transaction can be included in this block
      */
-    bool ProcessTransaction(const CTransaction& tx, TxValidationState& state);
+    bool ProcessLockUnlockTransaction(const CTransaction& tx, TxValidationState& state);
 
     /**
      * This function should be called by miner for initialization of MasterNode reward
@@ -102,7 +109,7 @@ public:
     }
 
 private:
-    bool SetTarget(const CTransaction& tx, TxValidationState& state);
+    bool SetTarget(const CTransaction& tx, const CAmount blockReward, TxValidationState& state);
     bool Lock(const CTransaction& tx, TxValidationState& state);
     bool Unlock(const CTransaction& tx, TxValidationState& state);
 };

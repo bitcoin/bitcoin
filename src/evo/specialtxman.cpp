@@ -138,10 +138,8 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, ll
         int64_t nTime1 = GetTimeMicros();
 
         const CCreditPool creditPool = creditPoolManager->GetCreditPool(pindex->pprev, consensusParams);
-        std::optional<CCreditPoolDiff> creditPoolDiff;
-        if (bool fV20Active_context = llmq::utils::IsV20Active(pindex->pprev); fV20Active_context) {
+        if (llmq::utils::IsV20Active(pindex->pprev)) {
             LogPrintf("%s: CCreditPool is %s\n", __func__, creditPool.ToString());
-            creditPoolDiff.emplace(creditPool, pindex->pprev, consensusParams);
         }
 
         for (const auto& ptr_tx : block.vtx) {
@@ -157,21 +155,6 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, ll
                 assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS || tx_state.GetResult() == TxValidationResult::TX_BAD_SPECIAL);
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
                                  strprintf("Process Special Transaction failed (tx hash %s) %s", ptr_tx->GetHash().ToString(), tx_state.GetDebugMessage()));
-            }
-            if (creditPoolDiff != std::nullopt && !creditPoolDiff->ProcessTransaction(*ptr_tx, tx_state)) {
-                assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS || tx_state.GetResult() == TxValidationResult::TX_BAD_SPECIAL);
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
-                                 strprintf("Process Special Transaction failed at Credit Pool (tx hash %s) %s", ptr_tx->GetHash().ToString(), tx_state.GetDebugMessage()));
-            }
-        }
-        if (creditPoolDiff != std::nullopt) {
-            CAmount locked_proposed{0};
-            if(creditPoolDiff->GetTargetBalance()) locked_proposed = *creditPoolDiff->GetTargetBalance();
-
-            CAmount locked_calculated = creditPoolDiff->GetTotalLocked();
-            if (locked_proposed != locked_calculated) {
-                LogPrintf("%s: mismatched locked amount in CbTx: %lld against re-calculated: %lld\n", __func__, locked_proposed, locked_calculated);
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-assetlocked-amount");
             }
         }
 
@@ -261,6 +244,52 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq:
         bls::bls_legacy_scheme.store(bls_legacy_scheme);
         LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
         return error(strprintf("%s -- failed: %s\n", __func__, e.what()).c_str());
+    }
+
+    return true;
+}
+
+bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams,
+                                const CAmount blockReward, BlockValidationState& state)
+{
+    AssertLockHeld(cs_main);
+
+    try {
+
+        if (!llmq::utils::IsV20Active(pindex->pprev)) return true;
+
+        const CCreditPool creditPool = creditPoolManager->GetCreditPool(pindex->pprev, consensusParams);
+        LogPrintf("%s: CCreditPool is %s\n", __func__, creditPool.ToString());
+        CCreditPoolDiff creditPoolDiff(creditPool, pindex->pprev, consensusParams);
+
+        for (const auto& ptr_tx : block.vtx) {
+            TxValidationState tx_state;
+            if (ptr_tx->IsCoinBase()) {
+                if (!creditPoolDiff.ProcessCoinbaseTransaction(*ptr_tx, blockReward, tx_state)) {
+                    assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS);
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
+                                     strprintf("Process Coinbase Transaction failed at Credit Pool (tx hash %s) %s", ptr_tx->GetHash().ToString(), tx_state.GetDebugMessage()));
+                }
+            } else {
+                if (!creditPoolDiff.ProcessLockUnlockTransaction(*ptr_tx, tx_state)) {
+                    assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS);
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
+                                     strprintf("Process Lock/Unlock Transaction failed at Credit Pool (tx hash %s) %s", ptr_tx->GetHash().ToString(), tx_state.GetDebugMessage()));
+                }
+            }
+        }
+        CAmount locked_proposed{0};
+        if (creditPoolDiff.GetTargetBalance()) locked_proposed = *creditPoolDiff.GetTargetBalance();
+
+        CAmount locked_calculated = creditPoolDiff.GetTotalLocked();
+        if (locked_proposed != locked_calculated) {
+            LogPrintf("%s: mismatched locked amount in CbTx: %lld against re-calculated: %lld\n", __func__, locked_proposed, locked_calculated);
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-assetlocked-amount");
+        }
+
+    } catch (const std::exception& e) {
+        LogPrintf("%s -- failed: %s\n", __func__, e.what());
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-checkcreditpooldiff");
     }
 
     return true;

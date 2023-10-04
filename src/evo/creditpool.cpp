@@ -228,7 +228,7 @@ void CCreditPoolDiff::AddRewardRealloced(const CAmount reward) {
     platformReward += reward;
 }
 
-bool CCreditPoolDiff::SetTarget(const CTransaction& tx, TxValidationState& state)
+bool CCreditPoolDiff::SetTarget(const CTransaction& tx, const CAmount blockReward, TxValidationState& state)
 {
     CCbTx cbTx;
     if (!GetTxPayload(tx, cbTx)) {
@@ -239,13 +239,8 @@ bool CCreditPoolDiff::SetTarget(const CTransaction& tx, TxValidationState& state
 
     targetBalance = cbTx.creditPoolBalance;
 
-
     if (!llmq::utils::IsMNRewardReallocationActive(pindex)) return true;
 
-    CAmount blockReward = 0;
-    for (const CTxOut& txout : tx.vout) {
-        blockReward += txout.nValue;
-    }
     platformReward = MasternodePayments::PlatformShare(GetMasternodePayment(cbTx.nHeight, blockReward, params.BRRHeight, true));
     LogPrintf("CreditPool: set target to %lld with MN reward %lld\n", *targetBalance, platformReward);
 
@@ -292,11 +287,18 @@ bool CCreditPoolDiff::Unlock(const CTransaction& tx, TxValidationState& state)
     return true;
 }
 
-bool CCreditPoolDiff::ProcessTransaction(const CTransaction& tx, TxValidationState& state)
+bool CCreditPoolDiff::ProcessCoinbaseTransaction(const CTransaction& tx, const CAmount blockReward, TxValidationState& state)
 {
     if (tx.nVersion != 3) return true;
-    if (tx.nType == TRANSACTION_COINBASE) return SetTarget(tx, state);
 
+    assert(tx.nType == TRANSACTION_COINBASE);
+
+    return SetTarget(tx, blockReward, state);
+}
+
+bool CCreditPoolDiff::ProcessLockUnlockTransaction(const CTransaction& tx, TxValidationState& state)
+{
+    if (tx.nVersion != 3) return true;
     if (tx.nType != TRANSACTION_ASSET_LOCK && tx.nType != TRANSACTION_ASSET_UNLOCK) return true;
 
     if (!CheckAssetLockUnlockTx(tx, pindex, pool.indexes, state)) {

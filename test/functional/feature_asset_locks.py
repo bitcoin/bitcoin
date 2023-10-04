@@ -41,6 +41,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    hex_str_to_bytes,
 )
 
 llmq_type_test = 100
@@ -164,8 +165,15 @@ class AssetLocksTest(DashTestFramework):
         block_time = best_block["time"] + 1
 
         cbb = create_coinbase(height, dip4_activated=True, v20_activated=True)
-        cbb.calc_sha256()
+        gbt = node_wallet.getblocktemplate()
+        cbb.vExtraPayload = hex_str_to_bytes(gbt["coinbase_payload"])
+        cbb.rehash()
         block = create_block(tip, cbb, block_time, version=4)
+        # Add quorum commitments from block template
+        for tx_obj in gbt["transactions"]:
+            tx = FromHex(CTransaction(), tx_obj["data"])
+            if tx.nType == 6:
+                block.vtx.append(tx)
         for tx in txes:
             block.vtx.append(tx)
         block.hashMerkleRoot = block.calc_merkle_root()
@@ -281,6 +289,7 @@ class AssetLocksTest(DashTestFramework):
         self.sync_all()
 
         self.log.info('Mine block with incorrect credit-pool value...')
+        coin = coins.pop()
         extra_lock_tx = self.create_assetlock(coin, COIN, pubkey)
         self.create_and_check_block([extra_lock_tx], expected_error = 'bad-cbtx-assetlocked-amount')
 

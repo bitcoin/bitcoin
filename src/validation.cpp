@@ -1985,6 +1985,7 @@ static int64_t nTimeForks = 0;
 static int64_t nTimeVerify = 0;
 static int64_t nTimeISFilter = 0;
 static int64_t nTimeSubsidy = 0;
+static int64_t nTimeCreditPool = 0;
 static int64_t nTimeValueValid = 0;
 static int64_t nTimePayeeValid = 0;
 static int64_t nTimeProcessSpecial = 0;
@@ -2368,14 +2369,22 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     int64_t nTime5_2 = GetTimeMicros(); nTimeSubsidy += nTime5_2 - nTime5_1;
     LogPrint(BCLog::BENCHMARK, "      - GetBlockSubsidy: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5_2 - nTime5_1), nTimeSubsidy * MICRO, nTimeSubsidy * MILLI / nBlocksTotal);
 
+    if (!CheckCreditPoolDiffForBlock(block, pindex, m_params.GetConsensus(), blockReward, state)) {
+        return error("ConnectBlock(DASH): CheckCreditPoolDiffForBlock for block %s failed with %s",
+                     pindex->GetBlockHash().ToString(), state.ToString());
+    }
+
+    int64_t nTime5_3 = GetTimeMicros(); nTimeCreditPool += nTime5_3 - nTime5_2;
+    LogPrint(BCLog::BENCHMARK, "      - CheckCreditPoolDiffForBlock: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5_3 - nTime5_2), nTimeCreditPool * MICRO, nTimeCreditPool * MILLI / nBlocksTotal);
+
     if (!MasternodePayments::IsBlockValueValid(*sporkManager, *governance, *::masternodeSync, block, pindex->nHeight, blockReward, strError)) {
         // NOTE: Do not punish, the node might be missing governance data
         LogPrintf("ERROR: ConnectBlock(DASH): %s\n", strError);
         return state.Invalid(BlockValidationResult::BLOCK_RESULT_UNSET, "bad-cb-amount");
     }
 
-    int64_t nTime5_3 = GetTimeMicros(); nTimeValueValid += nTime5_3 - nTime5_2;
-    LogPrint(BCLog::BENCHMARK, "      - IsBlockValueValid: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5_3 - nTime5_2), nTimeValueValid * MICRO, nTimeValueValid * MILLI / nBlocksTotal);
+    int64_t nTime5_4 = GetTimeMicros(); nTimeValueValid += nTime5_4 - nTime5_3;
+    LogPrint(BCLog::BENCHMARK, "      - IsBlockValueValid: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5_4 - nTime5_3), nTimeValueValid * MICRO, nTimeValueValid * MILLI / nBlocksTotal);
 
     if (!MasternodePayments::IsBlockPayeeValid(*sporkManager, *governance, *block.vtx[0], pindex->nHeight, blockReward)) {
         // NOTE: Do not punish, the node might be missing governance data
@@ -2383,8 +2392,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         return state.Invalid(BlockValidationResult::BLOCK_RESULT_UNSET, "bad-cb-payee");
     }
 
-    int64_t nTime5_4 = GetTimeMicros(); nTimePayeeValid += nTime5_4 - nTime5_3;
-    LogPrint(BCLog::BENCHMARK, "      - IsBlockPayeeValid: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5_4 - nTime5_3), nTimePayeeValid * MICRO, nTimePayeeValid * MILLI / nBlocksTotal);
+    int64_t nTime5_5 = GetTimeMicros(); nTimePayeeValid += nTime5_5 - nTime5_4;
+    LogPrint(BCLog::BENCHMARK, "      - IsBlockPayeeValid: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5_5 - nTime5_4), nTimePayeeValid * MICRO, nTimePayeeValid * MILLI / nBlocksTotal);
 
     int64_t nTime5 = GetTimeMicros(); nTimeDashSpecific += nTime5 - nTime4;
     LogPrint(BCLog::BENCHMARK, "    - Dash specific: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5 - nTime4), nTimeDashSpecific * MICRO, nTimeDashSpecific * MILLI / nBlocksTotal);

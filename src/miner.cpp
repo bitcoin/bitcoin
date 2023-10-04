@@ -463,7 +463,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             // `state` is local here because used to log info about this specific tx
             TxValidationState state;
 
-            if (!creditPoolDiff->ProcessTransaction(iter->GetTx(), state)) {
+            if (!creditPoolDiff->ProcessLockUnlockTransaction(iter->GetTx(), state)) {
                 if (fUsingModified) {
                     mapModifiedTx.get<ancestor_score>().erase(modit);
                     failedTx.insert(iter);
