@@ -473,7 +473,7 @@ private:
 
     /** The length of the V1 prefix to match bytes initially received by responders with to
      *  determine if their peer is speaking V1 or V2. */
-    static constexpr size_t V1_PREFIX_LEN = 12;
+    static constexpr size_t V1_PREFIX_LEN = 16;
 
     // The sender side and receiver side of V2Transport are state machines that are transitioned
     // through, based on what has been received. The receive state corresponds to the contents of,

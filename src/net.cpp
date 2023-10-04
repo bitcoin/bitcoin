@@ -1098,10 +1098,10 @@ void V2Transport::ProcessReceivedMaybeV1Bytes() noexcept
     AssertLockNotHeld(m_send_mutex);
     Assume(m_recv_state == RecvState::KEY_MAYBE_V1);
     // We still have to determine if this is a v1 or v2 connection. The bytes being received could
-    // be the beginning of either a v1 packet (network magic + "version\x00"), or of a v2 public
-    // key. BIP324 specifies that a mismatch with this 12-byte string should trigger sending of the
-    // key.
-    std::array<uint8_t, V1_PREFIX_LEN> v1_prefix = {0, 0, 0, 0, 'v', 'e', 'r', 's', 'i', 'o', 'n', 0};
+    // be the beginning of either a v1 packet (network magic + "version\x00\x00\x00\x00\x00"), or
+    // of a v2 public key. BIP324 specifies that a mismatch with this 16-byte string should trigger
+    // sending of the key.
+    std::array<uint8_t, V1_PREFIX_LEN> v1_prefix = {0, 0, 0, 0, 'v', 'e', 'r', 's', 'i', 'o', 'n', 0, 0, 0, 0, 0};
     std::copy(std::begin(Params().MessageStart()), std::end(Params().MessageStart()), v1_prefix.begin());
     Assume(m_recv_buffer.size() <= v1_prefix.size());
     if (!std::equal(m_recv_buffer.begin(), m_recv_buffer.end(), v1_prefix.begin())) {
@@ -1295,7 +1295,7 @@ size_t V2Transport::GetMaxBytesToProcess() noexcept
         // receive buffer.
         Assume(m_recv_buffer.size() <= V1_PREFIX_LEN);
         // As long as we're not sure if this is a v1 or v2 connection, don't receive more than what
-        // is strictly necessary to distinguish the two (12 bytes). If we permitted more than
+        // is strictly necessary to distinguish the two (16 bytes). If we permitted more than
         // the v1 header size (24 bytes), we may not be able to feed the already-received bytes
         // back into the m_v1_fallback V1 transport.
         return V1_PREFIX_LEN - m_recv_buffer.size();
