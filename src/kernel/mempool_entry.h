@@ -88,21 +88,6 @@ private:
     CAmount m_modified_fee;         //!< Used for determining the priority of the transaction for mining in a block
     mutable LockPoints lockPoints;  //!< Track the height and time at which tx was final
 
-    // Information about descendants of this transaction that are in the
-    // mempool; if we remove this transaction we must remove all of these
-    // descendants as well.
-    int64_t m_count_with_descendants{1}; //!< number of descendant transactions
-    // Using int64_t instead of int32_t to avoid signed integer overflow issues.
-    int64_t nSizeWithDescendants;      //!< ... and size
-    CAmount nModFeesWithDescendants;   //!< ... and total fees (all including us)
-
-    // Analogous statistics for ancestor transactions
-    int64_t m_count_with_ancestors{1};
-    // Using int64_t instead of int32_t to avoid signed integer overflow issues.
-    int64_t nSizeWithAncestors;
-    CAmount nModFeesWithAncestors;
-    int64_t nSigOpCostWithAncestors;
-
 public:
     virtual ~CTxMemPoolEntry() = default;
     CTxMemPoolEntry(TxGraph::Ref&& ref, const CTransactionRef& tx, CAmount fee,
@@ -120,12 +105,7 @@ public:
           spendsCoinbase{spends_coinbase},
           sigOpCost{sigops_cost},
           m_modified_fee{nFee},
-          lockPoints{lp},
-          nSizeWithDescendants{GetTxSize()},
-          nModFeesWithDescendants{nFee},
-          nSizeWithAncestors{GetTxSize()},
-          nModFeesWithAncestors{nFee},
-          nSigOpCostWithAncestors{sigOpCost} {}
+          lockPoints{lp} {}
 
     CTxMemPoolEntry& operator=(const CTxMemPoolEntry&) = delete;
     CTxMemPoolEntry(CTxMemPoolEntry&&) = default;
@@ -155,8 +135,6 @@ public:
     // Updates the modified fees with descendants/ancestors.
     void UpdateModifiedFee(CAmount fee_diff)
     {
-        nModFeesWithDescendants = SaturatingAdd(nModFeesWithDescendants, fee_diff);
-        nModFeesWithAncestors = SaturatingAdd(nModFeesWithAncestors, fee_diff);
         m_modified_fee = SaturatingAdd(m_modified_fee, fee_diff);
     }
 
