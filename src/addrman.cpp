@@ -854,7 +854,7 @@ std::vector<std::pair<AddrInfo, AddressPosition>> AddrManImpl::GetEntries_(bool 
                     /*multiplicity_in=*/from_tried ? 1 : info.nRefCount,
                     bucket,
                     position);
-                infos.push_back(std::make_pair(info, location));
+                infos.emplace_back(info, location);
             }
         }
     }

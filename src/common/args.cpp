@@ -216,7 +216,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
             m_command.push_back(key);
             while (++i < argc) {
                 // The remaining args are command args
-                m_command.push_back(argv[i]);
+                m_command.emplace_back(argv[i]);
             }
             break;
         }

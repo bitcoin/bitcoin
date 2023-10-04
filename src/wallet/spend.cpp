@@ -1151,7 +1151,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // behavior."
     const uint32_t nSequence{coin_control.m_signal_bip125_rbf.value_or(wallet.m_signal_rbf) ? MAX_BIP125_RBF_SEQUENCE : CTxIn::MAX_SEQUENCE_NONFINAL};
     for (const auto& coin : selected_coins) {
-        txNew.vin.push_back(CTxIn(coin->outpoint, CScript(), nSequence));
+        txNew.vin.emplace_back(coin->outpoint, CScript(), nSequence);
     }
     DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
 

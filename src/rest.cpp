@@ -798,7 +798,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
                 return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
 
             txid.SetHex(strTxid);
-            vOutPoints.push_back(COutPoint(txid, (uint32_t)nOutput));
+            vOutPoints.emplace_back(txid, (uint32_t)nOutput);
         }
 
         if (vOutPoints.size() > 0)

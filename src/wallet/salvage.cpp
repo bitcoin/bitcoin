@@ -146,7 +146,7 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
                 warnings.push_back(Untranslated("Salvage: WARNING: Number of keys in data does not match number of values."));
                 break;
             }
-            salvagedData.push_back(make_pair(ParseHex(keyHex), ParseHex(valueHex)));
+            salvagedData.emplace_back(ParseHex(keyHex), ParseHex(valueHex));
         }
     }
 

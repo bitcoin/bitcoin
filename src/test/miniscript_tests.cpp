@@ -337,7 +337,7 @@ CScript ScriptPubKey(miniscript::MiniscriptContext ctx, const CScript& script, T
 //! Fill the witness with the data additional to the script satisfaction.
 void SatisfactionToWitness(miniscript::MiniscriptContext ctx, CScriptWitness& witness, const CScript& script, TaprootBuilder& builder) {
     // For P2WSH, it's only the witness script.
-    witness.stack.push_back(std::vector<unsigned char>(script.begin(), script.end()));
+    witness.stack.emplace_back(script.begin(), script.end());
     if (!miniscript::IsTapscript(ctx)) return;
     // For Tapscript we also need the control block.
     witness.stack.push_back(*builder.GetSpendData().scripts.begin()->second.begin());

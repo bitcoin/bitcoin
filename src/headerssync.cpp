@@ -271,7 +271,7 @@ bool HeadersSyncState::ValidateAndStoreRedownloadedHeader(const CBlockHeader& he
     }
 
     // Store this header for later processing.
-    m_redownloaded_headers.push_back(header);
+    m_redownloaded_headers.emplace_back(header);
     m_redownload_buffer_last_height = next_height;
     m_redownload_buffer_last_hash = header.GetHash();
 

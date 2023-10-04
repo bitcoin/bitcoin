@@ -1080,9 +1080,9 @@ public:
                 bool reject{false};
                 auto msg = m_transport.GetReceivedMessage({}, reject);
                 if (reject) {
-                    ret.push_back(std::nullopt);
+                    ret.emplace_back(std::nullopt);
                 } else {
-                    ret.push_back(std::move(msg));
+                    ret.emplace_back(std::move(msg));
                 }
                 progress = true;
             }

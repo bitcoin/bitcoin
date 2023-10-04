@@ -54,7 +54,7 @@ bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalS
         if (model_field.isStr() && model_field.getValStr() != "") {
             name += model_field.getValStr();
         }
-        signers.push_back(ExternalSigner(command, chain, fingerprintStr, name));
+        signers.emplace_back(command, chain, fingerprintStr, name);
     }
     return true;
 }

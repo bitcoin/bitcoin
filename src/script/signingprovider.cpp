@@ -368,6 +368,8 @@ TaprootBuilder& TaprootBuilder::Add(int depth, Span<const unsigned char> script,
     /* Construct NodeInfo object with leaf hash and (if track is true) also leaf information. */
     NodeInfo node;
     node.hash = ComputeTapleafHash(leaf_version, script);
+    // due to bug in clang-tidy-17:
+    // NOLINTNEXTLINE(modernize-use-emplace)
     if (track) node.leaves.emplace_back(LeafInfo{std::vector<unsigned char>(script.begin(), script.end()), leaf_version, {}});
     /* Insert into the branch. */
     Insert(std::move(node), depth);
@@ -569,7 +571,7 @@ std::vector<std::tuple<uint8_t, uint8_t, std::vector<unsigned char>>> TaprootBui
             assert(leaf.merkle_branch.size() <= TAPROOT_CONTROL_MAX_NODE_COUNT);
             uint8_t depth = (uint8_t)leaf.merkle_branch.size();
             uint8_t leaf_ver = (uint8_t)leaf.leaf_version;
-            tuples.push_back(std::make_tuple(depth, leaf_ver, leaf.script));
+            tuples.emplace_back(depth, leaf_ver, leaf.script);
         }
     }
     return tuples;

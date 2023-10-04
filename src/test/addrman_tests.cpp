@@ -98,8 +98,8 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     // Test: reset addrman and test AddrMan::Add multiple addresses works as expected
     addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
     std::vector<CAddress> vAddr;
-    vAddr.push_back(CAddress(ResolveService("250.1.1.3", 8333), NODE_NONE));
-    vAddr.push_back(CAddress(ResolveService("250.1.1.4", 8333), NODE_NONE));
+    vAddr.emplace_back(ResolveService("250.1.1.3", 8333), NODE_NONE);
+    vAddr.emplace_back(ResolveService("250.1.1.4", 8333), NODE_NONE);
     BOOST_CHECK(addrman->Add(vAddr, source));
     BOOST_CHECK(addrman->Size() >= 1);
 }
