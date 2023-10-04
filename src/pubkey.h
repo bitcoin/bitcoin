@@ -191,6 +191,12 @@ public:
         return size() > 0;
     }
 
+    /** Check if a public key is a syntactically valid compressed or uncompressed key. */
+    bool IsValidNonHybrid() const noexcept
+    {
+        return size() > 0 && (vch[0] == 0x02 || vch[0] == 0x03 || vch[0] == 0x04);
+    }
+
     //! fully validate whether this is a valid public key (more expensive than IsValid())
     bool IsFullyValid() const;
 

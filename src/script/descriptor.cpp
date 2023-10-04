@@ -1290,6 +1290,10 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(uint32_t key_exp_index, const S
         if (IsHex(str)) {
             std::vector<unsigned char> data = ParseHex(str);
             CPubKey pubkey(data);
+            if (pubkey.IsValid() && !pubkey.IsValidNonHybrid()) {
+                error = "Hybrid public keys are not allowed";
+                return nullptr;
+            }
             if (pubkey.IsFullyValid()) {
                 if (permit_uncompressed || pubkey.IsCompressed()) {
                     return std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey, false);
@@ -1448,7 +1452,7 @@ struct KeyParser {
     {
         assert(m_in);
         CPubKey pubkey(begin, end);
-        if (pubkey.IsValid()) {
+        if (pubkey.IsValidNonHybrid()) {
             Key key = m_keys.size();
             m_keys.push_back(InferPubkey(pubkey, ParseScriptContext::P2WSH, *m_in));
             return key;
@@ -1795,7 +1799,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
 
     if (txntype == TxoutType::PUBKEY && (ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH)) {
         CPubKey pubkey(data[0]);
-        if (pubkey.IsValid()) {
+        if (pubkey.IsValidNonHybrid()) {
             return std::make_unique<PKDescriptor>(InferPubkey(pubkey, ctx, provider));
         }
     }
