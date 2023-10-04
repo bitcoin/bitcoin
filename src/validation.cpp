@@ -548,6 +548,9 @@ public:
         }
     };
 
+    /** Clean up all non-chainstate coins from m_view and m_viewmempool. */
+    void CleanupTemporaryCoins() EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
+
     // Single transaction acceptance
     MempoolAcceptResult AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -1347,26 +1350,8 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
     return PackageMempoolAcceptResult(package_state, std::move(results));
 }
 
-PackageMempoolAcceptResult MemPoolAccept::AcceptSubPackage(const std::vector<CTransactionRef>& subpackage, ATMPArgs& args)
+void MemPoolAccept::CleanupTemporaryCoins()
 {
-    AssertLockHeld(::cs_main);
-    AssertLockHeld(m_pool.cs);
-    auto result = [&]() EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_pool.cs) {
-        if (subpackage.size() > 1) {
-            return AcceptMultipleTransactions(subpackage, args);
-        }
-        const auto& tx = subpackage.front();
-        ATMPArgs single_args = ATMPArgs::SingleInPackageAccept(args);
-        const auto single_res = AcceptSingleTransaction(tx, single_args);
-        PackageValidationState package_state_wrapped;
-        if (single_res.m_result_type != MempoolAcceptResult::ResultType::VALID) {
-            package_state_wrapped.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
-        }
-        return PackageMempoolAcceptResult(package_state_wrapped, {{tx->GetWitnessHash(), single_res}});
-    }();
-    // Clean up m_view and m_viewmempool so that other subpackage evaluations don't have access to
-    // coins they shouldn't. Keep some coins in order to minimize re-fetching coins from the UTXO set.
-    //
     // There are 3 kinds of coins in m_view:
     // (1) Temporary coins from the transactions in subpackage, constructed by m_viewmempool.
     // (2) Mempool coins from transactions in the mempool, constructed by m_viewmempool.
@@ -1392,6 +1377,30 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptSubPackage(const std::vector<CTr
     }
     // This deletes the temporary and mempool coins.
     m_viewmempool.Reset();
+}
+
+PackageMempoolAcceptResult MemPoolAccept::AcceptSubPackage(const std::vector<CTransactionRef>& subpackage, ATMPArgs& args)
+{
+    AssertLockHeld(::cs_main);
+    AssertLockHeld(m_pool.cs);
+    auto result = [&]() EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_pool.cs) {
+        if (subpackage.size() > 1) {
+            return AcceptMultipleTransactions(subpackage, args);
+        }
+        const auto& tx = subpackage.front();
+        ATMPArgs single_args = ATMPArgs::SingleInPackageAccept(args);
+        const auto single_res = AcceptSingleTransaction(tx, single_args);
+        PackageValidationState package_state_wrapped;
+        if (single_res.m_result_type != MempoolAcceptResult::ResultType::VALID) {
+            package_state_wrapped.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
+        }
+        return PackageMempoolAcceptResult(package_state_wrapped, {{tx->GetWitnessHash(), single_res}});
+    }();
+
+    // Clean up m_view and m_viewmempool so that other subpackage evaluations don't have access to
+    // coins they shouldn't. Keep some coins in order to minimize re-fetching coins from the UTXO set.
+    CleanupTemporaryCoins();
+
     return result;
 }
 
