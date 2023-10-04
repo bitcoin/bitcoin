@@ -126,10 +126,6 @@ public:
     size_t DynamicMemoryUsage() const { return nUsageSize; }
     const LockPoints& GetLockPoints() const { return lockPoints; }
 
-    // Adjusts the descendant state.
-    void UpdateDescendantState(int32_t modifySize, CAmount modifyFee, int64_t modifyCount);
-    // Adjusts the ancestor state
-    void UpdateAncestorState(int32_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps);
     // Updates the modified fees with descendants/ancestors.
     void UpdateModifiedFee(CAmount fee_diff)
     {
