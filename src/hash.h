@@ -158,7 +158,7 @@ public:
 class CHashWriter : public HashWriter
 {
 private:
-    const int nVersion;
+    int nVersion{0};
 
 public:
     CHashWriter(int nTypeIn, int nVersionIn) : HashWriter(nTypeIn, nVersionIn) {}
@@ -230,6 +230,16 @@ public:
         return *this;
     }
 };
+
+// SYSCOIN
+/** Compute the 256-bit hash of an object's serialization. */
+template<typename T>
+uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL_VERSION)
+{
+    CHashWriter ss(nType, nVersion);
+    ss << obj;
+    return ss.GetHash();
+}
 
 /** Single-SHA256 a 32-byte input (represented as uint256). */
 [[nodiscard]] uint256 SHA256Uint256(const uint256& input);
