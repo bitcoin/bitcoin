@@ -13,17 +13,14 @@
 #include <utility>
 
 template <typename T>
-bool VerifyVectorHelper(Span<T> vec, size_t start, size_t count)
+bool VerifyVectorHelper(Span<T> vec)
 {
-    if (start == 0 && count == 0) {
-        count = vec.size();
-    }
     std::set<uint256> set;
-    for (size_t i = start; i < start + count; i++) {
-        if (!vec[i].IsValid())
+    for (auto item : vec) {
+        if (!item.IsValid())
             return false;
         // check duplicates
-        if (!set.emplace(vec[i].GetHash()).second) {
+        if (!set.emplace(item.GetHash()).second) {
             return false;
         }
     }
@@ -147,18 +144,16 @@ struct Aggregator : public std::enable_shared_from_this<Aggregator<T>> {
 
     // TP can either be a pointer or a reference
     template <typename TP>
-    Aggregator(Span<TP> _inputVec,
-               size_t start, size_t count,
-               bool _parallel,
+    Aggregator(Span<TP> _inputSpan, bool _parallel,
                ctpl::thread_pool& _workerPool,
                DoneCallback _doneCallback) :
-            inputVec(std::make_shared<std::vector<const T*>>(count)),
+            inputVec(std::make_shared<std::vector<const T*>>(_inputSpan.size())),
             parallel(_parallel),
             workerPool(_workerPool),
             doneCallback(std::move(_doneCallback))
     {
-        for (size_t i = 0; i < count; i++) {
-            (*inputVec)[i] = pointer(_inputVec[start + i]);
+        for (size_t i = 0; i < _inputSpan.size(); i++) {
+            (*inputVec)[i] = pointer(_inputSpan[i]);
         }
     }
 
@@ -341,8 +336,6 @@ struct VectorAggregator : public std::enable_shared_from_this<VectorAggregator<T
     DoneCallback doneCallback;
 
     VectorVectorType vecs;
-    size_t start;
-    size_t count;
     bool parallel;
     ctpl::thread_pool& workerPool;
 
@@ -352,13 +345,10 @@ struct VectorAggregator : public std::enable_shared_from_this<VectorAggregator<T
     size_t vecSize;
 
     VectorAggregator(VectorVectorType _vecs,
-                     size_t _start, size_t _count,
                      bool _parallel, ctpl::thread_pool& _workerPool,
                      DoneCallback _doneCallback) :
             doneCallback(std::move(_doneCallback)),
             vecs(_vecs),
-            start(_start),
-            count(_count),
             parallel(_parallel),
             workerPool(_workerPool)
     {
@@ -370,13 +360,13 @@ struct VectorAggregator : public std::enable_shared_from_this<VectorAggregator<T
     void Start()
     {
         for (size_t i = 0; i < vecSize; i++) {
-            std::vector<const T*> tmp(count);
-            for (size_t j = 0; j < count; j++) {
-                tmp[j] = &(*vecs[start + j])[i];
+            std::vector<const T*> tmp(vecs.size());
+            for (size_t j = 0; j < vecs.size(); j++) {
+                tmp[j] = &(*vecs[j])[i];
             }
 
             auto self(this->shared_from_this());
-            auto aggregator = std::make_shared<AggregatorType>(Span{tmp}, 0, count, parallel, workerPool, [self, i](const T& agg) {self->CheckDone(agg, i);});
+            auto aggregator = std::make_shared<AggregatorType>(Span{tmp}, parallel, workerPool, [self, i](const T& agg) {self->CheckDone(agg, i);});
             aggregator->Start();
         }
     }
@@ -492,8 +482,8 @@ struct ContributionVerifier : public std::enable_shared_from_this<ContributionVe
 
         // aggregate vvecs and skShares of batch in parallel
         auto self(this->shared_from_this());
-        auto vvecAgg = std::make_shared<VectorAggregator<CBLSPublicKey>>(vvecs, batchState.start, batchState.count, parallel, workerPool, [this, self, batchIdx] (const BLSVerificationVectorPtr& vvec) {HandleAggVvecDone(batchIdx, vvec);});
-        auto skShareAgg = std::make_shared<Aggregator<CBLSSecretKey>>(Span{skShares}, batchState.start, batchState.count, parallel, workerPool, [this, self, batchIdx] (const CBLSSecretKey& skShare) {HandleAggSkShareDone(batchIdx, skShare);});
+        auto vvecAgg = std::make_shared<VectorAggregator<CBLSPublicKey>>(vvecs.subspan(batchState.start, batchState.count), parallel, workerPool, [this, self, batchIdx] (const BLSVerificationVectorPtr& vvec) {HandleAggVvecDone(batchIdx, vvec);});
+        auto skShareAgg = std::make_shared<Aggregator<CBLSSecretKey>>(Span{skShares}.subspan(batchState.start, batchState.count), parallel, workerPool, [this, self, batchIdx] (const CBLSSecretKey& skShare) {HandleAggSkShareDone(batchIdx, skShare);});
 
         vvecAgg->Start();
         skShareAgg->Start();
@@ -594,109 +584,92 @@ struct ContributionVerifier : public std::enable_shared_from_this<ContributionVe
     }
 };
 
-void CBLSWorker::AsyncBuildQuorumVerificationVector(Span<BLSVerificationVectorPtr> vvecs,
-                                                    size_t start, size_t count, bool parallel,
+void CBLSWorker::AsyncBuildQuorumVerificationVector(Span<BLSVerificationVectorPtr> vvecs, bool parallel,
                                                     std::function<void(const BLSVerificationVectorPtr&)> doneCallback)
 {
-    if (start == 0 && count == 0) {
-        count = vvecs.size();
-    }
-    if (vvecs.empty() || count == 0 || start > vvecs.size() || start + count > vvecs.size()) {
+    if (vvecs.empty()) {
         doneCallback(nullptr);
         return;
     }
-    if (!VerifyVerificationVectors(vvecs, start, count)) {
+    if (!VerifyVerificationVectors(vvecs)) {
         doneCallback(nullptr);
         return;
     }
 
-    auto agg = std::make_shared<VectorAggregator<CBLSPublicKey>>(vvecs, start, count, parallel, workerPool, std::move(doneCallback));
+    auto agg = std::make_shared<VectorAggregator<CBLSPublicKey>>(vvecs, parallel, workerPool, std::move(doneCallback));
     agg->Start();
 }
 
-std::future<BLSVerificationVectorPtr> CBLSWorker::AsyncBuildQuorumVerificationVector(Span<BLSVerificationVectorPtr> vvecs,
-                                                                                     size_t start, size_t count, bool parallel)
+std::future<BLSVerificationVectorPtr> CBLSWorker::AsyncBuildQuorumVerificationVector(Span<BLSVerificationVectorPtr> vvecs, bool parallel)
 {
     auto p = BuildFutureDoneCallback<BLSVerificationVectorPtr>();
-    AsyncBuildQuorumVerificationVector(vvecs, start, count, parallel, std::move(p.first));
+    AsyncBuildQuorumVerificationVector(vvecs, parallel, std::move(p.first));
     return std::move(p.second);
 }
 
-BLSVerificationVectorPtr CBLSWorker::BuildQuorumVerificationVector(Span<BLSVerificationVectorPtr> vvecs,
-                                                                   size_t start, size_t count, bool parallel)
+BLSVerificationVectorPtr CBLSWorker::BuildQuorumVerificationVector(Span<BLSVerificationVectorPtr> vvecs, bool parallel)
 {
-    return AsyncBuildQuorumVerificationVector(vvecs, start, count, parallel).get();
+    return AsyncBuildQuorumVerificationVector(vvecs, parallel).get();
 }
 
 template <typename T>
-void AsyncAggregateHelper(ctpl::thread_pool& workerPool,
-                          Span<T> vec, size_t start, size_t count, bool parallel,
+void AsyncAggregateHelper(ctpl::thread_pool& workerPool, Span<T> vec, bool parallel,
                           std::function<void(const T&)> doneCallback)
 {
-    if (start == 0 && count == 0) {
-        count = vec.size();
-    }
-    if (vec.empty() || count == 0 || start > vec.size() || start + count > vec.size()) {
+    if (vec.empty()) {
         doneCallback(T());
         return;
     }
-    if (!VerifyVectorHelper(vec, start, count)) {
+    if (!VerifyVectorHelper(vec)) {
         doneCallback(T());
         return;
     }
 
-    auto agg = std::make_shared<Aggregator<T>>(vec, start, count, parallel, workerPool, std::move(doneCallback));
+    auto agg = std::make_shared<Aggregator<T>>(vec, parallel, workerPool, std::move(doneCallback));
     agg->Start();
 }
 
-void CBLSWorker::AsyncAggregateSecretKeys(Span<CBLSSecretKey> secKeys,
-                                          size_t start, size_t count, bool parallel,
+void CBLSWorker::AsyncAggregateSecretKeys(Span<CBLSSecretKey> secKeys, bool parallel,
                                           std::function<void(const CBLSSecretKey&)> doneCallback)
 {
-    AsyncAggregateHelper(workerPool, secKeys, start, count, parallel, std::move(doneCallback));
+    AsyncAggregateHelper(workerPool, secKeys, parallel, std::move(doneCallback));
 }
 
-std::future<CBLSSecretKey> CBLSWorker::AsyncAggregateSecretKeys(Span<CBLSSecretKey> secKeys,
-                                                                size_t start, size_t count, bool parallel)
+std::future<CBLSSecretKey> CBLSWorker::AsyncAggregateSecretKeys(Span<CBLSSecretKey> secKeys, bool parallel)
 {
     auto p = BuildFutureDoneCallback<CBLSSecretKey>();
-    AsyncAggregateSecretKeys(secKeys, start, count, parallel, std::move(p.first));
+    AsyncAggregateSecretKeys(secKeys, parallel, std::move(p.first));
     return std::move(p.second);
 }
 
-CBLSSecretKey CBLSWorker::AggregateSecretKeys(Span<CBLSSecretKey> secKeys,
-                                              size_t start, size_t count, bool parallel)
+CBLSSecretKey CBLSWorker::AggregateSecretKeys(Span<CBLSSecretKey> secKeys, bool parallel)
 {
-    return AsyncAggregateSecretKeys(secKeys, start, count, parallel).get();
+    return AsyncAggregateSecretKeys(secKeys, parallel).get();
 }
 
-void CBLSWorker::AsyncAggregatePublicKeys(Span<CBLSPublicKey> pubKeys,
-                                          size_t start, size_t count, bool parallel,
+void CBLSWorker::AsyncAggregatePublicKeys(Span<CBLSPublicKey> pubKeys, bool parallel,
                                           std::function<void(const CBLSPublicKey&)> doneCallback)
 {
-    AsyncAggregateHelper(workerPool, pubKeys, start, count, parallel, std::move(doneCallback));
+    AsyncAggregateHelper(workerPool, pubKeys, parallel, std::move(doneCallback));
 }
 
-std::future<CBLSPublicKey> CBLSWorker::AsyncAggregatePublicKeys(Span<CBLSPublicKey> pubKeys,
-                                                                size_t start, size_t count, bool parallel)
+std::future<CBLSPublicKey> CBLSWorker::AsyncAggregatePublicKeys(Span<CBLSPublicKey> pubKeys, bool parallel)
 {
     auto p = BuildFutureDoneCallback<CBLSPublicKey>();
-    AsyncAggregatePublicKeys(pubKeys, start, count, parallel, std::move(p.first));
+    AsyncAggregatePublicKeys(pubKeys, parallel, std::move(p.first));
     return std::move(p.second);
 }
 
-void CBLSWorker::AsyncAggregateSigs(Span<CBLSSignature> sigs,
-                                    size_t start, size_t count, bool parallel,
+void CBLSWorker::AsyncAggregateSigs(Span<CBLSSignature> sigs, bool parallel,
                                     std::function<void(const CBLSSignature&)> doneCallback)
 {
-    AsyncAggregateHelper(workerPool, sigs, start, count, parallel, std::move(doneCallback));
+    AsyncAggregateHelper(workerPool, sigs, parallel, std::move(doneCallback));
 }
 
-std::future<CBLSSignature> CBLSWorker::AsyncAggregateSigs(Span<CBLSSignature> sigs,
-                                                          size_t start, size_t count, bool parallel)
+std::future<CBLSSignature> CBLSWorker::AsyncAggregateSigs(Span<CBLSSignature> sigs, bool parallel)
 {
     auto p = BuildFutureDoneCallback<CBLSSignature>();
-    AsyncAggregateSigs(sigs, start, count, parallel, std::move(p.first));
+    AsyncAggregateSigs(sigs, parallel, std::move(p.first));
     return std::move(p.second);
 }
 
@@ -757,25 +730,19 @@ std::future<bool> CBLSWorker::AsyncVerifyContributionShare(const CBLSId& forId,
     return workerPool.push(f);
 }
 
-bool CBLSWorker::VerifyVerificationVector(Span<CBLSPublicKey> vvec, size_t start, size_t count)
+bool CBLSWorker::VerifyVerificationVector(Span<CBLSPublicKey> vvec)
 {
-    return VerifyVectorHelper(vvec, start, count);
+    return VerifyVectorHelper(vvec);
 }
 
-bool CBLSWorker::VerifyVerificationVectors(Span<BLSVerificationVectorPtr> vvecs,
-                                           size_t start, size_t count)
+bool CBLSWorker::VerifyVerificationVectors(Span<BLSVerificationVectorPtr> vvecs)
 {
-    if (start == 0 && count == 0) {
-        count = vvecs.size();
-    }
-
     std::set<uint256> set;
-    for (size_t i = 0; i < count; i++) {
-        const auto& vvec = vvecs[start + i];
+    for (const auto& vvec : vvecs) {
         if (vvec == nullptr) {
             return false;
         }
-        if (vvec->size() != vvecs[start]->size()) {
+        if (vvec->size() != vvecs[0]->size()) {
             return false;
         }
         for (size_t j = 0; j < vvec->size(); j++) {

@@ -82,7 +82,7 @@ public:
         ReceiveVvecs();
 
         bench.minEpochIterations(epoch_iters).run([&] {
-            quorumVvec = blsWorker.BuildQuorumVerificationVector(receivedVvecs, 0, 0, false);
+            quorumVvec = blsWorker.BuildQuorumVerificationVector(receivedVvecs, false);
         });
     }
 

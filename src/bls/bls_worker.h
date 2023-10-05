@@ -69,13 +69,10 @@ public:
     //   [ a1+a2+a3+a4, b1+b2+b3+b4, c1+c2+c3+c4, d1+d2+d3+d4]
     // Multiple things can be parallelized here. For example, all 4 entries in the result vector can be calculated in parallel
     // Also, each individual vector can be split into multiple batches and aggregating the batches can also be parallelized.
-    void AsyncBuildQuorumVerificationVector(Span<BLSVerificationVectorPtr> vvecs,
-                                            size_t start, size_t count, bool parallel,
+    void AsyncBuildQuorumVerificationVector(Span<BLSVerificationVectorPtr> vvecs, bool parallel,
                                             std::function<void(const BLSVerificationVectorPtr&)> doneCallback);
-    std::future<BLSVerificationVectorPtr> AsyncBuildQuorumVerificationVector(Span<BLSVerificationVectorPtr> vvecs,
-                                                                             size_t start, size_t count, bool parallel);
-    BLSVerificationVectorPtr BuildQuorumVerificationVector(Span<BLSVerificationVectorPtr> vvecs,
-                                                           size_t start = 0, size_t count = 0, bool parallel = true);
+    std::future<BLSVerificationVectorPtr> AsyncBuildQuorumVerificationVector(Span<BLSVerificationVectorPtr> vvecs, bool parallel);
+    BLSVerificationVectorPtr BuildQuorumVerificationVector(Span<BLSVerificationVectorPtr> vvecs, bool parallel = true);
 
     // The following functions are all used to aggregate single vectors
     // Inputs are in the following form:
@@ -83,23 +80,18 @@ public:
     // The result is simply a+b+c+d
     // Aggregation is parallelized by splitting up the input vector into multiple batches and then aggregating the individual batch results
     void AsyncAggregateSecretKeys(Span<CBLSSecretKey>,
-                                  size_t start, size_t count, bool parallel,
+                                  bool parallel,
                                   std::function<void(const CBLSSecretKey&)> doneCallback);
-    std::future<CBLSSecretKey> AsyncAggregateSecretKeys(Span<CBLSSecretKey> secKeys,
-                                                        size_t start, size_t count, bool parallel);
-    CBLSSecretKey AggregateSecretKeys(Span<CBLSSecretKey> secKeys, size_t start = 0, size_t count = 0, bool parallel = true);
+    std::future<CBLSSecretKey> AsyncAggregateSecretKeys(Span<CBLSSecretKey> secKeys, bool parallel);
+    CBLSSecretKey AggregateSecretKeys(Span<CBLSSecretKey> secKeys, bool parallel = true);
 
-    void AsyncAggregatePublicKeys(Span<CBLSPublicKey> pubKeys,
-                                  size_t start, size_t count, bool parallel,
+    void AsyncAggregatePublicKeys(Span<CBLSPublicKey> pubKeys, bool parallel,
                                   std::function<void(const CBLSPublicKey&)> doneCallback);
-    std::future<CBLSPublicKey> AsyncAggregatePublicKeys(Span<CBLSPublicKey> pubKeys,
-                                                        size_t start, size_t count, bool parallel);
+    std::future<CBLSPublicKey> AsyncAggregatePublicKeys(Span<CBLSPublicKey> pubKeys, bool parallel);
 
-    void AsyncAggregateSigs(Span<CBLSSignature> sigs,
-                            size_t start, size_t count, bool parallel,
+    void AsyncAggregateSigs(Span<CBLSSignature> sigs, bool parallel,
                             std::function<void(const CBLSSignature&)> doneCallback);
-    std::future<CBLSSignature> AsyncAggregateSigs(Span<CBLSSignature> sigs,
-                                                        size_t start, size_t count, bool parallel);
+    std::future<CBLSSignature> AsyncAggregateSigs(Span<CBLSSignature> sigs, bool parallel);
 
     // Calculate public key share from public key vector and id. Not parallelized
     static CBLSPublicKey BuildPubKeyShare(const BLSVerificationVectorPtr& vvec, const CBLSId& id);
@@ -120,8 +112,8 @@ public:
     std::future<bool> AsyncVerifyContributionShare(const CBLSId& forId, const BLSVerificationVectorPtr& vvec, const CBLSSecretKey& skContribution);
 
     // Simple verification of vectors. Checks x.IsValid() for every entry and checks for duplicate entries
-    static bool VerifyVerificationVector(Span<CBLSPublicKey> vvec, size_t start = 0, size_t count = 0);
-    static bool VerifyVerificationVectors(Span<BLSVerificationVectorPtr> vvecs, size_t start = 0, size_t count = 0);
+    static bool VerifyVerificationVector(Span<CBLSPublicKey> vvec);
+    static bool VerifyVerificationVectors(Span<BLSVerificationVectorPtr> vvecs);
 
     // Internally batched signature signing and verification
     void AsyncSign(const CBLSSecretKey& secKey, const uint256& msgHash, const SignDoneCallback& doneCallback);
