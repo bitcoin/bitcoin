@@ -180,9 +180,11 @@ void BlockAssembler::addPriorityTxs(const CTxMemPool& mempool, int &nPackagesSel
     // How much of the block should be dedicated to high-priority transactions,
     // included regardless of the fees they pay
     uint64_t nBlockPrioritySize = gArgs.GetIntArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE);
-    nBlockPrioritySize = std::min(m_options.nBlockMaxSize, nBlockPrioritySize);
+    if (m_options.nBlockMaxSize < nBlockPrioritySize) {
+        nBlockPrioritySize = m_options.nBlockMaxSize;
+    }
 
-    if (nBlockPrioritySize == 0) {
+    if (nBlockPrioritySize <= 0) {
         return;
     }
 
