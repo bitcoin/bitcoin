@@ -46,13 +46,9 @@ ENABLED = (
     'E272,'  # multiple spaces before keyword
     'E273,'  # tab after keyword
     'E274,'  # tab before keyword
-    'E275,'  # missing whitespace after keyword
     'E304,'  # blank lines found after function decorator
-    'E306,'  # expected 1 blank line before a nested definition
     'E401,'  # multiple imports on one line
     'E402,'  # module level import not at top of file
-    'E502,'  # the backslash is redundant between brackets
-    'E701,'  # multiple statements on one line (colon)
     'E702,'  # multiple statements on one line (semicolon)
     'E703,'  # statement ends with a semicolon
     'E711,'  # comparison to None should be 'if cond is None:'
@@ -63,7 +59,6 @@ ENABLED = (
     'E743,'  # do not define functions named "l", "O", or "I"
     'E901,'  # SyntaxError: invalid syntax
     'E902,'  # TokenError: EOF in multi-line string
-    'F401,'  # module imported but unused
     'F402,'  # import module from line N shadowed by loop variable
     'F403,'  # 'from foo_module import *' used; unable to detect undefined names
     'F404,'  # future import(s) name after other statements
@@ -89,7 +84,6 @@ ENABLED = (
     'F822,'  # undefined name name in __all__
     'F823,'  # local variable name … referenced before assignment
     'F831,'  # duplicate argument name in function definition
-    'F841,'  # local variable 'foo' is assigned to but never used
     'W191,'  # indentation contains tabs
     'W291,'  # trailing whitespace
     'W292,'  # no newline at end of file
