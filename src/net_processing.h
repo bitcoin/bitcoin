@@ -58,6 +58,9 @@ public:
         uint32_t max_extra_txs{DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN};
         //! Whether all P2P messages are captured to disk
         bool capture_messages{false};
+        //! Whether or not the internal RNG behaves deterministically (this is
+        //! a test-only option).
+        bool deterministic_rng{false};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
