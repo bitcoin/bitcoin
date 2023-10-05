@@ -361,15 +361,10 @@ public:
      */
     void check(const CCoinsViewCache& active_coins_tip, int64_t spendheight) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    // addUnchecked must updated state for all ancestors of a given transaction,
-    // to track size/count of descendant transactions.  First version of
-    // addUnchecked can be used to have it call CalculateMemPoolAncestors(), and
-    // then invoke the second version.
     // Note that addUnchecked is ONLY called from ATMP outside of tests
     // and any other callers may break wallet's in-mempool tracking (due to
     // lack of CValidationInterface::TransactionAddedToMempool callbacks).
     void addUnchecked(const CTxMemPoolEntry& entry) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
-    void addUnchecked(const CTxMemPoolEntry& entry, setEntries& setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
 
     void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** After reorg, filter the entries that would no longer be valid in the next block, and update
@@ -682,7 +677,7 @@ public:
 
 private:
     /** Update ancestors of hash to add/remove it as a descendant transaction. */
-    void UpdateAncestorsOf(bool add, txiter hash, setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void UpdateAncestorsOf(bool add, txiter hash) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** For each transaction being removed, update ancestors and any direct children.
       * If updateDescendants is true, then also update in-mempool descendants'
       * ancestor state. */

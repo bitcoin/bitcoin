@@ -287,7 +287,7 @@ CTxMemPool::setEntries CTxMemPool::AssumeCalculateMemPoolAncestors(
     return std::move(result).value_or(CTxMemPool::setEntries{});
 }
 
-void CTxMemPool::UpdateAncestorsOf(bool add, txiter it, setEntries &setAncestors)
+void CTxMemPool::UpdateAncestorsOf(bool add, txiter it)
 {
     const CTxMemPoolEntry::Parents& parents = it->GetMemPoolParentsConst();
     // add or remove this tx as a child of each parent
@@ -307,30 +307,9 @@ void CTxMemPool::UpdateChildrenForRemoval(txiter it)
 void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, bool updateDescendants)
 {
     for (txiter removeIt : entriesToRemove) {
-        const CTxMemPoolEntry &entry = *removeIt;
-        // Since this is a tx that is already in the mempool, we can call CMPA
-        // with fSearchForParents = false.  If the mempool is in a consistent
-        // state, then using true or false should both be correct, though false
-        // should be a bit faster.
-        // However, if we happen to be in the middle of processing a reorg, then
-        // the mempool can be in an inconsistent state.  In this case, the set
-        // of ancestors reachable via GetMemPoolParents()/GetMemPoolChildren()
-        // will be the same as the set of ancestors whose packages include this
-        // transaction, because when we add a new transaction to the mempool in
-        // addUnchecked(), we assume it has no children, and in the case of a
-        // reorg where that assumption is false, the in-mempool children aren't
-        // linked to the in-block tx's until UpdateTransactionsFromBlock() is
-        // called.
-        // So if we're being called during a reorg, ie before
-        // UpdateTransactionsFromBlock() has been called, then
-        // GetMemPoolParents()/GetMemPoolChildren() will differ from the set of
-        // mempool parents we'd calculate by searching, and it's important that
-        // we use the cached notion of ancestor transactions as the set of
-        // things to update for removal.
-        auto ancestors{AssumeCalculateMemPoolAncestors(__func__, entry, Limits::NoLimits(), /*fSearchForParents=*/false)};
         // Note that UpdateAncestorsOf severs the child links that point to
         // removeIt in the entries for the parents of removeIt.
-        UpdateAncestorsOf(false, removeIt, ancestors);
+        UpdateAncestorsOf(false, removeIt);
     }
     // After updating all the ancestor sizes, we can now sever the link between each
     // transaction being removed and any mempool children (ie, update CTxMemPoolEntry::m_parents
@@ -371,7 +350,7 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
     nTransactionsUpdated += n;
 }
 
-void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAncestors)
+void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry)
 {
     // Add to memory pool without checking anything.
     // Used by AcceptToMemoryPool(), which DOES do
@@ -416,7 +395,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     for (const auto& pit : GetIterSet(setParentTransactions)) {
         UpdateParent(newit, pit, true);
     }
-    UpdateAncestorsOf(true, newit, setAncestors);
+    UpdateAncestorsOf(true, newit);
 
     nTransactionsUpdated++;
     totalTxSize += entry.GetTxSize();
@@ -970,12 +949,6 @@ int CTxMemPool::Expire(std::chrono::seconds time)
     }
     RemoveStaged(stage, false, MemPoolRemovalReason::EXPIRY);
     return stage.size();
-}
-
-void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry)
-{
-    auto ancestors{AssumeCalculateMemPoolAncestors(__func__, entry, Limits::NoLimits())};
-    return addUnchecked(entry, ancestors);
 }
 
 void CTxMemPool::UpdateChild(txiter entry, txiter child, bool add)
