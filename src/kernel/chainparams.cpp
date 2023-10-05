@@ -705,14 +705,14 @@ public:
                 .height = 200,
                 .hash_serialized = AssumeutxoHash{uint256S("0x51c8d11d8b5c1de51543c579736e786aa2736206d1e11e627568029ce092cf62")},
             },
-            {
-                // For use by test/functional/feature_assumeutxo.py
-                // TODO fill with SYS data
-                // .height = 299,
-                // .hash_serialized = AssumeutxoHash{uint256S("0xef45ccdca5898b6c2145e4581d2b88c56564dd389e4bd75a1aaf6961d3edd3c0")},
-                // .nChainTx = 300,
-                // .blockhash = uint256S("0x7e0517ef3ea6ecbed9117858e42eedc8eb39e8698a38dcbd1b3962a283233f4c")
-            },
+            // TODO fill with SYS data
+            // {
+            //     // For use by test/functional/feature_assumeutxo.py
+            //     .height = 299,
+            //     .hash_serialized = AssumeutxoHash{uint256S("0xef45ccdca5898b6c2145e4581d2b88c56564dd389e4bd75a1aaf6961d3edd3c0")},
+            //     .nChainTx = 300,
+            //     .blockhash = uint256S("0x7e0517ef3ea6ecbed9117858e42eedc8eb39e8698a38dcbd1b3962a283233f4c")
+            // },
         };
 
         chainTxData = ChainTxData{
