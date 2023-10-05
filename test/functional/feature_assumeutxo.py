@@ -35,7 +35,7 @@ Interesting starting states could be loading a snapshot when the current chain t
 - TODO: Not an ancestor or a descendant of the snapshot block and has more work
 
 """
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, wait_until_helper
 
 START_HEIGHT = 199
@@ -44,7 +44,7 @@ FINAL_HEIGHT = 399
 COMPLETE_IDX = {'synced': True, 'best_block_height': FINAL_HEIGHT}
 
 
-class AssumeutxoTest(BitcoinTestFramework):
+class AssumeutxoTest(SyscoinTestFramework):
 
     def set_test_params(self):
         """Use the pregenerated, deterministic chain up to height 199."""
