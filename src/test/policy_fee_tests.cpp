@@ -13,7 +13,8 @@ BOOST_AUTO_TEST_SUITE(policy_fee_tests)
 
 BOOST_AUTO_TEST_CASE(FeeRounder)
 {
-    FeeFilterRounder fee_rounder{CFeeRate{1000}};
+    FastRandomContext rng{/*fDeterministic=*/true};
+    FeeFilterRounder fee_rounder{CFeeRate{1000}, rng};
 
     // check that 1000 rounds to 974 or 1071
     std::set<CAmount> results;
