@@ -4,6 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Wallet encryption"""
 
+import os
+import subprocess
 import time
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -46,6 +48,25 @@ class WalletEncryptionTest(BitcoinTestFramework):
         assert_raises_rpc_error(-15, "Error: running with an encrypted wallet, but encryptwallet was called.", self.nodes[0].encryptwallet, 'ff')
         assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].walletpassphrase, '', 1)
         assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].walletpassphrasechange, '', 'ff')
+
+        # Make sure there are no unencrypted key records
+        # Use the wallet tool's dump mechanism to get all of the records to inspect them.
+        self.nodes[0].unloadwallet(self.default_wallet_name)
+        dump_file = os.path.join(self.nodes[0].datadir_path, "wallet.dump")
+        subprocess.check_call([self.options.bitcoinwallet, f"-datadir={self.nodes[0].datadir_path}", f"-chain={self.chain}", f"-wallet={self.default_wallet_name}", f"-dumpfile={dump_file}", "dump"], stdout=subprocess.DEVNULL)
+        self.nodes[0].loadwallet(self.default_wallet_name)
+        # Look for records that contain the hex for 'key' but not 'ckey'
+        key_hex = b"key".hex()
+        ckey_hex = b"ckey".hex()
+        # Hex for records to skip
+        skip_records = [b"mkey".hex(), b"activehdkey".hex(), b"defaultkey".hex(), b"keymeta".hex()]
+        with open(dump_file, "r", encoding="utf8") as f:
+            for row in f:
+                k, v = row.split(",")
+                # Skip 'mkey' records. These aren't private key records.
+                if any([skip in k for skip in skip_records]):
+                    continue
+                assert ckey_hex in k or key_hex not in k, "Unexpected unencrypted key record"
 
         # Check that walletpassphrase works
         self.nodes[0].walletpassphrase(passphrase, 2)
