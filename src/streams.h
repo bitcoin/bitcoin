@@ -52,7 +52,7 @@ class OverrideStream
 
     const int nVersion;
     // SYSCOIN
-    const int nType;
+    int nType{0};
     int nTxVersion{0};
 
 public:
@@ -131,7 +131,9 @@ class CVectorWriter
         ::SerializeMany(*this, std::forward<Args>(args)...);
     }
     // SYSCOIN
-    CVectorWriter(int nTypeIn, int nVersionIn, std::vector<unsigned char>& vchDataIn, size_t nPosIn, Args&&... args) : CVectorWriter(nTypeIn, nVersionIn, vchDataIn, nPosIn)    {
+    template <typename... Args>
+    CVectorWriter(int nTypeIn, int nVersionIn, std::vector<unsigned char>& vchDataIn, size_t nPosIn, Args&&... args) : CVectorWriter{nTypeIn, nVersionIn, vchDataIn, nPosIn}
+    {
         ::SerializeMany(*this, std::forward<Args>(args)...);
     }
     void write(Span<const std::byte> src)
@@ -165,7 +167,7 @@ class CVectorWriter
 
 private:
     // SYSCOIN
-    const int nType;
+    int nType{0};
 
     const int nVersion;
     int nTxVersion{0};
@@ -181,7 +183,7 @@ private:
     const int m_version;
     Span<const unsigned char> m_data;
     // SYSCOIN
-    const int m_type;
+    const int m_type{0};
     int nTxVersion{0};
 public:
     /**
@@ -240,7 +242,7 @@ protected:
     vector_type::size_type m_read_pos{0};
 
     // SYSCOIN
-    int nType;
+    int nType{0};
     int nTxVersion{0};
 public:
     typedef vector_type::allocator_type   allocator_type;
