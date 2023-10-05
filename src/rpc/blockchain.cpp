@@ -2807,6 +2807,7 @@ const std::vector<RPCResult> RPCHelpForChainstate{
     {RPCResult::Type::STR_HEX, "snapshot_blockhash", /*optional=*/true, "the base block of the snapshot this chainstate is based on, if any"},
     {RPCResult::Type::NUM, "coins_db_cache_bytes", "size of the coinsdb cache"},
     {RPCResult::Type::NUM, "coins_tip_cache_bytes", "size of the coinstip cache"},
+    {RPCResult::Type::BOOL, "validated", "whether the chainstate is fully validated. True if all blocks in the chainstate were validated, false if the chain is based on a snapshot and the snapshot has not yet been validated."},
 };
 
 static RPCHelpMan getchainstates()
@@ -2818,8 +2819,7 @@ return RPCHelpMan{
         RPCResult{
             RPCResult::Type::OBJ, "", "", {
                 {RPCResult::Type::NUM, "headers", "the number of headers seen so far"},
-                {RPCResult::Type::OBJ, "normal", /*optional=*/true, "fully validated chainstate containing blocks this node has validated starting from the genesis block", RPCHelpForChainstate},
-                {RPCResult::Type::OBJ, "snapshot", /*optional=*/true, "only present if an assumeutxo snapshot is loaded. Partially validated chainstate containing blocks this node has validated starting from the snapshot. After the snapshot is validated (when the 'normal' chainstate advances far enough to validate it), this chainstate will replace and become the 'normal' chainstate.", RPCHelpForChainstate},
+                {RPCResult::Type::ARR, "chainstates", "list of the chainstates ordered by work, with the most-work (active) chainstate last", {{RPCResult::Type::OBJ, "", "", RPCHelpForChainstate},}},
             }
         },
         RPCExamples{
@@ -2834,7 +2834,7 @@ return RPCHelpMan{
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = *node.chainman;
 
-    auto make_chain_data = [&](const Chainstate& cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+    auto make_chain_data = [&](const Chainstate& cs, bool validated) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         AssertLockHeld(::cs_main);
         UniValue data(UniValue::VOBJ);
         if (!cs.m_chain.Tip()) {
@@ -2852,20 +2852,18 @@ return RPCHelpMan{
         if (cs.m_from_snapshot_blockhash) {
             data.pushKV("snapshot_blockhash", cs.m_from_snapshot_blockhash->ToString());
         }
+        data.pushKV("validated", validated);
         return data;
     };
 
-    if (chainman.GetAll().size() > 1) {
-        for (Chainstate* chainstate : chainman.GetAll()) {
-            obj.pushKV(
-                chainstate->m_from_snapshot_blockhash ? "snapshot" : "normal",
-                make_chain_data(*chainstate));
-        }
-    } else {
-        obj.pushKV("normal", make_chain_data(chainman.ActiveChainstate()));
-    }
     obj.pushKV("headers", chainman.m_best_header ? chainman.m_best_header->nHeight : -1);
 
+    const auto& chainstates = chainman.GetAll();
+    UniValue obj_chainstates{UniValue::VARR};
+    for (Chainstate* cs : chainstates) {
+      obj_chainstates.push_back(make_chain_data(*cs, !cs->m_from_snapshot_blockhash || chainstates.size() == 1));
+    }
+    obj.pushKV("chainstates", std::move(obj_chainstates));
     return obj;
 }
     };
