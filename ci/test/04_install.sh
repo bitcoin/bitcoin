@@ -21,6 +21,8 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
       "${BASE_READ_ONLY_DIR}"
   docker volume create "${CONTAINER_NAME}_ccache" || true
   docker volume create "${CONTAINER_NAME}_depends" || true
+  docker volume create "${CONTAINER_NAME}_depends_sources" || true
+  docker volume create "${CONTAINER_NAME}_depends_SDKs_android" || true
   docker volume create "${CONTAINER_NAME}_previous_releases" || true
 
   if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
@@ -36,7 +38,9 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   CI_CONTAINER_ID=$(docker run --cap-add LINUX_IMMUTABLE $CI_CONTAINER_CAP --rm --interactive --detach --tty \
                   --mount "type=bind,src=$BASE_READ_ONLY_DIR,dst=$BASE_READ_ONLY_DIR,readonly" \
                   --mount "type=volume,src=${CONTAINER_NAME}_ccache,dst=$CCACHE_DIR" \
-                  --mount "type=volume,src=${CONTAINER_NAME}_depends,dst=$DEPENDS_DIR" \
+                  --mount "type=volume,src=${CONTAINER_NAME}_depends,dst=$DEPENDS_DIR/built" \
+                  --mount "type=volume,src=${CONTAINER_NAME}_depends_sources,dst=$DEPENDS_DIR/sources" \
+                  --mount "type=volume,src=${CONTAINER_NAME}_depends_SDKs_android,dst=$DEPENDS_DIR/SDKs/android" \
                   --mount "type=volume,src=${CONTAINER_NAME}_previous_releases,dst=$PREVIOUS_RELEASES_DIR" \
                   --env-file /tmp/env \
                   --name "$CONTAINER_NAME" \
