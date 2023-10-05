@@ -1287,6 +1287,12 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
     // Transactions must meet two minimum feerates: the mempool minimum fee and min relay fee.
     // For transactions consisting of exactly one child and its parents, it suffices to use the
     // package feerate (total modified fees / total virtual size) to check this requirement.
+    // Note that this is an aggregate feerate; this function has not checked that there are transactions
+    // too low feerate to pay for themselves, or that the child transactions are higher feerate than
+    // their parents. Using aggregate feerate may allow "parents pay for child" behavior and permit
+    // a child that is below mempool minimum feerate. To avoid these behaviors, callers of
+    // AcceptMultipleTransactions need to restrict txns topology (e.g. to ancestor sets) and check
+    // the feerates of individuals and subsets.
     const auto m_total_vsize = std::accumulate(workspaces.cbegin(), workspaces.cend(), int64_t{0},
         [](int64_t sum, auto& ws) { return sum + ws.m_vsize; });
     const auto m_total_modified_fees = std::accumulate(workspaces.cbegin(), workspaces.cend(), CAmount{0},

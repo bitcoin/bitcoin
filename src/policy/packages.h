@@ -63,4 +63,8 @@ bool CheckPackage(const Package& txns, PackageValidationState& state);
  */
 bool IsChildWithParents(const Package& package);
 
+/** Context-free check that a package IsChildWithParents() and none of the parents depend on each
+ * other (the package is a "tree").
+ */
+bool IsChildWithParentsTree(const Package& package);
 #endif // BITCOIN_POLICY_PACKAGES_H
