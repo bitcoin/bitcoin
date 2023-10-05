@@ -1413,8 +1413,16 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(uint32_t key_exp_index, const Span<c
     return std::make_unique<OriginPubkeyProvider>(key_exp_index, std::move(info), std::move(provider), apostrophe);
 }
 
-std::unique_ptr<PubkeyProvider> InferPubkey(const CPubKey& pubkey, ParseScriptContext, const SigningProvider& provider)
+std::unique_ptr<PubkeyProvider> InferPubkey(const CPubKey& pubkey, ParseScriptContext ctx, const SigningProvider& provider)
 {
+    // Key cannot be hybrid
+    if (!pubkey.IsValidNonHybrid()) {
+        return nullptr;
+    }
+    // Uncompressed is only allowed in TOP and P2SH contexts
+    if (ctx != ParseScriptContext::TOP && ctx != ParseScriptContext::P2SH && !pubkey.IsCompressed()) {
+        return nullptr;
+    }
     std::unique_ptr<PubkeyProvider> key_provider = std::make_unique<ConstPubkeyProvider>(0, pubkey, false);
     KeyOriginInfo info;
     if (provider.GetKeyOrigin(pubkey.GetID(), info)) {
@@ -1497,11 +1505,9 @@ struct KeyParser {
             }
         } else if (!miniscript::IsTapscript(m_script_ctx)) {
             CPubKey pubkey(begin, end);
-            if (pubkey.IsValidNonHybrid()) {
-                if (auto pubkey_provider = InferPubkey(pubkey, ParseContext(), *m_in)) {
-                    m_keys.push_back(std::move(pubkey_provider));
-                    return key;
-                }
+            if (auto pubkey_provider = InferPubkey(pubkey, ParseContext(), *m_in)) {
+                m_keys.push_back(std::move(pubkey_provider));
+                return key;
             }
         }
         return {};
@@ -1855,10 +1861,8 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
 
     if (txntype == TxoutType::PUBKEY && (ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH)) {
         CPubKey pubkey(data[0]);
-        if (pubkey.IsValidNonHybrid()) {
-            if (auto pubkey_provider = InferPubkey(pubkey, ctx, provider)) {
-                return std::make_unique<PKDescriptor>(std::move(pubkey_provider));
-            }
+        if (auto pubkey_provider = InferPubkey(pubkey, ctx, provider)) {
+            return std::make_unique<PKDescriptor>(std::move(pubkey_provider));
         }
     }
     if (txntype == TxoutType::PUBKEYHASH && (ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH)) {
@@ -1876,7 +1880,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         CKeyID keyid(hash);
         CPubKey pubkey;
         if (provider.GetPubKey(keyid, pubkey)) {
-            if (auto pubkey_provider = InferPubkey(pubkey, ctx, provider)) {
+            if (auto pubkey_provider = InferPubkey(pubkey, ParseScriptContext::P2WPKH, provider)) {
                 return std::make_unique<WPKHDescriptor>(std::move(pubkey_provider));
             }
         }
