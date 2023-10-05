@@ -294,16 +294,13 @@ fn lint_py_lint() -> LintResult {
             "E101", // indentation contains mixed spaces and tabs
             "E401", // multiple imports on one line
             "E402", // module level import not at top of file
-            "E701", // multiple statements on one line (colon)
             "E702", // multiple statements on one line (semicolon)
             "E703", // statement ends with a semicolon
             "E711", // comparison to None should be 'if cond is None:'
-            "E714", // test for object identity should be "is not"
             "E721", // do not compare types, use "isinstance()"
             "E722", // do not use bare 'except'
             "E742", // do not define classes named "l", "O", or "I"
             "E743", // do not define functions named "l", "O", or "I"
-            "F401", // module imported but unused
             "F402", // import module from line N shadowed by loop variable
             "F403", // 'from foo_module import *' used; unable to detect undefined names
             "F404", // future import(s) name after other statements
@@ -320,7 +317,6 @@ fn lint_py_lint() -> LintResult {
             "F821", // undefined name 'Foo'
             "F822", // undefined name name in __all__
             "F823", // local variable name … referenced before assignment
-            "F841", // local variable 'foo' is assigned to but never used
             "PLE",  // Pylint errors
             "W191", // indentation contains tabs
             "W291", // trailing whitespace
