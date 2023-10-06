@@ -2707,7 +2707,7 @@ static RPCHelpMan loadtxoutset()
         "Load the serialized UTXO set from disk.\n"
         "Once this snapshot is loaded, its contents will be "
         "deserialized into a second chainstate data structure, which is then used to sync to "
-        "the network's tip under a security model very much like `assumevalid`. "
+        "the network's tip. "
         "Meanwhile, the original chainstate will complete the initial block download process in "
         "the background, eventually validating up to the block that the snapshot is based upon.\n\n"
 
