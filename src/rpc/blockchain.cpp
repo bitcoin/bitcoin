@@ -2759,7 +2759,7 @@ static RPCHelpMan loadtxoutset()
     LogPrintf("[snapshot] waiting to see blockheader %s in headers chain before snapshot activation\n",
         base_blockhash.ToString());
 
-    ChainstateManager& chainman = *node.chainman;
+    ChainstateManager& chainman = EnsureChainman(node);
 
     while (max_secs_to_wait_for_headers > 0) {
         snapshot_start_block = WITH_LOCK(::cs_main,
@@ -2831,8 +2831,7 @@ return RPCHelpMan{
     LOCK(cs_main);
     UniValue obj(UniValue::VOBJ);
 
-    NodeContext& node = EnsureAnyNodeContext(request.context);
-    ChainstateManager& chainman = *node.chainman;
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
 
     auto make_chain_data = [&](const Chainstate& cs, bool validated) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         AssertLockHeld(::cs_main);
