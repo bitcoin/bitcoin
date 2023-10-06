@@ -11,7 +11,15 @@
 #include <threadsafety.h>
 #include <univalue.h>
 
+#include <optional>
+#include <saltedhasher.h>
+#include <unordered_map>
+#include <unordered_lru_cache.h>
+
+class BlockValidationState;
+class CBlock;
 class CBlockIndex;
+class CEvoDB;
 class TxValidationState;
 extern RecursiveMutex cs_main;
 
@@ -20,11 +28,11 @@ class MNHFTx
 {
 public:
     uint8_t versionBit{0};
-    uint256 quorumHash;
-    CBLSSignature sig;
+    uint256 quorumHash{0};
+    CBLSSignature sig{};
 
     MNHFTx() = default;
-    bool Verify(const CBlockIndex* pQuorumIndex, const uint256& msgHash, TxValidationState& state) const;
+    bool Verify(const uint256& quorumHash, const uint256& msgHash, TxValidationState& state) const;
 
     SERIALIZE_METHODS(MNHFTx, obj)
     {
@@ -72,6 +80,59 @@ public:
     }
 };
 
+class CMNHFManager
+{
+public:
+    using Signals = std::unordered_map<uint8_t, int>;
+
+private:
+    CEvoDB& m_evoDb;
+
+    static constexpr size_t MNHFCacheSize = 1000;
+    Mutex cs_cache;
+    // versionBit <-> height
+    unordered_lru_cache<uint256, Signals, StaticSaltedHasher> mnhfCache GUARDED_BY(cs_cache) {MNHFCacheSize};
+
+public:
+    explicit CMNHFManager(CEvoDB& evoDb) :
+        m_evoDb(evoDb) {}
+    ~CMNHFManager() = default;
+
+    /**
+     * Every new block should be processed when Tip() is updated by calling of CMNHFManager::ProcessBlock
+     */
+    bool ProcessBlock(const CBlock& block, const CBlockIndex* const pindex, bool fJustCheck, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * Every undo block should be processed when Tip() is updated by calling of CMNHFManager::UndoBlock
+     */
+    bool UndoBlock(const CBlock& block, const CBlockIndex* const pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * Once app is started, need to initialize dictionary will all known signals at the current Tip()
+     * by calling UpdateChainParams()
+     */
+    void UpdateChainParams(const CBlockIndex* const pindex, const CBlockIndex* const pindexOld) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * This function prepares signals for new block.
+     * This data is filterd expired signals from previous blocks.
+     * This member function is not const because it calls non-const GetFromCache()
+     */
+    Signals GetSignalsStage(const CBlockIndex* const pindexPrev);
+private:
+    void AddToCache(const Signals& signals, const CBlockIndex* const pindex);
+
+    /**
+     * This function returns list of signals available on previous block.
+     * NOTE: that some signals could expired between blocks.
+     * validate them by
+     */
+    Signals GetFromCache(const CBlockIndex* const pindex);
+
+};
+
+std::optional<uint8_t> extractEHFSignal(const CTransaction& tx);
 bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOIN_EVO_MNHFTX_H

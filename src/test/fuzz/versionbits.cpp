@@ -42,6 +42,7 @@ public:
 
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override { return Condition(pindex->nVersion); }
     int64_t BeginTime(const Consensus::Params& params) const override { return m_begin; }
+    int MasternodeBeginHeight(const Consensus::Params& params) const override { return 0; }
     int64_t EndTime(const Consensus::Params& params) const override { return m_end; }
     int Period(const Consensus::Params& params) const override { return m_period; }
     int Threshold(const Consensus::Params& params, int nAttempt) const override { return m_threshold; }

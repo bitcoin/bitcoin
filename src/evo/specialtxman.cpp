@@ -122,7 +122,8 @@ static bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
     return false;
 }
 
-bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq::CQuorumBlockProcessor& quorum_block_processor, const llmq::CChainLocksHandler& chainlock_handler,
+bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CMNHFManager& mnhfManager,
+                              llmq::CQuorumBlockProcessor& quorum_block_processor, const llmq::CChainLocksHandler& chainlock_handler,
                               const Consensus::Params& consensusParams, const CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots,
                               BlockValidationState& state)
 {
@@ -134,6 +135,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, ll
         static int64_t nTimeDMN = 0;
         static int64_t nTimeMerkle = 0;
         static int64_t nTimeCbTxCL = 0;
+        static int64_t nTimeMnehf = 0;
 
         int64_t nTime1 = GetTimeMicros();
 
@@ -198,6 +200,15 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, ll
         nTimeCbTxCL += nTime6 - nTime5;
         LogPrint(BCLog::BENCHMARK, "        - CheckCbTxBestChainlock: %.2fms [%.2fs]\n", 0.001 * (nTime6 - nTime5), nTimeCbTxCL * 0.000001);
 
+        if (!mnhfManager.ProcessBlock(block, pindex, fJustCheck, state)) {
+            // pass the state returned by the function above
+            return false;
+        }
+
+        int64_t nTime7 = GetTimeMicros();
+        nTimeMnehf += nTime7 - nTime6;
+        LogPrint(BCLog::BENCHMARK, "        - mnhfManager: %.2fms [%.2fs]\n", 0.001 * (nTime7 - nTime6), nTimeMnehf * 0.000001);
+
         if (Params().GetConsensus().V19Height == pindex->nHeight + 1) {
             // NOTE: The block next to the activation is the one that is using new rules.
             // V19 activated just activated, so we must switch to the new rules here.
@@ -212,7 +223,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, ll
     return true;
 }
 
-bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq::CQuorumBlockProcessor& quorum_block_processor)
+bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CMNHFManager& mnhfManager, llmq::CQuorumBlockProcessor& quorum_block_processor)
 {
     AssertLockHeld(cs_main);
 
@@ -231,6 +242,10 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, llmq:
             if (!UndoSpecialTx(tx, pindex)) {
                 return false;
             }
+        }
+
+        if (!mnhfManager.UndoBlock(block, pindex)) {
+            return false;
         }
 
         if (!deterministicMNManager->UndoBlock(pindex)) {
