@@ -3960,12 +3960,8 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                 if (data.watchonly_wallet) {
                     LOCK(data.watchonly_wallet->cs_wallet);
                     if (data.watchonly_wallet->IsMine(addr_pair.first)) {
-                        // Add to the watchonly. Preserve the labels, purpose, and change-ness
-                        std::string label = addr_pair.second.GetLabel();
-                        data.watchonly_wallet->m_address_book[addr_pair.first].purpose = addr_pair.second.purpose;
-                        if (!addr_pair.second.IsChange()) {
-                            data.watchonly_wallet->m_address_book[addr_pair.first].SetLabel(label);
-                        }
+                        // Add to the watchonly. Copy the entire address book entry
+                        data.watchonly_wallet->m_address_book[addr_pair.first] = addr_pair.second;
                         dests_to_delete.push_back(addr_pair.first);
                         continue;
                     }
@@ -3973,12 +3969,8 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                 if (data.solvable_wallet) {
                     LOCK(data.solvable_wallet->cs_wallet);
                     if (data.solvable_wallet->IsMine(addr_pair.first)) {
-                        // Add to the solvable. Preserve the labels, purpose, and change-ness
-                        std::string label = addr_pair.second.GetLabel();
-                        data.solvable_wallet->m_address_book[addr_pair.first].purpose = addr_pair.second.purpose;
-                        if (!addr_pair.second.IsChange()) {
-                            data.solvable_wallet->m_address_book[addr_pair.first].SetLabel(label);
-                        }
+                        // Add to the solvable. Copy the entire address book entry
+                        data.solvable_wallet->m_address_book[addr_pair.first] = addr_pair.second;
                         dests_to_delete.push_back(addr_pair.first);
                         continue;
                     }
@@ -3998,21 +3990,13 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
             // Labels for everything else ("send") should be cloned to all
             if (data.watchonly_wallet) {
                 LOCK(data.watchonly_wallet->cs_wallet);
-                // Add to the watchonly. Preserve the labels, purpose, and change-ness
-                std::string label = addr_pair.second.GetLabel();
-                data.watchonly_wallet->m_address_book[addr_pair.first].purpose = addr_pair.second.purpose;
-                if (!addr_pair.second.IsChange()) {
-                    data.watchonly_wallet->m_address_book[addr_pair.first].SetLabel(label);
-                }
+                // Add to the watchonly. Copy the entire address book entry
+                data.watchonly_wallet->m_address_book[addr_pair.first] = addr_pair.second;
             }
             if (data.solvable_wallet) {
                 LOCK(data.solvable_wallet->cs_wallet);
-                // Add to the solvable. Preserve the labels, purpose, and change-ness
-                std::string label = addr_pair.second.GetLabel();
-                data.solvable_wallet->m_address_book[addr_pair.first].purpose = addr_pair.second.purpose;
-                if (!addr_pair.second.IsChange()) {
-                    data.solvable_wallet->m_address_book[addr_pair.first].SetLabel(label);
-                }
+                // Add to the solvable. Copy the entire address book entry
+                data.solvable_wallet->m_address_book[addr_pair.first] = addr_pair.second;
             }
         }
     }
@@ -4023,10 +4007,12 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         WalletBatch batch{wallet.GetDatabase()};
         for (const auto& [destination, addr_book_data] : wallet.m_address_book) {
             auto address{EncodeDestination(destination)};
-            std::optional<std::string> label = addr_book_data.IsChange() ? std::nullopt : std::make_optional(addr_book_data.GetLabel());
-            // don't bother writing default values (unknown purpose)
             if (addr_book_data.purpose) batch.WritePurpose(address, PurposeToString(*addr_book_data.purpose));
-            if (label) batch.WriteName(address, *label);
+            if (addr_book_data.label) batch.WriteName(address, *addr_book_data.label);
+            for (const auto& [id, request] : addr_book_data.receive_requests) {
+                batch.WriteAddressReceiveRequest(destination, id, request);
+            }
+            if (addr_book_data.previously_spent) batch.WriteAddressPreviouslySpent(destination, true);
         }
     };
     if (data.watchonly_wallet) persist_address_book(*data.watchonly_wallet);
