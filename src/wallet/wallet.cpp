@@ -3908,6 +3908,14 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
     // Check if the transactions in the wallet are still ours. Either they belong here, or they belong in the watchonly wallet.
     // We need to go through these in the tx insertion order so that lookups to spends works.
     std::vector<uint256> txids_to_delete;
+    std::unique_ptr<WalletBatch> watchonly_batch;
+    if (data.watchonly_wallet) {
+        watchonly_batch = std::make_unique<WalletBatch>(data.watchonly_wallet->GetDatabase());
+        // Copy the next tx order pos to the watchonly wallet
+        LOCK(data.watchonly_wallet->cs_wallet);
+        data.watchonly_wallet->nOrderPosNext = nOrderPosNext;
+        watchonly_batch->WriteOrderPosNext(data.watchonly_wallet->nOrderPosNext);
+    }
     for (const auto& [_pos, wtx] : wtxOrdered) {
         if (!IsMine(*wtx->tx) && !IsFromMe(*wtx->tx)) {
             // Check it is the watchonly wallet's
@@ -3916,12 +3924,20 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                 LOCK(data.watchonly_wallet->cs_wallet);
                 if (data.watchonly_wallet->IsMine(*wtx->tx) || data.watchonly_wallet->IsFromMe(*wtx->tx)) {
                     // Add to watchonly wallet
-                    if (!data.watchonly_wallet->AddToWallet(wtx->tx, wtx->m_state)) {
-                        error = _("Error: Could not add watchonly tx to watchonly wallet");
+                    const uint256& hash = wtx->GetHash();
+                    const CWalletTx& to_copy_wtx = *wtx;
+                    if (!data.watchonly_wallet->LoadToWallet(hash, [&](CWalletTx& ins_wtx, bool new_tx) EXCLUSIVE_LOCKS_REQUIRED(data.watchonly_wallet->cs_wallet) {
+                        if (!new_tx) return false;
+                        ins_wtx.SetTx(to_copy_wtx.tx);
+                        ins_wtx.CopyFrom(to_copy_wtx);
+                        return true;
+                    })) {
+                        error = strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex());
                         return false;
                     }
+                    watchonly_batch->WriteTx(data.watchonly_wallet->mapWallet.at(hash));
                     // Mark as to remove from this wallet
-                    txids_to_delete.push_back(wtx->GetHash());
+                    txids_to_delete.push_back(hash);
                     continue;
                 }
             }
@@ -3930,6 +3946,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
             return false;
         }
     }
+    watchonly_batch.reset(); // Flush
     // Do the removes
     if (txids_to_delete.size() > 0) {
         std::vector<uint256> deleted_txids;
