@@ -1491,8 +1491,7 @@ public:
         return !((GetType() & "BKW"_mst) == ""_mst);
     }
 
-    /** Return the maximum number of stack elements needed to satisfy this script non-malleably.
-     * This does not account for the P2WSH script push. */
+    /** Return the maximum number of stack elements needed to satisfy this script non-malleably. */
     std::optional<uint32_t> GetStackSize() const {
         if (!ss.sat.valid) return {};
         return ss.sat.netdiff + static_cast<int32_t>(IsBKW());
