@@ -848,7 +848,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         wallet.addmultisigaddress(2, [wallet.getnewaddress(), get_generate_key().pubkey])
         wallet.importaddress(get_generate_key().p2pkh_addr)
 
-        assert_raises_rpc_error(-4, "Failed to create new watchonly wallet", wallet.migratewallet)
+        assert_raises_rpc_error(-4, "Failed to create database", wallet.migratewallet)
 
         assert "failed" in self.nodes[0].listwallets()
         assert "failed_watchonly" not in self.nodes[0].listwallets()
