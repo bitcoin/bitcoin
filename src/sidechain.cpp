@@ -290,6 +290,7 @@ bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
         for (size_t i = 0; i < sidechain_proposal_list.size(); i += uint256::size()) {
             uint256 sidechain_proposal_hash{Span{&sidechain_proposal_list[i], uint256::size()}};
             CDataStream proposal_s = GetDBEntry(view, {sidechain_proposal_hash, DBIDX_SIDECHAIN_PROPOSAL});
+            CDataStream proposal_s_copy = proposal_s;
             Assert(!proposal_s.empty());
             Sidechain proposal;
             proposal_s >> proposal;
@@ -313,7 +314,7 @@ bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
             }
             if (acks >= SIDECHAIN_ACTIVATION_THRESHOLD) {
                 // Activate new sidechain
-                CreateDBEntry(view, txundo, block_height, sidechain_record_id, proposal_s);
+                CreateDBEntry(view, txundo, block_height, sidechain_record_id, proposal_s_copy);
                 new_sidechains_activated.insert(proposal.idnum);
             }
             DeleteDBEntry(view, txundo, record_id);
@@ -336,6 +337,9 @@ bool UpdateDrivechains(const CTransaction& tx, CCoinsViewCache& view, CTxUndo &t
                 CDataStream ctip_info(SER_NETWORK, PROTOCOL_VERSION);
                 ctip_info << sidechain_id;
                 CreateDBEntry(view, txundo, block_height, {tx.GetHash(), DBIDX_SIDECHAIN_CTIP_INFO}, ctip_info);
+
+                // Now we can remove idnum from new set
+                new_sidechains_activated.erase(sidechain_id);
             }
             if (!new_sidechains_activated.empty()) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-drivechain-activated-without-ctip");
