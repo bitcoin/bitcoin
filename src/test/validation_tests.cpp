@@ -144,19 +144,19 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
     const auto out110 = *params->AssumeutxoForHeight(110);
     // SYSCOIN
     BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "70b3b480f5476ad86dfd98db1f12bda867a90b6cf1b37644332eb52c2ba74ac9");
-    BOOST_CHECK_EQUAL(out110.nChainTx, 110U);
+    BOOST_CHECK_EQUAL(out110.nChainTx, 111U);
 
     // SYSCOIN
     // deleted in Bitcoin
     const auto out210 = *params->AssumeutxoForHeight(200);
     BOOST_CHECK_EQUAL(out210.hash_serialized.ToString(), "51c8d11d8b5c1de51543c579736e786aa2736206d1e11e627568029ce092cf62");
-    BOOST_CHECK_EQUAL(out210.nChainTx, 200U);
+    BOOST_CHECK_EQUAL(out210.nChainTx, 201U);
 
     // SYSCOIN
     // TODO fill with SYS data
     // const auto out110_2 = *params->AssumeutxoForBlockhash(uint256S("0x696e92821f65549c7ee134edceeeeaaa4105647a3c4fd9f298c0aec0ab50425c"));
     // BOOST_CHECK_EQUAL(out110_2.hash_serialized.ToString(), "1ebbf5850204c0bdb15bf030f47c7fe91d45c44c712697e4509ba67adb01c618");
-    // BOOST_CHECK_EQUAL(out110_2.nChainTx, 110U);
+    // BOOST_CHECK_EQUAL(out110_2.nChainTx, 111U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

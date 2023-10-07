@@ -34,11 +34,11 @@ from .util import (
     check_json_precision,
     get_datadir_path,
     initialize_datadir,
-    set_node_times,
     p2p_port,
+    wait_until_helper_internal,
+    set_node_times,
     copy_datadir,
     force_finish_mnsync,
-    wait_until_helper,
     bump_node_times,
     satoshi_round,
 )
@@ -766,7 +766,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         self.sync_mempools(nodes)
 
     def wait_until(self, test_function, timeout=60):
-        return wait_until_helper(test_function, timeout=timeout, timeout_factor=self.options.timeout_factor)
+        return wait_until_helper_internal(test_function, timeout=timeout, timeout_factor=self.options.timeout_factor)
 
     # Private helper methods. These should not be accessed by the subclass test scripts.
 
