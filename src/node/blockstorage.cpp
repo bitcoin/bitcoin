@@ -761,12 +761,14 @@ bool BlockManager::FlushChainstateBlockFile(int tip_height)
 {
     LOCK(cs_LastBlockFile);
     auto& cursor = m_blockfile_cursors[BlockfileTypeForHeight(tip_height)];
+    // If the cursor does not exist, it means an assumeutxo snapshot is loaded,
+    // but no blocks past the snapshot height have been written yet, so there
+    // is no data associated with the chainstate, and it is safe not to flush.
     if (cursor) {
-        // The cursor may not exist after a snapshot has been loaded but before any
-        // blocks have been downloaded.
         return FlushBlockFile(cursor->file_num, /*fFinalize=*/false, /*finalize_undo=*/false);
     }
-    return false;
+    // No need to log warnings in this case.
+    return true;
 }
 
 uint64_t BlockManager::CalculateCurrentUsage()

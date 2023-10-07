@@ -77,7 +77,7 @@ from test_framework.messages import (
 from test_framework.util import (
     MAX_NODES,
     p2p_port,
-    wait_until_helper,
+    wait_until_helper_internal,
 )
 
 logger = logging.getLogger("TestFramework.p2p")
@@ -466,7 +466,7 @@ class P2PInterface(P2PConnection):
                 assert self.is_connected
             return test_function_in()
 
-        wait_until_helper(test_function, timeout=timeout, lock=p2p_lock, timeout_factor=self.timeout_factor)
+        wait_until_helper_internal(test_function, timeout=timeout, lock=p2p_lock, timeout_factor=self.timeout_factor)
 
     def wait_for_connect(self, timeout=60):
         test_function = lambda: self.is_connected
@@ -602,7 +602,7 @@ class NetworkThread(threading.Thread):
     def close(self, timeout=10):
         """Close the connections and network event loop."""
         self.network_event_loop.call_soon_threadsafe(self.network_event_loop.stop)
-        wait_until_helper(lambda: not self.network_event_loop.is_running(), timeout=timeout)
+        wait_until_helper_internal(lambda: not self.network_event_loop.is_running(), timeout=timeout)
         self.network_event_loop.close()
         self.join(timeout)
         # Safe to remove event loop.

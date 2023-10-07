@@ -36,7 +36,7 @@ Interesting starting states could be loading a snapshot when the current chain t
 
 """
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, wait_until_helper
+from test_framework.util import assert_equal
 
 START_HEIGHT = 199
 SNAPSHOT_BASE_HEIGHT = 299
@@ -80,16 +80,13 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.sync_blocks()
 
-        def no_sync():
-            pass
-
         # Generate a series of blocks that `n0` will have in the snapshot,
         # but that n1 doesn't yet see. In order for the snapshot to activate,
         # though, we have to ferry over the new headers to n1 so that it
         # isn't waiting forever to see the header of the snapshot's base block
         # while disconnected from n0.
         for i in range(100):
-            self.generate(n0, nblocks=1, sync_fun=no_sync)
+            self.generate(n0, nblocks=1, sync_fun=self.no_op)
             newblock = n0.getblock(n0.getbestblockhash(), 0)
 
             # make n1 aware of the new header, but don't give it the block.
@@ -116,7 +113,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         # Mine more blocks on top of the snapshot that n1 hasn't yet seen. This
         # will allow us to test n1's sync-to-tip on top of a snapshot.
-        self.generate(n0, nblocks=100, sync_fun=no_sync)
+        self.generate(n0, nblocks=100, sync_fun=self.no_op)
 
         assert_equal(n0.getblockcount(), FINAL_HEIGHT)
         assert_equal(n1.getblockcount(), START_HEIGHT)
@@ -162,11 +159,11 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
 
         self.log.info(f"Ensuring snapshot chain syncs to tip. ({FINAL_HEIGHT})")
-        wait_until_helper(lambda: n1.getchainstates()['chainstates'][-1]['blocks'] == FINAL_HEIGHT)
+        self.wait_until(lambda: n1.getchainstates()['chainstates'][-1]['blocks'] == FINAL_HEIGHT)
         self.sync_blocks(nodes=(n0, n1))
 
         self.log.info("Ensuring background validation completes")
-        wait_until_helper(lambda: len(n1.getchainstates()['chainstates']) == 1)
+        self.wait_until(lambda: len(n1.getchainstates()['chainstates']) == 1)
 
         # Ensure indexes have synced.
         completed_idx_state = {
@@ -211,11 +208,11 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(snapshot['validated'], False)
 
         self.connect_nodes(0, 2)
-        wait_until_helper(lambda: n2.getchainstates()['chainstates'][-1]['blocks'] == FINAL_HEIGHT)
+        self.wait_until(lambda: n2.getchainstates()['chainstates'][-1]['blocks'] == FINAL_HEIGHT)
         self.sync_blocks()
 
         self.log.info("Ensuring background validation completes")
-        wait_until_helper(lambda: len(n2.getchainstates()['chainstates']) == 1)
+        self.wait_until(lambda: len(n2.getchainstates()['chainstates']) == 1)
 
         completed_idx_state = {
             'basic block filter index': COMPLETE_IDX,
@@ -242,12 +239,12 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.restart_node(2, extra_args=[
             '-reindex-chainstate=1', *self.extra_args[2]])
         assert_equal(n2.getblockchaininfo()["blocks"], FINAL_HEIGHT)
-        wait_until_helper(lambda: n2.getblockcount() == FINAL_HEIGHT)
+        self.wait_until(lambda: n2.getblockcount() == FINAL_HEIGHT)
 
         self.log.info("Test -reindex of an assumeutxo-synced node")
         self.restart_node(2, extra_args=['-reindex=1', *self.extra_args[2]])
         self.connect_nodes(0, 2)
-        wait_until_helper(lambda: n2.getblockcount() == FINAL_HEIGHT)
+        self.wait_until(lambda: n2.getblockcount() == FINAL_HEIGHT)
 
 
 if __name__ == '__main__':
