@@ -204,6 +204,13 @@ std::vector<CKeyID> XOnlyPubKey::GetKeyIDs() const
     return out;
 }
 
+CPubKey XOnlyPubKey::GetEvenCorrespondingCPubKey() const
+{
+    unsigned char full_key[CPubKey::COMPRESSED_SIZE] = {0x02};
+    std::copy(begin(), end(), full_key + 1);
+    return CPubKey{full_key};
+}
+
 bool XOnlyPubKey::IsFullyValid() const
 {
     secp256k1_xonly_pubkey pubkey;
