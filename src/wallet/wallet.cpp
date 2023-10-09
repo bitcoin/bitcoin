@@ -3473,6 +3473,18 @@ bool CWallet::IsTxImmatureCoinBase(const CWalletTx& wtx) const
     return GetTxBlocksToMaturity(wtx) > 0;
 }
 
+bool CWallet::IsTxAssumed(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+{
+    AssertLockHeld(cs_wallet);
+    if (GetBackgroundValidationHeight() == -1) return false;
+    if (auto* conf = wtx.state<TxStateConfirmed>()) {
+        int height{conf->confirmed_block_height};
+        return height > GetBackgroundValidationHeight();
+    }
+    return false;
+}
+
+
 bool CWallet::IsCrypted() const
 {
     return HasEncryptionKeys();
