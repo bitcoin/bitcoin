@@ -344,10 +344,9 @@ void FillBlockPayments(const CSporkManager& sporkManager, CGovernanceManager& go
 
 CAmount PlatformShare(const CAmount reward)
 {
-    constexpr double platformShare = 0.375;
-    const CAmount platformReward = reward * platformShare;
-    assert(MoneyRange(platformReward));
-
+    const CAmount platformReward = reward * 375 / 1000;
+    bool ok = MoneyRange(platformReward);
+    assert(ok);
     return platformReward;
 }
 
