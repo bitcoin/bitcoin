@@ -527,6 +527,7 @@ public:
         AssertLockHeld(cs_wallet);
         return GetTxDepthInMainChain(wtx) > 0;
     }
+    bool IsTxAssumed(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * @return number of blocks to maturity for this transaction:
