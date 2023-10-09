@@ -84,6 +84,9 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error: Unable to produce descriptors for this legacy wallet. Make sure to "
 "provide the wallet's passphrase if it is encrypted."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous "
+"cluster of unconfirmed transactions."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Failed to rename invalid peers.dat file. Please move or delete it and try "
 "again."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -148,17 +151,10 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is "
 "supported"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"The -txindex upgrade started by a previous version cannot be completed. "
-"Restart with the previous version or run a full -reindex."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "The block database contains a block which appears to be from the future. "
 "This may be due to your computer's date and time being set incorrectly. Only "
 "rebuild the block database if you are sure that your computer's date and "
 "time are correct"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"The block index db contains a legacy 'txindex'. To clear the occupied disk "
-"space, run a full -reindex, otherwise ignore this error. This error message "
-"will not be displayed again."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "The inputs size exceeds the maximum weight. Please try sending a smaller "
 "amount or manually consolidating your wallet's UTXOs"),
