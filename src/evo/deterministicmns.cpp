@@ -50,12 +50,17 @@ UniValue CDeterministicMN::ToJson() const
     obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
     obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
 
-    Coin coin;
-    if (GetUTXOCoin(collateralOutpoint, coin)) {
-        CTxDestination dest;
-        if (ExtractDestination(coin.out.scriptPubKey, dest)) {
-            obj.pushKV("collateralAddress", EncodeDestination(dest));
-        }
+    CScript scriptPubKey;
+    if (Coin coin; GetUTXOCoin(collateralOutpoint, coin)) {
+        scriptPubKey = coin.out.scriptPubKey;
+    } else {
+        uint256 tmpHashBlock;
+        CTransactionRef collateralTx = GetTransaction(/* block_index */ nullptr,  /* mempool */ nullptr, collateralOutpoint.hash, Params().GetConsensus(), tmpHashBlock);
+        scriptPubKey = collateralTx->vout[collateralOutpoint.n].scriptPubKey;
+    }
+    CTxDestination dest;
+    if (ExtractDestination(scriptPubKey, dest)) {
+        obj.pushKV("collateralAddress", EncodeDestination(dest));
     }
 
     obj.pushKV("operatorReward", (double)nOperatorReward / 100);

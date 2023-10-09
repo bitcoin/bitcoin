@@ -112,6 +112,8 @@ class DIP3Test(BitcoinTestFramework):
         spend_mns_count = 3
         mns_tmp = [] + mns
         dummy_txins = []
+        old_tip = self.nodes[0].getblockcount()
+        old_listdiff = self.nodes[0].protx("listdiff", 1, old_tip)
         for i in range(spend_mns_count):
             dummy_txin = self.spend_mn_collateral(mns[i], with_dummy_input_output=True)
             dummy_txins.append(dummy_txin)
@@ -119,6 +121,8 @@ class DIP3Test(BitcoinTestFramework):
             self.sync_all()
             mns_tmp.remove(mns[i])
             self.assert_mnlists(mns_tmp)
+        new_listdiff = self.nodes[0].protx("listdiff", 1, old_tip)
+        assert_equal(new_listdiff, old_listdiff)
 
         self.log.info("test that reverting the blockchain on a single node results in the mnlist to be reverted as well")
         for i in range(spend_mns_count):
