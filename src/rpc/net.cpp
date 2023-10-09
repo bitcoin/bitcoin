@@ -5,6 +5,7 @@
 #include <rpc/server.h>
 
 #include <addrman.h>
+#include <addrman_impl.h>
 #include <banman.h>
 #include <chainparams.h>
 #include <clientversion.h>
@@ -43,6 +44,12 @@ const std::vector<std::string> CONNECTION_TYPE_DOC{
         "manual (added via addnode RPC or -addnode/-connect configuration options)",
         "addr-fetch (short-lived automatic connection for soliciting addresses)",
         "feeler (short-lived automatic connection for testing addresses)"
+};
+
+const std::vector<std::string> TRANSPORT_TYPE_DOC{
+    "detecting (peer could be v1 or v2)",
+    "v1 (plaintext transport protocol)",
+    "v2 (BIP324 encrypted transport protocol)"
 };
 
 static RPCHelpMan getconnectioncount()
@@ -164,6 +171,8 @@ static RPCHelpMan getpeerinfo()
                     {RPCResult::Type::STR, "connection_type", "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + ".\n"
                                                               "Please note this output is unlikely to be stable in upcoming releases as we iterate to\n"
                                                               "best capture connection behaviors."},
+                    {RPCResult::Type::STR, "transport_protocol_type", "Type of transport protocol: \n" + Join(TRANSPORT_TYPE_DOC, ",\n") + ".\n"},
+                    {RPCResult::Type::STR, "session_id", "The session ID for this connection, or \"\" if there is none (\"v2\" transport protocol only).\n"},
                 }},
             }},
         },
@@ -268,6 +277,8 @@ static RPCHelpMan getpeerinfo()
         }
         obj.pushKV("bytesrecv_per_msg", recvPerMsgType);
         obj.pushKV("connection_type", ConnectionTypeAsString(stats.m_conn_type));
+        obj.pushKV("transport_protocol_type", TransportTypeAsString(stats.m_transport_type));
+        obj.pushKV("session_id", stats.m_session_id);
 
         ret.push_back(obj);
     }
@@ -289,11 +300,12 @@ static RPCHelpMan addnode()
                 {
                     {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the peer to connect to"},
                     {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once"},
+                    {"v2transport", RPCArg::Type::BOOL, RPCArg::Default{false}, "Attempt to connect using BIP324 v2 transport protocol (ignored for 'remove' command)"},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
-                    HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\"")
-            + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\"")
+                    HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\" true")
+            + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\" true")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -307,17 +319,22 @@ static RPCHelpMan addnode()
     CConnman& connman = EnsureConnman(node);
 
     const std::string node_arg{request.params[0].get_str()};
+    bool use_v2transport = self.Arg<bool>(2);
+
+    if (use_v2transport && !(node.connman->GetLocalServices() & NODE_P2P_V2)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: v2transport requested but not enabled (see -v2transport)");
+    }
 
     if (command == "onetry")
     {
         CAddress addr;
-        connman.OpenNetworkConnection(addr, /*fCountFailure=*/false, /*grantOutbound=*/nullptr, node_arg.c_str(), ConnectionType::MANUAL);
+        connman.OpenNetworkConnection(addr, /*fCountFailure=*/false, /*grant_outbound=*/{}, node_arg.c_str(), ConnectionType::MANUAL, use_v2transport);
         return UniValue::VNULL;
     }
 
     if (command == "add")
     {
-        if (!connman.AddNode(node_arg)) {
+        if (!connman.AddNode({node_arg, use_v2transport})) {
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Node already added");
         }
     }
@@ -475,7 +492,7 @@ static RPCHelpMan getaddednodeinfo()
     if (!request.params[0].isNull()) {
         bool found = false;
         for (const AddedNodeInfo& info : vInfo) {
-            if (info.strAddedNode == request.params[0].get_str()) {
+            if (info.m_params.m_added_node == request.params[0].get_str()) {
                 vInfo.assign(1, info);
                 found = true;
                 break;
@@ -490,7 +507,7 @@ static RPCHelpMan getaddednodeinfo()
 
     for (const AddedNodeInfo& info : vInfo) {
         UniValue obj(UniValue::VOBJ);
-        obj.pushKV("addednode", info.strAddedNode);
+        obj.pushKV("addednode", info.m_params.m_added_node);
         obj.pushKV("connected", info.fConnected);
         UniValue addresses(UniValue::VARR);
         if (info.fConnected) {
@@ -1063,6 +1080,74 @@ static RPCHelpMan getaddrmaninfo()
     };
 }
 
+UniValue AddrmanEntryToJSON(const AddrInfo& info)
+{
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKV("address", info.ToStringAddr());
+    ret.pushKV("port", info.GetPort());
+    ret.pushKV("services", (uint64_t)info.nServices);
+    ret.pushKV("time", int64_t{TicksSinceEpoch<std::chrono::seconds>(info.nTime)});
+    ret.pushKV("network", GetNetworkName(info.GetNetClass()));
+    ret.pushKV("source", info.source.ToStringAddr());
+    ret.pushKV("source_network", GetNetworkName(info.source.GetNetClass()));
+    return ret;
+}
+
+UniValue AddrmanTableToJSON(const std::vector<std::pair<AddrInfo, AddressPosition>>& tableInfos)
+{
+    UniValue table(UniValue::VOBJ);
+    for (const auto& e : tableInfos) {
+        AddrInfo info = e.first;
+        AddressPosition location = e.second;
+        std::ostringstream key;
+        key << location.bucket << "/" << location.position;
+        // Address manager tables have unique entries so there is no advantage
+        // in using UniValue::pushKV, which checks if the key already exists
+        // in O(N). UniValue::pushKVEnd is used instead which currently is O(1).
+        table.pushKVEnd(key.str(), AddrmanEntryToJSON(info));
+    }
+    return table;
+}
+
+static RPCHelpMan getrawaddrman()
+{
+    return RPCHelpMan{"getrawaddrman",
+        "EXPERIMENTAL warning: this call may be changed in future releases.\n"
+        "\nReturns information on all address manager entries for the new and tried tables.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ_DYN, "", "", {
+                {RPCResult::Type::OBJ_DYN, "table", "buckets with addresses in the address manager table ( new, tried )", {
+                    {RPCResult::Type::OBJ, "bucket/position", "the location in the address manager table (<bucket>/<position>)", {
+                        {RPCResult::Type::STR, "address", "The address of the node"},
+                        {RPCResult::Type::NUM, "port", "The port number of the node"},
+                        {RPCResult::Type::STR, "network", "The network (" + Join(GetNetworkNames(), ", ") + ") of the address"},
+                        {RPCResult::Type::NUM, "services", "The services offered by the node"},
+                        {RPCResult::Type::NUM_TIME, "time", "The " + UNIX_EPOCH_TIME + " when the node was last seen"},
+                        {RPCResult::Type::STR, "source", "The address that relayed the address to us"},
+                        {RPCResult::Type::STR, "source_network", "The network (" + Join(GetNetworkNames(), ", ") + ") of the source address"},
+                    }}
+                }}
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("getrawaddrman", "")
+            + HelpExampleRpc("getrawaddrman", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            NodeContext& node = EnsureAnyNodeContext(request.context);
+            if (!node.addrman) {
+                throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
+            }
+
+            UniValue ret(UniValue::VOBJ);
+            ret.pushKV("new", AddrmanTableToJSON(node.addrman->GetEntries(false)));
+            ret.pushKV("tried", AddrmanTableToJSON(node.addrman->GetEntries(true)));
+            return ret;
+        },
+    };
+}
+
 void RegisterNetRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
@@ -1083,6 +1168,7 @@ void RegisterNetRPCCommands(CRPCTable& t)
         {"hidden", &addpeeraddress},
         {"hidden", &sendmsgtopeer},
         {"hidden", &getaddrmaninfo},
+        {"hidden", &getrawaddrman},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);

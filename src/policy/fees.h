@@ -320,7 +320,7 @@ private:
 
 public:
     /** Create new FeeFilterRounder */
-    explicit FeeFilterRounder(const CFeeRate& min_incremental_fee);
+    explicit FeeFilterRounder(const CFeeRate& min_incremental_fee, FastRandomContext& rng);
 
     /** Quantize a minimum fee for privacy purpose before broadcast. */
     CAmount round(CAmount currentMinFee) EXCLUSIVE_LOCKS_REQUIRED(!m_insecure_rand_mutex);
@@ -328,7 +328,7 @@ public:
 private:
     const std::set<double> m_fee_set;
     Mutex m_insecure_rand_mutex;
-    FastRandomContext insecure_rand GUARDED_BY(m_insecure_rand_mutex);
+    FastRandomContext& insecure_rand GUARDED_BY(m_insecure_rand_mutex);
 };
 
 #endif // BITCOIN_POLICY_FEES_H

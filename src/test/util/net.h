@@ -65,6 +65,7 @@ constexpr ServiceFlags ALL_SERVICE_FLAGS[]{
     NODE_WITNESS,
     NODE_COMPACT_FILTERS,
     NODE_NETWORK_LIMITED,
+    NODE_P2P_V2,
 };
 
 constexpr NetPermissionFlags ALL_NET_PERMISSION_FLAGS[]{
@@ -107,10 +108,10 @@ constexpr auto ALL_NETWORKS = std::array{
 class StaticContentsSock : public Sock
 {
 public:
-    explicit StaticContentsSock(const std::string& contents) : m_contents{contents}
+    explicit StaticContentsSock(const std::string& contents)
+        : Sock{INVALID_SOCKET},
+          m_contents{contents}
     {
-        // Just a dummy number that is not INVALID_SOCKET.
-        m_socket = INVALID_SOCKET - 1;
     }
 
     ~StaticContentsSock() override { m_socket = INVALID_SOCKET; }
@@ -190,6 +191,11 @@ public:
             (void)sock;
             events.occurred = events.requested;
         }
+        return true;
+    }
+
+    bool IsConnected(std::string&) const override
+    {
         return true;
     }
 

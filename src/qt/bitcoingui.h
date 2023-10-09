@@ -230,6 +230,8 @@ public Q_SLOTS:
     void setNetworkActive(bool network_active);
     /** Set number of blocks and last block date shown in the UI */
     void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, SyncType synctype, SynchronizationState sync_state);
+    /** Launch the wallet creation modal (no-op if wallet is not compiled) **/
+    void createWallet();
 
     /** Notify the user of an event from the core network or transaction handling code.
        @param[in] title             the message box / notification title

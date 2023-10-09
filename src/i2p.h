@@ -261,6 +261,7 @@ private:
      * ("SESSION CREATE"). With the established session id we later open
      * other connections to the SAM service to accept incoming I2P
      * connections and make outgoing ones.
+     * If not connected then this unique_ptr will be empty.
      * See https://geti2p.net/en/docs/api/samv3
      */
     std::unique_ptr<Sock> m_control_sock GUARDED_BY(m_mutex);

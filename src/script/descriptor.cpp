@@ -1114,16 +1114,33 @@ public:
 class ScriptMaker {
     //! Keys contained in the Miniscript (the evaluation of DescriptorImpl::m_pubkey_args).
     const std::vector<CPubKey>& m_keys;
+    //! The script context we're operating within (Tapscript or P2WSH).
+    const miniscript::MiniscriptContext m_script_ctx;
+
+    //! Get the ripemd160(sha256()) hash of this key.
+    //! Any key that is valid in a descriptor serializes as 32 bytes within a Tapscript context. So we
+    //! must not hash the sign-bit byte in this case.
+    uint160 GetHash160(uint32_t key) const {
+        if (miniscript::IsTapscript(m_script_ctx)) {
+            return Hash160(XOnlyPubKey{m_keys[key]});
+        }
+        return m_keys[key].GetID();
+    }
 
 public:
-    ScriptMaker(const std::vector<CPubKey>& keys LIFETIMEBOUND) : m_keys(keys) {}
+    ScriptMaker(const std::vector<CPubKey>& keys LIFETIMEBOUND, const miniscript::MiniscriptContext script_ctx) : m_keys(keys), m_script_ctx{script_ctx} {}
 
     std::vector<unsigned char> ToPKBytes(uint32_t key) const {
-        return {m_keys[key].begin(), m_keys[key].end()};
+        // In Tapscript keys always serialize as x-only, whether an x-only key was used in the descriptor or not.
+        if (!miniscript::IsTapscript(m_script_ctx)) {
+            return {m_keys[key].begin(), m_keys[key].end()};
+        }
+        const XOnlyPubKey xonly_pubkey{m_keys[key]};
+        return {xonly_pubkey.begin(), xonly_pubkey.end()};
     }
 
     std::vector<unsigned char> ToPKHBytes(uint32_t key) const {
-        auto id = m_keys[key].GetID();
+        auto id = GetHash160(key);
         return {id.begin(), id.end()};
     }
 };
@@ -1164,8 +1181,15 @@ protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript> scripts,
                                      FlatSigningProvider& provider) const override
     {
-        for (const auto& key : keys) provider.pubkeys.emplace(key.GetID(), key);
-        return Vector(m_node->ToScript(ScriptMaker(keys)));
+        const auto script_ctx{m_node->GetMsCtx()};
+        for (const auto& key : keys) {
+            if (miniscript::IsTapscript(script_ctx)) {
+                provider.pubkeys.emplace(Hash160(XOnlyPubKey{key}), key);
+            } else {
+                provider.pubkeys.emplace(key.GetID(), key);
+            }
+        }
+        return Vector(m_node->ToScript(ScriptMaker(keys, script_ctx)));
     }
 
 public:
@@ -1290,6 +1314,10 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(uint32_t key_exp_index, const S
         if (IsHex(str)) {
             std::vector<unsigned char> data = ParseHex(str);
             CPubKey pubkey(data);
+            if (pubkey.IsValid() && !pubkey.IsValidNonHybrid()) {
+                error = "Hybrid public keys are not allowed";
+                return nullptr;
+            }
             if (pubkey.IsFullyValid()) {
                 if (permit_uncompressed || pubkey.IsCompressed()) {
                     return std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey, false);
@@ -1397,9 +1425,7 @@ std::unique_ptr<PubkeyProvider> InferPubkey(const CPubKey& pubkey, ParseScriptCo
 
 std::unique_ptr<PubkeyProvider> InferXOnlyPubkey(const XOnlyPubKey& xkey, ParseScriptContext ctx, const SigningProvider& provider)
 {
-    unsigned char full_key[CPubKey::COMPRESSED_SIZE] = {0x02};
-    std::copy(xkey.begin(), xkey.end(), full_key + 1);
-    CPubKey pubkey(full_key);
+    CPubKey pubkey{xkey.GetEvenCorrespondingCPubKey()};
     std::unique_ptr<PubkeyProvider> key_provider = std::make_unique<ConstPubkeyProvider>(0, pubkey, true);
     KeyOriginInfo info;
     if (provider.GetKeyOriginByXOnly(xkey, info)) {
@@ -1422,18 +1448,32 @@ struct KeyParser {
     mutable std::vector<std::unique_ptr<PubkeyProvider>> m_keys;
     //! Used to detect key parsing errors within a Miniscript.
     mutable std::string m_key_parsing_error;
+    //! The script context we're operating within (Tapscript or P2WSH).
+    const miniscript::MiniscriptContext m_script_ctx;
+    //! The number of keys that were parsed before starting to parse this Miniscript descriptor.
+    uint32_t m_offset;
 
-    KeyParser(FlatSigningProvider* out LIFETIMEBOUND, const SigningProvider* in LIFETIMEBOUND) : m_out(out), m_in(in) {}
+    KeyParser(FlatSigningProvider* out LIFETIMEBOUND, const SigningProvider* in LIFETIMEBOUND,
+              miniscript::MiniscriptContext ctx, uint32_t offset = 0)
+        : m_out(out), m_in(in), m_script_ctx(ctx), m_offset(offset) {}
 
     bool KeyCompare(const Key& a, const Key& b) const {
         return *m_keys.at(a) < *m_keys.at(b);
+    }
+
+    ParseScriptContext ParseContext() const {
+        switch (m_script_ctx) {
+            case miniscript::MiniscriptContext::P2WSH: return ParseScriptContext::P2WSH;
+            case miniscript::MiniscriptContext::TAPSCRIPT: return ParseScriptContext::P2TR;
+        }
+        assert(false);
     }
 
     template<typename I> std::optional<Key> FromString(I begin, I end) const
     {
         assert(m_out);
         Key key = m_keys.size();
-        auto pk = ParsePubkey(key, {&*begin, &*end}, ParseScriptContext::P2WSH, *m_out, m_key_parsing_error);
+        auto pk = ParsePubkey(m_offset + key, {&*begin, &*end}, ParseContext(), *m_out, m_key_parsing_error);
         if (!pk) return {};
         m_keys.push_back(std::move(pk));
         return key;
@@ -1447,11 +1487,18 @@ struct KeyParser {
     template<typename I> std::optional<Key> FromPKBytes(I begin, I end) const
     {
         assert(m_in);
-        CPubKey pubkey(begin, end);
-        if (pubkey.IsValid()) {
-            Key key = m_keys.size();
-            m_keys.push_back(InferPubkey(pubkey, ParseScriptContext::P2WSH, *m_in));
+        Key key = m_keys.size();
+        if (miniscript::IsTapscript(m_script_ctx) && end - begin == 32) {
+            XOnlyPubKey pubkey;
+            std::copy(begin, end, pubkey.begin());
+            m_keys.push_back(InferPubkey(pubkey.GetEvenCorrespondingCPubKey(), ParseContext(), *m_in));
             return key;
+        } else if (!miniscript::IsTapscript(m_script_ctx)) {
+            CPubKey pubkey{begin, end};
+            if (pubkey.IsValidNonHybrid()) {
+                m_keys.push_back(InferPubkey(pubkey, ParseContext(), *m_in));
+                return key;
+            }
         }
         return {};
     }
@@ -1466,10 +1513,14 @@ struct KeyParser {
         CPubKey pubkey;
         if (m_in->GetPubKey(keyid, pubkey)) {
             Key key = m_keys.size();
-            m_keys.push_back(InferPubkey(pubkey, ParseScriptContext::P2WSH, *m_in));
+            m_keys.push_back(InferPubkey(pubkey, ParseContext(), *m_in));
             return key;
         }
         return {};
+    }
+
+    miniscript::MiniscriptContext MsContext() const {
+        return m_script_ctx;
     }
 };
 
@@ -1496,8 +1547,9 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         }
         ++key_exp_index;
         return std::make_unique<PKHDescriptor>(std::move(pubkey));
-    } else if (Func("pkh", expr)) {
-        error = "Can only have pkh at top level, in sh(), or in wsh()";
+    } else if (ctx != ParseScriptContext::P2TR && Func("pkh", expr)) {
+        // Under Taproot, always the Miniscript parser deal with it.
+        error = "Can only have pkh at top level, in sh(), wsh(), or in tr()";
         return nullptr;
     }
     if (ctx == ParseScriptContext::TOP && Func("combo", expr)) {
@@ -1710,11 +1762,12 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
     }
     // Process miniscript expressions.
     {
-        KeyParser parser(&out, nullptr);
+        const auto script_ctx{ctx == ParseScriptContext::P2WSH ? miniscript::MiniscriptContext::P2WSH : miniscript::MiniscriptContext::TAPSCRIPT};
+        KeyParser parser(/*out = */&out, /* in = */nullptr, /* ctx = */script_ctx, key_exp_index);
         auto node = miniscript::FromString(std::string(expr.begin(), expr.end()), parser);
         if (node) {
-            if (ctx != ParseScriptContext::P2WSH) {
-                error = "Miniscript expressions can only be used in wsh";
+            if (ctx != ParseScriptContext::P2WSH && ctx != ParseScriptContext::P2TR) {
+                error = "Miniscript expressions can only be used in wsh or tr.";
                 return nullptr;
             }
             if (parser.m_key_parsing_error != "") {
@@ -1749,6 +1802,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
             // A signature check is required for a miniscript to be sane. Therefore no sane miniscript
             // may have an empty list of public keys.
             CHECK_NONFATAL(!parser.m_keys.empty());
+            key_exp_index += parser.m_keys.size();
             return std::make_unique<MiniscriptDescriptor>(std::move(parser.m_keys), std::move(node));
         }
     }
@@ -1795,7 +1849,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
 
     if (txntype == TxoutType::PUBKEY && (ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH)) {
         CPubKey pubkey(data[0]);
-        if (pubkey.IsValid()) {
+        if (pubkey.IsValidNonHybrid()) {
             return std::make_unique<PKDescriptor>(InferPubkey(pubkey, ctx, provider));
         }
     }
@@ -1882,8 +1936,9 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         }
     }
 
-    if (ctx == ParseScriptContext::P2WSH) {
-        KeyParser parser(nullptr, &provider);
+    if (ctx == ParseScriptContext::P2WSH || ctx == ParseScriptContext::P2TR) {
+        const auto script_ctx{ctx == ParseScriptContext::P2WSH ? miniscript::MiniscriptContext::P2WSH : miniscript::MiniscriptContext::TAPSCRIPT};
+        KeyParser parser(/* out = */nullptr, /* in = */&provider, /* ctx = */script_ctx);
         auto node = miniscript::FromScript(script, parser);
         if (node && node->IsSane()) {
             return std::make_unique<MiniscriptDescriptor>(std::move(parser.m_keys), std::move(node));

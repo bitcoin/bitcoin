@@ -28,7 +28,7 @@ The following rules are enforced for all packages:
    - Note that, if these mempool limits change, package limits should be reconsidered. Users may
      also configure their mempool limits differently.
 
-   - Note that the this is transaction weight, not "virtual" size as with other limits to allow
+   - Note that this is transaction weight, not "virtual" size as with other limits to allow
      simpler context-less checks.
 
 * Packages must be topologically sorted. (#20833)

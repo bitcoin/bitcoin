@@ -1,9 +1,9 @@
 # assumeutxo
 
 Assumeutxo is a feature that allows fast bootstrapping of a validating bitcoind
-instance with a very similar security model to assumevalid.
+instance.
 
-The RPC commands `dumptxoutset` and `loadtxoutset` (yet to be merged) are used to
+The RPC commands `dumptxoutset` and `loadtxoutset` are used to
 respectively generate and load UTXO snapshots. The utility script
 `./contrib/devtools/utxo_snapshot.sh` may be of use.
 

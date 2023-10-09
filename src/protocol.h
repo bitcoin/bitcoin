@@ -291,6 +291,9 @@ enum ServiceFlags : uint64_t {
     // See BIP159 for details on how this is implemented.
     NODE_NETWORK_LIMITED = (1 << 10),
 
+    // NODE_P2P_V2 means the node supports BIP324 transport
+    NODE_P2P_V2 = (1 << 11),
+
     // Bits 24-31 are reserved for temporary experiments. Just pick a bit that
     // isn't getting used, or one not being used much, and notify the
     // bitcoin-development mailing list. Remember that service bits are just
