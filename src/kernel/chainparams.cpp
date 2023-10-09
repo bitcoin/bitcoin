@@ -312,9 +312,9 @@ public:
 
         chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats at block 1632040
-            /* nTime    */ 1686627799,
-            /* nTxCount */ 2799398,
-            /* dTxRate  */ 0.008854098030063829
+            .nTime    = 1686627799,
+            .nTxCount = 2799398,
+            .dTxRate  = 0.008854098030063829
         };
     }
 };
@@ -455,9 +455,9 @@ public:
         };
         chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats 4096 0000000000000037a8cd3e06cd5edbfe9dd1dbcc5dacab279376ef7cfc2b4c75
-            /* nTime    */ 1669101140,
-            /* nTxCount */ 1043445,
-            /* dTxRate  */ 0.001586750190549993
+            .nTime    = 1669101140,
+            .nTxCount = 1043445,
+            .dTxRate  = 0.001586750190549993
         };
     }
 };
