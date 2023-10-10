@@ -175,6 +175,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "submitblock",
     "submitheader",
     "submitpackage",
+    "sweepprivkeys",
     "syncwithvalidationinterfacequeue",
     "testmempoolaccept",
     "uptime",
