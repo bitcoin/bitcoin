@@ -658,7 +658,7 @@ static void BlockNotifyGenesisWait(const CBlockIndex* pBlockIndex)
 #if HAVE_SYSTEM
 static void StartupNotify(const ArgsManager& args)
 {
-    for (std::string command : args.GetArgs("-startupnotify")) {
+    for (const std::string& command : args.GetArgs("-startupnotify")) {
         std::thread t(runCommand, command);
         t.detach(); // thread runs free
     }
