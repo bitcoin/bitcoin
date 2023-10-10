@@ -338,7 +338,7 @@ static bool InitRPCAuthentication()
         }
     }
     if (gArgs.GetArg("-rpcauthfile", "") != "") {
-        for (std::string path : gArgs.GetArgs("-rpcauthfile")) {
+        for (const std::string& path : gArgs.GetArgs("-rpcauthfile")) {
             std::ifstream file;
             file.open(path);
             if (!file.is_open()) continue;
