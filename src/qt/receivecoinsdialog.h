@@ -51,7 +51,7 @@ public Q_SLOTS:
 
 private:
     Ui::ReceiveCoinsDialog *ui;
-    GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
+    GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer{nullptr};
     WalletModel* model{nullptr};
     QMenu *contextMenu;
     QAction* copyLabelAction;
