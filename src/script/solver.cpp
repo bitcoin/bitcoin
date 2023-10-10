@@ -229,7 +229,7 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys, bo
 
     CScript script;
     script << nRequired;
-    for (std::vector<unsigned char> bytes : vEncoded) {
+    for (const std::vector<unsigned char>& bytes : vEncoded) {
         script << bytes;
     }
     script << keys.size() << OP_CHECKMULTISIG;
