@@ -3462,22 +3462,22 @@ std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addres
     return cache_entry.m_addrs_response_cache;
 }
 
-bool CConnman::AddNode(const AddedNodeParams& add)
+bool CConnman::AddNode(const AddedNodeParams& params)
 {
     LOCK(m_added_nodes_mutex);
     for (const auto& it : m_added_node_params) {
-        if (add.m_added_node == it.m_added_node) return false;
+        if (params.m_added_node == it.m_added_node) return false;
     }
 
-    m_added_node_params.push_back(add);
+    m_added_node_params.push_back(params);
     return true;
 }
 
-bool CConnman::RemoveAddedNode(const std::string& strNode)
+bool CConnman::RemoveAddedNode(const AddedNodeParams& params)
 {
     LOCK(m_added_nodes_mutex);
     for (auto it = m_added_node_params.begin(); it != m_added_node_params.end(); ++it) {
-        if (strNode == it->m_added_node) {
+        if (params.m_added_node == it->m_added_node) {
             m_added_node_params.erase(it);
             return true;
         }

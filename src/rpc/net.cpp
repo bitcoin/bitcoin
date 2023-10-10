@@ -340,7 +340,7 @@ static RPCHelpMan addnode()
     }
     else if (command == "remove")
     {
-        if (!connman.RemoveAddedNode(node_arg)) {
+        if (!connman.RemoveAddedNode({node_arg, use_v2transport})) {
             throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Error: Node could not be removed. It has not been added previously.");
         }
     }
