@@ -72,6 +72,9 @@ server_sleep_til_boot() {
 client_sleep_til_boot() {
   while ! client_rpc ping >/dev/null 2>&1; do sleep 0.1; done
 }
+server_sleep_til_shutdown() {
+  while server_rpc ping >/dev/null 2>&1; do sleep 0.1; done
+}
 
 mkdir -p "$SERVER_DATADIR" "$CLIENT_DATADIR"
 
@@ -109,7 +112,7 @@ echo "-- IBDing the blocks (height=$BASE_HEIGHT) required to the server node..."
 
 echo
 echo "-- Creating snapshot at ~ height $BASE_HEIGHT ($UTXO_DAT_FILE)..."
-sleep 2
+server_sleep_til_shutdown # wait for stopatheight to be hit
 ./src/bitcoind -logthreadnames=1 $SERVER_PORTS \
     -datadir="$SERVER_DATADIR" $EARLY_IBD_FLAGS -connect=0 -listen=0 >/dev/null &
 SERVER_PID="$!"
@@ -124,8 +127,7 @@ RPC_AU=$(jq -r .txoutset_hash < "$DUMP_OUTPUT")
 RPC_NCHAINTX=$(jq -r .nchaintx < "$DUMP_OUTPUT")
 RPC_BLOCKHASH=$(jq -r .base_hash < "$DUMP_OUTPUT")
 
-# Wait for server to shutdown...
-while server_rpc ping >/dev/null 2>&1; do sleep 0.1; done
+server_sleep_til_shutdown
 
 echo
 echo "-- Now: add the following to CMainParams::m_assumeutxo_data"
@@ -186,9 +188,7 @@ echo "   Press CTRL+C after you're satisfied to exit the demo"
 echo
 read -p "Press [enter] to continue"
 
-while kill -0 "$CLIENT_PID"; do
-    sleep 1
-done
+client_sleep_til_boot
 ./src/bitcoind $CLIENT_PORTS $ALL_INDEXES -logthreadnames=1 -datadir="$CLIENT_DATADIR" -connect=0 \
     -addnode=127.0.0.1:$SERVER_PORT "$EARLY_IBD_FLAGS" >/dev/null &
 CLIENT_PID="$!"
