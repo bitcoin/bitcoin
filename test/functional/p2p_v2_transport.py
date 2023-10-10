@@ -7,10 +7,10 @@ Test v2 transport
 """
 
 from test_framework.messages import NODE_P2P_V2
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
 
-class V2TransportTest(BitcoinTestFramework):
+class V2TransportTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 5
