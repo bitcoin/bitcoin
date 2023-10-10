@@ -548,20 +548,34 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
 /**
  * Called when a block is connected. Removes from mempool.
  */
+
 void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight)
 {
     AssertLockHeld(cs);
     std::vector<RemovedMempoolTransactionInfo> txs_removed_for_block;
     txs_removed_for_block.reserve(vtx.size());
+    std::vector<TxEntry::TxEntryRef> txs_to_remove;
+
+    // Look up all iterators, and grab the transaction data that we'll need for
+    // the callback later.
     for (const auto& tx : vtx)
     {
         txiter it = mapTx.find(tx->GetHash());
         if (it != mapTx.end()) {
-            setEntries stage;
-            stage.insert(it);
             txs_removed_for_block.emplace_back(*it);
-            RemoveStaged(stage, true, MemPoolRemovalReason::BLOCK);
+            txs_to_remove.emplace_back(*it);
         }
+    }
+
+    txgraph.RemoveBatch(txs_to_remove);
+
+    for (auto tx : txs_to_remove) {
+        txiter it = mapTx.iterator_to(dynamic_cast<const CTxMemPoolEntry&>(tx.get()));
+        UpdateForRemoveFromMempool({it}, false);
+        removeUnchecked(it, MemPoolRemovalReason::BLOCK);
+    }
+
+    for (const auto& tx : vtx) {
         removeConflicts(*tx);
         ClearPrioritisation(tx->GetHash());
     }
