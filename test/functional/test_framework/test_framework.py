@@ -1025,8 +1025,8 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         return self.config["components"].getboolean("USE_BDB")
 
     def has_blockfile(self, node, filenum: str):
-        blocksdir = os.path.join(node.datadir, self.chain, 'blocks', '')
-        return os.path.isfile(os.path.join(blocksdir, f"blk{filenum}.dat"))
+        blocksdir = node.datadir_path / self.chain / 'blocks'
+        return (blocksdir / f"blk{filenum}.dat").is_file()
 
     def bump_mocktime(self, t, nodes=None):
         if self.mocktime is None:
