@@ -277,10 +277,10 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         }
         if (fuzzed_data_provider.ConsumeBool()) {
             const auto& txid = fuzzed_data_provider.ConsumeBool() ?
-                                   tx->GetHash().ToUint256() :
+                                   tx->GetHash() :
                                    PickValue(fuzzed_data_provider, outpoints_rbf).hash;
             const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
-            tx_pool.PrioritiseTransaction(txid, delta);
+            tx_pool.PrioritiseTransaction(txid.ToUint256(), delta);
         }
 
         // Remember all removed and added transactions
@@ -367,7 +367,7 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
 
     MockTime(fuzzed_data_provider, chainstate);
 
-    std::vector<uint256> txids;
+    std::vector<Txid> txids;
     txids.reserve(g_outpoints_coinbase_init_mature.size());
     for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
         txids.push_back(outpoint.hash);
@@ -375,7 +375,7 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
     for (int i{0}; i <= 3; ++i) {
         // Add some immature and non-existent outpoints
         txids.push_back(g_outpoints_coinbase_init_immature.at(i).hash);
-        txids.push_back(ConsumeUInt256(fuzzed_data_provider));
+        txids.push_back(Txid::FromUint256(ConsumeUInt256(fuzzed_data_provider)));
     }
 
     SetMempoolConstraints(*node.args, fuzzed_data_provider);
@@ -396,10 +396,10 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
         }
         if (fuzzed_data_provider.ConsumeBool()) {
             const auto txid = fuzzed_data_provider.ConsumeBool() ?
-                                   mut_tx.GetHash().ToUint256() :
+                                   mut_tx.GetHash() :
                                    PickValue(fuzzed_data_provider, txids);
             const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
-            tx_pool.PrioritiseTransaction(txid, delta);
+            tx_pool.PrioritiseTransaction(txid.ToUint256(), delta);
         }
 
         const auto tx = MakeTransactionRef(mut_tx);

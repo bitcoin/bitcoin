@@ -190,7 +190,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
                                                          CFeeRate(23330), CFeeRate(50000), CFeeRate(5*CENT)});
 
     // All nonexistent entries have a bumpfee of zero, regardless of feerate
-    std::vector<COutPoint> nonexistent_outpoints({ COutPoint{GetRandHash(), 0}, COutPoint{GetRandHash(), 3} });
+    std::vector<COutPoint> nonexistent_outpoints({ COutPoint{Txid::FromUint256(GetRandHash()), 0}, COutPoint{Txid::FromUint256(GetRandHash()), 3} });
     for (const auto& outpoint : nonexistent_outpoints) BOOST_CHECK(!pool.isSpent(outpoint));
     for (const auto& feerate : various_normal_feerates) {
         node::MiniMiner mini_miner(pool, nonexistent_outpoints);
@@ -590,9 +590,17 @@ BOOST_FIXTURE_TEST_CASE(calculate_cluster, TestChain100Setup)
     CTxMemPool& pool = *Assert(m_node.mempool);
     LOCK2(cs_main, pool.cs);
 
+    // TODO this can be removed once the mempool interface uses Txid, Wtxid
+    auto convert_to_uint256_vec = [](const std::vector<Txid>& vec) -> std::vector<uint256> {
+        std::vector<uint256> out;
+        std::transform(vec.begin(), vec.end(), std::back_inserter(out),
+                       [](const Txid& txid) { return txid.ToUint256(); });
+        return out;
+    };
+
     // Add chain of size 500
     TestMemPoolEntryHelper entry;
-    std::vector<uint256> chain_txids;
+    std::vector<Txid> chain_txids;
     auto& lasttx = m_coinbase_txns[0];
     for (auto i{0}; i < 500; ++i) {
         const auto tx = make_tx({COutPoint{lasttx->GetHash(), 0}}, /*num_outputs=*/1);
@@ -603,7 +611,7 @@ BOOST_FIXTURE_TEST_CASE(calculate_cluster, TestChain100Setup)
     const auto cluster_500tx = pool.GatherClusters({lasttx->GetHash()});
     CTxMemPool::setEntries cluster_500tx_set{cluster_500tx.begin(), cluster_500tx.end()};
     BOOST_CHECK_EQUAL(cluster_500tx.size(), cluster_500tx_set.size());
-    const auto vec_iters_500 = pool.GetIterVec(chain_txids);
+    const auto vec_iters_500 = pool.GetIterVec(convert_to_uint256_vec(chain_txids));
     for (const auto& iter : vec_iters_500) BOOST_CHECK(cluster_500tx_set.count(iter));
 
     // GatherClusters stops at 500 transactions.
@@ -618,9 +626,9 @@ BOOST_FIXTURE_TEST_CASE(calculate_cluster, TestChain100Setup)
      *     txc0     txc1    txc2  ...    txc48
      * Note that each transaction's ancestor size is 1 or 3, and each descendant size is 1, 2 or 3.
      * However, all of these transactions are in the same cluster. */
-    std::vector<uint256> zigzag_txids;
+    std::vector<Txid> zigzag_txids;
     for (auto p{0}; p < 50; ++p) {
-        const auto txp = make_tx({COutPoint{GetRandHash(), 0}}, /*num_outputs=*/2);
+        const auto txp = make_tx({COutPoint{Txid::FromUint256(GetRandHash()), 0}}, /*num_outputs=*/2);
         pool.addUnchecked(entry.Fee(CENT).FromTx(txp));
         zigzag_txids.push_back(txp->GetHash());
     }
@@ -629,7 +637,7 @@ BOOST_FIXTURE_TEST_CASE(calculate_cluster, TestChain100Setup)
         pool.addUnchecked(entry.Fee(CENT).FromTx(txc));
         zigzag_txids.push_back(txc->GetHash());
     }
-    const auto vec_iters_zigzag = pool.GetIterVec(zigzag_txids);
+    const auto vec_iters_zigzag = pool.GetIterVec(convert_to_uint256_vec(zigzag_txids));
     // It doesn't matter which tx we calculate cluster for, everybody is in it.
     const std::vector<size_t> indices{0, 22, 72, zigzag_txids.size() - 1};
     for (const auto index : indices) {

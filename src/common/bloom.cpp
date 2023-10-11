@@ -98,8 +98,8 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
     //  for finding tx when they appear in a block
     if (vData.empty()) // zero-size = "match-all" filter
         return true;
-    const uint256& hash = tx.GetHash();
-    if (contains(hash))
+    const Txid& hash = tx.GetHash();
+    if (contains(hash.ToUint256()))
         fFound = true;
 
     for (unsigned int i = 0; i < tx.vout.size(); i++)
