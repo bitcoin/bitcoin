@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Hierarchical Deterministic wallet function."""
 
-import os
 import shutil
 
 from test_framework.blocktools import COINBASE_MATURITY
@@ -51,8 +50,8 @@ class WalletHDTest(BitcoinTestFramework):
         self.nodes[1].importprivkey(non_hd_key)
 
         # This should be enough to keep the master key and the non-HD key
-        self.nodes[1].backupwallet(os.path.join(self.nodes[1].datadir, "hd.bak"))
-        #self.nodes[1].dumpwallet(os.path.join(self.nodes[1].datadir, "hd.dump"))
+        self.nodes[1].backupwallet(self.nodes[1].datadir_path / "hd.bak")
+        #self.nodes[1].dumpwallet(self.nodes[1].datadir_path / "hd.dump")
 
         # Derive some HD addresses and remember the last
         # Also send funds to each add
@@ -87,11 +86,11 @@ class WalletHDTest(BitcoinTestFramework):
         self.stop_node(1)
         # we need to delete the complete chain directory
         # otherwise node1 would auto-recover all funds in flag the keypool keys as used
-        shutil.rmtree(os.path.join(self.nodes[1].blocks_path))
-        shutil.rmtree(os.path.join(self.nodes[1].chain_path, "chainstate"))
+        shutil.rmtree(self.nodes[1].blocks_path)
+        shutil.rmtree(self.nodes[1].chain_path / "chainstate")
         shutil.copyfile(
-            os.path.join(self.nodes[1].datadir, "hd.bak"),
-            os.path.join(self.nodes[1].wallets_path, self.default_wallet_name, self.wallet_data_filename),
+            self.nodes[1].datadir_path / "hd.bak",
+            self.nodes[1].wallets_path / self.default_wallet_name / self.wallet_data_filename
         )
         self.start_node(1)
 
@@ -115,11 +114,11 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Try a RPC based rescan
         self.stop_node(1)
-        shutil.rmtree(os.path.join(self.nodes[1].blocks_path))
-        shutil.rmtree(os.path.join(self.nodes[1].chain_path, "chainstate"))
+        shutil.rmtree(self.nodes[1].blocks_path)
+        shutil.rmtree(self.nodes[1].chain_path / "chainstate")
         shutil.copyfile(
-            os.path.join(self.nodes[1].datadir, "hd.bak"),
-            os.path.join(self.nodes[1].wallets_path, self.default_wallet_name, self.wallet_data_filename),
+            self.nodes[1].datadir_path / "hd.bak",
+            self.nodes[1].wallets_path / self.default_wallet_name / self.wallet_data_filename
         )
         self.start_node(1, extra_args=self.extra_args[1])
         self.connect_nodes(0, 1)

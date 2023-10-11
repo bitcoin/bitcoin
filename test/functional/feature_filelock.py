@@ -28,7 +28,7 @@ class FilelockTest(BitcoinTestFramework):
 
         self.log.info("Check that we can't start a second bitcoind instance using the same datadir")
         expected_msg = f"Error: Cannot obtain a lock on data directory {datadir}. {self.config['environment']['PACKAGE_NAME']} is probably already running."
-        self.nodes[1].assert_start_raises_init_error(extra_args=[f'-datadir={self.nodes[0].datadir}', '-noserver'], expected_msg=expected_msg)
+        self.nodes[1].assert_start_raises_init_error(extra_args=[f'-datadir={self.nodes[0].datadir_path}', '-noserver'], expected_msg=expected_msg)
 
         if self.is_wallet_compiled():
             def check_wallet_filelock(descriptors):

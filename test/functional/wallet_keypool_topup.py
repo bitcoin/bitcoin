@@ -10,7 +10,6 @@ Two nodes. Node1 is under test. Node0 is providing transactions and generating b
 - Generate 110 keys (enough to drain the keypool). Store key 90 (in the initial keypool) and key 110 (beyond the initial keypool). Send funds to key 90 and key 110.
 - Stop node1, clear the datadir, move wallet file back into the datadir and restart node1.
 - connect node1 to node0. Verify that they sync and node1 receives its funds."""
-import os
 import shutil
 
 from test_framework.blocktools import COINBASE_MATURITY
@@ -33,8 +32,8 @@ class KeypoolRestoreTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        wallet_path = os.path.join(self.nodes[1].wallets_path, self.default_wallet_name, self.wallet_data_filename)
-        wallet_backup_path = os.path.join(self.nodes[1].datadir, "wallet.bak")
+        wallet_path = self.nodes[1].wallets_path / self.default_wallet_name / self.wallet_data_filename
+        wallet_backup_path = self.nodes[1].datadir_path / "wallet.bak"
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
         self.log.info("Make backup of wallet")

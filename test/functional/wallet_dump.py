@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the dumpwallet RPC."""
 import datetime
-import os
 import time
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -111,8 +110,8 @@ class WalletDumpTest(BitcoinTestFramework):
     def run_test(self):
         self.nodes[0].createwallet("dump")
 
-        wallet_unenc_dump = os.path.join(self.nodes[0].datadir, "wallet.unencrypted.dump")
-        wallet_enc_dump = os.path.join(self.nodes[0].datadir, "wallet.encrypted.dump")
+        wallet_unenc_dump = self.nodes[0].datadir_path / "wallet.unencrypted.dump"
+        wallet_enc_dump = self.nodes[0].datadir_path / "wallet.encrypted.dump"
 
         # generate 30 addresses to compare against the dump
         # - 10 legacy P2PKH
@@ -156,7 +155,7 @@ class WalletDumpTest(BitcoinTestFramework):
 
         self.log.info('Dump unencrypted wallet')
         result = self.nodes[0].dumpwallet(wallet_unenc_dump)
-        assert_equal(result['filename'], wallet_unenc_dump)
+        assert_equal(result['filename'], str(wallet_unenc_dump))
 
         found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
             read_dump(wallet_unenc_dump, addrs, [multisig_addr], None)
@@ -220,7 +219,7 @@ class WalletDumpTest(BitcoinTestFramework):
         w3.sendtoaddress(w3.getnewaddress(), 10)
         w3.unloadwallet()
         self.nodes[0].loadwallet("w3")
-        w3.dumpwallet(os.path.join(self.nodes[0].datadir, "w3.dump"))
+        w3.dumpwallet(self.nodes[0].datadir_path / "w3.dump")
 
 if __name__ == '__main__':
     WalletDumpTest().main()
