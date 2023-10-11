@@ -270,15 +270,16 @@ class AddrTest(BitcoinTestFramework):
         full_outbound_peer.sync_with_ping()
         assert full_outbound_peer.getaddr_received()
 
-        self.log.info('Check that we do not send a getaddr message upon connecting to a block-relay-only peer')
+        self.log.info('Check that we do not send a getaddr message to a block-relay-only or inbound peer')
         block_relay_peer = self.nodes[0].add_outbound_p2p_connection(AddrReceiver(), p2p_idx=1, connection_type="block-relay-only")
         block_relay_peer.sync_with_ping()
         assert_equal(block_relay_peer.getaddr_received(), False)
 
-        self.log.info('Check that we answer getaddr messages only from inbound peers')
         inbound_peer = self.nodes[0].add_p2p_connection(AddrReceiver(send_getaddr=False))
         inbound_peer.sync_with_ping()
+        assert_equal(inbound_peer.getaddr_received(), False)
 
+        self.log.info('Check that we answer getaddr messages only from inbound peers')
         # Add some addresses to addrman
         for i in range(1000):
             first_octet = i >> 8
