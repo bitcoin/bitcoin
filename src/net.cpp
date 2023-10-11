@@ -238,10 +238,6 @@ static int GetnScore(const CService& addr)
 std::optional<CService> GetLocalAddrForPeer(CNode& node)
 {
     CService addrLocal{GetLocalAddress(node)};
-    if (gArgs.GetBoolArg("-addrmantest", false)) {
-        // use IPv4 loopback during addrmantest
-        addrLocal = CService(LookupNumeric("127.0.0.1", GetListenPort()));
-    }
     // If discovery is enabled, sometimes give our peer the address it
     // tells us that it sees us as in case it has a better idea of our
     // address than we do.
@@ -261,8 +257,7 @@ std::optional<CService> GetLocalAddrForPeer(CNode& node)
             addrLocal.SetIP(node.GetAddrLocal());
         }
     }
-    if (addrLocal.IsRoutable() || gArgs.GetBoolArg("-addrmantest", false))
-    {
+    if (addrLocal.IsRoutable()) {
         LogPrint(BCLog::NET, "Advertising address %s to peer=%d\n", addrLocal.ToStringAddrPort(), node.GetId());
         return addrLocal;
     }
