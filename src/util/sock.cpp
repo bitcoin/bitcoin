@@ -42,6 +42,9 @@ Sock& Sock::operator=(Sock&& other)
     return *this;
 }
 
+// SYSCOIN
+SOCKET Sock::Get() const { return m_socket; }
+
 ssize_t Sock::Send(const void* data, size_t len, int flags) const
 {
     return send(m_socket, static_cast<const char*>(data), len, flags);

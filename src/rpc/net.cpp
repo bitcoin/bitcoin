@@ -1151,8 +1151,8 @@ static RPCHelpMan getrawaddrman()
             HelpExampleCli("getrawaddrman", "")
             + HelpExampleRpc("getrawaddrman", "")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
-            NodeContext& node = EnsureAnyNodeContext(request.context);
+        [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue {
+            node::NodeContext& node = EnsureAnyNodeContext(request.context);
             if (!node.addrman) {
                 throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
             }

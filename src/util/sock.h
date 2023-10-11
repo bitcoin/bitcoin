@@ -58,6 +58,13 @@ public:
      */
     virtual Sock& operator=(Sock&& other);
 
+    // SYSCOIN
+    /**
+     * Get the value of the contained socket.
+     * @return socket or INVALID_SOCKET if empty
+     */
+    [[nodiscard]] virtual SOCKET Get() const;
+
     /**
      * send(2) wrapper. Equivalent to `send(m_socket, data, len, flags);`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.

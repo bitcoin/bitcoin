@@ -3211,7 +3211,7 @@ void CConnman::ThreadOpenAddedConnections()
 }
 
 // SYSCOIN if successful, this moves the passed grant to the constructed node
-void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant&& grant_Outbound, const char *pszDest, ConnectionType conn_type, bool use_v2transport, MasternodeConn masternode_connection, MasternodeProbeConn masternode_probe_connection)
+void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant&& grant_outbound, const char *pszDest, ConnectionType conn_type, bool use_v2transport, MasternodeConn masternode_connection, MasternodeProbeConn masternode_probe_connection)
 {
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
     assert(conn_type != ConnectionType::INBOUND);
@@ -3282,7 +3282,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
 // SYSCOIN
 void CConnman::OpenMasternodeConnection(const CAddress &addrConnect, MasternodeProbeConn probe) {
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
-    OpenNetworkConnection(addrConnect, false, nullptr, nullptr, ConnectionType::OUTBOUND_FULL_RELAY, /*use_v2transport=*/false, MasternodeConn::Is_Connection, probe);
+    OpenNetworkConnection(addrConnect, false, CSemaphoreGrant(), nullptr, ConnectionType::OUTBOUND_FULL_RELAY, /*use_v2transport=*/false, MasternodeConn::Is_Connection, probe);
 }
 
 Mutex NetEventsInterface::g_msgproc_mutex;
