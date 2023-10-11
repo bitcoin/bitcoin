@@ -384,6 +384,54 @@ void Check(const std::string& prv, const std::string& pub, const std::string& no
     }
 }
 
+void CheckInferDescriptor(const std::string& script_hex, const std::string& expected_desc, const std::vector<std::string>& hex_scripts, const std::vector<std::pair<std::string, std::string>>& origin_pubkeys)
+{
+    std::vector<unsigned char> script_bytes{ParseHex(script_hex)};
+    const CScript& script{script_bytes.begin(), script_bytes.end()};
+
+    FlatSigningProvider provider;
+    for (const std::string& prov_script_hex : hex_scripts) {
+        std::vector<unsigned char> prov_script_bytes{ParseHex(prov_script_hex)};
+        const CScript& prov_script{prov_script_bytes.begin(), prov_script_bytes.end()};
+        provider.scripts.emplace(CScriptID(prov_script), prov_script);
+    }
+    for (const auto& [pubkey_hex, origin_str] : origin_pubkeys) {
+        CPubKey origin_pubkey{ParseHex(pubkey_hex)};
+        provider.pubkeys.emplace(origin_pubkey.GetID(), origin_pubkey);
+
+        if (!origin_str.empty()) {
+            using namespace spanparsing;
+            KeyOriginInfo info;
+            Span<const char> origin_sp{origin_str};
+            std::vector<Span<const char>> origin_split = Split(origin_sp, "/");
+            std::string fpr_str(origin_split[0].begin(), origin_split[0].end());
+            auto fpr_bytes = ParseHex(fpr_str);
+            std::copy(fpr_bytes.begin(), fpr_bytes.end(), info.fingerprint);
+            for (size_t i = 1; i < origin_split.size(); ++i) {
+                Span<const char> elem = origin_split[i];
+                bool hardened = false;
+                if (elem.size() > 0) {
+                    const char last = elem[elem.size() - 1];
+                    if (last == '\'' || last == 'h') {
+                        elem = elem.first(elem.size() - 1);
+                        hardened = true;
+                    }
+                }
+                uint32_t p;
+                assert(ParseUInt32(std::string(elem.begin(), elem.end()), &p));
+                info.path.push_back(p | (((uint32_t)hardened) << 31));
+            }
+
+            provider.origins.emplace(origin_pubkey.GetID(), std::make_pair(origin_pubkey, info));
+        }
+    }
+
+    std::string checksum{GetDescriptorChecksum(expected_desc)};
+
+    std::unique_ptr<Descriptor> desc = InferDescriptor(script, provider);
+    BOOST_CHECK_EQUAL(desc->ToString(), expected_desc + "#" + checksum);
+}
+
 }
 
 BOOST_FIXTURE_TEST_SUITE(descriptor_tests, BasicTestingSetup)
@@ -594,6 +642,19 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     // preimages and the sequence, passes with.)
     Check("tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,{and_v(and_v(v:hash256(ae253ca2a54debcac7ecf414f6734f48c56421a08bb59182ff9f39a6fffdb588),v:pk(KykUPmR5967F4URzMUeCv9kNMU9CNRWycrPmx3ZvfkWoQLabbimL)),older(42)),multi_a(2,adf586a32ad4b0674a86022b000348b681b4c97a811f67eefe4a6e066e55080c,KztMyyi1pXUtuZfJSB7JzVdmJMAz7wfGVFoSRUR5CVZxXxULXuGR)})", "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,{and_v(and_v(v:hash256(ae253ca2a54debcac7ecf414f6734f48c56421a08bb59182ff9f39a6fffdb588),v:pk(1c9bc926084382e76da33b5a52d17b1fa153c072aae5fb5228ecc2ccf89d79d5)),older(42)),multi_a(2,adf586a32ad4b0674a86022b000348b681b4c97a811f67eefe4a6e066e55080c,14fa4ad085cdee1e2fc73d491b36a96c192382b1d9a21108eb3533f630364f9f)})", "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,{and_v(and_v(v:hash256(ae253ca2a54debcac7ecf414f6734f48c56421a08bb59182ff9f39a6fffdb588),v:pk(1c9bc926084382e76da33b5a52d17b1fa153c072aae5fb5228ecc2ccf89d79d5)),older(42)),multi_a(2,adf586a32ad4b0674a86022b000348b681b4c97a811f67eefe4a6e066e55080c,14fa4ad085cdee1e2fc73d491b36a96c192382b1d9a21108eb3533f630364f9f)})", MISSING_PRIVKEYS | XONLY_KEYS | SIGNABLE | SIGNABLE_FAILS, {{"51209a3d79db56fbe3ba4d905d827b62e1ed31cd6df1198b8c759d589c0f4efc27bd"}}, OutputType::BECH32M);
     Check("tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,{and_v(and_v(v:hash256(ae253ca2a54debcac7ecf414f6734f48c56421a08bb59182ff9f39a6fffdb588),v:pk(KykUPmR5967F4URzMUeCv9kNMU9CNRWycrPmx3ZvfkWoQLabbimL)),older(42)),multi_a(2,adf586a32ad4b0674a86022b000348b681b4c97a811f67eefe4a6e066e55080c,KztMyyi1pXUtuZfJSB7JzVdmJMAz7wfGVFoSRUR5CVZxXxULXuGR)})", "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,{and_v(and_v(v:hash256(ae253ca2a54debcac7ecf414f6734f48c56421a08bb59182ff9f39a6fffdb588),v:pk(1c9bc926084382e76da33b5a52d17b1fa153c072aae5fb5228ecc2ccf89d79d5)),older(42)),multi_a(2,adf586a32ad4b0674a86022b000348b681b4c97a811f67eefe4a6e066e55080c,14fa4ad085cdee1e2fc73d491b36a96c192382b1d9a21108eb3533f630364f9f)})", "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,{and_v(and_v(v:hash256(ae253ca2a54debcac7ecf414f6734f48c56421a08bb59182ff9f39a6fffdb588),v:pk(1c9bc926084382e76da33b5a52d17b1fa153c072aae5fb5228ecc2ccf89d79d5)),older(42)),multi_a(2,adf586a32ad4b0674a86022b000348b681b4c97a811f67eefe4a6e066e55080c,14fa4ad085cdee1e2fc73d491b36a96c192382b1d9a21108eb3533f630364f9f)})", MISSING_PRIVKEYS | XONLY_KEYS | SIGNABLE, {{"51209a3d79db56fbe3ba4d905d827b62e1ed31cd6df1198b8c759d589c0f4efc27bd"}}, OutputType::BECH32M, /*op_desc_id=*/{}, {{}}, /*spender_nlocktime=*/0, /*spender_nsequence=*/42, /*preimages=*/{{ParseHex("ae253ca2a54debcac7ecf414f6734f48c56421a08bb59182ff9f39a6fffdb588"), ParseHex("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f")}});
+
+    // Basic sh(pkh()) with key origin
+    CheckInferDescriptor("a9141a31ad23bf49c247dd531a623c2ef57da3c400c587", "sh(pkh([deadbeef/0h/0h/0]03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))", {"76a9149a1c78a507689f6f54b847ad1cef1e614ee23f1e88ac"}, {{"03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd", "deadbeef/0h/0h/0"}});
+    // p2pk script with hybrid key must infer as raw()
+    CheckInferDescriptor("41069228de6902abb4f541791f6d7f925b10e2078ccb1298856e5ea5cc5fd667f930eac37a00cc07f9a91ef3c2d17bf7a17db04552ff90ac312a5b8b4caca6c97aa4ac", "raw(41069228de6902abb4f541791f6d7f925b10e2078ccb1298856e5ea5cc5fd667f930eac37a00cc07f9a91ef3c2d17bf7a17db04552ff90ac312a5b8b4caca6c97aa4ac)", {}, {{"069228de6902abb4f541791f6d7f925b10e2078ccb1298856e5ea5cc5fd667f930eac37a00cc07f9a91ef3c2d17bf7a17db04552ff90ac312a5b8b4caca6c97aa4", ""}});
+    // p2pkh script with hybrid key must infer as addr()
+    CheckInferDescriptor("76a91445ff7c2327866472639d507334a9a00119dfd32688ac", "addr(17P7ge56F2QcdHxxRBa2NyzmejFggPwBJ9)", {}, {{"069228de6902abb4f541791f6d7f925b10e2078ccb1298856e5ea5cc5fd667f930eac37a00cc07f9a91ef3c2d17bf7a17db04552ff90ac312a5b8b4caca6c97aa4", ""}});
+    // p2wpkh script with uncompressed key must infer as addr()
+    CheckInferDescriptor("001422e363a523947a110d9a9eb114820de183aca313", "addr(bc1qyt3k8ffrj3apzrv6n6c3fqsduxp6egcnk2r66j)", {}, {{"049228de6902abb4f541791f6d7f925b10e2078ccb1298856e5ea5cc5fd667f930eac37a00cc07f9a91ef3c2d17bf7a17db04552ff90ac312a5b8b4caca6c97aa4", ""}});
+    // Infer pkh() from p2pkh with uncompressed key
+    CheckInferDescriptor("76a914a31725c74421fadc50d35520ab8751ed120af80588ac", "pkh(04c56fe4a92d401bcbf1b3dfbe4ac3dac5602ca155a3681497f02c1b9a733b92d704e2da6ec4162e4846af9236ef4171069ac8b7f8234a8405b6cadd96f34f5a31)", {}, {{"04c56fe4a92d401bcbf1b3dfbe4ac3dac5602ca155a3681497f02c1b9a733b92d704e2da6ec4162e4846af9236ef4171069ac8b7f8234a8405b6cadd96f34f5a31", ""}});
+    // Infer pk() from p2pk with uncompressed key
+    CheckInferDescriptor("4104032540df1d3c7070a8ab3a9cdd304dfc7fd1e6541369c53c4c3310b2537d91059afc8b8e7673eb812a32978dabb78c40f2e423f7757dca61d11838c7aeeb5220ac", "pk(04032540df1d3c7070a8ab3a9cdd304dfc7fd1e6541369c53c4c3310b2537d91059afc8b8e7673eb812a32978dabb78c40f2e423f7757dca61d11838c7aeeb5220)", {}, {{"04032540df1d3c7070a8ab3a9cdd304dfc7fd1e6541369c53c4c3310b2537d91059afc8b8e7673eb812a32978dabb78c40f2e423f7757dca61d11838c7aeeb5220", ""}});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
