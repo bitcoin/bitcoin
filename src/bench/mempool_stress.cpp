@@ -21,7 +21,7 @@
 
 class CCoinsViewCache;
 
-static void AddTx(const CTransactionRef& tx, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
+static void AddTx(const CTransactionRef& tx, CTxMemPool& pool, FastRandomContext& det_rand) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
 {
     int64_t nTime = 0;
     unsigned int nHeight = 1;
@@ -29,7 +29,7 @@ static void AddTx(const CTransactionRef& tx, CTxMemPool& pool) EXCLUSIVE_LOCKS_R
     bool spendsCoinbase = false;
     unsigned int sigOpCost = 4;
     LockPoints lp;
-    AddToMempool(pool, CTxMemPoolEntry(TxGraph::Ref(), tx, 1000, nTime, nHeight, sequence, spendsCoinbase, sigOpCost, lp));
+    AddToMempool(pool, CTxMemPoolEntry(TxGraph::Ref(), tx, det_rand.randrange(10000)+1000, nTime, nHeight, sequence, spendsCoinbase, sigOpCost, lp));
 }
 
 struct Available {
@@ -93,6 +93,33 @@ static std::vector<CTransactionRef> CreateCoinCluster(FastRandomContext& det_ran
     return ordered_coins;
 }
 
+static void MemPoolAddTransactions(benchmark::Bench& bench)
+{
+    FastRandomContext det_rand{true};
+    int childTxs = 50;
+    if (bench.complexityN() > 1) {
+        childTxs = static_cast<int>(bench.complexityN());
+    }
+    const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN);
+    CTxMemPool& pool = *testing_setup.get()->m_node.mempool;
+
+    std::vector<CTransactionRef> transactions;
+    // Create 1000 clusters of 100 transactions each
+    for (int i=0; i<100; i++) {
+        auto new_txs = CreateCoinCluster(det_rand, childTxs, /*min_ancestors*/ 1);
+        transactions.insert(transactions.end(), new_txs.begin(), new_txs.end());
+    }
+
+    LOCK2(cs_main, pool.cs);
+
+    bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
+        for (auto& tx : transactions) {
+            AddTx(tx, pool, det_rand);
+        }
+        pool.TrimToSize(0, nullptr);
+    });
+}
+
 static void ComplexMemPool(benchmark::Bench& bench)
 {
     FastRandomContext det_rand{true};
@@ -121,7 +148,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
                 ++tx_count;
                 hashes_remove_for_block.emplace_back(tx->GetHash());
             }
-            AddTx(tx, pool);
+            AddTx(tx, pool, det_rand);
         }
     }
 
@@ -131,11 +158,40 @@ static void ComplexMemPool(benchmark::Bench& bench)
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
         pool.removeForBlock(tx_remove_for_block, /*nBlockHeight*/100);
         for (auto& tx: tx_remove_for_block) {
-            AddTx(tx, pool);
+            AddTx(tx, pool, det_rand);
         }
         pool.UpdateTransactionsFromBlock(hashes_remove_for_block);
     });
 }
+
+static void MemPoolAncestorsDescendants(benchmark::Bench& bench)
+{
+    FastRandomContext det_rand{true};
+    int childTxs = 50;
+    if (bench.complexityN() > 1) {
+        childTxs = static_cast<int>(bench.complexityN());
+    }
+    const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN);
+    CTxMemPool& pool = *testing_setup.get()->m_node.mempool;
+
+    LOCK2(cs_main, pool.cs);
+
+    std::vector<CTransactionRef> transactions = CreateCoinCluster(det_rand, childTxs, /*min_ancestors=*/1);
+    for (auto& tx : transactions) {
+        AddTx(tx, pool, det_rand);
+    }
+
+    CTxMemPool::txiter first_tx = *pool.GetIter(transactions[0]->GetHash());
+    CTxMemPool::txiter last_tx = *pool.GetIter(transactions.back()->GetHash());
+
+    bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
+        CTxMemPool::setEntries dummy;
+        ankerl::nanobench::doNotOptimizeAway(dummy);
+        pool.CalculateDescendants({first_tx}, dummy);
+        ankerl::nanobench::doNotOptimizeAway(pool.CalculateMemPoolAncestors(*last_tx));
+    });
+}
+
 
 static void MempoolCheck(benchmark::Bench& bench)
 {
@@ -152,5 +208,7 @@ static void MempoolCheck(benchmark::Bench& bench)
     });
 }
 
+BENCHMARK(MemPoolAncestorsDescendants, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MemPoolAddTransactions, benchmark::PriorityLevel::HIGH);
 BENCHMARK(ComplexMemPool, benchmark::PriorityLevel::HIGH);
 BENCHMARK(MempoolCheck, benchmark::PriorityLevel::HIGH);
