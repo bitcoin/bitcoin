@@ -175,13 +175,13 @@ if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
 fi
 
 if [ "${RUN_TIDY}" = "true" ]; then
-  cmake -B /tidy-build -DLLVM_DIR=/usr/lib/llvm-16/cmake -DCMAKE_BUILD_TYPE=Release -S "${BASE_ROOT_DIR}"/contrib/devtools/syscoin-tidy
+  cmake -B /tidy-build -DLLVM_DIR=/usr/lib/llvm-"${TIDY_LLVM_V}"/cmake -DCMAKE_BUILD_TYPE=Release -S "${BASE_ROOT_DIR}"/contrib/devtools/syscoin-tidy
   cmake --build /tidy-build "$MAKEJOBS"
   cmake --build /tidy-build --target syscoin-tidy-tests "$MAKEJOBS"
 
   set -eo pipefail
   cd "${BASE_BUILD_DIR}/syscoin-$HOST/src/"
-  ( run-clang-tidy-15 -quiet -load="/tidy-build/libsyscoin-tidy.so" "${MAKEJOBS}" ) | grep -C5 "error"
+  ( run-clang-tidy-"${TIDY_LLVM_V}" -quiet -load="/tidy-build/libbitcoin-tidy.so" "${MAKEJOBS}" ) | grep -C5 "error"
   # Filter out files by regex here, because regex may not be
   # accepted in src/.bear-tidy-config
   # Filter out:
