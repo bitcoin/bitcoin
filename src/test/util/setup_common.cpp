@@ -30,6 +30,7 @@
 #include <node/peerman_args.h>
 #include <node/warnings.h>
 #include <noui.h>
+#include <policy/coin_age_priority.h>
 #include <policy/fees.h>
 #include <pow.h>
 #include <random.h>
@@ -520,6 +521,8 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
 
 std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContext& det_rand, size_t num_transactions, bool submit)
 {
+    auto& active_chainstate = m_node.chainman->ActiveChainstate();
+    const auto height = active_chainstate.m_chain.Height();
     std::vector<CTransactionRef> mempool_transactions;
     std::deque<std::pair<COutPoint, CAmount>> unspent_prevouts;
     std::transform(m_coinbase_txns.begin(), m_coinbase_txns.end(), std::back_inserter(unspent_prevouts),
@@ -557,9 +560,11 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
         if (submit) {
             LOCK2(cs_main, m_node.mempool->cs);
             LockPoints lp;
+            CAmount in_chain_input_value;
+            double dPriority = GetPriority(*ptx, active_chainstate.CoinsTip(), height + 1, in_chain_input_value);
             m_node.mempool->addUnchecked(CTxMemPoolEntry(ptx, /*fee=*/(total_in - num_outputs * amount_per_output),
-                                                         /*time=*/0, /*entry_priority=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
-                                                         /*in_chain_input_value=*/0,
+                                                         /*time=*/0, /*entry_priority=*/ dPriority, /*entry_height=*/ height, /*entry_sequence=*/0,
+                                                         in_chain_input_value,
                                                          /*spends_coinbase=*/false, /*sigops_cost=*/4, lp));
         }
         --num_transactions;
