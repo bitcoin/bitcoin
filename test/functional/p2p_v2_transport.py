@@ -145,7 +145,7 @@ class V2TransportTest(BitcoinTestFramework):
         wrong_network_magic_prefix = MAGIC_BYTES["signet"] + V1_PREFIX[4:]
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect(("127.0.0.1", p2p_port(0)))
-            with self.nodes[0].assert_debug_log("V2 transport error: V1 peer with wrong MessageStart"):
+            with self.nodes[0].assert_debug_log(["V2 transport error: V1 peer with wrong MessageStart"]):
                 s.sendall(wrong_network_magic_prefix + b"somepayload")
 
         # Check detection of missing garbage terminator (hits after fixed amount of data if terminator never matches garbage)
@@ -156,7 +156,7 @@ class V2TransportTest(BitcoinTestFramework):
             self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == num_peers + 1)
             s.sendall(b'\x00' * (MAX_KEY_GARB_AND_GARBTERM_LEN - 1))
             self.wait_until(lambda: self.nodes[0].getpeerinfo()[-1]["bytesrecv"] == MAX_KEY_GARB_AND_GARBTERM_LEN - 1)
-            with self.nodes[0].assert_debug_log("V2 transport error: missing garbage terminator"):
+            with self.nodes[0].assert_debug_log(["V2 transport error: missing garbage terminator"]):
                 s.sendall(b'\x00')  # send out last byte
                 # should disconnect immediately
                 self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == num_peers)
