@@ -54,6 +54,11 @@ else
   mkdir -p "${PREVIOUS_RELEASES_DIR}"
 fi
 
+if [ "$CI_OS_NAME" == "macos" ]; then
+  IN_GETOPT_BIN="$(brew --prefix gnu-getopt)/bin/getopt"
+  export IN_GETOPT_BIN
+fi
+
 CI_EXEC () {
   $CI_EXEC_CMD_PREFIX bash -c "export PATH=${BINS_SCRATCH_DIR}:${BASE_ROOT_DIR}/ci/retry:\$PATH && cd \"${BASE_ROOT_DIR}\" && $*"
 }
