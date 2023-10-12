@@ -99,7 +99,7 @@ if [ -n "$ANDROID_HOME" ] && [ ! -d "$ANDROID_HOME" ]; then
   fi
   mkdir -p "$ANDROID_HOME"
   unzip -o "$ANDROID_TOOLS_PATH" -d "$ANDROID_HOME"
-  yes | "${ANDROID_HOME}"/cmdline-tools/bin/sdkmanager --sdk_root="${ANDROID_HOME}" --install "build-tools;${ANDROID_BUILD_TOOLS_VERSION}" "platform-tools" "platforms;android-${ANDROID_API_LEVEL}" "ndk;${ANDROID_NDK_VERSION}"
+  yes | "${ANDROID_HOME}"/cmdline-tools/bin/sdkmanager --sdk_root="${ANDROID_HOME}" --install "build-tools;${ANDROID_BUILD_TOOLS_VERSION}" "platform-tools" "platforms;android-31" "platforms;android-${ANDROID_API_LEVEL}" "ndk;${ANDROID_NDK_VERSION}"
 fi
 
 git config --global ${CFG_DONE} "true"
