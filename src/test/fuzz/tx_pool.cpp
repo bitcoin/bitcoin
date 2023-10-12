@@ -80,14 +80,10 @@ struct TransactionsDelta final : public CValidationInterface {
 
 void SetMempoolConstraints(ArgsManager& args, FuzzedDataProvider& fuzzed_data_provider)
 {
-    args.ForceSetArg("-limitancestorcount",
-                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 50)));
-    args.ForceSetArg("-limitancestorsize",
-                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202)));
-    args.ForceSetArg("-limitdescendantcount",
-                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 50)));
-    args.ForceSetArg("-limitdescendantsize",
-                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202)));
+    args.ForceSetArg("-limitclustercount",
+                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(1, 64)));
+    args.ForceSetArg("-limitclustersize",
+                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(1, 250)));
     args.ForceSetArg("-maxmempool",
                      ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 200)));
     args.ForceSetArg("-mempoolexpiry",
@@ -104,6 +100,23 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
         auto assembler = BlockAssembler{chainstate, &tx_pool, options};
         auto block_template = assembler.CreateNewBlock();
         Assert(block_template->block.vtx.size() >= 1);
+
+        // Try updating the mempool for this block, as though it were mined.
+        LOCK2(::cs_main, tx_pool.cs);
+        tx_pool.removeForBlock(block_template->block.vtx, chainstate.m_chain.Height() + 1);
+
+        // Now try to add those transactions back, as though a reorg happened.
+        std::vector<Txid> hashes_to_update;
+        for (const auto& tx : block_template->block.vtx) {
+            const auto res = AcceptToMemoryPool(chainstate, tx, GetTime(), true, /*test_accept=*/false);
+            if (res.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+                hashes_to_update.push_back(tx->GetHash());
+            } else {
+                tx_pool.removeRecursive(*tx, MemPoolRemovalReason::REORG /* dummy */);
+            }
+        }
+        tx_pool.UpdateTransactionsFromBlock(hashes_to_update);
+        tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1);
     }
     const auto info_all = tx_pool.infoAll();
     if (!info_all.empty()) {
@@ -111,6 +124,19 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
         WITH_LOCK(tx_pool.cs, tx_pool.removeRecursive(tx_to_remove, MemPoolRemovalReason::BLOCK /* dummy */));
         assert(tx_pool.size() < info_all.size());
         WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
+    }
+
+    if (fuzzed_data_provider.ConsumeBool()) {
+        // Try eviction
+        LOCK2(::cs_main, tx_pool.cs);
+        tx_pool.TrimToSize(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0U, tx_pool.DynamicMemoryUsage()));
+        tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1);
+    }
+    if (fuzzed_data_provider.ConsumeBool()) {
+        // Try expiry
+        LOCK2(::cs_main, tx_pool.cs);
+        tx_pool.Expire(GetMockTime() - std::chrono::seconds(fuzzed_data_provider.ConsumeIntegral<uint32_t>()));
+        tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1);
     }
     g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }
