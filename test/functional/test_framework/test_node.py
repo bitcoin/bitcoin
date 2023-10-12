@@ -110,7 +110,8 @@ class TestNode():
         if self.descriptors is None:
             self.args.append("-disablewallet")
 
-        if use_valgrind:
+        # Use valgrind, expect for previous release binaries
+        if use_valgrind and version is None:
             default_suppressions_file = Path(__file__).parents[3] / "contrib" / "valgrind.supp"
             suppressions_file = os.getenv("VALGRIND_SUPPRESSIONS_FILE",
                                           default_suppressions_file)
