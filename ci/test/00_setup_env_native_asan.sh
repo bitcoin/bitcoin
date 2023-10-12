@@ -16,11 +16,11 @@ else
 fi
 
 export CONTAINER_NAME=ci_native_asan
-export PACKAGES="systemtap-sdt-dev clang-16 llvm-16 libclang-rt-16-dev python3-zmq qtbase5-dev qttools5-dev-tools libevent-dev libboost-dev libdb5.3++-dev libminiupnpc-dev libnatpmp-dev libzmq3-dev libqrencode-dev libsqlite3-dev ${BPFCC_PACKAGE}"
-export CI_IMAGE_NAME_TAG="docker.io/ubuntu:23.04"  # This version will reach EOL in Jan 2024, and can be replaced by "ubuntu:24.04" (or anything else that ships the wanted clang version).
+export PACKAGES="systemtap-sdt-dev clang-17 llvm-17 libclang-rt-17-dev python3-zmq qtbase5-dev qttools5-dev-tools libevent-dev libboost-dev libdb5.3++-dev libminiupnpc-dev libnatpmp-dev libzmq3-dev libqrencode-dev libsqlite3-dev ${BPFCC_PACKAGE}"
+export CI_IMAGE_NAME_TAG="docker.io/ubuntu:23.10"  # This version will reach EOL in Jul 2024, and can be replaced by "ubuntu:24.04" (or anything else that ships the wanted clang version).
 export NO_DEPENDS=1
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-c++20 --enable-usdt --enable-zmq --with-incompatible-bdb --with-gui=qt5 \
 CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' \
 --with-sanitizers=address,float-divide-by-zero,integer,undefined \
-CC='clang-16 -ftrivial-auto-var-init=pattern' CXX='clang++-16 -ftrivial-auto-var-init=pattern'"
+CC='clang-17 -ftrivial-auto-var-init=pattern' CXX='clang++-17 -ftrivial-auto-var-init=pattern'"
