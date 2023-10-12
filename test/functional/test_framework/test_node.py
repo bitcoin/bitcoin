@@ -111,7 +111,8 @@ class TestNode():
         if self.mocktime != 0:
             self.args.append(f"-mocktime={mocktime}")
 
-        if use_valgrind:
+        # Use valgrind, expect for previous release binaries
+        if use_valgrind and version is None:
             default_suppressions_file = os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
                 "..", "..", "..", "contrib", "valgrind.supp")
