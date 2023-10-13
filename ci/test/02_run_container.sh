@@ -6,6 +6,8 @@
 
 export LC_ALL=C.UTF-8
 
+set -ex
+
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   # Export all env vars to avoid missing some.
   # Though, exclude those with newlines to avoid parsing problems.
@@ -27,14 +29,12 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
 
   if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
     echo "Restart docker before run to stop and clear all containers started with --rm"
-    podman container stop --all  # Similar to "systemctl restart docker"
+    podman container rm --force --all  # Similar to "systemctl restart docker"
     echo "Prune all dangling images"
     docker image prune --force
   fi
 
   # shellcheck disable=SC2086
-
-
   CI_CONTAINER_ID=$(docker run --cap-add LINUX_IMMUTABLE $CI_CONTAINER_CAP --rm --interactive --detach --tty \
                   --mount "type=bind,src=$BASE_READ_ONLY_DIR,dst=$BASE_READ_ONLY_DIR,readonly" \
                   --mount "type=volume,src=${CONTAINER_NAME}_ccache,dst=$CCACHE_DIR" \
@@ -68,3 +68,10 @@ CI_EXEC "${BASE_ROOT_DIR}/ci/test/01_base_install.sh"
 CI_EXEC git config --global --add safe.directory \"*\"
 
 CI_EXEC mkdir -p "${BINS_SCRATCH_DIR}"
+
+CI_EXEC "${BASE_ROOT_DIR}/ci/test/06_script_b.sh"
+
+if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
+  echo "Stop and remove CI container by ID"
+  docker container kill "${CI_CONTAINER_ID}"
+fi
