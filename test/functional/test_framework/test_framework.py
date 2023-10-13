@@ -603,6 +603,8 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         """
         from_connection = self.nodes[a]
         to_connection = self.nodes[b]
+        from_num_peers = 1 + len(from_connection.getpeerinfo())
+        to_num_peers = 1 + len(to_connection.getpeerinfo())
         ip_port = "127.0.0.1:" + str(p2p_port(b))
 
         if peer_advertises_v2 is None:
@@ -623,14 +625,14 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         # See comments in net_processing:
         # * Must have a version message before anything else
         # * Must have a verack message before anything else
-        wait_until_helper(lambda: all(peer['version'] != 0 for peer in from_connection.getpeerinfo()))
-        wait_until_helper(lambda: all(peer['version'] != 0 for peer in to_connection.getpeerinfo()))
-        wait_until_helper(lambda: all(peer['bytesrecv_per_msg'].pop('verack', 0) >= 21 for peer in from_connection.getpeerinfo()))
-        wait_until_helper(lambda: all(peer['bytesrecv_per_msg'].pop('verack', 0) >= 21 for peer in to_connection.getpeerinfo()))
+        self.wait_until(lambda: sum(peer['version'] != 0 for peer in from_connection.getpeerinfo()) == from_num_peers)
+        self.wait_until(lambda: sum(peer['version'] != 0 for peer in to_connection.getpeerinfo()) == to_num_peers)
+        self.wait_until(lambda: sum(peer['bytesrecv_per_msg'].pop('verack', 0) >= 21 for peer in from_connection.getpeerinfo()) == from_num_peers)
+        self.wait_until(lambda: sum(peer['bytesrecv_per_msg'].pop('verack', 0) >= 21 for peer in to_connection.getpeerinfo()) == to_num_peers)
         # The message bytes are counted before processing the message, so make
         # sure it was fully processed by waiting for a ping.
-        wait_until_helper(lambda: all(peer["bytesrecv_per_msg"].pop("pong", 0) >= 29 for peer in from_connection.getpeerinfo()))
-        wait_until_helper(lambda: all(peer["bytesrecv_per_msg"].pop("pong", 0) >= 29 for peer in to_connection.getpeerinfo()))
+        self.wait_until(lambda: sum(peer["bytesrecv_per_msg"].pop("pong", 0) >= 29 for peer in from_connection.getpeerinfo()) == from_num_peers)
+        self.wait_until(lambda: sum(peer["bytesrecv_per_msg"].pop("pong", 0) >= 29 for peer in to_connection.getpeerinfo()) == to_num_peers)
 
     def disconnect_nodes(self, a, b):
         def disconnect_nodes_helper(node_a, node_b):
@@ -1319,7 +1321,7 @@ class DashTestFramework(SyscoinTestFramework):
                 return block["confirmations"] > 0 and block["chainlock"] is True
             except Exception:
                 return False
-        if wait_until_helper(check_chainlocked_block, timeout=timeout, do_assert=expected, sleep=0.5) and not expected:
+        if wait_until_helper_internal(check_chainlocked_block, timeout=timeout) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_chainlocked_block_all_nodes(self, block_hash, timeout=60):
@@ -1336,7 +1338,7 @@ class DashTestFramework(SyscoinTestFramework):
                 return node.getchainlocks()["recent_chainlock"]["blockhash"] == block_hash
             except Exception:
                 return False
-        wait_until_helper(check_cl, timeout=timeout, sleep=0.5)
+        wait_until_helper_internal(check_cl, timeout=timeout)
 
     def wait_for_most_active_chainlock(self, node, block_hash, timeout=30):
         def check_cl():
@@ -1345,14 +1347,14 @@ class DashTestFramework(SyscoinTestFramework):
                 return node.getchainlocks()["active_chainlock"]["blockhash"] == block_hash
             except Exception:
                 return False
-        wait_until_helper(check_cl, timeout=timeout, sleep=0.5)
+        wait_until_helper_internal(check_cl, timeout=timeout)
 
     def wait_for_sporks_same(self, timeout=30):
         def check_sporks_same():
             self.bump_mocktime(1)
             sporks = self.nodes[0].spork('show')
             return all(node.spork('show') == sporks for node in self.nodes)
-        wait_until_helper(check_sporks_same, timeout=timeout, sleep=0.5)
+        wait_until_helper_internal(check_sporks_same, timeout=timeout)
 
     def wait_for_quorum_connections(self, quorum_hash, expected_connections, nodes, llmq_type_name="llmq_test", timeout = 60, wait_proc=None):
         def check_quorum_connections():
@@ -1385,7 +1387,7 @@ class DashTestFramework(SyscoinTestFramework):
             if not all_ok and wait_proc is not None:
                 wait_proc()
             return all_ok
-        wait_until_helper(check_quorum_connections, timeout=timeout, sleep=1)
+        wait_until_helper_internal(check_quorum_connections, timeout=timeout)
 
     def wait_for_masternode_probes(self, mninfos, timeout = 60, wait_proc=None, llmq_type_name="llmq_test"):
         def check_probes():
@@ -1421,9 +1423,9 @@ class DashTestFramework(SyscoinTestFramework):
                                 return ret()
 
             return True
-        wait_until_helper(check_probes, timeout=timeout, sleep=1)
+        wait_until_helper_internal(check_probes, timeout=timeout)
 
-    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, wait_proc=None, llmq_type_name="llmq_test", timeout=60, sleep=0.5):
+    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, wait_proc=None, llmq_type_name="llmq_test", timeout=60):
         def check_dkg_session():
             all_ok = True
             member_count = 0
@@ -1456,7 +1458,7 @@ class DashTestFramework(SyscoinTestFramework):
             if all_ok and member_count != expected_member_count:
                 return False
             return all_ok
-        wait_until_helper(check_dkg_session, timeout=timeout, sleep=sleep)
+        wait_until_helper_internal(check_dkg_session, timeout=timeout)
 
     def wait_for_quorum_commitment(self, quorum_hash, nodes, wait_proc=None, llmq_type=100, timeout=60):
         def check_dkg_comitments():
@@ -1482,9 +1484,9 @@ class DashTestFramework(SyscoinTestFramework):
                     all_ok = False
                     break
             return all_ok
-        wait_until_helper(check_dkg_comitments, timeout=timeout, sleep=1)
+        wait_until_helper_internal(check_dkg_comitments, timeout=timeout)
 
-    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=60, sleep=2, llmq_type_name="llmq_test"):
+    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=60, llmq_type_name="llmq_test"):
         def wait_func():
             self.log.info("quorums: " + str(self.nodes[0].quorum_list()))
             if quorum_hash in self.nodes[0].quorum_list()[llmq_type_name]:
@@ -1493,7 +1495,7 @@ class DashTestFramework(SyscoinTestFramework):
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             self.sync_blocks(nodes)
             return False
-        wait_until_helper(wait_func, timeout=timeout, sleep=sleep)
+        wait_until_helper_internal(wait_func, timeout=timeout)
 
     def move_blocks(self, nodes, num_blocks):
         time.sleep(1)
@@ -1645,4 +1647,4 @@ class DashTestFramework(SyscoinTestFramework):
                 if "verified_proregtx_hash" in p and p["verified_proregtx_hash"] != "":
                     c += 1
             return c >= count
-        wait_until_helper(test, timeout=timeout)
+        wait_until_helper_internal(test, timeout=timeout)

@@ -30,6 +30,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     # Syscoin
     "auxpow -> primitives/block -> auxpow",
     "chain -> node/blockstorage -> chain",
+    "chain -> node/blockstorage -> kernel/chain -> chain",
     "chain -> validation -> chain",
     "chainparams -> kernel/chainparams -> chainparams",
     "common/args -> logging -> common/args",
