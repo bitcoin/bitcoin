@@ -77,6 +77,7 @@ struct TestData {
             sig.push_back(1); // sighash byte
             signatures.emplace(pubkey, sig);
             BOOST_CHECK(key.SignSchnorr(MESSAGE_HASH, schnorr_sig, nullptr, EMPTY_AUX));
+            schnorr_sig.push_back(1); // Maximally sized Schnorr sigs have a sighash byte.
             schnorr_signatures.emplace(XOnlyPubKey{pubkey}, schnorr_sig);
 
             // Compute various hashes
@@ -367,6 +368,8 @@ void TestSatisfy(const KeyConverter& converter, const std::string& testcase, con
             // Run non-malleable satisfaction algorithm.
             CScriptWitness witness_nonmal;
             const bool nonmal_success = node->Satisfy(satisfier, witness_nonmal.stack, true) == miniscript::Availability::YES;
+            // Compute witness size (excluding script push, control block, and witness count encoding).
+            const size_t wit_size = GetSerializeSize(witness_nonmal.stack, PROTOCOL_VERSION) - GetSizeOfCompactSize(witness_nonmal.stack.size());
             SatisfactionToWitness(converter.MsContext(), witness_nonmal, script, builder);
 
             if (nonmal_success) {
@@ -378,6 +381,7 @@ void TestSatisfy(const KeyConverter& converter, const std::string& testcase, con
                 // If a non-malleable satisfaction exists, the malleable one must also exist, and be identical to it.
                 BOOST_CHECK(mal_success);
                 BOOST_CHECK(witness_nonmal.stack == witness_mal.stack);
+                assert(wit_size <= *node->GetWitnessSize());
 
                 // Test non-malleable satisfaction.
                 ScriptError serror;

@@ -70,6 +70,7 @@ struct TestData {
             sig.push_back(1); // SIGHASH_ALL
             dummy_sigs.insert({pubkey, {sig, i & 1}});
             assert(privkey.SignSchnorr(MESSAGE_HASH, schnorr_sig, nullptr, EMPTY_AUX));
+            schnorr_sig.push_back(1); // Maximally-sized signature has sighash byte
             schnorr_sigs.emplace(XOnlyPubKey{pubkey}, std::make_pair(std::move(schnorr_sig), i & 1));
 
             std::vector<unsigned char> hash;
@@ -1119,6 +1120,9 @@ void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& p
         // If a non-malleable satisfaction exists, the malleable one must also exist, and be identical to it.
         assert(mal_success);
         assert(stack_nonmal == stack_mal);
+        // Compute witness size (excluding script push, control block, and witness count encoding).
+        const size_t wit_size = GetSerializeSize(stack_nonmal, PROTOCOL_VERSION) - GetSizeOfCompactSize(stack_nonmal.size());
+        assert(wit_size <= *node->GetWitnessSize());
 
         // Test non-malleable satisfaction.
         witness_nonmal.stack.insert(witness_nonmal.stack.end(), std::make_move_iterator(stack_nonmal.begin()), std::make_move_iterator(stack_nonmal.end()));
