@@ -113,7 +113,9 @@ struct TestData {
 struct ParserContext {
     typedef CPubKey Key;
 
-    MsCtx script_ctx{MsCtx::P2WSH};
+    const MsCtx script_ctx;
+
+    constexpr ParserContext(MsCtx ctx) noexcept : script_ctx(ctx) {}
 
     bool KeyCompare(const Key& a, const Key& b) const {
         return a < b;
@@ -178,11 +180,13 @@ struct ParserContext {
     MsCtx MsContext() const {
         return script_ctx;
     }
-} PARSER_CTX;
+};
 
 //! Context that implements naive conversion from/to script only, for roundtrip testing.
 struct ScriptParserContext {
-    MsCtx script_ctx{MsCtx::P2WSH};
+    const MsCtx script_ctx;
+
+    constexpr ScriptParserContext(MsCtx ctx) noexcept : script_ctx(ctx) {}
 
     //! For Script roundtrip we never need the key from a key hash.
     struct Key {
@@ -228,10 +232,13 @@ struct ScriptParserContext {
     MsCtx MsContext() const {
         return script_ctx;
     }
-} SCRIPT_PARSER_CONTEXT;
+};
 
 //! Context to produce a satisfaction for a Miniscript node using the pre-computed data.
-struct SatisfierContext: ParserContext {
+struct SatisfierContext : ParserContext {
+
+    constexpr SatisfierContext(MsCtx ctx) noexcept : ParserContext(ctx) {}
+
     // Timelock challenges satisfaction. Make the value (deterministically) vary to explore different
     // paths.
     bool CheckAfter(uint32_t value) const { return value % 2; }
@@ -267,12 +274,10 @@ struct SatisfierContext: ParserContext {
     miniscript::Availability SatHASH160(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage) const {
         return LookupHash(hash, preimage, TEST_DATA.hash160_preimages);
     }
-} SATISFIER_CTX;
+};
 
 //! Context to check a satisfaction against the pre-computed data.
-struct CheckerContext: BaseSignatureChecker {
-    TestData *test_data;
-
+const struct CheckerContext: BaseSignatureChecker {
     // Signature checker methods. Checks the right dummy signature is used.
     bool CheckECDSASignature(const std::vector<unsigned char>& sig, const std::vector<unsigned char>& vchPubKey,
                              const CScript& scriptCode, SigVersion sigversion) const override
@@ -294,7 +299,7 @@ struct CheckerContext: BaseSignatureChecker {
 } CHECKER_CTX;
 
 //! Context to check for duplicates when instancing a Node.
-struct KeyComparator {
+const struct KeyComparator {
     bool KeyCompare(const CPubKey& a, const CPubKey& b) const {
         return a < b;
     }
@@ -1027,15 +1032,15 @@ void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& p
     if (!node) return;
 
     // Check that it roundtrips to text representation
-    PARSER_CTX.script_ctx = script_ctx;
-    std::optional<std::string> str{node->ToString(PARSER_CTX)};
+    const ParserContext parser_ctx{script_ctx};
+    std::optional<std::string> str{node->ToString(parser_ctx)};
     assert(str);
-    auto parsed = miniscript::FromString(*str, PARSER_CTX);
+    auto parsed = miniscript::FromString(*str, parser_ctx);
     assert(parsed);
     assert(*parsed == *node);
 
     // Check consistency between script size estimation and real size.
-    auto script = node->ToScript(PARSER_CTX);
+    auto script = node->ToScript(parser_ctx);
     assert(node->ScriptSize() == script.size());
 
     // Check consistency of "x" property with the script (type K is excluded, because it can end
@@ -1049,12 +1054,12 @@ void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& p
     if (!node->IsValidTopLevel()) return;
 
     // Check roundtrip to script
-    auto decoded = miniscript::FromScript(script, PARSER_CTX);
+    auto decoded = miniscript::FromScript(script, parser_ctx);
     assert(decoded);
     // Note we can't use *decoded == *node because the miniscript representation may differ, so we check that:
     // - The script corresponding to that decoded form matches exactly
     // - The type matches exactly
-    assert(decoded->ToScript(PARSER_CTX) == script);
+    assert(decoded->ToScript(parser_ctx) == script);
     assert(decoded->GetType() == node->GetType());
 
     // Optionally pad the script or the witness in order to increase the sensitivity of the tests of
@@ -1091,7 +1096,7 @@ void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& p
         }
     }
 
-    SATISFIER_CTX.script_ctx = script_ctx;
+    const SatisfierContext satisfier_ctx{script_ctx};
 
     // Get the ScriptPubKey for this script, filling spend data if it's Taproot.
     TaprootBuilder builder;
@@ -1099,11 +1104,11 @@ void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& p
 
     // Run malleable satisfaction algorithm.
     std::vector<std::vector<unsigned char>> stack_mal;
-    const bool mal_success = node->Satisfy(SATISFIER_CTX, stack_mal, false) == miniscript::Availability::YES;
+    const bool mal_success = node->Satisfy(satisfier_ctx, stack_mal, false) == miniscript::Availability::YES;
 
     // Run non-malleable satisfaction algorithm.
     std::vector<std::vector<unsigned char>> stack_nonmal;
-    const bool nonmal_success = node->Satisfy(SATISFIER_CTX, stack_nonmal, true) == miniscript::Availability::YES;
+    const bool nonmal_success = node->Satisfy(satisfier_ctx, stack_nonmal, true) == miniscript::Availability::YES;
 
     if (nonmal_success) {
         // Non-malleable satisfactions are bounded by the satisfaction size plus:
@@ -1229,13 +1234,13 @@ FUZZ_TARGET(miniscript_string, .init = FuzzInit)
     if (buffer.empty()) return;
     FuzzedDataProvider provider(buffer.data(), buffer.size());
     auto str = provider.ConsumeBytesAsString(provider.remaining_bytes() - 1);
-    PARSER_CTX.script_ctx = (MsCtx)provider.ConsumeBool();
-    auto parsed = miniscript::FromString(str, PARSER_CTX);
+    const ParserContext parser_ctx{(MsCtx)provider.ConsumeBool()};
+    auto parsed = miniscript::FromString(str, parser_ctx);
     if (!parsed) return;
 
-    const auto str2 = parsed->ToString(PARSER_CTX);
+    const auto str2 = parsed->ToString(parser_ctx);
     assert(str2);
-    auto parsed2 = miniscript::FromString(*str2, PARSER_CTX);
+    auto parsed2 = miniscript::FromString(*str2, parser_ctx);
     assert(parsed2);
     assert(*parsed == *parsed2);
 }
@@ -1247,9 +1252,9 @@ FUZZ_TARGET(miniscript_script)
     const std::optional<CScript> script = ConsumeDeserializable<CScript>(fuzzed_data_provider);
     if (!script) return;
 
-    SCRIPT_PARSER_CONTEXT.script_ctx = (MsCtx)fuzzed_data_provider.ConsumeBool();
-    const auto ms = miniscript::FromScript(*script, SCRIPT_PARSER_CONTEXT);
+    const ScriptParserContext script_parser_ctx{(MsCtx)fuzzed_data_provider.ConsumeBool()};
+    const auto ms = miniscript::FromScript(*script, script_parser_ctx);
     if (!ms) return;
 
-    assert(ms->ToScript(SCRIPT_PARSER_CONTEXT) == *script);
+    assert(ms->ToScript(script_parser_ctx) == *script);
 }

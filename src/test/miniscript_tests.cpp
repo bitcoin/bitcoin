@@ -126,7 +126,9 @@ typedef std::pair<ChallengeType, uint32_t> Challenge;
 struct KeyConverter {
     typedef CPubKey Key;
 
-    miniscript::MiniscriptContext m_script_ctx{miniscript::MiniscriptContext::P2WSH};
+    const miniscript::MiniscriptContext m_script_ctx;
+
+    constexpr KeyConverter(miniscript::MiniscriptContext ctx) noexcept : m_script_ctx{ctx} {}
 
     bool KeyCompare(const Key& a, const Key& b) const {
         return a < b;
@@ -189,14 +191,13 @@ struct KeyConverter {
     miniscript::MiniscriptContext MsContext() const {
         return m_script_ctx;
     }
-
-    void SetContext(miniscript::MiniscriptContext ctx) {
-        m_script_ctx = ctx;
-    }
 };
 
 /** A class that encapsulates all signing/hash revealing operations. */
 struct Satisfier : public KeyConverter {
+
+    Satisfier(miniscript::MiniscriptContext ctx) noexcept : KeyConverter{ctx} {}
+
     //! Which keys/timelocks/hash preimages are available.
     std::set<Challenge> supported;
 
@@ -286,9 +287,6 @@ public:
     }
 };
 
-//! Singleton instance of KeyConverter.
-KeyConverter CONVERTER;
-
 //! Public key to be used as internal key for dummy Taproot spends.
 const std::vector<unsigned char> NUMS_PK{ParseHex("50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0")};
 
@@ -350,8 +348,7 @@ void TestSatisfy(const KeyConverter& converter, const std::string& testcase, con
     std::vector<Challenge> challist(challenges.begin(), challenges.end());
     for (int iter = 0; iter < 3; ++iter) {
         Shuffle(challist.begin(), challist.end(), g_insecure_rand_ctx);
-        Satisfier satisfier;
-        satisfier.SetContext(converter.MsContext());
+        Satisfier satisfier(converter.MsContext());
         TestSignatureChecker checker(satisfier);
         bool prev_mal_success = false, prev_nonmal_success = false;
         // Go over all challenges involved in this miniscript in random order.
@@ -476,10 +473,10 @@ void Test(const std::string& ms, const std::string& hexscript, const std::string
           int opslimit = -1, int stacklimit = -1, std::optional<uint32_t> max_wit_size = std::nullopt,
           std::optional<uint32_t> stack_exec = {})
 {
-    CONVERTER.SetContext(miniscript::MiniscriptContext::P2WSH);
-    Test(ms, hexscript, mode, CONVERTER, opslimit, stacklimit, max_wit_size, stack_exec);
-    CONVERTER.SetContext(miniscript::MiniscriptContext::TAPSCRIPT);
-    Test(ms, hextapscript == "=" ? hexscript : hextapscript, mode, CONVERTER, opslimit, stacklimit, max_wit_size, stack_exec);
+    KeyConverter wsh_converter(miniscript::MiniscriptContext::P2WSH);
+    Test(ms, hexscript, mode, wsh_converter, opslimit, stacklimit, max_wit_size, stack_exec);
+    KeyConverter tap_converter(miniscript::MiniscriptContext::TAPSCRIPT);
+    Test(ms, hextapscript == "=" ? hexscript : hextapscript, mode, tap_converter, opslimit, stacklimit, max_wit_size, stack_exec);
 }
 } // namespace
 
@@ -584,12 +581,14 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     //  - no pubkey at all
     //  - no pubkey before a CHECKSIGADD
     //  - no pubkey before the CHECKSIG
+    constexpr KeyConverter tap_converter{miniscript::MiniscriptContext::TAPSCRIPT};
+    constexpr KeyConverter wsh_converter{miniscript::MiniscriptContext::P2WSH};
     const auto no_pubkey{ParseHex("ac519c")};
-    BOOST_CHECK(miniscript::FromScript({no_pubkey.begin(), no_pubkey.end()}, CONVERTER) == nullptr);
+    BOOST_CHECK(miniscript::FromScript({no_pubkey.begin(), no_pubkey.end()}, tap_converter) == nullptr);
     const auto incomplete_multi_a{ParseHex("ba20c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5ba519c")};
-    BOOST_CHECK(miniscript::FromScript({incomplete_multi_a.begin(), incomplete_multi_a.end()}, CONVERTER) == nullptr);
+    BOOST_CHECK(miniscript::FromScript({incomplete_multi_a.begin(), incomplete_multi_a.end()}, tap_converter) == nullptr);
     const auto incomplete_multi_a_2{ParseHex("ac2079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac20c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5ba519c")};
-    BOOST_CHECK(miniscript::FromScript({incomplete_multi_a_2.begin(), incomplete_multi_a_2.end()}, CONVERTER) == nullptr);
+    BOOST_CHECK(miniscript::FromScript({incomplete_multi_a_2.begin(), incomplete_multi_a_2.end()}, tap_converter) == nullptr);
     // Can use multi_a under Tapscript but not P2WSH.
     Test("and_v(v:multi_a(2,03d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a,025601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7cc),after(1231488000))", "?", "20d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85aac205601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7ccba529d0400046749b1", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG | TESTMODE_P2WSH_INVALID, 4, 2, {}, 3);
     // Can use more than 20 keys in a multi_a.
@@ -621,13 +620,13 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     }
     ms_stack_limit += "pk(" + HexStr(g_testdata->pubkeys[0]) + ")";
     ms_stack_limit.insert(ms_stack_limit.end(), count, ')');
-    const auto ms_stack_ok{miniscript::FromString(ms_stack_limit, CONVERTER)};
+    const auto ms_stack_ok{miniscript::FromString(ms_stack_limit, tap_converter)};
     BOOST_CHECK(ms_stack_ok && ms_stack_ok->CheckStackSize());
     Test(ms_stack_limit, "?", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG | TESTMODE_P2WSH_INVALID, 4 * count + 1, 1, {}, 1 + count + 1);
     // But one more element on the stack during execution will make it fail. And we'd detect that.
     count++;
     ms_stack_limit = "and_b(older(1),a:" + ms_stack_limit + ")";
-    const auto ms_stack_nok{miniscript::FromString(ms_stack_limit, CONVERTER)};
+    const auto ms_stack_nok{miniscript::FromString(ms_stack_limit, tap_converter)};
     BOOST_CHECK(ms_stack_nok && !ms_stack_nok->CheckStackSize());
     Test(ms_stack_limit, "?", "?", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG | TESTMODE_P2WSH_INVALID, 4 * count + 1, 1, {}, 1 + count + 1);
 
@@ -635,11 +634,13 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     // A Script with a non minimal push is invalid
     std::vector<unsigned char> nonminpush = ParseHex("0000210232780000feff00ffffffffffff21ff005f00ae21ae00000000060602060406564c2102320000060900fe00005f00ae21ae00100000060606060606000000000000000000000000000000000000000000000000000000000000000000");
     const CScript nonminpush_script(nonminpush.begin(), nonminpush.end());
-    BOOST_CHECK(miniscript::FromScript(nonminpush_script, CONVERTER) == nullptr);
+    BOOST_CHECK(miniscript::FromScript(nonminpush_script, wsh_converter) == nullptr);
+    BOOST_CHECK(miniscript::FromScript(nonminpush_script, tap_converter) == nullptr);
     // A non-minimal VERIFY (<key> CHECKSIG VERIFY 1)
     std::vector<unsigned char> nonminverify = ParseHex("2103a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7ac6951");
     const CScript nonminverify_script(nonminverify.begin(), nonminverify.end());
-    BOOST_CHECK(miniscript::FromScript(nonminverify_script, CONVERTER) == nullptr);
+    BOOST_CHECK(miniscript::FromScript(nonminverify_script, wsh_converter) == nullptr);
+    BOOST_CHECK(miniscript::FromScript(nonminverify_script, tap_converter) == nullptr);
     // A threshold as large as the number of subs is valid.
     Test("thresh(2,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),altv:after(100))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b6300670164b16951686c935287", "20d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b6300670164b16951686c935287", TESTMODE_VALID | TESTMODE_NEEDSIG | TESTMODE_NONMAL);
     // A threshold of 1 is valid.
@@ -649,8 +650,7 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     // A threshold with a k null is invalid
     Test("thresh(0,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),sc:pk_k(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac7c2103fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556ac935187", "=", TESTMODE_INVALID);
     // For CHECKMULTISIG the OP cost is the number of keys, but the stack size is the number of sigs (+1)
-    CONVERTER.SetContext(miniscript::MiniscriptContext::P2WSH);
-    const auto ms_multi = miniscript::FromString("multi(1,03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65,03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556,0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)", CONVERTER);
+    const auto ms_multi = miniscript::FromString("multi(1,03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65,03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556,0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)", wsh_converter);
     BOOST_CHECK(ms_multi);
     BOOST_CHECK_EQUAL(*ms_multi->GetOps(), 4); // 3 pubkeys + CMS
     BOOST_CHECK_EQUAL(*ms_multi->GetStackSize(), 2); // 1 sig + dummy elem
@@ -661,33 +661,33 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     // Unfortunately, this rule is consensus for Taproot but only policy for P2WSH. Therefore we can't
     // (for now) have 'd:' be 'u'. This tests we can't use a 'd:' wrapper for a thresh, which requires
     // its subs to all be 'u' (taken from https://github.com/rust-bitcoin/rust-miniscript/discussions/341).
-    const auto ms_minimalif = miniscript::FromString("thresh(3,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),sc:pk_k(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556),sc:pk_k(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798),sdv:older(32))", CONVERTER);
+    const auto ms_minimalif = miniscript::FromString("thresh(3,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),sc:pk_k(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556),sc:pk_k(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798),sdv:older(32))", wsh_converter);
     BOOST_CHECK(ms_minimalif && !ms_minimalif->IsValid());
     // A Miniscript with duplicate keys is not sane
-    const auto ms_dup1 = miniscript::FromString("and_v(v:pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65))", CONVERTER);
+    const auto ms_dup1 = miniscript::FromString("and_v(v:pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65))", wsh_converter);
     BOOST_CHECK(ms_dup1);
     BOOST_CHECK(!ms_dup1->IsSane() && !ms_dup1->CheckDuplicateKey());
     // Same with a disjunction, and different key nodes (pk and pkh)
-    const auto ms_dup2 = miniscript::FromString("or_b(c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),ac:pk_h(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65))", CONVERTER);
+    const auto ms_dup2 = miniscript::FromString("or_b(c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),ac:pk_h(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65))", wsh_converter);
     BOOST_CHECK(ms_dup2 && !ms_dup2->IsSane() && !ms_dup2->CheckDuplicateKey());
     // Same when the duplicates are leaves or a larger tree
-    const auto ms_dup3 = miniscript::FromString("or_i(and_b(pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),s:pk(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556)),and_b(older(1),s:pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65)))", CONVERTER);
+    const auto ms_dup3 = miniscript::FromString("or_i(and_b(pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),s:pk(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556)),and_b(older(1),s:pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65)))", wsh_converter);
     BOOST_CHECK(ms_dup3 && !ms_dup3->IsSane() && !ms_dup3->CheckDuplicateKey());
     // Same when the duplicates are on different levels in the tree
-    const auto ms_dup4 = miniscript::FromString("thresh(2,pkh(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),s:pk(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556),a:and_b(dv:older(1),s:pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65)))", CONVERTER);
+    const auto ms_dup4 = miniscript::FromString("thresh(2,pkh(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),s:pk(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556),a:and_b(dv:older(1),s:pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65)))", wsh_converter);
     BOOST_CHECK(ms_dup4 && !ms_dup4->IsSane() && !ms_dup4->CheckDuplicateKey());
     // Sanity check the opposite is true, too. An otherwise sane Miniscript with no duplicate keys is sane.
-    const auto ms_nondup = miniscript::FromString("pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65)", CONVERTER);
+    const auto ms_nondup = miniscript::FromString("pk(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65)", wsh_converter);
     BOOST_CHECK(ms_nondup && ms_nondup->CheckDuplicateKey() && ms_nondup->IsSane());
     // Test we find the first insane sub closer to be a leaf node. This fragment is insane for two reasons:
     // 1. It can be spent without a signature
     // 2. It contains timelock mixes
     // We'll report the timelock mix error, as it's "deeper" (closer to be a leaf node) than the "no 's' property"
     // error is.
-    const auto ms_ins = miniscript::FromString("or_i(and_b(after(1),a:after(1000000000)),pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204))", CONVERTER);
+    const auto ms_ins = miniscript::FromString("or_i(and_b(after(1),a:after(1000000000)),pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204))", wsh_converter);
     BOOST_CHECK(ms_ins && ms_ins->IsValid() && !ms_ins->IsSane());
     const auto insane_sub = ms_ins->FindInsaneSub();
-    BOOST_CHECK(insane_sub && *insane_sub->ToString(CONVERTER) == "and_b(after(1),a:after(1000000000))");
+    BOOST_CHECK(insane_sub && *insane_sub->ToString(wsh_converter) == "and_b(after(1),a:after(1000000000))");
 
     // Timelock tests
     Test("after(100)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // only heightlock
