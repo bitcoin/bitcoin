@@ -650,7 +650,8 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
 
         m_mask_values_action->setChecked(_clientModel->getOptionsModel()->getOption(OptionsModel::OptionID::MaskValues).toBool());
     } else {
-        if(trayIconMenu)
+        // Shutdown requested, disable menus
+        if (trayIconMenu)
         {
             // Disable context menu on tray icon
             trayIconMenu->clear();
@@ -664,6 +665,8 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
         }
 #endif // ENABLE_WALLET
         unitDisplayControl->setOptionsModel(nullptr);
+        // Disable top bar menu actions
+        appMenuBar->clear();
     }
 }
 
