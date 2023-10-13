@@ -72,7 +72,7 @@ class AssumeutxoTest(SyscoinTestFramework):
             valid_snapshot_contents = f.read()
         bad_snapshot_path = valid_snapshot_path + '.mod'
 
-        self.log.info("  - snapshot file refering to a block that is not in the assumeutxo parameters")
+        self.log.info("  - snapshot file referring to a block that is not in the assumeutxo parameters")
         # we can only test this with a block that is already known, as otherwise the `loadtxoutset` RPC
         # would time out (waiting to see the hash in the headers chain), rather than error immediately
         bad_snapshot_height = SNAPSHOT_BASE_HEIGHT - 1
