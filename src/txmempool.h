@@ -320,6 +320,10 @@ private:
         return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), it->GetFee(), it->GetTxSize(), it->GetModifiedFee() - it->GetFee()};
     }
 
+    // Helper to remove all transactions that conflict with a given
+    // transaction (used for transactions appearing in a block).
+    void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
 public:
     indirectmap<COutPoint, txiter> mapNextTx GUARDED_BY(cs);
     std::map<Txid, CAmount> mapDeltas GUARDED_BY(cs);
@@ -352,7 +356,6 @@ public:
      *                                        and updates an entry's LockPoints.
      * */
     void removeForReorg(CChain& chain, std::function<bool(txiter)> filter_final_and_mature) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
-    void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     bool CompareMiningScoreWithTopology(const Wtxid& hasha, const Wtxid& hashb) const;
