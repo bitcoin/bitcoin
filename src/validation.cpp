@@ -945,7 +945,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     ws.m_iters_conflicting = m_pool.GetIterSet(ws.m_conflicts);
 
     // Calculate in-mempool ancestors, up to a limit.
-    if (auto ancestors{m_pool.CalculateMemPoolAncestors(*entry, m_pool.m_opts.limits)}) {
+    if (auto ancestors{m_pool.CalculateMemPoolAncestors(*entry)}) {
         ws.m_ancestors = std::move(*ancestors);
     } else {
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-long-mempool-chain", util::ErrorString(ancestors).original);
@@ -1293,7 +1293,7 @@ bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& 
         // Re-calculate mempool ancestors to call addUnchecked(). They may have changed since the
         // last calculation done in PreChecks, since package ancestors have already been submitted.
         {
-            auto ancestors{m_pool.CalculateMemPoolAncestors(*ws.m_entry, m_pool.m_opts.limits)};
+            auto ancestors{m_pool.CalculateMemPoolAncestors(*ws.m_entry)};
             if(!ancestors) {
                 results.emplace(ws.m_ptx->GetWitnessHash(), MempoolAcceptResult::Failure(ws.m_state));
                 // Since PreChecks() and PackageMempoolChecks() both enforce limits, this should never fail.
