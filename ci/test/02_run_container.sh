@@ -5,6 +5,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 export LC_ALL=C.UTF-8
+export CI_IMAGE_LABEL="bitcoin-ci-test"
 
 set -ex
 
@@ -19,6 +20,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
       --file "${BASE_READ_ONLY_DIR}/ci/test_imagefile" \
       --build-arg "CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG}" \
       --build-arg "FILE_ENV=${FILE_ENV}" \
+      --label="${CI_IMAGE_LABEL}" \
       --tag="${CONTAINER_NAME}" \
       "${BASE_READ_ONLY_DIR}"
   docker volume create "${CONTAINER_NAME}_ccache" || true
@@ -30,9 +32,14 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
     echo "Restart docker before run to stop and clear all containers started with --rm"
     podman container rm --force --all  # Similar to "systemctl restart docker"
+
+    # Still prune everything in case the filtered pruning doesn't work, or if labels were not set
+    # on a previous run. Belt and suspenders approach, should be fine to remove in the future.
     echo "Prune all dangling images"
     docker image prune --force
   fi
+  echo "Prune all dangling $CI_IMAGE_LABEL images"
+  docker image prune --force --filter "label=$CI_IMAGE_LABEL"
 
   # shellcheck disable=SC2086
   CI_CONTAINER_ID=$(docker run --cap-add LINUX_IMMUTABLE $CI_CONTAINER_CAP --rm --interactive --detach --tty \
