@@ -99,7 +99,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToU
     }
 }
 
-util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateAncestors(CTxMemPoolEntry::Parents& staged_ancestors) const
+CTxMemPool::setEntries CTxMemPool::CalculateAncestors(CTxMemPoolEntry::Parents& staged_ancestors) const
 {
     setEntries ancestors;
 
@@ -127,19 +127,6 @@ util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateAncestors(CTxMemPoolEn
 util::Result<void> CTxMemPool::CheckPackageLimits(const Package& package,
                                                   const int64_t total_vsize) const
 {
-    CTxMemPoolEntry::Parents staged_ancestors;
-    for (const auto& tx : package) {
-        for (const auto& input : tx->vin) {
-            std::optional<txiter> piter = GetIter(input.prevout.hash);
-            if (piter) {
-                staged_ancestors.insert(**piter);
-            }
-        }
-    }
-
-    const auto ancestors{CalculateAncestors(staged_ancestors)};
-    // It's possible to overestimate the ancestor/descendant totals.
-    if (!ancestors.has_value()) return util::Error{Untranslated("possibly " + util::ErrorString(ancestors).original)};
     return {};
 }
 
@@ -151,7 +138,7 @@ bool CTxMemPool::HasDescendants(const Txid& txid) const
     return m_txgraph->GetDescendants(*entry, TxGraph::Level::MAIN).size() > 1;
 }
 
-util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateMemPoolAncestors(
+CTxMemPool::setEntries CTxMemPool::CalculateMemPoolAncestors(
     const CTxMemPoolEntry &entry,
     bool fSearchForParents /* = true */) const
 {
@@ -176,19 +163,6 @@ util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateMemPoolAncestors(
     }
 
     return CalculateAncestors(staged_ancestors);
-}
-
-CTxMemPool::setEntries CTxMemPool::AssumeCalculateMemPoolAncestors(
-    std::string_view calling_fn_name,
-    const CTxMemPoolEntry &entry,
-    bool fSearchForParents /* = true */) const
-{
-    auto result{CalculateMemPoolAncestors(entry, fSearchForParents)};
-    if (!Assume(result)) {
-        LogPrintLevel(BCLog::MEMPOOL, BCLog::Level::Error, "%s: CalculateMemPoolAncestors failed unexpectedly, continuing with empty ancestor set (%s)\n",
-                      calling_fn_name, util::ErrorString(result).original);
-    }
-    return std::move(result).value_or(CTxMemPool::setEntries{});
 }
 
 void CTxMemPool::UpdateAncestorsOf(bool add, txiter it)
@@ -264,16 +238,6 @@ void CTxMemPool::Apply(ChangeSet* changeset)
 
     for (size_t i=0; i<changeset->m_entry_vec.size(); ++i) {
         auto tx_entry = changeset->m_entry_vec[i];
-        std::optional<CTxMemPool::setEntries> ancestors;
-        if (i == 0) {
-            // Note: ChangeSet::CalculateMemPoolAncestors() will return a
-            // cached value if mempool ancestors for this transaction were
-            // previously calculated.
-            // We can only use a cached ancestor calculation for the first
-            // transaction in a package, because in-package parents won't be
-            // present in the cached ancestor sets of in-package children.
-            ancestors = *Assume(changeset->CalculateMemPoolAncestors(tx_entry));
-        }
         // First splice this entry into mapTx.
         auto node_handle = changeset->m_to_add.extract(tx_entry);
         auto result = mapTx.insert(std::move(node_handle));
@@ -281,22 +245,11 @@ void CTxMemPool::Apply(ChangeSet* changeset)
         Assume(result.inserted);
         txiter it = result.position;
 
-        // Now update the entry for ancestors/descendants.
-        if (ancestors.has_value()) {
-            addNewTransaction(it, *ancestors);
-        } else {
-            addNewTransaction(it);
-        }
+        addNewTransaction(it);
     }
 }
 
-void CTxMemPool::addNewTransaction(CTxMemPool::txiter it)
-{
-    auto ancestors{AssumeCalculateMemPoolAncestors(__func__, *it)};
-    return addNewTransaction(it, ancestors);
-}
-
-void CTxMemPool::addNewTransaction(CTxMemPool::txiter newit, CTxMemPool::setEntries& setAncestors)
+void CTxMemPool::addNewTransaction(CTxMemPool::txiter newit)
 {
     const CTxMemPoolEntry& entry = *newit;
 
