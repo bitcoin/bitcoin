@@ -962,7 +962,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     ws.m_iters_conflicting = m_pool.GetIterSet(ws.m_conflicts);
 
     // Calculate in-mempool ancestors, up to a limit.
-    if (auto ancestors{m_subpackage.m_changeset->CalculateMemPoolAncestors(ws.m_tx_handle, m_pool.m_opts.limits)}) {
+    if (auto ancestors{m_subpackage.m_changeset->CalculateMemPoolAncestors(ws.m_tx_handle)}) {
         ws.m_ancestors = std::move(*ancestors);
     } else {
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-long-mempool-chain", util::ErrorString(ancestors).original);

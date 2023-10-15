@@ -99,11 +99,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToU
     }
 }
 
-util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateAncestorsAndCheckLimits(
-    int64_t entry_size,
-    size_t entry_count,
-    CTxMemPoolEntry::Parents& staged_ancestors,
-    const Limits& limits) const
+util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateAncestors(CTxMemPoolEntry::Parents& staged_ancestors) const
 {
     setEntries ancestors;
 
@@ -141,11 +137,7 @@ util::Result<void> CTxMemPool::CheckPackageLimits(const Package& package,
         }
     }
 
-    // When multiple transactions are passed in, the ancestors and descendants of all transactions
-    // considered together must be within limits even if they are not interdependent. This may be
-    // stricter than the limits for each individual transaction.
-    const auto ancestors{CalculateAncestorsAndCheckLimits(total_vsize, package.size(),
-                                                          staged_ancestors, m_opts.limits)};
+    const auto ancestors{CalculateAncestors(staged_ancestors)};
     // It's possible to overestimate the ancestor/descendant totals.
     if (!ancestors.has_value()) return util::Error{Untranslated("possibly " + util::ErrorString(ancestors).original)};
     return {};
@@ -161,7 +153,6 @@ bool CTxMemPool::HasDescendants(const Txid& txid) const
 
 util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateMemPoolAncestors(
     const CTxMemPoolEntry &entry,
-    const Limits& limits,
     bool fSearchForParents /* = true */) const
 {
     CTxMemPoolEntry::Parents staged_ancestors;
@@ -184,17 +175,15 @@ util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateMemPoolAncestors(
         staged_ancestors = it->GetMemPoolParentsConst();
     }
 
-    return CalculateAncestorsAndCheckLimits(entry.GetTxSize(), /*entry_count=*/1, staged_ancestors,
-                                            limits);
+    return CalculateAncestors(staged_ancestors);
 }
 
 CTxMemPool::setEntries CTxMemPool::AssumeCalculateMemPoolAncestors(
     std::string_view calling_fn_name,
     const CTxMemPoolEntry &entry,
-    const Limits& limits,
     bool fSearchForParents /* = true */) const
 {
-    auto result{CalculateMemPoolAncestors(entry, limits, fSearchForParents)};
+    auto result{CalculateMemPoolAncestors(entry, fSearchForParents)};
     if (!Assume(result)) {
         LogPrintLevel(BCLog::MEMPOOL, BCLog::Level::Error, "%s: CalculateMemPoolAncestors failed unexpectedly, continuing with empty ancestor set (%s)\n",
                       calling_fn_name, util::ErrorString(result).original);
@@ -283,10 +272,7 @@ void CTxMemPool::Apply(ChangeSet* changeset)
             // We can only use a cached ancestor calculation for the first
             // transaction in a package, because in-package parents won't be
             // present in the cached ancestor sets of in-package children.
-            // We pass in Limits::NoLimits() to ensure that this function won't fail
-            // (we're going to be applying this set of transactions whether or
-            // not the mempool policy limits are being respected).
-            ancestors = *Assume(changeset->CalculateMemPoolAncestors(tx_entry, Limits::NoLimits()));
+            ancestors = *Assume(changeset->CalculateMemPoolAncestors(tx_entry));
         }
         // First splice this entry into mapTx.
         auto node_handle = changeset->m_to_add.extract(tx_entry);
@@ -306,7 +292,7 @@ void CTxMemPool::Apply(ChangeSet* changeset)
 
 void CTxMemPool::addNewTransaction(CTxMemPool::txiter it)
 {
-    auto ancestors{AssumeCalculateMemPoolAncestors(__func__, *it, Limits::NoLimits())};
+    auto ancestors{AssumeCalculateMemPoolAncestors(__func__, *it)};
     return addNewTransaction(it, ancestors);
 }
 
