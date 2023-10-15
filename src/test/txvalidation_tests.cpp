@@ -113,7 +113,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         const auto expected_error_str{strprintf("non-v3 tx %s (wtxid=%s) cannot spend from v3 tx %s (wtxid=%s)",
             tx_v2_from_v3->GetHash().ToString(), tx_v2_from_v3->GetWitnessHash().ToString(),
             mempool_tx_v3->GetHash().ToString(), mempool_tx_v3->GetWitnessHash().ToString())};
-        auto result_v2_from_v3{SingleV3Checks(tx_v2_from_v3, *ancestors_v2_from_v3, empty_conflicts_set, GetVirtualTransactionSize(*tx_v2_from_v3))};
+        auto result_v2_from_v3{SingleV3Checks(tx_v2_from_v3, ancestors_v2_from_v3, empty_conflicts_set, GetVirtualTransactionSize(*tx_v2_from_v3))};
         BOOST_CHECK_EQUAL(result_v2_from_v3->first, expected_error_str);
         BOOST_CHECK_EQUAL(result_v2_from_v3->second, nullptr);
 
@@ -130,7 +130,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         const auto expected_error_str_2{strprintf("non-v3 tx %s (wtxid=%s) cannot spend from v3 tx %s (wtxid=%s)",
             tx_v2_from_v2_and_v3->GetHash().ToString(), tx_v2_from_v2_and_v3->GetWitnessHash().ToString(),
             mempool_tx_v3->GetHash().ToString(), mempool_tx_v3->GetWitnessHash().ToString())};
-        auto result_v2_from_both{SingleV3Checks(tx_v2_from_v2_and_v3, *ancestors_v2_from_both, empty_conflicts_set, GetVirtualTransactionSize(*tx_v2_from_v2_and_v3))};
+        auto result_v2_from_both{SingleV3Checks(tx_v2_from_v2_and_v3, ancestors_v2_from_both, empty_conflicts_set, GetVirtualTransactionSize(*tx_v2_from_v2_and_v3))};
         BOOST_CHECK_EQUAL(result_v2_from_both->first, expected_error_str_2);
         BOOST_CHECK_EQUAL(result_v2_from_both->second, nullptr);
 
@@ -148,7 +148,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         const auto expected_error_str{strprintf("v3 tx %s (wtxid=%s) cannot spend from non-v3 tx %s (wtxid=%s)",
             tx_v3_from_v2->GetHash().ToString(), tx_v3_from_v2->GetWitnessHash().ToString(),
             mempool_tx_v2->GetHash().ToString(), mempool_tx_v2->GetWitnessHash().ToString())};
-        auto result_v3_from_v2{SingleV3Checks(tx_v3_from_v2, *ancestors_v3_from_v2,  empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_from_v2))};
+        auto result_v3_from_v2{SingleV3Checks(tx_v3_from_v2, ancestors_v3_from_v2,  empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_from_v2))};
         BOOST_CHECK_EQUAL(result_v3_from_v2->first, expected_error_str);
         BOOST_CHECK_EQUAL(result_v3_from_v2->second, nullptr);
 
@@ -165,7 +165,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         const auto expected_error_str_2{strprintf("v3 tx %s (wtxid=%s) cannot spend from non-v3 tx %s (wtxid=%s)",
             tx_v3_from_v2_and_v3->GetHash().ToString(), tx_v3_from_v2_and_v3->GetWitnessHash().ToString(),
             mempool_tx_v2->GetHash().ToString(), mempool_tx_v2->GetWitnessHash().ToString())};
-        auto result_v3_from_both{SingleV3Checks(tx_v3_from_v2_and_v3, *ancestors_v3_from_both, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_from_v2_and_v3))};
+        auto result_v3_from_both{SingleV3Checks(tx_v3_from_v2_and_v3, ancestors_v3_from_both, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_from_v2_and_v3))};
         BOOST_CHECK_EQUAL(result_v3_from_both->first, expected_error_str_2);
         BOOST_CHECK_EQUAL(result_v3_from_both->second, nullptr);
 
@@ -182,7 +182,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         // tx_v3_from_v3
         auto tx_v3_from_v3 = make_tx({COutPoint{mempool_tx_v3->GetHash(), 0}}, /*version=*/3);
         auto ancestors_v3{pool.CalculateMemPoolAncestors(entry.FromTx(tx_v3_from_v3))};
-        BOOST_CHECK(SingleV3Checks(tx_v3_from_v3, *ancestors_v3, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_from_v3))
+        BOOST_CHECK(SingleV3Checks(tx_v3_from_v3, ancestors_v3, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_from_v3))
                     == std::nullopt);
 
         Package package_v3_v3{mempool_tx_v3, tx_v3_from_v3};
@@ -193,7 +193,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         // tx_v2_from_v2
         auto tx_v2_from_v2 = make_tx({COutPoint{mempool_tx_v2->GetHash(), 0}}, /*version=*/2);
         auto ancestors_v2{pool.CalculateMemPoolAncestors(entry.FromTx(tx_v2_from_v2))};
-        BOOST_CHECK(SingleV3Checks(tx_v2_from_v2, *ancestors_v2, empty_conflicts_set, GetVirtualTransactionSize(*tx_v2_from_v2))
+        BOOST_CHECK(SingleV3Checks(tx_v2_from_v2, ancestors_v2, empty_conflicts_set, GetVirtualTransactionSize(*tx_v2_from_v2))
                     == std::nullopt);
 
         Package package_v2_v2{mempool_tx_v2, tx_v2_from_v2};
@@ -216,10 +216,10 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         auto tx_v3_multi_parent = make_tx(mempool_outpoints, /*version=*/3);
         package_multi_parents.emplace_back(tx_v3_multi_parent);
         auto ancestors{pool.CalculateMemPoolAncestors(entry.FromTx(tx_v3_multi_parent))};
-        BOOST_CHECK_EQUAL(ancestors->size(), 3);
+        BOOST_CHECK_EQUAL(ancestors.size(), 3);
         const auto expected_error_str{strprintf("tx %s (wtxid=%s) would have too many ancestors",
             tx_v3_multi_parent->GetHash().ToString(), tx_v3_multi_parent->GetWitnessHash().ToString())};
-        auto result{SingleV3Checks(tx_v3_multi_parent, *ancestors, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_multi_parent))};
+        auto result{SingleV3Checks(tx_v3_multi_parent, ancestors, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_multi_parent))};
         BOOST_CHECK_EQUAL(result->first, expected_error_str);
         BOOST_CHECK_EQUAL(result->second, nullptr);
 
@@ -244,7 +244,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         auto ancestors{pool.CalculateMemPoolAncestors(entry.FromTx(tx_v3_multi_gen))};
         const auto expected_error_str{strprintf("tx %s (wtxid=%s) would have too many ancestors",
             tx_v3_multi_gen->GetHash().ToString(), tx_v3_multi_gen->GetWitnessHash().ToString())};
-        auto result{SingleV3Checks(tx_v3_multi_gen, *ancestors, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_multi_gen))};
+        auto result{SingleV3Checks(tx_v3_multi_gen, ancestors, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_multi_gen))};
         BOOST_CHECK_EQUAL(result->first, expected_error_str);
         BOOST_CHECK_EQUAL(result->second, nullptr);
 
@@ -262,7 +262,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         auto ancestors{pool.CalculateMemPoolAncestors(entry.FromTx(tx_v3_child_big))};
         const auto expected_error_str{strprintf("v3 child tx %s (wtxid=%s) is too big: %u > %u virtual bytes",
             tx_v3_child_big->GetHash().ToString(), tx_v3_child_big->GetWitnessHash().ToString(), vsize, V3_CHILD_MAX_VSIZE)};
-        auto result{SingleV3Checks(tx_v3_child_big, *ancestors, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_child_big))};
+        auto result{SingleV3Checks(tx_v3_child_big, ancestors, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_child_big))};
         BOOST_CHECK_EQUAL(result->first, expected_error_str);
         BOOST_CHECK_EQUAL(result->second, nullptr);
 
@@ -300,12 +300,12 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK_EQUAL(total_sigops, tx_many_sigops->vin.size() * MAX_PUBKEYS_PER_MULTISIG);
         const int64_t bip141_vsize{GetVirtualTransactionSize(*tx_many_sigops)};
         // Weight limit is not reached...
-        BOOST_CHECK(SingleV3Checks(tx_many_sigops, *ancestors, empty_conflicts_set, bip141_vsize) == std::nullopt);
+        BOOST_CHECK(SingleV3Checks(tx_many_sigops, ancestors, empty_conflicts_set, bip141_vsize) == std::nullopt);
         // ...but sigop limit is.
         const auto expected_error_str{strprintf("v3 child tx %s (wtxid=%s) is too big: %u > %u virtual bytes",
             tx_many_sigops->GetHash().ToString(), tx_many_sigops->GetWitnessHash().ToString(),
             total_sigops * DEFAULT_BYTES_PER_SIGOP / WITNESS_SCALE_FACTOR, V3_CHILD_MAX_VSIZE)};
-        auto result{SingleV3Checks(tx_many_sigops, *ancestors, empty_conflicts_set,
+        auto result{SingleV3Checks(tx_many_sigops, ancestors, empty_conflicts_set,
                                         GetVirtualTransactionSize(*tx_many_sigops, /*nSigOpCost=*/total_sigops, /*bytes_per_sigop=*/ DEFAULT_BYTES_PER_SIGOP))};
         BOOST_CHECK_EQUAL(result->first, expected_error_str);
         BOOST_CHECK_EQUAL(result->second, nullptr);
@@ -320,7 +320,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
     {
         BOOST_CHECK(GetTransactionWeight(*tx_mempool_v3_child) <= V3_CHILD_MAX_VSIZE * WITNESS_SCALE_FACTOR);
         auto ancestors{pool.CalculateMemPoolAncestors(entry.FromTx(tx_mempool_v3_child))};
-        BOOST_CHECK(SingleV3Checks(tx_mempool_v3_child, *ancestors, empty_conflicts_set, GetVirtualTransactionSize(*tx_mempool_v3_child)) == std::nullopt);
+        BOOST_CHECK(SingleV3Checks(tx_mempool_v3_child, ancestors, empty_conflicts_set, GetVirtualTransactionSize(*tx_mempool_v3_child)) == std::nullopt);
         pool.addUnchecked(entry.FromTx(tx_mempool_v3_child));
 
         Package package_v3_1p1c{mempool_tx_v3, tx_mempool_v3_child};
@@ -334,13 +334,13 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         auto ancestors_1sibling{pool.CalculateMemPoolAncestors(entry.FromTx(tx_v3_child2))};
         const auto expected_error_str{strprintf("tx %s (wtxid=%s) would exceed descendant count limit",
             mempool_tx_v3->GetHash().ToString(), mempool_tx_v3->GetWitnessHash().ToString())};
-        auto result_with_sibling_eviction{SingleV3Checks(tx_v3_child2, *ancestors_1sibling, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_child2))};
+        auto result_with_sibling_eviction{SingleV3Checks(tx_v3_child2, ancestors_1sibling, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_child2))};
         BOOST_CHECK_EQUAL(result_with_sibling_eviction->first, expected_error_str);
         // The other mempool child is returned to allow for sibling eviction.
         BOOST_CHECK_EQUAL(result_with_sibling_eviction->second, tx_mempool_v3_child);
 
         // If directly replacing the child, make sure there is no double-counting.
-        BOOST_CHECK(SingleV3Checks(tx_v3_child2, *ancestors_1sibling, {tx_mempool_v3_child->GetHash()}, GetVirtualTransactionSize(*tx_v3_child2))
+        BOOST_CHECK(SingleV3Checks(tx_v3_child2, ancestors_1sibling, {tx_mempool_v3_child->GetHash()}, GetVirtualTransactionSize(*tx_v3_child2))
                     == std::nullopt);
 
         Package package_v3_1p2c{mempool_tx_v3, tx_mempool_v3_child, tx_v3_child2};
@@ -354,7 +354,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK_EQUAL(entry_mempool_parent->GetNumChildren(), 2);
         auto ancestors_2siblings{pool.CalculateMemPoolAncestors(entry.FromTx(tx_v3_child3))};
 
-        auto result_2children{SingleV3Checks(tx_v3_child3, *ancestors_2siblings, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_child3))};
+        auto result_2children{SingleV3Checks(tx_v3_child3, ancestors_2siblings, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_child3))};
         BOOST_CHECK_EQUAL(result_2children->first, expected_error_str);
         // The other mempool child is not returned because sibling eviction is not allowed.
         BOOST_CHECK_EQUAL(result_2children->second, nullptr);
@@ -374,7 +374,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         auto ancestors_3gen{pool.CalculateMemPoolAncestors(entry.FromTx(tx_to_submit))};
         const auto expected_error_str{strprintf("tx %s (wtxid=%s) would exceed descendant count limit",
             tx_mempool_grandparent->GetHash().ToString(), tx_mempool_grandparent->GetWitnessHash().ToString())};
-        auto result_3gen{SingleV3Checks(tx_to_submit, *ancestors_3gen, empty_conflicts_set, GetVirtualTransactionSize(*tx_to_submit))};
+        auto result_3gen{SingleV3Checks(tx_to_submit, ancestors_3gen, empty_conflicts_set, GetVirtualTransactionSize(*tx_to_submit))};
         BOOST_CHECK_EQUAL(result_3gen->first, expected_error_str);
         // The other mempool child is not returned because sibling eviction is not allowed.
         BOOST_CHECK_EQUAL(result_3gen->second, nullptr);

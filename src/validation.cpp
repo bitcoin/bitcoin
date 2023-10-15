@@ -945,11 +945,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     ws.m_iters_conflicting = m_pool.GetIterSet(ws.m_conflicts);
 
     // Calculate in-mempool ancestors, up to a limit.
-    if (auto ancestors{m_pool.CalculateMemPoolAncestors(*entry)}) {
-        ws.m_ancestors = std::move(*ancestors);
-    } else {
-        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-long-mempool-chain", util::ErrorString(ancestors).original);
-    }
+    ws.m_ancestors = m_pool.CalculateMemPoolAncestors(*entry);
 
     // Even though just checking direct mempool parents for inheritance would be sufficient, we
     // check using the full ancestor set here because it's more convenient to use what we have
@@ -1293,17 +1289,7 @@ bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& 
         // Re-calculate mempool ancestors to call addUnchecked(). They may have changed since the
         // last calculation done in PreChecks, since package ancestors have already been submitted.
         {
-            auto ancestors{m_pool.CalculateMemPoolAncestors(*ws.m_entry)};
-            if(!ancestors) {
-                results.emplace(ws.m_ptx->GetWitnessHash(), MempoolAcceptResult::Failure(ws.m_state));
-                // Since PreChecks() and PackageMempoolChecks() both enforce limits, this should never fail.
-                Assume(false);
-                all_submitted = false;
-                package_state.Invalid(PackageValidationResult::PCKG_MEMPOOL_ERROR,
-                                    strprintf("BUG! Mempool ancestors or descendants were underestimated: %s",
-                                                ws.m_ptx->GetHash().ToString()));
-            }
-            ws.m_ancestors = std::move(ancestors).value_or(ws.m_ancestors);
+            ws.m_ancestors = m_pool.CalculateMemPoolAncestors(*ws.m_entry);
         }
         // If we call LimitMempoolSize() for each individual Finalize(), the mempool will not take
         // the transaction's descendant feerate into account because it hasn't seen them yet. Also,

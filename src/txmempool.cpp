@@ -130,7 +130,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256>& vHashes
     }
 }
 
-util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateAncestors(CTxMemPoolEntry::Parents& staged_ancestors) const
+CTxMemPool::setEntries CTxMemPool::CalculateAncestors(CTxMemPoolEntry::Parents& staged_ancestors) const
 {
     setEntries ancestors;
 
@@ -172,9 +172,6 @@ util::Result<void> CTxMemPool::CheckPackageLimits(const Package& package,
     if (!cluster_result) {
         return util::Error{Untranslated(util::ErrorString(cluster_result).original)};
     }
-    const auto ancestors{CalculateAncestors(staged_ancestors)};
-    // It's possible to overestimate the ancestor/descendant totals.
-    if (!ancestors.has_value()) return util::Error{Untranslated("possibly " + util::ErrorString(ancestors).original)};
     return {};
 }
 
@@ -236,7 +233,7 @@ std::vector<TxEntry::TxEntryRef> CTxMemPool::CalculateParents(const CTxMemPoolEn
     return CalculateParents(entry.GetTx());
 }
 
-util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateMemPoolAncestors(
+CTxMemPool::setEntries CTxMemPool::CalculateMemPoolAncestors(
     const CTxMemPoolEntry &entry,
     bool fSearchForParents /* = true */) const
 {
@@ -261,19 +258,6 @@ util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateMemPoolAncestors(
     }
 
     return CalculateAncestors(staged_ancestors);
-}
-
-CTxMemPool::setEntries CTxMemPool::AssumeCalculateMemPoolAncestors(
-    std::string_view calling_fn_name,
-    const CTxMemPoolEntry &entry,
-    bool fSearchForParents /* = true */) const
-{
-    auto result{CalculateMemPoolAncestors(entry, fSearchForParents)};
-    if (!Assume(result)) {
-        LogPrintLevel(BCLog::MEMPOOL, BCLog::Level::Error, "%s: CalculateMemPoolAncestors failed unexpectedly, continuing with empty ancestor set (%s)\n",
-                      calling_fn_name, util::ErrorString(result).original);
-    }
-    return std::move(result).value_or(CTxMemPool::setEntries{});
 }
 
 void CTxMemPool::UpdateAncestorsOf(bool add, txiter it)
