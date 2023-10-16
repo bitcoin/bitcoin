@@ -69,7 +69,8 @@ def main():
     )
     parser.add_argument(
         '--m_dir',
-        help='Merge inputs from this directory into the corpus_dir.',
+        action="append",
+        help="Merge inputs from these directories into the corpus_dir.",
     )
     parser.add_argument(
         '-g',
@@ -176,7 +177,7 @@ def main():
                 test_list=test_list_selection,
                 src_dir=config['environment']['SRCDIR'],
                 build_dir=config["environment"]["BUILDDIR"],
-                merge_dir=args.m_dir,
+                merge_dirs=[Path(m_dir) for m_dir in args.m_dir],
             )
             return
 
@@ -270,8 +271,8 @@ def generate_corpus(*, fuzz_pool, src_dir, build_dir, corpus_dir, targets):
         future.result()
 
 
-def merge_inputs(*, fuzz_pool, corpus, test_list, src_dir, build_dir, merge_dir):
-    logging.info("Merge the inputs from the passed dir into the corpus_dir. Passed dir {}".format(merge_dir))
+def merge_inputs(*, fuzz_pool, corpus, test_list, src_dir, build_dir, merge_dirs):
+    logging.info(f"Merge the inputs from the passed dir into the corpus_dir. Passed dirs {merge_dirs}")
     jobs = []
     for t in test_list:
         args = [
@@ -289,10 +290,10 @@ def merge_inputs(*, fuzz_pool, corpus, test_list, src_dir, build_dir, merge_dir)
             # [0] https://github.com/google/oss-fuzz/issues/1406#issuecomment-387790487
             # [1] https://github.com/bitcoin-core/qa-assets/issues/130#issuecomment-1749075891
             os.path.join(corpus, t),
-            os.path.join(merge_dir, t),
-        ]
+        ] + [str(m_dir / t) for m_dir in merge_dirs]
         os.makedirs(os.path.join(corpus, t), exist_ok=True)
-        os.makedirs(os.path.join(merge_dir, t), exist_ok=True)
+        for m_dir in merge_dirs:
+            (m_dir / t).mkdir(exist_ok=True)
 
         def job(t, args):
             output = 'Run {} with args {}\n'.format(t, " ".join(args))
