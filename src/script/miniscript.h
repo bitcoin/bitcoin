@@ -637,7 +637,7 @@ private:
             stack.pop_back();
         }
         // The final remaining results element is the root result, return it.
-        assert(results.size() == 1);
+        Assume(results.size() == 1);
         return std::move(results[0]);
     }
 
@@ -1202,7 +1202,7 @@ private:
                     // The dissatisfaction consists of as many empty vectors as there are keys, which is the same as
                     // satisfying 0 keys.
                     auto& nsat{sats[0]};
-                    assert(node.k != 0);
+                    Assume(node.k != 0);
                     assert(node.k <= sats.size());
                     return {std::move(nsat), std::move(sats[node.k])};
                 }
@@ -1544,7 +1544,8 @@ public:
                 case Fragment::THRESH:
                     return static_cast<uint32_t>(std::count(subs.begin(), subs.end(), true)) >= node.k;
                 default: // wrappers
-                    assert(subs.size() == 1);
+                    assert(subs.size() >= 1);
+                    Assume(subs.size() == 1);
                     return subs[0];
             }
         });
@@ -2094,8 +2095,9 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
     }
 
     // Sanity checks on the produced miniscript
-    assert(constructed.size() == 1);
-    assert(constructed[0]->ScriptSize() == script_size);
+    assert(constructed.size() >= 1);
+    Assume(constructed.size() == 1);
+    Assume(constructed[0]->ScriptSize() == script_size);
     if (in.size() > 0) return {};
     NodeRef<Key> tl_node = std::move(constructed.front());
     tl_node->DuplicateKeyCheck(ctx);
