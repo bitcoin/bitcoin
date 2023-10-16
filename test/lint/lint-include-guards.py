@@ -25,7 +25,8 @@ EXCLUDE_FILES_WITH_PREFIX = ['contrib/devtools/bitcoin-tidy',
                              'src/minisketch',
                              'src/tinyformat.h',
                              'src/bench/nanobench.h',
-                             'src/test/fuzz/FuzzedDataProvider.h']
+                             'src/test/fuzz/FuzzedDataProvider.h',
+                             'src/script/bitcoinconsensus.h']  # uses C-style comment after #endif
 
 
 def _get_header_file_lst() -> List[str]:
