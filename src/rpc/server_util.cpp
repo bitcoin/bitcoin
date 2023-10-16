@@ -108,3 +108,16 @@ PeerManager& EnsurePeerman(const NodeContext& node)
     }
     return *node.peerman;
 }
+
+AddrMan& EnsureAddrman(const NodeContext& node)
+{
+    if (!node.addrman) {
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
+    }
+    return *node.addrman;
+}
+
+AddrMan& EnsureAnyAddrman(const std::any& context)
+{
+    return EnsureAddrman(EnsureAnyNodeContext(context));
+}

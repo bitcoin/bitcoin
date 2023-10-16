@@ -949,10 +949,7 @@ static RPCHelpMan addpeeraddress()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    NodeContext& node = EnsureAnyNodeContext(request.context);
-    if (!node.addrman) {
-        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
-    }
+    AddrMan& addrman = EnsureAnyAddrman(request.context);
 
     const std::string& addr_string{request.params[0].get_str()};
     const auto port{request.params[1].getInt<uint16_t>()};
@@ -968,11 +965,11 @@ static RPCHelpMan addpeeraddress()
         address.nTime = Now<NodeSeconds>();
         // The source address is set equal to the address. This is equivalent to the peer
         // announcing itself.
-        if (node.addrman->Add({address}, address)) {
+        if (addrman.Add({address}, address)) {
             success = true;
             if (tried) {
                 // Attempt to move the address to the tried addresses table.
-                node.addrman->Good(address);
+                addrman.Good(address);
             }
         }
     }
@@ -1033,50 +1030,40 @@ static RPCHelpMan sendmsgtopeer()
 
 static RPCHelpMan getaddrmaninfo()
 {
-    return RPCHelpMan{"getaddrmaninfo",
-                      "\nProvides information about the node's address manager by returning the number of "
-                      "addresses in the `new` and `tried` tables and their sum for all networks.\n"
-                      "This RPC is for testing only.\n",
-                      {},
-                      RPCResult{
-                              RPCResult::Type::OBJ_DYN, "", "json object with network type as keys",
-                              {
-                                      {RPCResult::Type::OBJ, "network", "the network (" + Join(GetNetworkNames(), ", ") + ")",
-                                       {
-                                               {RPCResult::Type::NUM, "new", "number of addresses in the new table, which represent potential peers the node has discovered but hasn't yet successfully connected to."},
-                                               {RPCResult::Type::NUM, "tried", "number of addresses in the tried table, which represent peers the node has successfully connected to in the past."},
-                                               {RPCResult::Type::NUM, "total", "total number of addresses in both new/tried tables"},
-                                       }},
-                              }
-                      },
-                      RPCExamples{
-                              HelpExampleCli("getaddrmaninfo", "")
-                              + HelpExampleRpc("getaddrmaninfo", "")
-                      },
-                      [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-                      {
-                          NodeContext& node = EnsureAnyNodeContext(request.context);
-                          if (!node.addrman) {
-                              throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
-                          }
+    return RPCHelpMan{
+        "getaddrmaninfo",
+        "\nProvides information about the node's address manager by returning the number of "
+        "addresses in the `new` and `tried` tables and their sum for all networks.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ_DYN, "", "json object with network type as keys", {
+                {RPCResult::Type::OBJ, "network", "the network (" + Join(GetNetworkNames(), ", ") + ", all_networks)", {
+                {RPCResult::Type::NUM, "new", "number of addresses in the new table, which represent potential peers the node has discovered but hasn't yet successfully connected to."},
+                {RPCResult::Type::NUM, "tried", "number of addresses in the tried table, which represent peers the node has successfully connected to in the past."},
+                {RPCResult::Type::NUM, "total", "total number of addresses in both new/tried tables"},
+            }},
+        }},
+        RPCExamples{HelpExampleCli("getaddrmaninfo", "") + HelpExampleRpc("getaddrmaninfo", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            AddrMan& addrman = EnsureAnyAddrman(request.context);
 
-                          UniValue ret(UniValue::VOBJ);
-                          for (int n = 0; n < NET_MAX; ++n) {
-                              enum Network network = static_cast<enum Network>(n);
-                              if (network == NET_UNROUTABLE || network == NET_INTERNAL) continue;
-                              UniValue obj(UniValue::VOBJ);
-                              obj.pushKV("new", node.addrman->Size(network, true));
-                              obj.pushKV("tried", node.addrman->Size(network, false));
-                              obj.pushKV("total", node.addrman->Size(network));
-                              ret.pushKV(GetNetworkName(network), obj);
-                          }
-                          UniValue obj(UniValue::VOBJ);
-                          obj.pushKV("new", node.addrman->Size(std::nullopt, true));
-                          obj.pushKV("tried", node.addrman->Size(std::nullopt, false));
-                          obj.pushKV("total", node.addrman->Size());
-                          ret.pushKV("all_networks", obj);
-                          return ret;
-                      },
+            UniValue ret(UniValue::VOBJ);
+            for (int n = 0; n < NET_MAX; ++n) {
+                enum Network network = static_cast<enum Network>(n);
+                if (network == NET_UNROUTABLE || network == NET_INTERNAL) continue;
+                UniValue obj(UniValue::VOBJ);
+                obj.pushKV("new", addrman.Size(network, true));
+                obj.pushKV("tried", addrman.Size(network, false));
+                obj.pushKV("total", addrman.Size(network));
+                ret.pushKV(GetNetworkName(network), obj);
+            }
+            UniValue obj(UniValue::VOBJ);
+            obj.pushKV("new", addrman.Size(std::nullopt, true));
+            obj.pushKV("tried", addrman.Size(std::nullopt, false));
+            obj.pushKV("total", addrman.Size());
+            ret.pushKV("all_networks", obj);
+            return ret;
+        },
     };
 }
 
@@ -1135,14 +1122,11 @@ static RPCHelpMan getrawaddrman()
             + HelpExampleRpc("getrawaddrman", "")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
-            NodeContext& node = EnsureAnyNodeContext(request.context);
-            if (!node.addrman) {
-                throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
-            }
+            AddrMan& addrman = EnsureAnyAddrman(request.context);
 
             UniValue ret(UniValue::VOBJ);
-            ret.pushKV("new", AddrmanTableToJSON(node.addrman->GetEntries(false)));
-            ret.pushKV("tried", AddrmanTableToJSON(node.addrman->GetEntries(true)));
+            ret.pushKV("new", AddrmanTableToJSON(addrman.GetEntries(false)));
+            ret.pushKV("tried", AddrmanTableToJSON(addrman.GetEntries(true)));
             return ret;
         },
     };
@@ -1164,10 +1148,10 @@ void RegisterNetRPCCommands(CRPCTable& t)
         {"network", &clearbanned},
         {"network", &setnetworkactive},
         {"network", &getnodeaddresses},
+        {"network", &getaddrmaninfo},
         {"hidden", &addconnection},
         {"hidden", &addpeeraddress},
         {"hidden", &sendmsgtopeer},
-        {"hidden", &getaddrmaninfo},
         {"hidden", &getrawaddrman},
     };
     for (const auto& c : commands) {
