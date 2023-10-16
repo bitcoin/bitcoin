@@ -705,7 +705,7 @@ public:
         LOCK(cs);
         // Sanity check the transaction is in the mempool & insert into
         // unbroadcast set.
-        if (exists(GenTxid::Txid(txid))) m_unbroadcast_txids.insert(txid);
+        if (exists(GenTxid::Txid(Txid::FromUint256(txid)))) m_unbroadcast_txids.insert(txid);
     };
 
     /** Removes a transaction from the unbroadcast set */

@@ -104,7 +104,7 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx,
         if (!parents_of_conflicts.count(tx.vin[j].prevout.hash)) {
             // Rather than check the UTXO set - potentially expensive - it's cheaper to just check
             // if the new input refers to a tx that's in the mempool.
-            if (pool.exists(GenTxid::Txid(tx.vin[j].prevout.hash))) {
+            if (pool.exists(GenTxid::Txid(Txid::FromUint256(tx.vin[j].prevout.hash)))) {
                 return strprintf("replacement %s adds unconfirmed input, idx %d",
                                  tx.GetHash().ToString(), j);
             }

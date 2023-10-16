@@ -4099,9 +4099,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const CTransaction& tx = *ptx;
 
         const uint256& txid = ptx->GetHash();
-        const uint256& wtxid = ptx->GetWitnessHash();
+        const Wtxid& wtxid = ptx->GetWitnessHash();
 
-        const uint256& hash = peer->m_wtxid_relay ? wtxid : txid;
+        const uint256& hash = peer->m_wtxid_relay ? wtxid.ToUint256() : txid;
         AddKnownTx(*peer, hash);
 
         LOCK(cs_main);
@@ -4205,7 +4205,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     // wtxidrelay peers.
                     // Eventually we should replace this with an improved
                     // protocol for getting all unconfirmed parents.
-                    const auto gtxid{GenTxid::Txid(parent_txid)};
+                    const auto gtxid{GenTxid::Txid(Txid::FromUint256(parent_txid))};
                     AddKnownTx(*peer, parent_txid);
                     if (!AlreadyHaveTx(gtxid)) AddTxAnnouncement(pfrom, gtxid, current_time);
                 }
