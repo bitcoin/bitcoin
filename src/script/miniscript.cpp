@@ -425,5 +425,45 @@ int FindNextChar(Span<const char> sp, const char m)
     return -1;
 }
 
+void SanityCheckSatisfaction(Type typ, const InputResult& ret)
+{
+    // Do a consistency check between the satisfaction code and the type checker
+    // (the actual satisfaction code in ProduceInputHelper does not use GetType)
+
+    // For 'z' nodes, available satisfactions/dissatisfactions must have stack size 0.
+    if (typ << "z"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.stack.size() == 0);
+    if (typ << "z"_mst && ret.sat.available != Availability::NO) assert(ret.sat.stack.size() == 0);
+
+    // For 'o' nodes, available satisfactions/dissatisfactions must have stack size 1.
+    if (typ << "o"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.stack.size() == 1);
+    if (typ << "o"_mst && ret.sat.available != Availability::NO) assert(ret.sat.stack.size() == 1);
+
+    // For 'n' nodes, available satisfactions/dissatisfactions must have stack size 1 or larger. For satisfactions,
+    // the top element cannot be 0.
+    if (typ << "n"_mst && ret.sat.available != Availability::NO) assert(ret.sat.stack.size() >= 1);
+    if (typ << "n"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.stack.size() >= 1);
+    if (typ << "n"_mst && ret.sat.available != Availability::NO) assert(!ret.sat.stack.back().empty());
+
+    // For 'd' nodes, a dissatisfaction must exist, and they must not need a signature. If it is non-malleable,
+    // it must be canonical.
+    if (typ << "d"_mst) assert(ret.nsat.available != Availability::NO);
+    if (typ << "d"_mst) assert(!ret.nsat.has_sig);
+    if (typ << "d"_mst && !ret.nsat.malleable) assert(!ret.nsat.non_canon);
+
+    // For 'f'/'s' nodes, dissatisfactions/satisfactions must have a signature.
+    if (typ << "f"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.has_sig);
+    if (typ << "s"_mst && ret.sat.available != Availability::NO) assert(ret.sat.has_sig);
+
+    // For non-malleable 'e' nodes, a non-malleable dissatisfaction must exist.
+    if (typ << "me"_mst) assert(ret.nsat.available != Availability::NO);
+    if (typ << "me"_mst) assert(!ret.nsat.malleable);
+
+    // For 'm' nodes, if a satisfaction exists, it must be non-malleable.
+    if (typ << "m"_mst && ret.sat.available != Availability::NO) assert(!ret.sat.malleable);
+
+    // If a non-malleable satisfaction exists, it must be canonical.
+    if (ret.sat.available != Availability::NO && !ret.sat.malleable) assert(!ret.sat.non_canon);
+}
+
 } // namespace internal
 } // namespace miniscript
