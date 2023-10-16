@@ -169,7 +169,7 @@ public:
 bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strResult, const std::string &strCommand, const bool fExecute, std::string * const pstrFilteredOut, const WalletModel* wallet_model)
 {
     std::vector< std::vector<std::string> > stack;
-    stack.push_back(std::vector<std::string>());
+    stack.emplace_back();
 
     enum CmdParseState
     {
@@ -197,7 +197,7 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
         }
         // Make sure stack is not empty before adding something
         if (stack.empty()) {
-            stack.push_back(std::vector<std::string>());
+            stack.emplace_back();
         }
         stack.back().push_back(strArg);
     };
@@ -206,7 +206,7 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
         if (nDepthInsideSensitive) {
             if (!--nDepthInsideSensitive) {
                 assert(filter_begin_pos);
-                filter_ranges.push_back(std::make_pair(filter_begin_pos, chpos));
+                filter_ranges.emplace_back(filter_begin_pos, chpos);
                 filter_begin_pos = 0;
             }
         }
@@ -306,7 +306,7 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
                             if (nDepthInsideSensitive) {
                                 ++nDepthInsideSensitive;
                             }
-                            stack.push_back(std::vector<std::string>());
+                            stack.emplace_back();
                         }
 
                         // don't allow commands after executed commands on baselevel

@@ -173,9 +173,9 @@ BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100Setup)
             auto parent = MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[i + 1],
                                              0, 0, coinbaseKey, spk, CAmount(48 * COIN), false));
             package.emplace_back(parent);
-            child.vin.push_back(CTxIn(COutPoint(parent->GetHash(), 0)));
+            child.vin.emplace_back(COutPoint(parent->GetHash(), 0));
         }
-        child.vout.push_back(CTxOut(47 * COIN, spk2));
+        child.vout.emplace_back(47 * COIN, spk2);
 
         // The child must be in the package.
         BOOST_CHECK(!IsChildWithParents(package));
@@ -201,20 +201,20 @@ BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100Setup)
     // 2 Parents and 1 Child where one parent depends on the other.
     {
         CMutableTransaction mtx_parent;
-        mtx_parent.vin.push_back(CTxIn(COutPoint(m_coinbase_txns[0]->GetHash(), 0)));
-        mtx_parent.vout.push_back(CTxOut(20 * COIN, spk));
-        mtx_parent.vout.push_back(CTxOut(20 * COIN, spk2));
+        mtx_parent.vin.emplace_back(COutPoint(m_coinbase_txns[0]->GetHash(), 0));
+        mtx_parent.vout.emplace_back(20 * COIN, spk);
+        mtx_parent.vout.emplace_back(20 * COIN, spk2);
         CTransactionRef tx_parent = MakeTransactionRef(mtx_parent);
 
         CMutableTransaction mtx_parent_also_child;
-        mtx_parent_also_child.vin.push_back(CTxIn(COutPoint(tx_parent->GetHash(), 0)));
-        mtx_parent_also_child.vout.push_back(CTxOut(20 * COIN, spk));
+        mtx_parent_also_child.vin.emplace_back(COutPoint(tx_parent->GetHash(), 0));
+        mtx_parent_also_child.vout.emplace_back(20 * COIN, spk);
         CTransactionRef tx_parent_also_child = MakeTransactionRef(mtx_parent_also_child);
 
         CMutableTransaction mtx_child;
-        mtx_child.vin.push_back(CTxIn(COutPoint(tx_parent->GetHash(), 1)));
-        mtx_child.vin.push_back(CTxIn(COutPoint(tx_parent_also_child->GetHash(), 0)));
-        mtx_child.vout.push_back(CTxOut(39 * COIN, spk));
+        mtx_child.vin.emplace_back(COutPoint(tx_parent->GetHash(), 1));
+        mtx_child.vin.emplace_back(COutPoint(tx_parent_also_child->GetHash(), 0));
+        mtx_child.vout.emplace_back(39 * COIN, spk);
         CTransactionRef tx_child = MakeTransactionRef(mtx_child);
 
         PackageValidationState state;
@@ -301,7 +301,7 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
     // missing inputs, so the package validation isn't expected to happen.
     {
         CScriptWitness bad_witness;
-        bad_witness.stack.push_back(std::vector<unsigned char>(1));
+        bad_witness.stack.emplace_back(1);
         CMutableTransaction mtx_parent_invalid{mtx_parent};
         mtx_parent_invalid.vin[0].scriptWitness = bad_witness;
         CTransactionRef tx_parent_invalid = MakeTransactionRef(mtx_parent_invalid);
@@ -322,7 +322,7 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
     }
 
     // Child with missing parent.
-    mtx_child.vin.push_back(CTxIn(COutPoint(package_unrelated[0]->GetHash(), 0)));
+    mtx_child.vin.emplace_back(COutPoint(package_unrelated[0]->GetHash(), 0));
     Package package_missing_parent;
     package_missing_parent.push_back(tx_parent);
     package_missing_parent.push_back(MakeTransactionRef(mtx_child));
@@ -404,12 +404,12 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
 
     // Make two children with the same txid but different witnesses.
     CScriptWitness witness1;
-    witness1.stack.push_back(std::vector<unsigned char>(1));
-    witness1.stack.push_back(std::vector<unsigned char>(witnessScript.begin(), witnessScript.end()));
+    witness1.stack.emplace_back(1);
+    witness1.stack.emplace_back(witnessScript.begin(), witnessScript.end());
 
     CScriptWitness witness2(witness1);
-    witness2.stack.push_back(std::vector<unsigned char>(2));
-    witness2.stack.push_back(std::vector<unsigned char>(witnessScript.begin(), witnessScript.end()));
+    witness2.stack.emplace_back(2);
+    witness2.stack.emplace_back(witnessScript.begin(), witnessScript.end());
 
     CKey child_key;
     child_key.MakeNewKey(true);
@@ -529,7 +529,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     CScript acs_script = CScript() << OP_TRUE;
     CScript acs_spk = GetScriptForDestination(WitnessV0ScriptHash(acs_script));
     CScriptWitness acs_witness;
-    acs_witness.stack.push_back(std::vector<unsigned char>(acs_script.begin(), acs_script.end()));
+    acs_witness.stack.emplace_back(acs_script.begin(), acs_script.end());
 
     // parent1 will already be in the mempool
     auto mtx_parent1 = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[1], /*input_vout=*/0,
@@ -543,11 +543,11 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     CScript grandparent2_script = CScript() << OP_DROP << OP_TRUE;
     CScript grandparent2_spk = GetScriptForDestination(WitnessV0ScriptHash(grandparent2_script));
     CScriptWitness parent2_witness1;
-    parent2_witness1.stack.push_back(std::vector<unsigned char>(1));
-    parent2_witness1.stack.push_back(std::vector<unsigned char>(grandparent2_script.begin(), grandparent2_script.end()));
+    parent2_witness1.stack.emplace_back(1);
+    parent2_witness1.stack.emplace_back(grandparent2_script.begin(), grandparent2_script.end());
     CScriptWitness parent2_witness2;
-    parent2_witness2.stack.push_back(std::vector<unsigned char>(2));
-    parent2_witness2.stack.push_back(std::vector<unsigned char>(grandparent2_script.begin(), grandparent2_script.end()));
+    parent2_witness2.stack.emplace_back(2);
+    parent2_witness2.stack.emplace_back(grandparent2_script.begin(), grandparent2_script.end());
 
     // Create grandparent2 creating an output with multiple spending paths. Submit to mempool.
     auto mtx_grandparent2 = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[2], /*input_vout=*/0,
@@ -593,13 +593,13 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     CScript mixed_child_spk = GetScriptForDestination(WitnessV0KeyHash(mixed_grandchild_key.GetPubKey()));
 
     CMutableTransaction mtx_mixed_child;
-    mtx_mixed_child.vin.push_back(CTxIn(COutPoint(ptx_parent1->GetHash(), 0)));
-    mtx_mixed_child.vin.push_back(CTxIn(COutPoint(ptx_parent2_v1->GetHash(), 0)));
-    mtx_mixed_child.vin.push_back(CTxIn(COutPoint(ptx_parent3->GetHash(), 0)));
+    mtx_mixed_child.vin.emplace_back(COutPoint(ptx_parent1->GetHash(), 0));
+    mtx_mixed_child.vin.emplace_back(COutPoint(ptx_parent2_v1->GetHash(), 0));
+    mtx_mixed_child.vin.emplace_back(COutPoint(ptx_parent3->GetHash(), 0));
     mtx_mixed_child.vin[0].scriptWitness = acs_witness;
     mtx_mixed_child.vin[1].scriptWitness = acs_witness;
     mtx_mixed_child.vin[2].scriptWitness = acs_witness;
-    mtx_mixed_child.vout.push_back(CTxOut((48 + 49 + 50 - 1) * COIN, mixed_child_spk));
+    mtx_mixed_child.vout.emplace_back((48 + 49 + 50 - 1) * COIN, mixed_child_spk);
     CTransactionRef ptx_mixed_child = MakeTransactionRef(mtx_mixed_child);
     package_mixed.push_back(ptx_mixed_child);
 

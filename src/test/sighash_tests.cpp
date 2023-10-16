@@ -100,7 +100,7 @@ void static RandomTransaction(CMutableTransaction& tx, bool fSingle)
     int ins = (InsecureRandBits(2)) + 1;
     int outs = fSingle ? ins : (InsecureRandBits(2)) + 1;
     for (int in = 0; in < ins; in++) {
-        tx.vin.push_back(CTxIn());
+        tx.vin.emplace_back();
         CTxIn &txin = tx.vin.back();
         txin.prevout.hash = InsecureRand256();
         txin.prevout.n = InsecureRandBits(2);
@@ -108,7 +108,7 @@ void static RandomTransaction(CMutableTransaction& tx, bool fSingle)
         txin.nSequence = (InsecureRandBool()) ? InsecureRand32() : std::numeric_limits<uint32_t>::max();
     }
     for (int out = 0; out < outs; out++) {
-        tx.vout.push_back(CTxOut());
+        tx.vout.emplace_back();
         CTxOut &txout = tx.vout.back();
         txout.nValue = InsecureRandMoneyAmount();
         RandomScript(txout.scriptPubKey);
