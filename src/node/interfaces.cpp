@@ -674,7 +674,7 @@ public:
         if (!m_node.mempool) {
             std::map<COutPoint, CAmount> bump_fees;
             for (const auto& outpoint : outpoints) {
-                bump_fees.emplace(std::make_pair(outpoint, 0));
+                bump_fees.emplace(outpoint, 0);
             }
             return bump_fees;
         }

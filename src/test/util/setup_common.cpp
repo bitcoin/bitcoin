@@ -400,7 +400,7 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
         for (size_t n{0}; n < num_inputs; ++n) {
             if (unspent_prevouts.empty()) break;
             const auto& [prevout, amount] = unspent_prevouts.front();
-            mtx.vin.push_back(CTxIn(prevout, CScript()));
+            mtx.vin.emplace_back(prevout, CScript());
             total_in += amount;
             unspent_prevouts.pop_front();
         }
@@ -409,7 +409,7 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
         const CAmount amount_per_output = (total_in - fee) / num_outputs;
         for (size_t n{0}; n < num_outputs; ++n) {
             CScript spk = CScript() << CScriptNum(num_transactions + n);
-            mtx.vout.push_back(CTxOut(amount_per_output, spk));
+            mtx.vout.emplace_back(amount_per_output, spk);
         }
         CTransactionRef ptx = MakeTransactionRef(mtx);
         mempool_transactions.push_back(ptx);
@@ -418,7 +418,7 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
             // it can be used to build a more complex transaction graph. Insert randomly into
             // unspent_prevouts for extra randomness in the resulting structures.
             for (size_t n{0}; n < num_outputs; ++n) {
-                unspent_prevouts.push_back(std::make_pair(COutPoint(ptx->GetHash(), n), amount_per_output));
+                unspent_prevouts.emplace_back(COutPoint(ptx->GetHash(), n), amount_per_output);
                 std::swap(unspent_prevouts.back(), unspent_prevouts[det_rand.randrange(unspent_prevouts.size())]);
             }
         }
@@ -448,8 +448,8 @@ void TestChain100Setup::MockMempoolMinFee(const CFeeRate& target_feerate)
     // Manually create an invalid transaction. Manually set the fee in the CTxMemPoolEntry to
     // achieve the exact target feerate.
     CMutableTransaction mtx = CMutableTransaction();
-    mtx.vin.push_back(CTxIn{COutPoint{g_insecure_rand_ctx.rand256(), 0}});
-    mtx.vout.push_back(CTxOut(1 * COIN, GetScriptForDestination(WitnessV0ScriptHash(CScript() << OP_TRUE))));
+    mtx.vin.emplace_back(COutPoint{g_insecure_rand_ctx.rand256(), 0});
+    mtx.vout.emplace_back(1 * COIN, GetScriptForDestination(WitnessV0ScriptHash(CScript() << OP_TRUE)));
     const auto tx{MakeTransactionRef(mtx)};
     LockPoints lp;
     // The new mempool min feerate is equal to the removed package's feerate + incremental feerate.

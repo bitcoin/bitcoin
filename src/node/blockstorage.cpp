@@ -458,7 +458,7 @@ bool BlockManager::WriteBlockIndexDB()
     std::vector<std::pair<int, const CBlockFileInfo*>> vFiles;
     vFiles.reserve(m_dirty_fileinfo.size());
     for (std::set<int>::iterator it = m_dirty_fileinfo.begin(); it != m_dirty_fileinfo.end();) {
-        vFiles.push_back(std::make_pair(*it, &m_blockfile_info[*it]));
+        vFiles.emplace_back(*it, &m_blockfile_info[*it]);
         m_dirty_fileinfo.erase(it++);
     }
     std::vector<const CBlockIndex*> vBlocks;

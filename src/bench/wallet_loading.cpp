@@ -20,8 +20,8 @@ namespace wallet{
 static void AddTx(CWallet& wallet)
 {
     CMutableTransaction mtx;
-    mtx.vout.push_back({COIN, GetScriptForDestination(*Assert(wallet.GetNewDestination(OutputType::BECH32, "")))});
-    mtx.vin.push_back(CTxIn());
+    mtx.vout.emplace_back(COIN, GetScriptForDestination(*Assert(wallet.GetNewDestination(OutputType::BECH32, ""))));
+    mtx.vin.emplace_back();
 
     wallet.AddToWallet(MakeTransactionRef(mtx), TxStateInactive{});
 }
