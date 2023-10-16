@@ -236,7 +236,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                 assert(creditPoolDiff != std::nullopt);
 
                 if (fMNRewardReallocated) {
-                    const CAmount masternodeReward = GetMasternodePayment(nHeight, blockReward, Params().GetConsensus().BRRHeight, fMNRewardReallocated);
+                    const CAmount masternodeReward = GetMasternodePayment(nHeight, blockReward, fMNRewardReallocated);
                     const CAmount reallocedReward = MasternodePayments::PlatformShare(masternodeReward);
                     LogPrint(BCLog::MNPAYMENTS, "%s: add MN reward %lld (%lld) to credit pool\n", __func__, masternodeReward, reallocedReward);
                     creditPoolDiff->AddRewardRealloced(reallocedReward);

@@ -31,7 +31,7 @@
     const CBlockIndex* pindex = WITH_LOCK(cs_main, return ::ChainActive()[nBlockHeight - 1]);
     bool fMNRewardReallocated =  llmq::utils::IsMNRewardReallocationActive(pindex);
 
-    CAmount masternodeReward = GetMasternodePayment(nBlockHeight, blockReward, Params().GetConsensus().BRRHeight, fMNRewardReallocated);
+    CAmount masternodeReward = GetMasternodePayment(nBlockHeight, blockReward, fMNRewardReallocated);
     if (fMNRewardReallocated) {
         const CAmount platformReward = MasternodePayments::PlatformShare(masternodeReward);
         masternodeReward -= platformReward;

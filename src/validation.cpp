@@ -1180,12 +1180,13 @@ CAmount GetBlockSubsidy(const CBlockIndex* const pindex, const Consensus::Params
     return GetBlockSubsidyInner(pindex->pprev->nBits, pindex->pprev->nHeight, consensusParams, llmq::utils::IsMNRewardReallocationActive(pindex->pprev));
 }
 
-CAmount GetMasternodePayment(int nHeight, CAmount blockValue, int nReallocActivationHeight, bool fMNRewardReallocated)
+CAmount GetMasternodePayment(int nHeight, CAmount blockValue, bool fMNRewardReallocated)
 {
     CAmount ret = blockValue/5; // start at 20%
 
-    int nMNPIBlock = Params().GetConsensus().nMasternodePaymentsIncreaseBlock;
-    int nMNPIPeriod = Params().GetConsensus().nMasternodePaymentsIncreasePeriod;
+    const int nMNPIBlock = Params().GetConsensus().nMasternodePaymentsIncreaseBlock;
+    const int nMNPIPeriod = Params().GetConsensus().nMasternodePaymentsIncreasePeriod;
+    const int nReallocActivationHeight = Params().GetConsensus().BRRHeight;
 
                                                                       // mainnet:
     if(nHeight > nMNPIBlock)                  ret += blockValue / 20; // 158000 - 25.0% - 2014-10-24
