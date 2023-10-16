@@ -231,7 +231,8 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
             Type acc_tl = "k"_mst;
             for (size_t i = 0; i < sub_types.size(); ++i) {
                 Type t = sub_types[i];
-                if (!(t << (i ? "Wdu"_mst : "Bdu"_mst))) return ""_mst; // Require Bdu, Wdu, Wdu, ...
+                static constexpr auto WDU{"Wdu"_mst}, BDU{"Bdu"_mst};
+                if (!(t << (i ? WDU : BDU))) return ""_mst; // Require Bdu, Wdu, Wdu, ...
                 if (!(t << "e"_mst)) all_e = false;
                 if (!(t << "m"_mst)) all_m = false;
                 if (t << "s"_mst) num_s += 1;
