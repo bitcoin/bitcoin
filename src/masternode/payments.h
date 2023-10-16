@@ -12,6 +12,7 @@
 
 class CGovernanceManager;
 class CBlock;
+class CBlockIndex;
 class CTransaction;
 struct CMutableTransaction;
 class CSporkManager;
@@ -28,9 +29,9 @@ namespace MasternodePayments
 bool IsBlockValueValid(const CSporkManager& sporkManager, CGovernanceManager& governanceManager, const CMasternodeSync& mn_sync,
                        const CBlock& block, const int nBlockHeight, const CAmount blockReward, std::string& strErrorRet);
 bool IsBlockPayeeValid(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
-                       const CTransaction& txNew, const int nBlockHeight, const CAmount blockReward);
+                       const CTransaction& txNew, const CBlockIndex* const pindexPrev, const CAmount blockReward);
 void FillBlockPayments(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
-                       CMutableTransaction& txNew, const int nBlockHeight, const CAmount blockReward,
+                       CMutableTransaction& txNew, const CBlockIndex* const pindexPrev, const CAmount blockReward,
                        std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet);
 
 /**
