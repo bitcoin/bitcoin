@@ -240,6 +240,11 @@ def check_MACHO_sdk(binary) -> bool:
         return True
     return False
 
+def check_MACHO_ld64(binary) -> bool:
+    if binary.build_version.tools[0].version == [711, 0, 0]:
+        return True
+    return False
+
 def check_PE_libraries(binary) -> bool:
     ok: bool = True
     for dylib in binary.libraries:
@@ -278,6 +283,7 @@ lief.EXE_FORMATS.MACHO: [
     ('DYNAMIC_LIBRARIES', check_MACHO_libraries),
     ('MIN_OS', check_MACHO_min_os),
     ('SDK', check_MACHO_sdk),
+    ('LD64', check_MACHO_ld64),
 ],
 lief.EXE_FORMATS.PE: [
     ('DYNAMIC_LIBRARIES', check_PE_libraries),
