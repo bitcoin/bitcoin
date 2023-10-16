@@ -107,7 +107,7 @@ PeerManager& EnsurePeerman(const node::NodeContext& node)
     return *node.peerman;
 }
 
-AddrMan& EnsureAddrman(const NodeContext& node)
+AddrMan& EnsureAddrman(const node::NodeContext& node)
 {
     if (!node.addrman) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
