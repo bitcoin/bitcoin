@@ -109,10 +109,11 @@ struct AmountCompression
     }
 };
 
-/** wrapper for CTxOut that provides a more compact serialization */
-struct TxOutCompression
-{
-    FORMATTER_METHODS(CTxOut, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey)); }
+/** wrapper for CTxOut that provides a more compact serialization
+ * TODO: Compress BLSCT fields
+ */
+struct TxOutCompression {
+    FORMATTER_METHODS(CTxOut, obj) { READWRITE(obj); }
 };
 
 #endif // BITCOIN_COMPRESSOR_H

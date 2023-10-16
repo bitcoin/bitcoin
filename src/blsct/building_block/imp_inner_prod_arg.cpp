@@ -151,12 +151,16 @@ std::optional<Elements<typename T::Scalar>> ImpInnerProdArg::GenAllRoundXs(
     using Scalars = Elements<Scalar>;
 
     Scalars xs;
-    for (size_t i = 0; i < num_rounds; ++i) {
-        fiat_shamir << Ls[i];
-        fiat_shamir << Rs[i];
-        GEN_FIAT_SHAMIR_VAR(x, fiat_shamir, retry);
-        xs.Add(x);
+
+    if (Rs.Size() == Ls.Size()) {
+        for (size_t i = 0; i < std::min(Ls.Size(), num_rounds); ++i) {
+            fiat_shamir << Ls[i];
+            fiat_shamir << Rs[i];
+            GEN_FIAT_SHAMIR_VAR(x, fiat_shamir, retry);
+            xs.Add(x);
+        }
     }
+
     return xs;
 
 retry:

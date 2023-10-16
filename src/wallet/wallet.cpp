@@ -1101,6 +1101,21 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         }
     }
 
+    for (auto& txout : wtx.tx->vout) {
+        if (txout.IsBLSCT()) {
+            auto blsct_man = GetBLSCTKeyMan();
+            if (blsct_man) {
+                auto result = blsct_man->RecoverOutputs({wtx.tx->vout});
+                if (result.is_completed) {
+                    auto xs = result.amounts;
+                    for (auto& res : xs) {
+                        wtx.blsctRecoveryData[res.id] = res;
+                    }
+                }
+            }
+        }
+    }
+
     //// debug print
     WalletLogPrintf("AddToWallet %s  %s%s\n", hash.ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
 
@@ -1493,9 +1508,12 @@ CAmount CWallet::GetDebit(const CTxIn& txin, const isminefilter& filter) const
         const auto mi = mapWallet.find(txin.prevout.hash);
         if (mi != mapWallet.end()) {
             const CWalletTx& prev = (*mi).second;
-            if (txin.prevout.n < prev.tx->vout.size())
-                if (IsMine(prev.tx->vout[txin.prevout.n]) & filter)
+            if (txin.prevout.n < prev.tx->vout.size()) {
+                if (prev.tx->vout[txin.prevout.n].IsBLSCT() && filter & ISMINE_SPENDABLE_BLSCT) {
+                    return prev.blsctRecoveryData.at(txin.prevout.n).amount;
+                } else if (IsMine(prev.tx->vout[txin.prevout.n]) & filter)
                     return prev.tx->vout[txin.prevout.n].nValue;
+            }
         }
     }
     return 0;
@@ -1504,12 +1522,24 @@ CAmount CWallet::GetDebit(const CTxIn& txin, const isminefilter& filter) const
 isminetype CWallet::IsMine(const CTxOut& txout) const
 {
     AssertLockHeld(cs_wallet);
+    if (txout.IsBLSCT()) {
+        auto blsct_man = GetBLSCTKeyMan();
+        if (blsct_man) {
+            return blsct_man->IsMine(txout) ? ISMINE_SPENDABLE_BLSCT : ISMINE_NO;
+        }
+    }
     return IsMine(txout.scriptPubKey);
 }
 
 isminetype CWallet::IsMine(const CTxDestination& dest) const
 {
     AssertLockHeld(cs_wallet);
+    if (std::holds_alternative<blsct::DoublePublicKey>(dest)) {
+        auto blsct_man = GetBLSCTKeyMan();
+        if (blsct_man) {
+            return blsct_man->HaveSubAddressStr(blsct::SubAddress(std::get<blsct::DoublePublicKey>(dest))) ? ISMINE_SPENDABLE_BLSCT : ISMINE_NO;
+        }
+    }
     return IsMine(GetScriptForDestination(dest));
 }
 

@@ -195,6 +195,7 @@ BITCOIN_TESTS =\
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \
+  test/blsct/wallet/txfactory_tests.cpp \
   wallet/test/feebumper_tests.cpp \
   wallet/test/psbt_wallet_tests.cpp \
   wallet/test/spend_tests.cpp \

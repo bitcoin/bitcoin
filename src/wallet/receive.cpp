@@ -30,10 +30,28 @@ bool AllInputsMine(const CWallet& wallet, const CTransaction& tx, const isminefi
 
 CAmount OutputGetCredit(const CWallet& wallet, const CTxOut& txout, const isminefilter& filter)
 {
-    if (!MoneyRange(txout.nValue))
+    if (!txout.IsBLSCT() && !MoneyRange(txout.nValue))
         throw std::runtime_error(std::string(__func__) + ": value out of range");
     LOCK(wallet.cs_wallet);
-    return ((wallet.IsMine(txout) & filter) ? txout.nValue : 0);
+    if (txout.IsBLSCT()) {
+        if (wallet.IsMine(txout) & filter) {
+            CAmount ret = 0;
+            auto blsct_man = wallet.GetBLSCTKeyMan();
+            if (blsct_man) {
+                auto result = blsct_man->RecoverOutputs({txout});
+                if (result.is_completed) {
+                    auto xs = result.amounts;
+                    for (auto& res : xs) {
+                        ret = res.amount;
+                    }
+                }
+            }
+            return ret;
+        } else {
+            return 0;
+        }
+    } else
+        return ((wallet.IsMine(txout) & filter) ? txout.nValue : 0);
 }
 
 CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx, const isminefilter& filter)
@@ -78,7 +96,7 @@ bool OutputIsChange(const CWallet& wallet, const CTxOut& txout)
 CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout)
 {
     AssertLockHeld(wallet.cs_wallet);
-    if (!MoneyRange(txout.nValue))
+    if (!txout.IsBLSCT() && !MoneyRange(txout.nValue))
         throw std::runtime_error(std::string(__func__) + ": value out of range");
     return (OutputIsChange(wallet, txout) ? txout.nValue : 0);
 }

@@ -341,7 +341,7 @@ void KeyMan::UpdateTimeFirstKey(int64_t nCreateTime)
     }
 }
 
-SubAddress KeyMan::GetSubAddress(const SubAddressIdentifier& id)
+SubAddress KeyMan::GetSubAddress(const SubAddressIdentifier& id) const
 {
     return SubAddress(viewKey, spendPublicKey, id);
 };
@@ -414,21 +414,99 @@ bool KeyMan::Encrypt(const wallet::CKeyingMaterial& master_key, wallet::WalletBa
     return true;
 }
 
-bool KeyMan::IsMine(const blsct::PublicKey& ephemeralKey, const blsct::PublicKey& spendingKey, const uint16_t& viewTag)
+CKeyID KeyMan::GetHashId(const blsct::PublicKey& blindingKey, const blsct::PublicKey& spendingKey) const
+{
+    if (!fViewKeyDefined || !viewKey.IsValid())
+        throw std::runtime_error(strprintf("%s: the wallet has no view key available", __func__));
+
+    auto t = blindingKey.GetG1Point() * viewKey.GetScalar();
+    auto dh = MclG1Point::GetBasePoint() * t.GetHashWithSalt(0).Negate();
+    auto D_prime = spendingKey.GetG1Point() + dh;
+
+    return PublicKey(D_prime).GetID();
+};
+
+blsct::PrivateKey KeyMan::GetSpendingKey() const
+{
+    if (!fSpendKeyDefined)
+        throw std::runtime_error(strprintf("%s: the wallet has no spend key available"));
+
+    auto spendingKeyId = m_hd_chain.spend_id;
+
+    PrivateKey ret;
+
+    if (!GetKey(spendingKeyId, ret))
+        throw std::runtime_error(strprintf("%s: could not access the spend key", __func__));
+
+    return ret;
+}
+
+blsct::PrivateKey KeyMan::GetSpendingKeyForOutput(const CTxOut& out) const
+{
+    auto hashId = GetHashId(out);
+
+    return GetSpendingKeyForOutput(out, hashId);
+}
+
+blsct::PrivateKey KeyMan::GetSpendingKeyForOutput(const CTxOut& out, const CKeyID& hashId) const
+{
+    SubAddressIdentifier id;
+
+    if (!GetSubAddressId(hashId, id))
+        throw std::runtime_error(strprintf("%s: could not read subaddress id", __func__));
+
+    return GetSpendingKeyForOutput(out, id);
+}
+
+blsct::PrivateKey KeyMan::GetSpendingKeyForOutput(const CTxOut& out, const SubAddressIdentifier& id) const
+{
+    if (!fViewKeyDefined || !viewKey.IsValid())
+        throw std::runtime_error(strprintf("%s: the wallet has no view key available", __func__));
+
+    auto sk = GetSpendingKey();
+
+    CHashWriter string(SER_GETHASH, 0);
+
+    string << std::vector<unsigned char>(subAddressHeader.begin(), subAddressHeader.end());
+    string << viewKey;
+    string << id.account;
+    string << id.address;
+
+    MclG1Point t = out.blsctData.blindingKey * viewKey.GetScalar();
+    MclScalar ret = t.GetHashWithSalt(0) + sk.GetScalar() + MclScalar(string.GetHash());
+
+    return ret;
+}
+
+bulletproofs::AmountRecoveryResult<Mcl> KeyMan::RecoverOutputs(const std::vector<CTxOut>& outs)
+{
+    if (!fViewKeyDefined || !viewKey.IsValid())
+        return bulletproofs::AmountRecoveryResult<Mcl>::failure();
+
+    bulletproofs::RangeProofLogic<Mcl> rp;
+    std::vector<bulletproofs::AmountRecoveryRequest<Mcl>> reqs;
+    reqs.reserve(outs.size());
+
+    for (size_t i = 0; i < outs.size(); i++) {
+        CTxOut out = outs[i];
+        auto nonce = out.blsctData.blindingKey * viewKey.GetScalar();
+        reqs.push_back(bulletproofs::AmountRecoveryRequest<Mcl>::of({out.blsctData.rangeProof}, nonce));
+    }
+
+    return rp.RecoverAmounts(reqs);
+}
+
+bool KeyMan::IsMine(const blsct::PublicKey& blindingKey, const blsct::PublicKey& spendingKey, const uint16_t& viewTag)
 {
     if (!fViewKeyDefined || !viewKey.IsValid())
         return false;
 
     CHashWriter hash(SER_GETHASH, PROTOCOL_VERSION);
-    hash << (ephemeralKey.GetG1Point() * viewKey.GetScalar());
+    hash << (blindingKey.GetG1Point() * viewKey.GetScalar());
 
-    if (viewTag != (hash.GetHash().GetUint64(0) & 0xFF))
-        return false;
+    if (viewTag != (hash.GetHash().GetUint64(0) & 0xFFFF)) return false;
 
-    auto t = ephemeralKey.GetG1Point() * viewKey.GetScalar();
-    auto dh = MclG1Point::GetBasePoint() * t.GetHashWithSalt(0).Invert();
-    auto D_prime = spendingKey.GetG1Point() + dh;
-    auto hashId = PublicKey(D_prime).GetID();
+    auto hashId = GetHashId(blindingKey, spendingKey);
 
     {
         LOCK(cs_KeyStore);
@@ -456,6 +534,45 @@ bool KeyMan::AddSubAddress(const CKeyID& hashId, const SubAddressIdentifier& ind
 bool KeyMan::HaveSubAddress(const CKeyID& hashId) const
 {
     return mapSubAddresses.count(hashId) > 0;
+}
+
+bool KeyMan::GetSubAddress(const CKeyID& hashId, SubAddress& address) const
+{
+    LOCK(cs_KeyStore);
+    if (!HaveSubAddress(hashId)) return false;
+    address = GetSubAddress(mapSubAddresses.at(hashId));
+    return true;
+}
+
+bool KeyMan::GetSubAddressId(const CKeyID& hashId, SubAddressIdentifier& id) const
+{
+    LOCK(cs_KeyStore);
+    if (!HaveSubAddress(hashId)) return false;
+    id = mapSubAddresses.at(hashId);
+    return true;
+}
+
+void KeyMan::LoadSubAddressStr(const SubAddress& subAddress, const CKeyID& hashId)
+{
+    LOCK(cs_KeyStore);
+    mapSubAddressesStr[subAddress] = hashId;
+}
+
+bool KeyMan::AddSubAddressStr(const SubAddress& subAddress, const CKeyID& hashId)
+{
+    LOCK(cs_KeyStore);
+    wallet::WalletBatch batch(m_storage.GetDatabase());
+    AssertLockHeld(cs_KeyStore);
+
+    mapSubAddressesStr[subAddress] = hashId;
+
+    return batch.WriteSubAddressStr(subAddress, hashId);
+}
+
+bool KeyMan::HaveSubAddressStr(const SubAddress& subAddress) const
+{
+    LOCK(cs_KeyStore);
+    return mapSubAddressesStr.count(subAddress) > 0;
 }
 
 SubAddress KeyMan::GenerateNewSubAddress(const uint64_t& account, SubAddressIdentifier& id)
@@ -486,6 +603,9 @@ SubAddress KeyMan::GenerateNewSubAddress(const uint64_t& account, SubAddressIden
 
     if (!AddSubAddress(subAddress.GetKeys().GetID(), id))
         throw std::runtime_error(std::string(__func__) + ": AddSubAddress failed");
+
+    if (!AddSubAddressStr(subAddress, subAddress.GetKeys().GetID()))
+        throw std::runtime_error(std::string(__func__) + ": AddSubAddressStr failed");
 
     return subAddress;
 }

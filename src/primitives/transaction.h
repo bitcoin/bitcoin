@@ -16,6 +16,7 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <util/moneystr.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -158,6 +159,7 @@ public:
     }
 
     std::string ToString() const;
+    uint256 GetHash() const;
 };
 
 class CTxOutBLSCTData
@@ -277,7 +279,12 @@ public:
 
     bool IsNull() const
     {
-        return (nValue == -1);
+        return (nValue == -1 && blsctData.viewTag == 0 && scriptPubKey.size() == 0);
+    }
+
+    bool IsBLSCT() const
+    {
+        return blsctData.rangeProof.Vs.Size() > 0;
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
@@ -293,6 +300,7 @@ public:
     }
 
     std::string ToString() const;
+    uint256 GetHash() const;
 };
 
 struct CMutableTransaction;

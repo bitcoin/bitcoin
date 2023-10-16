@@ -23,7 +23,7 @@ public:
     bool VerifyBalanceBatch(const Signature& sig) const;
 
     // Message augmentation scheme
-    bool VerifyBatch(const std::vector<PublicKey::Message>& msgs, const Signature& sig) const;
+    bool VerifyBatch(const std::vector<PublicKey::Message>& msgs, const Signature& sig, const bool& fVerifyTx = false) const;
 
 private:
     // Core operations

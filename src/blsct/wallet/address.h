@@ -40,6 +40,7 @@ private:
     DoublePublicKey pk;
 
 public:
+    SubAddress(){};
     SubAddress(const PrivateKey& viewKey, const PublicKey& spendKey, const SubAddressIdentifier& subAddressId);
     SubAddress(const DoublePublicKey& pk) : pk(pk){};
 
@@ -48,6 +49,11 @@ public:
     std::string GetString() const;
     CTxDestination GetDestination() const;
     DoublePublicKey GetKeys() const { return pk; };
+
+    SERIALIZE_METHODS(SubAddress, obj) { READWRITE(obj.pk); }
+
+    bool operator==(const SubAddress& rhs) const;
+    bool operator<(const SubAddress& rhs) const;
 };
 } // namespace blsct
 

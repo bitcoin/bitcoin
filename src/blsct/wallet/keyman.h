@@ -10,6 +10,9 @@
 #include <blsct/eip_2333/bls12_381_keygen.h>
 #include <blsct/private_key.h>
 #include <blsct/public_key.h>
+#include <blsct/range_proof/bulletproofs/amount_recovery_request.h>
+#include <blsct/range_proof/bulletproofs/amount_recovery_result.h>
+#include <blsct/range_proof/bulletproofs/range_proof_logic.h>
 #include <blsct/wallet/address.h>
 #include <blsct/wallet/hdchain.h>
 #include <blsct/wallet/keyring.h>
@@ -47,10 +50,12 @@ private:
 
     using CryptedKeyMap = std::map<CKeyID, std::pair<PublicKey, std::vector<unsigned char>>>;
     using SubAddressMap = std::map<CKeyID, SubAddressIdentifier>;
+    using SubAddressStrMap = std::map<SubAddress, CKeyID>;
     using SubAddressPoolMapSet = std::map<uint64_t, std::set<uint64_t>>;
 
     CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
     SubAddressMap mapSubAddresses GUARDED_BY(cs_KeyStore);
+    SubAddressStrMap mapSubAddressesStr GUARDED_BY(cs_KeyStore);
     SubAddressPoolMapSet setSubAddressPool GUARDED_BY(cs_KeyStore);
     SubAddressPoolMapSet setSubAddressReservePool GUARDED_BY(cs_KeyStore);
 
@@ -104,7 +109,7 @@ public:
     bool CheckDecryptionKey(const wallet::CKeyingMaterial& master_key, bool accept_no_keys);
 
     SubAddress GenerateNewSubAddress(const uint64_t& account, SubAddressIdentifier& id);
-    SubAddress GetSubAddress(const SubAddressIdentifier& id = {0, 0});
+    SubAddress GetSubAddress(const SubAddressIdentifier& id = {0, 0}) const;
     util::Result<CTxDestination> GetNewDestination(const uint64_t& account = 0);
 
     /* Set the HD chain model (chain child index counters) and writes it to the database */
@@ -121,13 +126,25 @@ public:
     bool DeleteKeys();
 
     /** Detect ownership of outputs **/
-    bool IsMine(const CTxOut& txout) { return IsMine(txout.blsctData.ephemeralKey, txout.blsctData.spendingKey, txout.blsctData.viewTag); };
-    bool IsMine(const blsct::PublicKey& ephemeralKey, const blsct::PublicKey& spendingKey, const uint16_t& viewTag);
+    bool IsMine(const CTxOut& txout) { return IsMine(txout.blsctData.blindingKey, txout.blsctData.spendingKey, txout.blsctData.viewTag); };
+    bool IsMine(const blsct::PublicKey& blindingKey, const blsct::PublicKey& spendingKey, const uint16_t& viewTag);
+    CKeyID GetHashId(const CTxOut& txout) const { return GetHashId(txout.blsctData.blindingKey, txout.blsctData.spendingKey); }
+    CKeyID GetHashId(const blsct::PublicKey& blindingKey, const blsct::PublicKey& spendingKey) const;
+    blsct::PrivateKey GetSpendingKey() const;
+    blsct::PrivateKey GetSpendingKeyForOutput(const CTxOut& out) const;
+    blsct::PrivateKey GetSpendingKeyForOutput(const CTxOut& out, const CKeyID& id) const;
+    blsct::PrivateKey GetSpendingKeyForOutput(const CTxOut& out, const SubAddressIdentifier& id) const;
+    bulletproofs::AmountRecoveryResult<Mcl> RecoverOutputs(const std::vector<CTxOut>& outs);
 
     /** SubAddress keypool */
     void LoadSubAddress(const CKeyID& hashId, const SubAddressIdentifier& index);
     bool AddSubAddress(const CKeyID& hashId, const SubAddressIdentifier& index);
     bool HaveSubAddress(const CKeyID& hashId) const EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    bool GetSubAddress(const CKeyID& hashId, SubAddress& address) const;
+    bool GetSubAddressId(const CKeyID& hashId, SubAddressIdentifier& subAddId) const;
+    void LoadSubAddressStr(const SubAddress& subAddress, const CKeyID& hashId);
+    bool AddSubAddressStr(const SubAddress& subAddress, const CKeyID& hashId);
+    bool HaveSubAddressStr(const SubAddress& subAddress) const;
     bool NewSubAddressPool(const uint64_t& account = 0);
     bool TopUp(const unsigned int& size = 0);
     bool TopUpAccount(const uint64_t& account, const unsigned int& size = 0);

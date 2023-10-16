@@ -378,7 +378,7 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
         // failure if sizes of Ls and Rs differ or Vs is empty
         auto Ls_Rs_valid = req.Ls.Size() > 0 && req.Ls.Size() == req.Rs.Size();
         if (req.Vs.Size() == 0 || !Ls_Rs_valid) {
-            return AmountRecoveryResult<T>::failure();
+            continue;
         }
         // recovery can only be done when the number of value commitment is 1
         if (req.Vs.Size() != 1) {
@@ -425,6 +425,7 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
             req.nonce.GetHashWithSalt(100), // gamma for vs[0]
             msg_amt.msg
         );
+
         xs.push_back(x);
     }
     return {

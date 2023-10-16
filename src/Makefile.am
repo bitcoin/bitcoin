@@ -202,6 +202,8 @@ BITCOIN_CORE_H = \
   blsct/wallet/hdchain.h \
   blsct/wallet/keyman.h \
   blsct/wallet/keyring.h \
+  blsct/wallet/txfactory.h \
+  blsct/wallet/verification.h \
   dandelion.h \
   chain.h \
   chainparams.h \
@@ -592,9 +594,17 @@ libbitcoin_wallet_a_SOURCES = \
   blsct/eip_2333/bls12_381_keygen.cpp \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
+  blsct/building_block/imp_inner_prod_arg.cpp \
+  blsct/range_proof/bulletproofs/amount_recovery_request.cpp \
+  blsct/range_proof/bulletproofs/amount_recovery_result.cpp \
+  blsct/range_proof/bulletproofs/range_proof_logic.cpp \
+  blsct/range_proof/bulletproofs/range_proof_with_transcript.cpp \
+  blsct/range_proof/msg_amt_cipher.cpp \
   blsct/wallet/address.cpp \
   blsct/wallet/keyman.cpp \
   blsct/wallet/keyring.cpp \
+  blsct/wallet/txfactory.cpp \
+  blsct/wallet/verification.cpp \
   wallet/coincontrol.cpp \
   wallet/context.cpp \
   wallet/crypter.cpp \
@@ -769,6 +779,7 @@ libbitcoin_consensus_a_SOURCES = \
   tinyformat.h \
   uint256.cpp \
   uint256.h \
+  util/moneystr.cpp \
   util/strencodings.cpp \
   util/strencodings.h \
   version.h

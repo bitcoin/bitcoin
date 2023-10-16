@@ -37,6 +37,7 @@ const std::string BLSCTHDCHAIN{"blscthdchain"};
 const std::string BLSCTKEY{"blsctkey"};
 const std::string BLSCTKEYMETA{"blsctkeymeta"};
 const std::string BLSCTSUBADDRESS{"blsctsubaddress"};
+const std::string BLSCTSUBADDRESSSTR{"blsctsubaddressstr"};
 const std::string BLSCTSUBADDRESSPOOL{"blsctsubaddresspool"};
 const std::string CRYPTED_BLSCTKEY{"cblsctkey"};
 const std::string CRYPTED_KEY{"ckey"};
@@ -199,6 +200,12 @@ bool WalletBatch::EraseSubAddressPool(const blsct::SubAddressIdentifier& id)
 bool WalletBatch::WriteSubAddress(const CKeyID& hashId, const blsct::SubAddressIdentifier& index)
 {
     auto ret = WriteIC(std::make_pair(DBKeys::BLSCTSUBADDRESS, hashId), std::make_pair(index.account, index.address), false);
+    return ret;
+}
+
+bool WalletBatch::WriteSubAddressStr(const blsct::SubAddress& subAddress, const CKeyID& hashId)
+{
+    auto ret = WriteIC(std::make_pair(DBKeys::BLSCTSUBADDRESSSTR, subAddress), hashId, false);
     return ret;
 }
 
@@ -747,6 +754,14 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
             id.address = index.second;
 
             pwallet->GetOrCreateBLSCTKeyMan()->LoadSubAddress(hashId, id);
+        } else if (strType == DBKeys::BLSCTSUBADDRESSSTR) {
+            blsct::SubAddress subAddress;
+            ssKey >> subAddress;
+
+            CKeyID hashId;
+            ssValue >> hashId;
+
+            pwallet->GetOrCreateBLSCTKeyMan()->LoadSubAddressStr(subAddress, hashId);
         } else if (strType == DBKeys::BLSCTSUBADDRESSPOOL) {
             std::pair<uint64_t, uint64_t> index;
 
