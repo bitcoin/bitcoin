@@ -75,7 +75,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         def expected_error(log_msg="", rpc_details=""):
             with self.nodes[1].assert_debug_log([log_msg]):
-                assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot{rpc_details}", self.nodes[1].loadtxoutset, bad_snapshot_path)
+                assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot{rpc_details}", self.nodes[1].loadtxoutset,  "start", bad_snapshot_path)
 
         self.log.info("  - snapshot file referring to a block that is not in the assumeutxo parameters")
         prev_block_hash = self.nodes[0].getblockhash(SNAPSHOT_BASE_HEIGHT - 1)
@@ -195,7 +195,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.test_invalid_chainstate_scenarios()
 
         self.log.info(f"Loading snapshot into second node from {dump_output['path']}")
-        loaded = n1.loadtxoutset(dump_output['path'])
+        loaded = n1.loadtxoutset("start",dump_output['path'])
         assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 
@@ -285,7 +285,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(n2.getblockcount(), START_HEIGHT)
 
         self.log.info(f"Loading snapshot into third node from {dump_output['path']}")
-        loaded = n2.loadtxoutset(dump_output['path'])
+        loaded = n2.loadtxoutset("start",dump_output['path'])
         assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 

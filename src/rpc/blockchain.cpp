@@ -2714,12 +2714,14 @@ static RPCHelpMan loadtxoutset()
         "You can find more information on this process in the `assumeutxo` design "
         "document (<https://github.com/bitcoin/bitcoin/blob/master/doc/design/assumeutxo.md>).",
         {
+            {"action", RPCArg::Type::STR, RPCArg::Optional::NO, "The action to execute\n"
+                "\"start\" for starting to load the file. Currently, this is the only action available.\n"},
             {"path",
                 RPCArg::Type::STR,
                 RPCArg::Optional::NO,
                 "path to the snapshot file. If relative, will be prefixed by datadir."},
         },
-        RPCResult{
+        RPCResult{"when action=='start'; only returns after load completes",
             RPCResult::Type::OBJ, "", "",
                 {
                     {RPCResult::Type::NUM, "coins_loaded", "the number of coins loaded from the snapshot"},
@@ -2729,13 +2731,16 @@ static RPCHelpMan loadtxoutset()
                 }
         },
         RPCExamples{
-            HelpExampleCli("loadtxoutset", "utxo.dat")
+            HelpExampleCli("loadtxoutset", "start utxo.dat")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    if (self.Arg<std::string>(0) != "start") {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid action '%s'", self.Arg<std::string>(0)));
+    }
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
-    fs::path path{AbsPathForConfigVal(EnsureArgsman(node), fs::u8path(request.params[0].get_str()))};
+    fs::path path{AbsPathForConfigVal(EnsureArgsman(node), fs::u8path(self.Arg<std::string>(1)))};
 
     FILE* file{fsbridge::fopen(path, "rb")};
     AutoFile afile{file};

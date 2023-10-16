@@ -184,7 +184,7 @@ client_rpc getchainstates
 
 echo
 echo "-- Loading UTXO snapshot into client..."
-client_rpc loadtxoutset "$UTXO_DAT_FILE"
+client_rpc loadtxoutset start "$UTXO_DAT_FILE"
 
 watch -n 0.3 "( tail -n 14 $CLIENT_DATADIR/debug.log ; echo ; ./src/bitcoin-cli -rpcport=$CLIENT_RPC_PORT -datadir=$CLIENT_DATADIR getchainstates) | cat"
 
