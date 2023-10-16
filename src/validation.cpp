@@ -1119,7 +1119,7 @@ NOTE:   unlike bitcoin we are using PREVIOUS block height here,
         might be a good idea to change this to use prev bits
         but current height to avoid confusion.
 */
-CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fMNRewardReallocated, bool fSuperblockPartOnly)
+static std::pair<CAmount, CAmount> GetBlockSubsidyHelper(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fMNRewardReallocated)
 {
     double dDiff;
     CAmount nSubsidyBase;
@@ -1171,7 +1171,19 @@ CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Pa
         if (Params().NetworkIDString() == CBaseChainParams::TESTNET) fMNRewardReallocated = false;
         nSuperblockPart = nSubsidy / (fMNRewardReallocated ? 5 : 10);
     }
-    return fSuperblockPartOnly ? nSuperblockPart : nSubsidy - nSuperblockPart;
+    return {nSubsidy - nSuperblockPart, nSuperblockPart};
+}
+
+CAmount GetSuperblockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fMNRewardReallocated)
+{
+    const auto [nSubsidy, nSuperblock] = GetBlockSubsidyHelper(nPrevBits, nPrevHeight, consensusParams, fMNRewardReallocated);
+    return nSuperblock;
+}
+
+CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fMNRewardReallocated)
+{
+    const auto [nSubsidy, nSuperblock] = GetBlockSubsidyHelper(nPrevBits, nPrevHeight, consensusParams, fMNRewardReallocated);
+    return nSubsidy;
 }
 
 CAmount GetBlockSubsidy(const CBlockIndex* const pindex, const Consensus::Params& consensusParams)
