@@ -3566,13 +3566,12 @@ void CChainState::ResetBlockFailureFlags(CBlockIndex *pindex) {
     }
 }
 
-CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, enum BlockStatus nStatus)
+CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, const uint256& hash, enum BlockStatus nStatus)
 {
     assert(!(nStatus & BLOCK_FAILED_MASK)); // no failed blocks allowed
     AssertLockHeld(cs_main);
 
     // Check for duplicate
-    uint256 hash = block.GetHash();
     BlockMap::iterator it = m_block_index.find(hash);
     if (it != m_block_index.end())
         return it->second;
@@ -3737,16 +3736,16 @@ static bool FindUndoPos(BlockValidationState &state, int nFile, FlatFilePos &pos
     return true;
 }
 
-static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
+static bool CheckBlockHeader(const CBlockHeader& block, const uint256& hash, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+    if (fCheckPOW && !CheckProofOfWork(hash, block.nBits, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
 
     // Check DevNet
     if (!consensusParams.hashDevnetGenesisBlock.IsNull() &&
             block.hashPrevBlock == consensusParams.hashGenesisBlock &&
-            block.GetHash() != consensusParams.hashDevnetGenesisBlock) {
+            hash != consensusParams.hashDevnetGenesisBlock) {
         LogPrintf("ERROR: CheckBlockHeader(): wrong devnet genesis\n");
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "devnet-genesis");
     }
@@ -3765,7 +3764,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
 
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
-    if (!CheckBlockHeader(block, state, consensusParams, fCheckPOW))
+    if (!CheckBlockHeader(block, block.GetHash(), state, consensusParams, fCheckPOW))
         return false;
 
     // Check the merkle root.
@@ -4005,7 +4004,7 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
             return true;
         }
 
-        if (!CheckBlockHeader(block, state, chainparams.GetConsensus())) {
+        if (!CheckBlockHeader(block, hash, state, chainparams.GetConsensus())) {
             LogPrint(BCLog::VALIDATION, "%s: Consensus::CheckBlockHeader: %s, %s\n", __func__, hash.ToString(), state.ToString());
             return false;
         }
@@ -4075,14 +4074,14 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
 
         if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
             if (pindex == nullptr) {
-                AddToBlockIndex(block, BLOCK_CONFLICT_CHAINLOCK);
+                AddToBlockIndex(block, hash, BLOCK_CONFLICT_CHAINLOCK);
             }
             LogPrintf("ERROR: %s: header %s conflicts with chainlock\n", __func__, hash.ToString());
             return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-chainlock");
         }
     }
     if (pindex == nullptr)
-        pindex = AddToBlockIndex(block);
+        pindex = AddToBlockIndex(block, hash);
 
     if (ppindex)
         *ppindex = pindex;
@@ -5058,7 +5057,7 @@ bool CChainState::AddGenesisBlock(const CBlock& block, BlockValidationState& sta
     FlatFilePos blockPos = SaveBlockToDisk(block, 0, m_chain, m_params, nullptr);
     if (blockPos.IsNull())
         return error("%s: writing genesis block to disk failed (%s)", __func__, state.ToString());
-    CBlockIndex* pindex = m_blockman.AddToBlockIndex(block);
+    CBlockIndex* pindex = m_blockman.AddToBlockIndex(block, block.GetHash());
     ReceivedBlockTransactions(block, pindex, blockPos);
     return true;
 }
