@@ -69,6 +69,10 @@ class AssumeutxoTest(BitcoinTestFramework):
             valid_snapshot_contents = f.read()
         bad_snapshot_path = valid_snapshot_path + '.mod'
 
+        def expected_error(log_msg="", rpc_details=""):
+            with self.nodes[1].assert_debug_log([log_msg]):
+                assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot{rpc_details}", self.nodes[1].loadtxoutset, bad_snapshot_path)
+
         self.log.info("  - snapshot file refering to a block that is not in the assumeutxo parameters")
         prev_block_hash = self.nodes[0].getblockhash(SNAPSHOT_BASE_HEIGHT - 1)
         bogus_block_hash = "0" * 64  # Represents any unknown block hash
@@ -76,8 +80,8 @@ class AssumeutxoTest(BitcoinTestFramework):
             with open(bad_snapshot_path, 'wb') as f:
                 # block hash of the snapshot base is stored right at the start (first 32 bytes)
                 f.write(bytes.fromhex(bad_block_hash)[::-1] + valid_snapshot_contents[32:])
-            error_details = f"assumeutxo block hash in snapshot metadata not recognized ({bad_block_hash})"
-            assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot, {error_details}", self.nodes[1].loadtxoutset, bad_snapshot_path)
+            error_details = f", assumeutxo block hash in snapshot metadata not recognized ({bad_block_hash})"
+            expected_error(rpc_details=error_details)
 
         self.log.info("  - snapshot file with wrong number of coins")
         valid_num_coins = int.from_bytes(valid_snapshot_contents[32:32 + 8], "little")
@@ -86,18 +90,22 @@ class AssumeutxoTest(BitcoinTestFramework):
                 f.write(valid_snapshot_contents[:32])
                 f.write((valid_num_coins + off).to_bytes(8, "little"))
                 f.write(valid_snapshot_contents[32 + 8:])
-            expected_log = f"bad snapshot - coins left over after deserializing 298 coins" if off == -1 else f"bad snapshot format or truncated snapshot after deserializing 299 coins"
-            with self.nodes[1].assert_debug_log([expected_log]):
-                assert_raises_rpc_error(-32603, "Unable to load UTXO snapshot", self.nodes[1].loadtxoutset, bad_snapshot_path)
+            expected_error(log_msg=f"bad snapshot - coins left over after deserializing 298 coins" if off == -1 else f"bad snapshot format or truncated snapshot after deserializing 299 coins")
 
         self.log.info("  - snapshot file with wrong outpoint hash")
         with open(bad_snapshot_path, "wb") as f:
             f.write(valid_snapshot_contents[:(32 + 8)])
             f.write(b"\xff" * 32)
             f.write(valid_snapshot_contents[(32 + 8 + 32):])
-        expected_log = "[snapshot] bad snapshot content hash: expected ef45ccdca5898b6c2145e4581d2b88c56564dd389e4bd75a1aaf6961d3edd3c0, got 29926acf3ac81f908cf4f22515713ca541c08bb0f0ef1b2c3443a007134d69b8"
-        with self.nodes[1].assert_debug_log([expected_log]):
-            assert_raises_rpc_error(-32603, "Unable to load UTXO snapshot", self.nodes[1].loadtxoutset, bad_snapshot_path)
+        expected_error(log_msg="[snapshot] bad snapshot content hash: expected ef45ccdca5898b6c2145e4581d2b88c56564dd389e4bd75a1aaf6961d3edd3c0, got 29926acf3ac81f908cf4f22515713ca541c08bb0f0ef1b2c3443a007134d69b8")
+
+        self.log.info("  - snapshot file with wrong outpoint index")
+        with open(bad_snapshot_path, "wb") as f:
+            f.write(valid_snapshot_contents[:(32 + 8 + 32)])
+            new_index = 1  # The correct index is 0
+            f.write(new_index.to_bytes(4, "little"))
+            f.write(valid_snapshot_contents[(32 + 8 + 32 + 4):])
+        expected_error(log_msg="[snapshot] bad snapshot content hash: expected ef45ccdca5898b6c2145e4581d2b88c56564dd389e4bd75a1aaf6961d3edd3c0, got 798266c2e1f9a98fe5ce61f5951cbf47130743f3764cf3cbc254be129142cf9d")
 
     def run_test(self):
         """
