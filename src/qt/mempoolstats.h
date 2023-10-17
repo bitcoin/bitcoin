@@ -37,7 +37,7 @@ class MempoolStats : public QWidget
     Q_OBJECT
 
 public:
-    MempoolStats(QWidget *parent = 0);
+    MempoolStats(QWidget *parent = nullptr);
     ~MempoolStats();
 
     void setClientModel(ClientModel *model);
@@ -47,12 +47,12 @@ public Q_SLOTS:
     void objectClicked(QGraphicsItem *);
 
 private:
-    ClientModel *clientModel;
+    ClientModel *clientModel{nullptr};
 
     virtual void resizeEvent(QResizeEvent *event) override;
     virtual void showEvent(QShowEvent *event) override;
 
-    QGraphicsTextItem *titleItem;
+    QGraphicsTextItem *titleItem{nullptr};
     QGraphicsLineItem *titleLine;
     QGraphicsTextItem *noDataItem;
 
@@ -69,7 +69,7 @@ private:
     QGraphicsProxyWidget *minFeeSwitch;
     QGraphicsProxyWidget *dynMemUsageSwitch;
 
-    QGraphicsScene *scene;
+    QGraphicsScene *scene{nullptr};
     QVector<QGraphicsItem*> redrawItems;
 
     bool drawTxCount;

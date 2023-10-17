@@ -43,9 +43,6 @@ void ClickableTextItem::setEnabled(bool state)
 
 MempoolStats::MempoolStats(QWidget *parent) :
 QWidget(parent, Qt::Window),
-clientModel(0),
-titleItem(0),
-scene(0),
 drawTxCount(true),
 drawMinFee(false),
 drawDynMemUsage(true),
