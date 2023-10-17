@@ -471,8 +471,6 @@ void SyscoinGUI::createActions()
         connect(m_close_wallet_action, &QAction::triggered, m_wallet_controller, [this] {
             m_wallet_controller->closeWallet(walletFrame->currentWalletModel(), this);
         });
-        // BITCOIN (removed legacy wallet creation)
-        connect(m_create_wallet_action, &QAction::triggered, this, &SyscoinGUI::createWallet);
         // SYSCOIN (keep legacy wallet creation for now)
         connect(m_create_wallet_action, &QAction::triggered, [this] {
             auto activity = new CreateWalletActivity(m_wallet_controller, this);
@@ -1276,6 +1274,7 @@ void SyscoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
     progressBarLabel->setToolTip(tooltip);
     progressBar->setToolTip(tooltip);
 }
+
 void SyscoinGUI::message(const QString& title, QString message, unsigned int style, bool* ret, const QString& detailed_message)
 {
     // Default title. On macOS, the window title is ignored (as required by the macOS Guidelines).
