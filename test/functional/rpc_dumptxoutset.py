@@ -5,12 +5,12 @@
 """Test the generation of UTXO snapshots using `dumptxoutset`.
 """
 
-from test_framework.blocktools import COINBASE_MATURITY
+#from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+#from test_framework.util import assert_equal, assert_raises_rpc_error
 
-import hashlib
-from pathlib import Path
+#import hashlib
+#from pathlib import Path
 
 
 class DumptxoutsetTest(BitcoinTestFramework):
@@ -44,7 +44,7 @@ class DumptxoutsetTest(BitcoinTestFramework):
 
         #with open(str(expected_path), 'rb') as f:
         #    digest = hashlib.sha256(f.read()).hexdigest()
-            # UTXO snapshot hash should be deterministic based on mocked time.
+        # UTXO snapshot hash should be deterministic based on mocked time.
         #    assert_equal(
         #        digest, 'b1bacb602eacf5fbc9a7c2ef6eeb0d229c04e98bdf0c2ea5929012cd0eae3830')
 
