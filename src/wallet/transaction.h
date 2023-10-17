@@ -29,10 +29,12 @@ struct TxStateConfirmed {
     int position_in_block;
 
     explicit TxStateConfirmed(const uint256& block_hash, int height, int index) : confirmed_block_hash(block_hash), confirmed_block_height(height), position_in_block(index) {}
+    std::string toString() const { return strprintf("Confirmed (block=%s, height=%i, index=%i)", confirmed_block_hash.ToString(), confirmed_block_height, position_in_block); }
 };
 
 //! State of transaction added to mempool.
 struct TxStateInMempool {
+    std::string toString() const { return strprintf("InMempool"); }
 };
 
 //! State of rejected transaction that conflicts with a confirmed block.
@@ -41,6 +43,7 @@ struct TxStateConflicted {
     int conflicting_block_height;
 
     explicit TxStateConflicted(const uint256& block_hash, int height) : conflicting_block_hash(block_hash), conflicting_block_height(height) {}
+    std::string toString() const { return strprintf("Conflicted (block=%s, height=%i)", conflicting_block_hash.ToString(), conflicting_block_height); }
 };
 
 //! State of transaction not confirmed or conflicting with a known block and
@@ -51,6 +54,7 @@ struct TxStateInactive {
     bool abandoned;
 
     explicit TxStateInactive(bool abandoned = false) : abandoned(abandoned) {}
+    std::string toString() const { return strprintf("Inactive (abandoned=%i)", abandoned); }
 };
 
 //! State of transaction loaded in an unrecognized state with unexpected hash or
@@ -62,6 +66,7 @@ struct TxStateUnrecognized {
     int index;
 
     TxStateUnrecognized(const uint256& block_hash, int index) : block_hash(block_hash), index(index) {}
+    std::string toString() const { return strprintf("Unrecognized (block=%s, index=%i)", block_hash.ToString(), index); }
 };
 
 //! All possible CWalletTx states
@@ -109,6 +114,12 @@ static inline int TxStateSerializedIndex(const TxState& state)
     }, state);
 }
 
+//! Return TxState or SyncTxState as a string for logging or debugging.
+template<typename T>
+std::string TxStateString(const T& state)
+{
+    return std::visit([](const auto& s) { return s.toString(); }, state);
+}
 
 /**
  * Cachable amount subdivided into watchonly and spendable parts.
