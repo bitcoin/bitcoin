@@ -43,9 +43,6 @@ void ClickableTextItem::setEnabled(bool state)
 
 MempoolStats::MempoolStats(QWidget *parent) :
 QWidget(parent, Qt::Window),
-drawTxCount(true),
-drawMinFee(false),
-drawDynMemUsage(true),
 timeFilter(TEN_MINS),
 ui(new Ui::MempoolStats)
 {
@@ -79,7 +76,7 @@ void MempoolStats::setClientModel(ClientModel *model)
 
 void MempoolStats::drawChart()
 {
-    if (!isVisible())
+    if (!(isVisible() && clientModel))
         return;
 
     if (!titleItem)
@@ -90,30 +87,32 @@ void MempoolStats::drawChart()
         titleLine = scene->addLine(0,0,100,100);
         titleLine->setPen(QPen(QColor(100,100,100, 200), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 
-
-        QCheckBox *cb0 = new QCheckBox("Dynamic Memory Usage");
-        cb0->setStyleSheet("background-color: rgb(255,255,255);");
-        dynMemUsageSwitch = scene->addWidget(cb0);
-        connect(cb0, &QCheckBox::stateChanged, [cb0, this](){ drawDynMemUsage = cb0->isChecked(); drawChart(); });
-        cb0->setFont(QFont(LABEL_FONT, LABEL_KV_SIZE, QFont::Light));
+        cbShowMemUsage = new QCheckBox("Dynamic Memory Usage");
+        cbShowMemUsage->setChecked(true);
+        cbShowMemUsage->setStyleSheet("background-color: rgb(255,255,255);");
+        dynMemUsageSwitch = scene->addWidget(cbShowMemUsage);
+        connect(cbShowMemUsage, SIGNAL(stateChanged(int)), this, SLOT(drawChart()));
+        cbShowMemUsage->setFont(QFont(LABEL_FONT, LABEL_KV_SIZE, QFont::Light));
         dynMemUsageValueItem = scene->addText("N/A");
         dynMemUsageValueItem->setFont(QFont(LABEL_FONT, LABEL_KV_SIZE, QFont::Bold));
 
-        QCheckBox *cb1 = new QCheckBox("Amount of Transactions");
-        cb1->setStyleSheet("background-color: rgb(255,255,255);");
-        txCountSwitch = scene->addWidget(cb1);
+        cbShowNumTxns = new QCheckBox("Amount of Transactions");
+        cbShowNumTxns->setChecked(true);
+        cbShowNumTxns->setStyleSheet("background-color: rgb(255,255,255);");
+        txCountSwitch = scene->addWidget(cbShowNumTxns);
         scene->addItem(txCountSwitch);
-        connect(cb1, &QCheckBox::stateChanged, [cb1, this](){ drawTxCount = cb1->isChecked(); drawChart(); });
-        cb1->setFont(QFont(LABEL_FONT, LABEL_KV_SIZE, QFont::Light));
+        connect(cbShowNumTxns, SIGNAL(stateChanged(int)), this, SLOT(drawChart()));
+        cbShowNumTxns->setFont(QFont(LABEL_FONT, LABEL_KV_SIZE, QFont::Light));
         txCountValueItem = scene->addText("N/A");
         txCountValueItem->setFont(QFont(LABEL_FONT, LABEL_KV_SIZE, QFont::Bold));
 
-        QCheckBox *cb2 = new QCheckBox("MinRelayFee per KB");
-        cb2->setStyleSheet("background-color: rgb(255,255,255);");
-        minFeeSwitch = scene->addWidget(cb2);
+        cbShowMinFeerate = new QCheckBox("MinRelayFee per KB");
+        cbShowMinFeerate->setChecked(false);
+        cbShowMinFeerate->setStyleSheet("background-color: rgb(255,255,255);");
+        minFeeSwitch = scene->addWidget(cbShowMinFeerate);
         scene->addItem(minFeeSwitch);
-        connect(cb2, &QCheckBox::stateChanged, [cb2, this](){ drawMinFee = cb2->isChecked(); drawChart(); });
-        cb2->setFont(QFont(LABEL_FONT, LABEL_KV_SIZE, QFont::Light));
+        connect(cbShowMinFeerate, SIGNAL(stateChanged(int)), this, SLOT(drawChart()));
+        cbShowMinFeerate->setFont(QFont(LABEL_FONT, LABEL_KV_SIZE, QFont::Light));
         minFeeValueItem = scene->addText(tr("N/A"));
         minFeeValueItem->setFont(QFont(LABEL_FONT, LABEL_KV_SIZE, QFont::Bold));
 
@@ -138,11 +137,6 @@ void MempoolStats::drawChart()
         connect(allDataLabel, SIGNAL(objectClicked(QGraphicsItem*)), this, SLOT(objectClicked(QGraphicsItem*)));
         allDataLabel->setFont(QFont(LABEL_FONT, LABEL_KV_SIZE, QFont::Light));
     }
-
-    // set button states
-    ((QCheckBox *)dynMemUsageSwitch->widget())->setChecked(drawDynMemUsage);
-    ((QCheckBox *)txCountSwitch->widget())->setChecked(drawTxCount);
-    ((QCheckBox *)minFeeSwitch->widget())->setChecked(drawMinFee);
 
     last10MinLabel->setEnabled((timeFilter == TEN_MINS));
     lastHourLabel->setEnabled((timeFilter == ONE_HOUR));
@@ -348,11 +342,11 @@ void MempoolStats::drawChart()
     QPen linePenRed(QColor(188,49,62, 250), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     QPen linePenGreen(QColor(49,188,62, 250), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 
-    if (drawTxCount)
+    if (cbShowNumTxns->isChecked())
         redrawItems.append(scene->addPath(txCountPath, linePenRed));
-    if (drawMinFee)
+    if (cbShowMinFeerate->isChecked())
         redrawItems.append(scene->addPath(minFeePath, linePenGreen));
-    if (drawDynMemUsage)
+    if (cbShowMemUsage->isChecked())
     {
         redrawItems.append(scene->addPath(dynMemUsagePath, linePenBlue));
         redrawItems.append(scene->addPath(dynMemUsagePathFill, QPen(Qt::NoPen), graBru));

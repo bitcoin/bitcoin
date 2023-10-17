@@ -72,9 +72,9 @@ private:
     QGraphicsScene *scene{nullptr};
     QVector<QGraphicsItem*> redrawItems;
 
-    bool drawTxCount;
-    bool drawMinFee;
-    bool drawDynMemUsage;
+    QCheckBox *cbShowMemUsage;
+    QCheckBox *cbShowNumTxns;
+    QCheckBox *cbShowMinFeerate;
 
     int64_t timeFilter;
 
