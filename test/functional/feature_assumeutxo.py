@@ -92,20 +92,18 @@ class AssumeutxoTest(BitcoinTestFramework):
                 f.write(valid_snapshot_contents[32 + 8:])
             expected_error(log_msg=f"bad snapshot - coins left over after deserializing 298 coins" if off == -1 else f"bad snapshot format or truncated snapshot after deserializing 299 coins")
 
-        self.log.info("  - snapshot file with wrong outpoint hash")
-        with open(bad_snapshot_path, "wb") as f:
-            f.write(valid_snapshot_contents[:(32 + 8)])
-            f.write(b"\xff" * 32)
-            f.write(valid_snapshot_contents[(32 + 8 + 32):])
-        expected_error(log_msg="[snapshot] bad snapshot content hash: expected ef45ccdca5898b6c2145e4581d2b88c56564dd389e4bd75a1aaf6961d3edd3c0, got 29926acf3ac81f908cf4f22515713ca541c08bb0f0ef1b2c3443a007134d69b8")
+        self.log.info("  - snapshot file with alternated UTXO data")
+        cases = [
+            [b"\xff" * 32, 0, "29926acf3ac81f908cf4f22515713ca541c08bb0f0ef1b2c3443a007134d69b8"], # wrong outpoint hash
+            [(1).to_bytes(4, "little"), 32, "798266c2e1f9a98fe5ce61f5951cbf47130743f3764cf3cbc254be129142cf9d"], # wrong outpoint index
+        ]
 
-        self.log.info("  - snapshot file with wrong outpoint index")
-        with open(bad_snapshot_path, "wb") as f:
-            f.write(valid_snapshot_contents[:(32 + 8 + 32)])
-            new_index = 1  # The correct index is 0
-            f.write(new_index.to_bytes(4, "little"))
-            f.write(valid_snapshot_contents[(32 + 8 + 32 + 4):])
-        expected_error(log_msg="[snapshot] bad snapshot content hash: expected ef45ccdca5898b6c2145e4581d2b88c56564dd389e4bd75a1aaf6961d3edd3c0, got 798266c2e1f9a98fe5ce61f5951cbf47130743f3764cf3cbc254be129142cf9d")
+        for content, offset, wrong_hash in cases:
+            with open(bad_snapshot_path, "wb") as f:
+                f.write(valid_snapshot_contents[:(32 + 8 + offset)])
+                f.write(content)
+                f.write(valid_snapshot_contents[(32 + 8 + offset + len(content)):])
+            expected_error(log_msg=f"[snapshot] bad snapshot content hash: expected ef45ccdca5898b6c2145e4581d2b88c56564dd389e4bd75a1aaf6961d3edd3c0, got {wrong_hash}")
 
     def run_test(self):
         """
