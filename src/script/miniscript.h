@@ -1105,13 +1105,15 @@ private:
     }
 
     internal::WitnessSize CalcWitnessSize() const {
+        const uint32_t sig_size = IsTapscript(m_script_ctx) ? 1 + 65 : 1 + 72;
+        const uint32_t pubkey_size = IsTapscript(m_script_ctx) ? 1 + 32 : 1 + 33;
         switch (fragment) {
             case Fragment::JUST_0: return {{}, 0};
             case Fragment::JUST_1:
             case Fragment::OLDER:
             case Fragment::AFTER: return {0, {}};
-            case Fragment::PK_K: return {1 + 72, 1};
-            case Fragment::PK_H: return {1 + 72 + 1 + 33, 1 + 1 + 33};
+            case Fragment::PK_K: return {sig_size, 1};
+            case Fragment::PK_H: return {sig_size + pubkey_size, 1 + pubkey_size};
             case Fragment::SHA256:
             case Fragment::RIPEMD160:
             case Fragment::HASH256:
@@ -1131,8 +1133,8 @@ private:
             case Fragment::OR_C: return {subs[0]->ws.sat | (subs[0]->ws.dsat + subs[1]->ws.sat), {}};
             case Fragment::OR_D: return {subs[0]->ws.sat | (subs[0]->ws.dsat + subs[1]->ws.sat), subs[0]->ws.dsat + subs[1]->ws.dsat};
             case Fragment::OR_I: return {(subs[0]->ws.sat + 1 + 1) | (subs[1]->ws.sat + 1), (subs[0]->ws.dsat + 1 + 1) | (subs[1]->ws.dsat + 1)};
-            case Fragment::MULTI: return {k * (1 + 72) + 1, k + 1};
-            case Fragment::MULTI_A: return {k * (1 + 65) + static_cast<uint32_t>(keys.size()) - k, static_cast<uint32_t>(keys.size())};
+            case Fragment::MULTI: return {k * sig_size + 1, k + 1};
+            case Fragment::MULTI_A: return {k * sig_size + static_cast<uint32_t>(keys.size()) - k, static_cast<uint32_t>(keys.size())};
             case Fragment::WRAP_A:
             case Fragment::WRAP_N:
             case Fragment::WRAP_S:
