@@ -37,7 +37,7 @@ static void DuplicateInputs(benchmark::Bench& bench)
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = SCRIPT_PUB;
-    coinbaseTx.vout[0].nValue = GetBlockSubsidyInner(block.nBits, nHeight, chainparams.GetConsensus(), false);
+    coinbaseTx.vout[0].nValue = GetBlockSubsidyInner(block.nBits, nHeight, chainparams.GetConsensus(), /*fV20Active=*/ false, /*fMNRewardReallocated=*/ false);
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
 
     naughtyTx.vout.resize(1);

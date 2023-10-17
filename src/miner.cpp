@@ -193,7 +193,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     // NOTE: unlike in bitcoin, we need to pass PREVIOUS block height here
     bool fMNRewardReallocated = llmq::utils::IsMNRewardReallocationActive(pindexPrev);
-    CAmount blockReward = nFees + GetBlockSubsidyInner(pindexPrev->nBits, pindexPrev->nHeight, Params().GetConsensus(), fMNRewardReallocated);
+    bool fV20Active = llmq::utils::IsV20Active(pindexPrev);
+    CAmount blockReward = nFees + GetBlockSubsidyInner(pindexPrev->nBits, pindexPrev->nHeight, Params().GetConsensus(), fV20Active, fMNRewardReallocated);
 
     // Compute regular coinbase transaction.
     coinbaseTx.vout[0].nValue = blockReward;

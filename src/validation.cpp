@@ -1119,7 +1119,7 @@ NOTE:   unlike bitcoin we are using PREVIOUS block height here,
         might be a good idea to change this to use prev bits
         but current height to avoid confusion.
 */
-static std::pair<CAmount, CAmount> GetBlockSubsidyHelper(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fMNRewardReallocated)
+static std::pair<CAmount, CAmount> GetBlockSubsidyHelper(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fV20Active, bool fMNRewardReallocated)
 {
     double dDiff;
     CAmount nSubsidyBase;
@@ -1131,7 +1131,14 @@ static std::pair<CAmount, CAmount> GetBlockSubsidyHelper(int nPrevBits, int nPre
         dDiff = ConvertBitsToDouble(nPrevBits);
     }
 
-    if (nPrevHeight < 5465) {
+    // TODO remove "not testnet" condition when we re-organize testnet
+    if (fV20Active && Params().NetworkIDString() != CBaseChainParams::TESTNET) {
+        // Starting from V20 Activation, subsidybase should be stable.
+        // Currently, nSubsidyBase calculate relies on difficulty.
+        // Once Platform is live, it must constantly get blocks difficulty in order to calculate platformReward.
+        // This can not be continued so we set the nSubsidyBase to a fixed value.
+        nSubsidyBase = 5;
+    } else if (nPrevHeight < 5465) {
         // Early ages...
         // 1111/((x+1)^2)
         nSubsidyBase = (1111.0 / (pow((dDiff+1.0),2.0)));
@@ -1174,22 +1181,24 @@ static std::pair<CAmount, CAmount> GetBlockSubsidyHelper(int nPrevBits, int nPre
     return {nSubsidy - nSuperblockPart, nSuperblockPart};
 }
 
-CAmount GetSuperblockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fMNRewardReallocated)
+CAmount GetSuperblockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fV20Active, bool fMNRewardReallocated)
 {
-    const auto [nSubsidy, nSuperblock] = GetBlockSubsidyHelper(nPrevBits, nPrevHeight, consensusParams, fMNRewardReallocated);
+    const auto [nSubsidy, nSuperblock] = GetBlockSubsidyHelper(nPrevBits, nPrevHeight, consensusParams, fV20Active, fMNRewardReallocated);
     return nSuperblock;
 }
 
-CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fMNRewardReallocated)
+CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fV20Active, bool fMNRewardReallocated)
 {
-    const auto [nSubsidy, nSuperblock] = GetBlockSubsidyHelper(nPrevBits, nPrevHeight, consensusParams, fMNRewardReallocated);
+    const auto [nSubsidy, nSuperblock] = GetBlockSubsidyHelper(nPrevBits, nPrevHeight, consensusParams, fV20Active, fMNRewardReallocated);
     return nSubsidy;
 }
 
 CAmount GetBlockSubsidy(const CBlockIndex* const pindex, const Consensus::Params& consensusParams)
 {
     if (pindex->pprev == nullptr) return Params().GenesisBlock().vtx[0]->GetValueOut();
-    return GetBlockSubsidyInner(pindex->pprev->nBits, pindex->pprev->nHeight, consensusParams, llmq::utils::IsMNRewardReallocationActive(pindex->pprev));
+    bool isV20Active = llmq::utils::IsV20Active(pindex->pprev);
+    bool isMNRewardReallocated = llmq::utils::IsMNRewardReallocationActive(pindex->pprev);
+    return GetBlockSubsidyInner(pindex->pprev->nBits, pindex->pprev->nHeight, consensusParams, isV20Active, isMNRewardReallocated);
 }
 
 CAmount GetMasternodePayment(int nHeight, CAmount blockValue, bool fMNRewardReallocated)
