@@ -73,17 +73,12 @@ class AssumeutxoTest(BitcoinTestFramework):
         bad_snapshot_path = valid_snapshot_path + '.mod'
 
         self.log.info("  - snapshot file refering to a block that is not in the assumeutxo parameters")
-        # we can only test this with a block that is already known, as otherwise the `loadtxoutset` RPC
-        # would time out (waiting to see the hash in the headers chain), rather than error immediately
-        bad_snapshot_height = SNAPSHOT_BASE_HEIGHT - 1
+        bad_snapshot_block_hash = self.nodes[0].getblockhash(SNAPSHOT_BASE_HEIGHT - 1)
         with open(bad_snapshot_path, 'wb') as f:
-            bad_snapshot_block_hash = self.nodes[0].getblockhash(bad_snapshot_height)
             # block hash of the snapshot base is stored right at the start (first 32 bytes)
             f.write(bytes.fromhex(bad_snapshot_block_hash)[::-1] + valid_snapshot_contents[32:])
-
-        expected_log = f"assumeutxo height in snapshot metadata not recognized ({bad_snapshot_height}) - refusing to load snapshot"
-        with self.nodes[1].assert_debug_log([expected_log]):
-            assert_raises_rpc_error(-32603, "Unable to load UTXO snapshot", self.nodes[1].loadtxoutset, bad_snapshot_path)
+        error_details = f"assumeutxo block hash in snapshot metadata not recognized ({bad_snapshot_block_hash})"
+        assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot, {error_details}", self.nodes[1].loadtxoutset, bad_snapshot_path)
 
         self.log.info("  - snapshot file with wrong number of coins")
         valid_num_coins = struct.unpack("<I", valid_snapshot_contents[32:32 + 4])[0]
