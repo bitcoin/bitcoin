@@ -196,6 +196,19 @@ public:
         ::Unserialize(s, viewTag);
     }
 
+    void SetNull()
+    {
+        viewTag = 0;
+        spendingKey = MclG1Point();
+        blindingKey = MclG1Point();
+        ephemeralKey = MclG1Point();
+    }
+
+    bool IsNull() const
+    {
+        return viewTag == 0 && spendingKey.IsZero() && blindingKey.IsZero() && ephemeralKey.IsZero();
+    }
+
     friend bool operator==(const CTxOutBLSCTData& a, const CTxOutBLSCTData& b)
     {
         return (a.spendingKey == b.spendingKey && a.ephemeralKey == b.ephemeralKey &&
@@ -272,14 +285,15 @@ public:
 
     void SetNull()
     {
-        nValue = -1;
+        nValue = std::numeric_limits<CAmount>::max();
         scriptPubKey.clear();
-        blsctData.viewTag = 0;
+        blsctData.SetNull();
+        tokenId = TokenId();
     }
 
     bool IsNull() const
     {
-        return (nValue == -1 && blsctData.viewTag == 0 && scriptPubKey.size() == 0);
+        return (nValue == std::numeric_limits<CAmount>::max() && blsctData.IsNull() && scriptPubKey.size() == 0 && tokenId == TokenId());
     }
 
     bool IsBLSCT() const
