@@ -1,9 +1,9 @@
-24.2rc1 Release Notes
+24.2 Release Notes
 ==================
 
-Bitcoin Core version 24.2rc1 is now available from:
+Bitcoin Core version 24.2 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-24.2/test.rc1/>
+  <https://bitcoincore.org/bin/bitcoin-core-24.2/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
