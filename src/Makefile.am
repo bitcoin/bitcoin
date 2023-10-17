@@ -595,6 +595,11 @@ libbitcoin_wallet_a_SOURCES = \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/building_block/imp_inner_prod_arg.cpp \
+  blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
+  blsct/building_block/generator_deriver.cpp \
+  blsct/building_block/lazy_point.cpp \
+  blsct/common.cpp \
+  blsct/range_proof/generators.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_request.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_result.cpp \
   blsct/range_proof/bulletproofs/range_proof_logic.cpp \
