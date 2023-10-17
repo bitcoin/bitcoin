@@ -601,6 +601,7 @@ libbitcoin_wallet_a_SOURCES = \
   blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
   blsct/building_block/generator_deriver.cpp \
   blsct/building_block/lazy_point.cpp \
+  blsct/building_block/lazy_points.cpp \
   blsct/common.cpp \
   blsct/range_proof/generators.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_request.cpp \
