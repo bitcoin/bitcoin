@@ -1119,7 +1119,7 @@ NOTE:   unlike bitcoin we are using PREVIOUS block height here,
         might be a good idea to change this to use prev bits
         but current height to avoid confusion.
 */
-CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fMNRewardReallocated, bool fSuperblockPartOnly)
+static std::pair<CAmount, CAmount> GetBlockSubsidyHelper(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fMNRewardReallocated)
 {
     double dDiff;
     CAmount nSubsidyBase;
@@ -1171,7 +1171,19 @@ CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Pa
         if (Params().NetworkIDString() == CBaseChainParams::TESTNET) fMNRewardReallocated = false;
         nSuperblockPart = nSubsidy / (fMNRewardReallocated ? 5 : 10);
     }
-    return fSuperblockPartOnly ? nSuperblockPart : nSubsidy - nSuperblockPart;
+    return {nSubsidy - nSuperblockPart, nSuperblockPart};
+}
+
+CAmount GetSuperblockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fMNRewardReallocated)
+{
+    const auto [nSubsidy, nSuperblock] = GetBlockSubsidyHelper(nPrevBits, nPrevHeight, consensusParams, fMNRewardReallocated);
+    return nSuperblock;
+}
+
+CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fMNRewardReallocated)
+{
+    const auto [nSubsidy, nSuperblock] = GetBlockSubsidyHelper(nPrevBits, nPrevHeight, consensusParams, fMNRewardReallocated);
+    return nSubsidy;
 }
 
 CAmount GetBlockSubsidy(const CBlockIndex* const pindex, const Consensus::Params& consensusParams)
@@ -1180,12 +1192,13 @@ CAmount GetBlockSubsidy(const CBlockIndex* const pindex, const Consensus::Params
     return GetBlockSubsidyInner(pindex->pprev->nBits, pindex->pprev->nHeight, consensusParams, llmq::utils::IsMNRewardReallocationActive(pindex->pprev));
 }
 
-CAmount GetMasternodePayment(int nHeight, CAmount blockValue, int nReallocActivationHeight, bool fMNRewardReallocated)
+CAmount GetMasternodePayment(int nHeight, CAmount blockValue, bool fMNRewardReallocated)
 {
     CAmount ret = blockValue/5; // start at 20%
 
-    int nMNPIBlock = Params().GetConsensus().nMasternodePaymentsIncreaseBlock;
-    int nMNPIPeriod = Params().GetConsensus().nMasternodePaymentsIncreasePeriod;
+    const int nMNPIBlock = Params().GetConsensus().nMasternodePaymentsIncreaseBlock;
+    const int nMNPIPeriod = Params().GetConsensus().nMasternodePaymentsIncreasePeriod;
+    const int nReallocActivationHeight = Params().GetConsensus().BRRHeight;
 
                                                                       // mainnet:
     if(nHeight > nMNPIBlock)                  ret += blockValue / 20; // 158000 - 25.0% - 2014-10-24
@@ -2398,7 +2411,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     int64_t nTime5_4 = GetTimeMicros(); nTimeValueValid += nTime5_4 - nTime5_3;
     LogPrint(BCLog::BENCHMARK, "      - IsBlockValueValid: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5_4 - nTime5_3), nTimeValueValid * MICRO, nTimeValueValid * MILLI / nBlocksTotal);
 
-    if (!MasternodePayments::IsBlockPayeeValid(*sporkManager, *governance, *block.vtx[0], pindex->nHeight, blockReward)) {
+    if (!MasternodePayments::IsBlockPayeeValid(*sporkManager, *governance, *block.vtx[0], pindex->pprev, blockReward)) {
         // NOTE: Do not punish, the node might be missing governance data
         LogPrintf("ERROR: ConnectBlock(DASH): couldn't find masternode or superblock payments\n");
         return state.Invalid(BlockValidationResult::BLOCK_RESULT_UNSET, "bad-cb-payee");

@@ -241,7 +241,7 @@ bool CCreditPoolDiff::SetTarget(const CTransaction& tx, const CAmount blockRewar
 
     if (!llmq::utils::IsMNRewardReallocationActive(pindex)) return true;
 
-    platformReward = MasternodePayments::PlatformShare(GetMasternodePayment(cbTx.nHeight, blockReward, params.BRRHeight, true));
+    platformReward = MasternodePayments::PlatformShare(GetMasternodePayment(cbTx.nHeight, blockReward, /* reward_reallocation= */ true));
     LogPrintf("CreditPool: set target to %lld with MN reward %lld\n", *targetBalance, platformReward);
 
     return true;
