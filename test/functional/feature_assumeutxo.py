@@ -19,7 +19,6 @@ Interesting test cases could be loading an assumeutxo snapshot file with:
 
 - TODO: Valid hash but invalid snapshot file (bad coin height or
       bad other serialization)
-- TODO: Valid snapshot file, but referencing an unknown block
 - TODO: Valid snapshot file, but referencing a snapshot block that turns out to be
       invalid, or has an invalid parent
 - TODO: Valid snapshot file and snapshot block, but the block is not on the
@@ -71,12 +70,14 @@ class AssumeutxoTest(BitcoinTestFramework):
         bad_snapshot_path = valid_snapshot_path + '.mod'
 
         self.log.info("  - snapshot file refering to a block that is not in the assumeutxo parameters")
-        bad_snapshot_block_hash = self.nodes[0].getblockhash(SNAPSHOT_BASE_HEIGHT - 1)
-        with open(bad_snapshot_path, 'wb') as f:
-            # block hash of the snapshot base is stored right at the start (first 32 bytes)
-            f.write(bytes.fromhex(bad_snapshot_block_hash)[::-1] + valid_snapshot_contents[32:])
-        error_details = f"assumeutxo block hash in snapshot metadata not recognized ({bad_snapshot_block_hash})"
-        assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot, {error_details}", self.nodes[1].loadtxoutset, bad_snapshot_path)
+        prev_block_hash = self.nodes[0].getblockhash(SNAPSHOT_BASE_HEIGHT - 1)
+        bogus_block_hash = "0" * 64  # Represents any unknown block hash
+        for bad_block_hash in [bogus_block_hash, prev_block_hash]:
+            with open(bad_snapshot_path, 'wb') as f:
+                # block hash of the snapshot base is stored right at the start (first 32 bytes)
+                f.write(bytes.fromhex(bad_block_hash)[::-1] + valid_snapshot_contents[32:])
+            error_details = f"assumeutxo block hash in snapshot metadata not recognized ({bad_block_hash})"
+            assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot, {error_details}", self.nodes[1].loadtxoutset, bad_snapshot_path)
 
         self.log.info("  - snapshot file with wrong number of coins")
         valid_num_coins = int.from_bytes(valid_snapshot_contents[32:32 + 8], "little")
