@@ -82,7 +82,7 @@ public:
      * to change amount of credit pool
      * coinbase transaction's Payload must be valid if nVersion of coinbase transaction equals 3
      */
-    bool ProcessCoinbaseTransaction(const CTransaction& tx, const CAmount blockReward, TxValidationState& state);
+    bool ProcessCoinbaseTransaction(const CTransaction& tx, const CAmount blockSubsidy, TxValidationState& state);
 
     /**
      * This function should be called for each Asset Lock/Unlock tx
@@ -109,7 +109,7 @@ public:
     }
 
 private:
-    bool SetTarget(const CTransaction& tx, const CAmount blockReward, TxValidationState& state);
+    bool SetTarget(const CTransaction& tx, const CAmount blockSubsidy, TxValidationState& state);
     bool Lock(const CTransaction& tx, TxValidationState& state);
     bool Unlock(const CTransaction& tx, TxValidationState& state);
 };

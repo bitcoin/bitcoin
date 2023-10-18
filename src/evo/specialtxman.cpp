@@ -265,7 +265,7 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CMNHF
 }
 
 bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams,
-                                const CAmount blockReward, BlockValidationState& state)
+                                const CAmount blockSubsidy, BlockValidationState& state)
 {
     AssertLockHeld(cs_main);
 
@@ -280,7 +280,7 @@ bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex,
         for (const auto& ptr_tx : block.vtx) {
             TxValidationState tx_state;
             if (ptr_tx->IsCoinBase()) {
-                if (!creditPoolDiff.ProcessCoinbaseTransaction(*ptr_tx, blockReward, tx_state)) {
+                if (!creditPoolDiff.ProcessCoinbaseTransaction(*ptr_tx, blockSubsidy, tx_state)) {
                     assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS);
                     return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
                                      strprintf("Process Coinbase Transaction failed at Credit Pool (tx hash %s) %s", ptr_tx->GetHash().ToString(), tx_state.GetDebugMessage()));
