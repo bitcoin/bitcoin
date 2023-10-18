@@ -213,22 +213,24 @@ BITCOIN_CORE_H = \
   key_io.h \
   dbwrapper.h \
   limitedmap.h \
-  llmq/quorums.h \
   llmq/blockprocessor.h \
-  llmq/commitment.h \
   llmq/chainlocks.h \
   llmq/clsig.h \
+  llmq/commitment.h \
+  llmq/context.h \
   llmq/debug.h \
+  llmq/dkgsession.h \
   llmq/dkgsessionhandler.h \
   llmq/dkgsessionmgr.h \
-  llmq/dkgsession.h \
-  llmq/context.h \
+  llmq/ehf_signals.cpp \
+  llmq/ehf_signals.h \
   llmq/instantsend.h \
-  llmq/snapshot.h \
+  llmq/params.h \
+  llmq/quorums.h \
   llmq/signing.h \
   llmq/signing_shares.h \
+  llmq/snapshot.h \
   llmq/utils.h \
-  llmq/params.h \
   logging.h \
   logging/timer.h \
   mapport.h \

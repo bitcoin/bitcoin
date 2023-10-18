@@ -40,7 +40,7 @@ using SimpleUTXOMap = std::map<COutPoint, std::pair<int, CAmount>>;
 struct TestChainBRRBeforeActivationSetup : public TestChainSetup
 {
     // Force fast DIP3 activation
-    TestChainBRRBeforeActivationSetup() : TestChainSetup(497, {"-dip3params=30:50"}) {}
+    TestChainBRRBeforeActivationSetup() : TestChainSetup(497, {"-dip3params=30:50", "-vbparams=mn_rr:0:999999999999:20:16:12:5:0"}) {}
 };
 
 static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransactionRef>& txs)
@@ -264,6 +264,9 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, 61329598); // 0.6
     }
     BOOST_CHECK(!llmq::utils::IsMNRewardReallocationActive(m_node.chainman->ActiveChain().Tip()));
+
+    // Activate EHF "MN_RR"
+    Params().UpdateMNActivationParam(Params().GetConsensus().vDeployments[Consensus::DEPLOYMENT_MN_RR].bit, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), /*fJustCheck=*/ false);
 
     // Reward split should stay ~60/40 after reallocation is done,
     // check 10 next superblocks

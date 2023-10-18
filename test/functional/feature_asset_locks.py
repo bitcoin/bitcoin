@@ -41,6 +41,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    get_bip9_details,
     hex_str_to_bytes,
 )
 
@@ -83,7 +84,6 @@ class AssetLocksTest(DashTestFramework):
         lock_tx.vExtraPayload = lockTx_payload.serialize()
 
         lock_tx = node_wallet.signrawtransactionwithwallet(lock_tx.serialize().hex())
-        self.log.info(f"next tx: {lock_tx} payload: {lockTx_payload}")
         return FromHex(CTransaction(), lock_tx["hex"])
 
 
@@ -295,8 +295,8 @@ class AssetLocksTest(DashTestFramework):
 
         self.log.info("Mine a quorum...")
         self.mine_quorum()
-        self.validate_credit_pool_balance(locked_1)
 
+        self.validate_credit_pool_balance(locked_1)
 
         self.log.info("Testing asset unlock...")
 
@@ -428,8 +428,8 @@ class AssetLocksTest(DashTestFramework):
             self.log.info(f"Collecting coins in pool... Collected {total}/{10_900 * COIN}")
             coin = coins.pop()
             to_lock = int(coin['amount'] * COIN) - tiny_amount
-            if to_lock > 50 * COIN:
-                to_lock = 50 * COIN
+            if to_lock > 99 * COIN:
+                to_lock = 99 * COIN
             total += to_lock
             tx = self.create_assetlock(coin, to_lock, pubkey)
             self.send_tx_simple(tx)
@@ -455,6 +455,7 @@ class AssetLocksTest(DashTestFramework):
         self.sync_mempools()
         node.generate(1)
         self.sync_all()
+        self.log.info(f"MN_RR status: {get_bip9_details(node, 'mn_rr')}")
 
         new_total = self.get_credit_pool_balance()
         amount_actually_withdrawn = total - new_total
@@ -499,14 +500,17 @@ class AssetLocksTest(DashTestFramework):
         node.generate(1)
         self.sync_all()
 
-        self.log.info("generate many blocks to be sure that mempool is empty afterwards...")
+        self.log.info("generate many blocks to be sure that mempool is empty after expiring txes...")
         self.slowly_generate_batch(60)
         self.log.info("Checking that credit pool is not changed...")
         assert_equal(new_total, self.get_credit_pool_balance())
         self.check_mempool_size()
 
-        self.activate_mn_rr(expected_activation_height=3090)
+        # activate MN_RR reallocation
+        self.activate_mn_rr(expected_activation_height=node.getblockcount() + 12 * 3)
         self.log.info(f'height: {node.getblockcount()} credit: {self.get_credit_pool_balance()}')
+        assert_equal(new_total, self.get_credit_pool_balance())
+
         bt = node.getblocktemplate()
         platform_reward = bt['masternode'][0]['amount']
         assert_equal(bt['masternode'][0]['script'], '6a')  # empty OP_RETURN
@@ -515,7 +519,7 @@ class AssetLocksTest(DashTestFramework):
         all_mn_rewards = platform_reward + owner_reward + operator_reward
         assert_equal(all_mn_rewards, bt['coinbasevalue'] * 3 // 4)  # 75/25 mn/miner reward split
         assert_equal(platform_reward, all_mn_rewards * 375 // 1000)  # 0.375 platform share
-        assert_equal(platform_reward, 25553999)
+        assert_equal(platform_reward, 29636590)
         assert_equal(new_total, self.get_credit_pool_balance())
         node.generate(1)
         self.sync_all()

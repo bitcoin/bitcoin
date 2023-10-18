@@ -12,25 +12,27 @@ class CChainState;
 class CConnman;
 class CDBWrapper;
 class CEvoDB;
-class CTxMemPool;
 class CSporkManager;
+class CTxMemPool;
 class PeerManager;
 
 namespace llmq {
+class CChainLocksHandler;
 class CDKGDebugManager;
-class CQuorumBlockProcessor;
 class CDKGSessionManager;
+class CEHFSignalsHandler;
+class CInstantSendManager;
+class CQuorumBlockProcessor;
 class CQuorumManager;
 class CSigSharesManager;
 class CSigningManager;
-class CChainLocksHandler;
-class CInstantSendManager;
 }
 
 struct LLMQContext {
     LLMQContext() = delete;
     LLMQContext(const LLMQContext&) = delete;
-    LLMQContext(CChainState& chainstate, CConnman& connman, CEvoDB& evo_db, CSporkManager& sporkman, CTxMemPool& mempool,
+    LLMQContext(CChainState& chainstate, CConnman& connman, CEvoDB& evo_db, CSporkManager& sporkman,
+                CTxMemPool& mempool,
                 const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe);
     ~LLMQContext();
 
@@ -57,6 +59,7 @@ struct LLMQContext {
     const std::unique_ptr<llmq::CSigSharesManager> shareman;
     llmq::CChainLocksHandler* const clhandler;
     llmq::CInstantSendManager* const isman;
+    const std::unique_ptr<llmq::CEHFSignalsHandler> ehfSignalsHandler;
 };
 
 #endif // BITCOIN_LLMQ_CONTEXT_H

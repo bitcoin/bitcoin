@@ -160,11 +160,16 @@ class MnehfTest(DashTestFramework):
         assert_equal(get_bip9_details(node, 'testdummy')['status'], 'defined')
         self.activate_v20()
         assert_equal(get_bip9_details(node, 'testdummy')['status'], 'defined')
+        assert_equal(get_bip9_details(node, 'mn_rr')['status'], 'defined')
 
         ehf_tx_sent = self.send_tx(ehf_tx)
+        self.log.info(f"ehf tx: {ehf_tx_sent}")
         ehf_unknown_tx_sent = self.send_tx(ehf_unknown_tx)
+        self.log.info(f"unknown ehf tx: {ehf_unknown_tx_sent}")
         self.send_tx(ehf_invalid_tx, expected_error='bad-mnhf-non-ehf')
-        ehf_blockhash = node.generate(1)[0]
+        self.sync_all()
+        ehf_blockhash = self.nodes[1].generate(1)[0]
+        self.sync_blocks()
         self.sync_all()
 
         self.log.info(f"Check MnEhfTx {ehf_tx_sent} was mined in {ehf_blockhash}")
@@ -251,6 +256,12 @@ class MnehfTest(DashTestFramework):
         self.mine_quorum()
 
         ehf_tx_new_start = self.create_mnehf(28, pubkey)
+
+        self.log.info("activate MN_RR also by enabling spork 24")
+        assert_equal(get_bip9_details(node, 'mn_rr')['status'], 'defined')
+        self.nodes[0].sporkupdate("SPORK_24_EHF", 0)
+        self.wait_for_sporks_same()
+
         self.check_fork('defined')
 
         self.log.info("Mine one block and ensure EHF tx for the new deployment is mined")
@@ -263,6 +274,8 @@ class MnehfTest(DashTestFramework):
         self.check_fork('defined')
         self.slowly_generate_batch(12 * 4)
         self.check_fork('active')
+        self.log.info(f"bip9: {get_bip9_details(node, 'mn_rr')}")
+        assert_equal(get_bip9_details(node, 'mn_rr')['status'], 'active')
 
 
 if __name__ == '__main__':

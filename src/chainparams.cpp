@@ -219,10 +219,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].bit = 10;
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nStartTime = 19999999999;   // TODO: To be determined later
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
-        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nWindowSize = 4032;
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nWindowSize = 4032; // TODO to be determined before v20 release: choose nWindowSize/nThresholdStart/nThresholdMin
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdStart = 3226;     // 80% of 4032
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdMin = 2420;       // 60% of 4032
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nFalloffCoeff = 5;          // this corresponds to 10 periods
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nMNActivationHeight = 0;    // requires EHF activation
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000008677827656704520eb39"); // 1889000
@@ -420,6 +421,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdStart = 80;       // 80% of 100
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdMin = 60;         // 60% of 100
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nFalloffCoeff = 5;          // this corresponds to 10 periods
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nMNActivationHeight = 0;    // requires EHF activation
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000002d68c8cc1b8e54b"); // 851000
@@ -591,6 +593,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdStart = 80; // 80% of 100
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdMin = 60;   // 60% of 100
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nFalloffCoeff = 5;     // this corresponds to 10 periods
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nMNActivationHeight = 0;    // requires EHF activation
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
@@ -826,10 +829,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].bit = 10;
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
-        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nWindowSize = 1030;
-        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdStart = 800; // 80% of 1000
-        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdMin = 600;   // 60% of 1000
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nWindowSize = 12;
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdStart = 9; // 80% of 12
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdMin = 7;   // 60% of 7
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nFalloffCoeff = 5;     // this corresponds to 10 periods
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nMNActivationHeight = 0;    // requires EHF activation
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");

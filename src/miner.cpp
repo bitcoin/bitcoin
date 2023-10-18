@@ -311,7 +311,7 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
         const auto& txid = it->GetTx().GetHash();
         if (!m_isman.RejectConflictingBlocks() || !m_isman.IsInstantSendEnabled() || m_isman.IsLocked(txid)) continue;
 
-        if (!m_clhandler.IsTxSafeForMining(txid)) {
+        if (!it->GetTx().vin.empty() && !m_clhandler.IsTxSafeForMining(txid)) {
             return false;
         }
     }

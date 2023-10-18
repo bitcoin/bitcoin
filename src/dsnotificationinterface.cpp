@@ -19,6 +19,7 @@
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/dkgsessionmgr.h>
+#include <llmq/ehf_signals.h>
 #include <llmq/instantsend.h>
 #include <llmq/quorums.h>
 
@@ -78,6 +79,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
     llmq_ctx->qman->UpdatedBlockTip(pindexNew, fInitialDownload);
     llmq_ctx->qdkgsman->UpdatedBlockTip(pindexNew, fInitialDownload);
+    llmq_ctx->ehfSignalsHandler->UpdatedBlockTip(pindexNew);
 
     if (!fDisableGovernance) govman.UpdatedBlockTip(pindexNew, connman);
 }

@@ -1614,6 +1614,7 @@ static void BIP9SoftForkDescPushBack(const CBlockIndex* active_chain_tip, UniVal
     }
     bip9.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
     bip9.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
+    bip9.pushKV("ehf", consensusParams.vDeployments[id].nMNActivationHeight);
     int64_t since_height = VersionBitsStateSinceHeight(active_chain_tip, consensusParams, id, versionbitscache);
     bip9.pushKV("since", since_height);
     if (ThresholdState::STARTED == thresholdState)
