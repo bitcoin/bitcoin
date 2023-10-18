@@ -2778,7 +2778,15 @@ static RPCHelpMan loadtxoutset()
     }
 
     SnapshotMetadata metadata;
-    afile >> metadata;
+    try {
+        // Read data from the file
+        afile >> metadata;
+    } catch (const std::exception&) {
+        // Handle any exception, which includes reaching the end of the file e.g. file size < sizeOf(metadata)
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Unable to load UTXO snapshot, "
+            "couldn't read snapshot metadata from file %s.\nThe file may be corrupted "
+            "or it was crafted in an incompatible format.", path.utf8string()));
+    }
 
     uint256 base_blockhash = metadata.m_base_blockhash;
     if (!chainman.GetParams().AssumeutxoForBlockhash(base_blockhash).has_value()) {
