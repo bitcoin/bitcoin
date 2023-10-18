@@ -366,17 +366,31 @@ void CDeterministicMNList::PoSePunish(const uint256& proTxHash, int penalty, boo
     UpdateMN(proTxHash, newState);
 }
 
-void CDeterministicMNList::PoSeDecrease(const uint256& proTxHash)
+void CDeterministicMNList::DecreaseScores()
 {
-    auto dmn = GetMN(proTxHash);
-    if (!dmn) {
-        throw(std::runtime_error(strprintf("%s: Can't find a masternode with proTxHash=%s", __func__, proTxHash.ToString())));
-    }
-    assert(dmn->pdmnState->nPoSePenalty > 0 && !dmn->pdmnState->IsBanned());
+    std::vector<CDeterministicMNCPtr> toDecrease;
+    toDecrease.reserve(GetAllMNsCount() / 10);
+    // only iterate and decrease for valid ones (not PoSe banned yet)
+    // if a MN ever reaches the maximum, it stays in PoSe banned state until revived
+    ForEachMNShared(true /* onlyValid */, [&toDecrease](auto& dmn) {
+        // There is no reason to check if this MN is banned here since onlyValid=true will only run on non-banned MNs
+        if (dmn->pdmnState->nPoSePenalty > 0) {
+            toDecrease.emplace_back(dmn);
+        }
+    });
 
-    auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
+    for (const auto& proTxHash : toDecrease) {
+        PoSeDecrease(*proTxHash);
+    }
+}
+
+void CDeterministicMNList::PoSeDecrease(const CDeterministicMN& dmn)
+{
+    assert(dmn.pdmnState->nPoSePenalty > 0 && !dmn.pdmnState->IsBanned());
+
+    auto newState = std::make_shared<CDeterministicMNState>(*dmn.pdmnState);
     newState->nPoSePenalty--;
-    UpdateMN(proTxHash, newState);
+    UpdateMN(dmn, newState);
 }
 
 CDeterministicMNListDiff CDeterministicMNList::BuildDiff(const CDeterministicMNList& to) const
@@ -723,7 +737,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         }
     });
 
-    DecreasePoSePenalties(newList);
+    newList.DecreaseScores();
 
     bool isMNRewardReallocation = llmq::utils::IsMNRewardReallocationActive(pindexPrev);
 
@@ -999,24 +1013,6 @@ void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitmen
             // If it however fails 3 times in the timespan of a single payment cycle, it should definitely get banned
             mnList.PoSePunish(members[i]->proTxHash, mnList.CalcPenalty(66), debugLogs);
         }
-    }
-}
-
-void CDeterministicMNManager::DecreasePoSePenalties(CDeterministicMNList& mnList)
-{
-    std::vector<uint256> toDecrease;
-    toDecrease.reserve(mnList.GetAllMNsCount() / 10);
-    // only iterate and decrease for valid ones (not PoSe banned yet)
-    // if a MN ever reaches the maximum, it stays in PoSe banned state until revived
-    mnList.ForEachMN(true /* onlyValid */, [&toDecrease](auto& dmn) {
-        // There is no reason to check if this MN is banned here since onlyValid=true will only run on non-banned MNs
-        if (dmn.pdmnState->nPoSePenalty > 0) {
-            toDecrease.emplace_back(dmn.proTxHash);
-        }
-    });
-
-    for (const auto& proTxHash : toDecrease) {
-        mnList.PoSeDecrease(proTxHash);
     }
 }
 
