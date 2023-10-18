@@ -638,7 +638,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
     const uint256 snapshot_tip_hash = WITH_LOCK(chainman.GetMutex(),
         return chainman.ActiveTip()->GetBlockHash());
 
-    res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation(*Assert(chainman.HistoricalChainstate()), active_cs));
+    res = chainman.MaybeCompleteSnapshotValidation(*Assert(chainman.HistoricalChainstate()), active_cs);
     BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::SUCCESS);
 
     BOOST_CHECK(WITH_LOCK(::cs_main, return chainman.MostWorkChainstate().Validity() == ChainValidity::VALIDATED));
@@ -651,7 +651,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
     BOOST_CHECK(active_cs.m_coinsdb_cache_size_bytes > db_cache_before_complete);
 
     // Trying completion again should return false.
-    res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation(active_cs, active_cs));
+    res = chainman.MaybeCompleteSnapshotValidation(active_cs, active_cs);
     BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::SKIPPED);
 
     // The invalid snapshot path should not have been used.

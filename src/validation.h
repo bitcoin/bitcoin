@@ -673,33 +673,6 @@ public:
     //! if we pruned.
     void PruneAndFlush();
 
-    /**
-     * Find the best known block, and make it the tip of the block chain. The
-     * result is either failure or an activated best chain. pblock is either
-     * nullptr or a pointer to a block that is already loaded (to avoid loading
-     * it again from disk).
-     *
-     * ActivateBestChain is split into steps (see ActivateBestChainStep) so that
-     * we avoid holding cs_main for an extended period of time; the length of this
-     * call may be quite long during reindexing or a substantial reorg.
-     *
-     * May not be called with cs_main held. May not be called in a
-     * validationinterface callback.
-     *
-     * Note that if this is called while a snapshot chainstate is active, and if
-     * it is called on a non-snapshot chainstate whose tip has reached the base
-     * block of the snapshot, its execution will take *MINUTES* while it hashes
-     * the UTXO set to verify the assumeutxo value the snapshot was activated
-     * with. `cs_main` will be held during this time.
-     *
-     * @returns true unless a system error occurred
-     */
-    bool ActivateBestChain(
-        BlockValidationState& state,
-        std::shared_ptr<const CBlock> pblock = nullptr)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
-        LOCKS_EXCLUDED(::cs_main);
-
     // Block (dis)connection on a given view:
     DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -731,8 +704,6 @@ public:
 
     /** Whether the chain state needs to be redownloaded due to lack of witness data */
     [[nodiscard]] bool NeedsRedownload() const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */
-    bool LoadGenesisBlock();
 
     void TryAddBlockIndexCandidate(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -913,7 +884,7 @@ public:
      *
      * By default this only executes fully when using the Regtest chain; see: m_options.check_block_index.
      */
-    void CheckBlockIndex();
+    void CheckBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, GetMutex());
 
     /**
      * Alias for ::cs_main.
@@ -1001,7 +972,7 @@ public:
     //!
     //! @param[in] mempool              The mempool to pass to the chainstate
     //                                  constructor
-    Chainstate& InitializeChainstate(CTxMemPool* mempool) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    Chainstate& InitializeChainstate(CTxMemPool* mempool) EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, ::cs_main);
 
     //! Construct and activate a Chainstate on the basis of UTXO snapshot data.
     //!
@@ -1017,19 +988,19 @@ public:
     //! - Add the new chainstate to ChainstateManager and make it our
     //!   ChainstateActive().
     [[nodiscard]] bool ActivateSnapshot(
-        AutoFile& coins_file, const node::SnapshotMetadata& metadata, bool in_memory);
-
+        AutoFile& coins_file, const node::SnapshotMetadata& metadata, bool in_memory)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_chainstates_mutex);
     //! Once a fully validated non-snapshot chainstate reaches an assumeutxo
     //! snapshot block, the snapshot can be validated. If the snapshot hash
     //! matches the validated UTXO set, then the snapshot chainstate can be
     //! considered fully valid and the non-snapshot chainstate will be disabled.
     //! Otherwise the snapshot chainstate will be disabled and fatal error will
     //! be triggered.
-    SnapshotCompletionResult MaybeCompleteSnapshotValidation(Chainstate& validated_chainstate, Chainstate& snapshot_chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    SnapshotCompletionResult MaybeCompleteSnapshotValidation(Chainstate& validated_chainstate, Chainstate& snapshot_chainstate) EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex) LOCKS_EXCLUDED(::cs_main);
 
     //! Return chainstate targetting the most work-valid block.
-    Chainstate& MostWorkChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) {
-        return *Assert(*Assert(FindFirstPtr(m_chainstates, [](auto& cs) EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) {
+    Chainstate& MostWorkChainstate() const EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, GetMutex()) {
+        return *Assert(*Assert(FindFirstPtr(m_chainstates, [](auto& cs) EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, GetMutex()) {
             return !cs->m_target_block &&
                    (cs->m_validity == ChainValidity::VALIDATED ||
                     cs->m_validity == ChainValidity::ASSUMED_VALID); })));
@@ -1037,24 +1008,24 @@ public:
 
     //! If the active chainstate is not fully validated, return historical
     //! chainstate that can be used to download old blocks and validate it.
-    Chainstate* HistoricalChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) {
+    Chainstate* HistoricalChainstate() const EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, GetMutex()) {
         Chainstate& most_work = MostWorkChainstate();
         if (most_work.m_validity == ChainValidity::VALIDATED) return nullptr;
-        return Assert(FindFirstPtr(m_chainstates, [](auto& cs) EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) {
+        return Assert(FindFirstPtr(m_chainstates, [](auto& cs) EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, GetMutex()) {
             return cs->m_validity == ChainValidity::VALIDATED; }))->get();
     }
 
     //! Return fully validated chainstate. Prefer most-work chainstate but fall
     //! back to historical chainstate if most-work chainstate is not validated.
-    Chainstate& ValidatedChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) {
+    Chainstate& ValidatedChainstate() const EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, GetMutex()) {
         Chainstate& most_work = MostWorkChainstate();
         if (most_work.m_validity == ChainValidity::VALIDATED) return most_work;
-        return *Assert(*Assert(FindFirstPtr(m_chainstates, [](auto& cs) EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) {
+        return *Assert(*Assert(FindFirstPtr(m_chainstates, [](auto& cs) EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, GetMutex()) {
                         return cs->m_validity == ChainValidity::VALIDATED; })));
     }
 
     //! Remove a chainstate.
-    std::unique_ptr<Chainstate> RemoveChainstate(Chainstate& chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    std::unique_ptr<Chainstate> RemoveChainstate(Chainstate& chainstate) EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex)
     {
         auto it{std::find_if(m_chainstates.begin(), m_chainstates.end(), [&](auto& cs){ return cs.get() == &chainstate; })};
         if (it != m_chainstates.end()) {
@@ -1066,10 +1037,10 @@ public:
     }
 
     //! The most-work chain.
-    Chainstate& ActiveChainstate() const;
-    CChain& ActiveChain() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChainstate().m_chain; }
-    int ActiveHeight() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChain().Height(); }
-    CBlockIndex* ActiveTip() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChain().Tip(); }
+    Chainstate& ActiveChainstate() const EXCLUSIVE_LOCKS_REQUIRED(!m_chainstates_mutex);
+    CChain& ActiveChain() const EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, GetMutex()) { return MostWorkChainstate().m_chain; }
+    int ActiveHeight() const EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, GetMutex()) { return ActiveChain().Height(); }
+    CBlockIndex* ActiveTip() const EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, GetMutex()) { return ActiveChain().Tip(); }
 
     node::BlockMap& BlockIndex() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
@@ -1084,6 +1055,9 @@ public:
 
     /** Check whether we are doing an initial block download (synchronizing from disk or network) */
     bool IsInitialBlockDownload() const;
+
+    /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */
+    bool LoadGenesisBlock() EXCLUSIVE_LOCKS_REQUIRED(!m_chainstates_mutex);
 
     /**
      * Import blocks from an external file
@@ -1114,7 +1088,7 @@ public:
     void LoadExternalBlockFile(
         AutoFile& file_in,
         FlatFilePos* dbp = nullptr,
-        std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent = nullptr);
+        std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!m_chainstates_mutex);
 
     /**
      * Process an incoming block. This only returns after the best known valid
@@ -1140,7 +1114,7 @@ public:
      * @param[out]  new_block A boolean which is set to indicate if the block was first received via this call
      * @returns     If the block was processed, independently of block validity
      */
-    bool ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block) LOCKS_EXCLUDED(cs_main);
+    bool ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block) EXCLUSIVE_LOCKS_REQUIRED(!m_chainstates_mutex) LOCKS_EXCLUDED(cs_main);
 
     /**
      * Process incoming block headers.
@@ -1153,7 +1127,7 @@ public:
      * @param[out] state This may be set to an Error state if any error occurred processing them
      * @param[out] ppindex If set, the pointer will be set to point to the last new block index object for the given headers
      */
-    bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& block, bool min_pow_checked, BlockValidationState& state, const CBlockIndex** ppindex = nullptr) LOCKS_EXCLUDED(cs_main);
+    bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& block, bool min_pow_checked, BlockValidationState& state, const CBlockIndex** ppindex = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!m_chainstates_mutex) LOCKS_EXCLUDED(cs_main);
 
     /**
      * Sufficiently validate a block for disk storage (and store on disk).
@@ -1174,9 +1148,9 @@ public:
      *
      * @returns   False if the block or header is invalid, or if saving to disk fails (likely a fatal error); true otherwise.
      */
-    bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked) EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, cs_main);
 
-    void ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pindexNew, const FlatFilePos& pos) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pindexNew, const FlatFilePos& pos) EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, cs_main);
 
     /**
      * Try to add a transaction to the memory pool.
@@ -1185,14 +1159,14 @@ public:
      * @param[in]  test_accept     When true, run validation checks but don't submit to mempool.
      */
     [[nodiscard]] MempoolAcceptResult ProcessTransaction(const CTransactionRef& tx, bool test_accept=false)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+        EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, cs_main);
 
     //! Load the block tree and coins database from disk, initializing state if we're running with -reindex
-    bool LoadBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool LoadBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, cs_main);
 
     //! Check to see if caches are out of balance and if so, call
     //! ResizeCoinsCaches() as needed.
-    void MaybeRebalanceCaches() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void MaybeRebalanceCaches() EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, ::cs_main);
 
     /** Update uncommitted block structures (currently: only the witness reserved value). This is safe for submitted blocks. */
     void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev) const;
@@ -1211,14 +1185,14 @@ public:
     //! Return pointer to the Chainstate if it is loaded.
     Chainstate* DetectSnapshotChainstate() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    void ResetChainstates() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void ResetChainstates() EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, ::cs_main);
 
     //! Remove the chainstate and all on-disk artifacts.
     //! Used when reindex{-chainstate} is called during snapshot use.
-    [[nodiscard]] bool DeleteChainstate(Chainstate& chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] bool DeleteChainstate(Chainstate& chainstate) EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, ::cs_main);
 
     //! Add new chainstate and make it the active chainstate.
-    Chainstate& AddSnapshotChainstate(std::unique_ptr<Chainstate> chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    Chainstate& AddSnapshotChainstate(std::unique_ptr<Chainstate> chainstate) EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, ::cs_main);
 
     //! If we have validated a snapshot chain during this runtime, copy its
     //! chainstate directory over to the main `chainstate` location, completing
@@ -1238,9 +1212,38 @@ public:
         const Chainstate& chainstate, int last_height_can_prune) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Get range of historical blocks to download.
-    std::optional<std::pair<const CBlockIndex*, const CBlockIndex*>> GetHistoricalBlockRange() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    std::optional<std::pair<const CBlockIndex*, const CBlockIndex*>> GetHistoricalBlockRange() const EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, ::cs_main);
 
-    util::Result<void> ActivateBestChains() const LOCKS_EXCLUDED(::cs_main);
+    /**
+     * Find the best known block, and make it the tip of the block chain. The
+     * result is either failure or an activated best chain. pblock is either
+     * nullptr or a pointer to a block that is already loaded (to avoid loading
+     * it again from disk).
+     *
+     * ActivateBestChain is split into steps (see ActivateBestChainStep) so that
+     * we avoid holding cs_main for an extended period of time; the length of this
+     * call may be quite long during reindexing or a substantial reorg.
+     *
+     * May not be called with cs_main held. May not be called in a
+     * validationinterface callback.
+     *
+     * Note that if this is called while a snapshot chainstate is active, and if
+     * it is called on a non-snapshot chainstate whose tip has reached the base
+     * block of the snapshot, its execution will take *MINUTES* while it hashes
+     * the UTXO set to verify the assumeutxo value the snapshot was activated
+     * with, but `cs_main` will not be held during this time.
+     *
+     * @returns true unless a system error occurred
+     */
+    bool ActivateBestChain(
+        Chainstate& chainstate,
+        BlockValidationState& state,
+        std::shared_ptr<const CBlock> pblock)
+        EXCLUSIVE_LOCKS_REQUIRED(m_chainstates_mutex, !chainstate.m_chainstate_mutex)
+        LOCKS_EXCLUDED(::cs_main);
+
+
+    util::Result<void> ActivateBestChains() EXCLUSIVE_LOCKS_REQUIRED(!m_chainstates_mutex) LOCKS_EXCLUDED(::cs_main);
     void PruneAndFlush();
     void FlushStateToDisk(bool reset = false);
 
@@ -1248,13 +1251,9 @@ public:
 
     ~ChainstateManager();
 
-    //! List of chainstates. Note: in general, it is not safe delete Chainstate
-    //! objects once they are added to this list because there is no mutex that
-    //! can be locked to prevent Chainstate pointers from being used while they
-    //! are deleted. (cs_main doesn't work because is too granular and needs to
-    //! be released in the middle of Chainstate::ActivateBestChain to let
-    //! notifications be processed).
-    std::vector<std::unique_ptr<Chainstate>> m_chainstates GUARDED_BY(::cs_main);
+    //! List of chainstates.
+    std::vector<std::unique_ptr<Chainstate>> m_chainstates GUARDED_BY(m_chainstates_mutex);
+    Mutex m_chainstates_mutex;
 };
 
 /** Deployment* info via ChainstateManager */
