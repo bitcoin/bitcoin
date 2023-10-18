@@ -34,7 +34,7 @@ std::vector<CTransactionRef> DisconnectedBlockTransactions::LimitMemoryUsage()
 
     while (!queuedTx.empty() && DynamicMemoryUsage() > m_max_mem_usage) {
         evicted.emplace_back(queuedTx.front());
-        cachedInnerUsage -= RecursiveDynamicUsage(*queuedTx.front());
+        cachedInnerUsage -= RecursiveDynamicUsage(queuedTx.front());
         iters_by_txid.erase(queuedTx.front()->GetHash());
         queuedTx.pop_front();
     }
@@ -53,7 +53,7 @@ size_t DisconnectedBlockTransactions::DynamicMemoryUsage() const
         auto it = queuedTx.insert(queuedTx.end(), *block_it);
         auto [_, inserted] = iters_by_txid.emplace((*block_it)->GetHash(), it);
         assert(inserted); // callers may never pass multiple transactions with the same txid
-        cachedInnerUsage += RecursiveDynamicUsage(**block_it);
+        cachedInnerUsage += RecursiveDynamicUsage(*block_it);
     }
     return LimitMemoryUsage();
 }
@@ -69,7 +69,7 @@ void DisconnectedBlockTransactions::removeForBlock(const std::vector<CTransactio
         if (iter != iters_by_txid.end()) {
             auto list_iter = iter->second;
             iters_by_txid.erase(iter);
-            cachedInnerUsage -= RecursiveDynamicUsage(**list_iter);
+            cachedInnerUsage -= RecursiveDynamicUsage(*list_iter);
             queuedTx.erase(list_iter);
         }
     }
