@@ -94,8 +94,10 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info("  - snapshot file with alternated UTXO data")
         cases = [
-            [b"\xff" * 32, 0, "29926acf3ac81f908cf4f22515713ca541c08bb0f0ef1b2c3443a007134d69b8"], # wrong outpoint hash
-            [(1).to_bytes(4, "little"), 32, "798266c2e1f9a98fe5ce61f5951cbf47130743f3764cf3cbc254be129142cf9d"], # wrong outpoint index
+            [b"\xff" * 32, 0, "05030e506678f2eca8d624ffed97090ab3beadad1b51ee6e5985ba91c5720e37"], # wrong outpoint hash
+            [(1).to_bytes(4, "little"), 32, "7d29cfe2c1e242bc6f103878bb70cfffa8b4dac20dbd001ff6ce24b7de2d2399"], # wrong outpoint index
+            [b"\x81", 36, "f03939a195531f96d5dff983e294a1af62af86049fa7a19a7627246f237c03f1"], # wrong coin code VARINT((coinbase ? 1 : 0) | (height << 1))
+            [b"\x83", 36, "e4577da84590fb288c0f7967e89575e1b0aa46624669640f6f5dfef028d39930"], # another wrong coin code
         ]
 
         for content, offset, wrong_hash in cases:
@@ -103,7 +105,7 @@ class AssumeutxoTest(BitcoinTestFramework):
                 f.write(valid_snapshot_contents[:(32 + 8 + offset)])
                 f.write(content)
                 f.write(valid_snapshot_contents[(32 + 8 + offset + len(content)):])
-            expected_error(log_msg=f"[snapshot] bad snapshot content hash: expected ef45ccdca5898b6c2145e4581d2b88c56564dd389e4bd75a1aaf6961d3edd3c0, got {wrong_hash}")
+            expected_error(log_msg=f"[snapshot] bad snapshot content hash: expected 61d9c2b29a2571a5fe285fe2d8554f91f93309666fc9b8223ee96338de25ff53, got {wrong_hash}")
 
     def run_test(self):
         """
@@ -150,7 +152,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         assert_equal(
             dump_output['txoutset_hash'],
-            'ef45ccdca5898b6c2145e4581d2b88c56564dd389e4bd75a1aaf6961d3edd3c0')
+            '61d9c2b29a2571a5fe285fe2d8554f91f93309666fc9b8223ee96338de25ff53')
         assert_equal(dump_output['nchaintx'], 300)
         assert_equal(n0.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
 
