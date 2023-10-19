@@ -288,7 +288,7 @@ public:
 
     bool IsNull() const
     {
-        return (nValue == -1);
+        return nValue == -1;
     }
 
     bool IsBLSCT() const

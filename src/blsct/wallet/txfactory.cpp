@@ -37,6 +37,7 @@ UnsignedOutput TxFactory::CreateOutput(const SubAddress& destination, const CAmo
 {
     auto ret = UnsignedOutput();
 
+    ret.out.nValue = 0;
     ret.out.tokenId = tokenId;
     ret.out.scriptPubKey = CScript(OP_TRUE);
 
