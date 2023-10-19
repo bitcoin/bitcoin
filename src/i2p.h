@@ -105,7 +105,7 @@ public:
      * completion the `peer` member will be set to the address of the incoming peer.
      * @return true on success
      */
-    bool Accept(Connection& conn);
+    bool Accept(Connection& conn) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
      * Connect to an I2P peer.
