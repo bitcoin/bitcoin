@@ -711,12 +711,6 @@ bool IsV19Active(const CBlockIndex* pindex)
     return pindex->nHeight + 1 >= Params().GetConsensus().V19Height;
 }
 
-const CBlockIndex* V19ActivationIndex(const CBlockIndex* pindex)
-{
-    assert(pindex);
-    return pindex->GetAncestor(Params().GetConsensus().V19Height);
-}
-
 bool IsV20Active(const CBlockIndex* pindex)
 {
     assert(pindex);

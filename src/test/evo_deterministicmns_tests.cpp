@@ -376,7 +376,7 @@ void FuncV19Activation(TestChainSetup& setup)
     }
 
     // check mn list/diff
-    const CBlockIndex* v19_index = llmq::utils::V19ActivationIndex(::ChainActive().Tip());
+    const CBlockIndex* v19_index = ::ChainActive().Tip()->GetAncestor(Params().GetConsensus().V19Height);
     auto v19_list = deterministicMNManager->GetListForBlock(v19_index);
     dummy_diff = v19_list.BuildDiff(tip_list);
     dummmy_list = v19_list.ApplyDiff(::ChainActive().Tip(), dummy_diff);

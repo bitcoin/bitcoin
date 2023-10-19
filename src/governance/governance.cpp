@@ -828,9 +828,7 @@ void CGovernanceManager::SyncSingleObjVotes(CNode& peer, const uint256& nProp, c
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing single object to peer=%d, nProp = %s\n", __func__, peer.GetId(), nProp.ToString());
 
-    // TODO: drop cs_main here when v19 activation is buried
-    // and CGovernanceVote::CheckSignature no longer needs to use ::ChainActive()
-    LOCK2(cs_main, cs);
+    LOCK(cs);
 
     // single valid object and its valid votes
     auto it = mapObjects.find(nProp);
@@ -1021,9 +1019,6 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
 
 bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman)
 {
-    // TODO: drop cs_main here when v19 activation is buried
-    // and CGovernanceVote::CheckSignature no longer needs to use ::ChainActive()
-    LOCK(cs_main);
     ENTER_CRITICAL_SECTION(cs)
     uint256 nHashVote = vote.GetHash();
     uint256 nHashGovobj = vote.GetParentHash();
@@ -1487,9 +1482,7 @@ void CGovernanceManager::RemoveInvalidVotes()
         return;
     }
 
-    // TODO: drop cs_main here when v19 activation is buried
-    // and CGovernanceVote::CheckSignature no longer needs to use ::ChainActive()
-    LOCK2(cs_main, cs);
+    LOCK(cs);
 
     auto curMNList = deterministicMNManager->GetListAtChainTip();
     auto diff = lastMNListForVotingKeys->BuildDiff(curMNList);

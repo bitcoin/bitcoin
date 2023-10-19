@@ -226,23 +226,19 @@ bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
 
 bool CGovernanceVote::Sign(const CBLSSecretKey& key)
 {
-    CBLSSignature sig = key.Sign(GetSignatureHash());
+    CBLSSignature sig = key.Sign(GetSignatureHash(), false);
     if (!sig.IsValid()) {
         return false;
     }
-    const auto pindex = llmq::utils::V19ActivationIndex(::ChainActive().Tip());
-    bool is_bls_legacy_scheme = pindex == nullptr || nTime < pindex->pprev->nTime;
-    vchSig = sig.ToByteVector(is_bls_legacy_scheme);
+    vchSig = sig.ToByteVector(false);
     return true;
 }
 
 bool CGovernanceVote::CheckSignature(const CBLSPublicKey& pubKey) const
 {
     CBLSSignature sig;
-    const auto pindex = llmq::utils::V19ActivationIndex(::ChainActive().Tip());
-    bool is_bls_legacy_scheme = pindex == nullptr || nTime < pindex->pprev->nTime;
-    sig.SetByteVector(vchSig, is_bls_legacy_scheme);
-    if (!sig.VerifyInsecure(pubKey, GetSignatureHash(), is_bls_legacy_scheme)) {
+    sig.SetByteVector(vchSig, false);
+    if (!sig.VerifyInsecure(pubKey, GetSignatureHash(), false)) {
         LogPrintf("CGovernanceVote::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }

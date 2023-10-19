@@ -285,6 +285,7 @@ public:
 
     [[nodiscard]] CBLSPublicKey GetPublicKey() const;
     [[nodiscard]] CBLSSignature Sign(const uint256& hash) const;
+    [[nodiscard]] CBLSSignature Sign(const uint256& hash, const bool specificLegacyScheme) const;
 };
 
 class CBLSPublicKey : public CBLSWrapper<bls::G1Element, BLS_CURVE_PUBKEY_SIZE, CBLSPublicKey>
