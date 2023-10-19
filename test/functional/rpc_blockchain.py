@@ -340,7 +340,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert size > 6400
         assert size < 64000
         assert_equal(len(res['bestblock']), 64)
-        assert_equal(len(res['hash_serialized_2']), 64)
+        assert_equal(len(res['hash_serialized_3']), 64)
 
         self.log.info("Test gettxoutsetinfo works for blockchain with just the genesis block")
         b1hash = node.getblockhash(1)
@@ -353,7 +353,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res2['txouts'], 0)
         assert_equal(res2['bogosize'], 0),
         assert_equal(res2['bestblock'], node.getblockhash(0))
-        assert_equal(len(res2['hash_serialized_2']), 64)
+        assert_equal(len(res2['hash_serialized_3']), 64)
 
         self.log.info("Test gettxoutsetinfo returns the same result after invalidate/reconsider block")
         node.reconsiderblock(b1hash)
@@ -365,20 +365,20 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res, res3)
 
         self.log.info("Test gettxoutsetinfo hash_type option")
-        # Adding hash_type 'hash_serialized_2', which is the default, should
+        # Adding hash_type 'hash_serialized_3', which is the default, should
         # not change the result.
-        res4 = node.gettxoutsetinfo(hash_type='hash_serialized_2')
+        res4 = node.gettxoutsetinfo(hash_type='hash_serialized_3')
         del res4['disk_size']
         assert_equal(res, res4)
 
         # hash_type none should not return a UTXO set hash.
         res5 = node.gettxoutsetinfo(hash_type='none')
-        assert 'hash_serialized_2' not in res5
+        assert 'hash_serialized_3' not in res5
 
         # hash_type muhash should return a different UTXO set hash.
         res6 = node.gettxoutsetinfo(hash_type='muhash')
         assert 'muhash' in res6
-        assert res['hash_serialized_2'] != res6['muhash']
+        assert res['hash_serialized_3'] != res6['muhash']
 
         # muhash should not be returned unless requested.
         for r in [res, res2, res3, res4, res5]:
