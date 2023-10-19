@@ -15,7 +15,6 @@
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <random.h>
-#include <reverse_iterator.h>
 #include <tinyformat.h>
 #include <util/check.h>
 #include <util/feefrac.h>
@@ -31,6 +30,7 @@
 #include <cmath>
 #include <numeric>
 #include <optional>
+#include <ranges>
 #include <string_view>
 #include <utility>
 
@@ -121,7 +121,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256>& vHashes
     // This maximizes the benefit of the descendant cache and guarantees that
     // CTxMemPoolEntry::m_children will be updated, an assumption made in
     // UpdateForDescendants.
-    for (const uint256 &hash : reverse_iterate(vHashesToUpdate)) {
+    for (const uint256& hash : vHashesToUpdate | std::views::reverse) {
         // calculate children from mapNextTx
         txiter it = mapTx.find(hash);
         if (it == mapTx.end()) {
