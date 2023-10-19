@@ -603,7 +603,7 @@ class CTxOut:
 
         flags = 0
 
-        if self.nValue == -1:
+        if self.nValue == 9223372036854775807:
             flags = struct.unpack("<q", f.read(8))[0]
 
         self.scriptPubKey = deser_string(f)
@@ -625,7 +625,7 @@ class CTxOut:
         r = b""
 
         if flags != 0:
-            r += struct.pack("<q", -1)
+            r += struct.pack("<q", 9223372036854775807)
             r += struct.pack("<q", flags)
         else:
             r += struct.pack("<q", self.nValue)

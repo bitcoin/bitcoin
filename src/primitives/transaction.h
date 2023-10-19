@@ -199,14 +199,12 @@ public:
     void SetNull()
     {
         viewTag = 0;
-        spendingKey = MclG1Point();
-        blindingKey = MclG1Point();
-        ephemeralKey = MclG1Point();
+        rangeProof.Vs.Clear();
     }
 
     bool IsNull() const
     {
-        return viewTag == 0 && spendingKey.IsZero() && blindingKey.IsZero() && ephemeralKey.IsZero();
+        return viewTag == 0 && rangeProof.Vs.Size() == 0;
     }
 
     friend bool operator==(const CTxOutBLSCTData& a, const CTxOutBLSCTData& b)
@@ -285,15 +283,12 @@ public:
 
     void SetNull()
     {
-        nValue = std::numeric_limits<CAmount>::max();
-        scriptPubKey.clear();
-        blsctData.SetNull();
-        tokenId = TokenId();
+        nValue = -1;
     }
 
     bool IsNull() const
     {
-        return (nValue == std::numeric_limits<CAmount>::max() && blsctData.IsNull() && scriptPubKey.size() == 0 && tokenId == TokenId());
+        return (nValue == -1);
     }
 
     bool IsBLSCT() const
