@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <net.h>
 #include <netaddress.h>
+#include <node/connection.h>
 #include <random.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>

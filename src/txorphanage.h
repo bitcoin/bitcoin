@@ -5,7 +5,7 @@
 #ifndef BITCOIN_TXORPHANAGE_H
 #define BITCOIN_TXORPHANAGE_H
 
-#include <net.h>
+#include <node/connection.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <sync.h>

@@ -14,7 +14,6 @@
 #include <consensus/merkle.h>
 #include <key.h>
 #include <merkleblock.h>
-#include <net.h>
 #include <netbase.h>
 #include <netgroup.h>
 #include <node/utxo_snapshot.h>

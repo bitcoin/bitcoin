@@ -4,8 +4,8 @@
 
 #include <chainparams.h>
 #include <hash.h>
-#include <net.h>
 #include <netmessagemaker.h>
+#include <node/connection.h>
 #include <protocol.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>

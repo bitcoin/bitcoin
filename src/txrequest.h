@@ -6,7 +6,7 @@
 #define BITCOIN_TXREQUEST_H
 
 #include <primitives/transaction.h>
-#include <net.h> // For NodeId
+#include <node/connection.h>
 #include <uint256.h>
 
 #include <chrono>

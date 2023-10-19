@@ -5,7 +5,7 @@
 #include <txrequest.h>
 
 #include <crypto/siphash.h>
-#include <net.h>
+#include <node/connection.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <uint256.h>

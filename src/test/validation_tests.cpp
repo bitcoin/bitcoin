@@ -4,7 +4,6 @@
 
 #include <chainparams.h>
 #include <consensus/amount.h>
-#include <net.h>
 #include <signet.h>
 #include <uint256.h>
 #include <util/chaintype.h>

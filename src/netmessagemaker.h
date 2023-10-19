@@ -6,7 +6,7 @@
 #ifndef BITCOIN_NETMESSAGEMAKER_H
 #define BITCOIN_NETMESSAGEMAKER_H
 
-#include <net.h>
+#include <node/connection.h>
 #include <serialize.h>
 
 class CNetMsgMaker
