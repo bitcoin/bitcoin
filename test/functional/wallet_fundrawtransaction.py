@@ -25,7 +25,7 @@ from test_framework.util import (
     find_vout_for_address,
     get_fee,
 )
-from test_framework.wallet_util import generate_keypair
+from test_framework.wallet_util import generate_keypair, WalletUnlock
 
 ERR_NOT_ENOUGH_PRESET_INPUTS = "The preselected coins total amount does not cover the transaction target. " \
                                "Please allow other inputs to be automatically selected or include more coins manually"
@@ -581,19 +581,18 @@ class RawTransactionsTest(BitcoinTestFramework):
         wallet.encryptwallet("test")
 
         if self.options.descriptors:
-            wallet.walletpassphrase("test", 999000)
-            wallet.importdescriptors([{
-                'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/0h/*h)'),
-                'timestamp': 'now',
-                'active': True
-            },
-            {
-                'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/1h/*h)'),
-                'timestamp': 'now',
-                'active': True,
-                'internal': True
-            }])
-            wallet.walletlock()
+            with WalletUnlock(wallet, "test"):
+                wallet.importdescriptors([{
+                    'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/0h/*h)'),
+                    'timestamp': 'now',
+                    'active': True
+                },
+                {
+                    'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/1h/*h)'),
+                    'timestamp': 'now',
+                    'active': True,
+                    'internal': True
+                }])
 
         # Drain the keypool.
         wallet.getnewaddress()
@@ -619,9 +618,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Transaction needs a change address, but we can't generate it.", wallet.fundrawtransaction, rawtx)
 
         # Refill the keypool.
-        wallet.walletpassphrase("test", 999000)
-        wallet.keypoolrefill(8) #need to refill the keypool to get an internal change address
-        wallet.walletlock()
+        with WalletUnlock(wallet, "test"):
+            wallet.keypoolrefill(8) #need to refill the keypool to get an internal change address
 
         assert_raises_rpc_error(-13, "walletpassphrase", wallet.sendtoaddress, self.nodes[0].getnewaddress(), 1.2)
 
@@ -634,16 +632,16 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert fundedTx["changepos"] != -1
 
         # Now we need to unlock.
-        wallet.walletpassphrase("test", 999000)
-        signedTx = wallet.signrawtransactionwithwallet(fundedTx['hex'])
-        wallet.sendrawtransaction(signedTx['hex'])
-        self.generate(self.nodes[1], 1)
+        with WalletUnlock(wallet, "test"):
+            signedTx = wallet.signrawtransactionwithwallet(fundedTx['hex'])
+            wallet.sendrawtransaction(signedTx['hex'])
+            self.generate(self.nodes[1], 1)
 
-        # Make sure funds are received at node1.
-        assert_equal(oldBalance+Decimal('51.10000000'), self.nodes[0].getbalance())
+            # Make sure funds are received at node1.
+            assert_equal(oldBalance+Decimal('51.10000000'), self.nodes[0].getbalance())
 
-        # Restore pre-test wallet state
-        wallet.sendall(recipients=[df_wallet.getnewaddress(), df_wallet.getnewaddress(), df_wallet.getnewaddress()])
+            # Restore pre-test wallet state
+            wallet.sendall(recipients=[df_wallet.getnewaddress(), df_wallet.getnewaddress(), df_wallet.getnewaddress()])
         wallet.unloadwallet()
         self.generate(self.nodes[1], 1)
 

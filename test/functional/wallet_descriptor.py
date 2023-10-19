@@ -15,6 +15,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error
 )
+from test_framework.wallet_util import WalletUnlock
 
 
 class WalletDescriptorTest(BitcoinTestFramework):
@@ -128,11 +129,10 @@ class WalletDescriptorTest(BitcoinTestFramework):
 
         # Encrypt wallet 0
         send_wrpc.encryptwallet('pass')
-        send_wrpc.walletpassphrase("pass", 999000)
-        addr = send_wrpc.getnewaddress()
-        info2 = send_wrpc.getaddressinfo(addr)
-        assert info1['hdmasterfingerprint'] != info2['hdmasterfingerprint']
-        send_wrpc.walletlock()
+        with WalletUnlock(send_wrpc, "pass"):
+            addr = send_wrpc.getnewaddress()
+            info2 = send_wrpc.getaddressinfo(addr)
+            assert info1['hdmasterfingerprint'] != info2['hdmasterfingerprint']
         assert 'hdmasterfingerprint' in send_wrpc.getaddressinfo(send_wrpc.getnewaddress())
         info3 = send_wrpc.getaddressinfo(addr)
         assert_equal(info2['desc'], info3['desc'])
@@ -142,14 +142,13 @@ class WalletDescriptorTest(BitcoinTestFramework):
             send_wrpc.getnewaddress()
 
         self.log.info("Test that unlock is needed when deriving only hardened keys in an encrypted wallet")
-        send_wrpc.walletpassphrase("pass", 999000)
-        send_wrpc.importdescriptors([{
-            "desc": "wpkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/*h)#y4dfsj7n",
-            "timestamp": "now",
-            "range": [0,10],
-            "active": True
-        }])
-        send_wrpc.walletlock()
+        with WalletUnlock(send_wrpc, "pass"):
+            send_wrpc.importdescriptors([{
+                "desc": "wpkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/*h)#y4dfsj7n",
+                "timestamp": "now",
+                "range": [0,10],
+                "active": True
+            }])
         # Exhaust keypool of 100
         for _ in range(100):
             send_wrpc.getnewaddress(address_type='bech32')
