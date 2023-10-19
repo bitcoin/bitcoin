@@ -85,8 +85,8 @@ static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptP
         return set_error(err, syscoinconsensus_ERR_INVALID_FLAGS);
     }
 
-    if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_TAPROOT && spentOutputs == nullptr) {
-        return set_error(err, bitcoinconsensus_ERR_SPENT_OUTPUTS_REQUIRED);
+    if (flags & syscoinconsensus_SCRIPT_FLAGS_VERIFY_TAPROOT && spentOutputs == nullptr) {
+        return set_error(err, syscoinconsensus_ERR_SPENT_OUTPUTS_REQUIRED);
     }
 
     try {
@@ -96,7 +96,7 @@ static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptP
         std::vector<CTxOut> spent_outputs;
         if (spentOutputs != nullptr) {
             if (spentOutputsLen != tx.vin.size()) {
-                return set_error(err, bitcoinconsensus_ERR_SPENT_OUTPUTS_MISMATCH);
+                return set_error(err, syscoinconsensus_ERR_SPENT_OUTPUTS_MISMATCH);
             }
             for (size_t i = 0; i < spentOutputsLen; i++) {
                 CScript spk = CScript(spentOutputs[i].scriptPubKey, spentOutputs[i].scriptPubKey + spentOutputs[i].scriptPubKeySize);
@@ -116,7 +116,7 @@ static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptP
 
         PrecomputedTransactionData txdata(tx);
 
-        if (spentOutputs != nullptr && flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_TAPROOT) {
+        if (spentOutputs != nullptr && flags & syscoinconsensus_SCRIPT_FLAGS_VERIFY_TAPROOT) {
             txdata.Init(tx, std::move(spent_outputs));
         }
 
