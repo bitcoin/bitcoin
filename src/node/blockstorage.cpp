@@ -15,7 +15,6 @@
 #include <hash.h>
 #include <masternode/node.h>
 #include <pow.h>
-#include <reverse_iterator.h>
 #include <shutdown.h>
 #include <streams.h>
 #include <undo.h>
@@ -24,6 +23,7 @@
 #include <walletinitinterface.h>
 
 #include <map>
+#include <ranges>
 #include <unordered_map>
 
 std::atomic_bool fImporting(false);
@@ -410,7 +410,7 @@ const CBlockIndex* BlockManager::GetLastCheckpoint(const CCheckpointData& data)
 {
     const MapCheckpoints& checkpoints = data.mapCheckpoints;
 
-    for (const MapCheckpoints::value_type& i : reverse_iterate(checkpoints)) {
+    for (const MapCheckpoints::value_type& i : checkpoints | std::views::reverse) {
         const uint256& hash = i.second;
         const CBlockIndex* pindex = LookupBlockIndex(hash);
         if (pindex) {

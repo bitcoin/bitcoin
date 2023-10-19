@@ -22,7 +22,6 @@
 #include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <reverse_iterator.h>
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/sign.h>
@@ -52,7 +51,8 @@
 #include <univalue.h>
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
+#include <ranges>
 
 using interfaces::FoundBlock;
 
@@ -3335,7 +3335,7 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
 
     // Loop backward through backup files and keep the N newest ones (1 <= N <= 10)
     int counter{0};
-    for (const auto& [entry_time, entry] : reverse_iterate(folder_set)) {
+    for (const auto& [entry_time, entry] : folder_set | std::views::reverse) {
         counter++;
         if (counter > nWalletBackups) {
             // More than nWalletBackups backups: delete oldest one(s)

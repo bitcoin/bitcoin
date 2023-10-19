@@ -31,7 +31,6 @@
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <reverse_iterator.h>
 #include <script/script.h>
 #include <script/sigcache.h>
 #include <shutdown.h>
@@ -66,6 +65,7 @@
 #include <deque>
 #include <numeric>
 #include <optional>
+#include <ranges>
 #include <string>
 
 #define MICRO 0.000001
@@ -3228,7 +3228,7 @@ bool CChainState::ActivateBestChainStep(BlockValidationState& state, CBlockIndex
         nHeight = nTargetHeight;
 
         // Connect new blocks.
-        for (CBlockIndex* pindexConnect : reverse_iterate(vpindexToConnect)) {
+        for (CBlockIndex* pindexConnect : vpindexToConnect | std::views::reverse) {
             if (!ConnectTip(state, pindexConnect, pindexConnect == pindexMostWork ? pblock : std::shared_ptr<const CBlock>(), connectTrace, disconnectpool)) {
                 if (state.IsInvalid()) {
                     // The block violates a consensus rule.
