@@ -88,7 +88,7 @@ public:
             ++count;
         }
         BOOST_CHECK_EQUAL(GetCacheSize(), count);
-        // BOOST_CHECK_EQUAL(DynamicMemoryUsage(), ret);
+        //BOOST_CHECK_EQUAL(DynamicMemoryUsage(), ret);
     }
 
     CCoinsMap& map() const { return cacheCoins; }
