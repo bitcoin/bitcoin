@@ -158,6 +158,26 @@ BOOST_AUTO_TEST_CASE(bnb_test)
     AddCoins(clone_pool, {2 * CENT, 7 * CENT, 7 * CENT});
     AddDuplicateCoins(clone_pool, 50'000, 5 * CENT);
     TestBnBSuccess("Skip equivalent input sets", clone_pool, /*selection_target=*/ 16 * CENT, /*expected_input_amounts=*/ {2 * CENT, 7 * CENT, 7 * CENT});
+
+    // Test BnB attempt limit
+    std::vector<COutput> doppelganger_pool;
+    std::vector<CAmount> doppelgangers;
+    std::vector<CAmount> expected_inputs;
+    for (int i = 0; i < 17; ++i) {
+        if (i < 8) {
+            // 8 smallest UTXOs can be combined to create expected_result
+            doppelgangers.push_back(1 * CENT + i);
+            expected_inputs.push_back(doppelgangers[i]);
+        } else {
+            // Any 8 UTXOs including one larger UTXO exceed target window
+            doppelgangers.push_back(1 * CENT + default_cs_params.m_cost_of_change + i);
+        }
+    }
+    AddCoins(doppelganger_pool, doppelgangers);
+    TestBnBSuccess("Combine smallest 8 of 17 unique UTXOs", doppelganger_pool, /*selection_target=*/ 8 * CENT, /*expected_input_amounts=*/ expected_inputs);
+
+    AddCoins(doppelganger_pool, {1 * CENT + default_cs_params.m_cost_of_change + 17});
+    TestBnBFail("Exhaust looking for smallest 8 of 18 unique UTXOs", doppelganger_pool, /*selection_target=*/ 8 * CENT);
 }
 
 BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
