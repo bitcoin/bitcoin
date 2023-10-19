@@ -95,6 +95,7 @@ struct ScriptCompression
     }
 };
 
+
 struct AmountCompression
 {
     template<typename Stream, typename I> void Ser(Stream& s, I val)
