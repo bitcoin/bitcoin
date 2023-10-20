@@ -1509,7 +1509,6 @@ private:
 
     CNode* FindNode(const CNetAddr& ip, bool fExcludeDisconnecting = true);
     CNode* FindNode(const std::string& addrName, bool fExcludeDisconnecting = true);
-    CNode* FindNode(const CService& addr, bool fExcludeDisconnecting = true);
 
     /**
      * Determine whether we're already connected to a given address, in order to
