@@ -204,20 +204,56 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     return subscript.GetSigOpCount(true);
 }
 
+bool CScript::IsPayToPublicKey() const
+{
+    // Test for pay-to-public-key CScripts:
+    return ((this->size() == 0x43 && (*this)[0] == 0x41 && (*this)[66] == OP_CHECKSIG) ||
+            (this->size() == 0x23 && (*this)[0] == 0x21 && (*this)[34] == OP_CHECKSIG));
+}
+
 bool CScript::IsPayToScriptHash() const
 {
     // Extra-fast test for pay-to-script-hash CScripts:
-    return (this->size() == 23 &&
+    return (this->size() == 0x17 &&
             (*this)[0] == OP_HASH160 &&
             (*this)[1] == 0x14 &&
             (*this)[22] == OP_EQUAL);
 }
 
+bool CScript::IsPayToPublicKeyHash() const
+{
+    // Test for pay-to-public-key-hash CScripts:
+    return (this->size() == 0x19 &&
+            (*this)[0] == OP_DUP &&
+            (*this)[1] == OP_HASH160 &&
+            (*this)[2] == 0x14 &&
+            (*this)[23] == OP_EQUALVERIFY &&
+            (*this)[24] == OP_CHECKSIG);
+}
+
+
 bool CScript::IsPayToWitnessScriptHash() const
 {
     // Extra-fast test for pay-to-witness-script-hash CScripts:
-    return (this->size() == 34 &&
+    return (this->size() == 0x22 &&
             (*this)[0] == OP_0 &&
+            (*this)[1] == 0x20);
+}
+
+bool CScript::IsPayToWitnessKeyHash() const
+{
+    // Test for pay-to-witness-public-key-hash CScripts:
+    return (this->size() == 0x16 &&
+            (*this)[0] == OP_0 &&
+            (*this)[1] == 0x14);
+}
+
+
+bool CScript::IsPayToTaproot() const
+{
+    // Test for pay-to-taproot CScripts:
+    return (this->size() == 0x22 &&
+            (*this)[0] == OP_1 &&
             (*this)[1] == 0x20);
 }
 
