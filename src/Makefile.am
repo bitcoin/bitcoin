@@ -443,6 +443,7 @@ libbitcoin_node_a_SOURCES = \
   policy/rbf.cpp \
   policy/settings.cpp \
   pow.cpp \
+  primitives/compression.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
   rpc/fees.cpp \

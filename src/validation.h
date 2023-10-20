@@ -24,6 +24,7 @@
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <policy/policy.h>
+#include <primitives/compression.h>
 #include <script/script_error.h>
 #include <sync.h>
 #include <txdb.h>
@@ -742,6 +743,10 @@ public:
     CoinsCacheSizeState GetCoinsCacheSizeState(
         size_t max_coins_cache_size_bytes,
         size_t max_mempool_size_bytes) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /** Functions for indexing COutPoints for Compressed Transactions */
+    std::tuple<uint32_t, std::vector<CCompressedInput>> CompressOutPoints(const CTransaction& tx, bool compress, std::vector<std::string>& warnings) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool DecompressOutPoints(const uint32_t minimumHeight, const std::vector<CCompressedTxIn>& txins, std::vector<COutPoint>& prevout) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     std::string ToString() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 

@@ -34,6 +34,7 @@
 #include <policy/settings.h>
 #include <pow.h>
 #include <primitives/block.h>
+#include <primitives/compression.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <reverse_iterator.h>
@@ -4293,6 +4294,76 @@ bool Chainstate::LoadChainTip()
               m_chain.Height(),
               FormatISO8601DateTime(tip->GetBlockTime()),
               GuessVerificationProgress(m_chainman.GetParams().TxData(), tip));
+    return true;
+}
+
+std::tuple<uint32_t, std::vector<CCompressedInput>> Chainstate::CompressOutPoints(const CTransaction& tx, bool compress, std::vector<std::string>& warnings)
+{
+    uint32_t block_height = CHECK_NONFATAL(this->m_chain.Tip())->nHeight;
+    uint32_t barrier_height = (block_height >= 100)  ? block_height-100 : 0;
+    uint32_t minimumHeight  = (tx.nLockTime > 0)     ? tx.nLockTime-1   : std::numeric_limits<uint32_t>::max();
+
+    std::vector<std::tuple<uint32_t, uint32_t, CScript>> block_info;
+    for (size_t index = 0; index < tx.vin.size(); index++) {
+        Coin coin;
+        this->CoinsTip().GetCoin(tx.vin[index].prevout, coin);
+        if (compress) {
+            if (coin.nHeight) {
+                if (coin.nHeight <= barrier_height) {
+                    CBlockIndex* pindex = this->m_chain[coin.nHeight];
+                    CBlock block;
+                    if (this->m_blockman.ReadBlockFromDisk(block, *pindex)) {
+                        uint32_t block_index = 0;
+                        for (size_t vindex = 0; vindex < block.vtx.size(); vindex++) {
+                            if ((block.vtx[vindex])->GetHash() == tx.vin[index].prevout.hash) { //Assume that if a prevout->Coin->nHeight->Block->vtx it will contain the prevout
+                                block_info.emplace_back(std::make_tuple((uint32_t)coin.nHeight, block_index+tx.vin[index].prevout.n, coin.out.scriptPubKey));
+                                minimumHeight = coin.nHeight <= minimumHeight ? coin.nHeight-1 : minimumHeight;
+                                break;
+                            }
+                            block_index += (block.vtx[vindex])->vout.size();
+                        }
+                    } else {warnings.emplace_back(strprintf("UTXO(%u): %s", index, "Input could not be read, Possibly a pruned node"));}
+                } else {warnings.emplace_back(strprintf("UTXO(%u): %s", index, "Input less then 100 blocks old"));}
+            } else {warnings.emplace_back(strprintf("UTXO(%u): %s", index, "Input missing or spent"));}
+        }
+        if (block_info.size() < index+1) {block_info.emplace_back(std::make_tuple(0, 0, coin.out.scriptPubKey));}
+    }
+
+    std::vector<CCompressedInput> cinputs;
+    for (size_t index = 0; index < tx.vin.size(); index++) {
+        if (std::get<0>(block_info[index]) > 0 || std::get<1>(block_info[index])) {
+            cinputs.emplace_back(CCompressedInput(CCompressedOutPoint(std::get<0>(block_info[index])-minimumHeight, std::get<1>(block_info[index])), std::get<2>(block_info[index])));
+        } else {
+            cinputs.emplace_back(CCompressedInput(CCompressedOutPoint(tx.vin[index].prevout.hash, tx.vin[index].prevout.n), std::get<2>(block_info[index])));
+        }
+    }
+    if (minimumHeight == std::numeric_limits<uint32_t>::max()) { minimumHeight = 0; }
+    return std::make_tuple(minimumHeight, cinputs);
+}
+
+bool Chainstate::DecompressOutPoints(const uint32_t minimumHeight, const std::vector<CCompressedTxIn>& txins, std::vector<COutPoint>& prevouts) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+{
+    prevouts.clear();
+    for (size_t index = 0; index < txins.size(); index++) {
+        if (txins[index].prevout().IsCompressed()) {
+            CBlockIndex* pindex = this->m_chainman.ActiveChain()[txins[index].prevout().block_height()+minimumHeight];
+            if (pindex) {
+                CBlock block;
+                if (this->m_blockman.ReadBlockFromDisk(block, *pindex)) {
+                    uint32_t vcounter = 0;
+                    for (size_t vindex = 0; vindex < block.vtx.size(); vindex++) {
+                        if ((txins[index].prevout().block_index()-vcounter) < (block.vtx[vindex])->vout.size()) {
+                            prevouts.emplace_back((block.vtx[vindex])->GetHash(), txins[index].prevout().block_index()-vcounter);
+                        }
+                        vcounter += (block.vtx[vindex])->vout.size();
+                    }
+                }
+            }
+            if (prevouts.size() < index+1) return false;
+        } else {
+            prevouts.emplace_back(Txid::FromUint256(txins[index].prevout().txid()), txins[index].prevout().vout());
+        }
+    }
     return true;
 }
 
