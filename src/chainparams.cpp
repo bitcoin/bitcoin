@@ -648,11 +648,11 @@ public:
         AddLLMQ(Consensus::LLMQType::LLMQ_DEVNET);
         AddLLMQ(Consensus::LLMQType::LLMQ_DEVNET_DIP0024);
         AddLLMQ(Consensus::LLMQType::LLMQ_DEVNET_PLATFORM);
-        consensus.llmqTypeChainLocks = Consensus::LLMQType::LLMQ_50_60;
-        consensus.llmqTypeInstantSend = Consensus::LLMQType::LLMQ_50_60;
-        consensus.llmqTypeDIP0024InstantSend = Consensus::LLMQType::LLMQ_60_75;
-        consensus.llmqTypePlatform = Consensus::LLMQType::LLMQ_100_67;
-        consensus.llmqTypeMnhf = Consensus::LLMQType::LLMQ_50_60;
+        consensus.llmqTypeChainLocks = Consensus::LLMQType::LLMQ_DEVNET;
+        consensus.llmqTypeInstantSend = Consensus::LLMQType::LLMQ_DEVNET;
+        consensus.llmqTypeDIP0024InstantSend = Consensus::LLMQType::LLMQ_DEVNET_DIP0024;
+        consensus.llmqTypePlatform = Consensus::LLMQType::LLMQ_DEVNET_PLATFORM;
+        consensus.llmqTypeMnhf = Consensus::LLMQType::LLMQ_DEVNET;
         consensus.llmqTypeAssetLocks = consensus.llmqTypePlatform;
 
         UpdateDevnetLLMQChainLocksFromArgs(args);
