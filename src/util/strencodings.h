@@ -300,6 +300,48 @@ bool ConvertBits(O outfn, It it, It end, I infn = {}) {
     return true;
 }
 
+/** Convert from a set of power-of-2 number base to another set. */
+template<bool pad, typename O, typename It, typename I = IntIdentity>
+bool ConvertBitsVariable(const Span<int>& frombitsvec, const Span<int>& tobitsvec, O outfn, It it, It end, I infn = {}) {
+    size_t fromindex = 0;
+    size_t toindex = 0;
+    size_t acc = 0;
+    size_t bits = 0;
+    auto frombits = fromindex >= frombitsvec.size() ? frombitsvec[frombitsvec.size()-1] : frombitsvec[fromindex];
+    auto tobits = toindex >= tobitsvec.size() ? tobitsvec[tobitsvec.size()-1] : tobitsvec[toindex];
+    auto maxv = (1 << tobits) - 1;
+    auto max_acc = (1 << (frombits + tobits - 1)) - 1;
+
+    while (it != end) {
+       int v = infn(*it);
+        if (v < 0) return false;
+        acc = ((acc << frombits) | v) & max_acc;
+        bits += frombits;
+        while (bits >= (size_t)tobits) {
+            bits -= tobits;
+            outfn((acc >> bits) & maxv);
+            ++toindex;
+            tobits = toindex >= tobitsvec.size() ? tobitsvec[tobitsvec.size()-1] : tobitsvec[toindex];
+            maxv = (1 << tobits) - 1;
+            max_acc = (1 << (frombits + tobits - 1)) - 1;
+        }
+        ++it;
+        ++fromindex;
+        frombits = fromindex >= frombitsvec.size() ? frombitsvec[frombitsvec.size()-1] : frombitsvec[fromindex];
+        max_acc = (1 << (frombits + tobits - 1)) - 1;
+    }
+    frombits = fromindex >= frombitsvec.size() ? frombitsvec[frombitsvec.size()-1] : frombitsvec[fromindex];
+    tobits = toindex >= tobitsvec.size() ? tobitsvec[tobitsvec.size()-1] : tobitsvec[toindex];
+    maxv = (1 << tobits) - 1;
+    if (pad) {
+        if (bits) outfn((acc << (tobits - bits)) & maxv);
+    } else if (bits >= (size_t)frombits || ((acc << (tobits - bits)) & maxv)) {
+        return false;
+    }
+    if (fromindex < frombitsvec.size()-1 || toindex < tobitsvec.size()-1) return false;
+    return true;
+}
+
 /**
  * Converts the given character to its lowercase equivalent.
  * This function is locale independent. It only converts uppercase
