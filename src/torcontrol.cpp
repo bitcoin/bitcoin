@@ -409,7 +409,7 @@ void TorController::get_socks_cb(TorControlConnection& _conn, const TorControlRe
         //
         // If NET_ONION is not reachable, then none of -proxy or -onion was given.
         // Since we are here, then -torcontrol and -torpassword were given.
-        SetReachable(NET_ONION, true);
+        g_reachable_nets.Add(NET_ONION);
     }
 }
 

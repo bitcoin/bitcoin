@@ -682,7 +682,7 @@ CService HTTPRequest::GetPeer() const
         evhttp_connection_get_peer(con, (char**)&address, &port);
 #endif // HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR
 
-        peer = LookupNumeric(address, port);
+        peer = MaybeFlipIPv6toCJDNS(LookupNumeric(address, port));
     }
     return peer;
 }
