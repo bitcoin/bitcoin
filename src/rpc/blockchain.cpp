@@ -1672,6 +1672,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
                         {RPCResult::Type::NUM, "bit", "the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)"},
                         {RPCResult::Type::NUM_TIME, "start_time", "the minimum median time past of a block at which the bit gains its meaning"},
                         {RPCResult::Type::NUM_TIME, "timeout", "the median time past of a block at which the deployment is considered failed if not yet locked in"},
+                        {RPCResult::Type::NUM, "ehf", "the minimum height when miner's signals for the deployment can be accepted (special values: \"-1\" - any, \"0\" - none)"},
                         {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
                         {RPCResult::Type::OBJ, "statistics", "numeric statistics about BIP9 signalling for a softfork",
                         {
