@@ -5711,8 +5711,8 @@ void ChainstateManager::MaybeRebalanceCaches()
     assert(ibd_usable || snapshot_usable);
 
     if (ibd_usable && !snapshot_usable) {
-        LogPrintf("[snapshot] allocating all cache to the IBD chainstate\n");
-        // Allocate everything to the IBD chainstate.
+        // Allocate everything to the IBD chainstate. This will always happen
+        // when we are not using a snapshot.
         m_ibd_chainstate->ResizeCoinsCaches(m_total_coinstip_cache, m_total_coinsdb_cache);
     }
     else if (snapshot_usable && !ibd_usable) {
