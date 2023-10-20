@@ -659,6 +659,7 @@ public:
         UpdateDevnetLLMQInstantSendFromArgs(args);
         UpdateDevnetLLMQInstantSendDIP0024FromArgs(args);
         UpdateDevnetLLMQPlatformFromArgs(args);
+        UpdateDevnetLLMQMnhfFromArgs(args);
         UpdateLLMQDevnetParametersFromArgs(args);
         UpdateDevnetPowTargetSpacingFromArgs(args);
 
@@ -738,6 +739,14 @@ public:
     }
 
     /**
+     * Allows modifying the LLMQ type for Mnhf.
+     */
+    void UpdateDevnetLLMQMnhf(Consensus::LLMQType llmqType)
+    {
+        consensus.llmqTypeMnhf = llmqType;
+    }
+
+    /**
      * Allows modifying PowTargetSpacing
      */
     void UpdateDevnetPowTargetSpacing(int64_t nPowTargetSpacing)
@@ -761,6 +770,7 @@ public:
     void UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager& args);
     void UpdateDevnetLLMQInstantSendDIP0024FromArgs(const ArgsManager& args);
     void UpdateDevnetLLMQPlatformFromArgs(const ArgsManager& args);
+    void UpdateDevnetLLMQMnhfFromArgs(const ArgsManager& args);
     void UpdateDevnetPowTargetSpacingFromArgs(const ArgsManager& args);
 };
 
@@ -1319,6 +1329,28 @@ void CDevNetParams::UpdateDevnetLLMQPlatformFromArgs(const ArgsManager& args)
     }
     LogPrintf("Setting llmqplatform to size=%ld\n", static_cast<uint8_t>(llmqType));
     UpdateDevnetLLMQPlatform(llmqType);
+}
+
+void CDevNetParams::UpdateDevnetLLMQMnhfFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-llmqmnhf")) return;
+
+    const auto& llmq_params_opt = GetLLMQ(consensus.llmqTypeMnhf);
+    assert(llmq_params_opt.has_value());
+
+    std::string strLLMQType = gArgs.GetArg("-llmqmnhf", std::string(llmq_params_opt->name));
+
+    Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
+    for (const auto& params : consensus.llmqs) {
+        if (params.name == strLLMQType) {
+            llmqType = params.type;
+        }
+    }
+    if (llmqType == Consensus::LLMQType::LLMQ_NONE) {
+        throw std::runtime_error("Invalid LLMQ type specified for -llmqmnhf.");
+    }
+    LogPrintf("Setting llmqmnhf to size=%ld\n", static_cast<uint8_t>(llmqType));
+    UpdateDevnetLLMQMnhf(llmqType);
 }
 
 void CDevNetParams::UpdateDevnetPowTargetSpacingFromArgs(const ArgsManager& args)
