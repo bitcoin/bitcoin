@@ -31,14 +31,8 @@ elif [ "$CI_OS_NAME" != "macos" ]; then
 fi
 
 if [ -n "$PIP_PACKAGES" ]; then
-  if [ "$CI_OS_NAME" == "macos" ]; then
-    sudo -H pip3 install --upgrade pip
-    # shellcheck disable=SC2086
-    IN_GETOPT_BIN="$(brew --prefix gnu-getopt)/bin/getopt" ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
-  else
-    # shellcheck disable=SC2086
-    ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
-  fi
+  # shellcheck disable=SC2086
+  ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
 fi
 
 if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
