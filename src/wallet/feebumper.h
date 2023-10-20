@@ -72,6 +72,15 @@ Result CommitTransaction(CWallet& wallet,
     std::vector<bilingual_str>& errors,
     uint256& bumped_txid);
 
+Result CreateRateBumpDeniabilizationTransaction(CWallet& wallet,
+                                                const uint256& txid,
+                                                unsigned int confirm_target,
+                                                bool sign,
+                                                bilingual_str& error,
+                                                CAmount& old_fee,
+                                                CAmount& new_fee,
+                                                CTransactionRef& new_tx);
+
 struct SignatureWeights
 {
 private:
