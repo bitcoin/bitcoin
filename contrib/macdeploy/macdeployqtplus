@@ -402,16 +402,6 @@ verbose = config.verbose
 
 # ------------------------------------------------
 
-for p in config.add_resources:
-    if verbose:
-        print("Checking for \"%s\"..." % p)
-    if not os.path.exists(p):
-        if verbose:
-            sys.stderr.write("Error: Could not find additional resource file \"{}\"\n".format(p))
-        sys.exit(1)
-
-# ------------------------------------------------
-
 app_bundle = config.app_bundle[0]
 appname = config.appname[0]
 
