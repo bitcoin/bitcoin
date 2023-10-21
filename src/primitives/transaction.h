@@ -284,6 +284,7 @@ public:
     void SetNull()
     {
         nValue = -1;
+        scriptPubKey.clear();
     }
 
     bool IsNull() const

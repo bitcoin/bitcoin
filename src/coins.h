@@ -76,6 +76,9 @@ public:
         nHeight = code >> 1;
         fCoinBase = code & 1;
         ::Unserialize(s, Using<TxOutCompression>(out));
+        if (IsSpent()) {
+            throw std::ios_base::failure("Coin unserialization error, coin is spent.");
+        }
     }
 
     /** Either this coin never existed (see e.g. coinEmpty in coins.cpp), or it

@@ -81,7 +81,7 @@ public:
     void SelfTest() const
     {
         // Manually recompute the dynamic usage of the whole data, and compare it.
-        /*size_t ret = memusage::DynamicUsage(cacheCoins);
+        size_t ret = memusage::DynamicUsage(cacheCoins);
         size_t count = 0;
         for (const auto& entry : cacheCoins) {
             ret += entry.second.coin.DynamicMemoryUsage();
@@ -89,8 +89,6 @@ public:
         }
         BOOST_CHECK_EQUAL(GetCacheSize(), count);
         BOOST_CHECK_EQUAL(DynamicMemoryUsage(), ret);
-        */
-       
     }
 
     CCoinsMap& map() const { return cacheCoins; }
