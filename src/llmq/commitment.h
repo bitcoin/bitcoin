@@ -12,6 +12,8 @@
 #include <util/strencodings.h>
 #include <util/underlying.h>
 
+#include <gsl/pointers.h>
+
 #include <univalue.h>
 
 class CBlockIndex;
@@ -59,7 +61,7 @@ public:
         return int(std::count(validMembers.begin(), validMembers.end(), true));
     }
 
-    bool Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool checkSigs) const;
+    bool Verify(gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool checkSigs) const;
     bool VerifyNull() const;
     bool VerifySizes(const Consensus::LLMQParams& params) const;
 
@@ -169,7 +171,7 @@ public:
     }
 };
 
-bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state);
+bool CheckLLMQCommitment(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state);
 
 } // namespace llmq
 

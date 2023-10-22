@@ -178,7 +178,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
               __func__, clsig.ToString(), from);
 }
 
-void CChainLocksHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
+void CChainLocksHandler::AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew)
 {
     LOCK(cs);
 
@@ -361,7 +361,7 @@ void CChainLocksHandler::TransactionAddedToMempool(const CTransactionRef& tx, in
     txFirstSeenTime.emplace(tx->GetHash(), nAcceptTime);
 }
 
-void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
+void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindex)
 {
     if (!m_mn_sync.IsBlockchainSynced()) {
         return;
@@ -394,7 +394,7 @@ void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pbl
 
 }
 
-void CChainLocksHandler::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
+void CChainLocksHandler::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindexDisconnected)
 {
     LOCK(cs);
     blockTxs.erase(pindexDisconnected->GetBlockHash());

@@ -191,6 +191,8 @@ BITCOIN_CORE_H = \
   governance/validators.h \
   governance/vote.h \
   governance/votedb.h \
+  gsl/assert.h \
+  gsl/pointers.h \
   flat-database.h \
   hdchain.h \
   flatfile.h \
@@ -287,6 +289,7 @@ BITCOIN_CORE_H = \
   script/signingprovider.h \
   script/standard.h \
   shutdown.h \
+  source_location.h \
   spork.h \
   stacktraces.h \
   streams.h \

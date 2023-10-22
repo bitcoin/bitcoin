@@ -15,6 +15,8 @@
 #include <threadinterrupt.h>
 #include <txmempool.h>
 
+#include <gsl/pointers.h>
+
 #include <atomic>
 #include <unordered_map>
 #include <unordered_set>
@@ -148,8 +150,8 @@ public:
      * @param nUntilHeight the height from which to base the remove of archive IS Locks
      */
     void RemoveArchivedInstantSendLocks(int nUntilHeight) LOCKS_EXCLUDED(cs_db);
-    void WriteBlockInstantSendLocks(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) LOCKS_EXCLUDED(cs_db);
-    void RemoveBlockInstantSendLocks(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected) LOCKS_EXCLUDED(cs_db);
+    void WriteBlockInstantSendLocks(const gsl::not_null<std::shared_ptr<const CBlock>>& pblock, gsl::not_null<const CBlockIndex*> pindexConnected) LOCKS_EXCLUDED(cs_db);
+    void RemoveBlockInstantSendLocks(const gsl::not_null<std::shared_ptr<const CBlock>>& pblock, gsl::not_null<const CBlockIndex*> pindexDisconnected) LOCKS_EXCLUDED(cs_db);
     bool KnownInstantSendLock(const uint256& islockHash) const LOCKS_EXCLUDED(cs_db);
     /**
      * Gets the number of IS Locks which have not been confirmed by a block
@@ -198,7 +200,7 @@ public:
      */
     std::vector<uint256> RemoveChainedInstantSendLocks(const uint256& islockHash, const uint256& txid, int nHeight) LOCKS_EXCLUDED(cs_db);
 
-    void RemoveAndArchiveInstantSendLock(const CInstantSendLockPtr& islock, int nHeight) LOCKS_EXCLUDED(cs_db);
+    void RemoveAndArchiveInstantSendLock(const gsl::not_null<CInstantSendLockPtr>& islock, int nHeight) LOCKS_EXCLUDED(cs_db);
 };
 
 class CInstantSendManager : public CRecoveredSigsListener

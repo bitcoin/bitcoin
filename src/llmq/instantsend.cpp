@@ -250,7 +250,8 @@ void CInstantSendDb::RemoveArchivedInstantSendLocks(int nUntilHeight)
     db->WriteBatch(batch);
 }
 
-void CInstantSendDb::WriteBlockInstantSendLocks(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected)
+void CInstantSendDb::WriteBlockInstantSendLocks(const gsl::not_null<std::shared_ptr<const CBlock>>& pblock,
+                                                gsl::not_null<const CBlockIndex*> pindexConnected)
 {
     LOCK(cs_db);
     CDBBatch batch(*db);
@@ -268,7 +269,7 @@ void CInstantSendDb::WriteBlockInstantSendLocks(const std::shared_ptr<const CBlo
     db->WriteBatch(batch);
 }
 
-void CInstantSendDb::RemoveBlockInstantSendLocks(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
+void CInstantSendDb::RemoveBlockInstantSendLocks(const gsl::not_null<std::shared_ptr<const CBlock>>& pblock, gsl::not_null<const CBlockIndex*> pindexDisconnected)
 {
     LOCK(cs_db);
     CDBBatch batch(*db);
@@ -440,7 +441,7 @@ std::vector<uint256> CInstantSendDb::RemoveChainedInstantSendLocks(const uint256
     return result;
 }
 
-void CInstantSendDb::RemoveAndArchiveInstantSendLock(const CInstantSendLockPtr& islock, int nHeight)
+void CInstantSendDb::RemoveAndArchiveInstantSendLock(const gsl::not_null<CInstantSendLockPtr>& islock, int nHeight)
 {
     LOCK(cs_db);
 

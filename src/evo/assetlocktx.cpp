@@ -23,7 +23,7 @@
 /**
  *  Common code for Asset Lock and Asset Unlock
  */
-bool CheckAssetLockUnlockTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state)
+bool CheckAssetLockUnlockTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state)
 {
     switch (tx.nType) {
     case TRANSACTION_ASSET_LOCK:
@@ -108,7 +108,7 @@ std::string CAssetLockPayload::ToString() const
 
 const std::string ASSETUNLOCK_REQUESTID_PREFIX = "plwdtx";
 
-bool CAssetUnlockPayload::VerifySig(const uint256& msgHash, const CBlockIndex* pindexTip, TxValidationState& state) const
+bool CAssetUnlockPayload::VerifySig(const uint256& msgHash, gsl::not_null<const CBlockIndex*> pindexTip, TxValidationState& state) const
 {
     // That quourm hash must be active at `requestHeight`,
     // and at the quorumHash must be active in either the current or previous quorum cycle
@@ -143,7 +143,7 @@ bool CAssetUnlockPayload::VerifySig(const uint256& msgHash, const CBlockIndex* p
     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-not-verified");
 }
 
-bool CheckAssetUnlockTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state)
+bool CheckAssetUnlockTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state)
 {
     // Some checks depends from blockchain status also, such as `known indexes` and `withdrawal limits`
     // They are omitted here and done by CCreditPool

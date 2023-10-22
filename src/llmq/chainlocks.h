@@ -16,6 +16,8 @@
 #include <streams.h>
 #include <sync.h>
 
+#include <gsl/pointers.h>
+
 #include <atomic>
 #include <map>
 #include <unordered_map>
@@ -100,11 +102,11 @@ public:
 
     void ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv);
     void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash) LOCKS_EXCLUDED(cs);
-    void AcceptedBlockHeader(const CBlockIndex* pindexNew) LOCKS_EXCLUDED(cs);
+    void AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew) LOCKS_EXCLUDED(cs);
     void UpdatedBlockTip();
     void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) LOCKS_EXCLUDED(cs);
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex) LOCKS_EXCLUDED(cs);
-    void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected) LOCKS_EXCLUDED(cs);
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindex) LOCKS_EXCLUDED(cs);
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindexDisconnected) LOCKS_EXCLUDED(cs);
     void CheckActiveState() LOCKS_EXCLUDED(cs);
     void TrySignChainTip() LOCKS_EXCLUDED(cs);
     void EnforceBestChainLock() LOCKS_EXCLUDED(cs);
