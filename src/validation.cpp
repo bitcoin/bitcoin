@@ -2476,8 +2476,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     int64_t nTime8 = GetTimeMicros(); nTimeCallbacks += nTime8 - nTime5;
     LogPrint(BCLog::BENCHMARK, "    - Callbacks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime8 - nTime5), nTimeCallbacks * MICRO, nTimeCallbacks * MILLI / nBlocksTotal);
 
-    auto diff = nTime8 - nTimeStart;
-    statsClient.timing("ConnectBlock_ms", diff, 1.0f);
+    statsClient.timing("ConnectBlock_ms", (nTime8 - nTimeStart) / 1000, 1.0f);
     statsClient.gauge("blocks.tip.SizeBytes", ::GetSerializeSize(block, PROTOCOL_VERSION), 1.0f);
     statsClient.gauge("blocks.tip.Height", m_chain.Height(), 1.0f);
     statsClient.gauge("blocks.tip.Version", block.nVersion, 1.0f);
@@ -2927,7 +2926,7 @@ bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew
     LogPrint(BCLog::BENCHMARK, "  - Connect postprocess: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime6 - nTime5) * MILLI, nTimePostConnect * MICRO, nTimePostConnect * MILLI / nBlocksTotal);
     LogPrint(BCLog::BENCHMARK, "- Connect block: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime6 - nTime1) * MILLI, nTimeTotal * MICRO, nTimeTotal * MILLI / nBlocksTotal);
 
-    statsClient.timing("ConnectTip_ms", nTime6 - nTime1, 1.0f);
+    statsClient.timing("ConnectTip_ms", (nTime6 - nTime1) / 1000, 1.0f);
 
     connectTrace.BlockConnected(pindexNew, std::move(pthisBlock));
     return true;
