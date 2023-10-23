@@ -292,11 +292,11 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
             entry.pushKV("mnhfTx", mnhfTx.ToJson());
         }
     } else if (tx.nType == TRANSACTION_ASSET_LOCK) {
-        if (CAssetLockPayload assetLockTx; !GetTxPayload(tx, assetLockTx)) {
+        if (CAssetLockPayload assetLockTx; GetTxPayload(tx, assetLockTx)) {
             entry.pushKV("assetLockTx", assetLockTx.ToJson());
         }
     } else if (tx.nType == TRANSACTION_ASSET_UNLOCK) {
-        if (CAssetUnlockPayload assetUnlockTx; !GetTxPayload(tx, assetUnlockTx)) {
+        if (CAssetUnlockPayload assetUnlockTx; GetTxPayload(tx, assetUnlockTx)) {
             entry.pushKV("assetUnlockTx", assetUnlockTx.ToJson());
         }
     }

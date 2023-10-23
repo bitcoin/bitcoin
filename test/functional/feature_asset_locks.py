@@ -256,6 +256,7 @@ class AssetLocksTest(DashTestFramework):
         self.check_mempool_result(tx=asset_lock_tx, result_expected={'allowed': True})
         self.validate_credit_pool_balance(0)
         txid_in_block = self.send_tx(asset_lock_tx)
+        assert "assetLockTx" in node.getrawtransaction(txid_in_block, 1)
         self.validate_credit_pool_balance(0)
         node.generate(1)
         assert_equal(self.get_credit_pool_balance(node=node_wallet), 0)
@@ -327,7 +328,8 @@ class AssetLocksTest(DashTestFramework):
 
         assert_equal(asset_unlock_tx_payload.quorumHash, int(self.mninfo[0].node.quorum("selectquorum", llmq_type_test, 'e6c7a809d79f78ea85b72d5df7e9bd592aecf151e679d6e976b74f053a7f9056')["quorumHash"], 16))
 
-        self.send_tx(asset_unlock_tx)
+        txid = self.send_tx(asset_unlock_tx)
+        assert "assetUnlockTx" in node.getrawtransaction(txid, 1)
         self.mempool_size += 1
         self.check_mempool_size()
         self.validate_credit_pool_balance(locked_1)
