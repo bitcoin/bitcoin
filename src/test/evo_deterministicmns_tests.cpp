@@ -813,7 +813,7 @@ BOOST_AUTO_TEST_CASE(dip3_protx_legacy)
 
 BOOST_AUTO_TEST_CASE(dip3_protx_basic)
 {
-    TestChainDIP3V19Setup setup;
+    TestChainV19Setup setup;
     FuncDIP3Protx(setup);
 }
 
@@ -825,7 +825,7 @@ BOOST_AUTO_TEST_CASE(test_mempool_reorg_legacy)
 
 BOOST_AUTO_TEST_CASE(test_mempool_reorg_basic)
 {
-    TestChainDIP3V19Setup setup;
+    TestChainV19Setup setup;
     FuncTestMempoolReorg(setup);
 }
 
@@ -837,7 +837,7 @@ BOOST_AUTO_TEST_CASE(test_mempool_dual_proregtx_legacy)
 
 BOOST_AUTO_TEST_CASE(test_mempool_dual_proregtx_basic)
 {
-    TestChainDIP3V19Setup setup;
+    TestChainV19Setup setup;
     FuncTestMempoolDualProregtx(setup);
 }
 

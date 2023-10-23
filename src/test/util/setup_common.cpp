@@ -315,8 +315,8 @@ TestChainSetup::TestChainSetup(int num_blocks, const std::vector<const char*>& e
             {  497, uint256S("0x5d3a646bb53416543e409d2aa99b93ba619c8394ac68868e1b65a57cb8d0ce7d") },
             /* TestChainV19BeforeActivationSetup */
             {  894, uint256S("0x4e01ffea7482da6bbc581f16a62e04d7a20c8789b6bfe581c60016bb79d8d267") },
-            /* TestChainDIP3V19Setup */
-            { 1000, uint256S("0x610be429a3d38c4e2ec15fb6c0bfe368b537eb0f75d3bc0456b698017536634a") },
+            /* TestChainV19Setup */
+            {  899, uint256S("0x539da638600839a24c7a7ac408d22d85f20b3ab913176c80a37a1793eb32e0d9") },
         }
     };
 
@@ -462,6 +462,14 @@ CBlock getBlock13b8a()
     return block;
 }
 
+TestChainV19Setup::TestChainV19Setup() : TestChainSetup(899)
+{
+    bool v19_just_activated = llmq::utils::IsV19Active(::ChainActive().Tip()) &&
+                              !llmq::utils::IsV19Active(::ChainActive().Tip()->pprev);
+    assert(v19_just_activated);
+}
+
+// 5 blocks earlier
 TestChainV19BeforeActivationSetup::TestChainV19BeforeActivationSetup() : TestChainSetup(894)
 {
     bool v19_active = llmq::utils::IsV19Active(::ChainActive().Tip());
