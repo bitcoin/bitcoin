@@ -319,6 +319,7 @@ BITCOIN_CORE_H = \
   util/signalinterrupt.h \
   util/sock.h \
   util/spanparsing.h \
+  util/strencodings.h \
   util/string.h \
   util/subprocess.h \
   util/syserror.h \
@@ -565,6 +566,8 @@ crypto_libbitcoin_crypto_base_la_SOURCES = \
   crypto/chacha20poly1305.h \
   crypto/chacha20poly1305.cpp \
   crypto/common.h \
+  crypto/hex_base.cpp \
+  crypto/hex_base.h \
   crypto/hkdf_sha256_32.cpp \
   crypto/hkdf_sha256_32.h \
   crypto/hmac_sha256.cpp \
@@ -658,9 +661,7 @@ libbitcoin_consensus_a_SOURCES = \
   span.h \
   tinyformat.h \
   uint256.cpp \
-  uint256.h \
-  util/strencodings.cpp \
-  util/strencodings.h
+  uint256.h
 #
 
 # common #
