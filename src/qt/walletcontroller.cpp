@@ -472,10 +472,10 @@ void MigrateWalletActivity::migrate(WalletModel* wallet_model)
         if (res) {
             m_success_message = tr("The wallet '%1' was migrated successfully.").arg(GUIUtil::HtmlEscape(res->wallet->getWalletName()));
             if (res->watchonly_wallet_name) {
-                m_success_message += tr(" Watchonly scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(res->watchonly_wallet_name.value()));
+                m_success_message += QChar(' ') + tr("Watchonly scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(res->watchonly_wallet_name.value()));
             }
             if (res->solvables_wallet_name) {
-                m_success_message += tr(" Solvable but not watched scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(res->solvables_wallet_name.value()));
+                m_success_message += QChar(' ') + tr("Solvable but not watched scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(res->solvables_wallet_name.value()));
             }
             m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(res->wallet));
         } else {
