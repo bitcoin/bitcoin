@@ -111,12 +111,10 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, const 
 
 bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, BlockValidationState& state, const CCoinsViewCache& view)
 {
-    LOCK(deterministicMNManager->cs);
-
     try {
-        static int64_t nTimeDMN = 0;
-        static int64_t nTimeSMNL = 0;
-        static int64_t nTimeMerkle = 0;
+        static std::atomic<int64_t> nTimeDMN = 0;
+        static std::atomic<int64_t> nTimeSMNL = 0;
+        static std::atomic<int64_t> nTimeMerkle = 0;
 
         int64_t nTime1 = GetTimeMicros();
 
@@ -134,10 +132,12 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
         int64_t nTime3 = GetTimeMicros(); nTimeSMNL += nTime3 - nTime2;
         LogPrint(BCLog::BENCHMARK, "            - CSimplifiedMNList: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeSMNL * 0.000001);
 
-        static CSimplifiedMNList smlCached;
-        static uint256 merkleRootCached;
-        static bool mutatedCached{false};
+        static Mutex cached_mutex;
+        static CSimplifiedMNList smlCached GUARDED_BY(cached_mutex);
+        static uint256 merkleRootCached GUARDED_BY(cached_mutex);
+        static bool mutatedCached GUARDED_BY(cached_mutex) {false};
 
+        LOCK(cached_mutex);
         if (sml == smlCached) {
             merkleRootRet = merkleRootCached;
             if (mutatedCached) {

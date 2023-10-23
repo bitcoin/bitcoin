@@ -613,8 +613,6 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     int nHeight = pindex->nHeight;
 
     try {
-        LOCK(cs);
-
         if (!BuildNewListFromBlock(block, pindex->pprev, state, view, newList, true)) {
             // pass the state returned by the function above
             return false;
@@ -625,6 +623,8 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
         }
 
         newList.SetBlockHash(pindex->GetBlockHash());
+
+        LOCK(cs);
 
         oldList = GetListForBlockInternal(pindex->pprev);
         diff = oldList.BuildDiff(newList);
@@ -708,11 +708,9 @@ void CDeterministicMNManager::UpdatedBlockTip(const CBlockIndex* pindex)
 
 bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& state, const CCoinsViewCache& view, CDeterministicMNList& mnListRet, bool debugLogs)
 {
-    AssertLockHeld(cs);
-
     int nHeight = pindexPrev->nHeight + 1;
 
-    CDeterministicMNList oldList = GetListForBlockInternal(pindexPrev);
+    CDeterministicMNList oldList = GetListForBlock(pindexPrev);
     CDeterministicMNList newList = oldList;
     newList.SetBlockHash(uint256()); // we can't know the final block hash, so better not return a (invalid) block hash
     newList.SetHeight(nHeight);
