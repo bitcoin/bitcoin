@@ -7,10 +7,10 @@
 Verify that a bitcoind node can load multiple wallet files
 """
 from decimal import Decimal
+from pathlib import Path
 from threading import Thread
 import os
 import shutil
-import stat
 import sys
 import time
 
@@ -22,6 +22,8 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
     get_rpc_proxy,
+    make_readonly,
+    make_readwrite,
 )
 
 got_loading_error = False
@@ -58,6 +60,17 @@ class MultiWalletTest(BitcoinTestFramework):
             default=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/wallets/'),
             help='Test data with wallet directories (default: %(default)s)',
         )
+
+    def test_readonly_wallet_dir(self, wallet_dir, in_wallet_dir) -> None:
+        self.log.info('FIXME: Calling listwalletdir with a readonly wallet directory raises "Error scanning"')
+        os.mkdir(wallet_dir('readonly'))
+        wallet_path = Path(wallet_dir('readonly'))
+        if not make_readonly(wallet_path):
+            return
+        with self.nodes[0].assert_debug_log(expected_msgs=['Error scanning']):
+            wallet_list = self.nodes[0].listwalletdir()['wallets']
+        assert_equal(sorted(map(lambda w: w['name'], wallet_list)), sorted(in_wallet_dir))
+        make_readwrite(wallet_path)  # restore write access for test cleanup
 
     def run_test(self):
         node = self.nodes[0]
@@ -129,16 +142,7 @@ class MultiWalletTest(BitcoinTestFramework):
         for wallet_name in to_load:
             self.nodes[0].loadwallet(wallet_name)
 
-        os.mkdir(wallet_dir('no_access'))
-        os.chmod(wallet_dir('no_access'), 0)
-        try:
-            with self.nodes[0].assert_debug_log(expected_msgs=['Error scanning']):
-                walletlist = self.nodes[0].listwalletdir()['wallets']
-        finally:
-            # Need to ensure access is restored for cleanup
-            os.chmod(wallet_dir('no_access'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
-        assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
-
+        self.test_readonly_wallet_dir(wallet_dir, in_wallet_dir)
         assert_equal(set(node.listwallets()), set(wallet_names))
 
         # should raise rpc error if wallet path can't be created

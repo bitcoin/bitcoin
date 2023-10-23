@@ -5,15 +5,17 @@
 """Test bitcoin-wallet."""
 
 import os
-import stat
 import subprocess
 import textwrap
 
 from collections import OrderedDict
+from pathlib import Path
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    make_readonly,
+    make_readwrite,
     sha256sum_file,
 )
 
@@ -57,9 +59,6 @@ class ToolWalletTest(BitcoinTestFramework):
 
     def wallet_timestamp(self):
         return os.path.getmtime(self.wallet_path)
-
-    def wallet_permissions(self):
-        return oct(os.lstat(self.wallet_path).st_mode)[-3:]
 
     def log_wallet_timestamp_comparison(self, old, new):
         result = 'unchanged' if new == old else 'increased!'
@@ -203,35 +202,28 @@ class ToolWalletTest(BitcoinTestFramework):
     def test_tool_wallet_info(self):
         # Stop the node to close the wallet to call the info command.
         self.stop_node(0)
-        self.log.info('Calling wallet tool info, testing output')
-        #
-        # TODO: Wallet tool info should work with wallet file permissions set to
-        # read-only without raising:
-        # "Error loading wallet.dat. Is wallet being used by another process?"
-        # The following lines should be uncommented and the tests still succeed:
-        #
-        # self.log.debug('Setting wallet file permissions to 400 (read-only)')
-        # os.chmod(self.wallet_path, stat.S_IRUSR)
-        # assert self.wallet_permissions() in ['400', '666'] # Sanity check. 666 because Appveyor.
-        # shasum_before = self.wallet_shasum()
+
+        self.log.info("FIXME: Calling wallet tool info raises when wallet file is read-only due to unexpected write")
+        wallet_path = Path(self.wallet_path)
+        if not make_readonly(wallet_path):
+            return
+        shasum_before = self.wallet_shasum()
         timestamp_before = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp before calling info: {}'.format(timestamp_before))
-        out = self.get_expected_info_output(imported_privs=1)
-        self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
+        self.assert_raises_tool_error(
+            "SQLiteDatabase: Database opened in readonly mode but read-write permissions are needed"
+            if self.options.descriptors
+            else "Error loading . Is wallet being used by another process?",
+            "-wallet=" + self.default_wallet_name,
+            "info",
+        )
         timestamp_after = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp after calling info: {}'.format(timestamp_after))
         self.log_wallet_timestamp_comparison(timestamp_before, timestamp_after)
-        self.log.debug('Setting wallet file permissions back to 600 (read/write)')
-        os.chmod(self.wallet_path, stat.S_IRUSR | stat.S_IWUSR)
-        assert self.wallet_permissions() in ['600', '666']  # Sanity check. 666 because Appveyor.
-        #
-        # TODO: Wallet tool info should not write to the wallet file.
-        # The following lines should be uncommented and the tests still succeed:
-        #
-        # assert_equal(timestamp_before, timestamp_after)
-        # shasum_after = self.wallet_shasum()
-        # assert_equal(shasum_before, shasum_after)
-        # self.log.debug('Wallet file shasum unchanged\n')
+        make_readwrite(wallet_path)
+        assert_equal(timestamp_before, timestamp_after)
+        assert_equal(shasum_before, self.wallet_shasum())
+        self.log.debug("Wallet file shasum unchanged\n")
 
     def test_tool_wallet_info_after_transaction(self):
         """
