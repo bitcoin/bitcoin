@@ -1627,6 +1627,9 @@ static void BIP9SoftForkDescPushBack(const CBlockIndex* active_chain_tip, UniVal
         statsUV.pushKV("possible", statsStruct.possible);
         bip9.pushKV("statistics", statsUV);
     }
+    else if (ThresholdState::LOCKED_IN == thresholdState) {
+        bip9.pushKV("activation_height", since_height + static_cast<int>(consensusParams.vDeployments[id].nWindowSize));
+    }
 
     UniValue rv(UniValue::VOBJ);
     rv.pushKV("type", "bip9");
@@ -1673,6 +1676,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
                         {RPCResult::Type::NUM_TIME, "timeout", "the median time past of a block at which the deployment is considered failed if not yet locked in"},
                         {RPCResult::Type::NUM, "ehf", "the minimum height when miner's signals for the deployment can be accepted (special values: \"-1\" - any, \"0\" - none)"},
                         {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
+                        {RPCResult::Type::NUM, "activation_height", "expected activation height for this softfork (only for \"locked_in\" status)"},
                         {RPCResult::Type::OBJ, "statistics", "numeric statistics about BIP9 signalling for a softfork",
                         {
                             {RPCResult::Type::NUM, "period", "the length in blocks of the BIP9 signalling period"},
