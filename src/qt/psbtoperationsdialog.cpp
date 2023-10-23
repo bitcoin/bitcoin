@@ -167,13 +167,13 @@ void PSBTOperationsDialog::saveTransaction() {
 }
 
 void PSBTOperationsDialog::updateTransactionDisplay() {
-    m_ui->transactionDescription->setText(QString::fromStdString(renderTransaction(m_transaction_data)));
+    m_ui->transactionDescription->setText(renderTransaction(m_transaction_data));
     showTransactionStatus(m_transaction_data);
 }
 
-std::string PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction &psbtx)
+QString PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction &psbtx)
 {
-    QString tx_description = "";
+    QString tx_description;
     CAmount totalAmount = 0;
     for (const CTxOut& out : psbtx.tx->vout) {
         CTxDestination address;
@@ -217,7 +217,7 @@ std::string PSBTOperationsDialog::renderTransaction(const PartiallySignedTransac
         tx_description.append(tr("Transaction has %1 unsigned inputs.").arg(QString::number(num_unsigned)));
     }
 
-    return tx_description.toStdString();
+    return tx_description;
 }
 
 void PSBTOperationsDialog::showStatus(const QString &msg, StatusLevel level) {
