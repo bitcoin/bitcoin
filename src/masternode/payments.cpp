@@ -35,10 +35,6 @@
 
     if (llmq::utils::IsMNRewardReallocationActive(pindexPrev)) {
         CAmount masternodeSubsidyReward = GetMasternodePayment(nBlockHeight, blockSubsidy, fV20Active);
-        // TODO remove this when we re-organize testnet
-        if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
-            masternodeSubsidyReward = masternodeReward;
-        }
         const CAmount platformReward = MasternodePayments::PlatformShare(masternodeSubsidyReward);
         masternodeReward -= platformReward;
 

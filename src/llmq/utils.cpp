@@ -723,7 +723,6 @@ bool IsMNRewardReallocationActive(const CBlockIndex* pindex)
 {
     assert(pindex);
     if (!IsV20Active(pindex)) return false;
-    if (Params().NetworkIDString() == CBaseChainParams::TESTNET) return IsV20Active(pindex); // TODO remove this before re-hardforking testnet to check EHF
 
     LOCK(cs_llmq_vbc);
     return VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_MN_RR, llmq_versionbitscache) == ThresholdState::ACTIVE;
