@@ -729,18 +729,18 @@ bool IsMNRewardReallocationActive(const CBlockIndex* pindex)
     return VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_MN_RR, llmq_versionbitscache) == ThresholdState::ACTIVE;
 }
 
-ThresholdState GetMNRewardReallocationState(const CBlockIndex* pindex)
+ThresholdState GetV20State(const CBlockIndex* pindex)
 {
     assert(pindex);
     LOCK(cs_llmq_vbc);
-    return VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_MN_RR, llmq_versionbitscache);
+    return VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20, llmq_versionbitscache);
 }
 
-int GetMNRewardReallocationSince(const CBlockIndex* pindex)
+int GetV20Since(const CBlockIndex* pindex)
 {
     assert(pindex);
     LOCK(cs_llmq_vbc);
-    return VersionBitsStateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_MN_RR, llmq_versionbitscache);
+    return VersionBitsStateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20, llmq_versionbitscache);
 }
 
 bool IsInstantSendLLMQTypeShared()

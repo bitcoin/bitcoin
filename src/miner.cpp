@@ -193,8 +193,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     // NOTE: unlike in bitcoin, we need to pass PREVIOUS block height here
     bool fMNRewardReallocated = llmq::utils::IsMNRewardReallocationActive(pindexPrev);
-    bool fV20Active = llmq::utils::IsV20Active(pindexPrev);
-    CAmount blockSubsidy = GetBlockSubsidyInner(pindexPrev->nBits, pindexPrev->nHeight, Params().GetConsensus(), fV20Active, fMNRewardReallocated);
+    CAmount blockSubsidy = GetBlockSubsidyInner(pindexPrev->nBits, pindexPrev->nHeight, Params().GetConsensus(), fV20Active_context);
     CAmount blockReward = blockSubsidy + nFees;
 
     // Compute regular coinbase transaction.
@@ -238,7 +237,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                 assert(creditPoolDiff != std::nullopt);
 
                 if (fMNRewardReallocated) {
-                    const CAmount masternodeReward = GetMasternodePayment(nHeight, blockSubsidy, fMNRewardReallocated);
+                    const CAmount masternodeReward = GetMasternodePayment(nHeight, blockSubsidy, fV20Active_context);
                     const CAmount reallocedReward = MasternodePayments::PlatformShare(masternodeReward);
                     LogPrint(BCLog::MNPAYMENTS, "%s: add MN reward %lld (%lld) to credit pool\n", __func__, masternodeReward, reallocedReward);
                     creditPoolDiff->AddRewardRealloced(reallocedReward);

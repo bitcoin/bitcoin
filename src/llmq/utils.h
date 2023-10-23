@@ -76,8 +76,8 @@ bool IsDIP0024Active(const CBlockIndex* pindex);
 bool IsV19Active(const CBlockIndex* pindex);
 bool IsV20Active(const CBlockIndex* pindex);
 bool IsMNRewardReallocationActive(const CBlockIndex* pindex);
-ThresholdState GetMNRewardReallocationState(const CBlockIndex* pindex);
-int GetMNRewardReallocationSince(const CBlockIndex* pindex);
+ThresholdState GetV20State(const CBlockIndex* pindex);
+int GetV20Since(const CBlockIndex* pindex);
 
 /// Returns the state of `-llmq-data-recovery`
 bool QuorumDataRecoveryEnabled();

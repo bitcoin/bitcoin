@@ -1117,7 +1117,7 @@ NOTE:   unlike bitcoin we are using PREVIOUS block height here,
         might be a good idea to change this to use prev bits
         but current height to avoid confusion.
 */
-static std::pair<CAmount, CAmount> GetBlockSubsidyHelper(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fV20Active, bool fMNRewardReallocated)
+static std::pair<CAmount, CAmount> GetBlockSubsidyHelper(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fV20Active)
 {
     double dDiff;
     CAmount nSubsidyBase;
@@ -1171,23 +1171,23 @@ static std::pair<CAmount, CAmount> GetBlockSubsidyHelper(int nPrevBits, int nPre
     CAmount nSuperblockPart{};
     // Hard fork to reduce the block reward by 10 extra percent (allowing budget/superblocks)
     if (nPrevHeight > consensusParams.nBudgetPaymentsStartBlock) {
-        // Once MNRewardReallocated is active, the treasury is 20% instead of 10%
+        // Once v20 is active, the treasury is 20% instead of 10%
         // TODO remove this when we re-organize testnet
-        if (Params().NetworkIDString() == CBaseChainParams::TESTNET) fMNRewardReallocated = false;
-        nSuperblockPart = nSubsidy / (fMNRewardReallocated ? 5 : 10);
+        if (Params().NetworkIDString() == CBaseChainParams::TESTNET) fV20Active = false;
+        nSuperblockPart = nSubsidy / (fV20Active ? 5 : 10);
     }
     return {nSubsidy - nSuperblockPart, nSuperblockPart};
 }
 
-CAmount GetSuperblockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fV20Active, bool fMNRewardReallocated)
+CAmount GetSuperblockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fV20Active)
 {
-    const auto [nSubsidy, nSuperblock] = GetBlockSubsidyHelper(nPrevBits, nPrevHeight, consensusParams, fV20Active, fMNRewardReallocated);
+    const auto [nSubsidy, nSuperblock] = GetBlockSubsidyHelper(nPrevBits, nPrevHeight, consensusParams, fV20Active);
     return nSuperblock;
 }
 
-CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fV20Active, bool fMNRewardReallocated)
+CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fV20Active)
 {
-    const auto [nSubsidy, nSuperblock] = GetBlockSubsidyHelper(nPrevBits, nPrevHeight, consensusParams, fV20Active, fMNRewardReallocated);
+    const auto [nSubsidy, nSuperblock] = GetBlockSubsidyHelper(nPrevBits, nPrevHeight, consensusParams, fV20Active);
     return nSubsidy;
 }
 
@@ -1195,11 +1195,10 @@ CAmount GetBlockSubsidy(const CBlockIndex* const pindex, const Consensus::Params
 {
     if (pindex->pprev == nullptr) return Params().GenesisBlock().vtx[0]->GetValueOut();
     bool isV20Active = llmq::utils::IsV20Active(pindex->pprev);
-    bool isMNRewardReallocated = llmq::utils::IsMNRewardReallocationActive(pindex->pprev);
-    return GetBlockSubsidyInner(pindex->pprev->nBits, pindex->pprev->nHeight, consensusParams, isV20Active, isMNRewardReallocated);
+    return GetBlockSubsidyInner(pindex->pprev->nBits, pindex->pprev->nHeight, consensusParams, isV20Active);
 }
 
-CAmount GetMasternodePayment(int nHeight, CAmount blockValue, bool fMNRewardReallocated)
+CAmount GetMasternodePayment(int nHeight, CAmount blockValue, bool fV20Active)
 {
     CAmount ret = blockValue/5; // start at 20%
 
@@ -1233,8 +1232,8 @@ CAmount GetMasternodePayment(int nHeight, CAmount blockValue, bool fMNRewardReal
     }
 
     // TODO remove this when we re-organize testnet
-    if (Params().NetworkIDString() == CBaseChainParams::TESTNET) fMNRewardReallocated = false;
-    if (fMNRewardReallocated) {
+    if (Params().NetworkIDString() == CBaseChainParams::TESTNET) fV20Active = false;
+    if (fV20Active) {
         // Once MNRewardReallocated activates, block reward is 80% of block subsidy (+ tx fees) since treasury is 20%
         // Since the MN reward needs to be equal to 60% of the block subsidy (according to the proposal), MN reward is set to 75% of the block reward.
         // Previous reallocation periods are dropped.

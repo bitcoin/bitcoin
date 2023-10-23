@@ -30,11 +30,11 @@
 
     const int nBlockHeight = pindexPrev  == nullptr ? 0 : pindexPrev->nHeight + 1;
 
-    bool fMNRewardReallocated =  llmq::utils::IsMNRewardReallocationActive(pindexPrev);
+    bool fV20Active =  llmq::utils::IsV20Active(pindexPrev);
+    CAmount masternodeReward = GetMasternodePayment(nBlockHeight, blockSubsidy + feeReward, fV20Active);
 
-    CAmount masternodeReward = GetMasternodePayment(nBlockHeight, blockSubsidy + feeReward, fMNRewardReallocated);
-    if (fMNRewardReallocated) {
-        CAmount masternodeSubsidyReward = GetMasternodePayment(nBlockHeight, blockSubsidy, fMNRewardReallocated);
+    if (llmq::utils::IsMNRewardReallocationActive(pindexPrev)) {
+        CAmount masternodeSubsidyReward = GetMasternodePayment(nBlockHeight, blockSubsidy, fV20Active);
         // TODO remove this when we re-organize testnet
         if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
             masternodeSubsidyReward = masternodeReward;

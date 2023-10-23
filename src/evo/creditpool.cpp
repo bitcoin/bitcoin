@@ -240,8 +240,9 @@ bool CCreditPoolDiff::SetTarget(const CTransaction& tx, const CAmount blockSubsi
     targetBalance = cbTx.creditPoolBalance;
 
     if (!llmq::utils::IsMNRewardReallocationActive(pindex)) return true;
+    // We consider V20 active if mn_rr is active
 
-    platformReward = MasternodePayments::PlatformShare(GetMasternodePayment(cbTx.nHeight, blockSubsidy, /* reward_reallocation= */ true));
+    platformReward = MasternodePayments::PlatformShare(GetMasternodePayment(cbTx.nHeight, blockSubsidy, /* v20_active= */ true));
     LogPrintf("CreditPool: set target to %lld with MN reward %lld\n", *targetBalance, platformReward);
 
     return true;
