@@ -361,11 +361,38 @@ CNode* CConnman::FindNode(const CService& addr, std::optional<bool> inbound)
     return nullptr;
 }
 
-bool CConnman::AlreadyConnectedToAddress(const CAddress& addr)
+bool CConnman::AlreadyConnectedToAddress(const CAddress& addr, ConnectionType conn_type, bool log)
 {
     const CService service{MaybeFlipIPv6toCJDNS(addr)};
+    const bool inbound{conn_type == ConnectionType::INBOUND};
+    CNode* pnode{nullptr};
     LOCK(m_nodes_mutex);
-    return FindNode(static_cast<CNetAddr>(service)) || FindNode(service.ToStringAddrPort());
+    if (inbound) {
+        // For accepting an inbound connection, check all connections by addr only.
+        pnode = FindNode(static_cast<CNetAddr>(service));
+    } else {
+        // For making an outbound connection, check outbound connections by addr and port
+        // (for both CService and string), and if we're not making a manual connection,
+        // then also check inbound connections by addr only.
+        pnode = FindNode(service, /*inbound=*/false);
+        if (!pnode || !pnode->addr.IsValid()) {
+            pnode = FindNode(service.ToStringAddrPort(), /*inbound=*/false);
+        }
+        if ((!pnode || !pnode->addr.IsValid()) && conn_type != ConnectionType::MANUAL) {
+            pnode = FindNode(static_cast<CNetAddr>(service), /*inbound=*/true);
+        }
+    }
+    if (pnode && log) {
+        LogPrintLevel(BCLog::NET, inbound ? BCLog::Level::Debug : BCLog::Level::Info,
+                      "Not %s new %s connection%s, already connected to %s %s %s peer=%d%s, version=%d, subver=%s\n",
+                      inbound ? "accepting" : "opening", ConnectionTypeAsString(conn_type),
+                      fLogIPs ? strprintf(" %s %s", inbound ? "from" : "to", addr.ToStringAddrPort()) : "",
+                      TransportTypeAsString(pnode->m_transport->GetInfo().transport_type),
+                      pnode->ConnectionTypeAsString(), GetNetworkName(pnode->ConnectedThroughNetwork()),
+                      pnode->GetId(), fLogIPs ? strprintf(", peeraddr=%s", pnode->addr.ToStringAddrPort()) : "",
+                      pnode->nVersion.load(), WITH_LOCK(pnode->m_subver_mutex, return pnode->cleanSubVer));
+    }
+    return pnode != nullptr;
 }
 
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
@@ -2665,7 +2692,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     // No tried table collisions. Select a new table address
                     // for our feeler.
                     std::tie(addr, addr_last_try) = addrman.Select(true);
-                } else if (AlreadyConnectedToAddress(addr)) {
+                } else if (AlreadyConnectedToAddress(addr, conn_type, /*log=*/false)) {
                     // If test-before-evict logic would have us connect to a
                     // peer that we're already connected to, just mark that
                     // address as Good(). We won't be able to initiate the
@@ -2865,7 +2892,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     }
     if (!pszDest) {
         bool banned_or_discouraged = m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect));
-        if (IsLocal(addrConnect) || banned_or_discouraged || AlreadyConnectedToAddress(addrConnect)) {
+        if (IsLocal(addrConnect) || banned_or_discouraged || AlreadyConnectedToAddress(addrConnect, conn_type)) {
             return;
         }
     } else if (WITH_LOCK(m_nodes_mutex, return FindNode(std::string{pszDest}))) {

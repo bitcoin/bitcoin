@@ -1341,8 +1341,12 @@ private:
     /**
      * Determine whether we're already connected to a given address, in order to
      * avoid initiating duplicate connections.
+     *
+     * @param[in] addr  Address to search for.
+     * @param[in] conn_type  Intended connection type of the address.
+     * @param[in] log  Whether to log if already connected to the address.
      */
-    bool AlreadyConnectedToAddress(const CAddress& addr);
+    bool AlreadyConnectedToAddress(const CAddress& addr, ConnectionType conn_type, bool log = true);
 
     bool AttemptToEvictConnection();
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, ConnectionType conn_type, bool use_v2transport) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
