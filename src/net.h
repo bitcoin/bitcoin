@@ -1328,9 +1328,15 @@ private:
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
-    CNode* FindNode(const CNetAddr& ip) EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
-    CNode* FindNode(const std::string& addrName) EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
-    CNode* FindNode(const CService& addr) EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
+    /**
+     * Search for a peer by address from among the peers we're connected to.
+     * @param[in] addr  Address to search for.
+     * @param[in] inbound (optional)  Whether to also filter by inbound status true/false.
+     * @returns a pointer to the peer if one is found, otherwise nullptr.
+     */
+    CNode* FindNode(const CNetAddr& addr, std::optional<bool> inbound = std::nullopt) EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
+    CNode* FindNode(const std::string& addr, std::optional<bool> inbound = std::nullopt) EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
+    CNode* FindNode(const CService& addr, std::optional<bool> inbound = std::nullopt) EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
     /**
      * Determine whether we're already connected to a given address, in order to

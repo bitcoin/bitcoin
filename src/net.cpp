@@ -328,33 +328,33 @@ bool IsLocal(const CService& addr)
     return mapLocalHost.count(addr) > 0;
 }
 
-CNode* CConnman::FindNode(const CNetAddr& ip)
+CNode* CConnman::FindNode(const CNetAddr& addr, std::optional<bool> inbound)
 {
     AssertLockHeld(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
-      if (static_cast<CNetAddr>(pnode->addr) == ip) {
+        if (static_cast<CNetAddr>(pnode->addr) == addr && (!inbound.has_value() || pnode->IsInboundConn() == inbound.value())) {
             return pnode;
         }
     }
     return nullptr;
 }
 
-CNode* CConnman::FindNode(const std::string& addrName)
+CNode* CConnman::FindNode(const std::string& addr, std::optional<bool> inbound)
 {
     AssertLockHeld(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
-        if (pnode->m_addr_name == addrName) {
+        if (pnode->m_addr_name == addr && (!inbound.has_value() || pnode->IsInboundConn() == inbound.value())) {
             return pnode;
         }
     }
     return nullptr;
 }
 
-CNode* CConnman::FindNode(const CService& addr)
+CNode* CConnman::FindNode(const CService& addr, std::optional<bool> inbound)
 {
     AssertLockHeld(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
-        if (static_cast<CService>(pnode->addr) == addr) {
+        if (static_cast<CService>(pnode->addr) == addr && (!inbound.has_value() || pnode->IsInboundConn() == inbound.value())) {
             return pnode;
         }
     }
