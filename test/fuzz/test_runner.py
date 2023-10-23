@@ -277,6 +277,7 @@ def merge_inputs(*, fuzz_pool, corpus, test_list, src_dir, build_dir, merge_dirs
     for t in test_list:
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
+            '-rss_limit_mb=8000',
             '-set_cover_merge=1',
             # set_cover_merge is used instead of -merge=1 to reduce the overall
             # size of the qa-assets git repository a bit, but more importantly,
