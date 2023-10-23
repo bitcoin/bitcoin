@@ -12,11 +12,11 @@
 #include <llmq/utils.h>
 #include <primitives/transaction.h>
 #include <script/standard.h>
-#include <timedata.h>
-#include <util/strencodings.h>
-#include <validation.h>
 #include <util/moneystr.h>
+#include <util/strencodings.h>
+#include <util/time.h>
 #include <util/underlying.h>
+#include <validation.h>
 
 #include <univalue.h>
 
@@ -186,7 +186,7 @@ void CGovernanceTriggerManager::CleanAndRemove()
             if (pObj) {
                 strDataAsPlainString = pObj->GetDataAsPlainString();
                 // mark corresponding object for deletion
-                pObj->PrepareDeletion(GetAdjustedTime());
+                pObj->PrepareDeletion(GetTime<std::chrono::seconds>().count());
             }
             LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- Removing trigger object %s\n", strDataAsPlainString);
             // delete the trigger

@@ -17,6 +17,7 @@
 #include <netmessagemaker.h>
 #include <scheduler.h>
 #include <util/irange.h>
+#include <util/time.h>
 #include <util/underlying.h>
 #include <validation.h>
 
@@ -322,7 +323,7 @@ void CRecoveredSigsDb::WriteRecoveredSig(const llmq::CRecoveredSig& recSig)
 {
     CDBBatch batch(*db);
 
-    uint32_t curTime = GetAdjustedTime();
+    uint32_t curTime = GetTime<std::chrono::seconds>().count();
 
     // we put these close to each other to leverage leveldb's key compaction
     // this way, the second key can be used for fast HasRecoveredSig checks while the first key stores the recSig
@@ -410,7 +411,7 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
     std::unique_ptr<CDBIterator> pcursor(db->NewIterator());
 
     auto start = std::make_tuple(std::string("rs_t"), (uint32_t)0, (Consensus::LLMQType)0, uint256());
-    uint32_t endTime = (uint32_t)(GetAdjustedTime() - maxAge);
+    uint32_t endTime = (uint32_t)(GetTime<std::chrono::seconds>().count() - maxAge);
     pcursor->Seek(start);
 
     std::vector<std::pair<Consensus::LLMQType, uint256>> toDelete;
@@ -474,7 +475,7 @@ bool CRecoveredSigsDb::GetVoteForId(Consensus::LLMQType llmqType, const uint256&
 void CRecoveredSigsDb::WriteVoteForId(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash)
 {
     auto k1 = std::make_tuple(std::string("rs_v"), llmqType, id);
-    auto k2 = std::make_tuple(std::string("rs_vt"), (uint32_t)htobe32(GetAdjustedTime()), llmqType, id);
+    auto k2 = std::make_tuple(std::string("rs_vt"), (uint32_t)htobe32(GetTime<std::chrono::seconds>().count()), llmqType, id);
 
     CDBBatch batch(*db);
     batch.Write(k1, msgHash);
@@ -488,7 +489,7 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
     std::unique_ptr<CDBIterator> pcursor(db->NewIterator());
 
     auto start = std::make_tuple(std::string("rs_vt"), (uint32_t)0, (Consensus::LLMQType)0, uint256());
-    uint32_t endTime = (uint32_t)(GetAdjustedTime() - maxAge);
+    uint32_t endTime = (uint32_t)(GetTime<std::chrono::seconds>().count() - maxAge);
     pcursor->Seek(start);
 
     CDBBatch batch(*db);

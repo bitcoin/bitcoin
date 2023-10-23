@@ -15,6 +15,7 @@
 #include <net.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
+#include <util/time.h>
 #include <validation.h>
 
 void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
@@ -123,7 +124,7 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connma
     }
 
     if (!peer.fInbound) {
-        mmetaman->GetMetaInfo(mnauth.proRegTxHash)->SetLastOutboundSuccess(GetAdjustedTime());
+        mmetaman->GetMetaInfo(mnauth.proRegTxHash)->SetLastOutboundSuccess(GetTime<std::chrono::seconds>().count());
         if (peer.m_masternode_probe_connection) {
             LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- Masternode probe successful for %s, disconnecting. peer=%d\n",
                      mnauth.proRegTxHash.ToString(), peer.GetId());

@@ -26,6 +26,7 @@
 #include <util/sock.h>
 #include <util/strencodings.h>
 #include <util/thread.h>
+#include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
 
@@ -2567,7 +2568,7 @@ void CConnman::ThreadOpenMasternodeConnections()
         if (interruptNet)
             return;
 
-        int64_t nANow = GetAdjustedTime();
+        int64_t nANow = GetTime<std::chrono::seconds>().count();
         constexpr const auto &_func_ = __func__;
 
         // NOTE: Process only one pending masternode at a time

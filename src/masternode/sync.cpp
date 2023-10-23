@@ -11,6 +11,7 @@
 #include <shutdown.h>
 #include <ui_interface.h>
 #include <validation.h>
+#include <util/time.h>
 #include <util/translation.h>
 
 class CMasternodeSync;
@@ -335,7 +336,7 @@ void CMasternodeSync::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitia
 void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload)
 {
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
-    nTimeLastUpdateBlockTip = GetAdjustedTime();
+    nTimeLastUpdateBlockTip = GetTime<std::chrono::seconds>().count();
 
     CBlockIndex* pindexTip = WITH_LOCK(cs_main, return pindexBestHeader);
 

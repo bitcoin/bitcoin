@@ -5,7 +5,7 @@
 #include <masternode/meta.h>
 
 #include <flat-database.h>
-#include <timedata.h>
+#include <util/time.h>
 
 #include <sstream>
 
@@ -34,7 +34,7 @@ UniValue CMasternodeMetaInfo::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
 
-    auto now = GetAdjustedTime();
+    auto now = GetTime<std::chrono::seconds>().count();
 
     ret.pushKV("lastDSQ", nLastDsq);
     ret.pushKV("mixingTxCount", nMixingTxCount);

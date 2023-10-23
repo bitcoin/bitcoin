@@ -15,6 +15,8 @@
 #include <masternode/sync.h>
 #include <messagesigner.h>
 #include <net.h>
+#include <timedata.h>
+#include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -734,7 +736,7 @@ void CGovernanceObject::UpdateSentinelVariables()
     if ((GetAbsoluteYesCount(VOTE_SIGNAL_DELETE) >= nAbsDeleteReq) && !fCachedDelete) {
         fCachedDelete = true;
         if (nDeletionTime == 0) {
-            nDeletionTime = GetAdjustedTime();
+            nDeletionTime = GetTime<std::chrono::seconds>().count();
         }
     }
     if (GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED) >= nAbsVoteReq) fCachedEndorsed = true;
