@@ -1328,9 +1328,9 @@ private:
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
-    CNode* FindNode(const CNetAddr& ip);
-    CNode* FindNode(const std::string& addrName);
-    CNode* FindNode(const CService& addr);
+    CNode* FindNode(const CNetAddr& ip) EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
+    CNode* FindNode(const std::string& addrName) EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
+    CNode* FindNode(const CService& addr) EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
     /**
      * Determine whether we're already connected to a given address, in order to
