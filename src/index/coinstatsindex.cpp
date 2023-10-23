@@ -15,9 +15,10 @@
 #include <undo.h>
 #include <validation.h>
 
+using kernel::ApplyCoinHash;
 using kernel::CCoinsStats;
 using kernel::GetBogoSize;
-using kernel::TxOutSer;
+using kernel::RemoveCoinHash;
 
 static constexpr uint8_t DB_BLOCK_HASH{'s'};
 static constexpr uint8_t DB_BLOCK_HEIGHT{'t'};
@@ -164,7 +165,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
                     continue;
                 }
 
-                m_muhash.Insert(MakeUCharSpan(TxOutSer(outpoint, coin)));
+                ApplyCoinHash(m_muhash, outpoint, coin);
 
                 if (tx->IsCoinBase()) {
                     m_total_coinbase_amount += coin.out.nValue;
@@ -185,7 +186,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
                     Coin coin{tx_undo.vprevout[j]};
                     COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
 
-                    m_muhash.Remove(MakeUCharSpan(TxOutSer(outpoint, coin)));
+                    RemoveCoinHash(m_muhash, outpoint, coin);
 
                     m_total_prevout_spent_amount += coin.out.nValue;
 
@@ -440,7 +441,7 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
                 continue;
             }
 
-            m_muhash.Remove(MakeUCharSpan(TxOutSer(outpoint, coin)));
+            RemoveCoinHash(m_muhash, outpoint, coin);
 
             if (tx->IsCoinBase()) {
                 m_total_coinbase_amount -= coin.out.nValue;
@@ -461,7 +462,7 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
                 Coin coin{tx_undo.vprevout[j]};
                 COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
 
-                m_muhash.Insert(MakeUCharSpan(TxOutSer(outpoint, coin)));
+                ApplyCoinHash(m_muhash, outpoint, coin);
 
                 m_total_prevout_spent_amount -= coin.out.nValue;
 
