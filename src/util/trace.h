@@ -5,6 +5,10 @@
 #ifndef SYSCOIN_UTIL_TRACE_H
 #define SYSCOIN_UTIL_TRACE_H
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #ifdef ENABLE_TRACING
 
 #include <sys/sdt.h>
