@@ -48,6 +48,10 @@ void CEHFSignalsHandler::UpdatedBlockTip(const CBlockIndex* const pindexNew)
         return;
     }
 
+    if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
+        // TODO: v20 will never attempt to create EHF messages on main net; if this is needed it will be done by v20.1 or v21 nodes
+        return;
+    }
     // TODO: should do this for all not-yet-signied bits
     trySignEHFSignal(Params().GetConsensus().vDeployments[Consensus::DEPLOYMENT_MN_RR].bit, pindexNew);
 }
@@ -91,6 +95,10 @@ void CEHFSignalsHandler::trySignEHFSignal(int bit, const CBlockIndex* const pind
 
 void CEHFSignalsHandler::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig)
 {
+    if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
+        // TODO: v20 will never attempt to create EHF messages on main net; if this is needed it will be done by v20.1 or v21 nodes
+        return;
+    }
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }

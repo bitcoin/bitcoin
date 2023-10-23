@@ -50,9 +50,17 @@ static bool CheckSpecialTxInner(const CTransaction& tx, const CBlockIndex* pinde
             }
             return CheckMNHFTx(tx, pindexPrev, state);
         case TRANSACTION_ASSET_LOCK:
-        case TRANSACTION_ASSET_UNLOCK:
             if (!llmq::utils::IsV20Active(pindexPrev)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "assetlocks-before-v20");
+            }
+            return CheckAssetLockUnlockTx(tx, pindexPrev, indexes, state);
+        case TRANSACTION_ASSET_UNLOCK:
+            if (Params().NetworkIDString() == CBaseChainParams::REGTEST && !llmq::utils::IsV20Active(pindexPrev)) {
+                // TODO:  adjust functional tests to make it activated by MN_RR on regtest too
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "assetunlocks-before-v20");
+            }
+            if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !llmq::utils::IsMNRewardReallocationActive(pindexPrev)) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "assetunlocks-before-mn_rr");
             }
             return CheckAssetLockUnlockTx(tx, pindexPrev, indexes, state);
         }
