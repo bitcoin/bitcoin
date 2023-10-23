@@ -21,7 +21,6 @@ class CActiveMasternodeManager;
 class ArgsManager;
 class BlockValidationState;
 class CBlock;
-class CBlockFileInfo;
 class CBlockUndo;
 class CChain;
 class CChainParams;
