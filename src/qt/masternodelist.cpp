@@ -73,7 +73,6 @@ MasternodeList::MasternodeList(QWidget* parent) :
     ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_VOTING_ADDRESS, columnVotingWidth);
 
     // dummy column for proTxHash
-    // TODO use a proper table model for the MN list
     ui->tableWidgetMasternodesDIP3->insertColumn(COLUMN_PROTX_HASH);
     ui->tableWidgetMasternodesDIP3->setColumnHidden(COLUMN_PROTX_HASH, true);
 

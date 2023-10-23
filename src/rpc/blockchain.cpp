@@ -466,7 +466,6 @@ static UniValue waitforblockheight(const JSONRPCRequest& request)
             cond_blockchange.wait(lock, [&height]() EXCLUSIVE_LOCKS_REQUIRED(cs_blockchange) {return latestblock.height >= height || !IsRPCRunning(); });
         block = latestblock;
     }
-    // TODO: Backport g_utxosetscan and associated logic from #16127
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("hash", block.hash.GetHex());
     ret.pushKV("height", block.height);
@@ -2577,7 +2576,6 @@ bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& 
 } // namespace
 
 /** RAII object to prevent concurrency issue when scanning the txout set */
-static std::mutex g_utxosetscan;
 static std::atomic<int> g_scan_progress;
 static std::atomic<bool> g_scan_in_progress;
 static std::atomic<bool> g_should_abort_scan;
@@ -2590,18 +2588,15 @@ public:
 
     bool reserve() {
         CHECK_NONFATAL(!m_could_reserve);
-        std::lock_guard<std::mutex> lock(g_utxosetscan);
-        if (g_scan_in_progress) {
+        if (g_scan_in_progress.exchange(true)) {
             return false;
         }
-        g_scan_in_progress = true;
         m_could_reserve = true;
         return true;
     }
 
     ~CoinsViewScanReserver() {
         if (m_could_reserve) {
-            std::lock_guard<std::mutex> lock(g_utxosetscan);
             g_scan_in_progress = false;
         }
     }

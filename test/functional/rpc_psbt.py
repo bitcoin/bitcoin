@@ -22,12 +22,6 @@ class PSBTTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 3
-       # TODO: remove -txindex. Currently required for getrawtransaction call.
-        self.extra_args = [
-            ["-txindex"],
-            ["-txindex"],
-            ["-txindex"]
-        ]
         self.supports_cli = False
 
     def skip_test_if_missing_module(self):
