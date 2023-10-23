@@ -254,7 +254,7 @@ void BlockManager::PruneOneBlockFile(const int fileNumber)
         }
     }
 
-    m_blockfile_info[fileNumber].SetNull();
+    m_blockfile_info.at(fileNumber) = CBlockFileInfo{};
     m_dirty_fileinfo.insert(fileNumber);
 }
 
