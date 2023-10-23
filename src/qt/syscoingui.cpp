@@ -413,7 +413,7 @@ void SyscoinGUI::createActions()
         connect(usedSendingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedSendingAddresses);
         connect(usedReceivingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedReceivingAddresses);
         connect(openAction, &QAction::triggered, this, &SyscoinGUI::openClicked);
-        connect(m_open_wallet_menu, &QMenu::aboutToShow, m_wallet_controller, [this] {
+        connect(m_open_wallet_menu, &QMenu::aboutToShow, [this] {
             m_open_wallet_menu->clear();
             for (const std::pair<const std::string, bool>& i : m_wallet_controller->listWalletDir()) {
                 const std::string& path = i.first;
@@ -430,7 +430,7 @@ void SyscoinGUI::createActions()
                     continue;
                 }
 
-                connect(action, &QAction::triggered, m_wallet_controller, [this, path] {
+                connect(action, &QAction::triggered, [this, path] {
                     auto activity = new OpenWalletActivity(m_wallet_controller, this);
                     connect(activity, &OpenWalletActivity::opened, this, &SyscoinGUI::setCurrentWallet, Qt::QueuedConnection);
                     connect(activity, &OpenWalletActivity::opened, rpcConsole, &RPCConsole::setCurrentWallet, Qt::QueuedConnection);
@@ -442,7 +442,7 @@ void SyscoinGUI::createActions()
                 action->setEnabled(false);
             }
         });
-        connect(m_restore_wallet_action, &QAction::triggered, m_wallet_controller, [this] {
+        connect(m_restore_wallet_action, &QAction::triggered, [this] {
             //: Name of the wallet data file format.
             QString name_data_file = tr("Wallet Data");
 
@@ -468,7 +468,7 @@ void SyscoinGUI::createActions()
             auto backup_file_path = fs::PathFromString(backup_file.toStdString());
             activity->restore(backup_file_path, wallet_name.toStdString());
         });
-        connect(m_close_wallet_action, &QAction::triggered, m_wallet_controller, [this] {
+        connect(m_close_wallet_action, &QAction::triggered, [this] {
             m_wallet_controller->closeWallet(walletFrame->currentWalletModel(), this);
         });
         // SYSCOIN (keep legacy wallet creation for now)
@@ -478,10 +478,10 @@ void SyscoinGUI::createActions()
             connect(activity, &CreateWalletActivity::created, rpcConsole, &RPCConsole::setCurrentWallet);
             activity->create();
         });
-        connect(m_close_all_wallets_action, &QAction::triggered, m_wallet_controller, [this] {
+        connect(m_close_all_wallets_action, &QAction::triggered, [this] {
             m_wallet_controller->closeAllWallets(this);
         });
-        connect(m_migrate_wallet_action, &QAction::triggered, m_wallet_controller, [this] {
+        connect(m_migrate_wallet_action, &QAction::triggered, [this] {
             auto activity = new MigrateWalletActivity(m_wallet_controller, this);
             connect(activity, &MigrateWalletActivity::migrated, this, &SyscoinGUI::setCurrentWallet);
             activity->migrate(walletFrame->currentWalletModel());
