@@ -35,10 +35,13 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
 
     # Still prune everything in case the filtered pruning doesn't work, or if labels were not set
     # on a previous run. Belt and suspenders approach, should be fine to remove in the future.
+    # Prune images used by --external containers (e.g. build containers) when
+    # using podman.
     echo "Prune all dangling images"
-    docker image prune --force
+    podman image prune --force --external
   fi
   echo "Prune all dangling $CI_IMAGE_LABEL images"
+  # When detecting podman-docker, `--external` should be added.
   docker image prune --force --filter "label=$CI_IMAGE_LABEL"
 
   # shellcheck disable=SC2086
