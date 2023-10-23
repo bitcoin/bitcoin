@@ -6,11 +6,15 @@
 
 import random
 import shutil
+import struct
+import time
+
 from test_framework.address import (
     script_to_p2sh,
     key_to_p2pkh,
     key_to_p2wpkh,
 )
+from test_framework.bdb import BTREE_MAGIC
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECPubKey
 from test_framework.test_framework import BitcoinTestFramework
@@ -20,6 +24,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
     find_vout_for_address,
+    sha256sum_file,
 )
 from test_framework.wallet_util import (
     get_generate_key,
@@ -311,11 +316,16 @@ class WalletMigrationTest(BitcoinTestFramework):
         sent_watchonly_txid = send["txid"]
 
         self.generate(self.nodes[0], 1)
+        received_watchonly_tx_info = imports0.gettransaction(received_watchonly_txid, True)
+        received_sent_watchonly_tx_info = imports0.gettransaction(received_sent_watchonly_txid, True)
 
         balances = imports0.getbalances()
         spendable_bal = balances["mine"]["trusted"]
         watchonly_bal = balances["watchonly"]["trusted"]
         assert_equal(len(imports0.listtransactions(include_watchonly=True)), 4)
+
+        # Mock time forward a bit so we can check that tx metadata is preserved
+        self.nodes[0].setmocktime(int(time.time()) + 100)
 
         # Migrate
         imports0.migratewallet()
@@ -334,8 +344,12 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(watchonly_info["descriptors"], True)
         self.assert_is_sqlite("imports0_watchonly")
         assert_equal(watchonly_info["private_keys_enabled"], False)
-        watchonly.gettransaction(received_watchonly_txid)
-        watchonly.gettransaction(received_sent_watchonly_txid)
+        received_migrated_watchonly_tx_info = watchonly.gettransaction(received_watchonly_txid)
+        assert_equal(received_watchonly_tx_info["time"], received_migrated_watchonly_tx_info["time"])
+        assert_equal(received_watchonly_tx_info["timereceived"], received_migrated_watchonly_tx_info["timereceived"])
+        received_sent_migrated_watchonly_tx_info = watchonly.gettransaction(received_sent_watchonly_txid)
+        assert_equal(received_sent_watchonly_tx_info["time"], received_sent_migrated_watchonly_tx_info["time"])
+        assert_equal(received_sent_watchonly_tx_info["timereceived"], received_sent_migrated_watchonly_tx_info["timereceived"])
         watchonly.gettransaction(sent_watchonly_txid)
         assert_equal(watchonly.getbalance(), watchonly_bal)
         assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", watchonly.gettransaction, received_txid)
@@ -827,6 +841,43 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         wallet.unloadwallet()
 
+    def test_failed_migration_cleanup(self):
+        self.log.info("Test that a failed migration is cleaned up")
+        wallet = self.create_legacy_wallet("failed")
+
+        # Make a copy of the wallet with the solvables wallet name so that we are unable
+        # to create the solvables wallet when migrating, thus failing to migrate
+        wallet.unloadwallet()
+        solvables_path = self.nodes[0].wallets_path / "failed_solvables"
+        shutil.copytree(self.nodes[0].wallets_path / "failed", solvables_path)
+        original_shasum = sha256sum_file(solvables_path / "wallet.dat")
+
+        self.nodes[0].loadwallet("failed")
+
+        # Add a multisig so that a solvables wallet is created
+        wallet.addmultisigaddress(2, [wallet.getnewaddress(), get_generate_key().pubkey])
+        wallet.importaddress(get_generate_key().p2pkh_addr)
+
+        assert_raises_rpc_error(-4, "Failed to create database", wallet.migratewallet)
+
+        assert "failed" in self.nodes[0].listwallets()
+        assert "failed_watchonly" not in self.nodes[0].listwallets()
+        assert "failed_solvables" not in self.nodes[0].listwallets()
+
+        assert not (self.nodes[0].wallets_path / "failed_watchonly").exists()
+        # Since the file in failed_solvables is one that we put there, migration shouldn't touch it
+        assert solvables_path.exists()
+        new_shasum = sha256sum_file(solvables_path / "wallet.dat")
+        assert_equal(original_shasum, new_shasum)
+
+        wallet.unloadwallet()
+        # Check the wallet we tried to migrate is still BDB
+        with open(self.nodes[0].wallets_path / "failed" / "wallet.dat", "rb") as f:
+            data = f.read(16)
+            _, _, magic = struct.unpack("QII", data)
+            assert_equal(magic, BTREE_MAGIC)
+
+
     def run_test(self):
         self.generate(self.nodes[0], 101)
 
@@ -845,6 +896,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_migrate_raw_p2sh()
         self.test_conflict_txs()
         self.test_hybrid_pubkey()
+        self.test_failed_migration_cleanup()
 
 if __name__ == '__main__':
     WalletMigrationTest().main()
