@@ -8,7 +8,6 @@ Test script for security-check.py
 import lief
 import os
 import subprocess
-from typing import List
 import unittest
 
 from utils import determine_wellknown_cmd
@@ -34,7 +33,7 @@ def call_security_check(cc: str, source: str, executable: str, options) -> tuple
     #
     # See the definitions for ac_link in autoconf's lib/autoconf/c.m4 file for
     # reference.
-    env_flags: List[str] = []
+    env_flags: list[str] = []
     for var in ['CFLAGS', 'CPPFLAGS', 'LDFLAGS']:
         env_flags += filter(None, os.environ.get(var, '').split(' '))
 
