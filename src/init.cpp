@@ -341,11 +341,11 @@ void Shutdown(NodeContext& node)
     node.chain_clients.clear();
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
-    node.kernel.reset();
     node.mempool.reset();
     node.fee_estimator.reset();
     node.chainman.reset();
     node.scheduler.reset();
+    node.kernel.reset();
 
     try {
         if (!fs::remove(GetPidFile(*node.args))) {
