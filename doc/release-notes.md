@@ -1,0 +1,1 @@
+See https://github.com/bitcoin-core/bitcoin-devwiki/wiki/26.0%E2%80%90Release%E2%80%90Notes%E2%80%90Draft.
