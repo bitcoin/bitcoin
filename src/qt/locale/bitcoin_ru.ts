@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Нажмите правую кнопку мыши, чтобы изменить адрес или метку</translation>
+        <translation type="unfinished">Right-click to edit address or labell</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -56,14 +56,6 @@
     <message>
         <source>C&amp;hoose</source>
         <translation type="unfinished">&amp;Выбрать</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Адреса отправки</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Адреса получения</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -180,14 +172,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Введите новую парольную фразу для кошелька.&lt;br/&gt;Пожалуйста, используйте парольную фразу из &lt;b&gt;десяти или более случайных символов&lt;/b&gt;, либо &lt;b&gt;восьми или более слов&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase for the wallet.</source>
-        <translation type="unfinished">Введите старую и новую парольные фразы для кошелька</translation>
-    </message>
-    <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished">Помните, что шифрование кошелька не может полностью защитить ваши биткоины от кражи вредоносными программами, заразившими ваш компьютер.</translation>
-    </message>
-    <message>
         <source>Wallet to be encrypted</source>
         <translation type="unfinished">Кошелёк должен быть зашифрован</translation>
     </message>
@@ -202,18 +186,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation type="unfinished">ВАЖНО: Все ранее созданные резервные копии вашего кошелька, необходимо заменить только что сгенерированным зашифрованным файлом кошелька. Как только вы начнёте использовать новый, зашифрованный кошелёк, из соображений безопасности, предыдущие резервные копии незашифрованного файла кошелька станут бесполезными.</translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed</source>
-        <translation type="unfinished">Не удалось зашифровать кошелёк</translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished">Сбой шифрования кошелька из-за внутренней ошибки. Ваш кошелёк не был зашифрован.</translation>
-    </message>
-    <message>
-        <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished">Введённые парольные фразы не совпадают.</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
@@ -742,7 +714,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Показать помощь по %1, чтобы получить список доступных параметров командной строки</translation>
+        <translation type="unfinished">Показать справку %1 со списком доступных параметров командной строки</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
@@ -944,10 +916,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Комиссия:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Пыль:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">После комиссии:</translation>
     </message>
@@ -1036,28 +1004,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Копировать байты</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Копировать пыль</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Копировать сдачу</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 заблокирован)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">да</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">нет</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Эта метка становится красной, если получатель получит сумму меньше, чем текущий порог пыли.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1165,12 +1117,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
         <translation type="unfinished">Предупреждение при восстановлении кошелька</translation>
     </message>
-    <message>
-        <source>Restore wallet message</source>
-        <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
-        <translation type="unfinished">Сообщение при восстановлении кошелька</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletController</name>
     <message>
@@ -1237,14 +1184,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Создать пустой кошелёк</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">Использовать дескрипторы для управления scriptPubKey</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">Дескрипторный кошелёк</translation>
-    </message>
-    <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
         <translation type="unfinished">Использовать внешнее устройство для подписи, например аппаратный кошелек. Сначала настройте сценарий внешней подписи в настройках кошелька.</translation>
     </message>
@@ -1255,10 +1194,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Create</source>
         <translation type="unfinished">Создать</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Скомпилирован без поддержки SQLite (он необходим для дескрипторных кошельков)</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
@@ -1867,11 +1802,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Для активации изменений необходим перезапуск клиента.</translation>
     </message>
     <message>
-        <source>Current settings will be backed up at "%1".</source>
-        <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
-        <translation type="unfinished">Резервная копия текущих настроек будет сохранена в "%1".</translation>
-    </message>
-    <message>
         <source>Client will be shut down. Do you want to proceed?</source>
         <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
         <translation type="unfinished">Клиент будет закрыт. Продолжить?</translation>
@@ -2079,6 +2009,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source> * Sends %1 to %2</source>
         <translation type="unfinished">* Отправляет %1 на %2</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">свой адрес</translation>
     </message>
     <message>
         <source>Unable to calculate transaction fee or total transaction amount.</source>
@@ -2466,10 +2400,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Services</source>
         <translation type="unfinished">Службы</translation>
-    </message>
-    <message>
-        <source>High bandwidth BIP152 compact block relay: %1</source>
-        <translation type="unfinished">Широкополосный ретранслятор компактных блоков BIP152: %1</translation>
     </message>
     <message>
         <source>High Bandwidth</source>
@@ -3003,10 +2933,6 @@ For more information on using this console, type %6.
         <translation type="unfinished">Входы…</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Пыль:</translation>
-    </message>
-    <message>
         <source>Choose…</source>
         <translation type="unfinished">Выбрать…</translation>
     </message>
@@ -3081,10 +3007,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">Копировать байты</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Копировать пыль</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -3749,10 +3671,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">Отправлено на</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Платёж себе</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Добыто</translation>
     </message>
@@ -3826,10 +3744,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Sent to</source>
         <translation type="unfinished">Отправлено на</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">Себе</translation>
     </message>
     <message>
         <source>Mined</source>
@@ -4145,10 +4059,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">Не удалось загрузить кошелёк. Для кошелька требуется, чтобы блоки были загружены. Но в данный момент программа не поддерживает загрузку кошелька с одновременной загрузкой блоков не по порядку с использованием снимков assumeutxo. Кошелёк должен успешно загрузиться после того, как узел синхронизирует блок %s</translation>
     </message>
     <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">Ошибка чтения %s! Все ключи прочитаны верно, но данные транзакций или записи адресной книги могут отсутствовать или быть неправильными.</translation>
-    </message>
-    <message>
         <source>Error reading %s! Transaction data may be missing or incorrect. Rescanning wallet.</source>
         <translation type="unfinished">Ошибка чтения %s! Данные транзакций отсутствуют или неправильны. Кошелёк сканируется заново.</translation>
     </message>
@@ -4223,10 +4133,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
         <translation type="unfinished">В базе данных блоков найден блок из будущего. Это может произойти из-за неверно установленных даты и времени на вашем компьютере. Перестраивайте базу данных блоков только если вы уверены, что дата и время установлены верно.</translation>
-    </message>
-    <message>
-        <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
-        <translation type="unfinished">База данных индексации блоков содержит устаревший "txindex". Чтобы освободить место на диске, выполните полный -reindex, или игнорируйте эту ошибку. Это сообщение об ошибке больше показано не будет.</translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
@@ -4321,24 +4227,8 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">Не удается выполнить запись в каталог данных "%s"; проверьте разрешения.</translation>
     </message>
     <message>
-        <source>The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.</source>
-        <translation type="unfinished">Обновление -txindex, запущенное при предыдущей версии не может быть завершено. Перезапустите с предыдущей версией или запустите весь процесс заново с ключом -reindex.</translation>
-    </message>
-    <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
         <translation type="unfinished">%s слишком много! Комиссии такого объёма могут быть оплачены за одну транзакцию.</translation>
-    </message>
-    <message>
-        <source>-reindex-chainstate option is not compatible with -blockfilterindex. Please temporarily disable blockfilterindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
-        <translation type="unfinished">Опция -reindex-chainstate не совместима с -blockfilterindex. Пожалуйста, выключите на время blockfilterindex, пока используется -reindex-chainstate, либо замените -reindex-chainstate на -reindex для полной перестройки всех индексов.</translation>
-    </message>
-    <message>
-        <source>-reindex-chainstate option is not compatible with -coinstatsindex. Please temporarily disable coinstatsindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
-        <translation type="unfinished">Опция -reindex-chainstate не совместима с -coinstatsindex. Пожалуйста, выключите на время coinstatsindex, пока используется -reindex-chainstate, либо замените -reindex-chainstate на -reindex для полной перестройки всех индексов.</translation>
-    </message>
-    <message>
-        <source>-reindex-chainstate option is not compatible with -txindex. Please temporarily disable txindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
-        <translation type="unfinished">Опция -reindex-chainstate не совместима с -txindex. Пожалуйста, выключите на время txindex, пока используется -reindex-chainstate, либо замените -reindex-chainstate на -reindex для полной перестройки всех индексов.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
@@ -4409,10 +4299,6 @@ Please try running the latest software version.
 Кошелёк мог быть создан на более новой версии программы.
 Пожалуйста, попробуйте обновить программу до последней версии.
 </translation>
-    </message>
-    <message>
-        <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
-        <translation type="unfinished">Неподдерживаемый уровень подробности журнала для категории -loglevel=%s. Ожидалось -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Доступные категории: %s. Доступные уровни подробности журнала: %s.</translation>
     </message>
     <message>
         <source>
@@ -4909,10 +4795,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Unknown new rules activated (versionbit %i)</source>
         <translation type="unfinished">В силу вступили неизвестные правила (versionbit %i)</translation>
-    </message>
-    <message>
-        <source>Unsupported global logging level -loglevel=%s. Valid values: %s.</source>
-        <translation type="unfinished">Неподдерживаемый уровень подробности ведения журнала -loglevel=%s. Доступные значения: %s.</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>

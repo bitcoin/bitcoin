@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Bonyeza kitufe cha kulia kufanya mabadiliko kwenye anuani au lebo</translation>
+        <translation type="unfinished">Bonyeza kitufe cha kulia kufanya mabadiliko kwenye anuani au chapa</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -31,15 +31,15 @@
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Weka anwani au lebo ili utafute</translation>
+        <translation type="unfinished">Weka anwani au chapa ili utafute</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Hamisha data katika kichupo cha sasa hadi kwenye faili</translation>
+        <translation type="unfinished">Toa data katika kichupo cha sasa hadi kwenye faili</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">na hamisha</translation>
+        <translation type="unfinished">&amp;Toa</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -58,14 +58,6 @@
         <translation type="unfinished">Chagua</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Kutuma anuani</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Kupokea anuani</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Hizi ndizo anwani zako za kutuma malipo ya sarafu ya Bitcoin. Hakikisha kila wakati kiwango na anwani ya kupokea kabla ya kutuma sarafu.</translation>
     </message>
@@ -81,7 +73,7 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished">nakala &amp; lebo</translation>
+        <translation type="unfinished">Nakili &amp; Chapa</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -89,16 +81,16 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">Pakia orodha ya anuani</translation>
+        <translation type="unfinished">Toa orodha ya anuani</translation>
     </message>
     <message>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
-        <translation type="unfinished">Faili lililotenganishwa kwa mkato</translation>
+        <translation type="unfinished">Faili linalotenganishwa kwa mkato</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Upakiaji haujafanikiwa</translation>
+        <translation type="unfinished">Utoaji Haujafanikiwa</translation>
     </message>
 </context>
 <context>
@@ -152,11 +144,11 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished">Ingiza nenosiri jipya kwa ajili ya pochi yako.&lt;br/&gt;Tafadhali tumia nenosiri ya&lt;b&gt;herufi holelaholela kumi au zaidi&lt;/b&gt;, au &lt;b&gt; maneno kumi au zaidi&lt;/b&gt;.</translation>
+        <translation type="unfinished">Ingiza nenosiri jipya kwa ajili ya pochi yako.&lt;br/&gt;Tafadhali tumia nenosiri la &lt;b&gt;herufi holelaholela kumi au zaidi&lt;/b&gt;, au &lt;b&gt;maneno kumi au zaidi&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
-        <translation type="unfinished">Ingiza nenosiri ya zamani na nenosiri jipya ya pochi yako.</translation>
+        <translation type="unfinished">Ingiza nenosiri la zamani na nenosiri jipya la pochi yako.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -169,7 +161,7 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="unfinished">Nenosiri liliyoingizwa kwa ajili ya kufundua pochi sio sahihi.</translation>
+        <translation type="unfinished">Nenosiri liliyoingizwa kwa ajili ya kufungua pochi sio sahihi.</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
@@ -296,19 +288,7 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">Nakili &amp; Chapa</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">ndio</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">La</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Hii chapa hubadilika kuwa nyekundu kama mpokeaji yeyote atapokea kiasi kidogo kuliko kizingiti vumbi cha sasa.</translation>
+        <translation type="unfinished">Nakili &amp;chapa</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -419,7 +399,7 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">Nakili &amp; Chapa</translation>
+        <translation type="unfinished">Nakili &amp;chapa</translation>
     </message>
     </context>
 <context>
@@ -502,7 +482,7 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">Nakili &amp; Chapa</translation>
+        <translation type="unfinished">Nakili &amp;chapa</translation>
     </message>
     <message>
         <source>&amp;Edit address label</source>
@@ -510,12 +490,12 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>Export Transaction History</source>
-        <translation type="unfinished">Pakia historia ya miamala</translation>
+        <translation type="unfinished">Toa Historia ya Miamala</translation>
     </message>
     <message>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
-        <translation type="unfinished">Faili lililotenganishwa kwa mkato</translation>
+        <translation type="unfinished">Faili linalotenganishwa kwa mkato</translation>
     </message>
     <message>
         <source>Label</source>
@@ -527,22 +507,22 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Upakiaji haujafanikiwa</translation>
+        <translation type="unfinished">Utoaji Haujafanikiwa</translation>
     </message>
     <message>
         <source>Exporting Successful</source>
-        <translation type="unfinished">Upakiaji Umefanikiwa</translation>
+        <translation type="unfinished">Utoaji Umefanikiwa</translation>
     </message>
     </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">na hamisha</translation>
+        <translation type="unfinished">&amp;Toa</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Hamisha data katika kichupo cha sasa hadi kwenye faili</translation>
+        <translation type="unfinished">Toa data katika kichupo cha sasa hadi kwenye faili</translation>
     </message>
     </context>
 <context>
@@ -557,15 +537,15 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
-        <translation type="unfinished">HITILAFU: Data za kitabu cha anunai katika pochi haziwezi kutambulika kuwa ni ya pochi zilizohamia.</translation>
+        <translation type="unfinished">Hitilafu: Data za kitabu cha anunai katika pochi haziwezi kutambulika kuwa ni ya pochi zilizohamia.</translation>
     </message>
     <message>
         <source>Error: No %s addresses available.</source>
-        <translation type="unfinished">HITILAFU: Hamna anuani zilizopo %s.</translation>
+        <translation type="unfinished">Hitilafu: Hamna anuani zilizopo %s.</translation>
     </message>
     <message>
         <source>Error: Unable to remove watchonly address book data</source>
-        <translation type="unfinished">HITILAFU: Imeshindwa kuondoa data katika kitabu cha anuani ya kutazama tu</translation>
+        <translation type="unfinished">Hitilafu: Imeshindwa kuondoa data katika kitabu cha anuani ya kutazama tu</translation>
     </message>
     <message>
         <source>Importing…</source>

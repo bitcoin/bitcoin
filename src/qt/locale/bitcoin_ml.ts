@@ -58,14 +58,6 @@
         <translation type="unfinished">തി&amp;രഞ്ഞെടുക്കുക</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">അയക്കേണ്ട വിലാസങ്ങൾ</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">സ്വീകരിക്കുന്ന വിലാസങ്ങൾ</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">പൈസ അയയ്ക്കുന്നതിനുള്ള നിങ്ങളുടെ ബിറ്റ് കോയിൻ വിലാസങ്ങളാണ് ഇവ. നാണയങ്ങൾ അയയ്ക്കുന്നതിനുമുമ്പ് എല്ലായ്പ്പോഴും തുകയും സ്വീകരിക്കുന്ന വിലാസവും പരിശോധിക്കുക.</translation>
     </message>
@@ -653,10 +645,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ഫീസ്‌ / പ്രതിഫലം :</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">പൊടി:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">ഫീസ് കഴിഞ്ഞ്:</translation>
     </message>
@@ -721,28 +709,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ബൈറ്റ്സ് പകർത്തു</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">ഡസ്ട് പകർത്തു</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">ചേഞ്ച് പകർത്തു</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 ലോക്ക് ആക്കിയിരിക്കുന്നു)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">അതെ / ശരി</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">ഇല്ല</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">ഏതെങ്കിലും സ്വീകർത്താവിന് നിലവിലെ ഡസ്ട് പരിധിയേക്കാൾ ചെറിയ തുക ലഭിക്കുകയാണെങ്കിൽ ഈ ലേബൽ ചുവപ്പായി മാറുന്നു.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1137,10 +1109,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">മാറ്റം</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">പൊടി:</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">നിര്‍ദ്ധിഷ്‌ടസംഖ്യ / അളവ് പകർത്തുക</translation>
     </message>
@@ -1159,10 +1127,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">ബൈറ്റ്സ് പകർത്തു</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">ഡസ്ട് പകർത്തു</translation>
     </message>
     <message>
         <source>Copy change</source>

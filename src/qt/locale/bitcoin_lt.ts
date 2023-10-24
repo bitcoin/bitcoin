@@ -58,14 +58,6 @@
         <translation type="unfinished">P&amp;asirinkti</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Išsiuntimo adresai</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Gavimo adresai</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Tai yra jūsų Bitcoin adresai išeinantiems mokėjimams. Visada pasitikrinkite sumą ir gavėjo adresą prieš siunčiant lėšas.</translation>
     </message>
@@ -710,10 +702,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Mokestis:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Dulkės:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">Po mokesčio:</translation>
     </message>
@@ -778,28 +766,12 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Kopijuoti baitus</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopijuoti dulkę</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Kopijuoti keisti</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 užrakinta)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">taip</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">ne</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Ši etiketė tampa raudona, jei bet kuris gavėjas gauna mažesnę sumą nei dabartinė dulkių slenkstis.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1483,6 +1455,10 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Uždaryti</translation>
     </message>
     <message>
+        <source>own address</source>
+        <translation type="unfinished">savo adresas</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation type="unfinished">Visas kiekis</translation>
     </message>
@@ -2077,10 +2053,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Išvalykite visus formos laukus.</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Dulkės:</translation>
-    </message>
-    <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
         <translation type="unfinished">Kai sandorių apimtis yra mažesnė nei erdvės blokuose, kasėjai ir perduodantys mazgai gali užtikrinti minimalų mokestį. Mokėti tik šį minimalų mokestį yra galima, tačiau atkreipkite dėmesį, kad dėl to gali atsirasti niekada nepatvirtinamas sandoris, kai bus daugiau paklausos bitcoin operacijoms, nei tinklas gali apdoroti.</translation>
     </message>
@@ -2135,10 +2107,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">Kopijuoti baitus</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopijuoti dulkę</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -2640,10 +2608,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Išsiųsta</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Mokėjimas sau</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Išgauta</translation>
     </message>
@@ -2713,10 +2677,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Sent to</source>
         <translation type="unfinished">Išsiųsta</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">Skirta sau</translation>
     </message>
     <message>
         <source>Mined</source>

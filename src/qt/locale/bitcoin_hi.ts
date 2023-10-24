@@ -58,14 +58,6 @@
         <translation type="unfinished">&amp;चुज़</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">पते भेजे जा रहे हैं</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">पते प्राप्त किए जा रहे हैं</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">भुगतान भेजने के लिए ये आपके बिटकॉइन पते हैं। कॉइन्स भेजने से पहले हमेशा राशि और प्राप्त करने वाले पते की जांच करें।</translation>
     </message>
@@ -533,26 +525,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     <message>
-        <source>Click for more actions.</source>
-        <extracomment>A substring of the tooltip. "More actions" are available via the context menu.</extracomment>
-        <translation type="unfinished">अधिक विकल्पों के लिए क्लिक करें</translation>
-    </message>
-    <message>
-        <source>Show Peers tab</source>
-        <extracomment>A context menu item. The "Peers tab" is an element of the "Node window".</extracomment>
-        <translation type="unfinished">पीयर्स टैब दिखाएं</translation>
-    </message>
-    <message>
-        <source>Disable network activity</source>
-        <extracomment>A context menu item.</extracomment>
-        <translation type="unfinished">नेटवर्क गतिविधि अक्षम करें</translation>
-    </message>
-    <message>
-        <source>Enable network activity</source>
-        <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
-        <translation type="unfinished">नेटवर्क गतिविधि सक्षम करें</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">त्रुटि: %1</translation>
     </message>
@@ -595,10 +567,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">फी:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">डस्ट:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">आफ़्टर फी:</translation>
     </message>
@@ -632,7 +600,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">डेट</translation>
+        <translation type="unfinished">तारीख़</translation>
     </message>
     <message>
         <source>Confirmations</source>
@@ -675,37 +643,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">कॉपी बाइट्स</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">कॉपी डस्ट</translation>
-    </message>
-    <message>
-        <source>Copy change</source>
-        <translation type="unfinished">कॉपी चैंज</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">हां</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">ना</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">यदि किसी प्राप्तकर्ता को वर्तमान शेष सीमा से कम राशि प्राप्त होती है तो यह लेबल लाल हो जाता है।</translation>
-    </message>
-    <message>
         <source>(no label)</source>
-        <translation type="unfinished">(नो लेबल)</translation>
+        <translation type="unfinished">(कोई लेबल नहीं)</translation>
     </message>
     </context>
 <context>
     <name>CreateWalletActivity</name>
-    <message>
-        <source>Create Wallet</source>
-        <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
-        <translation type="unfinished">वॉलेट बनाएं</translation>
-    </message>
     <message>
         <source>Create wallet failed</source>
         <translation type="unfinished">वॉलेट बनाना विफल</translation>
@@ -792,6 +735,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">आंशिक रूप से हस्ताक्षरित लेनदेन (बाइनरी)</translation>
     </message>
     <message>
+        <source>own address</source>
+        <translation type="unfinished">खुद का पता</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation type="unfinished">कुल राशि</translation>
     </message>
@@ -825,7 +772,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Type</source>
         <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
-        <translation type="unfinished">टाइप</translation>
+        <translation type="unfinished">प्रकार</translation>
     </message>
     <message>
         <source>Network</source>
@@ -1066,10 +1013,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Time Offset</source>
         <translation type="unfinished">समय का निर्धारण</translation>
-    </message>
-    <message>
-        <source>Last block time</source>
-        <translation type="unfinished">अंतिम ब्लॉक समय</translation>
     </message>
     <message>
         <source>&amp;Open</source>
@@ -1333,10 +1276,6 @@ For more information on using this console, type %6.
         <translation type="unfinished">कॉपी &amp;अमाउंट</translation>
     </message>
     <message>
-        <source>Could not unlock wallet.</source>
-        <translation type="unfinished">वॉलेट अनलॉक नहीं किया जा सकता |</translation>
-    </message>
-    <message>
         <source>Could not generate new %1 address</source>
         <translation type="unfinished">नया पता उत्पन्न नहीं कर सका %1 </translation>
     </message>
@@ -1400,7 +1339,7 @@ For more information on using this console, type %6.
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">डेट</translation>
+        <translation type="unfinished">तारीख़</translation>
     </message>
     <message>
         <source>Label</source>
@@ -1412,7 +1351,7 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(नो लेबल)</translation>
+        <translation type="unfinished">(कोई लेबल नहीं)</translation>
     </message>
     <message>
         <source>(no message)</source>
@@ -1518,10 +1457,6 @@ For more information on using this console, type %6.
         <translation type="unfinished">इनपुट्स…</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">डस्ट:</translation>
-    </message>
-    <message>
         <source>Choose…</source>
         <translation type="unfinished">चुज…</translation>
     </message>
@@ -1596,10 +1531,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">कॉपी बाइट्स</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">कॉपी डस्ट</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -1788,7 +1719,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(नो लेबल)</translation>
+        <translation type="unfinished">(कोई लेबल नहीं)</translation>
     </message>
 </context>
 <context>
@@ -2067,7 +1998,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">डेट</translation>
+        <translation type="unfinished">तारीख़</translation>
     </message>
     <message>
         <source>Source</source>
@@ -2095,7 +2026,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>watch-only</source>
-        <translation type="unfinished">निगरानी-केवल</translation>
+        <translation type="unfinished">केवल निगरानी</translation>
     </message>
     <message>
         <source>label</source>
@@ -2212,11 +2143,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">डेट</translation>
+        <translation type="unfinished">तारीख़</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished">टाइप</translation>
+        <translation type="unfinished">प्रकार</translation>
     </message>
     <message>
         <source>Label</source>
@@ -2228,7 +2159,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Abandoned</source>
-        <translation type="unfinished">अबॅन्डन्ड</translation>
+        <translation type="unfinished">छोड़ दिया </translation>
     </message>
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
@@ -2240,7 +2171,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Conflicted</source>
-        <translation type="unfinished">विरोध हुआ</translation>
+        <translation type="unfinished">एक दूसरे के विरोध में</translation>
     </message>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
@@ -2248,19 +2179,107 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Generated but not accepted</source>
-        <translation type="unfinished">जनरेट किया गया लेकिन स्वीकार नहीं किया गया</translation>
+        <translation type="unfinished">निकाला गया पर स्वीकार नहीं </translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation type="unfinished">के साथ प्राप्त हुए</translation>
+    </message>
+    <message>
+        <source>Received from</source>
+        <translation type="unfinished">से मिला</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation type="unfinished">को भेजा</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation type="unfinished">माइन किया</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation type="unfinished">निगरानी-केवल</translation>
+        <translation type="unfinished">केवल निगरानी</translation>
+    </message>
+    <message>
+        <source>(n/a)</source>
+        <translation type="unfinished">(असंबंधित)</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(नो लेबल)</translation>
+        <translation type="unfinished">(कोई लेबल नहीं)</translation>
     </message>
-    </context>
+    <message>
+        <source>Transaction status. Hover over this field to show number of confirmations.</source>
+        <translation type="unfinished">लेनदेन की जानकारी. इस फ़ील्ड पर कर्सर लाएं ताकि कन्फ़र्मेशन की संख्या पता चले.</translation>
+    </message>
+    <message>
+        <source>Date and time that the transaction was received.</source>
+        <translation type="unfinished">तारीख़ और समय जब आपको ट्रांज़ेक्शन मिला. </translation>
+    </message>
+    <message>
+        <source>Type of transaction.</source>
+        <translation type="unfinished">ट्रांज़ेक्शन का प्रकार</translation>
+    </message>
+    <message>
+        <source>Amount removed from or added to balance.</source>
+        <translation type="unfinished">पैसा बैलेंस से हटाया या जोड़ा गया.</translation>
+    </message>
+</context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>All</source>
+        <translation type="unfinished">सभी</translation>
+    </message>
+    <message>
+        <source>Today</source>
+        <translation type="unfinished">आज</translation>
+    </message>
+    <message>
+        <source>This week</source>
+        <translation type="unfinished">इस हफ़्ते</translation>
+    </message>
+    <message>
+        <source>This month</source>
+        <translation type="unfinished">इस महीने</translation>
+    </message>
+    <message>
+        <source>Last month</source>
+        <translation type="unfinished">पिछले महीने</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation type="unfinished">इस साल</translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation type="unfinished">के साथ प्राप्त हुए</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation type="unfinished">को भेजा</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation type="unfinished">माइन किया</translation>
+    </message>
+    <message>
+        <source>Other</source>
+        <translation type="unfinished">दूसरा</translation>
+    </message>
+    <message>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation type="unfinished">सर्च करने के लिए अपना पता, ट्रांज़ेक्शन आईडी या लेबल डालें</translation>
+    </message>
+    <message>
+        <source>Min amount</source>
+        <translation type="unfinished">कम से कम राशि</translation>
+    </message>
+    <message>
+        <source>Range…</source>
+        <translation type="unfinished">सीमा...</translation>
+    </message>
     <message>
         <source>&amp;Copy address</source>
         <translation type="unfinished">&amp;कॉपी पता</translation>
@@ -2284,11 +2303,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">डेट</translation>
+        <translation type="unfinished">तारीख़</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished">टाइप</translation>
+        <translation type="unfinished">प्रकार</translation>
     </message>
     <message>
         <source>Label</source>
@@ -2326,7 +2345,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;एक्सपोर्ट</translation>
+        <translation type="unfinished">निर्यात</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>

@@ -58,14 +58,6 @@
         <translation type="unfinished">Избери</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Адреси за изпращане</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Адреси за получаване</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Тези са вашите Биткойн адреси за изпращане на плащания. Винаги проверявайте количеството и получаващите адреси преди изпращане на монети. </translation>
     </message>
@@ -897,10 +889,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Такса:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">прах:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">След такса:</translation>
     </message>
@@ -989,28 +977,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Копиране на байтовете</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Копирай прахта:</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Промяна на копирането</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 заключен)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">да</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">не</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Този етикет става червен ако някой получател получи количество, по-малко от текущия праг на прах</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1190,14 +1162,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Създайте празен портфейл</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">Използвайте декодери за управление на scriptPubKey</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">Декодер за портфейл</translation>
-    </message>
-    <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
         <translation type="unfinished">Използвайте външно устройство за подписване, като хардуерен портфейл. Конфигурирайте първо външния скрипт на подписа в предпочитания портфейл.</translation>
     </message>
@@ -1208,10 +1172,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Create</source>
         <translation type="unfinished">Създай</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Компилиран без поддръжка на sqlite (изисква се за декодер на портфейли)</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
@@ -1852,6 +1812,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Затвори</translation>
     </message>
     <message>
+        <source>own address</source>
+        <translation type="unfinished">собствен адрес</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation type="unfinished">Тотално количество</translation>
     </message>
@@ -2342,10 +2306,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Изчисти всички полета от формуляра.</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">прах:</translation>
-    </message>
-    <message>
         <source>Clear &amp;All</source>
         <translation type="unfinished">&amp;Изчисти</translation>
     </message>
@@ -2380,10 +2340,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">Копиране на байтовете</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Копирай прахта:</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -2761,10 +2717,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Изпратени на</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Плащане към себе си</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Емитирани</translation>
     </message>
@@ -2826,10 +2778,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Sent to</source>
         <translation type="unfinished">Изпратени на</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">Собствени</translation>
     </message>
     <message>
         <source>Mined</source>

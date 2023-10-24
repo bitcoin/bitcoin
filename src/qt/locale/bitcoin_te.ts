@@ -58,14 +58,6 @@
         <translation type="unfinished">ఎం&amp;చుకోండి</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">పంపించే చిరునామాలు</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">అందుకునే చిరునామాలు</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">ఇవి మీరు పంపే చెల్లింపుల బిట్‌కాయిన్ చిరునామాలు. నాణేలు పంపే ముందు ప్రతిసారి అందుకునే చిరునామా మరియు చెల్లింపు మొత్తం సరిచూసుకోండి.</translation>
     </message>
@@ -742,7 +734,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>S&amp;how</source>
-        <translation type="unfinished">&amp;చూపించు</translation>
+        <translation type="unfinished">S&amp;ఎలా</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -883,10 +875,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">రుసుము:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">దుమ్ము:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">రుసుము తర్వాత:</translation>
     </message>
@@ -975,28 +963,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">బైట్‌లను కాపీ చేయండి</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">దుమ్మును కాపీ చేయండి</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">మార్పుని కాపీ చేయండి</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 లాక్ చేయబడింది)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">అవును</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">లేదు</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">ఏదైనా గ్రహీత ప్రస్తుత ధూళి థ్రెషోల్డ్ కంటే చిన్న మొత్తాన్ని స్వీకరిస్తే ఈ లేబుల్ ఎరుపు రంగులోకి మారుతుంది.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1168,24 +1140,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ఖాళీ వాలెట్‌ని తయారు చేయండి</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">scriptPubKey నిర్వహణ కోసం డిస్క్రిప్టర్‌లను ఉపయోగించండి</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">డిస్క్రిప్టర్ వాలెట్</translation>
-    </message>
-    <message>
         <source>External signer</source>
         <translation type="unfinished">బాహ్య సంతకందారు</translation>
     </message>
     <message>
         <source>Create</source>
         <translation type="unfinished">సృష్టించు</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Sqlite మద్దతు లేకుండా కంపైల్ చేయబడింది (డిస్క్రిప్టర్ వాలెట్‌లకు అవసరం)</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
@@ -2332,10 +2292,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">దాచు</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">దుమ్ము:</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">కాపీ పరిమాణం</translation>
     </message>
@@ -2354,10 +2310,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">బైట్‌లను కాపీ చేయండి</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">దుమ్మును కాపీ చేయండి</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -2554,7 +2506,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>WalletFrame</name>
     <message>
         <source>Create a new wallet</source>
-        <translation type="unfinished">కొత్త వాలెట్‌ని సృష్టించండి</translation>
+        <translation type="unfinished">&lt;div&gt;&lt;/div&gt;</translation>
     </message>
     <message>
         <source>Error</source>
@@ -2745,10 +2697,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Unknown new rules activated (versionbit %i)</source>
         <translation type="unfinished">తెలియని కొత్త నియమాలు (వెర్షన్‌బిట్‌ %i)ని యాక్టివేట్ చేశాయి</translation>
-    </message>
-    <message>
-        <source>Unsupported global logging level -loglevel=%s. Valid values: %s.</source>
-        <translation type="unfinished">మద్దతు లేని గ్లోబల్ లాగింగ్ స్థాయి -లాగ్‌లెవెల్=%s. చెల్లుబాటు అయ్యే విలువలు: %s.</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
