@@ -58,14 +58,6 @@
         <translation type="unfinished">K&amp;iezen</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Verzendadressen</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Ontvangstadressen</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Dit zijn uw Bitcoin adressen om betalingen mee te verzenden. Controleer altijd het bedrag en het ontvangstadres voordat u uw bitcoins verzendt.</translation>
     </message>
@@ -873,10 +865,6 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
         <translation type="unfinished">Vergoeding:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Stof:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">Naheffing:</translation>
     </message>
@@ -965,28 +953,12 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
         <translation type="unfinished">Kopieer bytes</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopieër stof</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Kopieer wijziging</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 geblokkeerd)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">ja</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">nee</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Dit label wordt rood, als een ontvanger een bedrag van minder dan de huidige dust drempel gekregen heeft.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1059,12 +1031,12 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     </message>
     <message>
         <source>default wallet</source>
-        <translation type="unfinished">standaard wallet</translation>
+        <translation type="unfinished">standaard portemonnee</translation>
     </message>
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
-        <translation type="unfinished">Wallet openen</translation>
+        <translation type="unfinished">Portemonnee Openen</translation>
     </message>
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
@@ -1104,7 +1076,7 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     <name>WalletController</name>
     <message>
         <source>Close wallet</source>
-        <translation type="unfinished">Wallet sluiten</translation>
+        <translation type="unfinished">Portemonnee Sluiten</translation>
     </message>
     <message>
         <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
@@ -1116,7 +1088,7 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     </message>
     <message>
         <source>Close all wallets</source>
-        <translation type="unfinished">Alle wallets sluiten</translation>
+        <translation type="unfinished">Sluit alle portemonnees</translation>
     </message>
     <message>
         <source>Are you sure you wish to close all wallets?</source>
@@ -1162,14 +1134,6 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
         <translation type="unfinished">Lege wallet aanmaken</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">Gebruik descriptors voor scriptPubKey-beheer</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">Descriptorwallet</translation>
-    </message>
-    <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
         <translation type="unfinished">Gebruik een externe signing device zoals een hardware wallet. Configureer eerst het externe signer script in de wallet voorkeuren.</translation>
     </message>
@@ -1180,10 +1144,6 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     <message>
         <source>Create</source>
         <translation type="unfinished">Creëer</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Gecompileerd zonder sqlite-ondersteuning (nodig voor descriptor wallets)</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
@@ -1975,6 +1935,10 @@ Ongebruikte mempool geheugen is gedeeld voor deze cache.</translation>
     <message>
         <source> * Sends %1 to %2</source>
         <translation type="unfinished">Verstuur %1 naar %2</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">eigen adres</translation>
     </message>
     <message>
         <source>Unable to calculate transaction fee or total transaction amount.</source>
@@ -2807,10 +2771,6 @@ Voor meer informatie over het gebruik van deze console, type %6.
         <translation type="unfinished">Wis alle velden op het formulier.</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Stof:</translation>
-    </message>
-    <message>
         <source>Choose…</source>
         <translation type="unfinished">Kies...</translation>
     </message>
@@ -2885,10 +2845,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">Kopieer bytes</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopieër stof</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -3512,10 +3468,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation type="unfinished">Verzonden aan</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Betaling aan uzelf</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Gedolven</translation>
     </message>
@@ -3589,10 +3541,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>Sent to</source>
         <translation type="unfinished">Verzonden aan</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">Aan uzelf</translation>
     </message>
     <message>
         <source>Mined</source>
@@ -3686,7 +3634,7 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Exporteren mislukt</translation>
+        <translation type="unfinished">Exporteren Mislukt</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
@@ -3721,7 +3669,7 @@ Ga naar Bestand &gt; Wallet openen om een wallet te laden.
     </message>
     <message>
         <source>Create a new wallet</source>
-        <translation type="unfinished">Nieuwe wallet aanmaken</translation>
+        <translation type="unfinished">Nieuwe wallet creëren</translation>
     </message>
     <message>
         <source>Error</source>
@@ -3814,7 +3762,7 @@ Ga naar Bestand &gt; Wallet openen om een wallet te laden.
     </message>
     <message>
         <source>default wallet</source>
-        <translation type="unfinished">standaard wallet</translation>
+        <translation type="unfinished">standaard portemonnee</translation>
     </message>
 </context>
 <context>
@@ -3868,6 +3816,10 @@ Ga naar Bestand &gt; Wallet openen om een wallet te laden.
         <translation type="unfinished">%s beschadigd. Probeer de wallet tool bitcoin-wallet voor herstel of een backup terug te zetten.</translation>
     </message>
     <message>
+        <source>%s failed to validate the -assumeutxo snapshot state. This indicates a hardware problem, or a bug in the software, or a bad software modification that allowed an invalid snapshot to be loaded. As a result of this, the node will shut down and stop using any state that was built on the snapshot, resetting the chain height from %d to %d. On the next restart, the node will resume syncing from %d without using any snapshot data. Please report this incident to %s, including how you obtained the snapshot. The invalid snapshot chainstate will be left on disk in case it is helpful in diagnosing the issue that caused this error.</source>
+        <translation type="unfinished">%s kon de momentopnamestatus -assumeutxo niet valideren. Dit duidt op een hardwareprobleem, een fout in de software of een slechte softwarewijziging waardoor een ongeldige momentopname kon worden geladen. Als gevolg hiervan wordt het node afgesloten en stopt het met het gebruik van elke status die op de momentopname is gebouwd, waardoor de ketenhoogte wordt gereset van %d naar %d. Bij de volgende herstart hervat het node de synchronisatie vanaf %d zonder momentopnamegegevens te gebruiken. Rapporteer dit incident aan %s, inclusief hoe u aan de momentopname bent gekomen. De kettingstatus van de ongeldige momentopname is op schijf achtergelaten voor het geval dit nuttig is bij het diagnosticeren van het probleem dat deze fout heeft veroorzaakt.</translation>
+    </message>
+    <message>
         <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
         <translation type="unfinished">%s verzoekt om te luisteren op poort %u. Deze poort wordt als "slecht" beschouwd en het is daarom onwaarschijnlijk dat Bitcoin Core peers er verbinding mee maken. Zie doc/p2p-bad-ports.md voor details en een volledige lijst.</translation>
     </message>
@@ -3894,10 +3846,6 @@ Ga naar Bestand &gt; Wallet openen om een wallet te laden.
     <message>
         <source>Error loading wallet. Wallet requires blocks to be downloaded, and software does not currently support loading wallets while blocks are being downloaded out of order when using assumeutxo snapshots. Wallet should be able to load successfully after node sync reaches height %s</source>
         <translation type="unfinished">Fout bij het laden van portemonnee. Portemonnee vereist dat blokken worden gedownload en de software ondersteunt momenteel het laden van portemonnees terwijl blokken niet in de juiste volgorde worden gedownload bij gebruik van assumeutxo momentopnames. Portemonnee zou met succes moeten kunnen worden geladen nadat de synchronisatie de hoogte %s heeft bereikt</translation>
-    </message>
-    <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">Waarschuwing: Fout bij het lezen van %s! Alle sleutels zijn in goede orde uitgelezen, maar transactiedata of adresboeklemma's zouden kunnen ontbreken of fouten bevatten.</translation>
     </message>
     <message>
         <source>Error reading %s! Transaction data may be missing or incorrect. Rescanning wallet.</source>
@@ -3968,16 +3916,16 @@ Ga naar Bestand &gt; Wallet openen om een wallet te laden.
         <translation type="unfinished">Prune: laatste wallet synchronisatie gaat verder terug dan de pruned gegevens. Je moet herindexeren met -reindex (de hele blokketen opnieuw downloaden in geval van een pruned node)</translation>
     </message>
     <message>
+        <source>Rename of '%s' -&gt; '%s' failed. You should resolve this by manually moving or deleting the invalid snapshot directory %s, otherwise you will encounter the same error again on the next startup.</source>
+        <translation type="unfinished">Hernoemen van '%s' -&gt; '%s' mislukt. U moet dit oplossen door de ongeldige snapshot-map %shandmatig te verplaatsen of te verwijderen, anders zult u bij de volgende keer opstarten dezelfde fout opnieuw tegenkomen.</translation>
+    </message>
+    <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
         <translation type="unfinished">SQLiteDatabase: Onbekende sqlite wallet schema versie %d. Alleen versie %d wordt ondersteund.</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
         <translation type="unfinished">De blokdatabase bevat een blok dat lijkt uit de toekomst te komen. Dit kan gebeuren omdat de datum en tijd van uw computer niet goed staat. Herbouw de blokdatabase pas nadat u de datum en tijd van uw computer correct heeft ingesteld.</translation>
-    </message>
-    <message>
-        <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
-        <translation type="unfinished">De blokindex db bevat een legacy 'txindex'. Om de bezette schijfruimte vrij te maken, voert u een volledige -reindex uit, anders negeert u deze fout. Deze foutmelding wordt niet meer weergegeven.</translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
@@ -4016,12 +3964,20 @@ Ga naar Bestand &gt; Wallet openen om een wallet te laden.
         <translation type="unfinished">Onbekend walletbestandsformaat "%s" opgegeven. Kies aub voor "bdb" of "sqlite".</translation>
     </message>
     <message>
+        <source>Unsupported category-specific logging level %1$s=%2$s. Expected %1$s=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %3$s. Valid loglevels: %4$s.</source>
+        <translation type="unfinished">Niet-ondersteund categoriespecifiek logboekniveau %1$s=%2$s. Verwacht %1$s=&lt;category&gt;:&lt;loglevel&gt;. Geldige categorieën: %3$s. Geldige logniveaus: %4$s.</translation>
+    </message>
+    <message>
         <source>Unsupported chainstate database format found. Please restart with -reindex-chainstate. This will rebuild the chainstate database.</source>
         <translation type="unfinished">Niet ondersteund chainstate databaseformaat gevonden. Herstart aub met -reindex-chainstate. Dit zal de chainstate database opnieuw opbouwen.</translation>
     </message>
     <message>
         <source>Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future.</source>
         <translation type="unfinished">Wallet succesvol aangemaakt. Het oude wallettype wordt uitgefaseerd en ondersteuning voor het maken en openen van verouderde wallets zal in de toekomst komen te vervallen.</translation>
+    </message>
+    <message>
+        <source>Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet.</source>
+        <translation type="unfinished">Wallet succesvol aangemaakt. Het oude wallettype wordt uitgefaseerd en ondersteuning voor het maken en openen van verouderde wallets zal in de toekomst komen te vervallen. Oude wallettypes kan gemigreerd worden naar een descriptor wallet met migratewallet.</translation>
     </message>
     <message>
         <source>Warning: Dumpfile wallet format "%s" does not match command line specified format "%s".</source>
@@ -4072,28 +4028,8 @@ Ga naar Bestand &gt; Wallet openen om een wallet te laden.
         <translation type="unfinished">Mag niet schrijven naar gegevensmap '%s'; controleer bestandsrechten.</translation>
     </message>
     <message>
-        <source>The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.</source>
-        <translation type="unfinished">De -txindex upgrade die door een eerdere versie is gestart, kan niet worden voltooid. Herstart opnieuw met de vorige versie of voer een volledige -reindex uit.</translation>
-    </message>
-    <message>
-        <source>%s failed to validate the -assumeutxo snapshot state. This indicates a hardware problem, or a bug in the software, or a bad software modification that allowed an invalid snapshot to be loaded. As a result of this, the node will shut down and stop using any state that was built on the snapshot, resetting the chain height from %d to %d. On the next restart, the node will resume syncing from %d without using any snapshot data. Please report this incident to %s, including how you obtained the snapshot. The invalid snapshot chainstate has been left on disk in case it is helpful in diagnosing the issue that caused this error.</source>
-        <translation type="unfinished">%s kon de momentopnamestatus -assumeutxo niet valideren. Dit duidt op een hardwareprobleem, een fout in de software of een slechte softwarewijziging waardoor een ongeldige momentopname kon worden geladen. Als gevolg hiervan wordt het node afgesloten en stopt het met het gebruik van elke status die op de momentopname is gebouwd, waardoor de ketenhoogte wordt gereset van %d naar %d. Bij de volgende herstart hervat het node de synchronisatie vanaf %d zonder momentopnamegegevens te gebruiken. Rapporteer dit incident aan %s, inclusief hoe u aan de momentopname bent gekomen. De kettingstatus van de ongeldige momentopname is op schijf achtergelaten voor het geval dit nuttig is bij het diagnosticeren van het probleem dat deze fout heeft veroorzaakt.</translation>
-    </message>
-    <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
         <translation type="unfinished">%s is erg hoog ingesteld! Dergelijke hoge vergoedingen kunnen worden betaald voor een enkele transactie.</translation>
-    </message>
-    <message>
-        <source>-reindex-chainstate option is not compatible with -blockfilterindex. Please temporarily disable blockfilterindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
-        <translation type="unfinished">-reindex-chainstate optie is niet compatibel met -blockfilterindex. Schakel -blockfilterindex tijdelijk uit aub en gebruik -reindex-chainstate, of vervang -reindex-chainstate met -reindex om alle indices volledig opnieuw op te bouwen.</translation>
-    </message>
-    <message>
-        <source>-reindex-chainstate option is not compatible with -coinstatsindex. Please temporarily disable coinstatsindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
-        <translation type="unfinished">-reindex-chainstate optie is niet compatibel met -coinstatsindex. Schakel -coinstatsindex tijdelijk uit aub en gebruik -reindex-chainstate, of vervang -reindex-chainstate met -reindex om alle indices volledig opnieuw op te bouwen.</translation>
-    </message>
-    <message>
-        <source>-reindex-chainstate option is not compatible with -txindex. Please temporarily disable txindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
-        <translation type="unfinished">-reindex-chainstate optie is niet compatibel met -txindex. Schakel -txindex tijdelijk uit aub en gebruik -reindex-chainstate, of vervang -reindex-chainstate met -reindex om alle indices volledig opnieuw op te bouwen.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
@@ -4102,6 +4038,10 @@ Ga naar Bestand &gt; Wallet openen om een wallet te laden.
     <message>
         <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
         <translation type="unfinished">Fout bij laden %s: Externe signer wallet wordt geladen zonder gecompileerde ondersteuning voor externe signers</translation>
+    </message>
+    <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address metadata may be missing or incorrect.</source>
+        <translation type="unfinished">Fout bij het lezen van %s! Alle sleutels zijn in goede orde uitgelezen, maar transactiedata of adresboek metagegevens zouden kunnen ontbreken of fouten bevatten.</translation>
     </message>
     <message>
         <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
@@ -4374,6 +4314,10 @@ Kan mislukte migratie niet opschonen</translation>
     <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation type="unfinished">Herscannen van de wallet tijdens initialisatie mislukt</translation>
+    </message>
+    <message>
+        <source>Failed to start indexes, shutting down..</source>
+        <translation type="unfinished">Kan de indexen niet starten, wordt afgesloten..</translation>
     </message>
     <message>
         <source>Failed to verify database</source>
@@ -4692,8 +4636,12 @@ Kan mislukte migratie niet opschonen</translation>
         <translation type="unfinished">Onbekende nieuwe regels geactiveerd (versionbit %i)</translation>
     </message>
     <message>
-        <source>Unsupported global logging level -loglevel=%s. Valid values: %s.</source>
-        <translation type="unfinished">Niet ondersteund globaal logboekregistratieniveau -loglevel=%s. Geldige waarden: %s.</translation>
+        <source>Unsupported global logging level %s=%s. Valid values: %s.</source>
+        <translation type="unfinished">Niet-ondersteund globaal logniveau %s=%s. Geldige waarden: %s.</translation>
+    </message>
+    <message>
+        <source>acceptstalefeeestimates is not supported on %s chain.</source>
+        <translation type="unfinished">acceptstalefeeestimates worden niet ondersteund in de %s keten.</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
@@ -4717,11 +4665,11 @@ Kan mislukte migratie niet opschonen</translation>
     </message>
     <message>
         <source>Settings file could not be read</source>
-        <translation type="unfinished">Instellingen bestand kon niet worden gelezen</translation>
+        <translation type="unfinished">Instellingen bestand kan niet gelezen worden</translation>
     </message>
     <message>
         <source>Settings file could not be written</source>
-        <translation type="unfinished">Instellingen bestand kon niet worden geschreven</translation>
+        <translation type="unfinished">Instelling bestand kan niet opgeschreven worden</translation>
     </message>
 </context>
 </TS>

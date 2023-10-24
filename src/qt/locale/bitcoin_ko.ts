@@ -58,14 +58,6 @@
         <translation type="unfinished">&amp;선택</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">보내는 주소들</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">받는 주소들</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">비트코인을 보내는 계좌 주소입니다. 코인을 보내기 전에 금액과 받는 주소를 항상 확인하십시오.</translation>
     </message>
@@ -737,7 +729,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Load Wallet Backup</source>
         <extracomment>The title for Restore Wallet File Windows</extracomment>
-        <translation type="unfinished">백업된 지갑 불러오기</translation>
+        <translation type="unfinished">백업된 지갑을 불러옵니다.</translation>
     </message>
     <message>
         <source>Restore Wallet</source>
@@ -907,10 +899,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">수수료:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">더스트:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">수수료 이후:</translation>
     </message>
@@ -999,28 +987,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">bytes 복사</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">더스트 복사</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">잔돈 복사</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 잠금)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">예</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">아니요</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">수령인이 현재 더스트 임계값보다 작은 양을 수신하면 이 라벨이 빨간색으로 변합니다.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1176,14 +1148,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">빈 지갑 만들기</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">scriptPubKey 관리를 위해 디스크립터를 사용하세요.</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">디스크립터 지갑</translation>
-    </message>
-    <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
         <translation type="unfinished">Hardware wallet과 같은 외부 서명 장치를 사용합니다. 지갑 기본 설정에서 외부 서명자 스크립트를 먼저 구성하십시오.</translation>
     </message>
@@ -1194,10 +1158,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Create</source>
         <translation type="unfinished">생성</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">에스큐엘라이트 지원 없이 컴파일 되었습니다. (디스크립터 지갑에 요구됩니다.)</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
@@ -1963,6 +1923,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source> * Sends %1 to %2</source>
         <translation type="unfinished">* %1을 %2로 보냅니다.</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">자신의 주소</translation>
     </message>
     <message>
         <source>Unable to calculate transaction fee or total transaction amount.</source>
@@ -2833,10 +2797,6 @@ For more information on using this console, type %6.
         <translation type="unfinished">입력...</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">더스트:</translation>
-    </message>
-    <message>
         <source>Choose…</source>
         <translation type="unfinished">선택...</translation>
     </message>
@@ -2911,10 +2871,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">bytes 복사</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">더스트 복사</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -3544,10 +3500,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">받는 주소 :</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">자신에게 지불</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">채굴</translation>
     </message>
@@ -3621,10 +3573,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Sent to</source>
         <translation type="unfinished">받는 주소 :</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">자기 거래</translation>
     </message>
     <message>
         <source>Mined</source>
@@ -3923,10 +3871,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">MIT 소프트웨어 라이센스에 따라 배포되었습니다. 첨부 파일 %s 또는 %s을 참조하십시오.</translation>
     </message>
     <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">%s 불러오기 오류! 주소 키는 모두 정확하게 로드되었으나 거래 데이터와 주소록 필드에서 누락이나 오류가 존재할 수 있습니다.</translation>
-    </message>
-    <message>
         <source>Error reading %s! Transaction data may be missing or incorrect. Rescanning wallet.</source>
         <translation type="unfinished">%s를 읽는데 에러가 생겼습니다. 트랜잭션 데이터가 잘못되었거나 누락되었습니다. 지갑을 다시 스캐닝합니다.</translation>
     </message>
@@ -3993,10 +3937,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
         <translation type="unfinished">블록 데이터베이스에 미래의 블록이 포함되어 있습니다. 이것은 사용자의 컴퓨터의 날짜와 시간이 올바르게 설정되어 있지 않을때 나타날 수 있습니다. 블록 데이터 베이스의 재구성은 사용자의 컴퓨터의 날짜와 시간이 올바르다고 확신할 때에만 하십시오.</translation>
-    </message>
-    <message>
-        <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
-        <translation type="unfinished">udhdbfjfjdnbdjfjf hdhdbjcn2owkd. jjwbdbdof dkdbdnck wdkdj </translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>

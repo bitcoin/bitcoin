@@ -58,14 +58,6 @@
         <translation type="unfinished">Zgjidh</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Duke derguar adresen</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Duke marr adresen</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Këto janë Bitcoin adresat e juaja për të dërguar pagesa. Gjithmon kontrolloni shumën dhe adresën pranuese para se të dërgoni monedha.</translation>
     </message>
@@ -397,14 +389,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Date</source>
         <translation type="unfinished">Data</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">po</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">jo</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -761,10 +745,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Sent to</source>
         <translation type="unfinished">Dërguar drejt</translation>
-    </message>
-    <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Pagesë ndaj vetvetes</translation>
     </message>
     <message>
         <source>Mined</source>

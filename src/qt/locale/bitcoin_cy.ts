@@ -58,14 +58,6 @@
         <translation type="unfinished">D&amp;ewis</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Anfon cyfeiriadau</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Derbyn cyfeiriadau</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Rhain ydi eich cyfeiriadau Bitcoin ar gyfer gyrru taliadau. Gwnewch yn sicr o'r swm a'r cyfeiriad derbyn cyn gyrru arian.</translation>
     </message>
@@ -549,10 +541,6 @@
         <translation type="unfinished">Ffî:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Llwch</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">Ar Ôl Ffî</translation>
     </message>
@@ -865,10 +853,6 @@
     <message>
         <source>Send to multiple recipients at once</source>
         <translation type="unfinished">Anfon at pobl lluosog ar yr un pryd</translation>
-    </message>
-    <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Llwch</translation>
     </message>
     <message>
         <source>Balance:</source>

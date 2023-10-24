@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Mag-right click para ibahin ang address o label</translation>
+        <translation type="unfinished">Right-click para ma-edit ang address o label</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -56,14 +56,6 @@
     <message>
         <source>C&amp;hoose</source>
         <translation type="unfinished">Pumili</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Mga address na padadalahan</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Mga address na tatanggap</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -698,28 +690,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Kopyahin ang bytes</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopyahin ang dust</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Kopyahin ang sukli</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
-        <translation type="unfinished">(%1 Naka-lock)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">oo</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">hindi</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Ang label na ito ay magiging pula kung ang sinumang tatanggap ay tumanggap ng halagang mas mababa sa kasalukuyang dust threshold.</translation>
+        <translation type="unfinished">(%1 ay naka-lock)</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1393,6 +1369,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">%1</translation>
     </message>
     <message>
+        <source>own address</source>
+        <translation type="unfinished">sariling address</translation>
+    </message>
+    <message>
         <source>Pays transaction fee: </source>
         <translation type="unfinished">babayaran ang transaction fee:</translation>
     </message>
@@ -2030,10 +2010,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Kopyahin ang bytes</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopyahin ang dust</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Kopyahin ang sukli</translation>
     </message>
@@ -2535,10 +2511,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Ipinadala sa</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Pagbabayad sa iyong sarili</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Namina</translation>
     </message>
@@ -2604,10 +2576,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Sent to</source>
         <translation type="unfinished">Ipinadala sa</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">Sa iyong sarili</translation>
     </message>
     <message>
         <source>Mined</source>
@@ -2793,10 +2761,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation type="unfinished">Naipamahagi sa ilalim ng lisensya ng MIT software, tingnan ang kasamang file %s o %s</translation>
-    </message>
-    <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">Error sa pagbabasa %s! Nabasa nang tama ang lahat ng mga key, ngunit ang data ng transaksyon o mga entry sa address book ay maaaring nawawala o hindi tama.</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>

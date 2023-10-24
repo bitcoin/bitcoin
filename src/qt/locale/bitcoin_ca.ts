@@ -58,14 +58,6 @@
         <translation type="unfinished">&amp;Tria</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Adreces d'enviament</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Adreces de recepció</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Aquestes són les vostres adreces de Bitcoin per a enviar els pagaments. Sempre reviseu l'import i l'adreça del destinatari abans de transferir monedes.</translation>
     </message>
@@ -834,10 +826,6 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <translation type="unfinished">Tarifa:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Polsim:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">Tarifa posterior:</translation>
     </message>
@@ -922,24 +910,12 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <translation type="unfinished">Copia els bytes</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Copia el polsim</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Copia el canvi</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 bloquejada)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">sí</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Aquesta etiqueta es torna vermella si cap recipient rep un import inferior al llindar de polsim actual.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1075,14 +1051,6 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <translation type="unfinished">Fes cartera en blanc</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">Utilitzeu descriptors per a la gestió de scriptPubKey</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">Cartera del descriptor</translation>
-    </message>
-    <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
         <translation type="unfinished">Utilitzeu un dispositiu de signatura extern, com ara una cartera de maquinari. Configureu primer l’escriptura de signatura externa a les preferències de cartera.</translation>
     </message>
@@ -1093,10 +1061,6 @@ Això és ideal per a carteres de mode només lectura.</translation>
     <message>
         <source>Create</source>
         <translation type="unfinished">Crear</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Compilat sense el suport sqlite (requerit per a carteres descriptor)</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
@@ -1777,6 +1741,10 @@ Això és ideal per a carteres de mode només lectura.</translation>
     <message>
         <source> * Sends %1 to %2</source>
         <translation type="unfinished">*Envia %1 a %2</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">adreça pròpia</translation>
     </message>
     <message>
         <source>Unable to calculate transaction fee or total transaction amount.</source>
@@ -2589,10 +2557,6 @@ No utilitzeu aquesta consola sense entendre completament les ramificacions d'una
         <translation type="unfinished">Entrades...</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Polsim:</translation>
-    </message>
-    <message>
         <source>Choose…</source>
         <translation type="unfinished">Tria...</translation>
     </message>
@@ -2666,10 +2630,6 @@ Nota: atès que la tarifa es calcula per byte, una tarifa de "100 satoshis per k
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">Copia els bytes</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Copia el polsim</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -3295,10 +3255,6 @@ Nota: atès que la tarifa es calcula per byte, una tarifa de "100 satoshis per k
         <translation type="unfinished">Enviada a</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Pagament a un mateix</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Minada</translation>
     </message>
@@ -3368,10 +3324,6 @@ Nota: atès que la tarifa es calcula per byte, una tarifa de "100 satoshis per k
     <message>
         <source>Sent to</source>
         <translation type="unfinished">Enviada a</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">A un mateix</translation>
     </message>
     <message>
         <source>Mined</source>
@@ -3655,10 +3607,6 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation type="unfinished">Distribuït sota la llicència del programari MIT, consulteu el fitxer d'acompanyament %s o %s</translation>
-    </message>
-    <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">S'ha produït un error en llegir %s. Totes les claus es llegeixen correctament, però les dades de la transacció o les entrades de la llibreta d'adreces podrien faltar o ser incorrectes.</translation>
     </message>
     <message>
         <source>Error: Dumpfile format record is incorrect. Got "%s", expected "format".</source>

@@ -3,19 +3,23 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">I-right-click upang i-edit ang address o label</translation>
+        <translation type="unfinished">pindutin lamang ang kanang pindutan upang i-edit ang address o label</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Gumawa ng bagong ♦address♦</translation>
+        <translation type="unfinished">Lumikha ng bagong ♦address♦</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;Bago</translation>
+        <translation type="unfinished">Panibago</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopyahin ang pinipiling ♦address♦ sa kasalakuyan sa ♦clipboard♦ ng sistema</translation>
+        <translation type="unfinished">Gayahin ang pinipiling ♦address♦ sa kasalakuyan sa ♦clipboard♦ ng sistem</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation type="unfinished">Gayahin</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
@@ -23,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Tanggalin ang kasalukuyang napiling ♦address♦ sa listahan</translation>
+        <translation type="unfinished">Burahin ang kasalukuyang napiling ♦address♦ sa listahan</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -39,11 +43,11 @@
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation type="unfinished">&amp;Tanggalin</translation>
+        <translation type="unfinished">&amp;Burahin</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Piliin ang ♦address♦ kung saan ipapadala ang mga coin</translation>
+        <translation type="unfinished">Piliin ang ♦address♦ kung saan ipapadala ang mga barya</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
@@ -52,14 +56,6 @@
     <message>
         <source>C&amp;hoose</source>
         <translation type="unfinished">&amp;Pumili</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Pinapadala ang mga ♦address♦</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Tinatanggap ang mga ♦address♦</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -774,10 +770,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Bayad:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Alikabok:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">Pagkatapos na Bayad:</translation>
     </message>
@@ -862,28 +854,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Kopyahin ang ♦bytes♦</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopyahin ang ♦dust♦</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Kopyahin ang pagbabago</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 naka-lock)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">oo</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">hindi</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Ang tatak na ito ay nagiging pula kung ang sinomang tatanggap ay tatanggap ng halaga na mas maliit  sa kasalukuyang ♦dust threshold♦</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1019,14 +995,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Gumawa ng Blankong Pitaka</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">Gumawa ng  mga ♦descriptors♦ para sa pamamahala sa ♦scriptPubKey♦</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">♦Descriptor♦ na pitaka</translation>
-    </message>
-    <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
         <translation type="unfinished">Gumamit ng panlabas na pagpirmang ♦device♦ katulad ng ♦hardware♦ na pitaka. I-configure ang panlabas na ♦signer script♦ sa loob ng ♦preferences♦ ng pitaka n listahan. </translation>
     </message>
@@ -1037,10 +1005,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Create</source>
         <translation type="unfinished">Gumawa</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Pinagsama-sama na walang suporta ng ♦sqlite♦ (kailangan para sa ♦descriptor♦ na pitaka)</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
@@ -1356,10 +1320,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Sukli:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Alikabok:</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">Kopyahin ang dami</translation>
     </message>
@@ -1378,10 +1338,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">Kopyahin ang ♦bytes♦</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopyahin ang ♦dust♦</translation>
     </message>
     <message>
         <source>Copy change</source>

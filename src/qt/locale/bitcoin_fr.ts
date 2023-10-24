@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Copier l’adresse sélectionnée actuellement dans le presse-papiers</translation>
+        <translation type="unfinished">Copier l’adresse sélectionnée dans le presse-papiers</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Supprimer l’adresse sélectionnée actuellement de la liste</translation>
+        <translation type="unfinished">Supprimer l’adresse sélectionnée de la liste</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -55,19 +55,11 @@
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished">C&amp;hoisir</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Adresses d’envoi</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Adresses de réception</translation>
+        <translation type="unfinished">&amp;Choisir</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Ce sont vos adresses Bitcoin pour envoyer des paiements. Vérifiez toujours le montant et l’adresse du destinataire avant d’envoyer des pièces.</translation>
+        <translation type="unfinished">Ce sont vos adresses Bitcoin pour envoyer des paiements. Vérifiez toujours le montant et l’adresse de réception avant d’envoyer des pièces.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
@@ -81,7 +73,7 @@ La signature n'est possible qu'avec les adresses de type "patrimoine".</translat
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished">Copier l’é&amp;tiquette</translation>
+        <translation type="unfinished">Copier &amp;l’étiquette</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -94,7 +86,7 @@ La signature n'est possible qu'avec les adresses de type "patrimoine".</translat
     <message>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
-        <translation type="unfinished">Fichier séparé par des virgules</translation>
+        <translation type="unfinished">Fichier avec séparateur virgule</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
@@ -165,7 +157,7 @@ La signature n'est possible qu'avec les adresses de type "patrimoine".</translat
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">Avertissement : Si vous chiffrez votre porte-monnaie et perdez votre phrase de passe, vous &lt;b&gt;PERDREZ TOUS VOS BITCOINS&lt;/b&gt; !</translation>
+        <translation type="unfinished">Avertissement : Si vous chiffrez votre porte-monnaie et perdez votre phrase de passe, vous allez &lt;b&gt;PERDRE TOUS VOS BITCOINS&lt;/b&gt; !</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -714,7 +706,7 @@ La signature n'est possible qu'avec les adresses de type "patrimoine".</translat
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Afficher le message d’aide de %1 pour obtenir la liste des options possibles de ligne de commande Bitcoin</translation>
+        <translation type="unfinished">Afficher le message d’aide de %1 pour obtenir la liste des options possibles en ligne de commande Bitcoin</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
@@ -915,10 +907,6 @@ La signature n'est possible qu'avec les adresses de type "patrimoine".</translat
         <translation type="unfinished">Frais :</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Poussière :</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">Après les frais :</translation>
     </message>
@@ -999,28 +987,12 @@ La signature n'est possible qu'avec les adresses de type "patrimoine".</translat
         <translation type="unfinished">Copier les octets</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Copier la poussière</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Copier la monnaie</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 verrouillée)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">oui</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">non</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Cette étiquette devient rouge si un destinataire reçoit un montant inférieur au seuil actuel de poussière.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1200,14 +1172,6 @@ La signature n'est possible qu'avec les adresses de type "patrimoine".</translat
         <translation type="unfinished">Créer un porte-monnaie vide</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">Utiliser des descripteurs pour la gestion des scriptPubKey</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">Porte-monnaie de descripteurs</translation>
-    </message>
-    <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
         <translation type="unfinished">Utiliser un appareil externe de signature tel qu’un porte-monnaie matériel. Configurer d’abord le script signataire externe dans les préférences du porte-monnaie.</translation>
     </message>
@@ -1218,10 +1182,6 @@ La signature n'est possible qu'avec les adresses de type "patrimoine".</translat
     <message>
         <source>Create</source>
         <translation type="unfinished">Créer</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Compilé sans prise en charge de sqlite (requis pour les porte-monnaie de descripteurs)</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
@@ -2030,6 +1990,10 @@ La signature n'est possible qu'avec les adresses de type "patrimoine".</translat
     <message>
         <source> * Sends %1 to %2</source>
         <translation type="unfinished"> * Envoie %1 à %2</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">votre adresse</translation>
     </message>
     <message>
         <source>Unable to calculate transaction fee or total transaction amount.</source>
@@ -2899,10 +2863,6 @@ Pour plus de précisions sur cette console, tapez %6.
         <translation type="unfinished">Effacer tous les champs du formulaire.</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Poussière :</translation>
-    </message>
-    <message>
         <source>Choose…</source>
         <translation type="unfinished">Choisir…</translation>
     </message>
@@ -2977,10 +2937,6 @@ Note : Les frais étant calculés par octet, un taux de frais de « 100 satoshi
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">Copier les octets</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Copier la poussière</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -3603,10 +3559,6 @@ Note : Les frais étant calculés par octet, un taux de frais de « 100 satoshi
         <translation type="unfinished">Envoyée à</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Paiement à vous-même</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Miné </translation>
     </message>
@@ -3682,10 +3634,6 @@ Note : Les frais étant calculés par octet, un taux de frais de « 100 satoshi
         <translation type="unfinished">Envoyée à</translation>
     </message>
     <message>
-        <source>To yourself</source>
-        <translation type="unfinished">À vous-même</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Miné </translation>
     </message>
@@ -3757,7 +3705,7 @@ Note : Les frais étant calculés par octet, un taux de frais de « 100 satoshi
     <message>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
-        <translation type="unfinished">Fichier séparé par des virgules</translation>
+        <translation type="unfinished">Fichier avec séparateur virgule</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -3991,10 +3939,6 @@ Accédez à Fichier &gt; Ouvrir un porte-monnaie pour en charger un.
         <translation type="unfinished">Erreur de chargement du portefeuille. Le portefeuille nécessite le téléchargement de blocs, et le logiciel ne prend pas actuellement en charge le chargement de portefeuilles lorsque les blocs sont téléchargés dans le désordre lors de l'utilisation de snapshots assumeutxo. Le portefeuille devrait pouvoir être chargé avec succès une fois que la synchronisation des nœuds aura atteint la hauteur %s</translation>
     </message>
     <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">Erreur de lecture de %s. Toutes les clés ont été lues correctement, mais les données de la transaction ou les entrées du carnet d’adresses sont peut-être manquantes ou incorrectes.</translation>
-    </message>
-    <message>
         <source>Error reading %s! Transaction data may be missing or incorrect. Rescanning wallet.</source>
         <translation type="unfinished">Erreur de lecture de %s : soit les données de la transaction manquent soit elles sont incorrectes. Réanalyse du porte-monnaie.</translation>
     </message>
@@ -4069,10 +4013,6 @@ Accédez à Fichier &gt; Ouvrir un porte-monnaie pour en charger un.
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
         <translation type="unfinished">La base de données des blocs comprend un bloc qui semble provenir du futur. Cela pourrait être causé par la date et l’heure erronées de votre ordinateur. Ne reconstruisez la base de données des blocs que si vous êtes certain que la date et l’heure de votre ordinateur sont justes.</translation>
-    </message>
-    <message>
-        <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
-        <translation type="unfinished">La base de données d’indexation des blocs comprend un « txindex » hérité. Pour libérer l’espace disque occupé, exécutez un -reindex complet ou ignorez cette erreur. Ce message d’erreur ne sera pas affiché de nouveau.</translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
@@ -4167,28 +4107,8 @@ Accédez à Fichier &gt; Ouvrir un porte-monnaie pour en charger un.
         <translation type="unfinished">Impossible d’écrire dans le répertoire de données « %s » ; veuillez vérifier les droits.</translation>
     </message>
     <message>
-        <source>The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.</source>
-        <translation type="unfinished">La mise à niveau -txindex lancée par une version précédente ne peut pas être achevée. Redémarrez la version précédente ou exécutez un -reindex complet.</translation>
-    </message>
-    <message>
-        <source>%s failed to validate the -assumeutxo snapshot state. This indicates a hardware problem, or a bug in the software, or a bad software modification that allowed an invalid snapshot to be loaded. As a result of this, the node will shut down and stop using any state that was built on the snapshot, resetting the chain height from %d to %d. On the next restart, the node will resume syncing from %d without using any snapshot data. Please report this incident to %s, including how you obtained the snapshot. The invalid snapshot chainstate has been left on disk in case it is helpful in diagnosing the issue that caused this error.</source>
-        <translation type="unfinished">%sn'a pas réussi à valider l'état de l'instantané -assumeutxo. Cela indique un problème matériel, un bug dans le logiciel ou une mauvaise modification du logiciel qui a permis le chargement d'une snapshot invalide. En conséquence, le nœud s'arrêtera et cessera d'utiliser tout état construit sur la snapshot, ce qui réinitialisera la taille de la chaîne de %d à %d. Au prochain redémarrage, le nœud reprendra la synchronisation à partir de %d sans utiliser les données de la snapshot. Veuillez signaler cet incident à %s, en indiquant comment vous avez obtenu la snapshot. L'état de chaîne de la snapshot non valide a été laissé sur le disque au cas où il serait utile pour diagnostiquer le problème à l'origine de cette erreur.</translation>
-    </message>
-    <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
         <translation type="unfinished">%s est très élevé ! Des frais aussi importants pourraient être payés sur une seule transaction.</translation>
-    </message>
-    <message>
-        <source>-reindex-chainstate option is not compatible with -blockfilterindex. Please temporarily disable blockfilterindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
-        <translation type="unfinished">L'option -reindex-chainstate n'est pas compatible avec -blockfilterindex. Veuillez désactiver temporairement blockfilterindex lorsque vous utilisez -reindex-chainstate, ou remplacez -reindex-chainstate par -reindex pour reconstruire complètement tous les index.</translation>
-    </message>
-    <message>
-        <source>-reindex-chainstate option is not compatible with -coinstatsindex. Please temporarily disable coinstatsindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
-        <translation type="unfinished">L'option -reindex-chainstate n'est pas compatible avec -coinstatsindex. Veuillez désactiver temporairement coinstatsindex lorsque vous utilisez -reindex-chainstate, ou remplacez -reindex-chainstate par -reindex pour reconstruire complètement tous les index.</translation>
-    </message>
-    <message>
-        <source>-reindex-chainstate option is not compatible with -txindex. Please temporarily disable txindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
-        <translation type="unfinished">L'option -reindex-chainstate n'est pas compatible avec -txindex. Veuillez désactiver temporairement txindex lorsque vous utilisez -reindex-chainstate, ou remplacez -reindex-chainstate par -reindex pour reconstruire entièrement tous les index.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
@@ -4208,7 +4128,7 @@ Accédez à Fichier &gt; Ouvrir un porte-monnaie pour en charger un.
     </message>
     <message>
         <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
-        <translation type="unfinished">Erreur : La transaction %s dans le portefeuille ne peut pas être identifiée comme appartenant aux portefeuilles migrés.</translation>
+        <translation type="unfinished">Erreur : La transaction %s dans le portefeuille ne peut pas être identifiée comme appartenant aux portefeuilles migrés</translation>
     </message>
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
@@ -4281,16 +4201,14 @@ Please try running the latest software version.
         <translation type="unfinished">Descripteur non reconnu trouvé. Chargement du portefeuille %s
 
 Le portefeuille a peut-être été créé avec une version plus récente.
-Veuillez essayer d'utiliser la dernière version du logiciel.</translation>
-    </message>
-    <message>
-        <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
-        <translation type="unfinished">Niveau de consignation spécifique à une catégorie non pris en charge -loglevel=%s. Attendu -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Catégories valides : %s. Niveaux de consignation valides : %s.</translation>
+Veuillez essayer d'utiliser la dernière version du logiciel.
+</translation>
     </message>
     <message>
         <source>
 Unable to cleanup failed migration</source>
-        <translation type="unfinished">Impossible de corriger l'échec de la migration</translation>
+        <translation type="unfinished">
+Impossible de corriger l'échec de la migration</translation>
     </message>
     <message>
         <source>
@@ -4392,7 +4310,7 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
     </message>
     <message>
         <source>Error: Could not add watchonly tx to watchonly wallet</source>
-        <translation type="unfinished">Erreur : Impossible d'ajouter le tx watchonly au portefeuille watchonly</translation>
+        <translation type="unfinished">Erreur : Impossible d'ajouter la transaction watchonly au portefeuille watchonly</translation>
     </message>
     <message>
         <source>Error: Could not delete watchonly transactions</source>
@@ -4412,7 +4330,7 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
     </message>
     <message>
         <source>Error: Failed to create new watchonly wallet</source>
-        <translation type="unfinished">Erreur : Echec de la création d'un nouveau porte-monnaie Watchonly</translation>
+        <translation type="unfinished">Erreur : Echec de la création d'un nouveau portefeuille watchonly</translation>
     </message>
     <message>
         <source>Error: Got key that was not hex: %s</source>
@@ -4464,7 +4382,7 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
     </message>
     <message>
         <source>Error: Unable to remove watchonly address book data</source>
-        <translation type="unfinished">Erreur : Impossible de supprimer les données du carnet d'adresses en mode veille</translation>
+        <translation type="unfinished">Erreur : Impossible de supprimer les données du carnet d'adresses watchonly</translation>
     </message>
     <message>
         <source>Error: Unable to write record to new wallet</source>
@@ -4795,10 +4713,6 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
         <translation type="unfinished">Les nouvelles règles inconnues sont activées (versionbit %i)</translation>
     </message>
     <message>
-        <source>Unsupported global logging level -loglevel=%s. Valid values: %s.</source>
-        <translation type="unfinished">Niveau de consignation global non pris en charge -loglevel=%s. Valeurs valides : %s.</translation>
-    </message>
-    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation type="unfinished">La catégorie de journalisation %s=%s n’est pas prise en charge</translation>
     </message>
@@ -4816,7 +4730,7 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation type="unfinished">Le porte-monnaie devait être réécrit : redémarrer %s pour terminer l’opération.</translation>
+        <translation type="unfinished">Le portefeuille doit être réécrit : redémarrer %s pour terminer</translation>
     </message>
     <message>
         <source>Settings file could not be read</source>

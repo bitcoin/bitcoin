@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">አድራሻ ወይም መለያ ስም ለመቀየር ቀኙን ጠቅ ያድርጉ</translation>
+        <translation type="unfinished">አድራሻ ወይም መለያ ስም ለማርተዕ ቀኙን ጠቅ ያድርጉ</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">አዲስ አድራሻ ፍጠር</translation>
+        <translation type="unfinished">አዲስ አድራሻ ይፍጠሩ</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -58,16 +58,8 @@
         <translation type="unfinished">ምረጥ</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">የመላኪያ አድራሻዎች</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">የመቀበያ አድራሻዎች</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">እነኚህ የቢትኮይን ክፍያ የመላኪያ አድራሻዎችዎ ናቸው:: ገንዘብ/ኮይኖች ከመላክዎ በፊት መጠኑን እና የመቀበያ አድራሻውን ሁልጊዜ ያረጋግጡ::</translation>
+        <translation type="unfinished">ክፍያዎችን ለመላክ እነዚህ  የእርስዎ ቢትኮይን አድራሻዎች ናቸው። ሳንቲሞችን/ኮይኖች ከመላክዎ በፊት ሁል ጊዜ መጠኑን እና የተቀባዩን አድራሻ ያረጋግጡ።</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
@@ -480,14 +472,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ክፍያው ቅዳ</translation>
     </message>
     <message>
-        <source>yes</source>
-        <translation type="unfinished">አዎ</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">አይ</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation type="unfinished">(መለያ ስም የለም)</translation>
     </message>
@@ -768,7 +752,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">በአሁኑ ማውጫ ውስጥ ያለውን መረጃ ወደ አንድ ፋይል ላክ</translation>
+        <translation type="unfinished">በዚህ ማውጫ ውስጥ ያለውን ውሂብ ወደ አንድ ፋይል ቀይረህ አስቀምጥ</translation>
     </message>
     </context>
 </TS>

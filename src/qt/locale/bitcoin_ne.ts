@@ -58,14 +58,6 @@
         <translation type="unfinished">छनौट गर्नुहोस्...</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">पठाउने ठेगानाहरू</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">प्राप्त गर्ने ठेगानाहरू...</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">यी भुक्तानी गर्नका लागि तपाइका बिट्कोइन ठेगानाहरू हुन्। सिक्काहरू पठाउनुअघि रकम र प्राप्त गर्ने ठेगाना जाँच गर्नुहोस।</translation>
     </message>
@@ -441,14 +433,6 @@
         <source>Confirmed</source>
         <translation type="unfinished">पुष्टि भयो</translation>
     </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">हो</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">होइन</translation>
-    </message>
     </context>
 <context>
     <name>CreateWalletDialog</name>
@@ -469,7 +453,7 @@
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation type="unfinished">&amp;ठेगाना </translation>
+        <translation type="unfinished">&amp;ठेगाना</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -539,7 +523,7 @@
     </message>
     <message>
         <source>Unknown…</source>
-        <translation type="unfinished">थाहा नभाको</translation>
+        <translation type="unfinished">थाहा नभाको...</translation>
     </message>
     <message>
         <source>calculating…</source>
@@ -656,7 +640,7 @@
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished">बन्द गर्नुहोस् </translation>
+        <translation type="unfinished">बन्द गर्नुहोस्</translation>
     </message>
     </context>
 <context>

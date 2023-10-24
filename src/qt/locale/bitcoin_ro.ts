@@ -54,14 +54,6 @@
         <translation type="unfinished">A&amp;lege</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Adresa de trimitere</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Adresa de primire</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Acestea sunt adresele tale Bitcoin pentru efectuarea platilor. Intotdeauna verifica atent suma de plata si adresa beneficiarului inainte de a trimite monede.</translation>
     </message>
@@ -809,10 +801,6 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Comision:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Praf:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">După taxă:</translation>
     </message>
@@ -877,28 +865,12 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Copiază octeţi</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Copiază praf</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Copiază rest</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 blocat)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">da</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">nu</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Această etichetă devine roşie, dacă orice beneficiar primeşte o sumă mai mică decât pragul curent pentru praf.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1028,20 +1000,8 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Faceți Portofel gol</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">Utilizați descriptori pentru gestionarea scriptPubKey</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished"> Descriptor Portofel</translation>
-    </message>
-    <message>
         <source>Create</source>
         <translation type="unfinished">Creează</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Compilat fără suport sqlite (necesar pentru portofele descriptor)</translation>
     </message>
     </context>
 <context>
@@ -1595,6 +1555,10 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message>
         <source>Save Transaction Data</source>
         <translation type="unfinished">Salvați datele tranzacției</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">adresa proprie</translation>
     </message>
     <message>
         <source>Total Amount</source>
@@ -2170,10 +2134,6 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Şterge toate câmpurile formularului.</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Praf:</translation>
-    </message>
-    <message>
         <source>Confirmation time target:</source>
         <translation type="unfinished">Timp confirmare tinta:</translation>
     </message>
@@ -2220,10 +2180,6 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">Copiază octeţi</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Copiază praf</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -2737,10 +2693,6 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <translation type="unfinished">Trimis către</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Plată către dvs.</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Minat</translation>
     </message>
@@ -2814,10 +2766,6 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message>
         <source>Sent to</source>
         <translation type="unfinished">Trimis către</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">Către dvs.</translation>
     </message>
     <message>
         <source>Mined</source>
@@ -3001,10 +2949,6 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation type="unfinished">Distribuit sub licenţa de programe MIT, vezi fişierul însoţitor %s sau %s</translation>
-    </message>
-    <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">Eroare la citirea %s! Toate cheile sînt citite corect, dar datele tranzactiei sau anumite intrări din agenda sînt incorecte sau lipsesc.</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>

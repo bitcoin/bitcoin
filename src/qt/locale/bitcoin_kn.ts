@@ -168,10 +168,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ಬ್ಲಾಕ್ ಡೇಟಾಬೇಸ್ ಭವಿಷ್ಯದಿಂದ ಬಂದಿರುವ ಬ್ಲಾಕ್ ಹೊಂದಿದೆ ಎಂದು ತೋರುತ್ತದೆ. ಇದು ನಿಮ್ಮ ಕಂಪ್ಯೂಟರ್ನ ದಿನಾಂಕ ಮತ್ತು ಸಮಯವು ತಪ್ಪಾಗಿರಬಹುದು. ನಿಮ್ಮ ಕಂಪ್ಯೂಟರ್ನ ದಿನಾಂಕ ಮತ್ತು ಸಮಯ ಸರಿಯಾಗಿದ್ದರೆ, ಬ್ಲಾಕ್ ಡೇಟಾಬೇಸ್ ಮಾತ್ರವೇ ಪುನಃ ನಿರ್ಮಿಸಬೇಕು.</translation>
     </message>
     <message>
-        <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
-        <translation type="unfinished">ಬ್ಲಾಕ್ ಸೂಚಿ ಡೇಟಾಬೇಸ್ ಲೆಕ್ಕವಿದೆ, ಯಾವುದೋ ಭವಿಷ್ಯದಲ್ಲಿನ ಬ್ಲಾಕ್ ಸೇರಿದಂತೆ ತೋರುತ್ತದೆ. ನಿಮ್ಮ ಕಂಪ್ಯೂಟರ್ ದಿನಾಂಕ ಮತ್ತು ಸಮಯವು ಸರಿಯಾಗಿ ಹೊಂದಿಕೊಂಡಿರಬಹುದು ಎಂದು ಈ ತಪ್ಪು ಉಂಟಾಗಬಹುದು. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಕಂಪ್ಯೂಟರ್ ದಿನಾಂಕ ಮತ್ತು ಸಮಯ ಸರಿಯಾಗಿದ್ದರೆ ಬ್ಲಾಕ್ ಡೇಟಾಬೇಸ್ನ್ನು ಮರುಪ್ರಾರಂಭಿಸಿರಿ. ಮತ್ತಾಗಲಾಗಿ ನೆರವೇರಿಸಲು, ಕಡಿಮೆ ಆವರಣ ದಿಸೆಯಲ್ಲಿರುವ 'txindex' ತೊಡಿಸನ್ನು ನಿಲ್ಲಿಸಿ. ಈ ತಪ್ಪು ಸಂದೇಶವು ಮುಂದೆ ಪ್ರದರ್ಶಿಸಲ್ಪಡದು.</translation>
-    </message>
-    <message>
         <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
         <translation type="unfinished">ಈ ದೋಷ ಕ್ರಿಯೆಗೆ ಕೊನೆಯಾಗಿದ್ದ ಬರ್ಕ್ಲಿ ಡಿಬಿಯುಂಟುವಿನ ಹೊಸ ಸಂಸ್ಕರಣವನ್ನು ಬಳಸಿದ್ದ ಬದಲಾವಣೆಯ ಸಂಗಡ ಈ ವಾಲೆಟ್ ಕ್ರಿಯೆಯನ್ನು ಶುಚಿಗೊಳಿಸಲು ಕೊನೆಗೆ ಆಯ್ಕೆಮಾಡಿದೆಯೇ ಎಂದಾದರೆ, ದಯವಿಟ್ಟು ಈ ವಾಲೆಟ್ ಸೋಫ್ಟ್‌ವೇರ್ ಬಳಸಿದ ಅಂತಿಮ ಬರ್ಷನ್ ಅನ್ನು ಬಳಸಿ.</translation>
     </message>
@@ -186,20 +182,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future.</source>
         <translation type="unfinished">ವಾಲೆಟ್ ಯಶಸ್ವಿಯಾಗಿ ರಚಿಸಲಾಗಿದೆ. ಲೆಗೆಸಿ ವಾಲೆಟ್ ಪ್ರಕಾರ ಅಳಿಸಲ್ಪಡುತ್ತಿದೆ ಮತ್ತು ಭವಿಷ್ಯದಲ್ಲಿ ಲೆಗೆಸಿ ವಾಲೆಟ್ಗಳನ್ನು ರಚಿಸಲೂ, ತೆರೆಯಲೂ ಬೆಂಬಲ ನೀಡಲಾಗುವುದಿಲ್ಲ.</translation>
-    </message>
-    <message>
-        <source>-reindex-chainstate option is not compatible with -blockfilterindex. Please temporarily disable blockfilterindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
-        <translation type="unfinished">-reindex-chainstate ಆಯ್ಕೆ ಆಯ್ಕೆಗೆ -blockfilterindex ಅಸಾಧ್ಯವಾಗಿದೆ. -reindex-chainstate ಬಳಸುವಾಗ ತಾತ್ಕಾಲಿಕವಾಗಿ blockfilterindex ಅನ್ನು ನಿಲ್ಲಿಸಿ ಅಥವಾ ಪೂರ್ಣವಾಗಿ ಎಲ್ಲಾ ಸೂಚಕಗಳನ್ನು ಮರುಸ್ಥಾಪಿಸಲು -reindex ಬಳಸಿ.</translation>
-    </message>
-    <message>
-        <source>-reindex-chainstate option is not compatible with -coinstatsindex. Please temporarily disable coinstatsindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
-        <translation type="unfinished">ಬೆಳೆದಿನಿಂದಲೂ -coinstatsindex ಸಂಕೇತದೊಂದಿಗೆ -reindex-chainstate ಆಯ್ಕೆ ಹೊಂದಿದರೆ ಹೊಂದಿಕೆಗಳು ಸಂಪರ್ಕಾತ್ಮಕವಲ್ಲ. ದಯವಿಟ್ಟು -reindex-chainstate ಬಳಿಕ ಅದನ್ನು ಬಿಡುಗಡೆಗೊಳಿಸಲು coinstatsindex ಅನ್ನು ತಾತ್ಕಾಲಿಕವಾಗಿ ಅಡಿಮುಟ್ಟಿರಿ ಅಥವಾ -reindex ಬದಲಾಯಿಸಿ ಎಲ್ಲಾ ಸೂಚಕಗಳನ್ನು ಪೂರ್ಣವಾಗಿ ಪುನರ್ ನಿರ್ಮಿಸಿ.</translation>
-    </message>
-    <message>
-        <source>-reindex-chainstate option is not compatible with -txindex. Please temporarily disable txindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
-        <translation type="unfinished">ಚೆನ್ನಾಗಿಲ್ಲ. -txindex ಅನ್ನು ಬಿಡಿ ಅಥವಾ -reindex-chainstate ಅನ್ನು -reindex ಗೆ ಬದಲಾಯಿಸಿ ಎಂದು ಸೂಚಿಸಲಾಗಿದೆ. ನೀವು -reindex-chainstate ಬಳಸುವ ಸಮಯದಲ್ಲಿ -txindex ಅನ್ನು ತಾತ್ಕಾಲಿಕವಾಗಿ ನಿಲ್ಲಿಸಿ.
- 
- </translation>
     </message>
     <message>
         <source>Error: Duplicate descriptors created during migration. Your wallet may be corrupted.</source>
