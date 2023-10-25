@@ -5,13 +5,15 @@
 #ifndef BITCOIN_ADDRESSTYPE_H
 #define BITCOIN_ADDRESSTYPE_H
 
+#include <attributes.h>
 #include <pubkey.h>
 #include <script/script.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
-#include <variant>
 #include <algorithm>
+#include <variant>
+#include <vector>
 
 class CNoDestination {
 private:
