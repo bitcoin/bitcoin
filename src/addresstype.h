@@ -13,15 +13,16 @@
 #include <variant>
 #include <algorithm>
 
-class CNoDestination {
+class CNoDestination
+{
 private:
     CScript m_script;
 
 public:
     CNoDestination() = default;
-    CNoDestination(const CScript& script) : m_script(script) {}
+    explicit CNoDestination(const CScript& script) : m_script(script) {}
 
-    const CScript& GetScript() const { return m_script; }
+    const CScript& GetScript() const LIFETIMEBOUND { return m_script; }
 
     friend bool operator==(const CNoDestination& a, const CNoDestination& b) { return a.GetScript() == b.GetScript(); }
     friend bool operator<(const CNoDestination& a, const CNoDestination& b) { return a.GetScript() < b.GetScript(); }
@@ -32,7 +33,7 @@ private:
     CPubKey m_pubkey;
 
 public:
-    PubKeyDestination(const CPubKey& pubkey) : m_pubkey(pubkey) {}
+    explicit PubKeyDestination(const CPubKey& pubkey) : m_pubkey(pubkey) {}
 
     const CPubKey& GetPubKey() const LIFETIMEBOUND { return m_pubkey; }
 
