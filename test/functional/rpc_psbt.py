@@ -6,6 +6,7 @@
 """
 from decimal import Decimal
 from itertools import product
+from random import randbytes
 
 from test_framework.descriptors import descsum_create
 from test_framework.key import H_POINT
@@ -40,7 +41,6 @@ from test_framework.util import (
     assert_raises_rpc_error,
     find_output,
     find_vout_for_address,
-    random_bytes,
 )
 from test_framework.wallet_util import (
     generate_keypair,
@@ -893,10 +893,10 @@ class PSBTTest(BitcoinTestFramework):
 
         self.log.info("Test decoding PSBT with per-input preimage types")
         # note that the decodepsbt RPC doesn't check whether preimages and hashes match
-        hash_ripemd160, preimage_ripemd160 = random_bytes(20), random_bytes(50)
-        hash_sha256, preimage_sha256 = random_bytes(32), random_bytes(50)
-        hash_hash160, preimage_hash160 = random_bytes(20), random_bytes(50)
-        hash_hash256, preimage_hash256 = random_bytes(32), random_bytes(50)
+        hash_ripemd160, preimage_ripemd160 = randbytes(20), randbytes(50)
+        hash_sha256, preimage_sha256 = randbytes(32), randbytes(50)
+        hash_hash160, preimage_hash160 = randbytes(20), randbytes(50)
+        hash_hash256, preimage_hash256 = randbytes(32), randbytes(50)
 
         tx = CTransaction()
         tx.vin = [CTxIn(outpoint=COutPoint(hash=int('aa' * 32, 16), n=0), scriptSig=b""),

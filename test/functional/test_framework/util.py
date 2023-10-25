@@ -13,7 +13,6 @@ import json
 import logging
 import os
 import pathlib
-import random
 import re
 import sys
 import time
@@ -285,12 +284,6 @@ def sha256sum_file(filename):
             h.update(d)
             d = f.read(4096)
     return h.digest()
-
-
-# TODO: Remove and use random.randbytes(n) directly
-def random_bytes(n):
-    """Return a random bytes object of length n."""
-    return random.randbytes(n)
 
 
 # RPC/P2P connection constants and functions
