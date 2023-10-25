@@ -33,6 +33,8 @@ Interesting starting states could be loading a snapshot when the current chain t
 - TODO: Not an ancestor or a descendant of the snapshot block and has more work
 
 """
+from shutil import rmtree
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -107,6 +109,22 @@ class AssumeutxoTest(BitcoinTestFramework):
                 f.write(valid_snapshot_contents[(32 + 8 + offset + len(content)):])
             expected_error(log_msg=f"[snapshot] bad snapshot content hash: expected 61d9c2b29a2571a5fe285fe2d8554f91f93309666fc9b8223ee96338de25ff53, got {wrong_hash}")
 
+    def test_invalid_chainstate_scenarios(self):
+        self.log.info("Test different scenarios of invalid snapshot chainstate in datadir")
+
+        self.log.info("  - snapshot chainstate refering to a block that is not in the assumeutxo parameters")
+        self.stop_node(0)
+        chainstate_snapshot_path = self.nodes[0].chain_path / "chainstate_snapshot"
+        chainstate_snapshot_path.mkdir()
+        with open(chainstate_snapshot_path / "base_blockhash", 'wb') as f:
+            f.write(b'z' * 32)
+        expected_error = f"Error: A fatal internal error occurred, see debug.log for details"
+        self.nodes[0].assert_start_raises_init_error(expected_msg=expected_error)
+
+        # resurrect node again
+        rmtree(chainstate_snapshot_path)
+        self.start_node(0)
+
     def run_test(self):
         """
         Bring up two (disconnected) nodes, mine some new blocks on the first,
@@ -166,6 +184,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(n0.getblockchaininfo()["blocks"], FINAL_HEIGHT)
 
         self.test_invalid_snapshot_scenarios(dump_output['path'])
+        self.test_invalid_chainstate_scenarios()
 
         self.log.info(f"Loading snapshot into second node from {dump_output['path']}")
         loaded = n1.loadtxoutset(dump_output['path'])
