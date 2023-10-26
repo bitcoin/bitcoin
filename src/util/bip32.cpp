@@ -10,11 +10,13 @@
 #include <cstdio>
 #include <sstream>
 
-bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath)
+bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath, bool check_hardened_marker)
 {
     std::stringstream ss(keypath_str);
     std::string item;
     bool first = true;
+    bool saw_h = false;
+    bool saw_apostrophe = false;
     while (std::getline(ss, item, '/')) {
         if (item.compare("m") == 0) {
             if (first) {
@@ -25,9 +27,17 @@ bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypa
         }
         // Finds whether it is hardened
         uint32_t path = 0;
-        size_t pos = item.find('\'');
+        const size_t pos_h = item.find('h');
+        const size_t pos_apostrophe = item.find('\'');
+        saw_h |= pos_h != std::string::npos;
+        saw_apostrophe |= pos_apostrophe != std::string::npos;
+        if (check_hardened_marker && saw_h && saw_apostrophe) {
+            // Can't combine h and ' markers
+            return false;
+        }
+        const size_t pos = saw_h ? pos_h : pos_apostrophe;
         if (pos != std::string::npos) {
-            // The hardened tick can only be in the last index of the string
+            // The hardened marker can only be in the last index of the string
             if (pos != item.size() - 1) {
                 return false;
             }

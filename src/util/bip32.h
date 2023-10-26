@@ -9,8 +9,13 @@
 #include <string>
 #include <vector>
 
-/** Parse an HD keypaths like "m/7/0'/2000". */
-[[nodiscard]] bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath);
+/** Parse an HD keypath
+    *
+    * @param[in] keypath_str the path, e.g. "m/7'/0/2000" or "m/0h/0h"
+    * @param[out] keypath the parsed path values
+    * @param[in] check_hardened_marker Check that hardened deriviation markers h and ' are not mixed.
+    */
+[[nodiscard]] bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath, bool check_hardened_marker = false);
 
 /** Write HD keypaths as strings */
 std::string WriteHDKeypath(const std::vector<uint32_t>& keypath, bool apostrophe = false);
