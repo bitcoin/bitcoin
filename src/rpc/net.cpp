@@ -734,7 +734,7 @@ static RPCHelpMan setban()
         }
     }
     else
-        LookupSubNet(request.params[0].get_str(), subNet);
+        subNet = LookupSubNet(request.params[0].get_str());
 
     if (! (isSubnet ? subNet.IsValid() : netAddr.IsValid()) )
         throw JSONRPCError(RPC_CLIENT_INVALID_IP_OR_SUBNET, "Error: Invalid IP/Subnet");

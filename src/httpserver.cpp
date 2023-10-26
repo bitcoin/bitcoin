@@ -224,8 +224,7 @@ static bool InitHTTPAllowList()
     rpc_allow_subnets.emplace_back(LookupHost("127.0.0.1", false).value(), 8);  // always allow IPv4 local subnet
     rpc_allow_subnets.emplace_back(LookupHost("::1", false).value());  // always allow IPv6 localhost
     for (const std::string& strAllow : gArgs.GetArgs("-rpcallowip")) {
-        CSubNet subnet;
-        LookupSubNet(strAllow, subnet);
+        const CSubNet subnet{LookupSubNet(strAllow)};
         if (!subnet.IsValid()) {
             uiInterface.ThreadSafeMessageBox(
                 strprintf(Untranslated("Invalid -rpcallowip subnet specification: %s. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24)."), strAllow),

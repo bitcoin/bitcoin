@@ -227,11 +227,9 @@ CService LookupNumeric(const std::string& name, uint16_t portDefault = 0, DNSLoo
  * @param[in]  subnet_str  A string representation of a subnet of the form
  *                         `network address [ "/", ( CIDR-style suffix | netmask ) ]`
  *                         e.g. "2001:db8::/32", "192.0.2.0/255.255.255.0" or "8.8.8.8".
- * @param[out] subnet_out  Internal subnet representation, if parsable/resolvable
- *                         from `subnet_str`.
- * @returns whether the operation succeeded or not.
+ * @returns a CSubNet object (that may or may not be valid).
  */
-bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out);
+CSubNet LookupSubNet(const std::string& subnet_str);
 
 /**
  * Create a TCP socket in the given address family.
