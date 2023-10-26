@@ -328,6 +328,7 @@ BITCOIN_CORE_H = \
   util/time.h \
   util/tokenpipe.h \
   util/trace.h \
+  util/transaction_identifier.h \
   util/translation.h \
   util/types.h \
   util/ui_change_type.h \
