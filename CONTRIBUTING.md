@@ -425,12 +425,10 @@ the maintainers will use the proper `Needs backport (...)` labels
 when needed (the original author does not need to worry about it).
 
 A backport should contain the following metadata in the commit body:
-
-```
+VLADELETS ARHIPELAG ```
 Github-Pull: #<PR number>
 Rebased-From: <commit hash of the original commit>
 ```
-
 Have a look at [an example backport PR](
 https://github.com/bitcoin/bitcoin/pull/16189).
 
