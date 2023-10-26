@@ -167,7 +167,28 @@ if [ "$RUN_UNIT_TESTS" = "true" ]; then
 fi
 
 if [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
-  DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" "${BASE_OUTDIR}"/bin/test_bitcoin --catch_system_errors=no -l test_suite
+  # The output of test_bitcoin with DEBUG_LOG_OUT is about 80MB. Thus redirect
+  # it to a file and only if errors occur, then extract the relevant snippets
+  # from it - between "Entering test case" and "Leaving test case".
+  LOG="${BASE_BUILD_DIR}/test_bitcoin.log"
+  if ! DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" \
+       LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
+       "${BASE_OUTDIR}/bin/test_bitcoin" --catch_system_errors=no --color_output=false --log_level=test_suite -- DEBUG_LOG_OUT > "${LOG}" 2>&1 ; then
+
+    FAILED_TESTS=$(sed -E -n 's|.*error: in "(.+)/(.+)":.*|\1 \2|p' < "${LOG}" |sort -u)
+    printf "Error: the following tests failed from test_bitcoin:\n%s\n" "${FAILED_TESTS}"
+    # Find all lines that match 'error: in "test_suite/test_case"' and extract test_suite and test_case from them.
+    while read test_suite test_case ; do
+      # Seek to the line matching "Entering test suite" and below that print the lines between
+      # "Entering test case" and "Leaving test case".
+      ed -s "${LOG}" <<EDCOMMANDS
+        /Entering test suite "${test_suite}"/
+        /Entering test case "${test_case}"/,/Leaving test case "${test_case}"/p
+        q
+EDCOMMANDS
+    done <<<"${FAILED_TESTS}"
+    exit 1
+  fi
 fi
 
 if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
