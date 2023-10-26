@@ -1203,8 +1203,8 @@ int CGovernanceManager::RequestGovernanceObjectVotes(Span<CNode*> vNodesCopy, CC
 
         if (mapObjects.empty()) return -2;
 
-        for (const auto& objPair : mapObjects) {
-            uint256 nHash = objPair.first;
+        for (const auto& [nHash, govobj] : mapObjects) {
+            if (govobj.IsSetCachedDelete()) continue;
             if (mapAskedRecently.count(nHash)) {
                 auto it = mapAskedRecently[nHash].begin();
                 while (it != mapAskedRecently[nHash].end()) {
@@ -1217,7 +1217,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(Span<CNode*> vNodesCopy, CC
                 if (mapAskedRecently[nHash].size() >= nPeersPerHashMax) continue;
             }
 
-            if (objPair.second.GetObjectType() == GovernanceObject::TRIGGER) {
+            if (govobj.GetObjectType() == GovernanceObject::TRIGGER) {
                 vTriggerObjHashes.push_back(nHash);
             } else {
                 vOtherObjHashes.push_back(nHash);

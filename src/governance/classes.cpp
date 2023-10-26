@@ -127,7 +127,7 @@ bool CGovernanceTriggerManager::AddNewTrigger(uint256 nHash)
 
     mapTrigger.insert(std::make_pair(nHash, pSuperblock));
 
-    return true;
+    return !pSuperblock->IsExpired(*governance);
 }
 
 /**
@@ -722,6 +722,14 @@ bool CSuperblock::IsExpired(const CGovernanceManager& governanceManager) const
     if (governanceManager.GetCachedBlockHeight() > nExpirationBlock) {
         LogPrint(BCLog::GOBJECT, "CSuperblock::IsExpired -- Outdated trigger found\n");
         return true;
+    }
+
+    if (Params().NetworkIDString() != CBaseChainParams::MAIN) {
+        // NOTE: this can happen on testnet/devnets due to reorgs, should never happen on mainnet
+        if (governanceManager.GetCachedBlockHeight() + Params().GetConsensus().nSuperblockCycle * 2 < nBlockHeight) {
+            LogPrint(BCLog::GOBJECT, "CSuperblock::IsExpired -- Trigger is too far into the future\n");
+            return true;
+        }
     }
 
     return false;
