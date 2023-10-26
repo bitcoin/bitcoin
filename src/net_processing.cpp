@@ -3014,8 +3014,9 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
                 orphan_wtxid.ToString(),
                 m_mempool.size(), m_mempool.DynamicMemoryUsage() / 1000);
             RelayTransaction(orphanHash, porphanTx->GetWitnessHash());
+            FastRandomContext rng;
             m_orphanage.AddChildrenToWorkSet(*porphanTx);
-            m_orphanage.EraseTx(orphanHash);
+            m_orphanage.EraseTx(orphan_wtxid);
             for (const CTransactionRef& removedTx : result.m_replaced_transactions.value()) {
                 AddToCompactExtraTransactions(removedTx);
             }
@@ -3067,7 +3068,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
                     m_recent_rejects.insert(porphanTx->GetHash());
                 }
             }
-            m_orphanage.EraseTx(orphanHash);
+            m_orphanage.EraseTx(orphan_wtxid);
             return true;
         }
     }
@@ -4251,6 +4252,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             m_txrequest.ForgetTxHash(tx.GetHash());
             m_txrequest.ForgetTxHash(tx.GetWitnessHash());
             RelayTransaction(tx.GetHash(), tx.GetWitnessHash());
+            FastRandomContext rng;
             m_orphanage.AddChildrenToWorkSet(tx);
 
             pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
@@ -4299,7 +4301,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     if (!AlreadyHaveTx(gtxid)) AddTxAnnouncement(pfrom, gtxid, current_time);
                 }
 
-                if (m_orphanage.AddTx(ptx, pfrom.GetId())) {
+                if (m_orphanage.AddTx(ptx, pfrom.GetId(), unique_parents)) {
                     AddToCompactExtraTransactions(ptx);
                 }
 
