@@ -5,23 +5,26 @@
 #ifndef BITCOIN_ADDRESSTYPE_H
 #define BITCOIN_ADDRESSTYPE_H
 
+#include <attributes.h>
 #include <pubkey.h>
 #include <script/script.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
-#include <variant>
 #include <algorithm>
+#include <variant>
+#include <vector>
 
-class CNoDestination {
+class CNoDestination
+{
 private:
     CScript m_script;
 
 public:
     CNoDestination() = default;
-    CNoDestination(const CScript& script) : m_script(script) {}
+    explicit CNoDestination(const CScript& script) : m_script(script) {}
 
-    const CScript& GetScript() const { return m_script; }
+    const CScript& GetScript() const LIFETIMEBOUND { return m_script; }
 
     friend bool operator==(const CNoDestination& a, const CNoDestination& b) { return a.GetScript() == b.GetScript(); }
     friend bool operator<(const CNoDestination& a, const CNoDestination& b) { return a.GetScript() < b.GetScript(); }
@@ -32,7 +35,7 @@ private:
     CPubKey m_pubkey;
 
 public:
-    PubKeyDestination(const CPubKey& pubkey) : m_pubkey(pubkey) {}
+    explicit PubKeyDestination(const CPubKey& pubkey) : m_pubkey(pubkey) {}
 
     const CPubKey& GetPubKey() const LIFETIMEBOUND { return m_pubkey; }
 
