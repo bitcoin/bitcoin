@@ -40,7 +40,7 @@ static void addCoin(CoinsResult& coins,
     tx.vout[0].nValue = nValue;
     tx.vout[0].scriptPubKey = GetScriptForDestination(dest);
 
-    const uint256& txid = tx.GetHash();
+    const auto txid{tx.GetHash().ToUint256()};
     LOCK(wallet.cs_wallet);
     auto ret = wallet.mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(txid), std::forward_as_tuple(MakeTransactionRef(std::move(tx)), TxStateInactive{}));
     assert(ret.second);
