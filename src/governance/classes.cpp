@@ -756,7 +756,7 @@ std::string CSuperblock::GetHexStrData() const
         return EncodeDestination(dest);
     });
     std::string str_amounts = Join(vecPayments, "|", [&](const auto& payment) {
-        return FormatMoney(payment.nAmount);
+        return ValueFromAmount(payment.nAmount).write();
     });
     std::string str_hashes = Join(vecPayments, "|", [&](const auto& payment) { return payment.proposalHash.ToString(); });
 

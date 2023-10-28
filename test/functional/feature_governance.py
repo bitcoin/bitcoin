@@ -136,6 +136,13 @@ class DashGovernanceTest (DashTestFramework):
         trigger_data = list(valid_triggers.values())[0]
         assert_equal(trigger_data['YesCount'], 1)
 
+        # Make sure amounts aren't trimmed
+        payment_amounts_expected = [str(satoshi_round(str(p0_amount))), str(satoshi_round(str(p1_amount))), str(satoshi_round(str(p2_amount)))]
+        data_string = list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]["DataString"]
+        payment_amounts_trigger = json.loads(data_string)["payment_amounts"].split("|")
+        for amount_str in payment_amounts_trigger:
+            assert(amount_str in payment_amounts_expected)
+
         # Move 1 block inside the Superblock maturity window
         self.nodes[0].generate(1)
         self.sync_blocks()
