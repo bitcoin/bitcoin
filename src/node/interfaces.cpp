@@ -79,9 +79,14 @@ namespace {
 class EVOImpl : public EVO
 {
 public:
-    CDeterministicMNList getListAtChainTip() override
+    std::pair<CDeterministicMNList, const CBlockIndex*> getListAtChainTip() override
     {
-        return deterministicMNManager == nullptr ? CDeterministicMNList() : deterministicMNManager->GetListAtChainTip();
+        const CBlockIndex *tip = WITH_LOCK(::cs_main, return ::ChainActive().Tip());
+        CDeterministicMNList mnList{};
+        if  (tip != nullptr && deterministicMNManager != nullptr) {
+            mnList = deterministicMNManager->GetListForBlock(tip);
+        }
+        return {std::move(mnList), tip};
     }
 };
 
@@ -499,8 +504,8 @@ public:
     std::unique_ptr<Handler> handleNotifyMasternodeListChanged(NotifyMasternodeListChangedFn fn) override
     {
         return MakeHandler(
-            ::uiInterface.NotifyMasternodeListChanged_connect([fn](const CDeterministicMNList& newList) {
-                fn(newList);
+            ::uiInterface.NotifyMasternodeListChanged_connect([fn](const CDeterministicMNList& newList, const CBlockIndex* pindex) {
+                fn(newList, pindex);
             }));
     }
     std::unique_ptr<Handler> handleNotifyAdditionalDataSyncProgressChanged(NotifyAdditionalDataSyncProgressChangedFn fn) override

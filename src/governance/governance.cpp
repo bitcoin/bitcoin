@@ -676,8 +676,10 @@ void CGovernanceManager::CreateGovernanceTrigger(const CSuperblock& sb, CConnman
     if (identical_sb == nullptr) {
         // Nobody submitted a trigger we'd like to see,
         // so let's do it but only if we are the payee
-        auto mnList = deterministicMNManager->GetListAtChainTip();
-        auto mn_payees = mnList.GetProjectedMNPayeesAtChainTip();
+
+        const CBlockIndex *tip = WITH_LOCK(::cs_main, return ::ChainActive().Tip());
+        auto mnList = deterministicMNManager->GetListForBlock(tip);
+        auto mn_payees = mnList.GetProjectedMNPayees(tip);
         if (mn_payees.empty()) return;
         {
             LOCK(activeMasternodeInfoCs);

@@ -214,38 +214,35 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(const CBlockIndex* pIndex)
     return best;
 }
 
-std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayeesAtChainTip(int nCount) const
-{
-    return GetProjectedMNPayees(::ChainActive()[nHeight], nCount);
-}
-
 std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(const CBlockIndex* const pindex, int nCount) const
 {
     if (nCount < 0 ) {
         return {};
     }
-    nCount = std::min(nCount, int(GetValidWeightedMNsCount()));
+    const auto weighted_count = GetValidWeightedMNsCount();
+    nCount = std::min(nCount, int(weighted_count));
 
     std::vector<CDeterministicMNCPtr> result;
-    result.reserve(nCount);
+    result.reserve(weighted_count);
 
-    auto remaining_evo_payments = 0;
-    CDeterministicMNCPtr evo_to_be_skipped = nullptr;
-    bool isMNRewardReallocation = llmq::utils::IsMNRewardReallocationActive(pindex);
-    ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
-        if (dmn->pdmnState->nLastPaidHeight == nHeight) {
-            // We found the last MN Payee.
-            // If the last payee is an EvoNode, we need to check its consecutive payments and pay him again if needed
-            if (!isMNRewardReallocation && dmn->nType == MnType::Evo && dmn->pdmnState->nConsecutivePayments < dmn_types::Evo.voting_weight) {
-                remaining_evo_payments = dmn_types::Evo.voting_weight - dmn->pdmnState->nConsecutivePayments;
-                for ([[maybe_unused]] auto _ : irange::range(remaining_evo_payments)) {
-                    result.emplace_back(dmn);
-                    evo_to_be_skipped = dmn;
+    int remaining_evo_payments{0};
+    CDeterministicMNCPtr evo_to_be_skipped{nullptr};
+    const bool isMNRewardReallocation = llmq::utils::IsMNRewardReallocationActive(pindex);
+    if (!isMNRewardReallocation) {
+        ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
+            if (dmn->pdmnState->nLastPaidHeight == nHeight) {
+                // We found the last MN Payee.
+                // If the last payee is an EvoNode, we need to check its consecutive payments and pay him again if needed
+                if (dmn->nType == MnType::Evo && dmn->pdmnState->nConsecutivePayments < dmn_types::Evo.voting_weight) {
+                    remaining_evo_payments = dmn_types::Evo.voting_weight - dmn->pdmnState->nConsecutivePayments;
+                    for ([[maybe_unused]] auto _ : irange::range(remaining_evo_payments)) {
+                        result.emplace_back(dmn);
+                        evo_to_be_skipped = dmn;
+                    }
                 }
             }
-        }
-        return;
-    });
+        });
+    }
 
     ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
         if (dmn == evo_to_be_skipped) return;
@@ -647,7 +644,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     // Don't hold cs while calling signals
     if (diff.HasChanges()) {
         GetMainSignals().NotifyMasternodeListChanged(false, oldList, diff, connman);
-        uiInterface.NotifyMasternodeListChanged(newList);
+        uiInterface.NotifyMasternodeListChanged(newList, pindex);
     }
 
     if (nHeight == consensusParams.DIP0003EnforcementHeight) {
@@ -688,7 +685,7 @@ bool CDeterministicMNManager::UndoBlock(const CBlockIndex* pindex)
     if (diff.HasChanges()) {
         auto inversedDiff = curList.BuildDiff(prevList);
         GetMainSignals().NotifyMasternodeListChanged(true, curList, inversedDiff, connman);
-        uiInterface.NotifyMasternodeListChanged(prevList);
+        uiInterface.NotifyMasternodeListChanged(prevList, pindex->pprev);
     }
 
     const auto& consensusParams = Params().GetConsensus();

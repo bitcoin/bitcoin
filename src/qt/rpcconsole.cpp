@@ -967,7 +967,7 @@ void RPCConsole::updateMasternodeCount()
     if (!clientModel) {
         return;
     }
-    auto mnList = clientModel->getMasternodeList();
+    auto mnList = clientModel->getMasternodeList().first;
     size_t total_mn_count = mnList.GetAllMNsCount();
     size_t total_enabled_mn_count = mnList.GetValidMNsCount();
     size_t total_evo_count = mnList.GetAllEvoCount();
@@ -1247,7 +1247,7 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
     ui->peerHeight->setText(QString::number(stats->nodeStats.nStartingHeight));
     ui->peerWhitelisted->setText(stats->nodeStats.m_legacyWhitelisted ? tr("Yes") : tr("No"));
     ui->peerMappedAS->setText(stats->nodeStats.m_mapped_as != 0 ? QString::number(stats->nodeStats.m_mapped_as) : tr("N/A"));
-    auto dmn = clientModel->getMasternodeList().GetMNByService(stats->nodeStats.addr);
+    auto dmn = clientModel->getMasternodeList().first.GetMNByService(stats->nodeStats.addr);
     if (dmn == nullptr) {
         ui->peerNodeType->setText(tr("Regular"));
         ui->peerPoSeScore->setText(tr("N/A"));

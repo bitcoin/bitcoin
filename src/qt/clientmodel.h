@@ -67,8 +67,8 @@ public:
     int getHeaderTipHeight() const;
     int64_t getHeaderTipTime() const;
 
-    void setMasternodeList(const CDeterministicMNList& mnList);
-    CDeterministicMNList getMasternodeList() const;
+    void setMasternodeList(const CDeterministicMNList& mnList, const CBlockIndex* tip);
+    std::pair<CDeterministicMNList, const CBlockIndex*> getMasternodeList() const;
     void refreshMasternodeList();
 
     void getAllGovernanceObjects(std::vector<CGovernanceObject> &obj);
@@ -119,6 +119,7 @@ private:
     // representation of the list in UI during initial sync/reindex, so we cache it here too.
     mutable RecursiveMutex cs_mnlinst; // protects mnListCached
     CDeterministicMNListPtr mnListCached;
+    const CBlockIndex* mnListTip;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();

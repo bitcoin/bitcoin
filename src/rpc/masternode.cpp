@@ -135,8 +135,9 @@ static UniValue masternode_count(const JSONRPCRequest& request)
 
 static UniValue GetNextMasternodeForPayment(int heightShift)
 {
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-    auto payees = mnList.GetProjectedMNPayeesAtChainTip(heightShift);
+    const CBlockIndex *tip = WITH_LOCK(::cs_main, return ::ChainActive().Tip());
+    auto mnList = deterministicMNManager->GetListForBlock(tip);
+    auto payees = mnList.GetProjectedMNPayees(tip, heightShift);
     if (payees.empty())
         return "unknown";
     auto payee = payees.back();

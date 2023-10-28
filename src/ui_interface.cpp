@@ -58,7 +58,7 @@ void CClientUIInterface::ShowProgress(const std::string& title, int nProgress, b
 void CClientUIInterface::NotifyBlockTip(bool b, const CBlockIndex* i) { return g_ui_signals.NotifyBlockTip(b, i); }
 void CClientUIInterface::NotifyChainLock(const std::string& bestChainLockHash, int bestChainLockHeight) { return g_ui_signals.NotifyChainLock(bestChainLockHash, bestChainLockHeight); }
 void CClientUIInterface::NotifyHeaderTip(bool b, const CBlockIndex* i) { return g_ui_signals.NotifyHeaderTip(b, i); }
-void CClientUIInterface::NotifyMasternodeListChanged(const CDeterministicMNList& list) { return g_ui_signals.NotifyMasternodeListChanged(list); }
+void CClientUIInterface::NotifyMasternodeListChanged(const CDeterministicMNList& list, const CBlockIndex* i) { return g_ui_signals.NotifyMasternodeListChanged(list, i); }
 void CClientUIInterface::NotifyAdditionalDataSyncProgressChanged(double nSyncProgress) { return g_ui_signals.NotifyAdditionalDataSyncProgressChanged(nSyncProgress); }
 void CClientUIInterface::BannedListChanged() { return g_ui_signals.BannedListChanged(); }
 

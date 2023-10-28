@@ -82,26 +82,29 @@ int ClientModel::getNumConnections(unsigned int flags) const
     return m_node.getNodeCount(connections);
 }
 
-void ClientModel::setMasternodeList(const CDeterministicMNList& mnList)
+void ClientModel::setMasternodeList(const CDeterministicMNList& mnList, const CBlockIndex* tip)
 {
     LOCK(cs_mnlinst);
     if (mnListCached->GetBlockHash() == mnList.GetBlockHash()) {
         return;
     }
     mnListCached = std::make_shared<CDeterministicMNList>(mnList);
+    mnListTip = tip;
     Q_EMIT masternodeListChanged();
 }
 
-CDeterministicMNList ClientModel::getMasternodeList() const
+std::pair<CDeterministicMNList, const CBlockIndex*> ClientModel::getMasternodeList() const
 {
     LOCK(cs_mnlinst);
-    return *mnListCached;
+    return {*mnListCached, mnListTip};
 }
 
 void ClientModel::refreshMasternodeList()
 {
+    auto [mnList, tip] = m_node.evo().getListAtChainTip();
+
     LOCK(cs_mnlinst);
-    setMasternodeList(m_node.evo().getListAtChainTip());
+    setMasternodeList(mnList, tip);
 }
 
 int ClientModel::getHeaderTipHeight() const
@@ -332,9 +335,9 @@ static void NotifyChainLock(ClientModel *clientmodel, const std::string& bestCha
     assert(invoked);
 }
 
-static void NotifyMasternodeListChanged(ClientModel *clientmodel, const CDeterministicMNList& newList)
+static void NotifyMasternodeListChanged(ClientModel *clientmodel, const CDeterministicMNList& newList, const CBlockIndex* pindex)
 {
-    clientmodel->setMasternodeList(newList);
+    clientmodel->setMasternodeList(newList, pindex);
 }
 
 static void NotifyAdditionalDataSyncProgressChanged(ClientModel *clientmodel, double nSyncProgress)
@@ -355,7 +358,7 @@ void ClientModel::subscribeToCoreSignals()
     m_handler_notify_block_tip = m_node.handleNotifyBlockTip(std::bind(BlockTipChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, false));
     m_handler_notify_chainlock = m_node.handleNotifyChainLock(std::bind(NotifyChainLock, this, std::placeholders::_1, std::placeholders::_2));
     m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(std::bind(BlockTipChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, true));
-    m_handler_notify_masternodelist_changed = m_node.handleNotifyMasternodeListChanged(std::bind(NotifyMasternodeListChanged, this, std::placeholders::_1));
+    m_handler_notify_masternodelist_changed = m_node.handleNotifyMasternodeListChanged(std::bind(NotifyMasternodeListChanged, this, std::placeholders::_1, std::placeholders::_2));
     m_handler_notify_additional_data_sync_progess_changed = m_node.handleNotifyAdditionalDataSyncProgressChanged(std::bind(NotifyAdditionalDataSyncProgressChanged, this, std::placeholders::_1));
 }
 

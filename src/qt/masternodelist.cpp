@@ -166,7 +166,15 @@ void MasternodeList::updateDIP3List()
         return;
     }
 
-    auto mnList = clientModel->getMasternodeList();
+    auto [mnList, pindex] = clientModel->getMasternodeList();
+    auto projectedPayees = mnList.GetProjectedMNPayees(pindex);
+
+    if (projectedPayees.empty() && mnList.GetValidMNsCount() > 0) {
+        // GetProjectedMNPayees failed to provide results for a list with valid mns.
+        // Keep current list and let it try again later.
+        return;
+    }
+
     std::map<uint256, CTxDestination> mapCollateralDests;
 
     {
@@ -191,7 +199,6 @@ void MasternodeList::updateDIP3List()
 
     nTimeUpdatedDIP3 = GetTime();
 
-    auto projectedPayees = mnList.GetProjectedMNPayeesAtChainTip();
     std::map<uint256, int> nextPayments;
     for (size_t i = 0; i < projectedPayees.size(); i++) {
         const auto& dmn = projectedPayees[i];
@@ -222,7 +229,7 @@ void MasternodeList::updateDIP3List()
         QByteArray addr_ba(reinterpret_cast<const char*>(addr_key.data()), addr_key.size());
         QTableWidgetItem* addressItem = new CMasternodeListWidgetItem<QByteArray>(QString::fromStdString(dmn.pdmnState->addr.ToString()), addr_ba);
         QTableWidgetItem* typeItem = new QTableWidgetItem(QString::fromStdString(std::string(GetMnType(dmn.nType).description)));
-        QTableWidgetItem* statusItem = new QTableWidgetItem(mnList.IsMNValid(dmn) ? tr("ENABLED") : (mnList.IsMNPoSeBanned(dmn) ? tr("POSE_BANNED") : tr("UNKNOWN")));
+        QTableWidgetItem* statusItem = new QTableWidgetItem(dmn.pdmnState->IsBanned() ? tr("POSE_BANNED") : tr("ENABLED"));
         QTableWidgetItem* PoSeScoreItem = new CMasternodeListWidgetItem<int>(QString::number(dmn.pdmnState->nPoSePenalty), dmn.pdmnState->nPoSePenalty);
         QTableWidgetItem* registeredItem = new CMasternodeListWidgetItem<int>(QString::number(dmn.pdmnState->nRegisteredHeight), dmn.pdmnState->nRegisteredHeight);
         QTableWidgetItem* lastPaidItem = new CMasternodeListWidgetItem<int>(QString::number(dmn.pdmnState->nLastPaidHeight), dmn.pdmnState->nLastPaidHeight);
@@ -349,8 +356,7 @@ CDeterministicMNCPtr MasternodeList::GetSelectedDIP3MN()
     uint256 proTxHash;
     proTxHash.SetHex(strProTxHash);
 
-    auto mnList = clientModel->getMasternodeList();
-    return mnList.GetMN(proTxHash);
+    return clientModel->getMasternodeList().first.GetMN(proTxHash);;
 }
 
 void MasternodeList::extraInfoDIP3_clicked()

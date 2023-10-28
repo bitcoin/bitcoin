@@ -21,6 +21,7 @@
 #include <vector>
 
 class BanMan;
+class CBlockIndex;
 class CCoinControl;
 class CDeterministicMNList;
 class CFeeRate;
@@ -45,7 +46,7 @@ class EVO
 {
 public:
     virtual ~EVO() {}
-    virtual CDeterministicMNList getListAtChainTip() = 0;
+    virtual std::pair<CDeterministicMNList, const CBlockIndex*> getListAtChainTip() = 0;
 };
 
 //! Interface for the src/governance part of a dash node (dashd process).
@@ -355,7 +356,8 @@ public:
 
     //! Register handler for masternode list update messages.
     using NotifyMasternodeListChangedFn =
-        std::function<void(const CDeterministicMNList& newList)>;
+        std::function<void(const CDeterministicMNList& newList,
+                const CBlockIndex* pindex)>;
     virtual std::unique_ptr<Handler> handleNotifyMasternodeListChanged(NotifyMasternodeListChangedFn fn) = 0;
 
     //! Register handler for additional data sync progress update messages.
