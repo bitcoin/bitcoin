@@ -572,21 +572,13 @@ public:
 
     bool IsSolvable() const override
     {
-        for (const auto& arg : m_subdescriptor_args) {
-            if (!arg->IsSolvable()) return false;
-        }
-        return true;
+        return std::all_of(m_subdescriptor_args.cbegin(), m_subdescriptor_args.cend(), [](const auto& arg) { return arg->IsSolvable(); });
     }
 
     bool IsRange() const final
     {
-        for (const auto& pubkey : m_pubkey_args) {
-            if (pubkey->IsRange()) return true;
-        }
-        for (const auto& arg : m_subdescriptor_args) {
-            if (arg->IsRange()) return true;
-        }
-        return false;
+        return std::any_of(m_pubkey_args.cbegin(), m_pubkey_args.cend(), [](const auto& arg) { return arg->IsRange(); }) ||
+               std::any_of(m_subdescriptor_args.cbegin(), m_subdescriptor_args.cend(), [](const auto& arg) { return arg->IsRange(); });
     }
 
     virtual bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type, const DescriptorCache* cache = nullptr) const
