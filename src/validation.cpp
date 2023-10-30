@@ -2509,11 +2509,9 @@ CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(
     return CoinsCacheSizeState::OK;
 }
 
-std::unordered_map<uint8_t, int> CChainState::GetMNHFSignalsStage()
+std::unordered_map<uint8_t, int> CChainState::GetMNHFSignalsStage(const CBlockIndex* const pindexPrev)
 {
-    const CBlockIndex* const tip = m_chain.Tip();
-    if (tip == nullptr) return {};
-    return this->m_mnhfManager.GetSignalsStage(tip);
+    return this->m_mnhfManager.GetSignalsStage(pindexPrev);
 }
 
 bool CChainState::FlushStateToDisk(

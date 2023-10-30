@@ -20,7 +20,6 @@
 class CBlockIndex;
 class CChainParams;
 class CConnman;
-class CCreditPoolDiff;
 class CGovernanceManager;
 class CScript;
 class CSporkManager;
@@ -195,7 +194,7 @@ private:
       * Increments nPackagesSelected / nDescendantsUpdated with corresponding
       * statistics from the package selection (for logging statistics). */
     void addPackageTxs(int& nPackagesSelected, int& nDescendantsUpdated,
-                       std::optional<CCreditPoolDiff>& creditPoolDiff, std::unordered_map<uint8_t, int>& signals) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
+                       const CBlockIndex* pindexPrev) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */

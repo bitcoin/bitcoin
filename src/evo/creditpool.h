@@ -69,20 +69,12 @@ private:
     CAmount sessionUnlocked{0};
     CAmount platformReward{0};
 
-    // target value is used to validate CbTx. If values mismatched, block is invalid
-    std::optional<CAmount> targetBalance;
-
     const CBlockIndex *pindex{nullptr};
     const Consensus::Params& params;
 public:
-    explicit CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindex, const Consensus::Params& consensusParams);
-
-    /**
-     * This function should be called for each block's coinbase transaction
-     * to change amount of credit pool
-     * coinbase transaction's Payload must be valid if nVersion of coinbase transaction equals 3
-     */
-    bool ProcessCoinbaseTransaction(const CTransaction& tx, const CAmount blockSubsidy, TxValidationState& state);
+    explicit CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindex,
+                             const Consensus::Params& consensusParams,
+                             const CAmount blockSubsidy);
 
     /**
      * This function should be called for each Asset Lock/Unlock tx
@@ -92,24 +84,17 @@ public:
     bool ProcessLockUnlockTransaction(const CTransaction& tx, TxValidationState& state);
 
     /**
-     * This function should be called by miner for initialization of MasterNode reward
+     * this function returns total amount of credits for the next block
      */
-    void AddRewardRealloced(const CAmount reward);
-
     CAmount GetTotalLocked() const {
         return pool.locked + sessionLocked - sessionUnlocked + platformReward;
     }
 
-    const std::optional<CAmount>& GetTargetBalance() const {
-        return targetBalance;
-    }
-
     std::string ToString() const {
-        return strprintf("CCreditPoolDiff(target=%lld, sessionLocked=%lld, sessionUnlocked=%lld, newIndexes=%lld, pool=%s)", GetTargetBalance() ? *GetTargetBalance() : -1, sessionLocked, sessionUnlocked, newIndexes.size(), pool.ToString());
+        return strprintf("CCreditPoolDiff(sessionLocked=%lld, sessionUnlocked=%lld, platforomReward=%lld, newIndexes=%lld, pool=%s)", sessionLocked, sessionUnlocked, platformReward, newIndexes.size(), pool.ToString());
     }
 
 private:
-    bool SetTarget(const CTransaction& tx, const CAmount blockSubsidy, TxValidationState& state);
     bool Lock(const CTransaction& tx, TxValidationState& state);
     bool Unlock(const CTransaction& tx, TxValidationState& state);
 };
@@ -147,6 +132,9 @@ private:
 
     CCreditPool ConstructCreditPool(const CBlockIndex* block_index, CCreditPool prev, const Consensus::Params& consensusParams);
 };
+
+std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams,
+                                                         const CAmount blockSubsidy, BlockValidationState& state);
 
 extern std::unique_ptr<CCreditPoolManager> creditPoolManager;
 

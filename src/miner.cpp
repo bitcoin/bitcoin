@@ -169,14 +169,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
 
-    std::optional<CCreditPoolDiff> creditPoolDiff;
-    if (fV20Active_context) {
-        CCreditPool creditPool = creditPoolManager->GetCreditPool(pindexPrev, chainparams.GetConsensus());
-        LogPrintf("%s: CCreditPool is %s\n", __func__, creditPool.ToString());
-        creditPoolDiff.emplace(std::move(creditPool), pindexPrev, chainparams.GetConsensus());
-    }
-    std::unordered_map<uint8_t, int> signals = m_chainstate.GetMNHFSignalsStage();
-    addPackageTxs(nPackagesSelected, nDescendantsUpdated, creditPoolDiff, signals);
+    addPackageTxs(nPackagesSelected, nDescendantsUpdated, pindexPrev);
 
     int64_t nTime1 = GetTimeMicros();
 
@@ -192,7 +185,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
 
     // NOTE: unlike in bitcoin, we need to pass PREVIOUS block height here
-    bool fMNRewardReallocated = llmq::utils::IsMNRewardReallocationActive(pindexPrev);
     CAmount blockSubsidy = GetBlockSubsidyInner(pindexPrev->nBits, pindexPrev->nHeight, Params().GetConsensus(), fV20Active_context);
     CAmount blockReward = blockSubsidy + nFees;
 
@@ -234,14 +226,12 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                     // not an error
                     LogPrintf("CreateNewBlock() h[%d] CbTx failed to find best CL. Inserting null CL\n", nHeight);
                 }
-                assert(creditPoolDiff != std::nullopt);
-
-                if (fMNRewardReallocated) {
-                    const CAmount masternodeReward = GetMasternodePayment(nHeight, blockSubsidy, fV20Active_context);
-                    const CAmount reallocedReward = MasternodePayments::PlatformShare(masternodeReward);
-                    LogPrint(BCLog::MNPAYMENTS, "%s: add MN reward %lld (%lld) to credit pool\n", __func__, masternodeReward, reallocedReward);
-                    creditPoolDiff->AddRewardRealloced(reallocedReward);
+                BlockValidationState state;
+                const auto creditPoolDiff = GetCreditPoolDiffForBlock(*pblock, pindexPrev, chainparams.GetConsensus(), blockSubsidy, state);
+                if (creditPoolDiff == std::nullopt) {
+                    throw std::runtime_error(strprintf("%s: GetCreditPoolDiffForBlock failed: %s", __func__, state.ToString()));
                 }
+
                 cbTx.creditPoolBalance = creditPoolDiff->GetTotalLocked();
             }
         }
@@ -403,9 +393,22 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
 // Each time through the loop, we compare the best transaction in
 // mapModifiedTxs with the next transaction in the mempool to decide what
 // transaction package to work on next.
-void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, std::optional<CCreditPoolDiff>& creditPoolDiff, std::unordered_map<uint8_t, int>& signals)
+void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, const CBlockIndex* const pindexPrev)
 {
+    AssertLockHeld(cs_main); // for GetMNHFSignalsStage()
     AssertLockHeld(m_mempool.cs);
+
+    // This credit pool is used only to check withdrawal limits and to find
+    // duplicates of indexes. There's used `BlockSubsidy` equaled to 0
+    std::optional<CCreditPoolDiff> creditPoolDiff;
+    if (llmq::utils::IsV20Active(pindexPrev)) {
+        CCreditPool creditPool = creditPoolManager->GetCreditPool(pindexPrev, chainparams.GetConsensus());
+        LogPrintf("%s: CCreditPool is %s\n", __func__, creditPool.ToString());
+        creditPoolDiff.emplace(std::move(creditPool), pindexPrev, chainparams.GetConsensus(), 0);
+    }
+
+    // This map with signals is used only to find duplicates
+    std::unordered_map<uint8_t, int> signals = m_chainstate.GetMNHFSignalsStage(pindexPrev);
 
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block

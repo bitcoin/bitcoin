@@ -215,37 +215,17 @@ CCreditPoolManager::CCreditPoolManager(CEvoDB& _evoDb)
 {
 }
 
-CCreditPoolDiff::CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindex, const Consensus::Params& consensusParams) :
+CCreditPoolDiff::CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindex, const Consensus::Params& consensusParams, const CAmount blockSubsidy) :
     pool(std::move(starter)),
     pindex(pindex),
     params(consensusParams)
 {
     assert(pindex);
-}
 
-void CCreditPoolDiff::AddRewardRealloced(const CAmount reward) {
-    assert(MoneyRange(reward));
-    platformReward += reward;
-}
-
-bool CCreditPoolDiff::SetTarget(const CTransaction& tx, const CAmount blockSubsidy, TxValidationState& state)
-{
-    CCbTx cbTx;
-    if (!GetTxPayload(tx, cbTx)) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cbtx-payload");
+    if (llmq::utils::IsMNRewardReallocationActive(pindex)) {
+        // We consider V20 active if mn_rr is active
+        platformReward = MasternodePayments::PlatformShare(GetMasternodePayment(pindex->nHeight, blockSubsidy, /*fV20Active=*/ true));
     }
-
-    if (cbTx.nVersion != 3) return true;
-
-    targetBalance = cbTx.creditPoolBalance;
-
-    if (!llmq::utils::IsMNRewardReallocationActive(pindex)) return true;
-    // We consider V20 active if mn_rr is active
-
-    platformReward = MasternodePayments::PlatformShare(GetMasternodePayment(cbTx.nHeight, blockSubsidy, /* v20_active= */ true));
-    LogPrintf("CreditPool: set target to %lld with MN reward %lld\n", *targetBalance, platformReward);
-
-    return true;
 }
 
 bool CCreditPoolDiff::Lock(const CTransaction& tx, TxValidationState& state)
@@ -288,15 +268,6 @@ bool CCreditPoolDiff::Unlock(const CTransaction& tx, TxValidationState& state)
     return true;
 }
 
-bool CCreditPoolDiff::ProcessCoinbaseTransaction(const CTransaction& tx, const CAmount blockSubsidy, TxValidationState& state)
-{
-    if (tx.nVersion != 3) return true;
-
-    assert(tx.nType == TRANSACTION_COINBASE);
-
-    return SetTarget(tx, blockSubsidy, state);
-}
-
 bool CCreditPoolDiff::ProcessLockUnlockTransaction(const CTransaction& tx, TxValidationState& state)
 {
     if (tx.nVersion != 3) return true;
@@ -319,5 +290,30 @@ bool CCreditPoolDiff::ProcessLockUnlockTransaction(const CTransaction& tx, TxVal
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "failed-procassetlocksinblock");
+    }
+}
+
+std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams,
+                                                         const CAmount blockSubsidy, BlockValidationState& state)
+{
+    try {
+        const CCreditPool creditPool = creditPoolManager->GetCreditPool(pindexPrev, consensusParams);
+        LogPrintf("%s: CCreditPool is %s\n", __func__, creditPool.ToString());
+        CCreditPoolDiff creditPoolDiff(creditPool, pindexPrev, consensusParams, blockSubsidy);
+        for (size_t i = 1; i < block.vtx.size(); ++i) {
+            const auto& tx = *block.vtx[i];
+            TxValidationState tx_state;
+            if (!creditPoolDiff.ProcessLockUnlockTransaction(tx, tx_state)) {
+                assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS);
+                state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
+                                 strprintf("Process Lock/Unlock Transaction failed at Credit Pool (tx hash %s) %s", tx.GetHash().ToString(), tx_state.GetDebugMessage()));
+                return std::nullopt;
+            }
+        }
+        return creditPoolDiff;
+    } catch (const std::exception& e) {
+        LogPrintf("%s -- failed: %s\n", __func__, e.what());
+        state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-getcreditpooldiff");
+        return std::nullopt;
     }
 }
