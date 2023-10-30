@@ -32,7 +32,7 @@ enum class LLMQType : uint8_t {
     LLMQ_TEST_V17 = 102, // 3 members, 2 (66%) threshold, one per hour. Params might differ when -llmqtestparams is used
 
     // for testing only
-    LLMQ_TEST_DIP0024 = 103,     // 4 members, 2 (66%) threshold, one per hour. Params might differ when -llmqtestparams is used
+    LLMQ_TEST_DIP0024 = 103,     // 4 members, 3 (75%) threshold, one per hour.
     LLMQ_TEST_INSTANTSEND = 104, // 3 members, 2 (66%) threshold, one per hour. Params might differ when -llmqtestinstantsendparams is used
     LLMQ_TEST_PLATFORM = 106,    // 3 members, 2 (66%) threshold, one per hour.
 
@@ -202,7 +202,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .useRotation = true,
         .size = 4,
         .minSize = 4,
-        .threshold = 2,
+        .threshold = 3,
 
         .dkgInterval = 24, // DKG cycle
         .dkgPhaseBlocks = 2,

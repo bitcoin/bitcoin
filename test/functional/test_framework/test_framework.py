@@ -1047,6 +1047,7 @@ class DashTestFramework(BitcoinTestFramework):
         # LLMQ default test params (no need to pass -llmqtestparams)
         self.llmq_size = 3
         self.llmq_threshold = 2
+        self.llmq_size_dip0024 = 4
 
         # This is nRequestTimeout in dash-q-recovery thread
         self.quorum_data_thread_request_timeout_seconds = 10
@@ -1813,13 +1814,13 @@ class DashTestFramework(BitcoinTestFramework):
         spork23_active = self.nodes[0].spork('show')['SPORK_23_QUORUM_POSE'] <= 1
 
         if expected_connections is None:
-            expected_connections = (self.llmq_size - 1) if spork21_active else 2
+            expected_connections = (self.llmq_size_dip0024 - 1) if spork21_active else 2
         if expected_members is None:
-            expected_members = self.llmq_size
+            expected_members = self.llmq_size_dip0024
         if expected_contributions is None:
-            expected_contributions = self.llmq_size
+            expected_contributions = self.llmq_size_dip0024
         if expected_commitments is None:
-            expected_commitments = self.llmq_size
+            expected_commitments = self.llmq_size_dip0024
         if mninfos_online is None:
             mninfos_online = self.mninfo.copy()
         if mninfos_valid is None:
