@@ -13,6 +13,7 @@
 #include <chrono> // For std::chrono::microseconds
 #include <cstdint>
 #include <limits>
+#include <vector>
 
 /**
  * Overall design of the RNG and entropy sources.

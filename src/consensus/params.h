@@ -10,6 +10,7 @@
 #include <llmq/params.h>
 
 #include <limits>
+#include <vector>
 
 namespace Consensus {
 
