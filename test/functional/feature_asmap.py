@@ -66,12 +66,19 @@ class AsmapTest(BitcoinTestFramework):
             self.start_node(0, [f'-asmap={name}'])
         os.remove(filename)
 
-    def test_unspecified_asmap(self):
-        msg = "Error: -asmap requires a file path. Use -asmap=<file>."
-        for arg in ['-asmap', '-asmap=']:
-            self.log.info(f'Test bitcoind {arg} (and no filename specified)')
-            self.stop_node(0)
-            self.node.assert_start_raises_init_error(extra_args=[arg], expected_msg=msg)
+    def test_embedded_asmap(self):
+        if self.is_embedded_asmap_compiled():
+            self.log.info('Test bitcoind -asmap (using embedded map data)')
+            for arg in ['-asmap', '-asmap=1']:
+                self.stop_node(0)
+                with self.node.assert_debug_log(["Opened asmap data", "from embedded byte array"]):
+                    self.start_node(0, [arg])
+        else:
+            self.log.info('Test bitcoind -asmap (compiled without embedded map data)')
+            for arg in ['-asmap', '-asmap=1']:
+                self.stop_node(0)
+                msg = "Error: Embedded asmap data not available"
+                self.node.assert_start_raises_init_error(extra_args=[arg], expected_msg=msg)
 
     def test_asmap_interaction_with_addrman_containing_entries(self):
         self.log.info("Test bitcoind -asmap restart with addrman containing new and tried entries")
@@ -127,7 +134,7 @@ class AsmapTest(BitcoinTestFramework):
         self.test_noasmap_arg()
         self.test_asmap_with_absolute_path()
         self.test_asmap_with_relative_path()
-        self.test_unspecified_asmap()
+        self.test_embedded_asmap()
         self.test_asmap_interaction_with_addrman_containing_entries()
         self.test_asmap_with_missing_file()
         self.test_empty_asmap()
