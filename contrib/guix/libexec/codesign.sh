@@ -79,7 +79,11 @@ mkdir -p "$DISTSRC"
             signapple apply dist/Dash-Qt.app codesignatures/osx/dist
 
             # Make a .zip from dist/
-            zip "${OUTDIR}/${DISTNAME}-${HOST}.zip" dist/*
+            cd dist/
+            find . -print0 \
+                | xargs -0r touch --no-dereference --date="@${SOURCE_DATE_EPOCH}"
+            find . | sort \
+                | zip -X@ "${OUTDIR}/${DISTNAME}-${HOST}.zip"
             ;;
         *)
             exit 1
