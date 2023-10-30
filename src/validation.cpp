@@ -5953,8 +5953,8 @@ bool ChainstateManager::ValidatedSnapshotCleanup()
                                    fs::path p_old,
                                    fs::path p_new,
                                    const fs::filesystem_error& err) {
-        LogPrintf("%s: error renaming file (%s): %s\n",
-                __func__, fs::PathToString(p_old), err.what());
+        LogPrintf("Error renaming path (%s) -> (%s): %s\n",
+                  fs::PathToString(p_old), fs::PathToString(p_new), err.what());
         GetNotifications().fatalError(strprintf(
             "Rename of '%s' -> '%s' failed. "
             "Cannot clean up the background chainstate leveldb directory.",
