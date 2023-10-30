@@ -214,7 +214,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, masternode_payment);
     }
 
-    for ([[maybe_unused]] auto _ : irange::range(9)) {
+    for ([[maybe_unused]] auto _ : irange::range(consensus_params.nSuperblockCycle - 1)) {
         CreateAndProcessBlock({}, coinbaseKey);
     }
 
@@ -234,7 +234,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
     // there will be 19 adjustments, 3 superblocks long each
     for ([[maybe_unused]] auto i : irange::range(19)) {
         for ([[maybe_unused]] auto j : irange::range(3)) {
-            for ([[maybe_unused]] auto k : irange::range(10)) {
+            for ([[maybe_unused]] auto k : irange::range(consensus_params.nSuperblockCycle)) {
                 CreateAndProcessBlock({}, coinbaseKey);
             }
             LOCK(cs_main);
@@ -256,15 +256,15 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         const CAmount block_subsidy = GetBlockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
         const CAmount block_subsidy_sb = GetSuperblockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
         CAmount block_subsidy_potential = block_subsidy + block_subsidy_sb;
-        BOOST_CHECK_EQUAL(block_subsidy_potential, 113573330);
+        BOOST_CHECK_EQUAL(block_subsidy_potential, 84437941);
         CAmount expected_block_reward = block_subsidy_potential - block_subsidy_potential / 5;
 
         const CAmount masternode_payment = GetMasternodePayment(tip->nHeight, block_subsidy, isV20Active);
         const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
         BOOST_CHECK_EQUAL(pblocktemplate->block.vtx[0]->GetValueOut(), expected_block_reward);
-        BOOST_CHECK_EQUAL(pblocktemplate->block.vtx[0]->GetValueOut(), 90858664);
+        BOOST_CHECK_EQUAL(pblocktemplate->block.vtx[0]->GetValueOut(), 67550353);
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, masternode_payment);
-        BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, 68143998); // 0.75
+        BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, 50662764); // 0.75
     }
     BOOST_CHECK(!llmq::utils::IsMNRewardReallocationActive(m_node.chainman->ActiveChain().Tip()));
 
@@ -274,7 +274,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
     // Reward split should stay ~75/25 after reallocation is done,
     // check 10 next superblocks
     for ([[maybe_unused]] auto i : irange::range(10)) {
-        for ([[maybe_unused]] auto k : irange::range(10)) {
+        for ([[maybe_unused]] auto k : irange::range(consensus_params.nSuperblockCycle)) {
             CreateAndProcessBlock({}, coinbaseKey);
         }
         LOCK(cs_main);
@@ -307,9 +307,9 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         masternode_payment -= platform_payment;
         const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
 
-        // At this height (3178) the block subsidy is 105460950.
         CAmount block_subsidy_potential = block_subsidy + block_subsidy_sb;
-        BOOST_CHECK_EQUAL(block_subsidy_potential, 105460950);
+        BOOST_CHECK_EQUAL(tip->nHeight, 3858);
+        BOOST_CHECK_EQUAL(block_subsidy_potential, 78406660);
         // Treasury is 20% since MNRewardReallocation
         CAmount expected_block_reward = block_subsidy_potential - block_subsidy_potential / 5;
         // Since MNRewardReallocation, MN reward share is 75% of the block reward

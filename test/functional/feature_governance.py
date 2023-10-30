@@ -5,15 +5,16 @@
 """Tests around dash governance."""
 
 import json
-import time
 
 from test_framework.messages import uint256_to_string
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, satoshi_round
+from test_framework.util import assert_equal, satoshi_round, set_node_times, wait_until
 
 class DashGovernanceTest (DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(6, 5, [["-budgetparams=10:10:10"]] * 6)
+        self.v20_start_time = 1417713500
+        # using adjusted v20 deployment params to test an edge case where superblock maturity window is equal to deployment window size
+        self.set_dash_test_params(6, 5, [["-budgetparams=10:10:10", f"-vbparams=v20:{self.v20_start_time}:999999999999:10:8:6:5:-1"]] * 6, fast_dip3_enforcement=True)
 
     def prepare_object(self, object_type, parent_hash, creation_time, revision, name, amount, payment_address):
         proposal_rev = revision
@@ -23,7 +24,7 @@ class DashGovernanceTest (DashTestFramework):
             "name": name,
             "start_epoch": proposal_time,
             "end_epoch": proposal_time + 24 * 60 * 60,
-            "payment_amount": amount,
+            "payment_amount": float(amount),
             "payment_address": payment_address,
             "url": "https://dash.org"
         }
@@ -37,6 +38,44 @@ class DashGovernanceTest (DashTestFramework):
             "hex": proposal_hex,
             "data": proposal_template,
         }
+
+    def check_superblockbudget(self, v20_active):
+        v20_state = self.nodes[0].getblockchaininfo()["softforks"]["v20"]
+        assert_equal(v20_state["active"], v20_active)
+        assert_equal(self.nodes[0].getsuperblockbudget(200), self.expected_old_budget)
+        assert_equal(self.nodes[0].getsuperblockbudget(220), self.expected_old_budget)
+        if v20_state["bip9"]["status"] == "locked_in" or v20_state["bip9"]["status"] == "active":
+            assert_equal(self.nodes[0].getsuperblockbudget(240), self.expected_v20_budget)
+            assert_equal(self.nodes[0].getsuperblockbudget(260), self.expected_v20_budget)
+            assert_equal(self.nodes[0].getsuperblockbudget(280), self.expected_v20_budget)
+        else:
+            assert_equal(self.nodes[0].getsuperblockbudget(240), self.expected_old_budget)
+            assert_equal(self.nodes[0].getsuperblockbudget(260), self.expected_old_budget)
+            assert_equal(self.nodes[0].getsuperblockbudget(280), self.expected_old_budget)
+
+    def check_superblock(self):
+        # Make sure Superblock has only payments that fit into the budget
+        # p0 must always be included because it has most votes
+        # p1 and p2 have equal number of votes (but less votes than p0)
+        # so only one of them can be included (depends on proposal hashes).
+
+        coinbase_outputs = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]["vout"]
+        payments_found = 0
+        for txout in coinbase_outputs:
+            if txout["value"] == self.p0_amount and txout["scriptPubKey"]["addresses"][0] == self.p0_payout_address:
+                payments_found += 1
+            if txout["value"] == self.p1_amount and txout["scriptPubKey"]["addresses"][0] == self.p1_payout_address:
+                if self.p1_hash > self.p2_hash:
+                    payments_found += 1
+                else:
+                    assert False
+            if txout["value"] == self.p2_amount and txout["scriptPubKey"]["addresses"][0] == self.p2_payout_address:
+                if self.p2_hash > self.p1_hash:
+                    payments_found += 1
+                else:
+                    assert False
+
+        assert_equal(payments_found, 2)
 
     def run_test(self):
         map_vote_outcomes = {
@@ -52,6 +91,13 @@ class DashGovernanceTest (DashTestFramework):
             3: "delete",
             4: "endorsed"
         }
+        sb_cycle = 20
+        sb_maturity_window = 10
+        sb_immaturity_window = sb_cycle - sb_maturity_window
+        self.expected_old_budget = satoshi_round("928.57142840")
+        self.expected_v20_budget = satoshi_round("18.57142860")
+
+        self.activate_dip8()
 
         self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 4070908800)
         self.nodes[0].sporkupdate("SPORK_9_SUPERBLOCKS_ENABLED", 0)
@@ -59,82 +105,101 @@ class DashGovernanceTest (DashTestFramework):
 
         assert_equal(len(self.nodes[0].gobject("list-prepared")), 0)
 
-        proposal_time = self.mocktime
-        sb_block_height = self.nodes[0].getblockcount() + 10 - self.nodes[0].getblockcount() % 10
-        p0_payout_address = self.nodes[0].getnewaddress()
-        p1_payout_address = self.nodes[0].getnewaddress()
-        p2_payout_address = self.nodes[0].getnewaddress()
-        p0_amount = float(1.1)
-        p1_amount = float(3.3)
-        p2_amount = float(self.nodes[0].getsuperblockbudget(sb_block_height)) - p1_amount
+        self.nodes[0].generate(3)
+        self.bump_mocktime(3)
+        self.sync_blocks()
+        assert_equal(self.nodes[0].getblockcount(), 210)
+        assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["bip9"]["status"], "defined")
+        self.check_superblockbudget(False)
 
-        p0_collateral_prepare = self.prepare_object(1, uint256_to_string(0), proposal_time, 1, "Proposal_0", p0_amount, p0_payout_address)
-        p1_collateral_prepare = self.prepare_object(1, uint256_to_string(0), proposal_time, 1, "Proposal_1", p1_amount, p1_payout_address)
-        p2_collateral_prepare = self.prepare_object(1, uint256_to_string(0), proposal_time, 1, "Proposal_2", p2_amount, p2_payout_address)
+        assert self.mocktime < self.v20_start_time
+        self.mocktime = self.v20_start_time
+        set_node_times(self.nodes, self.mocktime)
+
+        self.nodes[0].generate(10)
+        self.bump_mocktime(10)
+        self.sync_blocks()
+        assert_equal(self.nodes[0].getblockcount(), 220)
+        assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["bip9"]["status"], "started")
+        self.check_superblockbudget(False)
+
+        proposal_time = self.mocktime
+        self.p0_payout_address = self.nodes[0].getnewaddress()
+        self.p1_payout_address = self.nodes[0].getnewaddress()
+        self.p2_payout_address = self.nodes[0].getnewaddress()
+        self.p0_amount = satoshi_round("1.1")
+        self.p1_amount = satoshi_round("3.3")
+        self.p2_amount = self.expected_v20_budget - self.p1_amount
+
+        p0_collateral_prepare = self.prepare_object(1, uint256_to_string(0), proposal_time, 1, "Proposal_0", self.p0_amount, self.p0_payout_address)
+        p1_collateral_prepare = self.prepare_object(1, uint256_to_string(0), proposal_time, 1, "Proposal_1", self.p1_amount, self.p1_payout_address)
+        p2_collateral_prepare = self.prepare_object(1, uint256_to_string(0), proposal_time, 1, "Proposal_2", self.p2_amount, self.p2_payout_address)
 
         self.nodes[0].generate(6)
+        self.bump_mocktime(6)
         self.sync_blocks()
 
         assert_equal(len(self.nodes[0].gobject("list-prepared")), 3)
         assert_equal(len(self.nodes[0].gobject("list")), 0)
 
-        p0_hash = self.nodes[0].gobject("submit", "0", 1, proposal_time, p0_collateral_prepare["hex"], p0_collateral_prepare["collateralHash"])
-        p1_hash = self.nodes[0].gobject("submit", "0", 1, proposal_time, p1_collateral_prepare["hex"], p1_collateral_prepare["collateralHash"])
-        p2_hash = self.nodes[0].gobject("submit", "0", 1, proposal_time, p2_collateral_prepare["hex"], p2_collateral_prepare["collateralHash"])
+        self.p0_hash = self.nodes[0].gobject("submit", "0", 1, proposal_time, p0_collateral_prepare["hex"], p0_collateral_prepare["collateralHash"])
+        self.p1_hash = self.nodes[0].gobject("submit", "0", 1, proposal_time, p1_collateral_prepare["hex"], p1_collateral_prepare["collateralHash"])
+        self.p2_hash = self.nodes[0].gobject("submit", "0", 1, proposal_time, p2_collateral_prepare["hex"], p2_collateral_prepare["collateralHash"])
 
         assert_equal(len(self.nodes[0].gobject("list")), 3)
 
-        assert_equal(self.nodes[0].gobject("get", p0_hash)["FundingResult"]["YesCount"], 0)
-        assert_equal(self.nodes[0].gobject("get", p0_hash)["FundingResult"]["NoCount"], 0)
+        assert_equal(self.nodes[0].gobject("get", self.p0_hash)["FundingResult"]["YesCount"], 0)
+        assert_equal(self.nodes[0].gobject("get", self.p0_hash)["FundingResult"]["NoCount"], 0)
 
-        assert_equal(self.nodes[0].gobject("get", p1_hash)["FundingResult"]["YesCount"], 0)
-        assert_equal(self.nodes[0].gobject("get", p1_hash)["FundingResult"]["NoCount"], 0)
+        assert_equal(self.nodes[0].gobject("get", self.p1_hash)["FundingResult"]["YesCount"], 0)
+        assert_equal(self.nodes[0].gobject("get", self.p1_hash)["FundingResult"]["NoCount"], 0)
 
-        assert_equal(self.nodes[0].gobject("get", p2_hash)["FundingResult"]["YesCount"], 0)
-        assert_equal(self.nodes[0].gobject("get", p2_hash)["FundingResult"]["NoCount"], 0)
+        assert_equal(self.nodes[0].gobject("get", self.p2_hash)["FundingResult"]["YesCount"], 0)
+        assert_equal(self.nodes[0].gobject("get", self.p2_hash)["FundingResult"]["NoCount"], 0)
 
-        self.nodes[0].gobject("vote-alias", p0_hash, map_vote_signals[1], map_vote_outcomes[2], self.mninfo[0].proTxHash)
-        self.nodes[0].gobject("vote-many", p0_hash, map_vote_signals[1], map_vote_outcomes[1])
-        assert_equal(self.nodes[0].gobject("get", p0_hash)["FundingResult"]["YesCount"], self.mn_count - 1)
-        assert_equal(self.nodes[0].gobject("get", p0_hash)["FundingResult"]["NoCount"], 1)
+        self.nodes[0].gobject("vote-alias", self.p0_hash, map_vote_signals[1], map_vote_outcomes[2], self.mninfo[0].proTxHash)
+        self.nodes[0].gobject("vote-many", self.p0_hash, map_vote_signals[1], map_vote_outcomes[1])
+        assert_equal(self.nodes[0].gobject("get", self.p0_hash)["FundingResult"]["YesCount"], self.mn_count - 1)
+        assert_equal(self.nodes[0].gobject("get", self.p0_hash)["FundingResult"]["NoCount"], 1)
 
-        self.nodes[0].gobject("vote-alias", p1_hash, map_vote_signals[1], map_vote_outcomes[2], self.mninfo[0].proTxHash)
-        self.nodes[0].gobject("vote-alias", p1_hash, map_vote_signals[1], map_vote_outcomes[2], self.mninfo[1].proTxHash)
-        self.nodes[0].gobject("vote-many", p1_hash, map_vote_signals[1], map_vote_outcomes[1])
-        assert_equal(self.nodes[0].gobject("get", p1_hash)["FundingResult"]["YesCount"], self.mn_count - 2)
-        assert_equal(self.nodes[0].gobject("get", p1_hash)["FundingResult"]["NoCount"], 2)
+        self.nodes[0].gobject("vote-alias", self.p1_hash, map_vote_signals[1], map_vote_outcomes[2], self.mninfo[0].proTxHash)
+        self.nodes[0].gobject("vote-alias", self.p1_hash, map_vote_signals[1], map_vote_outcomes[2], self.mninfo[1].proTxHash)
+        self.nodes[0].gobject("vote-many", self.p1_hash, map_vote_signals[1], map_vote_outcomes[1])
+        assert_equal(self.nodes[0].gobject("get", self.p1_hash)["FundingResult"]["YesCount"], self.mn_count - 2)
+        assert_equal(self.nodes[0].gobject("get", self.p1_hash)["FundingResult"]["NoCount"], 2)
 
-        self.nodes[0].gobject("vote-alias", p2_hash, map_vote_signals[1], map_vote_outcomes[2], self.mninfo[0].proTxHash)
-        self.nodes[0].gobject("vote-alias", p2_hash, map_vote_signals[1], map_vote_outcomes[2], self.mninfo[1].proTxHash)
-        self.nodes[0].gobject("vote-many", p2_hash, map_vote_signals[1], map_vote_outcomes[1])
-        assert_equal(self.nodes[0].gobject("get", p2_hash)["FundingResult"]["YesCount"], self.mn_count - 2)
-        assert_equal(self.nodes[0].gobject("get", p2_hash)["FundingResult"]["NoCount"], 2)
+        self.nodes[0].gobject("vote-alias", self.p2_hash, map_vote_signals[1], map_vote_outcomes[2], self.mninfo[0].proTxHash)
+        self.nodes[0].gobject("vote-alias", self.p2_hash, map_vote_signals[1], map_vote_outcomes[2], self.mninfo[1].proTxHash)
+        self.nodes[0].gobject("vote-many", self.p2_hash, map_vote_signals[1], map_vote_outcomes[1])
+        assert_equal(self.nodes[0].gobject("get", self.p2_hash)["FundingResult"]["YesCount"], self.mn_count - 2)
+        assert_equal(self.nodes[0].gobject("get", self.p2_hash)["FundingResult"]["NoCount"], 2)
 
         assert_equal(len(self.nodes[0].gobject("list", "valid", "triggers")), 0)
 
         block_count = self.nodes[0].getblockcount()
-        sb_cycle = 10
-        sb_maturity_window = 2
-        sb_maturity_cycle = sb_cycle - sb_maturity_window
 
         # Move until 1 block before the Superblock maturity window starts
-        n = sb_maturity_cycle - block_count % sb_cycle
-        self.nodes[0].generate(n - 1)
-        self.sync_blocks()
-        time.sleep(1)
+        n = sb_immaturity_window - block_count % sb_cycle
+        # v20 is expected to be activate since block 240
+        assert block_count + n < 240
+        for _ in range(n - 1):
+            self.nodes[0].generate(1)
+            self.bump_mocktime(1)
+            self.sync_blocks()
+            self.check_superblockbudget(False)
 
         assert_equal(len(self.nodes[0].gobject("list", "valid", "triggers")), 0)
 
         # Move 1 block enabling the Superblock maturity window
         self.nodes[0].generate(1)
+        self.bump_mocktime(1)
         self.sync_blocks()
-        time.sleep(1)
+        assert_equal(self.nodes[0].getblockcount(), 230)
+        assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["bip9"]["status"], "locked_in")
+        self.check_superblockbudget(False)
 
         # The "winner" should submit new trigger and vote for it, no one else should vote yet
-        valid_triggers = self.nodes[0].gobject("list", "valid", "triggers")
-        assert_equal(len(valid_triggers), 1)
-        trigger_data = list(valid_triggers.values())[0]
-        assert_equal(trigger_data['YesCount'], 1)
+        wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) == 1, timeout=5)
 
         # Make sure amounts aren't trimmed
         payment_amounts_expected = [str(satoshi_round(str(p0_amount))), str(satoshi_round(str(p1_amount))), str(satoshi_round(str(p2_amount)))]
@@ -145,45 +210,36 @@ class DashGovernanceTest (DashTestFramework):
 
         # Move 1 block inside the Superblock maturity window
         self.nodes[0].generate(1)
+        self.bump_mocktime(1)
         self.sync_blocks()
-        time.sleep(1)
 
         # Every MN should vote for the same trigger now, no new triggers should be created
-        triggers_rpc = self.nodes[0].gobject("list", "valid", "triggers")
-        assert_equal(len(triggers_rpc), 1)
-        trigger_data = list(triggers_rpc.values())[0]
-        assert_equal(trigger_data['YesCount'], self.mn_count)
+        wait_until(lambda: list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]['YesCount'] == self.mn_count, timeout=5)
 
         block_count = self.nodes[0].getblockcount()
         n = sb_cycle - block_count % sb_cycle
 
         # Move remaining n blocks until actual Superblock
         for i in range(n):
-            time.sleep(1)
             self.nodes[0].generate(1)
+            self.bump_mocktime(1)
             self.sync_blocks()
+            # comparing to 239 because bip9 forks are active when the tip is one block behind the activation height
+            self.check_superblockbudget(block_count + i + 1 >= 239)
 
-        # Make sure Superblock has only payments that fit into the budget
-        # p0 must always be included because it has most votes
-        # p1 and p2 have equal number of votes (but less votes than p0)
-        # so only one of them can be included (depends on proposal hashes).
-        coinbase_outputs = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]["vout"]
-        payments_found = 0
-        for txout in coinbase_outputs:
-            if txout["value"] == satoshi_round(str(p0_amount)) and txout["scriptPubKey"]["addresses"][0] == p0_payout_address:
-                payments_found += 1
-            if txout["value"] == satoshi_round(str(p1_amount)) and txout["scriptPubKey"]["addresses"][0] == p1_payout_address:
-                if p1_hash > p2_hash:
-                    payments_found += 1
-                else:
-                    assert False
-            if txout["value"] == satoshi_round(str(p2_amount)) and txout["scriptPubKey"]["addresses"][0] == p2_payout_address:
-                if p2_hash > p1_hash:
-                    payments_found += 1
-                else:
-                    assert False
+        self.check_superblockbudget(True)
+        self.check_superblock()
 
-        assert_equal(payments_found, 2)
+        # Mine and check a couple more superblocks
+        for i in range(2):
+            for _ in range(20):
+                self.nodes[0].generate(1)
+                self.bump_mocktime(1)
+                self.sync_blocks()
+            assert_equal(self.nodes[0].getblockcount(), 240 + (i + 1) * 20)
+            assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["bip9"]["status"], "active")
+            self.check_superblockbudget(True)
+            self.check_superblock()
 
 
 if __name__ == '__main__':

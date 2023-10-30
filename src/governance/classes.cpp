@@ -494,14 +494,16 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
         return 0;
     }
 
-    const CBlockIndex* tipIndex = ::ChainActive().Tip();
-    const auto v20_state = llmq::utils::GetV20State(tipIndex);
+    const CBlockIndex* pindex = ::ChainActive().Tip();
+    if (pindex->nHeight > nBlockHeight) pindex = pindex->GetAncestor(nBlockHeight);
+
+    const auto v20_state = llmq::utils::GetV20State(pindex);
     bool fV20Active{v20_state == ThresholdState::ACTIVE};
-    if (!fV20Active && nBlockHeight > tipIndex->nHeight) {
+    if (!fV20Active && nBlockHeight > pindex->nHeight) {
         // If fV20Active isn't active yet and nBlockHeight refers to a future SuperBlock
         // then we need to check if the fork is locked_in and see if it will be active by the time of the future SuperBlock
         if (v20_state == ThresholdState::LOCKED_IN) {
-            int activation_height = llmq::utils::GetV20Since(tipIndex) + static_cast<int>(Params().GetConsensus().vDeployments[Consensus::DEPLOYMENT_V20].nWindowSize);
+            int activation_height = llmq::utils::GetV20Since(pindex) + static_cast<int>(Params().GetConsensus().vDeployments[Consensus::DEPLOYMENT_V20].nWindowSize);
             if (nBlockHeight >= activation_height) {
                 fV20Active = true;
             }
