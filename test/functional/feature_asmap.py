@@ -73,7 +73,7 @@ class AsmapTest(BitcoinTestFramework):
             self.start_node(0, [f'-asmap={name}'])
         os.remove(filename)
 
-    def test_default_asmap(self):
+    def test_default_asmap_file(self):
         shutil.copyfile(self.asmap_raw, self.default_asmap)
         for arg in ['-asmap', '-asmap=']:
             self.log.info(f'Test bitcoind {arg} (using default map file)')
@@ -81,6 +81,20 @@ class AsmapTest(BitcoinTestFramework):
             with self.node.assert_debug_log(expected_messages(self.default_asmap)):
                 self.start_node(0, [arg])
         os.remove(self.default_asmap)
+
+    def test_embedded_asmap(self):
+        if self.is_embedded_asmap_compiled():
+            for arg in ['-asmap', '-asmap=1']:
+                self.log.info(f'Test bitcoind {arg} (using embedded map data)')
+                self.stop_node(0)
+                with self.node.assert_debug_log(["Opened asmap data", "from embedded byte array"]):
+                    self.start_node(0, [arg])
+        else:
+            self.stop_node(0)
+            for arg in ['-asmap', '-asmap=1']:
+                self.log.info(f'Test bitcoind {arg} (compiled without embedded map data)')
+                msg = f"Error: Could not find asmap file in default location \"{self.default_asmap}\""
+                self.node.assert_start_raises_init_error(extra_args=[arg], expected_msg=msg)
 
     def test_asmap_interaction_with_addrman_containing_entries(self):
         self.log.info("Test bitcoind -asmap restart with addrman containing new and tried entries")
@@ -98,18 +112,19 @@ class AsmapTest(BitcoinTestFramework):
             self.node.getnodeaddresses()  # getnodeaddresses re-runs the addrman checks
         os.remove(self.default_asmap)
 
-    def test_default_asmap_with_missing_file(self):
-        self.log.info('Test bitcoind -asmap with missing default map file')
+    def test_asmap_with_missing_file(self):
+        self.log.info('Test bitcoind -asmap= with missing map file')
         self.stop_node(0)
-        msg = f"Error: Could not find asmap file \"{self.default_asmap}\""
-        self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
+        bogus_map = os.path.join(self.datadir, "bogus.map")
+        msg = f"Error: Could not find asmap file \"{bogus_map}\""
+        self.node.assert_start_raises_init_error(extra_args=[f"-asmap={bogus_map}"], expected_msg=msg)
 
     def test_empty_asmap(self):
         self.log.info('Test bitcoind -asmap with empty map file')
         self.stop_node(0)
         with open(self.default_asmap, "w", encoding="utf-8") as f:
             f.write("")
-        msg = f"Error: Could not parse asmap file \"{self.default_asmap}\""
+        msg = f"Error: Could not parse asmap file in default location \"{self.default_asmap}\""
         self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
         os.remove(self.default_asmap)
 
@@ -139,9 +154,10 @@ class AsmapTest(BitcoinTestFramework):
         self.test_without_asmap_arg()
         self.test_asmap_with_absolute_path()
         self.test_asmap_with_relative_path()
-        self.test_default_asmap()
+        self.test_default_asmap_file()
+        self.test_embedded_asmap()
         self.test_asmap_interaction_with_addrman_containing_entries()
-        self.test_default_asmap_with_missing_file()
+        self.test_asmap_with_missing_file()
         self.test_empty_asmap()
         self.test_asmap_health_check()
 
