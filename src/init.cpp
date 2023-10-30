@@ -119,6 +119,10 @@
 #include <zmq/zmqrpc.h>
 #endif
 
+#ifdef ENABLE_EMBEDDED_ASMAP
+#include <node/data/ip_asn.dat.h>
+#endif
+
 using common::AmountErrMsg;
 using common::InvalidPortErrMsg;
 using common::ResolveErrMsg;
@@ -1538,25 +1542,59 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     ApplyArgsManOptions(args, peerman_opts);
 
     {
-        // Read asmap file if configured and initialize
+        // Read asmap file if configured or embedded asmap data and initialize
         // Netgroupman with or without it
         assert(!node.netgroupman);
         if (args.IsArgSet("-asmap") && !args.IsArgNegated("-asmap")) {
+            uint256 asmap_version{};
+            const bool asmap_file_set{args.GetPathArg("-asmap") != ""};
             fs::path asmap_path = args.GetPathArg("-asmap", DEFAULT_ASMAP_FILENAME);
             if (!asmap_path.is_absolute()) {
                 asmap_path = args.GetDataDirNet() / asmap_path;
             }
-            if (!fs::exists(asmap_path)) {
+
+            // If a specific path was passed with the asmap argument check if
+            // the file actually exists in that location
+            if (!fs::exists(asmap_path) && asmap_file_set) {
                 InitError(strprintf(_("Could not find asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
                 return false;
             }
-            std::vector<std::byte> asmap{DecodeAsmap(asmap_path)};
-            if (asmap.size() == 0) {
-                InitError(strprintf(_("Could not parse asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
-                return false;
+
+            if (fs::exists(asmap_path)) {
+                // If a file exists at the path (could be passed or the default
+                // location), try to read the file
+                std::vector<std::byte> asmap{DecodeAsmap(asmap_path)};
+                if (asmap.empty()) {
+                    // If the file could not be read, print the error depending
+                    // on if it was passed or the default location
+                    if (asmap_file_set) {
+                        InitError(strprintf(_("Could not parse asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
+                    } else {
+                        InitError(strprintf(_("Could not parse asmap file in default location %s"), fs::quoted(fs::PathToString(asmap_path))));
+                    }
+                    return false;
+                }
+                asmap_version = AsmapVersion(asmap);
+                node.netgroupman = std::make_unique<NetGroupManager>(NetGroupManager::WithLoadedAsmap(std::move(asmap)));
+            } else {
+                #ifdef ENABLE_EMBEDDED_ASMAP
+                    // If the file doesn't exist, try to use the embedded data
+                    std::span<const std::byte> asmap{node::data::ip_asn};
+                    if (asmap.empty() || !CheckAsmap(asmap)) {
+                        InitError(strprintf(_("Could not read embedded asmap data")));
+                        return false;
+                    }
+                    node.netgroupman = std::make_unique<NetGroupManager>(NetGroupManager::WithEmbeddedAsmap(asmap));
+                    asmap_version = AsmapVersion(asmap);
+                    LogInfo("Opened asmap data (%zu bytes) from embedded byte array\n", asmap.size());
+                #else
+                    // If there is no embedded data, fail and report the default
+                    // file as missing since we only end up here if the no
+                    // specific path was passed as an argument
+                    InitError(strprintf(_("Could not find asmap file in default location %s"), fs::quoted(fs::PathToString(asmap_path))));
+                    return false;
+                #endif
             }
-            const uint256 asmap_version = AsmapVersion(asmap);
-            node.netgroupman = std::make_unique<NetGroupManager>(NetGroupManager::WithLoadedAsmap(std::move(asmap)));
             LogInfo("Using asmap version %s for IP bucketing", asmap_version.ToString());
         } else {
             node.netgroupman = std::make_unique<NetGroupManager>(NetGroupManager::NoAsmap());
