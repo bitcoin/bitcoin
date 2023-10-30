@@ -230,14 +230,12 @@ CCreditPoolDiff::CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindex,
 
 bool CCreditPoolDiff::Lock(const CTransaction& tx, TxValidationState& state)
 {
-    CAssetLockPayload assetLockTx;
-    if (!GetTxPayload(tx, assetLockTx)) {
+    if (CAssetLockPayload assetLockTx; !GetTxPayload(tx, assetLockTx)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "failed-creditpool-lock-payload");
     }
 
     for (const CTxOut& txout : tx.vout) {
-        const CScript& script = txout.scriptPubKey;
-        if (script.empty() || script[0] != OP_RETURN) continue;
+        if (const CScript& script = txout.scriptPubKey; script.empty() || script[0] != OP_RETURN) continue;
 
         sessionLocked += txout.nValue;
         return true;

@@ -100,8 +100,7 @@ public:
         obj.pushKV("ownerAddress", EncodeDestination(PKHash(keyIDOwner)));
         obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
 
-        CTxDestination dest;
-        if (ExtractDestination(scriptPayout, dest)) {
+        if (CTxDestination dest; ExtractDestination(scriptPayout, dest)) {
             obj.pushKV("payoutAddress", EncodeDestination(dest));
         }
         obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
@@ -183,8 +182,7 @@ public:
         obj.pushKV("type", ToUnderlying(nType));
         obj.pushKV("proTxHash", proTxHash.ToString());
         obj.pushKV("service", addr.ToString(false));
-        CTxDestination dest;
-        if (ExtractDestination(scriptOperatorPayout, dest)) {
+        if (CTxDestination dest; ExtractDestination(scriptOperatorPayout, dest)) {
             obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
         }
         if (nType == MnType::Evo) {
@@ -253,8 +251,7 @@ public:
         obj.pushKV("version", nVersion);
         obj.pushKV("proTxHash", proTxHash.ToString());
         obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
-        CTxDestination dest;
-        if (ExtractDestination(scriptPayout, dest)) {
+        if (CTxDestination dest; ExtractDestination(scriptPayout, dest)) {
             obj.pushKV("payoutAddress", EncodeDestination(dest));
         }
         obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());

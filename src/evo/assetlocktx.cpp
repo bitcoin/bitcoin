@@ -118,9 +118,8 @@ bool CAssetUnlockPayload::VerifySig(const uint256& msgHash, gsl::not_null<const 
 
     // We check at most 2 quorums
     const auto quorums = llmq::quorumManager->ScanQuorums(llmqType, pindexTip, 2);
-    bool isActive = std::any_of(quorums.begin(), quorums.end(), [&](const auto &q) { return q->qc->quorumHash == quorumHash; });
 
-    if (!isActive) {
+    if (bool isActive = std::any_of(quorums.begin(), quorums.end(), [&](const auto &q) { return q->qc->quorumHash == quorumHash; }); !isActive) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-not-active-quorum");
     }
 
@@ -135,8 +134,8 @@ bool CAssetUnlockPayload::VerifySig(const uint256& msgHash, gsl::not_null<const 
 
     const uint256 requestId = ::SerializeHash(std::make_pair(ASSETUNLOCK_REQUESTID_PREFIX, index));
 
-    const uint256 signHash = llmq::utils::BuildSignHash(llmqType, quorum->qc->quorumHash, requestId, msgHash);
-    if (quorumSig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash)) {
+    if (const uint256 signHash = llmq::utils::BuildSignHash(llmqType, quorum->qc->quorumHash, requestId, msgHash);
+            quorumSig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash)) {
         return true;
     }
 
@@ -172,8 +171,7 @@ bool CheckAssetUnlockTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-duplicated-index");
     }
 
-    const CBlockIndex* pindexQuorum = WITH_LOCK(cs_main, return g_chainman.m_blockman.LookupBlockIndex(assetUnlockTx.getQuorumHash()));
-    if (!pindexQuorum) {
+    if (LOCK(cs_main); g_chainman.m_blockman.LookupBlockIndex(assetUnlockTx.getQuorumHash()) == nullptr) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-quorum-hash");
     }
 

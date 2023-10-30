@@ -1111,9 +1111,8 @@ bool CDeterministicMNManager::IsProTxWithCollateral(const CTransactionRef& tx, u
         return false;
     }
 
-    const CAmount expectedCollateral = GetMnType(proTx.nType).collat_amount;
 
-    if (tx->vout[n].nValue != expectedCollateral) {
+    if (const CAmount expectedCollateral = GetMnType(proTx.nType).collat_amount; tx->vout[n].nValue != expectedCollateral) {
         return false;
     }
     return true;
@@ -1489,8 +1488,7 @@ static bool CheckPlatformFields(const ProTx& proTx, TxValidationState& state)
 template <typename ProTx>
 static bool CheckHashSig(const ProTx& proTx, const PKHash& pkhash, TxValidationState& state)
 {
-    std::string strError;
-    if (!CHashSigner::VerifyHash(::SerializeHash(proTx), ToKeyID(pkhash), proTx.vchSig, strError)) {
+    if (std::string strError; !CHashSigner::VerifyHash(::SerializeHash(proTx), ToKeyID(pkhash), proTx.vchSig, strError)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-sig");
     }
     return true;
@@ -1499,8 +1497,7 @@ static bool CheckHashSig(const ProTx& proTx, const PKHash& pkhash, TxValidationS
 template <typename ProTx>
 static bool CheckStringSig(const ProTx& proTx, const PKHash& pkhash, TxValidationState& state)
 {
-    std::string strError;
-    if (!CMessageSigner::VerifyMessage(ToKeyID(pkhash), proTx.vchSig, proTx.MakeSignString(), strError)) {
+    if (std::string strError; !CMessageSigner::VerifyMessage(ToKeyID(pkhash), proTx.vchSig, proTx.MakeSignString(), strError)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-sig");
     }
     return true;
