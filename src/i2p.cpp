@@ -384,10 +384,25 @@ Binary Session::MyDestination() const
     static constexpr size_t CERT_LEN_POS = 385;
 
     uint16_t cert_len;
+
+    if (m_private_key.size() < CERT_LEN_POS + sizeof(cert_len)) {
+        throw std::runtime_error(strprintf("The private key is too short (%d < %d)",
+                                           m_private_key.size(),
+                                           CERT_LEN_POS + sizeof(cert_len)));
+    }
+
     memcpy(&cert_len, &m_private_key.at(CERT_LEN_POS), sizeof(cert_len));
     cert_len = be16toh(cert_len);
 
     const size_t dest_len = DEST_LEN_BASE + cert_len;
+
+    if (dest_len > m_private_key.size()) {
+        throw std::runtime_error(strprintf("Certificate length (%d) designates that the private key should "
+                                           "be %d bytes, but it is only %d bytes",
+                                           cert_len,
+                                           dest_len,
+                                           m_private_key.size()));
+    }
 
     return Binary{m_private_key.begin(), m_private_key.begin() + dest_len};
 }
