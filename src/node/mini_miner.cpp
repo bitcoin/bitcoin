@@ -173,7 +173,6 @@ MiniMiner::MiniMiner(const std::vector<MiniMinerMempoolEntry>& manual_entries,
     SanityCheck();
 }
 
-
 // Compare by min(ancestor feerate, individual feerate), then iterator
 //
 // Under the ancestor-based mining approach, high-feerate children can pay for parents, but high-feerate
@@ -253,8 +252,9 @@ void MiniMiner::SanityCheck() const
         [&](const auto& txid){return m_entries_by_txid.find(txid) == m_entries_by_txid.end();}));
 }
 
-void MiniMiner::BuildMockTemplate(const CFeeRate& target_feerate)
+void MiniMiner::BuildMockTemplate(std::optional<CFeeRate> target_feerate)
 {
+    const auto num_txns{m_entries_by_txid.size()};
     while (!m_entries_by_txid.empty()) {
         // Sort again, since transaction removal may change some m_entries' ancestor feerates.
         std::sort(m_entries.begin(), m_entries.end(), AncestorFeerateComparator());
@@ -265,7 +265,8 @@ void MiniMiner::BuildMockTemplate(const CFeeRate& target_feerate)
         const auto ancestor_package_size = (*best_iter)->second.GetSizeWithAncestors();
         const auto ancestor_package_fee = (*best_iter)->second.GetModFeesWithAncestors();
         // Stop here. Everything that didn't "make it into the block" has bumpfee.
-        if (ancestor_package_fee < target_feerate.GetFee(ancestor_package_size)) {
+        if (target_feerate.has_value() &&
+            ancestor_package_fee < target_feerate->GetFee(ancestor_package_size)) {
             break;
         }
 
@@ -292,7 +293,11 @@ void MiniMiner::BuildMockTemplate(const CFeeRate& target_feerate)
         DeleteAncestorPackage(ancestors);
         SanityCheck();
     }
-    Assume(m_in_block.empty() || m_total_fees >= target_feerate.GetFee(m_total_vsize));
+    if (!target_feerate.has_value()) {
+        Assume(m_in_block.size() == num_txns);
+    } else {
+        Assume(m_in_block.empty() || m_total_fees >= target_feerate->GetFee(m_total_vsize));
+    }
     // Do not try to continue building the block template with a different feerate.
     m_ready_to_calculate = false;
 }

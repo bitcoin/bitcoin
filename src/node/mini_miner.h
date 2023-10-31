@@ -84,7 +84,7 @@ class MiniMiner
     // the same tx will have the same bumpfee. Excludes non-mempool transactions.
     std::map<uint256, std::vector<COutPoint>> m_requested_outpoints_by_txid;
 
-    // What we're trying to calculate.
+    // What we're trying to calculate. Outpoint to the fee needed to bring the transaction to the target feerate.
     std::map<COutPoint, CAmount> m_bump_fees;
 
     // The constructed block template
@@ -114,8 +114,9 @@ public:
     /** Returns true if CalculateBumpFees may be called, false if not. */
     bool IsReadyToCalculate() const { return m_ready_to_calculate; }
 
-    /** Build a block template until the target feerate is hit. */
-    void BuildMockTemplate(const CFeeRate& target_feerate);
+    /** Build a block template until the target feerate is hit. If target_feerate is not given,
+     * builds a block template until all transactions have been selected. */
+    void BuildMockTemplate(std::optional<CFeeRate> target_feerate);
 
     /** Returns set of txids in the block template if one has been constructed. */
     std::set<uint256> GetMockTemplateTxids() const { return m_in_block; }
@@ -149,6 +150,7 @@ public:
      * not make it into the block to the target feerate. Returns the total bump fee, or std::nullopt
      * if it cannot be calculated. */
     std::optional<CAmount> CalculateTotalBumpFees(const CFeeRate& target_feerate);
+
 };
 } // namespace node
 
