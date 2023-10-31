@@ -132,6 +132,48 @@ MiniMiner::MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& ou
     SanityCheck();
 }
 
+MiniMiner::MiniMiner(const std::vector<MiniMinerMempoolEntry>& manual_entries,
+                     const std::map<Txid, std::set<Txid>>& descendant_caches)
+{
+    for (const auto& entry : manual_entries) {
+        const auto& txid = entry.GetTx().GetHash();
+        // We need to know the descendant set of every transaction.
+        if (!Assume(descendant_caches.count(txid) > 0)) {
+            m_ready_to_calculate = false;
+            return;
+        }
+        // Just forward these args onto MiniMinerMempoolEntry
+        auto [mapiter, success] = m_entries_by_txid.emplace(txid, entry);
+        // Txids must be unique; this txid shouldn't already be an entry in m_entries_by_txid
+        if (Assume(success)) m_entries.push_back(mapiter);
+    }
+    // Descendant cache is already built, but we need to translate them to m_entries_by_txid iters.
+    for (const auto& [txid, desc_txids] : descendant_caches) {
+        // Descendant cache should include at least the tx itself.
+        if (!Assume(!desc_txids.empty())) {
+            m_ready_to_calculate = false;
+            return;
+        }
+        std::vector<MockEntryMap::iterator> cached_descendants;
+        for (const auto& desc_txid : desc_txids) {
+            auto desc_it{m_entries_by_txid.find(desc_txid)};
+            // Descendants should only include transactions with corresponding entries.
+            if (!Assume(desc_it != m_entries_by_txid.end())) {
+                m_ready_to_calculate = false;
+                return;
+            } else {
+                cached_descendants.emplace_back(desc_it);
+            }
+        }
+        m_descendant_set_by_txid.emplace(txid, cached_descendants);
+    }
+    Assume(m_to_be_replaced.empty());
+    Assume(m_requested_outpoints_by_txid.empty());
+    Assume(m_bump_fees.empty());
+    SanityCheck();
+}
+
+
 // Compare by min(ancestor feerate, individual feerate), then iterator
 //
 // Under the ancestor-based mining approach, high-feerate children can pay for parents, but high-feerate

@@ -120,7 +120,24 @@ public:
     /** Returns set of txids in the block template if one has been constructed. */
     std::set<uint256> GetMockTemplateTxids() const { return m_in_block; }
 
+    /** Constructor that takes a list of outpoints that may or may not belong to transactions in the
+     * mempool. Copies out information about the relevant transactions in the mempool into
+     * MiniMinerMempoolEntrys.
+    */
     MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& outpoints);
+
+    /** Constructor in which the MiniMinerMempoolEntry entries have been constructed manually,
+     * presumably because these transactions are not in the mempool (yet). It is assumed that all
+     * entries are unique and their values are correct, otherwise results computed by MiniMiner may
+     * be incorrect. Callers should check IsReadyToCalculate() after construction.
+     * @param[in] descendant_caches A map from each transaction to the set of txids of this
+     *                              transaction's descendant set, including itself. Each tx in
+     *                              manual_entries must have a corresponding entry in this map, and
+     *                              all of the txids in a descendant set must correspond to a tx in
+     *                              manual_entries.
+     */
+    MiniMiner(const std::vector<MiniMinerMempoolEntry>& manual_entries,
+              const std::map<Txid, std::set<Txid>>& descendant_caches);
 
     /** Construct a new block template and, for each outpoint corresponding to a transaction that
      * did not make it into the block, calculate the cost of bumping those transactions (and their
