@@ -48,12 +48,21 @@
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">Uppsetanarfílan %1 kann vera avskeplað ella ógildig.</translation>
+    </message>
+    <message>
         <source>Internal error</source>
         <translation type="unfinished">Innanhýsis villa</translation>
     </message>
     </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">Ynskir tú at endurstilla stillingar til sjálvsettar, ella at avbróta uttan at hava broytt stillingar?</translation>
+    </message>
     <message>
         <source>Error: %1</source>
         <translation type="unfinished">Villa: %1</translation>
@@ -138,6 +147,10 @@
         <translation type="unfinished">&amp;Yvirlit</translation>
     </message>
     <message>
+        <source>Quit application</source>
+        <translation type="unfinished">Sløkk forrit</translation>
+    </message>
+    <message>
         <source>&amp;About %1</source>
         <translation type="unfinished">&amp;Um %1</translation>
     </message>
@@ -154,9 +167,21 @@
         <translation type="unfinished">Vís upplýsingar um Qt</translation>
     </message>
     <message>
+        <source>Modify configuration options for %1</source>
+        <translation type="unfinished">Broyt uppsetan fyri %1</translation>
+    </message>
+    <message>
         <source>Network activity disabled.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">Net-virksemi óvirkijað.</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation type="unfinished">&amp;Undirskriva  boðini</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <translation type="unfinished">Undirskriva boðini við tíni Bitcoin-adressu til tess at prógva at tey eru tíni</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -190,12 +215,20 @@
         <translation type="unfinished">Ávaring</translation>
     </message>
     <message>
+        <source>Up to date</source>
+        <translation type="unfinished">Javnsettur</translation>
+    </message>
+    <message>
         <source>Ctrl+Q</source>
         <translation type="unfinished">CTRL+Q</translation>
     </message>
     <message>
         <source>Ctrl+M</source>
         <translation type="unfinished">CTRL+M</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation type="unfinished">%1 viðskiftari</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -440,6 +473,26 @@
         <translation type="unfinished">Fullfíggja leið til eitt %1 sambæriligt skeljarrit (t.d. C:\Downloads\hwi.exe ella /Users/you/Downloads/hwi.py). Gev gætur: Illbúnaður kann stjala tín pening!</translation>
     </message>
     <message>
+        <source>Open Configuration File</source>
+        <translation type="unfinished">Lat upp uppsetanarfíl</translation>
+    </message>
+    <message>
+        <source>Reset all client options to default.</source>
+        <translation type="unfinished">Endurstilla allar viðskiftarastillingar til sjálvsettar.</translation>
+    </message>
+    <message>
+        <source>&amp;Reset Options</source>
+        <translation type="unfinished">&amp;Endurstilla stillingar</translation>
+    </message>
+    <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="unfinished">Sjálvvirkandi upplating av Bicoin viðskiftara porturinum á beinaranum. Hetta virkar bert um UPnP er virkja í beinaranum, á netinum tú brúkar.</translation>
+    </message>
+    <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">Sjálvvirkandi upplating av Bicoin viðskiftara porturinum á beinaranum. Hetta virkar bert um NAT-PMP er virkja í beinaranum, á netinum tú brúkar. Ytra porturnummari kann vera tilvildarligt.</translation>
+    </message>
+    <message>
         <source>&amp;Port:</source>
         <translation type="unfinished">&amp;Portur:</translation>
     </message>
@@ -452,6 +505,19 @@
         <translation type="unfinished">Her kann mál á nýtaramóti ásetast. Stillingin hevur virknað eftir at %1 er endurbyrja.</translation>
     </message>
     <message>
+        <source>&amp;Cancel</source>
+        <translation type="unfinished">&amp;Avlýs</translation>
+    </message>
+    <message>
+        <source>default</source>
+        <translation type="unfinished">sjálvsett</translation>
+    </message>
+    <message>
+        <source>Confirm options reset</source>
+        <extracomment>Window title text of pop-up window shown when the user has chosen to reset options.</extracomment>
+        <translation type="unfinished">Vátta endurstilling av stillingum</translation>
+    </message>
+    <message>
         <source>Client restart required to activate changes.</source>
         <extracomment>Text explaining that the settings changed will not come into effect until the client is restarted.</extracomment>
         <translation type="unfinished">Endurbyrjan av viðskiftara kravd fyri at virkja broyting(ar).</translation>
@@ -462,8 +528,21 @@
         <translation type="unfinished">Viðskiftari verður slóktur. Ynskir tú at halda áfram?</translation>
     </message>
     <message>
+        <source>Configuration options</source>
+        <extracomment>Window title text of pop-up box that allows opening up of configuration file.</extracomment>
+        <translation type="unfinished">Uppsetanarstillingar</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Avlýs</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation type="unfinished">Villa</translation>
+    </message>
+    <message>
+        <source>The configuration file could not be opened.</source>
+        <translation type="unfinished">Innlesan av uppsetanarfílu miseydnaðist.</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
@@ -512,9 +591,19 @@
         <translation type="unfinished">Aldur</translation>
     </message>
     <message>
+        <source>Received</source>
+        <extracomment>Title of Peers Table column which indicates the total amount of network information we have received from the peer.</extracomment>
+        <translation type="unfinished">Móttikið</translation>
+    </message>
+    <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
         <translation type="unfinished">Adressa</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
+        <translation type="unfinished">Slag</translation>
     </message>
     <message>
         <source>Network</source>
@@ -555,6 +644,10 @@
 <context>
     <name>RPCConsole</name>
     <message>
+        <source>Client version</source>
+        <translation type="unfinished">Viðskiftaraútgáva</translation>
+    </message>
+    <message>
         <source>Network</source>
         <translation type="unfinished">Net</translation>
     </message>
@@ -567,8 +660,28 @@
         <translation type="unfinished">Tal av sambondum</translation>
     </message>
     <message>
+        <source>Memory usage</source>
+        <translation type="unfinished">Minnisnýtsla</translation>
+    </message>
+    <message>
+        <source>&amp;Reset</source>
+        <translation type="unfinished">Tómstilla</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation type="unfinished">Móttikið</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation type="unfinished">Útgáva</translation>
+    </message>
+    <message>
         <source>Ping Time</source>
         <translation type="unfinished">Ping tíð</translation>
+    </message>
+    <message>
+        <source>Debug log file</source>
+        <translation type="unfinished">Gerðalistafíla til villukemban</translation>
     </message>
     <message>
         <source>In:</source>
@@ -797,12 +910,21 @@
         <translation type="unfinished">Avrita vekslipening</translation>
     </message>
     <message>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet.</extracomment>
+        <translation type="unfinished">Undirrita á eind</translation>
+    </message>
+    <message>
         <source>%1 to '%2'</source>
         <translation type="unfinished">%1 til '%2'</translation>
     </message>
     <message>
         <source>%1 to %2</source>
         <translation type="unfinished">%1 til %2</translation>
+    </message>
+    <message>
+        <source>Sign failed</source>
+        <translation type="unfinished">Undirritan miseydnaðist</translation>
     </message>
     <message>
         <source>or</source>
@@ -866,6 +988,22 @@
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
+        <source>Signatures - Sign / Verify a Message</source>
+        <translation type="unfinished">Undirskriftir - Undirrita / Vátta eini boð</translation>
+    </message>
+    <message>
+        <source>&amp;Sign Message</source>
+        <translation type="unfinished">&amp;Undirrita Boð</translation>
+    </message>
+    <message>
+        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation type="unfinished">Tú kann skriva undir boð/sáttmálar við tínum adressum, fyri at prógva at tú kanst móttaka bitcoin sendar til tær. Ver ansin so tú ikki skrivar undir nakað ógreitt ella tilvildarligt, tí fysking-álop kunnu royna at snýta teg til at latað tín samleika til tey. Undirrita einans nágreiniligar útsagnir ið tú tekur undir við.</translation>
+    </message>
+    <message>
+        <source>The Bitcoin address to sign the message with</source>
+        <translation type="unfinished">Bitcoin adressan at undirskriva boðini við</translation>
+    </message>
+    <message>
         <source>Choose previously used address</source>
         <translation type="unfinished">Brúka adressuna ið frammanundan var brúkt</translation>
     </message>
@@ -878,12 +1016,60 @@
         <translation type="unfinished">ALT+P</translation>
     </message>
     <message>
+        <source>Enter the message you want to sign here</source>
+        <translation type="unfinished">Inntøppa boðini, tú ynskir at undirrita, her</translation>
+    </message>
+    <message>
+        <source>Signature</source>
+        <translation type="unfinished">Undirskrift</translation>
+    </message>
+    <message>
+        <source>Sign the message to prove you own this Bitcoin address</source>
+        <translation type="unfinished">Undirskriva boðini fyri at prógva at Bitcoin-adressan er tín</translation>
+    </message>
+    <message>
+        <source>Sign &amp;Message</source>
+        <translation type="unfinished">&amp;Undirrita boð</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation type="unfinished">Tómstilla &amp;alt</translation>
     </message>
     <message>
+        <source>The Bitcoin address the message was signed with</source>
+        <translation type="unfinished">Bitcoin-adressan ið undirskrivaði boðini</translation>
+    </message>
+    <message>
+        <source>The signed message to verify</source>
+        <translation type="unfinished">Undirritað boð at vátta</translation>
+    </message>
+    <message>
+        <source>Click "Sign Message" to generate signature</source>
+        <translation type="unfinished">Trýst á "Undirrita boð" fyri at gera eina undirskrift</translation>
+    </message>
+    <message>
         <source>No error</source>
         <translation type="unfinished">Eingin villa</translation>
+    </message>
+    <message>
+        <source>Message signing failed.</source>
+        <translation type="unfinished">Undirritan av boðum miseydnaðist.</translation>
+    </message>
+    <message>
+        <source>Message signed.</source>
+        <translation type="unfinished">Boð undirritað</translation>
+    </message>
+    <message>
+        <source>The signature could not be decoded.</source>
+        <translation type="unfinished">Undirskriftin er ógildig.</translation>
+    </message>
+    <message>
+        <source>Please check the signature and try again.</source>
+        <translation type="unfinished">Vinaliga kanna undirskriftina og royn aftur.</translation>
+    </message>
+    <message>
+        <source>The signature did not match the message digest.</source>
+        <translation type="unfinished">Undirskriftin samsvaraði ikki við innihaldi í boðnum.</translation>
     </message>
     </context>
 <context>
@@ -949,6 +1135,10 @@
 </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Type</source>
+        <translation type="unfinished">Slag</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation type="unfinished">Spjaldur</translation>
@@ -1018,6 +1208,10 @@
         <translation type="unfinished">Vís í %1</translation>
     </message>
     <message>
+        <source>Type</source>
+        <translation type="unfinished">Slag</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation type="unfinished">Spjaldur</translation>
     </message>
@@ -1049,6 +1243,13 @@
     </message>
     </context>
 <context>
+    <name>WalletView</name>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Avlýs</translation>
+    </message>
+</context>
+<context>
     <name>bitcoin-core</name>
     <message>
         <source>The %s developers</source>
@@ -1075,6 +1276,14 @@
         <translation type="unfinished">Útgangandi sambond eru avmarkaði til CJDNS (-onlynet=cjdns) men -cjdnsreachable er ikki ásett.</translation>
     </message>
     <message>
+        <source>Outbound connections restricted to i2p (-onlynet=i2p) but -i2psam is not provided</source>
+        <translation type="unfinished">Útgangandi sambond avmarkaði til i2p (-onlynet=i2p) men -i2psam er ikki ásett.</translation>
+    </message>
+    <message>
+        <source>Error reading configuration file: %s</source>
+        <translation type="unfinished">Villa við innlesing av uppsetanarfílu: %s</translation>
+    </message>
+    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation type="unfinished">Miseydnaðist at lurta á portri. Brúka -listen=0 um tú ynskir hetta.</translation>
     </message>
@@ -1087,8 +1296,20 @@
         <translation type="unfinished">Keldukotan er tøk á %s.</translation>
     </message>
     <message>
+        <source>The specified config file %s does not exist</source>
+        <translation type="unfinished">Ásetta uppsetanarfílan %s finst ikki</translation>
+    </message>
+    <message>
         <source>This is experimental software.</source>
         <translation type="unfinished">Hetta er royndar-ritbúnaður.</translation>
     </message>
-    </context>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">Lesing av uppsetanarfílu miseydnaðist.</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">Skriving av uppsetanarfílu miseydnaðist</translation>
+    </message>
+</context>
 </TS>

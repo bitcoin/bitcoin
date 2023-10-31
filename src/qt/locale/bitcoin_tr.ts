@@ -2048,6 +2048,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Ayrıntılı bilgi görmek için bir eş seçin.</translation>
     </message>
     <message>
+        <source>Transport</source>
+        <translation type="unfinished">Aktar</translation>
+    </message>
+    <message>
         <source>Version</source>
         <translation type="unfinished">Sürüm</translation>
     </message>

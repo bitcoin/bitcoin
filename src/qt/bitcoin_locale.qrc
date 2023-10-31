@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/translations">
+        <file alias="af">locale/bitcoin_af.qm</file>
         <file alias="am">locale/bitcoin_am.qm</file>
         <file alias="ar">locale/bitcoin_ar.qm</file>
         <file alias="az">locale/bitcoin_az.qm</file>
@@ -51,6 +52,7 @@
         <file alias="id">locale/bitcoin_id.qm</file>
         <file alias="is">locale/bitcoin_is.qm</file>
         <file alias="it">locale/bitcoin_it.qm</file>
+        <file alias="ja">locale/bitcoin_ja.qm</file>
         <file alias="ka">locale/bitcoin_ka.qm</file>
         <file alias="kk">locale/bitcoin_kk.qm</file>
         <file alias="kk@latin">locale/bitcoin_kk@latin.qm</file>
