@@ -1455,9 +1455,12 @@ dnl Check for libnatpmp (optional).
 if test "$use_natpmp" != "no"; then
   TEMP_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $NATPMP_CPPFLAGS"
-  AC_CHECK_HEADERS([natpmp.h],
-                   [AC_CHECK_LIB([natpmp], [initnatpmp], [NATPMP_LIBS="$NATPMP_LIBS -lnatpmp"], [have_natpmp=no], [$NATPMP_LIBS])],
-                   [have_natpmp=no])
+  AC_CHECK_HEADERS([natpmp.h], [], [have_natpmp=no])
+
+  if test "$have_natpmp" != "no"; then
+    AC_CHECK_LIB([natpmp], [initnatpmp], [NATPMP_LIBS="$NATPMP_LIBS -lnatpmp"], [have_natpmp=no], [$NATPMP_LIBS])
+  fi
+
   CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
