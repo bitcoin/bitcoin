@@ -5,33 +5,45 @@
 #ifndef BITCOIN_NODE_MINI_MINER_H
 #define BITCOIN_NODE_MINI_MINER_H
 
-#include <txmempool.h>
+#include <consensus/amount.h>
+#include <primitives/transaction.h>
+#include <uint256.h>
 
+#include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <stdint.h>
+#include <vector>
+
+class CFeeRate;
+class CTxMemPool;
 
 namespace node {
 
 // Container for tracking updates to ancestor feerate as we include ancestors in the "block"
 class MiniMinerMempoolEntry
 {
-    const CAmount fee_individual;
     const CTransactionRef tx;
     const int64_t vsize_individual;
-    CAmount fee_with_ancestors;
     int64_t vsize_with_ancestors;
+    const CAmount fee_individual;
+    CAmount fee_with_ancestors;
 
 // This class must be constructed while holding mempool.cs. After construction, the object's
 // methods can be called without holding that lock.
 
 public:
-    explicit MiniMinerMempoolEntry(CTxMemPool::txiter entry) :
-        fee_individual{entry->GetModifiedFee()},
-        tx{entry->GetSharedTx()},
-        vsize_individual(entry->GetTxSize()),
-        fee_with_ancestors{entry->GetModFeesWithAncestors()},
-        vsize_with_ancestors(entry->GetSizeWithAncestors())
+    explicit MiniMinerMempoolEntry(CAmount fee_self,
+                                   CAmount fee_ancestor,
+                                   int64_t vsize_self,
+                                   int64_t vsize_ancestor,
+                                   const CTransactionRef& tx_in):
+        tx{tx_in},
+        vsize_individual{vsize_self},
+        vsize_with_ancestors{vsize_ancestor},
+        fee_individual{fee_self},
+        fee_with_ancestors{fee_ancestor}
     { }
 
     CAmount GetModifiedFee() const { return fee_individual; }
