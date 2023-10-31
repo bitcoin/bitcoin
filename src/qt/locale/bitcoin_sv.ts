@@ -224,12 +224,20 @@ Försök igen.</translation>
         <translation type="unfinished">Lösenfrasen för dekryptering av plånboken var felaktig.</translation>
     </message>
     <message>
+        <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <translation type="unfinished">Lösenordet som angavs för plånboksavkrypteringen är felaktigt. Det innehåller ett nolltecken (det vill säga en nollbyte). Om lösenordet ställdes in med en tidigare version av denna programvara före version 25.0, försök igen med endast tecknen upp till - men inte inklusive - det första nolltecknet. Om detta lyckas, vänligen ställ in ett nytt lösenord för att undvika detta problem i framtiden.</translation>
+    </message>
+    <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation type="unfinished">Plånbokens lösenfras ändrades.</translation>
     </message>
     <message>
         <source>Passphrase change failed</source>
         <translation type="unfinished">Misslyckades att ändra lösenfras</translation>
+    </message>
+    <message>
+        <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
+        <translation type="unfinished">Det gamla lösenordet som angavs för plånboksavkrypteringen är felaktigt. Det innehåller ett nolltecken (det vill säga en nollbyte). Om lösenordet ställdes in med en tidigare version av denna programvara före version 25.0, försök igen med endast tecknen upp till - men inte inklusive - det första nolltecknet.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -254,6 +262,10 @@ Försök igen.</translation>
         <translation type="unfinished">Konfigurationsfil %1 verkar vara korrupt</translation>
     </message>
     <message>
+        <source>Runaway exception</source>
+        <translation type="unfinished">Ohanterligt undantag</translation>
+    </message>
+    <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
         <translation type="unfinished">Ett allvarligt fel har uppstått. %1 kan inte längre köras säkert och kommer att avslutas.</translation>
     </message>
@@ -268,6 +280,11 @@ Försök igen.</translation>
 </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">Vill du återställa inställningarna till standardvärden, eller avbryta utan att göra några ändringar?</translation>
+    </message>
     <message>
         <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
         <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
@@ -724,6 +741,10 @@ Försök igen.</translation>
         <source>&amp;Hide</source>
         <translation type="unfinished">och göm</translation>
     </message>
+    <message>
+        <source>S&amp;how</source>
+        <translation type="unfinished">V&amp;isa</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
@@ -738,6 +759,11 @@ Försök igen.</translation>
         <translation type="unfinished">Klicka för fler alternativ</translation>
     </message>
     <message>
+        <source>Show Peers tab</source>
+        <extracomment>A context menu item. The "Peers tab" is an element of the "Node window".</extracomment>
+        <translation type="unfinished">Visa flik för anslutningar</translation>
+    </message>
+    <message>
         <source>Disable network activity</source>
         <extracomment>A context menu item.</extracomment>
         <translation type="unfinished">Stäng av nätverksaktivitet</translation>
@@ -746,6 +772,10 @@ Försök igen.</translation>
         <source>Enable network activity</source>
         <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
         <translation type="unfinished">Aktivera nätverksaktivitet</translation>
+    </message>
+    <message>
+        <source>Pre-syncing Headers (%1%)…</source>
+        <translation type="unfinished">Förhandsinkoppling av rubriker ( %1 %)...</translation>
     </message>
     <message>
         <source>Error creating wallet</source>
@@ -916,6 +946,10 @@ Försök igen.</translation>
     <message>
         <source>Copy &amp;amount</source>
         <translation type="unfinished">Kopiera &amp;Belopp</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID and output index</source>
+        <translation type="unfinished">Kopiera transaktion &amp;ID och utdatindex</translation>
     </message>
     <message>
         <source>Copy quantity</source>

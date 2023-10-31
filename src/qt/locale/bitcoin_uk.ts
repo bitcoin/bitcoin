@@ -4179,6 +4179,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">%s пошкоджено. Спробуйте скористатися інструментом гаманця bitcoin-wallet для виправлення або відновлення резервної копії.</translation>
     </message>
     <message>
+        <source>%s failed to validate the -assumeutxo snapshot state. This indicates a hardware problem, or a bug in the software, or a bad software modification that allowed an invalid snapshot to be loaded. As a result of this, the node will shut down and stop using any state that was built on the snapshot, resetting the chain height from %d to %d. On the next restart, the node will resume syncing from %d without using any snapshot data. Please report this incident to %s, including how you obtained the snapshot. The invalid snapshot chainstate will be left on disk in case it is helpful in diagnosing the issue that caused this error.</source>
+        <translation type="unfinished">Не вдалося перевірити стан знімка -assumeutxo для %s. Це вказує на проблему з обладнанням, або на помилку в програмному забезпеченні, або на неправильну модифікацію програми, яка дозволила завантажити неправильний знімок. Внаслідок цього вузол вимкнеться та припинить використовувати будь-який стан, побудований на знімку, скидаючи висоту блокчейну з %d на %d. При наступному запуску вузол буде продовжувати синхронізацію з %d, не використовуючи жодних даних зі знімка. Повідомте про цей випадок %s, включаючи інформацію про те, як знімок було отримано. Неправильний знімок стану блокчейну залишиться на диску у випадку, якщо він буде корисний при діагностиці проблеми, що викликала цю помилку.</translation>
+    </message>
+    <message>
         <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
         <translation type="unfinished">%s прохання прослухати на порту %u . Цей порт вважається «поганим» і тому навряд чи до нього підключиться який-небудь бенкет. Перегляньте doc/p2p-bad-ports.md для отримання детальної інформації та повного списку.</translation>
     </message>
@@ -4275,6 +4279,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">Скорочений блокчейн: остання синхронізація гаманця виходить за межі скорочених даних. Потрібно перезапустити з -reindex (заново завантажити весь блокчейн, якщо використовується скорочення)</translation>
     </message>
     <message>
+        <source>Rename of '%s' -&gt; '%s' failed. You should resolve this by manually moving or deleting the invalid snapshot directory %s, otherwise you will encounter the same error again on the next startup.</source>
+        <translation type="unfinished">Не вдалося перейменувати '%s' -&gt; '%s'. Слід вирішити це, перемістивши або видаливши неправильний каталог знімків %sвручну, інакше ця помилка станеться при наступному запуску.</translation>
+    </message>
+    <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
         <translation type="unfinished">SQLiteDatabase: Невідома версія схеми гаманця %d. Підтримується лише версія %d</translation>
     </message>
@@ -4329,6 +4337,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future.</source>
         <translation type="unfinished">Гаманець успішно створено. Підтримка гаманців застарілого типу припиняється, і можливість створення та відкриття таких гаманців буде видалена.</translation>
+    </message>
+    <message>
+        <source>Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet.</source>
+        <translation type="unfinished">Гаманець успішно завантажено. Гаманці застарілого типу виводяться з обігу, і підтримка створення та відкриття таких гаманців буде припинена у майбутньому. Застарілі гаманці можна перенести до гаманця з підтримкою дескрипторів за допомогою команди migratewallet.</translation>
     </message>
     <message>
         <source>Warning: Dumpfile wallet format "%s" does not match command line specified format "%s".</source>
@@ -4391,6 +4403,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">Помилка завантаження %s: Завантаження гаманця зі зовнішнім підписувачем, але скомпільовано без підтримки зовнішнього підписування</translation>
     </message>
     <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address metadata may be missing or incorrect.</source>
+        <translation type="unfinished">Помилка читання %s! Всі записи вірно зчитані, але дані транзакцій або метадані адрес можуть бути відсутніми або неправильними.</translation>
+    </message>
+    <message>
         <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
         <translation type="unfinished">Помилка:  Дані адресної книги в гаманці не можна ідентифікувати як належні до перенесених гаманців</translation>
     </message>
@@ -4401,6 +4417,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
         <translation type="unfinished">Помилка: Транзакцію %s в гаманці не можна ідентифікувати як належну до перенесених гаманців</translation>
+    </message>
+    <message>
+        <source>Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.</source>
+        <translation type="unfinished">Не вдалося розрахувати підвищені комісії, оскільки непідтверджені UTXO залежать від величезного кластеру непідтверджених транзакцій.</translation>
     </message>
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
