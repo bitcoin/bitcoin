@@ -103,6 +103,65 @@ static void AddDuplicateCoins(std::vector<COutput>& utxo_pool, int count, int am
     }
 }
 
+std::optional<SelectionResult> SelectCoinsKnapsack(std::vector<COutput>& utxo_pool, const CAmount& selection_target, FastRandomContext& rng = default_cs_params.rng_fast, CAmount change_target = 25'000, const int& max_weight = MAX_STANDARD_TX_WEIGHT)
+{
+    auto res{KnapsackSolver(GroupCoins(utxo_pool), selection_target, change_target, rng, max_weight)};
+    return res ? std::optional<SelectionResult>(*res) : std::nullopt;
+}
+
+/* Test Knapsack gets a specific input set composition */
+static void TestKnapsackMatch(std::string test_title, std::vector<COutput>& utxo_pool, const CAmount& selection_target, const std::vector<CAmount>& expected_input_amounts)
+{
+    SelectionResult expected_result(CAmount(0), SelectionAlgorithm::KNAPSACK);
+    CAmount expected_amount = 0;
+    for (int input_amount : expected_input_amounts) {
+        OutputGroup group;
+        COutput coin = MakeCoin(input_amount);
+        expected_amount += coin.txout.nValue;
+        group.Insert(std::make_shared<COutput>(coin), /*ancestors=*/ 0, /*descendants=*/ 0);
+        expected_result.AddInput(group);
+    }
+
+    const auto result = SelectCoinsKnapsack(utxo_pool, selection_target);
+    BOOST_CHECK_MESSAGE(result, "Knapsack-Result: " + test_title);
+    BOOST_CHECK(EquivalentResult(expected_result, *result));
+    BOOST_CHECK_EQUAL(result->GetSelectedValue(), expected_amount);
+    expected_result.Clear();
+}
+
+static void TestKnapsackFail(std::string test_title, std::vector<COutput>& utxo_pool, const CAmount& selection_target)
+{
+    BOOST_CHECK_MESSAGE(!SelectCoinsKnapsack(utxo_pool, selection_target), "Knapsack-Fail: " + test_title);
+}
+
+BOOST_AUTO_TEST_CASE(knapsack_predictable_test)
+{
+    std::vector<COutput> utxo_pool;
+
+    // Fail for empty UTXO pool
+    TestKnapsackFail("Empty UTXO pool", utxo_pool, /*selection_target=*/ 1 * CENT);
+
+    AddCoins(utxo_pool, {1 * CENT, 3 * CENT, 5 * CENT, 7 * CENT, 11 * CENT});
+
+    TestKnapsackMatch("Select matching single UTXO", utxo_pool, /*selection_target=*/ 5 * CENT, /*expected_input_amounts=*/ {5 * CENT});
+    TestKnapsackMatch("Select matching two UTXOs", utxo_pool, /*selection_target=*/ 6 * CENT, /*expected_input_amounts=*/ {1 * CENT, 5 * CENT});
+    TestKnapsackMatch("Select lowest larger", utxo_pool, /*selection_target=*/ 2 * CENT, /*expected_input_amounts=*/ {3 * CENT});
+    TestKnapsackMatch("Select sum of lower UTXOs", utxo_pool, /*selection_target=*/ 4 * CENT, /*expected_input_amounts=*/ {1 * CENT, 3 * CENT});
+    TestKnapsackMatch("Select everything", utxo_pool, /*selection_target=*/ 27 * CENT, /*expected_input_amounts=*/ {1 * CENT, 3 * CENT, 5 * CENT, 7 * CENT, 11 * CENT});
+    TestKnapsackFail("Target exceeds available coins", utxo_pool, /*selection_target=*/ 27.01 * CENT);
+    TestKnapsackMatch("Select closest combination", utxo_pool, /*selection_target=*/ 17.5 * CENT, /*expected_input_amounts=*/ {7 * CENT, 11 * CENT});
+    // 7 is closer than 3+5
+    TestKnapsackMatch("Closer lowest larger preferred over closest combination", utxo_pool, /*selection_target=*/ 6.5 * CENT, /*expected_input_amounts=*/ {7 * CENT});
+    // 1+3 is closer than 5
+    TestKnapsackMatch("Closer combination is preferred over lowest larger", utxo_pool, /*selection_target=*/ 3.5 * CENT, /*expected_input_amounts=*/ {1 * CENT, 3 * CENT});
+    // 1+3+7 vs 11
+    TestKnapsackMatch("Lowest larger is preferred in case of tie", utxo_pool, /*selection_target=*/ 10.5 * CENT, /*expected_input_amounts=*/ {11 * CENT});
+    // 7+3 is enough for target and min_change
+    TestKnapsackMatch("Exactly min_change", utxo_pool, /*selection_target=*/ 9.975 * CENT, /*expected_input_amounts=*/ {3 * CENT, 7 * CENT});
+    // 7+3 is enough, but not enough for min_change (9.976+0.025=10.00111000340)
+    TestKnapsackMatch("Select more to get min_change", utxo_pool, /*selection_target=*/ 9.976 * CENT, /*expected_input_amounts=*/ {11 * CENT});
+}
+
 static void TestBnBSuccess(std::string test_title, std::vector<COutput>& utxo_pool, const CAmount& selection_target, const std::vector<CAmount>& expected_input_amounts, const CFeeRate& feerate = default_cs_params.m_effective_feerate )
 {
     SelectionResult expected_result(CAmount(0), SelectionAlgorithm::BNB);
@@ -207,7 +266,11 @@ BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
     TestBnBSuccess("Select one input at high feerates", high_feerate_pool, /*selection_target=*/ 10 * CENT, /*expected_input_amounts=*/ {10 * CENT}, CFeeRate{25'000});
 }
 
-// TODO: Test at `SelectCoins`/spend.cpp level that changeless solutions can be achieved by combining preset inputs with BnB solutions
+//TODO: SelectCoins Test
+    // TODO: Test at `SelectCoins`/spend.cpp level that changeless solutions can be achieved by combining preset inputs with BnB solutions
+    // TODO: Test that immature coins are not considered
+    // TODO: Test eligibility filters
+    // TODO: Test that self-sent coins are filtered differently than foreign-sent coins
 
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
