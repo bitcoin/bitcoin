@@ -202,7 +202,7 @@ class DashGovernanceTest (DashTestFramework):
         wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) == 1, timeout=5)
 
         # Make sure amounts aren't trimmed
-        payment_amounts_expected = [str(satoshi_round(str(p0_amount))), str(satoshi_round(str(p1_amount))), str(satoshi_round(str(p2_amount)))]
+        payment_amounts_expected = [str(satoshi_round(str(self.p0_amount))), str(satoshi_round(str(self.p1_amount))), str(satoshi_round(str(self.p2_amount)))]
         data_string = list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]["DataString"]
         payment_amounts_trigger = json.loads(data_string)["payment_amounts"].split("|")
         for amount_str in payment_amounts_trigger:
