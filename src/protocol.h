@@ -445,7 +445,7 @@ public:
         }
         // Invoke V1/V2 serializer for CService parent object.
         const auto ser_params{use_v2 ? CNetAddr::V2 : CNetAddr::V1};
-        READWRITE(WithParams(ser_params, AsBase<CService>(obj)));
+        READWRITE(ser_params(AsBase<CService>(obj)));
     }
 
     //! Always included in serialization. The behavior is unspecified if the value is not representable as uint32_t.

@@ -214,11 +214,11 @@ const Out& AsBase(const In& x)
  *     }
  *   };
  * which would then be invoked as
- *   READWRITE(WithParams(BarParameter{...}, Using<FooFormatter>(obj.foo)))
+ *   READWRITE(BarParameter{...}(Using<FooFormatter>(obj.foo)))
  *
- * WithParams(parameter, obj) can be invoked anywhere in the call stack; it is
+ * parameter(obj) can be invoked anywhere in the call stack; it is
  * passed down recursively into all serialization code, until another
- * WithParams overrides it.
+ * serialization parameter overrides it.
  *
  * Parameters will be implicitly converted where appropriate. This means that
  * "parent" serialization code can use a parameter that derives from, or is
@@ -1183,17 +1183,6 @@ public:
 };
 
 /**
- * Return a wrapper around t that (de)serializes it with specified parameter params.
- *
- * See FORMATTER_METHODS_PARAMS for more information on serialization parameters.
- */
-template <typename Params, typename T>
-static auto WithParams(const Params& params, T&& t)
-{
-    return ParamsWrapper<Params, T>{params, t};
-}
-
-/**
  * Helper macro for SerParams structs
  *
  * Allows you define SerParams instances and then apply them directly
@@ -1202,8 +1191,16 @@ static auto WithParams(const Params& params, T&& t)
  *   constexpr SerParams FOO{....};
  *   ss << FOO(obj);
  */
-#define SER_PARAMS_OPFUNC \
-    template <typename T> \
-    auto operator()(T&& t) const { return WithParams(*this, t); }
+#define SER_PARAMS_OPFUNC                                                                \
+    /**                                                                                  \
+     * Return a wrapper around t that (de)serializes it with specified parameter params. \
+     *                                                                                   \
+     * See FORMATTER_METHODS_PARAMS for more information on serialization parameters.    \
+     */                                                                                  \
+    template <typename T>                                                                \
+    auto operator()(T&& t) const                                                         \
+    {                                                                                    \
+        return ParamsWrapper{*this, t};                                                  \
+    }
 
 #endif // BITCOIN_SERIALIZE_H
