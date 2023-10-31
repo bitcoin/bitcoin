@@ -67,6 +67,40 @@ Value Find(const std::map<Key, Value>& map, const Key& key)
     return it->second;
 }
 
+BOOST_FIXTURE_TEST_CASE(miniminer_negative, TestChain100Setup)
+{
+    CTxMemPool& pool = *Assert(m_node.mempool);
+    LOCK2(::cs_main, pool.cs);
+    TestMemPoolEntryHelper entry;
+
+    // Create a transaction that will be prioritised to have a negative modified fee.
+    const CAmount positive_base_fee{1000};
+    const CAmount negative_fee_delta{-50000};
+    const CAmount negative_modified_fees{positive_base_fee + negative_fee_delta};
+    BOOST_CHECK(negative_modified_fees < 0);
+    const auto tx_mod_negative = make_tx({COutPoint{m_coinbase_txns[4]->GetHash(), 0}}, /*num_outputs=*/1);
+    pool.addUnchecked(entry.Fee(positive_base_fee).FromTx(tx_mod_negative));
+    pool.PrioritiseTransaction(tx_mod_negative->GetHash(), negative_fee_delta);
+    const COutPoint only_outpoint{tx_mod_negative->GetHash(), 0};
+
+    // When target feerate is 0, transactions with negative fees are not selected.
+    node::MiniMiner mini_miner_target0(pool, {only_outpoint});
+    BOOST_CHECK(mini_miner_target0.IsReadyToCalculate());
+    const CFeeRate feerate_zero(0);
+    mini_miner_target0.BuildMockTemplate(feerate_zero);
+    // Check the quit condition:
+    BOOST_CHECK(negative_modified_fees < feerate_zero.GetFee(pool.GetIter(tx_mod_negative->GetHash()).value()->GetTxSize()));
+    BOOST_CHECK(mini_miner_target0.GetMockTemplateTxids().empty());
+
+    // With no target feerate, the template includes all transactions, even negative feerate ones.
+    node::MiniMiner mini_miner_no_target(pool, {only_outpoint});
+    BOOST_CHECK(mini_miner_no_target.IsReadyToCalculate());
+    mini_miner_no_target.BuildMockTemplate(std::nullopt);
+    const auto template_txids{mini_miner_no_target.GetMockTemplateTxids()};
+    BOOST_CHECK_EQUAL(template_txids.size(), 1);
+    BOOST_CHECK(template_txids.count(tx_mod_negative->GetHash().ToUint256()) > 0);
+}
+
 BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
