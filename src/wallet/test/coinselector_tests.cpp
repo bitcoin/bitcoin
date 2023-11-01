@@ -23,18 +23,9 @@
 namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(coinselector_tests, WalletTestingSetup)
 
-// how many times to run all the tests to have a chance to catch errors that only show up with particular random shuffles
-#define RUN_TESTS 100
-
-// some tests fail 1% of the time due to bad luck.
-// we repeat those tests this many times and only complain if all iterations of the test fail
-#define RANDOM_REPEATS 5
-
 typedef std::set<std::shared_ptr<COutput>> CoinSet;
 
 static const CoinEligibilityFilter filter_standard(1, 6, 0);
-static const CoinEligibilityFilter filter_confirmed(1, 1, 0);
-static const CoinEligibilityFilter filter_standard_extra(6, 6, 0);
 static int nextLockTime = 0;
 
 static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result, CAmount fee, CAmount long_term_fee)
@@ -81,16 +72,6 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
 {
     auto res{SelectCoinsBnB(utxo_pool, selection_target, cost_of_change, MAX_STANDARD_TX_WEIGHT)};
     return res ? std::optional<SelectionResult>(*res) : std::nullopt;
-}
-
-/** Check if this selection is equal to another one. Equal means same inputs (i.e same value and prevout) */
-static bool EqualResult(const SelectionResult& a, const SelectionResult& b)
-{
-    std::pair<CoinSet::iterator, CoinSet::iterator> ret = std::mismatch(a.GetInputSet().begin(), a.GetInputSet().end(), b.GetInputSet().begin(),
-        [](const std::shared_ptr<COutput>& a, const std::shared_ptr<COutput>& b) {
-            return a->outpoint == b->outpoint;
-        });
-    return ret.first == a.GetInputSet().end() && ret.second == b.GetInputSet().end();
 }
 
 
@@ -172,99 +153,6 @@ BOOST_AUTO_TEST_CASE(bnb_sffo_restriction)
     BOOST_CHECK(result->GetInputSet().size() == 2);
     // We have only considered BnB, SRD, and Knapsack. Test needs to be reevaluated if new algo is added
     BOOST_CHECK(result->GetAlgo() == SelectionAlgorithm::SRD || result->GetAlgo() == SelectionAlgorithm::KNAPSACK);
-}
-
-BOOST_AUTO_TEST_CASE(knapsack_solver_test)
-{
-    FastRandomContext rand{};
-    const auto temp1{[&rand](std::vector<OutputGroup>& g, const CAmount& v, CAmount c) { return KnapsackSolver(g, v, c, rand); }};
-    const auto KnapsackSolver{temp1};
-    std::unique_ptr<CWallet> wallet = NewWallet(m_node);
-
-    CoinsResult available_coins;
-
-    // test with many inputs
-    for (CAmount amt=1500; amt < COIN; amt*=10) {
-        available_coins.Clear();
-        // Create 676 inputs (=  (old MAX_STANDARD_TX_SIZE == 100000)  / 148 bytes per input)
-        for (uint16_t j = 0; j < 676; j++)
-            add_coin(available_coins, *wallet, amt);
-
-        // We only create the wallet once to save time, but we still run the coin selection RUN_TESTS times.
-        for (int i = 0; i < RUN_TESTS; i++) {
-            const auto result24 = KnapsackSolver(KnapsackGroupOutputs(available_coins, *wallet, filter_confirmed), 2000, CENT);
-            BOOST_CHECK(result24);
-
-            if (amt - 2000 < CENT) {
-                // needs more than one input:
-                uint16_t returnSize = std::ceil((2000.0 + CENT)/amt);
-                CAmount returnValue = amt * returnSize;
-                BOOST_CHECK_EQUAL(result24->GetSelectedValue(), returnValue);
-                BOOST_CHECK_EQUAL(result24->GetInputSet().size(), returnSize);
-            } else {
-                // one input is sufficient:
-                BOOST_CHECK_EQUAL(result24->GetSelectedValue(), amt);
-                BOOST_CHECK_EQUAL(result24->GetInputSet().size(), 1U);
-            }
-        }
-    }
-
-    // test randomness
-    {
-        available_coins.Clear();
-        for (int i2 = 0; i2 < 100; i2++)
-            add_coin(available_coins, *wallet, COIN);
-
-        // Again, we only create the wallet once to save time, but we still run the coin selection RUN_TESTS times.
-        for (int i = 0; i < RUN_TESTS; i++) {
-            // picking 50 from 100 coins doesn't depend on the shuffle,
-            // but does depend on randomness in the stochastic approximation code
-            const auto result25 = KnapsackSolver(GroupCoins(available_coins.All()), 50 * COIN, CENT);
-            BOOST_CHECK(result25);
-            const auto result26 = KnapsackSolver(GroupCoins(available_coins.All()), 50 * COIN, CENT);
-            BOOST_CHECK(result26);
-            BOOST_CHECK(!EqualResult(*result25, *result26));
-
-            int fails = 0;
-            for (int j = 0; j < RANDOM_REPEATS; j++)
-            {
-                // Test that the KnapsackSolver selects randomly from equivalent coins (same value and same input size).
-                // When choosing 1 from 100 identical coins, 1% of the time, this test will choose the same coin twice
-                // which will cause it to fail.
-                // To avoid that issue, run the test RANDOM_REPEATS times and only complain if all of them fail
-                const auto result27 = KnapsackSolver(GroupCoins(available_coins.All()), COIN, CENT);
-                BOOST_CHECK(result27);
-                const auto result28 = KnapsackSolver(GroupCoins(available_coins.All()), COIN, CENT);
-                BOOST_CHECK(result28);
-                if (EqualResult(*result27, *result28))
-                    fails++;
-            }
-            BOOST_CHECK_NE(fails, RANDOM_REPEATS);
-        }
-
-        // add 75 cents in small change.  not enough to make 90 cents,
-        // then try making 90 cents.  there are multiple competing "smallest bigger" coins,
-        // one of which should be picked at random
-        add_coin(available_coins, *wallet, 5 * CENT);
-        add_coin(available_coins, *wallet, 10 * CENT);
-        add_coin(available_coins, *wallet, 15 * CENT);
-        add_coin(available_coins, *wallet, 20 * CENT);
-        add_coin(available_coins, *wallet, 25 * CENT);
-
-        for (int i = 0; i < RUN_TESTS; i++) {
-            int fails = 0;
-            for (int j = 0; j < RANDOM_REPEATS; j++)
-            {
-                const auto result29 = KnapsackSolver(GroupCoins(available_coins.All()), 90 * CENT, CENT);
-                BOOST_CHECK(result29);
-                const auto result30 = KnapsackSolver(GroupCoins(available_coins.All()), 90 * CENT, CENT);
-                BOOST_CHECK(result30);
-                if (EqualResult(*result29, *result30))
-                    fails++;
-            }
-            BOOST_CHECK_NE(fails, RANDOM_REPEATS);
-        }
-    }
 }
 
 BOOST_AUTO_TEST_CASE(ApproximateBestSubset)

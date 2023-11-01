@@ -25,6 +25,8 @@
 namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(coinselection_tests, WalletTestingSetup)
 
+typedef std::set<std::shared_ptr<COutput>> CoinSet;
+
 static int nextLockTime = 0;
 static FastRandomContext default_rand;
 
@@ -129,6 +131,38 @@ static void TestKnapsackMatch(std::string test_title, std::vector<COutput>& utxo
     expected_result.Clear();
 }
 
+/* Test Knapsack gets a sufficient input set */
+static void TestKnapsackSuccess(std::string test_title, std::vector<COutput>& utxo_pool, const CAmount& selection_target)
+{
+    CAmount min_selection_with_change = selection_target + /*default_change_target=*/25'000;
+    CAmount lowest_larger_eff_value = MAX_MONEY;
+
+    for (COutput utxo : utxo_pool) {
+        CAmount eff_val = utxo.GetEffectiveValue();
+        if (eff_val == selection_target || eff_val >= min_selection_with_change) {
+            if (eff_val < lowest_larger_eff_value) {
+                lowest_larger_eff_value = eff_val;
+            }
+        }
+    }
+
+    const auto result = SelectCoinsKnapsack(utxo_pool, selection_target);
+    BOOST_CHECK_MESSAGE(result, "Knapsack-Result: " + test_title);
+    CAmount res_eff_value = result->GetSelectedEffectiveValue();
+    // Knapsack must select at least selection_target + min_change unless it finds an exact match
+    if (res_eff_value == selection_target) {
+        // Exact match
+        BOOST_CHECK_MESSAGE(res_eff_value == selection_target, "Exact match of selection target " + std::to_string(selection_target) + " found");
+    } else if (res_eff_value == lowest_larger_eff_value) {
+        BOOST_CHECK_MESSAGE(res_eff_value >= min_selection_with_change, "Greater or equal than selection target plus min_change: " + std::to_string(min_selection_with_change) );
+        BOOST_CHECK_MESSAGE(res_eff_value == lowest_larger_eff_value, "Selected lowest_larger " + std::to_string(lowest_larger_eff_value) + " (+"+ std::to_string(lowest_larger_eff_value - min_selection_with_change) + ")");
+    } else {
+        BOOST_CHECK_MESSAGE(res_eff_value >= min_selection_with_change, "Greater or equal than selection target plus min_change: " + std::to_string(min_selection_with_change) );
+        // Knapsack should prefer lowest_larger, if it cannot find a better combination, thus it’s an upper bound
+        BOOST_CHECK_MESSAGE(res_eff_value <= lowest_larger_eff_value, "Selected: " + std::to_string(res_eff_value) + " (+" + std::to_string(res_eff_value - min_selection_with_change) + "), while lowest_larger: " + std::to_string(lowest_larger_eff_value) + " (+"+ std::to_string(lowest_larger_eff_value - min_selection_with_change) + ")");
+    }
+}
+
 static void TestKnapsackFail(std::string test_title, std::vector<COutput>& utxo_pool, const CAmount& selection_target)
 {
     BOOST_CHECK_MESSAGE(!SelectCoinsKnapsack(utxo_pool, selection_target), "Knapsack-Fail: " + test_title);
@@ -160,6 +194,128 @@ BOOST_AUTO_TEST_CASE(knapsack_predictable_test)
     TestKnapsackMatch("Exactly min_change", utxo_pool, /*selection_target=*/ 9.975 * CENT, /*expected_input_amounts=*/ {3 * CENT, 7 * CENT});
     // 7+3 is enough, but not enough for min_change (9.976+0.025=10.00111000340)
     TestKnapsackMatch("Select more to get min_change", utxo_pool, /*selection_target=*/ 9.976 * CENT, /*expected_input_amounts=*/ {11 * CENT});
+}
+
+/** Check if this selection is equal to another one. Equal means same inputs (i.e same value and prevout) */
+static bool EqualResult(const SelectionResult& a, const SelectionResult& b)
+{
+    std::pair<CoinSet::iterator, CoinSet::iterator> ret = std::mismatch(a.GetInputSet().begin(), a.GetInputSet().end(), b.GetInputSet().begin(),
+        [](const std::shared_ptr<COutput>& a, const std::shared_ptr<COutput>& b) {
+            return a->outpoint == b->outpoint;
+        });
+    return ret.first == a.GetInputSet().end() && ret.second == b.GetInputSet().end();
+}
+
+BOOST_AUTO_TEST_CASE(knapsack_randomness_test)
+{
+    std::vector<COutput> clone_pool;
+    AddDuplicateCoins(clone_pool, /*count=*/ 1000, /*amount=*/ 1 * COIN);
+    {
+        // Select 50 from 1000 clone coins twice, input sets must differ
+        const auto one_result = SelectCoinsKnapsack(/*utxos=*/ clone_pool, /*selection_target*/ 50 * COIN);
+        BOOST_CHECK(one_result);
+
+        const auto another_result = SelectCoinsKnapsack(/*utxos=*/ clone_pool, /*selection_target*/ 50 * COIN);
+        BOOST_CHECK(another_result);
+        BOOST_CHECK_MESSAGE(!EqualResult(*one_result, *another_result), "Knapsack-Success: Select different input sets from clones on exact match");
+    }
+
+    {
+        // Select 1 from 10000 coins up to twenty times until they differ
+        const auto one_result = SelectCoinsKnapsack(/*utxos=*/ clone_pool, /*selection_target*/ 1 * COIN);
+        BOOST_CHECK(one_result);
+        std::optional<wallet::SelectionResult> another_result;
+        for (int i = 0; i < 20; i++) {
+            another_result = SelectCoinsKnapsack(/*utxos=*/ clone_pool, /*selection_target*/ 1 * COIN);
+            BOOST_CHECK(another_result);
+            if (EqualResult(*one_result, *another_result)) {
+                // Randomly selected the same single input from 1000. Select another.
+                continue;
+            }
+            break;
+        }
+        // If we select the same input 20 times from 1000, something is wrong
+        BOOST_CHECK_MESSAGE(!EqualResult(*one_result, *another_result), "Knapsack-Success: Select different single exact match inputs from clones");
+    }
+
+    AddDuplicateCoins(clone_pool, /*count=*/ 100, /*amount=*/ 60 * CENT);
+    {
+        // 2×0.6×COIN is worse than 1×COIN, select different lowest larger UTXO on repetition
+        const auto one_result = SelectCoinsKnapsack(/*utxos=*/ clone_pool, /*selection_target*/ 0.7 * COIN);
+        BOOST_CHECK(one_result);
+        std::optional<wallet::SelectionResult> another_result;
+        for (int i = 0; i < 20; i++) {
+            another_result = SelectCoinsKnapsack(/*utxos=*/ clone_pool, /*selection_target*/ 0.7 * COIN);
+            BOOST_CHECK(another_result);
+            if (EqualResult(*one_result, *another_result)) {
+                // Randomly selected the same lowest larger from 1000. Select another.
+                continue;
+            }
+            break;
+        }
+        // If we select the same lowest larger 20 times from 1000, something is wrong
+        BOOST_CHECK_MESSAGE(!EqualResult(*one_result, *another_result), "Knapsack-Success: Select different lowest larger inputs from clones");
+    }
+
+    {
+        // 0.6×COIN + 1×COIN is better than 2×COIN, select different UTXOs on repetition
+        const auto one_result = SelectCoinsKnapsack(/*utxos=*/ clone_pool, /*selection_target*/ 1.5 * COIN);
+        BOOST_CHECK(one_result);
+        std::optional<wallet::SelectionResult> another_result;
+        for (int i = 0; i < 20; i++) {
+            another_result = SelectCoinsKnapsack(/*utxos=*/ clone_pool, /*selection_target*/ 1.5 * COIN);
+            BOOST_CHECK(another_result);
+            if (EqualResult(*one_result, *another_result)) {
+                // Randomly selected the same two coins from 1100. Select another.
+                continue;
+            }
+            break;
+        }
+        // If we select the same lowest larger 20 times from 10'000, something is wrong
+        BOOST_CHECK_MESSAGE(!EqualResult(*one_result, *another_result), "Knapsack-Success: Select differing combinations of smaller inputs from clones");
+    }
+
+
+    std::vector<COutput> diverse_pool;
+    {
+        // Generate about 10 random amounts summing to about 1 COIN
+        for (int i = 0; i < 1; i++) {
+            CAmount sum = 0;
+            std::vector<CAmount> coin_amounts;
+            while (sum < COIN) {
+                CAmount amount = rand() % 1000 * (COIN - sum) / 1000 + 1500;
+                sum += amount;
+                coin_amounts.push_back(amount);
+            }
+            AddCoins(diverse_pool, coin_amounts);
+        }
+
+        BOOST_CHECK_MESSAGE(diverse_pool.size(), "Generated " + std::to_string(diverse_pool.size()) + " random UTXOs");
+
+        for (int i = 0; i < 50; i++) {
+            CAmount random_selection_target = (rand() % 1'000'000) * (CENT - 10'000) / 1'000'000 + 10'000;
+            TestKnapsackSuccess("Inputs between `target` and `lowest_larger` from random UTXOs #" + std::to_string(i+1), diverse_pool, random_selection_target);
+        }
+
+        // Generate a few hundred more random amounts summing to about 10×COIN
+        for (int i = 0; i < 10; i++) {
+            CAmount sum = 0;
+            std::vector<CAmount> coin_amounts;
+            while (sum < COIN) {
+                CAmount amount = rand() % 10'000 * (COIN - sum) / 30'000 + 1500;
+                sum += amount;
+                coin_amounts.push_back(amount);
+            }
+            AddCoins(diverse_pool, coin_amounts);
+        }
+
+        BOOST_CHECK_MESSAGE(diverse_pool.size(), "Stocked up to " + std::to_string(diverse_pool.size()) + " random UTXOs");
+
+        for (int i = 50; i < 100; i++) {
+            CAmount random_selection_target = (rand() % 1'000'000) * (CENT - 10'000) / 1'000'000 + 10'000;
+            TestKnapsackSuccess("Inputs between `target` and `lowest_larger` from random UTXOs #" + std::to_string(i+1), diverse_pool, random_selection_target);
+        }
+    }
 }
 
 static void TestBnBSuccess(std::string test_title, std::vector<COutput>& utxo_pool, const CAmount& selection_target, const std::vector<CAmount>& expected_input_amounts, const CFeeRate& feerate = default_cs_params.m_effective_feerate )
@@ -219,7 +375,7 @@ BOOST_AUTO_TEST_CASE(bnb_test)
     // Test skipping of equivalent input sets
     std::vector<COutput> clone_pool;
     AddCoins(clone_pool, {2 * CENT, 7 * CENT, 7 * CENT});
-    AddDuplicateCoins(clone_pool, 50'000, 5 * CENT);
+    AddDuplicateCoins(clone_pool, /*count=*/ 50'000, /*amount=*/ 5 * CENT);
     TestBnBSuccess("Skip equivalent input sets", clone_pool, /*selection_target=*/ 16 * CENT, /*expected_input_amounts=*/ {2 * CENT, 7 * CENT, 7 * CENT});
 
     // Test BnB attempt limit
