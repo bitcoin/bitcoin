@@ -205,7 +205,6 @@ fuzz_filtered.info: fuzz.info
 	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
 
 test_bitcoin.info: baseline_filtered.info
-	$(MAKE) -C src/ check
 	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src -t test_bitcoin -o $@
 	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
 
@@ -214,7 +213,6 @@ test_bitcoin_filtered.info: test_bitcoin.info
 	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
 
 functional_test.info: test_bitcoin_filtered.info
-	@TIMEOUT=15 test/functional/test_runner.py $(EXTENDED_FUNCTIONAL_TESTS)
 	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src --t functional-tests -o $@
 	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
 
