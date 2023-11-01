@@ -1121,7 +1121,7 @@ inline void WriteCompactSize(SizeComputer &s, uint64_t nSize)
 }
 
 template <typename T>
-size_t GetSerializeSize(const T& t, int nVersion = 0)
+size_t GetSerializeSize(const T& t)
 {
     return (SizeComputer() << t).size();
 }

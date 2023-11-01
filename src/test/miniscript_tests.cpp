@@ -369,7 +369,7 @@ void TestSatisfy(const KeyConverter& converter, const std::string& testcase, con
             CScriptWitness witness_nonmal;
             const bool nonmal_success = node->Satisfy(satisfier, witness_nonmal.stack, true) == miniscript::Availability::YES;
             // Compute witness size (excluding script push, control block, and witness count encoding).
-            const size_t wit_size = GetSerializeSize(witness_nonmal.stack, PROTOCOL_VERSION) - GetSizeOfCompactSize(witness_nonmal.stack.size());
+            const size_t wit_size = GetSerializeSize(witness_nonmal.stack) - GetSizeOfCompactSize(witness_nonmal.stack.size());
             SatisfactionToWitness(converter.MsContext(), witness_nonmal, script, builder);
 
             if (nonmal_success) {
