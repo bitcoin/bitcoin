@@ -7,6 +7,7 @@
 
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/public_keys.h>
+#include <blsct/range_proof/bulletproofs/range_proof_logic.h>
 #include <blsct/range_proof/generators.h>
 #include <coins.h>
 

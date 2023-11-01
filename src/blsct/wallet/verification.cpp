@@ -8,10 +8,11 @@ namespace blsct {
 bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view)
 {
     if (!view.HaveInputs(tx)) {
-        std::cout << "Unknown inputs\n";
         return false;
     }
 
+    bulletproofs::RangeProofLogic<Mcl> rp;
+    std::vector<bulletproofs::RangeProof<Mcl>> vProofs;
     std::vector<Message> vMessages;
     std::vector<PublicKey> vPubKeys;
     MclG1Point balanceKey;
@@ -20,7 +21,6 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view)
         Coin coin;
 
         if (!view.GetCoin(in.prevout, coin)) {
-            std::cout << "Unknown input\n";
             return false;
         }
 
@@ -36,12 +36,13 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view)
         vMessages.push_back(Message(out_hash.begin(), out_hash.end()));
 
         if (out.IsBLSCT()) {
+            vProofs.push_back(out.blsctData.rangeProof);
             balanceKey = balanceKey - out.blsctData.rangeProof.Vs[0];
         } else {
+            if (!out.scriptPubKey.IsUnspendable())
+                return false;
             range_proof::GeneratorsFactory<Mcl> gf;
-
-            TokenId token_id;
-            range_proof::Generators<Mcl> gen = gf.GetInstance(token_id);
+            range_proof::Generators<Mcl> gen = gf.GetInstance(out.tokenId);
             balanceKey = balanceKey - (gen.G * MclScalar(out.nValue));
         }
     }
@@ -49,6 +50,6 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view)
     vMessages.push_back(blsct::Common::BLSCTBALANCE);
     vPubKeys.push_back(balanceKey);
 
-    return PublicKeys{vPubKeys}.VerifyBatch(vMessages, tx.txSig, true);
+    return PublicKeys{vPubKeys}.VerifyBatch(vMessages, tx.txSig, true) && rp.Verify(vProofs);
 }
 } // namespace blsct

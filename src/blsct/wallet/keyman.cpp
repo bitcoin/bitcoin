@@ -426,6 +426,21 @@ CKeyID KeyMan::GetHashId(const blsct::PublicKey& blindingKey, const blsct::Publi
     return PublicKey(D_prime).GetID();
 };
 
+blsct::PrivateKey KeyMan::GetMasterSeedKey() const
+{
+    if (!IsHDEnabled())
+        throw std::runtime_error(strprintf("%s: the wallet has no HD enabled"));
+
+    auto seedId = m_hd_chain.seed_id;
+
+    PrivateKey ret;
+
+    if (!GetKey(seedId, ret))
+        throw std::runtime_error(strprintf("%s: could not access the master seed key", __func__));
+
+    return ret;
+}
+
 blsct::PrivateKey KeyMan::GetSpendingKey() const
 {
     if (!fSpendKeyDefined)

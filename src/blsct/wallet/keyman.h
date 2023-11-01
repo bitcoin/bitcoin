@@ -130,6 +130,7 @@ public:
     bool IsMine(const blsct::PublicKey& blindingKey, const blsct::PublicKey& spendingKey, const uint16_t& viewTag);
     CKeyID GetHashId(const CTxOut& txout) const { return GetHashId(txout.blsctData.blindingKey, txout.blsctData.spendingKey); }
     CKeyID GetHashId(const blsct::PublicKey& blindingKey, const blsct::PublicKey& spendingKey) const;
+    blsct::PrivateKey GetMasterSeedKey() const;
     blsct::PrivateKey GetSpendingKey() const;
     blsct::PrivateKey GetSpendingKeyForOutput(const CTxOut& out) const;
     blsct::PrivateKey GetSpendingKeyForOutput(const CTxOut& out, const CKeyID& id) const;

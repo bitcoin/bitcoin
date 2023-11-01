@@ -29,7 +29,6 @@ BOOST_FIXTURE_TEST_CASE(ismine_test, TestingSetup)
     auto recvAddress = blsct::SubAddress(std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(0).value()));
 
     auto out = blsct::TxFactory::CreateOutput(recvAddress, 1000, "test");
-
     BOOST_ASSERT(blsct_km->IsMine(out.out));
 
     auto hashId = blsct_km->GetHashId(out.out);
