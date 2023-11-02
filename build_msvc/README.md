@@ -32,7 +32,7 @@ Qt
 ---------------------
 To build Bitcoin Core with the GUI, a static build of Qt is required.
 
-1. Download a single ZIP archive of Qt source code from https://download.qt.io/official_releases/qt/ (e.g., [`qt-everywhere-opensource-src-5.15.10.zip`](https://download.qt.io/official_releases/qt/5.15/5.15.10/single/qt-everywhere-opensource-src-5.15.10.zip)), and expand it into a dedicated folder. The following instructions assume that this folder is `C:\dev\qt-source`.
+1. Download a single ZIP archive of Qt source code from https://download.qt.io/official_releases/qt/ (e.g., [`qt-everywhere-opensource-src-5.15.11.zip`](https://download.qt.io/official_releases/qt/5.15/5.15.11/single/qt-everywhere-opensource-src-5.15.11.zip)), and expand it into a dedicated folder. The following instructions assume that this folder is `C:\dev\qt-source`.
 
 2. Open "x64 Native Tools Command Prompt for VS 2022", and input the following commands:
 ```cmd
