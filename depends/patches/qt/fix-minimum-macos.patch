@@ -1,0 +1,24 @@
+This patch must be coordinated with the `OSX_MIN_VERSION`
+variable value in depends/hosts/darwin.mk.
+
+
+--- a/qtbase/src/corelib/global/qsystemdetection.h
++++ b/qtbase/src/corelib/global/qsystemdetection.h
+@@ -221,13 +221,13 @@
+ #  include <AvailabilityMacros.h>
+ #
+ #  ifdef Q_OS_MACOS
+-#    if !defined(__MAC_OS_X_VERSION_MIN_REQUIRED) || __MAC_OS_X_VERSION_MIN_REQUIRED < __MAC_10_6
++#    if !defined(__MAC_OS_X_VERSION_MIN_REQUIRED) || __MAC_OS_X_VERSION_MIN_REQUIRED < __MAC_11_0
+ #       undef __MAC_OS_X_VERSION_MIN_REQUIRED
+-#       define __MAC_OS_X_VERSION_MIN_REQUIRED __MAC_10_6
++#       define __MAC_OS_X_VERSION_MIN_REQUIRED __MAC_11_0
+ #    endif
+-#    if !defined(MAC_OS_X_VERSION_MIN_REQUIRED) || MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_6
++#    if !defined(MAC_OS_X_VERSION_MIN_REQUIRED) || MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_11_0
+ #       undef MAC_OS_X_VERSION_MIN_REQUIRED
+-#       define MAC_OS_X_VERSION_MIN_REQUIRED MAC_OS_X_VERSION_10_6
++#       define MAC_OS_X_VERSION_MIN_REQUIRED MAC_OS_X_VERSION_11_0
+ #    endif
+ #  endif
+ #

@@ -1,4 +1,4 @@
-OSX_MIN_VERSION=11.0
+OSX_MIN_VERSION=11.0 # This value must be coordinated with depends/patches/qt/fix-minimum-macos.patch.
 OSX_SDK_VERSION=11.0
 XCODE_VERSION=12.2
 XCODE_BUILD_ID=12B45b
