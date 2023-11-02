@@ -73,7 +73,7 @@ static ReorgTxns CreateBlocks(size_t num_not_shared)
 
 static void Reorg(const ReorgTxns& reorg)
 {
-    DisconnectedBlockTransactions disconnectpool{MAX_DISCONNECTED_TX_POOL_SIZE * 1000};
+    DisconnectedBlockTransactions disconnectpool{MAX_DISCONNECTED_TX_POOL_BYTES};
     // Disconnect block
     const auto evicted = disconnectpool.AddTransactionsFromBlock(reorg.disconnected_txns);
     assert(evicted.empty());

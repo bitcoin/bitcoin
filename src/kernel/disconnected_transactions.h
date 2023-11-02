@@ -5,8 +5,6 @@
 #ifndef BITCOIN_KERNEL_DISCONNECTED_TRANSACTIONS_H
 #define BITCOIN_KERNEL_DISCONNECTED_TRANSACTIONS_H
 
-#include <core_memusage.h>
-#include <memusage.h>
 #include <primitives/transaction.h>
 #include <util/hasher.h>
 
@@ -14,8 +12,8 @@
 #include <unordered_map>
 #include <vector>
 
-/** Maximum kilobytes for transactions to store for processing during reorg */
-static const unsigned int MAX_DISCONNECTED_TX_POOL_SIZE = 20'000;
+/** Maximum bytes for transactions to store for processing during reorg */
+static const unsigned int MAX_DISCONNECTED_TX_POOL_BYTES{20'000'000};
 /**
  * DisconnectedBlockTransactions
 
@@ -38,8 +36,7 @@ static const unsigned int MAX_DISCONNECTED_TX_POOL_SIZE = 20'000;
  */
 class DisconnectedBlockTransactions {
 private:
-    /** Cached dynamic memory usage for the CTransactions (memory for the shared pointers is
-     * included in the container calculations). */
+    /** Cached dynamic memory usage for the `CTransactionRef`s */
     uint64_t cachedInnerUsage = 0;
     const size_t m_max_mem_usage;
     std::list<CTransactionRef> queuedTx;
@@ -47,39 +44,15 @@ private:
     std::unordered_map<uint256, TxList::iterator, SaltedTxidHasher> iters_by_txid;
 
     /** Trim the earliest-added entries until we are within memory bounds. */
-    std::vector<CTransactionRef> LimitMemoryUsage()
-    {
-        std::vector<CTransactionRef> evicted;
-
-        while (!queuedTx.empty() && DynamicMemoryUsage() > m_max_mem_usage) {
-            evicted.emplace_back(queuedTx.front());
-            cachedInnerUsage -= RecursiveDynamicUsage(*queuedTx.front());
-            iters_by_txid.erase(queuedTx.front()->GetHash());
-            queuedTx.pop_front();
-        }
-        return evicted;
-    }
+    std::vector<CTransactionRef> LimitMemoryUsage();
 
 public:
-    DisconnectedBlockTransactions(size_t max_mem_usage) : m_max_mem_usage{max_mem_usage} {}
+    DisconnectedBlockTransactions(size_t max_mem_usage)
+        : m_max_mem_usage{max_mem_usage} {}
 
-    // It's almost certainly a logic bug if we don't clear out queuedTx before
-    // destruction, as we add to it while disconnecting blocks, and then we
-    // need to re-process remaining transactions to ensure mempool consistency.
-    // For now, assert() that we've emptied out this object on destruction.
-    // This assert() can always be removed if the reorg-processing code were
-    // to be refactored such that this assumption is no longer true (for
-    // instance if there was some other way we cleaned up the mempool after a
-    // reorg, besides draining this object).
-    ~DisconnectedBlockTransactions() {
-        assert(queuedTx.empty());
-        assert(iters_by_txid.empty());
-        assert(cachedInnerUsage == 0);
-    }
+    ~DisconnectedBlockTransactions();
 
-    size_t DynamicMemoryUsage() const {
-        return cachedInnerUsage + memusage::DynamicUsage(iters_by_txid) + memusage::DynamicUsage(queuedTx);
-    }
+    size_t DynamicMemoryUsage() const;
 
     /** Add transactions from the block, iterating through vtx in reverse order. Callers should call
      * this function for blocks in descending order by block height.
@@ -88,50 +61,16 @@ public:
      * corresponding entry in iters_by_txid.
      * @returns vector of transactions that were evicted for size-limiting.
      */
-    [[nodiscard]] std::vector<CTransactionRef> AddTransactionsFromBlock(const std::vector<CTransactionRef>& vtx)
-    {
-        iters_by_txid.reserve(iters_by_txid.size() + vtx.size());
-        for (auto block_it = vtx.rbegin(); block_it != vtx.rend(); ++block_it) {
-            auto it = queuedTx.insert(queuedTx.end(), *block_it);
-            iters_by_txid.emplace((*block_it)->GetHash(), it);
-            cachedInnerUsage += RecursiveDynamicUsage(**block_it);
-        }
-        return LimitMemoryUsage();
-    }
+    [[nodiscard]] std::vector<CTransactionRef> AddTransactionsFromBlock(const std::vector<CTransactionRef>& vtx);
 
     /** Remove any entries that are in this block. */
-    void removeForBlock(const std::vector<CTransactionRef>& vtx)
-    {
-        // Short-circuit in the common case of a block being added to the tip
-        if (queuedTx.empty()) {
-            return;
-        }
-        for (const auto& tx : vtx) {
-            auto iter = iters_by_txid.find(tx->GetHash());
-            if (iter != iters_by_txid.end()) {
-                auto list_iter = iter->second;
-                iters_by_txid.erase(iter);
-                cachedInnerUsage -= RecursiveDynamicUsage(**list_iter);
-                queuedTx.erase(list_iter);
-            }
-        }
-    }
+    void removeForBlock(const std::vector<CTransactionRef>& vtx);
 
     size_t size() const { return queuedTx.size(); }
 
-    void clear()
-    {
-        cachedInnerUsage = 0;
-        iters_by_txid.clear();
-        queuedTx.clear();
-    }
+    void clear();
 
     /** Clear all data structures and return the list of transactions. */
-    std::list<CTransactionRef> take()
-    {
-        std::list<CTransactionRef> ret = std::move(queuedTx);
-        clear();
-        return ret;
-    }
+    std::list<CTransactionRef> take();
 };
 #endif // BITCOIN_KERNEL_DISCONNECTED_TRANSACTIONS_H
