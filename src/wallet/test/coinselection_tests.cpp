@@ -275,45 +275,25 @@ BOOST_AUTO_TEST_CASE(knapsack_randomness_test)
         BOOST_CHECK_MESSAGE(!EqualResult(*one_result, *another_result), "Knapsack-Success: Select differing combinations of smaller inputs from clones");
     }
 
-
     std::vector<COutput> diverse_pool;
     {
-        // Generate about 10 random amounts summing to about 1 COIN
-        for (int i = 0; i < 1; i++) {
-            CAmount sum = 0;
-            std::vector<CAmount> coin_amounts;
-            while (sum < COIN) {
-                CAmount amount = rand() % 1000 * (COIN - sum) / 1000 + 1500;
-                sum += amount;
-                coin_amounts.push_back(amount);
-            }
-            AddCoins(diverse_pool, coin_amounts);
-        }
-
-        BOOST_CHECK_MESSAGE(diverse_pool.size(), "Generated " + std::to_string(diverse_pool.size()) + " random UTXOs");
-
-        for (int i = 0; i < 50; i++) {
-            CAmount random_selection_target = (rand() % 1'000'000) * (CENT - 10'000) / 1'000'000 + 10'000;
-            TestKnapsackSuccess("Inputs between `target` and `lowest_larger` from random UTXOs #" + std::to_string(i+1), diverse_pool, random_selection_target);
-        }
-
-        // Generate a few hundred more random amounts summing to about 10×COIN
         for (int i = 0; i < 10; i++) {
             CAmount sum = 0;
             std::vector<CAmount> coin_amounts;
             while (sum < COIN) {
-                CAmount amount = rand() % 10'000 * (COIN - sum) / 30'000 + 1500;
+                // Each loop creates more and smaller chunks, first loop has about 8, last has about 1400 UTXOs
+                CAmount amount = rand() % (int)(pow(2, i) * 1000) * (COIN - sum) / (int)(pow(3, i) * 1000) + 3000;
                 sum += amount;
                 coin_amounts.push_back(amount);
             }
             AddCoins(diverse_pool, coin_amounts);
-        }
+            BOOST_CHECK_MESSAGE(diverse_pool.size(), "UTXO pool has " + std::to_string(diverse_pool.size()) + " random UTXOs");
 
-        BOOST_CHECK_MESSAGE(diverse_pool.size(), "Stocked up to " + std::to_string(diverse_pool.size()) + " random UTXOs");
-
-        for (int i = 50; i < 100; i++) {
-            CAmount random_selection_target = (rand() % 1'000'000) * (CENT - 10'000) / 1'000'000 + 10'000;
-            TestKnapsackSuccess("Inputs between `target` and `lowest_larger` from random UTXOs #" + std::to_string(i+1), diverse_pool, random_selection_target);
+            for (int j = 10*i; j < (i+1) * 10; j++) {
+                // Start with random target between 1500 and 4500, multiply by three each loop
+                CAmount selection_target = ((rand() % 3000) + 1500) * pow(3, j%10); // [1500, 4500], [4500, 13'500], … , [9'841'500, 29'524'500], [29'524'500, 88'573'500]
+                TestKnapsackSuccess("Inputs between `target` and `lowest_larger` from random UTXOs #" + std::to_string(j+1), diverse_pool, selection_target);
+            }
         }
     }
 }
