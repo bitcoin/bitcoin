@@ -8,27 +8,22 @@
 #include <coins.h>
 #include <crypto/muhash.h>
 #include <hash.h>
+#include <kernel/cs_main.h>
 #include <logging.h>
 #include <node/blockstorage.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
-#include <serialize.h>
 #include <span.h>
 #include <streams.h>
 #include <sync.h>
-#include <tinyformat.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/overflow.h>
-#include <validation.h>
-#include <version.h>
 
 #include <cassert>
 #include <iosfwd>
-#include <iterator>
 #include <map>
 #include <memory>
-#include <string>
 #include <utility>
 
 namespace kernel {

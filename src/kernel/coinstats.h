@@ -6,8 +6,6 @@
 #define BITCOIN_KERNEL_COINSTATS_H
 
 #include <consensus/amount.h>
-#include <crypto/muhash.h>
-#include <streams.h>
 #include <uint256.h>
 
 #include <cstdint>
@@ -15,9 +13,10 @@
 #include <optional>
 
 class CCoinsView;
-class Coin;
 class COutPoint;
 class CScript;
+class Coin;
+class MuHash3072;
 namespace node {
 class BlockManager;
 } // namespace node
