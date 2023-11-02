@@ -811,7 +811,9 @@ bool LegacyScriptPubKeyMan::AddKeyPubKeyInner(const CKey& key, const CPubKey &pu
 
     std::vector<unsigned char> vchCryptedSecret;
     CKeyingMaterial vchSecret{UCharCast(key.begin()), UCharCast(key.end())};
-    if (!EncryptSecret(m_storage.GetEncryptionKey(), vchSecret, pubkey.GetHash(), vchCryptedSecret)) {
+    if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
+            return EncryptSecret(encryption_key, vchSecret, pubkey.GetHash(), vchCryptedSecret);
+        })) {
         return false;
     }
 
@@ -997,7 +999,9 @@ bool LegacyScriptPubKeyMan::GetKey(const CKeyID &address, CKey& keyOut) const
     {
         const CPubKey &vchPubKey = (*mi).second.first;
         const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.second;
-        return DecryptKey(m_storage.GetEncryptionKey(), vchCryptedSecret, vchPubKey, keyOut);
+        return m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
+            return DecryptKey(encryption_key, vchCryptedSecret, vchPubKey, keyOut);
+        });
     }
     return false;
 }
@@ -2128,7 +2132,9 @@ std::map<CKeyID, CKey> DescriptorScriptPubKeyMan::GetKeys() const
             const CPubKey& pubkey = key_pair.second.first;
             const std::vector<unsigned char>& crypted_secret = key_pair.second.second;
             CKey key;
-            DecryptKey(m_storage.GetEncryptionKey(), crypted_secret, pubkey, key);
+            m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
+                return DecryptKey(encryption_key, crypted_secret, pubkey, key);
+            });
             keys[pubkey.GetID()] = key;
         }
         return keys;
@@ -2262,7 +2268,9 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
 
         std::vector<unsigned char> crypted_secret;
         CKeyingMaterial secret{UCharCast(key.begin()), UCharCast(key.end())};
-        if (!EncryptSecret(m_storage.GetEncryptionKey(), secret, pubkey.GetHash(), crypted_secret)) {
+        if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
+                return EncryptSecret(encryption_key, secret, pubkey.GetHash(), crypted_secret);
+            })) {
             return false;
         }
 
