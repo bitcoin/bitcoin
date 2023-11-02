@@ -58,6 +58,7 @@ TIME_RANGE_STEP = 600  # ten-minute steps
 TIME_RANGE_MTP = TIME_GENESIS_BLOCK + (HEIGHT - 6) * TIME_RANGE_STEP
 TIME_RANGE_TIP = TIME_GENESIS_BLOCK + (HEIGHT - 1) * TIME_RANGE_STEP
 TIME_RANGE_END = TIME_GENESIS_BLOCK + HEIGHT * TIME_RANGE_STEP
+DIFFICULTY_ADJUSTMENT_INTERVAL = 2016
 
 
 class BlockchainTest(BitcoinTestFramework):
@@ -450,6 +451,15 @@ class BlockchainTest(BitcoinTestFramework):
         )
         # This should be 2 hashes every 10 minutes or 1/300
         assert abs(hashes_per_second * 300 - 1) < 0.0001
+
+        # Test setting the first param of getnetworkhashps to negative value returns the average network
+        # hashes per second from the last difficulty change.
+        current_block_height = self.nodes[0].getmininginfo()['blocks']
+        blocks_since_last_diff_change = current_block_height % DIFFICULTY_ADJUSTMENT_INTERVAL + 1
+        expected_hashes_per_second_since_diff_change = self.nodes[0].getnetworkhashps(blocks_since_last_diff_change)
+
+        assert_equal(self.nodes[0].getnetworkhashps(-1), expected_hashes_per_second_since_diff_change)
+        assert_equal(self.nodes[0].getnetworkhashps(-2), expected_hashes_per_second_since_diff_change)
 
     def _test_stopatheight(self):
         self.log.info("Test stopping at height")
