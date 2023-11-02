@@ -503,11 +503,11 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         if (!sock) {
             return nullptr;
         }
-        std::string host;
-        uint16_t port{default_port};
+        std::optional<std::string> host;
+        std::optional<uint16_t> port = default_port;
         SplitHostPort(std::string(pszDest), port, host);
         bool proxyConnectionFailed;
-        connected = ConnectThroughProxy(proxy, host, port, *sock, nConnectTimeout,
+        connected = ConnectThroughProxy(proxy, host.value(), port.value(), *sock, nConnectTimeout,
                                         proxyConnectionFailed);
     }
     if (!connected) {

@@ -126,21 +126,6 @@ std::vector<std::string> GetNetworkNames(bool append_unroutable)
     return names;
 }
 
-NetworkAddrError HasValidHostPort(std::string_view networkAddr)
-{
-    uint16_t port{0};
-    std::string hostname;
-    bool validPort = SplitHostPort(networkAddr, port, hostname);
-
-    NetworkAddrError res = NetworkAddrError::OK;
-    if (!validPort || port == 0)
-        res = NetworkAddrError::NO_PORT;
-    if (hostname.empty() || hostname.find(' ') != std::string::npos)
-        res = (res == NetworkAddrError::NO_PORT) ? NetworkAddrError::NO_HOSTPORT
-            : NetworkAddrError::NO_HOST;
-    return res;
-}
-
 static std::vector<CNetAddr> LookupIntern(const std::string& name, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
     if (!ContainsNoNUL(name)) return {};
@@ -193,16 +178,16 @@ std::vector<CService> Lookup(const std::string& name, uint16_t portDefault, bool
     if (name.empty() || !ContainsNoNUL(name)) {
         return {};
     }
-    uint16_t port{portDefault};
-    std::string hostname;
+    std::optional<uint16_t> port{portDefault};
+    std::optional<std::string> hostname;
     SplitHostPort(name, port, hostname);
 
-    const std::vector<CNetAddr> addresses{LookupIntern(hostname, nMaxSolutions, fAllowLookup, dns_lookup_function)};
+    const std::vector<CNetAddr> addresses{LookupIntern(hostname.value(), nMaxSolutions, fAllowLookup, dns_lookup_function)};
     if (addresses.empty()) return {};
     std::vector<CService> services;
     services.reserve(addresses.size());
     for (const auto& addr : addresses)
-        services.emplace_back(addr, port);
+        services.emplace_back(addr, port.value());
     return services;
 }
 

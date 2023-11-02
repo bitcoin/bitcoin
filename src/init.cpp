@@ -1269,33 +1269,37 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
-    for (const std::string port_option : {
-        "-i2psam",
-        "-onion",
-        "-proxy",
-        "-rpcbind",
-        "-torcontrol",
-        "-whitebind",
-        "-zmqpubhashblock",
-        "-zmqpubhashtx",
-        "-zmqpubrawblock",
-        "-zmqpubrawtx",
-        "-zmqpubsequence",
-    }) {
-        for (const std::string& socket_addr : args.GetArgs(port_option)) {
-            std::string host_out;
-            uint16_t port_out{0};
-            if (!SplitHostPort(socket_addr, port_out, host_out)) {
-                return InitError(InvalidPortErrMsg(port_option, socket_addr));
+     for (const auto& [option, port_required] :
+        std::vector<std::tuple<const char*, bool>>{{"-i2psam", true},
+                                                {"-onion", true},
+                                                {"-proxy", true},
+                                                {"-rpcbind", false},
+                                                {"-torcontrol", true},
+                                                {"-whitebind", false},
+                                                {"-zmqpubhashblock", true},
+                                                {"-zmqpubhashtx", true},
+                                                {"-zmqpubrawblock", true},
+                                                {"-zmqpubrawtx", true},
+                                                {"-zmqpubsequence", true}}) {
+        for (const std::string& str : args.GetArgs(option)) {
+            std::optional<std::string> host;
+            std::optional<uint16_t> port;
+            SplitHostPort(str, port, host);
+            if (!host.has_value()) {
+                return InitError(InvalidHostErrMsg(option, str));
+            }
+            if (port_required && !port.has_value()) {
+                return InitError(InvalidPortErrMsg(option, str));
             }
         }
     }
 
     for (const std::string& socket_addr : args.GetArgs("-bind")) {
-        std::string host_out;
-        uint16_t port_out{0};
+        std::optional<std::string> host_out;
+        std::optional<uint16_t> port_out;
         std::string bind_socket_addr = socket_addr.substr(0, socket_addr.rfind('='));
-        if (!SplitHostPort(bind_socket_addr, port_out, host_out)) {
+        SplitHostPort(bind_socket_addr, port_out, host_out);
+        if (!port_out.has_value()) {
             return InitError(InvalidPortErrMsg("-bind", socket_addr));
         }
     }

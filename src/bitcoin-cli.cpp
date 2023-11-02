@@ -743,8 +743,13 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     //     2. port in -rpcconnect (ie following : in ipv4 or ]: in ipv6)
     //     3. default port for chain
     uint16_t port{BaseParams().RPCPort()};
-    SplitHostPort(gArgs.GetArg("-rpcconnect", DEFAULT_RPCCONNECT), port, host);
+
+    std::optional<std::string> hostOut;
+    std::optional<uint16_t> portOut;
+    SplitHostPort(gArgs.GetArg("-rpcconnect", DEFAULT_RPCCONNECT), portOut, hostOut);
     port = static_cast<uint16_t>(gArgs.GetIntArg("-rpcport", port));
+    host = hostOut.value();
+    port = portOut.value();
 
     // Obtain event base
     raii_event_base base = obtain_event_base();

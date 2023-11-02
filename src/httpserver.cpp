@@ -373,10 +373,10 @@ static bool HTTPBindAddresses(struct evhttp* http)
         }
     } else if (gArgs.IsArgSet("-rpcbind")) { // Specific bind address
         for (const std::string& strRPCBind : gArgs.GetArgs("-rpcbind")) {
-            uint16_t port{http_port};
-            std::string host;
+            std::optional<uint16_t> port = http_port;
+            std::optional<std::string> host;
             SplitHostPort(strRPCBind, port, host);
-            endpoints.emplace_back(host, port);
+            endpoints.emplace_back(host.value(), port.value());
         }
     }
 

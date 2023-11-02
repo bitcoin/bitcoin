@@ -75,49 +75,16 @@ BOOST_AUTO_TEST_CASE(netbase_properties)
 
 }
 
-bool static TestHasHostPort(const std::string& test, bool hasHost, bool hasPort)
-{
-    NetworkAddrError ret = HasValidHostPort(test);
-    switch (ret) {
-        case NetworkAddrError::OK:
-            return hasHost && hasPort;
-        case NetworkAddrError::NO_HOST:
-            return !hasHost && hasPort;
-        case NetworkAddrError::NO_PORT:
-            return hasHost && !hasPort;
-        case NetworkAddrError::NO_HOSTPORT:
-            return !hasHost && !hasPort;
-        default:
-            return false;
-    }
-}
-
-BOOST_AUTO_TEST_CASE(netbase_hashostport)
-{
-    BOOST_CHECK(TestHasHostPort("1.2.3.4:123", true, true));
-    BOOST_CHECK(TestHasHostPort("[1.2.3.4]:123", true, true));
-    BOOST_CHECK(TestHasHostPort("bitcoincore.org:123", true, true));
-    BOOST_CHECK(TestHasHostPort("[bitcoincore.org]:123", true, true));
-    BOOST_CHECK(TestHasHostPort("[::ffff:127.0.0.1]:1234", true, true));
-    BOOST_CHECK(TestHasHostPort("1.2.3.4", true, false));
-    BOOST_CHECK(TestHasHostPort("bitcoincore.org", true, false));
-    BOOST_CHECK(TestHasHostPort("1.2.3.4:", true, false));
-    BOOST_CHECK(TestHasHostPort("bitcoincore.org:", true, false));
-    BOOST_CHECK(TestHasHostPort(":123", false, true));
-    BOOST_CHECK(TestHasHostPort("1", true, false));
-    BOOST_CHECK(TestHasHostPort("1024", true, false));
-    BOOST_CHECK(TestHasHostPort(":", true, false));
-    BOOST_CHECK(TestHasHostPort("", false, false));
-    BOOST_CHECK(TestHasHostPort(" ", false, false));
-    BOOST_CHECK(TestHasHostPort(" : ", false, false));
-}
-
 bool static TestSplitHost(const std::string& test, const std::string& host, uint16_t port, bool validPort=true)
 {
-    std::string hostOut;
-    uint16_t portOut{0};
-    bool validPortOut = SplitHostPort(test, portOut, hostOut);
-    return hostOut == host && portOut == port && validPortOut == validPort;
+    std::optional<std::string> hostOut;
+    std::optional<uint16_t> portOut{0};
+    SplitHostPort(test, portOut, hostOut);
+    if (portOut.has_value() && hostOut.has_value()) {
+        bool validPortOut = portOut != 0;
+        return hostOut == host && portOut == port && validPortOut == validPort;
+    }
+    return false;
 }
 
 BOOST_AUTO_TEST_CASE(netbase_splithost)

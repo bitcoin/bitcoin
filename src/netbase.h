@@ -160,8 +160,6 @@ enum class NetworkAddrError {
     NO_HOSTPORT,
 };
 
-NetworkAddrError HasValidHostPort(std::string_view networkAddr);
-
 using DNSLookupFn = std::function<std::vector<CNetAddr>(const std::string&, bool)>;
 extern DNSLookupFn g_dns_lookup;
 
