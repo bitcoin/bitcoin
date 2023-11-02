@@ -410,6 +410,11 @@ public:
             result.unconfirmed_watch_only_balance = bal.m_watchonly_untrusted_pending;
             result.immature_watch_only_balance = bal.m_watchonly_immature;
         }
+        if (m_wallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE)) {
+            const auto full_bal = GetBalance(*m_wallet, 0, false);
+            result.used = full_bal.m_mine_trusted + full_bal.m_mine_untrusted_pending - bal.m_mine_trusted - bal.m_mine_untrusted_pending;
+        }
+
         return result;
     }
     bool tryGetBalances(WalletBalances& balances, uint256& block_hash) override
@@ -524,6 +529,7 @@ public:
         RemoveWallet(m_context, m_wallet, /*load_on_start=*/false);
     }
     bool isLegacy() override { return m_wallet->IsLegacy(); }
+    bool isAvoidReuseEnabled() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE); }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {
         return MakeSignalHandler(m_wallet->NotifyUnload.connect(fn));
