@@ -49,11 +49,11 @@ std::optional<std::string> CheckPackageMempoolAcceptResult(const Package& txns,
         }
     } else {
         if (result.m_state.IsValid()) {
-            strprintf("Package validation unexpectedly succeeded. %s", result.m_state.ToString());
+            return strprintf("Package validation unexpectedly succeeded. %s", result.m_state.ToString());
         }
     }
     if (result.m_state.GetResult() != PackageValidationResult::PCKG_POLICY && txns.size() != result.m_tx_results.size()) {
-        strprintf("txns size %u does not match tx results size %u", txns.size(), result.m_tx_results.size());
+        return strprintf("txns size %u does not match tx results size %u", txns.size(), result.m_tx_results.size());
     }
     for (const auto& tx : txns) {
         const auto& wtxid = tx->GetWitnessHash();
@@ -102,12 +102,12 @@ std::optional<std::string> CheckPackageMempoolAcceptResult(const Package& txns,
             // The tx by txid should be in the mempool iff the result was not INVALID.
             const bool txid_in_mempool{atmp_result.m_result_type != MempoolAcceptResult::ResultType::INVALID};
             if (mempool->exists(GenTxid::Txid(tx->GetHash())) != txid_in_mempool) {
-                strprintf("tx %s should %sbe in mempool", wtxid.ToString(), txid_in_mempool ? "" : "not ");
+                return strprintf("tx %s should %sbe in mempool", wtxid.ToString(), txid_in_mempool ? "" : "not ");
             }
             // Additionally, if the result was DIFFERENT_WITNESS, we shouldn't be able to find the tx in mempool by wtxid.
             if (tx->HasWitness() && atmp_result.m_result_type == MempoolAcceptResult::ResultType::DIFFERENT_WITNESS) {
                 if (mempool->exists(GenTxid::Wtxid(wtxid))) {
-                    strprintf("wtxid %s should not be in mempool", wtxid.ToString());
+                    return strprintf("wtxid %s should not be in mempool", wtxid.ToString());
                 }
             }
         }
