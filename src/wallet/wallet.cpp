@@ -3067,6 +3067,12 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
 {
     std::vector<CRecipient> vecSend;
 
+    // If no specific change position was requested, apply BIP69
+    if (nChangePosInOut == -1) {
+        std::sort(tx.vin.begin(), tx.vin.end(), CompareInputBIP69());
+        std::sort(tx.vout.begin(), tx.vout.end(), CompareOutputBIP69());
+    }
+
     // Turn the txout set into a CRecipient vector.
     for (size_t idx = 0; idx < tx.vout.size(); idx++) {
         const CTxOut& txOut = tx.vout[idx];

@@ -14,6 +14,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     count_bytes,
     find_vout_for_address,
+    satoshi_round,
 )
 
 
@@ -158,6 +159,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         totalOut = 0
         for out in dec_tx['vout']:
             totalOut += out['value']
+            address = out['scriptPubKey']['addresses'][0]
+            if address in outputs.keys():
+                assert_equal(satoshi_round(outputs[address]), out['value'])
 
         assert len(dec_tx['vin']) > 0
         assert_equal(dec_tx['vin'][0]['scriptSig']['hex'], '')
