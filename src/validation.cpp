@@ -1222,7 +1222,13 @@ bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& 
         results.emplace(ws.m_ptx->GetWitnessHash(),
                         MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize,
                                          ws.m_base_fees, effective_feerate, effective_feerate_wtxids));
-        GetMainSignals().TransactionAddedToMempool(ws.m_ptx, m_pool.GetAndIncrementSequence());
+        const CTransaction& tx = *ws.m_ptx;
+        const auto tx_info = NewMempoolTransactionInfo(ws.m_ptx, ws.m_base_fees,
+                                                       ws.m_vsize, ws.m_entry->GetHeight(),
+                                                       args.m_bypass_limits, args.m_package_submission,
+                                                       IsCurrentForFeeEstimation(m_active_chainstate),
+                                                       m_pool.HasNoInputsOf(tx));
+        GetMainSignals().TransactionAddedToMempool(tx_info, m_pool.GetAndIncrementSequence());
     }
     return all_submitted;
 }
@@ -1265,7 +1271,13 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
         return MempoolAcceptResult::FeeFailure(ws.m_state, CFeeRate(ws.m_modified_fees, ws.m_vsize), {ws.m_ptx->GetWitnessHash()});
     }
 
-    GetMainSignals().TransactionAddedToMempool(ptx, m_pool.GetAndIncrementSequence());
+    const CTransaction& tx = *ws.m_ptx;
+    const auto tx_info = NewMempoolTransactionInfo(ws.m_ptx, ws.m_base_fees,
+                                                   ws.m_vsize, ws.m_entry->GetHeight(),
+                                                   args.m_bypass_limits, args.m_package_submission,
+                                                   IsCurrentForFeeEstimation(m_active_chainstate),
+                                                   m_pool.HasNoInputsOf(tx));
+    GetMainSignals().TransactionAddedToMempool(tx_info, m_pool.GetAndIncrementSequence());
 
     return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize, ws.m_base_fees,
                                         effective_feerate, single_wtxid);
