@@ -1969,6 +1969,17 @@ case ${OS} in
    ;;
 esac
 
+dnl An old hack similar to a98356fee to remove hard-coded
+dnl bind_at_load flag from libtool
+case $host in
+  *darwin*)
+     AC_MSG_RESULT([Removing -Wl,bind_at_load from libtool.])
+     sed < libtool > libtool-2 '/bind_at_load/d'
+     mv libtool-2 libtool
+     chmod 755 libtool
+   ;;
+esac
+
 echo
 echo "Options used to compile and link:"
 echo "  external signer = $use_external_signer"
