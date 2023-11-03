@@ -37,6 +37,7 @@ static constexpr bool DEFAULT_ACCEPT_STALE_FEE_ESTIMATES{false};
 class AutoFile;
 class CTxMemPoolEntry;
 class TxConfirmStats;
+struct RemovedMempoolTransactionInfo;
 
 /* Identifier for each of the 3 different TxConfirmStats which will track
  * history over different time horizons. */
@@ -201,8 +202,8 @@ public:
     ~CBlockPolicyEstimator();
 
     /** Process all the transactions that have been included in a block */
-    void processBlock(unsigned int nBlockHeight,
-                      std::vector<const CTxMemPoolEntry*>& entries)
+    void processBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
+                      unsigned int nBlockHeight)
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Process a transaction accepted to the mempool*/
@@ -290,7 +291,7 @@ private:
     std::map<double, unsigned int> bucketMap GUARDED_BY(m_cs_fee_estimator); // Map of bucket upper-bound to index into all vectors by bucket
 
     /** Process a transaction confirmed in a block*/
-    bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry) EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
+    bool processBlockTx(unsigned int nBlockHeight, const RemovedMempoolTransactionInfo& tx) EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
 
     /** Helper for estimateSmartFee */
     double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);

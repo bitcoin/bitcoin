@@ -643,17 +643,6 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
 void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight)
 {
     AssertLockHeld(cs);
-    std::vector<const CTxMemPoolEntry*> entries;
-    for (const auto& tx : vtx)
-    {
-        uint256 hash = tx->GetHash();
-
-        indexed_transaction_set::iterator i = mapTx.find(hash);
-        if (i != mapTx.end())
-            entries.push_back(&*i);
-    }
-    // Before the txs in the new block have been removed from the mempool, update policy estimates
-    if (minerPolicyEstimator) {minerPolicyEstimator->processBlock(nBlockHeight, entries);}
     std::vector<RemovedMempoolTransactionInfo> txs_removed_for_block;
     txs_removed_for_block.reserve(vtx.size());
     for (const auto& tx : vtx)
@@ -667,6 +656,10 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
         }
         removeConflicts(*tx);
         ClearPrioritisation(tx->GetHash());
+    }
+    // Update policy estimates
+    if (minerPolicyEstimator) {
+        minerPolicyEstimator->processBlock(txs_removed_for_block, nBlockHeight);
     }
     GetMainSignals().MempoolTransactionsRemovedForBlock(txs_removed_for_block, nBlockHeight);
     lastRollingFeeUpdate = GetTime();
