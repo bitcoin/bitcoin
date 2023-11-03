@@ -121,7 +121,6 @@ CTxMemPool MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeConte
     mempool_opts.expiry = std::chrono::hours{fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 999)};
     nBytesPerSigOp = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(1, 999);
 
-    mempool_opts.estimator = nullptr;
     mempool_opts.check_ratio = 1;
     mempool_opts.require_standard = fuzzed_data_provider.ConsumeBool();
 

@@ -123,7 +123,6 @@ CTxMemPool MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeConte
     CTxMemPool::Options mempool_opts{MemPoolOptionsForTest(node)};
 
     // ...override specific options for this specific fuzz suite
-    mempool_opts.estimator = nullptr;
     mempool_opts.check_ratio = 1;
     mempool_opts.require_standard = fuzzed_data_provider.ConsumeBool();
 

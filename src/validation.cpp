@@ -1126,17 +1126,8 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
         ws.m_replaced_transactions.push_back(it->GetSharedTx());
     }
     m_pool.RemoveStaged(ws.m_all_conflicting, false, MemPoolRemovalReason::REPLACED);
-
-    // This transaction should only count for fee estimation if:
-    // - it's not being re-added during a reorg which bypasses typical mempool fee limits
-    // - the node is not behind
-    // - the transaction is not dependent on any other transactions in the mempool
-    // - it's not part of a package. Since package relay is not currently supported, this
-    // transaction has not necessarily been accepted to miners' mempools.
-    bool validForFeeEstimation = !bypass_limits && !args.m_package_submission && IsCurrentForFeeEstimation(m_active_chainstate) && m_pool.HasNoInputsOf(tx);
-
     // Store transaction in memory
-    m_pool.addUnchecked(*entry, ws.m_ancestors, validForFeeEstimation);
+    m_pool.addUnchecked(*entry, ws.m_ancestors);
 
     // trim mempool and check if tx was trimmed
     // If we are validating a package, don't trim here because we could evict a previous transaction
