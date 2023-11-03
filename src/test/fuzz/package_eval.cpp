@@ -257,15 +257,6 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
 
         const auto result_package = WITH_LOCK(::cs_main,
                                     return ProcessNewPackage(chainstate, tx_pool, txs, /*test_accept=*/single_submit));
-        // If something went wrong due to a package-specific policy, it might not return a
-        // validation result for the transaction.
-        if (result_package.m_state.GetResult() != PackageValidationResult::PCKG_POLICY) {
-            auto it = result_package.m_tx_results.find(txs.back()->GetWitnessHash());
-            Assert(it != result_package.m_tx_results.end());
-            Assert(it->second.m_result_type == MempoolAcceptResult::ResultType::VALID ||
-                   it->second.m_result_type == MempoolAcceptResult::ResultType::INVALID ||
-                   it->second.m_result_type == MempoolAcceptResult::ResultType::MEMPOOL_ENTRY);
-        }
 
         const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, txs.back(), GetTime(), bypass_limits, /*test_accept=*/!single_submit));
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
@@ -281,6 +272,12 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
                 Assert(added.size() == 1);
                 Assert(txs.back() == *added.begin());
             }
+        } else if (result_package.m_state.GetResult() != PackageValidationResult::PCKG_POLICY) {
+            // We don't know anything about the validity since transactions were randomly generated, so
+            // just use result_package.m_state here. This makes the expect_valid check meaningless, but
+            // we can still verify that the contents of m_tx_results are consistent with m_state.
+            const bool expect_valid{result_package.m_state.IsValid()};
+            Assert(!CheckPackageMempoolAcceptResult(txs, result_package, expect_valid, nullptr));
         } else {
             // This is empty if it fails early checks, or "full" if transactions are looked at deeper
             Assert(result_package.m_tx_results.size() == txs.size() || result_package.m_tx_results.empty());

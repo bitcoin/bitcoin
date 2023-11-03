@@ -131,6 +131,53 @@ CTxMemPool MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeConte
     return CTxMemPool{mempool_opts};
 }
 
+void CheckATMPInvariants(const MempoolAcceptResult& res, bool txid_in_mempool, bool wtxid_in_mempool)
+{
+
+    switch (res.m_result_type) {
+    case MempoolAcceptResult::ResultType::VALID:
+    {
+        Assert(txid_in_mempool);
+        Assert(wtxid_in_mempool);
+        Assert(res.m_state.IsValid());
+        Assert(!res.m_state.IsInvalid());
+        Assert(res.m_replaced_transactions);
+        Assert(res.m_vsize);
+        Assert(res.m_base_fees);
+        Assert(res.m_effective_feerate);
+        Assert(res.m_wtxids_fee_calculations);
+        Assert(!res.m_other_wtxid);
+        break;
+    }
+    case MempoolAcceptResult::ResultType::INVALID:
+    {
+        // It may be already in the mempool since in ATMP cases we don't set MEMPOOL_ENTRY or DIFFERENT_WITNESS
+        Assert(!res.m_state.IsValid());
+        Assert(res.m_state.IsInvalid());
+        Assert(!res.m_replaced_transactions);
+        Assert(!res.m_vsize);
+        Assert(!res.m_base_fees);
+        // Unable or unwilling to calculate fees
+        Assert(!res.m_effective_feerate);
+        Assert(!res.m_wtxids_fee_calculations);
+        Assert(!res.m_other_wtxid);
+        break;
+    }
+    case MempoolAcceptResult::ResultType::MEMPOOL_ENTRY:
+    {
+        // ATMP never sets this; only set in package settings
+        Assert(false);
+        break;
+    }
+    case MempoolAcceptResult::ResultType::DIFFERENT_WITNESS:
+    {
+        // ATMP never sets this; only set in package settings
+        Assert(false);
+        break;
+    }
+    }
+}
+
 FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
@@ -258,9 +305,11 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         SyncWithValidationInterfaceQueue();
         UnregisterSharedValidationInterface(txr);
 
+        bool txid_in_mempool = tx_pool.exists(GenTxid::Txid(tx->GetHash()));
+        bool wtxid_in_mempool = tx_pool.exists(GenTxid::Wtxid(tx->GetWitnessHash()));
+        CheckATMPInvariants(res, txid_in_mempool, wtxid_in_mempool);
+
         Assert(accepted != added.empty());
-        Assert(accepted == res.m_state.IsValid());
-        Assert(accepted != res.m_state.IsInvalid());
         if (accepted) {
             Assert(added.size() == 1); // For now, no package acceptance
             Assert(tx == *added.begin());
