@@ -15,6 +15,11 @@
 
 BOOST_FIXTURE_TEST_SUITE(miniminer_tests, TestingSetup)
 
+const CAmount low_fee{CENT/2000}; // 500 ṩ
+const CAmount med_fee{CENT/200}; // 5000 ṩ
+const CAmount high_fee{CENT/10}; // 100_000 ṩ
+
+
 static inline CTransactionRef make_tx(const std::vector<COutPoint>& inputs, size_t num_outputs)
 {
     CMutableTransaction tx = CMutableTransaction();
@@ -107,15 +112,11 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
     LOCK2(::cs_main, pool.cs);
     TestMemPoolEntryHelper entry;
 
-    const CAmount low_fee{CENT/2000};
-    const CAmount normal_fee{CENT/200};
-    const CAmount high_fee{CENT/10};
-
     // Create a parent tx0 and child tx1 with normal fees:
     const auto tx0 = make_tx({COutPoint{m_coinbase_txns[0]->GetHash(), 0}}, /*num_outputs=*/2);
-    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx0));
+    pool.addUnchecked(entry.Fee(med_fee).FromTx(tx0));
     const auto tx1 = make_tx({COutPoint{tx0->GetHash(), 0}}, /*num_outputs=*/1);
-    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx1));
+    pool.addUnchecked(entry.Fee(med_fee).FromTx(tx1));
 
     // Create a low-feerate parent tx2 and high-feerate child tx3 (cpfp)
     const auto tx2 = make_tx({COutPoint{m_coinbase_txns[1]->GetHash(), 0}}, /*num_outputs=*/2);
@@ -128,9 +129,10 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
     pool.addUnchecked(entry.Fee(low_fee).FromTx(tx4));
     const auto tx5 = make_tx({COutPoint{tx4->GetHash(), 0}}, /*num_outputs=*/1);
     pool.addUnchecked(entry.Fee(low_fee).FromTx(tx5));
+    const CAmount tx5_delta{CENT/100};
     // Make tx5's modified fee much higher than its base fee. This should cause it to pass
     // the fee-related checks despite being low-feerate.
-    pool.PrioritiseTransaction(tx5->GetHash(), CENT/100);
+    pool.PrioritiseTransaction(tx5->GetHash(), tx5_delta);
 
     // Create a high-feerate parent tx6, low-feerate child tx7
     const auto tx6 = make_tx({COutPoint{m_coinbase_txns[3]->GetHash(), 0}}, /*num_outputs=*/2);
@@ -341,10 +343,6 @@ BOOST_FIXTURE_TEST_CASE(miniminer_overlap, TestChain100Setup)
     CTxMemPool& pool = *Assert(m_node.mempool);
     LOCK2(::cs_main, pool.cs);
     TestMemPoolEntryHelper entry;
-
-    const CAmount low_fee{CENT/2000}; // 500 ṩ
-    const CAmount med_fee{CENT/200}; // 5000 ṩ
-    const CAmount high_fee{CENT/10}; // 100_000 ṩ
 
     // Create 3 parents of different feerates, and 1 child spending outputs from all 3 parents.
     const auto tx0 = make_tx({COutPoint{m_coinbase_txns[0]->GetHash(), 0}}, /*num_outputs=*/2);
