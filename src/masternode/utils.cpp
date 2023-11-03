@@ -46,30 +46,33 @@ void CMasternodeUtils::DoMaintenance(CConnman& connman, const CMasternodeSync& m
     }
 
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
-        // we're only disconnecting m_masternode_connection connections
-        if (!pnode->m_masternode_connection) return;
-        if (!pnode->GetVerifiedProRegTxHash().IsNull()) {
-            // keep _verified_ LLMQ connections
-            if (connman.IsMasternodeQuorumNode(pnode)) {
+        if (pnode->m_masternode_probe_connection) {
+            // we're not disconnecting masternode probes for at least PROBE_WAIT_INTERVAL seconds
+            if (GetSystemTimeInSeconds() - pnode->nTimeConnected < PROBE_WAIT_INTERVAL) return;
+        } else {
+            // we're only disconnecting m_masternode_connection connections
+            if (!pnode->m_masternode_connection) return;
+            if (!pnode->GetVerifiedProRegTxHash().IsNull()) {
+                // keep _verified_ LLMQ connections
+                if (connman.IsMasternodeQuorumNode(pnode)) {
+                    return;
+                }
+                // keep _verified_ LLMQ relay connections
+                if (connman.IsMasternodeQuorumRelayMember(pnode->GetVerifiedProRegTxHash())) {
+                    return;
+                }
+                // keep _verified_ inbound connections
+                if (pnode->fInbound) {
+                    return;
+                }
+            } else if (GetSystemTimeInSeconds() - pnode->nTimeConnected < 5) {
+                // non-verified, give it some time to verify itself
+                return;
+            } else if (pnode->qwatch) {
+                // keep watching nodes
                 return;
             }
-            // keep _verified_ LLMQ relay connections
-            if (connman.IsMasternodeQuorumRelayMember(pnode->GetVerifiedProRegTxHash())) {
-                return;
-            }
-            // keep _verified_ inbound connections
-            if (pnode->fInbound) {
-                return;
-            }
-        } else if (GetSystemTimeInSeconds() - pnode->nTimeConnected < 5) {
-            // non-verified, give it some time to verify itself
-            return;
-        } else if (pnode->qwatch) {
-            // keep watching nodes
-            return;
         }
-        // we're not disconnecting masternode probes for at least a few seconds
-        if (pnode->m_masternode_probe_connection && GetSystemTimeInSeconds() - pnode->nTimeConnected < 5) return;
 
 #ifdef ENABLE_WALLET
         bool fFound = ranges::any_of(vecDmns, [&pnode](const auto& dmn){ return pnode->addr == dmn->pdmnState->addr; });

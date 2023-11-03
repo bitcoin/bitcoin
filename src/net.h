@@ -55,6 +55,8 @@ static const bool DEFAULT_WHITELISTFORCERELAY = false;
 
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
 static const int TIMEOUT_INTERVAL = 20 * 60;
+/** Time to wait since nTimeConnected before disconnecting a probe node. **/
+static const int PROBE_WAIT_INTERVAL = 5;
 /** Minimum time between warnings printed to log. */
 static const int WARNING_INTERVAL = 10 * 60;
 /** Run the feeler connection loop once every 2 minutes or 120 seconds. **/
@@ -1103,7 +1105,10 @@ public:
     bool fSentAddr{false};
     // If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
     std::atomic<bool> m_masternode_connection{false};
-    // If 'true' this node will be disconnected after MNAUTH
+    /**
+     * If 'true' this node will be disconnected after MNAUTH (outbound only) or
+     * after PROBE_WAIT_INTERVAL seconds since nTimeConnected
+     */
     std::atomic<bool> m_masternode_probe_connection{false};
     // If 'true', we identified it as an intra-quorum relay connection
     std::atomic<bool> m_masternode_iqr_connection{false};

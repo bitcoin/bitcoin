@@ -133,6 +133,8 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connma
         }
     }
 
+    const uint256 myProTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
+
     connman.ForEachNode([&](CNode* pnode2) {
         if (peer.fDisconnect) {
             // we've already disconnected the new peer
@@ -140,17 +142,19 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connma
         }
 
         if (pnode2->GetVerifiedProRegTxHash() == mnauth.proRegTxHash) {
-            if (fMasternodeMode) {
-                const auto deterministicOutbound = WITH_LOCK(activeMasternodeInfoCs, return llmq::utils::DeterministicOutboundConnection(activeMasternodeInfo.proTxHash, mnauth.proRegTxHash));
+            if (fMasternodeMode && !myProTxHash.IsNull()) {
+                const auto deterministicOutbound = llmq::utils::DeterministicOutboundConnection(myProTxHash, mnauth.proRegTxHash);
                 LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, deterministicOutbound=%s. peer=%d\n",
                          mnauth.proRegTxHash.ToString(), pnode2->GetId(), deterministicOutbound.ToString(), peer.GetId());
-                if (WITH_LOCK(activeMasternodeInfoCs, return deterministicOutbound == activeMasternodeInfo.proTxHash)) {
+                if (deterministicOutbound == myProTxHash) {
+                    // NOTE: do not drop inbound nodes here, mark them as probes so that
+                    // they would be disconnected later in CMasternodeUtils::DoMaintenance
                     if (pnode2->fInbound) {
-                        LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- dropping old inbound, peer=%d\n", pnode2->GetId());
-                        pnode2->fDisconnect = true;
+                        LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- marking old inbound for dropping it later, peer=%d\n", pnode2->GetId());
+                        pnode2->m_masternode_probe_connection = true;
                     } else if (peer.fInbound) {
-                        LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- dropping new inbound, peer=%d\n", peer.GetId());
-                        peer.fDisconnect = true;
+                        LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- marking new inbound for dropping it later, peer=%d\n", peer.GetId());
+                        peer.m_masternode_probe_connection = true;
                     }
                 } else {
                     if (!pnode2->fInbound) {
