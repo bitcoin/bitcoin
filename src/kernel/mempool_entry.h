@@ -178,4 +178,34 @@ public:
 
 using CTxMemPoolEntryRef = CTxMemPoolEntry::CTxMemPoolEntryRef;
 
+struct TransactionInfo {
+    const CTransactionRef m_tx;
+    /* The fee the transaction paid */
+    const CAmount m_fee;
+    /**
+     * The virtual transaction size.
+     *
+     * This is a policy field which considers the sigop cost of the
+     * transaction as well as its weight, and reinterprets it as bytes.
+     *
+     * It is the primary metric by which the mining algorithm selects
+     * transactions.
+     */
+    const int64_t m_virtual_transaction_size;
+    /* The block height the transaction entered the mempool */
+    const unsigned int txHeight;
+
+    TransactionInfo(const CTransactionRef& tx, const CAmount& fee, const int64_t vsize, const unsigned int height)
+        : m_tx{tx},
+          m_fee{fee},
+          m_virtual_transaction_size{vsize},
+          txHeight{height} {}
+};
+
+struct RemovedMempoolTransactionInfo {
+    TransactionInfo info;
+    explicit RemovedMempoolTransactionInfo(const CTxMemPoolEntry& entry)
+        : info{entry.GetSharedTx(), entry.GetFee(), entry.GetTxSize(), entry.GetHeight()} {}
+};
+
 #endif // BITCOIN_KERNEL_MEMPOOL_ENTRY_H
