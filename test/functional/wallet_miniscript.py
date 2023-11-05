@@ -205,7 +205,6 @@ DESCS_PRIV = [
 class WalletMiniscriptTest(BitcoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser, legacy=False)
-        self.rpc_timeout = 480
 
     def set_test_params(self):
         self.num_nodes = 1
