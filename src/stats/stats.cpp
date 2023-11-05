@@ -41,8 +41,9 @@ void CStats::addMempoolSample(int64_t txcount, int64_t dynUsage, int64_t current
             m_mempool_stats.m_start_time = now;
 
         // ensure the minimum time delta between samples
-        if (m_mempool_stats.m_samples.size() && m_mempool_stats.m_samples.back().m_time_delta + SAMPLE_MIN_DELTA_IN_SEC >= now - m_mempool_stats.m_start_time)
+        if (m_mempool_stats.m_samples.size() && m_mempool_stats.m_start_time + m_mempool_stats.m_samples.back().m_time_delta + SAMPLE_MIN_DELTA_IN_SEC >= now) {
             return;
+        }
 
         // calculate the current time delta and add a sample
         uint32_t timeDelta = now - m_mempool_stats.m_start_time; //truncate to uint32_t should be sufficient
