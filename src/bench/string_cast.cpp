@@ -59,12 +59,12 @@ static void strings_1_tostring(benchmark::Bench& bench)
 static void strings_2_multi_lexical_cast(benchmark::Bench& bench)
 {
     int i{0};
-    bench.run([&] {
+    bench.run([&] { static_cast<void>(
         boost::lexical_cast<std::string>(i) +
         boost::lexical_cast<std::string>(i+1) +
         boost::lexical_cast<std::string>(i+2) +
         boost::lexical_cast<std::string>(i+3) +
-        boost::lexical_cast<std::string>(i+4);
+        boost::lexical_cast<std::string>(i+4));
         ++i;
     });
 }
@@ -72,8 +72,8 @@ static void strings_2_multi_lexical_cast(benchmark::Bench& bench)
 static void strings_2_multi_numberToString(benchmark::Bench& bench)
 {
     int i{0};
-    bench.run([&] {
-        NumberToString(i) + NumberToString(i+1) + NumberToString(i+2) + NumberToString(i+3) + NumberToString(i+4);
+    bench.run([&] { static_cast<void>(
+        NumberToString(i) + NumberToString(i+1) + NumberToString(i+2) + NumberToString(i+3) + NumberToString(i+4));
         ++i;
     });
 }
@@ -81,8 +81,8 @@ static void strings_2_multi_numberToString(benchmark::Bench& bench)
 static void strings_2_multi_tostring(benchmark::Bench& bench)
 {
     int i{0};
-    bench.run([&] {
-        ToString(i) + ToString(i+1) + ToString(i+2) + ToString(i+3) + ToString(i+4);
+    bench.run([&] { static_cast<void>(
+        ToString(i) + ToString(i+1) + ToString(i+2) + ToString(i+3) + ToString(i+4));
         ++i;
     });
 }
