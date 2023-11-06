@@ -386,4 +386,6 @@ const std::map<std::string, script_verify_flag_name>& ScriptFlagNamesToEnum();
 
 std::vector<std::string> GetScriptFlagNames(script_verify_flags flags);
 
+bool CastToBool(const std::vector<unsigned char>& vch);
+
 #endif // BITCOIN_SCRIPT_INTERPRETER_H
