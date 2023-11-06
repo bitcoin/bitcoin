@@ -190,16 +190,57 @@ class DashGovernanceTest (DashTestFramework):
 
         assert_equal(len(self.nodes[0].gobject("list", "valid", "triggers")), 0)
 
-        # Move 1 block enabling the Superblock maturity window
+        # Detect payee node
+        mn_list = self.nodes[0].protx("list", "registered", True)
+        height_protx_list = []
+        for mn in mn_list:
+            height_protx_list.append((mn['state']['lastPaidHeight'], mn['proTxHash']))
+
+        height_protx_list = sorted(height_protx_list)
+        _, mn_payee_protx = height_protx_list[1]
+
+        payee_idx = None
+        for mn in self.mninfo:
+            if mn.proTxHash == mn_payee_protx:
+                payee_idx = mn.nodeIdx
+                break
+        assert payee_idx is not None
+
+        # Isolate payee node and create a trigger
+        self.isolate_node(payee_idx)
+        isolated = self.nodes[payee_idx]
+
+        # Move 1 block inside the Superblock maturity window on the isolated node
+        isolated.generate(1)
+        self.bump_mocktime(1)
+        # The isolated "winner" should submit new trigger and vote for it
+        wait_until(lambda: len(isolated.gobject("list", "valid", "triggers")) == 1, timeout=5)
+        isolated_trigger_hash = list(isolated.gobject("list", "valid", "triggers").keys())[0]
+        wait_until(lambda: list(isolated.gobject("list", "valid", "triggers").values())[0]['YesCount'] == 1, timeout=5)
+        more_votes = wait_until(lambda: list(isolated.gobject("list", "valid", "triggers").values())[0]['YesCount'] > 1, timeout=5, do_assert=False)
+        assert_equal(more_votes, False)
+
+        # Move 1 block enabling the Superblock maturity window on non-isolated nodes
         self.nodes[0].generate(1)
         self.bump_mocktime(1)
-        self.sync_blocks()
         assert_equal(self.nodes[0].getblockcount(), 230)
         assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["bip9"]["status"], "locked_in")
         self.check_superblockbudget(False)
 
-        # The "winner" should submit new trigger and vote for it, no one else should vote yet
+        # The "winner" should submit new trigger and vote for it, but it's isolated so no triggers should be found
+        has_trigger = wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) >= 1, timeout=5, do_assert=False)
+        assert_equal(has_trigger, False)
+
+        # Move 1 block inside the Superblock maturity window on non-isolated nodes
+        self.nodes[0].generate(1)
+        self.bump_mocktime(1)
+
+        # There is now new "winner" who should submit new trigger and vote for it
         wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) == 1, timeout=5)
+        winning_trigger_hash = list(self.nodes[0].gobject("list", "valid", "triggers").keys())[0]
+        wait_until(lambda: list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]['YesCount'] == 1, timeout=5)
+        more_votes = wait_until(lambda: list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]['YesCount'] > 1, timeout=5, do_assert=False)
+        assert_equal(more_votes, False)
 
         # Make sure amounts aren't trimmed
         payment_amounts_expected = [str(satoshi_round(str(self.p0_amount))), str(satoshi_round(str(self.p1_amount))), str(satoshi_round(str(self.p2_amount)))]
@@ -208,13 +249,45 @@ class DashGovernanceTest (DashTestFramework):
         for amount_str in payment_amounts_trigger:
             assert(amount_str in payment_amounts_expected)
 
-        # Move 1 block inside the Superblock maturity window
+        # Move another block inside the Superblock maturity window on non-isolated nodes
+        self.nodes[0].generate(1)
+        self.bump_mocktime(1)
+
+        # Every non-isolated MN should vote for the same trigger now, no new triggers should be created
+        wait_until(lambda: list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]['YesCount'] == self.mn_count - 1, timeout=5)
+        more_triggers = wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) > 1, timeout=5, do_assert=False)
+        assert_equal(more_triggers, False)
+
+        self.reconnect_isolated_node(payee_idx, 0)
+        # self.connect_nodes(0, payee_idx)
+        self.sync_blocks()
+
+        # re-sync helper
+        def sync_gov(node):
+            self.bump_mocktime(1)
+            return node.mnsync("status")["IsSynced"]
+
+        for node in self.nodes:
+            # Force sync
+            node.mnsync("reset")
+            # fast-forward to governance sync
+            node.mnsync("next")
+            wait_until(lambda: sync_gov(node))
+
+        # Should see two triggers now
+        wait_until(lambda: len(isolated.gobject("list", "valid", "triggers")) == 2, timeout=5)
+        wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) == 2, timeout=5)
+        more_triggers = wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) > 2, timeout=5, do_assert=False)
+        assert_equal(more_triggers, False)
+
+        # Move another block inside the Superblock maturity window
         self.nodes[0].generate(1)
         self.bump_mocktime(1)
         self.sync_blocks()
 
-        # Every MN should vote for the same trigger now, no new triggers should be created
-        wait_until(lambda: list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]['YesCount'] == self.mn_count, timeout=5)
+        # Should see NO votes on both triggers now
+        wait_until(lambda: self.nodes[0].gobject("list", "valid", "triggers")[winning_trigger_hash]['NoCount'] == 1, timeout=5)
+        wait_until(lambda: self.nodes[0].gobject("list", "valid", "triggers")[isolated_trigger_hash]['NoCount'] == self.mn_count - 1, timeout=5)
 
         block_count = self.nodes[0].getblockcount()
         n = sb_cycle - block_count % sb_cycle

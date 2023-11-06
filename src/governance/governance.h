@@ -293,10 +293,6 @@ public:
 
     void ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
 
-    std::optional<CSuperblock> CreateSuperblockCandidate(int nHeight) const;
-    void CreateGovernanceTrigger(const CSuperblock& sb, CConnman& connman);
-    bool VoteFundingTrigger(const uint256& nHash, const vote_outcome_enum_t outcome, CConnman& connman);
-    bool HasAlreadyVotedFundingTrigger() const;
     void ResetVotedFundingTrigger();
 
     void DoMaintenance(CConnman& connman);
@@ -370,6 +366,12 @@ public:
     int RequestGovernanceObjectVotes(Span<CNode*> vNodesCopy, CConnman& connman) const;
 
 private:
+    std::optional<const CSuperblock> CreateSuperblockCandidate(int nHeight) const;
+    std::optional<const CGovernanceObject> CreateGovernanceTrigger(const std::optional<const CSuperblock>& sb_opt, CConnman& connman);
+    void VoteGovernanceTriggers(const std::optional<const CGovernanceObject>& trigger_opt, CConnman& connman);
+    bool VoteFundingTrigger(const uint256& nHash, const vote_outcome_enum_t outcome, CConnman& connman);
+    bool HasAlreadyVotedFundingTrigger() const;
+
     void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman& connman, bool fUseFilter = false) const;
 
     void AddInvalidVote(const CGovernanceVote& vote)
