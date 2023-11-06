@@ -1305,7 +1305,7 @@ bool loadFonts()
     auto supportedWeights = [](FontFamily family) -> std::vector<QFont::Weight> {
         auto getTestWidth = [&](QFont::Weight weight) -> int {
             QFont font = getFont(family, weight, false, defaultFontSize);
-            return QFontMetrics(font).width("Check the width of this text to see if the weight change has an impact!");
+            return TextWidth(QFontMetrics(font), ("Check the width of this text to see if the weight change has an impact!"));
         };
         std::vector<QFont::Weight> vecWeights{QFont::Thin, QFont::ExtraLight, QFont::Light,
                                               QFont::Normal, QFont::Medium, QFont::DemiBold,
