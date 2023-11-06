@@ -124,7 +124,7 @@ bool CAssetUnlockPayload::VerifySig(const uint256& msgHash, gsl::not_null<const 
     }
 
     if (pindexTip->nHeight < requestedHeight || pindexTip->nHeight >= getHeightToExpiry()) {
-        LogPrintf("Asset unlock tx %d with requested height %d could not be accepted on height: %d\n",
+        LogPrint(BCLog::CREDITPOOL, "Asset unlock tx %d with requested height %d could not be accepted on height: %d\n",
                 index, requestedHeight, pindexTip->nHeight);
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-too-late");
     }

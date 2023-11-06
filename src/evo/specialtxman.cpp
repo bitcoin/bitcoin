@@ -149,7 +149,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CM
 
         const CCreditPool creditPool = creditPoolManager->GetCreditPool(pindex->pprev, consensusParams);
         if (llmq::utils::IsV20Active(pindex->pprev)) {
-            LogPrintf("%s: CCreditPool is %s\n", __func__, creditPool.ToString());
+            LogPrint(BCLog::CREDITPOOL, "%s: CCreditPool is %s\n", __func__, creditPool.ToString());
         }
 
         for (const auto& ptr_tx : block.vtx) {

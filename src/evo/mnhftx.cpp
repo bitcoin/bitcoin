@@ -189,6 +189,7 @@ bool CMNHFManager::ProcessBlock(const CBlock& block, const CBlockIndex* const pi
             if (!fJustCheck) {
                 AddToCache(signals, pindex);
             }
+            LogPrint(BCLog::EHF, "CMNHFManager::ProcessBlock: no new signals; number of known signals: %d\n", signals.size());
             return true;
         }
 
@@ -232,7 +233,7 @@ bool CMNHFManager::UndoBlock(const CBlock& block, const CBlockIndex* const pinde
     std::vector<uint8_t> excluded_signals;
     BlockValidationState state;
     if (!extractSignals(block, pindex, excluded_signals, state)) {
-        LogPrintf("%s: failed to extract signals\n", __func__);
+        LogPrintf("CMNHFManager::%s: failed to extract signals\n", __func__);
         return false;
     }
     if (excluded_signals.empty()) {
@@ -284,20 +285,17 @@ CMNHFManager::Signals CMNHFManager::GetFromCache(const CBlockIndex* const pindex
     {
         LOCK(cs_cache);
         if (mnhfCache.get(blockHash, signals)) {
-            LogPrintf("CMNHFManager::GetFromCache: mnhf get for block %s from cache: %lld signals\n", pindex->GetBlockHash().ToString(), signals.size());
             return signals;
         }
     }
     if (VersionBitsState(pindex->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_V20, versionbitscache) != ThresholdState::ACTIVE) {
         LOCK(cs_cache);
         mnhfCache.insert(blockHash, {});
-        LogPrintf("CMNHFManager::GetFromCache: mnhf feature is disabled: return empty for block %s\n", pindex->GetBlockHash().ToString());
         return {};
     }
     if (!m_evoDb.Read(std::make_pair(DB_SIGNALS, blockHash), signals)) {
         LogPrintf("CMNHFManager::GetFromCache: failure: can't read MnEHF signals from db for %s\n", pindex->GetBlockHash().ToString());
     }
-    LogPrintf("CMNHFManager::GetFromCache: mnhf for block %s read from evo: %lld\n", pindex->GetBlockHash().ToString(), signals.size());
     LOCK(cs_cache);
     mnhfCache.insert(blockHash, signals);
     return signals;
@@ -308,7 +306,6 @@ void CMNHFManager::AddToCache(const Signals& signals, const CBlockIndex* const p
     const uint256& blockHash = pindex->GetBlockHash();
     {
         LOCK(cs_cache);
-        LogPrintf("CMNHFManager::AddToCache: mnhf for block %s add to cache: %lld\n", pindex->GetBlockHash().ToString(), signals.size());
         mnhfCache.insert(blockHash, signals);
     }
     m_evoDb.Write(std::make_pair(DB_SIGNALS, blockHash), signals);

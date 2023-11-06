@@ -403,7 +403,6 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     std::optional<CCreditPoolDiff> creditPoolDiff;
     if (llmq::utils::IsV20Active(pindexPrev)) {
         CCreditPool creditPool = creditPoolManager->GetCreditPool(pindexPrev, chainparams.GetConsensus());
-        LogPrintf("%s: CCreditPool is %s\n", __func__, creditPool.ToString());
         creditPoolDiff.emplace(std::move(creditPool), pindexPrev, chainparams.GetConsensus(), 0);
     }
 

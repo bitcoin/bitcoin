@@ -71,9 +71,12 @@ namespace BCLog {
         COINJOIN    = ((uint64_t)1 << 41),
         SPORK       = ((uint64_t)1 << 42),
         NETCONN     = ((uint64_t)1 << 43),
+        EHF         = ((uint64_t)1 << 44),
+        CREDITPOOL  = ((uint64_t)1 << 45),
 
         DASH        = CHAINLOCKS | GOBJECT | INSTANTSEND | LLMQ | LLMQ_DKG
-                    | LLMQ_SIGS | MNPAYMENTS | MNSYNC | COINJOIN | SPORK | NETCONN,
+                    | LLMQ_SIGS | MNPAYMENTS | MNSYNC | COINJOIN | SPORK | NETCONN
+                    | EHF | CREDITPOOL,
 
         NET_NETCONN = NET | NETCONN, // use this to have something logged in NET and NETCONN as well
         //End Dash

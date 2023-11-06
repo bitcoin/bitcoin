@@ -62,8 +62,6 @@ void CEHFSignalsHandler::trySignEHFSignal(int bit, const CBlockIndex* const pind
     mnhfPayload.signal.versionBit = bit;
     const uint256 requestId = mnhfPayload.GetRequestId();
 
-    LogPrintf("CEHFSignalsHandler::trySignEHFSignal: bit=%d at height=%d id=%s\n", bit, pindex->nHeight, requestId.ToString());
-
     const Consensus::LLMQType& llmqType = Params().GetConsensus().llmqTypeMnhf;
     const auto& llmq_params_opt = llmq::GetLLMQParams(llmqType);
     if (!llmq_params_opt.has_value()) {
@@ -73,6 +71,7 @@ void CEHFSignalsHandler::trySignEHFSignal(int bit, const CBlockIndex* const pind
         LOCK(cs);
         ids.insert(requestId);
 
+        LogPrint(BCLog::EHF, "CEHFSignalsHandler::trySignEHFSignal: already signed bit=%d at height=%d id=%s\n", bit, pindex->nHeight, requestId.ToString());
         // no need to sign same message one more time
         return;
     }
@@ -83,6 +82,7 @@ void CEHFSignalsHandler::trySignEHFSignal(int bit, const CBlockIndex* const pind
         return;
     }
 
+    LogPrint(BCLog::EHF, "CEHFSignalsHandler::trySignEHFSignal: bit=%d at height=%d id=%s\n", bit, pindex->nHeight, requestId.ToString());
     mnhfPayload.signal.quorumHash = quorum->qc->quorumHash;
     const uint256 msgHash = mnhfPayload.PrepareTx().GetHash();
 
@@ -113,10 +113,10 @@ void CEHFSignalsHandler::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig
     mnhfPayload.signal.versionBit = Params().GetConsensus().vDeployments[Consensus::DEPLOYMENT_MN_RR].bit;
 
     const uint256 expectedId = mnhfPayload.GetRequestId();
-    LogPrintf("CEHFSignalsHandler::HandleNewRecoveredSig expecting ID=%s received=%s\n", expectedId.ToString(), recoveredSig.getId().ToString());
+    LogPrint(BCLog::EHF, "CEHFSignalsHandler::HandleNewRecoveredSig expecting ID=%s received=%s\n", expectedId.ToString(), recoveredSig.getId().ToString());
     if (recoveredSig.getId() != mnhfPayload.GetRequestId()) {
         // there's nothing interesting for CEHFSignalsHandler
-        LogPrintf("CEHFSignalsHandler::HandleNewRecoveredSig id is known but it's not MN_RR, expected: %s\n", mnhfPayload.GetRequestId().ToString());
+        LogPrint(BCLog::EHF, "CEHFSignalsHandler::HandleNewRecoveredSig id is known but it's not MN_RR, expected: %s\n", mnhfPayload.GetRequestId().ToString());
         return;
     }
 
