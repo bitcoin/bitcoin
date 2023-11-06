@@ -668,7 +668,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
         const CFeeRate expected_feerate(1 * COIN, GetVirtualTransactionSize(*ptx_parent3) + GetVirtualTransactionSize(*ptx_mixed_child));
         BOOST_CHECK(it_parent3->second.m_effective_feerate.value() == expected_feerate);
         BOOST_CHECK(it_child->second.m_effective_feerate.value() == expected_feerate);
-        std::vector<uint256> expected_wtxids({ptx_parent3->GetWitnessHash(), ptx_mixed_child->GetWitnessHash()});
+        std::vector<Wtxid> expected_wtxids({ptx_parent3->GetWitnessHash(), ptx_mixed_child->GetWitnessHash()});
         BOOST_CHECK(it_parent3->second.m_wtxids_fee_calculations.value() == expected_wtxids);
         BOOST_CHECK(it_child->second.m_wtxids_fee_calculations.value() == expected_wtxids);
     }
@@ -756,7 +756,7 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
                                         GetVirtualTransactionSize(*tx_parent) + GetVirtualTransactionSize(*tx_child));
         BOOST_CHECK(it_parent->second.m_effective_feerate.value() == expected_feerate);
         BOOST_CHECK(it_child->second.m_effective_feerate.value() == expected_feerate);
-        std::vector<uint256> expected_wtxids({tx_parent->GetWitnessHash(), tx_child->GetWitnessHash()});
+        std::vector<Wtxid> expected_wtxids({tx_parent->GetWitnessHash(), tx_child->GetWitnessHash()});
         BOOST_CHECK(it_parent->second.m_wtxids_fee_calculations.value() == expected_wtxids);
         BOOST_CHECK(it_child->second.m_wtxids_fee_calculations.value() == expected_wtxids);
         BOOST_CHECK(expected_feerate.GetFeePerK() > 1000);
@@ -820,7 +820,7 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
         BOOST_CHECK(it_child->second.m_result_type == MempoolAcceptResult::ResultType::VALID);
         BOOST_CHECK(it_child->second.m_base_fees.value() == child_fee);
         BOOST_CHECK(it_child->second.m_effective_feerate.value() == expected_feerate);
-        std::vector<uint256> expected_wtxids({tx_parent_cheap->GetWitnessHash(), tx_child_cheap->GetWitnessHash()});
+        std::vector<Wtxid> expected_wtxids({tx_parent_cheap->GetWitnessHash(), tx_child_cheap->GetWitnessHash()});
         BOOST_CHECK(it_parent->second.m_wtxids_fee_calculations.value() == expected_wtxids);
         BOOST_CHECK(it_child->second.m_wtxids_fee_calculations.value() == expected_wtxids);
     }

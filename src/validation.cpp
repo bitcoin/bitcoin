@@ -1201,7 +1201,7 @@ bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& 
         }
     }
 
-    std::vector<uint256> all_package_wtxids;
+    std::vector<Wtxid> all_package_wtxids;
     all_package_wtxids.reserve(workspaces.size());
     std::transform(workspaces.cbegin(), workspaces.cend(), std::back_inserter(all_package_wtxids),
                    [](const auto& ws) { return ws.m_ptx->GetWitnessHash(); });
@@ -1211,7 +1211,7 @@ bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& 
         const auto effective_feerate = args.m_package_feerates ? ws.m_package_feerate :
             CFeeRate{ws.m_modified_fees, static_cast<uint32_t>(ws.m_vsize)};
         const auto effective_feerate_wtxids = args.m_package_feerates ? all_package_wtxids :
-            std::vector<uint256>({ws.m_ptx->GetWitnessHash()});
+            std::vector<Wtxid>{ws.m_ptx->GetWitnessHash()};
         results.emplace(ws.m_ptx->GetWitnessHash(),
                         MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize,
                                          ws.m_base_fees, effective_feerate, effective_feerate_wtxids));
@@ -1226,6 +1226,7 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
     LOCK(m_pool.cs); // mempool "read lock" (held through GetMainSignals().TransactionAddedToMempool())
 
     Workspace ws(ptx);
+    const std::vector<Wtxid> single_wtxid{ws.m_ptx->GetWitnessHash()};
 
     if (!PreChecks(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
 
@@ -1238,7 +1239,6 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
     if (!ConsensusScriptChecks(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
 
     const CFeeRate effective_feerate{ws.m_modified_fees, static_cast<uint32_t>(ws.m_vsize)};
-    const std::vector<uint256> single_wtxid{ws.m_ptx->GetWitnessHash()};
     // Tx was accepted, but not added
     if (args.m_test_accept) {
         return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize,
@@ -1314,7 +1314,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
         return PackageMempoolAcceptResult(package_state, std::move(results));
     }
 
-    std::vector<uint256> all_package_wtxids;
+    std::vector<Wtxid> all_package_wtxids;
     all_package_wtxids.reserve(workspaces.size());
     std::transform(workspaces.cbegin(), workspaces.cend(), std::back_inserter(all_package_wtxids),
                    [](const auto& ws) { return ws.m_ptx->GetWitnessHash(); });
@@ -1330,7 +1330,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
             const auto effective_feerate = args.m_package_feerates ? ws.m_package_feerate :
                 CFeeRate{ws.m_modified_fees, static_cast<uint32_t>(ws.m_vsize)};
             const auto effective_feerate_wtxids = args.m_package_feerates ? all_package_wtxids :
-                std::vector<uint256>{ws.m_ptx->GetWitnessHash()};
+                std::vector<Wtxid>{ws.m_ptx->GetWitnessHash()};
             results.emplace(ws.m_ptx->GetWitnessHash(),
                             MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions),
                                                          ws.m_vsize, ws.m_base_fees, effective_feerate,

@@ -149,7 +149,7 @@ struct MempoolAcceptResult {
      * package. This is not necessarily equivalent to the list of transactions passed to
      * ProcessNewPackage().
      * Only present when m_result_type = ResultType::VALID. */
-    const std::optional<std::vector<uint256>> m_wtxids_fee_calculations;
+    const std::optional<std::vector<Wtxid>> m_wtxids_fee_calculations;
 
     // The following field is only present when m_result_type = ResultType::DIFFERENT_WITNESS
     /** The wtxid of the transaction in the mempool which has the same txid but different witness. */
@@ -163,7 +163,7 @@ struct MempoolAcceptResult {
                                        int64_t vsize,
                                        CAmount fees,
                                        CFeeRate effective_feerate,
-                                       const std::vector<uint256>& wtxids_fee_calculations) {
+                                       const std::vector<Wtxid>& wtxids_fee_calculations) {
         return MempoolAcceptResult(std::move(replaced_txns), vsize, fees,
                                    effective_feerate, wtxids_fee_calculations);
     }
@@ -189,7 +189,7 @@ private:
                                  int64_t vsize,
                                  CAmount fees,
                                  CFeeRate effective_feerate,
-                                 const std::vector<uint256>& wtxids_fee_calculations)
+                                 const std::vector<Wtxid>& wtxids_fee_calculations)
         : m_result_type(ResultType::VALID),
         m_replaced_transactions(std::move(replaced_txns)),
         m_vsize{vsize},
