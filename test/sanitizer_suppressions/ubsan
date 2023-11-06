@@ -1,4 +1,7 @@
-# Suppressions should use `sanitize-type:ClassName::MethodName`.
+# The suppressions would be `sanitize-type:ClassName::MethodName`, however due
+# to a bug on at least Fedora the symbolizer is broken and thus no symbol names
+# can be used.
+# See https://github.com/bitcoin/bitcoin/pull/28147#issuecomment-1789703076
 
 # -fsanitize=undefined suppressions
 # =================================
@@ -9,7 +12,8 @@
 # ------------
 # Suppressions in dependencies that are developed outside this repository.
 unsigned-integer-overflow:*/include/c++/
-unsigned-integer-overflow:FuzzedDataProvider::ConsumeIntegralInRange
+# unsigned-integer-overflow in FuzzedDataProvider's ConsumeIntegralInRange
+unsigned-integer-overflow:FuzzedDataProvider.h
 unsigned-integer-overflow:leveldb/
 unsigned-integer-overflow:minisketch/
 unsigned-integer-overflow:secp256k1/
