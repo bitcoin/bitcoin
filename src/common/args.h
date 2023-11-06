@@ -226,6 +226,16 @@ public:
     std::optional<const Command> GetCommand() const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
+     * Check that any command-specific options the user specified are valid
+     * for the given command.
+     *
+     * @param[in] command   The command being run.
+     * @param[out] errors   If non-null, populated with a message for each invalid option.
+     * @return false if any command-specific options were specified that are not valid for this command
+     */
+    bool CheckCommandOptions(const std::string& command, std::vector<std::string>* errors = nullptr) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
+
+    /**
      * Get blocks directory path
      *
      * @return Blocks path which is network specific
