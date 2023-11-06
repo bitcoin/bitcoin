@@ -153,6 +153,7 @@ BASE_SCRIPTS = [
     'p2p_invalid_messages.py',
     'rpc_createmultisig.py',
     'p2p_timeouts.py',
+    'p2p_timeouts.py --v2transport',
     'wallet_dump.py --legacy-wallet',
     'rpc_signer.py',
     'wallet_signer.py --descriptors',
