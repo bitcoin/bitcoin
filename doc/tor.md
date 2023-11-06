@@ -203,18 +203,14 @@ for normal IPv4/IPv6 communication, use:
 
 ## 3.1. List of known Dash Core Tor relays
 
-Note: All these nodes are hosted by masternodehosting.com
-
-* l7oq3v7ujau5tfrw.onion
-* vsmegqxisccimsir.onion
-* 4rbha5nrjso54l75.onion
-* 3473226fvgoenztx.onion
-* onn5v3aby2dioicx.onion
-* w5n7s2p3mdq5yf2d.onion
-* ec4qdvujskzasvrb.onion
-* g5e4hvsecwri3inf.onion
-* ys5upbdeotplam3y.onion
-* fijy6aikzxfea54i.onion
+- 3dnj6le7i2dgzqtj7tth5zoiscmoddovzswdl5pjy5pnyllevxhb3uyd.onion
+- cmhr5r3lqhy7ic2ebeil66ftcz5u62zq5qhbfdz53l6sqxljh7zxntyd.onion
+- k532fqvgzqotj6epfw3rfc377elrj3td47ztad2tkn6vwnw6nhxacrqd.onion
+- nqvpq3urtggxybor6wlf5odzanfqcitg5m7xjo2w25bj7tl2g54te6yd.onion
+- oabd4mxviavh2xhlv4xidbqswsrqvmcnkpfwfwhjgy4w2dmlaoulxwad.onion
+- qpcfsys2rqguha4vahdq6lbx7flc2fivrdicwxqtvh5okujrh6ami3ad.onion
+- v7ttoiov7rc5aut64nfomyfwxt424ihufwvr5ilf7moeg3fwibjpjcqd.onion
+- yjos5hcumgpgggm37xjmgjfzzhbjo6a7phyavutfzkh6qrlnozvajuad.onion
 
 ## 4. Privacy recommendations
 

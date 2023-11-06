@@ -47,7 +47,7 @@ information in the debug log about your I2P configuration and connections. Run
 `dash-cli help logging` for more information.
 
 It is possible to restrict outgoing connections in the usual way with
-`onlynet=i2p`. I2P support was added to Dash Core in version 22.0 (mid 2021)
+`onlynet=i2p`. I2P support was added to Dash Core in version 20.0 (fall 2023)
 and there may be fewer I2P peers than Tor or IP ones. Therefore, using
 `onlynet=i2p` alone (without other `onlynet=`) may make a node more susceptible
 to [Sybil attacks](https://en.dash.it/wiki/Weaknesses#Sybil_attack). Use
