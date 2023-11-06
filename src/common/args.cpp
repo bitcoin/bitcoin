@@ -363,6 +363,31 @@ std::optional<const ArgsManager::Command> ArgsManager::GetCommand() const
     return ret;
 }
 
+bool ArgsManager::CheckCommandOptions(const std::string& command, std::vector<std::string>* errors) const
+{
+    LOCK(cs_args);
+
+    auto command_options = m_available_args.find(OptionsCategory::COMMAND_OPTIONS);
+    if (command_options == m_available_args.end()) return true;
+
+    const auto command_args = m_command_args.find(command);
+    auto is_valid_opt = [&](const auto& opt) EXCLUSIVE_LOCKS_REQUIRED(cs_args) -> bool {
+        if (command_args == m_command_args.end()) return false;
+        return command_args->second.contains(opt);
+    };
+
+    bool ok = true;
+    for (const auto& [arg, _] : command_options->second) {
+        if (!IsArgSet(arg)) continue;
+        if (is_valid_opt(arg)) continue;
+        if (errors != nullptr) {
+            errors->emplace_back(strprintf("The %s option cannot be used with the '%s' command.", arg, command));
+            ok = false;
+        }
+    }
+    return ok;
+}
+
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
 {
     std::vector<std::string> result;

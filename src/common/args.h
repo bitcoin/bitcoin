@@ -218,6 +218,11 @@ protected:
     std::optional<const Command> GetCommand() const;
 
     /**
+     * Check for invalid command options
+     */
+    bool CheckCommandOptions(const std::string& command, std::vector<std::string>* errors = nullptr) const;
+
+    /**
      * Get blocks directory path
      *
      * @return Blocks path which is network specific
