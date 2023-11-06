@@ -28,7 +28,7 @@
   </ItemGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <DisableSpecificWarnings>4060;4065;4146;4244;4267;4554</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4060;4065;4146;4244;4267</DisableSpecificWarnings>
       <PreprocessorDefinitions>HAVE_CLMUL;DISABLE_DEFAULT_FIELDS;ENABLE_FIELD_32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
