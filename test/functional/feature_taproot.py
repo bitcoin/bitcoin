@@ -104,7 +104,7 @@ from test_framework.key import (
     tweak_add_privkey,
     ECKey,
 )
-from test_framework import secp256k1
+from test_framework.crypto import secp256k1
 from test_framework.address import (
     hash160,
     program_to_witness,
