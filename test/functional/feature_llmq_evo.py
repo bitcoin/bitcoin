@@ -112,7 +112,7 @@ class LLMQEvoNodesTest(DashTestFramework):
         self.test_evo_protx_are_in_mnlist(evo_protxhash_list)
 
         self.log.info("Test that EvoNodes are paid 4x blocks in a row")
-        self.test_evo_payments(window_analysis=256)
+        self.test_evo_payments(window_analysis=48)
 
         self.activate_v20()
         self.activate_mn_rr()
@@ -124,7 +124,7 @@ class LLMQEvoNodesTest(DashTestFramework):
         self.sync_blocks()
 
         self.log.info("Test that EvoNodes are paid 1 block in a row after MN RewardReallocation activation")
-        self.test_evo_payments(window_analysis=256, v20active=True)
+        self.test_evo_payments(window_analysis=48, v20active=True)
 
         self.log.info(self.nodes[0].masternodelist())
 

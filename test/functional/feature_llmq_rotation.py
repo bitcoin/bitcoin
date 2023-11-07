@@ -98,10 +98,10 @@ class LLMQQuorumRotationTest(DashTestFramework):
         quorumList = self.test_getmnlistdiff_quorums(b_h_0, b_h_1, {}, expectedDeleted, expectedNew, testQuorumsCLSigs=False)
 
         self.log.info(f"Wait for v20 locked_in phase")
-        # Expected locked_in phase starts at 1440 - 480 (window size in regtest)
-        projected_activation_height = self.advance_to_locked_in_for_v20(expected_locked_in_height=960)
+        # Expected locked_in phase starts at 1200 - 400 (window size in regtest)
+        projected_activation_height = self.advance_to_locked_in_for_v20(expected_locked_in_height=800)
 
-        self.activate_v20(expected_activation_height=1440)
+        self.activate_v20(expected_activation_height=1200)
         self.log.info("Activated v20 at height:" + str(self.nodes[0].getblockcount()))
 
         softfork_info = get_bip9_details(self.nodes[0], 'v20')

@@ -60,6 +60,7 @@ class BIP65Test(BitcoinTestFramework):
             '-dip3params=9000:9000',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
             '-acceptnonstdtxn=1',  # cltv_invalidate is nonstandard
+            '-vbparams=v20:0:999999999999:480:384:288:5:-1' # Delay v20 for this test as we don't need it
         ]]
         self.setup_clean_chain = True
         self.rpc_timeout = 480

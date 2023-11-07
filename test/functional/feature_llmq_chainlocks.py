@@ -33,7 +33,7 @@ class LLMQChainLocksTest(DashTestFramework):
 
         self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=False)
 
-        self.activate_v20(expected_activation_height=1440)
+        self.activate_v20(expected_activation_height=1200)
         self.log.info("Activated v20 at height:" + str(self.nodes[0].getblockcount()))
 
         # v20 is active for the next block, not for the tip

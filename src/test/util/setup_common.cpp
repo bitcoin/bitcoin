@@ -308,15 +308,15 @@ TestChainSetup::TestChainSetup(int num_blocks, const std::vector<const char*>& e
             /* TestChain100Setup */
             {  100, uint256S("0x6ffb83129c19ebdf1ae3771be6a67fe34b35f4c956326b9ba152fac1649f65ae") },
             /* TestChainDIP3BeforeActivationSetup */
-            {  430, uint256S("0x0bcefaa33fec56cd84d05d0e76cd6a78badcc20f627d91903646de6a07930a14") },
+            {  430, uint256S("0x592b23a8882162ea48606e40c9ee00b2166ddae092c691d7f1b1758ec13647d9") },
             /* TestChainDIP3Setup */
-            {  431, uint256S("0x5fd3aa5ef29464839499d7f847edd9362e3e73392b79d3bd88b1591f5fb17d4e") },
+            {  431, uint256S("0x49db248651517f3fc3725fbbc7087db90552d487d11e0962b0148fc4788aeb77") },
             /* TestChainBRRBeforeActivationSetup */
-            {  497, uint256S("0x5d3a646bb53416543e409d2aa99b93ba619c8394ac68868e1b65a57cb8d0ce7d") },
+            {  497, uint256S("0x15445246f9f9fd4fdb1021dd8278ace7246b3e3cb545e1632a277d3a02eb011f") },
             /* TestChainV19BeforeActivationSetup */
-            {  894, uint256S("0x4e01ffea7482da6bbc581f16a62e04d7a20c8789b6bfe581c60016bb79d8d267") },
+            {  894, uint256S("0x03cbf1871d7d915cda10aded00ced45f71a4e2acf6a3c7a77a1ff488267dd1cd") },
             /* TestChainV19Setup */
-            {  899, uint256S("0x539da638600839a24c7a7ac408d22d85f20b3ab913176c80a37a1793eb32e0d9") },
+            {  899, uint256S("0x405a630e16d0ca0efe3abb0e24c9a157a69ec2e07b04333cc5d004efa634ac89") },
         }
     };
 

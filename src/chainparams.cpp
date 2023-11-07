@@ -833,7 +833,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].bit = 9;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V20].nWindowSize = 480;
+        consensus.vDeployments[Consensus::DEPLOYMENT_V20].nWindowSize = 400;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nThresholdStart = 384; // 80% of 480
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nThresholdMin = 288;   // 60% of 480
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nFalloffCoeff = 5;     // this corresponds to 10 periods
