@@ -646,7 +646,7 @@ BOOST_FIXTURE_TEST_CASE(manual_ctor, TestChain100Setup)
     CTxMemPool& pool = *Assert(m_node.mempool);
     LOCK2(cs_main, pool.cs);
     {
-        // 3 pairs of fee-bumping grandparent + parent, plus 1 low-feerate child.
+        // 3 pairs of grandparent + fee-bumping parent, plus 1 low-feerate child.
         // 0 fee + high fee
         auto grandparent_zero_fee = make_tx({{m_coinbase_txns.at(0)->GetHash(), 0}}, 1);
         auto parent_high_feerate = make_tx({{grandparent_zero_fee->GetHash(), 0}}, 1);
@@ -692,7 +692,7 @@ BOOST_FIXTURE_TEST_CASE(manual_ctor, TestChain100Setup)
         BOOST_CHECK_EQUAL(sequences.at(grandparent_double_low_feerate->GetHash()), 1);
         BOOST_CHECK_EQUAL(sequences.at(parent_med_feerate->GetHash()), 1);
 
-        // CPFP low + med
+        // CPFP low + double low
         BOOST_CHECK_EQUAL(sequences.at(grandparent_low_feerate->GetHash()), 2);
         BOOST_CHECK_EQUAL(sequences.at(parent_double_low_feerate->GetHash()), 2);
 
