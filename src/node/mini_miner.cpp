@@ -154,7 +154,7 @@ MiniMiner::MiniMiner(const std::vector<MiniMinerMempoolEntry>& manual_entries,
             m_ready_to_calculate = false;
             return;
         }
-        std::vector<MockEntryMap::iterator> cached_descendants;
+        std::vector<MockEntryMap::iterator> descendants;
         for (const auto& desc_txid : desc_txids) {
             auto desc_it{m_entries_by_txid.find(desc_txid)};
             // Descendants should only include transactions with corresponding entries.
@@ -162,10 +162,10 @@ MiniMiner::MiniMiner(const std::vector<MiniMinerMempoolEntry>& manual_entries,
                 m_ready_to_calculate = false;
                 return;
             } else {
-                cached_descendants.emplace_back(desc_it);
+                descendants.emplace_back(desc_it);
             }
         }
-        m_descendant_set_by_txid.emplace(txid, cached_descendants);
+        m_descendant_set_by_txid.emplace(txid, descendants);
     }
     Assume(m_to_be_replaced.empty());
     Assume(m_requested_outpoints_by_txid.empty());
