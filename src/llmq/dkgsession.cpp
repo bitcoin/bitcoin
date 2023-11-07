@@ -457,7 +457,9 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions() const
         }
         if (auto it = protoMap.find(m->dmn->proTxHash); it == protoMap.end()) {
             m->badConnection = fShouldAllMembersBeConnected;
-            logger.Batch("%s is not connected to us, badConnection=%b", m->dmn->proTxHash.ToString(), m->badConnection);
+            if (m->badConnection) {
+                logger.Batch("%s is not connected to us, badConnection=1", m->dmn->proTxHash.ToString());
+            }
         } else if (it->second < MIN_MASTERNODE_PROTO_VERSION) {
             m->badConnection = true;
             logger.Batch("%s does not have min proto version %d (has %d)", m->dmn->proTxHash.ToString(), MIN_MASTERNODE_PROTO_VERSION, it->second);
