@@ -37,6 +37,7 @@
 #include <QButtonGroup>
 #include <QDir>
 #include <QFontDatabase>
+#include <QDateTime>
 #include <QKeyEvent>
 #include <QMenu>
 #include <QMessageBox>
@@ -515,7 +516,11 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     pageButtons->addButton(ui->btnNetTraffic, pageButtons->buttons().size());
     pageButtons->addButton(ui->btnPeers, pageButtons->buttons().size());
     pageButtons->addButton(ui->btnRepair, pageButtons->buttons().size());
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 15, 0))
+    connect(pageButtons, &QButtonGroup::idClicked, this, &RPCConsole::showPage);
+#else
     connect(pageButtons, QOverload<int>::of(&QButtonGroup::buttonClicked), this, &RPCConsole::showPage);
+#endif
 
     showPage(ToUnderlying(TabTypes::INFO));
 

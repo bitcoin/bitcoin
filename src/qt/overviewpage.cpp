@@ -20,6 +20,7 @@
 #include <cmath>
 
 #include <QAbstractItemDelegate>
+#include <QDateTime>
 #include <QPainter>
 #include <QSettings>
 #include <QTimer>
