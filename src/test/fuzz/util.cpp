@@ -164,6 +164,24 @@ uint32_t ConsumeSequence(FuzzedDataProvider& fuzzed_data_provider) noexcept
                fuzzed_data_provider.ConsumeIntegral<uint32_t>();
 }
 
+std::map<COutPoint, Coin> ConsumeCoins(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    std::map<COutPoint, Coin> coins;
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+        const std::optional<COutPoint> outpoint{ConsumeDeserializable<COutPoint>(fuzzed_data_provider)};
+        if (!outpoint) {
+            break;
+        }
+        const std::optional<Coin> coin{ConsumeDeserializable<Coin>(fuzzed_data_provider)};
+        if (!coin) {
+            break;
+        }
+        coins[*outpoint] = *coin;
+    }
+
+    return coins;
+}
+
 CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     CTxDestination tx_destination;
