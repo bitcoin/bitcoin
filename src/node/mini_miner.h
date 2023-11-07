@@ -34,11 +34,11 @@ class MiniMinerMempoolEntry
 // methods can be called without holding that lock.
 
 public:
-    explicit MiniMinerMempoolEntry(CAmount fee_self,
-                                   CAmount fee_ancestor,
+    explicit MiniMinerMempoolEntry(const CTransactionRef& tx_in,
                                    int64_t vsize_self,
                                    int64_t vsize_ancestor,
-                                   const CTransactionRef& tx_in):
+                                   CAmount fee_self,
+                                   CAmount fee_ancestor):
         tx{tx_in},
         vsize_individual{vsize_self},
         vsize_with_ancestors{vsize_ancestor},
