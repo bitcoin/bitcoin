@@ -30,7 +30,7 @@ bool fNameLookup = DEFAULT_NAME_LOOKUP;
 
 // Need ample time for negotiation for very slow proxies such as Tor
 std::chrono::milliseconds g_socks5_recv_timeout = 20s;
-static std::atomic<bool> interruptSocks5Recv(false);
+CThreadInterrupt g_socks5_interrupt;
 
 ReachableNets g_reachable_nets;
 
@@ -271,7 +271,7 @@ enum class IntrRecvError {
  *          IntrRecvError::OK only if all of the specified number of bytes were
  *          read.
  *
- * @see This function can be interrupted by calling InterruptSocks5(bool).
+ * @see This function can be interrupted by calling g_socks5_interrupt().
  *      Sockets can be made non-blocking with Sock::SetNonBlocking().
  */
 static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, std::chrono::milliseconds timeout, const Sock& sock)
@@ -299,8 +299,9 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, std::chrono::m
                 return IntrRecvError::NetworkError;
             }
         }
-        if (interruptSocks5Recv)
+        if (g_socks5_interrupt) {
             return IntrRecvError::Interrupted;
+        }
         curTime = Now<SteadyMilliseconds>();
     }
     return len == 0 ? IntrRecvError::OK : IntrRecvError::Timeout;
@@ -333,103 +334,93 @@ static std::string Socks5ErrorString(uint8_t err)
 
 bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* auth, const Sock& sock)
 {
-    IntrRecvError recvr;
-    LogPrint(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
-    if (strDest.size() > 255) {
-        return error("Hostname too long");
-    }
-    // Construct the version identifier/method selection message
-    std::vector<uint8_t> vSocks5Init;
-    vSocks5Init.push_back(SOCKSVersion::SOCKS5); // We want the SOCK5 protocol
-    if (auth) {
-        vSocks5Init.push_back(0x02); // 2 method identifiers follow...
-        vSocks5Init.push_back(SOCKS5Method::NOAUTH);
-        vSocks5Init.push_back(SOCKS5Method::USER_PASS);
-    } else {
-        vSocks5Init.push_back(0x01); // 1 method identifier follows...
-        vSocks5Init.push_back(SOCKS5Method::NOAUTH);
-    }
-    ssize_t ret = sock.Send(vSocks5Init.data(), vSocks5Init.size(), MSG_NOSIGNAL);
-    if (ret != (ssize_t)vSocks5Init.size()) {
-        return error("Error sending to proxy");
-    }
-    uint8_t pchRet1[2];
-    if (InterruptibleRecv(pchRet1, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
-        LogPrintf("Socks5() connect to %s:%d failed: InterruptibleRecv() timeout or other failure\n", strDest, port);
-        return false;
-    }
-    if (pchRet1[0] != SOCKSVersion::SOCKS5) {
-        return error("Proxy failed to initialize");
-    }
-    if (pchRet1[1] == SOCKS5Method::USER_PASS && auth) {
-        // Perform username/password authentication (as described in RFC1929)
-        std::vector<uint8_t> vAuth;
-        vAuth.push_back(0x01); // Current (and only) version of user/pass subnegotiation
-        if (auth->username.size() > 255 || auth->password.size() > 255)
-            return error("Proxy username or password too long");
-        vAuth.push_back(auth->username.size());
-        vAuth.insert(vAuth.end(), auth->username.begin(), auth->username.end());
-        vAuth.push_back(auth->password.size());
-        vAuth.insert(vAuth.end(), auth->password.begin(), auth->password.end());
-        ret = sock.Send(vAuth.data(), vAuth.size(), MSG_NOSIGNAL);
-        if (ret != (ssize_t)vAuth.size()) {
-            return error("Error sending authentication to proxy");
+    try {
+        IntrRecvError recvr;
+        LogPrint(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
+        if (strDest.size() > 255) {
+            return error("Hostname too long");
         }
-        LogPrint(BCLog::PROXY, "SOCKS5 sending proxy authentication %s:%s\n", auth->username, auth->password);
-        uint8_t pchRetA[2];
-        if (InterruptibleRecv(pchRetA, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
-            return error("Error reading proxy authentication response");
-        }
-        if (pchRetA[0] != 0x01 || pchRetA[1] != 0x00) {
-            return error("Proxy authentication unsuccessful");
-        }
-    } else if (pchRet1[1] == SOCKS5Method::NOAUTH) {
-        // Perform no authentication
-    } else {
-        return error("Proxy requested wrong authentication method %02x", pchRet1[1]);
-    }
-    std::vector<uint8_t> vSocks5;
-    vSocks5.push_back(SOCKSVersion::SOCKS5); // VER protocol version
-    vSocks5.push_back(SOCKS5Command::CONNECT); // CMD CONNECT
-    vSocks5.push_back(0x00); // RSV Reserved must be 0
-    vSocks5.push_back(SOCKS5Atyp::DOMAINNAME); // ATYP DOMAINNAME
-    vSocks5.push_back(strDest.size()); // Length<=255 is checked at beginning of function
-    vSocks5.insert(vSocks5.end(), strDest.begin(), strDest.end());
-    vSocks5.push_back((port >> 8) & 0xFF);
-    vSocks5.push_back((port >> 0) & 0xFF);
-    ret = sock.Send(vSocks5.data(), vSocks5.size(), MSG_NOSIGNAL);
-    if (ret != (ssize_t)vSocks5.size()) {
-        return error("Error sending to proxy");
-    }
-    uint8_t pchRet2[4];
-    if ((recvr = InterruptibleRecv(pchRet2, 4, g_socks5_recv_timeout, sock)) != IntrRecvError::OK) {
-        if (recvr == IntrRecvError::Timeout) {
-            /* If a timeout happens here, this effectively means we timed out while connecting
-             * to the remote node. This is very common for Tor, so do not print an
-             * error message. */
-            return false;
+        // Construct the version identifier/method selection message
+        std::vector<uint8_t> vSocks5Init;
+        vSocks5Init.push_back(SOCKSVersion::SOCKS5); // We want the SOCK5 protocol
+        if (auth) {
+            vSocks5Init.push_back(0x02); // 2 method identifiers follow...
+            vSocks5Init.push_back(SOCKS5Method::NOAUTH);
+            vSocks5Init.push_back(SOCKS5Method::USER_PASS);
         } else {
-            return error("Error while reading proxy response");
+            vSocks5Init.push_back(0x01); // 1 method identifier follows...
+            vSocks5Init.push_back(SOCKS5Method::NOAUTH);
         }
-    }
-    if (pchRet2[0] != SOCKSVersion::SOCKS5) {
-        return error("Proxy failed to accept request");
-    }
-    if (pchRet2[1] != SOCKS5Reply::SUCCEEDED) {
-        // Failures to connect to a peer that are not proxy errors
-        LogPrintf("Socks5() connect to %s:%d failed: %s\n", strDest, port, Socks5ErrorString(pchRet2[1]));
-        return false;
-    }
-    if (pchRet2[2] != 0x00) { // Reserved field must be 0
-        return error("Error: malformed proxy response");
-    }
-    uint8_t pchRet3[256];
-    switch (pchRet2[3])
-    {
+        sock.SendComplete(vSocks5Init, g_socks5_recv_timeout, g_socks5_interrupt);
+        uint8_t pchRet1[2];
+        if (InterruptibleRecv(pchRet1, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
+            LogPrintf("Socks5() connect to %s:%d failed: InterruptibleRecv() timeout or other failure\n", strDest, port);
+            return false;
+        }
+        if (pchRet1[0] != SOCKSVersion::SOCKS5) {
+            return error("Proxy failed to initialize");
+        }
+        if (pchRet1[1] == SOCKS5Method::USER_PASS && auth) {
+            // Perform username/password authentication (as described in RFC1929)
+            std::vector<uint8_t> vAuth;
+            vAuth.push_back(0x01); // Current (and only) version of user/pass subnegotiation
+            if (auth->username.size() > 255 || auth->password.size() > 255)
+                return error("Proxy username or password too long");
+            vAuth.push_back(auth->username.size());
+            vAuth.insert(vAuth.end(), auth->username.begin(), auth->username.end());
+            vAuth.push_back(auth->password.size());
+            vAuth.insert(vAuth.end(), auth->password.begin(), auth->password.end());
+            sock.SendComplete(vAuth, g_socks5_recv_timeout, g_socks5_interrupt);
+            LogPrint(BCLog::PROXY, "SOCKS5 sending proxy authentication %s:%s\n", auth->username, auth->password);
+            uint8_t pchRetA[2];
+            if (InterruptibleRecv(pchRetA, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
+                return error("Error reading proxy authentication response");
+            }
+            if (pchRetA[0] != 0x01 || pchRetA[1] != 0x00) {
+                return error("Proxy authentication unsuccessful");
+            }
+        } else if (pchRet1[1] == SOCKS5Method::NOAUTH) {
+            // Perform no authentication
+        } else {
+            return error("Proxy requested wrong authentication method %02x", pchRet1[1]);
+        }
+        std::vector<uint8_t> vSocks5;
+        vSocks5.push_back(SOCKSVersion::SOCKS5);   // VER protocol version
+        vSocks5.push_back(SOCKS5Command::CONNECT); // CMD CONNECT
+        vSocks5.push_back(0x00);                   // RSV Reserved must be 0
+        vSocks5.push_back(SOCKS5Atyp::DOMAINNAME); // ATYP DOMAINNAME
+        vSocks5.push_back(strDest.size());         // Length<=255 is checked at beginning of function
+        vSocks5.insert(vSocks5.end(), strDest.begin(), strDest.end());
+        vSocks5.push_back((port >> 8) & 0xFF);
+        vSocks5.push_back((port >> 0) & 0xFF);
+        sock.SendComplete(vSocks5, g_socks5_recv_timeout, g_socks5_interrupt);
+        uint8_t pchRet2[4];
+        if ((recvr = InterruptibleRecv(pchRet2, 4, g_socks5_recv_timeout, sock)) != IntrRecvError::OK) {
+            if (recvr == IntrRecvError::Timeout) {
+                /* If a timeout happens here, this effectively means we timed out while connecting
+                 * to the remote node. This is very common for Tor, so do not print an
+                 * error message. */
+                return false;
+            } else {
+                return error("Error while reading proxy response");
+            }
+        }
+        if (pchRet2[0] != SOCKSVersion::SOCKS5) {
+            return error("Proxy failed to accept request");
+        }
+        if (pchRet2[1] != SOCKS5Reply::SUCCEEDED) {
+            // Failures to connect to a peer that are not proxy errors
+            LogPrintf("Socks5() connect to %s:%d failed: %s\n", strDest, port, Socks5ErrorString(pchRet2[1]));
+            return false;
+        }
+        if (pchRet2[2] != 0x00) { // Reserved field must be 0
+            return error("Error: malformed proxy response");
+        }
+        uint8_t pchRet3[256];
+        switch (pchRet2[3]) {
         case SOCKS5Atyp::IPV4: recvr = InterruptibleRecv(pchRet3, 4, g_socks5_recv_timeout, sock); break;
         case SOCKS5Atyp::IPV6: recvr = InterruptibleRecv(pchRet3, 16, g_socks5_recv_timeout, sock); break;
-        case SOCKS5Atyp::DOMAINNAME:
-        {
+        case SOCKS5Atyp::DOMAINNAME: {
             recvr = InterruptibleRecv(pchRet3, 1, g_socks5_recv_timeout, sock);
             if (recvr != IntrRecvError::OK) {
                 return error("Error reading from proxy");
@@ -439,15 +430,18 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
             break;
         }
         default: return error("Error: malformed proxy response");
+        }
+        if (recvr != IntrRecvError::OK) {
+            return error("Error reading from proxy");
+        }
+        if (InterruptibleRecv(pchRet3, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
+            return error("Error reading from proxy");
+        }
+        LogPrint(BCLog::NET, "SOCKS5 connected %s\n", strDest);
+        return true;
+    } catch (const std::runtime_error& e) {
+        return error("Error during SOCKS5 proxy handshake: %s", e.what());
     }
-    if (recvr != IntrRecvError::OK) {
-        return error("Error reading from proxy");
-    }
-    if (InterruptibleRecv(pchRet3, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
-        return error("Error reading from proxy");
-    }
-    LogPrint(BCLog::NET, "SOCKS5 connected %s\n", strDest);
-    return true;
 }
 
 std::unique_ptr<Sock> CreateSockTCP(const CService& address_family)
@@ -679,11 +673,6 @@ CSubNet LookupSubNet(const std::string& subnet_str)
     }
 
     return subnet;
-}
-
-void InterruptSocks5(bool interrupt)
-{
-    interruptSocks5Recv = interrupt;
 }
 
 bool IsBadPort(uint16_t port)
