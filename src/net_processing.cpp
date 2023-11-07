@@ -2447,7 +2447,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         // of transactions relevant to them, without having to download the
         // entire memory pool.
         // Also, other nodes can use these messages to automatically request a
-        // transaction from some other peer that annnounced it, and stop
+        // transaction from some other peer that announced it, and stop
         // waiting for us to respond.
         // In normal operation, we often send NOTFOUND messages for parents of
         // transactions that we relay; if a peer is missing a parent, they may
@@ -3592,7 +3592,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        // Log succesful connections unconditionally for outbound, but not for inbound as those
+        // Log successful connections unconditionally for outbound, but not for inbound as those
         // can be triggered by an attacker at high rate.
         if (!pfrom.IsInboundConn() || LogAcceptCategory(BCLog::NET, BCLog::Level::Debug)) {
             const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};

@@ -170,7 +170,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         return Result::INVALID_PARAMETER;
     }
 
-    // We are going to modify coin control later, copy to re-use
+    // We are going to modify coin control later, copy to reuse
     CCoinControl new_coin_control(coin_control);
 
     LOCK(wallet.cs_wallet);

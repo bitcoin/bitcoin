@@ -75,7 +75,7 @@ class AssumeutxoTest(BitcoinTestFramework):
             with self.nodes[1].assert_debug_log([log_msg]):
                 assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot{rpc_details}", self.nodes[1].loadtxoutset, bad_snapshot_path)
 
-        self.log.info("  - snapshot file refering to a block that is not in the assumeutxo parameters")
+        self.log.info("  - snapshot file referring to a block that is not in the assumeutxo parameters")
         prev_block_hash = self.nodes[0].getblockhash(SNAPSHOT_BASE_HEIGHT - 1)
         bogus_block_hash = "0" * 64  # Represents any unknown block hash
         for bad_block_hash in [bogus_block_hash, prev_block_hash]:
@@ -112,7 +112,7 @@ class AssumeutxoTest(BitcoinTestFramework):
     def test_invalid_chainstate_scenarios(self):
         self.log.info("Test different scenarios of invalid snapshot chainstate in datadir")
 
-        self.log.info("  - snapshot chainstate refering to a block that is not in the assumeutxo parameters")
+        self.log.info("  - snapshot chainstate referring to a block that is not in the assumeutxo parameters")
         self.stop_node(0)
         chainstate_snapshot_path = self.nodes[0].chain_path / "chainstate_snapshot"
         chainstate_snapshot_path.mkdir()

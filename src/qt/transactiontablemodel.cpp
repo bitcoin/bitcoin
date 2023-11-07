@@ -219,7 +219,7 @@ public:
 
             // If a status update is needed (blocks came in since last check),
             // try to update the status of this transaction from the wallet.
-            // Otherwise, simply re-use the cached status.
+            // Otherwise, simply reuse the cached status.
             interfaces::WalletTxStatus wtx;
             int numBlocks;
             int64_t block_time;

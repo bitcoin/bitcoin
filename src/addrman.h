@@ -172,7 +172,7 @@ public:
     /**
      * Returns an information-location pair for all addresses in the selected addrman table.
      * If an address appears multiple times in the new table, an information-location pair
-     * is returned for each occurence. Addresses only ever appear once in the tried table.
+     * is returned for each occurrence. Addresses only ever appear once in the tried table.
      *
      * @param[in] from_tried     Selects which table to return entries from.
      *

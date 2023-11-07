@@ -1089,7 +1089,7 @@ UniValue RPCResult::MatchesType(const UniValue& result) const
     if (UniValue::VARR == result.getType()) {
         UniValue errors(UniValue::VOBJ);
         for (size_t i{0}; i < result.get_array().size(); ++i) {
-            // If there are more results than documented, re-use the last doc_inner.
+            // If there are more results than documented, reuse the last doc_inner.
             const RPCResult& doc_inner{m_inner.at(std::min(m_inner.size() - 1, i))};
             UniValue match{doc_inner.MatchesType(result.get_array()[i])};
             if (!match.isTrue()) errors.pushKV(strprintf("%d", i), match);
