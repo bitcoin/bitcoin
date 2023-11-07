@@ -147,6 +147,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, const std::vecto
 
 BasicTestingSetup::~BasicTestingSetup()
 {
+    m_node.kernel.reset();
     SetMockTime(0s); // Reset mocktime for following tests
     LogInstance().DisconnectTestLogger();
     fs::remove_all(m_path_root);
@@ -205,8 +206,9 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.netgroupman.reset();
     m_node.args = nullptr;
     m_node.mempool.reset();
-    m_node.scheduler.reset();
+    m_node.fee_estimator.reset();
     m_node.chainman.reset();
+    m_node.scheduler.reset();
 }
 
 void ChainTestingSetup::LoadVerifyActivateChainstate()
