@@ -16,6 +16,7 @@
 #include <netbase.h>
 #include <node/context.h>
 #include <policy/settings.h>
+#include <protocol.h>
 #include <rpc/blockchain.h>
 #include <rpc/protocol.h>
 #include <rpc/server_util.h>
@@ -96,6 +97,18 @@ static RPCHelpMan ping()
     return UniValue::VNULL;
 },
     };
+}
+
+/** Returns, given services flags, a list of humanly readable (known) network services */
+static UniValue GetServicesNames(ServiceFlags services)
+{
+    UniValue servicesNames(UniValue::VARR);
+
+    for (const auto& flag : serviceFlagsToStr(services)) {
+        servicesNames.push_back(flag);
+    }
+
+    return servicesNames;
 }
 
 static RPCHelpMan getpeerinfo()

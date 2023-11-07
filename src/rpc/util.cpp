@@ -1304,17 +1304,6 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
     return ret;
 }
 
-UniValue GetServicesNames(ServiceFlags services)
-{
-    UniValue servicesNames(UniValue::VARR);
-
-    for (const auto& flag : serviceFlagsToStr(services)) {
-        servicesNames.push_back(flag);
-    }
-
-    return servicesNames;
-}
-
 /** Convert a vector of bilingual strings to a UniValue::VARR containing their original untranslated values. */
 [[nodiscard]] static UniValue BilingualStringsToUniValue(const std::vector<bilingual_str>& bilingual_strings)
 {
