@@ -1184,23 +1184,7 @@ bool CWallet::LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx
     // If wallet doesn't have a chain (e.g when using bitcoin-wallet tool),
     // don't bother to update txn.
     if (HaveChain()) {
-        bool active;
-        auto lookup_block = [&](const uint256& hash, int& height, TxState& state) {
-            // If tx block (or conflicting block) was reorged out of chain
-            // while the wallet was shutdown, change tx status to UNCONFIRMED
-            // and reset block height, hash, and index. ABANDONED tx don't have
-            // associated blocks and don't need to be updated. The case where a
-            // transaction was reorged out while online and then reconfirmed
-            // while offline is covered by the rescan logic.
-            if (!chain().findBlock(hash, FoundBlock().inActiveChain(active).height(height)) || !active) {
-                state = TxStateInactive{};
-            }
-        };
-        if (auto* conf = wtx.state<TxStateConfirmed>()) {
-            lookup_block(conf->confirmed_block_hash, conf->confirmed_block_height, wtx.m_state);
-        } else if (auto* conf = wtx.state<TxStateConflicted>()) {
-            lookup_block(conf->conflicting_block_hash, conf->conflicting_block_height, wtx.m_state);
-        }
+      wtx.updateState(chain());
     }
     if (/* insertion took place */ ins.second) {
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
@@ -3319,8 +3303,10 @@ int CWallet::GetTxDepthInMainChain(const CWalletTx& wtx) const
 {
     AssertLockHeld(cs_wallet);
     if (auto* conf = wtx.state<TxStateConfirmed>()) {
+        assert(conf->confirmed_block_height >= 0);
         return GetLastBlockHeight() - conf->confirmed_block_height + 1;
     } else if (auto* conf = wtx.state<TxStateConflicted>()) {
+        assert(conf->conflicting_block_height >= 0);
         return -1 * (GetLastBlockHeight() - conf->conflicting_block_height + 1);
     } else {
         return 0;
