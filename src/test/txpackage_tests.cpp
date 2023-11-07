@@ -174,7 +174,6 @@ BOOST_FIXTURE_TEST_CASE(ancestorpackage, TestChain100Setup)
             last_tx = tx;
             if (i == 0) signing_key = placeholder_key;
         }
-        BOOST_CHECK(!IsChildWithParents(package));
         BOOST_CHECK(TestIsAncestorPackage(package));
 
         Package package_copy = package;
@@ -213,7 +212,6 @@ BOOST_FIXTURE_TEST_CASE(ancestorpackage, TestChain100Setup)
         Shuffle(package_copy.begin(), package_copy.end(), det_rand);
         AncestorPackage packageified(package_copy);
         BOOST_CHECK(TestIsAncestorPackage(packageified.Txns()));
-        BOOST_CHECK(IsChildWithParents(packageified.Txns()));
 
         // Note that AncestorPackage will sort the package so that parents are before the child, but
         // this does not necessarily mean that the ith parent in packageified matches the ith parent
@@ -479,8 +477,6 @@ BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100Setup)
         BOOST_CHECK(!IsWellFormedPackage({tx_child, tx_parent}, state, /*require_sorted=*/true));
         BOOST_CHECK_EQUAL(state.GetResult(), PackageValidationResult::PCKG_POLICY);
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "package-not-sorted");
-        BOOST_CHECK(IsChildWithParents({tx_parent, tx_child}));
-        BOOST_CHECK(IsChildWithParentsTree({tx_parent, tx_child}));
     }
 
     // 24 Parents and 1 Child
@@ -495,9 +491,6 @@ BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100Setup)
         }
         child.vout.emplace_back(47 * COIN, spk2);
 
-        // The child must be in the package.
-        BOOST_CHECK(!IsChildWithParents(package));
-
         // The parents can be in any order.
         FastRandomContext rng;
         Shuffle(package.begin(), package.end(), rng);
@@ -505,15 +498,6 @@ BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100Setup)
 
         PackageValidationState state;
         BOOST_CHECK(IsWellFormedPackage(package, state, /*require_sorted=*/true));
-        BOOST_CHECK(IsChildWithParents(package));
-        BOOST_CHECK(IsChildWithParentsTree(package));
-
-        package.erase(package.begin());
-        BOOST_CHECK(IsChildWithParents(package));
-
-        // The package cannot have unrelated transactions.
-        package.insert(package.begin(), m_coinbase_txns[0]);
-        BOOST_CHECK(!IsChildWithParents(package));
     }
 
     // 2 Parents and 1 Child where one parent depends on the other.
@@ -536,15 +520,9 @@ BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100Setup)
         CTransactionRef tx_child = MakeTransactionRef(mtx_child);
 
         PackageValidationState state;
-        BOOST_CHECK(IsChildWithParents({tx_parent, tx_parent_also_child}));
-        BOOST_CHECK(IsChildWithParents({tx_parent, tx_child}));
-        BOOST_CHECK(IsChildWithParents({tx_parent, tx_parent_also_child, tx_child}));
-        BOOST_CHECK(!IsChildWithParentsTree({tx_parent, tx_parent_also_child, tx_child}));
-        // IsChildWithParents does not detect unsorted parents.
-        BOOST_CHECK(IsChildWithParents({tx_parent_also_child, tx_parent, tx_child}));
+        BOOST_CHECK(!IsTopoSortedPackage({tx_parent_also_child, tx_parent, tx_child}));
         BOOST_CHECK(IsWellFormedPackage({tx_parent, tx_parent_also_child, tx_child}, state, /*require_sorted=*/true));
         BOOST_CHECK(!IsWellFormedPackage({tx_parent_also_child, tx_parent, tx_child}, state, /*require_sorted=*/true));
-        BOOST_CHECK(!IsTopoSortedPackage({tx_parent_also_child, tx_parent, tx_child}));
         BOOST_CHECK_EQUAL(state.GetResult(), PackageValidationResult::PCKG_POLICY);
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "package-not-sorted");
     }

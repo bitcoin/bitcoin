@@ -78,14 +78,4 @@ bool IsConsistentPackage(const Package& txns);
  */
 bool IsWellFormedPackage(const Package& txns, PackageValidationState& state, bool require_sorted);
 
-/** Context-free check that a package is exactly one child and its parents; not all parents need to
- * be present, but the package must not contain any transactions that are not the child's parents.
- * It is expected to be sorted, which means the last transaction must be the child.
- */
-bool IsChildWithParents(const Package& package);
-
-/** Context-free check that a package IsChildWithParents() and none of the parents depend on each
- * other (the package is a "tree").
- */
-bool IsChildWithParentsTree(const Package& package);
 #endif // BITCOIN_POLICY_PACKAGES_H
