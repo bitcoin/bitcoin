@@ -1129,11 +1129,15 @@ static std::pair<CAmount, CAmount> GetBlockSubsidyHelper(int nPrevBits, int nPre
         dDiff = ConvertBitsToDouble(nPrevBits);
     }
 
-    if (fV20Active) {
-        // Starting from V20 Activation, subsidybase should be stable.
-        // Currently, nSubsidyBase calculate relies on difficulty.
-        // Once Platform is live, it must constantly get blocks difficulty in order to calculate platformReward.
-        // This can not be continued so we set the nSubsidyBase to a fixed value.
+    const bool isDevnet = Params().NetworkIDString() == CBaseChainParams::DEVNET;
+    const bool force_fixed_base_subsidy = fV20Active || (isDevnet && nPrevHeight >= consensusParams.nHighSubsidyBlocks);
+    if (force_fixed_base_subsidy) {
+        // Originally, nSubsidyBase calculations relied on difficulty. Once Platform is live,
+        // it must be able to calculate platformReward. However, we don't want it to constantly
+        // get blocks difficulty from the payment chain, so we set the nSubsidyBase to a fixed
+        // value starting from V20 activation. Note, that it doesn't affect mainnet really
+        // because blocks difficulty there is very high already.
+        // Devnets get fixed nSubsidyBase starting from nHighSubsidyBlocks to better mimic mainnet.
         nSubsidyBase = 5;
     } else if (nPrevHeight < 5465) {
         // Early ages...
@@ -1162,8 +1166,8 @@ static std::pair<CAmount, CAmount> GetBlockSubsidyHelper(int nPrevBits, int nPre
         nSubsidy -= nSubsidy/14;
     }
 
-    // this is only active on devnets
     if (nPrevHeight < consensusParams.nHighSubsidyBlocks) {
+        assert(isDevnet);
         nSubsidy *= consensusParams.nHighSubsidyFactor;
     }
 
