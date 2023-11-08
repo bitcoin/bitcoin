@@ -18,7 +18,7 @@ extern UniValue read_json(const std::string& jsondata);
 BOOST_FIXTURE_TEST_SUITE(evo_trivialvalidation, BasicTestingSetup)
 
 template<class T>
-void TestTxHelper(const CMutableTransaction& tx, bool expected_failure, const std::string& expected_error)
+void TestTxHelper(const CMutableTransaction& tx, bool is_basic_bls, bool expected_failure, const std::string& expected_error)
 {
     T payload;
 
@@ -29,7 +29,7 @@ void TestTxHelper(const CMutableTransaction& tx, bool expected_failure, const st
     if (payload_to_fail) return;
 
     TxValidationState dummy_state;
-    BOOST_CHECK_EQUAL(payload.IsTriviallyValid(!bls::bls_legacy_scheme.load(), dummy_state), !expected_failure);
+    BOOST_CHECK_EQUAL(payload.IsTriviallyValid(is_basic_bls, dummy_state), !expected_failure);
     if (expected_failure) {
         BOOST_CHECK_EQUAL(dummy_state.GetRejectReason(), expected_error);
     }
@@ -44,19 +44,20 @@ void trivialvalidation_runner(const std::string& json)
         uint256 txHash;
         std::string txType;
         CMutableTransaction tx;
-        bool expected;
         std::string expected_err;
         try {
             // Additional data
             txHash = uint256S(test[0].get_str());
             BOOST_TEST_MESSAGE("tx: " << test[0].get_str());
             txType = test[1].get_str();
+            BOOST_CHECK(test[2].get_str() == "basic" || test[2].get_str() == "legacy");
+            bool is_basic_bls = test[2].get_str() == "basic";
             // Raw transaction
-            CDataStream stream(ParseHex(test[2].get_str()), SER_NETWORK, PROTOCOL_VERSION);
+            CDataStream stream(ParseHex(test[3].get_str()), SER_NETWORK, PROTOCOL_VERSION);
             stream >> tx;
-            expected = test.size() > 3;
+            bool expected = test.size() > 4;
             if (expected) {
-                expected_err = test[3].get_str();
+                expected_err = test[4].get_str();
             }
             // Sanity check
             BOOST_CHECK_EQUAL(tx.nVersion, 3);
@@ -67,25 +68,25 @@ void trivialvalidation_runner(const std::string& json)
             case TRANSACTION_PROVIDER_REGISTER: {
                 BOOST_CHECK_EQUAL(txType, "proregtx");
 
-                TestTxHelper<CProRegTx>(tx, expected, expected_err);
+                TestTxHelper<CProRegTx>(tx, is_basic_bls, expected, expected_err);
                 break;
             }
             case TRANSACTION_PROVIDER_UPDATE_SERVICE: {
                 BOOST_CHECK_EQUAL(txType, "proupservtx");
 
-                TestTxHelper<CProUpServTx>(tx, expected, expected_err);
+                TestTxHelper<CProUpServTx>(tx, is_basic_bls, expected, expected_err);
                 break;
             }
             case TRANSACTION_PROVIDER_UPDATE_REGISTRAR: {
                 BOOST_CHECK_EQUAL(txType, "proupregtx");
 
-                TestTxHelper<CProUpRegTx>(tx, expected, expected_err);
+                TestTxHelper<CProUpRegTx>(tx, is_basic_bls, expected, expected_err);
                 break;
             }
             case TRANSACTION_PROVIDER_UPDATE_REVOKE: {
                 BOOST_CHECK_EQUAL(txType, "prouprevtx");
 
-                TestTxHelper<CProUpRevTx>(tx, expected, expected_err);
+                TestTxHelper<CProUpRevTx>(tx, is_basic_bls, expected, expected_err);
                 break;
             }
             default:
@@ -103,19 +104,23 @@ void trivialvalidation_runner(const std::string& json)
 
 BOOST_AUTO_TEST_CASE(trivialvalidation_valid)
 {
-    //TODO: Provide raw data for basic scheme as well
-    bls::bls_legacy_scheme.store(true);
-
     const std::string json(json_tests::trivially_valid, json_tests::trivially_valid + sizeof(json_tests::trivially_valid));
+
+    bls::bls_legacy_scheme.store(true);
+    trivialvalidation_runner(json);
+
+    bls::bls_legacy_scheme.store(false);
     trivialvalidation_runner(json);
 }
 
 BOOST_AUTO_TEST_CASE(trivialvalidation_invalid)
 {
-    //TODO: Provide raw data for basic scheme as well
-    bls::bls_legacy_scheme.store(true);
-
     const std::string json(json_tests::trivially_invalid, json_tests::trivially_invalid + sizeof(json_tests::trivially_invalid));
+
+    bls::bls_legacy_scheme.store(true);
+    trivialvalidation_runner(json);
+
+    bls::bls_legacy_scheme.store(false);
     trivialvalidation_runner(json);
 }
 

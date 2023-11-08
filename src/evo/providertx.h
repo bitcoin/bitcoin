@@ -59,6 +59,7 @@ public:
             // unknown version, bail out early
             return;
         }
+
         READWRITE(
                 obj.nType,
                 obj.nMode,
@@ -71,7 +72,7 @@ public:
                 obj.scriptPayout,
                 obj.inputsHash
         );
-        if (obj.nVersion == BASIC_BLS_VERSION && obj.nType == MnType::Evo) {
+        if (obj.nType == MnType::Evo) {
             READWRITE(
                 obj.platformNodeID,
                 obj.platformP2PPort,
@@ -159,7 +160,7 @@ public:
                 obj.scriptOperatorPayout,
                 obj.inputsHash
         );
-        if (obj.nVersion == BASIC_BLS_VERSION && obj.nType == MnType::Evo) {
+        if (obj.nType == MnType::Evo) {
             READWRITE(
                 obj.platformNodeID,
                 obj.platformP2PPort,
