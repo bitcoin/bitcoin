@@ -128,6 +128,14 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     BOOST_CHECK(solutions[0] == std::vector<unsigned char>{16});
     BOOST_CHECK(solutions[1] == ToByteVector(uint256::ONE));
 
+    // TxoutType::ANCHOR
+    std::vector<unsigned char> anchor_bytes{0x4e, 0x73};
+    s.clear();
+    s << OP_1 << anchor_bytes;
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::ANCHOR);
+    BOOST_CHECK(solutions[0] == std::vector<unsigned char>{1});
+    BOOST_CHECK(solutions[1] == anchor_bytes);
+
     // TxoutType::NONSTANDARD
     s.clear();
     s << OP_9 << OP_ADD << OP_11 << OP_EQUAL;
@@ -188,6 +196,16 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
     s.clear();
     s << OP_0 << std::vector<unsigned char>(19, 0x01);
     BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::NONSTANDARD);
+
+    // TxoutType::ANCHOR but wrong witness version
+    s.clear();
+    s << OP_2 << std::vector<unsigned char>{0x4e, 0x73};
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_UNKNOWN);
+
+    // TxoutType::ANCHOR but wrong 2-byte data push
+    s.clear();
+    s << OP_1 << std::vector<unsigned char>{0xff, 0xff};
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_UNKNOWN);
 }
 
 BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
