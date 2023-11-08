@@ -136,8 +136,8 @@ class AnchorsTest(BitcoinTestFramework):
             file_handler.write(new_data + new_data_hash)
 
         self.log.info("Restarting node attempts to reconnect to anchors")
-        with self.nodes[0].assert_debug_log([f"Trying to make an anchor connection to {ONION_ADDR}"]):
-            self.start_node(0, extra_args=[f"-onion={onion_conf.addr[0]}:{onion_conf.addr[1]}"])
+        with self.nodes[0].assert_debug_log([f"Trying block-relay-only anchor connection to net=onion, peeraddr={ONION_ADDR}"]):
+            self.start_node(0, extra_args=[f"-onion={onion_conf.addr[0]}:{onion_conf.addr[1]}", "-logips"])
 
 
 if __name__ == "__main__":

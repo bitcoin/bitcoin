@@ -51,6 +51,7 @@
 #include <functional>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <math.h>
 
@@ -328,42 +329,71 @@ bool IsLocal(const CService& addr)
     return mapLocalHost.count(addr) > 0;
 }
 
-CNode* CConnman::FindNode(const CNetAddr& ip)
+CNode* CConnman::FindNode(const CNetAddr& addr, std::optional<bool> inbound)
 {
-    LOCK(m_nodes_mutex);
+    AssertLockHeld(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
-      if (static_cast<CNetAddr>(pnode->addr) == ip) {
+        if (static_cast<CNetAddr>(pnode->addr) == addr && (!inbound.has_value() || pnode->IsInboundConn() == inbound.value())) {
             return pnode;
         }
     }
     return nullptr;
 }
 
-CNode* CConnman::FindNode(const std::string& addrName)
+CNode* CConnman::FindNode(const std::string& addr, std::optional<bool> inbound)
 {
-    LOCK(m_nodes_mutex);
+    AssertLockHeld(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
-        if (pnode->m_addr_name == addrName) {
+        if (pnode->m_addr_name == addr && (!inbound.has_value() || pnode->IsInboundConn() == inbound.value())) {
             return pnode;
         }
     }
     return nullptr;
 }
 
-CNode* CConnman::FindNode(const CService& addr)
+CNode* CConnman::FindNode(const CService& addr, std::optional<bool> inbound)
 {
-    LOCK(m_nodes_mutex);
+    AssertLockHeld(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
-        if (static_cast<CService>(pnode->addr) == addr) {
+        if (static_cast<CService>(pnode->addr) == addr && (!inbound.has_value() || pnode->IsInboundConn() == inbound.value())) {
             return pnode;
         }
     }
     return nullptr;
 }
 
-bool CConnman::AlreadyConnectedToAddress(const CAddress& addr)
+bool CConnman::AlreadyConnectedToAddress(const CAddress& addr, ConnectionType conn_type, bool log)
 {
-    return FindNode(static_cast<CNetAddr>(addr)) || FindNode(addr.ToStringAddrPort());
+    const CService service{MaybeFlipIPv6toCJDNS(addr)};
+    const bool inbound{conn_type == ConnectionType::INBOUND};
+    CNode* pnode{nullptr};
+    LOCK(m_nodes_mutex);
+    if (inbound) {
+        // For accepting an inbound connection, check all connections by addr only.
+        pnode = FindNode(static_cast<CNetAddr>(service));
+    } else {
+        // For making an outbound connection, check outbound connections by addr and port
+        // (for both CService and string), and if we're not making a manual connection,
+        // then also check inbound connections by addr only.
+        pnode = FindNode(service, /*inbound=*/false);
+        if (!pnode || !pnode->addr.IsValid()) {
+            pnode = FindNode(service.ToStringAddrPort(), /*inbound=*/false);
+        }
+        if ((!pnode || !pnode->addr.IsValid()) && conn_type != ConnectionType::MANUAL) {
+            pnode = FindNode(static_cast<CNetAddr>(service), /*inbound=*/true);
+        }
+    }
+    if (pnode && log) {
+        LogPrintLevel(BCLog::NET, inbound ? BCLog::Level::Debug : BCLog::Level::Info,
+                      "Not %s new %s connection%s, already connected to %s %s %s peer=%d%s, version=%d, subver=%s\n",
+                      inbound ? "accepting" : "opening", ConnectionTypeAsString(conn_type),
+                      fLogIPs ? strprintf(" %s %s", inbound ? "from" : "to", addr.ToStringAddrPort()) : "",
+                      TransportTypeAsString(pnode->m_transport->GetInfo().transport_type),
+                      pnode->ConnectionTypeAsString(), GetNetworkName(pnode->ConnectedThroughNetwork()),
+                      pnode->GetId(), fLogIPs ? strprintf(", peeraddr=%s", pnode->addr.ToStringAddrPort()) : "",
+                      pnode->nVersion.load(), WITH_LOCK(pnode->m_subver_mutex, return pnode->cleanSubVer));
+    }
+    return pnode != nullptr;
 }
 
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
@@ -400,18 +430,10 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             return nullptr;
 
         // Look for an existing connection
-        CNode* pnode = FindNode(static_cast<CService>(addrConnect));
-        if (pnode)
-        {
-            LogPrintf("Failed to open new connection, already connected\n");
+        if (AlreadyConnectedToAddress(addrConnect, conn_type)) {
             return nullptr;
         }
     }
-
-    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "trying %s connection %s lastseen=%.1fhrs\n",
-        use_v2transport ? "v2" : "v1",
-        pszDest ? pszDest : addrConnect.ToStringAddrPort(),
-        Ticks<HoursDouble>(pszDest ? 0h : Now<NodeSeconds>() - addrConnect.nTime));
 
     // Resolve
     const uint16_t default_port{pszDest != nullptr ? GetDefaultPort(pszDest) :
@@ -427,14 +449,16 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             }
             // It is possible that we already have a connection to the IP/port pszDest resolved to.
             // In that case, drop the connection that was just created.
-            LOCK(m_nodes_mutex);
-            CNode* pnode = FindNode(static_cast<CService>(addrConnect));
-            if (pnode) {
-                LogPrintf("Failed to open new connection, already connected\n");
+            if (AlreadyConnectedToAddress(addrConnect, conn_type)) {
                 return nullptr;
             }
         }
     }
+
+    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Trying v%i %s connection to net=%s%s, lastseen=%.1fh ago\n",
+                  use_v2transport ? 2 : 1, ConnectionTypeAsString(conn_type), GetNetworkName(addrConnect.GetNetwork()),
+                  fLogIPs ? strprintf(", peeraddr=%s", pszDest ? pszDest : addrConnect.ToStringAddrPort()) : "",
+                  Ticks<HoursDouble>(pszDest ? 0h : Now<NodeSeconds>() - addrConnect.nTime));
 
     // Connect
     bool connected = false;
@@ -1688,7 +1712,9 @@ bool CConnman::AttemptToEvictConnection()
     LOCK(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
         if (pnode->GetId() == *node_id_to_evict) {
-            LogPrint(BCLog::NET, "selected %s connection for eviction peer=%d; disconnecting\n", pnode->ConnectionTypeAsString(), pnode->GetId());
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Selected %s connection for eviction, disconnecting: peer=%d net=%s%s\n",
+                          pnode->ConnectionTypeAsString(), pnode->GetId(), GetNetworkName(pnode->ConnectedThroughNetwork()),
+                          fLogIPs ? strprintf(", peeraddr=%s", pnode->addr.ToStringAddrPort()) : "");
             pnode->fDisconnect = true;
             return true;
         }
@@ -1799,6 +1825,13 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     }
 
     const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
+
+    // Do not accept inbound connections from I2P peers already connected to us,
+    // as creating new tunnels is expensive.
+    if (addr.IsI2P() && AlreadyConnectedToAddress(addr, ConnectionType::INBOUND)) {
+        return;
+    }
+
     // The V2Transport transparently falls back to V1 behavior when an incoming V1 connection is
     // detected, so use it whenever we signal NODE_P2P_V2.
     const bool use_v2transport(nodeServices & NODE_P2P_V2);
@@ -1821,7 +1854,9 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     pnode->AddRef();
     m_msgproc->InitializeNode(*pnode, nodeServices);
 
-    LogPrint(BCLog::NET, "connection from %s accepted\n", addr.ToStringAddrPort());
+    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "New %s connection accepted: peer=%d, net=%s%s\n",
+                  pnode->ConnectionTypeAsString(), pnode->GetId(), GetNetworkName(pnode->ConnectedThroughNetwork()),
+                  fLogIPs ? strprintf(", peeraddr=%s", addr.ToStringAddrPort()) : "");
 
     {
         LOCK(m_nodes_mutex);
@@ -2398,24 +2433,23 @@ bool CConnman::MultipleManualOrFullOutboundConns(Network net) const
     return m_network_conn_counts[net] > 1;
 }
 
-bool CConnman::MaybePickPreferredNetwork(std::optional<Network>& network)
+std::optional<Network> CConnman::MaybePickPreferredNetwork() const
 {
+    AssertLockNotHeld(m_nodes_mutex);
     std::array<Network, 5> nets{NET_IPV4, NET_IPV6, NET_ONION, NET_I2P, NET_CJDNS};
     Shuffle(nets.begin(), nets.end(), FastRandomContext());
-
     LOCK(m_nodes_mutex);
     for (const auto net : nets) {
         if (g_reachable_nets.Contains(net) && m_network_conn_counts[net] == 0 && addrman.Size(net) != 0) {
-            network = net;
-            return true;
+            return net;
         }
     }
-
-    return false;
+    return std::nullopt;
 }
 
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 {
+    AssertLockNotHeld(m_nodes_mutex);
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
     AssertLockNotHeld(m_reconnections_mutex);
     FastRandomContext rng;
@@ -2613,7 +2647,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         } else if (nOutboundFullRelay == m_max_outbound_full_relay &&
                    m_max_outbound_full_relay == MAX_OUTBOUND_FULL_RELAY_CONNECTIONS &&
                    now > next_extra_network_peer &&
-                   MaybePickPreferredNetwork(preferred_net)) {
+                   (preferred_net = MaybePickPreferredNetwork()).has_value()) {
             // Full outbound connection management: Attempt to get at least one
             // outbound peer from each reachable network by making extra connections
             // and then protecting "only" peers from a network during outbound eviction.
@@ -2639,7 +2673,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     !HasAllDesirableServiceFlags(addr.nServices) ||
                     outbound_ipv46_peer_netgroups.count(m_netgroupman.GetGroup(addr))) continue;
                 addrConnect = addr;
-                LogPrint(BCLog::NET, "Trying to make an anchor connection to %s\n", addrConnect.ToStringAddrPort());
+                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Trying %s anchor connection to net=%s%s\n",
+                              ConnectionTypeAsString(conn_type), GetNetworkName(addrConnect.GetNetwork()),
+                              fLogIPs ? strprintf(", peeraddr=%s", addrConnect.ToStringAddrPort()) : "");
                 break;
             }
 
@@ -2662,7 +2698,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     // No tried table collisions. Select a new table address
                     // for our feeler.
                     std::tie(addr, addr_last_try) = addrman.Select(true);
-                } else if (AlreadyConnectedToAddress(addr)) {
+                } else if (AlreadyConnectedToAddress(addr, conn_type, /*log=*/false)) {
                     // If test-before-evict logic would have us connect to a
                     // peer that we're already connected to, just mark that
                     // address as Good(). We won't be able to initiate the
@@ -2713,6 +2749,17 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 continue;
             }
 
+            // Do not make automatic outbound connections to addnode peers,
+            // to allocate our limited outbound slots correctly and to ensure
+            // addnode connections benefit from their intended protections.
+            if (AddedNodesContain(addr)) {
+                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Not making automatic %s%s connection to %s peer selected for manual (addnode) connection%s\n",
+                              preferred_net.has_value() ? "network-specific " : "",
+                              ConnectionTypeAsString(conn_type), GetNetworkName(addr.GetNetwork()),
+                              fLogIPs ? strprintf(": %s", addr.ToStringAddrPort()) : "");
+                continue;
+            }
+
             addrConnect = addr;
             break;
         }
@@ -2723,10 +2770,12 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 if (!interruptNet.sleep_for(rng.rand_uniform_duration<CThreadInterrupt::Clock>(FEELER_SLEEP_WINDOW))) {
                     return;
                 }
-                LogPrint(BCLog::NET, "Making feeler connection to %s\n", addrConnect.ToStringAddrPort());
             }
 
-            if (preferred_net != std::nullopt) LogPrint(BCLog::NET, "Making network specific connection to %s on %s.\n", addrConnect.ToStringAddrPort(), GetNetworkName(preferred_net.value()));
+            if (preferred_net.has_value()) {
+                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "Trying automatic network-specific %s connection %s(%s)\n",
+                              GetNetworkName(preferred_net.value()), fLogIPs ? strprintf("to %s ", addrConnect.ToStringAddrPort()) : "", ConnectionTypeAsString(conn_type));
+            }
 
             // Record addrman failure attempts when node has at least 2 persistent outbound connections to peers with
             // different netgroups in ipv4/ipv6 networks + all peers in Tor/I2P/CJDNS networks.
@@ -2764,15 +2813,19 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo() const
         std::copy(m_added_node_params.cbegin(), m_added_node_params.cend(), std::back_inserter(lAddresses));
     }
 
-
-    // Build a map of all already connected addresses (by IP:port and by name) to inbound/outbound and resolved CService
-    std::map<CService, bool> mapConnected;
+    // Collect all addresses to which we are already connected.
+    std::unordered_set<CNetAddr, CNetAddrHash> connected_to_inbound;
+    std::unordered_set<CService, CServiceHash> connected_to_outbound;
     std::map<std::string, std::pair<bool, CService>> mapConnectedByName;
     {
         LOCK(m_nodes_mutex);
         for (const CNode* pnode : m_nodes) {
             if (pnode->addr.IsValid()) {
-                mapConnected[pnode->addr] = pnode->IsInboundConn();
+                if (pnode->IsInboundConn()) {
+                    connected_to_inbound.insert(pnode->addr);
+                } else {
+                    connected_to_outbound.insert(pnode->addr);
+                }
             }
             std::string addrName{pnode->m_addr_name};
             if (!addrName.empty()) {
@@ -2782,18 +2835,21 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo() const
     }
 
     for (const auto& addr : lAddresses) {
-        CService service(LookupNumeric(addr.m_added_node, GetDefaultPort(addr.m_added_node)));
+        CService service{MaybeFlipIPv6toCJDNS(LookupNumeric(addr.m_added_node, GetDefaultPort(addr.m_added_node)))};
         AddedNodeInfo addedNode{addr, CService(), false, false};
         if (service.IsValid()) {
-            // strAddNode is an IP:port
-            auto it = mapConnected.find(service);
-            if (it != mapConnected.end()) {
+            // addr.m_added_node is an addr:port
+            if (connected_to_outbound.count(service)) {
                 addedNode.resolvedAddress = service;
                 addedNode.fConnected = true;
-                addedNode.fInbound = it->second;
+                addedNode.fInbound = false;
+            } else if (connected_to_inbound.count(service)) {
+                addedNode.resolvedAddress = service;
+                addedNode.fConnected = true;
+                addedNode.fInbound = true;
             }
         } else {
-            // strAddNode is a name
+            // addr.m_added_node is a name
             auto it = mapConnectedByName.find(addr.m_added_node);
             if (it != mapConnectedByName.end()) {
                 addedNode.resolvedAddress = it->second.second;
@@ -2855,11 +2911,12 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     }
     if (!pszDest) {
         bool banned_or_discouraged = m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect));
-        if (IsLocal(addrConnect) || banned_or_discouraged || AlreadyConnectedToAddress(addrConnect)) {
+        if (IsLocal(addrConnect) || banned_or_discouraged || AlreadyConnectedToAddress(addrConnect, conn_type)) {
             return;
         }
-    } else if (FindNode(std::string(pszDest)))
+    } else if (WITH_LOCK(m_nodes_mutex, return FindNode(std::string{pszDest}))) {
         return;
+    }
 
     CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, conn_type, use_v2transport);
 
@@ -3422,27 +3479,28 @@ std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addres
     return cache_entry.m_addrs_response_cache;
 }
 
-bool CConnman::AddNode(const AddedNodeParams& add)
+bool CConnman::AddNode(const AddedNodeParams& params)
 {
     LOCK(m_added_nodes_mutex);
-    for (const auto& it : m_added_node_params) {
-        if (add.m_added_node == it.m_added_node) return false;
-    }
-
-    m_added_node_params.push_back(add);
-    return true;
+    return m_added_node_params.insert(params).second;
 }
 
-bool CConnman::RemoveAddedNode(const std::string& strNode)
+bool CConnman::RemoveAddedNode(const AddedNodeParams& params)
 {
     LOCK(m_added_nodes_mutex);
-    for (auto it = m_added_node_params.begin(); it != m_added_node_params.end(); ++it) {
-        if (strNode == it->m_added_node) {
-            m_added_node_params.erase(it);
-            return true;
-        }
-    }
-    return false;
+    return m_added_node_params.erase(params);
+}
+
+bool CConnman::AddedNodesContain(const CAddress& addr) const
+{
+    AssertLockNotHeld(m_added_nodes_mutex);
+    const std::string addr_str{addr.ToStringAddr()};
+    const std::string addr_port_str{addr.ToStringAddrPort()};
+    LOCK(m_added_nodes_mutex);
+    return m_added_node_params.count({addr_str, /*m_use_v2transport=*/true})
+        || m_added_node_params.count({addr_str, /*m_use_v2transport=*/false})
+        || m_added_node_params.count({addr_port_str, /*m_use_v2transport=*/true})
+        || m_added_node_params.count({addr_port_str, /*m_use_v2transport=*/false});
 }
 
 size_t CConnman::GetNodeCount(ConnectionDirection flags) const

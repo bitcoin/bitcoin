@@ -261,6 +261,7 @@ public:
         }
     }
 
+    friend class CNetAddrHash;
     friend class CSubNet;
 
 private:
@@ -477,6 +478,30 @@ private:
         // will not be gossiped, but continue reading next addresses from the stream.
         m_net = NET_IPV6;
         m_addr.assign(ADDR_IPV6_SIZE, 0x0);
+    }
+};
+
+class CNetAddrHash
+{
+private:
+    const uint64_t m_salt_k0;
+    const uint64_t m_salt_k1;
+
+public:
+    CNetAddrHash()
+        : m_salt_k0{GetRand<uint64_t>()},
+          m_salt_k1{GetRand<uint64_t>()}
+    {
+    }
+
+    CNetAddrHash(uint64_t salt_k0, uint64_t salt_k1) : m_salt_k0{salt_k0}, m_salt_k1{salt_k1} {}
+
+    size_t operator()(const CNetAddr& a) const noexcept
+    {
+        CSipHasher hasher(m_salt_k0, m_salt_k1);
+        hasher.Write(a.m_net);
+        hasher.Write(a.m_addr);
+        return static_cast<size_t>(hasher.Finalize());
     }
 };
 

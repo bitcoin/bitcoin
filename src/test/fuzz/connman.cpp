@@ -112,7 +112,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 connman.PushMessage(&random_node, std::move(serialized_net_msg));
             },
             [&] {
-                connman.RemoveAddedNode(random_string);
+                connman.RemoveAddedNode({random_string, fuzzed_data_provider.ConsumeBool()});
             },
             [&] {
                 connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());

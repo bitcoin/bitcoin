@@ -101,6 +101,17 @@ typedef int64_t NodeId;
 struct AddedNodeParams {
     std::string m_added_node;
     bool m_use_v2transport;
+    bool operator==(const AddedNodeParams& p) const
+    {
+        return m_added_node == p.m_added_node && m_use_v2transport == p.m_use_v2transport;
+    }
+};
+
+struct AddedNodeParamsHash {
+    size_t operator()(const AddedNodeParams& p) const noexcept
+    {
+        return std::hash<std::string>()(p.m_added_node) ^ p.m_use_v2transport;
+    }
 };
 
 struct AddedNodeInfo {
@@ -1094,7 +1105,7 @@ public:
 
             for (const std::string& added_node : connOptions.m_added_nodes) {
                 // -addnode cli arg does not currently have a way to signal BIP324 support
-                m_added_node_params.push_back({added_node, false});
+                m_added_node_params.insert({added_node, /*m_use_v2transport=*/false});
             }
         }
         m_onion_binds = connOptions.onion_binds;
@@ -1182,8 +1193,9 @@ public:
     // Count the number of block-relay-only peers we have over our limit.
     int GetExtraBlockRelayCount() const;
 
-    bool AddNode(const AddedNodeParams& add) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
-    bool RemoveAddedNode(const std::string& node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
+    bool AddNode(const AddedNodeParams& params) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
+    bool RemoveAddedNode(const AddedNodeParams& params) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
+    bool AddedNodesContain(const CAddress& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     std::vector<AddedNodeInfo> GetAddedNodeInfo() const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
 
     /**
@@ -1323,15 +1335,25 @@ private:
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
-    CNode* FindNode(const CNetAddr& ip);
-    CNode* FindNode(const std::string& addrName);
-    CNode* FindNode(const CService& addr);
+    /**
+     * Search for a peer by address from among the peers we're connected to.
+     * @param[in] addr  Address to search for.
+     * @param[in] inbound (optional)  Whether to also filter by inbound status true/false.
+     * @returns a pointer to the peer if one is found, otherwise nullptr.
+     */
+    CNode* FindNode(const CNetAddr& addr, std::optional<bool> inbound = std::nullopt) EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
+    CNode* FindNode(const std::string& addr, std::optional<bool> inbound = std::nullopt) EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
+    CNode* FindNode(const CService& addr, std::optional<bool> inbound = std::nullopt) EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
     /**
      * Determine whether we're already connected to a given address, in order to
      * avoid initiating duplicate connections.
+     *
+     * @param[in] addr  Address to search for.
+     * @param[in] conn_type  Intended connection type of the address.
+     * @param[in] log  Whether to log if already connected to the address.
      */
-    bool AlreadyConnectedToAddress(const CAddress& addr);
+    bool AlreadyConnectedToAddress(const CAddress& addr, ConnectionType conn_type, bool log = true);
 
     bool AttemptToEvictConnection();
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, ConnectionType conn_type, bool use_v2transport) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
@@ -1366,12 +1388,8 @@ private:
      * currently don't have any OUTBOUND_FULL_RELAY or MANUAL connections.
      * There needs to be at least one address in AddrMan for a preferred
      * network to be picked.
-     *
-     * @param[out]    network        Preferred network, if found.
-     *
-     * @return           bool        Whether a preferred network was found.
      */
-    bool MaybePickPreferredNetwork(std::optional<Network>& network);
+    std::optional<Network> MaybePickPreferredNetwork() const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
     // Whether the node should be passed out in ForEach* callbacks
     static bool NodeFullyConnected(const CNode* pnode);
@@ -1408,7 +1426,7 @@ private:
     Mutex m_addr_fetches_mutex;
 
     // connection string and whether to use v2 p2p
-    std::vector<AddedNodeParams> m_added_node_params GUARDED_BY(m_added_nodes_mutex);
+    std::unordered_set<AddedNodeParams, AddedNodeParamsHash> m_added_node_params GUARDED_BY(m_added_nodes_mutex);
 
     mutable Mutex m_added_nodes_mutex;
     std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
