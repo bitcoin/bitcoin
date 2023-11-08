@@ -533,6 +533,11 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
+    /*
+     * OP_TRUE <0x4e73>
+     */
+    bool IsPayToAnchor() const;
+
     bool IsPayToScriptHash() const;
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
