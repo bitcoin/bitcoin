@@ -54,6 +54,8 @@ enum class TxValidationResult {
     TX_CONFLICT,
     TX_MEMPOOL_POLICY,        //!< violated mempool's fee/size/descendant/RBF/etc limits
     TX_NO_MEMPOOL,            //!< this node does not have a mempool so can't validate the transaction
+    TX_RECONSIDERABLE,        //!< fails some policy, but might be acceptable if submitted in a (different) package
+    TX_UNKNOWN,               //!< transaction was not validated because package failed
 };
 
 /** A "reason" why a block was invalid, suitable for determining whether the
