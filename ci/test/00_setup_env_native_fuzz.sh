@@ -18,3 +18,4 @@ export CI_CONTAINER_CAP="--cap-add SYS_PTRACE"  # If run with (ASan + LSan), the
 export BITCOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer,address,undefined,float-divide-by-zero,integer \
 CC='clang-17 -ftrivial-auto-var-init=pattern' CXX='clang++-17 -ftrivial-auto-var-init=pattern'"
 export CCACHE_MAXSIZE=200M
+export LLVM_SYMBOLIZER_PATH="/usr/bin/llvm-symbolizer-17"

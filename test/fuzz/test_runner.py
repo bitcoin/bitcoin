@@ -16,11 +16,14 @@ import sys
 
 
 def get_fuzz_env(*, target, source_dir):
+    symbolizer = os.environ.get('LLVM_SYMBOLIZER_PATH', "/usr/bin/llvm-symbolizer")
     return {
         'FUZZ': target,
         'UBSAN_OPTIONS':
         f'suppressions={source_dir}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1',
+        'UBSAN_SYMBOLIZER_PATH':symbolizer,
         "ASAN_OPTIONS": "detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1",
+        'ASAN_SYMBOLIZER_PATH':symbolizer,
     }
 
 
