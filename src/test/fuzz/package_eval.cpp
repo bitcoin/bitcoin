@@ -205,6 +205,18 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
 
                     tx_mut.vin.push_back(in);
                 }
+
+                // Duplicate an input
+                bool dup_input = fuzzed_data_provider.ConsumeBool();
+                if (dup_input) {
+                    tx_mut.vin.push_back(tx_mut.vin.back());
+                }
+
+                // Refer to a non-existant input
+                if (fuzzed_data_provider.ConsumeBool()) {
+                    tx_mut.vin.emplace_back();
+                }
+
                 const auto amount_fee = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, amount_in);
                 const auto amount_out = (amount_in - amount_fee) / num_out;
                 for (int i = 0; i < num_out; ++i) {
@@ -215,7 +227,8 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
                 // Restore previously removed outpoints, except in-package outpoints
                 if (!last_tx) {
                     for (const auto& in : tx->vin) {
-                        Assert(outpoints.insert(in.prevout).second);
+                        // It's a fake input, or a new input, or a duplicate
+                        Assert(in == CTxIn() || outpoints.insert(in.prevout).second || dup_input);
                     }
                     // Cache the in-package outpoints being made
                     for (size_t i = 0; i < tx->vout.size(); ++i) {
