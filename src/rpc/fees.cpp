@@ -14,6 +14,7 @@
 #include <txmempool.h>
 #include <univalue.h>
 #include <util/fees.h>
+#include <validationinterface.h>
 
 #include <algorithm>
 #include <array>
@@ -67,6 +68,7 @@ static RPCHelpMan estimatesmartfee()
             const NodeContext& node = EnsureAnyNodeContext(request.context);
             const CTxMemPool& mempool = EnsureMemPool(node);
 
+            SyncWithValidationInterfaceQueue();
             unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
             unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
             bool conservative = true;
@@ -155,6 +157,7 @@ static RPCHelpMan estimaterawfee()
         {
             CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
 
+            SyncWithValidationInterfaceQueue();
             unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
             unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
             double threshold = 0.95;
