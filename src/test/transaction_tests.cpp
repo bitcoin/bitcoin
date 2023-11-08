@@ -1026,6 +1026,14 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
         t.vout[0].nValue = 239;
         CheckIsNotStandard(t, "dust");
     }
+
+    // Check anchor outputs
+    t.vout[0].scriptPubKey = CScript() << OP_1 << std::vector<unsigned char>{0x4e, 0x73};
+    BOOST_CHECK(t.vout[0].scriptPubKey.IsPayToAnchor());
+    t.vout[0].nValue = 240;
+    CheckIsStandard(t);
+    t.vout[0].nValue = 239;
+    CheckIsNotStandard(t, "dust");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

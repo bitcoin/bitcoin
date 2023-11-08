@@ -501,6 +501,7 @@ public:
     }
 
     UniValue operator()(const WitnessV1Taproot& id) const { return UniValue(UniValue::VOBJ); }
+    UniValue operator()(const PayToAnchor& id) const { return UniValue(UniValue::VOBJ); }
     UniValue operator()(const WitnessUnknown& id) const { return UniValue(UniValue::VOBJ); }
 };
 
