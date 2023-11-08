@@ -388,6 +388,7 @@ BASE_SCRIPTS = [
     'feature_dirsymlinks.py',
     'feature_help.py',
     'feature_shutdown.py',
+    'mempool_ephemeral_anchor.py',
     'wallet_migration.py',
     'p2p_ibd_txrelay.py',
     # Don't append tests at the end to avoid merge conflicts
