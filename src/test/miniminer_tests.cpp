@@ -325,14 +325,14 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
         const int32_t tx6_vsize{tx_dims.at(tx6->GetHash()).vsize};
         const int32_t tx7_vsize{tx_dims.at(tx7->GetHash()).vsize};
 
-        miniminer_info.emplace_back(/*fee_self=*/med_fee,/*fee_ancestor=*/med_fee,/*vsize_self=*/tx0_vsize,/*vsize_ancestor=*/tx0_vsize, tx0);
-        miniminer_info.emplace_back(             med_fee,               2*med_fee,               tx1_vsize,       tx0_vsize + tx1_vsize, tx1);
-        miniminer_info.emplace_back(             low_fee,                 low_fee,               tx2_vsize,                   tx2_vsize, tx2);
-        miniminer_info.emplace_back(            high_fee,      low_fee + high_fee,               tx3_vsize,       tx2_vsize + tx3_vsize, tx3);
-        miniminer_info.emplace_back(             low_fee,                 low_fee,               tx4_vsize,                   tx4_vsize, tx4);
-        miniminer_info.emplace_back(         tx5_mod_fee,   low_fee + tx5_mod_fee,               tx5_vsize,       tx4_vsize + tx5_vsize, tx5);
-        miniminer_info.emplace_back(            high_fee,                high_fee,               tx6_vsize,                   tx6_vsize, tx6);
-        miniminer_info.emplace_back(             low_fee,      high_fee + low_fee,               tx7_vsize,       tx6_vsize + tx7_vsize, tx7);
+        miniminer_info.emplace_back(tx0,/*vsize_self=*/tx0_vsize,/*vsize_ancestor=*/tx0_vsize,/*fee_self=*/med_fee,/*fee_ancestor=*/med_fee);
+        miniminer_info.emplace_back(tx1,               tx1_vsize,       tx0_vsize + tx1_vsize,             med_fee,               2*med_fee);
+        miniminer_info.emplace_back(tx2,               tx2_vsize,                   tx2_vsize,             low_fee,                 low_fee);
+        miniminer_info.emplace_back(tx3,               tx3_vsize,       tx2_vsize + tx3_vsize,            high_fee,      low_fee + high_fee);
+        miniminer_info.emplace_back(tx4,               tx4_vsize,                   tx4_vsize,             low_fee,                 low_fee);
+        miniminer_info.emplace_back(tx5,               tx5_vsize,       tx4_vsize + tx5_vsize,         tx5_mod_fee,   low_fee + tx5_mod_fee);
+        miniminer_info.emplace_back(tx6,               tx6_vsize,                   tx6_vsize,            high_fee,                high_fee);
+        miniminer_info.emplace_back(tx7,               tx7_vsize,       tx6_vsize + tx7_vsize,             low_fee,      high_fee + low_fee);
     }
     std::map<Txid, std::set<Txid>> descendant_caches;
     descendant_caches.emplace(tx0->GetHash(), std::set<Txid>{tx0->GetHash(), tx1->GetHash()});
@@ -543,15 +543,14 @@ BOOST_FIXTURE_TEST_CASE(miniminer_overlap, TestChain100Setup)
     }
     // Check linearization order
     std::vector<node::MiniMinerMempoolEntry> miniminer_info;
-    miniminer_info.emplace_back(/*fee_self=*/low_fee,   /*fee_ancestor=*/low_fee,/*vsize_self=*/tx_vsizes[0],                     /*vsize_ancestor=*/tx_vsizes[0], tx0);
-    miniminer_info.emplace_back(             med_fee,                    med_fee,               tx_vsizes[1],                                        tx_vsizes[1], tx1);
-    miniminer_info.emplace_back(            high_fee,                   high_fee,               tx_vsizes[2],                                        tx_vsizes[2], tx2);
-    miniminer_info.emplace_back(            high_fee, low_fee+med_fee+2*high_fee,               tx_vsizes[3], tx_vsizes[0]+tx_vsizes[1]+tx_vsizes[2]+tx_vsizes[3], tx3);
-
-    miniminer_info.emplace_back(            high_fee,                   high_fee,               tx_vsizes[4],                                        tx_vsizes[4], tx4);
-    miniminer_info.emplace_back(             low_fee,         low_fee + high_fee,               tx_vsizes[5],                           tx_vsizes[4]+tx_vsizes[5], tx5);
-    miniminer_info.emplace_back(             med_fee,   high_fee+low_fee+med_fee,               tx_vsizes[6],              tx_vsizes[4]+tx_vsizes[5]+tx_vsizes[6], tx6);
-    miniminer_info.emplace_back(            high_fee,  high_fee+low_fee+high_fee,               tx_vsizes[7],              tx_vsizes[4]+tx_vsizes[5]+tx_vsizes[7], tx7);
+    miniminer_info.emplace_back(tx0,/*vsize_self=*/tx_vsizes[0],                     /*vsize_ancestor=*/tx_vsizes[0], /*fee_self=*/low_fee,   /*fee_ancestor=*/low_fee);
+    miniminer_info.emplace_back(tx1,               tx_vsizes[1],                                        tx_vsizes[1],              med_fee,                    med_fee);
+    miniminer_info.emplace_back(tx2,               tx_vsizes[2],                                        tx_vsizes[2],             high_fee,                   high_fee);
+    miniminer_info.emplace_back(tx3,               tx_vsizes[3], tx_vsizes[0]+tx_vsizes[1]+tx_vsizes[2]+tx_vsizes[3],             high_fee, low_fee+med_fee+2*high_fee);
+    miniminer_info.emplace_back(tx4,               tx_vsizes[4],                                        tx_vsizes[4],             high_fee,                   high_fee);
+    miniminer_info.emplace_back(tx5,               tx_vsizes[5],                           tx_vsizes[4]+tx_vsizes[5],              low_fee,         low_fee + high_fee);
+    miniminer_info.emplace_back(tx6,               tx_vsizes[6],              tx_vsizes[4]+tx_vsizes[5]+tx_vsizes[6],              med_fee,   high_fee+low_fee+med_fee);
+    miniminer_info.emplace_back(tx7,               tx_vsizes[7],              tx_vsizes[4]+tx_vsizes[5]+tx_vsizes[7],             high_fee,  high_fee+low_fee+high_fee);
 
     std::map<Txid, std::set<Txid>> descendant_caches;
     descendant_caches.emplace(tx0->GetHash(), std::set<Txid>{tx0->GetHash(), tx3->GetHash()});
@@ -647,7 +646,7 @@ BOOST_FIXTURE_TEST_CASE(manual_ctor, TestChain100Setup)
     CTxMemPool& pool = *Assert(m_node.mempool);
     LOCK2(cs_main, pool.cs);
     {
-        // 3 pairs of fee-bumping grandparent + parent, plus 1 low-feerate child.
+        // 3 pairs of grandparent + fee-bumping parent, plus 1 low-feerate child.
         // 0 fee + high fee
         auto grandparent_zero_fee = make_tx({{m_coinbase_txns.at(0)->GetHash(), 0}}, 1);
         auto parent_high_feerate = make_tx({{grandparent_zero_fee->GetHash(), 0}}, 1);
@@ -665,13 +664,13 @@ BOOST_FIXTURE_TEST_CASE(manual_ctor, TestChain100Setup)
         const int64_t child_vsize{1000};
 
         std::vector<node::MiniMinerMempoolEntry> miniminer_info;
-        miniminer_info.emplace_back(/*fee_self=*/0,         /*fee_ancestor=*/0,/*vsize_self=*/tx_vsize,/*vsize_ancestor=*/tx_vsize, grandparent_zero_fee);
-        miniminer_info.emplace_back(      high_fee,                   high_fee,               tx_vsize,                 2*tx_vsize, parent_high_feerate);
-        miniminer_info.emplace_back(     2*low_fee,                  2*low_fee,               tx_vsize,                   tx_vsize, grandparent_double_low_feerate);
-        miniminer_info.emplace_back(       med_fee,          2*low_fee+med_fee,               tx_vsize,                 2*tx_vsize, parent_med_feerate);
-        miniminer_info.emplace_back(       low_fee,                    low_fee,               tx_vsize,                   tx_vsize, grandparent_low_feerate);
-        miniminer_info.emplace_back(     2*low_fee,                  3*low_fee,               tx_vsize,                 2*tx_vsize, parent_double_low_feerate);
-        miniminer_info.emplace_back(       low_fee, high_fee+med_fee+6*low_fee,            child_vsize,     6*tx_vsize+child_vsize, child);
+        miniminer_info.emplace_back(grandparent_zero_fee,          /*vsize_self=*/tx_vsize,/*vsize_ancestor=*/tx_vsize, /*fee_self=*/0,/*fee_ancestor=*/0);
+        miniminer_info.emplace_back(parent_high_feerate,                          tx_vsize,                 2*tx_vsize, high_fee,      high_fee);
+        miniminer_info.emplace_back(grandparent_double_low_feerate,               tx_vsize,                   tx_vsize, 2*low_fee,     2*low_fee);
+        miniminer_info.emplace_back(parent_med_feerate,                           tx_vsize,                 2*tx_vsize, med_fee,       2*low_fee+med_fee);
+        miniminer_info.emplace_back(grandparent_low_feerate,                      tx_vsize,                   tx_vsize, low_fee,       low_fee);
+        miniminer_info.emplace_back(parent_double_low_feerate,                    tx_vsize,                 2*tx_vsize, 2*low_fee,     3*low_fee);
+        miniminer_info.emplace_back(child,                                     child_vsize,     6*tx_vsize+child_vsize, low_fee,       high_fee+med_fee+6*low_fee);
         std::map<Txid, std::set<Txid>> descendant_caches;
         descendant_caches.emplace(grandparent_zero_fee->GetHash(), std::set<Txid>{grandparent_zero_fee->GetHash(), parent_high_feerate->GetHash(), child->GetHash()});
         descendant_caches.emplace(grandparent_low_feerate->GetHash(), std::set<Txid>{grandparent_low_feerate->GetHash(), parent_double_low_feerate->GetHash(), child->GetHash()});
@@ -693,7 +692,7 @@ BOOST_FIXTURE_TEST_CASE(manual_ctor, TestChain100Setup)
         BOOST_CHECK_EQUAL(sequences.at(grandparent_double_low_feerate->GetHash()), 1);
         BOOST_CHECK_EQUAL(sequences.at(parent_med_feerate->GetHash()), 1);
 
-        // CPFP low + med
+        // CPFP low + double low
         BOOST_CHECK_EQUAL(sequences.at(grandparent_low_feerate->GetHash()), 2);
         BOOST_CHECK_EQUAL(sequences.at(parent_double_low_feerate->GetHash()), 2);
 

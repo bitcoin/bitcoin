@@ -34,11 +34,11 @@ class MiniMinerMempoolEntry
 // methods can be called without holding that lock.
 
 public:
-    explicit MiniMinerMempoolEntry(CAmount fee_self,
-                                   CAmount fee_ancestor,
+    explicit MiniMinerMempoolEntry(const CTransactionRef& tx_in,
                                    int64_t vsize_self,
                                    int64_t vsize_ancestor,
-                                   const CTransactionRef& tx_in):
+                                   CAmount fee_self,
+                                   CAmount fee_ancestor):
         tx{tx_in},
         vsize_individual{vsize_self},
         vsize_with_ancestors{vsize_ancestor},
@@ -137,10 +137,10 @@ public:
     */
     MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& outpoints);
 
-    /** Constructor in which the MiniMinerMempoolEntry entries have been constructed manually,
-     * presumably because these transactions are not in the mempool (yet). It is assumed that all
-     * entries are unique and their values are correct, otherwise results computed by MiniMiner may
-     * be incorrect. Callers should check IsReadyToCalculate() after construction.
+    /** Constructor in which the MiniMinerMempoolEntry entries have been constructed manually.
+     * It is assumed that all entries are unique and their values are correct, otherwise results
+     * computed by MiniMiner may be incorrect. Callers should check IsReadyToCalculate() after
+     * construction.
      * @param[in] descendant_caches A map from each transaction to the set of txids of this
      *                              transaction's descendant set, including itself. Each tx in
      *                              manual_entries must have a corresponding entry in this map, and

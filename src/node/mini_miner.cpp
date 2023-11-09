@@ -78,11 +78,11 @@ MiniMiner::MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& ou
     for (const auto& txiter : cluster) {
         if (!m_to_be_replaced.count(txiter->GetTx().GetHash())) {
             auto [mapiter, success] = m_entries_by_txid.emplace(txiter->GetTx().GetHash(),
-                MiniMinerMempoolEntry{/*fee_self=*/txiter->GetModifiedFee(),
-                                      /*fee_ancestor=*/txiter->GetModFeesWithAncestors(),
+                MiniMinerMempoolEntry{/*tx_in=*/txiter->GetSharedTx(),
                                       /*vsize_self=*/txiter->GetTxSize(),
                                       /*vsize_ancestor=*/txiter->GetSizeWithAncestors(),
-                                      /*tx_in=*/txiter->GetSharedTx()});
+                                      /*fee_self=*/txiter->GetModifiedFee(),
+                                      /*fee_ancestor=*/txiter->GetModFeesWithAncestors()});
             m_entries.push_back(mapiter);
         } else {
             auto outpoints_it = m_requested_outpoints_by_txid.find(txiter->GetTx().GetHash());
@@ -154,7 +154,7 @@ MiniMiner::MiniMiner(const std::vector<MiniMinerMempoolEntry>& manual_entries,
             m_ready_to_calculate = false;
             return;
         }
-        std::vector<MockEntryMap::iterator> cached_descendants;
+        std::vector<MockEntryMap::iterator> descendants;
         for (const auto& desc_txid : desc_txids) {
             auto desc_it{m_entries_by_txid.find(desc_txid)};
             // Descendants should only include transactions with corresponding entries.
@@ -162,10 +162,10 @@ MiniMiner::MiniMiner(const std::vector<MiniMinerMempoolEntry>& manual_entries,
                 m_ready_to_calculate = false;
                 return;
             } else {
-                cached_descendants.emplace_back(desc_it);
+                descendants.emplace_back(desc_it);
             }
         }
-        m_descendant_set_by_txid.emplace(txid, cached_descendants);
+        m_descendant_set_by_txid.emplace(txid, descendants);
     }
     Assume(m_to_be_replaced.empty());
     Assume(m_requested_outpoints_by_txid.empty());
