@@ -586,7 +586,7 @@ private:
      * @param[in]   maybe_add_extra_compact_tx    Whether this tx should be added to vExtraTxnForCompact.
      *                                            Set to false if the tx has already been rejected before,
      *                                            e.g. is an orphan, to avoid adding duplicate entries.
-     * Updates m_txrequest, m_recent_rejects, m_orphanage, and vExtraTxnForCompact. */
+     * Updates m_txrequest, m_recent_rejects, m_recent_rejects_reconsiderable, m_orphanage, and vExtraTxnForCompact. */
     void ProcessInvalidTx(NodeId nodeid, const CTransactionRef& tx, const TxValidationState& result,
                           bool maybe_add_extra_compact_tx)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, cs_main);
@@ -806,7 +806,16 @@ private:
     /** Stalling timeout for blocks in IBD */
     std::atomic<std::chrono::seconds> m_block_stalling_timeout{BLOCK_STALLING_TIMEOUT_DEFAULT};
 
-    bool AlreadyHaveTx(const GenTxid& gtxid)
+    /** Check whether we already have this gtxid in:
+     *  - mempool
+     *  - orphanage
+     *  - m_recent_rejects
+     *  - m_recent_rejects_reconsiderable (if include_reconsiderable = true)
+     *  - m_recent_confirmed_transactions
+     * Also responsible for resetting m_recent_rejects and m_recent_rejects_reconsiderable if the
+     * chain tip has changed.
+     *  */
+    bool AlreadyHaveTx(const GenTxid& gtxid, bool include_reconsiderable)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_recent_confirmed_transactions_mutex);
 
     /**
@@ -844,7 +853,31 @@ private:
      * Memory used: 1.3 MB
      */
     CRollingBloomFilter m_recent_rejects GUARDED_BY(::cs_main){120'000, 0.000'001};
+    /** Block hash of chain tip the last time we reset m_recent_rejects and
+     * m_recent_rejects_reconsiderable. */
     uint256 hashRecentRejectsChainTip GUARDED_BY(cs_main);
+
+    /**
+     * Filter for:
+     * (1) wtxids of transactions that were recently rejected by the mempool but are
+     * eligible for reconsideration if submitted with other transactions.
+     * (2) packages (see GetPackageHash) we have already rejected before and should not retry.
+     *
+     * Similar to m_recent_rejects, this filter is used to save bandwidth when e.g. all of our peers
+     * have larger mempools and thus lower minimum feerates than us.
+     *
+     * When a transaction's error is TxValidationResult::TX_RECONSIDERABLE (in a package or by
+     * itself), add its wtxid to this filter. When a package fails for any reason, add the combined
+     * hash to this filter.
+     *
+     * Upon receiving an announcement for a transaction, if it exists in this filter, do not
+     * download the txdata. When considering packages, if it exists in this filter, drop it.
+     *
+     * Reset this filter when the chain tip changes.
+     *
+     * Parameters are picked to be the same as m_recent_rejects, with the same rationale.
+     */
+    CRollingBloomFilter m_recent_rejects_reconsiderable GUARDED_BY(::cs_main){120'000, 0.000'001};
 
     /*
      * Filter for transactions that have been recently confirmed.
@@ -2194,7 +2227,7 @@ void PeerManagerImpl::BlockChecked(const CBlock& block, const BlockValidationSta
 //
 
 
-bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid)
+bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_reconsiderable)
 {
     if (m_chainman.ActiveChain().Tip()->GetBlockHash() != hashRecentRejectsChainTip) {
         // If the chain tip has changed previously rejected transactions
@@ -2203,11 +2236,14 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid)
         // txs a second chance.
         hashRecentRejectsChainTip = m_chainman.ActiveChain().Tip()->GetBlockHash();
         m_recent_rejects.reset();
+        m_recent_rejects_reconsiderable.reset();
     }
 
     const uint256& hash = gtxid.GetHash();
 
     if (m_orphanage.HaveTx(gtxid)) return true;
+
+    if (include_reconsiderable && m_recent_rejects_reconsiderable.contains(hash)) return true;
 
     {
         LOCK(m_recent_confirmed_transactions_mutex);
@@ -3097,7 +3133,14 @@ void PeerManagerImpl::ProcessInvalidTx(NodeId nodeid, const CTransactionRef& ptx
         // See also comments in https://github.com/bitcoin/bitcoin/pull/18044#discussion_r443419034
         // for concerns around weakening security of unupgraded nodes
         // if we start doing this too early.
-        m_recent_rejects.insert(ptx->GetWitnessHash().ToUint256());
+        if (state.GetResult() == TxValidationResult::TX_RECONSIDERABLE) {
+            // If the result is TX_RECONSIDERABLE, add it to m_recent_rejects_reconsiderable
+            // because we should not download or submit this transaction by itself again, but may
+            // submit it as part of a package later.
+            m_recent_rejects_reconsiderable.insert(ptx->GetWitnessHash().ToUint256());
+        } else {
+            m_recent_rejects.insert(ptx->GetWitnessHash().ToUint256());
+        }
         m_txrequest.ForgetTxHash(ptx->GetWitnessHash());
         // If the transaction failed for TX_INPUTS_NOT_STANDARD,
         // then we know that the witness was irrelevant to the policy
@@ -4015,7 +4058,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     return;
                 }
                 const GenTxid gtxid = ToGenTxid(inv);
-                const bool fAlreadyHave = AlreadyHaveTx(gtxid);
+                const bool fAlreadyHave = AlreadyHaveTx(gtxid, /*include_reconsiderable=*/true);
                 LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
 
                 AddKnownTx(*peer, inv.hash);
@@ -4320,7 +4363,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // already; and an adversary can already relay us old transactions
         // (older than our recency filter) if trying to DoS us, without any need
         // for witness malleation.
-        if (AlreadyHaveTx(GenTxid::Wtxid(wtxid))) {
+        if (AlreadyHaveTx(GenTxid::Wtxid(wtxid), /*include_reconsiderable=*/true)) {
             if (pfrom.HasPermission(NetPermissionFlags::ForceRelay)) {
                 // Always relay transactions received from peers with forcerelay
                 // permission, even if they were already in the mempool, allowing
@@ -4392,7 +4435,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     // protocol for getting all unconfirmed parents.
                     const auto gtxid{GenTxid::Txid(parent_txid)};
                     AddKnownTx(*peer, parent_txid);
-                    if (!AlreadyHaveTx(gtxid)) AddTxAnnouncement(pfrom, gtxid, current_time);
+                    if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/true)) AddTxAnnouncement(pfrom, gtxid, current_time);
                 }
 
                 if (m_orphanage.AddTx(ptx, pfrom.GetId())) {
@@ -6033,7 +6076,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 entry.second.GetHash().ToString(), entry.first);
         }
         for (const GenTxid& gtxid : requestable) {
-            if (!AlreadyHaveTx(gtxid)) {
+            if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/true)) {
                 LogPrint(BCLog::NET, "Requesting %s %s peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
                     gtxid.GetHash().ToString(), pto->GetId());
                 vGetData.emplace_back(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(*peer)), gtxid.GetHash());
