@@ -8,4 +8,4 @@ P2P
   slots are full. This is achieved by attempting to force the eviction of a random,
   inbound, otherwise unprotected peer. Because this permission can be exploited
   to disrupt existing connections, a maximum of 8 forced inbound peers are allowed
-  simultaneously. (#27600)
+  simultaneously. RPC `getpeerinfo` will also now indicate `forced_inbound`. (#27600)

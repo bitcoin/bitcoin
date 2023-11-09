@@ -147,7 +147,13 @@ class P2PEvict(BitcoinTestFramework):
         self.log.debug("ForceInbound whitebind inbound gets connected, even when full")
         allowed_peers.append(node.add_p2p_connection(P2PInterface(), dstport=30202))
 
-        assert_equal(len(node.getpeerinfo()), 10)
+        peerinfo = node.getpeerinfo()
+        assert_equal(len(peerinfo), 10)
+        for peer in peerinfo:
+            if "30202" in peer["addrbind"]:
+                assert peer["forced_inbound"]
+            else:
+                assert not peer["forced_inbound"]
 
         self.log.debug("Generic inbound gets rejected when whitebind peer is filling inbound slot")
         with node.assert_debug_log(["failed to find an eviction candidate - connection dropped (full)"]):

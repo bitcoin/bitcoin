@@ -226,6 +226,8 @@ public:
     TransportProtocolType m_transport_type;
     /** BIP324 session id string in hex, if any. */
     std::string m_session_id;
+    /** whether this peer forced its connection by evicting another */
+    bool m_forced_inbound;
 };
 
 
