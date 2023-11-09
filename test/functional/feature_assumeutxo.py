@@ -118,8 +118,14 @@ class AssumeutxoTest(BitcoinTestFramework):
         chainstate_snapshot_path.mkdir()
         with open(chainstate_snapshot_path / "base_blockhash", 'wb') as f:
             f.write(b'z' * 32)
-        expected_error = f"Error: A fatal internal error occurred, see debug.log for details"
-        self.nodes[0].assert_start_raises_init_error(expected_msg=expected_error)
+
+        def expected_error(log_msg="", error_msg=""):
+            with self.nodes[0].assert_debug_log([log_msg]):
+                self.nodes[0].assert_start_raises_init_error(expected_msg=error_msg)
+
+        expected_error_msg = f"Error: A fatal internal error occurred, see debug.log for details"
+        error_details = f"Assumeutxo data not found for the given blockhash"
+        expected_error(log_msg=error_details, error_msg=expected_error_msg)
 
         # resurrect node again
         rmtree(chainstate_snapshot_path)
