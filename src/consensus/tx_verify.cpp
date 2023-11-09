@@ -173,37 +173,56 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
                          strprintf("%s: inputs missing/spent", __func__));
     }
 
-    CAmount nValueIn = 0;
-    for (unsigned int i = 0; i < tx.vin.size(); ++i) {
-        const COutPoint &prevout = tx.vin[i].prevout;
-        const Coin& coin = inputs.AccessCoin(prevout);
-        assert(!coin.IsSpent());
-
-        // If prev is coinbase, check that it's matured
-        if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
-            return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
-                strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
+    if (tx.IsBLSCT()) {
+        for (unsigned int i = 0; i < tx.vin.size(); ++i) {
+            const COutPoint& prevout = tx.vin[i].prevout;
+            const Coin& coin = inputs.AccessCoin(prevout);
+            assert(!coin.IsSpent());
         }
 
-        // Check for negative or overflow input values
-        nValueIn += coin.out.nValue;
-        if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn)) {
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputvalues-outofrange");
+        bool fFeeFound = false;
+
+        for (auto& out : tx.vout) {
+            if (!out.IsBLSCT() && out.scriptPubKey.IsUnspendable()) {
+                if (fFeeFound)
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "more-than-one-fee-output");
+                txfee = out.nValue;
+                fFeeFound = true;
+            }
         }
-    }
+    } else {
+        CAmount nValueIn = 0;
+        for (unsigned int i = 0; i < tx.vin.size(); ++i) {
+            const COutPoint& prevout = tx.vin[i].prevout;
+            const Coin& coin = inputs.AccessCoin(prevout);
+            assert(!coin.IsSpent());
 
-    const CAmount value_out = tx.GetValueOut();
-    if (nValueIn < value_out) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-in-belowout",
-            strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
-    }
+            // If prev is coinbase, check that it's matured
+            if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
+                return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
+                                     strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
+            }
 
-    // Tally transaction fees
-    const CAmount txfee_aux = nValueIn - value_out;
-    if (!MoneyRange(txfee_aux)) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-fee-outofrange");
-    }
+            // Check for negative or overflow input values
+            nValueIn += coin.out.nValue;
+            if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn)) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputvalues-outofrange");
+            }
+        }
 
-    txfee = txfee_aux;
+        const CAmount value_out = tx.GetValueOut();
+        if (nValueIn < value_out) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-in-belowout",
+                                 strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
+        }
+
+        // Tally transaction fees
+        const CAmount txfee_aux = nValueIn - value_out;
+        if (!MoneyRange(txfee_aux)) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-fee-outofrange");
+        }
+
+        txfee = txfee_aux;
+    }
     return true;
 }

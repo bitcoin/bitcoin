@@ -281,7 +281,9 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             const CTxOut& output = wtx.tx->vout[i];
             const COutPoint outpoint(wtxid, i);
 
-            if (output.nValue < params.min_amount || output.nValue > params.max_amount)
+            auto nValue = output.IsBLSCT() ? wtx.blsctRecoveryData.at(i).amount : output.nValue;
+
+            if (nValue < params.min_amount || nValue > params.max_amount)
                 continue;
 
             // Skip manually selected coins (the caller can fetch them directly)
@@ -295,8 +297,15 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                 continue;
 
             isminetype mine = wallet.IsMine(output);
-
             if (mine == ISMINE_NO) {
+                continue;
+            }
+
+            if (params.only_blsct && !output.IsBLSCT()) {
+                continue;
+            }
+
+            if (params.token_id != output.tokenId) {
                 continue;
             }
 

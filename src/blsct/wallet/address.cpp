@@ -5,6 +5,14 @@
 #include <blsct/wallet/address.h>
 
 namespace blsct {
+SubAddress::SubAddress(const std::string& sAddress)
+{
+    auto dest = DecodeDestination(sAddress);
+    if (std::holds_alternative<blsct::DoublePublicKey>(dest)) {
+        pk = std::get<blsct::DoublePublicKey>(dest);
+    }
+}
+
 SubAddress::SubAddress(const PrivateKey& viewKey, const PublicKey& spendKey, const SubAddressIdentifier& subAddressId)
 {
     if (!viewKey.IsValid() || !spendKey.IsValid()) {

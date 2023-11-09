@@ -45,6 +45,68 @@ BOOST_FIXTURE_TEST_CASE(ismine_test, TestingSetup)
     BOOST_CHECK(xs[0].message == "test");
 }
 
+BOOST_FIXTURE_TEST_CASE(createtransaction_test, TestingSetup)
+{
+    SeedInsecureRand(SeedRand::ZEROS);
+    CCoinsViewDB base{{.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};
+
+    wallet::DatabaseOptions options;
+    options.create_flags |= wallet::WALLET_FLAG_BLSCT;
+
+    std::shared_ptr<wallet::CWallet> wallet(new wallet::CWallet(m_node.chain.get(), "", wallet::CreateMockWalletDatabase(options)));
+
+    LOCK(wallet->cs_wallet);
+    auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
+    BOOST_CHECK(blsct_km->SetupGeneration(true));
+
+    auto recvAddress = blsct::SubAddress(std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(0).value()));
+
+    const uint256 txid{InsecureRand256()};
+    COutPoint outpoint{txid, /*nIn=*/0};
+
+    Coin coin;
+    auto out = blsct::TxFactory::CreateOutput(recvAddress, 1000 * COIN, "test");
+    coin.nHeight = 1;
+    coin.out = out.out;
+
+    auto tx = blsct::TxFactory(blsct_km);
+
+    {
+        CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
+        coins_view_cache.SetBestBlock(InsecureRand256());
+        coins_view_cache.AddCoin(outpoint, std::move(coin), true);
+        BOOST_ASSERT(coins_view_cache.Flush());
+    }
+
+    CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
+    BOOST_ASSERT(tx.AddInput(coins_view_cache, outpoint));
+
+    tx.AddOutput(recvAddress, 900 * COIN, "test");
+
+    auto finalTx = tx.BuildTx();
+
+    BOOST_ASSERT(finalTx.has_value());
+    BOOST_ASSERT(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache));
+
+    bool fFoundChange = false;
+
+    // Wallet does not have the coins available yet
+    BOOST_ASSERT(blsct::TxFactory::CreateTransaction(wallet, coins_view_cache, recvAddress, 900 * COIN, "test") == std::nullopt);
+
+    auto result = blsct_km->RecoverOutputs(finalTx.value().vout);
+
+    for (auto& res : result.amounts) {
+        if (res.message == "Change" && res.amount == (1000 - 900 - 0.008) * COIN) fFoundChange = true;
+    }
+
+    BOOST_ASSERT(fFoundChange);
+
+    wallet->transactionAddedToMempool(MakeTransactionRef(finalTx.value()));
+
+    // Wallet does not have the coins available yet (not confirmed in block)
+    BOOST_ASSERT(blsct::TxFactory::CreateTransaction(wallet, coins_view_cache, recvAddress, 900 * COIN, "test") == std::nullopt);
+}
+
 BOOST_FIXTURE_TEST_CASE(addinput_test, TestingSetup)
 {
     SeedInsecureRand(SeedRand::ZEROS);
@@ -135,4 +197,4 @@ BOOST_FIXTURE_TEST_CASE(addinput_test, TestingSetup)
     BOOST_ASSERT(TxGetCredit(*wallet, CTransaction(finalTx2.value()), wallet::ISMINE_SPENDABLE_BLSCT) == (1000 - 900 - 0.008 - 50 - 0.008) * COIN);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+    BOOST_AUTO_TEST_SUITE_END()

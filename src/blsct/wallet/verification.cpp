@@ -3,19 +3,26 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/wallet/verification.h>
+#include <util/strencodings.h>
 
 namespace blsct {
-bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view)
+bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount& blockReward)
 {
     if (!view.HaveInputs(tx)) {
         return false;
     }
 
+    range_proof::GeneratorsFactory<Mcl> gf;
     bulletproofs::RangeProofLogic<Mcl> rp;
     std::vector<bulletproofs::RangeProof<Mcl>> vProofs;
     std::vector<Message> vMessages;
     std::vector<PublicKey> vPubKeys;
     MclG1Point balanceKey;
+
+    if (blockReward > 0) {
+        range_proof::Generators<Mcl> gen = gf.GetInstance(TokenId());
+        balanceKey = (gen.G * MclScalar(blockReward));
+    }
 
     for (auto& in : tx.vin) {
         Coin coin;
@@ -30,6 +37,8 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view)
         balanceKey = balanceKey + coin.out.blsctData.rangeProof.Vs[0];
     }
 
+    CAmount nFee = 0;
+
     for (auto& out : tx.vout) {
         vPubKeys.push_back(out.blsctData.ephemeralKey);
         auto out_hash = out.GetHash();
@@ -41,7 +50,9 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view)
         } else {
             if (!out.scriptPubKey.IsUnspendable())
                 return false;
-            range_proof::GeneratorsFactory<Mcl> gf;
+            if (nFee > 0)
+                return false;
+            nFee = out.nValue;
             range_proof::Generators<Mcl> gen = gf.GetInstance(out.tokenId);
             balanceKey = balanceKey - (gen.G * MclScalar(out.nValue));
         }

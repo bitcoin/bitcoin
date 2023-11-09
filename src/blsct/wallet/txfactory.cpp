@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/wallet/txfactory.h>
+#include <wallet/fees.cpp>
 
 using T = Mcl;
 using Point = T::Point;
@@ -31,6 +32,16 @@ void UnsignedOutput::GenerateKeys(Scalar blindingKey, DoublePublicKey destKeys)
     auto rV = vk * blindingKey;
 
     out.blsctData.spendingKey = sk + (PrivateKey(Scalar(rV.GetHashWithSalt(0))).GetPoint());
+}
+
+Signature UnsignedOutput::GetSignature() const
+{
+    std::vector<Signature> txSigs;
+
+    txSigs.push_back(blsct::PrivateKey(blindingKey).Sign(out.GetHash()));
+    txSigs.push_back(blsct::PrivateKey(gamma.Negate()).SignBalance());
+
+    return Signature::Aggregate(txSigs);
 }
 
 UnsignedOutput TxFactory::CreateOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId)
@@ -94,7 +105,7 @@ void TxFactory::AddOutput(const SubAddress& destination, const CAmount& nAmount,
     vOutputs[tokenId].push_back(out);
 }
 
-bool TxFactory::AddInput(const CCoinsViewCache& cache, const COutPoint& outpoint)
+bool TxFactory::AddInput(const CCoinsViewCache& cache, const COutPoint& outpoint, const bool& rbf)
 {
     Coin coin;
 
@@ -109,7 +120,7 @@ bool TxFactory::AddInput(const CCoinsViewCache& cache, const COutPoint& outpoint
     if (vInputs.count(coin.out.tokenId) <= 0)
         vInputs[coin.out.tokenId] = std::vector<UnsignedInput>();
 
-    vInputs[coin.out.tokenId].push_back({CTxIn(outpoint), recoveredInfo.amounts[0].amount, recoveredInfo.amounts[0].gamma, km->GetSpendingKeyForOutput(coin.out)});
+    vInputs[coin.out.tokenId].push_back({CTxIn(outpoint, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL), recoveredInfo.amounts[0].amount, recoveredInfo.amounts[0].gamma, km->GetSpendingKeyForOutput(coin.out)});
 
     if (nAmounts.count(coin.out.tokenId) <= 0)
         nAmounts[coin.out.tokenId] = {0, 0};
@@ -121,10 +132,12 @@ bool TxFactory::AddInput(const CCoinsViewCache& cache, const COutPoint& outpoint
 
 std::optional<CMutableTransaction> TxFactory::BuildTx()
 {
-    CAmount nFee = 200000 * (vInputs.size() + vOutputs.size() + 1);
+    CAmount nFee = BLSCT_DEFAULT_FEE * (vInputs.size() + vOutputs.size() + 1);
 
     while (true) {
         CMutableTransaction tx;
+        tx.nVersion |= CTransaction::BLSCT_MARKER;
+
         Scalar gammaAcc;
         std::map<TokenId, CAmount> mapChange;
         std::vector<Signature> txSigs;
@@ -158,7 +171,7 @@ std::optional<CMutableTransaction> TxFactory::BuildTx()
             txSigs.push_back(PrivateKey(changeOutput.blindingKey).Sign(changeOutput.out.GetHash()));
         }
 
-        if (nFee == (long long)(200000 * (tx.vin.size() + tx.vout.size() + 1))) {
+        if (nFee == (long long)(BLSCT_DEFAULT_FEE * (tx.vin.size() + tx.vout.size() + 1))) {
             CTxOut fee_out{nFee, CScript(OP_RETURN)};
             auto blindingKey = PrivateKey(Scalar::Rand());
             fee_out.blsctData.ephemeralKey = blindingKey.GetPublicKey().GetG1Point();
@@ -169,10 +182,64 @@ std::optional<CMutableTransaction> TxFactory::BuildTx()
             return tx;
         }
 
-        nFee = 200000 * (tx.vin.size() + tx.vout.size() + 1);
+        nFee = BLSCT_DEFAULT_FEE * (tx.vin.size() + tx.vout.size() + 1);
     }
 
     return std::nullopt;
+}
+
+std::optional<CMutableTransaction> TxFactory::CreateTransaction(std::shared_ptr<wallet::CWallet> wallet, const CCoinsViewCache& cache, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId)
+{
+    wallet::CCoinControl coin_control;
+    wallet::CoinFilterParams coins_params;
+    coins_params.min_amount = 0;
+    coins_params.only_blsct = true;
+    coins_params.token_id = tokenId;
+
+    bool rbf = false;
+
+    FeeCalculation fee_calc_out;
+    CFeeRate fee_rate{wallet::GetMinimumFeeRate(*wallet, coin_control, &fee_calc_out)};
+
+    auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
+    auto tx = blsct::TxFactory(blsct_km);
+
+    for (const wallet::COutput& output : AvailableCoins(*wallet, &coin_control, fee_rate, coins_params).All()) {
+        CHECK_NONFATAL(output.input_bytes > 0);
+        tx.AddInput(cache, COutPoint(output.outpoint.hash, output.outpoint.n));
+
+        if (tx.nAmounts[tokenId].nFromInputs > nAmount + (long long)(BLSCT_DEFAULT_FEE * (tx.vInputs.size() + 3))) break;
+    }
+
+    tx.AddOutput(destination, nAmount, sMemo, tokenId);
+
+    return tx.BuildTx();
+}
+
+CTransactionRef TxFactory::AggregateTransactions(const std::vector<CTransactionRef>& txs)
+{
+    auto ret = CMutableTransaction();
+    std::vector<Signature> vSigs;
+    CAmount nFee = 0;
+
+    for (auto& tx : txs) {
+        vSigs.push_back(tx->txSig);
+        for (auto& in : tx->vin) {
+            ret.vin.push_back(in);
+        }
+        for (auto& out : tx->vout) {
+            if (out.IsBLSCT())
+                ret.vout.push_back(out);
+            else if (out.scriptPubKey.IsUnspendable())
+                nFee = out.nValue;
+        }
+    }
+
+    ret.vout.push_back(CTxOut{nFee, CScript{OP_RETURN}});
+
+    ret.txSig = blsct::Signature::Aggregate(vSigs);
+
+    return MakeTransactionRef(ret);
 }
 
 } // namespace blsct

@@ -15,6 +15,6 @@
 class CTransaction;
 class TxValidationState;
 
-bool CheckTransaction(const CTransaction& tx, TxValidationState& state);
+bool CheckTransaction(const CTransaction& tx, TxValidationState& state, const bool& fBLSCT = false);
 
 #endif // BITCOIN_CONSENSUS_TX_CHECK_H

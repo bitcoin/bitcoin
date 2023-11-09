@@ -78,7 +78,7 @@ void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& opti
             vbparams.min_activation_height = 0;
         }
         bool found = false;
-        for (int j=0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
+        for (int j = 0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
             if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
                 options.version_bits_parameters[Consensus::DeploymentPos(j)] = vbparams;
                 found = true;
@@ -115,6 +115,11 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
         auto opts = CChainParams::RegTestOptions{};
         ReadRegTestArgs(args, opts);
         return CChainParams::RegTest(opts);
+    }
+    case ChainType::BLSCTREGTEST: {
+        auto opts = CChainParams::RegTestOptions{};
+        ReadRegTestArgs(args, opts);
+        return CChainParams::BLSCTRegTest(opts);
     }
     }
     assert(false);

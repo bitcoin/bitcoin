@@ -8,6 +8,7 @@
 
 #include <addrman.h>
 #include <banman.h>
+#include <blsct/wallet/txfactory.h>
 #include <chainparams.h>
 #include <common/url.h>
 #include <config/bitcoin-config.h>
@@ -270,6 +271,74 @@ TestingSetup::TestingSetup(
         options.m_msgproc = m_node.peerman.get();
         m_node.connman->Init(options);
     }
+}
+
+TestBLSCTChain100Setup::TestBLSCTChain100Setup(
+    const blsct::SubAddress& coinbaseDest,
+    const ChainType chain_type,
+    const std::vector<const char*>& extra_args,
+    const bool coins_db_in_memory,
+    const bool block_tree_db_in_memory)
+    : TestingSetup{ChainType::BLSCTREGTEST, extra_args, coins_db_in_memory, block_tree_db_in_memory}, coinbaseDest{coinbaseDest}
+{
+    SetMockTime(1598887952);
+    constexpr std::array<unsigned char, 32> vchKey = {
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}};
+    coinbaseKey.Set(vchKey.begin(), vchKey.end(), true);
+
+    // Generate a 100-block chain:
+    this->mineBlocks(COINBASE_MATURITY);
+}
+
+void TestBLSCTChain100Setup::mineBlocks(int num_blocks)
+{
+    for (int i = 0; i < num_blocks; i++) {
+        std::vector<CMutableTransaction> noTxns;
+        CBlock b = CreateAndProcessBlock(noTxns);
+        SetMockTime(GetTime() + 1);
+        m_coinbase_txns.push_back(b.vtx[0]);
+    }
+}
+
+CBlock TestBLSCTChain100Setup::CreateBlock(
+    const std::vector<CMutableTransaction>& txns,
+    Chainstate& chainstate)
+{
+    auto out = blsct::TxFactory::CreateOutput(coinbaseDest, m_node.chainman->GetConsensus().nBLSCTBlockReward, "Reward");
+
+    CBlock block = BlockAssembler{chainstate, nullptr}.CreateNewBLSCTPOWBlock(out)->block;
+
+    Assert(block.vtx.size() == 1);
+    for (const CMutableTransaction& tx : txns) {
+        block.vtx.push_back(MakeTransactionRef(tx));
+    }
+
+    auto aggregatedTx = blsct::TxFactory::AggregateTransactions(block.vtx);
+    block.vtx.clear();
+    block.vtx.push_back(aggregatedTx);
+    Assert(block.vtx.size() == 1);
+
+    RegenerateCommitments(block, *Assert(m_node.chainman));
+
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, m_node.chainman->GetConsensus()))
+        ++block.nNonce;
+
+    return block;
+}
+
+CBlock TestBLSCTChain100Setup::CreateAndProcessBlock(
+    const std::vector<CMutableTransaction>& txns,
+    Chainstate* chainstate)
+{
+    if (!chainstate) {
+        chainstate = &Assert(m_node.chainman)->ActiveChainstate();
+    }
+
+    CBlock block = this->CreateBlock(txns, *chainstate);
+    std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
+    Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr);
+
+    return block;
 }
 
 TestChain100Setup::TestChain100Setup(

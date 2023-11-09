@@ -7,6 +7,7 @@
 
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_init.h>
+#include <blsct/wallet/address.h>
 #include <chainparamsbase.h>
 #include <common/args.h>
 #include <key.h>
@@ -155,6 +156,85 @@ struct TestChain100Setup : public TestingSetup {
     CBlock CreateBlock(
         const std::vector<CMutableTransaction>& txns,
         const CScript& scriptPubKey,
+        Chainstate& chainstate);
+
+    //! Mine a series of new blocks on the active chain.
+    void mineBlocks(int num_blocks);
+
+    /**
+     * Create a transaction and submit to the mempool.
+     *
+     * @param input_transaction  The transaction to spend
+     * @param input_vout         The vout to spend from the input_transaction
+     * @param input_height       The height of the block that included the input_transaction
+     * @param input_signing_key  The key to spend the input_transaction
+     * @param output_destination Where to send the output
+     * @param output_amount      How much to send
+     * @param submit             Whether or not to submit to mempool
+     */
+    CMutableTransaction CreateValidMempoolTransaction(CTransactionRef input_transaction,
+                                                      int input_vout,
+                                                      int input_height,
+                                                      CKey input_signing_key,
+                                                      CScript output_destination,
+                                                      CAmount output_amount = CAmount(1 * COIN),
+                                                      bool submit = true);
+
+    /** Create transactions spending from m_coinbase_txns. These transactions will only spend coins
+     * that exist in the current chain, but may be premature coinbase spends, have missing
+     * signatures, or violate some other consensus rules. They should only be used for testing
+     * mempool consistency. All transactions will have some random number of inputs and outputs
+     * (between 1 and 24). Transactions may or may not be dependent upon each other; if dependencies
+     * exit, every parent will always be somewhere in the list before the child so each transaction
+     * can be submitted in the same order they appear in the list.
+     * @param[in]   submit      When true, submit transactions to the mempool.
+     *                          When false, return them but don't submit them.
+     * @returns A vector of transactions that can be submitted to the mempool.
+     */
+    std::vector<CTransactionRef> PopulateMempool(FastRandomContext& det_rand, size_t num_transactions, bool submit);
+
+    /** Mock the mempool minimum feerate by adding a transaction and calling TrimToSize(0),
+     * simulating the mempool "reaching capacity" and evicting by descendant feerate.  Note that
+     * this clears the mempool, and the new minimum feerate will depend on the maximum feerate of
+     * transactions removed, so this must be called while the mempool is empty.
+     *
+     * @param target_feerate    The new mempool minimum feerate after this function returns.
+     *                          Must be above max(incremental feerate, min relay feerate),
+     *                          or 1sat/vB with default settings.
+     */
+    void MockMempoolMinFee(const CFeeRate& target_feerate);
+
+    std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
+    CKey coinbaseKey;                             // private/public key needed to spend coinbase transactions
+};
+
+/**
+ * Testing fixture that pre-creates a 100-block REGTEST-mode block chain
+ */
+struct TestBLSCTChain100Setup : public TestingSetup {
+    blsct::SubAddress coinbaseDest;
+
+    TestBLSCTChain100Setup(
+        const blsct::SubAddress& coinbaseDest,
+        const ChainType chain_type = ChainType::REGTEST,
+        const std::vector<const char*>& extra_args = {},
+        const bool coins_db_in_memory = true,
+        const bool block_tree_db_in_memory = true);
+
+    /**
+     * Create a new block with just given transactions, coinbase paying to
+     * scriptPubKey, and try to add it to the current chain.
+     * If no chainstate is specified, default to the active.
+     */
+    CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
+                                 Chainstate* chainstate = nullptr);
+
+    /**
+     * Create a new block with just given transactions, coinbase paying to
+     * scriptPubKey.
+     */
+    CBlock CreateBlock(
+        const std::vector<CMutableTransaction>& txns,
         Chainstate& chainstate);
 
     //! Mine a series of new blocks on the active chain.

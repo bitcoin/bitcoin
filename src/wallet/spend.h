@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_SPEND_H
 
 #include <consensus/amount.h>
+#include <ctokens/tokenid.h>
 #include <policy/fees.h> // for FeeCalculation
 #include <util/result.h>
 #include <wallet/coinselection.h>
@@ -78,6 +79,10 @@ struct CoinFilterParams {
     bool include_immature_coinbase{false};
     // By default, skip locked UTXOs
     bool skip_locked{true};
+    // Only include BLSCT outputs
+    bool only_blsct{false};
+    // By default, use native nav
+    TokenId token_id{TokenId()};
 };
 
 /**

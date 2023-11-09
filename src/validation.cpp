@@ -1073,6 +1073,11 @@ bool MemPoolAccept::ConsensusScriptChecks(const ATMPArgs& args, Workspace& ws)
         return Assume(false);
     }
 
+    if (args.m_chainparams.GetConsensus().fBLSCT) {
+        if (!blsct::VerifyTx(tx, m_view))
+            return Assume(false);
+    }
+
     return true;
 }
 
@@ -2350,6 +2355,16 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             control.Add(std::move(vChecks));
         }
 
+        if (tx.IsBLSCT()) {
+            if (params.GetConsensus().fBLSCT)
+                blsct::VerifyTx(tx, view, params.GetConsensus().nBLSCTBlockReward);
+            else
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "non-blsct-tx-not-allowed");
+        } else {
+            if (params.GetConsensus().fBLSCT)
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "blsct-tx-not-allowed");
+        }
+
         CTxUndo undoDummy;
         if (i > 0) {
             blockundo.vtxundo.push_back(CTxUndo());
@@ -3501,6 +3516,10 @@ void Chainstate::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pin
 
 static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
+    if ((consensusParams.fBLSCT && !(block.nVersion & VERSIONBITS_TOP_BLSCT_BITS)) || (!consensusParams.fBLSCT && block.nVersion & VERSIONBITS_TOP_BLSCT_BITS)) {
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "blsct-block-version", "wrong blsct block version");
+    }
+
     // Check proof of work matches claimed amount
     if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
@@ -3550,17 +3569,21 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-length", "size limits failed");
 
     // First transaction must be coinbase, the rest must not be
-    if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "first tx is not coinbase");
-    for (unsigned int i = 1; i < block.vtx.size(); i++)
-        if (block.vtx[i]->IsCoinBase())
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-multiple", "more than one coinbase");
+    if (!consensusParams.fBLSCT) {
+        if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "first tx is not coinbase");
+        for (unsigned int i = 1; i < block.vtx.size(); i++)
+            if (block.vtx[i]->IsCoinBase())
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-multiple", "more than one coinbase");
+    } else if (block.vtx.size() > 1)
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "multiple-tx", "more than one transaction in blsct block");
 
     // Check transactions
     // Must check for duplicate inputs (see CVE-2018-17144)
+
     for (const auto& tx : block.vtx) {
         TxValidationState tx_state;
-        if (!CheckTransaction(*tx, tx_state)) {
+        if (!CheckTransaction(*tx, tx_state, consensusParams.fBLSCT)) {
             // CheckBlock() does context-free validation checks. The only
             // possible failures are consensus failures.
             assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS);

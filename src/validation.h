@@ -12,6 +12,7 @@
 
 #include <arith_uint256.h>
 #include <attributes.h>
+#include <blsct/wallet/verification.h>
 #include <chain.h>
 #include <consensus/amount.h>
 #include <deploymentstatus.h>

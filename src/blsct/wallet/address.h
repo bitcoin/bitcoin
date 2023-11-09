@@ -41,6 +41,7 @@ private:
 
 public:
     SubAddress(){};
+    SubAddress(const std::string& sAddress);
     SubAddress(const PrivateKey& viewKey, const PublicKey& spendKey, const SubAddressIdentifier& subAddressId);
     SubAddress(const DoublePublicKey& pk) : pk(pk){};
 
