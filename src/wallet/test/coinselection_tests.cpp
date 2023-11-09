@@ -69,12 +69,12 @@ static bool EquivalentResult(const SelectionResult& a, const SelectionResult& b)
     return ret.first == a_amts.end() && ret.second == b_amts.end();
 }
 
-inline std::vector<OutputGroup>& GroupCoins(const std::vector<COutput>& available_coins, bool subtract_fee_outputs = false)
+inline std::vector<OutputGroup>& GroupCoins(const std::vector<COutput>& available_coins, const CoinSelectionParams& cs_params = default_cs_params, bool subtract_fee_outputs = false)
 {
     static std::vector<OutputGroup> static_groups;
     static_groups.clear();
     for (auto& coin : available_coins) {
-        static_groups.emplace_back();
+        static_groups.emplace_back(cs_params);
         OutputGroup& group = static_groups.back();
         group.Insert(std::make_shared<COutput>(coin), /*ancestors=*/ 0, /*descendants=*/ 0);
         group.m_subtract_fee_outputs = subtract_fee_outputs;
@@ -91,19 +91,19 @@ static COutput MakeCoin(const CAmount& amount, bool is_eff_value = true, int nIn
     return COutput{COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ custom_spending_vsize, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, /*fees=*/ fees};
 }
 
-static void AddCoins(std::vector<COutput>& utxo_pool, std::vector<CAmount> coins) {
+static void AddCoins(std::vector<COutput>& utxo_pool, std::vector<CAmount> coins, CFeeRate feerate = default_cs_params.m_effective_feerate) {
     for (int c : coins) {
-        utxo_pool.push_back(MakeCoin(c));
+        utxo_pool.push_back(MakeCoin(c, true, 0, feerate));
     }
 }
 
-static void TestBnBSuccess(std::string test_title, std::vector<COutput>& utxo_pool, const CAmount& selection_target, const std::vector<CAmount>& expected_input_amounts)
+static void TestBnBSuccess(std::string test_title, std::vector<COutput>& utxo_pool, const CAmount& selection_target, const std::vector<CAmount>& expected_input_amounts, const CFeeRate& feerate = default_cs_params.m_effective_feerate )
 {
     SelectionResult expected_result(CAmount(0), SelectionAlgorithm::BNB);
     CAmount expected_amount = 0;
     for (int input_amount : expected_input_amounts) {
         OutputGroup group;
-        COutput coin = MakeCoin(input_amount);
+        COutput coin = MakeCoin(input_amount, true, 0, feerate);
         expected_amount += coin.txout.nValue;
         group.Insert(std::make_shared<COutput>(coin), /*ancestors=*/ 0, /*descendants=*/ 0);
         expected_result.AddInput(group);
@@ -130,6 +130,18 @@ BOOST_AUTO_TEST_CASE(bnb_test)
 
     // BnB finds changeless solution while overshooting by up to cost_of_change
     TestBnBSuccess("Select upper bound", utxo_pool, /*selection_target=*/ 9 * CENT - default_cs_params.m_cost_of_change, /*expected_input_amounts=*/ {1 * CENT, 3 * CENT, 5 * CENT});
+}
+
+BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
+{
+    // Create sets of UTXOs with the same effective amounts at different feerates (but different absolute amounts)
+    std::vector<COutput> low_feerate_pool; // 5 sat/vB (lower than long_term_feerate of 10 sat/vB)
+    AddCoins(low_feerate_pool, {2 * CENT, 3 * CENT, 5 * CENT, 10 * CENT});
+    TestBnBSuccess("Select many inputs at low feerates", low_feerate_pool, /*selection_target=*/ 10 * CENT, /*expected_input_amounts=*/ {2 * CENT, 3 * CENT, 5 * CENT});
+
+    std::vector<COutput> high_feerate_pool; // 25 sat/vB (greater than long_term_feerate of 10 sat/vB)
+    AddCoins(high_feerate_pool, {2 * CENT, 3 * CENT, 5 * CENT, 10 * CENT}, CFeeRate{25'000});
+    TestBnBSuccess("Select one input at high feerates", high_feerate_pool, /*selection_target=*/ 10 * CENT, /*expected_input_amounts=*/ {10 * CENT}, CFeeRate{25'000});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
