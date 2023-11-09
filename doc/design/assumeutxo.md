@@ -1,4 +1,4 @@
-# assumeutxo
+# Assumeutxo
 
 Assumeutxo is a feature that allows fast bootstrapping of a validating bitcoind
 instance.
