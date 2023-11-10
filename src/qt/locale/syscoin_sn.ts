@@ -22,14 +22,6 @@
         <translation type="unfinished">Dzima</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Makero ekutumira</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Makero ekutambira</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation type="unfinished">Kopera Kero</translation>
     </message>

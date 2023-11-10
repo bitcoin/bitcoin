@@ -58,14 +58,6 @@
         <translation type="unfinished">​ရွေးပါ</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">လိပ်စာပေးပို့နေသည်</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">လိပ်စာလက်ခံရရှိသည်</translation>
-    </message>
-    <message>
         <source>&amp;Edit</source>
         <translation type="unfinished">&amp;ပြင်ဆင်</translation>
     </message>
@@ -173,14 +165,6 @@
     <message>
         <source>Date</source>
         <translation type="unfinished">နေ့စွဲ</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">ဟုတ်တယ်</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">မဟုတ်ဘူး</translation>
     </message>
     </context>
 <context>

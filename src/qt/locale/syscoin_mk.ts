@@ -285,10 +285,6 @@
         <translation type="unfinished">Провизија:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Прашина:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">После Провизија:</translation>
     </message>
@@ -537,10 +533,6 @@
     <message>
         <source>Change:</source>
         <translation type="unfinished">Кусур:</translation>
-    </message>
-    <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Прашина:</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
