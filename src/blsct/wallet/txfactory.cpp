@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/wallet/txfactory.h>
-#include <wallet/fees.cpp>
+#include <wallet/fees.h>
 
 using T = Mcl;
 using Point = T::Point;
@@ -196,15 +196,15 @@ std::optional<CMutableTransaction> TxFactory::CreateTransaction(std::shared_ptr<
     coins_params.only_blsct = true;
     coins_params.token_id = tokenId;
 
-    bool rbf = false;
-
     FeeCalculation fee_calc_out;
     CFeeRate fee_rate{wallet::GetMinimumFeeRate(*wallet, coin_control, &fee_calc_out)};
 
     auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
     auto tx = blsct::TxFactory(blsct_km);
 
-    for (const wallet::COutput& output : AvailableCoins(*wallet, &coin_control, fee_rate, coins_params).All()) {
+    for (const wallet::COutput& output : WITH_LOCK(wallet->cs_wallet,
+                                                   return AvailableCoins(*wallet, &coin_control, fee_rate, coins_params))
+                                             .All()) {
         CHECK_NONFATAL(output.input_bytes > 0);
         tx.AddInput(cache, COutPoint(output.outpoint.hash, output.outpoint.n));
 
