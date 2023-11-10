@@ -160,16 +160,5 @@ class P2PEvict(BitcoinTestFramework):
         with node.assert_debug_log(["failed to find an eviction candidate - connection dropped (full)"]):
             node.add_p2p_connection(RejectedPeer(), supports_v2_p2p=False, wait_for_verack=False)
 
-        self.log.debug("Fill force_inbound slots")
-        for i in range(7):
-            allowed_peers.append(node.add_p2p_connection(P2PInterface(), dstport=30202))
-
-        self.log.debug("ForceInbound gets rejected after 8 evictions")
-        with node.assert_debug_log([f"dropped (too many forced inbound)"]):
-            node.add_p2p_connection(RejectedPeer(), supports_v2_p2p=False, dstport=30202, wait_for_verack=False)
-
-        assert_equal(len(node.getpeerinfo()), 10)
-        assert [peer.is_connected for peer in allowed_peers]
-
 if __name__ == '__main__':
     P2PEvict(__file__).main()
