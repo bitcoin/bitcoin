@@ -13,7 +13,7 @@ Checks LLMQs based ChainLocks
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import force_finish_mnsync, assert_equal
+from test_framework.util import force_finish_mnsync, assert_equal, assert_raises_rpc_error
 
 
 class LLMQChainLocksTest(DashTestFramework):
@@ -186,6 +186,24 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Re-enable network on first node and wait for chainlock")
         self.reconnect_isolated_node(0, 1)
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[0].getbestblockhash(), timeout=30)
+
+        for i in range(2):
+            self.log.info(f"{'Disable' if i == 0 else 'Enable'} Chainlock")
+            self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 4070908800 if i == 0 else 0)
+            self.wait_for_sporks_same()
+
+            self.log.info("Add a new node and let it sync")
+            self.dynamically_add_masternode(evo=False)
+            added_idx = len(self.nodes) - 1
+            assert_raises_rpc_error(-32603, "Unable to find any chainlock", self.nodes[added_idx].getbestchainlock)
+
+            self.log.info("Test that new node can mine without Chainlock info")
+            tip_0 = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)
+            self.nodes[added_idx].generate(1)
+            self.sync_blocks(self.nodes)
+            tip_1 = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)
+            assert_equal(tip_1['cbTx']['bestCLSignature'], tip_0['cbTx']['bestCLSignature'])
+            assert_equal(tip_1['cbTx']['bestCLHeightDiff'], tip_0['cbTx']['bestCLHeightDiff'] + 1)
 
     def create_chained_txs(self, node, amount):
         txid = node.sendtoaddress(node.getnewaddress(), amount)
