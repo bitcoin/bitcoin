@@ -509,6 +509,7 @@ class AssetLocksTest(DashTestFramework):
         self.check_mempool_size()
 
         # activate MN_RR reallocation
+        self.log.info("Activate mn_rr...")
         self.activate_mn_rr(expected_activation_height=node.getblockcount() + 12 * 3)
         self.log.info(f'height: {node.getblockcount()} credit: {self.get_credit_pool_balance()}')
         assert_equal(new_total, self.get_credit_pool_balance())

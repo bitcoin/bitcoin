@@ -25,7 +25,7 @@ from test_framework.util import (
 
 class MnehfTest(DashTestFramework):
     def set_test_params(self):
-        extra_args = [["-vbparams=testdummy:0:999999999999:12:12:12:5:0", "-persistmempool=0"] for _ in range(4)]
+        extra_args = [["-vbparams=testdummy:0:999999999999:12:12:12:5:1", "-persistmempool=0"] for _ in range(4)]
         self.set_dash_test_params(4, 3, fast_dip3_enforcement=True, extra_args=extra_args)
 
     def skip_test_if_missing_module(self):
@@ -35,7 +35,7 @@ class MnehfTest(DashTestFramework):
         for inode in range(self.num_nodes):
             self.log.info(f"Restart node {inode} with {self.extra_args[inode]}")
             if params is not None:
-                self.extra_args[inode][0] = f"-vbparams=testdummy:{params[0]}:{params[1]}:12:12:12:5:0"
+                self.extra_args[inode][0] = f"-vbparams=testdummy:{params[0]}:{params[1]}:12:12:12:5:1"
                 self.log.info(f"Actual restart options: {self.extra_args[inode]}")
 
         self.restart_node(0)

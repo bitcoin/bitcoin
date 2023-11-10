@@ -135,15 +135,13 @@ public:
     void UpdateBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
     void UpdateLLMQInstantSend(Consensus::LLMQType llmqType);
     /**
-     * Update params for Masternodes EHF
+     * Validate params for Masternodes EHF
      *
      * @param[in] nBit The version bit to update
-     * @param[in] height The height of block where that signal is mined
      * @param[in] timePast The block time to validate if release is already time-outed
-     * @param[in] fJustCheck If true do not update any internal data, only validate params
      * @return Whether params are legit and params are updated (if release is known)
      */
-    bool UpdateMNActivationParam(int nBit, int height, int64_t timePast, bool fJustCheck) const;
+    bool IsValidMNActivation(int nBit, int64_t timePast) const;
     int PoolMinParticipants() const { return nPoolMinParticipants; }
     int PoolMaxParticipants() const { return nPoolMaxParticipants; }
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }

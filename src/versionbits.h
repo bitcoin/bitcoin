@@ -56,7 +56,7 @@ class AbstractThresholdConditionChecker {
 protected:
     virtual bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const =0;
     virtual int64_t BeginTime(const Consensus::Params& params) const =0;
-    virtual int MasternodeBeginHeight(const Consensus::Params& params) const = 0;
+    virtual int SignalHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params) const = 0;
     virtual int64_t EndTime(const Consensus::Params& params) const =0;
     virtual int Period(const Consensus::Params& params) const =0;
     virtual int Threshold(const Consensus::Params& params, int nAttempt) const =0;
@@ -87,5 +87,36 @@ BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::
 /** Get the block height at which the BIP9 deployment switched into the state for the block building on the current tip. */
 int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
 uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
+
+class AbstractEHFManager
+{
+public:
+    using Signals = std::unordered_map<uint8_t, int>;
+
+    /**
+     * getInstance() is used in versionbit because it is non-trivial
+     * to get access to NodeContext from all usages of VersionBits* methods
+     * For simplification of interface this methods static/global variable is used
+     * to get access to EHF data
+     */
+public:
+    [[nodiscard]] static AbstractEHFManager* getInstance() {
+        return globalInstance;
+    };
+
+    /**
+     * `GetSignalsStage' prepares signals for new block.
+     * The results are diffent with GetFromCache results due to one more
+     * stage of processing: signals that would be expired in next block
+     * are excluded from results.
+     * This member function is not const because it calls non-const GetFromCache()
+     */
+    virtual Signals GetSignalsStage(const CBlockIndex* const pindexPrev) = 0;
+
+
+protected:
+    static AbstractEHFManager* globalInstance;
+
+};
 
 #endif // BITCOIN_VERSIONBITS_H

@@ -1956,7 +1956,7 @@ public:
 
     int64_t BeginTime(const Consensus::Params& params) const override { return 0; }
     int64_t EndTime(const Consensus::Params& params) const override { return std::numeric_limits<int64_t>::max(); }
-    int MasternodeBeginHeight(const Consensus::Params& params) const override { return 0; }
+    int SignalHeight(const CBlockIndex* const pindex, const Consensus::Params& params) const override { return 0; }
     int Period(const Consensus::Params& params) const override { return params.nMinerConfirmationWindow; }
     int Threshold(const Consensus::Params& params, int nAttempt) const override { return params.nRuleChangeActivationThreshold; }
 
@@ -2515,7 +2515,7 @@ CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(
 
 std::unordered_map<uint8_t, int> CChainState::GetMNHFSignalsStage(const CBlockIndex* const pindexPrev)
 {
-    return this->m_mnhfManager.GetSignalsStage(pindexPrev);
+    return m_mnhfManager.GetSignalsStage(pindexPrev);
 }
 
 bool CChainState::FlushStateToDisk(

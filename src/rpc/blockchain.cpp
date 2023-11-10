@@ -1590,7 +1590,7 @@ static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name,
     softforks.pushKV(name, rv);
 }
 
-static void BIP9SoftForkDescPushBack(const CBlockIndex* active_chain_tip, UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void BIP9SoftForkDescPushBack(const CBlockIndex* active_chain_tip, const std::unordered_map<uint8_t, int>& signals, UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // For BIP9 deployments.
     // Deployments (e.g. testdummy) with timeout value before Jan 1, 2009 are hidden.
@@ -1613,7 +1613,10 @@ static void BIP9SoftForkDescPushBack(const CBlockIndex* active_chain_tip, UniVal
     }
     bip9.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
     bip9.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
-    bip9.pushKV("ehf", consensusParams.vDeployments[id].nMNActivationHeight);
+    bip9.pushKV("ehf", consensusParams.vDeployments[id].useEHF);
+    if (auto it = signals.find(consensusParams.vDeployments[id].bit); it != signals.end()) {
+        bip9.pushKV("ehf_height", it->second);
+    }
     int64_t since_height = VersionBitsStateSinceHeight(active_chain_tip, consensusParams, id, versionbitscache);
     bip9.pushKV("since", since_height);
     if (ThresholdState::STARTED == thresholdState)
@@ -1674,7 +1677,8 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
                         {RPCResult::Type::NUM, "bit", "the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)"},
                         {RPCResult::Type::NUM_TIME, "start_time", "the minimum median time past of a block at which the bit gains its meaning"},
                         {RPCResult::Type::NUM_TIME, "timeout", "the median time past of a block at which the deployment is considered failed if not yet locked in"},
-                        {RPCResult::Type::NUM, "ehf", "the minimum height when miner's signals for the deployment can be accepted (special values: \"-1\" - any, \"0\" - none)"},
+                        {RPCResult::Type::BOOL, "ehf", "returns true for EHF activated forks"},
+                        {RPCResult::Type::NUM, "ehf_height", /* optional */ true, "the minimum height when miner's signals for the deployment matter. Below this height miner signaling cannot trigger hard fork lock-in. Not specified for non-EHF forks"},
                         {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
                         {RPCResult::Type::NUM, "activation_height", "expected activation height for this softfork (only for \"locked_in\" status)"},
                         {RPCResult::Type::OBJ, "statistics", "numeric statistics about BIP9 signalling for a softfork",
@@ -1706,6 +1710,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     const CBlockIndex* tip = active_chainstate.m_chain.Tip();
     CHECK_NONFATAL(tip);
     const int height = tip->nHeight;
+    const auto ehfSignals = active_chainstate.GetMNHFSignalsStage(tip);
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("chain",                 strChainName);
     obj.pushKV("blocks",                height);
@@ -1750,9 +1755,9 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     BuriedForkDescPushBack(softforks, "dip0024", consensusParams.DIP0024Height, height);
     BuriedForkDescPushBack(softforks, "realloc", consensusParams.BRRHeight, height);
     BuriedForkDescPushBack(softforks, "v19", consensusParams.V19Height, height);
-    BIP9SoftForkDescPushBack(tip, softforks, "v20", consensusParams, Consensus::DEPLOYMENT_V20);
-    BIP9SoftForkDescPushBack(tip, softforks, "mn_rr", consensusParams, Consensus::DEPLOYMENT_MN_RR);
-    BIP9SoftForkDescPushBack(tip, softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
+    BIP9SoftForkDescPushBack(tip, ehfSignals, softforks, "v20", consensusParams, Consensus::DEPLOYMENT_V20);
+    BIP9SoftForkDescPushBack(tip, ehfSignals, softforks, "mn_rr", consensusParams, Consensus::DEPLOYMENT_MN_RR);
+    BIP9SoftForkDescPushBack(tip, ehfSignals, softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
 
     obj.pushKV("softforks",             softforks);
 

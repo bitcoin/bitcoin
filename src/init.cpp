@@ -2103,9 +2103,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                             LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
                         }
 
-                        LogPrintf("init.cpp: update chain params right after bls\n");
-                        node.mnhf_manager->UpdateChainParams(::ChainActive().Tip(), nullptr);
-
                         if (!CVerifyDB().VerifyDB(
                                 *chainstate, chainparams, chainstate->CoinsDB(),
                                 *node.evodb,

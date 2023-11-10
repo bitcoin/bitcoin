@@ -1128,10 +1128,13 @@ class DashTestFramework(BitcoinTestFramework):
     def activate_mn_rr(self, expected_activation_height=None):
         self.nodes[0].sporkupdate("SPORK_24_EHF", 0)
         self.wait_for_sporks_same()
-        mn_rr_status = 0
-        while mn_rr_status == 0:
+        mn_rr_height = 0
+        while mn_rr_height == 0:
             time.sleep(1)
-            mn_rr_status = get_bip9_details(self.nodes[0], 'mn_rr')['ehf']
+            try:
+                mn_rr_height = get_bip9_details(self.nodes[0], 'mn_rr')['ehf_height']
+            except KeyError:
+                pass
             self.nodes[0].generate(1)
             self.sync_all()
         self.activate_by_name('mn_rr', expected_activation_height)

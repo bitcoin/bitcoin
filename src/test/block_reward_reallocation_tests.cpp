@@ -18,6 +18,7 @@
 #include <validation.h>
 
 #include <evo/deterministicmns.h>
+#include <evo/mnhftx.h>
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
 #include <governance/governance.h>
@@ -40,7 +41,7 @@ using SimpleUTXOMap = std::map<COutPoint, std::pair<int, CAmount>>;
 struct TestChainBRRBeforeActivationSetup : public TestChainSetup
 {
     // Force fast DIP3 activation
-    TestChainBRRBeforeActivationSetup() : TestChainSetup(497, {"-dip3params=30:50", "-vbparams=mn_rr:0:999999999999:20:16:12:5:0"}) {}
+    TestChainBRRBeforeActivationSetup() : TestChainSetup(497, {"-dip3params=30:50", "-vbparams=mn_rr:0:999999999999:20:16:12:5:1"}) {}
 };
 
 static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransactionRef>& txs)
@@ -269,7 +270,10 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
     BOOST_CHECK(!llmq::utils::IsMNRewardReallocationActive(m_node.chainman->ActiveChain().Tip()));
 
     // Activate EHF "MN_RR"
-    Params().UpdateMNActivationParam(Params().GetConsensus().vDeployments[Consensus::DEPLOYMENT_MN_RR].bit, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), /*fJustCheck=*/ false);
+    {
+        LOCK(cs_main);
+        m_node.mnhf_manager->AddSignal(m_node.chainman->ActiveChain().Tip(), 10);
+    }
 
     // Reward split should stay ~75/25 after reallocation is done,
     // check 10 next superblocks

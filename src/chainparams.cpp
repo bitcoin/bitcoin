@@ -106,7 +106,7 @@ static CBlock FindDevNetGenesisBlock(const CBlock &prevBlock, const CAmount& rew
     assert(false);
 }
 
-bool CChainParams::UpdateMNActivationParam(int nBit, int height, int64_t timePast, bool fJustCheck) const
+bool CChainParams::IsValidMNActivation(int nBit, int64_t timePast) const
 {
     assert(nBit < VERSIONBITS_NUM_BITS);
 
@@ -114,17 +114,14 @@ bool CChainParams::UpdateMNActivationParam(int nBit, int height, int64_t timePas
         if (consensus.vDeployments[index].bit == nBit) {
             auto& deployment = consensus.vDeployments[index];
             if (timePast > deployment.nTimeout || timePast < deployment.nStartTime) {
-                LogPrintf("%s: activation by bit=%d height=%d deployment='%s' is out of time range start=%lld timeout=%lld\n", __func__, nBit, height, VersionBitsDeploymentInfo[Consensus::DeploymentPos(index)].name, deployment.nStartTime, deployment.nTimeout);
+                LogPrintf("%s: activation by bit=%d deployment='%s' is out of time range start=%lld timeout=%lld\n", __func__, nBit, VersionBitsDeploymentInfo[Consensus::DeploymentPos(index)].name, deployment.nStartTime, deployment.nTimeout);
                 continue;
             }
-            if (deployment.nMNActivationHeight < 0) {
-                LogPrintf("%s: trying to set MnEHF height=%d for non-masternode activation fork bit=%d\n", __func__, height, nBit);
+            if (!deployment.useEHF) {
+                LogPrintf("%s: trying to set MnEHF for non-masternode activation fork bit=%d\n", __func__, nBit);
                 return false;
             }
-            LogPrintf("%s: set MnEHF height=%d for bit=%d fJustCheck=%d is valid\n", __func__, height, nBit, fJustCheck);
-            if (!fJustCheck) {
-                deployment.nMNActivationHeight = height;
-            }
+            LogPrintf("%s: set MnEHF for bit=%d is valid\n", __func__, nBit);
             return true;
         }
     }
@@ -224,7 +221,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdStart = 3226;     // 80% of 4032
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdMin = 2420;       // 60% of 4032
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nFalloffCoeff = 5;          // this corresponds to 10 periods
-        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nMNActivationHeight = 0;    // requires EHF activation
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].useEHF = true;
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000008677827656704520eb39"); // 1889000
@@ -422,7 +419,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdStart = 80;       // 80% of 100
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdMin = 60;         // 60% of 100
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nFalloffCoeff = 5;          // this corresponds to 10 periods
-        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nMNActivationHeight = 0;    // requires EHF activation
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].useEHF = true;
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000002d68d24632e300f"); // 905100
@@ -595,7 +592,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdStart = 80; // 80% of 100
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdMin = 60;   // 60% of 100
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nFalloffCoeff = 5;     // this corresponds to 10 periods
-        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nMNActivationHeight = 0;    // requires EHF activation
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].useEHF = true;
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
@@ -845,7 +842,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdStart = 9; // 80% of 12
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nThresholdMin = 7;   // 60% of 7
         consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nFalloffCoeff = 5;     // this corresponds to 10 periods
-        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].nMNActivationHeight = 0;    // requires EHF activation
+        consensus.vDeployments[Consensus::DEPLOYMENT_MN_RR].useEHF = true;
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
@@ -953,7 +950,7 @@ public:
     /**
      * Allows modifying the Version Bits regtest parameters.
      */
-    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff, int64_t nMNActivationHeight)
+    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff, int64_t nUseEHF)
     {
         consensus.vDeployments[d].nStartTime = nStartTime;
         consensus.vDeployments[d].nTimeout = nTimeout;
@@ -969,8 +966,8 @@ public:
         if (nFalloffCoeff != -1) {
             consensus.vDeployments[d].nFalloffCoeff = nFalloffCoeff;
         }
-        if (nMNActivationHeight != -1) {
-            consensus.vDeployments[d].nMNActivationHeight = nMNActivationHeight;
+        if (nUseEHF != -1) {
+            consensus.vDeployments[d].useEHF = nUseEHF > 0;
         }
     }
     void UpdateActivationParametersFromArgs(const ArgsManager& args);
@@ -1049,9 +1046,9 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
             throw std::runtime_error("Version bits parameters malformed, expecting "
                     "<deployment>:<start>:<end> or "
                     "<deployment>:<start>:<end>:<window>:<threshold> or "
-                    "<deployment>:<start>:<end>:<window>:<thresholdstart>:<thresholdmin>:<falloffcoeff>:<mnactivation>");
+                    "<deployment>:<start>:<end>:<window>:<thresholdstart>:<thresholdmin>:<falloffcoeff>:<useehf>");
         }
-        int64_t nStartTime, nTimeout, nWindowSize = -1, nThresholdStart = -1, nThresholdMin = -1, nFalloffCoeff = -1, nMNActivationHeight = -1;
+        int64_t nStartTime, nTimeout, nWindowSize = -1, nThresholdStart = -1, nThresholdMin = -1, nFalloffCoeff = -1, nUseEHF = -1;
         if (!ParseInt64(vDeploymentParams[1], &nStartTime)) {
             throw std::runtime_error(strprintf("Invalid nStartTime (%s)", vDeploymentParams[1]));
         }
@@ -1073,17 +1070,17 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
             if (!ParseInt64(vDeploymentParams[6], &nFalloffCoeff)) {
                 throw std::runtime_error(strprintf("Invalid nFalloffCoeff (%s)", vDeploymentParams[6]));
             }
-            if (!ParseInt64(vDeploymentParams[7], &nMNActivationHeight)) {
-                throw std::runtime_error(strprintf("Invalid nMNActivationHeight (%s)", vDeploymentParams[7]));
+            if (!ParseInt64(vDeploymentParams[7], &nUseEHF)) {
+                throw std::runtime_error(strprintf("Invalid nUseEHF (%s)", vDeploymentParams[7]));
             }
         }
         bool found = false;
         for (int j=0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
             if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
-                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin, nFalloffCoeff, nMNActivationHeight);
+                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin, nFalloffCoeff, nUseEHF);
                 found = true;
-                LogPrintf("Setting version bits activation parameters for %s to start=%ld, timeout=%ld, window=%ld, thresholdstart=%ld, thresholdmin=%ld, falloffcoeff=%ld, mnactivationHeight=%ld\n",
-                          vDeploymentParams[0], nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin, nFalloffCoeff, nMNActivationHeight);
+                LogPrintf("Setting version bits activation parameters for %s to start=%ld, timeout=%ld, window=%ld, thresholdstart=%ld, thresholdmin=%ld, falloffcoeff=%ld, useehf=%ld\n",
+                          vDeploymentParams[0], nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin, nFalloffCoeff, nUseEHF);
                 break;
             }
         }
