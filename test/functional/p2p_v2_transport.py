@@ -48,7 +48,7 @@ class V2TransportTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getblockcount(), 5)
         # verify there is a v2 connection between node 0 and 1
         node_0_info = self.nodes[0].getpeerinfo()
-        node_1_info = self.nodes[0].getpeerinfo()
+        node_1_info = self.nodes[1].getpeerinfo()
         assert_equal(len(node_0_info), 1)
         assert_equal(len(node_1_info), 1)
         assert_equal(node_0_info[0]["transport_protocol_type"], "v2")
