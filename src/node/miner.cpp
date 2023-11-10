@@ -231,7 +231,13 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTPOWBlock(const bls
 
     // Create coinbase transaction.
     CMutableTransaction coinbaseTx;
-    coinbaseTx.txSig = out.GetSignature();
+
+    std::vector<blsct::Signature> txSigs;
+
+    txSigs.push_back(blsct::PrivateKey(out.blindingKey).Sign(out.out.GetHash()));
+    txSigs.push_back(blsct::PrivateKey(out.gamma.Negate()).SignBalance());
+
+    coinbaseTx.txSig = blsct::Signature::Aggregate(txSigs);
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0] = out.out;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
