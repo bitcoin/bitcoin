@@ -127,8 +127,6 @@ AC_PATH_TOOL(DSYMUTIL, dsymutil)
 AC_PATH_PROG(DOXYGEN, doxygen)
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
-AC_ARG_VAR(PYTHONPATH, Augments the default search path for python module files)
-
 AC_ARG_ENABLE([wallet],
   [AS_HELP_STRING([--disable-wallet],
   [disable wallet (enabled by default)])],
