@@ -1098,6 +1098,7 @@ libbitcoinkernel_la_SOURCES = \
   blsct/range_proof/bulletproofs/range_proof.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof.cpp \
   blsct/signature.cpp \
+  blsct/wallet/verification.cpp \
   chain.cpp \
   chainparamsbase.cpp \
   chainparams.cpp \
