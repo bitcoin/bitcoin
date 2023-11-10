@@ -483,8 +483,6 @@ libbitcoin_node_a_SOURCES = \
   blsct/set_mem_proof/set_mem_proof.cpp \
   blsct/set_mem_proof/set_mem_proof_setup.cpp \
   blsct/set_mem_proof/set_mem_proof_prover.cpp \
-  blsct/wallet/keyman.cpp \
-  blsct/wallet/txfactory.cpp \
   blsct/wallet/verification.cpp \
   blsct/signature.cpp \
   chain.cpp \
@@ -566,8 +564,6 @@ libbitcoin_node_a_SOURCES = \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
-  wallet/wallet.cpp \
-  wallet/spend.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_WALLET
