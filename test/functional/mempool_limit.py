@@ -125,8 +125,9 @@ class MempoolLimitTest(BitcoinTestFramework):
             utxo_to_spend=tx_B["new_utxo"],
             confirmed_only=True
         )
-
-        assert_raises_rpc_error(-26, "too-long-mempool-chain", node.submitpackage, [tx_B["hex"], tx_C["hex"]])
+        res = node.submitpackage([tx_B["hex"], tx_C["hex"]])
+        assert_equal(res["package_msg"], "transaction failed")
+        assert "too-long-mempool-chain" in res["tx-results"][tx_C["wtxid"]]["error"]
 
     def test_mid_package_eviction(self):
         node = self.nodes[0]
@@ -205,7 +206,7 @@ class MempoolLimitTest(BitcoinTestFramework):
 
         # Package should be submitted, temporarily exceeding maxmempool, and then evicted.
         with node.assert_debug_log(expected_msgs=["rolling minimum fee bumped"]):
-            assert_raises_rpc_error(-26, "mempool full", node.submitpackage, package_hex)
+            assert_equal(node.submitpackage(package_hex)["package_msg"], "transaction failed")
 
         # Maximum size must never be exceeded.
         assert_greater_than(node.getmempoolinfo()["maxmempool"], node.getmempoolinfo()["bytes"])
@@ -273,7 +274,9 @@ class MempoolLimitTest(BitcoinTestFramework):
         package_hex = [cpfp_parent["hex"], replacement_tx["hex"], child["hex"]]
 
         # Package should be submitted, temporarily exceeding maxmempool, and then evicted.
-        assert_raises_rpc_error(-26, "bad-txns-inputs-missingorspent", node.submitpackage, package_hex)
+        res = node.submitpackage(package_hex)
+        assert_equal(res["package_msg"], "transaction failed")
+        assert len([tx_res for _, tx_res in res["tx-results"].items() if "error" in tx_res and tx_res["error"] == "bad-txns-inputs-missingorspent"])
 
         # Maximum size must never be exceeded.
         assert_greater_than(node.getmempoolinfo()["maxmempool"], node.getmempoolinfo()["bytes"])
@@ -321,6 +324,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         package_txns.append(tx_child)
 
         submitpackage_result = node.submitpackage([tx["hex"] for tx in package_txns])
+        assert_equal(submitpackage_result["package_msg"], "success")
 
         rich_parent_result = submitpackage_result["tx-results"][tx_rich["wtxid"]]
         poor_parent_result = submitpackage_result["tx-results"][tx_poor["wtxid"]]
@@ -366,7 +370,9 @@ class MempoolLimitTest(BitcoinTestFramework):
         assert_greater_than(worst_feerate_btcvb, (parent_fee + child_fee) / (tx_parent_just_below["tx"].get_vsize() + tx_child_just_above["tx"].get_vsize()))
         assert_greater_than(mempoolmin_feerate, (parent_fee) / (tx_parent_just_below["tx"].get_vsize()))
         assert_greater_than((parent_fee + child_fee) / (tx_parent_just_below["tx"].get_vsize() + tx_child_just_above["tx"].get_vsize()), mempoolmin_feerate / 1000)
-        assert_raises_rpc_error(-26, "mempool full", node.submitpackage, [tx_parent_just_below["hex"], tx_child_just_above["hex"]])
+        res = node.submitpackage([tx_parent_just_below["hex"], tx_child_just_above["hex"]])
+        for wtxid in [tx_parent_just_below["wtxid"], tx_child_just_above["wtxid"]]:
+            assert_equal(res["tx-results"][wtxid]["error"], "mempool full")
 
         self.log.info('Test passing a value below the minimum (5 MB) to -maxmempool throws an error')
         self.stop_node(0)
