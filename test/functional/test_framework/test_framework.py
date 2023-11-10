@@ -1491,7 +1491,7 @@ class DashTestFramework(SyscoinTestFramework):
             self.log.info("quorums: " + str(self.nodes[0].quorum_list()))
             if quorum_hash in self.nodes[0].quorum_list()[llmq_type_name]:
                 return True
-            self.bump_mocktime(sleep, nodes=nodes)
+            self.bump_mocktime(2, nodes=nodes)
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             self.sync_blocks(nodes)
             return False

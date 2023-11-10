@@ -19,7 +19,6 @@
              ((gnu packages python) #:select (python-minimal))
              ((gnu packages python-build) #:select (python-tomli))
              ((gnu packages python-crypto) #:select (python-asn1crypto))
-             ((gnu packages python-web) #:select (python-requests))
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
@@ -445,7 +444,7 @@ and endian independent.")
     (license license:expat)))
 
 (define-public python-signapple
-  (let ((commit "8a945a2e7583be2665cf3a6a89d665b70ecd1ab6"))
+  (let ((commit "7a96b4171a360abf0f0f56e499f8f9ed2116280d"))
     (package
       (name "python-signapple")
       (version (git-version "0.1" "1" commit))
@@ -458,14 +457,13 @@ and endian independent.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "0fr1hangvfyiwflca6jg5g8zvg3jc9qr7vd2c12ff89pznf38dlg"))))
+           "0aa4k180jnpal15yhncnm3g3z9gzmi7qb25q5l0kaj444a1p2pm4"))))
       (build-system python-build-system)
       (propagated-inputs
        `(("python-asn1crypto" ,python-asn1crypto)
          ("python-oscrypto" ,python-oscrypto)
          ("python-certvalidator" ,python-certvalidator)
          ("python-elfesteem" ,python-elfesteem)
-         ("python-requests" ,python-requests)
          ("python-macholib" ,python-macholib)))
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; problems, just disable the test
