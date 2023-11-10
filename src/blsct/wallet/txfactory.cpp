@@ -190,20 +190,16 @@ std::optional<CMutableTransaction> TxFactory::BuildTx()
 
 std::optional<CMutableTransaction> TxFactory::CreateTransaction(std::shared_ptr<wallet::CWallet> wallet, const CCoinsViewCache& cache, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId)
 {
-    wallet::CCoinControl coin_control;
     wallet::CoinFilterParams coins_params;
     coins_params.min_amount = 0;
     coins_params.only_blsct = true;
     coins_params.token_id = tokenId;
 
-    FeeCalculation fee_calc_out;
-    CFeeRate fee_rate{wallet::GetMinimumFeeRate(*wallet, coin_control, &fee_calc_out)};
-
     auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
     auto tx = blsct::TxFactory(blsct_km);
 
     for (const wallet::COutput& output : WITH_LOCK(wallet->cs_wallet,
-                                                   return AvailableCoins(*wallet, &coin_control, fee_rate, coins_params))
+                                                   return AvailableCoins(*wallet, nullptr, std::nullopt, coins_params))
                                              .All()) {
         CHECK_NONFATAL(output.input_bytes > 0);
         tx.AddInput(cache, COutPoint(output.outpoint.hash, output.outpoint.n));
