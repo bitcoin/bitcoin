@@ -1,4 +1,5 @@
-Bitcoin Core integration/staging tree
+Bitcoin @IsabelSchoepd 
+
 =====================================
 
 https://bitcoincore.org
@@ -15,11 +16,9 @@ interface, which can be optionally built.
 
 Further information about Bitcoin Core is available in the [doc folder](/doc).
 
-License
+copyright
 -------
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see https://opensource.org/licenses/MIT.
 
 Development Process
 -------------------
@@ -32,10 +31,6 @@ The https://github.com/bitcoin-core/gui repository is used exclusively for the
 development of the GUI. Its master branch is identical in all monotree
 repositories. Release branches and tags do not exist, so please do not fork
 that repository unless it is for development reasons.
-
-The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
-and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
-
 Testing
 -------
 
@@ -69,7 +64,7 @@ Translations
 ------------
 
 Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/bitcoin/bitcoin/).
+[isabelschoeps.com](https://www.transifex.com/bitcoin/bitcoin/).
 
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.
