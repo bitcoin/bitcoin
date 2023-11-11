@@ -91,9 +91,8 @@ const static std::vector<std::string> g_all_net_message_types{
 };
 
 CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
+    : pchMessageStart{pchMessageStartIn}
 {
-    pchMessageStart = pchMessageStartIn;
-
     // Copy the command name
     size_t i = 0;
     for (; i < COMMAND_SIZE && pszCommand[i] != 0; ++i) pchCommand[i] = pszCommand[i];
