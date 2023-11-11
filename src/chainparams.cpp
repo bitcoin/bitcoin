@@ -206,8 +206,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
 
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].bit = 9;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V20].nStartTime = 19999999999;     // TODO: To be determined later
-        consensus.vDeployments[Consensus::DEPLOYMENT_V20].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_V20].nStartTime = 1700006400;      // November 15, 2023
+        consensus.vDeployments[Consensus::DEPLOYMENT_V20].nTimeout = 1731628800;        // November 15, 2024
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nWindowSize = 4032;
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nThresholdStart = 3226;       // 80% of 4032
         consensus.vDeployments[Consensus::DEPLOYMENT_V20].nThresholdMin = 2420;         // 60% of 4032
