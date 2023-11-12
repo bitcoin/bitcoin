@@ -17,6 +17,7 @@
     <ClCompile Include="..\..\src\pubkey.cpp" />
     <ClCompile Include="..\..\src\script\bitcoinconsensus.cpp" />
     <ClCompile Include="..\..\src\script\interpreter.cpp" />
+    <ClCompile Include="..\..\src\script\txhash.cpp" />
     <ClCompile Include="..\..\src\script\script.cpp" />
     <ClCompile Include="..\..\src\script\script_error.cpp" />
     <ClCompile Include="..\..\src\uint256.cpp" />
