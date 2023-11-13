@@ -10,11 +10,10 @@ Checks conflict handling between ChainLocks and InstantSend
 
 '''
 
-from decimal import Decimal
 import struct
 
-from test_framework.blocktools import get_masternode_payment, create_coinbase, create_block
-from test_framework.messages import CCbTx, CInv, COIN, CTransaction, FromHex, hash256, msg_clsig, msg_inv, ser_string, ToHex, uint256_from_str, uint256_to_string
+from test_framework.blocktools import create_block_with_mnpayments
+from test_framework.messages import CInv, CTransaction, FromHex, hash256, msg_clsig, msg_inv, ser_string, ToHex, uint256_from_str
 from test_framework.mininode import P2PInterface
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes, wait_until
@@ -112,7 +111,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
             self.wait_for_instantlock(rawtx1_txid, node)
             self.wait_for_instantlock(rawtx4_txid, node)
 
-        block = self.create_block(self.nodes[0], [rawtx2_obj])
+        block = create_block_with_mnpayments(self.mninfo, self.nodes[0], [rawtx2_obj])
         if test_block_conflict:
             # The block shouldn't be accepted/connected but it should be known to node 0 now
             submit_result = self.nodes[0].submitblock(ToHex(block))
@@ -234,7 +233,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         assert_raises_rpc_error(-25, "bad-txns-inputs-missingorspent", self.nodes[0].sendrawtransaction, rawtx2)
 
         # Create the block and the corresponding clsig but do not relay clsig yet
-        cl_block = self.create_block(self.nodes[0])
+        cl_block = create_block_with_mnpayments(self.mninfo, self.nodes[0])
         cl = self.create_chainlock(self.nodes[0].getblockcount() + 1, cl_block)
         self.nodes[0].submitblock(ToHex(cl_block))
         self.sync_all()
@@ -274,74 +273,6 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
             self.wait_for_chainlocked_block(node, cl_block.hash)
             # Previous tip should be marked as conflicting now
             assert_equal(node.getchaintips(2)[1]["status"], "conflicting")
-
-    def create_block(self, node, vtx=None):
-        if vtx is None:
-            vtx = []
-        bt = node.getblocktemplate()
-        height = bt['height']
-        tip_hash = bt['previousblockhash']
-
-        coinbasevalue = bt['coinbasevalue']
-        miner_address = node.getnewaddress()
-        mn_payee = bt['masternode'][0]['payee']
-
-        # calculate fees that the block template included (we'll have to remove it from the coinbase as we won't
-        # include the template's transactions
-        bt_fees = 0
-        for tx in bt['transactions']:
-            bt_fees += tx['fee']
-
-        new_fees = 0
-        for tx in vtx:
-            in_value = 0
-            out_value = 0
-            for txin in tx.vin:
-                txout = node.gettxout(uint256_to_string(txin.prevout.hash), txin.prevout.n, False)
-                in_value += int(txout['value'] * COIN)
-            for txout in tx.vout:
-                out_value += txout.nValue
-            new_fees += in_value - out_value
-
-        # fix fees
-        coinbasevalue -= bt_fees
-        coinbasevalue += new_fees
-
-        realloc_info = self.nodes[0].getblockchaininfo()['softforks']['realloc']
-        realloc_height = 99999999
-        if realloc_info['active']:
-            realloc_height = realloc_info['height']
-        mn_amount = get_masternode_payment(height, coinbasevalue, realloc_height)
-        miner_amount = coinbasevalue - mn_amount
-
-        outputs = {miner_address: str(Decimal(miner_amount) / COIN)}
-        if mn_amount > 0:
-            outputs[mn_payee] = str(Decimal(mn_amount) / COIN)
-
-        coinbase = FromHex(CTransaction(), node.createrawtransaction([], outputs))
-        coinbase.vin = create_coinbase(height).vin
-
-        # We can't really use this one as it would result in invalid merkle roots for masternode lists
-        if len(bt['coinbase_payload']) != 0:
-            cbtx = FromHex(CCbTx(version=1), bt['coinbase_payload'])
-            coinbase.nVersion = 3
-            coinbase.nType = 5 # CbTx
-            coinbase.vExtraPayload = cbtx.serialize()
-
-        coinbase.calc_sha256()
-
-        block = create_block(int(tip_hash, 16), coinbase, ntime=bt['curtime'], version=bt['version'])
-        block.vtx += vtx
-
-        # Add quorum commitments from template
-        for tx in bt['transactions']:
-            tx2 = FromHex(CTransaction(), tx['data'])
-            if tx2.nType == 6:
-                block.vtx.append(tx2)
-
-        block.hashMerkleRoot = block.calc_merkle_root()
-        block.solve()
-        return block
 
     def create_chainlock(self, height, block):
         request_id_buf = ser_string(b"clsig") + struct.pack("<I", height)

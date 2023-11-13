@@ -9,8 +9,8 @@
 
 from decimal import Decimal
 
-from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment
-from test_framework.messages import CCbTx, COIN, CTransaction, FromHex, ToHex, uint256_to_string
+from test_framework.blocktools import create_block_with_mnpayments
+from test_framework.messages import CTransaction, FromHex, ToHex
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, force_finish_mnsync, p2p_port
 
@@ -131,7 +131,7 @@ class DIP3Test(BitcoinTestFramework):
             self.assert_mnlist(self.nodes[0], mns_tmp)
 
         self.log.info("cause a reorg with a double spend and check that mnlists are still correct on all nodes")
-        self.mine_double_spend(self.nodes[0], dummy_txins, self.nodes[0].getnewaddress(), use_mnmerkleroot_from_tip=True)
+        self.mine_double_spend(mns, self.nodes[0], dummy_txins, self.nodes[0].getnewaddress())
         self.nodes[0].generate(spend_mns_count)
         self.sync_all()
         self.assert_mnlists(mns_tmp)
@@ -139,7 +139,7 @@ class DIP3Test(BitcoinTestFramework):
         self.log.info("test mn payment enforcement with deterministic MNs")
         for i in range(20):
             node = self.nodes[i % len(self.nodes)]
-            self.test_invalid_mn_payment(node)
+            self.test_invalid_mn_payment(mns, node)
             self.nodes[0].generate(1)
             self.sync_all()
 
@@ -218,6 +218,7 @@ class DIP3Test(BitcoinTestFramework):
         mn.idx = idx
         mn.alias = alias
         mn.p2p_port = p2p_port(mn.idx)
+        mn.operator_reward = (mn.idx % self.num_initial_mn)
 
         blsKey = node.bls('generate')
         mn.fundsAddr = node.getnewaddress()
@@ -247,7 +248,7 @@ class DIP3Test(BitcoinTestFramework):
         mn.collateral_address = node.getnewaddress()
         mn.rewards_address = node.getnewaddress()
 
-        mn.protx_hash = node.protx('register_fund', mn.collateral_address, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address, mn.fundsAddr)
+        mn.protx_hash = node.protx('register_fund', mn.collateral_address, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
         mn.collateral_txid = mn.protx_hash
         mn.collateral_vout = None
 
@@ -263,7 +264,7 @@ class DIP3Test(BitcoinTestFramework):
         node.sendtoaddress(mn.fundsAddr, 0.001)
         mn.rewards_address = node.getnewaddress()
 
-        mn.protx_hash = node.protx('register', mn.collateral_txid, mn.collateral_vout, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address, mn.fundsAddr)
+        mn.protx_hash = node.protx('register', mn.collateral_txid, mn.collateral_vout, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
         node.generate(1)
 
     def start_mn(self, mn):
@@ -353,93 +354,15 @@ class DIP3Test(BitcoinTestFramework):
 
         return dummy_txin
 
-    def mine_block(self, node, vtx=None, miner_address=None, mn_payee=None, mn_amount=None, use_mnmerkleroot_from_tip=False, expected_error=None):
-        if vtx is None:
-            vtx = []
-        bt = node.getblocktemplate()
-        height = bt['height']
-        tip_hash = bt['previousblockhash']
-
-        tip_block = node.getblock(tip_hash)
-
-        coinbasevalue = bt['coinbasevalue']
-        if miner_address is None:
-            miner_address = self.nodes[0].getnewaddress()
-        if mn_payee is None:
-            if isinstance(bt['masternode'], list):
-                mn_payee = bt['masternode'][0]['payee']
-            else:
-                mn_payee = bt['masternode']['payee']
-        # we can't take the masternode payee amount from the template here as we might have additional fees in vtx
-
-        # calculate fees that the block template included (we'll have to remove it from the coinbase as we won't
-        # include the template's transactions
-        bt_fees = 0
-        for tx in bt['transactions']:
-            bt_fees += tx['fee']
-
-        new_fees = 0
-        for tx in vtx:
-            in_value = 0
-            out_value = 0
-            for txin in tx.vin:
-                txout = node.gettxout(uint256_to_string(txin.prevout.hash), txin.prevout.n, False)
-                in_value += int(txout['value'] * COIN)
-            for txout in tx.vout:
-                out_value += txout.nValue
-            new_fees += in_value - out_value
-
-        # fix fees
-        coinbasevalue -= bt_fees
-        coinbasevalue += new_fees
-
-        if mn_amount is None:
-            realloc_info = node.getblockchaininfo()['softforks']['realloc']
-            realloc_height = 99999999
-            if realloc_info['active']:
-                realloc_height = realloc_info['height']
-            mn_amount = get_masternode_payment(height, coinbasevalue, realloc_height)
-        miner_amount = coinbasevalue - mn_amount
-
-        outputs = {miner_address: str(Decimal(miner_amount) / COIN)}
-        if mn_amount > 0:
-            outputs[mn_payee] = str(Decimal(mn_amount) / COIN)
-
-        coinbase = FromHex(CTransaction(), node.createrawtransaction([], outputs))
-        coinbase.vin = create_coinbase(height).vin
-
-        # We can't really use this one as it would result in invalid merkle roots for masternode lists
-        if len(bt['coinbase_payload']) != 0:
-            cbtx = FromHex(CCbTx(version=1), bt['coinbase_payload'])
-            if use_mnmerkleroot_from_tip:
-                if 'cbTx' in tip_block:
-                    cbtx.merkleRootMNList = int(tip_block['cbTx']['merkleRootMNList'], 16)
-                else:
-                    cbtx.merkleRootMNList = 0
-            coinbase.nVersion = 3
-            coinbase.nType = 5 # CbTx
-            coinbase.vExtraPayload = cbtx.serialize()
-
-        coinbase.calc_sha256()
-
-        block = create_block(int(tip_hash, 16), coinbase)
-        block.vtx += vtx
-
-        # Add quorum commitments from template
-        for tx in bt['transactions']:
-            tx2 = FromHex(CTransaction(), tx['data'])
-            if tx2.nType == 6:
-                block.vtx.append(tx2)
-
-        block.hashMerkleRoot = block.calc_merkle_root()
-        block.solve()
+    def mine_block(self, mns, node, vtx=None, mn_payee=None, mn_amount=None, expected_error=None):
+        block = create_block_with_mnpayments(mns, node, vtx, mn_payee, mn_amount)
         result = node.submitblock(ToHex(block))
         if expected_error is not None and result != expected_error:
             raise AssertionError('mining the block should have failed with error %s, but submitblock returned %s' % (expected_error, result))
         elif expected_error is None and result is not None:
             raise AssertionError('submitblock returned %s' % (result))
 
-    def mine_double_spend(self, node, txins, target_address, use_mnmerkleroot_from_tip=False):
+    def mine_double_spend(self, mns, node, txins, target_address):
         amount = Decimal(0)
         for txin in txins:
             txout = node.gettxout(txin['txid'], txin['vout'], False)
@@ -450,12 +373,12 @@ class DIP3Test(BitcoinTestFramework):
         rawtx = node.signrawtransactionwithwallet(rawtx)['hex']
         tx = FromHex(CTransaction(), rawtx)
 
-        self.mine_block(node, [tx], use_mnmerkleroot_from_tip=use_mnmerkleroot_from_tip)
+        self.mine_block(mns, node, [tx])
 
-    def test_invalid_mn_payment(self, node):
+    def test_invalid_mn_payment(self, mns, node):
         mn_payee = self.nodes[0].getnewaddress()
-        self.mine_block(node, mn_payee=mn_payee, expected_error='bad-cb-payee')
-        self.mine_block(node, mn_amount=1, expected_error='bad-cb-payee')
+        self.mine_block(mns, node, mn_payee=mn_payee, expected_error='bad-cb-payee')
+        self.mine_block(mns, node, mn_amount=1, expected_error='bad-cb-payee')
 
 if __name__ == '__main__':
     DIP3Test().main()

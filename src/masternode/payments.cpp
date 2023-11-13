@@ -261,35 +261,40 @@ bool IsBlockValueValid(const CSporkManager& sporkManager, CGovernanceManager& go
     return true;
 }
 
-bool IsBlockPayeeValid(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
+bool IsBlockPayeeValid(const CSporkManager& sporkManager, CGovernanceManager& governanceManager, const CMasternodeSync& mn_sync,
                        const CTransaction& txNew, const CBlockIndex* const pindexPrev, const CAmount blockSubsidy, const CAmount feeReward)
 {
-    if(fDisableGovernance) {
-        //there is no budget data to use to check anything, let's just accept the longest chain
-        LogPrint(BCLog::MNPAYMENTS, "%s -- WARNING: Not enough data, skipping block payee checks\n", __func__);
-        return true;
+    const int nBlockHeight = pindexPrev  == nullptr ? 0 : pindexPrev->nHeight + 1;
+
+    // Check for correct masternode payment
+    if (IsTransactionValid(txNew, pindexPrev, blockSubsidy, feeReward)) {
+        LogPrint(BCLog::MNPAYMENTS, "%s -- Valid masternode payment at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
+    } else {
+        LogPrintf("%s -- ERROR: Invalid masternode payment detected at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
+        return false;
     }
 
-    const int nBlockHeight = pindexPrev  == nullptr ? 0 : pindexPrev->nHeight + 1;
-    // we are still using budgets, but we have no data about them anymore,
-    // we can only check masternode payments
+    if (!mn_sync.IsSynced() || fDisableGovernance) {
+        // governance data is either incomplete or non-existent
+        LogPrint(BCLog::MNPAYMENTS, "%s -- WARNING: Not enough data, skipping superblock payee checks\n", __func__);
+        return true;  // not an error
+    }
 
-    const Consensus::Params& consensusParams = Params().GetConsensus();
-
-    if(nBlockHeight < consensusParams.nSuperblockStartBlock) {
+    if (nBlockHeight < Params().GetConsensus().nSuperblockStartBlock) {
+        // We are still using budgets, but we have no data about them anymore,
+        // we can only check masternode payments.
         // NOTE: old budget system is disabled since 12.1 and we should never enter this branch
         // anymore when sync is finished (on mainnet). We have no old budget data but these blocks
         // have tons of confirmations and can be safely accepted without payee verification
         LogPrint(BCLog::GOBJECT, "%s -- WARNING: Client synced but old budget system is disabled, accepting any payee\n", __func__);
-        return true;
+        return true; // not an error
     }
 
     // superblocks started
-    // SEE IF THIS IS A VALID SUPERBLOCK
 
-    if(AreSuperblocksEnabled(sporkManager)) {
-        if(CSuperblockManager::IsSuperblockTriggered(governanceManager, nBlockHeight)) {
-            if(CSuperblockManager::IsValid(governanceManager, txNew, nBlockHeight, blockSubsidy + feeReward)) {
+    if (AreSuperblocksEnabled(sporkManager)) {
+        if (CSuperblockManager::IsSuperblockTriggered(governanceManager, nBlockHeight)) {
+            if (CSuperblockManager::IsValid(governanceManager, txNew, nBlockHeight, blockSubsidy + feeReward)) {
                 LogPrint(BCLog::GOBJECT, "%s -- Valid superblock at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
                 // continue validation, should also pay MN
             } else {
@@ -305,14 +310,7 @@ bool IsBlockPayeeValid(const CSporkManager& sporkManager, CGovernanceManager& go
         LogPrint(BCLog::GOBJECT, "%s -- Superblocks are disabled, no superblocks allowed\n", __func__);
     }
 
-    // Check for correct masternode payment
-    if(IsTransactionValid(txNew, pindexPrev, blockSubsidy, feeReward)) {
-        LogPrint(BCLog::MNPAYMENTS, "%s -- Valid masternode payment at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
-        return true;
-    }
-
-    LogPrintf("%s -- ERROR: Invalid masternode payment detected at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
-    return false;
+    return true;
 }
 
 void FillBlockPayments(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,

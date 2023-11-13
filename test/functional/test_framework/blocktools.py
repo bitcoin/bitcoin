@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Utilities for manipulating blocks and transactions."""
 
+from decimal import Decimal
 import unittest
 
 from .messages import (
@@ -14,6 +15,8 @@ from .messages import (
     CTransaction,
     CTxIn,
     CTxOut,
+    FromHex,
+    uint256_to_string,
 )
 from .script import CScript, CScriptNum, CScriptOp, OP_TRUE, OP_CHECKSIG
 from .util import assert_equal, hex_str_to_bytes
@@ -41,6 +44,97 @@ def create_block(hashprev, coinbase, ntime=None, *, version=1):
     block.vtx.append(coinbase)
     block.hashMerkleRoot = block.calc_merkle_root()
     block.calc_sha256()
+    return block
+
+def create_block_with_mnpayments(mninfo, node, vtx=None, mn_payee=None, mn_amount=None):
+    if vtx is None:
+        vtx = []
+    bt = node.getblocktemplate()
+    height = bt['height']
+    tip_hash = bt['previousblockhash']
+    coinbasevalue = bt['coinbasevalue']
+
+    assert len(bt['masternode']) <= 2
+    if mn_payee is None:
+        mn_payee = bt['masternode'][0]['payee']
+
+    mn_operator_payee = None
+    if len(bt['masternode']) == 2:
+        mn_operator_payee = bt['masternode'][1]['payee']
+    # we can't take the masternode payee amount from the template here as we might have additional fees in vtx
+
+    # calculate fees that the block template included (we'll have to remove it from the coinbase as we won't
+    # include the template's transactions
+    bt_fees = 0
+    for tx in bt['transactions']:
+        bt_fees += tx['fee']
+
+    new_fees = 0
+    for tx in vtx:
+        in_value = 0
+        out_value = 0
+        for txin in tx.vin:
+            txout = node.gettxout(uint256_to_string(txin.prevout.hash), txin.prevout.n, False)
+            in_value += int(txout['value'] * COIN)
+        for txout in tx.vout:
+            out_value += txout.nValue
+        new_fees += in_value - out_value
+
+    # fix fees
+    coinbasevalue -= bt_fees
+    coinbasevalue += new_fees
+
+    operator_reward = 0
+    if mn_operator_payee is not None:
+        for mn in mninfo:
+            if mn.rewards_address == mn_payee:
+                operator_reward = mn.operator_reward
+                break
+        assert operator_reward > 0
+
+    mn_operator_amount = 0
+    if mn_amount is None:
+        v20_info = node.getblockchaininfo()['softforks']['v20']
+        mn_amount_total = get_masternode_payment(height, coinbasevalue, v20_info['active'])
+        mn_operator_amount = mn_amount_total * operator_reward // 100
+        mn_amount = mn_amount_total - mn_operator_amount
+    miner_amount = coinbasevalue - mn_amount - mn_operator_amount
+
+    miner_address = node.get_deterministic_priv_key().address
+    outputs = {miner_address: str(Decimal(miner_amount) / COIN)}
+    if mn_amount > 0:
+        outputs[mn_payee] = str(Decimal(mn_amount) / COIN)
+    if mn_operator_amount > 0:
+        outputs[mn_operator_payee] = str(Decimal(mn_operator_amount) / COIN)
+
+    coinbase = FromHex(CTransaction(), node.createrawtransaction([], outputs))
+    coinbase.vin = create_coinbase(height).vin
+
+    # We can't really use this one as it would result in invalid merkle roots for masternode lists
+    if len(bt['coinbase_payload']) != 0:
+        tip_block = node.getblock(tip_hash)
+        cbtx = FromHex(CCbTx(version=1), bt['coinbase_payload'])
+        if 'cbTx' in tip_block:
+            cbtx.merkleRootMNList = int(tip_block['cbTx']['merkleRootMNList'], 16)
+        else:
+            cbtx.merkleRootMNList = 0
+        coinbase.nVersion = 3
+        coinbase.nType = 5 # CbTx
+        coinbase.vExtraPayload = cbtx.serialize()
+
+    coinbase.calc_sha256()
+
+    block = create_block(int(tip_hash, 16), coinbase, ntime=bt['curtime'], version=bt['version'])
+    block.vtx += vtx
+
+    # Add quorum commitments from template
+    for tx in bt['transactions']:
+        tx2 = FromHex(CTransaction(), tx['data'])
+        if tx2.nType == 6:
+            block.vtx.append(tx2)
+
+    block.hashMerkleRoot = block.calc_merkle_root()
+    block.solve()
     return block
 
 def script_BIP34_coinbase_height(height):
@@ -128,11 +222,12 @@ def get_legacy_sigopcount_tx(tx, accurate=True):
     return count
 
 # Identical to GetMasternodePayment in C++ code
-def get_masternode_payment(nHeight, blockValue, nReallocActivationHeight):
+def get_masternode_payment(nHeight, blockValue, fV20Active):
     ret = int(blockValue / 5)
 
     nMNPIBlock = 350
     nMNPIPeriod = 10
+    nReallocActivationHeight = 2500
 
     if nHeight > nMNPIBlock:
         ret += int(blockValue / 20)
@@ -164,6 +259,12 @@ def get_masternode_payment(nHeight, blockValue, nReallocActivationHeight):
     if nHeight < nReallocStart:
         # Activated but we have to wait for the next cycle to start realocation, nothing to do
         return ret
+
+    if fV20Active:
+        # Once MNRewardReallocated activates, block reward is 80% of block subsidy (+ tx fees) since treasury is 20%
+        # Since the MN reward needs to be equal to 60% of the block subsidy (according to the proposal), MN reward is set to 75% of the block reward.
+        # Previous reallocation periods are dropped.
+        return blockValue * 3 // 4
 
     # Periods used to reallocate the masternode reward from 50% to 60%
     vecPeriods = [

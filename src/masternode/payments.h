@@ -28,7 +28,7 @@ namespace MasternodePayments
 {
 bool IsBlockValueValid(const CSporkManager& sporkManager, CGovernanceManager& governanceManager, const CMasternodeSync& mn_sync,
                        const CBlock& block, const int nBlockHeight, const CAmount blockReward, std::string& strErrorRet);
-bool IsBlockPayeeValid(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
+bool IsBlockPayeeValid(const CSporkManager& sporkManager, CGovernanceManager& governanceManager, const CMasternodeSync& mn_sync,
                        const CTransaction& txNew, const CBlockIndex* const pindexPrev, const CAmount blockSubsidy, const CAmount feeReward);
 void FillBlockPayments(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
                        CMutableTransaction& txNew, const CBlockIndex* const pindexPrev, const CAmount blockSubsidy, const CAmount feeReward,
