@@ -422,7 +422,7 @@ and endian independent.")
     (license license:expat)))
 
 (define-public python-signapple
-  (let ((commit "7a96b4171a360abf0f0f56e499f8f9ed2116280d"))
+  (let ((commit "62155712e7417aba07565c9780a80e452823ae6a"))
     (package
       (name "python-signapple")
       (version (git-version "0.1" "1" commit))
@@ -435,14 +435,13 @@ and endian independent.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "0aa4k180jnpal15yhncnm3g3z9gzmi7qb25q5l0kaj444a1p2pm4"))))
+           "1nm6rm4h4m7kbq729si4cm8rzild62mk4ni8xr5zja7l33fhv3gb"))))
       (build-system python-build-system)
       (propagated-inputs
        `(("python-asn1crypto" ,python-asn1crypto)
          ("python-oscrypto" ,python-oscrypto)
          ("python-certvalidator" ,python-certvalidator)
-         ("python-elfesteem" ,python-elfesteem)
-         ("python-macholib" ,python-macholib)))
+         ("python-elfesteem" ,python-elfesteem)))
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; problems, just disable the test
       (arguments '(#:tests? #f))
