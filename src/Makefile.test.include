@@ -302,6 +302,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/bloom_filter.cpp \
  test/fuzz/buffered_file.cpp \
  test/fuzz/chain.cpp \
+ test/fuzz/chainstate.cpp \
  test/fuzz/checkqueue.cpp \
  test/fuzz/cluster_linearize.cpp \
  test/fuzz/coins_view.cpp \
