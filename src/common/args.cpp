@@ -720,6 +720,13 @@ fs::path ArgsManager::GetConfigFilePath() const
     return *Assert(m_config_path);
 }
 
+void ArgsManager::SetConfigFilePath(fs::path path)
+{
+    LOCK(cs_args);
+    assert(!m_config_path);
+    m_config_path = path;
+}
+
 ChainType ArgsManager::GetChainType() const
 {
     std::variant<ChainType, std::string> arg = GetChainArg();
