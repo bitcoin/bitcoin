@@ -487,7 +487,7 @@ static RPCHelpMan getprioritisedtransactions()
         "Returns a map of all user-created (see prioritisetransaction) fee deltas by txid, and whether the tx is present in mempool.",
         {},
         RPCResult{
-            RPCResult::Type::OBJ_DYN, "prioritisation-map", "prioritisation keyed by txid",
+            RPCResult::Type::OBJ_DYN, "", "prioritisation keyed by txid",
             {
                 {RPCResult::Type::OBJ, "txid", "", {
                     {RPCResult::Type::NUM, "fee_delta", "transaction fee delta in satoshis"},
