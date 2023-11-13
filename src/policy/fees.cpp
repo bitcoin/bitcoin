@@ -1044,8 +1044,8 @@ void CBlockPolicyEstimator::FlushUnconfirmed()
 
 std::chrono::hours CBlockPolicyEstimator::GetFeeEstimatorFileAge()
 {
-    auto file_time = std::filesystem::last_write_time(m_estimation_filepath);
-    auto now = std::filesystem::file_time_type::clock::now();
+    auto file_time{fs::last_write_time(m_estimation_filepath)};
+    auto now{fs::file_time_type::clock::now()};
     return std::chrono::duration_cast<std::chrono::hours>(now - file_time);
 }
 
