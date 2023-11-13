@@ -57,7 +57,7 @@ struct ParentInfo {
 
 std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t vsize,
                                            const Package& package,
-                                           const CTxMemPool::setEntries& mempool_ancestors)
+                                           const CTxMemPool::setEntryRefs& mempool_ancestors)
 {
     // This function is specialized for these limits, and must be reimplemented if they ever change.
     static_assert(V3_ANCESTOR_LIMIT == 2);
@@ -84,12 +84,12 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
             // Exactly 1 parent exists, either in mempool or package. Find it.
             const auto parent_info = [&] {
                 if (mempool_ancestors.size() > 0) {
-                    auto& mempool_parent = *mempool_ancestors.begin();
-                    Assume(mempool_parent->GetCountWithDescendants() == 1);
-                    return ParentInfo{mempool_parent->GetTx().GetHash(),
-                                      mempool_parent->GetTx().GetWitnessHash(),
-                                      mempool_parent->GetTx().nVersion,
-                                      /*has_mempool_descendant=*/mempool_parent->GetCountWithDescendants() > 1};
+                    const CTxMemPoolEntry& mempool_parent = *mempool_ancestors.begin();
+                    Assume(mempool_parent.GetCountWithDescendants() == 1);
+                    return ParentInfo{mempool_parent.GetTx().GetHash(),
+                                      mempool_parent.GetTx().GetWitnessHash(),
+                                      mempool_parent.GetTx().nVersion,
+                                      /*has_mempool_descendant=*/mempool_parent.GetCountWithDescendants() > 1};
                 } else {
                     auto& parent_index = in_package_parents.front();
                     auto& package_parent = package.at(parent_index);
@@ -138,11 +138,11 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
         }
     } else {
         // Non-v3 transactions cannot have v3 parents.
-        for (auto it : mempool_ancestors) {
-            if (it->GetTx().nVersion == 3) {
+        for (const CTxMemPoolEntry& entry : mempool_ancestors) {
+            if (entry.GetTx().nVersion == 3) {
                 return strprintf("non-v3 tx %s (wtxid=%s) cannot spend from v3 tx %s (wtxid=%s)",
                                  ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(),
-                                 it->GetSharedTx()->GetHash().ToString(), it->GetSharedTx()->GetWitnessHash().ToString());
+                                 entry.GetSharedTx()->GetHash().ToString(), entry.GetSharedTx()->GetWitnessHash().ToString());
             }
         }
         for (const auto& index: in_package_parents) {
@@ -159,20 +159,20 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
 }
 
 std::optional<std::string> SingleV3Checks(const CTransactionRef& ptx,
-                                          const CTxMemPool::setEntries& mempool_ancestors,
+                                          const CTxMemPool::setEntryRefs& mempool_ancestors,
                                           const std::set<Txid>& direct_conflicts,
                                           int64_t vsize)
 {
     // Check v3 and non-v3 inheritance.
-    for (const auto& entry : mempool_ancestors) {
-        if (ptx->nVersion != 3 && entry->GetTx().nVersion == 3) {
+    for (const CTxMemPoolEntry& entry : mempool_ancestors) {
+        if (ptx->nVersion != 3 && entry.GetTx().nVersion == 3) {
             return strprintf("non-v3 tx %s (wtxid=%s) cannot spend from v3 tx %s (wtxid=%s)",
                              ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(),
-                             entry->GetSharedTx()->GetHash().ToString(), entry->GetSharedTx()->GetWitnessHash().ToString());
-        } else if (ptx->nVersion == 3 && entry->GetTx().nVersion != 3) {
+                             entry.GetSharedTx()->GetHash().ToString(), entry.GetSharedTx()->GetWitnessHash().ToString());
+        } else if (ptx->nVersion == 3 && entry.GetTx().nVersion != 3) {
             return strprintf("v3 tx %s (wtxid=%s) cannot spend from non-v3 tx %s (wtxid=%s)",
                              ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(),
-                             entry->GetSharedTx()->GetHash().ToString(), entry->GetSharedTx()->GetWitnessHash().ToString());
+                             entry.GetSharedTx()->GetHash().ToString(), entry.GetSharedTx()->GetWitnessHash().ToString());
         }
     }
 
@@ -198,21 +198,21 @@ std::optional<std::string> SingleV3Checks(const CTransactionRef& ptx,
         }
 
         // Check the descendant counts of in-mempool ancestors.
-        const auto& parent_entry = *mempool_ancestors.begin();
+        const CTxMemPoolEntry& parent_entry = *mempool_ancestors.begin();
         // If there are any ancestors, this is the only child allowed. The parent cannot have any
         // other descendants. We handle the possibility of multiple children as that case is
         // possible through a reorg.
-        const auto& children = parent_entry->GetMemPoolChildrenConst();
+        const auto& children = parent_entry.GetMemPoolChildrenConst();
         // Don't double-count a transaction that is going to be replaced. This logic assumes that
         // any descendant of the V3 transaction is a direct child, which makes sense because a V3
         // transaction can only have 1 descendant.
         const bool child_will_be_replaced = !children.empty() &&
             std::any_of(children.cbegin(), children.cend(),
                 [&direct_conflicts](const CTxMemPoolEntry& child){return direct_conflicts.count(child.GetTx().GetHash()) > 0;});
-        if (parent_entry->GetCountWithDescendants() + 1 > V3_DESCENDANT_LIMIT && !child_will_be_replaced) {
+        if (parent_entry.GetCountWithDescendants() + 1 > V3_DESCENDANT_LIMIT && !child_will_be_replaced) {
             return strprintf("tx %u (wtxid=%s) would exceed descendant count limit",
-                             parent_entry->GetSharedTx()->GetHash().ToString(),
-                             parent_entry->GetSharedTx()->GetWitnessHash().ToString());
+                             parent_entry.GetSharedTx()->GetHash().ToString(),
+                             parent_entry.GetSharedTx()->GetWitnessHash().ToString());
         }
     }
     return std::nullopt;

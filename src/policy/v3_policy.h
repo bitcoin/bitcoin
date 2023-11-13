@@ -51,7 +51,7 @@ static_assert(V3_CHILD_MAX_VSIZE + MAX_STANDARD_TX_WEIGHT / WITNESS_SCALE_FACTOR
  * @returns debug string if an error occurs, std::nullopt otherwise.
  */
 std::optional<std::string> SingleV3Checks(const CTransactionRef& ptx,
-                                          const CTxMemPool::setEntries& mempool_ancestors,
+                                          const CTxMemPool::setEntryRefs& mempool_ancestors,
                                           const std::set<Txid>& direct_conflicts,
                                           int64_t vsize);
 
@@ -78,6 +78,6 @@ std::optional<std::string> SingleV3Checks(const CTransactionRef& ptx,
  * */
 std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t vsize,
                                            const Package& package,
-                                           const CTxMemPool::setEntries& mempool_ancestors);
+                                           const CTxMemPool::setEntryRefs& mempool_ancestors);
 
 #endif // BITCOIN_POLICY_V3_POLICY_H

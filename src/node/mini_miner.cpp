@@ -49,10 +49,10 @@ MiniMiner::MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& ou
             //
             // Note that the descendants of a transaction include the transaction itself. Also note,
             // that this is only calculating bump fees. RBF fee rules should be handled separately.
-            CTxMemPool::setEntries descendants;
-            mempool.CalculateDescendants(mempool.GetIter(ptx->GetHash()).value(), descendants);
-            for (const auto& desc_txiter : descendants) {
-                m_to_be_replaced.insert(desc_txiter->GetTx().GetHash());
+            CTxMemPool::setEntryRefs descendants;
+            mempool.CalculateDescendants(*Assert(mempool.GetEntry(ptx->GetHash())), descendants);
+            for (const CTxMemPoolEntry& desc : descendants) {
+                m_to_be_replaced.insert(desc.GetTx().GetHash());
             }
         }
     }
@@ -75,17 +75,17 @@ MiniMiner::MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& ou
     }
 
     // Add every entry to m_entries_by_txid and m_entries, except the ones that will be replaced.
-    for (const auto& txiter : cluster) {
-        if (!m_to_be_replaced.count(txiter->GetTx().GetHash())) {
-            auto [mapiter, success] = m_entries_by_txid.emplace(txiter->GetTx().GetHash(),
-                MiniMinerMempoolEntry{/*tx_in=*/txiter->GetSharedTx(),
-                                      /*vsize_self=*/txiter->GetTxSize(),
-                                      /*vsize_ancestor=*/txiter->GetSizeWithAncestors(),
-                                      /*fee_self=*/txiter->GetModifiedFee(),
-                                      /*fee_ancestor=*/txiter->GetModFeesWithAncestors()});
+    for (const CTxMemPoolEntry& entry : cluster) {
+        if (!m_to_be_replaced.count(entry.GetTx().GetHash())) {
+            auto [mapiter, success] = m_entries_by_txid.emplace(entry.GetTx().GetHash(),
+                MiniMinerMempoolEntry{/*tx_in=*/entry.GetSharedTx(),
+                                      /*vsize_self=*/entry.GetTxSize(),
+                                      /*vsize_ancestor=*/entry.GetSizeWithAncestors(),
+                                      /*fee_self=*/entry.GetModifiedFee(),
+                                      /*fee_ancestor=*/entry.GetModFeesWithAncestors()});
             m_entries.push_back(mapiter);
         } else {
-            auto outpoints_it = m_requested_outpoints_by_txid.find(txiter->GetTx().GetHash());
+            auto outpoints_it = m_requested_outpoints_by_txid.find(entry.GetTx().GetHash());
             if (outpoints_it != m_requested_outpoints_by_txid.end()) {
                 // This UTXO is the output of a to-be-replaced transaction. Bump fee is 0; spending
                 // this UTXO is impossible as it will no longer exist after the replacement.
@@ -98,17 +98,17 @@ MiniMiner::MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& ou
     }
 
     // Build the m_descendant_set_by_txid cache.
-    for (const auto& txiter : cluster) {
-        const auto& txid = txiter->GetTx().GetHash();
+    for (const CTxMemPoolEntry& entry : cluster) {
+        const auto& txid = entry.GetTx().GetHash();
         // Cache descendants for future use. Unlike the real mempool, a descendant MiniMinerMempoolEntry
         // will not exist without its ancestor MiniMinerMempoolEntry, so these sets won't be invalidated.
         std::vector<MockEntryMap::iterator> cached_descendants;
         const bool remove{m_to_be_replaced.count(txid) > 0};
-        CTxMemPool::setEntries descendants;
-        mempool.CalculateDescendants(txiter, descendants);
-        Assume(descendants.count(txiter) > 0);
-        for (const auto& desc_txiter : descendants) {
-            const auto txid_desc = desc_txiter->GetTx().GetHash();
+        CTxMemPool::setEntryRefs descendants;
+        mempool.CalculateDescendants(entry, descendants);
+        Assume(descendants.count(entry) > 0);
+        for (const CTxMemPoolEntry& desc : descendants) {
+            const auto txid_desc = desc.GetTx().GetHash();
             const bool remove_desc{m_to_be_replaced.count(txid_desc) > 0};
             auto desc_it{m_entries_by_txid.find(txid_desc)};
             Assume((desc_it == m_entries_by_txid.end()) == remove_desc);

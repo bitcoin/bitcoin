@@ -14,7 +14,7 @@
 /** Epoch: RAII-style guard for using epoch-based graph traversal algorithms.
  *     When walking ancestors or descendants, we generally want to avoid
  * visiting the same transactions twice. Some traversal algorithms use
- * std::set (or setEntries) to deduplicate the transaction we visit.
+ * std::set (or setEntryRefs) to deduplicate the transaction we visit.
  * However, use of std::set is algorithmically undesirable because it both
  * adds an asymptotic factor of O(log n) to traversals cost and triggers O(n)
  * more dynamic memory allocations.
