@@ -94,7 +94,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_negative, TestChain100Setup)
     const CFeeRate feerate_zero(0);
     mini_miner_target0.BuildMockTemplate(feerate_zero);
     // Check the quit condition:
-    BOOST_CHECK(negative_modified_fees < feerate_zero.GetFee(pool.GetIter(tx_mod_negative->GetHash()).value()->GetTxSize()));
+    BOOST_CHECK(negative_modified_fees < feerate_zero.GetFee(Assert(pool.GetEntry(tx_mod_negative->GetHash()))->GetTxSize()));
     BOOST_CHECK(mini_miner_target0.GetMockTemplateTxids().empty());
 
     // With no target feerate, the template includes all transactions, even negative feerate ones.
@@ -179,9 +179,9 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
     };
     std::map<uint256, TxDimensions> tx_dims;
     for (const auto& tx : all_transactions) {
-        const auto it = pool.GetIter(tx->GetHash()).value();
-        tx_dims.emplace(tx->GetHash(), TxDimensions{it->GetTxSize(), it->GetModifiedFee(),
-                                              CFeeRate(it->GetModifiedFee(), it->GetTxSize())});
+        const auto& entry{*Assert(pool.GetEntry(tx->GetHash()))};
+        tx_dims.emplace(tx->GetHash(), TxDimensions{entry.GetTxSize(), entry.GetModifiedFee(),
+                                              CFeeRate(entry.GetModifiedFee(), entry.GetTxSize())});
     }
 
     const std::vector<CFeeRate> various_normal_feerates({CFeeRate(0), CFeeRate(500), CFeeRate(999),
@@ -447,15 +447,15 @@ BOOST_FIXTURE_TEST_CASE(miniminer_overlap, TestChain100Setup)
     // tx3's feerate is lower than tx2's. same fee, different weight.
     BOOST_CHECK(tx2_feerate > tx3_feerate);
     const auto tx3_anc_feerate = CFeeRate(low_fee + med_fee + high_fee + high_fee, tx_vsizes[0] + tx_vsizes[1] + tx_vsizes[2] + tx_vsizes[3]);
-    const auto tx3_iter = pool.GetIter(tx3->GetHash());
-    BOOST_CHECK(tx3_anc_feerate == CFeeRate(tx3_iter.value()->GetModFeesWithAncestors(), tx3_iter.value()->GetSizeWithAncestors()));
+    const auto& tx3_entry{*Assert(pool.GetEntry(tx3->GetHash()))};
+    BOOST_CHECK(tx3_anc_feerate == CFeeRate(tx3_entry.GetModFeesWithAncestors(), tx3_entry.GetSizeWithAncestors()));
     const auto tx4_feerate = CFeeRate(high_fee, tx_vsizes[4]);
     const auto tx6_anc_feerate = CFeeRate(high_fee + low_fee + med_fee, tx_vsizes[4] + tx_vsizes[5] + tx_vsizes[6]);
-    const auto tx6_iter = pool.GetIter(tx6->GetHash());
-    BOOST_CHECK(tx6_anc_feerate == CFeeRate(tx6_iter.value()->GetModFeesWithAncestors(), tx6_iter.value()->GetSizeWithAncestors()));
+    const auto& tx6_entry{*Assert(pool.GetEntry(tx6->GetHash()))};
+    BOOST_CHECK(tx6_anc_feerate == CFeeRate(tx6_entry.GetModFeesWithAncestors(), tx6_entry.GetSizeWithAncestors()));
     const auto tx7_anc_feerate = CFeeRate(high_fee + low_fee + high_fee, tx_vsizes[4] + tx_vsizes[5] + tx_vsizes[7]);
-    const auto tx7_iter = pool.GetIter(tx7->GetHash());
-    BOOST_CHECK(tx7_anc_feerate == CFeeRate(tx7_iter.value()->GetModFeesWithAncestors(), tx7_iter.value()->GetSizeWithAncestors()));
+    const auto& tx7_entry{*Assert(pool.GetEntry(tx7->GetHash()))};
+    BOOST_CHECK(tx7_anc_feerate == CFeeRate(tx7_entry.GetModFeesWithAncestors(), tx7_entry.GetSizeWithAncestors()));
     BOOST_CHECK(tx4_feerate > tx6_anc_feerate);
     BOOST_CHECK(tx4_feerate > tx7_anc_feerate);
 
