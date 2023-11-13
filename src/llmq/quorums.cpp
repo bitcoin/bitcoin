@@ -1003,18 +1003,24 @@ void CQuorumManager::CleanupOldQuorumData(const CBlockIndex* pIndex) const
         return;
     }
 
-    std::set<uint256> dbKeys;
+    std::set<uint256> dbKeysToSkip;
 
     LogPrint(BCLog::LLMQ, "CQuorumManager::%d -- start\n", __func__);
+    // Platform quorums in all networks are created every 24 blocks (~1h).
+    // Unlike for other quorum types we want to keep data (secret key shares and vvec)
+    // for Platform quorums for at least 2 months because Platform can be restarted and
+    // it must be able to re-sign stuff. During a month, 24 * 30 quorums are created.
+    constexpr auto numPlatformQuorumsDataToKeep = 24 * 30 * 2;
 
     for (const auto& params : Params().GetConsensus().llmqs) {
-        const auto vecQuorums = ScanQuorums(params.type, pIndex, params.keepOldConnections);
+        auto nQuorumsToKeep = params.type == Params().GetConsensus().llmqTypePlatform ? numPlatformQuorumsDataToKeep : params.keepOldConnections;
+        const auto vecQuorums = ScanQuorums(params.type, pIndex, nQuorumsToKeep);
         for (const auto& pQuorum : vecQuorums) {
-            dbKeys.insert(MakeQuorumKey(*pQuorum));
+            dbKeysToSkip.insert(MakeQuorumKey(*pQuorum));
         }
     }
 
-    DataCleanupHelper(m_evoDb.GetRawDB(), dbKeys);
+    DataCleanupHelper(m_evoDb.GetRawDB(), dbKeysToSkip);
 
     LogPrint(BCLog::LLMQ, "CQuorumManager::%d -- done\n", __func__);
 }
