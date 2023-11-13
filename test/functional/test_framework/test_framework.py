@@ -1128,7 +1128,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.activate_by_name('v20', expected_activation_height)
 
     def activate_mn_rr(self, expected_activation_height=None):
-        self.nodes[0].sporkupdate("SPORK_24_EHF", 0)
+        self.nodes[0].sporkupdate("SPORK_24_TEST_EHF", 0)
         self.wait_for_sporks_same()
         mn_rr_height = 0
         while mn_rr_height == 0:

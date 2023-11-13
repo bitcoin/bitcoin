@@ -44,7 +44,7 @@ CEHFSignalsHandler::~CEHFSignalsHandler()
 
 void CEHFSignalsHandler::UpdatedBlockTip(const CBlockIndex* const pindexNew)
 {
-    if (!fMasternodeMode || !llmq::utils::IsV20Active(pindexNew) || !sporkman.IsSporkActive(SPORK_24_EHF)) {
+    if (!fMasternodeMode || !llmq::utils::IsV20Active(pindexNew) || (Params().IsTestChain() && !sporkman.IsSporkActive(SPORK_24_TEST_EHF))) {
         return;
     }
 

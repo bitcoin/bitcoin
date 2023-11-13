@@ -259,7 +259,7 @@ class MnehfTest(DashTestFramework):
 
         self.log.info("activate MN_RR also by enabling spork 24")
         assert_equal(get_bip9_details(node, 'mn_rr')['status'], 'defined')
-        self.nodes[0].sporkupdate("SPORK_24_EHF", 0)
+        self.nodes[0].sporkupdate("SPORK_24_TEST_EHF", 0)
         self.wait_for_sporks_same()
 
         self.check_fork('defined')
