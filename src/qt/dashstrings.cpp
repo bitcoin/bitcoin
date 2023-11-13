@@ -62,6 +62,9 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Make sure to encrypt your wallet and delete all non-encrypted backups after "
 "you have verified that the wallet works!"),
 QT_TRANSLATE_NOOP("dash-core", ""
+"More than one onion bind address is provided. Using %s for the automatically "
+"created Tor onion service."),
+QT_TRANSLATE_NOOP("dash-core", ""
 "Please check that your computer's date and time are correct! If your clock "
 "is wrong, %s will not work properly."),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -112,9 +115,6 @@ QT_TRANSLATE_NOOP("dash-core", ""
 QT_TRANSLATE_NOOP("dash-core", ""
 "Warning: Private keys detected in wallet {%s} with disabled private keys"),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Warning: The network does not appear to fully agree! Some miners appear to "
-"be experiencing issues."),
-QT_TRANSLATE_NOOP("dash-core", ""
 "Warning: We do not appear to fully agree with our peers! You may need to "
 "upgrade, or other nodes may need to upgrade."),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -122,12 +122,10 @@ QT_TRANSLATE_NOOP("dash-core", ""
 QT_TRANSLATE_NOOP("dash-core", ""
 "You need to rebuild the database using -reindex to go back to unpruned "
 "mode.  This will redownload the entire blockchain"),
-QT_TRANSLATE_NOOP("dash-core", "%d of last 100 blocks have unexpected version"),
 QT_TRANSLATE_NOOP("dash-core", "%s can't be lower than %s"),
 QT_TRANSLATE_NOOP("dash-core", "%s failed"),
 QT_TRANSLATE_NOOP("dash-core", "%s is idle."),
 QT_TRANSLATE_NOOP("dash-core", "%s is not a valid backup folder!"),
-QT_TRANSLATE_NOOP("dash-core", "%s is only allowed with a single wallet file"),
 QT_TRANSLATE_NOOP("dash-core", "%s is set very high!"),
 QT_TRANSLATE_NOOP("dash-core", "%s request incomplete:"),
 QT_TRANSLATE_NOOP("dash-core", "-devnet can only be specified once"),
@@ -140,7 +138,6 @@ QT_TRANSLATE_NOOP("dash-core", "Automatic backups disabled"),
 QT_TRANSLATE_NOOP("dash-core", "Can't find random Masternode."),
 QT_TRANSLATE_NOOP("dash-core", "Can't mix while sync in progress."),
 QT_TRANSLATE_NOOP("dash-core", "Can't mix: no compatible inputs found!"),
-QT_TRANSLATE_NOOP("dash-core", "Cannot downgrade wallet"),
 QT_TRANSLATE_NOOP("dash-core", "Cannot resolve -%s address: '%s'"),
 QT_TRANSLATE_NOOP("dash-core", "Cannot set -peerblockfilters without -blockfilterindex."),
 QT_TRANSLATE_NOOP("dash-core", "Cannot write to data directory '%s'; check permissions."),
@@ -201,6 +198,8 @@ QT_TRANSLATE_NOOP("dash-core", "Initialization sanity check failed. %s is shutti
 QT_TRANSLATE_NOOP("dash-core", "Input is not valid."),
 QT_TRANSLATE_NOOP("dash-core", "Inputs vs outputs size mismatch."),
 QT_TRANSLATE_NOOP("dash-core", "Insufficient funds."),
+QT_TRANSLATE_NOOP("dash-core", "Invalid '%s'. Allowed values: 128, 160, 192, 224, 256."),
+QT_TRANSLATE_NOOP("dash-core", "Invalid -i2psam address or hostname: '%s'"),
 QT_TRANSLATE_NOOP("dash-core", "Invalid -onion address or hostname: '%s'"),
 QT_TRANSLATE_NOOP("dash-core", "Invalid -proxy address or hostname: '%s'"),
 QT_TRANSLATE_NOOP("dash-core", "Invalid P2P permission: '%s'"),
@@ -219,11 +218,6 @@ QT_TRANSLATE_NOOP("dash-core", "Last successful action was too recent."),
 QT_TRANSLATE_NOOP("dash-core", "Loading P2P addresses..."),
 QT_TRANSLATE_NOOP("dash-core", "Loading banlist..."),
 QT_TRANSLATE_NOOP("dash-core", "Loading block index..."),
-QT_TRANSLATE_NOOP("dash-core", "Loading fulfilled requests cache..."),
-QT_TRANSLATE_NOOP("dash-core", "Loading governance cache..."),
-QT_TRANSLATE_NOOP("dash-core", "Loading masternode cache..."),
-QT_TRANSLATE_NOOP("dash-core", "Loading sporks cache..."),
-QT_TRANSLATE_NOOP("dash-core", "Loading wallet... (%3.2f %%)"),
 QT_TRANSLATE_NOOP("dash-core", "Loading wallet..."),
 QT_TRANSLATE_NOOP("dash-core", "Lock is already in place."),
 QT_TRANSLATE_NOOP("dash-core", "Masternode queue is full."),
@@ -240,7 +234,7 @@ QT_TRANSLATE_NOOP("dash-core", "Not enough file descriptors available."),
 QT_TRANSLATE_NOOP("dash-core", "Not enough funds to mix."),
 QT_TRANSLATE_NOOP("dash-core", "Not in the Masternode list."),
 QT_TRANSLATE_NOOP("dash-core", "Prune cannot be configured with a negative value."),
-QT_TRANSLATE_NOOP("dash-core", "Prune mode is incompatible with -blockfilterindex."),
+QT_TRANSLATE_NOOP("dash-core", "Prune mode is incompatible with -coinstatsindex."),
 QT_TRANSLATE_NOOP("dash-core", "Prune mode is incompatible with -disablegovernance=false."),
 QT_TRANSLATE_NOOP("dash-core", "Prune mode is incompatible with -txindex."),
 QT_TRANSLATE_NOOP("dash-core", "Pruning blockstore..."),
@@ -265,13 +259,14 @@ QT_TRANSLATE_NOOP("dash-core", "Synchronization finished"),
 QT_TRANSLATE_NOOP("dash-core", "Synchronizing blockchain..."),
 QT_TRANSLATE_NOOP("dash-core", "Synchronizing governance objects..."),
 QT_TRANSLATE_NOOP("dash-core", "The source code is available from %s."),
-QT_TRANSLATE_NOOP("dash-core", "The specified config file %s does not exist\n"),
+QT_TRANSLATE_NOOP("dash-core", "The specified config file %s does not exist"),
 QT_TRANSLATE_NOOP("dash-core", "The transaction amount is too small to pay the fee"),
 QT_TRANSLATE_NOOP("dash-core", "The wallet will avoid paying less than the minimum relay fee."),
 QT_TRANSLATE_NOOP("dash-core", "This is expected because you are running a pruned node."),
 QT_TRANSLATE_NOOP("dash-core", "This is experimental software."),
 QT_TRANSLATE_NOOP("dash-core", "This is the minimum transaction fee you pay on every transaction."),
 QT_TRANSLATE_NOOP("dash-core", "This is the transaction fee you will pay if you send a transaction."),
+QT_TRANSLATE_NOOP("dash-core", "Topping up keypool..."),
 QT_TRANSLATE_NOOP("dash-core", "Transaction amount too small"),
 QT_TRANSLATE_NOOP("dash-core", "Transaction amounts must not be negative"),
 QT_TRANSLATE_NOOP("dash-core", "Transaction created successfully."),
@@ -307,6 +302,7 @@ QT_TRANSLATE_NOOP("dash-core", "Warning: incorrect parameter %s, path must exist
 QT_TRANSLATE_NOOP("dash-core", "Warning: unknown new rules activated (versionbit %i)"),
 QT_TRANSLATE_NOOP("dash-core", "Wasn't able to create wallet backup folder %s!"),
 QT_TRANSLATE_NOOP("dash-core", "Will retry..."),
+QT_TRANSLATE_NOOP("dash-core", "Wiping wallet transactions..."),
 QT_TRANSLATE_NOOP("dash-core", "You are starting with governance validation disabled."),
 QT_TRANSLATE_NOOP("dash-core", "You can not disable governance validation on a masternode."),
 QT_TRANSLATE_NOOP("dash-core", "You can not start a masternode with wallet enabled."),
