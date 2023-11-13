@@ -111,9 +111,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         raw_after = self.nodes[0].getrawmempool(verbose=True)
         assert_equal(raw_before[txid_a], raw_after[txid_a])
         assert_equal(raw_before, raw_after)
-        prioritisation_map_in_mempool = self.nodes[0].getprioritisedtransactions()
-        assert_equal(prioritisation_map_in_mempool[txid_b], {"fee_delta" : fee_delta_b*COIN, "in_mempool" : True})
-        assert_equal(prioritisation_map_in_mempool[txid_c], {"fee_delta" : (fee_delta_c_1 + fee_delta_c_2)*COIN, "in_mempool" : True})
+        assert_equal(self.nodes[0].getprioritisedtransactions(), {txid_b: {"fee_delta" : fee_delta_b*COIN, "in_mempool" : True}, txid_c: {"fee_delta" : (fee_delta_c_1 + fee_delta_c_2)*COIN, "in_mempool" : True}})
         # Clear prioritisation, otherwise the transactions' fee deltas are persisted to mempool.dat and loaded again when the node
         # is restarted at the end of this subtest. Deltas are removed when a transaction is mined, but only at that time. We do
         # not check whether mapDeltas transactions were mined when loading from mempool.dat.
@@ -126,17 +124,13 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.nodes[0].prioritisetransaction(txid=txid_b, fee_delta=int(fee_delta_b * COIN))
         self.nodes[0].prioritisetransaction(txid=txid_c, fee_delta=int(fee_delta_c_1 * COIN))
         self.nodes[0].prioritisetransaction(txid=txid_c, fee_delta=int(fee_delta_c_2 * COIN))
-        prioritisation_map_not_in_mempool = self.nodes[0].getprioritisedtransactions()
-        assert_equal(prioritisation_map_not_in_mempool[txid_b], {"fee_delta" : fee_delta_b*COIN, "in_mempool" : False})
-        assert_equal(prioritisation_map_not_in_mempool[txid_c], {"fee_delta" : (fee_delta_c_1 + fee_delta_c_2)*COIN, "in_mempool" : False})
+        assert_equal(self.nodes[0].getprioritisedtransactions(), {txid_b: {"fee_delta" : fee_delta_b*COIN, "in_mempool" : False}, txid_c: {"fee_delta" : (fee_delta_c_1 + fee_delta_c_2)*COIN, "in_mempool" : False}})
         for t in [tx_o_a["hex"], tx_o_b["hex"], tx_o_c["hex"], tx_o_d["hex"]]:
             self.nodes[0].sendrawtransaction(t)
         raw_after = self.nodes[0].getrawmempool(verbose=True)
         assert_equal(raw_before[txid_a], raw_after[txid_a])
         assert_equal(raw_before, raw_after)
-        prioritisation_map_in_mempool = self.nodes[0].getprioritisedtransactions()
-        assert_equal(prioritisation_map_in_mempool[txid_b], {"fee_delta" : fee_delta_b*COIN, "in_mempool" : True})
-        assert_equal(prioritisation_map_in_mempool[txid_c], {"fee_delta" : (fee_delta_c_1 + fee_delta_c_2)*COIN, "in_mempool" : True})
+        assert_equal(self.nodes[0].getprioritisedtransactions(), {txid_b: {"fee_delta" : fee_delta_b*COIN, "in_mempool" : True}, txid_c: {"fee_delta" : (fee_delta_c_1 + fee_delta_c_2)*COIN, "in_mempool" : True}})
 
         # Clear mempool
         self.generate(self.nodes[0], 1)
