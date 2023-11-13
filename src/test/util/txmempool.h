@@ -38,6 +38,14 @@ struct TestMemPoolEntryHelper {
     TestMemPoolEntryHelper& SigOpsCost(unsigned int _sigopsCost) { sigOpCost = _sigopsCost; return *this; }
 };
 
+// Comparator for allowing direct comparison of CTxMemPoolEntryRef
+struct CompareEntryByHash {
+    bool operator()(const CTxMemPoolEntryRef& a, const CTxMemPoolEntryRef& b) const
+    {
+        return a.get().GetTx().GetHash() == b.get().GetTx().GetHash();
+    }
+};
+
 /** Check expected properties for every PackageMempoolAcceptResult, regardless of value. Returns
  * a string if an error occurs with error populated, nullopt otherwise. If mempool is provided,
  * checks that the expected transactions are in mempool (this should be set to nullptr for a test_accept).

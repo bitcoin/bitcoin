@@ -332,16 +332,16 @@ void Chainstate::MaybeUpdateMempoolForReorg(
     // Also updates valid entries' cached LockPoints if needed.
     // If false, the tx is still valid and its lockpoints are updated.
     // If true, the tx would be invalid in the next block; remove this entry and all of its descendants.
-    const auto filter_final_and_mature = [this](CTxMemPool::txiter it)
+    const auto filter_final_and_mature = [this](const CTxMemPoolEntry& entry)
         EXCLUSIVE_LOCKS_REQUIRED(m_mempool->cs, ::cs_main) {
         AssertLockHeld(m_mempool->cs);
         AssertLockHeld(::cs_main);
-        const CTransaction& tx = it->GetTx();
+        const CTransaction& tx = entry.GetTx();
 
         // The transaction must be final.
         if (!CheckFinalTxAtTip(*Assert(m_chain.Tip()), tx)) return true;
 
-        const LockPoints& lp = it->GetLockPoints();
+        const LockPoints& lp = entry.GetLockPoints();
         // CheckSequenceLocksAtTip checks if the transaction will be final in the next block to be
         // created on top of the new chain.
         if (TestLockPointValidity(m_chain, lp)) {
@@ -353,14 +353,14 @@ void Chainstate::MaybeUpdateMempoolForReorg(
             const std::optional<LockPoints> new_lock_points{CalculateLockPointsAtTip(m_chain.Tip(), view_mempool, tx)};
             if (new_lock_points.has_value() && CheckSequenceLocksAtTip(m_chain.Tip(), *new_lock_points)) {
                 // Now update the mempool entry lockpoints as well.
-                it->UpdateLockPoints(*new_lock_points);
+                entry.UpdateLockPoints(*new_lock_points);
             } else {
                 return true;
             }
         }
 
         // If the transaction spends any coinbase outputs, it must be mature.
-        if (it->GetSpendsCoinbase()) {
+        if (entry.GetSpendsCoinbase()) {
             for (const CTxIn& txin : tx.vin) {
                 if (m_mempool->exists(GenTxid::Txid(txin.prevout.hash))) continue;
                 const Coin& coin{CoinsTip().AccessCoin(txin.prevout)};
@@ -583,13 +583,13 @@ private:
         explicit Workspace(const CTransactionRef& ptx) : m_ptx(ptx), m_hash(ptx->GetHash()) {}
         /** Txids of mempool transactions that this transaction directly conflicts with. */
         std::set<uint256> m_conflicts;
-        /** Iterators to mempool entries that this transaction directly conflicts with. */
-        CTxMemPool::setEntries m_iters_conflicting;
-        /** Iterators to all mempool entries that would be replaced by this transaction, including
+        /** Mempool entries that this transaction directly conflicts with. */
+        CTxMemPool::setEntryRefs m_entries_conflicting;
+        /** All mempool entries that would be replaced by this transaction, including
          * those it directly conflicts with and their descendants. */
-        CTxMemPool::setEntries m_all_conflicting;
+        CTxMemPool::setEntryRefs m_all_conflicting;
         /** All mempool ancestors of this transaction. */
-        CTxMemPool::setEntries m_ancestors;
+        CTxMemPool::setEntryRefs m_ancestors;
         /** Mempool entry constructed for this transaction. Constructed in PreChecks() but not
          * inserted into the mempool until Finalize(). */
         std::unique_ptr<CTxMemPoolEntry> m_entry;
@@ -875,7 +875,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // feerate later.
     if (!bypass_limits && !args.m_package_feerates && !CheckFeeRate(ws.m_vsize, ws.m_modified_fees, state)) return false;
 
-    ws.m_iters_conflicting = m_pool.GetIterSet(ws.m_conflicts);
+    ws.m_entries_conflicting = m_pool.GetEntrySet(ws.m_conflicts);
 
     // Note that these modifications are only applicable to single transaction scenarios;
     // carve-outs and package RBF are disabled for multi-transaction evaluations.
@@ -910,11 +910,11 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // the ancestor limits should be the same for both our new transaction and any conflicts).
         // We don't bother incrementing m_limit_descendants by the full removal count as that limit never comes
         // into force here (as we're only adding a single transaction).
-        assert(ws.m_iters_conflicting.size() == 1);
-        CTxMemPool::txiter conflict = *ws.m_iters_conflicting.begin();
+        assert(ws.m_entries_conflicting.size() == 1);
+        const CTxMemPoolEntry& conflict = *ws.m_entries_conflicting.begin();
 
         maybe_rbf_limits.descendant_count += 1;
-        maybe_rbf_limits.descendant_size_vbytes += conflict->GetSizeWithDescendants();
+        maybe_rbf_limits.descendant_size_vbytes += conflict.GetSizeWithDescendants();
     }
 
     auto ancestors{m_pool.CalculateMemPoolAncestors(*entry, maybe_rbf_limits)};
@@ -980,7 +980,7 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     //   guarantee that this is incentive-compatible for miners, because it is possible for a
     //   descendant transaction of a direct conflict to pay a higher feerate than the transaction that
     //   might replace them, under these rules.
-    if (const auto err_string{PaysMoreThanConflicts(ws.m_iters_conflicting, newFeeRate, hash)}) {
+    if (const auto err_string{PaysMoreThanConflicts(ws.m_entries_conflicting, newFeeRate, hash)}) {
         // Even though this is a fee-related failure, this result is TX_MEMPOOL_POLICY, not
         // TX_RECONSIDERABLE, because it cannot be bypassed using package validation.
         // This must be changed if package RBF is enabled.
@@ -988,20 +988,20 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     }
 
     // Calculate all conflicting entries and enforce Rule #5.
-    if (const auto err_string{GetEntriesForConflicts(tx, m_pool, ws.m_iters_conflicting, ws.m_all_conflicting)}) {
+    if (const auto err_string{GetEntriesForConflicts(tx, m_pool, ws.m_entries_conflicting, ws.m_all_conflicting)}) {
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                              "too many potential replacements", *err_string);
     }
     // Enforce Rule #2.
-    if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, ws.m_iters_conflicting)}) {
+    if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, ws.m_entries_conflicting)}) {
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
                              "replacement-adds-unconfirmed", *err_string);
     }
     // Check if it's economically rational to mine this transaction rather than the ones it
     // replaces and pays for its own relay fees. Enforce Rules #3 and #4.
-    for (CTxMemPool::txiter it : ws.m_all_conflicting) {
-        ws.m_conflicting_fees += it->GetModifiedFee();
-        ws.m_conflicting_size += it->GetTxSize();
+    for (const CTxMemPoolEntry& entry : ws.m_all_conflicting) {
+        ws.m_conflicting_fees += entry.GetModifiedFee();
+        ws.m_conflicting_size += entry.GetTxSize();
     }
     if (const auto err_string{PaysForRBF(ws.m_conflicting_fees, ws.m_modified_fees, ws.m_vsize,
                                          m_pool.m_incremental_relay_feerate, hash)}) {
@@ -1105,25 +1105,25 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
 
     // Remove conflicting transactions from the mempool
-    for (CTxMemPool::txiter it : ws.m_all_conflicting)
+    for (const CTxMemPoolEntry& replaced_entry : ws.m_all_conflicting)
     {
         LogPrint(BCLog::MEMPOOL, "replacing tx %s (wtxid=%s) with %s (wtxid=%s) for %s additional fees, %d delta bytes\n",
-                it->GetTx().GetHash().ToString(),
-                it->GetTx().GetWitnessHash().ToString(),
+                replaced_entry.GetTx().GetHash().ToString(),
+                replaced_entry.GetTx().GetWitnessHash().ToString(),
                 hash.ToString(),
                 tx.GetWitnessHash().ToString(),
                 FormatMoney(ws.m_modified_fees - ws.m_conflicting_fees),
                 (int)entry->GetTxSize() - (int)ws.m_conflicting_size);
         TRACE7(mempool, replaced,
-                it->GetTx().GetHash().data(),
-                it->GetTxSize(),
-                it->GetFee(),
-                std::chrono::duration_cast<std::chrono::duration<std::uint64_t>>(it->GetTime()).count(),
+                replaced_entry.GetTx().GetHash().data(),
+                replaced_entry.GetTxSize(),
+                replaced_entry.GetFee(),
+                std::chrono::duration_cast<std::chrono::duration<std::uint64_t>>(replaced_entry.GetTime()).count(),
                 hash.data(),
                 entry->GetTxSize(),
                 entry->GetFee()
         );
-        ws.m_replaced_transactions.push_back(it->GetSharedTx());
+        ws.m_replaced_transactions.push_back(replaced_entry.GetSharedTx());
     }
     m_pool.RemoveStaged(ws.m_all_conflicting, false, MemPoolRemovalReason::REPLACED);
 

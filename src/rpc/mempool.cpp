@@ -467,17 +467,16 @@ static RPCHelpMan getmempoolancestors()
 
     if (!fVerbose) {
         UniValue o(UniValue::VARR);
-        for (CTxMemPool::txiter ancestorIt : ancestors) {
-            o.push_back(ancestorIt->GetTx().GetHash().ToString());
+        for (const CTxMemPoolEntry& ancestor : ancestors) {
+            o.push_back(ancestor.GetTx().GetHash().ToString());
         }
         return o;
     } else {
         UniValue o(UniValue::VOBJ);
-        for (CTxMemPool::txiter ancestorIt : ancestors) {
-            const CTxMemPoolEntry &e = *ancestorIt;
-            const uint256& _hash = e.GetTx().GetHash();
+        for (const CTxMemPoolEntry& ancestor : ancestors) {
+            const uint256& _hash = ancestor.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
-            entryToJSON(mempool, info, e);
+            entryToJSON(mempool, info, ancestor);
             o.pushKV(_hash.ToString(), info);
         }
         return o;
@@ -519,30 +518,29 @@ static RPCHelpMan getmempooldescendants()
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     LOCK(mempool.cs);
 
-    const auto it{mempool.GetIter(hash)};
+    const auto it{mempool.GetEntry(Txid::FromUint256(hash))};
     if (!it) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
     }
 
-    CTxMemPool::setEntries setDescendants;
+    CTxMemPool::setEntryRefs setDescendants;
     mempool.CalculateDescendants(*it, setDescendants);
     // CTxMemPool::CalculateDescendants will include the given tx
     setDescendants.erase(*it);
 
     if (!fVerbose) {
         UniValue o(UniValue::VARR);
-        for (CTxMemPool::txiter descendantIt : setDescendants) {
-            o.push_back(descendantIt->GetTx().GetHash().ToString());
+        for (const CTxMemPoolEntry& descendant : setDescendants) {
+            o.push_back(descendant.GetTx().GetHash().ToString());
         }
 
         return o;
     } else {
         UniValue o(UniValue::VOBJ);
-        for (CTxMemPool::txiter descendantIt : setDescendants) {
-            const CTxMemPoolEntry &e = *descendantIt;
-            const uint256& _hash = e.GetTx().GetHash();
+        for (const CTxMemPoolEntry& descendant : setDescendants) {
+            const uint256& _hash = descendant.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
-            entryToJSON(mempool, info, e);
+            entryToJSON(mempool, info, descendant);
             o.pushKV(_hash.ToString(), info);
         }
         return o;

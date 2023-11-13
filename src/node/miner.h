@@ -86,13 +86,13 @@ struct modifiedentry_iter {
 // A comparator that sorts transactions based on number of ancestors.
 // This is sufficient to sort an ancestor package in an order that is valid
 // to appear in a block.
-struct CompareTxIterByAncestorCount {
-    bool operator()(const CTxMemPool::txiter& a, const CTxMemPool::txiter& b) const
+struct CompareMemPoolEntryByAncestorCount {
+    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
     {
-        if (a->GetCountWithAncestors() != b->GetCountWithAncestors()) {
-            return a->GetCountWithAncestors() < b->GetCountWithAncestors();
+        if (a.GetCountWithAncestors() != b.GetCountWithAncestors()) {
+            return a.GetCountWithAncestors() < b.GetCountWithAncestors();
         }
-        return CompareIteratorByHash()(a, b);
+        return a.GetTx().GetHash() < b.GetTx().GetHash();
     }
 };
 
@@ -177,7 +177,7 @@ private:
     /** Clear the block's state and prepare for assembling a new block */
     void resetBlock();
     /** Add a tx to the block */
-    void AddToBlock(CTxMemPool::txiter iter);
+    void AddToBlock(const CTxMemPoolEntry& entry);
 
     // Methods for how to add transactions to a block.
     /** Add transactions based on feerate including unconfirmed ancestors
@@ -187,16 +187,16 @@ private:
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */
-    void onlyUnconfirmed(CTxMemPool::setEntries& testSet);
+    void onlyUnconfirmed(CTxMemPool::setEntryRefs& testSet);
     /** Test if a new package would "fit" in the block */
     bool TestPackage(uint64_t packageSize, int64_t packageSigOpsCost) const;
     /** Perform checks on each transaction in a package:
       * locktime, premature-witness, serialized size (if necessary)
       * These checks should always succeed, and they're here
       * only as an extra check in case of suboptimal node configuration */
-    bool TestPackageTransactions(const CTxMemPool::setEntries& package) const;
+    bool TestPackageTransactions(const CTxMemPool::setEntryRefs& package) const;
     /** Sort the package in an order that is valid to appear in a block */
-    void SortForBlock(const CTxMemPool::setEntries& package, std::vector<CTxMemPool::txiter>& sortedEntries);
+    void SortForBlock(const CTxMemPool::setEntryRefs& package, std::vector<CTxMemPoolEntryRef>& sortedEntries);
 };
 
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);

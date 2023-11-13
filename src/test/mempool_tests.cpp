@@ -190,8 +190,8 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     sortedOrder.insert(sortedOrder.begin(), tx6.GetHash().ToString());
     CheckSort<descendant_score>(pool, sortedOrder);
 
-    CTxMemPool::setEntries setAncestors;
-    setAncestors.insert(pool.GetIter(tx6.GetHash()).value());
+    CTxMemPool::setEntryRefs setAncestors;
+    setAncestors.insert(*Assert(pool.GetEntry(tx6.GetHash())));
     CMutableTransaction tx7 = CMutableTransaction();
     tx7.vin.resize(1);
     tx7.vin[0].prevout = COutPoint(tx6.GetHash(), 0);
@@ -204,7 +204,8 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
 
     auto ancestors_calculated{pool.CalculateMemPoolAncestors(entry.Fee(2000000LL).FromTx(tx7), CTxMemPool::Limits::NoLimits())};
     BOOST_REQUIRE(ancestors_calculated.has_value());
-    BOOST_CHECK(*ancestors_calculated == setAncestors);
+    BOOST_CHECK((*ancestors_calculated).size() == setAncestors.size());
+    BOOST_CHECK(std::equal(setAncestors.begin(), setAncestors.end(), ancestors_calculated.value().begin(), CompareEntryByHash{}));
 
     pool.addUnchecked(entry.FromTx(tx7), setAncestors);
     BOOST_CHECK_EQUAL(pool.size(), 7U);
@@ -223,7 +224,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx8.vout.resize(1);
     tx8.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx8.vout[0].nValue = 10 * COIN;
-    setAncestors.insert(pool.GetIter(tx7.GetHash()).value());
+    setAncestors.insert(*Assert(pool.GetEntry(tx7.GetHash())));
     pool.addUnchecked(entry.Fee(0LL).Time(NodeSeconds{2s}).FromTx(tx8), setAncestors);
 
     // Now tx8 should be sorted low, but tx6/tx both high
@@ -247,8 +248,8 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
 
     std::vector<std::string> snapshotOrder = sortedOrder;
 
-    setAncestors.insert(pool.GetIter(tx8.GetHash()).value());
-    setAncestors.insert(pool.GetIter(tx9.GetHash()).value());
+    setAncestors.insert(*Assert(pool.GetEntry(tx8.GetHash())));
+    setAncestors.insert(*Assert(pool.GetEntry(tx9.GetHash())));
     /* tx10 depends on tx8 and tx9 and has a high fee*/
     CMutableTransaction tx10 = CMutableTransaction();
     tx10.vin.resize(2);
@@ -262,7 +263,8 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
 
     ancestors_calculated = pool.CalculateMemPoolAncestors(entry.Fee(200000LL).Time(NodeSeconds{4s}).FromTx(tx10), CTxMemPool::Limits::NoLimits());
     BOOST_REQUIRE(ancestors_calculated);
-    BOOST_CHECK(*ancestors_calculated == setAncestors);
+    BOOST_CHECK((*ancestors_calculated).size() == setAncestors.size());
+    BOOST_CHECK(std::equal(setAncestors.begin(), setAncestors.end(), ancestors_calculated.value().begin(), CompareEntryByHash{}));
 
     pool.addUnchecked(entry.FromTx(tx10), setAncestors);
 

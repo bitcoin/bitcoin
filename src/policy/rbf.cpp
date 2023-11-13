@@ -40,8 +40,8 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
     auto ancestors{pool.AssumeCalculateMemPoolAncestors(__func__, entry, CTxMemPool::Limits::NoLimits(),
                                                         /*fSearchForParents=*/false)};
 
-    for (CTxMemPool::txiter it : ancestors) {
-        if (SignalsOptInRBF(it->GetTx())) {
+    for (const CTxMemPoolEntry& entry : ancestors) {
+        if (SignalsOptInRBF(entry.GetTx())) {
             return RBFTransactionState::REPLACEABLE_BIP125;
         }
     }
@@ -56,14 +56,14 @@ RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx)
 
 std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
                                                   CTxMemPool& pool,
-                                                  const CTxMemPool::setEntries& iters_conflicting,
-                                                  CTxMemPool::setEntries& all_conflicts)
+                                                  const CTxMemPool::setEntryRefs& entries_conflicting,
+                                                  CTxMemPool::setEntryRefs& all_conflicts)
 {
     AssertLockHeld(pool.cs);
     const uint256 txid = tx.GetHash();
     uint64_t nConflictingCount = 0;
-    for (const auto& mi : iters_conflicting) {
-        nConflictingCount += mi->GetCountWithDescendants();
+    for (const CTxMemPoolEntry& entry : entries_conflicting) {
+        nConflictingCount += entry.GetCountWithDescendants();
         // Rule #5: don't consider replacing more than MAX_REPLACEMENT_CANDIDATES
         // entries from the mempool. This potentially overestimates the number of actual
         // descendants (i.e. if multiple conflicts share a descendant, it will be counted multiple
@@ -76,20 +76,20 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
         }
     }
     // Calculate the set of all transactions that would have to be evicted.
-    for (CTxMemPool::txiter it : iters_conflicting) {
-        pool.CalculateDescendants(it, all_conflicts);
+    for (const CTxMemPoolEntry& entry : entries_conflicting) {
+        pool.CalculateDescendants(entry, all_conflicts);
     }
     return std::nullopt;
 }
 
 std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx,
                                                const CTxMemPool& pool,
-                                               const CTxMemPool::setEntries& iters_conflicting)
+                                               const CTxMemPool::setEntryRefs& entries_conflicting)
 {
     AssertLockHeld(pool.cs);
     std::set<uint256> parents_of_conflicts;
-    for (const auto& mi : iters_conflicting) {
-        for (const CTxIn& txin : mi->GetTx().vin) {
+    for (const CTxMemPoolEntry& entry : entries_conflicting) {
+        for (const CTxIn& txin : entry.GetTx().vin) {
             parents_of_conflicts.insert(txin.prevout.hash);
         }
     }
@@ -114,12 +114,12 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx,
     return std::nullopt;
 }
 
-std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries& ancestors,
+std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntryRefs& ancestors,
                                                    const std::set<uint256>& direct_conflicts,
                                                    const uint256& txid)
 {
-    for (CTxMemPool::txiter ancestorIt : ancestors) {
-        const uint256& hashAncestor = ancestorIt->GetTx().GetHash();
+    for (const CTxMemPoolEntry& ancestor : ancestors) {
+        const uint256& hashAncestor = ancestor.GetTx().GetHash();
         if (direct_conflicts.count(hashAncestor)) {
             return strprintf("%s spends conflicting transaction %s",
                              txid.ToString(),
@@ -129,11 +129,11 @@ std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries&
     return std::nullopt;
 }
 
-std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& iters_conflicting,
+std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntryRefs& entries_conflicting,
                                                  CFeeRate replacement_feerate,
                                                  const uint256& txid)
 {
-    for (const auto& mi : iters_conflicting) {
+    for (const CTxMemPoolEntry& entry : entries_conflicting) {
         // Don't allow the replacement to reduce the feerate of the mempool.
         //
         // We usually don't want to accept replacements with lower feerates than what they replaced
@@ -144,7 +144,7 @@ std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& i
         // descendants. While that does mean high feerate children are ignored when deciding whether
         // or not to replace, we do require the replacement to pay more overall fees too, mitigating
         // most cases.
-        CFeeRate original_feerate(mi->GetModifiedFee(), mi->GetTxSize());
+        CFeeRate original_feerate(entry.GetModifiedFee(), entry.GetTxSize());
         if (replacement_feerate <= original_feerate) {
             return strprintf("rejecting replacement %s; new feerate %s <= old feerate %s",
                              txid.ToString(),

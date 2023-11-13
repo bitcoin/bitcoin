@@ -89,48 +89,48 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     const auto tx8 = make_tx(/*inputs=*/ {m_coinbase_txns[4]}, /*output_values=*/ {999 * CENT});
     pool.addUnchecked(entry.Fee(high_fee).FromTx(tx8));
 
-    const auto entry1 = pool.GetIter(tx1->GetHash()).value();
-    const auto entry2 = pool.GetIter(tx2->GetHash()).value();
-    const auto entry3 = pool.GetIter(tx3->GetHash()).value();
-    const auto entry4 = pool.GetIter(tx4->GetHash()).value();
-    const auto entry5 = pool.GetIter(tx5->GetHash()).value();
-    const auto entry6 = pool.GetIter(tx6->GetHash()).value();
-    const auto entry7 = pool.GetIter(tx7->GetHash()).value();
-    const auto entry8 = pool.GetIter(tx8->GetHash()).value();
+    const CTxMemPoolEntry& entry1 = *Assert(pool.GetEntry(tx1->GetHash()));
+    const CTxMemPoolEntry& entry2 = *Assert(pool.GetEntry(tx2->GetHash()));
+    const CTxMemPoolEntry& entry3 = *Assert(pool.GetEntry(tx3->GetHash()));
+    const CTxMemPoolEntry& entry4 = *Assert(pool.GetEntry(tx4->GetHash()));
+    const CTxMemPoolEntry& entry5 = *Assert(pool.GetEntry(tx5->GetHash()));
+    const CTxMemPoolEntry& entry6 = *Assert(pool.GetEntry(tx6->GetHash()));
+    const CTxMemPoolEntry& entry7 = *Assert(pool.GetEntry(tx7->GetHash()));
+    const CTxMemPoolEntry& entry8 = *Assert(pool.GetEntry(tx8->GetHash()));
 
-    BOOST_CHECK_EQUAL(entry1->GetFee(), normal_fee);
-    BOOST_CHECK_EQUAL(entry2->GetFee(), normal_fee);
-    BOOST_CHECK_EQUAL(entry3->GetFee(), low_fee);
-    BOOST_CHECK_EQUAL(entry4->GetFee(), high_fee);
-    BOOST_CHECK_EQUAL(entry5->GetFee(), low_fee);
-    BOOST_CHECK_EQUAL(entry6->GetFee(), low_fee);
-    BOOST_CHECK_EQUAL(entry7->GetFee(), high_fee);
-    BOOST_CHECK_EQUAL(entry8->GetFee(), high_fee);
+    BOOST_CHECK_EQUAL(entry1.GetFee(), normal_fee);
+    BOOST_CHECK_EQUAL(entry2.GetFee(), normal_fee);
+    BOOST_CHECK_EQUAL(entry3.GetFee(), low_fee);
+    BOOST_CHECK_EQUAL(entry4.GetFee(), high_fee);
+    BOOST_CHECK_EQUAL(entry5.GetFee(), low_fee);
+    BOOST_CHECK_EQUAL(entry6.GetFee(), low_fee);
+    BOOST_CHECK_EQUAL(entry7.GetFee(), high_fee);
+    BOOST_CHECK_EQUAL(entry8.GetFee(), high_fee);
 
-    CTxMemPool::setEntries set_12_normal{entry1, entry2};
-    CTxMemPool::setEntries set_34_cpfp{entry3, entry4};
-    CTxMemPool::setEntries set_56_low{entry5, entry6};
-    CTxMemPool::setEntries all_entries{entry1, entry2, entry3, entry4, entry5, entry6, entry7, entry8};
-    CTxMemPool::setEntries empty_set;
+    CTxMemPool::setEntryRefs set_12_normal{entry1, entry2};
+    CTxMemPool::setEntryRefs set_34_cpfp{entry3, entry4};
+    CTxMemPool::setEntryRefs set_56_low{entry5, entry6};
+    CTxMemPool::setEntryRefs all_entries{entry1, entry2, entry3, entry4, entry5, entry6, entry7, entry8};
+    CTxMemPool::setEntryRefs empty_set;
 
     const auto unused_txid{GetRandHash()};
 
     // Tests for PaysMoreThanConflicts
     // These tests use feerate, not absolute fee.
-    BOOST_CHECK(PaysMoreThanConflicts(/*iters_conflicting=*/set_12_normal,
-                                      /*replacement_feerate=*/CFeeRate(entry1->GetModifiedFee() + 1, entry1->GetTxSize() + 2),
+    BOOST_CHECK(PaysMoreThanConflicts(/*entries_conflicting=*/set_12_normal,
+                                      /*replacement_feerate=*/CFeeRate(entry1.GetModifiedFee() + 1, entry1.GetTxSize() + 2),
                                       /*txid=*/unused_txid).has_value());
     // Replacement must be strictly greater than the originals.
-    BOOST_CHECK(PaysMoreThanConflicts(set_12_normal, CFeeRate(entry1->GetModifiedFee(), entry1->GetTxSize()), unused_txid).has_value());
-    BOOST_CHECK(PaysMoreThanConflicts(set_12_normal, CFeeRate(entry1->GetModifiedFee() + 1, entry1->GetTxSize()), unused_txid) == std::nullopt);
+    BOOST_CHECK(PaysMoreThanConflicts(set_12_normal, CFeeRate(entry1.GetModifiedFee(), entry1.GetTxSize()), unused_txid).has_value());
+    BOOST_CHECK(PaysMoreThanConflicts(set_12_normal, CFeeRate(entry1.GetModifiedFee() + 1, entry1.GetTxSize()), unused_txid) == std::nullopt);
     // These tests use modified fees (including prioritisation), not base fees.
-    BOOST_CHECK(PaysMoreThanConflicts({entry5}, CFeeRate(entry5->GetModifiedFee() + 1, entry5->GetTxSize()), unused_txid) == std::nullopt);
-    BOOST_CHECK(PaysMoreThanConflicts({entry6}, CFeeRate(entry6->GetFee() + 1, entry6->GetTxSize()), unused_txid).has_value());
-    BOOST_CHECK(PaysMoreThanConflicts({entry6}, CFeeRate(entry6->GetModifiedFee() + 1, entry6->GetTxSize()), unused_txid) == std::nullopt);
+    BOOST_CHECK(PaysMoreThanConflicts({entry5}, CFeeRate(entry5.GetModifiedFee() + 1, entry5.GetTxSize()), unused_txid) == std::nullopt);
+    BOOST_CHECK(PaysMoreThanConflicts({entry6}, CFeeRate(entry6.GetFee() + 1, entry6.GetTxSize()), unused_txid).has_value());
+    BOOST_CHECK(PaysMoreThanConflicts({entry6}, CFeeRate(entry6.GetModifiedFee() + 1, entry6.GetTxSize()), unused_txid) == std::nullopt);
     // PaysMoreThanConflicts checks individual feerate, not ancestor feerate. This test compares
     // replacement_feerate and entry4's feerate, which are the same. The replacement_feerate is
     // considered too low even though entry4 has a low ancestor feerate.
-    BOOST_CHECK(PaysMoreThanConflicts(set_34_cpfp, CFeeRate(entry4->GetModifiedFee(), entry4->GetTxSize()), unused_txid).has_value());
+    BOOST_CHECK(PaysMoreThanConflicts(set_34_cpfp, CFeeRate(entry4.GetModifiedFee(), entry4.GetTxSize()), unused_txid).has_value());
 
     // Tests for EntriesAndTxidsDisjoint
     BOOST_CHECK(EntriesAndTxidsDisjoint(empty_set, {tx1->GetHash()}, unused_txid) == std::nullopt);
@@ -140,7 +140,7 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     BOOST_CHECK(EntriesAndTxidsDisjoint({entry2}, {tx2->GetHash()}, unused_txid).has_value());
     BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {tx1->GetHash()}, unused_txid).has_value());
     BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {tx2->GetHash()}, unused_txid).has_value());
-    // EntriesAndTxidsDisjoint does not calculate descendants of iters_conflicting; it uses whatever
+    // EntriesAndTxidsDisjoint does not calculate descendants of entries_conflicting; it uses whatever
     // the caller passed in. As such, no error is returned even though entry2 is a descendant of tx1.
     BOOST_CHECK(EntriesAndTxidsDisjoint({entry2}, {tx1->GetHash()}, unused_txid) == std::nullopt);
 
@@ -165,17 +165,18 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     BOOST_CHECK(PaysForRBF(low_fee, high_fee + 99999999, 99999999, incremental_relay_feerate, unused_txid) == std::nullopt);
 
     // Tests for GetEntriesForConflicts
-    CTxMemPool::setEntries all_parents{entry1, entry3, entry5, entry7, entry8};
-    CTxMemPool::setEntries all_children{entry2, entry4, entry6};
+    CTxMemPool::setEntryRefs all_parents{entry1, entry3, entry5, entry7, entry8};
+    CTxMemPool::setEntryRefs all_children{entry2, entry4, entry6};
     const std::vector<CTransactionRef> parent_inputs({m_coinbase_txns[0], m_coinbase_txns[1], m_coinbase_txns[2],
                                                 m_coinbase_txns[3], m_coinbase_txns[4]});
     const auto conflicts_with_parents = make_tx(parent_inputs, {50 * CENT});
-    CTxMemPool::setEntries all_conflicts;
+    CTxMemPool::setEntryRefs all_conflicts;
     BOOST_CHECK(GetEntriesForConflicts(/*tx=*/ *conflicts_with_parents.get(),
                                        /*pool=*/ pool,
-                                       /*iters_conflicting=*/ all_parents,
+                                       /*entries_conflicting=*/ all_parents,
                                        /*all_conflicts=*/ all_conflicts) == std::nullopt);
-    BOOST_CHECK(all_conflicts == all_entries);
+    BOOST_CHECK(all_conflicts.size() == all_entries.size());
+    BOOST_CHECK(std::equal(all_conflicts.begin(), all_conflicts.end(), all_entries.begin(), CompareEntryByHash{}));
     auto conflicts_size = all_conflicts.size();
     all_conflicts.clear();
 
@@ -216,7 +217,7 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     }
     BOOST_CHECK(HasNoNewUnconfirmed(/*tx=*/ *spends_unconfirmed.get(),
                                     /*pool=*/ pool,
-                                    /*iters_conflicting=*/ all_entries) == std::nullopt);
+                                    /*entries_conflicting=*/ all_entries) == std::nullopt);
     BOOST_CHECK(HasNoNewUnconfirmed(*spends_unconfirmed.get(), pool, {entry2}) == std::nullopt);
     BOOST_CHECK(HasNoNewUnconfirmed(*spends_unconfirmed.get(), pool, empty_set).has_value());
 
