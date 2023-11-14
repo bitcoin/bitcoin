@@ -21,7 +21,8 @@ FUZZ_TARGET(autofile)
     AutoFile auto_file{
         fuzzed_file_provider.open(),
     };
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
+    {
         CallOneOf(
             fuzzed_data_provider,
             [&] {

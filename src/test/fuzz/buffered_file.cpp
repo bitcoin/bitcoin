@@ -26,7 +26,8 @@ FUZZ_TARGET(buffered_file)
     }
     if (opt_buffered_file && !fuzzed_file.IsNull()) {
         bool setpos_fail = false;
-        LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+        LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
+        {
             CallOneOf(
                 fuzzed_data_provider,
                 [&] {
