@@ -41,7 +41,6 @@ private:
     CEvoDB& m_evoDb;
     const std::unique_ptr<PeerManager>& m_peerman;
 
-    // TODO cleanup
     mutable RecursiveMutex minableCommitmentsCs;
     std::map<std::pair<Consensus::LLMQType, uint256>, uint256> minableCommitmentsByQuorum GUARDED_BY(minableCommitmentsCs);
     std::map<uint256, CFinalCommitment> minableCommitments GUARDED_BY(minableCommitmentsCs);
