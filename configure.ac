@@ -1956,6 +1956,9 @@ CPPFLAGS_TEMP="$CPPFLAGS"
 unset CPPFLAGS
 CPPFLAGS="$CPPFLAGS_TEMP"
 
+if test "$enable_lto" = "yes"; then
+  export SECP_CFLAGS="$SECP_CFLAGS $LTO_CXXFLAGS"
+fi
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --disable-module-ecdh"
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
@@ -2016,7 +2019,7 @@ echo "  target os       = $host_os"
 echo "  build os        = $build_os"
 echo
 echo "  CC              = $CC"
-echo "  CFLAGS          = $PTHREAD_CFLAGS $CFLAGS"
+echo "  CFLAGS          = $LTO_CXXFLAGS $PTHREAD_CFLAGS $CFLAGS"
 echo "  CPPFLAGS        = $DEBUG_CPPFLAGS $HARDENED_CPPFLAGS $CORE_CPPFLAGS $CPPFLAGS"
 echo "  CXX             = $CXX"
 echo "  CXXFLAGS        = $LTO_CXXFLAGS $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CORE_CXXFLAGS $CXXFLAGS"
