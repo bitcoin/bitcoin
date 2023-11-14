@@ -114,6 +114,12 @@ static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
                     {RPCResult::Type::STR, "asm", "Disassembly of the signature script"},
                     {RPCResult::Type::STR_HEX, "hex", "The raw signature script bytes, hex-encoded"},
                 }},
+                {RPCResult::Type::OBJ, "redeemScript", /*optional=*/true, "",
+                {
+                    {RPCResult::Type::STR, "asm", ""},
+                    {RPCResult::Type::STR, "desc", ""},
+                    {RPCResult::Type::STR, "type", ""},
+                }},
                 {RPCResult::Type::ARR, "txinwitness", /*optional=*/true, "",
                 {
                     {RPCResult::Type::STR_HEX, "hex", "hex-encoded witness data (if any)"},
