@@ -263,6 +263,12 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
             if (x != high_fee_tx):
                 assert x not in mempool
 
+
+        self.log.info("Assert that 0 delta is never added to mapDeltas")
+        tx_id_zero_del = self.wallet.create_self_transfer()['txid']
+        self.nodes[0].prioritisetransaction(txid=tx_id_zero_del, fee_delta=0)
+        assert tx_id_zero_del not in self.nodes[0].getprioritisedtransactions()
+
         # Create a free transaction.  Should be rejected.
         tx_res = self.wallet.create_self_transfer(fee_rate=0)
         tx_hex = tx_res['hex']
