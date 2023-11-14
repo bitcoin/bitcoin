@@ -464,25 +464,13 @@ public:
             return false;
         }
 
-        if (curIsParent) {
-            try {
-                // TODO try to avoid this copy (we need a stream that allows reading from external buffers)
-                CDataStream ssKey = parentKey;
-                ssKey >> key;
-            } catch (const std::exception&) {
-                return false;
-            }
-            return true;
-        } else {
-            try {
-                // TODO try to avoid this copy (we need a stream that allows reading from external buffers)
-                CDataStream ssKey = transactionIt->first;
-                ssKey >> key;
-            } catch (const std::exception&) {
-                return false;
-            }
-            return true;
+        try {
+            // TODO try to avoid copy transactionIt->first (we need a stream that allows reading from external buffers)
+            (curIsParent ? parentKey : CDataStream{transactionIt->first}) >> key;
+        } catch (const std::exception&) {
+            return false;
         }
+        return true;
     }
 
     CDataStream GetKey() {
