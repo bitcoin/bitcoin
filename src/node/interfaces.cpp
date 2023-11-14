@@ -654,6 +654,12 @@ public:
         if (entry == nullptr) return false;
         return entry->GetCountWithDescendants() > 1;
     }
+    bool allowsEphemeralAnchors() override
+    {
+        if (!m_node.mempool) return false;
+        LOCK(m_node.mempool->cs);
+        return m_node.mempool->m_permit_anchors;
+    }
     bool broadcastTransaction(const CTransactionRef& tx,
         const CAmount& max_tx_fee,
         bool relay,

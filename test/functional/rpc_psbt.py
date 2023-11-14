@@ -18,6 +18,7 @@ from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     WITNESS_SCALE_FACTOR,
     ser_compact_size,
+    tx_from_hex,
 )
 from test_framework.psbt import (
     PSBT,
@@ -988,6 +989,56 @@ class PSBTTest(BitcoinTestFramework):
 
         self.log.info("Test descriptorprocesspsbt raises if an invalid sighashtype is passed")
         assert_raises_rpc_error(-8, "all is not a valid sighash parameter.", self.nodes[2].descriptorprocesspsbt, psbt, [descriptor], sighashtype="all")
+
+
+        self.log.info("Test that PSBT can have ephemeral anchor added in rpc")
+        # Fake input to avoid tripping up segwit deserialization error
+        raw_anchor = self.nodes[0].createrawtransaction([{"txid": "ff"*32, "vout": 0}], [{"anchor":"0.00000001"}])
+        anchor_tx = tx_from_hex(raw_anchor)
+
+        # Is restricted to V3
+        assert_equal(anchor_tx.nVersion, 3)
+        assert_equal(len(anchor_tx.vout), 1)
+        assert_equal(anchor_tx.vout[0].nValue, 1)
+        assert_equal(anchor_tx.vout[0].scriptPubKey, bytes([OP_TRUE, 0x02, 0x4e, 0x73]))
+
+        psbt_anchor = self.nodes[0].createpsbt([{"txid": "ff"*32, "vout": 0}], [{"anchor":"0.00000001"}])
+        anchor = PSBT.from_base64(psbt_anchor)
+
+        assert_equal(anchor.g.map[0], anchor_tx.serialize())
+
+        utxos = self.nodes[0].listunspent()
+
+        # Choose a utxo to fund it
+        funded_anchor = self.nodes[0].walletcreatefundedpsbt([{"txid": utxos[0]["txid"], "vout": utxos[0]["vout"]}], [{"anchor": "0.00000001"}], 0, {"fee_rate": "0"})
+
+        funded_decoded = self.nodes[0].decodepsbt(funded_anchor["psbt"])["tx"]
+        anchor_idx = 0 if funded_decoded["vout"][0]["scriptPubKey"]["address"] == "bcrt1pfeesnyr2tx" else 1
+        assert_equal(funded_decoded["vout"][anchor_idx]["scriptPubKey"]["address"], "bcrt1pfeesnyr2tx")
+        assert_equal(funded_decoded["vout"][anchor_idx]["scriptPubKey"]["type"], "anchor")
+        assert_equal(funded_decoded["vout"][anchor_idx]["value"], Decimal("0.00000001"))
+
+        anchor_tx = self.nodes[0].finalizepsbt(self.nodes[0].walletprocesspsbt(psbt=funded_anchor["psbt"])["psbt"])["hex"]
+        anchor_decoded = self.nodes[0].decoderawtransaction(anchor_tx)
+        anchor_index = 0 if anchor_decoded["vout"][0]["value"] == Decimal("0.00000001") else 1
+
+        # Parent tx is not "in wallet" or utxo set or mempool, so we must create spend manually
+        # Take second utxo to bump
+        bump = self.nodes[0].createpsbt([{"txid": anchor_decoded["txid"], "vout": anchor_index}, {"txid": utxos[1]["txid"], "vout": utxos[1]["vout"]}], [{self.nodes[0].getnewaddress(): utxos[1]["amount"] - 1}])
+
+        # Need to switch to v3 to spend v3 parent, and inject OP_TRUE utxo to extract later
+        acs_prevout = CTxOut(nValue=1, scriptPubKey=CScript([OP_TRUE]))
+        bump_edit = PSBT.from_base64(bump)
+        bump_tx = tx_from_hex(bump_edit.g.map[0].hex())
+        bump_tx.nVersion = 3
+        bump_edit.g.map[0] = bump_tx.serialize()
+        bump_edit.i = [PSBTMap({bytes([PSBT_IN_WITNESS_UTXO]) : acs_prevout.serialize()}), PSBTMap()]
+        bump = bump_edit.to_base64()
+        bump_signed = self.nodes[0].walletprocesspsbt(bump)
+        bump_final = self.nodes[0].finalizepsbt(bump_signed["psbt"])
+
+        # Submit both as a package successfully
+        self.nodes[0].submitpackage([anchor_tx, bump_final["hex"]])
 
 
 if __name__ == '__main__':

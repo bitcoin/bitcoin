@@ -98,6 +98,7 @@ void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
     // Duplicate checking
     std::set<CTxDestination> destinations;
     bool has_data{false};
+    bool has_anchor{false};
 
     for (const std::string& name_ : outputs.getKeys()) {
         if (name_ == "data") {
@@ -108,6 +109,16 @@ void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
             std::vector<unsigned char> data = ParseHexV(outputs[name_].getValStr(), "Data");
 
             CTxOut out(0, CScript() << OP_RETURN << data);
+            rawTx.vout.push_back(out);
+        } else if (name_ == "anchor") {
+            if (has_anchor) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, duplicate key: anchor");
+            }
+            has_anchor = true;
+            rawTx.nVersion = 3;
+            CAmount nAmount = AmountFromValue(outputs[name_]);
+
+            CTxOut out(nAmount, CScript() << OP_TRUE << std::vector<unsigned char>{0x4e, 0x73});
             rawTx.vout.push_back(out);
         } else {
             CTxDestination destination = DecodeDestination(name_);
