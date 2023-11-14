@@ -684,10 +684,8 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
 }
 
 V1Transport::V1Transport(const NodeId node_id, int nTypeIn, int nVersionIn) noexcept :
-    m_node_id(node_id), hdrbuf(nTypeIn, nVersionIn), vRecv(nTypeIn, nVersionIn)
+    m_magic_bytes{Params().MessageStart()}, m_node_id(node_id), hdrbuf(nTypeIn, nVersionIn), vRecv(nTypeIn, nVersionIn)
 {
-    assert(std::size(Params().MessageStart()) == std::size(m_magic_bytes));
-    m_magic_bytes = Params().MessageStart();
     LOCK(m_recv_mutex);
     Reset();
 }
