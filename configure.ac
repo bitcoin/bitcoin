@@ -391,7 +391,7 @@ fi
 
 if test "$enable_lto" = "yes"; then
   AX_CHECK_COMPILE_FLAG([-flto], [
-    AX_CHECK_LINK_FLAG([-flto], [LTO_CXXFLAGS="$LTO_CXXFLAGS -flto"], [AC_MSG_ERROR([link failed with -flto])], [$LDFLAG_WERROR])
+    AX_CHECK_LINK_FLAG([-flto], [LTO_FLAGS="$LTO_FLAGS -flto"], [AC_MSG_ERROR([link failed with -flto])], [$LDFLAG_WERROR])
   ], [AC_MSG_ERROR([compile failed with -flto])], [$CXXFLAG_WERROR])
 fi
 
@@ -1902,7 +1902,7 @@ AC_SUBST(GPROF_LDFLAGS)
 AC_SUBST(HARDENED_CXXFLAGS)
 AC_SUBST(HARDENED_CPPFLAGS)
 AC_SUBST(HARDENED_LDFLAGS)
-AC_SUBST(LTO_CXXFLAGS)
+AC_SUBST(LTO_FLAGS)
 AC_SUBST(PIC_FLAGS)
 AC_SUBST(PIE_FLAGS)
 AC_SUBST(SANITIZER_CXXFLAGS)
@@ -1957,7 +1957,7 @@ unset CPPFLAGS
 CPPFLAGS="$CPPFLAGS_TEMP"
 
 if test "$enable_lto" = "yes"; then
-  export SECP_CFLAGS="$SECP_CFLAGS $LTO_CXXFLAGS"
+  export SECP_CFLAGS="$SECP_CFLAGS $LTO_FLAGS"
 fi
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --disable-module-ecdh"
 AC_CONFIG_SUBDIRS([src/secp256k1])
@@ -2019,10 +2019,10 @@ echo "  target os       = $host_os"
 echo "  build os        = $build_os"
 echo
 echo "  CC              = $CC"
-echo "  CFLAGS          = $LTO_CXXFLAGS $PTHREAD_CFLAGS $CFLAGS"
+echo "  CFLAGS          = $LTO_FLAGS $PTHREAD_CFLAGS $CFLAGS"
 echo "  CPPFLAGS        = $DEBUG_CPPFLAGS $HARDENED_CPPFLAGS $CORE_CPPFLAGS $CPPFLAGS"
 echo "  CXX             = $CXX"
-echo "  CXXFLAGS        = $LTO_CXXFLAGS $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CORE_CXXFLAGS $CXXFLAGS"
+echo "  CXXFLAGS        = $LTO_FLAGS $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CORE_CXXFLAGS $CXXFLAGS"
 echo "  LDFLAGS         = $PTHREAD_LIBS $HARDENED_LDFLAGS $GPROF_LDFLAGS $CORE_LDFLAGS $LDFLAGS"
 echo "  AR              = $AR"
 echo "  ARFLAGS         = $ARFLAGS"
