@@ -944,16 +944,6 @@ std::optional<CTxMemPool::txiter> CTxMemPool::GetIter(const uint256& txid) const
     return std::nullopt;
 }
 
-CTxMemPool::setEntries CTxMemPool::GetIterSet(const std::set<Txid>& hashes) const
-{
-    CTxMemPool::setEntries ret;
-    for (const auto& h : hashes) {
-        const auto mi = GetIter(h);
-        if (mi) ret.insert(*mi);
-    }
-    return ret;
-}
-
 CTxMemPool::setEntryRefs CTxMemPool::GetEntrySet(const std::set<Txid>& hashes) const
 {
     AssertLockHeld(cs);
@@ -974,19 +964,6 @@ std::vector<CTxMemPoolEntryRef> CTxMemPool::GetEntryVec(const std::vector<uint25
         const auto e{GetEntry(Txid::FromUint256(txid))};
         if (!e) return {};
         ret.emplace_back(*e);
-    }
-    return ret;
-}
-
-std::vector<CTxMemPool::txiter> CTxMemPool::GetIterVec(const std::vector<uint256>& txids) const
-{
-    AssertLockHeld(cs);
-    std::vector<txiter> ret;
-    ret.reserve(txids.size());
-    for (const auto& txid : txids) {
-        const auto it{GetIter(txid)};
-        if (!it) return {};
-        ret.push_back(*it);
     }
     return ret;
 }
