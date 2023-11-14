@@ -17,7 +17,7 @@
 FUZZ_TARGET(buffered_file)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    FuzzedFileProvider fuzzed_file_provider = ConsumeFile(fuzzed_data_provider);
+    FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};
     std::optional<BufferedFile> opt_buffered_file;
     CAutoFile fuzzed_file{fuzzed_file_provider.open(), 0};
     try {

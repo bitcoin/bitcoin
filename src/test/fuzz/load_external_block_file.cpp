@@ -27,7 +27,7 @@ void initialize_load_external_block_file()
 FUZZ_TARGET(load_external_block_file, .init = initialize_load_external_block_file)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    FuzzedFileProvider fuzzed_file_provider = ConsumeFile(fuzzed_data_provider);
+    FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};
     CAutoFile fuzzed_block_file{fuzzed_file_provider.open(), CLIENT_VERSION};
     if (fuzzed_block_file.IsNull()) {
         return;

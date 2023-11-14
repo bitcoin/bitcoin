@@ -263,31 +263,6 @@ public:
     static int close(void* cookie);
 };
 
-[[nodiscard]] inline FuzzedFileProvider ConsumeFile(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    return {fuzzed_data_provider};
-}
-
-class FuzzedAutoFileProvider
-{
-    FuzzedFileProvider m_fuzzed_file_provider;
-
-public:
-    FuzzedAutoFileProvider(FuzzedDataProvider& fuzzed_data_provider) : m_fuzzed_file_provider{fuzzed_data_provider}
-    {
-    }
-
-    AutoFile open()
-    {
-        return AutoFile{m_fuzzed_file_provider.open()};
-    }
-};
-
-[[nodiscard]] inline FuzzedAutoFileProvider ConsumeAutoFile(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    return {fuzzed_data_provider};
-}
-
 #define WRITE_TO_STREAM_CASE(type, consume) \
     [&] {                                   \
         type o = consume;                   \

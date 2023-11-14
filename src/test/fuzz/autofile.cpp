@@ -17,8 +17,10 @@
 FUZZ_TARGET(autofile)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    FuzzedAutoFileProvider fuzzed_auto_file_provider = ConsumeAutoFile(fuzzed_data_provider);
-    AutoFile auto_file{fuzzed_auto_file_provider.open()};
+    FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};
+    AutoFile auto_file{
+        fuzzed_file_provider.open(),
+    };
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
