@@ -394,8 +394,6 @@ public:
     using txiter = indexed_transaction_set::nth_index<0>::type::const_iterator;
     std::vector<CTransactionRef> txns_randomized GUARDED_BY(cs); //!< All transactions in mapTx, in random order
 
-    typedef std::set<txiter, CompareIteratorByHash> setEntries;
-
     typedef std::set<CTxMemPoolEntryRef, CompareIteratorByHash> setEntryRefs;
 
     using Limits = kernel::MemPoolLimits;
@@ -433,6 +431,9 @@ private:
                                                               CTxMemPoolEntry::Parents &staged_ancestors,
                                                               const Limits& limits
                                                               ) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    /** Returns an iterator to the given hash, if found */
+    std::optional<txiter> GetIter(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
@@ -521,9 +522,6 @@ public:
 
     /** Get the transaction in the pool that spends the same prevout */
     const CTransaction* GetConflictTx(const COutPoint& prevout) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-
-    /** Returns an iterator to the given hash, if found */
-    std::optional<txiter> GetIter(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Translate a set of hashes into a set of pool entries to avoid repeated lookups.
      * Does not require that all of the hashes correspond to actual transactions in the mempool,
@@ -688,11 +686,6 @@ public:
     const CTxMemPoolEntry* GetEntry(const Txid& txid) const LIFETIMEBOUND EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     CTransactionRef get(const uint256& hash) const;
-    txiter get_iter_from_wtxid(const uint256& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
-    {
-        AssertLockHeld(cs);
-        return mapTx.project<0>(mapTx.get<index_by_wtxid>().find(wtxid));
-    }
     TxMempoolInfo info(const GenTxid& gtxid) const;
 
     /** Returns info for a transaction if its entry_sequence < last_sequence */
@@ -789,6 +782,12 @@ private:
      *  removal.
      */
     void removeUnchecked(txiter entry, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    txiter get_iter_from_wtxid(const uint256& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
+        AssertLockHeld(cs);
+        return mapTx.project<0>(mapTx.get<index_by_wtxid>().find(wtxid));
+    }
 
     /** visited marks a CTxMemPoolEntry as having been traversed
      * during the lifetime of the most recently created Epoch::Guard
