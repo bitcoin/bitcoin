@@ -12,6 +12,7 @@
 #include <util/strencodings.h>
 
 #include <string>
+#include <sstream>
 
 CScriptID::CScriptID(const CScript& in) : BaseHash(Hash160(in)) {}
 
@@ -154,6 +155,25 @@ std::string GetOpName(opcodetype opcode)
     default:
         return "OP_UNKNOWN";
     }
+}
+
+std::string GetOpNameAsm(const opcodetype& opcode)
+{
+    // Directly handle numeric opcode range
+    if ((opcode > OP_0) && (opcode < OP_PUSHDATA1)) {
+        std::ostringstream ss;
+        ss << static_cast<int>(opcode);
+        return ss.str();
+    }
+
+    std::string o = GetOpName(opcode);
+
+    constexpr std::string_view prefix = "OP_";
+    if (o.starts_with(prefix)) {
+        o.erase(0, prefix.length());
+    }
+
+    return o;
 }
 
 unsigned int CScript::GetSigOpCount(bool fAccurate) const
