@@ -85,6 +85,76 @@ std::string SighashToStr(unsigned char sighash_type)
     return it->second;
 }
 
+/*
+ * Format pushed bytes into appropriate ASM format
+ */
+std::string FormatPushDataAsm(const std::vector<unsigned char>& vch, const opcodetype& opcode)
+{
+    // Use OPCODE<hex> for non-minimal pushes
+    if (!CheckMinimalPush(vch, opcode)) {
+        return GetOpNameAsm(opcode) + "<" + HexStr(vch) + ">";
+    }
+
+    // Use <hex> for minimal pushes > 5 bytes
+    if (vch.size() > 5) {
+        return "<" + HexStr(vch) + ">";
+    }
+
+    // Use decimal for minimally-encoded, minimal pushes <= 5 bytes
+    // Note: OP_CLTV / OP_CSV accept 5-byte numbers
+    try {
+        CScriptNum n{vch, true, 5};
+        return strprintf("%lld", n.GetInt64());
+    }
+
+    // Use OPCODE<hex> for non-minimally-encoded minimal pushes
+    catch (scriptnum_error&) {
+        return "<" + HexStr(vch) + ">";
+    }
+}
+
+/*
+ * Format an opcode and associated data into an ASM string
+ */
+std::string OpcodeToAsmString(const opcodetype& opcode, const std::vector<unsigned char>& vch)
+{
+    switch (opcode) {
+        case OP_0:
+            return "0";
+        case OP_1NEGATE:
+            return "-1";
+        case OP_1:
+        case OP_2:
+        case OP_3:
+        case OP_4:
+        case OP_5:
+        case OP_6:
+        case OP_7:
+        case OP_8:
+        case OP_9:
+        case OP_10:
+        case OP_11:
+        case OP_12:
+        case OP_13:
+        case OP_14:
+        case OP_15:
+        case OP_16:
+            return strprintf("%i", opcode - OP_1NEGATE - 1);
+        default:
+            // Push opcodes 1-75
+            if (0 < opcode && opcode <= OP_PUSHDATA4) {
+                return FormatPushDataAsm(vch, opcode);
+            }
+            auto op_name = GetOpNameAsm(opcode);
+            // Unknown opcodes
+            if (op_name == "UNKNOWN") {
+                return strprintf("UNKNOWN_%s", opcode);
+            }
+            // Other opcodes
+            return op_name;
+    }
+}
+
 /**
  * Create the assembly string representation of a CScript object.
  * @param[in] script    CScript object to convert into the asm string representation.
@@ -100,18 +170,9 @@ std::string ScriptToAsmStr(const CScript& script)
             str += " ";
         }
         if (!script.GetOp(pc, opcode, vch)) {
-            str += "[error]";
-            return str;
+            return str + "[error]";
         }
-        if (0 <= opcode && opcode <= OP_PUSHDATA4) {
-            if (vch.size() <= static_cast<std::vector<unsigned char>::size_type>(4)) {
-                str += strprintf("%d", CScriptNum(vch, false).getint());
-            } else {
-                str += HexStr(vch);
-            }
-        } else {
-            str += GetOpNameAsm(opcode);
-        }
+        str += OpcodeToAsmString(opcode, vch);
     }
     return str;
 }

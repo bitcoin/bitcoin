@@ -1309,6 +1309,12 @@ BOOST_AUTO_TEST_CASE(script_IsPushOnly_on_invalid_scripts)
     BOOST_CHECK(!CScript(direct, direct+sizeof(direct)).IsPushOnly());
 }
 
+static std::string ASMRepr(const std::string& str)
+{
+    std::string ret = "<" + str + ">";
+    return ret;
+}
+
 BOOST_AUTO_TEST_CASE(script_GetScriptAsm)
 {
     BOOST_CHECK_EQUAL("CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_NOP2));
@@ -1318,14 +1324,14 @@ BOOST_AUTO_TEST_CASE(script_GetScriptAsm)
     std::string pubKey("03b0da749730dc9b4b1f4a14d6902877a92541f5368778853d9c4a0cb7802dcfb2");
     std::vector<unsigned char> vchPubKey = ToByteVector(ParseHex(pubKey));
 
-    BOOST_CHECK_EQUAL(derSig + "00 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "00")) << vchPubKey));
-    BOOST_CHECK_EQUAL(derSig + "01 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "01")) << vchPubKey));
-    BOOST_CHECK_EQUAL(derSig + "02 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "02")) << vchPubKey));
-    BOOST_CHECK_EQUAL(derSig + "03 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "03")) << vchPubKey));
-    BOOST_CHECK_EQUAL(derSig + "80 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "80")) << vchPubKey));
-    BOOST_CHECK_EQUAL(derSig + "81 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "81")) << vchPubKey));
-    BOOST_CHECK_EQUAL(derSig + "82 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "82")) << vchPubKey));
-    BOOST_CHECK_EQUAL(derSig + "83 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "83")) << vchPubKey));
+    BOOST_CHECK_EQUAL(ASMRepr(derSig + "00") + " " + ASMRepr(pubKey), ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "00")) << vchPubKey));
+    BOOST_CHECK_EQUAL(ASMRepr(derSig + "01") + " " + ASMRepr(pubKey), ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "01")) << vchPubKey));
+    BOOST_CHECK_EQUAL(ASMRepr(derSig + "02") + " " + ASMRepr(pubKey), ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "02")) << vchPubKey));
+    BOOST_CHECK_EQUAL(ASMRepr(derSig + "03") + " " + ASMRepr(pubKey), ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "03")) << vchPubKey));
+    BOOST_CHECK_EQUAL(ASMRepr(derSig + "80") + " " + ASMRepr(pubKey), ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "80")) << vchPubKey));
+    BOOST_CHECK_EQUAL(ASMRepr(derSig + "81") + " " + ASMRepr(pubKey), ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "81")) << vchPubKey));
+    BOOST_CHECK_EQUAL(ASMRepr(derSig + "82") + " " + ASMRepr(pubKey), ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "82")) << vchPubKey));
+    BOOST_CHECK_EQUAL(ASMRepr(derSig + "83") + " " + ASMRepr(pubKey), ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "83")) << vchPubKey));
 }
 
 static CScript ScriptFromHex(const std::string& str)

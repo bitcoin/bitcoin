@@ -13,7 +13,7 @@
             "value": 0.00000000,
             "n": 0,
             "scriptPubKey": {
-                "asm": "0 0bfe935e70c321c7ca3afc75ce0d0ca2f98b5422e008bb31c00c6d7f1f1c0ad6",
+                "asm": "0 <0bfe935e70c321c7ca3afc75ce0d0ca2f98b5422e008bb31c00c6d7f1f1c0ad6>",
                 "desc": "addr(bc1qp0lfxhnscvsu0j36l36uurgv5tuck4pzuqytkvwqp3kh78cupttqyf705v)#s4fdh9tu",
                 "hex": "00200bfe935e70c321c7ca3afc75ce0d0ca2f98b5422e008bb31c00c6d7f1f1c0ad6",
                 "address": "bc1qp0lfxhnscvsu0j36l36uurgv5tuck4pzuqytkvwqp3kh78cupttqyf705v",

@@ -13,7 +13,7 @@
             "value": 0.00000000,
             "n": 0,
             "scriptPubKey": {
-                "asm": "0 a2516e770582864a6a56ed21a102044e388c62e3",
+                "asm": "0 <a2516e770582864a6a56ed21a102044e388c62e3>",
                 "desc": "addr(bc1q5fgkuac9s2ry56jka5s6zqsyfcugcchry5cwu0)#gm7zhxq2",
                 "hex": "0014a2516e770582864a6a56ed21a102044e388c62e3",
                 "address": "bc1q5fgkuac9s2ry56jka5s6zqsyfcugcchry5cwu0",

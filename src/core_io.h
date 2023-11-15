@@ -6,6 +6,7 @@
 #define BITCOIN_CORE_IO_H
 
 #include <consensus/amount.h>
+#include <script/script.h>
 #include <util/result.h>
 
 #include <string>
@@ -51,6 +52,8 @@ bool ParseHashStr(const std::string& strHex, uint256& result);
 // core_write.cpp
 UniValue ValueFromAmount(const CAmount amount);
 std::string FormatScript(const CScript& script);
+std::string FormatPushDataAsm(const std::vector<unsigned char>& vch, const opcodetype& opcode);
+std::string OpcodeToAsmString(const opcodetype& opcode, const std::vector<unsigned char>& vch);
 std::string EncodeHexTx(const CTransaction& tx);
 std::string SighashToStr(unsigned char sighash_type);
 void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex = true, bool include_address = false, const SigningProvider* provider = nullptr);
