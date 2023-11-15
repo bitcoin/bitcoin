@@ -203,11 +203,6 @@ FUZZ_WALLET_SRC = \
  wallet/test/fuzz/fees.cpp \
  wallet/test/fuzz/parse_iso8601.cpp
 
-if USE_SQLITE
-FUZZ_WALLET_SRC += \
- wallet/test/fuzz/notifications.cpp
-endif # USE_SQLITE
-
 BITCOIN_TEST_SUITE += \
   wallet/test/wallet_test_fixture.cpp \
   wallet/test/wallet_test_fixture.h \
