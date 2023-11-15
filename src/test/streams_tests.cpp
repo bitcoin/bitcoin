@@ -271,9 +271,6 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     BufferedFile bf{file, 25, 10};
     BOOST_CHECK(!bf.eof());
 
-    // This member has no functional effect.
-    BOOST_CHECK_EQUAL(bf.GetVersion(), 333);
-
     uint8_t i;
     bf >> i;
     BOOST_CHECK_EQUAL(i, 0);
