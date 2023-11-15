@@ -13,7 +13,6 @@
 #include <uint256.h>
 #include <util/strencodings.h>
 #include <util/transaction_identifier.h>
-#include <version.h>
 
 #include <cassert>
 #include <stdexcept>

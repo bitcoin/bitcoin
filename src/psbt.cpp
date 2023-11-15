@@ -8,6 +8,7 @@
 #include <script/signingprovider.h>
 #include <util/check.h>
 #include <util/strencodings.h>
+#include <version.h>
 
 
 PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction& tx) : tx(tx)

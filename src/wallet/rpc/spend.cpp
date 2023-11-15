@@ -19,6 +19,7 @@
 #include <wallet/rpc/util.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
+#include <version.h>
 
 #include <univalue.h>
 

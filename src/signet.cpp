@@ -22,6 +22,7 @@
 #include <streams.h>
 #include <uint256.h>
 #include <util/strencodings.h>
+#include <version.h>
 
 static constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2};
 

@@ -30,6 +30,7 @@
 #include <util/check.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
+#include <version.h>
 
 #include <atomic>
 #include <condition_variable>
