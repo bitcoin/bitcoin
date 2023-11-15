@@ -13,7 +13,7 @@
             "value": 0.00000000,
             "n": 0,
             "scriptPubKey": {
-                "asm": "OP_DROP",
+                "asm": "DROP",
                 "desc": "raw(75)#ppey0zqj",
                 "hex": "75",
                 "type": "nonstandard"

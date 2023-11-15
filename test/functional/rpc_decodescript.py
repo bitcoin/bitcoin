@@ -75,7 +75,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         self.log.info("- P2PK")
         # <pubkey> OP_CHECKSIG
         rpc_result = self.nodes[0].decodescript(push_public_key + 'ac')
-        assert_equal(public_key + ' OP_CHECKSIG', rpc_result['asm'])
+        assert_equal(public_key + ' CHECKSIG', rpc_result['asm'])
         assert_equal('pubkey', rpc_result['type'])
         # P2PK is translated to P2WPKH
         assert_equal('0 ' + public_key_hash, rpc_result['segwit']['asm'])
@@ -84,7 +84,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         # OP_DUP OP_HASH160 <PubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
         rpc_result = self.nodes[0].decodescript('76a9' + push_public_key_hash + '88ac')
         assert_equal('pubkeyhash', rpc_result['type'])
-        assert_equal('OP_DUP OP_HASH160 ' + public_key_hash + ' OP_EQUALVERIFY OP_CHECKSIG', rpc_result['asm'])
+        assert_equal('DUP HASH160 ' + public_key_hash + ' EQUALVERIFY CHECKSIG', rpc_result['asm'])
         # P2PKH is translated to P2WPKH
         assert_equal('witness_v0_keyhash', rpc_result['segwit']['type'])
         assert_equal('0 ' + public_key_hash, rpc_result['segwit']['asm'])
@@ -96,7 +96,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         multisig_script = '52' + push_public_key + push_public_key + push_public_key + '53ae'
         rpc_result = self.nodes[0].decodescript(multisig_script)
         assert_equal('multisig', rpc_result['type'])
-        assert_equal('2 ' + public_key + ' ' + public_key + ' ' + public_key +  ' 3 OP_CHECKMULTISIG', rpc_result['asm'])
+        assert_equal('2 ' + public_key + ' ' + public_key + ' ' + public_key +  ' 3 CHECKMULTISIG', rpc_result['asm'])
         # multisig in P2WSH
         multisig_script_hash = sha256(bytes.fromhex(multisig_script)).hex()
         assert_equal('witness_v0_scripthash', rpc_result['segwit']['type'])
@@ -108,7 +108,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         # but this works the same for purposes of this test.
         rpc_result = self.nodes[0].decodescript('a9' + push_public_key_hash + '87')
         assert_equal('scripthash', rpc_result['type'])
-        assert_equal('OP_HASH160 ' + public_key_hash + ' OP_EQUAL', rpc_result['asm'])
+        assert_equal('HASH160 ' + public_key_hash + ' EQUAL', rpc_result['asm'])
         # P2SH does not work in segwit secripts. decodescript should not return a result for it.
         assert 'segwit' not in rpc_result
 
@@ -120,7 +120,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         # OP_RETURN <data>
         rpc_result = self.nodes[0].decodescript('6a' + signature_imposter)
         assert_equal('nulldata', rpc_result['type'])
-        assert_equal('OP_RETURN ' + signature_imposter[2:], rpc_result['asm'])
+        assert_equal('RETURN ' + signature_imposter[2:], rpc_result['asm'])
 
         self.log.info("- CLTV redeem script")
         # redeem scripts are in-effect scriptPubKey scripts, so adding a test here.
@@ -139,7 +139,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         cltv_script = '63' + push_public_key + 'ad670320a107b17568' + push_public_key + 'ac'
         rpc_result = self.nodes[0].decodescript(cltv_script)
         assert_equal('nonstandard', rpc_result['type'])
-        assert_equal('OP_IF ' + public_key + ' OP_CHECKSIGVERIFY OP_ELSE 500000 OP_CHECKLOCKTIMEVERIFY OP_DROP OP_ENDIF ' + public_key + ' OP_CHECKSIG', rpc_result['asm'])
+        assert_equal('IF ' + public_key + ' CHECKSIGVERIFY ELSE 500000 CHECKLOCKTIMEVERIFY DROP ENDIF ' + public_key + ' CHECKSIG', rpc_result['asm'])
         # CLTV script in P2WSH
         cltv_script_hash = sha256(bytes.fromhex(cltv_script)).hex()
         assert_equal('0 ' + cltv_script_hash, rpc_result['segwit']['asm'])
@@ -148,7 +148,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         # <pubkey> OP_CHECKSIG
         rpc_result = self.nodes[0].decodescript(push_uncompressed_public_key + 'ac')
         assert_equal('pubkey', rpc_result['type'])
-        assert_equal(uncompressed_public_key + ' OP_CHECKSIG', rpc_result['asm'])
+        assert_equal(uncompressed_public_key + ' CHECKSIG', rpc_result['asm'])
         # uncompressed pubkeys are invalid for checksigs in segwit scripts.
         # decodescript should not return a P2WPKH equivalent.
         assert 'segwit' not in rpc_result
@@ -160,7 +160,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         # with an uncompressed pubkey in them.
         rpc_result = self.nodes[0].decodescript('52' + push_public_key + push_uncompressed_public_key +'52ae')
         assert_equal('multisig', rpc_result['type'])
-        assert_equal('2 ' + public_key + ' ' + uncompressed_public_key + ' 2 OP_CHECKMULTISIG', rpc_result['asm'])
+        assert_equal('2 ' + public_key + ' ' + uncompressed_public_key + ' 2 CHECKMULTISIG', rpc_result['asm'])
         # uncompressed pubkeys are invalid for checksigs in segwit scripts.
         # decodescript should not return a P2WPKH equivalent.
         assert 'segwit' not in rpc_result
@@ -212,22 +212,22 @@ class DecodeScriptTest(BitcoinTestFramework):
         rpc_result = self.nodes[0].decoderawtransaction(tx)
         assert_equal('8e3730608c3b0bb5df54f09076e196bc292a8e39a78e73b44b6ba08c78f5cbb0', rpc_result['txid'])
         assert_equal('0 3045022100ae3b4e589dfc9d48cb82d41008dc5fa6a86f94d5c54f9935531924602730ab8002202f88cf464414c4ed9fa11b773c5ee944f66e9b05cc1e51d97abc22ce098937ea01 3045022100b44883be035600e9328a01b66c7d8439b74db64187e76b99a68f7893b701d5380220225bf286493e4c4adcf928c40f785422572eb232f84a0b83b0dea823c3a19c7501 5221020743d44be989540d27b1b4bbbcfd17721c337cb6bc9af20eb8a32520b393532f2102c0120a1dda9e51a938d39ddd9fe0ebc45ea97e1d27a7cbd671d5431416d3dd87210213820eb3d5f509d7438c9eeecb4157b2f595105e7cd564b3cdbb9ead3da41eed53ae', rpc_result['vin'][0]['scriptSig']['asm'])
-        assert_equal('OP_DUP OP_HASH160 dc863734a218bfe83ef770ee9d41a27f824a6e56 OP_EQUALVERIFY OP_CHECKSIG', rpc_result['vout'][0]['scriptPubKey']['asm'])
-        assert_equal('OP_HASH160 2a5edea39971049a540474c6a99edf0aa4074c58 OP_EQUAL', rpc_result['vout'][1]['scriptPubKey']['asm'])
+        assert_equal('DUP HASH160 dc863734a218bfe83ef770ee9d41a27f824a6e56 EQUALVERIFY CHECKSIG', rpc_result['vout'][0]['scriptPubKey']['asm'])
+        assert_equal('HASH160 2a5edea39971049a540474c6a99edf0aa4074c58 EQUAL', rpc_result['vout'][1]['scriptPubKey']['asm'])
         txSave = tx_from_hex(tx)
 
         self.log.info("- tx not passing DER signature checks")
         # make sure that a specifically crafted op_return value will not pass all the IsDERSignature checks and then get decoded as a sighash type
         tx = '01000000015ded05872fdbda629c7d3d02b194763ce3b9b1535ea884e3c8e765d42e316724020000006b48304502204c10d4064885c42638cbff3585915b322de33762598321145ba033fc796971e2022100bb153ad3baa8b757e30a2175bd32852d2e1cb9080f84d7e32fcdfd667934ef1b012103163c0ff73511ea1743fb5b98384a2ff09dd06949488028fd819f4d83f56264efffffffff0200000000000000000b6a0930060201000201000180380100000000001976a9141cabd296e753837c086da7a45a6c2fe0d49d7b7b88ac00000000'
         rpc_result = self.nodes[0].decoderawtransaction(tx)
-        assert_equal('OP_RETURN 300602010002010001', rpc_result['vout'][0]['scriptPubKey']['asm'])
+        assert_equal('RETURN 300602010002010001', rpc_result['vout'][0]['scriptPubKey']['asm'])
 
         self.log.info("- tx passing DER signature checks")
         # verify that we have not altered scriptPubKey processing even of a specially crafted P2PKH pubkeyhash and P2SH redeem script hash that is made to pass the der signature checks
         tx = '01000000018d1f5635abd06e2c7e2ddf58dc85b3de111e4ad6e0ab51bb0dcf5e84126d927300000000fdfe0000483045022100ae3b4e589dfc9d48cb82d41008dc5fa6a86f94d5c54f9935531924602730ab8002202f88cf464414c4ed9fa11b773c5ee944f66e9b05cc1e51d97abc22ce098937ea01483045022100b44883be035600e9328a01b66c7d8439b74db64187e76b99a68f7893b701d5380220225bf286493e4c4adcf928c40f785422572eb232f84a0b83b0dea823c3a19c75014c695221020743d44be989540d27b1b4bbbcfd17721c337cb6bc9af20eb8a32520b393532f2102c0120a1dda9e51a938d39ddd9fe0ebc45ea97e1d27a7cbd671d5431416d3dd87210213820eb3d5f509d7438c9eeecb4157b2f595105e7cd564b3cdbb9ead3da41eed53aeffffffff02611e0000000000001976a914301102070101010101010102060101010101010188acee2a02000000000017a91430110207010101010101010206010101010101018700000000'
         rpc_result = self.nodes[0].decoderawtransaction(tx)
-        assert_equal('OP_DUP OP_HASH160 3011020701010101010101020601010101010101 OP_EQUALVERIFY OP_CHECKSIG', rpc_result['vout'][0]['scriptPubKey']['asm'])
-        assert_equal('OP_HASH160 3011020701010101010101020601010101010101 OP_EQUAL', rpc_result['vout'][1]['scriptPubKey']['asm'])
+        assert_equal('DUP HASH160 3011020701010101010101020601010101010101 EQUALVERIFY CHECKSIG', rpc_result['vout'][0]['scriptPubKey']['asm'])
+        assert_equal('HASH160 3011020701010101010101020601010101010101 EQUAL', rpc_result['vout'][1]['scriptPubKey']['asm'])
 
         # some more full transaction tests of varying specific scriptSigs. used instead of
         # tests in decodescript_script_sig because the decodescript RPC is specifically
@@ -259,7 +259,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         # in fact, it contains an OP_RETURN with data specially crafted to cause improper decode if the code does not catch it.
         txSave.vin[0].scriptSig = bytes.fromhex('6a143011020701010101010101020601010101010101')
         rpc_result = self.nodes[0].decoderawtransaction(txSave.serialize().hex())
-        assert_equal('OP_RETURN 3011020701010101010101020601010101010101', rpc_result['vin'][0]['scriptSig']['asm'])
+        assert_equal('RETURN 3011020701010101010101020601010101010101', rpc_result['vin'][0]['scriptSig']['asm'])
 
     def decodescript_datadriven_tests(self):
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_decodescript.json'), encoding='utf-8') as f:
