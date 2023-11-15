@@ -27,7 +27,7 @@ FUZZ_TARGET(script_format, .init = initialize_script_format)
     }
 
     (void)FormatScript(script);
-    (void)ScriptToAsmStr(script, /*fAttemptSighashDecode=*/fuzzed_data_provider.ConsumeBool());
+    (void)ScriptToAsmStr(script);
 
     UniValue o1(UniValue::VOBJ);
     ScriptToUniv(script, /*out=*/o1, /*include_hex=*/fuzzed_data_provider.ConsumeBool(), /*include_address=*/fuzzed_data_provider.ConsumeBool());
