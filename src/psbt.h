@@ -95,7 +95,7 @@ void SerializeToVector(Stream& s, const X&... args)
 
 // Takes a stream and multiple arguments and unserializes them first as a vector then each object individually in the order provided in the arguments
 template<typename Stream, typename... X>
-void UnserializeFromVector(Stream& s, X&... args)
+void UnserializeFromVector(Stream& s, X&&... args)
 {
     size_t expected_size = ReadCompactSize(s);
     size_t remaining_before = s.size();
@@ -226,8 +226,7 @@ struct PSBTInput
         // Write the utxo
         if (non_witness_utxo) {
             SerializeToVector(s, CompactSizeWriter(PSBT_IN_NON_WITNESS_UTXO));
-            OverrideStream<Stream> os{&s, s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS};
-            SerializeToVector(os, non_witness_utxo);
+            SerializeToVector(s, TX_NO_WITNESS(non_witness_utxo));
         }
         if (!witness_utxo.IsNull()) {
             SerializeToVector(s, CompactSizeWriter(PSBT_IN_WITNESS_UTXO));
@@ -394,8 +393,7 @@ struct PSBTInput
                         throw std::ios_base::failure("Non-witness utxo key is more than one byte type");
                     }
                     // Set the stream to unserialize with witness since this is always a valid network transaction
-                    OverrideStream<Stream> os{&s, s.GetVersion() & ~SERIALIZE_TRANSACTION_NO_WITNESS};
-                    UnserializeFromVector(os, non_witness_utxo);
+                    UnserializeFromVector(s, TX_WITH_WITNESS(non_witness_utxo));
                     break;
                 }
                 case PSBT_IN_WITNESS_UTXO:
@@ -984,8 +982,7 @@ struct PartiallySignedTransaction
         SerializeToVector(s, CompactSizeWriter(PSBT_GLOBAL_UNSIGNED_TX));
 
         // Write serialized tx to a stream
-        OverrideStream<Stream> os{&s, s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS};
-        SerializeToVector(os, *tx);
+        SerializeToVector(s, TX_NO_WITNESS(*tx));
 
         // Write xpubs
         for (const auto& xpub_pair : m_xpubs) {
@@ -1075,8 +1072,7 @@ struct PartiallySignedTransaction
                     }
                     CMutableTransaction mtx;
                     // Set the stream to serialize with non-witness since this should always be non-witness
-                    OverrideStream<Stream> os{&s, s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS};
-                    UnserializeFromVector(os, mtx);
+                    UnserializeFromVector(s, TX_NO_WITNESS(mtx));
                     tx = std::move(mtx);
                     // Make sure that all scriptSigs and scriptWitnesses are empty
                     for (const CTxIn& txin : tx->vin) {

@@ -16,8 +16,7 @@ namespace {
 class TxInputStream
 {
 public:
-    TxInputStream(int nVersionIn, const unsigned char *txTo, size_t txToLen) :
-    m_version(nVersionIn),
+    TxInputStream(const unsigned char *txTo, size_t txToLen) :
     m_data(txTo),
     m_remaining(txToLen)
     {}
@@ -48,9 +47,7 @@ public:
         return *this;
     }
 
-    int GetVersion() const { return m_version; }
 private:
-    const int m_version;
     const unsigned char* m_data;
     size_t m_remaining;
 };
@@ -84,8 +81,8 @@ static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptP
     }
 
     try {
-        TxInputStream stream(PROTOCOL_VERSION, txTo, txToLen);
-        CTransaction tx(deserialize, stream);
+        TxInputStream stream(txTo, txToLen);
+        CTransaction tx(deserialize, TX_WITH_WITNESS, stream);
 
         std::vector<CTxOut> spent_outputs;
         if (spentOutputs != nullptr) {
@@ -102,7 +99,7 @@ static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptP
 
         if (nIn >= tx.vin.size())
             return set_error(err, bitcoinconsensus_ERR_TX_INDEX);
-        if (GetSerializeSize(tx, PROTOCOL_VERSION) != txToLen)
+        if (GetSerializeSize(TX_WITH_WITNESS(tx)) != txToLen)
             return set_error(err, bitcoinconsensus_ERR_TX_SIZE_MISMATCH);
 
         // Regardless of the verification result, the tx did not error.

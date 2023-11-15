@@ -58,7 +58,7 @@ FUZZ_TARGET(bloom_filter)
                 assert(present);
             },
             [&] {
-                const std::optional<CMutableTransaction> mut_tx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
+                const std::optional<CMutableTransaction> mut_tx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
                 if (!mut_tx) {
                     good_data = false;
                     return;

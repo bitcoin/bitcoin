@@ -114,7 +114,7 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                 random_coin = *opt_coin;
             },
             [&] {
-                const std::optional<CMutableTransaction> opt_mutable_transaction = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
+                const std::optional<CMutableTransaction> opt_mutable_transaction = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
                 if (!opt_mutable_transaction) {
                     good_data = false;
                     return;
