@@ -79,7 +79,7 @@ bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRe
         return false;
     }
 
-    CAutoFile file{m_chainstate->m_blockman.OpenBlockFile(postx, true)};
+    AutoFile file{m_chainstate->m_blockman.OpenBlockFile(postx, true)};
     if (file.IsNull()) {
         return error("%s: OpenBlockFile failed", __func__);
     }
