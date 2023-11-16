@@ -15,18 +15,12 @@ public:
     explicit CNetMsgMaker(int /*unused*/) {}
 
     template <typename... Args>
-    CSerializedNetMsg Make(int /*unused*/, std::string msg_type, Args&&... args) const
+    CSerializedNetMsg Make(std::string msg_type, Args&&... args) const
     {
         CSerializedNetMsg msg;
         msg.m_type = std::move(msg_type);
         VectorWriter{msg.data, 0, std::forward<Args>(args)...};
         return msg;
-    }
-
-    template <typename... Args>
-    CSerializedNetMsg Make(std::string msg_type, Args&&... args) const
-    {
-        return Make(0, std::move(msg_type), std::forward<Args>(args)...);
     }
 };
 
