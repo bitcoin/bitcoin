@@ -37,7 +37,7 @@ void initialize_process_message()
 {
     if (const auto val{std::getenv("LIMIT_TO_MESSAGE_TYPE")}) {
         LIMIT_TO_MESSAGE_TYPE = val;
-        Assert(std::count(getAllNetMessageTypes().begin(), getAllNetMessageTypes().end(), LIMIT_TO_MESSAGE_TYPE)); // Unknown message type passed
+        Assert(std::count(g_all_net_message_types.begin(), g_all_net_message_types.end(), LIMIT_TO_MESSAGE_TYPE)); // Unknown message type passed
     }
 
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(
