@@ -409,7 +409,7 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     }
     // Process expected parameters. If any parameters were left unspecified in
     // the request before a parameter that was specified, null values need to be
-    // inserted at the unspecifed parameter positions, and the "hole" variable
+    // inserted at the unspecified parameter positions, and the "hole" variable
     // below tracks the number of null values that need to be inserted.
     // The "initial_hole_size" variable stores the size of the initial hole,
     // i.e. how many initial positional arguments were left unspecified. This is

@@ -52,5 +52,5 @@ in order.
 ### Cache
 
 In order to avoid rebuilding all dependencies for each build, the binaries are
-cached and re-used when possible. Changes in the dependency-generator will
+cached and reused when possible. Changes in the dependency-generator will
 trigger cache-invalidation and rebuilds as necessary.

@@ -402,7 +402,7 @@ public:
      * RPC method implementations. The helper internally checks whether the
      * user-passed argument isNull() and parses (from JSON) and returns the
      * user-passed argument, or the default value derived from the RPCArg
-     * documention, or a falsy value if no default was given.
+     * documentation, or a falsy value if no default was given.
      *
      * Use Arg<Type>(i) to get the argument or its default value. Otherwise,
      * use MaybeArg<Type>(i) to get the optional argument or a falsy value.
