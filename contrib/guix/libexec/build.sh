@@ -286,6 +286,13 @@ mkdir -p "$DISTSRC"
     # Build Dash Core
     make --jobs="$JOBS" ${V:+V=1}
 
+    # Make macos-specific debug symbols
+    case "$HOST" in
+        *darwin*)
+            make -C src/ osx_debug
+            ;;
+    esac
+
     # Check that symbol/security checks tools are sane.
     make test-security-check ${V:+V=1}
     # Perform basic security checks on a series of executables.
@@ -308,14 +315,7 @@ mkdir -p "$DISTSRC"
     INSTALLPATH="${PWD}/installed/${DISTNAME}"
     mkdir -p "${INSTALLPATH}"
     # Install built Dash Core to $INSTALLPATH
-    case "$HOST" in
-        *darwin*)
-            make install-strip DESTDIR="${INSTALLPATH}" ${V:+V=1}
-            ;;
-        *)
-            make install DESTDIR="${INSTALLPATH}" ${V:+V=1}
-            ;;
-    esac
+    make install DESTDIR="${INSTALLPATH}" ${V:+V=1}
 
     case "$HOST" in
         *darwin*)
@@ -355,7 +355,10 @@ mkdir -p "$DISTSRC"
         rm -rf "${DISTNAME}/lib/pkgconfig"
 
         case "$HOST" in
-            *darwin*) ;;
+            *darwin*)
+                # Copy dSYM-s
+                find ../src -name "*.dSYM" -exec cp -ra {} "${DISTNAME}/bin" \;
+                ;;
             *)
                 # Split binaries and libraries from their debug symbols
                 {
@@ -404,11 +407,16 @@ mkdir -p "$DISTSRC"
                     || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST}-debug.tar.gz" && exit 1 )
                 ;;
             *darwin*)
-                find "${DISTNAME}" -print0 \
+                find "${DISTNAME}" -not -path "*.dSYM*" -print0 \
                     | sort --zero-terminated \
                     | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
                     | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST}.tar.gz" \
                     || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST}.tar.gz" && exit 1 )
+                find "${DISTNAME}" -path "*.dSYM*" -print0 \
+                    | sort --zero-terminated \
+                    | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
+                    | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST}-debug.tar.gz" \
+                    || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST}-debug.tar.gz" && exit 1 )
                 ;;
         esac
     )  # $DISTSRC/installed
