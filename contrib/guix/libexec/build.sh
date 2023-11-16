@@ -27,11 +27,15 @@ Required environment variables as seen inside the container:
     DIST_ARCHIVE_BASE: ${DIST_ARCHIVE_BASE:?not set}
     DISTNAME: ${DISTNAME:?not set}
     HOST: ${HOST:?not set}
-    CONFIGFLAGS: ${CONFIGFLAGS:?not set}
     SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH:?not set}
     JOBS: ${JOBS:?not set}
     DISTSRC: ${DISTSRC:?not set}
     OUTDIR: ${OUTDIR:?not set}
+EOF
+
+cat << EOF
+Optional environment variables as seen inside the container:
+    CONFIGFLAGS: ${CONFIGFLAGS}
 EOF
 
 ACTUAL_OUTDIR="${OUTDIR}"
