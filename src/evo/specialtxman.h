@@ -9,12 +9,15 @@
 #include <sync.h>
 #include <threadsafety.h>
 
+#include <optional>
+
 class BlockValidationState;
 class CBlock;
 class CBlockIndex;
 class CCoinsViewCache;
 class CMNHFManager;
 class TxValidationState;
+struct MNListUpdates;
 namespace llmq {
 class CQuorumBlockProcessor;
 class CChainLocksHandler;
@@ -30,9 +33,9 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const
 bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CMNHFManager& mnhfManager,
                               llmq::CQuorumBlockProcessor& quorum_block_processor, const llmq::CChainLocksHandler& chainlock_handler,
                               const Consensus::Params& consensusParams, const CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots,
-                              BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                              BlockValidationState& state, std::optional<MNListUpdates>& updatesRet) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CMNHFManager& mnhfManager,
-                           llmq::CQuorumBlockProcessor& quorum_block_processor) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                           llmq::CQuorumBlockProcessor& quorum_block_processor, std::optional<MNListUpdates>& updatesRet) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams,
                                 const CAmount blockSubsidy, BlockValidationState& state);
 
