@@ -9,19 +9,15 @@
 #include <net.h>
 #include <serialize.h>
 
-class CNetMsgMaker
-{
-public:
-    explicit CNetMsgMaker(int /*unused*/) {}
-
+namespace NetMsg {
     template <typename... Args>
-    CSerializedNetMsg Make(std::string msg_type, Args&&... args) const
+    CSerializedNetMsg Make(std::string msg_type, Args&&... args)
     {
         CSerializedNetMsg msg;
         msg.m_type = std::move(msg_type);
         VectorWriter{msg.data, 0, std::forward<Args>(args)...};
         return msg;
     }
-};
+} // namespace NetMsg
 
 #endif // BITCOIN_NETMESSAGEMAKER_H
