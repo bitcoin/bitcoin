@@ -10,9 +10,10 @@ import copy
 import ipaddress
 import random
 import unittest
+from collections.abc import Callable, Iterable
 from enum import Enum
 from functools import total_ordering
-from typing import Callable, Iterable, Optional, Union, overload
+from typing import Optional, Union, overload
 
 def net_to_prefix(net: Union[ipaddress.IPv4Network,ipaddress.IPv6Network]) -> list[bool]:
     """
