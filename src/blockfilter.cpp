@@ -81,7 +81,7 @@ GCSFilter::GCSFilter(const Params& params, const ElementSet& elements)
     }
     m_F = static_cast<uint64_t>(m_N) * static_cast<uint64_t>(m_params.m_M);
 
-    CVectorWriter stream(GCS_SER_VERSION, m_encoded, 0);
+    VectorWriter stream{m_encoded, 0};
 
     WriteCompactSize(stream, m_N);
 
@@ -89,7 +89,7 @@ GCSFilter::GCSFilter(const Params& params, const ElementSet& elements)
         return;
     }
 
-    BitStreamWriter<CVectorWriter> bitwriter(stream);
+    BitStreamWriter bitwriter{stream};
 
     uint64_t last_value = 0;
     for (uint64_t value : BuildHashedSet(elements)) {
