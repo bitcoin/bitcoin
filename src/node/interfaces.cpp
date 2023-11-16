@@ -775,7 +775,6 @@ public:
     {
         RPCRunLater(name, std::move(fn), seconds);
     }
-    bool rpcSerializationWithoutWitness() override { return RPCSerializationWithoutWitness(); }
     common::SettingsValue getSetting(const std::string& name) override
     {
         return args().GetSetting(name);
