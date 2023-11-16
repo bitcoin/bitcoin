@@ -215,7 +215,7 @@ Open Terminal, and navigate to the location of the .dmg file.
 Then, run the following command to notarize the .dmg file:
 
 ```
-xcrun notarytool submit dashcore-{version}-osx.dmg --keychain-profile "AC_PASSWORD" --wait
+xcrun notarytool submit dashcore-{version}-{x86_64, arm64}-apple-darwin.dmg --keychain-profile "AC_PASSWORD" --wait
 ```
 Replace "{version}" with the version you are notarizing. This command uploads the .dmg file to Apple's notary service.
 
