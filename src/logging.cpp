@@ -178,6 +178,8 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::COINJOIN, "coinjoin"},
     {BCLog::SPORK, "spork"},
     {BCLog::NETCONN, "netconn"},
+    {BCLog::CREDITPOOL, "creditpool"},
+    {BCLog::EHF, "ehf"},
     {BCLog::DASH, "dash"},
     //End Dash
 };
