@@ -1046,10 +1046,10 @@ class V2TransportTester
 
 public:
     /** Construct a tester object. test_initiator: whether the tested transport is initiator. */
-    V2TransportTester(bool test_initiator) :
-        m_transport(0, test_initiator, SER_NETWORK, INIT_PROTO_VERSION),
-        m_cipher{GenerateRandomTestKey(), MakeByteSpan(InsecureRand256())},
-        m_test_initiator(test_initiator) {}
+    explicit V2TransportTester(bool test_initiator)
+        : m_transport{0, test_initiator},
+          m_cipher{GenerateRandomTestKey(), MakeByteSpan(InsecureRand256())},
+          m_test_initiator(test_initiator) {}
 
     /** Data type returned by Interact:
      *
