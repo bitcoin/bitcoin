@@ -40,7 +40,7 @@ void initialize_tx_pool()
     g_setup = testing_setup.get();
 
     for (int i = 0; i < 2 * COINBASE_MATURITY; ++i) {
-        COutPoint prevout{MineBlock(g_setup->m_node, P2WSH_OP_TRUE)};
+        COutPoint prevout{MineBlock(g_setup->m_node, P2WSH_EMPTY)};
         if (i < COINBASE_MATURITY) {
             // Remember the txids to avoid expensive disk access later on
             g_outpoints_coinbase_init_mature.push_back(prevout);
@@ -195,7 +195,8 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
                     // Create input
                     const auto sequence = ConsumeSequence(fuzzed_data_provider);
                     const auto script_sig = CScript{};
-                    const auto script_wit_stack = std::vector<std::vector<uint8_t>>{WITNESS_STACK_ELEM_OP_TRUE};
+                    const auto script_wit_stack = fuzzed_data_provider.ConsumeBool() ? P2WSH_EMPTY_TRUE_STACK : P2WSH_EMPTY_TWO_STACK;
+
                     CTxIn in;
                     in.prevout = outpoint;
                     in.nSequence = sequence;
@@ -204,17 +205,30 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
 
                     tx_mut.vin.push_back(in);
                 }
+
+                // Duplicate an input
+                bool dup_input = fuzzed_data_provider.ConsumeBool();
+                if (dup_input) {
+                    tx_mut.vin.push_back(tx_mut.vin.back());
+                }
+
+                // Refer to a non-existant input
+                if (fuzzed_data_provider.ConsumeBool()) {
+                    tx_mut.vin.emplace_back();
+                }
+
                 const auto amount_fee = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, amount_in);
                 const auto amount_out = (amount_in - amount_fee) / num_out;
                 for (int i = 0; i < num_out; ++i) {
-                    tx_mut.vout.emplace_back(amount_out, P2WSH_OP_TRUE);
+                    tx_mut.vout.emplace_back(amount_out, P2WSH_EMPTY);
                 }
                 // TODO vary transaction sizes to catch size-related issues
                 auto tx = MakeTransactionRef(tx_mut);
                 // Restore previously removed outpoints, except in-package outpoints
                 if (!last_tx) {
                     for (const auto& in : tx->vin) {
-                        Assert(outpoints.insert(in.prevout).second);
+                        // It's a fake input, or a new input, or a duplicate
+                        Assert(in == CTxIn() || outpoints.insert(in.prevout).second || dup_input);
                     }
                     // Cache the in-package outpoints being made
                     for (size_t i = 0; i < tx->vout.size(); ++i) {
