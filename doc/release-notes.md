@@ -281,7 +281,7 @@ while mixing.
 - `logging` and `debug` rpc support new logging categories `validations` and
   `i2p`
 
-  - `gettxoutsetinfo` RPC has 2 new parameters and lots of new fields in
+- `gettxoutsetinfo` RPC has 2 new parameters and lots of new fields in
   results. Please check `help gettxoutsetinfo` for more information.
 
 - `gettxchainlocks` Returns the block height each transaction was mined at and
@@ -433,7 +433,7 @@ meaningful results.
 ## Backports from Bitcoin Core
 
 This release introduces many updates from Bitcoin  v0.20-v22.0 as well as
-numerous updates from Bitcoin v23.0 and v25.0. Bitcoin changes that do not align
+numerous updates from Bitcoin v23.0-v25.0. Bitcoin changes that do not align
 with Dash’s product needs, such as SegWit and RBF, are excluded from our
 backporting. For additional detail on what’s included in Bitcoin, please refer
 to their release notes.
