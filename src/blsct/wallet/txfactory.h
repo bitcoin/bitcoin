@@ -61,7 +61,7 @@ public:
     void AddOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId());
     bool AddInput(const CCoinsViewCache& cache, const COutPoint& outpoint, const bool& rbf = false);
     std::optional<CMutableTransaction> BuildTx();
-    static std::optional<CMutableTransaction> CreateTransaction(std::shared_ptr<wallet::CWallet> wallet, const CCoinsViewCache& cache, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId());
+    static std::optional<CMutableTransaction> CreateTransaction(std::shared_ptr<wallet::CWallet> wallet, blsct::KeyMan* blsct_km, const CCoinsViewCache& cache, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId());
     static CTransactionRef AggregateTransactions(const std::vector<CTransactionRef>& txs);
 };
 } // namespace blsct

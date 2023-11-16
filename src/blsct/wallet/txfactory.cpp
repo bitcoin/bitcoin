@@ -188,14 +188,13 @@ std::optional<CMutableTransaction> TxFactory::BuildTx()
     return std::nullopt;
 }
 
-std::optional<CMutableTransaction> TxFactory::CreateTransaction(std::shared_ptr<wallet::CWallet> wallet, const CCoinsViewCache& cache, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId)
+std::optional<CMutableTransaction> TxFactory::CreateTransaction(std::shared_ptr<wallet::CWallet> wallet, blsct::KeyMan* blsct_km, const CCoinsViewCache& cache, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId)
 {
     wallet::CoinFilterParams coins_params;
     coins_params.min_amount = 0;
     coins_params.only_blsct = true;
     coins_params.token_id = tokenId;
 
-    auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
     auto tx = blsct::TxFactory(blsct_km);
 
     for (const wallet::COutput& output : WITH_LOCK(wallet->cs_wallet,
