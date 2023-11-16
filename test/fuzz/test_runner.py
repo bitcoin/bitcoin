@@ -205,12 +205,12 @@ def transform_process_message_target(targets, src_dir):
     p2p_msg_target = "process_message"
     if (p2p_msg_target, {}) in targets:
         lines = subprocess.run(
-            ["git", "grep", "--function-context", "g_all_net_message_types{", src_dir / "src" / "protocol.cpp"],
+            ["git", "grep", "--function-context", "ALL_NET_MESSAGE_TYPES{", src_dir / "src" / "protocol.h"],
             check=True,
             stdout=subprocess.PIPE,
             text=True,
         ).stdout.splitlines()
-        lines = [l.split("::", 1)[1].split(",")[0].lower() for l in lines if l.startswith("src/protocol.cpp-    NetMsgType::")]
+        lines = [l.split("::", 1)[1].split(",")[0].lower() for l in lines if l.startswith("src/protocol.h-    NetMsgType::")]
         assert len(lines)
         targets += [(p2p_msg_target, {"LIMIT_TO_MESSAGE_TYPE": m}) for m in lines]
     return targets

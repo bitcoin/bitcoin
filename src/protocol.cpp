@@ -47,47 +47,6 @@ const char* WTXIDRELAY = "wtxidrelay";
 const char* SENDTXRCNCL = "sendtxrcncl";
 } // namespace NetMsgType
 
-/** All known message types. Keep this in the same order as the list of
- * messages above and in protocol.h.
- */
-const static std::vector<std::string> g_all_net_message_types{
-    NetMsgType::VERSION,
-    NetMsgType::VERACK,
-    NetMsgType::ADDR,
-    NetMsgType::ADDRV2,
-    NetMsgType::SENDADDRV2,
-    NetMsgType::INV,
-    NetMsgType::GETDATA,
-    NetMsgType::MERKLEBLOCK,
-    NetMsgType::GETBLOCKS,
-    NetMsgType::GETHEADERS,
-    NetMsgType::TX,
-    NetMsgType::HEADERS,
-    NetMsgType::BLOCK,
-    NetMsgType::GETADDR,
-    NetMsgType::MEMPOOL,
-    NetMsgType::PING,
-    NetMsgType::PONG,
-    NetMsgType::NOTFOUND,
-    NetMsgType::FILTERLOAD,
-    NetMsgType::FILTERADD,
-    NetMsgType::FILTERCLEAR,
-    NetMsgType::SENDHEADERS,
-    NetMsgType::FEEFILTER,
-    NetMsgType::SENDCMPCT,
-    NetMsgType::CMPCTBLOCK,
-    NetMsgType::GETBLOCKTXN,
-    NetMsgType::BLOCKTXN,
-    NetMsgType::GETCFILTERS,
-    NetMsgType::CFILTER,
-    NetMsgType::GETCFHEADERS,
-    NetMsgType::CFHEADERS,
-    NetMsgType::GETCFCHECKPT,
-    NetMsgType::CFCHECKPT,
-    NetMsgType::WTXIDRELAY,
-    NetMsgType::SENDTXRCNCL,
-};
-
 CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
     : pchMessageStart{pchMessageStartIn}
 {
@@ -162,11 +121,6 @@ std::string CInv::ToString() const
     } catch(const std::out_of_range &) {
         return strprintf("0x%08x %s", type, hash.ToString());
     }
-}
-
-const std::vector<std::string> &getAllNetMessageTypes()
-{
-    return g_all_net_message_types;
 }
 
 /**

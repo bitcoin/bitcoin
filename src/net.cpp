@@ -3701,8 +3701,9 @@ CNode::CNode(NodeId idIn,
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
 
-    for (const std::string &msg : getAllNetMessageTypes())
+    for (const auto& msg : ALL_NET_MESSAGE_TYPES) {
         mapRecvBytesPerMsgType[msg] = 0;
+    }
     mapRecvBytesPerMsgType[NET_MESSAGE_TYPE_OTHER] = 0;
 
     if (fLogIPs) {

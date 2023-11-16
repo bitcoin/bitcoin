@@ -55,7 +55,7 @@ public:
 
 /**
  * Bitcoin protocol message types. When adding new message types, don't forget
- * to update allNetMessageTypes in protocol.cpp.
+ * to update ALL_NET_MESSAGE_TYPES below.
  */
 namespace NetMsgType {
 
@@ -267,8 +267,44 @@ extern const char* WTXIDRELAY;
 extern const char* SENDTXRCNCL;
 }; // namespace NetMsgType
 
-/* Get a vector of all valid message types (see above) */
-const std::vector<std::string>& getAllNetMessageTypes();
+/** All known message types (see above). Keep this in the same order as the list of messages above. */
+inline const std::array ALL_NET_MESSAGE_TYPES{std::to_array<std::string>({
+    NetMsgType::VERSION,
+    NetMsgType::VERACK,
+    NetMsgType::ADDR,
+    NetMsgType::ADDRV2,
+    NetMsgType::SENDADDRV2,
+    NetMsgType::INV,
+    NetMsgType::GETDATA,
+    NetMsgType::MERKLEBLOCK,
+    NetMsgType::GETBLOCKS,
+    NetMsgType::GETHEADERS,
+    NetMsgType::TX,
+    NetMsgType::HEADERS,
+    NetMsgType::BLOCK,
+    NetMsgType::GETADDR,
+    NetMsgType::MEMPOOL,
+    NetMsgType::PING,
+    NetMsgType::PONG,
+    NetMsgType::NOTFOUND,
+    NetMsgType::FILTERLOAD,
+    NetMsgType::FILTERADD,
+    NetMsgType::FILTERCLEAR,
+    NetMsgType::SENDHEADERS,
+    NetMsgType::FEEFILTER,
+    NetMsgType::SENDCMPCT,
+    NetMsgType::CMPCTBLOCK,
+    NetMsgType::GETBLOCKTXN,
+    NetMsgType::BLOCKTXN,
+    NetMsgType::GETCFILTERS,
+    NetMsgType::CFILTER,
+    NetMsgType::GETCFHEADERS,
+    NetMsgType::CFHEADERS,
+    NetMsgType::GETCFCHECKPT,
+    NetMsgType::CFCHECKPT,
+    NetMsgType::WTXIDRELAY,
+    NetMsgType::SENDTXRCNCL,
+})};
 
 /** nServices flags */
 enum ServiceFlags : uint64_t {
