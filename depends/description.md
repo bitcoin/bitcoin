@@ -27,7 +27,7 @@ etc), and as well as a hash of the same data for each recursive dependency. If
 any portion of a package's build recipe changes, it will be rebuilt as well as
 any other package that depends on it. If any of the main makefiles (Makefile,
 funcs.mk, etc) are changed, all packages will be rebuilt. After building, the
-results are cached into a tarball that can be re-used and distributed.
+results are cached into a tarball that can be reused and distributed.
 
 ### Package build results are (relatively) deterministic.
 
