@@ -1,4 +1,4 @@
-env:  # Global defaults
+:  # Global defaults
   CIRRUS_CLONE_DEPTH: 1
   PACKAGE_MANAGER_INSTALL: "apt-get update && apt-get install -y"
   MAKEJOBS: "-j10"
