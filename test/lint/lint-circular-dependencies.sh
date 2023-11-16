@@ -105,6 +105,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "llmq/debug -> llmq/dkgsessionhandler -> llmq/dkgsession -> llmq/debug"
     "llmq/utils -> validation -> llmq/utils"
     "evo/mnhftx -> validation -> evo/mnhftx"
+    "evo/deterministicmns -> validation -> evo/deterministicmns"
 )
 
 EXIT_CODE=0

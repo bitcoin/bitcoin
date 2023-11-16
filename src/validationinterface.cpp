@@ -310,7 +310,7 @@ void CMainSignals::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecover
             sig->GetHash().ToString());
 }
 
-void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman) {
+void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {
     LOG_EVENT("%s: notify mn list changed undo=%d", __func__, undo);
-    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyMasternodeListChanged(undo, oldMNList, diff, connman); });
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyMasternodeListChanged(undo, oldMNList, diff); });
 }

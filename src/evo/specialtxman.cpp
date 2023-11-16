@@ -133,7 +133,7 @@ static bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
 bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CMNHFManager& mnhfManager,
                               llmq::CQuorumBlockProcessor& quorum_block_processor, const llmq::CChainLocksHandler& chainlock_handler,
                               const Consensus::Params& consensusParams, const CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots,
-                              BlockValidationState& state)
+                              BlockValidationState& state, std::optional<MNListUpdates>& updatesRet)
 {
     AssertLockHeld(cs_main);
 
@@ -181,7 +181,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CM
         nTimeQuorum += nTime3 - nTime2;
         LogPrint(BCLog::BENCHMARK, "        - quorumBlockProcessor: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeQuorum * 0.000001);
 
-        if (!deterministicMNManager->ProcessBlock(block, pindex, state, view, fJustCheck)) {
+        if (!deterministicMNManager->ProcessBlock(block, pindex, state, view, fJustCheck, updatesRet)) {
             // pass the state returned by the function above
             return false;
         }
@@ -231,7 +231,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CM
     return true;
 }
 
-bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CMNHFManager& mnhfManager, llmq::CQuorumBlockProcessor& quorum_block_processor)
+bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CMNHFManager& mnhfManager, llmq::CQuorumBlockProcessor& quorum_block_processor, std::optional<MNListUpdates>& updatesRet)
 {
     AssertLockHeld(cs_main);
 
@@ -256,7 +256,7 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CMNHF
             return false;
         }
 
-        if (!deterministicMNManager->UndoBlock(pindex)) {
+        if (!deterministicMNManager->UndoBlock(pindex, updatesRet)) {
             return false;
         }
 
