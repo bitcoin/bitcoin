@@ -22,6 +22,9 @@
 #include <stdint.h>
 
 class CBlockIndex;
+class CTxMemPoolEntry;
+
+using CTxMemPoolEntryRef = std::reference_wrapper<const CTxMemPoolEntry>;
 
 struct LockPoints {
     // Will be set to the blockchain height and median time past
@@ -65,7 +68,6 @@ struct CompareIteratorByHash {
 class CTxMemPoolEntry
 {
 public:
-    typedef std::reference_wrapper<const CTxMemPoolEntry> CTxMemPoolEntryRef;
     // two aliases, should the types ever diverge
     typedef std::set<CTxMemPoolEntryRef, CompareIteratorByHash> Parents;
     typedef std::set<CTxMemPoolEntryRef, CompareIteratorByHash> Children;
@@ -190,7 +192,5 @@ public:
     mutable size_t idx_randomized; //!< Index in mempool's txns_randomized
     mutable Epoch::Marker m_epoch_marker; //!< epoch when last touched, useful for graph algorithms
 };
-
-using CTxMemPoolEntryRef = CTxMemPoolEntry::CTxMemPoolEntryRef;
 
 #endif // BITCOIN_KERNEL_MEMPOOL_ENTRY_H
