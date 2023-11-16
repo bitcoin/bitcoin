@@ -1817,12 +1817,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         LogPrintf("Shutdown requested. Exiting.\n");
         return false;
     }
-    pdsNotificationInterface = new CDSNotificationInterface(*node.connman, *node.peerman);
-    RegisterValidationInterface(pdsNotificationInterface);
 
     ChainstateManager& chainman = *Assert(node.chainman);
 
-    assert(!node.peerman);
+    pdsNotificationInterface = new CDSNotificationInterface(*node.connman, *node.peerman);
+    RegisterValidationInterface(pdsNotificationInterface);
     node.peerman = PeerManager::make(*node.connman, *node.addrman,
                                      node.banman.get(), chainman,
                                      *node.mempool, peerman_opts);
