@@ -565,6 +565,13 @@ constexpr int llmq_max_blocks() {
     return max_blocks;
 }
 
+struct MNListUpdates
+{
+    CDeterministicMNList old_list;
+    CDeterministicMNList new_list;
+    CDeterministicMNListDiff diff;
+};
+
 class CDeterministicMNManager
 {
     static constexpr int DISK_SNAPSHOT_PERIOD = 576; // once per day
@@ -596,8 +603,8 @@ public:
     ~CDeterministicMNManager() = default;
 
     bool ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex, BlockValidationState& state,
-                      const CCoinsViewCache& view, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main) LOCKS_EXCLUDED(cs);
-    bool UndoBlock(gsl::not_null<const CBlockIndex*> pindex) LOCKS_EXCLUDED(cs);
+                      const CCoinsViewCache& view, bool fJustCheck, std::optional<MNListUpdates>& updatesRet) EXCLUSIVE_LOCKS_REQUIRED(cs_main) LOCKS_EXCLUDED(cs);
+    bool UndoBlock(gsl::not_null<const CBlockIndex*> pindex, std::optional<MNListUpdates>& updatesRet) LOCKS_EXCLUDED(cs);
 
     void UpdatedBlockTip(gsl::not_null<const CBlockIndex*> pindex) LOCKS_EXCLUDED(cs);
 

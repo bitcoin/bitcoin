@@ -52,6 +52,7 @@
 #include <masternode/payments.h>
 #include <masternode/sync.h>
 
+#include <evo/deterministicmns.h>
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>
 #include <evo/specialtx.h>
@@ -1731,7 +1732,8 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
     std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
 
-    if (!UndoSpecialTxsInBlock(block, pindex, m_mnhfManager, *m_quorum_block_processor)) {
+    std::optional<MNListUpdates> mnlist_updates_opt{std::nullopt};
+    if (!UndoSpecialTxsInBlock(block, pindex, m_mnhfManager, *m_quorum_block_processor, mnlist_updates_opt)) {
         error("DisconnectBlock(): UndoSpecialTxsInBlock failed");
         return DISCONNECT_FAILED;
     }
@@ -1846,6 +1848,12 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
     m_evoDb.WriteBestBlock(pindex->pprev->GetBlockHash());
+
+    if (mnlist_updates_opt.has_value()) {
+        auto mnlu = mnlist_updates_opt.value();
+        GetMainSignals().NotifyMasternodeListChanged(true, mnlu.old_list, mnlu.diff);
+        uiInterface.NotifyMasternodeListChanged(mnlu.new_list, pindex->pprev);
+    }
 
     auto finish = Now<SteadyMilliseconds>();
     auto diff = finish - start;
@@ -2210,7 +2218,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     bool fDIP0001Active_context = pindex->nHeight >= Params().GetConsensus().DIP0001Height;
 
     // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
-    if (!ProcessSpecialTxsInBlock(block, pindex, m_mnhfManager, *m_quorum_block_processor, *m_clhandler, m_params.GetConsensus(), view, fJustCheck, fScriptChecks, state)) {
+    std::optional<MNListUpdates> mnlist_updates_opt{std::nullopt};
+    if (!ProcessSpecialTxsInBlock(block, pindex, m_mnhfManager, *m_quorum_block_processor, *m_clhandler, m_params.GetConsensus(), view, fJustCheck, fScriptChecks, state, mnlist_updates_opt)) {
         return error("ConnectBlock(DASH): ProcessSpecialTxsInBlock for block %s failed with %s",
                      pindex->GetBlockHash().ToString(), state.ToString());
     }
@@ -2469,6 +2478,12 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
     m_evoDb.WriteBestBlock(pindex->GetBlockHash());
+
+    if (mnlist_updates_opt.has_value()) {
+        auto mnlu = mnlist_updates_opt.value();
+        GetMainSignals().NotifyMasternodeListChanged(false, mnlu.old_list, mnlu.diff);
+        uiInterface.NotifyMasternodeListChanged(mnlu.new_list, pindex);
+    }
 
     int64_t nTime8 = GetTimeMicros(); nTimeCallbacks += nTime8 - nTime5;
     LogPrint(BCLog::BENCHMARK, "    - Callbacks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime8 - nTime5), nTimeCallbacks * MICRO, nTimeCallbacks * MILLI / nBlocksTotal);
@@ -4838,7 +4853,8 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
 
     // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
     BlockValidationState state;
-    if (!ProcessSpecialTxsInBlock(block, pindex, m_mnhfManager, *m_quorum_block_processor, *m_clhandler, m_params.GetConsensus(), inputs, false /*fJustCheck*/, false /*fScriptChecks*/, state)) {
+    std::optional<MNListUpdates> mnlist_updates_opt{std::nullopt};
+    if (!ProcessSpecialTxsInBlock(block, pindex, m_mnhfManager, *m_quorum_block_processor, *m_clhandler, m_params.GetConsensus(), inputs, false /*fJustCheck*/, false /*fScriptChecks*/, state, mnlist_updates_opt)) {
         return error("RollforwardBlock(DASH): ProcessSpecialTxsInBlock for block %s failed with %s",
             pindex->GetBlockHash().ToString(), state.ToString());
     }

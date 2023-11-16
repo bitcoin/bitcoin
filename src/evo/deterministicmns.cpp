@@ -594,7 +594,7 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
     mnInternalIdMap = mnInternalIdMap.erase(dmn->GetInternalId());
 }
 
-bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex, BlockValidationState& state, const CCoinsViewCache& view, bool fJustCheck)
+bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex, BlockValidationState& state, const CCoinsViewCache& view, bool fJustCheck, std::optional<MNListUpdates>& updatesRet)
 {
     AssertLockHeld(cs_main);
 
@@ -641,10 +641,8 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-dmn-block");
     }
 
-    // Don't hold cs while calling signals
     if (diff.HasChanges()) {
-        GetMainSignals().NotifyMasternodeListChanged(false, oldList, diff, connman);
-        uiInterface.NotifyMasternodeListChanged(newList, pindex);
+        updatesRet = {newList, oldList, diff};
     }
 
     if (nHeight == consensusParams.DIP0003EnforcementHeight) {
@@ -660,7 +658,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
     return true;
 }
 
-bool CDeterministicMNManager::UndoBlock(gsl::not_null<const CBlockIndex*> pindex)
+bool CDeterministicMNManager::UndoBlock(gsl::not_null<const CBlockIndex*> pindex, std::optional<MNListUpdates>& updatesRet)
 {
     int nHeight = pindex->nHeight;
     uint256 blockHash = pindex->GetBlockHash();
@@ -684,8 +682,7 @@ bool CDeterministicMNManager::UndoBlock(gsl::not_null<const CBlockIndex*> pindex
 
     if (diff.HasChanges()) {
         auto inversedDiff = curList.BuildDiff(prevList);
-        GetMainSignals().NotifyMasternodeListChanged(true, curList, inversedDiff, connman);
-        uiInterface.NotifyMasternodeListChanged(prevList, pindex->pprev);
+        updatesRet = {curList, prevList, inversedDiff};
     }
 
     const auto& consensusParams = Params().GetConsensus();
