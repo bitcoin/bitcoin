@@ -505,26 +505,6 @@ public:
     }
 };
 
-class CAutoFile : public AutoFile
-{
-public:
-    explicit CAutoFile(std::FILE* file, int /*unused*/, std::vector<std::byte> data_xor = {}) : AutoFile{file, std::move(data_xor)} {}
-
-    template<typename T>
-    CAutoFile& operator<<(const T& obj)
-    {
-        ::Serialize(*this, obj);
-        return (*this);
-    }
-
-    template<typename T>
-    CAutoFile& operator>>(T&& obj)
-    {
-        ::Unserialize(*this, obj);
-        return (*this);
-    }
-};
-
 /** Wrapper around an AutoFile& that implements a ring buffer to
  *  deserialize from. It guarantees the ability to rewind a given number of bytes.
  *
