@@ -507,12 +507,8 @@ public:
 
 class CAutoFile : public AutoFile
 {
-private:
-    const int nVersion;
-
 public:
-    explicit CAutoFile(std::FILE* file, int version, std::vector<std::byte> data_xor = {}) : AutoFile{file, std::move(data_xor)}, nVersion{version} {}
-    int GetVersion() const       { return nVersion; }
+    explicit CAutoFile(std::FILE* file, int /*unused*/, std::vector<std::byte> data_xor = {}) : AutoFile{file, std::move(data_xor)} {}
 
     template<typename T>
     CAutoFile& operator<<(const T& obj)
