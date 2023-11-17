@@ -19,8 +19,6 @@ TEST_UTIL_H = \
   blsct/public_key.h \
   blsct/public_keys.h \
   blsct/signature.h \
-  blsct/wallet/keyman.cpp \
-  blsct/wallet/keyring.cpp \
   test/util/blockfilter.h \
   test/util/chainstate.h \
   test/util/coins.h \
@@ -36,8 +34,8 @@ TEST_UTIL_H = \
   test/util/transaction_utils.h \
   test/util/txmempool.h \
   test/util/validation.h \
-  test/util/xoroshiro128plusplus.h 
-  
+  test/util/xoroshiro128plusplus.h
+
 if ENABLE_WALLET
 TEST_UTIL_H += wallet/test/util.h
 endif # ENABLE_WALLET
