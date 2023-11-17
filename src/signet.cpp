@@ -22,7 +22,6 @@
 #include <streams.h>
 #include <uint256.h>
 #include <util/strencodings.h>
-#include <version.h>
 
 static constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2};
 
@@ -99,7 +98,7 @@ std::optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& c
         // no signet solution -- allow this to support OP_TRUE as trivial block challenge
     } else {
         try {
-            SpanReader v{INIT_PROTO_VERSION, signet_solution};
+            SpanReader v{signet_solution};
             v >> tx_spending.vin[0].scriptSig;
             v >> tx_spending.vin[0].scriptWitness.stack;
             if (!v.empty()) return std::nullopt; // extraneous data encountered

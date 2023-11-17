@@ -100,16 +100,13 @@ private:
 class SpanReader
 {
 private:
-    const int m_version;
     Span<const unsigned char> m_data;
 
 public:
     /**
-     * @param[in]  version Serialization Version (including any flags)
      * @param[in]  data Referenced byte vector to overwrite/append
      */
-    SpanReader(int version, Span<const unsigned char> data)
-        : m_version{version}, m_data{data} {}
+    explicit SpanReader(Span<const unsigned char> data) : m_data{data} {}
 
     template<typename T>
     SpanReader& operator>>(T&& obj)
@@ -117,8 +114,6 @@ public:
         ::Unserialize(*this, obj);
         return (*this);
     }
-
-    int GetVersion() const { return m_version; }
 
     size_t size() const { return m_data.size(); }
     bool empty() const { return m_data.empty(); }
