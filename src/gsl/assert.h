@@ -18,10 +18,6 @@
 #define GSL_ASSERT_H
 
 #include <source_location.h>
-#include <logging.h>
-
-#include <sstream>
-
 //
 // Temporary until MSVC STL supports no-exceptions mode.
 // Currently terminate is a no-op in this mode, so we add termination behavior back
@@ -113,20 +109,7 @@ namespace gsl
 
 #endif // defined(GSL_MSVC_USE_STL_NOEXCEPTION_WORKAROUND)
 
-        [[noreturn]] inline void terminate(nostd::source_location loc) noexcept
-        {
-#if defined(GSL_MSVC_USE_STL_NOEXCEPTION_WORKAROUND)
-            (*gsl::details::get_terminate_handler())();
-#else
-            std::ostringstream s;
-            s << "ERROR: error detected null not_null detected at " << loc.file_name() << ":" << loc.line() << ":"
-                                                                    << loc.column() << ":" << loc.function_name()
-                                                                    << std::endl;
-            std::cerr << s.str() << std::flush;
-            LogPrintf("%s", s.str()); /* Continued */
-            std::terminate();
-#endif // defined(GSL_MSVC_USE_STL_NOEXCEPTION_WORKAROUND)
-        }
+        [[noreturn]] void terminate(nostd::source_location loc) noexcept;
 
     } // namespace details
 } // namespace gsl

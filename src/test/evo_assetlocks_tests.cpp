@@ -6,7 +6,9 @@
 
 #include <amount.h>
 #include <consensus/tx_check.h>
+#include <consensus/validation.h>
 #include <evo/assetlocktx.h>
+#include <evo/specialtx.h>
 #include <policy/settings.h>
 #include <script/script.h>
 #include <script/signingprovider.h>

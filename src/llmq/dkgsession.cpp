@@ -11,21 +11,33 @@
 #include <evo/deterministicmns.h>
 #include <evo/specialtx.h>
 
-#include <masternode/node.h>
-#include <masternode/meta.h>
+#include <batchedlogger.h>
 #include <chainparams.h>
-#include <netmessagemaker.h>
-#include <univalue.h>
-#include <validation.h>
-
 #include <cxxtimer.hpp>
-#include <atomic>
-#include <memory>
+#include <logging.h>
+#include <masternode/meta.h>
+#include <masternode/node.h>
+#include <netmessagemaker.h>
+#include <validation.h>
 #include <util/irange.h>
 #include <util/underlying.h>
 
+#include <univalue.h>
+#include <atomic>
+#include <memory>
+
 namespace llmq
 {
+
+class CDKGLogger : public CBatchedLogger
+{
+public:
+    CDKGLogger(const CDKGSession& _quorumDkg, std::string_view _func) :
+        CDKGLogger(_quorumDkg.params.name, _quorumDkg.quorumIndex, _quorumDkg.m_quorum_base_block_index->GetBlockHash(), _quorumDkg.m_quorum_base_block_index->nHeight, _quorumDkg.AreWeMember(), _func){};
+    CDKGLogger(std::string_view _llmqTypeName, int _quorumIndex, const uint256& _quorumHash, int _height, bool _areWeMember, std::string_view _func) :
+        CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%s, quorumIndex=%d, height=%d, member=%d, func=%s)", _llmqTypeName, _quorumIndex, _height, _areWeMember, _func)){};
+};
+
 static std::array<std::atomic<double>, ToUnderlying(DKGError::type::_COUNT)> simDkgErrorMap{};
 
 void SetSimulatedDKGErrorRate(DKGError::type type, double rate)

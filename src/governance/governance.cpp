@@ -1370,6 +1370,19 @@ void CGovernanceManager::InitOnLoad()
     LogPrintf("     %s\n", ToString());
 }
 
+void GovernanceStore::Clear()
+{
+    LOCK(cs);
+
+    LogPrint(BCLog::GOBJECT, "Governance object manager was cleared\n");
+    mapObjects.clear();
+    mapErasedGovernanceObjects.clear();
+    cmapVoteToObject.Clear();
+    cmapInvalidVotes.Clear();
+    cmmapOrphanVotes.Clear();
+    mapLastMasternodeObject.clear();
+}
+
 std::string GovernanceStore::ToString() const
 {
     LOCK(cs);

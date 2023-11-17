@@ -11,7 +11,6 @@
 #include <primitives/transaction.h>
 #include <sync.h>
 #include <timedata.h>
-#include <tinyformat.h>
 #include <univalue.h>
 #include <util/ranges.h>
 #include <util/translation.h>
@@ -238,11 +237,7 @@ public:
     /// Check if a queue is too old or too far into the future
     [[nodiscard]] bool IsTimeOutOfBounds(int64_t current_time = GetAdjustedTime()) const;
 
-    [[nodiscard]] std::string ToString() const
-    {
-        return strprintf("nDenom=%d, nTime=%lld, fReady=%s, fTried=%s, masternode=%s",
-            nDenom, nTime, fReady ? "true" : "false", fTried ? "true" : "false", masternodeOutpoint.ToStringShort());
-    }
+    [[nodiscard]] std::string ToString() const;
 
     friend bool operator==(const CCoinJoinQueue& a, const CCoinJoinQueue& b)
     {

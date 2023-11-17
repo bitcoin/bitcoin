@@ -10,7 +10,6 @@
 
 #include <chain.h>
 #include <coins.h>
-#include <dbwrapper.h>
 #include <primitives/transaction.h>
 #include <threadinterrupt.h>
 #include <txmempool.h>
@@ -22,6 +21,7 @@
 #include <unordered_set>
 
 class CChainState;
+class CDBWrapper;
 class CMasternodeSync;
 class CSporkManager;
 class PeerManager;
@@ -121,9 +121,8 @@ private:
 
 
 public:
-    explicit CInstantSendDb(bool unitTests, bool fWipe) :
-            db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/isdb"), 32 << 20, unitTests, fWipe))
-    {}
+    explicit CInstantSendDb(bool unitTests, bool fWipe);
+    ~CInstantSendDb();
 
     void Upgrade(const CTxMemPool& mempool) LOCKS_EXCLUDED(cs_db);
 

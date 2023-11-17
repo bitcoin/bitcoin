@@ -6,19 +6,17 @@
 #define BITCOIN_EVO_ASSETLOCKTX_H
 
 #include <bls/bls_ies.h>
-#include <evo/specialtx.h>
 #include <primitives/transaction.h>
 #include <gsl/pointers.h>
 
-#include <key_io.h>
 #include <serialize.h>
-#include <tinyformat.h>
 #include <univalue.h>
 
 #include <optional>
 
 class CBlockIndex;
 class CRangesSet;
+class TxValidationState;
 
 class CAssetLockPayload
 {

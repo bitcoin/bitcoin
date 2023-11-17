@@ -1,7 +1,7 @@
 // Copyright (c) 2014-2022 The Dash Core developers
 
 #include <cachemap.h>
-
+#include <streams.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>

@@ -8,12 +8,11 @@
 #include <llmq/signing_shares.h>
 #include <llmq/commitment.h>
 
-
 #include <evo/mnhftx.h>
 #include <evo/specialtx.h>
 
+#include <consensus/validation.h>
 #include <index/txindex.h> // g_txindex
-
 #include <primitives/transaction.h>
 #include <spork.h>
 #include <txmempool.h>

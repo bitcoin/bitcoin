@@ -14,6 +14,7 @@
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <shutdown.h>
+#include <util/check.h>
 #include <util/irange.h>
 #include <util/moneystr.h>
 #include <util/ranges.h>
@@ -154,6 +155,15 @@ void CCoinJoinClientManager::ProcessMessage(CNode& peer, PeerManager& peerman, C
         }
     }
 }
+
+CCoinJoinClientSession::CCoinJoinClientSession(CWallet& pwallet, CJClientManager& clientman, const CMasternodeSync& mn_sync,
+                                               const std::unique_ptr<CCoinJoinClientQueueManager>& queueman) :
+    m_wallet(pwallet),
+    m_clientman(clientman),
+    m_manager(*Assert(clientman.Get(pwallet))),
+    m_mn_sync(mn_sync),
+    m_queueman(queueman)
+{}
 
 void CCoinJoinClientSession::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
 {

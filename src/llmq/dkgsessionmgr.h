@@ -15,6 +15,7 @@
 
 class CBlockIndex;
 class CChainState;
+class CDBWrapper;
 class CDKGDebugManager;
 class CSporkManager;
 class PeerManager;

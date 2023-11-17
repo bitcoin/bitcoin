@@ -16,6 +16,7 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 
+#include <tinyformat.h>
 
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>

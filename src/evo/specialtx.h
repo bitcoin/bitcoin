@@ -5,7 +5,6 @@
 #ifndef BITCOIN_EVO_SPECIALTX_H
 #define BITCOIN_EVO_SPECIALTX_H
 
-#include <consensus/validation.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <streams.h>

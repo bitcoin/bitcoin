@@ -4,10 +4,13 @@
 
 #include <bls/bls.h>
 #include <bls/bls_batchverifier.h>
-#include <boost/test/unit_test.hpp>
+#include <clientversion.h>
 #include <random.h>
+#include <streams.h>
 #include <test/util/setup_common.h>
 #include <util/irange.h>
+
+#include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(bls_tests, BasicTestingSetup)
 

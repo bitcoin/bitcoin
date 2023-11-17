@@ -7,7 +7,6 @@
 
 #include <consensus/params.h>
 
-#include <dbwrapper.h>
 #include <random.h>
 #include <set>
 #include <sync.h>

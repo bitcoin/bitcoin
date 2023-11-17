@@ -12,9 +12,9 @@
 #include <node/context.h>
 #include <pubkey.h>
 #include <random.h>
-#include <txdb.h>
 #include <txmempool.h>
 #include <util/check.h>
+#include <util/system.h>
 #include <util/string.h>
 
 #include <stdexcept>

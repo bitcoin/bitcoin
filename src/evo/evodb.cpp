@@ -4,6 +4,8 @@
 
 #include <evo/evodb.h>
 
+#include <uint256.h>
+
 CEvoDBScopedCommitter::CEvoDBScopedCommitter(CEvoDB &_evoDB) :
     evoDB(_evoDB)
 {

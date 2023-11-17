@@ -5,13 +5,14 @@
 #ifndef BITCOIN_GOVERNANCE_VOTEDB_H
 #define BITCOIN_GOVERNANCE_VOTEDB_H
 
-#include <list>
-#include <map>
-
 #include <governance/vote.h>
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
+
+#include <list>
+#include <map>
+#include <vector>
 
 /**
  * Represents the collection of votes associated with a given CGovernanceObject

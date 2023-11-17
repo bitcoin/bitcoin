@@ -5,6 +5,26 @@
 
 #include <chain.h>
 
+#include <tinyformat.h>
+
+std::string CDiskBlockIndex::ToString() const
+{
+    std::string str = "CDiskBlockIndex(";
+    str += CBlockIndex::ToString();
+    str += strprintf("\n                hashBlock=%s, hashPrev=%s)",
+        GetBlockHash().ToString(),
+        hashPrev.ToString());
+    return str;
+}
+
+std::string CBlockIndex::ToString() const
+{
+    return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
+        pprev, nHeight,
+        hashMerkleRoot.ToString(),
+        GetBlockHash().ToString());
+}
+
 /**
  * CChain implementation
  */

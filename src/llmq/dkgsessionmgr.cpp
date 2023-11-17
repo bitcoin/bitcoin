@@ -10,6 +10,7 @@
 #include <evo/deterministicmns.h>
 
 #include <chainparams.h>
+#include <dbwrapper.h>
 #include <net_processing.h>
 #include <spork.h>
 #include <util/irange.h>

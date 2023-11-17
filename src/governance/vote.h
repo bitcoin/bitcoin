@@ -6,6 +6,7 @@
 #define BITCOIN_GOVERNANCE_VOTE_H
 
 #include <primitives/transaction.h>
+#include <uint256.h>
 
 class CGovernanceVote;
 class CBLSPublicKey;

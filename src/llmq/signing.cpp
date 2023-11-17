@@ -12,10 +12,12 @@
 #include <bls/bls_batchverifier.h>
 #include <chainparams.h>
 #include <cxxtimer.hpp>
+#include <dbwrapper.h>
 #include <masternode/node.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <scheduler.h>
+#include <streams.h>
 #include <util/irange.h>
 #include <util/time.h>
 #include <util/underlying.h>
@@ -38,6 +40,14 @@ UniValue CRecoveredSig::ToJson() const
     return ret;
 }
 
+
+CRecoveredSigsDb::CRecoveredSigsDb(bool fMemory, bool fWipe) :
+        db(std::make_unique<CDBWrapper>(fMemory ? "" : (GetDataDir() / "llmq/recsigdb"), 8 << 20, fMemory, fWipe))
+{
+    MigrateRecoveredSigs();
+}
+
+CRecoveredSigsDb::~CRecoveredSigsDb() = default;
 
 void CRecoveredSigsDb::MigrateRecoveredSigs()
 {

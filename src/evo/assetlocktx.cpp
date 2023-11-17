@@ -5,18 +5,18 @@
 #include <evo/assetlocktx.h>
 #include <evo/specialtx.h>
 
-#include <consensus/params.h>
-
-#include <chainparams.h>
-#include <logging.h>
-#include <validation.h>
-
 #include <llmq/commitment.h>
 #include <llmq/signing.h>
 #include <llmq/utils.h>
 #include <llmq/quorums.h>
 
+#include <chainparams.h>
+#include <consensus/params.h>
+#include <consensus/validation.h>
+#include <logging.h>
+#include <tinyformat.h>
 #include <util/ranges_set.h>
+#include <validation.h>
 
 #include <algorithm>
 

@@ -12,14 +12,14 @@
 #include <functional>
 #include <set>
 
-#include <llmq/dkgsessionhandler.h>
-
 class CDataStream;
 class CInv;
 class CScheduler;
 
 namespace llmq
 {
+
+enum class QuorumPhase;
 
 class CDKGDebugMemberStatus
 {

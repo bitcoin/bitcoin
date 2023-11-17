@@ -8,7 +8,6 @@
 #include <governance/exceptions.h>
 #include <governance/vote.h>
 #include <governance/votedb.h>
-#include <logging.h>
 #include <sync.h>
 #include <util/underlying.h>
 
@@ -311,9 +310,7 @@ public:
         }
         if (s.GetType() & SER_DISK) {
             // Only include these for the disk file format
-            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp Reading/writing votes from/to disk\n");
             READWRITE(obj.nDeletionTime, obj.fExpired, obj.mapCurrentMNVotes, obj.fileVotes);
-            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp hash = %s, vote count = %d\n", obj.GetHash().ToString(), obj.fileVotes.GetVoteCount());
         }
 
         // AFTER DESERIALIZATION OCCURS, CACHED VARIABLES MUST BE CALCULATED MANUALLY

@@ -13,7 +13,6 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <saltedhasher.h>
-#include <streams.h>
 #include <sync.h>
 
 #include <gsl/pointers.h>

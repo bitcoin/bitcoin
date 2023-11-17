@@ -9,6 +9,7 @@
 #include <script/interpreter.h>
 #include <consensus/validation.h>
 #include <evo/assetlocktx.h>
+#include <tinyformat.h>
 
 // TODO remove the following dependencies
 #include <chain.h>

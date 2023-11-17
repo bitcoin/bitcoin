@@ -11,7 +11,6 @@
 #include <consensus/params.h>
 #include <primitives/block.h>
 #include <saltedhasher.h>
-#include <streams.h>
 #include <sync.h>
 
 #include <gsl/pointers.h>
@@ -21,6 +20,7 @@
 class BlockValidationState;
 class CChainState;
 class CConnman;
+class CDataStream;
 class CEvoDB;
 class CNode;
 class PeerManager;

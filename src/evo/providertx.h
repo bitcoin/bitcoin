@@ -14,7 +14,6 @@
 #include <key_io.h>
 #include <netaddress.h>
 #include <pubkey.h>
-#include <tinyformat.h>
 #include <univalue.h>
 #include <util/underlying.h>
 

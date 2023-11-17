@@ -13,6 +13,7 @@
 #include <bls/bls_batchverifier.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <dbwrapper.h>
 #include <index/txindex.h>
 #include <masternode/sync.h>
 #include <net_processing.h>
@@ -56,6 +57,13 @@ uint256 CInstantSendLock::GetRequestId() const
 
 ////////////////
 
+
+CInstantSendDb::CInstantSendDb(bool unitTests, bool fWipe) :
+    db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/isdb"), 32 << 20, unitTests, fWipe))
+{
+}
+
+CInstantSendDb::~CInstantSendDb() = default;
 
 void CInstantSendDb::Upgrade(const CTxMemPool& mempool)
 {

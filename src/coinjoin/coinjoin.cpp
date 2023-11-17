@@ -21,6 +21,7 @@
 #include <util/translation.h>
 #include <validation.h>
 
+#include <tinyformat.h>
 #include <string>
 
 constexpr static CAmount DEFAULT_MAX_RAW_TX_FEE{COIN / 10};
@@ -85,6 +86,12 @@ bool CCoinJoinQueue::IsTimeOutOfBounds(int64_t current_time) const
 {
     return current_time - nTime > COINJOIN_QUEUE_TIMEOUT ||
            nTime - current_time > COINJOIN_QUEUE_TIMEOUT;
+}
+
+[[nodiscard]] std::string CCoinJoinQueue::ToString() const
+{
+    return strprintf("nDenom=%d, nTime=%lld, fReady=%s, fTried=%s, masternode=%s",
+        nDenom, nTime, fReady ? "true" : "false", fTried ? "true" : "false", masternodeOutpoint.ToStringShort());
 }
 
 uint256 CCoinJoinBroadcastTx::GetSignatureHash() const

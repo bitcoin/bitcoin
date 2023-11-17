@@ -21,6 +21,7 @@
 #include <unordered_set>
 
 class CBlockIndex;
+class BlockValidationState;
 class TxValidationState;
 
 namespace Consensus

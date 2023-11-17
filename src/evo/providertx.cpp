@@ -9,6 +9,7 @@
 #include <consensus/validation.h>
 #include <hash.h>
 #include <script/standard.h>
+#include <tinyformat.h>
 #include <util/underlying.h>
 
 bool CProRegTx::IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const

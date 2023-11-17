@@ -208,18 +208,7 @@ public:
             >> *lastMNListForVotingKeys;
     }
 
-    void Clear()
-    {
-        LOCK(cs);
-
-        LogPrint(BCLog::GOBJECT, "Governance object manager was cleared\n");
-        mapObjects.clear();
-        mapErasedGovernanceObjects.clear();
-        cmapVoteToObject.Clear();
-        cmapInvalidVotes.Clear();
-        cmmapOrphanVotes.Clear();
-        mapLastMasternodeObject.clear();
-    }
+    void Clear();
 
     std::string ToString() const;
 };
