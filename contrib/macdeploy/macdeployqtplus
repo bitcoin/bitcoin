@@ -20,7 +20,7 @@ import sys, re, os, platform, shutil, stat, subprocess, os.path
 from argparse import ArgumentParser
 from pathlib import Path
 from subprocess import PIPE, run
-from typing import List, Optional
+from typing import Optional
 
 # This is ported from the original macdeployqt with modifications
 
@@ -181,7 +181,7 @@ class DeploymentInfo(object):
                     return True
         return False
 
-def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
+def getFrameworks(binaryPath: str, verbose: int) -> list[FrameworkInfo]:
     if verbose:
         print(f"Inspecting with otool: {binaryPath}")
     otoolbin=os.getenv("OTOOL", "otool")
@@ -285,7 +285,7 @@ def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional
 
     return toPath
 
-def deployFrameworks(frameworks: List[FrameworkInfo], bundlePath: str, binaryPath: str, strip: bool, verbose: int, deploymentInfo: Optional[DeploymentInfo] = None) -> DeploymentInfo:
+def deployFrameworks(frameworks: list[FrameworkInfo], bundlePath: str, binaryPath: str, strip: bool, verbose: int, deploymentInfo: Optional[DeploymentInfo] = None) -> DeploymentInfo:
     if deploymentInfo is None:
         deploymentInfo = DeploymentInfo()
     
