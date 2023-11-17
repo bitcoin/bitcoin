@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(flatfile_open)
                       "lost if a trusted third party is still required to prevent double-spending.");
 
     size_t pos1 = 0;
-    size_t pos2 = pos1 + GetSerializeSize(line1, CLIENT_VERSION);
+    size_t pos2 = pos1 + GetSerializeSize(line1);
 
     // Write first line to file.
     {
