@@ -28,7 +28,7 @@ BOOST_FIXTURE_TEST_CASE(ismine_test, TestingSetup)
 
     auto recvAddress = blsct::SubAddress(std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(0).value()));
 
-    auto out = blsct::TxFactory::CreateOutput(recvAddress, 1000, "test");
+    auto out = blsct::CreateOutput(recvAddress, 1000, "test");
     BOOST_ASSERT(blsct_km->IsMine(out.out));
 
     auto hashId = blsct_km->GetHashId(out.out);
@@ -65,7 +65,7 @@ BOOST_FIXTURE_TEST_CASE(createtransaction_test, TestingSetup)
     COutPoint outpoint{txid, /*nIn=*/0};
 
     Coin coin;
-    auto out = blsct::TxFactory::CreateOutput(recvAddress, 1000 * COIN, "test");
+    auto out = blsct::CreateOutput(recvAddress, 1000 * COIN, "test");
     coin.nHeight = 1;
     coin.out = out.out;
 
@@ -127,7 +127,7 @@ BOOST_FIXTURE_TEST_CASE(addinput_test, TestingSetup)
     COutPoint outpoint{txid, /*nIn=*/0};
 
     Coin coin;
-    auto out = blsct::TxFactory::CreateOutput(recvAddress, 1000 * COIN, "test");
+    auto out = blsct::CreateOutput(recvAddress, 1000 * COIN, "test");
     coin.nHeight = 1;
     coin.out = out.out;
 

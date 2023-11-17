@@ -8,7 +8,7 @@
 
 #include <addrman.h>
 #include <banman.h>
-#include <blsct/wallet/txfactory.h>
+#include <blsct/wallet/txfactory_global.h>
 #include <chainparams.h>
 #include <common/url.h>
 #include <config/bitcoin-config.h>
@@ -304,7 +304,7 @@ CBlock TestBLSCTChain100Setup::CreateBlock(
     const std::vector<CMutableTransaction>& txns,
     Chainstate& chainstate)
 {
-    auto out = blsct::TxFactory::CreateOutput(coinbaseDest, m_node.chainman->GetConsensus().nBLSCTBlockReward, "Reward");
+    auto out = blsct::CreateOutput(coinbaseDest, m_node.chainman->GetConsensus().nBLSCTBlockReward, "Reward");
 
     CBlock block = BlockAssembler{chainstate, nullptr}.CreateNewBLSCTPOWBlock(out)->block;
 
@@ -313,7 +313,7 @@ CBlock TestBLSCTChain100Setup::CreateBlock(
         block.vtx.push_back(MakeTransactionRef(tx));
     }
 
-    auto aggregatedTx = blsct::TxFactory::AggregateTransactions(block.vtx);
+    auto aggregatedTx = blsct::AggregateTransactions(block.vtx);
     block.vtx.clear();
     block.vtx.push_back(aggregatedTx);
     Assert(block.vtx.size() == 1);

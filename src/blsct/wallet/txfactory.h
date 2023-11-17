@@ -6,45 +6,14 @@
 #define TXFACTORY_H
 
 #include <blsct/arith/elements.h>
-#include <blsct/range_proof/bulletproofs/range_proof_logic.h>
 #include <blsct/wallet/keyman.h>
+#include <blsct/wallet/txfactory_global.h>
 #include <policy/fees.h>
 #include <util/rbf.h>
 #include <wallet/coincontrol.h>
 #include <wallet/spend.h>
 
-using T = Mcl;
-using Point = T::Point;
-using Points = Elements<Point>;
-using Scalar = T::Scalar;
-using Scalars = Elements<Scalar>;
-
-#define BLSCT_DEFAULT_FEE 200000
-
 namespace blsct {
-struct UnsignedOutput {
-    CTxOut out;
-    Scalar blindingKey;
-    Scalar value;
-    Scalar gamma;
-
-    void GenerateKeys(Scalar blindingKey, DoublePublicKey destKeys);
-
-    Signature GetSignature() const;
-};
-
-struct UnsignedInput {
-    CTxIn in;
-    Scalar value;
-    Scalar gamma;
-    PrivateKey sk;
-};
-
-struct Amounts {
-    CAmount nFromInputs;
-    CAmount nFromOutputs;
-};
-
 class TxFactory
 {
 private:
@@ -57,12 +26,10 @@ private:
 public:
     TxFactory(KeyMan* km) : km(km){};
 
-    static UnsignedOutput CreateOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId());
     void AddOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId());
     bool AddInput(const CCoinsViewCache& cache, const COutPoint& outpoint, const bool& rbf = false);
     std::optional<CMutableTransaction> BuildTx();
     static std::optional<CMutableTransaction> CreateTransaction(std::shared_ptr<wallet::CWallet> wallet, blsct::KeyMan* blsct_km, const CCoinsViewCache& cache, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId());
-    static CTransactionRef AggregateTransactions(const std::vector<CTransactionRef>& txs);
 };
 } // namespace blsct
 
