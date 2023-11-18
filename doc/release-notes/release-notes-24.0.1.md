@@ -199,6 +199,11 @@ New settings
   accept transaction replacement without enforcing BIP125 replaceability
   signaling. (#25353)
 
+Updated settings
+----------------
+
+- The `-coinstatsindex` option can now also be used in pruned mode. (#21726)
+
 Wallet
 ------
 
