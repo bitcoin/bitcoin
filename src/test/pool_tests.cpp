@@ -163,8 +163,7 @@ BOOST_AUTO_TEST_CASE(memusage_test)
                                    std::hash<int>,
                                    std::equal_to<int>,
                                    PoolAllocator<std::pair<const int, int>,
-                                                 sizeof(std::pair<const int, int>) + sizeof(void*) * 4,
-                                                 alignof(void*)>>;
+                                                 sizeof(std::pair<const int, int>) + sizeof(void*) * 4>>;
     auto resource = Map::allocator_type::ResourceType(1024);
 
     PoolResourceTester::CheckAllDataAccountedFor(resource);
