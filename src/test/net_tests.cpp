@@ -1126,7 +1126,7 @@ public:
     void SendV1Version(const MessageStartChars& magic)
     {
         CMessageHeader hdr(magic, "version", 126 + InsecureRandRange(11));
-        CDataStream ser(SER_NETWORK, CLIENT_VERSION);
+        DataStream ser{};
         ser << hdr;
         m_to_send.insert(m_to_send.end(), UCharCast(ser.data()), UCharCast(ser.data() + ser.size()));
     }

@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(walletdb_readkeyvalue)
      * silently fail. The test here makes sure the type of exception thrown from CDataStream::read()
      * matches the type we expect, otherwise we need to update the "key"/"wkey" exception type caught.
      */
-    CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+    DataStream ssValue{};
     uint256 dummy;
     BOOST_CHECK_THROW(ssValue >> dummy, std::ios_base::failure);
 }
