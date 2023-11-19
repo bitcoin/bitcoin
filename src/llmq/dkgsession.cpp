@@ -686,7 +686,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
     qj.proTxHash = myProTxHash;
     qj.contributions.reserve(forMembers.size());
 
-    for (const auto i : irange::range(members.size())) {
+    for (const uint32_t i : irange::range(members.size())) {
         const auto& m = members[i];
         if (forMembers.count(m->dmn->proTxHash) == 0) {
             continue;
@@ -700,7 +700,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
             skContribution.MakeNewKey();
         }
 
-        qj.contributions.emplace_back(i, skContribution);
+        qj.contributions.emplace_back(CDKGJustification::Contribution{i, skContribution});
     }
 
     if (ShouldSimulateError(DKGError::type::JUSTIFY_OMIT)) {
@@ -747,19 +747,19 @@ bool CDKGSession::PreVerifyMessage(const CDKGJustification& qj, bool& retBan) co
 
     std::set<size_t> contributionsSet;
     for (const auto& p : qj.contributions) {
-        if (p.first > members.size()) {
+        if (p.index > members.size()) {
             logger.Batch("invalid contribution index");
             retBan = true;
             return false;
         }
 
-        if (!contributionsSet.emplace(p.first).second) {
+        if (!contributionsSet.emplace(p.index).second) {
             logger.Batch("duplicate contribution index");
             retBan = true;
             return false;
         }
 
-        const auto& skShare = p.second;
+        const auto& skShare = p.key;
         if (!skShare.IsValid()) {
             logger.Batch("invalid contribution");
             retBan = true;
@@ -822,7 +822,7 @@ void CDKGSession::ReceiveMessage(const CDKGJustification& qj, bool& retBan)
     }
 
     for (const auto& p : qj.contributions) {
-        const auto& member2 = members[p.first];
+        const auto& member2 = members[p.index];
 
         if (member->complaintsFromOthers.count(member2->dmn->proTxHash) == 0) {
             logger.Batch("got justification from %s for %s even though he didn't complain",
@@ -837,17 +837,15 @@ void CDKGSession::ReceiveMessage(const CDKGJustification& qj, bool& retBan)
     cxxtimer::Timer t1(true);
 
     std::list<std::future<bool>> futures;
-    for (const auto& p : qj.contributions) {
-        const auto& member2 = members[p.first];
-        const auto& skContribution = p.second;
+    for (const auto& [index, skContribution] : qj.contributions) {
+        const auto& member2 = members[index];
 
         // watch out to not bail out before these async calls finish (they rely on valid references)
         futures.emplace_back(blsWorker.AsyncVerifyContributionShare(member2->id, receivedVvecs[member->idx], skContribution));
     }
     auto resultIt = futures.begin();
-    for (const auto& p : qj.contributions) {
-        const auto& member2 = members[p.first];
-        const auto& skContribution = p.second;
+    for (const auto& [index, skContribution] : qj.contributions) {
+        const auto& member2 = members[index];
 
         bool result = (resultIt++)->get();
         if (!result) {

@@ -95,12 +95,11 @@ UniValue CSimplifiedMNListEntry::ToJson(bool extended) const
     return obj;
 }
 
-// TODO: Invistigate if we can delete this constructor
 CSimplifiedMNList::CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries)
 {
-    mnList.resize(smlEntries.size());
-    for (size_t i = 0; i < smlEntries.size(); i++) {
-        mnList[i] = std::make_unique<CSimplifiedMNListEntry>(smlEntries[i]);
+    mnList.reserve(smlEntries.size());
+    for (const auto& entry : smlEntries) {
+        mnList.emplace_back(std::make_unique<CSimplifiedMNListEntry>(entry));
     }
 
     std::sort(mnList.begin(), mnList.end(), [&](const std::unique_ptr<CSimplifiedMNListEntry>& a, const std::unique_ptr<CSimplifiedMNListEntry>& b) {
@@ -110,11 +109,9 @@ CSimplifiedMNList::CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& 
 
 CSimplifiedMNList::CSimplifiedMNList(const CDeterministicMNList& dmnList)
 {
-    mnList.resize(dmnList.GetAllMNsCount());
-
-    size_t i = 0;
-    dmnList.ForEachMN(false, [this, &i](auto& dmn) {
-        mnList[i++] = std::make_unique<CSimplifiedMNListEntry>(dmn);
+    mnList.reserve(dmnList.GetAllMNsCount());
+    dmnList.ForEachMN(false, [this](auto& dmn) {
+        mnList.emplace_back(std::make_unique<CSimplifiedMNListEntry>(dmn));
     });
 
     std::sort(mnList.begin(), mnList.end(), [&](const std::unique_ptr<CSimplifiedMNListEntry>& a, const std::unique_ptr<CSimplifiedMNListEntry>& b) {

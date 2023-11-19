@@ -41,7 +41,6 @@ private:
     CEvoDB& m_evoDb;
     const std::unique_ptr<PeerManager>& m_peerman;
 
-    // TODO cleanup
     mutable RecursiveMutex minableCommitmentsCs;
     std::map<std::pair<Consensus::LLMQType, uint256>, uint256> minableCommitmentsByQuorum GUARDED_BY(minableCommitmentsCs);
     std::map<uint256, CFinalCommitment> minableCommitments GUARDED_BY(minableCommitmentsCs);
@@ -50,8 +49,6 @@ private:
 
 public:
     explicit CQuorumBlockProcessor(CChainState& chainstate, CConnman& _connman, CEvoDB& evoDb, const std::unique_ptr<PeerManager>& peerman);
-
-    bool UpgradeDB();
 
     void ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv);
 

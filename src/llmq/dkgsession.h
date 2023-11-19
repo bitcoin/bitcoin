@@ -121,8 +121,15 @@ public:
     Consensus::LLMQType llmqType;
     uint256 quorumHash;
     uint256 proTxHash;
-    // TODO make this pair a struct with named fields
-    std::vector<std::pair<uint32_t, CBLSSecretKey>> contributions;
+    struct Contribution {
+        uint32_t index;
+        CBLSSecretKey key;
+        SERIALIZE_METHODS(Contribution, obj)
+        {
+            READWRITE(obj.index, obj.key);
+        }
+    };
+    std::vector<Contribution> contributions;
     CBLSSignature sig;
 
 public:

@@ -2074,11 +2074,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                     break;
                 }
 
-                if (!llmq::quorumBlockProcessor->UpgradeDB()) {
-                    strLoadError = _("Error upgrading evo database");
-                    break;
-                }
-
                 for (CChainState* chainstate : chainman.GetAll()) {
                     if (!is_coinsview_empty(chainstate)) {
                         uiInterface.InitMessage(_("Verifying blocks...").translated);

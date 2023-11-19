@@ -15,7 +15,6 @@
 #include <consensus/validation.h>
 #include <net.h>
 #include <net_processing.h>
-#include <node/blockstorage.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <saltedhasher.h>
@@ -350,64 +349,6 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, gsl::not_null<const C
 
     m_evoDb.Write(DB_BEST_BLOCK_UPGRADE, pindex->pprev->GetBlockHash());
 
-    return true;
-}
-
-// TODO remove this with 0.15.0
-bool CQuorumBlockProcessor::UpgradeDB()
-{
-    LOCK(cs_main);
-
-    if (m_chainstate.m_chain.Tip() == nullptr) {
-        // should have no records
-        return m_evoDb.IsEmpty();
-    }
-
-    uint256 bestBlock;
-    if (m_evoDb.GetRawDB().Read(DB_BEST_BLOCK_UPGRADE, bestBlock) && bestBlock == m_chainstate.m_chain.Tip()->GetBlockHash()) {
-        return true;
-    }
-
-    LogPrintf("CQuorumBlockProcessor::%s -- Upgrading DB...\n", __func__);
-
-    if (m_chainstate.m_chain.Height() >= Params().GetConsensus().DIP0003EnforcementHeight) {
-        const auto* pindex = m_chainstate.m_chain[Params().GetConsensus().DIP0003EnforcementHeight];
-        while (pindex != nullptr) {
-            if (fPruneMode && ((pindex->nStatus & BLOCK_HAVE_DATA) == 0)) {
-                // Too late, we already pruned blocks we needed to reprocess commitments
-                return false;
-            }
-            CBlock block;
-            bool r = ReadBlockFromDisk(block, pindex, Params().GetConsensus());
-            assert(r);
-
-            std::multimap<Consensus::LLMQType, CFinalCommitment> qcs;
-            BlockValidationState dummyState;
-            GetCommitmentsFromBlock(block, pindex, qcs, dummyState);
-
-            for (const auto& p : qcs) {
-                const auto& qc = p.second;
-                if (qc.IsNull()) {
-                    continue;
-                }
-                const auto* pQuorumBaseBlockIndex = m_chainstate.m_blockman.LookupBlockIndex(qc.quorumHash);
-                m_evoDb.GetRawDB().Write(std::make_pair(DB_MINED_COMMITMENT, std::make_pair(qc.llmqType, qc.quorumHash)), std::make_pair(qc, pindex->GetBlockHash()));
-                const auto& llmq_params_opt = GetLLMQParams(qc.llmqType);
-                assert(llmq_params_opt.has_value());
-                if (llmq::utils::IsQuorumRotationEnabled(llmq_params_opt.value(), pQuorumBaseBlockIndex)) {
-                    m_evoDb.GetRawDB().Write(BuildInversedHeightKeyIndexed(qc.llmqType, pindex->nHeight, int(qc.quorumIndex)), pQuorumBaseBlockIndex->nHeight);
-                } else {
-                    m_evoDb.GetRawDB().Write(BuildInversedHeightKey(qc.llmqType, pindex->nHeight), pQuorumBaseBlockIndex->nHeight);
-                }
-            }
-
-            m_evoDb.GetRawDB().Write(DB_BEST_BLOCK_UPGRADE, pindex->GetBlockHash());
-
-            pindex = m_chainstate.m_chain.Next(pindex);
-        }
-    }
-
-    LogPrintf("CQuorumBlockProcessor::%s -- Upgrade done...\n", __func__);
     return true;
 }
 

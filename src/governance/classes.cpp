@@ -354,10 +354,8 @@ bool CSuperblockManager::GetSuperblockPayments(CGovernanceManager& governanceMan
             CTxDestination dest;
             ExtractDestination(payment.script, dest);
 
-            // TODO: PRINT NICE N.N DASH OUTPUT
-
-            LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- NEW Superblock: output %d (addr %s, amount %lld)\n",
-                        i, EncodeDestination(dest), payment.nAmount);
+            LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- NEW Superblock: output %d (addr %s, amount %d.%08d)\n",
+                        i, EncodeDestination(dest), payment.nAmount / COIN, payment.nAmount % COIN);
         } else {
             LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- Payment not found\n");
         }
