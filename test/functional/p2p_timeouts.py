@@ -69,11 +69,8 @@ class TimeoutsTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(['Unsupported message "ping" prior to verack from peer=0']):
             no_verack_node.send_message(msg_ping())
 
-        # With v2, non-version messages before the handshake would be interpreted as part of the key exchange.
-        # Therefore, don't execute this part of the test if v2transport is chosen.
-        if not self.options.v2transport:
-            with self.nodes[0].assert_debug_log(['non-version message before version handshake. Message "ping" from peer=1']):
-                no_version_node.send_message(msg_ping())
+        with self.nodes[0].assert_debug_log(['non-version message before version handshake. Message "ping" from peer=1']):
+            no_version_node.send_message(msg_ping())
 
         self.mock_forward(1)
         assert "version" in no_verack_node.last_message
@@ -83,14 +80,20 @@ class TimeoutsTest(BitcoinTestFramework):
         assert no_send_node.is_connected
 
         no_verack_node.send_message(msg_ping())
-        if not self.options.v2transport:
-            no_version_node.send_message(msg_ping())
+        no_version_node.send_message(msg_ping())
 
-        expected_timeout_logs = [
-            "version handshake timeout peer=0",
-            f"socket no message in first 3 seconds, {'0' if self.options.v2transport else '1'} 0 peer=1",
-            "socket no message in first 3 seconds, 0 0 peer=2",
-        ]
+        if self.options.v2transport:
+            expected_timeout_logs = [
+                "version handshake timeout peer=0",
+                "version handshake timeout peer=1",
+                "version handshake timeout peer=2",
+            ]
+        else:
+            expected_timeout_logs = [
+                "version handshake timeout peer=0",
+                "socket no message in first 3 seconds, 1 0 peer=1",
+                "socket no message in first 3 seconds, 0 0 peer=2",
+            ]
 
         with self.nodes[0].assert_debug_log(expected_msgs=expected_timeout_logs):
             self.mock_forward(2)
