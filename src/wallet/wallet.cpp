@@ -1763,11 +1763,11 @@ bool CWallet::ImportScriptPubKeys(const std::string& label, const std::set<CScri
     return true;
 }
 
-void CWallet::FirstKeyTimeChanged(const ScriptPubKeyMan* spkm, int64_t new_birth_time)
+void CWallet::MaybeUpdateBirthTime(int64_t time)
 {
     int64_t birthtime = m_birth_time.load();
-    if (new_birth_time < birthtime) {
-        m_birth_time = new_birth_time;
+    if (time < birthtime) {
+        m_birth_time = time;
     }
 }
 
@@ -3494,10 +3494,12 @@ LegacyScriptPubKeyMan* CWallet::GetOrCreateLegacyScriptPubKeyMan()
 
 void CWallet::AddScriptPubKeyMan(const uint256& id, std::unique_ptr<ScriptPubKeyMan> spkm_man)
 {
+    // Add spkm_man to m_spk_managers before calling any method
+    // that might access it.
     const auto& spkm = m_spk_managers[id] = std::move(spkm_man);
 
     // Update birth time if needed
-    FirstKeyTimeChanged(spkm.get(), spkm->GetTimeFirstKey());
+    MaybeUpdateBirthTime(spkm->GetTimeFirstKey());
 }
 
 void CWallet::SetupLegacyScriptPubKeyMan()
@@ -3530,7 +3532,7 @@ void CWallet::ConnectScriptPubKeyManNotifiers()
     for (const auto& spk_man : GetActiveScriptPubKeyMans()) {
         spk_man->NotifyWatchonlyChanged.connect(NotifyWatchonlyChanged);
         spk_man->NotifyCanGetAddressesChanged.connect(NotifyCanGetAddressesChanged);
-        spk_man->NotifyFirstKeyTimeChanged.connect(std::bind(&CWallet::FirstKeyTimeChanged, this, std::placeholders::_1, std::placeholders::_2));
+        spk_man->NotifyFirstKeyTimeChanged.connect(std::bind(&CWallet::MaybeUpdateBirthTime, this, std::placeholders::_2));
     }
 }
 
