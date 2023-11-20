@@ -7,6 +7,7 @@
 
 #include <clientversion.h>
 #include <streams.h>
+#include <univalue.h>
 
 #include <cstddef>
 #include <mp/proxy-types.h>
@@ -82,6 +83,24 @@ CustomReadField(TypeList<LocalType>, Priority<1>, InvokeContext& invoke_context,
         auto data = input.get();
         SpanReader stream({data.begin(), data.end()});
         value.Unserialize(stream);
+    });
+}
+
+template <typename Value, typename Output>
+void CustomBuildField(TypeList<UniValue>, Priority<1>, InvokeContext& invoke_context, Value&& value, Output&& output)
+{
+    std::string str = value.write();
+    auto result = output.init(str.size());
+    memcpy(result.begin(), str.data(), str.size());
+}
+
+template <typename Input, typename ReadDest>
+decltype(auto) CustomReadField(TypeList<UniValue>, Priority<1>, InvokeContext& invoke_context, Input&& input,
+                               ReadDest&& read_dest)
+{
+    return read_dest.update([&](auto& value) {
+        auto data = input.get();
+        value.read(std::string_view{data.begin(), data.size()});
     });
 }
 } // namespace mp

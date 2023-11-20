@@ -55,6 +55,12 @@ void IpcTest()
     COutPoint txout2{foo->passOutPoint(txout1)};
     BOOST_CHECK(txout1 == txout2);
 
+    UniValue uni1{UniValue::VOBJ};
+    uni1.pushKV("i", 1);
+    uni1.pushKV("s", "two");
+    UniValue uni2{foo->passUniValue(uni1)};
+    BOOST_CHECK_EQUAL(uni1.write(), uni2.write());
+
     // Test cleanup: disconnect pipe and join thread
     disconnect_client();
     thread.join();
