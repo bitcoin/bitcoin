@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <mp/proxy-types.h>
 #include <logging.h>
+#include <mp/proxy-types.h>
 #include <test/ipc_test.capnp.h>
 #include <test/ipc_test.capnp.proxy.h>
 #include <test/ipc_test.h>
@@ -50,6 +50,10 @@ void IpcTest()
 
     // Test: make sure arguments were sent and return value is received
     BOOST_CHECK_EQUAL(foo->add(1, 2), 3);
+
+    COutPoint txout1{Txid::FromUint256(uint256{100}), 200};
+    COutPoint txout2{foo->passOutPoint(txout1)};
+    BOOST_CHECK(txout1 == txout2);
 
     // Test cleanup: disconnect pipe and join thread
     disconnect_client();

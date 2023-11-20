@@ -11,6 +11,7 @@ class FooImplementation
 {
 public:
     int add(int a, int b) { return a + b; }
+    COutPoint passOutPoint(COutPoint o) { return o; }
 };
 
 void IpcTest();
