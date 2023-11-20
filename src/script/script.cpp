@@ -318,6 +318,7 @@ bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator en
     if (end - pc < 1)
         return false;
     unsigned int opcode = *pc++;
+    opcodeRet = static_cast<opcodetype>(opcode);
 
     // Immediate operand
     if (opcode <= OP_PUSHDATA4)
@@ -347,14 +348,19 @@ bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator en
             nSize = ReadLE32(&pc[0]);
             pc += 4;
         }
-        if (end - pc < 0 || (unsigned int)(end - pc) < nSize)
+
+        // Fail if there's not enough data
+        unsigned int available_data = static_cast<unsigned int>(end - pc);
+        if (available_data < nSize)
+        {
             return false;
-        if (pvchRet)
-            pvchRet->assign(pc, pc + nSize);
-        pc += nSize;
+        } else {
+            if (pvchRet)
+                pvchRet->assign(pc, pc + nSize);
+            pc += nSize;
+        }
     }
 
-    opcodeRet = static_cast<opcodetype>(opcode);
     return true;
 }
 

@@ -55,7 +55,7 @@
     [
         "6a02ee",
         {
-            "asm": "RETURN [error]",
+            "asm": "RETURN UNPARSABLE(02ee)",
             "desc": "raw(6a02ee)#gvdwnlzl",
             "type": "nonstandard"
         }

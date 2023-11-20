@@ -63,7 +63,8 @@ std::string FormatScript(const CScript& script)
             }
             continue;
         }
-        ret += strprintf("0x%x ", HexStr(std::vector<uint8_t>(it2, script.end())));
+        // Undecodable bytes
+        ret += strprintf("UNPARSABLE:(%x) ", HexStr(std::vector<uint8_t>(it2, script.end())));
         break;
     }
     return ret.substr(0, ret.empty() ? ret.npos : ret.size() - 1);
@@ -169,8 +170,11 @@ std::string ScriptToAsmStr(const CScript& script)
         if (!str.empty()) {
             str += " ";
         }
+        auto start = pc;
         if (!script.GetOp(pc, opcode, vch)) {
-            return str + "[error]";
+            std::vector<unsigned char> remaining_bytes(start, script.end());
+            str += strprintf("UNPARSABLE(%s)", HexStr(remaining_bytes));
+            break;
         }
         str += OpcodeToAsmString(opcode, vch);
     }
