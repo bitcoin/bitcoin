@@ -1053,7 +1053,6 @@ std::chrono::microseconds GetObjectInterval(int invType)
             return std::chrono::seconds{15};
         case MSG_CLSIG:
             return std::chrono::seconds{5};
-        case MSG_ISLOCK:
         case MSG_ISDLOCK:
             return std::chrono::seconds{10};
         default:
@@ -1879,7 +1878,6 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
         return m_llmq_ctx->sigman->AlreadyHave(inv);
     case MSG_CLSIG:
         return m_llmq_ctx->clhandler->AlreadyHave(inv);
-    case MSG_ISLOCK:
     case MSG_ISDLOCK:
         return m_llmq_ctx->isman->AlreadyHave(inv);
     }
@@ -2042,7 +2040,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, const CChainParams& chai
                     for (PairType &pair : merkleBlock.vMatchedTxn) {
                         auto islock = isman.GetInstantSendLockByTxid(pair.second);
                         if (islock != nullptr) {
-                            connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::ISLOCK, *islock));
+                            connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::ISDLOCK, *islock));
                         }
                     }
                 }
@@ -2258,11 +2256,10 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 }
             }
 
-            if (!push && (inv.type == MSG_ISLOCK || inv.type == MSG_ISDLOCK)) {
+            if (!push && inv.type == MSG_ISDLOCK) {
                 llmq::CInstantSendLock o;
                 if (m_llmq_ctx->isman->GetInstantSendLockByHash(inv.hash, o)) {
-                    const auto msg_type = inv.type == MSG_ISLOCK ? NetMsgType::ISLOCK : NetMsgType::ISDLOCK;
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(msg_type, o));
+                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::ISDLOCK, o));
                     push = true;
                 }
             }
@@ -3281,7 +3278,7 @@ void PeerManagerImpl::ProcessMessage(
                     pfrom.fDisconnect = true;
                     return;
                 } else if (!fAlreadyHave) {
-                    if (fBlocksOnly && (inv.type == MSG_ISLOCK || inv.type == MSG_ISDLOCK)) {
+                    if (fBlocksOnly && inv.type == MSG_ISDLOCK) {
                         if (pfrom.GetRecvVersion() <= ADDRV2_PROTO_VERSION) {
                             // It's ok to receive these invs, we just ignore them
                             // and do not request corresponding objects.
@@ -4985,8 +4982,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
                         const auto islock = m_llmq_ctx->isman->GetInstantSendLockByTxid(hash);
                         if (islock == nullptr) continue;
-                        if (pto->nVersion < ISDLOCK_PROTO_VERSION && islock->IsDeterministic()) continue;
-                        queueAndMaybePushInv(CInv(islock->IsDeterministic() ? MSG_ISDLOCK : MSG_ISLOCK, ::SerializeHash(*islock)));
+                        if (pto->nVersion < ISDLOCK_PROTO_VERSION) continue;
+                        queueAndMaybePushInv(CInv(MSG_ISDLOCK, ::SerializeHash(*islock)));
                     }
 
                     // Send an inv for the best ChainLock we have
@@ -5068,7 +5065,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     if (pto->m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
                         continue;
                     }
-                    if (!fSendIS && (inv.type == MSG_ISLOCK || inv.type == MSG_ISDLOCK)) {
+                    if (!fSendIS && inv.type == MSG_ISDLOCK) {
                         continue;
                     }
                     queueAndMaybePushInv(inv);

@@ -2224,31 +2224,6 @@ class msg_clsig:
         return "msg_clsig(height=%d, blockHash=%064x)" % (self.height, self.blockHash)
 
 
-class msg_islock:
-    __slots__ = ("inputs", "txid", "sig",)
-    command = b"islock"
-
-    def __init__(self, inputs=None, txid=0, sig=b'\x00' * 96):
-        self.inputs = inputs if inputs is not None else []
-        self.txid = txid
-        self.sig = sig
-
-    def deserialize(self, f):
-        self.inputs = deser_vector(f, COutPoint)
-        self.txid = deser_uint256(f)
-        self.sig = f.read(96)
-
-    def serialize(self):
-        r = b""
-        r += ser_vector(self.inputs)
-        r += ser_uint256(self.txid)
-        r += self.sig
-        return r
-
-    def __repr__(self):
-        return "msg_islock(inputs=%s, txid=%064x)" % (repr(self.inputs), self.txid)
-
-
 class msg_isdlock:
     __slots__ = ("nVersion", "inputs", "txid", "cycleHash", "sig")
     command = b"isdlock"

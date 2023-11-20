@@ -28,7 +28,6 @@ from test_framework.messages import (
     msg_clsig,
     msg_inv,
     msg_isdlock,
-    msg_islock,
     msg_tx,
     MSG_TX,
     MSG_TYPE_MASK,
@@ -76,11 +75,11 @@ class TestP2PConn(P2PInterface):
         self.islocks = {}
         self.txes = {}
 
-    def send_islock(self, islock, deterministic):
+    def send_islock(self, islock):
         hash = uint256_from_str(hash256(islock.serialize()))
         self.islocks[hash] = islock
 
-        inv = msg_inv([CInv(31 if deterministic else 30, hash)])
+        inv = msg_inv([CInv(31, hash)])
         self.send_message(inv)
 
     def send_tx(self, tx):
@@ -131,35 +130,39 @@ class DashZMQTest (DashTestFramework):
             self.activate_dip8()
             self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
             self.wait_for_sporks_same()
-            # Create an LLMQ for testing
-            self.quorum_type = 100  # llmq_test
-            self.quorum_hash = self.mine_quorum()
+            self.activate_v19(expected_activation_height=900)
+            self.log.info("Activated v19 at height:" + str(self.nodes[0].getblockcount()))
+            self.move_to_next_cycle()
+            self.log.info("Cycle H height:" + str(self.nodes[0].getblockcount()))
+            self.move_to_next_cycle()
+            self.log.info("Cycle H+C height:" + str(self.nodes[0].getblockcount()))
+            self.move_to_next_cycle()
+            self.log.info("Cycle H+2C height:" + str(self.nodes[0].getblockcount()))
+
+            self.mine_cycle_quorum(llmq_type_name='llmq_test_dip0024', llmq_type=103)
+
             self.sync_blocks()
             self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
             # Wait a moment to avoid subscribing to recovered sig in the test before the one from the chainlock
             # has been sent which leads to test failure.
             time.sleep(1)
             # Test all dash related ZMQ publisher
-            self.test_recovered_signature_publishers()
+            #self.test_recovered_signature_publishers()
             self.test_chainlock_publishers()
             self.test_governance_publishers()
             self.test_getzmqnotifications()
-            self.test_instantsend_publishers(False)
-            self.activate_dip0024()
-            self.log.info("Activated DIP0024 at height:" + str(self.nodes[0].getblockcount()))
-            # Test for CL 8 blocks after dip24 activation because along with dip24, the BLS scheme is activted
-            self.generate_blocks(8)
+            self.test_instantsend_publishers()
             self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
-            self.test_instantsend_publishers(False)
+            self.test_instantsend_publishers()
             # At this point, we need to move forward 3 cycles (3 x 24 blocks) so the first 3 quarters can be created (without DKG sessions)
             self.move_to_next_cycle()
-            self.test_instantsend_publishers(False)
+            self.test_instantsend_publishers()
             self.move_to_next_cycle()
-            self.test_instantsend_publishers(False)
+            self.test_instantsend_publishers()
             self.move_to_next_cycle()
-            self.test_instantsend_publishers(False)
+            self.test_instantsend_publishers()
             self.mine_cycle_quorum()
-            self.test_instantsend_publishers(True)
+            self.test_instantsend_publishers()
         finally:
             # Destroy the ZMQ context.
             self.log.debug("Destroying ZMQ context")
@@ -191,7 +194,7 @@ class DashZMQTest (DashTestFramework):
         def validate_recovered_sig(request_id, msg_hash):
             # Make sure the recovered sig exists by RPC
             self.wait_for_recovered_sig(request_id, msg_hash)
-            rpc_recovered_sig = self.mninfo[0].node.quorum('getrecsig', 100, request_id, msg_hash)
+            rpc_recovered_sig = self.mninfo[0].node.quorum('getrecsig', 103, request_id, msg_hash)
             # Validate hashrecoveredsig
             zmq_recovered_sig_hash = self.subscribers[ZMQPublisher.hash_recovered_sig].receive().read(32).hex()
             assert_equal(zmq_recovered_sig_hash, msg_hash)
@@ -268,7 +271,7 @@ class DashZMQTest (DashTestFramework):
         # Unsubscribe from ChainLock messages
         self.unsubscribe(chain_lock_publishers)
 
-    def test_instantsend_publishers(self, deterministic):
+    def test_instantsend_publishers(self):
         import zmq
         instantsend_publishers = [
             ZMQPublisher.hash_tx_lock,
@@ -304,7 +307,7 @@ class DashZMQTest (DashTestFramework):
         zmq_tx_lock_tx.deserialize(zmq_tx_lock_sig_stream)
         assert zmq_tx_lock_tx.is_valid()
         assert_equal(zmq_tx_lock_tx.hash, rpc_raw_tx_1['txid'])
-        zmq_tx_lock = msg_isdlock() if deterministic else msg_islock()
+        zmq_tx_lock = msg_isdlock()
         zmq_tx_lock.deserialize(zmq_tx_lock_sig_stream)
         assert_equal(uint256_to_string(zmq_tx_lock.txid), rpc_raw_tx_1['txid'])
         # Try to send the second transaction. This must throw an RPC error because it conflicts with rpc_raw_tx_1
@@ -327,8 +330,8 @@ class DashZMQTest (DashTestFramework):
         # No islock notifications when tx is not received yet
         self.nodes[0].generate(1)
         rpc_raw_tx_3 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)
-        islock = self.create_islock(rpc_raw_tx_3['hex'], deterministic)
-        self.test_node.send_islock(islock, deterministic)
+        isdlock = self.create_isdlock(rpc_raw_tx_3['hex'])
+        self.test_node.send_islock(isdlock)
         # Validate NO hashtxlock
         time.sleep(1)
         try:

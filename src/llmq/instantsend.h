@@ -35,35 +35,26 @@ class CSigSharesManager;
 
 struct CInstantSendLock
 {
-    // This is the old format of instant send lock, it must be 0
-    static constexpr uint8_t islock_version{0};
-    // This is the new format of instant send deterministic lock, this should be incremented for new isdlock versions
-    static constexpr uint8_t isdlock_version{1};
+    static constexpr uint8_t CURRENT_VERSION{1};
 
-    uint8_t nVersion;
+    uint8_t nVersion{CURRENT_VERSION};
     std::vector<COutPoint> inputs;
     uint256 txid;
     uint256 cycleHash;
     CBLSLazySignature sig;
 
-    CInstantSendLock() : CInstantSendLock(islock_version) {}
-    explicit CInstantSendLock(const uint8_t desiredVersion) : nVersion(desiredVersion) {}
+    CInstantSendLock() = default;
 
     SERIALIZE_METHODS(CInstantSendLock, obj)
     {
-        if (s.GetVersion() >= ISDLOCK_PROTO_VERSION && obj.IsDeterministic()) {
-            READWRITE(obj.nVersion);
-        }
+        READWRITE(obj.nVersion);
         READWRITE(obj.inputs);
         READWRITE(obj.txid);
-        if (s.GetVersion() >= ISDLOCK_PROTO_VERSION && obj.IsDeterministic()) {
-            READWRITE(obj.cycleHash);
-        }
+        READWRITE(obj.cycleHash);
         READWRITE(obj.sig);
     }
 
     uint256 GetRequestId() const;
-    bool IsDeterministic() const { return nVersion != islock_version; }
     bool TriviallyValid() const;
 };
 
@@ -198,8 +189,6 @@ public:
      * @return A vector of IS Lock hashes of all IS Locks removed
      */
     std::vector<uint256> RemoveChainedInstantSendLocks(const uint256& islockHash, const uint256& txid, int nHeight) LOCKS_EXCLUDED(cs_db);
-
-    void RemoveAndArchiveInstantSendLock(const gsl::not_null<CInstantSendLockPtr>& islock, int nHeight) LOCKS_EXCLUDED(cs_db);
 };
 
 class CInstantSendManager : public CRecoveredSigsListener
@@ -292,8 +281,7 @@ private:
     void TrySignInstantSendLock(const CTransaction& tx) LOCKS_EXCLUDED(cs_creating);
 
     void ProcessMessageInstantSendLock(const CNode& pfrom, const CInstantSendLockPtr& islock);
-    bool ProcessPendingInstantSendLocks();
-    bool ProcessPendingInstantSendLocks(bool deterministic) LOCKS_EXCLUDED(cs_pendingLocks);
+    bool ProcessPendingInstantSendLocks() LOCKS_EXCLUDED(cs_pendingLocks);
 
     std::unordered_set<uint256, StaticSaltedHasher> ProcessPendingInstantSendLocks(const Consensus::LLMQParams& llmq_params,
                                                                                    int signOffset,

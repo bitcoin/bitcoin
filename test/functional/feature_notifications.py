@@ -27,7 +27,7 @@ def notify_outputname(walletname, txid):
 
 class NotificationsTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(5, 3, fast_dip3_enforcement=True)
+        self.set_dash_test_params(6, 4, fast_dip3_enforcement=True)
 
     def setup_network(self):
         self.wallet = ''.join(chr(i) for i in range(FILE_CHAR_START, FILE_CHAR_END) if chr(i) not in FILE_CHARS_DISALLOWED)
@@ -102,11 +102,21 @@ class NotificationsTest(DashTestFramework):
 
         self.log.info("test -chainlocknotify")
 
+        self.activate_v19(expected_activation_height=900)
+        self.log.info("Activated v19 at height:" + str(self.nodes[0].getblockcount()))
+
         self.activate_dip8()
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
         self.wait_for_sporks_same()
-        self.mine_quorum()
+        self.move_to_next_cycle()
+        self.log.info("Cycle H height:" + str(self.nodes[0].getblockcount()))
+        self.move_to_next_cycle()
+        self.log.info("Cycle H+C height:" + str(self.nodes[0].getblockcount()))
+        self.move_to_next_cycle()
+        self.log.info("Cycle H+2C height:" + str(self.nodes[0].getblockcount()))
+
+        (quorum_info_i_0, quorum_info_i_1) = self.mine_cycle_quorum(llmq_type_name='llmq_test_dip0024', llmq_type=103)
         self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.wait_for_sporks_same()
 

@@ -8,9 +8,9 @@ feature_llmq_is_retroactive.py
 
 Tests retroactive signing
 
-We have 6 nodes where node 0 is the control node, nodes 1-5 are masternodes.
+We have 5 nodes where node 0 is the control node, nodes 1-4 are masternodes.
 Mempool inconsistencies are simulated via disconnecting/reconnecting node 3
-and by having a higher relay fee on nodes 4 and 5.
+and by having a higher relay fee on node 4.
 '''
 
 import time
@@ -22,8 +22,7 @@ from test_framework.util import set_node_times
 class LLMQ_IS_RetroactiveSigning(DashTestFramework):
     def set_test_params(self):
         # -whitelist is needed to avoid the trickling logic on node0
-        self.set_dash_test_params(6, 5, [["-whitelist=127.0.0.1"], [], [], [], ["-minrelaytxfee=0.001"], ["-minrelaytxfee=0.001"]], fast_dip3_enforcement=True)
-        self.set_dash_llmq_test_params(5, 3)
+        self.set_dash_test_params(5, 4, [["-whitelist=127.0.0.1"], [], [], [], ["-minrelaytxfee=0.001"]], fast_dip3_enforcement=True)
 
     def run_test(self):
         self.activate_dip8()
@@ -33,8 +32,16 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 1)
         self.wait_for_sporks_same()
 
-        self.mine_quorum()
-        self.mine_quorum()
+        self.activate_v19(expected_activation_height=900)
+        self.log.info("Activated v19 at height:" + str(self.nodes[0].getblockcount()))
+        self.move_to_next_cycle()
+        self.log.info("Cycle H height:" + str(self.nodes[0].getblockcount()))
+        self.move_to_next_cycle()
+        self.log.info("Cycle H+C height:" + str(self.nodes[0].getblockcount()))
+        self.move_to_next_cycle()
+        self.log.info("Cycle H+2C height:" + str(self.nodes[0].getblockcount()))
+
+        self.mine_cycle_quorum(llmq_type_name='llmq_test_dip0024', llmq_type=103)
 
         # Make sure that all nodes are chainlocked at the same height before starting actual tests
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)

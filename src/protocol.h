@@ -287,7 +287,6 @@ extern const char* QSIGSHARE;
 extern const char* QGETDATA;
 extern const char* QDATA;
 extern const char* CLSIG;
-extern const char* ISLOCK;
 extern const char* ISDLOCK;
 extern const char* MNAUTH;
 extern const char* GETHEADERS2;
@@ -525,7 +524,7 @@ enum GetDataMsg {
     /* MSG_QUORUM_DEBUG_STATUS = 27, */               // was shortly used on testnet/devnet/regtest
     MSG_QUORUM_RECOVERED_SIG = 28,
     MSG_CLSIG = 29,
-    MSG_ISLOCK = 30,
+    /* MSG_ISLOCK = 30, */                            // Non-deterministic InstantSend and not used anymore
     MSG_ISDLOCK = 31,
 };
 

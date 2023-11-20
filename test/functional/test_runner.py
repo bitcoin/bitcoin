@@ -116,7 +116,6 @@ BASE_SCRIPTS = [
     'feature_llmq_evo.py', # NOTE: needs dash_hash to pass
     'feature_llmq_simplepose.py', # NOTE: needs dash_hash to pass
     'feature_llmq_is_cl_conflicts.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_is_migration.py', # NOTE: needs dash_hash to pass
     'feature_llmq_is_retroactive.py', # NOTE: needs dash_hash to pass
     'feature_llmq_dkgerrors.py', # NOTE: needs dash_hash to pass
     'feature_dip4_coinbasemerkleroots.py', # NOTE: needs dash_hash to pass

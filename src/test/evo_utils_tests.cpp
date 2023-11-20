@@ -23,9 +23,6 @@ void Test(llmq::CQuorumManager& qman, NodeContext& node)
     using namespace llmq::utils;
     auto tip = node.chainman->ActiveTip();
     const auto& consensus_params = Params().GetConsensus();
-    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeInstantSend, qman, tip, false, false), true);
-    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeInstantSend, qman, tip, true, false), true);
-    BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeInstantSend, qman, tip, true, true), false);
     BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeDIP0024InstantSend, qman, tip, false, false), false);
     BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeDIP0024InstantSend, qman, tip, true, false), true);
     BOOST_CHECK_EQUAL(IsQuorumTypeEnabledInternal(consensus_params.llmqTypeDIP0024InstantSend, qman, tip, true, true), true);

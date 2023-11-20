@@ -978,7 +978,7 @@ static UniValue verifyislock(const JSONRPCRequest& request)
 
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    auto llmqType = llmq::utils::GetInstantSendLLMQType(*llmq_ctx.qman, pBlockIndex);
+    auto llmqType = Params().GetConsensus().llmqTypeDIP0024InstantSend;
     // First check against the current active set, if it fails check against the last active set
     const auto& llmq_params_opt = llmq::GetLLMQParams(llmqType);
     CHECK_NONFATAL(llmq_params_opt.has_value());

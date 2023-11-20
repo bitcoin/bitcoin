@@ -29,7 +29,6 @@ from .messages import (
     CTransaction,
     FromHex,
     hash256,
-    msg_islock,
     msg_isdlock,
     ser_compact_size,
     ser_string,
@@ -1510,7 +1509,7 @@ class DashTestFramework(BitcoinTestFramework):
         if wait_until(check_tx, timeout=timeout, sleep=1, do_assert=expected) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
-    def create_islock(self, hextx, deterministic=False):
+    def create_isdlock(self, hextx):
         tx = FromHex(CTransaction(), hextx)
         tx.rehash()
 
@@ -1522,18 +1521,15 @@ class DashTestFramework(BitcoinTestFramework):
         request_id = hash256(request_id_buf)[::-1].hex()
         message_hash = tx.hash
 
-        llmq_type = 103 if deterministic else 104
+        llmq_type = 103
 
         rec_sig = self.get_recovered_sig(request_id, message_hash, llmq_type=llmq_type)
 
-        if deterministic:
-            block_count = self.mninfo[0].node.getblockcount()
-            cycle_hash = int(self.mninfo[0].node.getblockhash(block_count - (block_count % 24)), 16)
-            islock = msg_isdlock(1, inputs, tx.sha256, cycle_hash, hex_str_to_bytes(rec_sig['sig']))
-        else:
-            islock = msg_islock(inputs, tx.sha256, hex_str_to_bytes(rec_sig['sig']))
+        block_count = self.mninfo[0].node.getblockcount()
+        cycle_hash = int(self.mninfo[0].node.getblockhash(block_count - (block_count % 24)), 16)
+        isdlock = msg_isdlock(1, inputs, tx.sha256, cycle_hash, hex_str_to_bytes(rec_sig['sig']))
 
-        return islock
+        return isdlock
 
     def wait_for_instantlock(self, txid, node, expected=True, timeout=60):
         def check_instantlock():

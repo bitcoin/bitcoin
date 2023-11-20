@@ -18,7 +18,6 @@ class RPCVerifyISLockTest(DashTestFramework):
     def set_test_params(self):
         # -whitelist is needed to avoid the trickling logic on node0
         self.set_dash_test_params(6, 5, [["-whitelist=127.0.0.1"], [], [], [], [], []], fast_dip3_enforcement=True)
-        self.set_dash_llmq_test_params(5, 3)
 
     def get_request_id(self, tx_hex):
         tx = FromHex(CTransaction(), tx_hex)
@@ -34,15 +33,27 @@ class RPCVerifyISLockTest(DashTestFramework):
         node.sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
-        self.mine_quorum()
+        self.activate_v19(expected_activation_height=900)
+        self.log.info("Activated v19 at height:" + str(self.nodes[0].getblockcount()))
+        self.move_to_next_cycle()
+        self.log.info("Cycle H height:" + str(self.nodes[0].getblockcount()))
+        self.move_to_next_cycle()
+        self.log.info("Cycle H+C height:" + str(self.nodes[0].getblockcount()))
+        self.move_to_next_cycle()
+        self.log.info("Cycle H+2C height:" + str(self.nodes[0].getblockcount()))
+
+        self.mine_cycle_quorum(llmq_type_name='llmq_test_dip0024', llmq_type=103)
+        self.bump_mocktime(1)
+        self.nodes[0].generate(8)
+        self.sync_blocks()
 
         txid = node.sendtoaddress(node.getnewaddress(), 1)
         self.wait_for_instantlock(txid, node)
 
         request_id = self.get_request_id(self.nodes[0].getrawtransaction(txid))
-        wait_until(lambda: node.quorum("hasrecsig", 104, request_id, txid))
+        wait_until(lambda: node.quorum("hasrecsig", 103, request_id, txid))
 
-        rec_sig = node.quorum("getrecsig", 104, request_id, txid)['sig']
+        rec_sig = node.quorum("getrecsig", 103, request_id, txid)['sig']
         assert node.verifyislock(request_id, txid, rec_sig)
         # Not mined, should use maxHeight
         assert not node.verifyislock(request_id, txid, rec_sig, 1)
@@ -53,18 +64,14 @@ class RPCVerifyISLockTest(DashTestFramework):
         # Mined, should ignore higher maxHeight
         assert node.verifyislock(request_id, txid, rec_sig, node.getblockcount() + 100)
 
-        # Mine one more quorum to have a full active set
-        self.mine_quorum()
-        # Create an ISLOCK for the oldest quorum i.e. the active quorum which will be moved
-        # out of the active set when a new quorum appears
-        selected_hash = None
+        # Mine one more cycle of rotated quorums
+        self.mine_cycle_quorum(llmq_type_name='llmq_test_dip0024', llmq_type=103)
+        # Create an ISLOCK using an active quorum which will be replaced when a new cycle happens
         request_id = None
-        oldest_quorum_hash = node.quorum("list")["llmq_test_instantsend"][-1]
         utxos = node.listunspent()
         fee = 0.001
         amount = 1
-        # Try all available utxo's until we have one resulting in a request id which selects the
-        # last active quorum
+        # Try all available utxo's until we have one valid in_amount
         for utxo in utxos:
             in_amount = float(utxo['amount'])
             if in_amount < amount + fee:
@@ -77,21 +84,18 @@ class RPCVerifyISLockTest(DashTestFramework):
             rawtx = node.createrawtransaction([utxo], outputs)
             rawtx = node.signrawtransactionwithwallet(rawtx)["hex"]
             request_id = self.get_request_id(rawtx)
-            selected_hash = node.quorum('selectquorum', 104, request_id)["quorumHash"]
-            if selected_hash == oldest_quorum_hash:
-                break
-        assert selected_hash == oldest_quorum_hash
-        # Create the ISLOCK, then mine a quorum to move the signing quorum out of the active set
-        islock = self.create_islock(rawtx, False)
-        # Mine one block to trigger the "signHeight + dkgInterval" verification for the ISLOCK
-        self.mine_quorum()
+            break
+        # Create the ISDLOCK, then mine a cycle quorum to move renew active set
+        isdlock = self.create_isdlock(rawtx)
+        # Mine one block to trigger the "signHeight + dkgInterval" verification for the ISDLOCK
+        self.mine_cycle_quorum(llmq_type_name='llmq_test_dip0024', llmq_type=103)
         # Verify the ISLOCK for a transaction that is not yet known by the node
         rawtx_txid = node.decoderawtransaction(rawtx)["txid"]
         assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx_txid)
-        assert node.verifyislock(request_id, rawtx_txid, islock.sig.hex(), node.getblockcount())
-        # Send the tx and verify the ISLOCK for a now known transaction
+        assert node.verifyislock(request_id, rawtx_txid, isdlock.sig.hex(), node.getblockcount())
+        # Send the tx and verify the ISDLOCK for a now known transaction
         assert rawtx_txid == node.sendrawtransaction(rawtx)
-        assert node.verifyislock(request_id, rawtx_txid, islock.sig.hex(), node.getblockcount())
+        assert node.verifyislock(request_id, rawtx_txid, isdlock.sig.hex(), node.getblockcount())
 
 
 if __name__ == '__main__':

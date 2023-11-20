@@ -18,7 +18,7 @@ from test_framework.util import force_finish_mnsync, assert_equal, assert_raises
 
 class LLMQChainLocksTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(4, 3, fast_dip3_enforcement=True)
+        self.set_dash_test_params(5, 4, fast_dip3_enforcement=True)
 
     def run_test(self):
 
@@ -46,9 +46,14 @@ class LLMQChainLocksTest(DashTestFramework):
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
-        self.log.info("Mining 4 quorums")
-        for i in range(4):
-            self.mine_quorum()
+        self.move_to_next_cycle()
+        self.log.info("Cycle H height:" + str(self.nodes[0].getblockcount()))
+        self.move_to_next_cycle()
+        self.log.info("Cycle H+C height:" + str(self.nodes[0].getblockcount()))
+        self.move_to_next_cycle()
+        self.log.info("Cycle H+2C height:" + str(self.nodes[0].getblockcount()))
+        self.mine_cycle_quorum(llmq_type_name="llmq_test_dip0024", llmq_type=103)
+
 
         self.log.info("Mine single block, wait for chainlock")
         self.nodes[0].generate(1)

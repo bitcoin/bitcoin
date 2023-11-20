@@ -108,7 +108,6 @@ BITCOIN_TESTS =\
   test/dynamic_activation_thresholds_tests.cpp \
   test/evo_assetlocks_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
-  test/evo_instantsend_tests.cpp \
   test/evo_mnhf_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
   test/evo_trivialvalidation.cpp \
