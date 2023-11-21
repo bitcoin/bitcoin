@@ -2720,6 +2720,14 @@ struct CompareByPriority
     }
 };
 
+static bool isGroupISLocked(const OutputGroup& group, interfaces::Chain& chain)
+{
+    for (const auto& output : group.m_outputs) {
+        if (!chain.isInstantSendLockedTx(output.outpoint.hash)) return false;
+    }
+    return true;
+}
+
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<OutputGroup> groups,
                                  std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params, bool& bnb_used, CoinType nCoinType) const
 {
@@ -2739,7 +2747,8 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
 
         // Filter by the min conf specs and add to utxo_pool and calculate effective value
         for (OutputGroup& group : groups) {
-            if (!group.EligibleForSpending(eligibility_filter)) continue;
+            bool isISLocked = isGroupISLocked(group, chain());
+            if (!group.EligibleForSpending(eligibility_filter, isISLocked)) continue;
 
             if (coin_selection_params.m_subtract_fee_outputs) {
                 // Set the effective feerate to 0 as we don't want to use the effective value since the fees will be deducted from the output
@@ -2758,7 +2767,8 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     } else {
         // Filter by the min conf specs and add to utxo_pool
         for (const OutputGroup& group : groups) {
-            if (!group.EligibleForSpending(eligibility_filter)) continue;
+            bool isISLocked = isGroupISLocked(group, chain());
+            if (!group.EligibleForSpending(eligibility_filter, isISLocked)) continue;
             utxo_pool.push_back(group);
         }
         bnb_used = false;
@@ -5132,7 +5142,7 @@ bool CWalletTx::IsLockedByInstantSend() const
     if (fIsChainlocked) {
         fIsInstantSendLocked = false;
     } else if (!fIsInstantSendLocked) {
-        fIsInstantSendLocked = llmq::quorumInstantSendManager->IsLocked(GetHash());
+        fIsInstantSendLocked = pwallet->chain().isInstantSendLockedTx(GetHash());
     }
     return fIsInstantSendLocked;
 }

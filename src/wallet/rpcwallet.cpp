@@ -40,7 +40,6 @@
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
 #include <llmq/chainlocks.h>
-#include <llmq/instantsend.h>
 
 #include <stdint.h>
 
@@ -158,7 +157,7 @@ WalletContext& EnsureWalletContext(const CoreContext& context)
 static void WalletTxToJSON(interfaces::Chain& chain, const CWalletTx& wtx, UniValue& entry)
 {
     int confirms = wtx.GetDepthInMainChain();
-    bool fLocked = llmq::quorumInstantSendManager->IsLocked(wtx.GetHash());
+    bool fLocked = chain.isInstantSendLockedTx(wtx.GetHash());
     bool chainlock = false;
     if (confirms > 0) {
         chainlock = wtx.IsChainLocked();

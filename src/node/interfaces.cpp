@@ -16,6 +16,7 @@
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
+#include <llmq/context.h>
 #include <llmq/instantsend.h>
 #include <mapport.h>
 #include <masternode/sync.h>
@@ -714,6 +715,11 @@ public:
         LOCK(cs_main);
         assert(std::addressof(::ChainActive()) == std::addressof(m_node.chainman->ActiveChain()));
         return CheckFinalTx(m_node.chainman->ActiveChain().Tip(), tx);
+    }
+    bool isInstantSendLockedTx(const uint256& hash) override
+    {
+        if (m_node.llmq_ctx == nullptr || m_node.llmq_ctx->isman == nullptr) return false;
+        return m_node.llmq_ctx->isman->IsLocked(hash);
     }
     bool findBlock(const uint256& hash, const FoundBlock& block) override
     {

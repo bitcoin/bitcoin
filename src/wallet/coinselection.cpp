@@ -8,7 +8,6 @@
 #include <util/system.h>
 #include <util/moneystr.h>
 
-#include <llmq/instantsend.h>
 #include <coinjoin/coinjoin.h>
 
 #include <optional>
@@ -391,18 +390,9 @@ std::vector<CInputCoin>::iterator OutputGroup::Discard(const CInputCoin& output)
     return m_outputs.erase(it);
 }
 
-bool OutputGroup::IsLockedByInstantSend() const
+bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_filter, bool isISLocked) const
 {
-    for (const auto& output : m_outputs) {
-        if (!llmq::quorumInstantSendManager->IsLocked(output.outpoint.hash))
-            return false;
-    }
-    return true;
-}
-
-bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const
-{
-    return (m_depth >= (m_from_me ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs) || IsLockedByInstantSend())
+    return (m_depth >= (m_from_me ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs) || isISLocked)
         && m_ancestors <= eligibility_filter.max_ancestors
         && m_descendants <= eligibility_filter.max_descendants;
 }

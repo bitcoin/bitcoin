@@ -135,6 +135,9 @@ public:
     //! Check if transaction will be final given chain height current time.
     virtual bool checkFinalTx(const CTransaction& tx) = 0;
 
+    //! Check if transaction is locked by InstantSendManager
+    virtual bool isInstantSendLockedTx(const uint256& hash) = 0;
+
     //! Return whether node has the block and optionally return block metadata
     //! or contents.
     virtual bool findBlock(const uint256& hash, const FoundBlock& block={}) = 0;
