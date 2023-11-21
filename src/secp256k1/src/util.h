@@ -7,14 +7,49 @@
 #ifndef SECP256K1_UTIL_H
 #define SECP256K1_UTIL_H
 
-#if defined HAVE_CONFIG_H
-#include "libsecp256k1-config.h"
-#endif
+#include "../include/secp256k1.h"
 
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <limits.h>
+
+#define STR_(x) #x
+#define STR(x) STR_(x)
+#define DEBUG_CONFIG_MSG(x) "DEBUG_CONFIG: " x
+#define DEBUG_CONFIG_DEF(x) DEBUG_CONFIG_MSG(#x "=" STR(x))
+
+/* Debug helper for printing arrays of unsigned char. */
+#define PRINT_BUF(buf, len) do { \
+    printf("%s[%lu] = ", #buf, (unsigned long)len); \
+    print_buf_plain(buf, len); \
+} while(0)
+
+static void print_buf_plain(const unsigned char *buf, size_t len) {
+    size_t i;
+    printf("{");
+    for (i = 0; i < len; i++) {
+        if (i % 8 == 0) {
+            printf("\n    ");
+        } else {
+            printf(" ");
+        }
+        printf("0x%02X,", buf[i]);
+    }
+    printf("\n}\n");
+}
+
+# if (!defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L) )
+#  if SECP256K1_GNUC_PREREQ(2,7)
+#   define SECP256K1_INLINE __inline__
+#  elif (defined(_MSC_VER))
+#   define SECP256K1_INLINE __inline
+#  else
+#   define SECP256K1_INLINE
+#  endif
+# else
+#  define SECP256K1_INLINE inline
+# endif
 
 typedef struct {
     void (*fn)(const char *text, void* data);
@@ -24,6 +59,33 @@ typedef struct {
 static SECP256K1_INLINE void secp256k1_callback_call(const secp256k1_callback * const cb, const char * const text) {
     cb->fn(text, (void*)cb->data);
 }
+
+#ifndef USE_EXTERNAL_DEFAULT_CALLBACKS
+static void secp256k1_default_illegal_callback_fn(const char* str, void* data) {
+    (void)data;
+    fprintf(stderr, "[libsecp256k1] illegal argument: %s\n", str);
+    abort();
+}
+static void secp256k1_default_error_callback_fn(const char* str, void* data) {
+    (void)data;
+    fprintf(stderr, "[libsecp256k1] internal consistency check failed: %s\n", str);
+    abort();
+}
+#else
+void secp256k1_default_illegal_callback_fn(const char* str, void* data);
+void secp256k1_default_error_callback_fn(const char* str, void* data);
+#endif
+
+static const secp256k1_callback default_illegal_callback = {
+    secp256k1_default_illegal_callback_fn,
+    NULL
+};
+
+static const secp256k1_callback default_error_callback = {
+    secp256k1_default_error_callback_fn,
+    NULL
+};
+
 
 #ifdef DETERMINISTIC
 #define TEST_FAILURE(msg) do { \
@@ -69,25 +131,6 @@ static SECP256K1_INLINE void secp256k1_callback_call(const secp256k1_callback * 
 #define VERIFY_SETUP(stmt)
 #endif
 
-/* Define `VG_UNDEF` and `VG_CHECK` when VALGRIND is defined  */
-#if !defined(VG_CHECK)
-# if defined(VALGRIND)
-#  include <valgrind/memcheck.h>
-#  define VG_UNDEF(x,y) VALGRIND_MAKE_MEM_UNDEFINED((x),(y))
-#  define VG_CHECK(x,y) VALGRIND_CHECK_MEM_IS_DEFINED((x),(y))
-# else
-#  define VG_UNDEF(x,y)
-#  define VG_CHECK(x,y)
-# endif
-#endif
-
-/* Like `VG_CHECK` but on VERIFY only */
-#if defined(VERIFY)
-#define VG_CHECK_VERIFY(x,y) VG_CHECK((x), (y))
-#else
-#define VG_CHECK_VERIFY(x,y)
-#endif
-
 static SECP256K1_INLINE void *checked_malloc(const secp256k1_callback* cb, size_t size) {
     void *ret = malloc(size);
     if (ret == NULL) {
@@ -114,36 +157,6 @@ static SECP256K1_INLINE void *checked_realloc(const secp256k1_callback* cb, void
 #endif
 
 #define ROUND_TO_ALIGN(size) ((((size) + ALIGNMENT - 1) / ALIGNMENT) * ALIGNMENT)
-
-/* Assume there is a contiguous memory object with bounds [base, base + max_size)
- * of which the memory range [base, *prealloc_ptr) is already allocated for usage,
- * where *prealloc_ptr is an aligned pointer. In that setting, this functions
- * reserves the subobject [*prealloc_ptr, *prealloc_ptr + alloc_size) of
- * alloc_size bytes by increasing *prealloc_ptr accordingly, taking into account
- * alignment requirements.
- *
- * The function returns an aligned pointer to the newly allocated subobject.
- *
- * This is useful for manual memory management: if we're simply given a block
- * [base, base + max_size), the caller can use this function to allocate memory
- * in this block and keep track of the current allocation state with *prealloc_ptr.
- *
- * It is VERIFY_CHECKed that there is enough space left in the memory object and
- * *prealloc_ptr is aligned relative to base.
- */
-static SECP256K1_INLINE void *manual_alloc(void** prealloc_ptr, size_t alloc_size, void* base, size_t max_size) {
-    size_t aligned_alloc_size = ROUND_TO_ALIGN(alloc_size);
-    void* ret;
-    VERIFY_CHECK(prealloc_ptr != NULL);
-    VERIFY_CHECK(*prealloc_ptr != NULL);
-    VERIFY_CHECK(base != NULL);
-    VERIFY_CHECK((unsigned char*)*prealloc_ptr >= (unsigned char*)base);
-    VERIFY_CHECK(((unsigned char*)*prealloc_ptr - (unsigned char*)base) % ALIGNMENT == 0);
-    VERIFY_CHECK((unsigned char*)*prealloc_ptr - (unsigned char*)base + aligned_alloc_size <= max_size);
-    ret = *prealloc_ptr;
-    *prealloc_ptr = (unsigned char*)*prealloc_ptr + aligned_alloc_size;
-    return ret;
-}
 
 /* Macro for restrict, when available and not in a VERIFY build. */
 #if defined(SECP256K1_BUILD) && defined(VERIFY)
@@ -174,31 +187,6 @@ static SECP256K1_INLINE void *manual_alloc(void** prealloc_ptr, size_t alloc_siz
 # define SECP256K1_GNUC_EXT __extension__
 #else
 # define SECP256K1_GNUC_EXT
-#endif
-
-/* If SECP256K1_{LITTLE,BIG}_ENDIAN is not explicitly provided, infer from various other system macros. */
-#if !defined(SECP256K1_LITTLE_ENDIAN) && !defined(SECP256K1_BIG_ENDIAN)
-/* Inspired by https://github.com/rofl0r/endianness.h/blob/9853923246b065a3b52d2c43835f3819a62c7199/endianness.h#L52L73 */
-# if (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) || \
-     defined(_X86_) || defined(__x86_64__) || defined(__i386__) || \
-     defined(__i486__) || defined(__i586__) || defined(__i686__) || \
-     defined(__MIPSEL) || defined(_MIPSEL) || defined(MIPSEL) || \
-     defined(__ARMEL__) || defined(__AARCH64EL__) || \
-     (defined(__LITTLE_ENDIAN__) && __LITTLE_ENDIAN__ == 1) || \
-     (defined(_LITTLE_ENDIAN) && _LITTLE_ENDIAN == 1) || \
-     defined(_M_IX86) || defined(_M_AMD64) || defined(_M_ARM) /* MSVC */
-#  define SECP256K1_LITTLE_ENDIAN
-# endif
-# if (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) || \
-     defined(__MIPSEB) || defined(_MIPSEB) || defined(MIPSEB) || \
-     defined(__MICROBLAZEEB__) || defined(__ARMEB__) || defined(__AARCH64EB__) || \
-     (defined(__BIG_ENDIAN__) && __BIG_ENDIAN__ == 1) || \
-     (defined(_BIG_ENDIAN) && _BIG_ENDIAN == 1)
-#  define SECP256K1_BIG_ENDIAN
-# endif
-#endif
-#if defined(SECP256K1_LITTLE_ENDIAN) == defined(SECP256K1_BIG_ENDIAN)
-# error Please make sure that either SECP256K1_LITTLE_ENDIAN or SECP256K1_BIG_ENDIAN is set, see src/util.h.
 #endif
 
 /* Zero memory if flag == 1. Flag must be 0 or 1. Constant time. */
@@ -253,27 +241,35 @@ static SECP256K1_INLINE void secp256k1_int_cmov(int *r, const int *a, int flag) 
     *r = (int)(r_masked | a_masked);
 }
 
-/* If USE_FORCE_WIDEMUL_{INT128,INT64} is set, use that wide multiplication implementation.
- * Otherwise use the presence of __SIZEOF_INT128__ to decide.
- */
-#if defined(USE_FORCE_WIDEMUL_INT128)
+#if defined(USE_FORCE_WIDEMUL_INT128_STRUCT)
+/* If USE_FORCE_WIDEMUL_INT128_STRUCT is set, use int128_struct. */
 # define SECP256K1_WIDEMUL_INT128 1
+# define SECP256K1_INT128_STRUCT 1
+#elif defined(USE_FORCE_WIDEMUL_INT128)
+/* If USE_FORCE_WIDEMUL_INT128 is set, use int128. */
+# define SECP256K1_WIDEMUL_INT128 1
+# define SECP256K1_INT128_NATIVE 1
 #elif defined(USE_FORCE_WIDEMUL_INT64)
+/* If USE_FORCE_WIDEMUL_INT64 is set, use int64. */
 # define SECP256K1_WIDEMUL_INT64 1
 #elif defined(UINT128_MAX) || defined(__SIZEOF_INT128__)
+/* If a native 128-bit integer type exists, use int128. */
 # define SECP256K1_WIDEMUL_INT128 1
+# define SECP256K1_INT128_NATIVE 1
+#elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_ARM64))
+/* On 64-bit MSVC targets (x86_64 and arm64), use int128_struct
+ * (which has special logic to implement using intrinsics on those systems). */
+# define SECP256K1_WIDEMUL_INT128 1
+# define SECP256K1_INT128_STRUCT 1
+#elif SIZE_MAX > 0xffffffff
+/* Systems with 64-bit pointers (and thus registers) very likely benefit from
+ * using 64-bit based arithmetic (even if we need to fall back to 32x32->64 based
+ * multiplication logic). */
+# define SECP256K1_WIDEMUL_INT128 1
+# define SECP256K1_INT128_STRUCT 1
 #else
+/* Lastly, fall back to int64 based arithmetic. */
 # define SECP256K1_WIDEMUL_INT64 1
-#endif
-#if defined(SECP256K1_WIDEMUL_INT128)
-# if !defined(UINT128_MAX) && defined(__SIZEOF_INT128__)
-SECP256K1_GNUC_EXT typedef unsigned __int128 uint128_t;
-SECP256K1_GNUC_EXT typedef __int128 int128_t;
-#define UINT128_MAX ((uint128_t)(-1))
-#define INT128_MAX ((int128_t)(UINT128_MAX >> 1))
-#define INT128_MIN (-INT128_MAX - 1)
-/* No (U)INT128_C macros because compilers providing __int128 do not support 128-bit literals.  */
-# endif
 #endif
 
 #ifndef __has_builtin
@@ -289,7 +285,7 @@ static SECP256K1_INLINE int secp256k1_ctz32_var_debruijn(uint32_t x) {
         0x10, 0x07, 0x0C, 0x1A, 0x1F, 0x17, 0x12, 0x05, 0x15, 0x09, 0x0F, 0x0B,
         0x1E, 0x11, 0x08, 0x0E, 0x1D, 0x0D, 0x1C, 0x1B
     };
-    return debruijn[((x & -x) * 0x04D7651F) >> 27];
+    return debruijn[(uint32_t)((x & -x) * 0x04D7651FU) >> 27];
 }
 
 /* Determine the number of trailing zero bits in a (non-zero) 64-bit x.
@@ -302,7 +298,7 @@ static SECP256K1_INLINE int secp256k1_ctz64_var_debruijn(uint64_t x) {
         63, 52, 6, 26, 37, 40, 33, 47, 61, 45, 43, 21, 23, 58, 17, 10,
         51, 25, 36, 32, 60, 20, 57, 16, 50, 31, 19, 15, 30, 14, 13, 12
     };
-    return debruijn[((x & -x) * 0x022FDD63CC95386D) >> 58];
+    return debruijn[(uint64_t)((x & -x) * 0x022FDD63CC95386DU) >> 58];
 }
 
 /* Determine the number of trailing zero bits in a (non-zero) 32-bit x. */
@@ -339,6 +335,46 @@ static SECP256K1_INLINE int secp256k1_ctz64_var(uint64_t x) {
     /* If no suitable CTZ builtin is available, use a (variable time) software emulation. */
     return secp256k1_ctz64_var_debruijn(x);
 #endif
+}
+
+/* Read a uint32_t in big endian */
+SECP256K1_INLINE static uint32_t secp256k1_read_be32(const unsigned char* p) {
+    return (uint32_t)p[0] << 24 |
+           (uint32_t)p[1] << 16 |
+           (uint32_t)p[2] << 8  |
+           (uint32_t)p[3];
+}
+
+/* Write a uint32_t in big endian */
+SECP256K1_INLINE static void secp256k1_write_be32(unsigned char* p, uint32_t x) {
+    p[3] = x;
+    p[2] = x >>  8;
+    p[1] = x >> 16;
+    p[0] = x >> 24;
+}
+
+/* Read a uint64_t in big endian */
+SECP256K1_INLINE static uint64_t secp256k1_read_be64(const unsigned char* p) {
+    return (uint64_t)p[0] << 56 |
+           (uint64_t)p[1] << 48 |
+           (uint64_t)p[2] << 40 |
+           (uint64_t)p[3] << 32 |
+           (uint64_t)p[4] << 24 |
+           (uint64_t)p[5] << 16 |
+           (uint64_t)p[6] << 8  |
+           (uint64_t)p[7];
+}
+
+/* Write a uint64_t in big endian */
+SECP256K1_INLINE static void secp256k1_write_be64(unsigned char* p, uint64_t x) {
+    p[7] = x;
+    p[6] = x >>  8;
+    p[5] = x >> 16;
+    p[4] = x >> 24;
+    p[3] = x >> 32;
+    p[2] = x >> 40;
+    p[1] = x >> 48;
+    p[0] = x >> 56;
 }
 
 #endif /* SECP256K1_UTIL_H */

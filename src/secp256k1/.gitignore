@@ -1,19 +1,22 @@
-bench_inv
-bench_ecdh
+bench
 bench_ecmult
-bench_schnorrsig
-bench_sign
-bench_verify
-bench_recover
 bench_internal
+noverify_tests
 tests
 exhaustive_tests
-gen_context
-valgrind_ctime_test
+precompute_ecmult_gen
+precompute_ecmult
+ctime_tests
+ecdh_example
+ecdsa_example
+schnorr_example
 *.exe
 *.so
 *.a
-!.gitignore
+*.csv
+*.log
+*.trs
+*.sage.py
 
 Makefile
 configure
@@ -32,8 +35,6 @@ libtool
 *.lo
 *.o
 *~
-*.log
-*.trs
 
 coverage/
 coverage.html
@@ -42,9 +43,7 @@ coverage.*.html
 *.gcno
 *.gcov
 
-src/libsecp256k1-config.h
-src/libsecp256k1-config.h.in
-src/ecmult_static_context.h
+build-aux/ar-lib
 build-aux/config.guess
 build-aux/config.sub
 build-aux/depcomp
@@ -58,5 +57,9 @@ build-aux/m4/ltversion.m4
 build-aux/missing
 build-aux/compile
 build-aux/test-driver
-src/stamp-h1
 libsecp256k1.pc
+
+### CMake
+/CMakeUserPresets.json
+# Default CMake build directory.
+/build

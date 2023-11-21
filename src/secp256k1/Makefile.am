@@ -24,10 +24,14 @@ noinst_HEADERS += src/eckey.h
 noinst_HEADERS += src/eckey_impl.h
 noinst_HEADERS += src/ecmult.h
 noinst_HEADERS += src/ecmult_impl.h
+noinst_HEADERS += src/ecmult_compute_table.h
+noinst_HEADERS += src/ecmult_compute_table_impl.h
 noinst_HEADERS += src/ecmult_const.h
 noinst_HEADERS += src/ecmult_const_impl.h
 noinst_HEADERS += src/ecmult_gen.h
 noinst_HEADERS += src/ecmult_gen_impl.h
+noinst_HEADERS += src/ecmult_gen_compute_table.h
+noinst_HEADERS += src/ecmult_gen_compute_table_impl.h
 noinst_HEADERS += src/field_10x26.h
 noinst_HEADERS += src/field_10x26_impl.h
 noinst_HEADERS += src/field_5x52.h
@@ -38,8 +42,17 @@ noinst_HEADERS += src/modinv32.h
 noinst_HEADERS += src/modinv32_impl.h
 noinst_HEADERS += src/modinv64.h
 noinst_HEADERS += src/modinv64_impl.h
+noinst_HEADERS += src/precomputed_ecmult.h
+noinst_HEADERS += src/precomputed_ecmult_gen.h
 noinst_HEADERS += src/assumptions.h
+noinst_HEADERS += src/checkmem.h
 noinst_HEADERS += src/util.h
+noinst_HEADERS += src/int128.h
+noinst_HEADERS += src/int128_impl.h
+noinst_HEADERS += src/int128_native.h
+noinst_HEADERS += src/int128_native_impl.h
+noinst_HEADERS += src/int128_struct.h
+noinst_HEADERS += src/int128_struct_impl.h
 noinst_HEADERS += src/scratch.h
 noinst_HEADERS += src/scratch_impl.h
 noinst_HEADERS += src/selftest.h
@@ -50,17 +63,26 @@ noinst_HEADERS += src/hash_impl.h
 noinst_HEADERS += src/field.h
 noinst_HEADERS += src/field_impl.h
 noinst_HEADERS += src/bench.h
+noinst_HEADERS += src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h
 noinst_HEADERS += contrib/lax_der_parsing.h
 noinst_HEADERS += contrib/lax_der_parsing.c
 noinst_HEADERS += contrib/lax_der_privatekey_parsing.h
 noinst_HEADERS += contrib/lax_der_privatekey_parsing.c
+noinst_HEADERS += examples/examples_util.h
+
+PRECOMPUTED_LIB = libsecp256k1_precomputed.la
+noinst_LTLIBRARIES = $(PRECOMPUTED_LIB)
+libsecp256k1_precomputed_la_SOURCES =  src/precomputed_ecmult.c src/precomputed_ecmult_gen.c
+# We need `-I$(top_srcdir)/src` in VPATH builds if libsecp256k1_precomputed_la_SOURCES have been recreated in the build tree.
+# This helps users and packagers who insist on recreating the precomputed files (e.g., Gentoo).
+libsecp256k1_precomputed_la_CPPFLAGS = -I$(top_srcdir)/src $(SECP_CONFIG_DEFINES)
 
 if USE_EXTERNAL_ASM
 COMMON_LIB = libsecp256k1_common.la
-noinst_LTLIBRARIES = $(COMMON_LIB)
 else
 COMMON_LIB =
 endif
+noinst_LTLIBRARIES += $(COMMON_LIB)
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libsecp256k1.pc
@@ -72,84 +94,163 @@ endif
 endif
 
 libsecp256k1_la_SOURCES = src/secp256k1.c
-libsecp256k1_la_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src $(SECP_INCLUDES)
-libsecp256k1_la_LIBADD = $(SECP_LIBS) $(COMMON_LIB)
-
-if VALGRIND_ENABLED
-libsecp256k1_la_CPPFLAGS += -DVALGRIND
-endif
+libsecp256k1_la_CPPFLAGS = $(SECP_CONFIG_DEFINES)
+libsecp256k1_la_LIBADD = $(COMMON_LIB) $(PRECOMPUTED_LIB)
+libsecp256k1_la_LDFLAGS = -no-undefined -version-info $(LIB_VERSION_CURRENT):$(LIB_VERSION_REVISION):$(LIB_VERSION_AGE)
 
 noinst_PROGRAMS =
 if USE_BENCHMARK
-noinst_PROGRAMS += bench_verify bench_sign bench_internal bench_ecmult
-bench_verify_SOURCES = src/bench_verify.c
-bench_verify_LDADD = libsecp256k1.la $(SECP_LIBS) $(SECP_TEST_LIBS) $(COMMON_LIB)
-# SECP_TEST_INCLUDES are only used here for CRYPTO_CPPFLAGS
-bench_verify_CPPFLAGS = $(SECP_TEST_INCLUDES)
-bench_sign_SOURCES = src/bench_sign.c
-bench_sign_LDADD = libsecp256k1.la $(SECP_LIBS) $(SECP_TEST_LIBS) $(COMMON_LIB)
+noinst_PROGRAMS += bench bench_internal bench_ecmult
+bench_SOURCES = src/bench.c
+bench_LDADD = libsecp256k1.la
+bench_CPPFLAGS = $(SECP_CONFIG_DEFINES)
 bench_internal_SOURCES = src/bench_internal.c
-bench_internal_LDADD = $(SECP_LIBS) $(COMMON_LIB)
-bench_internal_CPPFLAGS = $(SECP_INCLUDES)
+bench_internal_LDADD = $(COMMON_LIB) $(PRECOMPUTED_LIB)
+bench_internal_CPPFLAGS = $(SECP_CONFIG_DEFINES)
 bench_ecmult_SOURCES = src/bench_ecmult.c
-bench_ecmult_LDADD = $(SECP_LIBS) $(COMMON_LIB)
-bench_ecmult_CPPFLAGS = $(SECP_INCLUDES)
+bench_ecmult_LDADD = $(COMMON_LIB) $(PRECOMPUTED_LIB)
+bench_ecmult_CPPFLAGS = $(SECP_CONFIG_DEFINES)
 endif
 
 TESTS =
 if USE_TESTS
-noinst_PROGRAMS += tests
-tests_SOURCES = src/tests.c
-tests_CPPFLAGS = -I$(top_srcdir)/src -I$(top_srcdir)/include $(SECP_INCLUDES) $(SECP_TEST_INCLUDES)
-if VALGRIND_ENABLED
-tests_CPPFLAGS += -DVALGRIND
-noinst_PROGRAMS += valgrind_ctime_test
-valgrind_ctime_test_SOURCES = src/valgrind_ctime_test.c
-valgrind_ctime_test_LDADD = libsecp256k1.la $(SECP_LIBS) $(COMMON_LIB)
-endif
+TESTS += noverify_tests
+noinst_PROGRAMS += noverify_tests
+noverify_tests_SOURCES = src/tests.c
+noverify_tests_CPPFLAGS = $(SECP_CONFIG_DEFINES)
+noverify_tests_LDADD = $(COMMON_LIB) $(PRECOMPUTED_LIB)
+noverify_tests_LDFLAGS = -static
 if !ENABLE_COVERAGE
-tests_CPPFLAGS += -DVERIFY
-endif
-tests_LDADD = $(SECP_LIBS) $(SECP_TEST_LIBS) $(COMMON_LIB)
-tests_LDFLAGS = -static
 TESTS += tests
+noinst_PROGRAMS += tests
+tests_SOURCES  = $(noverify_tests_SOURCES)
+tests_CPPFLAGS = $(noverify_tests_CPPFLAGS) -DVERIFY
+tests_LDADD    = $(noverify_tests_LDADD)
+tests_LDFLAGS  = $(noverify_tests_LDFLAGS)
+endif
+endif
+
+if USE_CTIME_TESTS
+noinst_PROGRAMS += ctime_tests
+ctime_tests_SOURCES = src/ctime_tests.c
+ctime_tests_LDADD = libsecp256k1.la
+ctime_tests_CPPFLAGS = $(SECP_CONFIG_DEFINES)
 endif
 
 if USE_EXHAUSTIVE_TESTS
 noinst_PROGRAMS += exhaustive_tests
 exhaustive_tests_SOURCES = src/tests_exhaustive.c
-exhaustive_tests_CPPFLAGS = -I$(top_srcdir)/src $(SECP_INCLUDES)
+exhaustive_tests_CPPFLAGS = $(SECP_CONFIG_DEFINES)
 if !ENABLE_COVERAGE
 exhaustive_tests_CPPFLAGS += -DVERIFY
 endif
-exhaustive_tests_LDADD = $(SECP_LIBS) $(COMMON_LIB)
+# Note: do not include $(PRECOMPUTED_LIB) in exhaustive_tests (it uses runtime-generated tables).
+exhaustive_tests_LDADD = $(COMMON_LIB)
 exhaustive_tests_LDFLAGS = -static
 TESTS += exhaustive_tests
 endif
 
-if USE_ECMULT_STATIC_PRECOMPUTATION
-CPPFLAGS_FOR_BUILD +=-I$(top_srcdir) -I$(builddir)/src
-
-gen_context_OBJECTS = gen_context.o
-gen_context_BIN = gen_context$(BUILD_EXEEXT)
-gen_%.o: src/gen_%.c src/libsecp256k1-config.h
-	$(CC_FOR_BUILD) $(DEFS) $(CPPFLAGS_FOR_BUILD) $(SECP_CFLAGS_FOR_BUILD) $(CFLAGS_FOR_BUILD) -c $< -o $@
-
-$(gen_context_BIN): $(gen_context_OBJECTS)
-	$(CC_FOR_BUILD) $(SECP_CFLAGS_FOR_BUILD) $(CFLAGS_FOR_BUILD) $(LDFLAGS_FOR_BUILD) $^ -o $@
-
-$(libsecp256k1_la_OBJECTS): src/ecmult_static_context.h
-$(tests_OBJECTS): src/ecmult_static_context.h
-$(bench_internal_OBJECTS): src/ecmult_static_context.h
-$(bench_ecmult_OBJECTS): src/ecmult_static_context.h
-
-src/ecmult_static_context.h: $(gen_context_BIN)
-	./$(gen_context_BIN)
-
-CLEANFILES = $(gen_context_BIN) src/ecmult_static_context.h
+if USE_EXAMPLES
+noinst_PROGRAMS += ecdsa_example
+ecdsa_example_SOURCES = examples/ecdsa.c
+ecdsa_example_CPPFLAGS = -I$(top_srcdir)/include
+ecdsa_example_LDADD = libsecp256k1.la
+ecdsa_example_LDFLAGS = -static
+if BUILD_WINDOWS
+ecdsa_example_LDFLAGS += -lbcrypt
+endif
+TESTS += ecdsa_example
+if ENABLE_MODULE_ECDH
+noinst_PROGRAMS += ecdh_example
+ecdh_example_SOURCES = examples/ecdh.c
+ecdh_example_CPPFLAGS = -I$(top_srcdir)/include
+ecdh_example_LDADD = libsecp256k1.la
+ecdh_example_LDFLAGS = -static
+if BUILD_WINDOWS
+ecdh_example_LDFLAGS += -lbcrypt
+endif
+TESTS += ecdh_example
+endif
+if ENABLE_MODULE_SCHNORRSIG
+noinst_PROGRAMS += schnorr_example
+schnorr_example_SOURCES = examples/schnorr.c
+schnorr_example_CPPFLAGS = -I$(top_srcdir)/include
+schnorr_example_LDADD = libsecp256k1.la
+schnorr_example_LDFLAGS = -static
+if BUILD_WINDOWS
+schnorr_example_LDFLAGS += -lbcrypt
+endif
+TESTS += schnorr_example
+endif
 endif
 
-EXTRA_DIST = autogen.sh src/gen_context.c src/basic-config.h
+### Precomputed tables
+EXTRA_PROGRAMS = precompute_ecmult precompute_ecmult_gen
+CLEANFILES = $(EXTRA_PROGRAMS)
+
+precompute_ecmult_SOURCES = src/precompute_ecmult.c
+precompute_ecmult_CPPFLAGS = $(SECP_CONFIG_DEFINES) -DVERIFY
+precompute_ecmult_LDADD = $(COMMON_LIB)
+
+precompute_ecmult_gen_SOURCES = src/precompute_ecmult_gen.c
+precompute_ecmult_gen_CPPFLAGS = $(SECP_CONFIG_DEFINES) -DVERIFY
+precompute_ecmult_gen_LDADD = $(COMMON_LIB)
+
+# See Automake manual, Section "Errors with distclean".
+# We don't list any dependencies for the prebuilt files here because
+# otherwise make's decision whether to rebuild them (even in the first
+# build by a normal user) depends on mtimes, and thus is very fragile.
+# This means that rebuilds of the prebuilt files always need to be
+# forced by deleting them.
+src/precomputed_ecmult.c:
+	$(MAKE) $(AM_MAKEFLAGS) precompute_ecmult$(EXEEXT)
+	./precompute_ecmult$(EXEEXT)
+src/precomputed_ecmult_gen.c:
+	$(MAKE) $(AM_MAKEFLAGS) precompute_ecmult_gen$(EXEEXT)
+	./precompute_ecmult_gen$(EXEEXT)
+
+PRECOMP = src/precomputed_ecmult_gen.c src/precomputed_ecmult.c
+precomp: $(PRECOMP)
+
+# Ensure the prebuilt files will be build first (only if they don't exist,
+# e.g., after `make maintainer-clean`).
+BUILT_SOURCES = $(PRECOMP)
+
+.PHONY: clean-precomp
+clean-precomp:
+	rm -f $(PRECOMP)
+maintainer-clean-local: clean-precomp
+
+### Pregenerated test vectors
+### (see the comments in the previous section for detailed rationale)
+TESTVECTORS = src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h
+
+src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h:
+	mkdir -p $(@D)
+	python3 $(top_srcdir)/tools/tests_wycheproof_generate.py $(top_srcdir)/src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json > $@
+
+testvectors: $(TESTVECTORS)
+
+BUILT_SOURCES += $(TESTVECTORS)
+
+.PHONY: clean-testvectors
+clean-testvectors:
+	rm -f $(TESTVECTORS)
+maintainer-clean-local: clean-testvectors
+
+### Additional files to distribute
+EXTRA_DIST = autogen.sh CHANGELOG.md SECURITY.md
+EXTRA_DIST += doc/release-process.md doc/safegcd_implementation.md
+EXTRA_DIST += examples/EXAMPLES_COPYING
+EXTRA_DIST += sage/gen_exhaustive_groups.sage
+EXTRA_DIST += sage/gen_split_lambda_constants.sage
+EXTRA_DIST += sage/group_prover.sage
+EXTRA_DIST += sage/prove_group_implementations.sage
+EXTRA_DIST += sage/secp256k1_params.sage
+EXTRA_DIST += sage/weierstrass_prover.sage
+EXTRA_DIST += src/wycheproof/WYCHEPROOF_COPYING
+EXTRA_DIST += src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json
+EXTRA_DIST += tools/tests_wycheproof_generate.py
 
 if ENABLE_MODULE_ECDH
 include src/modules/ecdh/Makefile.am.include
@@ -165,4 +266,8 @@ endif
 
 if ENABLE_MODULE_SCHNORRSIG
 include src/modules/schnorrsig/Makefile.am.include
+endif
+
+if ENABLE_MODULE_ELLSWIFT
+include src/modules/ellswift/Makefile.am.include
 endif

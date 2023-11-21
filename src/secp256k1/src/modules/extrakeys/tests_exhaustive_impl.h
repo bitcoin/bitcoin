@@ -7,8 +7,8 @@
 #ifndef SECP256K1_MODULE_EXTRAKEYS_TESTS_EXHAUSTIVE_H
 #define SECP256K1_MODULE_EXTRAKEYS_TESTS_EXHAUSTIVE_H
 
-#include "src/modules/extrakeys/main_impl.h"
 #include "../../../include/secp256k1_extrakeys.h"
+#include "main_impl.h"
 
 static void test_exhaustive_extrakeys(const secp256k1_context *ctx, const secp256k1_ge* group) {
     secp256k1_keypair keypair[EXHAUSTIVE_TEST_ORDER - 1];
@@ -47,7 +47,7 @@ static void test_exhaustive_extrakeys(const secp256k1_context *ctx, const secp25
         CHECK(secp256k1_memcmp_var(xonly_pubkey_bytes[i - 1], buf, 32) == 0);
 
         /* Compare the xonly_pubkey bytes against the precomputed group. */
-        secp256k1_fe_set_b32(&fe, xonly_pubkey_bytes[i - 1]);
+        secp256k1_fe_set_b32_mod(&fe, xonly_pubkey_bytes[i - 1]);
         CHECK(secp256k1_fe_equal_var(&fe, &group[i].x));
 
         /* Check the parity against the precomputed group. */

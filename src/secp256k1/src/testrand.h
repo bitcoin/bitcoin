@@ -7,9 +7,7 @@
 #ifndef SECP256K1_TESTRAND_H
 #define SECP256K1_TESTRAND_H
 
-#if defined HAVE_CONFIG_H
-#include "libsecp256k1-config.h"
-#endif
+#include "util.h"
 
 /* A non-cryptographic RNG used only for test infrastructure. */
 
@@ -17,11 +15,14 @@
 SECP256K1_INLINE static void secp256k1_testrand_seed(const unsigned char *seed16);
 
 /** Generate a pseudorandom number in the range [0..2**32-1]. */
-static uint32_t secp256k1_testrand32(void);
+SECP256K1_INLINE static uint32_t secp256k1_testrand32(void);
+
+/** Generate a pseudorandom number in the range [0..2**64-1]. */
+SECP256K1_INLINE static uint64_t secp256k1_testrand64(void);
 
 /** Generate a pseudorandom number in the range [0..2**bits-1]. Bits must be 1 or
  *  more. */
-static uint32_t secp256k1_testrand_bits(int bits);
+SECP256K1_INLINE static uint64_t secp256k1_testrand_bits(int bits);
 
 /** Generate a pseudorandom number in the range [0..range-1]. */
 static uint32_t secp256k1_testrand_int(uint32_t range);

@@ -9,6 +9,7 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <coins.h>
+#include <compat.h>
 #include <consensus/consensus.h>
 #include <core_io.h>
 #include <key_io.h>
@@ -616,8 +617,6 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
 
 class Secp256k1Init
 {
-    ECCVerifyHandle globalVerifyHandle;
-
 public:
     Secp256k1Init() {
         ECC_Start();
@@ -786,7 +785,7 @@ static int CommandLineRawTx(int argc, char* argv[])
     return nRet;
 }
 
-int main(int argc, char* argv[])
+MAIN_FUNCTION
 {
     RegisterPrettyTerminateHander();
     RegisterPrettySignalHandlers();

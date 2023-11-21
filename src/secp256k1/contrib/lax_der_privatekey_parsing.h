@@ -43,8 +43,7 @@ extern "C" {
 /** Export a private key in DER format.
  *
  *  Returns: 1 if the private key was valid.
- *  Args: ctx:        pointer to a context object, initialized for signing (cannot
- *                    be NULL)
+ *  Args: ctx:        pointer to a context object (not secp256k1_context_static).
  *  Out: privkey:     pointer to an array for storing the private key in BER.
  *                    Should have space for 279 bytes, and cannot be NULL.
  *       privkeylen:  Pointer to an int where the length of the private key in

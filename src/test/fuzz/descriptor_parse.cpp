@@ -11,7 +11,6 @@
 
 void initialize_descriptor_parse()
 {
-    static const ECCVerifyHandle verify_handle;
     ECC_Start();
     SelectParams(CBaseChainParams::MAIN);
 }

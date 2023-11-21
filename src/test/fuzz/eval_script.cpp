@@ -9,12 +9,7 @@
 
 #include <limits>
 
-void initialize_eval_script()
-{
-    static const ECCVerifyHandle verify_handle;
-}
-
-FUZZ_TARGET_INIT(eval_script, initialize_eval_script)
+FUZZ_TARGET(eval_script)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const unsigned int flags = fuzzed_data_provider.ConsumeIntegral<unsigned int>();

@@ -270,6 +270,7 @@ Span<std::byte> MakeWritableByteSpan(V&& v) noexcept
 // Helper functions to safely cast to unsigned char pointers.
 inline unsigned char* UCharCast(char* c) { return (unsigned char*)c; }
 inline unsigned char* UCharCast(unsigned char* c) { return c; }
+inline unsigned char* UCharCast(std::byte* c) { return (unsigned char*)c; }
 inline const unsigned char* UCharCast(const char* c) { return (unsigned char*)c; }
 inline const unsigned char* UCharCast(const unsigned char* c) { return c; }
 inline const unsigned char* UCharCast(const std::byte* c) { return reinterpret_cast<const unsigned char*>(c); }

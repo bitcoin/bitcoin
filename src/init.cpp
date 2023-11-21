@@ -190,8 +190,6 @@ static fs::path GetPidFile(const ArgsManager& args)
 // shutdown thing.
 //
 
-static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
-
 void Interrupt(NodeContext& node)
 {
     InterruptHTTPServer();
@@ -399,7 +397,6 @@ void Shutdown(NodeContext& node)
         PrepareShutdown(node);
     }
     // Shutdown part 2: delete wallet instance
-    globalVerifyHandle.reset();
     ECC_Stop();
     node.mempool.reset();
     node.fee_estimator.reset();
@@ -1467,7 +1464,6 @@ bool AppInitSanityChecks()
     LogPrintf("Using the '%s' SHA256 implementation\n", sha256_algo);
     RandomInit();
     ECC_Start();
-    globalVerifyHandle.reset(new ECCVerifyHandle());
 
     // Sanity check
     if (!InitSanityCheck())

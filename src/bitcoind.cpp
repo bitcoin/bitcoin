@@ -156,7 +156,7 @@ static bool AppInit(int argc, char* argv[])
     return fRet;
 }
 
-int main(int argc, char* argv[])
+MAIN_FUNCTION
 {
     RegisterPrettyTerminateHander();
     RegisterPrettySignalHandlers();

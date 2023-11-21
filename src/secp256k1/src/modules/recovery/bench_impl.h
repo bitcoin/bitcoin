@@ -4,10 +4,10 @@
  * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
  ***********************************************************************/
 
-#include "../include/secp256k1.h"
-#include "../include/secp256k1_recovery.h"
-#include "util.h"
-#include "bench.h"
+#ifndef SECP256K1_MODULE_RECOVERY_BENCH_H
+#define SECP256K1_MODULE_RECOVERY_BENCH_H
+
+#include "../../../include/secp256k1_recovery.h"
 
 typedef struct {
     secp256k1_context *ctx;
@@ -15,7 +15,7 @@ typedef struct {
     unsigned char sig[64];
 } bench_recover_data;
 
-void bench_recover(void* arg, int iters) {
+static void bench_recover(void* arg, int iters) {
     int i;
     bench_recover_data *data = (bench_recover_data*)arg;
     secp256k1_pubkey pubkey;
@@ -36,7 +36,7 @@ void bench_recover(void* arg, int iters) {
     }
 }
 
-void bench_recover_setup(void* arg) {
+static void bench_recover_setup(void* arg) {
     int i;
     bench_recover_data *data = (bench_recover_data*)arg;
 
@@ -48,15 +48,15 @@ void bench_recover_setup(void* arg) {
     }
 }
 
-int main(void) {
+static void run_recovery_bench(int iters, int argc, char** argv) {
     bench_recover_data data;
+    int d = argc == 1;
 
-    int iters = get_iters(20000);
+    data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
 
-    data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
-
-    run_benchmark("ecdsa_recover", bench_recover, bench_recover_setup, NULL, &data, 10, iters);
+    if (d || have_flag(argc, argv, "ecdsa") || have_flag(argc, argv, "recover") || have_flag(argc, argv, "ecdsa_recover")) run_benchmark("ecdsa_recover", bench_recover, bench_recover_setup, NULL, &data, 10, iters);
 
     secp256k1_context_destroy(data.ctx);
-    return 0;
 }
+
+#endif /* SECP256K1_MODULE_RECOVERY_BENCH_H */

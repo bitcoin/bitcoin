@@ -4,14 +4,10 @@
  * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
  ***********************************************************************/
 
-#include <string.h>
-#include <stdlib.h>
+#ifndef SECP256K1_MODULE_SCHNORRSIG_BENCH_H
+#define SECP256K1_MODULE_SCHNORRSIG_BENCH_H
 
-
-#include "../include/secp256k1.h"
-#include "../include/secp256k1_schnorrsig.h"
-#include "util.h"
-#include "bench.h"
+#include "../../../include/secp256k1_schnorrsig.h"
 
 #define MSGLEN 32
 
@@ -25,7 +21,7 @@ typedef struct {
     const unsigned char **msgs;
 } bench_schnorrsig_data;
 
-void bench_schnorrsig_sign(void* arg, int iters) {
+static void bench_schnorrsig_sign(void* arg, int iters) {
     bench_schnorrsig_data *data = (bench_schnorrsig_data *)arg;
     int i;
     unsigned char msg[MSGLEN] = {0};
@@ -38,7 +34,7 @@ void bench_schnorrsig_sign(void* arg, int iters) {
     }
 }
 
-void bench_schnorrsig_verify(void* arg, int iters) {
+static void bench_schnorrsig_verify(void* arg, int iters) {
     bench_schnorrsig_data *data = (bench_schnorrsig_data *)arg;
     int i;
 
@@ -49,12 +45,12 @@ void bench_schnorrsig_verify(void* arg, int iters) {
     }
 }
 
-int main(void) {
+static void run_schnorrsig_bench(int iters, int argc, char** argv) {
     int i;
     bench_schnorrsig_data data;
-    int iters = get_iters(10000);
+    int d = argc == 1;
 
-    data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY | SECP256K1_CONTEXT_SIGN);
+    data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
     data.keypairs = (const secp256k1_keypair **)malloc(iters * sizeof(secp256k1_keypair *));
     data.pk = (const unsigned char **)malloc(iters * sizeof(unsigned char *));
     data.msgs = (const unsigned char **)malloc(iters * sizeof(unsigned char *));
@@ -86,8 +82,8 @@ int main(void) {
         CHECK(secp256k1_xonly_pubkey_serialize(data.ctx, pk_char, &pk) == 1);
     }
 
-    run_benchmark("schnorrsig_sign", bench_schnorrsig_sign, NULL, NULL, (void *) &data, 10, iters);
-    run_benchmark("schnorrsig_verify", bench_schnorrsig_verify, NULL, NULL, (void *) &data, 10, iters);
+    if (d || have_flag(argc, argv, "schnorrsig") || have_flag(argc, argv, "sign") || have_flag(argc, argv, "schnorrsig_sign")) run_benchmark("schnorrsig_sign", bench_schnorrsig_sign, NULL, NULL, (void *) &data, 10, iters);
+    if (d || have_flag(argc, argv, "schnorrsig") || have_flag(argc, argv, "verify") || have_flag(argc, argv, "schnorrsig_verify")) run_benchmark("schnorrsig_verify", bench_schnorrsig_verify, NULL, NULL, (void *) &data, 10, iters);
 
     for (i = 0; i < iters; i++) {
         free((void *)data.keypairs[i]);
@@ -95,11 +91,14 @@ int main(void) {
         free((void *)data.msgs[i]);
         free((void *)data.sigs[i]);
     }
-    free(data.keypairs);
-    free(data.pk);
-    free(data.msgs);
-    free(data.sigs);
+
+    /* Casting to (void *) avoids a stupid warning in MSVC. */
+    free((void *)data.keypairs);
+    free((void *)data.pk);
+    free((void *)data.msgs);
+    free((void *)data.sigs);
 
     secp256k1_context_destroy(data.ctx);
-    return 0;
 }
+
+#endif

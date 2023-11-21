@@ -11,20 +11,37 @@
 #include "scalar.h"
 #include "scratch.h"
 
-typedef struct {
-    /* For accelerating the computation of a*P + b*G: */
-    secp256k1_ge_storage (*pre_g)[];    /* odd multiples of the generator */
-    secp256k1_ge_storage (*pre_g_128)[]; /* odd multiples of 2^128*generator */
-} secp256k1_ecmult_context;
+#ifndef ECMULT_WINDOW_SIZE
+#  define ECMULT_WINDOW_SIZE 15
+#  ifdef DEBUG_CONFIG
+#     pragma message DEBUG_CONFIG_MSG("ECMULT_WINDOW_SIZE undefined, assuming default value")
+#  endif
+#endif
 
-static void secp256k1_ecmult_context_init(secp256k1_ecmult_context *ctx);
-static void secp256k1_ecmult_context_build(secp256k1_ecmult_context *ctx, void **prealloc);
-static void secp256k1_ecmult_context_finalize_memcpy(secp256k1_ecmult_context *dst, const secp256k1_ecmult_context *src);
-static void secp256k1_ecmult_context_clear(secp256k1_ecmult_context *ctx);
-static int secp256k1_ecmult_context_is_built(const secp256k1_ecmult_context *ctx);
+#ifdef DEBUG_CONFIG
+#  pragma message DEBUG_CONFIG_DEF(ECMULT_WINDOW_SIZE)
+#endif
+
+/* Noone will ever need more than a window size of 24. The code might
+ * be correct for larger values of ECMULT_WINDOW_SIZE but this is not
+ * tested.
+ *
+ * The following limitations are known, and there are probably more:
+ * If WINDOW_G > 27 and size_t has 32 bits, then the code is incorrect
+ * because the size of the memory object that we allocate (in bytes)
+ * will not fit in a size_t.
+ * If WINDOW_G > 31 and int has 32 bits, then the code is incorrect
+ * because certain expressions will overflow.
+ */
+#if ECMULT_WINDOW_SIZE < 2 || ECMULT_WINDOW_SIZE > 24
+#  error Set ECMULT_WINDOW_SIZE to an integer in range [2..24].
+#endif
+
+/** The number of entries a table with precomputed multiples needs to have. */
+#define ECMULT_TABLE_SIZE(w) (1L << ((w)-2))
 
 /** Double multiply: R = na*A + ng*G */
-static void secp256k1_ecmult(const secp256k1_ecmult_context *ctx, secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_scalar *na, const secp256k1_scalar *ng);
+static void secp256k1_ecmult(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_scalar *na, const secp256k1_scalar *ng);
 
 typedef int (secp256k1_ecmult_multi_callback)(secp256k1_scalar *sc, secp256k1_ge *pt, size_t idx, void *data);
 
@@ -39,6 +56,6 @@ typedef int (secp256k1_ecmult_multi_callback)(secp256k1_scalar *sc, secp256k1_ge
  *          0 if there is not enough scratch space for a single point or
  *          callback returns 0
  */
-static int secp256k1_ecmult_multi_var(const secp256k1_callback* error_callback, const secp256k1_ecmult_context *ctx, secp256k1_scratch *scratch, secp256k1_gej *r, const secp256k1_scalar *inp_g_sc, secp256k1_ecmult_multi_callback cb, void *cbdata, size_t n);
+static int secp256k1_ecmult_multi_var(const secp256k1_callback* error_callback, secp256k1_scratch *scratch, secp256k1_gej *r, const secp256k1_scalar *inp_g_sc, secp256k1_ecmult_multi_callback cb, void *cbdata, size_t n);
 
 #endif /* SECP256K1_ECMULT_H */
