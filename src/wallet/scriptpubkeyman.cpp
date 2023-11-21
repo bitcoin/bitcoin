@@ -8,7 +8,6 @@
 #include <script/descriptor.h>
 #include <script/sign.h>
 #include <shutdown.h>
-#include <ui_interface.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
 #include <util/system.h>
@@ -1437,7 +1436,7 @@ bool LegacyScriptPubKeyMan::TopUpInner(unsigned int kpSize)
         int64_t progress_report_time = GetTime();
         WalletLogPrintf("%s\n", strMsg);
         if (should_show_progress) {
-            uiInterface.ShowProgress(strMsg, 0, false);
+            m_storage.UpdateProgress(strMsg, 0);
         }
 
         bool fInternal = false;
@@ -1458,7 +1457,7 @@ bool LegacyScriptPubKeyMan::TopUpInner(unsigned int kpSize)
                 progress_report_time = GetTime();
                 WalletLogPrintf("Still topping up. At key %lld. Progress=%f\n", current_index, dProgress);
                 if (should_show_progress) {
-                    uiInterface.ShowProgress(strMsg, static_cast<int>(dProgress), false);
+                    m_storage.UpdateProgress(strMsg, static_cast<int>(dProgress));
                 }
             }
             if (ShutdownRequested()) break;
@@ -1466,7 +1465,7 @@ bool LegacyScriptPubKeyMan::TopUpInner(unsigned int kpSize)
         WalletLogPrintf("Keypool added %d keys, size=%u (%u internal)\n",
                   current_index + 1, setInternalKeyPool.size() + setExternalKeyPool.size(), setInternalKeyPool.size());
         if (should_show_progress) {
-            uiInterface.ShowProgress("", 100, false);
+            m_storage.UpdateProgress("", 100);
         }
     }
     NotifyCanGetAddressesChanged();
