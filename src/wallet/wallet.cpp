@@ -52,8 +52,6 @@
 
 #include <evo/providertx.h>
 
-#include <llmq/instantsend.h>
-#include <llmq/chainlocks.h>
 #include <assert.h>
 
 using interfaces::FoundBlock;
@@ -5155,7 +5153,7 @@ bool CWalletTx::IsChainLocked() const
         bool active;
         int height;
         if (pwallet->chain().findBlock(m_confirm.hashBlock, FoundBlock().inActiveChain(active).height(height)) && active) {
-            fIsChainlocked = llmq::chainLocksHandler->HasChainLock(height, m_confirm.hashBlock);
+            fIsChainlocked = pwallet->chain().hasChainLock(height, m_confirm.hashBlock);
         }
     }
     return fIsChainlocked;

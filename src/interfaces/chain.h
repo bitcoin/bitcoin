@@ -138,6 +138,9 @@ public:
     //! Check if transaction is locked by InstantSendManager
     virtual bool isInstantSendLockedTx(const uint256& hash) = 0;
 
+    //! Check if block is chainlocked.
+    virtual bool hasChainLock(int height, const uint256& hash) = 0;
+
     //! Return whether node has the block and optionally return block metadata
     //! or contents.
     virtual bool findBlock(const uint256& hash, const FoundBlock& block={}) = 0;

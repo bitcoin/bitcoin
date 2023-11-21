@@ -16,6 +16,7 @@
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
+#include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/instantsend.h>
 #include <mapport.h>
@@ -720,6 +721,11 @@ public:
     {
         if (m_node.llmq_ctx == nullptr || m_node.llmq_ctx->isman == nullptr) return false;
         return m_node.llmq_ctx->isman->IsLocked(hash);
+    }
+    bool hasChainLock(int height, const uint256& hash) override
+    {
+        if (m_node.llmq_ctx == nullptr || m_node.llmq_ctx->clhandler == nullptr) return false;
+        return m_node.llmq_ctx->clhandler->HasChainLock(height, hash);
     }
     bool findBlock(const uint256& hash, const FoundBlock& block) override
     {
