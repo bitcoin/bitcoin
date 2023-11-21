@@ -1460,7 +1460,6 @@ bool LegacyScriptPubKeyMan::TopUpInner(unsigned int kpSize)
                     m_storage.UpdateProgress(strMsg, static_cast<int>(dProgress));
                 }
             }
-            if (ShutdownRequested()) break;
         }
         WalletLogPrintf("Keypool added %d keys, size=%u (%u internal)\n",
                   current_index + 1, setInternalKeyPool.size() + setExternalKeyPool.size(), setInternalKeyPool.size());
