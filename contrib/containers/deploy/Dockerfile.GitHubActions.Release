@@ -24,7 +24,7 @@ RUN apt-get update && \
 
 RUN mach=$(uname -m) \
       && case $mach in aarch64) arch="aarch64-linux-gnu"; ;; x86_64) arch="x86_64-linux-gnu"; ;;  *) echo "ERROR: Machine type $mach not supported."; ;; esac \
-      && wget https://github.com/dashpay/dash/releases/download/v${TAG}/dashcore-${TAG}-$arch.tar.gz -P /tmp \
+      && wget https://github.com/${GITHUB_REPOSITORY}/releases/download/v${TAG}/dashcore-${TAG}-$arch.tar.gz -P /tmp \
       && tar -xvf /tmp/dashcore-*.tar.gz -C /tmp/ \
       && cp /tmp/dashcore*/bin/*  /usr/local/bin \
       && rm -rf /tmp/dashcore* \
