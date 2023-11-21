@@ -30,11 +30,8 @@ RUN apt-get update && \
 # To mitigate the build halting, you can add "|| true" so that it
 # unconditionally returns 0
 #
-# Also, we create the group `docker` and add our user to it to meet
-# Gitian's requirements
-#
 RUN groupadd docker && \
-    usermod -aG sudo,docker dash && \
+    usermod -aG sudo dash && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # Disable noninteractive mode
