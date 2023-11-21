@@ -260,8 +260,8 @@ BOOST_AUTO_TEST_CASE( conversion )
     BOOST_CHECK(UintToArith256(OneL) == 1);
     BOOST_CHECK(ArithToUint256(0) == ZeroL);
     BOOST_CHECK(ArithToUint256(1) == OneL);
-    BOOST_CHECK(arith_uint256(R1L.GetHex()) == UintToArith256(R1L));
-    BOOST_CHECK(arith_uint256(R2L.GetHex()) == UintToArith256(R2L));
+    BOOST_CHECK(arith_uint256(UintToArith256(uint256S(R1L.GetHex()))) == UintToArith256(R1L));
+    BOOST_CHECK(arith_uint256(UintToArith256(uint256S(R2L.GetHex()))) == UintToArith256(R2L));
     BOOST_CHECK(R1L.GetHex() == UintToArith256(R1L).GetHex());
     BOOST_CHECK(R2L.GetHex() == UintToArith256(R2L).GetHex());
 }
