@@ -44,14 +44,26 @@ class WalletReindexTest(BitcoinTestFramework):
             self.advance_time(node, BLOCK_TIME)
 
         # Now create a new wallet, and import the descriptor
-        node.createwallet(wallet_name='watch_only', disable_private_keys=True, blank=True, load_on_startup=True)
+        node.createwallet(wallet_name='watch_only', disable_private_keys=True, load_on_startup=True)
         wallet_watch_only = node.get_wallet_rpc('watch_only')
+        # Blank wallets don't have a birth time
+        assert 'birthtime' not in wallet_watch_only.getwalletinfo()
 
         # For a descriptors wallet: Import address with timestamp=now.
         # For legacy wallet: There is no way of importing a script/address with a custom time. The wallet always imports it with birthtime=1.
         # In both cases, disable rescan to not detect the transaction.
         wallet_watch_only.importaddress(wallet_addr, rescan=False)
         assert_equal(len(wallet_watch_only.listtransactions()), 0)
+
+        # Depending on the wallet type, the birth time changes.
+        wallet_birthtime = wallet_watch_only.getwalletinfo()['birthtime']
+        if self.options.descriptors:
+            # As blocks were generated every 10 min, the chain MTP timestamp is node_time - 60 min.
+            assert_equal(self.node_time - BLOCK_TIME * 6, wallet_birthtime)
+        else:
+            # No way of importing scripts/addresses with a custom time on a legacy wallet.
+            # It's always set to the beginning of time.
+            assert_equal(wallet_birthtime, 1)
 
         # Rescan the wallet to detect the missing transaction
         wallet_watch_only.rescanblockchain()
@@ -65,7 +77,16 @@ class WalletReindexTest(BitcoinTestFramework):
 
         # Verify the transaction is still 'confirmed' after reindex
         wallet_watch_only = node.get_wallet_rpc('watch_only')
-        assert_equal(wallet_watch_only.gettransaction(tx_id)['confirmations'], 50)
+        tx_info = wallet_watch_only.gettransaction(tx_id)
+        assert_equal(tx_info['confirmations'], 50)
+
+        # Depending on the wallet type, the birth time changes.
+        if self.options.descriptors:
+            # For descriptors, verify the wallet updated the birth time to the transaction time
+            assert_equal(tx_info['time'], wallet_watch_only.getwalletinfo()['birthtime'])
+        else:
+            # For legacy, as the birth time was set to the beginning of time, verify it did not change
+            assert_equal(wallet_birthtime, 1)
 
         wallet_watch_only.unloadwallet()
 
