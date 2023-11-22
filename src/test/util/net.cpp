@@ -67,9 +67,9 @@ void ConnmanTestMsg::Handshake(CNode& node,
     }
 }
 
-void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const
+void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete)
 {
-    assert(node.ReceiveMsgBytes(msg_bytes, complete));
+    assert(node.ReceiveMsgBytes(msg_bytes, complete, m_net_stats));
     if (complete) {
         node.MarkReceivedMsgsForProcessing();
     }
@@ -87,7 +87,7 @@ void ConnmanTestMsg::FlushSendBuffer(CNode& node) const
     }
 }
 
-bool ConnmanTestMsg::ReceiveMsgFrom(CNode& node, CSerializedNetMsg&& ser_msg) const
+bool ConnmanTestMsg::ReceiveMsgFrom(CNode& node, CSerializedNetMsg&& ser_msg)
 {
     bool queued = node.m_transport->SetMessageToSend(ser_msg);
     assert(queued);
