@@ -411,12 +411,8 @@ inspecting signatures in Mach-O binaries.")
           `(append ,flags
             ;; https://gcc.gnu.org/install/configure.html
             (list "--enable-threads=posix",
-                  building-on)))
-        ((#:make-flags flags)
-          ;; Uses the SSP functions from glibc instead of from libssp.so.
-          ;; Our 'symbol-check' script will complain if we link against libssp.so,
-          ;; and thus will ensure that this works properly.
-          `(cons "gcc_cv_libc_provides_ssp=yes" ,flags))))))
+                  "--enable-default-ssp=yes",
+                  building-on)))))))
 
 (define-public linux-base-gcc
   (package
