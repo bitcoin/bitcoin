@@ -60,7 +60,9 @@ jobs:
           # ancestors from the rev-list output as described in:
           # https://git-scm.com/docs/git-rev-list
           echo "TEST_BASE=$(git rev-list -n$((${{ env.MAX_COUNT }} + 1)) --reverse HEAD ^$(git rev-list -n1 --merges HEAD)^@ | head -1)" >> "$GITHUB_ENV"
-      - run: sudo apt install clang ccache build-essential libtool autotools-dev automake pkg-config bsdmainutils python3-zmq libevent-dev libboost-dev libsqlite3-dev libdb++-dev systemtap-sdt-dev libminiupnpc-dev libnatpmp-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools qtwayland5 libqrencode-dev -y
+      - run: |
+          sudo apt-get update
+          sudo apt-get install clang ccache build-essential libtool autotools-dev automake pkg-config bsdmainutils python3-zmq libevent-dev libboost-dev libsqlite3-dev libdb++-dev systemtap-sdt-dev libminiupnpc-dev libnatpmp-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools qtwayland5 libqrencode-dev -y
       - name: Compile and run tests
         run: |
           # Run tests on commits after the last merge commit and before the PR head commit
@@ -137,29 +139,47 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Fix Visual Studio installation
-        # See: https://github.com/actions/runner-images/issues/7832#issuecomment-1617585694.
+        # Avoid toolset ambiguity that MSVC can't handle.
         run: |
           Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
           $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
           $componentsToRemove= @(
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ARM64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.x86.x64"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.x86.x64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ATL"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ATL.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ATL.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ATL.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ATL.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ATL.ARM64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.MFC"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.MFC.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.MFC.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.MFC.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.MFC.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.MFC.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM64"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM64"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ARM"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ARM.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ARM64"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL.ARM"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL.ARM.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL.ARM64"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC.ARM"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC.ARM.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC.ARM64"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64.Spectre"
           )
           [string]$workloadArgs = $componentsToRemove | ForEach-Object {" --remove " +  $_}
           $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache')

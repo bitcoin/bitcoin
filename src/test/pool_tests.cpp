@@ -156,21 +156,20 @@ BOOST_AUTO_TEST_CASE(random_allocations)
 
 BOOST_AUTO_TEST_CASE(memusage_test)
 {
-    auto std_map = std::unordered_map<int, int>{};
+    auto std_map = std::unordered_map<int64_t, int64_t>{};
 
-    using Map = std::unordered_map<int,
-                                   int,
-                                   std::hash<int>,
-                                   std::equal_to<int>,
-                                   PoolAllocator<std::pair<const int, int>,
-                                                 sizeof(std::pair<const int, int>) + sizeof(void*) * 4,
-                                                 alignof(void*)>>;
+    using Map = std::unordered_map<int64_t,
+                                   int64_t,
+                                   std::hash<int64_t>,
+                                   std::equal_to<int64_t>,
+                                   PoolAllocator<std::pair<const int64_t, int64_t>,
+                                                 sizeof(std::pair<const int64_t, int64_t>) + sizeof(void*) * 4>>;
     auto resource = Map::allocator_type::ResourceType(1024);
 
     PoolResourceTester::CheckAllDataAccountedFor(resource);
 
     {
-        auto resource_map = Map{0, std::hash<int>{}, std::equal_to<int>{}, &resource};
+        auto resource_map = Map{0, std::hash<int64_t>{}, std::equal_to<int64_t>{}, &resource};
 
         // can't have the same resource usage
         BOOST_TEST(memusage::DynamicUsage(std_map) != memusage::DynamicUsage(resource_map));
@@ -182,6 +181,11 @@ BOOST_AUTO_TEST_CASE(memusage_test)
 
         // Eventually the resource_map should have a much lower memory usage because it has less malloc overhead
         BOOST_TEST(memusage::DynamicUsage(resource_map) <= memusage::DynamicUsage(std_map) * 90 / 100);
+
+        // Make sure the pool is actually used by the nodes
+        auto max_nodes_per_chunk = resource.ChunkSizeBytes() / sizeof(Map::value_type);
+        auto min_num_allocated_chunks = resource_map.size() / max_nodes_per_chunk + 1;
+        BOOST_TEST(resource.NumAllocatedChunks() >= min_num_allocated_chunks);
     }
 
     PoolResourceTester::CheckAllDataAccountedFor(resource);
