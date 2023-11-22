@@ -84,9 +84,9 @@ struct ConnmanTestMsg : public CConnman {
         return m_msgproc->ProcessMessages(&node, flagInterruptMsgProc);
     }
 
-    void NodeReceiveMsgBytes(CNode& node, std::span<const uint8_t> msg_bytes, bool& complete) const;
+    void NodeReceiveMsgBytes(CNode& node, std::span<const uint8_t> msg_bytes, bool& complete);
 
-    bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg&& ser_msg) const;
+    bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg&& ser_msg);
     void FlushSendBuffer(CNode& node) const;
 
     bool AlreadyConnectedPublic(const CAddress& addr) { return AlreadyConnectedToAddress(addr); };
