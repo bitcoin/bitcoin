@@ -884,6 +884,9 @@ public:
     /* Returns true if the wallet can give out new addresses. This means it has keys in the keypool or can generate new keys */
     bool CanGetAddresses(bool internal = false) const;
 
+    /* Returns the time of the first created key or, in case of an import, it could be the time of the first received transaction */
+    int64_t GetBirthTime() const { return m_birth_time; }
+
     /**
      * Blocks until the wallet state is up-to-date to /at least/ the current
      * chain at the time this function is entered
