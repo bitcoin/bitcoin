@@ -15,4 +15,3 @@ export GOAL="install"
 export BITCOIN_CONFIG="--enable-debug CC='clang -m32' CXX='clang++ -m32' \
 LDFLAGS='--rtlib=compiler-rt -lgcc_s' CPPFLAGS='-DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE'"
 export TEST_RUNNER_ENV="BITCOIND=bitcoin-node"
-export NO_WERROR=1  # Temporary workaround to avoid -Wdeprecated-declarations from KJ
