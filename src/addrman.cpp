@@ -171,7 +171,7 @@ void AddrManImpl::Serialize(Stream& s_) const
      */
 
     // Always serialize in the latest version (FILE_FORMAT).
-    ParamsStream s{CAddress::V2_DISK, s_};
+    ParamsStream s{s_, CAddress::V2_DISK};
 
     s << static_cast<uint8_t>(FILE_FORMAT);
 
@@ -236,7 +236,7 @@ void AddrManImpl::Unserialize(Stream& s_)
     s_ >> Using<CustomUintFormatter<1>>(format);
 
     const auto ser_params = (format >= Format::V3_BIP155 ? CAddress::V2_DISK : CAddress::V1_DISK);
-    ParamsStream s{ser_params, s_};
+    ParamsStream s{s_, ser_params};
 
     uint8_t compat;
     s >> compat;

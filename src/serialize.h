@@ -1104,14 +1104,14 @@ size_t GetSerializeSize(const T& t)
 }
 
 /** Wrapper that overrides the GetParams() function of a stream. */
-template <typename Params, typename SubStream>
+template <typename SubStream, typename Params>
 class ParamsStream
 {
     const Params& m_params;
     SubStream& m_substream;
 
 public:
-    ParamsStream(const Params& params LIFETIMEBOUND, SubStream& substream LIFETIMEBOUND) : m_params{params}, m_substream{substream} {}
+    ParamsStream(SubStream& substream LIFETIMEBOUND, const Params& params LIFETIMEBOUND) : m_params{params}, m_substream{substream} {}
     template <typename U> ParamsStream& operator<<(const U& obj) { ::Serialize(*this, obj); return *this; }
     template <typename U> ParamsStream& operator>>(U&& obj) { ::Unserialize(*this, obj); return *this; }
     void write(Span<const std::byte> src) { m_substream.write(src); }
@@ -1145,13 +1145,13 @@ public:
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        ParamsStream ss{m_params, s};
+        ParamsStream ss{s, m_params};
         ::Serialize(ss, m_object);
     }
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        ParamsStream ss{m_params, s};
+        ParamsStream ss{s, m_params};
         ::Unserialize(ss, m_object);
     }
 };
