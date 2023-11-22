@@ -8,21 +8,26 @@
 #include <attributes.h>
 #include <chain.h>
 #include <dbwrapper.h>
+#include <flatfile.h>
 #include <kernel/blockmanager_opts.h>
-#include <kernel/chain.h>
 #include <kernel/chainparams.h>
 #include <kernel/cs_main.h>
 #include <kernel/messagestartchars.h>
+#include <primitives/block.h>
+#include <streams.h>
 #include <sync.h>
+#include <uint256.h>
 #include <util/fs.h>
 #include <util/hasher.h>
 
+#include <array>
 #include <atomic>
 #include <cstdint>
 #include <functional>
 #include <limits>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -30,14 +35,9 @@
 #include <vector>
 
 class BlockValidationState;
-class CAutoFile;
-class CBlock;
 class CBlockUndo;
-class CChainParams;
 class Chainstate;
 class ChainstateManager;
-struct CCheckpointData;
-struct FlatFilePos;
 namespace Consensus {
 struct Params;
 }
@@ -162,7 +162,7 @@ private:
     FlatFileSeq BlockFileSeq() const;
     FlatFileSeq UndoFileSeq() const;
 
-    CAutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
+    AutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
 
     bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const;
     bool UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos, const uint256& hashBlock) const;
@@ -350,7 +350,7 @@ public:
     void UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Open a block file (blk?????.dat) */
-    CAutoFile OpenBlockFile(const FlatFilePos& pos, bool fReadOnly = false) const;
+    AutoFile OpenBlockFile(const FlatFilePos& pos, bool fReadOnly = false) const;
 
     /** Translation to a filesystem path */
     fs::path GetBlockPosFilename(const FlatFilePos& pos) const;

@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 BOOST_AUTO_TEST_CASE(streams_buffered_file)
 {
     fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
-    CAutoFile file{fsbridge::fopen(streams_test_filename, "w+b"), 333};
+    AutoFile file{fsbridge::fopen(streams_test_filename, "w+b")};
 
     // The value at each offset is the offset.
     for (uint8_t j = 0; j < 40; ++j) {
@@ -270,9 +270,6 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     // The buffer is 25 bytes, allow rewinding 10 bytes.
     BufferedFile bf{file, 25, 10};
     BOOST_CHECK(!bf.eof());
-
-    // This member has no functional effect.
-    BOOST_CHECK_EQUAL(bf.GetVersion(), 333);
 
     uint8_t i;
     bf >> i;
@@ -383,7 +380,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
 BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
 {
     fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
-    CAutoFile file{fsbridge::fopen(streams_test_filename, "w+b"), 333};
+    AutoFile file{fsbridge::fopen(streams_test_filename, "w+b")};
     // The value at each offset is the byte offset (e.g. byte 1 in the file has the value 0x01).
     for (uint8_t j = 0; j < 40; ++j) {
         file << j;
@@ -436,7 +433,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
 
     fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
     for (int rep = 0; rep < 50; ++rep) {
-        CAutoFile file{fsbridge::fopen(streams_test_filename, "w+b"), 333};
+        AutoFile file{fsbridge::fopen(streams_test_filename, "w+b")};
         size_t fileSize = InsecureRandRange(256);
         for (uint8_t i = 0; i < fileSize; ++i) {
             file << i;

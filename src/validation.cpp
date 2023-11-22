@@ -4649,7 +4649,7 @@ bool Chainstate::LoadGenesisBlock()
 }
 
 void ChainstateManager::LoadExternalBlockFile(
-    CAutoFile& file_in,
+    AutoFile& file_in,
     FlatFilePos* dbp,
     std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent)
 {
