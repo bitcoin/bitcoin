@@ -125,6 +125,13 @@ BOOST_AUTO_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection)
     BOOST_CHECK_EQUAL(connman->GetAddedNodeInfo(/*include_connected=*/true).size(), nodes.size());
     BOOST_CHECK(connman->GetAddedNodeInfo(/*include_connected=*/false).empty());
 
+    // Test AddedNodesContain()
+    for (auto node : connman->TestNodes()) {
+        BOOST_CHECK(connman->AddedNodesContain(node->addr));
+    }
+    AddPeer(id, nodes, *peerman, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
+    BOOST_CHECK(!connman->AddedNodesContain(nodes.back()->addr));
+
     BOOST_TEST_MESSAGE("\nPrint GetAddedNodeInfo contents:");
     for (const auto& info : connman->GetAddedNodeInfo(/*include_connected=*/true)) {
         BOOST_TEST_MESSAGE(strprintf("\nadded node: %s", info.m_params.m_added_node));
