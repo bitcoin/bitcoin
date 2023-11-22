@@ -326,7 +326,7 @@ public:
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
-        SerializeTransaction(*this, s, s.GetParams());
+        SerializeTransaction(*this, s, s.template GetParams<TransactionSerParams>());
     }
 
     /** This deserializing constructor is provided instead of an Unserialize method.
@@ -386,12 +386,12 @@ struct CMutableTransaction
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
-        SerializeTransaction(*this, s, s.GetParams());
+        SerializeTransaction(*this, s, s.template GetParams<TransactionSerParams>());
     }
 
     template <typename Stream>
     inline void Unserialize(Stream& s) {
-        UnserializeTransaction(*this, s, s.GetParams());
+        UnserializeTransaction(*this, s, s.template GetParams<TransactionSerParams>());
     }
 
     template <typename Stream>

@@ -241,7 +241,7 @@ public:
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        if (s.GetParams().enc == Encoding::V2) {
+        if (s.template GetParams<SerParams>().enc == Encoding::V2) {
             SerializeV2Stream(s);
         } else {
             SerializeV1Stream(s);
@@ -254,7 +254,7 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        if (s.GetParams().enc == Encoding::V2) {
+        if (s.template GetParams<SerParams>().enc == Encoding::V2) {
             UnserializeV2Stream(s);
         } else {
             UnserializeV1Stream(s);
