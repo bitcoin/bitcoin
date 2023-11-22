@@ -7,7 +7,9 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::process::ExitCode;
 
-use String as LintError;
+type LintError = String;
+type LintResult = Result<(), LintError>;
+type LintFn = fn() -> LintResult;
 
 /// Return the git command
 fn git() -> Command {
@@ -31,7 +33,31 @@ fn get_git_root() -> String {
     check_output(git().args(["rev-parse", "--show-toplevel"])).unwrap()
 }
 
-fn lint_std_filesystem() -> Result<(), LintError> {
+fn lint_subtree() -> LintResult {
+    // This only checks that the trees are pure subtrees, it is not doing a full
+    // check with -r to not have to fetch all the remotes.
+    let mut good = true;
+    for subtree in [
+        "src/crypto/ctaes",
+        "src/secp256k1",
+        "src/minisketch",
+        "src/leveldb",
+        "src/crc32c",
+    ] {
+        good &= Command::new("test/lint/git-subtree-check.sh")
+            .arg(subtree)
+            .status()
+            .expect("command_error")
+            .success();
+    }
+    if good {
+        Ok(())
+    } else {
+        Err("".to_string())
+    }
+}
+
+fn lint_std_filesystem() -> LintResult {
     let found = git()
         .args([
             "grep",
@@ -55,8 +81,37 @@ fs:: namespace, which has unsafe filesystem functions marked as deleted.
     }
 }
 
+fn lint_doc() -> LintResult {
+    if Command::new("test/lint/check-doc.py")
+        .status()
+        .expect("command error")
+        .success()
+    {
+        Ok(())
+    } else {
+        Err("".to_string())
+    }
+}
+
+fn lint_all() -> LintResult {
+    if Command::new("test/lint/all-lint.py")
+        .status()
+        .expect("command error")
+        .success()
+    {
+        Ok(())
+    } else {
+        Err("".to_string())
+    }
+}
+
 fn main() -> ExitCode {
-    let test_list = [("std::filesystem check", lint_std_filesystem)];
+    let test_list: Vec<(&str, LintFn)> = vec![
+        ("subtree check", lint_subtree),
+        ("std::filesystem check", lint_std_filesystem),
+        ("-help=1 documentation check", lint_doc),
+        ("all-lint.py script", lint_all),
+    ];
 
     let git_root = PathBuf::from(get_git_root());
 
