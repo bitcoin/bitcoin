@@ -1115,7 +1115,7 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
                 tx.GetWitnessHash().ToString(),
                 FormatMoney(ws.m_modified_fees - ws.m_conflicting_fees),
                 (int)entry->GetTxSize() - (int)ws.m_conflicting_size);
-        TRACE7(mempool, replaced,
+        TRACEPOINT(mempool, replaced,
                 it->GetTx().GetHash().data(),
                 it->GetTxSize(),
                 it->GetFee(),
@@ -1622,7 +1622,7 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
 
         for (const COutPoint& hashTx : coins_to_uncache)
             active_chainstate.CoinsTip().Uncache(hashTx);
-        TRACE2(mempool, rejected,
+        TRACEPOINT(mempool, rejected,
                 tx->GetHash().data(),
                 result.m_state.GetRejectReason().c_str()
         );
@@ -2490,7 +2490,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<SecondsDouble>(time_index),
              Ticks<MillisecondsDouble>(time_index) / num_blocks_total);
 
-    TRACE6(validation, block_connected,
+    TRACEPOINT(validation, block_connected,
         block_hash.data(),
         pindex->nHeight,
         block.vtx.size(),
@@ -2664,7 +2664,7 @@ bool Chainstate::FlushStateToDisk(
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to write to coin database");
             m_last_flush = nNow;
             full_flush_completed = true;
-            TRACE5(utxocache, flush,
+            TRACEPOINT(utxocache, flush,
                    int64_t{Ticks<std::chrono::microseconds>(SteadyClock::now() - nNow)},
                    (uint32_t)mode,
                    (uint64_t)coins_count,

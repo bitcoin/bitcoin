@@ -3757,7 +3757,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         CaptureMessage(pnode->addr, msg.m_type, msg.data, /*is_incoming=*/false);
     }
 
-    TRACE6(net, outbound_message,
+    TRACEPOINT(net, outbound_message,
         pnode->GetId(),
         pnode->m_addr_name.c_str(),
         pnode->ConnectionTypeAsString().c_str(),
