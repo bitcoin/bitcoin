@@ -3,12 +3,17 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/amount.h>
-#include <pubkey.h>
+#include <primitives/transaction.h>
 #include <script/interpreter.h>
+#include <serialize.h>
 #include <streams.h>
+#include <test/fuzz/fuzz.h>
 #include <test/util/script.h>
 
-#include <test/fuzz/fuzz.h>
+#include <cassert>
+#include <ios>
+#include <utility>
+#include <vector>
 
 FUZZ_TARGET(script_flags)
 {
