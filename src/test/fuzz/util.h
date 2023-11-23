@@ -181,6 +181,8 @@ template <typename WeakEnumType, size_t size>
     return UintToArith256(ConsumeUInt256(fuzzed_data_provider));
 }
 
+[[nodiscard]] std::map<COutPoint, Coin> ConsumeCoins(FuzzedDataProvider& fuzzed_data_provider) noexcept;
+
 [[nodiscard]] CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 [[nodiscard]] CKey ConsumePrivateKey(FuzzedDataProvider& fuzzed_data_provider, std::optional<bool> compressed = std::nullopt) noexcept;
