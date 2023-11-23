@@ -270,21 +270,47 @@ Use the `TRACEPOINT` macro to add a new tracepoint. If not yet included, include
 Each tracepoint needs a `context` and an `event`. Please use `snake_case` and
 try to make sure that the tracepoint names make sense even without detailed
 knowledge of the implementation details. You can pass zero to twelve arguments
-to the tracepoint. Do not forget to update the tracepoint list in this
-document.
+to the tracepoint. Each tracepoint also needs a global semaphore. The semaphore
+gates the tracepoint arguments from being processed if we are not attached to
+the tracepoint. Add a `TRACEPOINT_SEMAPHORE(context, event)` with the `context`
+and `event` of your tracepoint in the top-level namespace at the beginning of
+the file. Do not forget to update the tracepoint list in this document.
 
-For example, a tracepoint in the `net` context for the event `inbound_message`
-and six arguments:
+For example, the `net:outbound_message` tracepoint in `src/net.cpp` with six
+arguments.
 
 ```C++
-TRACEPOINT(net, inbound_message,
-    pnode->GetId(),
-    pnode->m_addr_name.c_str(),
-    pnode->ConnectionTypeAsString().c_str(),
-    sanitizedType.c_str(),
-    msg.data.size(),
-    msg.data.data()
-);
+// src/net.cpp
+TRACEPOINT_SEMAPHORE(net, outbound_message);
+…
+void CConnman::PushMessage(…) {
+  …
+  TRACEPOINT(net, outbound_message,
+      pnode->GetId(),
+      pnode->m_addr_name.c_str(),
+      pnode->ConnectionTypeAsString().c_str(),
+      sanitizedType.c_str(),
+      msg.data.size(),
+      msg.data.data()
+  );
+  …
+}
+```
+If needed, an extra `if (TRACEPOINT_ACTIVE(context, event)) {...}` check can be
+used to prepare somewhat expensive arguments right before the tracepoint. While
+the tracepoint arguments are only prepared when we attach something to the
+tracepoint, an argument preparation should never hang the process. Hashing and
+serialization of data structures is probably fine, a `sleep(10s)` not.
+
+```C++
+// An example tracepoint with an expensive argument.
+
+TRACEPOINT_SEMAPHORE(example, gated_expensive_argument);
+…
+if (TRACEPOINT_ACTIVE(example, gated_expensive_argument)) {
+    expensive_argument = expensive_calulation();
+    TRACEPOINT(example, gated_expensive_argument, expensive_argument);
+}
 ```
 
 ### Guidelines and best practices
@@ -301,12 +327,6 @@ can be kept simple but should give others a starting point when working with
 the tracepoint. See existing examples in [contrib/tracing/].
 
 [contrib/tracing/]: ../contrib/tracing/
-
-#### No expensive computations for tracepoints
-Data passed to the tracepoint should be inexpensive to compute. Although the
-tracepoint itself only has overhead when enabled, the code to compute arguments
-is always run - even if the tracepoint is not used. For example, avoid
-serialization and parsing.
 
 #### Semi-stable API
 Tracepoints should have a semi-stable API. Users should be able to rely on the
@@ -354,9 +374,9 @@ $ gdb ./build/src/bitcoind
 …
 (gdb) info probes
 Type Provider   Name             Where              Semaphore Object
-stap net        inbound_message  0x000000000014419e /build/src/bitcoind
-stap net        outbound_message 0x0000000000107c05 /build/src/bitcoind
-stap validation block_connected  0x00000000002fb10c /build/src/bitcoind
+stap net        inbound_message  0x000000000014419e 0x0000000000d29bd2 /build/src/bitcoind
+stap net        outbound_message 0x0000000000107c05 0x0000000000d29bd0 /build/src/bitcoind
+stap validation block_connected  0x00000000002fb10c 0x0000000000d29bd8 /build/src/bitcoind
 …
 ```
 
@@ -372,7 +392,7 @@ Displaying notes found in: .note.stapsdt
   stapsdt              0x0000005d	NT_STAPSDT (SystemTap probe descriptors)
     Provider: net
     Name: outbound_message
-    Location: 0x0000000000107c05, Base: 0x0000000000579c90, Semaphore: 0x0000000000000000
+    Location: 0x0000000000107c05, Base: 0x0000000000579c90, Semaphore: 0x0000000000d29bd0
     Arguments: -8@%r12 8@%rbx 8@%rdi 8@192(%rsp) 8@%rax 8@%rdx
 …
 ```
@@ -391,7 +411,7 @@ between distributions. For example, on
 
 ```
 $ tplist -l ./build/src/bitcoind -v
-b'net':b'outbound_message' [sema 0x0]
+b'net':b'outbound_message' [sema 0xd29bd0]
   1 location(s)
   6 argument(s)
 …
