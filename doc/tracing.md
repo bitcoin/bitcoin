@@ -265,35 +265,19 @@ Arguments passed:
 
 ## Adding tracepoints to Bitcoin Core
 
-To add a new tracepoint, `#include <util/trace.h>` in the compilation unit where
-the tracepoint is inserted. Use one of the `TRACEx` macros listed below
-depending on the number of arguments passed to the tracepoint. Up to 12
-arguments can be provided. The `context` and `event` specify the names by which
-the tracepoint is referred to. Please use `snake_case` and try to make sure that
-the tracepoint names make sense even without detailed knowledge of the
-implementation details. Do not forget to update the tracepoint list in this
+Use the `TRACEPOINT` macro to add a new tracepoint. If not yet included, include
+`util/trace.h` (defines the tracepoint macros) with `#include <util/trace.h>`.
+Each tracepoint needs a `context` and an `event`. Please use `snake_case` and
+try to make sure that the tracepoint names make sense even without detailed
+knowledge of the implementation details. You can pass zero to twelve arguments
+to the tracepoint. Do not forget to update the tracepoint list in this
 document.
 
-```c
-#define TRACE(context, event)
-#define TRACE1(context, event, a)
-#define TRACE2(context, event, a, b)
-#define TRACE3(context, event, a, b, c)
-#define TRACE4(context, event, a, b, c, d)
-#define TRACE5(context, event, a, b, c, d, e)
-#define TRACE6(context, event, a, b, c, d, e, f)
-#define TRACE7(context, event, a, b, c, d, e, f, g)
-#define TRACE8(context, event, a, b, c, d, e, f, g, h)
-#define TRACE9(context, event, a, b, c, d, e, f, g, h, i)
-#define TRACE10(context, event, a, b, c, d, e, f, g, h, i, j)
-#define TRACE11(context, event, a, b, c, d, e, f, g, h, i, j, k)
-#define TRACE12(context, event, a, b, c, d, e, f, g, h, i, j, k, l)
-```
-
-For example:
+For example, a tracepoint in the `net` context for the event `inbound_message`
+and six arguments:
 
 ```C++
-TRACE6(net, inbound_message,
+TRACEPOINT(net, inbound_message,
     pnode->GetId(),
     pnode->m_addr_name.c_str(),
     pnode->ConnectionTypeAsString().c_str(),
@@ -347,7 +331,7 @@ first six argument fields. Binary data can be placed in later arguments. The BCC
 supports reading from all 12 arguments.
 
 #### Strings as C-style String
-Generally, strings should be passed into the `TRACEx` macros as pointers to
+Generally, strings should be passed into the `TRACEPOINT` macros as pointers to
 C-style strings (a null-terminated sequence of characters). For C++
 `std::strings`, [`c_str()`]  can be used. It's recommended to document the
 maximum expected string size if known.
