@@ -84,6 +84,12 @@ static const std::vector<unsigned char> TXFS_SPECIAL_TEMPLATE = {
 
 static const unsigned int LEADING_CACHE_INTERVAL = 10;
 
+bool validate_field_selector(
+    std::vector<unsigned char>& field_selector,
+    unsigned int nb_inputs,
+    unsigned int nb_outputs
+);
+
 struct TxHashCache
 {
     //! Mutex to guard access to the TxHashCache.

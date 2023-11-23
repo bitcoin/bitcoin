@@ -10,13 +10,13 @@
 #include <hash.h>
 #include <primitives/transaction.h>
 #include <script/script_error.h> // IWYU pragma: export
+#include <script/txhash.h>
 #include <span.h>
 #include <uint256.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <vector>
 
 class CPubKey;
 class CScript;
@@ -143,6 +143,10 @@ enum : uint32_t {
     // Making unknown public key versions (in BIP 342 scripts) non-standard
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE = (1U << 20),
 
+    // Support OP_TXHASH and OP_CHECKTXHASHVERIFY.
+    //
+    SCRIPT_VERIFY_TXHASH = (1U << 21),
+
     // Constants to point to the highest flag in use. Add new flags above this line.
     //
     SCRIPT_VERIFY_END_MARKER
@@ -260,6 +264,11 @@ public:
          return false;
     }
 
+    virtual bool CalculateTxHash(uint256& hash_out, const Span<const unsigned char>& tx_field_selector, ScriptExecutionData& execdata) const
+    {
+        return false;
+    }
+
     virtual ~BaseSignatureChecker() {}
 };
 
@@ -284,6 +293,7 @@ private:
     unsigned int nIn;
     const CAmount amount;
     const PrecomputedTransactionData* txdata;
+    TxHashCache* txhash_cache;
 
 protected:
     virtual bool VerifyECDSASignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
@@ -296,6 +306,7 @@ public:
     bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;
     bool CheckSequence(const CScriptNum& nSequence) const override;
+    bool CalculateTxHash(uint256& hash_out, const Span<const unsigned char>& tx_field_selector, ScriptExecutionData& execdata) const override;
 };
 
 using TransactionSignatureChecker = GenericTransactionSignatureChecker<CTransaction>;
