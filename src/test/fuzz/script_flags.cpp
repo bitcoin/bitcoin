@@ -7,21 +7,12 @@
 #include <script/interpreter.h>
 #include <streams.h>
 #include <test/util/script.h>
-#include <version.h>
 
 #include <test/fuzz/fuzz.h>
 
 FUZZ_TARGET(script_flags)
 {
-    CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
-    try {
-        int nVersion;
-        ds >> nVersion;
-        ds.SetVersion(nVersion);
-    } catch (const std::ios_base::failure&) {
-        return;
-    }
-
+    DataStream ds{buffer};
     try {
         const CTransaction tx(deserialize, TX_WITH_WITNESS, ds);
 
