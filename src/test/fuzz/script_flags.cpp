@@ -12,6 +12,7 @@
 
 FUZZ_TARGET(script_flags)
 {
+    if (buffer.size() > 100'000) return;
     DataStream ds{buffer};
     try {
         const CTransaction tx(deserialize, TX_WITH_WITNESS, ds);
