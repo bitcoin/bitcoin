@@ -31,6 +31,11 @@
 
 using interfaces::FoundBlock;
 
+TRACEPOINT_SEMAPHORE(coin_selection, selected_coins);
+TRACEPOINT_SEMAPHORE(coin_selection, normal_create_tx_internal);
+TRACEPOINT_SEMAPHORE(coin_selection, attempting_aps_create_tx);
+TRACEPOINT_SEMAPHORE(coin_selection, aps_create_tx_internal);
+
 namespace wallet {
 static constexpr size_t OUTPUT_GROUP_MAX_ENTRIES{100};
 

@@ -15,16 +15,48 @@
 // the optional variadic macros to define tracepoints.
 #define SDT_USE_VARIADIC 1
 
+// Setting _SDT_HAS_SEMAPHORES let's systemtap (sys/sdt.h) know that we want to
+// use the optional semaphore feature for our tracepoints. This feature allows
+// us to check if something is attached to a tracepoint. We only want to prepare
+// some potentially expensive tracepoint arguments, if the tracepoint is being
+// used. Here, an expensive argument preparation could, for example, be
+// calculating a hash or serialization of a data structure.
+#define _SDT_HAS_SEMAPHORES 1
+
+// Used to define a counting semaphore for a tracepoint. This semaphore is
+// automatically incremented by tracing frameworks (bpftrace, bcc, libbpf, ...)
+// upon attaching to the tracepoint and decremented when detaching. This needs
+// to be a global variable. It's placed in the '.probes' ELF section.
+#define TRACEPOINT_SEMAPHORE(context, event) \
+    unsigned short context##_##event##_semaphore __attribute__((section(".probes")))
+
+// Extract the first argument of a variable number of arguments, even without warning
+// when only 1 argument is provided
+#define TRACEPOINT_FIRST_ARG(...) TRACEPOINT_FIRST_ARG_HELPER(__VA_ARGS__, dummy)
+#define TRACEPOINT_FIRST_ARG_HELPER(arg1, ...) arg1
+
 #include <sys/sdt.h>
 
-// A USDT tracepoint with zero to twelve arguments.
-#define TRACEPOINT(context, ...) \
-    STAP_PROBEV(context, __VA_ARGS__);
+// Returns true if something is attached to the tracepoint.
+#define TRACEPOINT_ACTIVE(context, event) TRACEPOINT_ACTIVE_HELPER(context, event)
+#define TRACEPOINT_ACTIVE_HELPER(context, event) context##_##event##_semaphore > 0
+
+// A USDT tracepoint with one to twelve arguments. It's checked that the
+// tracepoint is active before preparing its arguments.
+#define TRACEPOINT(context, ...)                                                \
+    do {                                                                        \
+        if (TRACEPOINT_ACTIVE(context, TRACEPOINT_FIRST_ARG(__VA_ARGS__))) {    \
+            STAP_PROBEV(context, __VA_ARGS__);                                  \
+        }                                                                       \
+    } while(0)
+
 #else
 
+#define TRACEPOINT_SEMAPHORE(context, event)
+#define TRACEPOINT_ACTIVE(context, event) false
 #define TRACEPOINT(context, ...)
 
-#endif
+#endif // ENABLE_TRACING
 
 
 #endif // BITCOIN_UTIL_TRACE_H

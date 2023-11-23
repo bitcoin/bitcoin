@@ -53,6 +53,8 @@
 #include <typeinfo>
 #include <utility>
 
+TRACEPOINT_SEMAPHORE(net, inbound_message);
+
 /** Headers download timeout.
  *  Timeout = base + per_header * (expected number of headers) */
 static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_BASE = 15min;
