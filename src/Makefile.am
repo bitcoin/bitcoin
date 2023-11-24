@@ -199,6 +199,7 @@ BITCOIN_CORE_H = \
   key_io.h \
   logging.h \
   logging/timer.h \
+  malloc_usage.h \
   mapport.h \
   memusage.h \
   merkleblock.h \

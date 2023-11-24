@@ -6,10 +6,10 @@
 #define BITCOIN_MEMUSAGE_H
 
 #include <indirectmap.h>
+#include <malloc_usage.h>
 #include <prevector.h>
 #include <support/allocators/pool.h>
 
-#include <cassert>
 #include <cstdlib>
 #include <list>
 #include <map>
@@ -22,9 +22,6 @@
 
 namespace memusage
 {
-
-/** Compute the total memory used by allocating alloc bytes. */
-static size_t MallocUsage(size_t alloc);
 
 /** Dynamic memory usage for built-in types is zero. */
 static inline size_t DynamicUsage(const int8_t& v) { return 0; }
@@ -47,20 +44,6 @@ template<typename X> static inline size_t DynamicUsage(const X * const &v) { ret
  *  application data structures require more accurate inner accounting, they should
  *  iterate themselves, or use more efficient caching + updating on modification.
  */
-
-static inline size_t MallocUsage(size_t alloc)
-{
-    // Measured on libc6 2.19 on Linux.
-    if (alloc == 0) {
-        return 0;
-    } else if (sizeof(void*) == 8) {
-        return ((alloc + 31) >> 4) << 4;
-    } else if (sizeof(void*) == 4) {
-        return ((alloc + 15) >> 3) << 3;
-    } else {
-        assert(0);
-    }
-}
 
 // STL data structures
 
