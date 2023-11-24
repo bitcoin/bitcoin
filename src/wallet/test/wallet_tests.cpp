@@ -946,7 +946,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
 
     CMutableTransaction mtx;
     mtx.vout.emplace_back(COIN, GetScriptForDestination(op_dest));
-    mtx.vin.emplace_back(g_insecure_rand_ctx.rand256(), 0);
+    mtx.vin.emplace_back(Txid::FromUint256(g_insecure_rand_ctx.rand256()), 0);
     const auto& tx_id_to_spend = wallet.AddToWallet(MakeTransactionRef(mtx), TxStateInMempool{})->GetHash();
 
     {
@@ -963,12 +963,12 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
     mtx.vin.clear();
     mtx.vin.emplace_back(tx_id_to_spend, 0);
     wallet.transactionAddedToMempool(MakeTransactionRef(mtx));
-    const auto good_tx_id{mtx.GetHash().ToUint256()};
+    const auto good_tx_id{mtx.GetHash()};
 
     {
         // Verify balance update for the new tx and the old one
         LOCK(wallet.cs_wallet);
-        const CWalletTx* new_wtx = wallet.GetWalletTx(good_tx_id);
+        const CWalletTx* new_wtx = wallet.GetWalletTx(good_tx_id.ToUint256());
         BOOST_CHECK_EQUAL(CachedTxGetAvailableCredit(wallet, *new_wtx), 1 * COIN);
 
         // Now the old wtx

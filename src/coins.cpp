@@ -116,7 +116,7 @@ void CCoinsViewCache::EmplaceCoinInternalDANGER(COutPoint&& outpoint, Coin&& coi
 
 void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check_for_overwrite) {
     bool fCoinbase = tx.IsCoinBase();
-    const uint256& txid = tx.GetHash();
+    const Txid& txid = tx.GetHash();
     for (size_t i = 0; i < tx.vout.size(); ++i) {
         bool overwrite = check_for_overwrite ? cache.HaveCoin(COutPoint(txid, i)) : fCoinbase;
         // Coinbase transactions can always be overwritten, in order to correctly
@@ -341,7 +341,7 @@ void CCoinsViewCache::SanityCheck() const
 static const size_t MIN_TRANSACTION_OUTPUT_WEIGHT = WITNESS_SCALE_FACTOR * ::GetSerializeSize(CTxOut());
 static const size_t MAX_OUTPUTS_PER_BLOCK = MAX_BLOCK_WEIGHT / MIN_TRANSACTION_OUTPUT_WEIGHT;
 
-const Coin& AccessByTxid(const CCoinsViewCache& view, const uint256& txid)
+const Coin& AccessByTxid(const CCoinsViewCache& view, const Txid& txid)
 {
     COutPoint iter(txid, 0);
     while (iter.n < MAX_OUTPUTS_PER_BLOCK) {

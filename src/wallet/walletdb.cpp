@@ -1073,7 +1073,7 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, std::vecto
     // Load locked utxo record
     LoadResult locked_utxo_res = LoadRecords(pwallet, batch, DBKeys::LOCKED_UTXO,
         [] (CWallet* pwallet, DataStream& key, CDataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
-        uint256 hash;
+        Txid hash;
         uint32_t n;
         key >> hash;
         key >> n;

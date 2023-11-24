@@ -252,10 +252,10 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
         }
         if (fuzzed_data_provider.ConsumeBool()) {
             const auto& txid = fuzzed_data_provider.ConsumeBool() ?
-                                   txs.back()->GetHash().ToUint256() :
+                                   txs.back()->GetHash() :
                                    PickValue(fuzzed_data_provider, mempool_outpoints).hash;
             const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
-            tx_pool.PrioritiseTransaction(txid, delta);
+            tx_pool.PrioritiseTransaction(txid.ToUint256(), delta);
         }
 
         // Remember all added transactions

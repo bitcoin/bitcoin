@@ -137,16 +137,16 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
     stack.push_back(std::make_unique<CCoinsViewCacheTest>(base)); // Start with one cache.
 
     // Use a limited set of random transaction ids, so we do test overwriting entries.
-    std::vector<uint256> txids;
+    std::vector<Txid> txids;
     txids.resize(NUM_SIMULATION_ITERATIONS / 8);
     for (unsigned int i = 0; i < txids.size(); i++) {
-        txids[i] = InsecureRand256();
+        txids[i] = Txid::FromUint256(InsecureRand256());
     }
 
     for (unsigned int i = 0; i < NUM_SIMULATION_ITERATIONS; i++) {
         // Do a random modification.
         {
-            uint256 txid = txids[InsecureRandRange(txids.size())]; // txid we're going to modify in this iteration.
+            auto txid = txids[InsecureRandRange(txids.size())]; // txid we're going to modify in this iteration.
             Coin& coin = result[COutPoint(txid, 0)];
 
             // Determine whether to test HaveCoin before or after Access* (or both). As these functions
@@ -290,7 +290,7 @@ UtxoData utxoData;
 
 UtxoData::iterator FindRandomFrom(const std::set<COutPoint> &utxoSet) {
     assert(utxoSet.size());
-    auto utxoSetIt = utxoSet.lower_bound(COutPoint(InsecureRand256(), 0));
+    auto utxoSetIt = utxoSet.lower_bound(COutPoint(Txid::FromUint256(InsecureRand256()), 0));
     if (utxoSetIt == utxoSet.end()) {
         utxoSetIt = utxoSet.begin();
     }
@@ -926,7 +926,7 @@ void TestFlushBehavior(
         }
     };
 
-    uint256 txid = InsecureRand256();
+    Txid txid = Txid::FromUint256(InsecureRand256());
     COutPoint outp = COutPoint(txid, 0);
     Coin coin = MakeCoin();
     // Ensure the coins views haven't seen this coin before.
@@ -1017,7 +1017,7 @@ void TestFlushBehavior(
     // --- Bonus check: ensure that a coin added to the base view via one cache
     //     can be spent by another cache which has never seen it.
     //
-    txid = InsecureRand256();
+    txid = Txid::FromUint256(InsecureRand256());
     outp = COutPoint(txid, 0);
     coin = MakeCoin();
     BOOST_CHECK(!base.HaveCoin(outp));
@@ -1040,7 +1040,7 @@ void TestFlushBehavior(
 
     // --- Bonus check 2: ensure that a FRESH, spent coin is deleted by Sync()
     //
-    txid = InsecureRand256();
+    txid = Txid::FromUint256(InsecureRand256());
     outp = COutPoint(txid, 0);
     coin = MakeCoin();
     CAmount coin_val = coin.out.nValue;

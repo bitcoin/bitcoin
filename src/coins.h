@@ -363,7 +363,7 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool 
 //! This function can be quite expensive because in the event of a transaction
 //! which is not found in the cache, it can cause up to MAX_OUTPUTS_PER_BLOCK
 //! lookups to database, so it should be used with care.
-const Coin& AccessByTxid(const CCoinsViewCache& cache, const uint256& txid);
+const Coin& AccessByTxid(const CCoinsViewCache& cache, const Txid& txid);
 
 /**
  * This is a minimally invasive approach to shutdown on LevelDB read errors from the

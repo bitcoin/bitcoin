@@ -696,7 +696,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     AssertLockHeld(m_pool.cs);
     const CTransactionRef& ptx = ws.m_ptx;
     const CTransaction& tx = *ws.m_ptx;
-    const uint256& hash = ws.m_hash;
+    const Txid& hash = ws.m_hash;
 
     // Copy/alias what we need out of args
     const int64_t nAcceptTime = args.m_accept_time;
@@ -2036,7 +2036,7 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
     // undo transactions in reverse order
     for (int i = block.vtx.size() - 1; i >= 0; i--) {
         const CTransaction &tx = *(block.vtx[i]);
-        uint256 hash = tx.GetHash();
+        Txid hash = tx.GetHash();
         bool is_coinbase = tx.IsCoinBase();
         bool is_bip30_exception = (is_coinbase && !fEnforceBIP30);
 

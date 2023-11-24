@@ -633,7 +633,7 @@ static RPCHelpMan gettxspendingprevout()
                                     {"vout", UniValueType(UniValue::VNUM)},
                                 }, /*fAllowNull=*/false, /*fStrict=*/true);
 
-                const uint256 txid(ParseHashO(o, "txid"));
+                const Txid txid = Txid::FromUint256(ParseHashO(o, "txid"));
                 const int nOutput{o.find_value("vout").getInt<int>()};
                 if (nOutput < 0) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative");
