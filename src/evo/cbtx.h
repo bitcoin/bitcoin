@@ -29,11 +29,16 @@ UniValue ValueFromAmount(const CAmount& amount);
 class CCbTx
 {
 public:
-    static constexpr auto SPECIALTX_TYPE = TRANSACTION_COINBASE;
-    static constexpr uint16_t CB_V19_VERSION = 2;
-    static constexpr uint16_t CB_V20_VERSION = 3;
+    enum class Version : uint16_t {
+        INVALID = 0,
+        MERKLE_ROOT_MNLIST = 1,
+        MERKLE_ROOT_QUORUMS = 2,
+        CLSIG_AND_BALANCE = 3,
+        UNKNOWN,
+    };
 
-    uint16_t nVersion{CB_V19_VERSION};
+    static constexpr auto SPECIALTX_TYPE = TRANSACTION_COINBASE;
+    Version nVersion{Version::MERKLE_ROOT_QUORUMS};
     int32_t nHeight{0};
     uint256 merkleRootMNList;
     uint256 merkleRootQuorums;
@@ -45,9 +50,9 @@ public:
     {
         READWRITE(obj.nVersion, obj.nHeight, obj.merkleRootMNList);
 
-        if (obj.nVersion >= CB_V19_VERSION) {
+        if (obj.nVersion >= Version::MERKLE_ROOT_QUORUMS) {
             READWRITE(obj.merkleRootQuorums);
-            if (obj.nVersion >= CB_V20_VERSION) {
+            if (obj.nVersion >= Version::CLSIG_AND_BALANCE) {
                 READWRITE(COMPACTSIZE(obj.bestCLHeightDiff));
                 READWRITE(obj.bestCLSignature);
                 READWRITE(obj.creditPoolBalance);
@@ -65,9 +70,9 @@ public:
         obj.pushKV("version", (int)nVersion);
         obj.pushKV("height", nHeight);
         obj.pushKV("merkleRootMNList", merkleRootMNList.ToString());
-        if (nVersion >= CB_V19_VERSION) {
+        if (nVersion >= Version::MERKLE_ROOT_QUORUMS) {
             obj.pushKV("merkleRootQuorums", merkleRootQuorums.ToString());
-            if (nVersion >= CB_V20_VERSION) {
+            if (nVersion >= Version::CLSIG_AND_BALANCE) {
                 obj.pushKV("bestCLHeightDiff", static_cast<int>(bestCLHeightDiff));
                 obj.pushKV("bestCLSignature", bestCLSignature.ToString());
                 obj.pushKV("creditPoolBalance", ValueFromAmount(creditPoolBalance));
@@ -76,6 +81,7 @@ public:
         return obj;
     }
 };
+template<> struct is_serializable_enum<CCbTx::Version> : std::true_type {};
 
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state);
 
