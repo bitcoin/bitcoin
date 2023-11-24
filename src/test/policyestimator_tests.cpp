@@ -5,7 +5,6 @@
 #include <policy/fees.h>
 #include <policy/fees_args.h>
 #include <policy/policy.h>
-#include <test/util/transaction_utils.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <uint256.h>

@@ -29,7 +29,6 @@ public:
     CTransactionRef& getWtx();
     void setWtx(const CTransactionRef&);
 
-    //! WARNING: Currently only safe for self-generated transactions due to bypassing non-weight logic of GetVirtualTransactionSize
     unsigned int getTransactionSize();
 
     void setTransactionFee(const CAmount& newFee);

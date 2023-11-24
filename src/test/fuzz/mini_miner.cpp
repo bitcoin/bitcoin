@@ -4,7 +4,6 @@
 #include <test/fuzz/util/mempool.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
-#include <test/util/transaction_utils.h>
 #include <test/util/txmempool.h>
 #include <test/util/mining.h>
 
