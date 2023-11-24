@@ -16,8 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import plistlib
-import sys, re, os, shutil, stat, os.path
+import sys, re, os, platform, shutil, stat, subprocess, os.path
 from argparse import ArgumentParser
 from ds_store import DSStore
 from mac_alias import Alias
@@ -53,7 +52,7 @@ class FrameworkInfo(object):
             return False
 
     def __str__(self):
-        return f""" Framework name: {frameworkName}
+        return f""" Framework name: {self.frameworkName}
  Framework directory: {self.frameworkDirectory}
  Framework path: {self.frameworkPath}
  Binary name: {self.binaryName}
@@ -85,8 +84,8 @@ class FrameworkInfo(object):
         if line == "":
             return None
 
-        # Don't deploy system libraries (exception for libQtuitools and libQtlucene).
-        if line.startswith("/System/Library/") or line.startswith("@executable_path") or (line.startswith("/usr/lib/") and "libQt" not in line):
+        # Don't deploy system libraries
+        if line.startswith("/System/Library/") or line.startswith("@executable_path") or line.startswith("/usr/lib/"):
             return None
 
         m = cls.reOLine.match(line)
@@ -246,55 +245,45 @@ def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional
     toDir = os.path.join(path, framework.destinationDirectory)
     toPath = os.path.join(toDir, framework.binaryName)
 
-    if not os.path.exists(fromPath):
-        raise RuntimeError(f"No file at {fromPath}")
+    if framework.isDylib():
+        if not os.path.exists(fromPath):
+            raise RuntimeError(f"No file at {fromPath}")
 
-    if os.path.exists(toPath):
-        return None # Already there
+        if os.path.exists(toPath):
+            return None # Already there
 
-    if not os.path.exists(toDir):
-        os.makedirs(toDir)
+        if not os.path.exists(toDir):
+            os.makedirs(toDir)
 
-    shutil.copy2(fromPath, toPath)
-    if verbose:
-        print("Copied:", fromPath)
-        print(" to:", toPath)
+        shutil.copy2(fromPath, toPath)
+        if verbose:
+            print("Copied:", fromPath)
+            print(" to:", toPath)
+    else:
+        to_dir = os.path.join(path, "Contents", "Frameworks", framework.frameworkName)
+        if os.path.exists(to_dir):
+            return None # Already there
+
+        from_dir = framework.frameworkPath
+        if not os.path.exists(from_dir):
+            raise RuntimeError(f"No directory at {from_dir}")
+
+        shutil.copytree(from_dir, to_dir, symlinks=True)
+        if verbose:
+            print("Copied:", from_dir)
+            print(" to:", to_dir)
+
+        headers_link = os.path.join(to_dir, "Headers")
+        if os.path.exists(headers_link):
+            os.unlink(headers_link)
+
+        headers_dir = os.path.join(to_dir, framework.binaryDirectory, "Headers")
+        if os.path.exists(headers_dir):
+            shutil.rmtree(headers_dir)
 
     permissions = os.stat(toPath)
     if not permissions.st_mode & stat.S_IWRITE:
       os.chmod(toPath, permissions.st_mode | stat.S_IWRITE)
-
-    if not framework.isDylib(): # Copy resources for real frameworks
-
-        linkfrom = os.path.join(path, "Contents","Frameworks", framework.frameworkName, "Versions", "Current")
-        linkto = framework.version
-        if not os.path.exists(linkfrom):
-            os.symlink(linkto, linkfrom)
-            print("Linked:", linkfrom, "->", linkto)
-        fromResourcesDir = framework.sourceResourcesDirectory
-        if os.path.exists(fromResourcesDir):
-            toResourcesDir = os.path.join(path, framework.destinationResourcesDirectory)
-            shutil.copytree(fromResourcesDir, toResourcesDir, symlinks=True)
-            if verbose:
-                print("Copied resources:", fromResourcesDir)
-                print(" to:", toResourcesDir)
-        fromContentsDir = framework.sourceVersionContentsDirectory
-        if not os.path.exists(fromContentsDir):
-            fromContentsDir = framework.sourceContentsDirectory
-        if os.path.exists(fromContentsDir):
-            toContentsDir = os.path.join(path, framework.destinationVersionContentsDirectory)
-            shutil.copytree(fromContentsDir, toContentsDir, symlinks=True)
-            if verbose:
-                print("Copied Contents:", fromContentsDir)
-                print(" to:", toContentsDir)
-    elif framework.frameworkName.startswith("libQtGui"): # Copy qt_menu.nib (applies to non-framework layout)
-        qtMenuNibSourcePath = os.path.join(framework.frameworkDirectory, "Resources", "qt_menu.nib")
-        qtMenuNibDestinationPath = os.path.join(path, "Contents", "Resources", "qt_menu.nib")
-        if os.path.exists(qtMenuNibSourcePath) and not os.path.exists(qtMenuNibDestinationPath):
-            shutil.copytree(qtMenuNibSourcePath, qtMenuNibDestinationPath, symlinks=True)
-            if verbose:
-                print("Copied for libQtGui:", qtMenuNibSourcePath)
-                print(" to:", qtMenuNibDestinationPath)
 
     return toPath
 
@@ -351,115 +340,20 @@ def deployFrameworksForAppBundle(applicationBundle: ApplicationBundleInfo, strip
         return deployFrameworks(frameworks, applicationBundle.path, applicationBundle.binaryPath, strip, verbose)
 
 def deployPlugins(appBundleInfo: ApplicationBundleInfo, deploymentInfo: DeploymentInfo, strip: bool, verbose: int):
-    # Lookup available plugins, exclude unneeded
     plugins = []
     if deploymentInfo.pluginPath is None:
         return
     for dirpath, dirnames, filenames in os.walk(deploymentInfo.pluginPath):
         pluginDirectory = os.path.relpath(dirpath, deploymentInfo.pluginPath)
-        if pluginDirectory == "designer":
-            # Skip designer plugins
+
+        if pluginDirectory not in ['styles', 'platforms']:
             continue
-        elif pluginDirectory == "printsupport":
-            # Skip printsupport plugins
-            continue
-        elif pluginDirectory == "imageformats":
-            # Skip imageformats plugins
-            continue
-        elif pluginDirectory == "sqldrivers":
-            # Deploy the sql plugins only if QtSql is in use
-            if not deploymentInfo.usesFramework("QtSql"):
-                continue
-        elif pluginDirectory == "script":
-            # Deploy the script plugins only if QtScript is in use
-            if not deploymentInfo.usesFramework("QtScript"):
-                continue
-        elif pluginDirectory == "qmltooling" or pluginDirectory == "qml1tooling":
-            # Deploy the qml plugins only if QtDeclarative is in use
-            if not deploymentInfo.usesFramework("QtDeclarative"):
-                continue
-        elif pluginDirectory == "bearer":
-            # Deploy the bearer plugins only if QtNetwork is in use
-            if not deploymentInfo.usesFramework("QtNetwork"):
-                continue
-        elif pluginDirectory == "position":
-            # Deploy the position plugins only if QtPositioning is in use
-            if not deploymentInfo.usesFramework("QtPositioning"):
-                continue
-        elif pluginDirectory == "sensors" or pluginDirectory == "sensorgestures":
-            # Deploy the sensor plugins only if QtSensors is in use
-            if not deploymentInfo.usesFramework("QtSensors"):
-                continue
-        elif pluginDirectory == "audio" or pluginDirectory == "playlistformats":
-            # Deploy the audio plugins only if QtMultimedia is in use
-            if not deploymentInfo.usesFramework("QtMultimedia"):
-                continue
-        elif pluginDirectory == "mediaservice":
-            # Deploy the mediaservice plugins only if QtMultimediaWidgets is in use
-            if not deploymentInfo.usesFramework("QtMultimediaWidgets"):
-                continue
-        elif pluginDirectory == "canbus":
-            # Deploy the canbus plugins only if QtSerialBus is in use
-            if not deploymentInfo.usesFramework("QtSerialBus"):
-                continue
-        elif pluginDirectory == "webview":
-            # Deploy the webview plugins only if QtWebView is in use
-            if not deploymentInfo.usesFramework("QtWebView"):
-                continue
-        elif pluginDirectory == "gamepads":
-            # Deploy the webview plugins only if QtGamepad is in use
-            if not deploymentInfo.usesFramework("QtGamepad"):
-                continue
-        elif pluginDirectory == "geoservices":
-            # Deploy the webview plugins only if QtLocation is in use
-            if not deploymentInfo.usesFramework("QtLocation"):
-                continue
-        elif pluginDirectory == "texttospeech":
-            # Deploy the texttospeech plugins only if QtTextToSpeech is in use
-            if not deploymentInfo.usesFramework("QtTextToSpeech"):
-                continue
-        elif pluginDirectory == "virtualkeyboard":
-            # Deploy the virtualkeyboard plugins only if QtVirtualKeyboard is in use
-            if not deploymentInfo.usesFramework("QtVirtualKeyboard"):
-                continue
-        elif pluginDirectory == "sceneparsers":
-            # Deploy the virtualkeyboard plugins only if Qt3DCore is in use
-            if not deploymentInfo.usesFramework("Qt3DCore"):
-                continue
-        elif pluginDirectory == "renderplugins":
-            # Deploy the renderplugins plugins only if Qt3DCore is in use
-            if not deploymentInfo.usesFramework("Qt3DCore"):
-                continue
-        elif pluginDirectory == "geometryloaders":
-            # Deploy the geometryloaders plugins only if Qt3DCore is in use
-            if not deploymentInfo.usesFramework("Qt3DCore"):
-                continue
 
         for pluginName in filenames:
             pluginPath = os.path.join(pluginDirectory, pluginName)
-            if pluginName.endswith("_debug.dylib"):
-                # Skip debug plugins
+
+            if pluginName.split('.')[0] not in ['libqminimal', 'libqcocoa', 'libqmacstyle']:
                 continue
-            elif pluginPath == "imageformats/libqsvg.dylib" or pluginPath == "iconengines/libqsvgicon.dylib":
-                # Deploy the svg plugins only if QtSvg is in use
-                if not deploymentInfo.usesFramework("QtSvg"):
-                    continue
-            elif pluginPath == "accessible/libqtaccessiblecompatwidgets.dylib":
-                # Deploy accessibility for Qt3Support only if the Qt3Support is in use
-                if not deploymentInfo.usesFramework("Qt3Support"):
-                    continue
-            elif pluginPath == "graphicssystems/libqglgraphicssystem.dylib":
-                # Deploy the opengl graphicssystem plugin only if QtOpenGL is in use
-                if not deploymentInfo.usesFramework("QtOpenGL"):
-                    continue
-            elif pluginPath == "accessible/libqtaccessiblequick.dylib":
-                # Deploy the accessible qtquick plugin only if QtQuick is in use
-                if not deploymentInfo.usesFramework("QtQuick"):
-                    continue
-            elif pluginPath == "platforminputcontexts/libqtvirtualkeyboardplugin.dylib":
-                # Deploy the virtualkeyboardplugin plugin only if QtVirtualKeyboard is in use
-                if not deploymentInfo.usesFramework("QtVirtualKeyboard"):
-                    continue
 
             plugins.append((pluginDirectory, pluginName))
 
@@ -526,6 +420,9 @@ if os.path.exists("dist"):
 if os.path.exists(appname + ".dmg"):
     print("+ Removing existing DMG +")
     os.unlink(appname + ".dmg")
+
+if os.path.exists(appname + ".temp.dmg"):
+    os.unlink(appname + ".temp.dmg")
 
 # ------------------------------------------------
 
@@ -644,6 +541,25 @@ ds.close()
 
 # ------------------------------------------------
 
+if platform.system() == "Darwin":
+    subprocess.check_call(f"codesign --deep --force --sign - {target}", shell=True)
+
+print("+ Installing background.tiff +")
+
+bg_path = os.path.join('dist', '.background', 'background.tiff')
+os.mkdir(os.path.dirname(bg_path))
+
+tiff_path = os.path.join('contrib', 'macdeploy', 'background.tiff')
+shutil.copy2(tiff_path, bg_path)
+
+# ------------------------------------------------
+
+print("+ Generating symlink for /Applications +")
+
+os.symlink("/Applications", os.path.join('dist', "Applications"))
+
+# ------------------------------------------------
+
 if config.dmg is not None:
 
     print("+ Preparing .dmg disk image +")
@@ -666,19 +582,6 @@ if config.dmg is not None:
     if verbose:
         print("Attaching temp image...")
     output = run(["hdiutil", "attach", tempname, "-readwrite"], check=True, universal_newlines=True, stdout=PIPE).stdout
-
-    m = re.search(r"/Volumes/(.+$)", output)
-    disk_root = m.group(0)
-
-    print("+ Applying fancy settings +")
-
-    bg_path = os.path.join(disk_root, ".background", os.path.basename('background.tiff'))
-    os.mkdir(os.path.dirname(bg_path))
-    if verbose:
-        print('background.tiff', "->", bg_path)
-    shutil.copy2('contrib/macdeploy/background.tiff', bg_path)
-
-    os.symlink("/Applications", os.path.join(disk_root, "Applications"))
 
     print("+ Finalizing .dmg disk image +")
 

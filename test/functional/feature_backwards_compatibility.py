@@ -30,11 +30,12 @@ from test_framework.util import (
 class BackwardsCompatibilityTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 6
+        self.num_nodes = 7
         # Add new version after each release:
         self.extra_args = [
             [], # Pre-release: use to mine blocks
             ["-nowallet"], # Pre-release: use to receive coins, swap wallets, etc
+            ["-nowallet"], # v20.0.1
             ["-nowallet"], # v19.3.0
             ["-nowallet"], # v18.2.2
             ["-nowallet"], # v0.17.0.3
@@ -50,6 +51,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes, extra_args=self.extra_args, versions=[
             None,
             None,
+            19030000,
             19030000,
             18020200,
             170003,
@@ -68,7 +70,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         res = self.nodes[self.num_nodes - 1].getblockchaininfo()
         assert_equal(res['blocks'], 101)
 
-        node_master = self.nodes[self.num_nodes - 5]
+        node_master = self.nodes[self.num_nodes - 6]
+        node_v20 = self.nodes[self.num_nodes - 5]
         node_v19 = self.nodes[self.num_nodes - 4]
         node_v18 = self.nodes[self.num_nodes - 3]
         node_v17 = self.nodes[self.num_nodes - 2]
@@ -117,6 +120,13 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         assert info['private_keys_enabled'] == False
         assert info['keypoolsize'] == 0
 
+        # w1_v20: regular wallet, created with v20.0
+        node_v20.createwallet(wallet_name="w1_v20")
+        wallet = node_v20.get_wallet_rpc("w1_v20")
+        info = wallet.getwalletinfo()
+        assert info['private_keys_enabled']
+        assert info['keypoolsize'] > 0
+
         # w2_v19: wallet with private keys disabled, created with v0.19
         node_v19.createwallet(wallet_name="w2_v19", disable_private_keys=True)
         wallet = node_v19.get_wallet_rpc("w2_v19")
@@ -155,6 +165,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         # Copy the wallets to older nodes:
         node_master_wallets_dir = os.path.join(node_master.datadir, "regtest/wallets")
+        node_v20_wallets_dir = os.path.join(node_v20.datadir, "regtest/wallets")
         node_v19_wallets_dir = os.path.join(node_v19.datadir, "regtest/wallets")
         node_v18_wallets_dir = os.path.join(node_v18.datadir, "regtest/wallets")
         node_v17_wallets_dir = os.path.join(node_v17.datadir, "regtest/wallets")
@@ -198,6 +209,34 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                 os.path.join(node_master_wallets_dir, wallet),
                 os.path.join(node_v19_wallets_dir, wallet)
             )
+
+        # Copy wallets to v0.20
+        for wallet in os.listdir(node_master_wallets_dir):
+            shutil.copytree(
+                os.path.join(node_master_wallets_dir, wallet),
+                os.path.join(node_v20_wallets_dir, wallet)
+            )
+
+        # Open the wallets in v0.20
+        node_v20.loadwallet("w1")
+        wallet = node_v20.get_wallet_rpc("w1")
+        info = wallet.getwalletinfo()
+        assert info['private_keys_enabled']
+        assert info['keypoolsize'] > 0
+        txs = wallet.listtransactions()
+        assert_equal(len(txs), 1)
+
+        node_v20.loadwallet("w2")
+        wallet = node_v20.get_wallet_rpc("w2")
+        info = wallet.getwalletinfo()
+        assert info['private_keys_enabled'] == False
+        assert info['keypoolsize'] == 0
+
+        node_v20.loadwallet("w3")
+        wallet = node_v20.get_wallet_rpc("w3")
+        info = wallet.getwalletinfo()
+        assert info['private_keys_enabled']
+        assert info['keypoolsize'] == 0
 
         # Open the wallets in v0.19
         node_v19.loadwallet("w1")
@@ -277,15 +316,15 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # assert_raises_rpc_error(-4, "Wallet loading failed.", node_v17.loadwallet, 'w3_v18')
 
         # Instead, we stop node and try to launch it with the wallet:
-        self.stop_node(4)
+        self.stop_node(5)
         # it expected to fail with error 'DBErrors::TOO_NEW' but Dash Core can open v18 by version 17
         # can be implemented in future if there's any incompatible versions
         #node_v17.assert_start_raises_init_error(["-wallet=w3_v18"], "Error: Error loading w3_v18: Wallet requires newer version of Dash Core")
         #node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of Dash Core")
-        self.start_node(4)
+        self.start_node(5)
 
         # Open most recent wallet in v0.16 (no loadwallet RPC)
-        self.restart_node(5, extra_args=["-wallet=w2"])
+        self.restart_node(6, extra_args=["-wallet=w2"])
         wallet = node_v16.get_wallet_rpc("w2")
         info = wallet.getwalletinfo()
         assert info['keypoolsize'] == 1
