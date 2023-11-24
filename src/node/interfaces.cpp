@@ -45,6 +45,7 @@
 #include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
+#include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -702,14 +703,13 @@ public:
         limit_ancestor_count = limits.ancestor_count;
         limit_descendant_count = limits.descendant_count;
     }
-    bool checkChainLimits(const CTransactionRef& tx) override
+    util::Result<void> checkChainLimits(const CTransactionRef& tx) override
     {
-        if (!m_node.mempool) return true;
+        if (!m_node.mempool) return {};
         LockPoints lp;
         CTxMemPoolEntry entry(tx, 0, 0, 0, 0, false, 0, lp);
         LOCK(m_node.mempool->cs);
-        std::string err_string;
-        return m_node.mempool->CheckPackageLimits({tx}, entry.GetTxSize(), err_string);
+        return m_node.mempool->CheckPackageLimits({tx}, entry.GetTxSize());
     }
     CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc) override
     {

@@ -51,6 +51,7 @@
 #include <util/hasher.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
+#include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/time.h>
@@ -1024,10 +1025,10 @@ bool MemPoolAccept::PackageMempoolChecks(const std::vector<CTransactionRef>& txn
     assert(std::all_of(txns.cbegin(), txns.cend(), [this](const auto& tx)
                        { return !m_pool.exists(GenTxid::Txid(tx->GetHash()));}));
 
-    std::string err_string;
-    if (!m_pool.CheckPackageLimits(txns, total_vsize, err_string)) {
+    auto result = m_pool.CheckPackageLimits(txns, total_vsize);
+    if (!result) {
         // This is a package-wide error, separate from an individual transaction error.
-        return package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-mempool-limits", err_string);
+        return package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-mempool-limits", util::ErrorString(result).original);
     }
    return true;
 }
