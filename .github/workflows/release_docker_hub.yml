@@ -67,7 +67,9 @@ jobs:
         push: true
         tags: ${{ steps.docker_meta.outputs.tags }}
         labels: ${{ steps.docker_meta.outputs.labels }}
-        build-args: TAG=${{ steps.get_tag.outputs.build_tag }}
+        build-args: |
+          TAG=${{ steps.get_tag.outputs.build_tag }}
+          GITHUB_REPOSITORY=${{ GITHUB_REPOSITORY }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         platforms: linux/amd64,linux/arm64
