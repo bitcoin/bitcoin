@@ -163,6 +163,9 @@ class P2PConnection(asyncio.Protocol):
         # The underlying transport of the connection.
         # Should only call methods on this from the NetworkThread, c.f. call_soon_threadsafe
         self._transport = None
+        # This lock is acquired before sending messages over the socket. There's an implied lock order and
+        # p2p_lock must not be acquired after _send_lock as it could result in deadlocks.
+        self._send_lock = threading.Lock()
         self.v2_state = None  # EncryptedP2PState object needed for v2 p2p connections
 
     @property
@@ -360,9 +363,10 @@ class P2PConnection(asyncio.Protocol):
 
         This method takes a P2P payload, builds the P2P header and adds
         the message to the send buffer to be sent over the socket."""
-        tmsg = self.build_message(message)
-        self._log_message("send", message)
-        return self.send_raw_message(tmsg)
+        with self._send_lock:
+            tmsg = self.build_message(message)
+            self._log_message("send", message)
+            return self.send_raw_message(tmsg)
 
     def send_raw_message(self, raw_message_bytes):
         if not self.is_connected:
