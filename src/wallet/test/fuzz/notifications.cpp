@@ -7,6 +7,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/translation.h>
 #include <wallet/context.h>
 #include <wallet/receive.h>
@@ -14,7 +15,6 @@
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
-#include <cassert>
 #include <cstdint>
 #include <string>
 #include <vector>
