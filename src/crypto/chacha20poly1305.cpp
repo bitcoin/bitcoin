@@ -40,34 +40,6 @@ int timingsafe_bcmp(const unsigned char* b1, const unsigned char* b2, size_t n) 
 
 #endif
 
-/** Compute poly1305 tag. chacha20 must be set to the right nonce, block 0. Will be at block 1 after. */
-void ComputeTag(ChaCha20& chacha20, Span<const std::byte> aad, Span<const std::byte> cipher, Span<std::byte> tag) noexcept
-{
-    static const std::byte PADDING[16] = {{}};
-
-    // Get block of keystream (use a full 64 byte buffer to avoid the need for chacha20's own buffering).
-    std::byte first_block[ChaCha20Aligned::BLOCKLEN];
-    chacha20.Keystream(first_block);
-
-    // Use the first 32 bytes of the first keystream block as poly1305 key.
-    Poly1305 poly1305{Span{first_block}.first(Poly1305::KEYLEN)};
-
-    // Compute tag:
-    // - Process the padded AAD with Poly1305.
-    const unsigned aad_padding_length = (16 - (aad.size() % 16)) % 16;
-    poly1305.Update(aad).Update(Span{PADDING}.first(aad_padding_length));
-    // - Process the padded ciphertext with Poly1305.
-    const unsigned cipher_padding_length = (16 - (cipher.size() % 16)) % 16;
-    poly1305.Update(cipher).Update(Span{PADDING}.first(cipher_padding_length));
-    // - Process the AAD and plaintext length with Poly1305.
-    std::byte length_desc[Poly1305::TAGLEN];
-    WriteLE64(UCharCast(length_desc), aad.size());
-    WriteLE64(UCharCast(length_desc + 8), cipher.size());
-    poly1305.Update(length_desc);
-
-    // Output tag.
-    poly1305.Finalize(tag);
-}
 
 } // namespace
 
