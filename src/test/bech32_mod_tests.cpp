@@ -39,7 +39,7 @@ void embed_errors(std::string& s, const size_t num_errors) {
     // randonly select indices to change
     std::set<size_t> indices;
 
-    auto sep_idx = s.rfind("1");
+    auto sep_idx = s.rfind('1');
     while (indices.size() < num_errors) {
         std::uniform_int_distribution<size_t> dist(sep_idx + 1, s.size() - 9);
         indices.insert(dist(gen));
