@@ -186,6 +186,7 @@ BITCOIN_CORE_H = \
   kernel/coinstats.h \
   kernel/context.h \
   kernel/cs_main.h \
+  kernel/disconnected_transactions.h \
   kernel/mempool_entry.h \
   kernel/mempool_limits.h \
   kernel/mempool_options.h \
@@ -327,6 +328,7 @@ BITCOIN_CORE_H = \
   util/time.h \
   util/tokenpipe.h \
   util/trace.h \
+  util/transaction_identifier.h \
   util/translation.h \
   util/types.h \
   util/ui_change_type.h \
@@ -402,6 +404,7 @@ libbitcoin_node_a_SOURCES = \
   kernel/coinstats.cpp \
   kernel/context.cpp \
   kernel/cs_main.cpp \
+  kernel/disconnected_transactions.cpp \
   kernel/mempool_persist.cpp \
   kernel/mempool_removal_reason.cpp \
   mapport.cpp \
@@ -942,6 +945,7 @@ libbitcoinkernel_la_SOURCES = \
   kernel/coinstats.cpp \
   kernel/context.cpp \
   kernel/cs_main.cpp \
+  kernel/disconnected_transactions.cpp \
   kernel/mempool_persist.cpp \
   kernel/mempool_removal_reason.cpp \
   key.cpp \

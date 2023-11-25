@@ -4,8 +4,10 @@ dnl permitted in any medium without royalty provided the copyright notice
 dnl and this notice are preserved. This file is offered as-is, without any
 dnl warranty.
 
-# Some versions of gcc/libstdc++ require linking with -latomic if
-# using the C++ atomic library.
+# Clang prior to version 15, when building for 32-bit,
+# and linking against libstdc++, requires linking with
+# -latomic if using the C++ atomic library.
+# Can be tested with: clang++ test.cpp -m32
 #
 # Sourced from http://bugs.debian.org/797228
 

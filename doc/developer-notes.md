@@ -488,7 +488,9 @@ To enable LCOV report generation during test runs:
 make
 make cov
 
-# A coverage report will now be accessible at `./test_bitcoin.coverage/index.html`.
+# A coverage report will now be accessible at `./test_bitcoin.coverage/index.html`,
+# which covers unit tests, and `./total.coverage/index.html`, which covers
+# unit and functional tests.
 ```
 
 ### Performance profiling with perf
@@ -739,12 +741,6 @@ Common misconceptions are clarified in those sections:
 - Passing (non-)fundamental types in the [C++ Core
   Guideline](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rf-conventional).
 
-- Assertions should not have side-effects.
-
-  - *Rationale*: Even though the source code is set to refuse to compile
-    with assertions disabled, having side-effects in assertions is unexpected and
-    makes the code harder to understand.
-
 - If you use the `.h`, you must link the `.cpp`.
 
   - *Rationale*: Include files define the interface for the code in implementation files. Including one but
@@ -954,7 +950,9 @@ Threads and synchronization
     internal to a class (private or protected) rather than public.
 
   - Combine annotations in function declarations with run-time asserts in
-    function definitions:
+    function definitions (`AssertLockNotHeld()` can be omitted if `LOCK()` is
+    called unconditionally after it because `LOCK()` does the same check as
+    `AssertLockNotHeld()` internally, for non-recursive mutexes):
 
 ```C++
 // txmempool.h

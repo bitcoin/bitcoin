@@ -291,6 +291,9 @@ enum ServiceFlags : uint64_t {
     // See BIP159 for details on how this is implemented.
     NODE_NETWORK_LIMITED = (1 << 10),
 
+    // NODE_P2P_V2 means the node supports BIP324 transport
+    NODE_P2P_V2 = (1 << 11),
+
     // Bits 24-31 are reserved for temporary experiments. Just pick a bit that
     // isn't getting used, or one not being used much, and notify the
     // bitcoin-development mailing list. Remember that service bits are just
@@ -442,7 +445,7 @@ public:
         }
         // Invoke V1/V2 serializer for CService parent object.
         const auto ser_params{use_v2 ? CNetAddr::V2 : CNetAddr::V1};
-        READWRITE(WithParams(ser_params, AsBase<CService>(obj)));
+        READWRITE(ser_params(AsBase<CService>(obj)));
     }
 
     //! Always included in serialization. The behavior is unspecified if the value is not representable as uint32_t.

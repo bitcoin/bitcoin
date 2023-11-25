@@ -12,6 +12,7 @@
 #include <uint256.h>
 #include <util/chaintype.h>
 #include <util/hash_type.h>
+#include <util/vector.h>
 
 #include <cstdint>
 #include <iterator>
@@ -44,17 +45,21 @@ struct AssumeutxoHash : public BaseHash<uint256> {
  * as valid.
  */
 struct AssumeutxoData {
+    int height;
+
     //! The expected hash of the deserialized UTXO set.
-    const AssumeutxoHash hash_serialized;
+    AssumeutxoHash hash_serialized;
 
     //! Used to populate the nChainTx value, which is used during BlockManager::LoadBlockIndex().
     //!
     //! We need to hardcode the value here because this is computed cumulatively using block data,
     //! which we do not necessarily have at the time of snapshot load.
-    const unsigned int nChainTx;
-};
+    unsigned int nChainTx;
 
-using MapAssumeutxo = std::map<int, const AssumeutxoData>;
+    //! The hash of the base block for this snapshot. Used to refer to assumeutxo data
+    //! prior to having a loaded blockindex.
+    uint256 blockhash;
+};
 
 /**
  * Holds various statistics on transactions within a chain. Used to estimate
@@ -93,7 +98,7 @@ public:
     /** Default value for -checkmempool and -checkblockindex argument */
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
     /** If this chain is exclusively used for testing */
-    bool IsTestChain() const { return m_is_test_chain; }
+    bool IsTestChain() const { return m_chain_type != ChainType::MAIN; }
     /** If this chain allows time to be mocked */
     bool IsMockableChain() const { return m_is_mockable_chain; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
@@ -114,9 +119,14 @@ public:
     const std::vector<uint8_t>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
 
-    //! Get allowed assumeutxo configuration.
-    //! @see ChainstateManager
-    const MapAssumeutxo& Assumeutxo() const { return m_assumeutxo_data; }
+    std::optional<AssumeutxoData> AssumeutxoForHeight(int height) const
+    {
+        return FindFirst(m_assumeutxo_data, [&](const auto& d) { return d.height == height; });
+    }
+    std::optional<AssumeutxoData> AssumeutxoForBlockhash(const uint256& blockhash) const
+    {
+        return FindFirst(m_assumeutxo_data, [&](const auto& d) { return d.blockhash == blockhash; });
+    }
 
     const ChainTxData& TxData() const { return chainTxData; }
 
@@ -167,10 +177,9 @@ protected:
     CBlock genesis;
     std::vector<uint8_t> vFixedSeeds;
     bool fDefaultConsistencyChecks;
-    bool m_is_test_chain;
     bool m_is_mockable_chain;
     CCheckpointData checkpointData;
-    MapAssumeutxo m_assumeutxo_data;
+    std::vector<AssumeutxoData> m_assumeutxo_data;
     ChainTxData chainTxData;
 };
 

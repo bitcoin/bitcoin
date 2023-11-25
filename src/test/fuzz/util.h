@@ -107,7 +107,7 @@ template <typename T, typename P>
     DataStream ds{buffer};
     T obj;
     try {
-        ds >> WithParams(params, obj);
+        ds >> params(obj);
     } catch (const std::ios_base::failure&) {
         return std::nullopt;
     }
@@ -145,7 +145,7 @@ template <typename WeakEnumType, size_t size>
 
 [[nodiscard]] int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optional<int64_t>& min = std::nullopt, const std::optional<int64_t>& max = std::nullopt) noexcept;
 
-[[nodiscard]] CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider, const std::optional<std::vector<uint256>>& prevout_txids, const int max_num_in = 10, const int max_num_out = 10) noexcept;
+[[nodiscard]] CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider, const std::optional<std::vector<Txid>>& prevout_txids, const int max_num_in = 10, const int max_num_out = 10) noexcept;
 
 [[nodiscard]] CScriptWitness ConsumeScriptWitness(FuzzedDataProvider& fuzzed_data_provider, const size_t max_stack_elem_size = 32) noexcept;
 
@@ -180,6 +180,8 @@ template <typename WeakEnumType, size_t size>
 {
     return UintToArith256(ConsumeUInt256(fuzzed_data_provider));
 }
+
+[[nodiscard]] std::map<COutPoint, Coin> ConsumeCoins(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 [[nodiscard]] CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
@@ -262,31 +264,6 @@ public:
 
     static int close(void* cookie);
 };
-
-[[nodiscard]] inline FuzzedFileProvider ConsumeFile(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    return {fuzzed_data_provider};
-}
-
-class FuzzedAutoFileProvider
-{
-    FuzzedFileProvider m_fuzzed_file_provider;
-
-public:
-    FuzzedAutoFileProvider(FuzzedDataProvider& fuzzed_data_provider) : m_fuzzed_file_provider{fuzzed_data_provider}
-    {
-    }
-
-    AutoFile open()
-    {
-        return AutoFile{m_fuzzed_file_provider.open()};
-    }
-};
-
-[[nodiscard]] inline FuzzedAutoFileProvider ConsumeAutoFile(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    return {fuzzed_data_provider};
-}
 
 #define WRITE_TO_STREAM_CASE(type, consume) \
     [&] {                                   \

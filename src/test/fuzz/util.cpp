@@ -40,7 +40,7 @@ int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optiona
     return fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(min.value_or(time_min), max.value_or(time_max));
 }
 
-CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider, const std::optional<std::vector<uint256>>& prevout_txids, const int max_num_in, const int max_num_out) noexcept
+CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider, const std::optional<std::vector<Txid>>& prevout_txids, const int max_num_in, const int max_num_out) noexcept
 {
     CMutableTransaction tx_mut;
     const auto p2wsh_op_true = fuzzed_data_provider.ConsumeBool();
@@ -53,7 +53,7 @@ CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider,
     for (int i = 0; i < num_in; ++i) {
         const auto& txid_prev = prevout_txids ?
                                     PickValue(fuzzed_data_provider, *prevout_txids) :
-                                    ConsumeUInt256(fuzzed_data_provider);
+                                    Txid::FromUint256(ConsumeUInt256(fuzzed_data_provider));
         const auto index_out = fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(0, max_num_out);
         const auto sequence = ConsumeSequence(fuzzed_data_provider);
         const auto script_sig = p2wsh_op_true ? CScript{} : ConsumeScript(fuzzed_data_provider);
@@ -164,6 +164,24 @@ uint32_t ConsumeSequence(FuzzedDataProvider& fuzzed_data_provider) noexcept
                fuzzed_data_provider.ConsumeIntegral<uint32_t>();
 }
 
+std::map<COutPoint, Coin> ConsumeCoins(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    std::map<COutPoint, Coin> coins;
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+        const std::optional<COutPoint> outpoint{ConsumeDeserializable<COutPoint>(fuzzed_data_provider)};
+        if (!outpoint) {
+            break;
+        }
+        const std::optional<Coin> coin{ConsumeDeserializable<Coin>(fuzzed_data_provider)};
+        if (!coin) {
+            break;
+        }
+        coins[*outpoint] = *coin;
+    }
+
+    return coins;
+}
+
 CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     CTxDestination tx_destination;
@@ -171,6 +189,15 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
         fuzzed_data_provider,
         [&] {
             tx_destination = CNoDestination{};
+        },
+        [&] {
+            bool compressed = fuzzed_data_provider.ConsumeBool();
+            CPubKey pk{ConstructPubKeyBytes(
+                    fuzzed_data_provider,
+                    ConsumeFixedLengthByteVector(fuzzed_data_provider, (compressed ? CPubKey::COMPRESSED_SIZE : CPubKey::SIZE)),
+                    compressed
+            )};
+            tx_destination = PubKeyDestination{pk};
         },
         [&] {
             tx_destination = PKHash{ConsumeUInt160(fuzzed_data_provider)};
@@ -188,15 +215,11 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
             tx_destination = WitnessV1Taproot{XOnlyPubKey{ConsumeUInt256(fuzzed_data_provider)}};
         },
         [&] {
-            WitnessUnknown witness_unknown{};
-            witness_unknown.version = fuzzed_data_provider.ConsumeIntegralInRange(2, 16);
-            std::vector<uint8_t> witness_unknown_program_1{fuzzed_data_provider.ConsumeBytes<uint8_t>(40)};
-            if (witness_unknown_program_1.size() < 2) {
-                witness_unknown_program_1 = {0, 0};
+            std::vector<unsigned char> program{ConsumeRandomLengthByteVector(fuzzed_data_provider, /*max_length=*/40)};
+            if (program.size() < 2) {
+                program = {0, 0};
             }
-            witness_unknown.length = witness_unknown_program_1.size();
-            std::copy(witness_unknown_program_1.begin(), witness_unknown_program_1.end(), witness_unknown.program);
-            tx_destination = witness_unknown;
+            tx_destination = WitnessUnknown{fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(2, 16), program};
         })};
     Assert(call_size == std::variant_size_v<CTxDestination>);
     return tx_destination;

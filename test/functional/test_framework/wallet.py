@@ -9,7 +9,6 @@ from decimal import Decimal
 from enum import Enum
 from typing import (
     Any,
-    List,
     Optional,
 )
 from test_framework.address import (
@@ -284,7 +283,7 @@ class MiniWallet:
     def create_self_transfer_multi(
         self,
         *,
-        utxos_to_spend: Optional[List[dict]] = None,
+        utxos_to_spend: Optional[list[dict]] = None,
         num_outputs=1,
         amount_per_output=0,
         locktime=0,

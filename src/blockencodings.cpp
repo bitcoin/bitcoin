@@ -107,12 +107,12 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     std::vector<bool> have_txn(txn_available.size());
     {
     LOCK(pool->cs);
-    for (size_t i = 0; i < pool->vTxHashes.size(); i++) {
-        uint64_t shortid = cmpctblock.GetShortID(pool->vTxHashes[i].first);
+    for (const auto& tx : pool->txns_randomized) {
+        uint64_t shortid = cmpctblock.GetShortID(tx->GetWitnessHash());
         std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
         if (idit != shorttxids.end()) {
             if (!have_txn[idit->second]) {
-                txn_available[idit->second] = pool->vTxHashes[i].second->GetSharedTx();
+                txn_available[idit->second] = tx;
                 have_txn[idit->second]  = true;
                 mempool_count++;
             } else {
@@ -164,7 +164,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
             break;
     }
 
-    LogPrint(BCLog::CMPCTBLOCK, "Initialized PartiallyDownloadedBlock for block %s using a cmpctblock of size %lu\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock, PROTOCOL_VERSION));
+    LogPrint(BCLog::CMPCTBLOCK, "Initialized PartiallyDownloadedBlock for block %s using a cmpctblock of size %lu\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock));
 
     return READ_STATUS_OK;
 }

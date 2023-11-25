@@ -57,7 +57,6 @@ template <typename MutexType>
 void EnterCritical(const char* pszName, const char* pszFile, int nLine, MutexType* cs, bool fTry = false);
 void LeaveCritical();
 void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line);
-std::string LocksHeld();
 template <typename MutexType>
 void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) EXCLUSIVE_LOCKS_REQUIRED(cs);
 template <typename MutexType>
@@ -301,6 +300,10 @@ inline MutexType* MaybeCheckNotHeld(MutexType* m) LOCKS_EXCLUDED(m) LOCK_RETURNE
 //! gcc and the -Wreturn-stack-address flag in clang, both enabled by default.
 #define WITH_LOCK(cs, code) (MaybeCheckNotHeld(cs), [&]() -> decltype(auto) { LOCK(cs); code; }())
 
+/** An implementation of a semaphore.
+ *
+ * See https://en.wikipedia.org/wiki/Semaphore_(programming)
+ */
 class CSemaphore
 {
 private:
@@ -309,25 +312,33 @@ private:
     int value;
 
 public:
-    explicit CSemaphore(int init) : value(init) {}
+    explicit CSemaphore(int init) noexcept : value(init) {}
 
-    void wait()
+    // Disallow default construct, copy, move.
+    CSemaphore() = delete;
+    CSemaphore(const CSemaphore&) = delete;
+    CSemaphore(CSemaphore&&) = delete;
+    CSemaphore& operator=(const CSemaphore&) = delete;
+    CSemaphore& operator=(CSemaphore&&) = delete;
+
+    void wait() noexcept
     {
         std::unique_lock<std::mutex> lock(mutex);
         condition.wait(lock, [&]() { return value >= 1; });
         value--;
     }
 
-    bool try_wait()
+    bool try_wait() noexcept
     {
         std::lock_guard<std::mutex> lock(mutex);
-        if (value < 1)
+        if (value < 1) {
             return false;
+        }
         value--;
         return true;
     }
 
-    void post()
+    void post() noexcept
     {
         {
             std::lock_guard<std::mutex> lock(mutex);
@@ -345,45 +356,64 @@ private:
     bool fHaveGrant;
 
 public:
-    void Acquire()
+    void Acquire() noexcept
     {
-        if (fHaveGrant)
+        if (fHaveGrant) {
             return;
+        }
         sem->wait();
         fHaveGrant = true;
     }
 
-    void Release()
+    void Release() noexcept
     {
-        if (!fHaveGrant)
+        if (!fHaveGrant) {
             return;
+        }
         sem->post();
         fHaveGrant = false;
     }
 
-    bool TryAcquire()
+    bool TryAcquire() noexcept
     {
-        if (!fHaveGrant && sem->try_wait())
+        if (!fHaveGrant && sem->try_wait()) {
             fHaveGrant = true;
+        }
         return fHaveGrant;
     }
 
-    void MoveTo(CSemaphoreGrant& grant)
+    // Disallow copy.
+    CSemaphoreGrant(const CSemaphoreGrant&) = delete;
+    CSemaphoreGrant& operator=(const CSemaphoreGrant&) = delete;
+
+    // Allow move.
+    CSemaphoreGrant(CSemaphoreGrant&& other) noexcept
     {
-        grant.Release();
-        grant.sem = sem;
-        grant.fHaveGrant = fHaveGrant;
-        fHaveGrant = false;
+        sem = other.sem;
+        fHaveGrant = other.fHaveGrant;
+        other.fHaveGrant = false;
+        other.sem = nullptr;
     }
 
-    CSemaphoreGrant() : sem(nullptr), fHaveGrant(false) {}
-
-    explicit CSemaphoreGrant(CSemaphore& sema, bool fTry = false) : sem(&sema), fHaveGrant(false)
+    CSemaphoreGrant& operator=(CSemaphoreGrant&& other) noexcept
     {
-        if (fTry)
+        Release();
+        sem = other.sem;
+        fHaveGrant = other.fHaveGrant;
+        other.fHaveGrant = false;
+        other.sem = nullptr;
+        return *this;
+    }
+
+    CSemaphoreGrant() noexcept : sem(nullptr), fHaveGrant(false) {}
+
+    explicit CSemaphoreGrant(CSemaphore& sema, bool fTry = false) noexcept : sem(&sema), fHaveGrant(false)
+    {
+        if (fTry) {
             TryAcquire();
-        else
+        } else {
             Acquire();
+        }
     }
 
     ~CSemaphoreGrant()
@@ -391,7 +421,7 @@ public:
         Release();
     }
 
-    operator bool() const
+    explicit operator bool() const noexcept
     {
         return fHaveGrant;
     }

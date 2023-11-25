@@ -92,6 +92,7 @@ BITCOIN_TESTS =\
   test/dbwrapper_tests.cpp \
   test/denialofservice_tests.cpp \
   test/descriptor_tests.cpp \
+  test/disconnected_transactions.cpp \
   test/flatfile_tests.cpp \
   test/fs_tests.cpp \
   test/getarg_tests.cpp \
@@ -111,6 +112,7 @@ BITCOIN_TESTS =\
   test/miniscript_tests.cpp \
   test/minisketch_tests.cpp \
   test/multisig_tests.cpp \
+  test/net_peer_connection_tests.cpp \
   test/net_peer_eviction_tests.cpp \
   test/net_tests.cpp \
   test/netbase_tests.cpp \
@@ -144,6 +146,7 @@ BITCOIN_TESTS =\
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
   test/sock_tests.cpp \
+  test/span_tests.cpp \
   test/streams_tests.cpp \
   test/sync_tests.cpp \
   test/system_tests.cpp \
@@ -202,7 +205,8 @@ FUZZ_WALLET_SRC = \
 
 if USE_SQLITE
 FUZZ_WALLET_SRC += \
- wallet/test/fuzz/notifications.cpp
+ wallet/test/fuzz/notifications.cpp \
+ wallet/test/fuzz/scriptpubkeyman.cpp
 endif # USE_SQLITE
 
 BITCOIN_TEST_SUITE += \
@@ -280,7 +284,6 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/headerssync.cpp \
  test/fuzz/hex.cpp \
  test/fuzz/http_request.cpp \
- test/fuzz/i2p.cpp \
  test/fuzz/integer.cpp \
  test/fuzz/key.cpp \
  test/fuzz/key_io.cpp \
@@ -300,6 +303,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/netbase_dns_lookup.cpp \
  test/fuzz/node_eviction.cpp \
  test/fuzz/p2p_transport_serialization.cpp \
+ test/fuzz/package_eval.cpp \
  test/fuzz/parse_hd_keypath.cpp \
  test/fuzz/parse_numbers.cpp \
  test/fuzz/parse_script.cpp \

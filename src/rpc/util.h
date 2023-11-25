@@ -9,7 +9,6 @@
 #include <consensus/amount.h>
 #include <node/transaction.h>
 #include <outputtype.h>
-#include <protocol.h>
 #include <pubkey.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
@@ -26,6 +25,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -59,7 +59,6 @@ extern const std::string UNIX_EPOCH_TIME;
 extern const std::string EXAMPLE_ADDRESS[2];
 
 class FillableSigningProvider;
-class CPubKey;
 class CScript;
 struct Sections;
 
@@ -91,10 +90,10 @@ void RPCTypeCheckObj(const UniValue& o,
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).
  */
-uint256 ParseHashV(const UniValue& v, std::string strName);
-uint256 ParseHashO(const UniValue& o, std::string strKey);
-std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName);
-std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey);
+uint256 ParseHashV(const UniValue& v, std::string_view name);
+uint256 ParseHashO(const UniValue& o, std::string_view strKey);
+std::vector<unsigned char> ParseHexV(const UniValue& v, std::string_view name);
+std::vector<unsigned char> ParseHexO(const UniValue& o, std::string_view strKey);
 
 /**
  * Validate and return a CAmount from a UniValue number or string.
@@ -131,9 +130,6 @@ std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
 
 /** Evaluate a descriptor given as a string, or as a {"desc":...,"range":...} object, with default range of 1000. */
 std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider, const bool expand_priv = false);
-
-/** Returns, given services flags, a list of humanly readable (known) network services */
-UniValue GetServicesNames(ServiceFlags services);
 
 /**
  * Serializing JSON objects depends on the outer type. Only arrays and
@@ -406,7 +402,7 @@ public:
      * RPC method implementations. The helper internally checks whether the
      * user-passed argument isNull() and parses (from JSON) and returns the
      * user-passed argument, or the default value derived from the RPCArg
-     * documention, or a falsy value if no default was given.
+     * documentation, or a falsy value if no default was given.
      *
      * Use Arg<Type>(i) to get the argument or its default value. Otherwise,
      * use MaybeArg<Type>(i) to get the optional argument or a falsy value.

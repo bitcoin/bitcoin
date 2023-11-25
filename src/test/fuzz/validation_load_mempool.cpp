@@ -38,7 +38,7 @@ FUZZ_TARGET(validation_load_mempool, .init = initialize_validation_load_mempool)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    FuzzedFileProvider fuzzed_file_provider = ConsumeFile(fuzzed_data_provider);
+    FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};
 
     CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node)};
 

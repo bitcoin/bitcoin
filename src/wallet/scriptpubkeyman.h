@@ -123,20 +123,14 @@ public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
-        int nVersion = s.GetVersion();
-        if (!(s.GetType() & SER_GETHASH)) {
-            s << nVersion;
-        }
+        s << int{259900}; // Unused field, writes the highest client version ever written
         s << nTime << vchPubKey << fInternal << m_pre_split;
     }
 
     template<typename Stream>
     void Unserialize(Stream& s)
     {
-        int nVersion = s.GetVersion();
-        if (!(s.GetType() & SER_GETHASH)) {
-            s >> nVersion;
-        }
+        s >> int{}; // Discard unused field
         s >> nTime >> vchPubKey;
         try {
             s >> fInternal;
@@ -524,6 +518,12 @@ public:
 
     std::set<CKeyID> GetKeys() const override;
     std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override;
+
+    /**
+     * Retrieves scripts that were imported by bugs into the legacy spkm and are
+     * simply invalid, such as a sh(sh(pkh())) script, or not watched.
+     */
+    std::unordered_set<CScript, SaltedSipHasher> GetNotMineScriptPubKeys() const;
 
     /** Get the DescriptorScriptPubKeyMans (with private keys) that have the same scriptPubKeys as this LegacyScriptPubKeyMan.
      * Does not modify this ScriptPubKeyMan. */

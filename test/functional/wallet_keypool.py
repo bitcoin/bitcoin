@@ -9,6 +9,7 @@ from decimal import Decimal
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.wallet_util import WalletUnlock
 
 class KeyPoolTest(BitcoinTestFramework):
     def add_options(self, parser):
@@ -85,9 +86,8 @@ class KeyPoolTest(BitcoinTestFramework):
         assert_raises_rpc_error(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
 
         # put six (plus 2) new keys in the keypool (100% external-, +100% internal-keys, 1 in min)
-        nodes[0].walletpassphrase('test', 12000)
-        nodes[0].keypoolrefill(6)
-        nodes[0].walletlock()
+        with WalletUnlock(nodes[0], 'test'):
+            nodes[0].keypoolrefill(6)
         wi = nodes[0].getwalletinfo()
         if self.options.descriptors:
             assert_equal(wi['keypoolsize_hd_internal'], 24)
@@ -131,29 +131,29 @@ class KeyPoolTest(BitcoinTestFramework):
             nodes[0].getnewaddress()
         assert_raises_rpc_error(-12, "Keypool ran out", nodes[0].getnewaddress)
 
-        nodes[0].walletpassphrase('test', 100)
-        nodes[0].keypoolrefill(100)
-        wi = nodes[0].getwalletinfo()
-        if self.options.descriptors:
-            assert_equal(wi['keypoolsize_hd_internal'], 400)
-            assert_equal(wi['keypoolsize'], 400)
-        else:
-            assert_equal(wi['keypoolsize_hd_internal'], 100)
-            assert_equal(wi['keypoolsize'], 100)
+        with WalletUnlock(nodes[0], 'test'):
+            nodes[0].keypoolrefill(100)
+            wi = nodes[0].getwalletinfo()
+            if self.options.descriptors:
+                assert_equal(wi['keypoolsize_hd_internal'], 400)
+                assert_equal(wi['keypoolsize'], 400)
+            else:
+                assert_equal(wi['keypoolsize_hd_internal'], 100)
+                assert_equal(wi['keypoolsize'], 100)
 
-        if not self.options.descriptors:
-            # Check that newkeypool entirely flushes the keypool
-            start_keypath = nodes[0].getaddressinfo(nodes[0].getnewaddress())['hdkeypath']
-            start_change_keypath = nodes[0].getaddressinfo(nodes[0].getrawchangeaddress())['hdkeypath']
-            # flush keypool and get new addresses
-            nodes[0].newkeypool()
-            end_keypath = nodes[0].getaddressinfo(nodes[0].getnewaddress())['hdkeypath']
-            end_change_keypath = nodes[0].getaddressinfo(nodes[0].getrawchangeaddress())['hdkeypath']
-            # The new keypath index should be 100 more than the old one
-            new_index = int(start_keypath.rsplit('/',  1)[1][:-1]) + 100
-            new_change_index = int(start_change_keypath.rsplit('/',  1)[1][:-1]) + 100
-            assert_equal(end_keypath, "m/0'/0'/" + str(new_index) + "'")
-            assert_equal(end_change_keypath, "m/0'/1'/" + str(new_change_index) + "'")
+            if not self.options.descriptors:
+                # Check that newkeypool entirely flushes the keypool
+                start_keypath = nodes[0].getaddressinfo(nodes[0].getnewaddress())['hdkeypath']
+                start_change_keypath = nodes[0].getaddressinfo(nodes[0].getrawchangeaddress())['hdkeypath']
+                # flush keypool and get new addresses
+                nodes[0].newkeypool()
+                end_keypath = nodes[0].getaddressinfo(nodes[0].getnewaddress())['hdkeypath']
+                end_change_keypath = nodes[0].getaddressinfo(nodes[0].getrawchangeaddress())['hdkeypath']
+                # The new keypath index should be 100 more than the old one
+                new_index = int(start_keypath.rsplit('/',  1)[1][:-1]) + 100
+                new_change_index = int(start_change_keypath.rsplit('/',  1)[1][:-1]) + 100
+                assert_equal(end_keypath, "m/0'/0'/" + str(new_index) + "'")
+                assert_equal(end_change_keypath, "m/0'/1'/" + str(new_change_index) + "'")
 
         # create a blank wallet
         nodes[0].createwallet(wallet_name='w2', blank=True, disable_private_keys=True)
@@ -170,9 +170,9 @@ class KeyPoolTest(BitcoinTestFramework):
         else:
             res = w2.importmulti([{'desc': desc, 'timestamp': 'now'}])
         assert_equal(res[0]['success'], True)
-        w1.walletpassphrase('test', 100)
 
-        res = w1.sendtoaddress(address=address, amount=0.00010000)
+        with WalletUnlock(w1, 'test'):
+            res = w1.sendtoaddress(address=address, amount=0.00010000)
         self.generate(nodes[0], 1)
         destination = addr.pop()
 

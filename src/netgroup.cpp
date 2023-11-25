@@ -52,8 +52,8 @@ std::vector<unsigned char> NetGroupManager::GetGroup(const CNetAddr& address) co
     } else if (address.IsCJDNS()) {
         // Treat in the same way as Tor and I2P because the address in all of
         // them is "random" bytes (derived from a public key). However in CJDNS
-        // the first byte is a constant 0xfc, so the random bytes come after it.
-        // Thus skip the constant 8 bits at the start.
+        // the first byte is a constant (see CJDNS_PREFIX), so the random bytes
+        // come after it. Thus skip the constant 8 bits at the start.
         nBits = 12;
     } else if (address.IsHeNet()) {
         // for he.net, use /36 groups

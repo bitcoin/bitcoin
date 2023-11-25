@@ -66,7 +66,7 @@ template <typename T, typename P>
 DataStream Serialize(const T& obj, const P& params)
 {
     DataStream ds{};
-    ds << WithParams(params, obj);
+    ds << params(obj);
     return ds;
 }
 
@@ -74,7 +74,7 @@ template <typename T, typename P>
 T Deserialize(DataStream&& ds, const P& params)
 {
     T obj;
-    ds >> WithParams(params, obj);
+    ds >> params(obj);
     return obj;
 }
 
@@ -83,7 +83,7 @@ void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj, const P& params
 {
     DataStream ds{buffer};
     try {
-        ds >> WithParams(params, obj);
+        ds >> params(obj);
     } catch (const std::ios_base::failure&) {
         throw invalid_fuzzing_input_exception();
     }
@@ -91,9 +91,9 @@ void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj, const P& params
 }
 
 template <typename T>
-CDataStream Serialize(const T& obj, const int version = INIT_PROTO_VERSION, const int ser_type = SER_NETWORK)
+CDataStream Serialize(const T& obj)
 {
-    CDataStream ds(ser_type, version);
+    CDataStream ds{SER_NETWORK, INIT_PROTO_VERSION};
     ds << obj;
     return ds;
 }
@@ -107,12 +107,10 @@ T Deserialize(CDataStream ds)
 }
 
 template <typename T>
-void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj, const std::optional<int> protocol_version = std::nullopt, const int ser_type = SER_NETWORK)
+void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj)
 {
-    CDataStream ds(buffer, ser_type, INIT_PROTO_VERSION);
-    if (protocol_version) {
-        ds.SetVersion(*protocol_version);
-    } else {
+    CDataStream ds{buffer, SER_NETWORK, INIT_PROTO_VERSION};
+    {
         try {
             int version;
             ds >> version;
@@ -135,9 +133,9 @@ void AssertEqualAfterSerializeDeserialize(const T& obj, const P& params)
     assert(Deserialize<T>(Serialize(obj, params), params) == obj);
 }
 template <typename T>
-void AssertEqualAfterSerializeDeserialize(const T& obj, const int version = INIT_PROTO_VERSION, const int ser_type = SER_NETWORK)
+void AssertEqualAfterSerializeDeserialize(const T& obj)
 {
-    assert(Deserialize<T>(Serialize(obj, version, ser_type)) == obj);
+    assert(Deserialize<T>(Serialize(obj)) == obj);
 }
 
 } // namespace
@@ -219,7 +217,7 @@ FUZZ_TARGET_DESERIALIZE(psbt_output_deserialize, {
 })
 FUZZ_TARGET_DESERIALIZE(block_deserialize, {
     CBlock block;
-    DeserializeFromFuzzingInput(buffer, block);
+    DeserializeFromFuzzingInput(buffer, TX_WITH_WITNESS(block));
 })
 FUZZ_TARGET_DESERIALIZE(blocklocator_deserialize, {
     CBlockLocator bl;
@@ -227,7 +225,7 @@ FUZZ_TARGET_DESERIALIZE(blocklocator_deserialize, {
 })
 FUZZ_TARGET_DESERIALIZE(blockmerkleroot, {
     CBlock block;
-    DeserializeFromFuzzingInput(buffer, block);
+    DeserializeFromFuzzingInput(buffer, TX_WITH_WITNESS(block));
     bool mutated;
     BlockMerkleRoot(block, &mutated);
 })
@@ -254,7 +252,7 @@ FUZZ_TARGET(netaddr_deserialize, .init = initialize_deserialize)
     if (!maybe_na) return;
     const CNetAddr& na{*maybe_na};
     if (na.IsAddrV1Compatible()) {
-        AssertEqualAfterSerializeDeserialize(na, ConsumeDeserializationParams<CNetAddr::SerParams>(fdp));
+        AssertEqualAfterSerializeDeserialize(na, CNetAddr::V1);
     }
     AssertEqualAfterSerializeDeserialize(na, CNetAddr::V2);
 }
@@ -266,7 +264,7 @@ FUZZ_TARGET(service_deserialize, .init = initialize_deserialize)
     if (!maybe_s) return;
     const CService& s{*maybe_s};
     if (s.IsAddrV1Compatible()) {
-        AssertEqualAfterSerializeDeserialize(s, ConsumeDeserializationParams<CNetAddr::SerParams>(fdp));
+        AssertEqualAfterSerializeDeserialize(s, CNetAddr::V1);
     }
     AssertEqualAfterSerializeDeserialize(s, CNetAddr::V2);
     if (ser_params.enc == CNetAddr::Encoding::V1) {
@@ -281,8 +279,8 @@ FUZZ_TARGET_DESERIALIZE(messageheader_deserialize, {
 FUZZ_TARGET(address_deserialize, .init = initialize_deserialize)
 {
     FuzzedDataProvider fdp{buffer.data(), buffer.size()};
-    const auto ser_enc{ConsumeDeserializationParams<CNetAddr::SerParams>(fdp)};
-    const auto maybe_a{ConsumeDeserializable<CAddress>(fdp, CAddress::SerParams{{ser_enc}, CAddress::Format::Network})};
+    const auto ser_enc{ConsumeDeserializationParams<CAddress::SerParams>(fdp)};
+    const auto maybe_a{ConsumeDeserializable<CAddress>(fdp, ser_enc)};
     if (!maybe_a) return;
     const CAddress& a{*maybe_a};
     // A CAddress in V1 mode will roundtrip

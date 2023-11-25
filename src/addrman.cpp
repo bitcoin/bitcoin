@@ -610,8 +610,9 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, std::c
             ClearNew(nUBucket, nUBucketPos);
             pinfo->nRefCount++;
             vvNew[nUBucket][nUBucketPos] = nId;
-            LogPrint(BCLog::ADDRMAN, "Added %s mapped to AS%i to new[%i][%i]\n",
-                     addr.ToStringAddrPort(), m_netgroupman.GetMappedAS(addr), nUBucket, nUBucketPos);
+            const auto mapped_as{m_netgroupman.GetMappedAS(addr)};
+            LogPrint(BCLog::ADDRMAN, "Added %s%s to new[%i][%i]\n",
+                     addr.ToStringAddrPort(), (mapped_as ? strprintf(" mapped to AS%i", mapped_as) : ""), nUBucket, nUBucketPos);
         } else {
             if (pinfo->nRefCount == 0) {
                 Delete(nId);
@@ -669,8 +670,9 @@ bool AddrManImpl::Good_(const CService& addr, bool test_before_evict, NodeSecond
     } else {
         // move nId to the tried tables
         MakeTried(info, nId);
-        LogPrint(BCLog::ADDRMAN, "Moved %s mapped to AS%i to tried[%i][%i]\n",
-                 addr.ToStringAddrPort(), m_netgroupman.GetMappedAS(addr), tried_bucket, tried_bucket_pos);
+        const auto mapped_as{m_netgroupman.GetMappedAS(addr)};
+        LogPrint(BCLog::ADDRMAN, "Moved %s%s to tried[%i][%i]\n",
+                 addr.ToStringAddrPort(), (mapped_as ? strprintf(" mapped to AS%i", mapped_as) : ""), tried_bucket, tried_bucket_pos);
         return true;
     }
 }
@@ -836,6 +838,30 @@ std::vector<CAddress> AddrManImpl::GetAddr_(size_t max_addresses, size_t max_pct
     }
     LogPrint(BCLog::ADDRMAN, "GetAddr returned %d random addresses\n", addresses.size());
     return addresses;
+}
+
+std::vector<std::pair<AddrInfo, AddressPosition>> AddrManImpl::GetEntries_(bool from_tried) const
+{
+    AssertLockHeld(cs);
+
+    const int bucket_count = from_tried ? ADDRMAN_TRIED_BUCKET_COUNT : ADDRMAN_NEW_BUCKET_COUNT;
+    std::vector<std::pair<AddrInfo, AddressPosition>> infos;
+    for (int bucket = 0; bucket < bucket_count; ++bucket) {
+        for (int position = 0; position < ADDRMAN_BUCKET_SIZE; ++position) {
+            int id = GetEntry(from_tried, bucket, position);
+            if (id >= 0) {
+                AddrInfo info = mapInfo.at(id);
+                AddressPosition location = AddressPosition(
+                    from_tried,
+                    /*multiplicity_in=*/from_tried ? 1 : info.nRefCount,
+                    bucket,
+                    position);
+                infos.emplace_back(info, location);
+            }
+        }
+    }
+
+    return infos;
 }
 
 void AddrManImpl::Connected_(const CService& addr, NodeSeconds time)
@@ -1199,6 +1225,15 @@ std::vector<CAddress> AddrManImpl::GetAddr(size_t max_addresses, size_t max_pct,
     return addresses;
 }
 
+std::vector<std::pair<AddrInfo, AddressPosition>> AddrManImpl::GetEntries(bool from_tried) const
+{
+    LOCK(cs);
+    Check();
+    auto addrInfos = GetEntries_(from_tried);
+    Check();
+    return addrInfos;
+}
+
 void AddrManImpl::Connected(const CService& addr, NodeSeconds time)
 {
     LOCK(cs);
@@ -1287,6 +1322,11 @@ std::pair<CAddress, NodeSeconds> AddrMan::Select(bool new_only, std::optional<Ne
 std::vector<CAddress> AddrMan::GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const
 {
     return m_impl->GetAddr(max_addresses, max_pct, network);
+}
+
+std::vector<std::pair<AddrInfo, AddressPosition>> AddrMan::GetEntries(bool use_tried) const
+{
+    return m_impl->GetEntries(use_tried);
 }
 
 void AddrMan::Connected(const CService& addr, NodeSeconds time)

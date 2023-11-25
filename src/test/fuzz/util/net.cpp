@@ -36,7 +36,11 @@ CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept
     } else if (network == Network::NET_IPV6) {
         if (fuzzed_data_provider.remaining_bytes() >= 16) {
             in6_addr v6_addr = {};
-            memcpy(v6_addr.s6_addr, fuzzed_data_provider.ConsumeBytes<uint8_t>(16).data(), 16);
+            auto addr_bytes = fuzzed_data_provider.ConsumeBytes<uint8_t>(16);
+            if (addr_bytes[0] == CJDNS_PREFIX) { // Avoid generating IPv6 addresses that look like CJDNS.
+                addr_bytes[0] = 0x55; // Just an arbitrary number, anything != CJDNS_PREFIX would do.
+            }
+            memcpy(v6_addr.s6_addr, addr_bytes.data(), 16);
             net_addr = CNetAddr{v6_addr, fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
         }
     } else if (network == Network::NET_INTERNAL) {
@@ -77,9 +81,10 @@ template CNetAddr::SerParams ConsumeDeserializationParams(FuzzedDataProvider&) n
 template CAddress::SerParams ConsumeDeserializationParams(FuzzedDataProvider&) noexcept;
 
 FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider)
-    : m_fuzzed_data_provider{fuzzed_data_provider}, m_selectable{fuzzed_data_provider.ConsumeBool()}
+    : Sock{fuzzed_data_provider.ConsumeIntegralInRange<SOCKET>(INVALID_SOCKET - 1, INVALID_SOCKET)},
+      m_fuzzed_data_provider{fuzzed_data_provider},
+      m_selectable{fuzzed_data_provider.ConsumeBool()}
 {
-    m_socket = fuzzed_data_provider.ConsumeIntegralInRange<SOCKET>(INVALID_SOCKET - 1, INVALID_SOCKET);
 }
 
 FuzzedSock::~FuzzedSock()

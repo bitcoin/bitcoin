@@ -14,6 +14,11 @@
 /**
  * Can be used to limit a theoretically unbounded loop. This caps the runtime
  * to avoid timeouts or OOMs.
+ *
+ * This can be used in combination with a check in the condition to confirm
+ * whether the fuzz engine provided "good" data. If the fuzz input contains
+ * invalid data, the loop aborts early. This will teach the fuzz engine to look
+ * for useful data and avoids bloating the fuzz input folder with useless data.
  */
 #define LIMITED_WHILE(condition, limit) \
     for (unsigned _count{limit}; (condition) && _count; --_count)

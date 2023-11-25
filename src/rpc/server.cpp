@@ -88,7 +88,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
     vCommands.reserve(mapCommands.size());
 
     for (const auto& entry : mapCommands)
-        vCommands.push_back(make_pair(entry.second.front()->category + entry.first, entry.second.front()));
+        vCommands.emplace_back(entry.second.front()->category + entry.first, entry.second.front());
     sort(vCommands.begin(), vCommands.end());
 
     JSONRPCRequest jreq = helpreq;
@@ -409,7 +409,7 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     }
     // Process expected parameters. If any parameters were left unspecified in
     // the request before a parameter that was specified, null values need to be
-    // inserted at the unspecifed parameter positions, and the "hole" variable
+    // inserted at the unspecified parameter positions, and the "hole" variable
     // below tracks the number of null values that need to be inserted.
     // The "initial_hole_size" variable stores the size of the initial hole,
     // i.e. how many initial positional arguments were left unspecified. This is
@@ -595,12 +595,9 @@ void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nS
     deadlineTimers.emplace(name, std::unique_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000)));
 }
 
-int RPCSerializationFlags()
+bool RPCSerializationWithoutWitness()
 {
-    int flag = 0;
-    if (gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) == 0)
-        flag |= SERIALIZE_TRANSACTION_NO_WITNESS;
-    return flag;
+    return (gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) == 0);
 }
 
 CRPCTable tableRPC;

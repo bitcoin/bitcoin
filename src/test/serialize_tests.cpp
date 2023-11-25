@@ -36,7 +36,7 @@ public:
         READWRITE(obj.boolval);
         READWRITE(obj.stringval);
         READWRITE(obj.charstrval);
-        READWRITE(obj.txval);
+        READWRITE(TX_WITH_WITNESS(obj.txval));
     }
 
     bool operator==(const CSerializeMethodsTestSingle& rhs) const
@@ -56,35 +56,37 @@ public:
 
     SERIALIZE_METHODS(CSerializeMethodsTestMany, obj)
     {
-        READWRITE(obj.intval, obj.boolval, obj.stringval, obj.charstrval, obj.txval);
+        READWRITE(obj.intval, obj.boolval, obj.stringval, obj.charstrval, TX_WITH_WITNESS(obj.txval));
     }
 };
 
 BOOST_AUTO_TEST_CASE(sizes)
 {
-    BOOST_CHECK_EQUAL(sizeof(unsigned char), GetSerializeSize((unsigned char)0, 0));
-    BOOST_CHECK_EQUAL(sizeof(int8_t), GetSerializeSize(int8_t(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(uint8_t), GetSerializeSize(uint8_t(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(int16_t), GetSerializeSize(int16_t(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(uint16_t), GetSerializeSize(uint16_t(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(int32_t), GetSerializeSize(int32_t(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(uint32_t), GetSerializeSize(uint32_t(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(int64_t), GetSerializeSize(int64_t(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(uint64_t), GetSerializeSize(uint64_t(0), 0));
+    BOOST_CHECK_EQUAL(sizeof(unsigned char), GetSerializeSize((unsigned char)0));
+    BOOST_CHECK_EQUAL(sizeof(int8_t), GetSerializeSize(int8_t(0)));
+    BOOST_CHECK_EQUAL(sizeof(uint8_t), GetSerializeSize(uint8_t(0)));
+    BOOST_CHECK_EQUAL(sizeof(int16_t), GetSerializeSize(int16_t(0)));
+    BOOST_CHECK_EQUAL(sizeof(uint16_t), GetSerializeSize(uint16_t(0)));
+    BOOST_CHECK_EQUAL(sizeof(int32_t), GetSerializeSize(int32_t(0)));
+    BOOST_CHECK_EQUAL(sizeof(uint32_t), GetSerializeSize(uint32_t(0)));
+    BOOST_CHECK_EQUAL(sizeof(int64_t), GetSerializeSize(int64_t(0)));
+    BOOST_CHECK_EQUAL(sizeof(uint64_t), GetSerializeSize(uint64_t(0)));
     // Bool is serialized as uint8_t
-    BOOST_CHECK_EQUAL(sizeof(uint8_t), GetSerializeSize(bool(0), 0));
+    BOOST_CHECK_EQUAL(sizeof(uint8_t), GetSerializeSize(bool(0)));
 
     // Sanity-check GetSerializeSize and c++ type matching
-    BOOST_CHECK_EQUAL(GetSerializeSize((unsigned char)0, 0), 1U);
-    BOOST_CHECK_EQUAL(GetSerializeSize(int8_t(0), 0), 1U);
-    BOOST_CHECK_EQUAL(GetSerializeSize(uint8_t(0), 0), 1U);
-    BOOST_CHECK_EQUAL(GetSerializeSize(int16_t(0), 0), 2U);
-    BOOST_CHECK_EQUAL(GetSerializeSize(uint16_t(0), 0), 2U);
-    BOOST_CHECK_EQUAL(GetSerializeSize(int32_t(0), 0), 4U);
-    BOOST_CHECK_EQUAL(GetSerializeSize(uint32_t(0), 0), 4U);
-    BOOST_CHECK_EQUAL(GetSerializeSize(int64_t(0), 0), 8U);
-    BOOST_CHECK_EQUAL(GetSerializeSize(uint64_t(0), 0), 8U);
-    BOOST_CHECK_EQUAL(GetSerializeSize(bool(0), 0), 1U);
+    BOOST_CHECK_EQUAL(GetSerializeSize((unsigned char)0), 1U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(int8_t(0)), 1U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(uint8_t(0)), 1U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(int16_t(0)), 2U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(uint16_t(0)), 2U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(int32_t(0)), 4U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(uint32_t(0)), 4U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(int64_t(0)), 8U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(uint64_t(0)), 8U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(bool(0)), 1U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(std::array<uint8_t, 1>{0}), 1U);
+    BOOST_CHECK_EQUAL(GetSerializeSize(std::array<uint8_t, 2>{0, 0}), 2U);
 }
 
 BOOST_AUTO_TEST_CASE(varints)
@@ -95,13 +97,13 @@ BOOST_AUTO_TEST_CASE(varints)
     DataStream::size_type size = 0;
     for (int i = 0; i < 100000; i++) {
         ss << VARINT_MODE(i, VarIntMode::NONNEGATIVE_SIGNED);
-        size += ::GetSerializeSize(VARINT_MODE(i, VarIntMode::NONNEGATIVE_SIGNED), 0);
+        size += ::GetSerializeSize(VARINT_MODE(i, VarIntMode::NONNEGATIVE_SIGNED));
         BOOST_CHECK(size == ss.size());
     }
 
     for (uint64_t i = 0;  i < 100000000000ULL; i += 999999937) {
         ss << VARINT(i);
-        size += ::GetSerializeSize(VARINT(i), 0);
+        size += ::GetSerializeSize(VARINT(i));
         BOOST_CHECK(size == ss.size());
     }
 
@@ -176,7 +178,17 @@ BOOST_AUTO_TEST_CASE(vector_bool)
     std::vector<bool> vec2{1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1};
 
     BOOST_CHECK(vec1 == std::vector<uint8_t>(vec2.begin(), vec2.end()));
-    BOOST_CHECK(SerializeHash(vec1) == SerializeHash(vec2));
+    BOOST_CHECK((HashWriter{} << vec1).GetHash() == (HashWriter{} << vec2).GetHash());
+}
+
+BOOST_AUTO_TEST_CASE(array)
+{
+    std::array<uint8_t, 32> array1{1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1};
+    DataStream ds;
+    ds << array1;
+    std::array<uint8_t, 32> array2;
+    ds >> array2;
+    BOOST_CHECK(array1 == array2);
 }
 
 BOOST_AUTO_TEST_CASE(noncanonical)
@@ -228,7 +240,7 @@ BOOST_AUTO_TEST_CASE(class_methods)
     CSerializeMethodsTestMany methodtest2(intval, boolval, stringval, charstrval, tx_ref);
     CSerializeMethodsTestSingle methodtest3;
     CSerializeMethodsTestMany methodtest4;
-    CDataStream ss(SER_DISK, PROTOCOL_VERSION);
+    DataStream ss;
     BOOST_CHECK(methodtest1 == methodtest2);
     ss << methodtest1;
     ss >> methodtest4;
@@ -238,8 +250,8 @@ BOOST_AUTO_TEST_CASE(class_methods)
     BOOST_CHECK(methodtest2 == methodtest3);
     BOOST_CHECK(methodtest3 == methodtest4);
 
-    CDataStream ss2{SER_DISK, PROTOCOL_VERSION};
-    ss2 << intval << boolval << stringval << charstrval << txval;
+    DataStream ss2;
+    ss2 << intval << boolval << stringval << charstrval << TX_WITH_WITNESS(txval);
     ss2 >> methodtest3;
     BOOST_CHECK(methodtest3 == methodtest4);
     {
@@ -255,10 +267,15 @@ BOOST_AUTO_TEST_CASE(class_methods)
     }
 }
 
-enum class BaseFormat {
-    RAW,
-    HEX,
+struct BaseFormat {
+    const enum {
+        RAW,
+        HEX,
+    } m_base_format;
+    SER_PARAMS_OPFUNC
 };
+constexpr BaseFormat RAW{BaseFormat::RAW};
+constexpr BaseFormat HEX{BaseFormat::HEX};
 
 /// (Un)serialize a number as raw byte or 2 hexadecimal chars.
 class Base
@@ -272,7 +289,7 @@ public:
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        if (s.GetParams() == BaseFormat::RAW) {
+        if (s.GetParams().m_base_format == BaseFormat::RAW) {
             s << m_base_data;
         } else {
             s << Span{HexStr(Span{&m_base_data, 1})};
@@ -282,7 +299,7 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        if (s.GetParams() == BaseFormat::RAW) {
+        if (s.GetParams().m_base_format == BaseFormat::RAW) {
             s >> m_base_data;
         } else {
             std::string hex{"aa"};
@@ -301,6 +318,8 @@ public:
         LOWER,
         UPPER,
     } m_derived_format;
+
+    SER_PARAMS_OPFUNC
 };
 
 class Derived : public Base
@@ -310,7 +329,7 @@ public:
 
     SERIALIZE_METHODS_PARAMS(Derived, obj, DerivedAndBaseFormat, fmt)
     {
-        READWRITE(WithParams(fmt.m_base_format, AsBase<Base>(obj)));
+        READWRITE(fmt.m_base_format(AsBase<Base>(obj)));
 
         if (ser_action.ForRead()) {
             std::string str;
@@ -330,20 +349,20 @@ BOOST_AUTO_TEST_CASE(with_params_base)
 
     DataStream stream;
 
-    stream << WithParams(BaseFormat::RAW, b);
+    stream << RAW(b);
     BOOST_CHECK_EQUAL(stream.str(), "\x0F");
 
     b.m_base_data = 0;
-    stream >> WithParams(BaseFormat::RAW, b);
+    stream >> RAW(b);
     BOOST_CHECK_EQUAL(b.m_base_data, 0x0F);
 
     stream.clear();
 
-    stream << WithParams(BaseFormat::HEX, b);
+    stream << HEX(b);
     BOOST_CHECK_EQUAL(stream.str(), "0f");
 
     b.m_base_data = 0;
-    stream >> WithParams(BaseFormat::HEX, b);
+    stream >> HEX(b);
     BOOST_CHECK_EQUAL(b.m_base_data, 0x0F);
 }
 
@@ -353,27 +372,30 @@ BOOST_AUTO_TEST_CASE(with_params_vector_of_base)
 
     DataStream stream;
 
-    stream << WithParams(BaseFormat::RAW, v);
+    stream << RAW(v);
     BOOST_CHECK_EQUAL(stream.str(), "\x02\x0F\xFF");
 
     v[0].m_base_data = 0;
     v[1].m_base_data = 0;
-    stream >> WithParams(BaseFormat::RAW, v);
+    stream >> RAW(v);
     BOOST_CHECK_EQUAL(v[0].m_base_data, 0x0F);
     BOOST_CHECK_EQUAL(v[1].m_base_data, 0xFF);
 
     stream.clear();
 
-    stream << WithParams(BaseFormat::HEX, v);
+    stream << HEX(v);
     BOOST_CHECK_EQUAL(stream.str(), "\x02"
                                     "0fff");
 
     v[0].m_base_data = 0;
     v[1].m_base_data = 0;
-    stream >> WithParams(BaseFormat::HEX, v);
+    stream >> HEX(v);
     BOOST_CHECK_EQUAL(v[0].m_base_data, 0x0F);
     BOOST_CHECK_EQUAL(v[1].m_base_data, 0xFF);
 }
+
+constexpr DerivedAndBaseFormat RAW_LOWER{{BaseFormat::RAW}, DerivedAndBaseFormat::DerivedFormat::LOWER};
+constexpr DerivedAndBaseFormat HEX_UPPER{{BaseFormat::HEX}, DerivedAndBaseFormat::DerivedFormat::UPPER};
 
 BOOST_AUTO_TEST_CASE(with_params_derived)
 {
@@ -381,17 +403,11 @@ BOOST_AUTO_TEST_CASE(with_params_derived)
     d.m_base_data = 0x0F;
     d.m_derived_data = "xY";
 
-    DerivedAndBaseFormat fmt;
-
     DataStream stream;
 
-    fmt.m_base_format = BaseFormat::RAW;
-    fmt.m_derived_format = DerivedAndBaseFormat::DerivedFormat::LOWER;
-    stream << WithParams(fmt, d);
+    stream << RAW_LOWER(d);
 
-    fmt.m_base_format = BaseFormat::HEX;
-    fmt.m_derived_format = DerivedAndBaseFormat::DerivedFormat::UPPER;
-    stream << WithParams(fmt, d);
+    stream << HEX_UPPER(d);
 
     BOOST_CHECK_EQUAL(stream.str(), "\x0F\x02xy"
                                     "0f\x02XY");

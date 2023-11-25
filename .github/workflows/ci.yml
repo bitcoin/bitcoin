@@ -23,11 +23,57 @@ env:
   MAKEJOBS: '-j10'
 
 jobs:
+  test-each-commit:
+    name: 'test each commit'
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'pull_request' && github.event.pull_request.commits != 1
+    timeout-minutes: 360  # Use maximum time, see https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes. Assuming a worst case time of 1 hour per commit, this leads to a --max-count=6 below.
+    env:
+      MAX_COUNT: 6
+    steps:
+      - name: Determine fetch depth
+        run: echo "FETCH_DEPTH=$((${{ github.event.pull_request.commits }} + 2))" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: ${{ env.FETCH_DEPTH }}
+      - name: Determine commit range
+        run: |
+          # Checkout HEAD~ and find the test base commit
+          # Checkout HEAD~ because it would be wasteful to rerun tests on the PR
+          # head commit that are already run by other jobs.
+          git checkout HEAD~
+          # Figure out test base commit by listing ancestors of HEAD, excluding
+          # ancestors of the most recent merge commit, limiting the list to the
+          # newest MAX_COUNT ancestors, ordering it from oldest to newest, and
+          # taking the first one.
+          #
+          # If the branch contains up to MAX_COUNT ancestor commits after the
+          # most recent merge commit, all of those commits will be tested. If it
+          # contains more, only the most recent MAX_COUNT commits will be
+          # tested.
+          #
+          # In the command below, the ^@ suffix is used to refer to all parents
+          # of the merge commit as described in:
+          # https://git-scm.com/docs/git-rev-parse#_other_rev_parent_shorthand_notations
+          # and the ^ prefix is used to exclude these parents and all their
+          # ancestors from the rev-list output as described in:
+          # https://git-scm.com/docs/git-rev-list
+          echo "TEST_BASE=$(git rev-list -n$((${{ env.MAX_COUNT }} + 1)) --reverse HEAD ^$(git rev-list -n1 --merges HEAD)^@ | head -1)" >> "$GITHUB_ENV"
+      - run: |
+          sudo apt-get update
+          sudo apt-get install clang ccache build-essential libtool autotools-dev automake pkg-config bsdmainutils python3-zmq libevent-dev libboost-dev libsqlite3-dev libdb++-dev systemtap-sdt-dev libminiupnpc-dev libnatpmp-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools qtwayland5 libqrencode-dev -y
+      - name: Compile and run tests
+        run: |
+          # Run tests on commits after the last merge commit and before the PR head commit
+          # Use clang++, because it is a bit faster and uses less memory than g++
+          git rebase --exec "echo Running test-one-commit on \$( git log -1 ) && ./autogen.sh && CC=clang CXX=clang++ ./configure && make clean && make -j $(nproc) check && ./test/functional/test_runner.py -j $(( $(nproc) * 2 ))" ${{ env.TEST_BASE }}
+
   macos-native-x86_64:
     name: 'macOS 13 native, x86_64, no depends, sqlite only, gui'
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks).
     # See: https://github.com/actions/runner-images#available-images.
-    runs-on: macos-13  # Use M1 once available https://github.com/github/roadmap/issues/528
+    runs-on: macos-13
 
     # No need to run on the read-only mirror, unless it is a PR.
     if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
@@ -46,7 +92,7 @@ jobs:
         run: clang --version
 
       - name: Install Homebrew packages
-        run: brew install boost libevent qt@5 miniupnpc libnatpmp ccache zeromq qrencode libtool automake gnu-getopt
+        run: brew install automake libtool pkg-config gnu-getopt ccache boost libevent miniupnpc libnatpmp zeromq qt@5 qrencode
 
       - name: Set Ccache directory
         run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
@@ -83,8 +129,8 @@ jobs:
       CCACHE_MAXSIZE: '200M'
       CI_CCACHE_VERSION: '4.7.5'
       CI_QT_CONF: '-release -silent -opensource -confirm-license -opengl desktop -static -static-runtime -mp -qt-zlib -qt-pcre -qt-libpng -nomake examples -nomake tests -nomake tools -no-angle -no-dbus -no-gif -no-gtk -no-ico -no-icu -no-libjpeg -no-libudev -no-sql-sqlite -no-sql-odbc -no-sqlite -no-vulkan -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdeclarative -skip doc -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtimageformats -skip qtlocation -skip qtlottie -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquick3d -skip qtquickcontrols -skip qtquickcontrols2 -skip qtquicktimeline -skip qtremoteobjects -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtsvg -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebglplugin -skip qtwebsockets -skip qtwebview -skip qtx11extras -skip qtxmlpatterns -no-openssl -no-feature-bearermanagement -no-feature-printdialog -no-feature-printer -no-feature-printpreviewdialog -no-feature-printpreviewwidget -no-feature-sql -no-feature-sqlmodel -no-feature-textbrowser -no-feature-textmarkdownwriter -no-feature-textodfwriter -no-feature-xml'
-      CI_QT_DIR: 'qt-everywhere-src-5.15.5'
-      CI_QT_URL: 'https://download.qt.io/official_releases/qt/5.15/5.15.5/single/qt-everywhere-opensource-src-5.15.5.zip'
+      CI_QT_DIR: 'qt-everywhere-src-5.15.11'
+      CI_QT_URL: 'https://download.qt.io/official_releases/qt/5.15/5.15.11/single/qt-everywhere-opensource-src-5.15.11.zip'
       PYTHONUTF8: 1
       TEST_RUNNER_TIMEOUT_FACTOR: 40
 
@@ -93,29 +139,47 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Fix Visual Studio installation
-        # See: https://github.com/actions/runner-images/issues/7832#issuecomment-1617585694.
+        # Avoid toolset ambiguity that MSVC can't handle.
         run: |
           Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
           $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
           $componentsToRemove= @(
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ARM64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.x86.x64"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.x86.x64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ATL"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ATL.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ATL.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ATL.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ATL.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.ATL.ARM64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.MFC"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.MFC.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.MFC.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.MFC.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.MFC.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.35.17.5.MFC.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM64"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM64"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ARM"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ARM.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ARM64"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL.ARM"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL.ARM.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL.ARM64"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC.ARM"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC.ARM.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC.ARM64"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64"
+            "Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64.Spectre"
           )
           [string]$workloadArgs = $componentsToRemove | ForEach-Object {" --remove " +  $_}
           $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache')
@@ -264,6 +328,10 @@ jobs:
         run: py -3 test\util\rpcauth-test.py
 
       - name: Run functional tests
-        env:
-          TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
-        run: py -3 test\functional\test_runner.py --jobs $env:NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix=$env:RUNNER_TEMP --combinedlogslen=99999999 --timeout-factor=$env:TEST_RUNNER_TIMEOUT_FACTOR $env:TEST_RUNNER_EXTRA
+        # Don't run functional tests for pull requests.
+        # The test suit regularly fails to complete in windows native github
+        # actions as a child process stops making progress. The root cause has
+        # not yet been determined.
+        # Discussed in https://github.com/bitcoin/bitcoin/pull/28509
+        if: github.event_name != 'pull_request'
+        run: py -3 test\functional\test_runner.py --jobs $env:NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix=$env:RUNNER_TEMP --combinedlogslen=99999999 --timeout-factor=$env:TEST_RUNNER_TIMEOUT_FACTOR --extended

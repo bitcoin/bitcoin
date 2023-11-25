@@ -167,19 +167,20 @@ void PSBTOperationsDialog::saveTransaction() {
 }
 
 void PSBTOperationsDialog::updateTransactionDisplay() {
-    m_ui->transactionDescription->setText(QString::fromStdString(renderTransaction(m_transaction_data)));
+    m_ui->transactionDescription->setText(renderTransaction(m_transaction_data));
     showTransactionStatus(m_transaction_data);
 }
 
-std::string PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction &psbtx)
+QString PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction &psbtx)
 {
-    QString tx_description = "";
+    QString tx_description;
+    QLatin1String bullet_point(" * ");
     CAmount totalAmount = 0;
     for (const CTxOut& out : psbtx.tx->vout) {
         CTxDestination address;
         ExtractDestination(out.scriptPubKey, address);
         totalAmount += out.nValue;
-        tx_description.append(tr(" * Sends %1 to %2")
+        tx_description.append(bullet_point).append(tr("Sends %1 to %2")
             .arg(BitcoinUnits::formatWithUnit(BitcoinUnit::BTC, out.nValue))
             .arg(QString::fromStdString(EncodeDestination(address))));
         // Check if the address is one of ours
@@ -188,7 +189,7 @@ std::string PSBTOperationsDialog::renderTransaction(const PartiallySignedTransac
     }
 
     PSBTAnalysis analysis = AnalyzePSBT(psbtx);
-    tx_description.append(" * ");
+    tx_description.append(bullet_point);
     if (!*analysis.fee) {
         // This happens if the transaction is missing input UTXO information.
         tx_description.append(tr("Unable to calculate transaction fee or total transaction amount."));
@@ -217,7 +218,7 @@ std::string PSBTOperationsDialog::renderTransaction(const PartiallySignedTransac
         tx_description.append(tr("Transaction has %1 unsigned inputs.").arg(QString::number(num_unsigned)));
     }
 
-    return tx_description.toStdString();
+    return tx_description;
 }
 
 void PSBTOperationsDialog::showStatus(const QString &msg, StatusLevel level) {

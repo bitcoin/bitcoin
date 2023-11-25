@@ -124,14 +124,13 @@ template<typename Stream> inline uint64_t ser_readdata64(Stream &s)
 // i.e. anything that supports .read(Span<std::byte>) and .write(Span<const std::byte>)
 //
 
-class CSizeComputer;
+class SizeComputer;
 
 enum
 {
     // primary actions
     SER_NETWORK         = (1 << 0),
     SER_DISK            = (1 << 1),
-    SER_GETHASH         = (1 << 2),
 };
 
 /**
@@ -215,11 +214,11 @@ const Out& AsBase(const In& x)
  *     }
  *   };
  * which would then be invoked as
- *   READWRITE(WithParams(BarParameter{...}, Using<FooFormatter>(obj.foo)))
+ *   READWRITE(BarParameter{...}(Using<FooFormatter>(obj.foo)))
  *
- * WithParams(parameter, obj) can be invoked anywhere in the call stack; it is
+ * parameter(obj) can be invoked anywhere in the call stack; it is
  * passed down recursively into all serialization code, until another
- * WithParams overrides it.
+ * serialization parameter overrides it.
  *
  * Parameters will be implicitly converted where appropriate. This means that
  * "parent" serialization code can use a parameter that derives from, or is
@@ -317,7 +316,7 @@ template <typename Stream> inline void Unserialize(Stream& s, bool& a) { uint8_t
  * size <= UINT_MAX   -- 5 bytes  (254 + 4 bytes)
  * size >  UINT_MAX   -- 9 bytes  (255 + 8 bytes)
  */
-inline unsigned int GetSizeOfCompactSize(uint64_t nSize)
+constexpr inline unsigned int GetSizeOfCompactSize(uint64_t nSize)
 {
     if (nSize < 253)             return sizeof(unsigned char);
     else if (nSize <= std::numeric_limits<uint16_t>::max()) return sizeof(unsigned char) + sizeof(uint16_t);
@@ -325,7 +324,7 @@ inline unsigned int GetSizeOfCompactSize(uint64_t nSize)
     else                         return sizeof(unsigned char) + sizeof(uint64_t);
 }
 
-inline void WriteCompactSize(CSizeComputer& os, uint64_t nSize);
+inline void WriteCompactSize(SizeComputer& os, uint64_t nSize);
 
 template<typename Stream>
 void WriteCompactSize(Stream& os, uint64_t nSize)
@@ -451,7 +450,7 @@ inline unsigned int GetSizeOfVarInt(I n)
 }
 
 template<typename I>
-inline void WriteVarInt(CSizeComputer& os, I n);
+inline void WriteVarInt(SizeComputer& os, I n);
 
 template<typename Stream, VarIntMode Mode, typename I>
 void WriteVarInt(Stream& os, I n)
@@ -1071,22 +1070,21 @@ struct ActionUnserialize {
 /* ::GetSerializeSize implementations
  *
  * Computing the serialized size of objects is done through a special stream
- * object of type CSizeComputer, which only records the number of bytes written
+ * object of type SizeComputer, which only records the number of bytes written
  * to it.
  *
  * If your Serialize or SerializationOp method has non-trivial overhead for
  * serialization, it may be worthwhile to implement a specialized version for
- * CSizeComputer, which uses the s.seek() method to record bytes that would
+ * SizeComputer, which uses the s.seek() method to record bytes that would
  * be written instead.
  */
-class CSizeComputer
+class SizeComputer
 {
 protected:
     size_t nSize{0};
 
-    const int nVersion;
 public:
-    explicit CSizeComputer(int nVersionIn) : nVersion(nVersionIn) {}
+    SizeComputer() {}
 
     void write(Span<const std::byte> src)
     {
@@ -1100,7 +1098,7 @@ public:
     }
 
     template<typename T>
-    CSizeComputer& operator<<(const T& obj)
+    SizeComputer& operator<<(const T& obj)
     {
         ::Serialize(*this, obj);
         return (*this);
@@ -1109,33 +1107,23 @@ public:
     size_t size() const {
         return nSize;
     }
-
-    int GetVersion() const { return nVersion; }
 };
 
 template<typename I>
-inline void WriteVarInt(CSizeComputer &s, I n)
+inline void WriteVarInt(SizeComputer &s, I n)
 {
     s.seek(GetSizeOfVarInt<I>(n));
 }
 
-inline void WriteCompactSize(CSizeComputer &s, uint64_t nSize)
+inline void WriteCompactSize(SizeComputer &s, uint64_t nSize)
 {
     s.seek(GetSizeOfCompactSize(nSize));
 }
 
 template <typename T>
-size_t GetSerializeSize(const T& t, int nVersion = 0)
+size_t GetSerializeSize(const T& t)
 {
-    return (CSizeComputer(nVersion) << t).size();
-}
-
-template <typename... T>
-size_t GetSerializeSizeMany(int nVersion, const T&... t)
-{
-    CSizeComputer sc(nVersion);
-    SerializeMany(sc, t...);
-    return sc.size();
+    return (SizeComputer() << t).size();
 }
 
 /** Wrapper that overrides the GetParams() function of a stream (and hides GetVersion/GetType). */
@@ -1184,17 +1172,6 @@ public:
 };
 
 /**
- * Return a wrapper around t that (de)serializes it with specified parameter params.
- *
- * See FORMATTER_METHODS_PARAMS for more information on serialization parameters.
- */
-template <typename Params, typename T>
-static auto WithParams(const Params& params, T&& t)
-{
-    return ParamsWrapper<Params, T>{params, t};
-}
-
-/**
  * Helper macro for SerParams structs
  *
  * Allows you define SerParams instances and then apply them directly
@@ -1203,8 +1180,16 @@ static auto WithParams(const Params& params, T&& t)
  *   constexpr SerParams FOO{....};
  *   ss << FOO(obj);
  */
-#define SER_PARAMS_OPFUNC \
-    template <typename T> \
-    auto operator()(T&& t) const { return WithParams(*this, t); }
+#define SER_PARAMS_OPFUNC                                                                \
+    /**                                                                                  \
+     * Return a wrapper around t that (de)serializes it with specified parameter params. \
+     *                                                                                   \
+     * See FORMATTER_METHODS_PARAMS for more information on serialization parameters.    \
+     */                                                                                  \
+    template <typename T>                                                                \
+    auto operator()(T&& t) const                                                         \
+    {                                                                                    \
+        return ParamsWrapper{*this, t};                                                  \
+    }
 
 #endif // BITCOIN_SERIALIZE_H

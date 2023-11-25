@@ -5,7 +5,7 @@
 
 import threading
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import random_bytes
+from random import randbytes
 
 
 class NetDeadlockTest(BitcoinTestFramework):
@@ -18,7 +18,7 @@ class NetDeadlockTest(BitcoinTestFramework):
         node1 = self.nodes[1]
 
         self.log.info("Simultaneously send a large message on both sides")
-        rand_msg = random_bytes(4000000).hex()
+        rand_msg = randbytes(4000000).hex()
 
         thread0 = threading.Thread(target=node0.sendmsgtopeer, args=(0, "unknown", rand_msg))
         thread1 = threading.Thread(target=node1.sendmsgtopeer, args=(0, "unknown", rand_msg))

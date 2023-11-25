@@ -61,8 +61,8 @@ static void VerifyScriptBench(benchmark::Bench& bench)
         assert(success);
 
 #if defined(HAVE_CONSENSUS_LIB)
-        CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
-        stream << txSpend;
+        DataStream stream;
+        stream << TX_WITH_WITNESS(txSpend);
         int csuccess = bitcoinconsensus_verify_script_with_amount(
             txCredit.vout[0].scriptPubKey.data(),
             txCredit.vout[0].scriptPubKey.size(),

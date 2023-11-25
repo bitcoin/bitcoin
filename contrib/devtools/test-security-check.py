@@ -8,7 +8,6 @@ Test script for security-check.py
 import lief
 import os
 import subprocess
-from typing import List
 import unittest
 
 from utils import determine_wellknown_cmd
@@ -34,7 +33,7 @@ def call_security_check(cc: str, source: str, executable: str, options) -> tuple
     #
     # See the definitions for ac_link in autoconf's lib/autoconf/c.m4 file for
     # reference.
-    env_flags: List[str] = []
+    env_flags: list[str] = []
     for var in ['CFLAGS', 'CPPFLAGS', 'LDFLAGS']:
         env_flags += filter(None, os.environ.get(var, '').split(' '))
 
@@ -129,11 +128,11 @@ class TestSecurityChecks(unittest.TestCase):
                 (1, executable+': failed NOUNDEFS PIE CONTROL_FLOW'))
             self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-fstack-protector-all', '-Wl,-fixup_chains']),
                 (1, executable+': failed PIE CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-bind_at_load','-fstack-protector-all', '-Wl,-fixup_chains']),
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-fstack-protector-all', '-Wl,-fixup_chains']),
                 (1, executable+': failed PIE CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-bind_at_load','-fstack-protector-all', '-fcf-protection=full', '-Wl,-fixup_chains']),
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-fstack-protector-all', '-fcf-protection=full', '-Wl,-fixup_chains']),
                 (1, executable+': failed PIE'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-pie','-Wl,-bind_at_load','-fstack-protector-all', '-fcf-protection=full', '-Wl,-fixup_chains']),
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-pie','-fstack-protector-all', '-fcf-protection=full', '-Wl,-fixup_chains']),
                 (0, ''))
         else:
             # arm64 darwin doesn't support non-PIE binaries, control flow or executable stacks
@@ -143,7 +142,7 @@ class TestSecurityChecks(unittest.TestCase):
                 (1, executable+': failed NOUNDEFS Canary'))
             self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-flat_namespace','-fstack-protector-all', '-Wl,-fixup_chains']),
                 (1, executable+': failed NOUNDEFS'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-bind_at_load','-fstack-protector-all', '-Wl,-fixup_chains']),
+            self.assertEqual(call_security_check(cc, source, executable, ['-fstack-protector-all', '-Wl,-fixup_chains']),
                 (0, ''))
 
 

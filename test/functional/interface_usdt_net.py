@@ -114,7 +114,7 @@ class NetTracepointTest(BitcoinTestFramework):
                          fn_name="trace_inbound_message")
         ctx.enable_probe(probe="net:outbound_message",
                          fn_name="trace_outbound_message")
-        bpf = BPF(text=net_tracepoints_program, usdt_contexts=[ctx], debug=0)
+        bpf = BPF(text=net_tracepoints_program, usdt_contexts=[ctx], debug=0, cflags=["-Wno-error=implicit-function-declaration"])
 
         EXPECTED_INOUTBOUND_VERSION_MSG = 1
         checked_inbound_version_msg = 0

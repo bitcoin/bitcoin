@@ -63,9 +63,9 @@ void BanMapFromJson(const UniValue& bans_json, banmap_t& bans)
             LogPrintf("Dropping entry with unknown version (%s) from ban list\n", version);
             continue;
         }
-        CSubNet subnet;
         const auto& subnet_str = ban_entry_json[BANMAN_JSON_ADDR_KEY].get_str();
-        if (!LookupSubNet(subnet_str, subnet)) {
+        const CSubNet subnet{LookupSubNet(subnet_str)};
+        if (!subnet.IsValid()) {
             LogPrintf("Dropping entry with unparseable address or subnet (%s) from ban list\n", subnet_str);
             continue;
         }

@@ -19,7 +19,6 @@
 #include <streams.h>
 #include <sync.h>
 #include <uint256.h>
-#include <version.h>
 #include <zmq/zmqutil.h>
 
 #include <zmq.h>
@@ -244,14 +243,14 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 {
     LogPrint(BCLog::ZMQ, "Publish rawblock %s to %s\n", pindex->GetBlockHash().GetHex(), this->address);
 
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+    DataStream ss;
     CBlock block;
     if (!m_get_block_by_index(block, *pindex)) {
         zmqError("Can't read block from disk");
         return false;
     }
 
-    ss << block;
+    ss << RPCTxSerParams(block);
 
     return SendZmqMessage(MSG_RAWBLOCK, &(*ss.begin()), ss.size());
 }
@@ -260,8 +259,8 @@ bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &tr
 {
     uint256 hash = transaction.GetHash();
     LogPrint(BCLog::ZMQ, "Publish rawtx %s to %s\n", hash.GetHex(), this->address);
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-    ss << transaction;
+    DataStream ss;
+    ss << RPCTxSerParams(transaction);
     return SendZmqMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
 }
 

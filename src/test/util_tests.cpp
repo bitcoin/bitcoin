@@ -1023,9 +1023,9 @@ BOOST_AUTO_TEST_CASE(test_FormatParagraph)
 BOOST_AUTO_TEST_CASE(test_FormatSubVersion)
 {
     std::vector<std::string> comments;
-    comments.push_back(std::string("comment1"));
+    comments.emplace_back("comment1");
     std::vector<std::string> comments2;
-    comments2.push_back(std::string("comment1"));
+    comments2.emplace_back("comment1");
     comments2.push_back(SanitizeString(std::string("Comment2; .,_?@-; !\"#$%&'()*+/<=>[]\\^`{|}~"), SAFE_CHARS_UA_COMMENT)); // Semicolon is discouraged but not forbidden by BIP-0014
     BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, std::vector<std::string>()),std::string("/Test:9.99.0/"));
     BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, comments),std::string("/Test:9.99.0(comment1)/"));

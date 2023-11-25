@@ -30,6 +30,7 @@
 #include <util/check.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
+#include <version.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -94,11 +95,17 @@ static constexpr bool DEFAULT_FIXEDSEEDS{true};
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
+static constexpr bool DEFAULT_V2_TRANSPORT{false};
+
 typedef int64_t NodeId;
 
-struct AddedNodeInfo
-{
-    std::string strAddedNode;
+struct AddedNodeParams {
+    std::string m_added_node;
+    bool m_use_v2transport;
+};
+
+struct AddedNodeInfo {
+    AddedNodeParams m_params;
     CService resolvedAddress;
     bool fConnected;
     bool fInbound;
@@ -151,29 +158,15 @@ enum
     LOCAL_MAX
 };
 
-bool IsPeerAddrLocalGood(CNode *pnode);
 /** Returns a local address that we should advertise to this peer. */
 std::optional<CService> GetLocalAddrForPeer(CNode& node);
-
-/**
- * Mark a network as reachable or unreachable (no automatic connects to it)
- * @note Networks are reachable by default
- */
-void SetReachable(enum Network net, bool reachable);
-/** @returns true if the network is reachable, false otherwise */
-bool IsReachable(enum Network net);
-/** @returns true if the address is in a reachable network, false otherwise */
-bool IsReachable(const CNetAddr& addr);
 
 bool AddLocal(const CService& addr, int nScore = LOCAL_NONE);
 bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
 void RemoveLocal(const CService& addr);
 bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr);
-bool GetLocal(CService& addr, const CNode& peer);
 CService GetLocalAddress(const CNode& peer);
-CService MaybeFlipIPv6toCJDNS(const CService& service);
-
 
 extern bool fDiscover;
 extern bool fListen;
@@ -228,6 +221,10 @@ public:
     Network m_network;
     uint32_t m_mapped_as;
     ConnectionType m_conn_type;
+    /** Transport protocol type. */
+    TransportProtocolType m_transport_type;
+    /** BIP324 session id string in hex, if any. */
+    std::string m_session_id;
 };
 
 
@@ -263,6 +260,15 @@ public:
 class Transport {
 public:
     virtual ~Transport() {}
+
+    struct Info
+    {
+        TransportProtocolType transport_type;
+        std::optional<uint256> session_id;
+    };
+
+    /** Retrieve information about this transport. */
+    virtual Info GetInfo() const noexcept = 0;
 
     // 1. Receiver side functions, for decoding bytes received on the wire into transport protocol
     // agnostic CNetMessage (message type & payload) objects.
@@ -357,12 +363,17 @@ public:
 
     /** Return the memory usage of this transport attributable to buffered data to send. */
     virtual size_t GetSendMemoryUsage() const noexcept = 0;
+
+    // 3. Miscellaneous functions.
+
+    /** Whether upon disconnections, a reconnect with V1 is warranted. */
+    virtual bool ShouldReconnectV1() const noexcept = 0;
 };
 
 class V1Transport final : public Transport
 {
 private:
-    MessageStartChars m_magic_bytes;
+    const MessageStartChars m_magic_bytes;
     const NodeId m_node_id; // Only for logging
     mutable Mutex m_recv_mutex; //!< Lock for receive state
     mutable CHash256 hasher GUARDED_BY(m_recv_mutex);
@@ -417,6 +428,8 @@ public:
         return WITH_LOCK(m_recv_mutex, return CompleteInternal());
     }
 
+    Info GetInfo() const noexcept override;
+
     bool ReceivedBytes(Span<const uint8_t>& msg_bytes) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
     {
         AssertLockNotHeld(m_recv_mutex);
@@ -436,6 +449,7 @@ public:
     BytesToSend GetBytesToSend(bool have_next_message) const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
     void MarkBytesSent(size_t bytes_sent) noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
     size_t GetSendMemoryUsage() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
+    bool ShouldReconnectV1() const noexcept override { return false; }
 };
 
 class V2Transport final : public Transport
@@ -448,7 +462,7 @@ private:
 
     /** The length of the V1 prefix to match bytes initially received by responders with to
      *  determine if their peer is speaking V1 or V2. */
-    static constexpr size_t V1_PREFIX_LEN = 12;
+    static constexpr size_t V1_PREFIX_LEN = 16;
 
     // The sender side and receiver side of V2Transport are state machines that are transitioned
     // through, based on what has been received. The receive state corresponds to the contents of,
@@ -462,10 +476,10 @@ private:
      *
      *   start(responder)
      *        |
-     *        |  start(initiator)                                       /---------\
-     *        |          |                                              |         |
-     *        v          v                                              v         |
-     *  KEY_MAYBE_V1 -> KEY -> GARB_GARBTERM -> GARBAUTH -> VERSION -> APP -> APP_READY
+     *        |  start(initiator)                           /---------\
+     *        |          |                                  |         |
+     *        v          v                                  v         |
+     *  KEY_MAYBE_V1 -> KEY -> GARB_GARBTERM -> VERSION -> APP -> APP_READY
      *        |
      *        \-------> V1
      */
@@ -487,24 +501,19 @@ private:
         /** Garbage and garbage terminator.
          *
          * Whenever a byte is received, the last 16 bytes are compared with the expected garbage
-         * terminator. When that happens, the state becomes GARBAUTH. If no matching terminator is
+         * terminator. When that happens, the state becomes VERSION. If no matching terminator is
          * received in 4111 bytes (4095 for the maximum garbage length, and 16 bytes for the
          * terminator), the connection aborts. */
         GARB_GARBTERM,
 
-        /** Garbage authentication packet.
-         *
-         * A packet is received, and decrypted/verified with AAD set to the garbage received during
-         * the GARB_GARBTERM state. If that succeeds, the state becomes VERSION. If it fails the
-         * connection aborts. */
-        GARBAUTH,
-
         /** Version packet.
          *
-         * A packet is received, and decrypted/verified. If that succeeds, the state becomes APP,
-         * and the decrypted contents is interpreted as version negotiation (currently, that means
-         * ignoring it, but it can be used for negotiating future extensions). If it fails, the
-         * connection aborts. */
+         * A packet is received, and decrypted/verified. If that fails, the connection aborts. The
+         * first received packet in this state (whether it's a decoy or not) is expected to
+         * authenticate the garbage received during the GARB_GARBTERM state as associated
+         * authenticated data (AAD). The first non-decoy packet in this state is interpreted as
+         * version negotiation (currently, that means ignoring the contents, but it can be used for
+         * negotiating future extensions), and afterwards the state becomes APP. */
         VERSION,
 
         /** Application packet.
@@ -558,9 +567,9 @@ private:
         /** Normal sending state.
          *
          * In this state, the ciphers are initialized, so packets can be sent. When this state is
-         * entered, the garbage terminator, garbage authentication packet, and version
-         * packet are appended to the send buffer (in addition to the key and garbage which may
-         * still be there). In this state a message can be provided if the send buffer is empty. */
+         * entered, the garbage terminator and version packet are appended to the send buffer (in
+         * addition to the key and garbage which may still be there). In this state a message can be
+         * provided if the send buffer is empty. */
         READY,
 
         /** This transport is using v1 fallback.
@@ -580,13 +589,13 @@ private:
 
     /** Lock for receiver-side fields. */
     mutable Mutex m_recv_mutex ACQUIRED_BEFORE(m_send_mutex);
-    /** In {GARBAUTH, VERSION, APP}, the decrypted packet length, if m_recv_buffer.size() >=
+    /** In {VERSION, APP}, the decrypted packet length, if m_recv_buffer.size() >=
      *  BIP324Cipher::LENGTH_LEN. Unspecified otherwise. */
     uint32_t m_recv_len GUARDED_BY(m_recv_mutex) {0};
     /** Receive buffer; meaning is determined by m_recv_state. */
     std::vector<uint8_t> m_recv_buffer GUARDED_BY(m_recv_mutex);
-    /** During GARBAUTH, the garbage received during GARB_GARBTERM. */
-    std::vector<uint8_t> m_recv_garbage GUARDED_BY(m_recv_mutex);
+    /** AAD expected in next received packet (currently used only for garbage). */
+    std::vector<uint8_t> m_recv_aad GUARDED_BY(m_recv_mutex);
     /** Buffer to put decrypted contents in, for converting to CNetMessage. */
     std::vector<uint8_t> m_recv_decode_buffer GUARDED_BY(m_recv_mutex);
     /** Deserialization type. */
@@ -609,6 +618,8 @@ private:
     std::string m_send_type GUARDED_BY(m_send_mutex);
     /** Current sender state. */
     SendState m_send_state GUARDED_BY(m_send_mutex);
+    /** Whether we've sent at least 24 bytes (which would trigger disconnect for V1 peers). */
+    bool m_sent_v1_header_worth GUARDED_BY(m_send_mutex) {false};
 
     /** Change the receive state. */
     void SetReceiveState(RecvState recv_state) noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
@@ -626,7 +637,7 @@ private:
     bool ProcessReceivedKeyBytes() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex, !m_send_mutex);
     /** Process bytes in m_recv_buffer, while in GARB_GARBTERM state. */
     bool ProcessReceivedGarbageBytes() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
-    /** Process bytes in m_recv_buffer, while in GARBAUTH/VERSION/APP state. */
+    /** Process bytes in m_recv_buffer, while in VERSION/APP state. */
     bool ProcessReceivedPacketBytes() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
 
 public:
@@ -654,6 +665,10 @@ public:
     BytesToSend GetBytesToSend(bool have_next_message) const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
     void MarkBytesSent(size_t bytes_sent) noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
     size_t GetSendMemoryUsage() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
+
+    // Miscellaneous functions.
+    bool ShouldReconnectV1() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex, !m_send_mutex);
+    Info GetInfo() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
 };
 
 struct CNodeOptions
@@ -662,6 +677,7 @@ struct CNodeOptions
     std::unique_ptr<i2p::sam::Session> i2p_sam_session = nullptr;
     bool prefer_evict = false;
     size_t recv_flood_size{DEFAULT_MAXRECEIVEBUFFER * 1000};
+    bool use_v2transport = false;
 };
 
 /** Information about a peer */
@@ -706,6 +722,8 @@ public:
     // Bind address of our side of the connection
     const CAddress addrBind;
     const std::string m_addr_name;
+    /** The pszDest argument provided to ConnectNode(). Only used for reconnections. */
+    const std::string m_dest;
     //! Whether this peer is an inbound onion, i.e. connected via our Tor onion service.
     const bool m_inbound_onion;
     std::atomic<int> nVersion{0};
@@ -833,6 +851,9 @@ public:
      * @return network the peer connected through.
      */
     Network ConnectedThroughNetwork() const;
+
+    /** Whether this peer connected through a privacy network. */
+    [[nodiscard]] bool IsConnectedThroughPrivacyNet() const;
 
     // We selected peer as (compact blocks) high-bandwidth peer (BIP152)
     std::atomic<bool> m_bip152_highbandwidth_to{false};
@@ -1025,11 +1046,7 @@ public:
     struct Options
     {
         ServiceFlags nLocalServices = NODE_NONE;
-        int nMaxConnections = 0;
-        int m_max_outbound_full_relay = 0;
-        int m_max_outbound_block_relay = 0;
-        int nMaxAddnode = 0;
-        int nMaxFeeler = 0;
+        int m_max_automatic_connections = 0;
         CClientUIInterface* uiInterface = nullptr;
         NetEventsInterface* m_msgproc = nullptr;
         BanMan* m_banman = nullptr;
@@ -1056,13 +1073,12 @@ public:
         AssertLockNotHeld(m_total_bytes_sent_mutex);
 
         nLocalServices = connOptions.nLocalServices;
-        nMaxConnections = connOptions.nMaxConnections;
-        m_max_outbound_full_relay = std::min(connOptions.m_max_outbound_full_relay, connOptions.nMaxConnections);
-        m_max_outbound_block_relay = connOptions.m_max_outbound_block_relay;
+        m_max_automatic_connections = connOptions.m_max_automatic_connections;
+        m_max_outbound_full_relay = std::min(MAX_OUTBOUND_FULL_RELAY_CONNECTIONS, m_max_automatic_connections);
+        m_max_outbound_block_relay = std::min(MAX_BLOCK_RELAY_ONLY_CONNECTIONS, m_max_automatic_connections - m_max_outbound_full_relay);
+        m_max_automatic_outbound = m_max_outbound_full_relay + m_max_outbound_block_relay + m_max_feeler;
+        m_max_inbound = std::max(0, m_max_automatic_connections - m_max_automatic_outbound);
         m_use_addrman_outgoing = connOptions.m_use_addrman_outgoing;
-        nMaxAddnode = connOptions.nMaxAddnode;
-        nMaxFeeler = connOptions.nMaxFeeler;
-        m_max_outbound = m_max_outbound_full_relay + m_max_outbound_block_relay + nMaxFeeler;
         m_client_interface = connOptions.uiInterface;
         m_banman = connOptions.m_banman;
         m_msgproc = connOptions.m_msgproc;
@@ -1076,7 +1092,11 @@ public:
         vWhitelistedRange = connOptions.vWhitelistedRange;
         {
             LOCK(m_added_nodes_mutex);
-            m_added_nodes = connOptions.m_added_nodes;
+
+            for (const std::string& added_node : connOptions.m_added_nodes) {
+                // -addnode cli arg does not currently have a way to signal BIP324 support
+                m_added_node_params.push_back({added_node, false});
+            }
         }
         m_onion_binds = connOptions.onion_binds;
     }
@@ -1100,7 +1120,7 @@ public:
     bool GetNetworkActive() const { return fNetworkActive; };
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
-    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant* grantOutbound, const char* strDest, ConnectionType conn_type) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant&& grant_outbound, const char* strDest, ConnectionType conn_type, bool use_v2transport) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
     bool CheckIncomingNonce(uint64_t nonce);
 
     // alias for thread safety annotations only, not defined
@@ -1163,9 +1183,10 @@ public:
     // Count the number of block-relay-only peers we have over our limit.
     int GetExtraBlockRelayCount() const;
 
-    bool AddNode(const std::string& node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
+    bool AddNode(const AddedNodeParams& add) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     bool RemoveAddedNode(const std::string& node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
-    std::vector<AddedNodeInfo> GetAddedNodeInfo() const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
+    bool AddedNodesContain(const CAddress& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
+    std::vector<AddedNodeInfo> GetAddedNodeInfo(bool include_connected) const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
 
     /**
      * Attempts to open a connection. Currently only used from tests.
@@ -1246,10 +1267,10 @@ private:
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
     bool InitBinds(const Options& options);
 
-    void ThreadOpenAddedConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_unused_i2p_sessions_mutex);
+    void ThreadOpenAddedConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
     void AddAddrFetch(const std::string& strDest) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex);
     void ProcessAddrFetch() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_unused_i2p_sessions_mutex);
-    void ThreadOpenConnections(std::vector<std::string> connect) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex);
+    void ThreadOpenConnections(std::vector<std::string> connect) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
     void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
     void ThreadI2PAcceptIncoming();
     void AcceptConnection(const ListenSocket& hListenSocket);
@@ -1267,7 +1288,7 @@ private:
                                       const CAddress& addr_bind,
                                       const CAddress& addr);
 
-    void DisconnectNodes();
+    void DisconnectNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_nodes_mutex);
     void NotifyNumConnectionsChanged();
     /** Return true if the peer is inactive and should be disconnected. */
     bool InactivityCheck(const CNode& node) const;
@@ -1299,13 +1320,12 @@ private:
      */
     void SocketHandlerListening(const Sock::EventsPerSock& events_per_sock);
 
-    void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc);
+    void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc, !m_nodes_mutex, !m_reconnections_mutex);
     void ThreadDNSAddressSeed() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_nodes_mutex);
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
     CNode* FindNode(const CNetAddr& ip);
-    CNode* FindNode(const CSubNet& subNet);
     CNode* FindNode(const std::string& addrName);
     CNode* FindNode(const CService& addr);
 
@@ -1316,7 +1336,7 @@ private:
     bool AlreadyConnectedToAddress(const CAddress& addr);
 
     bool AttemptToEvictConnection();
-    CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, ConnectionType conn_type) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+    CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, ConnectionType conn_type, bool use_v2transport) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
     void AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNetAddr &addr) const;
 
     void DeleteNode(CNode* pnode);
@@ -1388,7 +1408,10 @@ private:
     const NetGroupManager& m_netgroupman;
     std::deque<std::string> m_addr_fetches GUARDED_BY(m_addr_fetches_mutex);
     Mutex m_addr_fetches_mutex;
-    std::vector<std::string> m_added_nodes GUARDED_BY(m_added_nodes_mutex);
+
+    // connection string and whether to use v2 p2p
+    std::vector<AddedNodeParams> m_added_node_params GUARDED_BY(m_added_nodes_mutex);
+
     mutable Mutex m_added_nodes_mutex;
     std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
     std::list<CNode*> m_nodes_disconnected;
@@ -1440,7 +1463,18 @@ private:
 
     std::unique_ptr<CSemaphore> semOutbound;
     std::unique_ptr<CSemaphore> semAddnode;
-    int nMaxConnections;
+
+    /**
+     * Maximum number of automatic connections permitted, excluding manual
+     * connections but including inbounds. May be changed by the user and is
+     * potentially limited by the operating system (number of file descriptors).
+     */
+    int m_max_automatic_connections;
+
+    /*
+     * Maximum number of peers by connection type. Might vary from defaults
+     * based on -maxconnections init value.
+     */
 
     // How many full-relay (tx, block, addr) outbound peers we want
     int m_max_outbound_full_relay;
@@ -1449,9 +1483,11 @@ private:
     // We do not relay tx or addr messages with these peers
     int m_max_outbound_block_relay;
 
-    int nMaxAddnode;
-    int nMaxFeeler;
-    int m_max_outbound;
+    int m_max_addnode{MAX_ADDNODE_CONNECTIONS};
+    int m_max_feeler{MAX_FEELER_CONNECTIONS};
+    int m_max_automatic_outbound;
+    int m_max_inbound;
+
     bool m_use_addrman_outgoing;
     CClientUIInterface* m_client_interface;
     NetEventsInterface* m_msgproc;
@@ -1528,6 +1564,29 @@ private:
     std::queue<std::unique_ptr<i2p::sam::Session>> m_unused_i2p_sessions GUARDED_BY(m_unused_i2p_sessions_mutex);
 
     /**
+     * Mutex protecting m_reconnections.
+     */
+    Mutex m_reconnections_mutex;
+
+    /** Struct for entries in m_reconnections. */
+    struct ReconnectionInfo
+    {
+        CAddress addr_connect;
+        CSemaphoreGrant grant;
+        std::string destination;
+        ConnectionType conn_type;
+        bool use_v2transport;
+    };
+
+    /**
+     * List of reconnections we have to make.
+     */
+    std::list<ReconnectionInfo> m_reconnections GUARDED_BY(m_reconnections_mutex);
+
+    /** Attempt reconnections, if m_reconnections non-empty. */
+    void PerformReconnections() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_unused_i2p_sessions_mutex);
+
+    /**
      * Cap on the size of `m_unused_i2p_sessions`, to ensure it does not
      * unexpectedly use too much memory.
      */
@@ -1574,12 +1633,6 @@ private:
 
     friend struct ConnmanTestMsg;
 };
-
-/** Dump binary message to file, with timestamp */
-void CaptureMessageToFile(const CAddress& addr,
-                          const std::string& msg_type,
-                          Span<const unsigned char> data,
-                          bool is_incoming);
 
 /** Defaults to `CaptureMessageToFile()`, but can be overridden by unit tests. */
 extern std::function<void(const CAddress& addr,

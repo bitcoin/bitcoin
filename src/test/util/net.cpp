@@ -4,11 +4,15 @@
 
 #include <test/util/net.h>
 
-#include <chainparams.h>
-#include <node/eviction.h>
 #include <net.h>
 #include <net_processing.h>
+#include <netaddress.h>
 #include <netmessagemaker.h>
+#include <node/connection_types.h>
+#include <node/eviction.h>
+#include <protocol.h>
+#include <random.h>
+#include <serialize.h>
 #include <span.h>
 
 #include <vector>
@@ -96,6 +100,17 @@ bool ConnmanTestMsg::ReceiveMsgFrom(CNode& node, CSerializedNetMsg&& ser_msg) co
         node.m_transport->MarkBytesSent(to_send.size());
     }
     return complete;
+}
+
+CNode* ConnmanTestMsg::ConnectNodePublic(PeerManager& peerman, const char* pszDest, ConnectionType conn_type)
+{
+    CNode* node = ConnectNode(CAddress{}, pszDest, /*fCountFailure=*/false, conn_type, /*use_v2transport=*/true);
+    if (!node) return nullptr;
+    node->SetCommonVersion(PROTOCOL_VERSION);
+    peerman.InitializeNode(*node, ServiceFlags(NODE_NETWORK | NODE_WITNESS));
+    node->fSuccessfullyConnected = true;
+    AddTestNode(*node);
+    return node;
 }
 
 std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candidates, FastRandomContext& random_context)

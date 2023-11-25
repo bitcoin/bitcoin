@@ -259,7 +259,7 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
 {
     PreSelectedInputs result;
     const bool can_grind_r = wallet.CanGrindR();
-    std::map<COutPoint, CAmount> map_of_bump_fees = wallet.chain().CalculateIndividualBumpFees(coin_control.ListSelected(), coin_selection_params.m_effective_feerate);
+    std::map<COutPoint, CAmount> map_of_bump_fees = wallet.chain().calculateIndividualBumpFees(coin_control.ListSelected(), coin_selection_params.m_effective_feerate);
     for (const COutPoint& outpoint : coin_control.ListSelected()) {
         int input_bytes = -1;
         CTxOut txout;
@@ -321,7 +321,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     std::set<uint256> trusted_parents;
     for (const auto& entry : wallet.mapWallet)
     {
-        const uint256& wtxid = entry.first;
+        const uint256& txid = entry.first;
         const CWalletTx& wtx = entry.second;
 
         if (wallet.IsTxImmatureCoinBase(wtx) && !params.include_immature_coinbase)
@@ -381,7 +381,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
             const CTxOut& output = wtx.tx->vout[i];
-            const COutPoint outpoint(wtxid, i);
+            const COutPoint outpoint(Txid::FromUint256(txid), i);
 
             if (output.nValue < params.min_amount || output.nValue > params.max_amount)
                 continue;
@@ -453,7 +453,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     }
 
     if (feerate.has_value()) {
-        std::map<COutPoint, CAmount> map_of_bump_fees = wallet.chain().CalculateIndividualBumpFees(outpoints, feerate.value());
+        std::map<COutPoint, CAmount> map_of_bump_fees = wallet.chain().calculateIndividualBumpFees(outpoints, feerate.value());
 
         for (auto& [_, outputs] : result.coins) {
             for (auto& output : outputs) {
@@ -505,8 +505,15 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
     coins_params.skip_locked = false;
     for (const COutput& coin : AvailableCoins(wallet, &coin_control, /*feerate=*/std::nullopt, coins_params).All()) {
         CTxDestination address;
-        if ((coin.spendable || (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.solvable)) &&
-            ExtractDestination(FindNonChangeParentOutput(wallet, coin.outpoint).scriptPubKey, address)) {
+        if ((coin.spendable || (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.solvable))) {
+            if (!ExtractDestination(FindNonChangeParentOutput(wallet, coin.outpoint).scriptPubKey, address)) {
+                // For backwards compatibility, we convert P2PK output scripts into PKHash destinations
+                if (auto pk_dest = std::get_if<PubKeyDestination>(&address)) {
+                    address = PKHash(pk_dest->GetPubKey());
+                } else {
+                    continue;
+                }
+            }
             result[address].emplace_back(coin);
         }
     }
@@ -718,7 +725,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
             outpoints.push_back(coin->outpoint);
             summed_bump_fees += coin->ancestor_bump_fees;
         }
-        std::optional<CAmount> combined_bump_fee = chain.CalculateCombinedBumpFee(outpoints, coin_selection_params.m_effective_feerate);
+        std::optional<CAmount> combined_bump_fee = chain.calculateCombinedBumpFee(outpoints, coin_selection_params.m_effective_feerate);
         if (!combined_bump_fee.has_value()) {
             return util::Error{_("Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.")};
         }
@@ -1071,10 +1078,10 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // vouts to the payees
     for (const auto& recipient : vecSend)
     {
-        CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
+        CTxOut txout(recipient.nAmount, GetScriptForDestination(recipient.dest));
 
         // Include the fee cost for outputs.
-        coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, PROTOCOL_VERSION);
+        coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout);
 
         if (IsDust(txout, wallet.chain().relayDustFee())) {
             return util::Error{_("Transaction amount too small")};
@@ -1144,7 +1151,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // behavior."
     const uint32_t nSequence{coin_control.m_signal_bip125_rbf.value_or(wallet.m_signal_rbf) ? MAX_BIP125_RBF_SEQUENCE : CTxIn::MAX_SEQUENCE_NONFINAL};
     for (const auto& coin : selected_coins) {
-        txNew.vin.push_back(CTxIn(coin->outpoint, CScript(), nSequence));
+        txNew.vin.emplace_back(coin->outpoint, CScript(), nSequence);
     }
     DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
 
@@ -1250,7 +1257,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     }
 
     // Before we return success, we assume any change key will be used to prevent
-    // accidental re-use.
+    // accidental reuse.
     reservedest.KeepDestination();
 
     wallet.WalletLogPrintf("Fee Calculation: Fee:%d Bytes:%u Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
@@ -1292,7 +1299,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(
         CCoinControl tmp_cc = coin_control;
         tmp_cc.m_avoid_partial_spends = true;
 
-        // Re-use the change destination from the first creation attempt to avoid skipping BIP44 indexes
+        // Reuse the change destination from the first creation attempt to avoid skipping BIP44 indexes
         const int ungrouped_change_pos = txr_ungrouped.change_pos;
         if (ungrouped_change_pos != -1) {
             ExtractDestination(txr_ungrouped.tx->vout[ungrouped_change_pos].scriptPubKey, tmp_cc.destChange);
@@ -1319,7 +1326,9 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
     // Turn the txout set into a CRecipient vector.
     for (size_t idx = 0; idx < tx.vout.size(); idx++) {
         const CTxOut& txOut = tx.vout[idx];
-        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
+        CTxDestination dest;
+        ExtractDestination(txOut.scriptPubKey, dest);
+        CRecipient recipient = {dest, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
         vecSend.push_back(recipient);
     }
 

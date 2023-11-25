@@ -43,7 +43,7 @@ struct TestSubscriber final : public CValidationInterface {
         BOOST_CHECK_EQUAL(m_expected_tip, pindexNew->GetBlockHash());
     }
 
-    void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override
+    void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override
     {
         BOOST_CHECK_EQUAL(m_expected_tip, block->hashPrevBlock);
         BOOST_CHECK_EQUAL(m_expected_tip, pindex->pprev->GetBlockHash());
@@ -117,7 +117,7 @@ std::shared_ptr<const CBlock> MinerTestingSetup::BadBlock(const uint256& prev_ha
     auto pblock = Block(prev_hash);
 
     CMutableTransaction coinbase_spend;
-    coinbase_spend.vin.push_back(CTxIn(COutPoint(pblock->vtx[0]->GetHash(), 0), CScript(), 0));
+    coinbase_spend.vin.emplace_back(COutPoint(pblock->vtx[0]->GetHash(), 0), CScript(), 0);
     coinbase_spend.vout.push_back(pblock->vtx[0]->vout[0]);
 
     CTransactionRef tx = MakeTransactionRef(coinbase_spend);
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
         std::vector<CTransactionRef> txs;
         for (int num_txs = 22; num_txs > 0; --num_txs) {
             CMutableTransaction mtx;
-            mtx.vin.push_back(CTxIn{COutPoint{last_mined->vtx[0]->GetHash(), 1}, CScript{}});
+            mtx.vin.emplace_back(COutPoint{last_mined->vtx[0]->GetHash(), 1}, CScript{});
             mtx.vin[0].scriptWitness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
             mtx.vout.push_back(last_mined->vtx[0]->vout[1]);
             mtx.vout[0].nValue -= 1000;
@@ -283,8 +283,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
 
         // Check that all txs are in the pool
         {
-            LOCK(m_node.mempool->cs);
-            BOOST_CHECK_EQUAL(m_node.mempool->mapTx.size(), txs.size());
+            BOOST_CHECK_EQUAL(m_node.mempool->size(), txs.size());
         }
 
         // Run a thread that simulates an RPC caller that is polling while
@@ -295,7 +294,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
             // not some intermediate amount.
             while (true) {
                 LOCK(m_node.mempool->cs);
-                if (m_node.mempool->mapTx.size() == 0) {
+                if (m_node.mempool->size() == 0) {
                     // We are done with the reorg
                     break;
                 }
@@ -304,7 +303,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
                 // be atomic. So the caller assumes that the returned mempool
                 // is consistent. That is, it has all txs that were there
                 // before the reorg.
-                assert(m_node.mempool->mapTx.size() == txs.size());
+                assert(m_node.mempool->size() == txs.size());
                 continue;
             }
             LOCK(cs_main);

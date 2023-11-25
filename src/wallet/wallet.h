@@ -178,7 +178,7 @@ static const std::map<std::string,WalletFlags> WALLET_FLAG_MAP{
  * Instantiating a ReserveDestination does not reserve an address. To do so,
  * GetReservedDestination() needs to be called on the object. Once an address has been
  * reserved, call KeepDestination() on the ReserveDestination object to make sure it is not
- * returned. Call ReturnDestination() to return the address so it can be re-used (for
+ * returned. Call ReturnDestination() to return the address so it can be reused (for
  * example, if the address was used in a new transaction
  * and that transaction was not completed and needed to be aborted).
  *
@@ -288,7 +288,7 @@ inline std::optional<AddressPurpose> PurposeFromString(std::string_view s)
 
 struct CRecipient
 {
-    CScript scriptPubKey;
+    CTxDestination dest;
     CAmount nAmount;
     bool fSubtractFeeFromAmount;
 };
@@ -503,6 +503,13 @@ public:
      * <0  : conflicts with a transaction this deep in the blockchain
      *  0  : in memory pool, waiting to be included in a block
      * >=1 : this many blocks deep in the main chain
+     *
+     * Preconditions: it is only valid to call this function when the wallet is
+     * online and the block index is loaded. So this cannot be called by
+     * bitcoin-wallet tool code or by wallet migration code. If this is called
+     * without the wallet being online, it won't be able able to determine the
+     * the height of the last block processed, or the heights of blocks
+     * referenced in transaction, and might cause assert failures.
      */
     int GetTxDepthInMainChain(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool IsTxInMainChain(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
@@ -599,7 +606,7 @@ public:
     CWalletTx* AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx=nullptr, bool fFlushOnClose=true, bool rescanning_old_block = false);
     bool LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void transactionAddedToMempool(const CTransactionRef& tx) override;
-    void blockConnected(const interfaces::BlockInfo& block) override;
+    void blockConnected(ChainstateRole role, const interfaces::BlockInfo& block) override;
     void blockDisconnected(const interfaces::BlockInfo& block) override;
     void updatedBlockTip() override;
     int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
@@ -777,7 +784,7 @@ public:
     /** should probably be renamed to IsRelevantToMe */
     bool IsFromMe(const CTransaction& tx) const;
     CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const;
-    void chainStateFlushed(const CBlockLocator& loc) override;
+    void chainStateFlushed(ChainstateRole role, const CBlockLocator& loc) override;
 
     DBErrors LoadWallet();
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -1087,6 +1094,7 @@ bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_nam
 
 struct MigrationResult {
     std::string wallet_name;
+    std::shared_ptr<CWallet> wallet;
     std::shared_ptr<CWallet> watchonly_wallet;
     std::shared_ptr<CWallet> solvables_wallet;
     fs::path backup_path;

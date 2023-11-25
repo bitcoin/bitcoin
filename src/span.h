@@ -222,15 +222,32 @@ public:
     template <typename O> friend class Span;
 };
 
+// Return result of calling .data() method on type T. This is used to be able to
+// write template deduction guides for the single-parameter Span constructor
+// below that will work if the value that is passed has a .data() method, and if
+// the data method does not return a void pointer.
+//
+// It is important to check for the void type specifically below, so the
+// deduction guides can be used in SFINAE contexts to check whether objects can
+// be converted to spans. If the deduction guides did not explicitly check for
+// void, and an object was passed that returned void* from data (like
+// std::vector<bool>), the template deduction would succeed, but the Span<void>
+// object instantiation would fail, resulting in a hard error, rather than a
+// SFINAE error.
+// https://stackoverflow.com/questions/68759148/sfinae-to-detect-the-explicitness-of-a-ctad-deduction-guide
+// https://stackoverflow.com/questions/16568986/what-happens-when-you-call-data-on-a-stdvectorbool
+template<typename T>
+using DataResult = std::remove_pointer_t<decltype(std::declval<T&>().data())>;
+
 // Deduction guides for Span
 // For the pointer/size based and iterator based constructor:
 template <typename T, typename EndOrSize> Span(T*, EndOrSize) -> Span<T>;
 // For the array constructor:
 template <typename T, std::size_t N> Span(T (&)[N]) -> Span<T>;
 // For the temporaries/rvalue references constructor, only supporting const output.
-template <typename T> Span(T&&) -> Span<std::enable_if_t<!std::is_lvalue_reference_v<T>, const std::remove_pointer_t<decltype(std::declval<T&&>().data())>>>;
+template <typename T> Span(T&&) -> Span<std::enable_if_t<!std::is_lvalue_reference_v<T> && !std::is_void_v<DataResult<T&&>>, const DataResult<T&&>>>;
 // For (lvalue) references, supporting mutable output.
-template <typename T> Span(T&) -> Span<std::remove_pointer_t<decltype(std::declval<T&>().data())>>;
+template <typename T> Span(T&) -> Span<std::enable_if_t<!std::is_void_v<DataResult<T&>>, DataResult<T&>>>;
 
 /** Pop the last element off a span, and return a reference to that element. */
 template <typename T>

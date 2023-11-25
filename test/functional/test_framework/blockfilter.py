@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Helper routines relevant for compact block filters (BIP158).
 """
-from .siphash import siphash
+from .crypto.siphash import siphash
 
 
 def bip158_basic_element_hash(script_pub_key, N, block_hash):
@@ -29,7 +29,7 @@ def bip158_basic_element_hash(script_pub_key, N, block_hash):
 
 
 def bip158_relevant_scriptpubkeys(node, block_hash):
-    """ Determines the basic filter relvant scriptPubKeys as defined in BIP158:
+    """ Determines the basic filter relevant scriptPubKeys as defined in BIP158:
 
     'A basic filter MUST contain exactly the following items for each transaction in a block:
        - The previous output script (the script being spent) for each input, except for

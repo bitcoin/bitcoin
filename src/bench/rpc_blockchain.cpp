@@ -27,7 +27,7 @@ struct TestBlockAndIndex {
         std::byte a{0};
         stream.write({&a, 1}); // Prevent compaction
 
-        stream >> block;
+        stream >> TX_WITH_WITNESS(block);
 
         blockHash = block.GetHash();
         blockindex.phashBlock = &blockHash;

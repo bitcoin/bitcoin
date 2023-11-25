@@ -83,11 +83,21 @@ A small script to automatically create manpages in ../../doc/man by running the 
 This requires help2man which can be found at: https://www.gnu.org/software/help2man/
 
 With in-tree builds this tool can be run from any directory within the
-repostitory. To use this tool with out-of-tree builds set `BUILDDIR`. For
+repository. To use this tool with out-of-tree builds set `BUILDDIR`. For
 example:
 
 ```bash
 BUILDDIR=$PWD/build contrib/devtools/gen-manpages.py
+```
+
+headerssync-params.py
+=====================
+
+A script to generate optimal parameters for the headerssync module (src/headerssync.cpp). It takes no command-line
+options, as all its configuration is set at the top of the file. It runs many times faster inside PyPy. Invocation:
+
+```bash
+pypy3 contrib/devtools/headerssync-params.py
 ```
 
 gen-bitcoin-conf.sh

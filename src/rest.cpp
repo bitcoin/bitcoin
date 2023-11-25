@@ -26,8 +26,8 @@
 #include <txmempool.h>
 #include <util/any.h>
 #include <util/check.h>
+#include <util/strencodings.h>
 #include <validation.h>
-#include <version.h>
 
 #include <any>
 #include <string>
@@ -316,8 +316,8 @@ static bool rest_block(const std::any& context,
 
     switch (rf) {
     case RESTResponseFormat::BINARY: {
-        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-        ssBlock << block;
+        DataStream ssBlock;
+        ssBlock << RPCTxSerParams(block);
         std::string binaryBlock = ssBlock.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
         req->WriteReply(HTTP_OK, binaryBlock);
@@ -325,8 +325,8 @@ static bool rest_block(const std::any& context,
     }
 
     case RESTResponseFormat::HEX: {
-        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-        ssBlock << block;
+        DataStream ssBlock;
+        ssBlock << RPCTxSerParams(block);
         std::string strHex = HexStr(ssBlock) + "\n";
         req->WriteHeader("Content-Type", "text/plain");
         req->WriteReply(HTTP_OK, strHex);
@@ -722,8 +722,8 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
 
     switch (rf) {
     case RESTResponseFormat::BINARY: {
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-        ssTx << tx;
+        DataStream ssTx;
+        ssTx << RPCTxSerParams(tx);
 
         std::string binaryTx = ssTx.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
@@ -732,8 +732,8 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
     }
 
     case RESTResponseFormat::HEX: {
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-        ssTx << tx;
+        DataStream ssTx;
+        ssTx << RPCTxSerParams(tx);
 
         std::string strHex = HexStr(ssTx) + "\n";
         req->WriteHeader("Content-Type", "text/plain");
@@ -789,7 +789,6 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
 
         for (size_t i = (fCheckMemPool) ? 1 : 0; i < uriParts.size(); i++)
         {
-            uint256 txid;
             int32_t nOutput;
             std::string strTxid = uriParts[i].substr(0, uriParts[i].find('-'));
             std::string strOutput = uriParts[i].substr(uriParts[i].find('-')+1);
@@ -797,8 +796,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
             if (!ParseInt32(strOutput, &nOutput) || !IsHex(strTxid))
                 return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
 
-            txid.SetHex(strTxid);
-            vOutPoints.push_back(COutPoint(txid, (uint32_t)nOutput));
+            vOutPoints.emplace_back(TxidFromString(strTxid), (uint32_t)nOutput);
         }
 
         if (vOutPoints.size() > 0)

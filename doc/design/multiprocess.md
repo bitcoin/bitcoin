@@ -19,7 +19,7 @@ The `-debug=ipc` command line option can be used to see requests and responses b
 
 ## Installation
 
-The multiprocess feature requires [Cap'n Proto](https://capnproto.org/) and [libmultiprocess](https://github.com/chaincodelabs/libmultiprocess) as dependencies. A simple way to get starting using it without installing these dependencies manually is to use the [depends system](../depends) with the `MULTIPROCESS=1` [dependency option](../depends#dependency-options) passed to make:
+The multiprocess feature requires [Cap'n Proto](https://capnproto.org/) and [libmultiprocess](https://github.com/chaincodelabs/libmultiprocess) as dependencies. A simple way to get starting using it without installing these dependencies manually is to use the [depends system](../../depends) with the `MULTIPROCESS=1` [dependency option](../../depends#dependency-options) passed to make:
 
 ```
 cd <BITCOIN_SOURCE_DIRECTORY>
@@ -32,13 +32,13 @@ BITCOIND=bitcoin-node test/functional/test_runner.py
 
 The configure script will pick up settings and library locations from the depends directory, so there is no need to pass `--enable-multiprocess` as a separate flag when using the depends system (it's controlled by the `MULTIPROCESS=1` option).
 
-Alternately, you can install [Cap'n Proto](https://capnproto.org/) and [libmultiprocess](https://github.com/chaincodelabs/libmultiprocess) packages on your system, and just run `./configure --enable-multiprocess` without using the depends system. The configure script will be able to locate the installed packages via [pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/). See [Installation](https://github.com/chaincodelabs/libmultiprocess#installation) section of the libmultiprocess readme for install steps. See [build-unix.md](build-unix.md) and [build-osx.md](build-osx.md) for information about installing dependencies in general.
+Alternately, you can install [Cap'n Proto](https://capnproto.org/) and [libmultiprocess](https://github.com/chaincodelabs/libmultiprocess) packages on your system, and just run `./configure --enable-multiprocess` without using the depends system. The configure script will be able to locate the installed packages via [pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/). See [Installation](https://github.com/chaincodelabs/libmultiprocess/blob/master/doc/install.md) section of the libmultiprocess readme for install steps. See [build-unix.md](../build-unix.md) and [build-osx.md](../build-osx.md) for information about installing dependencies in general.
 
 ## IPC implementation details
 
 Cross process Node, Wallet, and Chain interfaces are defined in
-[`src/interfaces/`](../src/interfaces/). These are C++ classes which follow
-[conventions](developer-notes.md#internal-interface-guidelines), like passing
+[`src/interfaces/`](../../src/interfaces/). These are C++ classes which follow
+[conventions](../developer-notes.md#internal-interface-guidelines), like passing
 serializable arguments so they can be called from different processes, and
 making methods pure virtual so they can have proxy implementations that forward
 calls between processes.
@@ -58,7 +58,7 @@ actual serialization and socket communication.
 As much as possible, calls between processes are meant to work the same as
 calls within a single process without adding limitations or requiring extra
 implementation effort. Processes communicate with each other by calling regular
-[C++ interface methods](../src/interfaces/README.md). Method arguments and
+[C++ interface methods](../../src/interfaces/README.md). Method arguments and
 return values are automatically serialized and sent between processes. Object
 references and `std::function` arguments are automatically tracked and mapped
 to allow invoked code to call back into invoking code at any time, and there is

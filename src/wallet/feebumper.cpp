@@ -86,7 +86,7 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CMutableTrans
         reused_inputs.push_back(txin.prevout);
     }
 
-    std::optional<CAmount> combined_bump_fee = wallet.chain().CalculateCombinedBumpFee(reused_inputs, newFeerate);
+    std::optional<CAmount> combined_bump_fee = wallet.chain().calculateCombinedBumpFee(reused_inputs, newFeerate);
     if (!combined_bump_fee.has_value()) {
         errors.push_back(strprintf(Untranslated("Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.")));
     }
@@ -162,15 +162,15 @@ bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid)
 }
 
 Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
-                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs, std::optional<uint32_t> reduce_output)
+                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs, std::optional<uint32_t> original_change_index)
 {
-    // Cannot both specify new outputs and an output to reduce
-    if (!outputs.empty() && reduce_output.has_value()) {
-        errors.push_back(Untranslated("Cannot specify both new outputs to use and an output index to reduce"));
+    // For now, cannot specify both new outputs to use and an output index to send change
+    if (!outputs.empty() && original_change_index.has_value()) {
+        errors.push_back(Untranslated("The options 'outputs' and 'original_change_index' are incompatible. You can only either specify a new set of outputs, or designate a change output to be recycled."));
         return Result::INVALID_PARAMETER;
     }
 
-    // We are going to modify coin control later, copy to re-use
+    // We are going to modify coin control later, copy to reuse
     CCoinControl new_coin_control(coin_control);
 
     LOCK(wallet.cs_wallet);
@@ -182,8 +182,8 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     }
     const CWalletTx& wtx = it->second;
 
-    // Make sure that reduce_output is valid
-    if (reduce_output.has_value() && reduce_output.value() >= wtx.tx->vout.size()) {
+    // Make sure that original_change_index is valid
+    if (original_change_index.has_value() && original_change_index.value() >= wtx.tx->vout.size()) {
         errors.push_back(Untranslated("Change position is out of range"));
         return Result::INVALID_PARAMETER;
     }
@@ -257,12 +257,12 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     const auto& txouts = outputs.empty() ? wtx.tx->vout : outputs;
     for (size_t i = 0; i < txouts.size(); ++i) {
         const CTxOut& output = txouts.at(i);
-        if (reduce_output.has_value() ?  reduce_output.value() == i : OutputIsChange(wallet, output)) {
-            CTxDestination change_dest;
-            ExtractDestination(output.scriptPubKey, change_dest);
-            new_coin_control.destChange = change_dest;
+        CTxDestination dest;
+        ExtractDestination(output.scriptPubKey, dest);
+        if (original_change_index.has_value() ?  original_change_index.value() == i : OutputIsChange(wallet, output)) {
+            new_coin_control.destChange = dest;
         } else {
-            CRecipient recipient = {output.scriptPubKey, output.nValue, false};
+            CRecipient recipient = {dest, output.nValue, false};
             recipients.push_back(recipient);
         }
         new_outputs_value += output.nValue;
@@ -278,7 +278,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
 
         // Add change as recipient with SFFO flag enabled, so fees are deduced from it.
         // If the output differs from the original tx output (because the user customized it) a new change output will be created.
-        recipients.emplace_back(CRecipient{GetScriptForDestination(new_coin_control.destChange), new_outputs_value, /*fSubtractFeeFromAmount=*/true});
+        recipients.emplace_back(CRecipient{new_coin_control.destChange, new_outputs_value, /*fSubtractFeeFromAmount=*/true});
         new_coin_control.destChange = CNoDestination();
     }
 

@@ -323,7 +323,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
             if (!GetPaymentRequestMerchant(r.second, merchant)) {
                 merchant.clear();
             } else {
-                merchant += tr(" (Certificate was not verified)");
+                merchant = tr("%1 (Certificate was not verified)").arg(merchant);
             }
             if (!merchant.isNull()) {
                 strHTML += "<b>" + tr("Merchant") + ":</b> " + GUIUtil::HtmlEscape(merchant) + "<br>";
@@ -360,12 +360,10 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
         {
             COutPoint prevout = txin.prevout;
 
-            Coin prev;
-            if(node.getUnspentOutput(prevout, prev))
-            {
+            if (auto prev{node.getUnspentOutput(prevout)}) {
                 {
                     strHTML += "<li>";
-                    const CTxOut &vout = prev.out;
+                    const CTxOut& vout = prev->out;
                     CTxDestination address;
                     if (ExtractDestination(vout.scriptPubKey, address))
                     {

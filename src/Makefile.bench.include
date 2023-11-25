@@ -28,6 +28,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/data.cpp \
   bench/data.h \
   bench/descriptors.cpp \
+  bench/disconnected_transactions.cpp \
   bench/duplicate_inputs.cpp \
   bench/ellswift.cpp \
   bench/examples.cpp \

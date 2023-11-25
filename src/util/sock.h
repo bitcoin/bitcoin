@@ -21,16 +21,12 @@
 static constexpr auto MAX_WAIT_FOR_IO = 1s;
 
 /**
- * RAII helper class that manages a socket. Mimics `std::unique_ptr`, but instead of a pointer it
- * contains a socket and closes it automatically when it goes out of scope.
+ * RAII helper class that manages a socket and closes it automatically when it goes out of scope.
  */
 class Sock
 {
 public:
-    /**
-     * Default constructor, creates an empty object that does nothing when destroyed.
-     */
-    Sock();
+    Sock() = delete;
 
     /**
      * Take ownership of an existent socket.
@@ -63,43 +59,37 @@ public:
     virtual Sock& operator=(Sock&& other);
 
     /**
-     * Get the value of the contained socket.
-     * @return socket or INVALID_SOCKET if empty
-     */
-    [[nodiscard]] virtual SOCKET Get() const;
-
-    /**
-     * send(2) wrapper. Equivalent to `send(this->Get(), data, len, flags);`. Code that uses this
+     * send(2) wrapper. Equivalent to `send(m_socket, data, len, flags);`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
      */
     [[nodiscard]] virtual ssize_t Send(const void* data, size_t len, int flags) const;
 
     /**
-     * recv(2) wrapper. Equivalent to `recv(this->Get(), buf, len, flags);`. Code that uses this
+     * recv(2) wrapper. Equivalent to `recv(m_socket, buf, len, flags);`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
      */
     [[nodiscard]] virtual ssize_t Recv(void* buf, size_t len, int flags) const;
 
     /**
-     * connect(2) wrapper. Equivalent to `connect(this->Get(), addr, addrlen)`. Code that uses this
+     * connect(2) wrapper. Equivalent to `connect(m_socket, addr, addrlen)`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
      */
     [[nodiscard]] virtual int Connect(const sockaddr* addr, socklen_t addr_len) const;
 
     /**
-     * bind(2) wrapper. Equivalent to `bind(this->Get(), addr, addr_len)`. Code that uses this
+     * bind(2) wrapper. Equivalent to `bind(m_socket, addr, addr_len)`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
      */
     [[nodiscard]] virtual int Bind(const sockaddr* addr, socklen_t addr_len) const;
 
     /**
-     * listen(2) wrapper. Equivalent to `listen(this->Get(), backlog)`. Code that uses this
+     * listen(2) wrapper. Equivalent to `listen(m_socket, backlog)`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
      */
     [[nodiscard]] virtual int Listen(int backlog) const;
 
     /**
-     * accept(2) wrapper. Equivalent to `std::make_unique<Sock>(accept(this->Get(), addr, addr_len))`.
+     * accept(2) wrapper. Equivalent to `std::make_unique<Sock>(accept(m_socket, addr, addr_len))`.
      * Code that uses this wrapper can be unit tested if this method is overridden by a mock Sock
      * implementation.
      * The returned unique_ptr is empty if `accept()` failed in which case errno will be set.
@@ -108,7 +98,7 @@ public:
 
     /**
      * getsockopt(2) wrapper. Equivalent to
-     * `getsockopt(this->Get(), level, opt_name, opt_val, opt_len)`. Code that uses this
+     * `getsockopt(m_socket, level, opt_name, opt_val, opt_len)`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
      */
     [[nodiscard]] virtual int GetSockOpt(int level,
@@ -118,7 +108,7 @@ public:
 
     /**
      * setsockopt(2) wrapper. Equivalent to
-     * `setsockopt(this->Get(), level, opt_name, opt_val, opt_len)`. Code that uses this
+     * `setsockopt(m_socket, level, opt_name, opt_val, opt_len)`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
      */
     [[nodiscard]] virtual int SetSockOpt(int level,
@@ -128,7 +118,7 @@ public:
 
     /**
      * getsockname(2) wrapper. Equivalent to
-     * `getsockname(this->Get(), name, name_len)`. Code that uses this
+     * `getsockname(m_socket, name, name_len)`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
      */
     [[nodiscard]] virtual int GetSockName(sockaddr* name, socklen_t* name_len) const;
@@ -238,7 +228,14 @@ public:
      * @throws std::runtime_error if the operation cannot be completed. In this case only some of
      * the data will be written to the socket.
      */
-    virtual void SendComplete(const std::string& data,
+    virtual void SendComplete(Span<const unsigned char> data,
+                              std::chrono::milliseconds timeout,
+                              CThreadInterrupt& interrupt) const;
+
+    /**
+     * Convenience method, equivalent to `SendComplete(MakeUCharSpan(data), timeout, interrupt)`.
+     */
+    virtual void SendComplete(Span<const char> data,
                               std::chrono::milliseconds timeout,
                               CThreadInterrupt& interrupt) const;
 
@@ -265,6 +262,11 @@ public:
      * @return true if connected
      */
     [[nodiscard]] virtual bool IsConnected(std::string& errmsg) const;
+
+    /**
+     * Check if the internal socket is equal to `s`. Use only in tests.
+     */
+    bool operator==(SOCKET s) const;
 
 protected:
     /**

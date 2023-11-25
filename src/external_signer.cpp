@@ -2,12 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <external_signer.h>
+
 #include <chainparams.h>
 #include <common/run_command.h>
 #include <core_io.h>
 #include <psbt.h>
 #include <util/strencodings.h>
-#include <external_signer.h>
+#include <version.h>
 
 #include <algorithm>
 #include <stdexcept>
@@ -54,7 +56,7 @@ bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalS
         if (model_field.isStr() && model_field.getValStr() != "") {
             name += model_field.getValStr();
         }
-        signers.push_back(ExternalSigner(command, chain, fingerprintStr, name));
+        signers.emplace_back(command, chain, fingerprintStr, name);
     }
     return true;
 }
