@@ -3,6 +3,7 @@
   "version-string": "1",
   "dependencies": [
     "berkeleydb",
+    "boost-date-time",
     "boost-multi-index",
     "boost-process",
     "boost-signals2",
