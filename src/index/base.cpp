@@ -141,7 +141,7 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& 
     return chain.Next(chain.FindFork(pindex_prev));
 }
 
-void BaseIndex::ThreadSync()
+void BaseIndex::Sync()
 {
     const CBlockIndex* pindex = m_best_block_index.load();
     if (!m_synced) {
@@ -394,7 +394,7 @@ bool BaseIndex::StartBackgroundSync()
 {
     if (!m_init) throw std::logic_error("Error: Cannot start a non-initialized index");
 
-    m_thread_sync = std::thread(&util::TraceThread, GetName(), [this] { ThreadSync(); });
+    m_thread_sync = std::thread(&util::TraceThread, GetName(), [this] { Sync(); });
     return true;
 }
 

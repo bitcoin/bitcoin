@@ -34,6 +34,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/examples.cpp \
   bench/gcs_filter.cpp \
   bench/hashpadding.cpp \
+  bench/index_blockfilter.cpp \
   bench/load_external.cpp \
   bench/lockedpool.cpp \
   bench/logging.cpp \
