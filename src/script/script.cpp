@@ -204,6 +204,40 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     return subscript.GetSigOpCount(true);
 }
 
+bool CScript::IsPayToBareCheckTxHashVerify() const
+{
+    // Extra-fast test for pay-to-bare-check-txhash-verify CScripts:
+
+    // NB parsing the script using GetScriptOp would result in an allocation
+    // of the byte push. To avoid this, we see what the size of the push would
+    // be based on the size of the script and then make sure that the script
+    // is correct.
+    // Since MAX_TXFS_SIZE is 132, the push should this always fit into either
+    // a single PUSHBYTES or PUSHDATA1.
+
+    assert(MAX_TX_FIELD_SELECTOR_SIZE == 132);
+    if (this->size() < 34 || this->size() > 3 + MAX_TX_FIELD_SELECTOR_SIZE) {
+        return false;
+    }
+    if ((*this)[this->size() - 1] != OP_CHECKTXHASHVERIFY) {
+        return false;
+    }
+
+    size_t max_push_size = this->size() - 2;
+    if (max_push_size < OP_PUSHDATA1) {
+        size_t push_size = max_push_size;
+        if ((*this)[0] != (unsigned char)push_size) {
+            return false;
+        }
+    } else {
+        size_t push_size = max_push_size - 1;
+        if ((*this)[0] != OP_PUSHDATA1 || (*this)[1] != (unsigned char)push_size) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool CScript::IsPayToScriptHash() const
 {
     // Extra-fast test for pay-to-script-hash CScripts:

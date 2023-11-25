@@ -70,6 +70,17 @@ static constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE = 32;
 static constexpr size_t WITNESS_V0_KEYHASH_SIZE = 20;
 static constexpr size_t WITNESS_V1_TAPROOT_SIZE = 32;
 
+/// Maximum size in bytes of the TXHASH tx field selector.
+///
+/// Consists of:
+/// - 1 global field byte
+/// - 1 input/output field byte
+/// - 1 input selector byte
+/// - max 2^5 individual input indices of 2 bytes each
+/// - 1 output selector byte
+/// - max 2^5 individual output indices of 2 bytes each
+static const unsigned int MAX_TX_FIELD_SELECTOR_SIZE = 1 + 1 + 2 * (1 + (1 << 5) * 2); // 132
+
 template <typename T>
 std::vector<unsigned char> ToByteVector(const T& in)
 {
@@ -544,6 +555,7 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
+    bool IsPayToBareCheckTxHashVerify() const;
     bool IsPayToScriptHash() const;
     bool IsPayToWitnessScriptHash() const;
     bool IsPayToTaproot() const;
