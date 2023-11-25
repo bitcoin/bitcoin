@@ -5,6 +5,8 @@
 #ifndef BITCOIN_SUPPORT_ALLOCATORS_POOL_H
 #define BITCOIN_SUPPORT_ALLOCATORS_POOL_H
 
+#include <malloc_usage.h>
+
 #include <array>
 #include <cassert>
 #include <cstddef>
@@ -120,6 +122,11 @@ class PoolResource final
     std::byte* m_available_memory_end = nullptr;
 
     /**
+     * Total number of bytes allocated through this resource. This includes all data that the pool has forwarded to ::operator new().
+     */
+    std::size_t m_total_allocated = 0;
+
+    /**
      * How many multiple of ELEM_ALIGN_BYTES are necessary to fit bytes. We use that result directly as an index
      * into m_free_lists. Round up for the special case when bytes==0.
      */
@@ -162,6 +169,9 @@ class PoolResource final
         m_available_memory_it = new (storage) std::byte[m_chunk_size_bytes];
         m_available_memory_end = m_available_memory_it + m_chunk_size_bytes;
         m_allocated_chunks.emplace_back(m_available_memory_it);
+
+        // size for the chunk + estimate for one list node (3 pointers: next, previous, and to the chunk)
+        m_total_allocated += memusage::MallocUsage(m_chunk_size_bytes) + memusage::MallocUsage(sizeof(void*) * 3);
     }
 
     /**
@@ -232,6 +242,7 @@ public:
         }
 
         // Can't use the pool => use operator new()
+        m_total_allocated += memusage::MallocUsage(bytes);
         return ::operator new (bytes, std::align_val_t{alignment});
     }
 
@@ -247,6 +258,7 @@ public:
             PlacementAddToList(p, m_free_lists[num_alignments]);
         } else {
             // Can't use the pool => forward deallocation to ::operator delete().
+            m_total_allocated -= memusage::MallocUsage(bytes);
             ::operator delete (p, std::align_val_t{alignment});
         }
     }
@@ -265,6 +277,11 @@ public:
     [[nodiscard]] size_t ChunkSizeBytes() const
     {
         return m_chunk_size_bytes;
+    }
+
+    [[nodiscard]] size_t DynamicMemoryUsage() const
+    {
+        return m_total_allocated;
     }
 };
 
