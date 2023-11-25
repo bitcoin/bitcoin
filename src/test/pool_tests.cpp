@@ -154,10 +154,57 @@ BOOST_AUTO_TEST_CASE(random_allocations)
     PoolResourceTester::CheckAllDataAccountedFor(resource);
 }
 
+
+size_t total_allocated_bytes = 0;
+
+/**
+ * A simple allocator that increases/decreases a counter for each allocate/deallocate.
+ * Based on https://howardhinnant.github.io/allocator_boilerplate.html
+ */
+template <class T>
+class SimpleGlobalCountingAllocator
+{
+public:
+    using value_type = T;
+
+    SimpleGlobalCountingAllocator() = default;
+
+    template <class U>
+    SimpleGlobalCountingAllocator(SimpleGlobalCountingAllocator<U> const&) noexcept
+    {
+    }
+
+    value_type* allocate(std::size_t n)
+    {
+        total_allocated_bytes += memusage::MallocUsage(n * sizeof(value_type));
+        return static_cast<value_type*>(::operator new(n * sizeof(value_type)));
+    }
+
+    void deallocate(value_type* p, std::size_t n) noexcept
+    {
+        total_allocated_bytes -= memusage::MallocUsage(n * sizeof(value_type));
+        ::operator delete(p);
+    }
+};
+
+
+template <class T, class U>
+bool operator==(SimpleGlobalCountingAllocator<T> const&, SimpleGlobalCountingAllocator<U> const&) noexcept
+{
+    return true;
+}
+
+template <class T, class U>
+bool operator!=(SimpleGlobalCountingAllocator<T> const& x, SimpleGlobalCountingAllocator<U> const& y) noexcept
+{
+    return !(x == y);
+}
+
+
 BOOST_AUTO_TEST_CASE(memusage_test)
 {
-    auto std_map = std::unordered_map<int64_t, int64_t>{};
-
+    total_allocated_bytes = 0;
+    using StdMap = std::unordered_map<int64_t, int64_t, std::hash<int64_t>, std::equal_to<int64_t>, SimpleGlobalCountingAllocator<std::pair<const int64_t, int64_t>>>;
     using Map = std::unordered_map<int64_t,
                                    int64_t,
                                    std::hash<int64_t>,
@@ -169,18 +216,17 @@ BOOST_AUTO_TEST_CASE(memusage_test)
     PoolResourceTester::CheckAllDataAccountedFor(resource);
 
     {
+        auto std_map = StdMap{};
         auto resource_map = Map{0, std::hash<int64_t>{}, std::equal_to<int64_t>{}, &resource};
 
         // can't have the same resource usage
-        BOOST_TEST(memusage::DynamicUsage(std_map) != memusage::DynamicUsage(resource_map));
-
         for (size_t i = 0; i < 10000; ++i) {
             std_map[i];
             resource_map[i];
         }
 
         // Eventually the resource_map should have a much lower memory usage because it has less malloc overhead
-        BOOST_TEST(memusage::DynamicUsage(resource_map) <= memusage::DynamicUsage(std_map) * 90 / 100);
+        BOOST_TEST(memusage::DynamicUsage(resource_map) <= total_allocated_bytes * 90 / 100);
 
         // Make sure the pool is actually used by the nodes
         auto max_nodes_per_chunk = resource.ChunkSizeBytes() / sizeof(Map::value_type);
@@ -188,6 +234,53 @@ BOOST_AUTO_TEST_CASE(memusage_test)
         BOOST_TEST(resource.NumAllocatedChunks() >= min_num_allocated_chunks);
     }
 
+    // check if counting was correct, everything should be deallocated by now
+    BOOST_TEST(total_allocated_bytes == 0U);
+    PoolResourceTester::CheckAllDataAccountedFor(resource);
+}
+
+
+struct alignas(sizeof(void*) * 2) Large {
+    int i;
+};
+
+BOOST_AUTO_TEST_CASE(test_incorrect_alignment)
+{
+    using Map = std::unordered_map<int64_t,
+                                   Large,
+                                   std::hash<int64_t>,
+                                   std::equal_to<int64_t>,
+                                   PoolAllocator<std::pair<const int64_t, Large>,
+                                                 sizeof(std::pair<const int64_t, Large>) + sizeof(void*) * 4,
+                                                 alignof(void*) // this is too small => pool won't be used for nodes
+                                                 >>;
+    auto resource = Map::allocator_type::ResourceType(1024);
+    PoolResourceTester::CheckAllDataAccountedFor(resource);
+    // initially 1 chunk is allocated
+    auto initial_size = resource.DynamicMemoryUsage();
+    {
+        auto resource_map = Map{0, std::hash<int64_t>{}, std::equal_to<int64_t>{}, &resource};
+        resource_map.reserve(10000);
+        for (size_t i = 0; i < 10000; ++i) {
+            resource_map[i];
+        }
+
+        // make sure both give the same result
+        BOOST_TEST(memusage::DynamicUsage(resource_map) == resource.DynamicMemoryUsage());
+
+        // alignment is too large => resource can't be used for nodes. It might be used for one or two bucket arrays when the map was small.
+        BOOST_TEST(resource.NumAllocatedChunks() <= 1);
+
+        // the resource keeps track of everything allocated/deallocated, not just chunk sizes
+        auto low_estimate_for_node_size = memusage::MallocUsage(sizeof(Map::value_type) + sizeof(void*) * 2) * resource_map.size();
+        auto bucket_array_size = memusage::MallocUsage(resource_map.bucket_count() * sizeof(void*));
+
+        // In my test (Linux 64bit) this estimate is pretty close: 723296 >= 722208
+        BOOST_TEST(memusage::DynamicUsage(resource_map) >= low_estimate_for_node_size + bucket_array_size);
+    }
+
+    // map is destroyed, so everything allocated by new() is now gone; so the resource should be pretty empty
+    BOOST_TEST(resource.DynamicMemoryUsage() == initial_size);
     PoolResourceTester::CheckAllDataAccountedFor(resource);
 }
 
