@@ -154,6 +154,7 @@ BITCOIN_CORE_H = \
   banman.h \
   base58.h \
   bech32.h \
+  bech32_mod.h \
   blockencodings.h \
   blockfilter.h \
   blsct/arith/mcl/mcl.h \
@@ -780,6 +781,7 @@ libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
   base58.cpp \
   bech32.cpp \
+  bech32_mod.cpp \
   blsct/arith/elements.cpp \
   blsct/double_public_key.cpp \
   blsct/public_key.cpp \

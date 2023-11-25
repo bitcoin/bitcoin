@@ -18,6 +18,9 @@
     <ClCompile Include="..\..\src\bench\bech32.cpp">
       <ObjectFileName>$(IntDir)bench_bech32.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\src\bench\bech32_mod.cpp">
+      <ObjectFileName>$(IntDir)bench_bech32_mod.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\src\bench\bench.cpp">
       <ObjectFileName>$(IntDir)bench_bench.obj</ObjectFileName>
     </ClCompile>

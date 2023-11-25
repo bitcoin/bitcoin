@@ -15,6 +15,7 @@ bench_bench_navcoin_SOURCES = \
   bench/addrman.cpp \
   bench/base58.cpp \
   bench/bech32.cpp \
+  bench/bech32_mod.cpp \
   bench/bench.cpp \
   bench/bench.h \
   bench/bench_bitcoin.cpp \
