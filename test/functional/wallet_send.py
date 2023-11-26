@@ -142,7 +142,12 @@ class WalletSendTest(BitcoinTestFramework):
             return
 
         if locktime:
+            assert_equal(from_wallet.gettransaction(txid=res["txid"], verbose=True)["decoded"]["locktime"], locktime)
             return res
+        else:
+            if add_to_wallet:
+                decoded_tx = from_wallet.gettransaction(txid=res["txid"], verbose=True)["decoded"]
+                assert_greater_than(decoded_tx["locktime"], from_wallet.getblockcount() - 100)
 
         if from_wallet.getwalletinfo()["private_keys_enabled"] and not include_watching:
             assert_equal(res["complete"], True)
