@@ -43,7 +43,7 @@ uint32_t EncodingConstant(Encoding encoding) {
 /** This function will compute what 8 5-bit values to XOR into the last 8 input values, in order to
  *  make the checksum 0. These 8 values are packed together in a single 40-bit integer. The higher
  *  bits correspond to earlier values. */
-uint32_t PolyMod(const data& v)
+uint64_t PolyMod(const data& v)
 {
     // The input is interpreted as a list of coefficients of a polynomial over F = GF(32), with an
     // implicit 1 in front. If the input is [v0,v1,v2,v3,v4], that polynomial is v(x) =
