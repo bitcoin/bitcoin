@@ -219,6 +219,12 @@ struct CreatedTransactionResult
 };
 
 /**
+ * Set a height-based locktime for new transactions (uses the height of the
+ * current chain tip unless we are not synced with the current chain
+ */
+void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height);
+
+/**
  * Create a new transaction paying the recipients with a set of coins
  * selected by SelectCoins(); Also create the change output, when needed
  * @note passing change_pos as std::nullopt will result in setting a random position
