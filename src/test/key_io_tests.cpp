@@ -5,6 +5,7 @@
 #include <test/data/key_io_invalid.json.h>
 #include <test/data/key_io_valid.json.h>
 
+#include <bech32_mod.h>
 #include <key.h>
 #include <key_io.h>
 #include <script/script.h>
@@ -157,6 +158,15 @@ BOOST_AUTO_TEST_CASE(key_io_blsct)
     auto dest = EncodeDestination(doubleKey);
 
     BOOST_CHECK(DecodeDestination(dest) == CTxDestination(doubleKey));
+}
+
+BOOST_AUTO_TEST_CASE(key_io_double_pk_encode)
+{
+    std::vector<uint8_t> dpk = ParseHex("c97f5a67ec381b760aeaf67573bc164845ff39a3bb26a1cee401ac67243b48db1a2b3c4d5e6f7890abcdefc97f5a67ec381b760aeaf67573bc164845ff39a3bb26a1cee401ac67243b48db1a2b3c4d5e6f7890abcdefc97f5a67ec381b760aea");
+    std::string enc_pk = EncodeDoublePublicKey(bech32_mod::Encoding::BECH32M, "nv", dpk);
+    std::vector<uint8_t> dec_pk = DecodeDoublePublicKey(enc_pk);
+
+    BOOST_CHECK(dpk == dec_pk);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

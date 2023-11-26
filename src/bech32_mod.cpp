@@ -178,7 +178,7 @@ data CreateChecksum(Encoding encoding, const std::string& hrp, const data& value
     auto exp_hrp = ExpandHRP(hrp);
     data enc = Cat(ExpandHRP(hrp), values);
     enc.resize(enc.size() + 8); // Append 8 zeroes
-    uint32_t mod = PolyMod(enc) ^ EncodingConstant(encoding); // Determine what to XOR into those 8 zeroes.
+    uint64_t mod = PolyMod(enc) ^ EncodingConstant(encoding); // Determine what to XOR into those 8 zeroes.
     data ret(8);
     for (size_t i = 0; i < 8; ++i) {
         // Convert the 5-bit groups in mod to checksum values.
