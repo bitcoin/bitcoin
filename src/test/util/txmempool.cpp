@@ -7,6 +7,7 @@
 #include <chainparams.h>
 #include <node/context.h>
 #include <node/mempool_args.h>
+#include <policy/v3_policy.h>
 #include <txmempool.h>
 #include <util/check.h>
 #include <util/time.h>
@@ -115,4 +116,29 @@ std::optional<std::string> CheckPackageMempoolAcceptResult(const Package& txns,
         }
     }
     return std::nullopt;
+}
+
+void CheckMempoolV3Invariants(const CTxMemPool& tx_pool)
+{
+    LOCK(tx_pool.cs);
+    for (const auto& tx_info : tx_pool.infoAll()) {
+        const auto& entry = *Assert(tx_pool.GetEntry(tx_info.tx->GetHash()));
+        if (tx_info.tx->nVersion == 3) {
+            // Check that special v3 ancestor/descendant limits and rules are always respected
+            Assert(entry.GetCountWithDescendants() <= V3_DESCENDANT_LIMIT);
+            Assert(entry.GetCountWithAncestors() <= V3_ANCESTOR_LIMIT);
+            // If this transaction has at least 1 ancestor, it's a "child" and has restricted weight.
+            if (entry.GetCountWithAncestors() > 1) {
+                Assert(entry.GetTxSize() <= V3_CHILD_MAX_VSIZE);
+                // All v3 transactions must only have v3 unconfirmed parents.
+                const auto& parents = entry.GetMemPoolParentsConst();
+                Assert(parents.begin()->get().GetSharedTx()->nVersion == 3);
+            }
+        } else if (entry.GetCountWithAncestors() > 1) {
+            // All non-v3 transactions must only have non-v3 unconfirmed parents.
+            for (const auto& parent : entry.GetMemPoolParentsConst()) {
+                Assert(parent.get().GetSharedTx()->nVersion != 3);
+            }
+        }
+    }
 }
