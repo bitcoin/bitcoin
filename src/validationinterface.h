@@ -160,13 +160,10 @@ private:
     std::unique_ptr<MainSignalsImpl> m_internals;
 
 public:
-    CMainSignals();
+    CMainSignals(CScheduler& scheduler LIFETIMEBOUND);
+
     ~CMainSignals();
 
-    /** Register a CScheduler to give callbacks which should run in the background (may only be called once) */
-    void RegisterBackgroundSignalScheduler(CScheduler& scheduler);
-    /** Unregister a CScheduler to give callbacks which should run in the background - these callbacks will now be dropped! */
-    void UnregisterBackgroundSignalScheduler();
     /** Call any remaining callbacks on the calling thread */
     void FlushBackgroundCallbacks();
 

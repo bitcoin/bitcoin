@@ -94,31 +94,18 @@ public:
     }
 };
 
-CMainSignals::CMainSignals() {}
+CMainSignals::CMainSignals(CScheduler& scheduler)
+    : m_internals{std::make_unique<MainSignalsImpl>(scheduler)} {}
 
 CMainSignals::~CMainSignals() {}
 
-void CMainSignals::RegisterBackgroundSignalScheduler(CScheduler& scheduler)
-{
-    assert(!m_internals);
-    m_internals = std::make_unique<MainSignalsImpl>(scheduler);
-}
-
-void CMainSignals::UnregisterBackgroundSignalScheduler()
-{
-    m_internals.reset(nullptr);
-}
-
 void CMainSignals::FlushBackgroundCallbacks()
 {
-    if (m_internals) {
-        m_internals->m_schedulerClient.EmptyQueue();
-    }
+    m_internals->m_schedulerClient.EmptyQueue();
 }
 
 size_t CMainSignals::CallbacksPending()
 {
-    if (!m_internals) return 0;
     return m_internals->m_schedulerClient.CallbacksPending();
 }
 
@@ -143,16 +130,11 @@ void CMainSignals::UnregisterSharedValidationInterface(std::shared_ptr<CValidati
 
 void CMainSignals::UnregisterValidationInterface(CValidationInterface* callbacks)
 {
-    if (m_internals) {
-        m_internals->Unregister(callbacks);
-    }
+    m_internals->Unregister(callbacks);
 }
 
 void CMainSignals::UnregisterAllValidationInterfaces()
 {
-    if (!m_internals) {
-        return;
-    }
     m_internals->Clear();
 }
 
