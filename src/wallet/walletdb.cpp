@@ -42,6 +42,8 @@ const std::string DEFAULTKEY{"defaultkey"};
 const std::string DESTDATA{"destdata"};
 const std::string FLAGS{"flags"};
 const std::string HDCHAIN{"hdchain"};
+const std::string HDCKEY{"hdckey"};
+const std::string HDKEY{"hdkey"};
 const std::string KEYMETA{"keymeta"};
 const std::string KEY{"key"};
 const std::string LOCKED_UTXO{"lockedutxo"};
@@ -69,7 +71,8 @@ const std::unordered_set<std::string> LEGACY_TYPES{CRYPTED_KEY, CSCRIPT, DEFAULT
 // WalletBatch
 //
 
-static uint256 PrivKeyChecksum(const CPrivKey& privkey, const CPubKey& pubkey)
+template <typename P>
+static uint256 PrivKeyChecksum(const CPrivKey& privkey, const P& pubkey)
 {
     // hash pubkey/privkey to accelerate wallet load
     std::vector<unsigned char> to_hash;
@@ -304,6 +307,32 @@ bool WalletBatch::WriteActiveHDKey(const CExtPubKey& extpub, bool encryption_sta
     extpub.Encode(xpub.data());
 
     return WriteIC(DBKeys::ACTIVEHDKEY, std::make_pair(xpub, encryption_status), true);
+}
+
+bool WalletBatch::WriteHDKey(const CExtKey& extkey)
+{
+    std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
+    extkey.Neuter().Encode(xpub.data());
+
+    CPrivKey privkey = extkey.key.GetPrivKey();
+
+    return WriteIC(std::make_pair(DBKeys::HDKEY, xpub), std::make_pair(privkey, PrivKeyChecksum(privkey, xpub)), false);
+}
+
+bool WalletBatch::WriteHDCryptedKey(const CExtPubKey& extpub, const std::vector<unsigned char>& crypted_key)
+{
+    // Compute a checksum of the encrypted key
+    uint256 checksum = Hash(crypted_key);
+
+    std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
+    extpub.Encode(xpub.data());
+
+    const auto key = std::make_pair(DBKeys::HDCKEY, xpub);
+    if (!WriteIC(key, std::make_pair(crypted_key, checksum), false)) {
+        return false;
+    }
+    EraseIC(std::make_pair(DBKeys::HDKEY, xpub));
+    return true;
 }
 
 bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
@@ -976,6 +1005,72 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
         return result;
     });
     result = std::max(result, desc_res.m_result);
+
+    // Get HDKeys
+    LoadResult hdkey_res = LoadRecords(pwallet, batch, DBKeys::HDKEY,
+        [&wallet_xpub, &wallet_key] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        CExtPubKey extpub;
+        std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
+        key >> xpub;
+        extpub.Decode(xpub.data());
+        if (!extpub.pubkey.IsValid()) {
+            err = "Error reading wallet database: CExtPubKey corrupt";
+            return DBErrors::CORRUPT;
+        }
+
+        CKey pkey;
+        CPrivKey pkey_data;
+        uint256 hash;
+
+        value >> pkey_data;
+        value >> hash;
+
+        if (PrivKeyChecksum(pkey_data, xpub) != hash) {
+            err = "Error reading wallet database: CPubKey/CPrivKey corrupt";
+            return DBErrors::CORRUPT;
+        }
+
+        if (!pkey.Load(pkey_data, extpub.pubkey, true)) {
+            err = "Error reading wallet database: CPrivKey corrupt";
+            return DBErrors::CORRUPT;
+        }
+        if (wallet_xpub && extpub == *wallet_xpub) {
+            wallet_key = pkey;
+        }
+        return DBErrors::LOAD_OK;
+    });
+    result = std::max(result, hdkey_res.m_result);
+    num_keys += hdkey_res.m_records;
+
+    // Get encrypted HDKeys
+    LoadResult enc_hdkey_res = LoadRecords(pwallet, batch, DBKeys::HDCKEY,
+        [&wallet_xpub, &wallet_crypted_key] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        CExtPubKey extpub;
+        std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
+        key >> xpub;
+        extpub.Decode(xpub.data());
+        if (!extpub.pubkey.IsValid()) {
+            err = "Error reading wallet database: CExtPubKey corrupt";
+            return DBErrors::CORRUPT;
+        }
+
+        std::vector<unsigned char> privkey;
+        value >> privkey;
+
+        // Get the checksum and check it
+        uint256 checksum;
+        value >> checksum;
+        if (Hash(privkey) != checksum) {
+            err = "Error reading wallet database: Encrypted hd key corrupt";
+            return DBErrors::CORRUPT;
+        }
+        if (wallet_xpub && extpub == *wallet_xpub) {
+            wallet_crypted_key = privkey;
+        }
+        return DBErrors::LOAD_OK;
+    });
+    result = std::max(result, enc_hdkey_res.m_result);
+    num_ckeys += enc_hdkey_res.m_records;
 
     if (num_ckeys > 0 && num_keys != 0) {
         pwallet->WalletLogPrintf("Error: Wallet has both encrypted and unencrypted HD keys\n");

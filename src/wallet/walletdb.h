@@ -71,6 +71,8 @@ extern const std::string DEFAULTKEY;
 extern const std::string DESTDATA;
 extern const std::string FLAGS;
 extern const std::string HDCHAIN;
+extern const std::string HDCKEY;
+extern const std::string HDKEY;
 extern const std::string KEY;
 extern const std::string KEYMETA;
 extern const std::string LOCKED_UTXO;
@@ -289,6 +291,8 @@ public:
      * match the real status.
      */
     bool WriteActiveHDKey(const CExtPubKey& extpub, bool encryption_status);
+    bool WriteHDKey(const CExtKey& extkey);
+    bool WriteHDCryptedKey(const CExtPubKey& extpub, const std::vector<unsigned char>& crypted_key);
 
     DBErrors LoadWallet(CWallet* pwallet);
     DBErrors FindWalletTxHashes(std::vector<uint256>& tx_hashes);
