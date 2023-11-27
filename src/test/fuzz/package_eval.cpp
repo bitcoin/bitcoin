@@ -277,7 +277,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
         auto single_submit = txs.size() == 1 && fuzzed_data_provider.ConsumeBool();
 
         const auto result_package = WITH_LOCK(::cs_main,
-                                    return ProcessNewPackage(chainstate, tx_pool, txs, /*test_accept=*/single_submit));
+                                    return ProcessNewPackage(chainstate, tx_pool, txs, /*test_accept=*/single_submit, /*max_sane_feerate=*/{}));
 
         // Always set bypass_limits to false because it is not supported in ProcessNewPackage and
         // can be a source of divergence.

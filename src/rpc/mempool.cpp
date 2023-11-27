@@ -28,6 +28,7 @@
 
 using kernel::DumpMempool;
 
+using node::DEFAULT_MAX_BURN_AMOUNT;
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
 using node::MempoolPath;
 using node::NodeContext;
@@ -46,7 +47,7 @@ static RPCHelpMan sendrawtransaction()
             {"maxfeerate", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK())},
              "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT +
                  "/kvB.\nFee rates larger than 1BTC/kvB are rejected.\nSet to 0 to accept any fee rate."},
-            {"maxburnamount", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(0)},
+            {"maxburnamount", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(DEFAULT_MAX_BURN_AMOUNT)},
              "Reject transactions with provably unspendable outputs (e.g. 'datacarrier' outputs that use the OP_RETURN opcode) greater than the specified value, expressed in " + CURRENCY_UNIT + ".\n"
              "If burning funds through unspendable outputs is desired, increase this value.\n"
              "This check is based on heuristics and does not guarantee spendability of outputs.\n"},
@@ -180,7 +181,7 @@ static RPCHelpMan testmempoolaccept()
             Chainstate& chainstate = chainman.ActiveChainstate();
             const PackageMempoolAcceptResult package_result = [&] {
                 LOCK(::cs_main);
-                if (txns.size() > 1) return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/true);
+                if (txns.size() > 1) return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/true, /*max_sane_feerate=*/{});
                 return PackageMempoolAcceptResult(txns[0]->GetWitnessHash(),
                                                   chainman.ProcessTransaction(txns[0], /*test_accept=*/true));
             }();
@@ -823,6 +824,14 @@ static RPCHelpMan submitpackage()
                     {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
                 },
             },
+            {"maxfeerate", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK())},
+             "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT +
+                 "/kvB.\nFee rates larger than 1BTC/kvB are rejected.\nSet to 0 to accept any fee rate."},
+            {"maxburnamount", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(DEFAULT_MAX_BURN_AMOUNT)},
+             "Reject transactions with provably unspendable outputs (e.g. 'datacarrier' outputs that use the OP_RETURN opcode) greater than the specified value, expressed in " + CURRENCY_UNIT + ".\n"
+             "If burning funds through unspendable outputs is desired, increase this value.\n"
+             "This check is based on heuristics and does not guarantee spendability of outputs.\n"
+            },
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -862,6 +871,17 @@ static RPCHelpMan submitpackage()
                                    "Array must contain between 1 and " + ToString(MAX_PACKAGE_COUNT) + " transactions.");
             }
 
+            // Fee check needs to be run with chainstate and package context
+            const CFeeRate max_raw_tx_fee_rate = ParseFeeRate(self.Arg<UniValue>(1));
+            std::optional<CFeeRate> max_sane_feerate{max_raw_tx_fee_rate};
+            // 0-value is special; it's mapped to no sanity check
+            if (max_raw_tx_fee_rate == CFeeRate(0)) {
+                max_sane_feerate = std::nullopt;
+            }
+
+            // Burn sanity check is run with no context
+            const CAmount max_burn_amount = request.params[2].isNull() ? 0 : AmountFromValue(request.params[2]);
+
             std::vector<CTransactionRef> txns;
             txns.reserve(raw_transactions.size());
             for (const auto& rawtx : raw_transactions.getValues()) {
@@ -870,6 +890,13 @@ static RPCHelpMan submitpackage()
                     throw JSONRPCError(RPC_DESERIALIZATION_ERROR,
                                        "TX decode failed: " + rawtx.get_str() + " Make sure the tx has at least one input.");
                 }
+
+                for (const auto& out : mtx.vout) {
+                    if((out.scriptPubKey.IsUnspendable() || !out.scriptPubKey.HasValidOps()) && out.nValue > max_burn_amount) {
+                        throw JSONRPCTransactionError(TransactionError::MAX_BURN_EXCEEDED);
+                    }
+                }
+
                 txns.emplace_back(MakeTransactionRef(std::move(mtx)));
             }
             if (!IsChildWithParentsTree(txns)) {
@@ -879,7 +906,7 @@ static RPCHelpMan submitpackage()
             NodeContext& node = EnsureAnyNodeContext(request.context);
             CTxMemPool& mempool = EnsureMemPool(node);
             Chainstate& chainstate = EnsureChainman(node).ActiveChainstate();
-            const auto package_result = WITH_LOCK(::cs_main, return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/ false));
+            const auto package_result = WITH_LOCK(::cs_main, return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/ false, max_sane_feerate));
 
             std::string package_msg = "success";
 
