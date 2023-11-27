@@ -4501,8 +4501,16 @@ bool CWallet::SetActiveHDKey(const CExtKey& xprv)
         if (!EncryptSecret(GetEncryptionKey(), secret, xprv.key.GetPubKey().GetHash(), crypted_key)) {
             return false;
         }
+        // Write the key if HAS_HDKEY_RECORDS is set
+        if (IsWalletFlagSet(WALLET_FLAG_HAS_HDKEY_RECORDS) && !WalletBatch(GetDatabase()).WriteHDCryptedKey(xprv.Neuter(), crypted_key)) {
+            return false;
+        }
     } else {
         key = xprv.key;
+        // Write the key if HAS_HDKEY_RECORDS is set
+        if (IsWalletFlagSet(WALLET_FLAG_HAS_HDKEY_RECORDS) && !WalletBatch(GetDatabase()).WriteHDKey(xprv)) {
+            return false;
+        }
     }
     return SetActiveHDKey(xprv.Neuter(), key, crypted_key);
 }
