@@ -80,7 +80,7 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx, const CTx
  * @returns error message if the sets intersect, std::nullopt if they are disjoint.
  */
 std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries& ancestors,
-                                                   const std::set<uint256>& direct_conflicts,
+                                                   const std::set<Txid>& direct_conflicts,
                                                    const uint256& txid);
 
 /** Check that the feerate of the replacement transaction(s) is higher than the feerate of each
