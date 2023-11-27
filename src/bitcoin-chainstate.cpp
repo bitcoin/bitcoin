@@ -23,11 +23,10 @@
 #include <node/caches.h>
 #include <node/chainstate.h>
 #include <random.h>
-#include <scheduler.h>
 #include <script/sigcache.h>
 #include <util/chaintype.h>
 #include <util/fs.h>
-#include <util/thread.h>
+#include <util/task_runner.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -68,16 +67,7 @@ int main(int argc, char* argv[])
     Assert(InitSignatureCache(validation_cache_sizes.signature_cache_bytes));
     Assert(InitScriptExecutionCache(validation_cache_sizes.script_execution_cache_bytes));
 
-
-    // SETUP: Scheduling and Background Signals
-    CScheduler scheduler{};
-    // Start the lightweight task scheduler thread
-    scheduler.m_service_thread = std::thread(util::TraceThread, "scheduler", [&] { scheduler.serviceQueue(); });
-
-    ValidationSignals validation_signals{scheduler};
-
-    // Gather some entropy once per minute.
-    scheduler.scheduleEvery(RandAddPeriodic, std::chrono::minutes{1});
+    ValidationSignals validation_signals{std::make_unique<util::ImmediateTaskRunner>()};
 
     class KernelNotifications : public kernel::Notifications
     {
@@ -288,7 +278,6 @@ int main(int argc, char* argv[])
 epilogue:
     // Without this precise shutdown sequence, there will be a lot of nullptr
     // dereferencing and UB.
-    scheduler.stop();
     if (chainman.m_thread_load.joinable()) chainman.m_thread_load.join();
 
     validation_signals.FlushBackgroundCallbacks();
