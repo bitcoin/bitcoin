@@ -17,7 +17,7 @@
 #include <uint256.h>
 
 /* Number of bytes to hash per iteration */
-static const uint64_t BUFFER_SIZE = 1000*1000;
+constexpr uint64_t BUFFER_SIZE = 1000*1000;
 
 static void BenchRIPEMD160(benchmark::Bench& bench)
 {
