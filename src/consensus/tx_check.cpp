@@ -11,7 +11,7 @@
 bool CheckTransaction(const CTransaction& tx, TxValidationState& state, const bool& fBLSCT)
 {
     // Basic checks that don't depend on any context
-    if (tx.vin.empty())
+    if (tx.vin.empty() && !tx.IsBLSCT())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vin-empty");
     if (tx.vout.empty())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-vout-empty");

@@ -44,6 +44,7 @@ public:
     SubAddress(const std::string& sAddress);
     SubAddress(const PrivateKey& viewKey, const PublicKey& spendKey, const SubAddressIdentifier& subAddressId);
     SubAddress(const DoublePublicKey& pk) : pk(pk){};
+    SubAddress(const CTxDestination& dest) : pk(std::get<blsct::DoublePublicKey>(dest)){};
 
     bool IsValid() const;
 

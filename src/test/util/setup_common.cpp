@@ -282,9 +282,6 @@ TestBLSCTChain100Setup::TestBLSCTChain100Setup(
     : TestingSetup{ChainType::BLSCTREGTEST, extra_args, coins_db_in_memory, block_tree_db_in_memory}, coinbaseDest{coinbaseDest}
 {
     SetMockTime(1598887952);
-    constexpr std::array<unsigned char, 32> vchKey = {
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}};
-    coinbaseKey.Set(vchKey.begin(), vchKey.end(), true);
 
     // Generate a 100-block chain:
     this->mineBlocks(COINBASE_MATURITY);
@@ -302,9 +299,10 @@ void TestBLSCTChain100Setup::mineBlocks(int num_blocks)
 
 CBlock TestBLSCTChain100Setup::CreateBlock(
     const std::vector<CMutableTransaction>& txns,
-    Chainstate& chainstate)
+    Chainstate& chainstate,
+    const std::optional<blsct::SubAddress>& dest)
 {
-    auto out = blsct::CreateOutput(coinbaseDest, m_node.chainman->GetConsensus().nBLSCTBlockReward, "Reward");
+    auto out = blsct::CreateOutput(dest.has_value() ? dest.value() : coinbaseDest, m_node.chainman->GetConsensus().nBLSCTBlockReward, "Reward");
 
     CBlock block = BlockAssembler{chainstate, nullptr}.CreateNewBLSCTPOWBlock(out)->block;
 
@@ -328,13 +326,14 @@ CBlock TestBLSCTChain100Setup::CreateBlock(
 
 CBlock TestBLSCTChain100Setup::CreateAndProcessBlock(
     const std::vector<CMutableTransaction>& txns,
-    Chainstate* chainstate)
+    Chainstate* chainstate,
+    const std::optional<blsct::SubAddress>& dest)
 {
     if (!chainstate) {
         chainstate = &Assert(m_node.chainman)->ActiveChainstate();
     }
 
-    CBlock block = this->CreateBlock(txns, *chainstate);
+    CBlock block = this->CreateBlock(txns, *chainstate, dest);
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr);
 

@@ -159,8 +159,17 @@ public:
         bool fastprune{false};
     };
 
+    /**
+     * BLSCTRegTestOptions holds configurations for creating a regtest BLSCT CChainParams.
+     */
+    struct BLSCTRegTestOptions {
+        std::unordered_map<Consensus::DeploymentPos, VersionBitsParameters> version_bits_parameters{};
+        std::unordered_map<Consensus::BuriedDeployment, int> activation_heights{};
+        bool fastprune{false};
+    };
+
     static std::unique_ptr<const CChainParams> RegTest(const RegTestOptions& options);
-    static std::unique_ptr<const CChainParams> BLSCTRegTest(const RegTestOptions& options);
+    static std::unique_ptr<const CChainParams> BLSCTRegTest(const BLSCTRegTestOptions& options);
     static std::unique_ptr<const CChainParams> SigNet(const SigNetOptions& options);
     static std::unique_ptr<const CChainParams> Main();
     static std::unique_ptr<const CChainParams> TestNet();

@@ -65,9 +65,8 @@ BOOST_FIXTURE_TEST_CASE(validation_reward_test, TestingSetup)
     CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
 
     CMutableTransaction tx;
-    std::string dummyAddress = "xNVGDQwqMnD7Wi13X5FutkC11VwAf9oaZuDMs1sXUPHgGjmkh5UukhJihW56uTY4GMMLEfzF536N3zMAzMcWA6mxfm6sjsQ9k49cUNBN1B6xAGqGE2bnBsBPijYsMMQNuQjrRDLn5rs";
 
-    auto out = blsct::CreateOutput(dummyAddress, 900 * COIN, " Reward ");
+    auto out = blsct::CreateOutput(blsct::SubAddress(), 900 * COIN, " Reward ");
     tx.vout.push_back(out.out);
     tx.txSig = out.GetSignature();
 

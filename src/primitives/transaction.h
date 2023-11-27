@@ -354,6 +354,10 @@ inline void UnserializeTransaction(TxType& tx, Stream& s)
         /* We read a non-empty vin. Assume a normal vout follows. */
         s >> tx.vout;
     }
+    if (flags & 2) {
+        /* Only coinbase */
+        flags ^= 2;
+    }
     if ((flags & 1) && fAllowWitness) {
         /* The witness flag is present, and we support witnesses. */
         flags ^= 1;
@@ -370,6 +374,7 @@ inline void UnserializeTransaction(TxType& tx, Stream& s)
         throw std::ios_base::failure("Unknown transaction optional data");
     }
     s >> tx.nLockTime;
+
     if (tx.IsBLSCT()) {
         s >> tx.txSig;
     }
@@ -388,6 +393,9 @@ inline void SerializeTransaction(const TxType& tx, Stream& s)
         if (tx.HasWitness()) {
             flags |= 1;
         }
+    }
+    if (tx.vin.size() == 0) {
+        flags |= 2;
     }
     if (flags) {
         /* Use extended format in case witnesses are to be serialized. */

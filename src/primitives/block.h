@@ -51,6 +51,11 @@ public:
         return (nBits == 0);
     }
 
+    bool IsBLSCT() const
+    {
+        return (nVersion & 0x40000000UL);
+    }
+
     uint256 GetHash() const;
 
     NodeSeconds Time() const
