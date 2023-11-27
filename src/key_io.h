@@ -27,13 +27,6 @@ std::string EncodeDestination(const CTxDestination& dest);
 CTxDestination DecodeDestination(const std::string& str);
 CTxDestination DecodeDestination(const std::string& str, std::string& error_msg, std::vector<int>* error_locations = nullptr);
 
-std::string EncodeDoublePublicKey(
-    bech32_mod::Encoding encoding,
-    const std::string& hrp,
-    const std::vector<uint8_t>& dpk
-);
-std::vector<uint8_t> DecodeDoublePublicKey(const std::string& pubkey);
-
 bool IsValidDestinationString(const std::string& str);
 bool IsValidDestinationString(const std::string& str, const CChainParams& params);
 

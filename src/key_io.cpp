@@ -321,21 +321,3 @@ bool IsValidDestinationString(const std::string& str)
     return IsValidDestinationString(str, Params());
 }
 
-std::string EncodeDoublePublicKey(
-    bech32_mod::Encoding encoding,
-    const std::string& hrp,
-    const std::vector<uint8_t>& dpk)
-{
-    std::vector<uint8_t> dpk_5bit;
-    ConvertBits<8, 5, true>([&](uint8_t c) { dpk_5bit.push_back(c); }, dpk.begin(), dpk.end());
-    return bech32_mod::Encode(encoding, hrp, dpk_5bit);
-}
-
-std::vector<uint8_t> DecodeDoublePublicKey(const std::string& bech32_dpk)
-{
-    auto res = bech32_mod::Decode(bech32_dpk);
-    std::vector<uint8_t> dpk;
-    ConvertBits<5, 8, false>([&](uint8_t c) { dpk.push_back(c); }, res.data.begin(), res.data.end());
-    return dpk;
-}
-
