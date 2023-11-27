@@ -24,7 +24,6 @@ elif [ "$CI_USE_APT_INSTALL" != "no" ]; then
   if [[ -n "${APPEND_APT_SOURCES_LIST}" ]]; then
     echo "${APPEND_APT_SOURCES_LIST}" >> /etc/apt/sources.list
   fi
-  echo "TAG is ${CI_IMAGE_NAME_TAG} !!!!!!!!!!!!!!"
   ${CI_RETRY_EXE} apt-get update
   ${CI_RETRY_EXE} bash -c "apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $CI_BASE_PACKAGES"
 fi
