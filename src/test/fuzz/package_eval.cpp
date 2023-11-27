@@ -6,6 +6,7 @@
 #include <node/context.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
+#include <policy/v3_policy.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -171,7 +172,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
             // Create transaction to add to the mempool
             const CTransactionRef tx = [&] {
                 CMutableTransaction tx_mut;
-                tx_mut.nVersion = CTransaction::CURRENT_VERSION;
+                tx_mut.nVersion = fuzzed_data_provider.ConsumeBool() ? CTransaction::CURRENT_VERSION : 3;
                 tx_mut.nLockTime = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<uint32_t>();
                 // Last tx will sweep all outpoints in package
                 const auto num_in = last_tx ? package_outpoints.size()  : fuzzed_data_provider.ConsumeIntegralInRange<int>(1, mempool_outpoints.size());
@@ -261,7 +262,6 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
         std::set<CTransactionRef> added;
         auto txr = std::make_shared<TransactionsDelta>(added);
         RegisterSharedValidationInterface(txr);
-        const bool bypass_limits = fuzzed_data_provider.ConsumeBool();
 
         // When there are multiple transactions in the package, we call ProcessNewPackage(txs, test_accept=false)
         // and AcceptToMemoryPool(txs.back(), test_accept=true). When there is only 1 transaction, we might flip it
@@ -271,7 +271,10 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
         const auto result_package = WITH_LOCK(::cs_main,
                                     return ProcessNewPackage(chainstate, tx_pool, txs, /*test_accept=*/single_submit));
 
-        const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, txs.back(), GetTime(), bypass_limits, /*test_accept=*/!single_submit));
+        // Always set bypass_limits to false because it is not supported in ProcessNewPackage and
+        // can be a source of divergence.
+        const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, txs.back(), GetTime(),
+                                   /*bypass_limits=*/false, /*test_accept=*/!single_submit));
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
 
         SyncWithValidationInterfaceQueue();
@@ -300,5 +303,21 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
     UnregisterSharedValidationInterface(outpoints_updater);
 
     WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
+    LOCK(tx_pool.cs);
+    for (const auto& tx_info : tx_pool.infoAll()) {
+        const auto& entry = *Assert(tx_pool.GetEntry(tx_info.tx->GetHash()));
+        if (tx_info.tx->nVersion == 3) {
+            // Check that special v3 ancestor/descendant limits and rules are always respected
+            Assert(entry.GetCountWithDescendants() <= V3_DESCENDANT_LIMIT);
+            Assert(entry.GetCountWithAncestors() <= V3_ANCESTOR_LIMIT);
+            if (entry.GetCountWithAncestors() > 1) {
+                Assert(entry.GetTxSize() <= V3_CHILD_MAX_VSIZE);
+            }
+        }
+        // Transactions with fees of 0 or lower should be proactively trimmed.
+        if (tx_pool.m_min_relay_feerate.GetFeePerK() > 0) {
+            Assert(entry.GetModFeesWithDescendants() > 0);
+        }
+    }
 }
 } // namespace

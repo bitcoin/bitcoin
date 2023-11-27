@@ -6,6 +6,7 @@
 #include <node/context.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
+#include <policy/v3_policy.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -130,6 +131,27 @@ CTxMemPool MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeConte
     return CTxMemPool{mempool_opts};
 }
 
+void CheckMempoolInvariants(const CTxMemPool& tx_pool, bool check_fees)
+{
+    LOCK(tx_pool.cs);
+    for (const auto& tx_info : tx_pool.infoAll()) {
+        const auto& entry = *Assert(tx_pool.GetEntry(tx_info.tx->GetHash()));
+        if (tx_info.tx->nVersion == 3) {
+            // Check that special v3 ancestor/descendant limits and rules are always respected
+            Assert(entry.GetCountWithDescendants() <= V3_DESCENDANT_LIMIT);
+            Assert(entry.GetCountWithAncestors() <= V3_ANCESTOR_LIMIT);
+            // If this transaction has at least 1 ancestor, it's a "child" and has restricted weight.
+            if (entry.GetCountWithAncestors() > 1) {
+                Assert(entry.GetTxSize() <= V3_CHILD_MAX_VSIZE);
+            }
+        }
+        // Transactions with fees of 0 or lower should be proactively trimmed.
+        if (check_fees && tx_pool.m_min_relay_feerate.GetFeePerK() > 0) {
+            Assert(entry.GetModFeesWithDescendants() > 0);
+        }
+    }
+}
+
 void CheckATMPInvariants(const MempoolAcceptResult& res, bool txid_in_mempool, bool wtxid_in_mempool)
 {
 
@@ -229,7 +251,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         // Create transaction to add to the mempool
         const CTransactionRef tx = [&] {
             CMutableTransaction tx_mut;
-            tx_mut.nVersion = CTransaction::CURRENT_VERSION;
+            tx_mut.nVersion = fuzzed_data_provider.ConsumeBool() ? CTransaction::CURRENT_VERSION : 3;
             tx_mut.nLockTime = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<uint32_t>();
             const auto num_in = fuzzed_data_provider.ConsumeIntegralInRange<int>(1, outpoints_rbf.size());
             const auto num_out = fuzzed_data_provider.ConsumeIntegralInRange<int>(1, outpoints_rbf.size() * 2);
@@ -315,6 +337,9 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         if (accepted) {
             Assert(added.size() == 1); // For now, no package acceptance
             Assert(tx == *added.begin());
+            // Only check fees if accepted and not bypass_limits, otherwise it's not guaranteed that
+            // trimming has happened for this tx and previous iterations.
+            CheckMempoolInvariants(tx_pool, /*check_fees=*/!bypass_limits);
         } else {
             // Do not consider rejected transaction removed
             removed.erase(tx);
@@ -407,6 +432,9 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         if (accepted) {
             txids.push_back(tx->GetHash());
+            // Only check fees if accepted and not bypass_limits, otherwise it's not guaranteed that
+            // trimming has happened for this tx and previous iterations.
+            CheckMempoolInvariants(tx_pool, /*check_fees=*/!bypass_limits);
         }
     }
     Finish(fuzzed_data_provider, tx_pool, chainstate);
