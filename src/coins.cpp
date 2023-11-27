@@ -250,14 +250,16 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
     return true;
 }
 
-bool CCoinsViewCache::Flush() {
+bool CCoinsViewCache::Flush(bool reallocate_cache) {
     bool fOk = base->BatchWrite(cacheCoins, hashBlock, /*erase=*/true);
     if (fOk) {
         if (!cacheCoins.empty()) {
             /* BatchWrite must erase all cacheCoins elements when erase=true. */
             throw std::logic_error("Not all cached coins were erased");
         }
-        ReallocateCache();
+        if (reallocate_cache) {
+            ReallocateCache();
+        }
     }
     cachedCoinsUsage = 0;
     return fOk;
