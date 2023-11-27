@@ -46,6 +46,10 @@ struct CNodeStateStats {
     std::chrono::seconds time_offset{0};
 };
 
+struct PeerManagerInfo {
+    std::chrono::seconds median_outbound_time_offset{0s};
+};
+
 class PeerManager : public CValidationInterface, public NetEventsInterface
 {
 public:
@@ -85,6 +89,9 @@ public:
 
     /** Get statistics from node state */
     virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
+
+    /** Get peer manager info. */
+    virtual PeerManagerInfo GetInfo() const = 0;
 
     /** Whether this node ignores txs received over p2p. */
     virtual bool IgnoresIncomingTxs() = 0;
