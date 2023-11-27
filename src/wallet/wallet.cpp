@@ -884,7 +884,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
         for(unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
             if (IsMine(wtx.tx->vout[i]) && !IsSpent(hash, i)) {
                 setWalletUTXO.insert(COutPoint(hash, i));
-                if (deterministicMNManager->IsProTxWithCollateral(wtx.tx, i) || mnList.HasMNByCollateral(COutPoint(hash, i))) {
+                if (CDeterministicMNManager::IsProTxWithCollateral(wtx.tx, i) || mnList.HasMNByCollateral(COutPoint(hash, i))) {
                     LockCoin(COutPoint(hash, i));
                 }
             }
@@ -909,7 +909,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
         for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
             if (IsMine(wtx.tx->vout[i]) && !IsSpent(hash, i)) {
                 bool new_utxo = setWalletUTXO.insert(COutPoint(hash, i)).second;
-                if (new_utxo && (deterministicMNManager->IsProTxWithCollateral(wtx.tx, i) || mnList.HasMNByCollateral(COutPoint(hash, i)))) {
+                if (new_utxo && (CDeterministicMNManager::IsProTxWithCollateral(wtx.tx, i) || mnList.HasMNByCollateral(COutPoint(hash, i)))) {
                     LockCoin(COutPoint(hash, i));
                 }
                 fUpdated |= new_utxo;
@@ -3869,7 +3869,7 @@ void CWallet::AutoLockMasternodeCollaterals()
     for (const auto& pair : mapWallet) {
         for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
             if (IsMine(pair.second.tx->vout[i]) && !IsSpent(pair.first, i)) {
-                if (deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i))) {
+                if (CDeterministicMNManager::IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i))) {
                     LockCoin(COutPoint(pair.first, i));
                 }
             }
@@ -4306,7 +4306,7 @@ void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
         auto it = mapWallet.find(o.hash);
         if (it != mapWallet.end()) {
             const auto &p = it->second;
-            if (deterministicMNManager->IsProTxWithCollateral(p.tx, o.n) || mnList.HasMNByCollateral(o)) {
+            if (CDeterministicMNManager::IsProTxWithCollateral(p.tx, o.n) || mnList.HasMNByCollateral(o)) {
                 vOutpts.emplace_back(o);
             }
         }
