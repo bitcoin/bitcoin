@@ -1009,6 +1009,12 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
     // Get HDKeys
     LoadResult hdkey_res = LoadRecords(pwallet, batch, DBKeys::HDKEY,
         [&wallet_xpub, &wallet_key] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        // Make sure that the HAS_HDKEY_RECORDS flag is set
+        if (!pwallet->IsWalletFlagSet(WALLET_FLAG_HAS_HDKEY_RECORDS)) {
+            err = "Error unexepcted hdkey record found";
+            return DBErrors::CORRUPT;
+        }
+
         CExtPubKey extpub;
         std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
         key >> xpub;
@@ -1045,6 +1051,12 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
     // Get encrypted HDKeys
     LoadResult enc_hdkey_res = LoadRecords(pwallet, batch, DBKeys::HDCKEY,
         [&wallet_xpub, &wallet_crypted_key] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        // Make sure that the HAS_HDKEY_RECORDS flag is set
+        if (!pwallet->IsWalletFlagSet(WALLET_FLAG_HAS_HDKEY_RECORDS)) {
+            err = "Error unexepcted hdckey record found";
+            return DBErrors::CORRUPT;
+        }
+
         CExtPubKey extpub;
         std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
         key >> xpub;

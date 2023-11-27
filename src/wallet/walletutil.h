@@ -78,6 +78,11 @@ enum WalletFlags : uint64_t {
 
     //! Indicates that the wallet needs an external signer
     WALLET_FLAG_EXTERNAL_SIGNER = (1ULL << 35),
+
+    //! Indicates that the wallet has hdkey or hdckey records
+    //! hdkey and hdckey are backwards incompatible as they can result in keys remaining
+    //! unencrypted when encrypting after a downgrade. Thus downgrade protection is required
+    WALLET_FLAG_HAS_HDKEY_RECORDS = (1ULL << 36),
 };
 
 //! Get the path of the wallet directory.
