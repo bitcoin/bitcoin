@@ -823,7 +823,7 @@ void CQuorumManager::StartCachePopulatorThread(const CQuorumCPtr pQuorum) const
     // when then later some other thread tries to get keys, it will be much faster
     workerPool.push([pQuorum, t, this](int threadId) {
         for (const auto i : irange::range(pQuorum->members.size())) {
-            if (!quorumThreadInterrupt) {
+            if (quorumThreadInterrupt) {
                 break;
             }
             if (pQuorum->qc->validMembers[i]) {
