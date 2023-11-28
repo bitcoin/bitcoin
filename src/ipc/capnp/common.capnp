@@ -16,6 +16,14 @@ struct BlockRef $Proxy.wrap("interfaces::BlockRef") {
     height @1 :Int32;
 }
 
+struct PSBTFillOptions $Proxy.wrap("common::PSBTFillOptions") {
+    sign @0 :Bool = true;
+    sighashType @1 :Int32 $Proxy.name("sighash_type");
+    hasSighashType @2 :Bool;
+    finalize @3 :Bool = true;
+    bip32Derivs @4 :Bool $Proxy.name("bip32_derivs");
+}
+
 struct FeeCalculation $Proxy.wrap("FeeCalculation") {
     est @0 :EstimationResult;
     reason @1 :Int32;
