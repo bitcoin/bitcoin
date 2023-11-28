@@ -7,6 +7,7 @@
 
 #include <chainparams.h>
 #include <clientversion.h>
+#include <common/types.h>
 #include <consensus/validation.h>
 #include <interfaces/types.h>
 #include <ipc/capnp/common.capnp.proxy.h>
@@ -39,9 +40,11 @@
 #include <mp/type-number.h>
 #include <mp/type-optional.h>
 #include <mp/type-pointer.h>
+#include <mp/type-set.h>
 #include <mp/type-string.h>
 #include <mp/type-struct.h>
 #include <mp/type-threadmap.h>
+#include <mp/type-tuple.h>
 #include <mp/type-vector.h>
 #include <mp/type-void.h>
 #include <stdexcept>
@@ -307,6 +310,34 @@ decltype(auto) CustomReadField(TypeList<util::Expected<T, E>>, Priority<1>, Invo
     }
 }
 
+//! Overload CustomBuildField and CustomReadField to serialize
+//! util::Expected<void, E> return values as common.capnp ExpectedVoid union
+//! structs
+template <typename E, typename Value, typename Output>
+void CustomBuildField(TypeList<util::Expected<void, E>>, Priority<1>, InvokeContext& invoke_context, Value&& expected, Output&& output)
+{
+    auto result = output.init();
+    if (expected) {
+        result.setValue();
+    } else {
+        BuildField(TypeList<E>(), invoke_context, Make<ValueField>(result.initError()), expected.error());
+    }
+}
+
+template <typename E, typename Input, typename ReadDest>
+decltype(auto) CustomReadField(TypeList<util::Expected<void, E>>, Priority<1>, InvokeContext& invoke_context, Input&& input, ReadDest&& read_dest)
+{
+    auto result = input.get();
+    if (result.hasError()) {
+        return ReadField(TypeList<E>(), invoke_context, Make<ValueField>(result.getError()),
+            ReadDestEmplace(TypeList<E>(), [&](auto&&... args) -> const util::Expected<void, E>& {
+                return read_dest.construct(util::Unexpected{std::forward<decltype(args)>(args)...});
+            }));
+    } else {
+        return static_cast<const util::Expected<void, E>&>(read_dest.construct());
+    }
+}
+
 //! Overload CustomBuildField and CustomReadField to serialize util::Result
 //! return values as common.capnp Result and ResultVoid structs
 template <typename LocalType, typename Value, typename Output>
@@ -380,6 +411,16 @@ void CustomBuildField(TypeList<std::unordered_set<LocalType, Hash>>, Priority<1>
         BuildField(TypeList<LocalType>(), invoke_context, ListOutput<typename decltype(list)::Builds>(list, i), elem);
         ++i;
     }
+}
+
+// FIXME: Extend mp/type-data.h to cover this case where c++ constructor accepts
+// span argument instead of begin/end arguments.
+template <typename Value, typename Output>
+void CustomBuildField(TypeList<PKHash>, Priority<2>, InvokeContext& invoke_context, Value&& value, Output&& output)
+{
+    auto data = std::span{value};
+    auto result = output.init(data.size());
+    memcpy(result.begin(), data.data(), data.size());
 }
 } // namespace mp
 
