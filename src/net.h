@@ -1064,6 +1064,8 @@ public:
         std::vector<std::string> m_specified_outgoing;
         std::vector<std::string> m_added_nodes;
         bool m_i2p_accept_incoming;
+        bool whitelist_forcerelay = DEFAULT_WHITELISTFORCERELAY;
+        bool whitelist_relay = DEFAULT_WHITELISTRELAY;
     };
 
     void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex)
@@ -1098,6 +1100,8 @@ public:
             }
         }
         m_onion_binds = connOptions.onion_binds;
+        whitelist_forcerelay = connOptions.whitelist_forcerelay;
+        whitelist_relay = connOptions.whitelist_relay;
     }
 
     CConnman(uint64_t seed0, uint64_t seed1, AddrMan& addrman, const NetGroupManager& netgroupman,
@@ -1550,6 +1554,18 @@ private:
      * an address and port that are designated for incoming Tor connections.
      */
     std::vector<CService> m_onion_binds;
+
+    /**
+     * flag for adding 'forcerelay' permission to whitelisted inbound
+     * and manual peers with default permissions.
+     */
+    bool whitelist_forcerelay;
+
+    /**
+     * flag for adding 'relay' permission to whitelisted inbound
+     * and manual peers with default permissions.
+     */
+    bool whitelist_relay;
 
     /**
      * Mutex protecting m_i2p_sam_sessions.
