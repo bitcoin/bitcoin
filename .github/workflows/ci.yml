@@ -138,55 +138,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Fix Visual Studio installation
-        # Avoid toolset ambiguity that MSVC can't handle.
-        run: |
-          Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
-          $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
-          $componentsToRemove= @(
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.ATL"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.MFC"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.37.17.7.x86.x64"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ARM64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL.ARM64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.ATL.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC.ARM"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC.ARM.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC.ARM64"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC.ARM64.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.MFC.Spectre"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64"
-            "Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64.Spectre"
-          )
-          [string]$workloadArgs = $componentsToRemove | ForEach-Object {" --remove " +  $_}
-          $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache')
-          # should be run twice
-          $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
-          $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
-
       - name: Configure Developer Command Prompt for Microsoft Visual C++
         # Using microsoft/setup-msbuild is not enough.
         uses: ilammy/msvc-dev-cmd@v1
@@ -197,6 +148,8 @@ jobs:
         run: |
           msbuild -version | Out-File -FilePath "$env:GITHUB_WORKSPACE\msbuild_version"
           Get-Content -Path "$env:GITHUB_WORKSPACE\msbuild_version"
+          $env:VCToolsVersion | Out-File -FilePath "$env:GITHUB_WORKSPACE\toolset_version"
+          Get-Content -Path "$env:GITHUB_WORKSPACE\toolset_version"
           $env:CI_QT_URL | Out-File -FilePath "$env:GITHUB_WORKSPACE\qt_url"
           $env:CI_QT_CONF | Out-File -FilePath "$env:GITHUB_WORKSPACE\qt_conf"
 
@@ -279,7 +232,8 @@ jobs:
         run: |
           Set-Location "$env:VCPKG_INSTALLATION_ROOT"
           Add-Content -Path "triplets\x64-windows-static.cmake" -Value "set(VCPKG_BUILD_TYPE release)"
-          vcpkg --vcpkg-root "$env:VCPKG_INSTALLATION_ROOT" integrate install
+          Add-Content -Path "triplets\x64-windows-static.cmake" -Value "set(VCPKG_PLATFORM_TOOLSET_VERSION $env:VCToolsVersion)"
+          .\vcpkg.exe --vcpkg-root "$env:VCPKG_INSTALLATION_ROOT" integrate install
           git rev-parse HEAD | Out-File -FilePath "$env:GITHUB_WORKSPACE\vcpkg_commit"
           Get-Content -Path "$env:GITHUB_WORKSPACE\vcpkg_commit"
 
@@ -293,7 +247,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/AppData/Local/vcpkg/archives
-          key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('vcpkg_commit', 'msbuild_version', 'build_msvc/vcpkg.json') }}
+          key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('vcpkg_commit', 'msbuild_version', 'toolset_version', 'build_msvc/vcpkg.json') }}
 
       - name: Generate project files
         run: py -3 build_msvc\msvc-autogen.py
