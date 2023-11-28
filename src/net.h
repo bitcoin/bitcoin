@@ -20,6 +20,7 @@
 #include <netbase.h>
 #include <netgroup.h>
 #include <node/connection_types.h>
+#include <node/protocol_version.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -30,7 +31,6 @@
 #include <util/check.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
-#include <version.h>
 
 #include <atomic>
 #include <condition_variable>

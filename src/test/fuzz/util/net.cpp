@@ -6,13 +6,13 @@
 
 #include <compat/compat.h>
 #include <netaddress.h>
+#include <node/protocol_version.h>
 #include <protocol.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
 #include <test/util/net.h>
 #include <util/sock.h>
 #include <util/time.h>
-#include <version.h>
 
 #include <array>
 #include <cassert>

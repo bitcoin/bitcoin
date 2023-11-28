@@ -12,6 +12,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <netmessagemaker.h>
+#include <node/protocol_version.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
@@ -22,7 +23,6 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <validation.h>
-#include <version.h>
 
 #include <boost/test/unit_test.hpp>
 
