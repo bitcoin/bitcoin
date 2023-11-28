@@ -67,7 +67,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir_path, *, chain, rpchost, timewait, timeout_factor, bitcoind, bitcoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, descriptors=False):
+    def __init__(self, i, datadir_path, *, chain, rpchost, timewait, timeout_factor, bitcoind, bitcoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, descriptors=False, v2transport=False):
         """
         Kwargs:
             start_perf (bool): If True, begin profiling the node with `perf` as soon as
@@ -125,6 +125,12 @@ class TestNode():
             self.args.append("-logsourcelocations")
         if self.version_is_at_least(239000):
             self.args.append("-loglevel=trace")
+
+        # Default behavior from global -v2transport flag is added to args to persist it over restarts.
+        # May be overwritten in individual tests, using extra_args.
+        self.default_to_v2 = v2transport
+        if self.default_to_v2:
+            self.args.append("-v2transport=1")
 
         self.cli = TestNodeCLI(bitcoin_cli, self.datadir_path)
         self.use_cli = use_cli
@@ -197,6 +203,8 @@ class TestNode():
         """Start the node."""
         if extra_args is None:
             extra_args = self.extra_args
+
+        self.use_v2transport = "-v2transport=1" in extra_args or (self.default_to_v2 and "-v2transport=0" not in extra_args)
 
         # Add a new stdout and stderr file each time bitcoind is started
         if stderr is None:
@@ -782,15 +790,15 @@ class TestNodeCLI():
                 results.append(dict(error=e))
         return results
 
-    def send_cli(self, command=None, *args, **kwargs):
+    def send_cli(self, clicommand=None, *args, **kwargs):
         """Run bitcoin-cli command. Deserializes returned string as python object."""
         pos_args = [arg_to_cli(arg) for arg in args]
         named_args = [str(key) + "=" + arg_to_cli(value) for (key, value) in kwargs.items()]
         p_args = [self.binary, f"-datadir={self.datadir}"] + self.options
         if named_args:
             p_args += ["-named"]
-        if command is not None:
-            p_args += [command]
+        if clicommand is not None:
+            p_args += [clicommand]
         p_args += pos_args + named_args
         self.log.debug("Running bitcoin-cli {}".format(p_args[2:]))
         process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)

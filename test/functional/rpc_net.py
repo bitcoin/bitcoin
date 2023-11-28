@@ -150,7 +150,7 @@ class NetTest(BitcoinTestFramework):
                 "synced_blocks": -1,
                 "synced_headers": -1,
                 "timeoffset": 0,
-                "transport_protocol_type": "v1",
+                "transport_protocol_type": "v1" if not self.options.v2transport else "detecting",
                 "version": 0,
             },
         )
@@ -160,19 +160,23 @@ class NetTest(BitcoinTestFramework):
     def test_getnettotals(self):
         self.log.info("Test getnettotals")
         # Test getnettotals and getpeerinfo by doing a ping. The bytes
-        # sent/received should increase by at least the size of one ping (32
-        # bytes) and one pong (32 bytes).
+        # sent/received should increase by at least the size of one ping
+        # and one pong. Both have a payload size of 8 bytes, but the total
+        # size depends on the used p2p version:
+        #   - p2p v1: 24 bytes (header) + 8 bytes (payload) = 32 bytes
+        #   - p2p v2: 21 bytes (header/tag with short-id) + 8 bytes (payload) = 29 bytes
+        ping_size = 32 if not self.options.v2transport else 29
         net_totals_before = self.nodes[0].getnettotals()
         peer_info_before = self.nodes[0].getpeerinfo()
 
         self.nodes[0].ping()
-        self.wait_until(lambda: (self.nodes[0].getnettotals()['totalbytessent'] >= net_totals_before['totalbytessent'] + 32 * 2), timeout=1)
-        self.wait_until(lambda: (self.nodes[0].getnettotals()['totalbytesrecv'] >= net_totals_before['totalbytesrecv'] + 32 * 2), timeout=1)
+        self.wait_until(lambda: (self.nodes[0].getnettotals()['totalbytessent'] >= net_totals_before['totalbytessent'] + ping_size * 2), timeout=1)
+        self.wait_until(lambda: (self.nodes[0].getnettotals()['totalbytesrecv'] >= net_totals_before['totalbytesrecv'] + ping_size * 2), timeout=1)
 
         for peer_before in peer_info_before:
             peer_after = lambda: next(p for p in self.nodes[0].getpeerinfo() if p['id'] == peer_before['id'])
-            self.wait_until(lambda: peer_after()['bytesrecv_per_msg'].get('pong', 0) >= peer_before['bytesrecv_per_msg'].get('pong', 0) + 32, timeout=1)
-            self.wait_until(lambda: peer_after()['bytessent_per_msg'].get('ping', 0) >= peer_before['bytessent_per_msg'].get('ping', 0) + 32, timeout=1)
+            self.wait_until(lambda: peer_after()['bytesrecv_per_msg'].get('pong', 0) >= peer_before['bytesrecv_per_msg'].get('pong', 0) + ping_size, timeout=1)
+            self.wait_until(lambda: peer_after()['bytessent_per_msg'].get('ping', 0) >= peer_before['bytessent_per_msg'].get('ping', 0) + ping_size, timeout=1)
 
     def test_getnetworkinfo(self):
         self.log.info("Test getnetworkinfo")
@@ -345,7 +349,10 @@ class NetTest(BitcoinTestFramework):
         node = self.nodes[0]
 
         self.restart_node(0)
-        self.connect_nodes(0, 1)
+        # we want to use a p2p v1 connection here in order to ensure
+        # a peer id of zero (a downgrade from v2 to v1 would lead
+        # to an increase of the peer id)
+        self.connect_nodes(0, 1, peer_advertises_v2=False)
 
         self.log.info("Test sendmsgtopeer")
         self.log.debug("Send a valid message")
