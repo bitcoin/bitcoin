@@ -20,6 +20,13 @@ target_capnp_sources(bitcoin_ipc ${CMAKE_CURRENT_SOURCE_DIR}
   capnp/mining.capnp
 )
 
+if (ENABLE_WALLET)
+  target_sources(bitcoin_ipc PRIVATE capnp/wallet.cpp)
+  target_capnp_sources(bitcoin_ipc ${PROJECT_SOURCE_DIR} capnp/wallet.capnp)
+else()
+  target_capnp_sources(bitcoin_ipc ${PROJECT_SOURCE_DIR} ONLY_CAPNP capnp/wallet.capnp)
+endif()
+
 target_link_libraries(bitcoin_ipc
   PRIVATE
     core_interface

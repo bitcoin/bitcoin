@@ -37,9 +37,11 @@
 #include <mp/type-number.h>
 #include <mp/type-optional.h>
 #include <mp/type-pointer.h>
+#include <mp/type-set.h>
 #include <mp/type-string.h>
 #include <mp/type-struct.h>
 #include <mp/type-threadmap.h>
+#include <mp/type-tuple.h>
 #include <mp/type-vector.h>
 #include <mp/type-void.h>
 #include <type_traits>
@@ -329,6 +331,16 @@ void CustomBuildField(TypeList<std::unordered_set<LocalType, Hash>>, Priority<1>
         BuildField(TypeList<LocalType>(), invoke_context, ListOutput<typename decltype(list)::Builds>(list, i), elem);
         ++i;
     }
+}
+
+// FIXME: Extend mp/type-data.h to cover this case where c++ constructor accepts
+// span argument instead of begin/end arguments.
+template <typename Value, typename Output>
+void CustomBuildField(TypeList<PKHash>, Priority<2>, InvokeContext& invoke_context, Value&& value, Output&& output)
+{
+    auto data = std::span{value};
+    auto result = output.init(data.size());
+    memcpy(result.begin(), data.data(), data.size());
 }
 } // namespace mp
 
