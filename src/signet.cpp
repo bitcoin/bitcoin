@@ -110,7 +110,7 @@ std::optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& c
     uint256 signet_merkle = ComputeModifiedMerkleRoot(modified_cb, block);
 
     std::vector<uint8_t> block_data;
-    CVectorWriter writer{INIT_PROTO_VERSION, block_data, 0};
+    VectorWriter writer{block_data, 0};
     writer << block.nVersion;
     writer << block.hashPrevBlock;
     writer << signet_merkle;

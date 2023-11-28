@@ -683,8 +683,8 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
     return true;
 }
 
-V1Transport::V1Transport(const NodeId node_id, int nTypeIn, int nVersionIn) noexcept :
-    m_magic_bytes{Params().MessageStart()}, m_node_id(node_id), hdrbuf(nTypeIn, nVersionIn), vRecv(nTypeIn, nVersionIn)
+V1Transport::V1Transport(const NodeId node_id) noexcept
+    : m_magic_bytes{Params().MessageStart()}, m_node_id{node_id}
 {
     LOCK(m_recv_mutex);
     Reset();
@@ -818,7 +818,7 @@ bool V1Transport::SetMessageToSend(CSerializedNetMsg& msg) noexcept
 
     // serialize header
     m_header_to_send.clear();
-    CVectorWriter{INIT_PROTO_VERSION, m_header_to_send, 0, hdr};
+    VectorWriter{m_header_to_send, 0, hdr};
 
     // update state
     m_message_to_send = std::move(msg);
@@ -968,12 +968,12 @@ void V2Transport::StartSendingHandshake() noexcept
     // We cannot wipe m_send_garbage as it will still be used as AAD later in the handshake.
 }
 
-V2Transport::V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in, const CKey& key, Span<const std::byte> ent32, std::vector<uint8_t> garbage) noexcept :
-    m_cipher{key, ent32}, m_initiating{initiating}, m_nodeid{nodeid},
-    m_v1_fallback{nodeid, type_in, version_in}, m_recv_type{type_in}, m_recv_version{version_in},
-    m_recv_state{initiating ? RecvState::KEY : RecvState::KEY_MAYBE_V1},
-    m_send_garbage{std::move(garbage)},
-    m_send_state{initiating ? SendState::AWAITING_KEY : SendState::MAYBE_V1}
+V2Transport::V2Transport(NodeId nodeid, bool initiating, const CKey& key, Span<const std::byte> ent32, std::vector<uint8_t> garbage) noexcept
+    : m_cipher{key, ent32}, m_initiating{initiating}, m_nodeid{nodeid},
+      m_v1_fallback{nodeid},
+      m_recv_state{initiating ? RecvState::KEY : RecvState::KEY_MAYBE_V1},
+      m_send_garbage{std::move(garbage)},
+      m_send_state{initiating ? SendState::AWAITING_KEY : SendState::MAYBE_V1}
 {
     Assume(m_send_garbage.size() <= MAX_GARBAGE_LEN);
     // Start sending immediately if we're the initiator of the connection.
@@ -983,9 +983,9 @@ V2Transport::V2Transport(NodeId nodeid, bool initiating, int type_in, int versio
     }
 }
 
-V2Transport::V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in) noexcept :
-    V2Transport{nodeid, initiating, type_in, version_in, GenerateRandomKey(),
-                MakeByteSpan(GetRandHash()), GenerateRandomGarbage()} { }
+V2Transport::V2Transport(NodeId nodeid, bool initiating) noexcept
+    : V2Transport{nodeid, initiating, GenerateRandomKey(),
+                  MakeByteSpan(GetRandHash()), GenerateRandomGarbage()} {}
 
 void V2Transport::SetReceiveState(RecvState recv_state) noexcept
 {
@@ -1429,8 +1429,7 @@ CNetMessage V2Transport::GetReceivedMessage(std::chrono::microseconds time, bool
     Assume(m_recv_state == RecvState::APP_READY);
     Span<const uint8_t> contents{m_recv_decode_buffer};
     auto msg_type = GetMessageType(contents);
-    CDataStream ret(m_recv_type, m_recv_version);
-    CNetMessage msg{std::move(ret)};
+    CNetMessage msg{DataStream{}};
     // Note that BIP324Cipher::EXPANSION also includes the length descriptor size.
     msg.m_raw_message_size = m_recv_decode_buffer.size() + BIP324Cipher::EXPANSION;
     if (msg_type) {
@@ -3660,9 +3659,9 @@ ServiceFlags CConnman::GetLocalServices() const
 static std::unique_ptr<Transport> MakeTransport(NodeId id, bool use_v2transport, bool inbound) noexcept
 {
     if (use_v2transport) {
-        return std::make_unique<V2Transport>(id, /*initiating=*/!inbound, SER_NETWORK, INIT_PROTO_VERSION);
+        return std::make_unique<V2Transport>(id, /*initiating=*/!inbound);
     } else {
-        return std::make_unique<V1Transport>(id, SER_NETWORK, INIT_PROTO_VERSION);
+        return std::make_unique<V1Transport>(id);
     }
 }
 
