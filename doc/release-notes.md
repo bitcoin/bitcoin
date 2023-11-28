@@ -1,5 +1,5 @@
-26.0 rc3 Release Notes
-======================
+26.0 Release Notes
+==================
 
 Bitcoin Core version 26.0 is now available from:
 
