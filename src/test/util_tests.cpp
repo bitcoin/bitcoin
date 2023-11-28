@@ -1218,6 +1218,9 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     // has released the lock as we would expect by probing it.
     int processstatus;
     BOOST_CHECK_EQUAL(write(fd[1], &LockCommand, 1), 1);
+    // The following line invokes the ~CNetCleanup dtor without
+    // a paired SetupNetworking call. This is acceptable as long as
+    // ~CNetCleanup is a no-op for non-Windows platforms.
     BOOST_CHECK_EQUAL(write(fd[1], &ExitCommand, 1), 1);
     BOOST_CHECK_EQUAL(waitpid(pid, &processstatus, 0), pid);
     BOOST_CHECK_EQUAL(processstatus, 0);
