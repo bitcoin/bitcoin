@@ -4299,18 +4299,17 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
 
 void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
 {
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    std::vector<std::pair<const CTransactionRef&, unsigned int>> outputs;
 
     AssertLockHeld(cs_wallet);
     for (const auto &o : setWalletUTXO) {
         auto it = mapWallet.find(o.hash);
         if (it != mapWallet.end()) {
-            const auto &p = it->second;
-            if (CDeterministicMNManager::IsProTxWithCollateral(p.tx, o.n) || mnList.HasMNByCollateral(o)) {
-                vOutpts.emplace_back(o);
-            }
+            const auto &ptx = it->second;
+            outputs.emplace_back(ptx.tx, o.n);
         }
     }
+    vOutpts = m_chain->listMNCollaterials(outputs);
 }
 
 /** @} */ // end of Actions

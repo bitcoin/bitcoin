@@ -727,6 +727,22 @@ public:
         if (m_node.llmq_ctx == nullptr || m_node.llmq_ctx->clhandler == nullptr) return false;
         return m_node.llmq_ctx->clhandler->HasChainLock(height, hash);
     }
+    std::vector<COutPoint> listMNCollaterials(const std::vector<std::pair<const CTransactionRef&, unsigned int>>& outputs) override
+    {
+        const CBlockIndex *tip = WITH_LOCK(::cs_main, return ::ChainActive().Tip());
+        CDeterministicMNList mnList{};
+        if  (tip != nullptr && deterministicMNManager != nullptr) {
+            mnList = deterministicMNManager->GetListForBlock(tip);
+        }
+        std::vector<COutPoint> listRet;
+        for (const auto& [tx, index]: outputs) {
+            COutPoint nextOut{tx->GetHash(), index};
+            if (CDeterministicMNManager::IsProTxWithCollateral(tx, index) || mnList.HasMNByCollateral(nextOut)) {
+                listRet.emplace_back(nextOut);
+            }
+        }
+        return listRet;
+    }
     bool findBlock(const uint256& hash, const FoundBlock& block) override
     {
         WAIT_LOCK(cs_main, lock);
