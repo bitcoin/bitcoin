@@ -98,7 +98,7 @@ FUZZ_TARGET(bip324_cipher_roundtrip, .init=Initialize)
             unsigned damage_bit = provider.ConsumeIntegralInRange<unsigned>(0,
                 (ciphertext.size() + aad.size()) * 8U - 1U);
             unsigned damage_pos = damage_bit >> 3;
-            std::byte damage_val{(uint8_t)(1U << (damage_bit & 3))};
+            std::byte damage_val{(uint8_t)(1U << (damage_bit & 7))};
             if (damage_pos >= ciphertext.size()) {
                 aad[damage_pos - ciphertext.size()] ^= damage_val;
             } else {
