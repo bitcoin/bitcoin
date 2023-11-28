@@ -68,8 +68,8 @@ FUZZ_TARGET(golomb_rice)
 
     std::vector<uint64_t> decoded_deltas;
     {
-        SpanReader stream{0, golomb_rice_data};
-        BitStreamReader<SpanReader> bitreader{stream};
+        SpanReader stream{golomb_rice_data};
+        BitStreamReader bitreader{stream};
         const uint32_t n = static_cast<uint32_t>(ReadCompactSize(stream));
         for (uint32_t i = 0; i < n; ++i) {
             decoded_deltas.push_back(GolombRiceDecode(bitreader, BASIC_FILTER_P));
@@ -80,14 +80,14 @@ FUZZ_TARGET(golomb_rice)
 
     {
         const std::vector<uint8_t> random_bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider, 1024);
-        SpanReader stream{0, random_bytes};
+        SpanReader stream{random_bytes};
         uint32_t n;
         try {
             n = static_cast<uint32_t>(ReadCompactSize(stream));
         } catch (const std::ios_base::failure&) {
             return;
         }
-        BitStreamReader<SpanReader> bitreader{stream};
+        BitStreamReader bitreader{stream};
         for (uint32_t i = 0; i < std::min<uint32_t>(n, 1024); ++i) {
             try {
                 (void)GolombRiceDecode(bitreader, BASIC_FILTER_P);

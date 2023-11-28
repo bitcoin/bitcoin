@@ -1470,7 +1470,7 @@ BOOST_AUTO_TEST_CASE(script_HasValidOps)
 static CMutableTransaction TxFromHex(const std::string& str)
 {
     CMutableTransaction tx;
-    SpanReader{0, ParseHex(str)} >> TX_NO_WITNESS(tx);
+    SpanReader{ParseHex(str)} >> TX_NO_WITNESS(tx);
     return tx;
 }
 
@@ -1480,7 +1480,7 @@ static std::vector<CTxOut> TxOutsFromJSON(const UniValue& univalue)
     std::vector<CTxOut> prevouts;
     for (size_t i = 0; i < univalue.size(); ++i) {
         CTxOut txout;
-        SpanReader{0, ParseHex(univalue[i].get_str())} >> txout;
+        SpanReader{ParseHex(univalue[i].get_str())} >> txout;
         prevouts.push_back(std::move(txout));
     }
     return prevouts;
@@ -1816,7 +1816,7 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
     for (const auto& vec : vectors.getValues()) {
         auto txhex = ParseHex(vec["given"]["rawUnsignedTx"].get_str());
         CMutableTransaction tx;
-        SpanReader{PROTOCOL_VERSION, txhex} >> TX_WITH_WITNESS(tx);
+        SpanReader{txhex} >> TX_WITH_WITNESS(tx);
         std::vector<CTxOut> utxos;
         for (const auto& utxo_spent : vec["given"]["utxosSpent"].getValues()) {
             auto script_bytes = ParseHex(utxo_spent["scriptPubKey"].get_str());
