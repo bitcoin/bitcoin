@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <cstdint>
 #include <locale>
 #include <sstream>
 #include <string>

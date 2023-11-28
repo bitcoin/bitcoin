@@ -5,11 +5,12 @@
 #ifndef BITCOIN_SUPPORT_LOCKEDPOOL_H
 #define BITCOIN_SUPPORT_LOCKEDPOOL_H
 
-#include <stdint.h>
 #include <list>
 #include <map>
-#include <mutex>
 #include <memory>
+#include <mutex>
+#include <stdexcept>
+#include <stdint.h>
 #include <unordered_map>
 
 /**
