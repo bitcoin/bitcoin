@@ -45,7 +45,7 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <undo.h>
-#include <util/check.h> // For NDEBUG compile time check
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/hasher.h>

@@ -16,9 +16,9 @@
 #include <hash.h>
 #include <headerssync.h>
 #include <index/blockfilterindex.h>
+#include <kernel/chain.h>
 #include <kernel/mempool_entry.h>
 #include <logging.h>
-#include <kernel/chain.h>
 #include <merkleblock.h>
 #include <netbase.h>
 #include <netmessagemaker.h>
@@ -39,7 +39,7 @@
 #include <txmempool.h>
 #include <txorphanage.h>
 #include <txrequest.h>
-#include <util/check.h> // For NDEBUG compile time check
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/trace.h>
 #include <validation.h>
