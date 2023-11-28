@@ -7,7 +7,6 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <util/serfloat.h>
-#include <version.h>
 
 #include <cassert>
 #include <cmath>

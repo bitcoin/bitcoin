@@ -25,8 +25,6 @@
 #include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
-#include <version.h>
-
 
 #include <atomic>
 #include <cstdlib>

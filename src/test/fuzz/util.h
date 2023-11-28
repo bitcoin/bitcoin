@@ -20,7 +20,6 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <uint256.h>
-#include <version.h>
 
 #include <algorithm>
 #include <array>

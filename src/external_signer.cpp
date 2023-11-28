@@ -9,7 +9,6 @@
 #include <core_io.h>
 #include <psbt.h>
 #include <util/strencodings.h>
-#include <version.h>
 
 #include <algorithm>
 #include <stdexcept>

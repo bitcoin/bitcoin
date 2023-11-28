@@ -17,7 +17,6 @@
 #include <util/fs.h>
 #include <util/string.h>
 #include <util/vector.h>
-#include <version.h>
 
 #include <functional>
 #include <type_traits>
