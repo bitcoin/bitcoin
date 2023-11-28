@@ -114,6 +114,17 @@ interface ChainNotifications $Proxy.wrap("interfaces::Chain::Notifications") {
     chainStateFlushed @6 (context :Proxy.Context, role: ChainstateRole, locator :Data) -> ();
 }
 
+interface ChainClient $Proxy.wrap("interfaces::ChainClient") {
+    destroy @0 (context :Proxy.Context) -> ();
+    registerRpcs @1 (context :Proxy.Context) -> ();
+    verify @2 (context :Proxy.Context) -> (result :Bool);
+    load @3 (context :Proxy.Context) -> (result :Bool);
+    start @4 (context :Proxy.Context, scheduler :Void) -> ();
+    stop @5 (context :Proxy.Context) -> ();
+    setMockTime @6 (context :Proxy.Context, time :Int64) -> ();
+    schedulerMockForward @7 (context :Proxy.Context, deltaSeconds :Int64) -> ();
+}
+
 struct RPCCommand $Proxy.wrap("CRPCCommand") {
    category @0 :Text;
    name @1 :Text;

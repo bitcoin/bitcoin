@@ -412,7 +412,8 @@ public:
     //! Load saved state.
     virtual bool load() = 0;
 
-    //! Start client execution and provide a scheduler.
+    //! Start client execution and provide a scheduler. (Scheduler is
+    //! ignored if client is out-of-process).
     virtual void start(CScheduler& scheduler) = 0;
 
     //! Shut down client.

@@ -25,6 +25,7 @@
 #include <uint256.h>
 #include <undo.h>
 
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -189,6 +190,14 @@ void CustomPassMessage(InvokeContext& invoke_context,
     result->m_context.cleanup_fns.emplace_back([rpc_command = rpc_command.release()] { delete rpc_command; });
     results.setResult(kj::mv(result));
     return {};
+}
+
+void ProxyServerMethodTraits<ipc::capnp::messages::ChainClient, ipc::capnp::messages::ChainClient::StartParams>::invoke(ChainContext& context)
+{
+    // This method is never called because ChainClient::Start is overridden by
+    // WalletLoader::Start. The custom implementation is needed just because
+    // the CScheduler& argument this is supposed to pass is not serializable.
+    assert(0);
 }
 
 template <>

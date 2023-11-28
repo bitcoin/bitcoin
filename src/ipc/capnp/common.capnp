@@ -16,6 +16,14 @@ struct BlockRef $Proxy.wrap("interfaces::BlockRef") {
     height @1 :Int32;
 }
 
+struct PSBTFillOptions $Proxy.wrap("common::PSBTFillOptions") {
+    sign @0 :Bool = true;
+    sighashType @1 :Int32 $Proxy.name("sighash_type");
+    hasSighashType @2 :Bool;
+    finalize @3 :Bool = true;
+    bip32Derivs @4 :Bool $Proxy.name("bip32_derivs");
+}
+
 struct Settings $Proxy.wrap("common::Settings") {
    forcedSettings @0 :List(Pair(Text, Text)) $Proxy.name("forced_settings");
    commandLineOptions @1 :List(Pair(Text, List(Text))) $Proxy.name("command_line_options");
@@ -46,6 +54,14 @@ struct ResultVoid(Value) {
 struct Expected(Value, Error) {
     union {
         value @0 :Value;
+        error @1 :Error;
+    }
+}
+
+# Wrapper for util::Expected<void, Error>
+struct ExpectedVoid(Error) {
+    union {
+        value @0 :Void;
         error @1 :Error;
     }
 }

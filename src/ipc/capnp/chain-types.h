@@ -27,6 +27,17 @@ struct mp::ProxyServerMethodTraits<ipc::capnp::messages::UnstableChain, ipc::cap
     static ::capnp::Void invoke(Context& context);
 };
 
+//! Specialization of start method needed to provide CScheduler& reference
+//! argument.
+template <>
+struct mp::ProxyServerMethodTraits<ipc::capnp::messages::ChainClient, ipc::capnp::messages::ChainClient::StartParams>
+{
+    using ChainContext = ServerContext<ipc::capnp::messages::ChainClient,
+                                       ipc::capnp::messages::ChainClient::StartParams,
+                                       ipc::capnp::messages::ChainClient::StartResults>;
+    static void invoke(ChainContext& context);
+};
+
 namespace mp {
 //! Serve interfaces::Chain objects sent as stable Chain capabilities with
 //! ProxyServer<UnstableChain> servers, and read received Chain capabilities
@@ -78,6 +89,14 @@ void CustomPassMessage(InvokeContext& invoke_context,
                        const ipc::capnp::messages::BlockInfo::Reader& reader,
                        ::capnp::Void builder,
                        std::function<void(const interfaces::BlockInfo&)>&& fn);
+
+//! CScheduler& server-side argument handling. Skips argument so it can
+//! be handled by ProxyServerMethodTraits ChainClient::Start code.
+template <typename Accessor, typename ServerContext, typename Fn, typename... Args>
+void CustomPassField(TypeList<CScheduler&>, ServerContext& server_context, const Fn& fn, Args&&... args)
+{
+    fn.invoke(server_context, std::forward<Args>(args)...);
+}
 
 //! CRPCCommand& server-side argument handling. Skips argument so it can
 //! be handled by ProxyServerMethodTraits UnstableChain::HandleRpc code.
