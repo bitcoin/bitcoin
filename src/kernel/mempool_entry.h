@@ -127,8 +127,11 @@ public:
           nModFeesWithAncestors{nFee},
           nSigOpCostWithAncestors{sigOpCost} {}
 
+    // Prohibit accidental copies that might invalidate references from parent
+    // and child transactions, or lead to unsafe usage of mapTx.iterator_to.
     CTxMemPoolEntry(ExplicitCopyTag, const CTxMemPoolEntry& entry) : CTxMemPoolEntry(entry) {}
     CTxMemPoolEntry& operator=(const CTxMemPoolEntry&) = delete;
+    // The move constructor is already implicitly deleted, so be explicit about it.
     CTxMemPoolEntry(CTxMemPoolEntry&&) = delete;
     CTxMemPoolEntry& operator=(CTxMemPoolEntry&&) = delete;
 
