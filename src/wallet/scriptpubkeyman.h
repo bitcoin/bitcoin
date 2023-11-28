@@ -51,6 +51,9 @@ public:
     virtual bool IsLocked() const = 0;
 };
 
+//! Constant representing an unknown spkm creation time
+static constexpr int64_t UNKNOWN_TIME = std::numeric_limits<int64_t>::max();
+
 //! Default for -keypool
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 
@@ -286,7 +289,8 @@ private:
     WatchOnlySet setWatchOnly GUARDED_BY(cs_KeyStore);
     WatchKeyMap mapWatchKeys GUARDED_BY(cs_KeyStore);
 
-    int64_t nTimeFirstKey GUARDED_BY(cs_KeyStore) = 0;
+    // By default, do not scan any block until keys/scripts are generated/imported
+    int64_t nTimeFirstKey GUARDED_BY(cs_KeyStore) = UNKNOWN_TIME;
 
     //! Number of pre-generated keys/scripts (part of the look-ahead process, used to detect payments)
     int64_t m_keypool_size GUARDED_BY(cs_KeyStore){DEFAULT_KEYPOOL_SIZE};
