@@ -22,14 +22,16 @@ public:
     const std::string& DataDir() const { return strDataDir; }
     uint16_t RPCPort() const { return m_rpc_port; }
     uint16_t OnionServiceTargetPort() const { return m_onion_service_target_port; }
+    uint16_t Sv2Port() const { return m_sv2_port; }
 
     CBaseChainParams() = delete;
-    CBaseChainParams(const std::string& data_dir, uint16_t rpc_port, uint16_t onion_service_target_port)
-        : m_rpc_port(rpc_port), m_onion_service_target_port(onion_service_target_port), strDataDir(data_dir) {}
+    CBaseChainParams(const std::string& data_dir, uint16_t rpc_port, uint16_t onion_service_target_port, uint16_t sv2_port)
+        : m_rpc_port(rpc_port), m_onion_service_target_port(onion_service_target_port), m_sv2_port{sv2_port}, strDataDir(data_dir) {}
 
 private:
     const uint16_t m_rpc_port;
     const uint16_t m_onion_service_target_port;
+    const uint16_t m_sv2_port;
     std::string strDataDir;
 };
 
