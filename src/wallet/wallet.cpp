@@ -46,7 +46,6 @@
 #include <coinjoin/options.h>
 #include <evo/providertx.h>
 #include <governance/governance.h>
-#include <evo/deterministicmns.h>
 #include <masternode/sync.h>
 
 #include <univalue.h>
@@ -880,14 +879,15 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
         wtx.nTimeSmart = ComputeTimeSmart(wtx);
         AddToSpends(hash);
 
-        auto mnList = deterministicMNManager->GetListAtChainTip();
+        std::vector<std::pair<const CTransactionRef&, unsigned int>> outputs;
         for(unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
             if (IsMine(wtx.tx->vout[i]) && !IsSpent(hash, i)) {
                 setWalletUTXO.insert(COutPoint(hash, i));
-                if (CDeterministicMNManager::IsProTxWithCollateral(wtx.tx, i) || mnList.HasMNByCollateral(COutPoint(hash, i))) {
-                    LockCoin(COutPoint(hash, i));
-                }
+                outputs.emplace_back(wtx.tx, i);
             }
+        }
+        for (const auto& outPoint : m_chain->listMNCollaterials(outputs)) {
+            LockCoin(outPoint);
         }
     }
 
@@ -905,15 +905,18 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
             assert(wtx.m_confirm.block_height == confirm.block_height);
         }
 
-        auto mnList = deterministicMNManager->GetListAtChainTip();
-        for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
+        std::vector<std::pair<const CTransactionRef&, unsigned int>> outputs;
+        for(unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
             if (IsMine(wtx.tx->vout[i]) && !IsSpent(hash, i)) {
                 bool new_utxo = setWalletUTXO.insert(COutPoint(hash, i)).second;
-                if (new_utxo && (CDeterministicMNManager::IsProTxWithCollateral(wtx.tx, i) || mnList.HasMNByCollateral(COutPoint(hash, i)))) {
-                    LockCoin(COutPoint(hash, i));
+                if (new_utxo) {
+                    outputs.emplace_back(wtx.tx, i);
+                    fUpdated = true;
                 }
-                fUpdated |= new_utxo;
             }
+        }
+        for (const auto& outPoint : m_chain->listMNCollaterials(outputs)) {
+            LockCoin(outPoint);
         }
     }
 
@@ -3863,17 +3866,18 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 // This avoids accidental spending of collaterals. They can still be unlocked manually if a spend is really intended.
 void CWallet::AutoLockMasternodeCollaterals()
 {
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    std::vector<std::pair<const CTransactionRef&, unsigned int>> outputs;
 
     LOCK(cs_wallet);
     for (const auto& pair : mapWallet) {
         for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
             if (IsMine(pair.second.tx->vout[i]) && !IsSpent(pair.first, i)) {
-                if (CDeterministicMNManager::IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i))) {
-                    LockCoin(COutPoint(pair.first, i));
-                }
+                outputs.emplace_back(pair.second.tx, i);
             }
         }
+    }
+    for (const auto& outPoint : m_chain->listMNCollaterials(outputs)) {
+        LockCoin(outPoint);
     }
 }
 
