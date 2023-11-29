@@ -1515,9 +1515,19 @@ if test "$use_external_signer" != "no"; then
   CXXFLAGS="$TEMP_CXXFLAGS"
   AC_MSG_RESULT([$have_boost_process])
   if test "$have_boost_process" = "yes"; then
-    use_external_signer="yes"
-    AC_DEFINE([ENABLE_EXTERNAL_SIGNER], [1], [Define if external signer support is enabled])
-    AC_DEFINE([BOOST_PROCESS_USE_STD_FS], [1], [Defined to avoid Boost::Process trying to use Boost Filesystem])
+    case $host in
+      dnl Boost Process for Windows uses Boost ASIO. Boost ASIO performs
+      dnl pre-main init of Windows networking libraries, which we do not
+      dnl want.
+      *mingw*)
+        use_external_signer="no"
+      ;;
+      *)
+        use_external_signer="yes"
+        AC_DEFINE([ENABLE_EXTERNAL_SIGNER], [1], [Define if external signer support is enabled])
+        AC_DEFINE([BOOST_PROCESS_USE_STD_FS], [1], [Defined to avoid Boost::Process trying to use Boost Filesystem])
+      ;;
+    esac
   else
     if test "$use_external_signer" = "yes"; then
       AC_MSG_ERROR([External signing is not supported for this Boost version])
