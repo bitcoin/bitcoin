@@ -5,14 +5,14 @@
 #ifndef BITCOIN_TEST_UTIL_SETUP_COMMON_H
 #define BITCOIN_TEST_UTIL_SETUP_COMMON_H
 
-#include <common/args.h>
+#include <common/args.h> // IWYU pragma: export
 #include <key.h>
 #include <node/caches.h>
 #include <node/context.h> // IWYU pragma: export
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <stdexcept>
-#include <util/chaintype.h>
+#include <util/chaintype.h> // IWYU pragma: export
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/string.h>
