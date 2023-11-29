@@ -104,6 +104,13 @@ struct LLMQParams {
     // For rotated quorums it should be equal to 2 x active quorums set.
     int keepOldConnections;
 
+    // The number of quorums for which we should keep keys. Usually it's equal to keepOldConnections.
+    // Unlike for other quorum types we want to keep data (secret key shares and vvec)
+    // for Platform quorums for much longer because Platform can be restarted and
+    // it must be able to re-sign stuff.
+
+    int keepOldKeys;
+
     // How many members should we try to send all sigShares to before we give up.
     int recoveryMembers;
 };
@@ -138,6 +145,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
 
         .keepOldConnections = 3,
+        .keepOldKeys = 3,
         .recoveryMembers = 3,
     },
 
@@ -163,6 +171,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
 
         .keepOldConnections = 3,
+        .keepOldKeys = 3,
         .recoveryMembers = 3,
     },
 
@@ -188,6 +197,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
 
         .keepOldConnections = 3,
+        .keepOldKeys = 3,
         .recoveryMembers = 3,
     },
 
@@ -213,6 +223,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
 
         .keepOldConnections = 4,
+        .keepOldKeys = 4,
         .recoveryMembers = 3,
     },
 
@@ -238,6 +249,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
 
         .keepOldConnections = 4,
+        .keepOldKeys = 24 * 30 * 2, // 2 months of quorums
         .recoveryMembers = 3,
     },
 
@@ -263,6 +275,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .signingActiveQuorumCount = 4, // just a few ones to allow easier testing
 
         .keepOldConnections = 5,
+        .keepOldKeys = 5,
         .recoveryMembers = 6,
     },
 
@@ -288,6 +301,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
 
         .keepOldConnections = 4,
+        .keepOldKeys = 4,
         .recoveryMembers = 4,
     },
 
@@ -313,6 +327,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .signingActiveQuorumCount = 4, // just a few ones to allow easier testing
 
         .keepOldConnections = 5,
+        .keepOldKeys = 24 * 30 * 2, // 2 months of quorums
         .recoveryMembers = 6,
     },
 
@@ -338,6 +353,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
 
         .signingActiveQuorumCount = 24, // a full day worth of LLMQs
         .keepOldConnections = 25,
+        .keepOldKeys = 25,
         .recoveryMembers = 25,
     },
 
@@ -363,6 +379,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
 
         .signingActiveQuorumCount = 32,
         .keepOldConnections = 64,
+        .keepOldKeys = 64,
         .recoveryMembers = 25,
     },
 
@@ -389,6 +406,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
         .keepOldConnections = 5,
+        .keepOldKeys = 5,
         .recoveryMembers = 100,
     },
 
@@ -416,6 +434,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .signingActiveQuorumCount = 4, // four days worth of LLMQs
 
         .keepOldConnections = 5,
+        .keepOldKeys = 5,
         .recoveryMembers = 100,
     },
 
@@ -443,6 +462,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .signingActiveQuorumCount = 24, // a full day worth of LLMQs
 
         .keepOldConnections = 25,
+        .keepOldKeys = 24 * 30 * 2, // 2 months of quorums
         .recoveryMembers = 50,
     },
 
@@ -470,6 +490,7 @@ static constexpr std::array<LLMQParams, 14> available_llmqs = {
         .signingActiveQuorumCount = 24, // a full day worth of LLMQs
 
         .keepOldConnections = 25,
+        .keepOldKeys = 24 * 30 * 2, // 2 months of quorums
         .recoveryMembers = 12,
     },
 
