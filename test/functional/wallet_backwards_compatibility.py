@@ -131,6 +131,68 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         wallet = node_v19.get_wallet_rpc("w1_v19")
         assert wallet.getaddressinfo(address_18075)["solvable"]
 
+    def test_downgrade_encryption(self, node_master, descriptors_nodes, legacy_nodes):
+        self.log.info("Test downgrade encryption + re-open on master")
+
+        # Create wallet on master, downgrade and encrypt the wallet. Then, try to open it again on master.
+        name_wallet_on_master = "new_wallet"
+        node_master.createwallet(name_wallet_on_master, descriptors=self.options.descriptors)
+        wallet_on_master = node_master.get_wallet_rpc(name_wallet_on_master)
+
+        if self.options.descriptors:
+            # Retrieve the wallet's xpub
+            xpub = wallet_on_master.gethdkey()["xpub"]
+
+        # Make a backup of the wallet file
+        backup_path = os.path.join(self.options.tmpdir, f"{name_wallet_on_master}.dat")
+        wallet_on_master.backupwallet(backup_path)
+
+        # Downgrade and encrypt the wallet.
+        for node in descriptors_nodes if self.options.descriptors else legacy_nodes:
+            if self.major_version_less_than(node, 22):
+                continue  # cannot downgrade further than v22, tr() descriptors aren't supported.
+
+            # Load wallet in the prev node
+            target_dir = node.wallets_path / name_wallet_on_master
+            os.makedirs(target_dir, exist_ok=True)
+            shutil.copyfile(backup_path, target_dir / "wallet.dat")
+            node.loadwallet(name_wallet_on_master)
+            wallet_prev = node.get_wallet_rpc(name_wallet_on_master)
+
+            # Encrypt wallet in the prev node
+            wallet_prev.encryptwallet("pass")
+            wallet_info = wallet_prev.getwalletinfo()
+
+            # Restart prev node and verify it can reopen the wallet
+            self.restart_node(node.index, extra_args=[f"-wallet={name_wallet_on_master}"])
+            wallet_prev = node.get_wallet_rpc(name_wallet_on_master)
+            assert_equal(wallet_info, wallet_prev.getwalletinfo())
+            # And also it can decrypt the wallet
+            wallet_prev.walletpassphrase("pass", 999999)
+
+            # Finally, export the encrypted prev node wallet, and re-open it on master
+            exported_name = f'{name_wallet_on_master}_{node.index}'
+            prev_backup_path = os.path.join(self.options.tmpdir, f"{exported_name}.dat")
+            wallet_prev.backupwallet(prev_backup_path)
+
+            # Re-open it on master and decrypt the wallet
+            node_master.restorewallet(exported_name, prev_backup_path)
+            enc_wallet = node_master.get_wallet_rpc(exported_name)
+            enc_wallet.walletpassphrase("pass", 999999)
+            assert 'unlocked_until' in enc_wallet.getwalletinfo()
+
+            if self.options.descriptors:
+                # Check that the xpub is different
+                assert xpub != enc_wallet.gethdkey()["xpub"]
+
+            # remove backup file
+            os.remove(prev_backup_path)
+            wallet_prev.unloadwallet()
+            enc_wallet.unloadwallet()
+
+        # Clean wallet
+        wallet_on_master.unloadwallet()
+
     def run_test(self):
         node_miner = self.nodes[0]
         node_master = self.nodes[1]
@@ -304,6 +366,9 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         if self.options.descriptors:
             self.log.info("Test that 0.21 cannot open wallet containing tr() descriptors")
             assert_raises_rpc_error(-1, "map::at", node_v21.loadwallet, "w1")
+
+        # Test encryption on a previous version + reopen on master
+        self.test_downgrade_encryption(node_master, descriptors_nodes, legacy_nodes)
 
         self.log.info("Test that a wallet can upgrade to and downgrade from master, from:")
         for node in descriptors_nodes if self.options.descriptors else legacy_nodes:
