@@ -519,7 +519,6 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    bool IgnoresIncomingTxs() override { return m_opts.ignore_incoming_txs; }
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestBlock(int height, std::chrono::seconds time) override
@@ -1809,6 +1808,7 @@ PeerManagerInfo PeerManagerImpl::GetInfo() const
 {
     return PeerManagerInfo{
         .median_outbound_time_offset = m_outbound_time_offsets.Median(),
+        .ignores_incoming_txs = m_opts.ignore_incoming_txs,
     };
 }
 

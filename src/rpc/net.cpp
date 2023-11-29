@@ -679,7 +679,7 @@ static RPCHelpMan getnetworkinfo()
     }
     if (node.peerman) {
         auto peerman_info{node.peerman->GetInfo()};
-        obj.pushKV("localrelay", !node.peerman->IgnoresIncomingTxs());
+        obj.pushKV("localrelay", !peerman_info.ignores_incoming_txs);
         obj.pushKV("timeoffset", Ticks<std::chrono::seconds>(peerman_info.median_outbound_time_offset));
     }
     if (node.connman) {

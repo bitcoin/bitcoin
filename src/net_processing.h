@@ -48,6 +48,7 @@ struct CNodeStateStats {
 
 struct PeerManagerInfo {
     std::chrono::seconds median_outbound_time_offset{0s};
+    bool ignores_incoming_txs{false};
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface
@@ -92,9 +93,6 @@ public:
 
     /** Get peer manager info. */
     virtual PeerManagerInfo GetInfo() const = 0;
-
-    /** Whether this node ignores txs received over p2p. */
-    virtual bool IgnoresIncomingTxs() = 0;
 
     /** Relay transaction to all peers. */
     virtual void RelayTransaction(const uint256& txid, const uint256& wtxid) = 0;
