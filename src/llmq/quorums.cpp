@@ -200,8 +200,8 @@ CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, 
     m_mn_sync(mn_sync),
     m_peerman(peerman)
 {
-    utils::InitQuorumsCache(mapQuorumsCache);
-    utils::InitQuorumsCache(scanQuorumsCache);
+    utils::InitQuorumsCache(mapQuorumsCache, false);
+    utils::InitQuorumsCache(scanQuorumsCache, false);
 
     quorumThreadInterrupt.reset();
 }
@@ -296,7 +296,7 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
     }
 
     TriggerQuorumDataRecoveryThreads(pindexNew);
-    CleanupOldQuorumData(pindexNew);
+    StartCleanupOldQuorumDataThread(pindexNew);
 }
 
 void CQuorumManager::CheckQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindexNew) const
@@ -956,7 +956,7 @@ void CQuorumManager::StartQuorumDataRecoveryThread(const CQuorumCPtr pQuorum, co
     });
 }
 
-static void DataCleanupHelper(CDBWrapper& db, std::set<uint256> skip_list)
+static void DataCleanupHelper(CDBWrapper& db, std::set<uint256> skip_list, bool compact = false)
 {
     const auto prefixes = {DB_QUORUM_QUORUM_VVEC, DB_QUORUM_SK_SHARE};
 
@@ -990,39 +990,54 @@ static void DataCleanupHelper(CDBWrapper& db, std::set<uint256> skip_list)
 
         db.WriteBatch(batch);
 
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%d -- %s removed %d\n", __func__, prefix, count);
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s removed %d\n", __func__, prefix, count);
     }
 
     pcursor.reset();
-    db.CompactFull();
+
+    if (compact) {
+        // Avoid using this on regular cleanups, use on db migrations only
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- compact start\n", __func__);
+        db.CompactFull();
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- compact end\n", __func__);
+    }
 }
 
-void CQuorumManager::CleanupOldQuorumData(const CBlockIndex* pIndex) const
+void CQuorumManager::StartCleanupOldQuorumDataThread(const CBlockIndex* pIndex) const
 {
-    if (!fMasternodeMode || pIndex == nullptr || (pIndex->nHeight % 576 != 0)) {
+    // Note: this function is CPU heavy and we don't want it to be running during DKGs.
+    // The largest dkgMiningWindowStart for a related quorum type is 42 (LLMQ_60_75).
+    // At the same time most quorums use dkgInterval = 24 so the next DKG for them
+    // (after block 576 + 42) will start at block 576 + 24 * 2. That's only a 6 blocks
+    // window and it's better to have more room so we pick next cycle.
+    // dkgMiningWindowStart for small quorums is 10 i.e. a safe block to start
+    // these calculations is at height 576 + 24 * 2 + 10 = 576 + 58.
+    if (!fMasternodeMode || pIndex == nullptr || (pIndex->nHeight % 576 != 58)) {
         return;
     }
 
-    std::set<uint256> dbKeysToSkip;
+    cxxtimer::Timer t(/*start=*/ true);
+    LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- start\n", __func__);
 
-    LogPrint(BCLog::LLMQ, "CQuorumManager::%d -- start\n", __func__);
-    // Platform quorums in all networks are created every 24 blocks (~1h).
-    // Unlike for other quorum types we want to keep data (secret key shares and vvec)
-    // for Platform quorums for at least 2 months because Platform can be restarted and
-    // it must be able to re-sign stuff. During a month, 24 * 30 quorums are created.
-    constexpr auto numPlatformQuorumsDataToKeep = 24 * 30 * 2;
+    // do not block the caller thread
+    workerPool.push([pIndex, t, this](int threadId) {
+        std::set<uint256> dbKeysToSkip;
 
-    for (const auto& params : Params().GetConsensus().llmqs) {
-        auto nQuorumsToKeep = params.type == Params().GetConsensus().llmqTypePlatform ? numPlatformQuorumsDataToKeep : params.keepOldConnections;
-        const auto vecQuorums = ScanQuorums(params.type, pIndex, nQuorumsToKeep);
-        for (const auto& pQuorum : vecQuorums) {
-            dbKeysToSkip.insert(MakeQuorumKey(*pQuorum));
+        for (const auto& params : Params().GetConsensus().llmqs) {
+            if (quorumThreadInterrupt) {
+                break;
+            }
+            for (const auto& pQuorum : ScanQuorums(params.type, pIndex, params.keepOldKeys)) {
+                dbKeysToSkip.insert(MakeQuorumKey(*pQuorum));
+            }
         }
-    }
 
-    DataCleanupHelper(m_evoDb.GetRawDB(), dbKeysToSkip);
+        if (!quorumThreadInterrupt) {
+            DataCleanupHelper(m_evoDb.GetRawDB(), dbKeysToSkip);
+        }
 
-    LogPrint(BCLog::LLMQ, "CQuorumManager::%d -- done\n", __func__);
+        LogPrint(BCLog::LLMQ, "CQuorumManager::StartCleanupOldQuorumDataThread -- done. time=%d\n", t.count());
+    });
 }
 
 } // namespace llmq

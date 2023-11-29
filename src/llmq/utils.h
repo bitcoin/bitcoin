@@ -120,7 +120,7 @@ void IterateNodesRandom(NodesContainer& nodeStates, Continue&& cont, Callback&& 
 }
 
 template <typename CacheType>
-void InitQuorumsCache(CacheType& cache);
+void InitQuorumsCache(CacheType& cache, bool limit_by_connections = true);
 
 } // namespace utils
 
