@@ -17,7 +17,7 @@
 int64_t GetStartupTime();
 
 void SetupEnvironment();
-bool SetupNetworking();
+[[nodiscard]] bool SetupNetworking();
 #ifndef WIN32
 std::string ShellEscape(const std::string& arg);
 #endif
