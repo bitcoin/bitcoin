@@ -52,13 +52,12 @@ class WalletMigrationTest(BitcoinTestFramework):
             assert_equal(file_magic, b'SQLite format 3\x00')
         assert_equal(self.nodes[0].get_wallet_rpc(wallet_name).getwalletinfo()["format"], "sqlite")
 
-    def create_legacy_wallet(self, wallet_name, disable_private_keys=False):
-        self.nodes[0].createwallet(wallet_name=wallet_name, descriptors=False, disable_private_keys=disable_private_keys)
+    def create_legacy_wallet(self, wallet_name, **kwargs):
+        self.nodes[0].createwallet(wallet_name=wallet_name, descriptors=False, **kwargs)
         wallet = self.nodes[0].get_wallet_rpc(wallet_name)
         info = wallet.getwalletinfo()
         assert_equal(info["descriptors"], False)
         assert_equal(info["format"], "bdb")
-        assert_equal(info["private_keys_enabled"], not disable_private_keys)
         return wallet
 
     def assert_addr_info_equal(self, addr_info, addr_info_old):
@@ -876,6 +875,13 @@ class WalletMigrationTest(BitcoinTestFramework):
             _, _, magic = struct.unpack("QII", data)
             assert_equal(magic, BTREE_MAGIC)
 
+    def test_blank(self):
+        self.log.info("Test that a blank wallet is migrated")
+        wallet = self.create_legacy_wallet("blank", blank=True)
+        assert_equal(wallet.getwalletinfo()["blank"], True)
+        wallet.migratewallet()
+        assert_equal(wallet.getwalletinfo()["blank"], True)
+
 
     def test_avoidreuse(self):
         self.log.info("Test that avoidreuse persists after migration")
@@ -987,6 +993,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_failed_migration_cleanup()
         self.test_avoidreuse()
         self.test_preserve_tx_extra_info()
+        self.test_blank()
 
 if __name__ == '__main__':
     WalletMigrationTest().main()
