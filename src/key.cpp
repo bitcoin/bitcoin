@@ -12,9 +12,12 @@
 
 #include <secp256k1.h>
 #include <secp256k1_ellswift.h>
+#include <secp256k1_ecdh.h>
 #include <secp256k1_extrakeys.h>
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
+
+#include <util/check.h>
 
 static secp256k1_context* secp256k1_context_sign = nullptr;
 
@@ -331,6 +334,51 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
     bool ret = secp256k1_ec_seckey_tweak_add(secp256k1_context_sign, (unsigned char*)keyChild.begin(), vout.data());
     if (!ret) keyChild.ClearKeyData();
     return ret;
+}
+
+// TODO: use https://github.com/bitcoin-core/secp256k1/pull/1198
+bool CKey::ECDH(const XOnlyPubKey& pubkey, unsigned char* output) const {
+    CKey tmp_key = *this;
+    // Negate our private key if its public key has odd Y. This is needed because
+    // secp256k1_ecdh uses ecdh_hash_function_sha256 which includes in its checksum
+    // whether the y coordinate is even.
+    // The above PR removes the need for this, by introducing secp256k1_ecdh_xonly_hash_function
+    // that does not use the y-coordinate.
+    if (!HasEvenY()) {
+        tmp_key.Negate();
+    }
+
+    secp256k1_xonly_pubkey xonly_pubkey;
+    if (!secp256k1_xonly_pubkey_parse(secp256k1_context_sign, &xonly_pubkey, pubkey.begin())) {
+        Assume(false);
+        return false;
+    }
+
+    uint8_t buf[33] = {};
+    buf[0] = 0x02;
+
+    if (!secp256k1_xonly_pubkey_serialize(secp256k1_context_sign, &buf[1], &xonly_pubkey)) {
+        Assume(false);
+        return false;
+    }
+
+    secp256k1_pubkey secp_pubkey;
+    if (!secp256k1_ec_pubkey_parse(secp256k1_context_sign, &secp_pubkey, &buf[0], 33)) {
+        Assume(false);
+        return false;
+    }
+
+    if (!secp256k1_ecdh(secp256k1_context_sign, output, &secp_pubkey, tmp_key.keydata->data(), nullptr, nullptr)) {
+        Assume(false);
+        return false;
+    }
+
+    return true;
+}
+
+bool CKey::HasEvenY() const {
+    assert(IsValid());
+    return GetPubKey().data()[0] == 0x02;
 }
 
 EllSwiftPubKey CKey::EllSwiftCreate(Span<const std::byte> ent32) const

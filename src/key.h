@@ -203,6 +203,16 @@ public:
     ECDHSecret ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift,
                                        const EllSwiftPubKey& our_ellswift,
                                        bool initiating) const;
+
+    /**
+     * Perform ecdh on this key and a given public key point.
+     */
+    bool ECDH(const XOnlyPubKey& pubkey, unsigned char* output) const;
+
+    /**
+     * Returns whether the public key as an even Y coordinate.
+     */
+    bool HasEvenY() const;
 };
 
 CKey GenerateRandomKey(bool compressed = true) noexcept;

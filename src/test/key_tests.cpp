@@ -364,4 +364,38 @@ BOOST_AUTO_TEST_CASE(key_ellswift)
     }
 }
 
+BOOST_AUTO_TEST_CASE(ecdh_test)
+{
+    CKey initiator_key;
+    initiator_key.MakeNewKey(true);
+    while (!initiator_key.HasEvenY()) {
+        initiator_key.MakeNewKey(true);
+    }
+    BOOST_CHECK(initiator_key.HasEvenY());
+
+    CKey responder_key;
+    responder_key.MakeNewKey(true);
+    while (!responder_key.HasEvenY()) {
+        responder_key.MakeNewKey(true);
+    }
+    BOOST_CHECK(responder_key.HasEvenY());
+
+    unsigned char ecdh_output_1[32] = {};
+    unsigned char ecdh_output_2[32] = {};
+
+    // Assert both outputs are the same.
+    BOOST_CHECK(std::memcmp(&ecdh_output_1[0], &ecdh_output_2[0], 32) == 0);
+
+    // Assert different keys can reach the same ECDH outpoint.
+    XOnlyPubKey responder_pk = XOnlyPubKey(responder_key.GetPubKey());
+    BOOST_CHECK(responder_pk.IsFullyValid());
+    initiator_key.ECDH(responder_pk, ecdh_output_1);
+
+    XOnlyPubKey initiator_pk = XOnlyPubKey(initiator_key.GetPubKey());
+    BOOST_CHECK(initiator_pk.IsFullyValid());
+    responder_key.ECDH(initiator_pk, ecdh_output_2);
+
+    BOOST_CHECK(std::memcmp(&ecdh_output_1[0], &ecdh_output_2[0], 32) == 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
