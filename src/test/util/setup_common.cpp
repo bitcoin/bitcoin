@@ -187,6 +187,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, const std::vecto
         .adjusted_time_callback = GetAdjustedTime,
         .check_block_index = true,
         .notifications = *m_node.notifications,
+        .worker_threads_num = 2,
     };
     const BlockManager::Options blockman_opts{
         .chainparams = chainman_opts.chainparams,
@@ -198,15 +199,11 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, const std::vecto
         .path = m_args.GetDataDirNet() / "blocks" / "index",
         .cache_bytes = static_cast<size_t>(m_cache_sizes.block_tree_db),
         .memory_only = true});
-
-    constexpr int script_check_threads = 2;
-    StartScriptCheckWorkerThreads(script_check_threads);
 }
 
 ChainTestingSetup::~ChainTestingSetup()
 {
     if (m_node.scheduler) m_node.scheduler->stop();
-    StopScriptCheckWorkerThreads();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     m_node.connman.reset();

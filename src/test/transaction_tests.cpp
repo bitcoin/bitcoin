@@ -529,10 +529,8 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
 
     // check all inputs concurrently, with the cache
     PrecomputedTransactionData txdata(tx);
-    CCheckQueue<CScriptCheck> scriptcheckqueue(128);
+    CCheckQueue<CScriptCheck> scriptcheckqueue(/*batch_size=*/128, /*worker_threads_num=*/20);
     CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
-
-    scriptcheckqueue.StartWorkerThreads(20);
 
     std::vector<Coin> coins;
     for(uint32_t i = 0; i < mtx.vin.size(); i++) {
@@ -552,7 +550,6 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
 
     bool controlCheck = control.Wait();
     assert(controlCheck);
-    scriptcheckqueue.StopWorkerThreads();
 }
 
 SignatureData CombineSignatures(const CMutableTransaction& input1, const CMutableTransaction& input2, const CTransactionRef tx)

@@ -17,9 +17,9 @@
 
 #include <common/system.h>
 #include <interfaces/node.h>
+#include <node/chainstatemanager_args.h>
 #include <netbase.h>
 #include <txdb.h>
-#include <validation.h>
 
 #include <chrono>
 
