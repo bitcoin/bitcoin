@@ -4213,7 +4213,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     }
 
     // Before anything else, check if there is something to migrate.
-    if (!local_wallet->GetLegacyScriptPubKeyMan()) {
+    if (local_wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
         return util::Error{_("Error: This wallet is already a descriptor wallet")};
     }
 
