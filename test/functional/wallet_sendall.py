@@ -379,6 +379,27 @@ class SendallTest(BitcoinTestFramework):
         assert_equal(len(self.wallet.listunspent()), 1)
         assert_equal(self.wallet.listunspent()[0]['confirmations'], 6)
 
+    @cleanup
+    def sendall_spends_unconfirmed_change(self):
+        self.log.info("Test that sendall spends unconfirmed change")
+        self.add_utxos([17])
+        self.wallet.sendtoaddress(self.remainder_target, 10)
+        assert_greater_than(self.wallet.getbalances()["mine"]["trusted"], 6)
+        self.test_sendall_success(sendall_args = [self.remainder_target])
+
+        assert_equal(self.wallet.getbalance(), 0)
+
+    @cleanup
+    def sendall_spends_unconfirmed_inputs_if_specified(self):
+        self.log.info("Test that sendall spends specified unconfirmed inputs")
+        self.def_wallet.sendtoaddress(self.wallet.getnewaddress(), 17)
+        self.wallet.syncwithvalidationinterfacequeue()
+        assert_equal(self.wallet.getbalances()["mine"]["untrusted_pending"], 17)
+        unspent = self.wallet.listunspent(minconf=0)[0]
+
+        self.wallet.sendall(recipients=[self.remainder_target], inputs=[unspent])
+        assert_equal(self.wallet.getbalance(), 0)
+
     # This tests needs to be the last one otherwise @cleanup will fail with "Transaction too large" error
     def sendall_fails_with_transaction_too_large(self):
         self.log.info("Test that sendall fails if resulting transaction is too large")
@@ -459,6 +480,12 @@ class SendallTest(BitcoinTestFramework):
 
         # Sendall only uses outputs with less than a given number of confirmation when using minconf
         self.sendall_with_maxconf()
+
+        # Sendall spends unconfirmed change
+        self.sendall_spends_unconfirmed_change()
+
+        # Sendall spends unconfirmed inputs if they are specified
+        self.sendall_spends_unconfirmed_inputs_if_specified()
 
         # Sendall fails when many inputs result to too large transaction
         self.sendall_fails_with_transaction_too_large()
