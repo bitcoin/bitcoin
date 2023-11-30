@@ -709,6 +709,10 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
         results.push_back(*srd_result);
     } else append_error(srd_result);
 
+    if (auto gg_result{SelectCoinsGG(groups.positive_group, nTargetValue, coin_selection_params.m_change_fee, coin_selection_params.rng_fast, max_inputs_weight)}) {
+        results.push_back(*gg_result);
+    } else append_error(gg_result);
+
     if (results.empty()) {
         // No solution found, retrieve the first explicit error (if any).
         // future: add 'severity level' to errors so the worst one can be retrieved instead of the first one.

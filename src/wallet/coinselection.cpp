@@ -246,6 +246,73 @@ util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utx
     return max_tx_weight_exceeded ? ErrorMaxWeightExceeded() : util::Error();
 }
 
+util::Result<SelectionResult> SelectCoinsGG(std::vector<OutputGroup>& utxo_pool, CAmount target_value, CAmount change_fee, FastRandomContext& rng,
+                                             int max_weight)
+{
+    SelectionResult result(target_value, SelectionAlgorithm::GG);
+    std::priority_queue<OutputGroup, std::vector<OutputGroup>, MinOutputGroupComparator> heap;
+
+    // Include change for Gutter Guard Selector as we want to avoid making really small change if the selection just
+    // barely meets the target.
+    target_value += CHANGE_LOWER + change_fee;
+
+    // Use largest-first selection to determine minimum count of necessary output groups
+    std::sort(utxo_pool.begin(), utxo_pool.end(), descending);
+    CAmount selected_lf_amount = 0;
+    size_t lf_group_count = 0;
+
+    for (const OutputGroup& group : utxo_pool) {
+        selected_lf_amount += group.GetSelectionAmount();
+        lf_group_count++;
+        if (selected_lf_amount >= target_value) {
+            break;
+        }
+    }
+
+    // Gutter Guard selection
+    size_t gg_group_limit = lf_group_count + 3;
+
+    std::vector<size_t> indexes;
+    indexes.resize(utxo_pool.size());
+    std::iota(indexes.begin(), indexes.end(), 0);
+    Shuffle(indexes.begin(), indexes.end(), rng);
+
+    CAmount selected_eff_value = 0;
+    int weight = 0;
+    bool max_tx_weight_exceeded = false;
+    for (const size_t i : indexes) {
+        // Select random additional group
+        const OutputGroup& group = utxo_pool.at(i);
+        Assume(group.GetSelectionAmount() > 0);
+        heap.push(group);
+        selected_eff_value += group.GetSelectionAmount();
+        weight += group.m_weight;
+
+        if (weight > max_weight) {
+            // Store error in case no useful result is found
+            max_tx_weight_exceeded = true;
+        }
+
+        while (!heap.empty() && (weight > max_weight || heap.size() > gg_group_limit)) {
+            // Drop output group with lowest effective value
+            const OutputGroup& to_remove_group = heap.top();
+            selected_eff_value -= to_remove_group.GetSelectionAmount();
+            weight -= to_remove_group.m_weight;
+            heap.pop();
+        }
+
+        if (selected_eff_value >= target_value) {
+            // Success, return heap content
+            while (!heap.empty()) {
+                result.AddInput(heap.top());
+                heap.pop();
+            }
+            return result;
+        }
+    }
+    return max_tx_weight_exceeded ? ErrorMaxWeightExceeded() : util::Error();
+}
+
 /** Find a subset of the OutputGroups that is at least as large as, but as close as possible to, the
  * target amount; solve subset sum.
  * param@[in]   groups          OutputGroups to choose from, sorted by value in descending order.
@@ -602,6 +669,7 @@ std::string GetAlgorithmName(const SelectionAlgorithm algo)
     case SelectionAlgorithm::BNB: return "bnb";
     case SelectionAlgorithm::KNAPSACK: return "knapsack";
     case SelectionAlgorithm::SRD: return "srd";
+    case SelectionAlgorithm::GG: return "gg";
     case SelectionAlgorithm::MANUAL: return "manual";
     // No default case to allow for compiler to warn
     }

@@ -311,7 +311,8 @@ enum class SelectionAlgorithm : uint8_t
     BNB = 0,
     KNAPSACK = 1,
     SRD = 2,
-    MANUAL = 3,
+    GG = 3,
+    MANUAL = 4,
 };
 
 std::string GetAlgorithmName(const SelectionAlgorithm algo);
@@ -440,6 +441,21 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
  * @returns If successful, a valid SelectionResult, otherwise, util::Error
  */
 util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, CAmount change_fee, FastRandomContext& rng,
+                                             int max_weight);
+
+/** Select coins by Gutter Guard Selector. Limits the number of unnecessary
+ * OutputGroups to three.  OutputGroups are selected randomly from the eligible
+ * output groups until the target is satisfied, if the permitted count of
+ * OutputGroups is exceeded, the output group with the smallest amount is
+ * dropped from the input set.
+ *
+ * @param[in]  utxo_pool    The positive effective value OutputGroups eligible for selection
+ * @param[in]  target_value The target value to select for
+ * @param[in]  rng The randomness source to shuffle coins
+ * @param[in]  max_weight The maximum allowed weight for a selection result to be valid
+ * @returns If successful, a valid SelectionResult, otherwise, util::Error
+ */
+util::Result<SelectionResult> SelectCoinsGG(std::vector<OutputGroup>& utxo_pool, CAmount target_value, CAmount change_fee, FastRandomContext& rng,
                                              int max_weight);
 
 // Original coin selection algorithm as a fallback
