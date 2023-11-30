@@ -4246,8 +4246,11 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         // First change to using SQLite
         if (!local_wallet->MigrateToSQLite(error)) return util::Error{error};
 
-        // Do the migration, and cleanup if it fails
-        success = DoMigration(*local_wallet, context, error, res);
+        // Do the migration of keys and scripts for non-blank wallets, and cleanup if it fails
+        success = local_wallet->IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET);
+        if (!success) {
+            success = DoMigration(*local_wallet, context, error, res);
+        }
     }
 
     // In case of reloading failure, we need to remember the wallet dirs to remove
