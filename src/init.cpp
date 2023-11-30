@@ -2112,6 +2112,10 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                             LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
                         }
 
+                        if (args.GetArg("-checklevel", DEFAULT_CHECKLEVEL) >= 3) {
+                            chainstate->ResetBlockFailureFlags(nullptr);
+                        }
+
                     } else {
                         // TODO: CEvoDB instance should probably be a part of CChainState
                         // (for multiple chainstates to actually work in parallel)
@@ -2122,10 +2126,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                             failed_verification = true;
                             break;
                         }
-                    }
-
-                    if (args.GetArg("-checklevel", DEFAULT_CHECKLEVEL) >= 3) {
-                        ::ChainstateActive().ResetBlockFailureFlags(nullptr);
                     }
                 }
             } catch (const std::exception& e) {
