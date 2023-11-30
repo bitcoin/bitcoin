@@ -40,7 +40,6 @@
 #include <util/vector.h>
 #include <validation.h>
 #include <validationinterface.h>
-#include <version.h>
 
 #include <numeric>
 #include <stdint.h>

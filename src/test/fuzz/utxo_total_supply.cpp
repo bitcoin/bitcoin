@@ -16,7 +16,6 @@
 #include <test/util/setup_common.h>
 #include <util/chaintype.h>
 #include <validation.h>
-#include <version.h>
 
 FUZZ_TARGET(utxo_total_supply)
 {

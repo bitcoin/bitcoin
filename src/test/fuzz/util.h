@@ -20,7 +20,6 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <uint256.h>
-#include <version.h>
 
 #include <algorithm>
 #include <array>
@@ -118,7 +117,7 @@ template <typename T>
 [[nodiscard]] inline std::optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
     const std::vector<uint8_t> buffer = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
-    CDataStream ds{buffer, SER_NETWORK, INIT_PROTO_VERSION};
+    DataStream ds{buffer};
     T obj;
     try {
         ds >> obj;
