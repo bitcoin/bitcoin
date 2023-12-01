@@ -55,13 +55,13 @@ struct OutpointsUpdater final : public CValidationInterface {
     explicit OutpointsUpdater(std::set<COutPoint>& r)
         : m_mempool_outpoints{r} {}
 
-    void TransactionAddedToMempool(const CTransactionRef& tx, uint64_t /* mempool_sequence */) override
+    void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t /* mempool_sequence */) override
     {
         // for coins spent we always want to be able to rbf so they're not removed
 
         // outputs from this tx can now be spent
-        for (uint32_t index{0}; index < tx->vout.size(); ++index) {
-            m_mempool_outpoints.insert(COutPoint{tx->GetHash(), index});
+        for (uint32_t index{0}; index < tx.info.m_tx->vout.size(); ++index) {
+            m_mempool_outpoints.insert(COutPoint{tx.info.m_tx->GetHash(), index});
         }
     }
 
@@ -85,10 +85,10 @@ struct TransactionsDelta final : public CValidationInterface {
     explicit TransactionsDelta(std::set<CTransactionRef>& a)
         : m_added{a} {}
 
-    void TransactionAddedToMempool(const CTransactionRef& tx, uint64_t /* mempool_sequence */) override
+    void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t /* mempool_sequence */) override
     {
         // Transactions may be entered and booted any number of times
-        m_added.insert(tx);
+        m_added.insert(tx.info.m_tx);
     }
 
     void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t /* mempool_sequence */) override
@@ -121,7 +121,6 @@ CTxMemPool MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeConte
     mempool_opts.expiry = std::chrono::hours{fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 999)};
     nBytesPerSigOp = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(1, 999);
 
-    mempool_opts.estimator = nullptr;
     mempool_opts.check_ratio = 1;
     mempool_opts.require_standard = fuzzed_data_provider.ConsumeBool();
 

@@ -284,8 +284,12 @@ void Shutdown(NodeContext& node)
         DumpMempool(*node.mempool, MempoolPath(*node.args));
     }
 
-    // Drop transactions we were still watching, and record fee estimations.
-    if (node.fee_estimator) node.fee_estimator->Flush();
+    // Drop transactions we were still watching, record fee estimations and Unregister
+    // fee estimator from validation interface.
+    if (node.fee_estimator) {
+        node.fee_estimator->Flush();
+        UnregisterValidationInterface(node.fee_estimator.get());
+    }
 
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
     if (node.chainman) {
@@ -1239,6 +1243,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         // Flush estimates to disk periodically
         CBlockPolicyEstimator* fee_estimator = node.fee_estimator.get();
         node.scheduler->scheduleEvery([fee_estimator] { fee_estimator->FlushFeeEstimates(); }, FEE_FLUSH_INTERVAL);
+        RegisterValidationInterface(fee_estimator);
     }
 
     // Check port numbers
@@ -1452,7 +1457,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.chainman);
 
     CTxMemPool::Options mempool_opts{
-        .estimator = node.fee_estimator.get(),
         .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
     };
     auto result{ApplyArgsManOptions(args, chainparams, mempool_opts)};
