@@ -145,6 +145,11 @@ public:
 
     // Public Getter methods
 
+    const Governance::Object& Object() const
+    {
+        return m_obj;
+    }
+
     int64_t GetCreationTime() const
     {
         return m_obj.time;

@@ -9,7 +9,12 @@
 
 class CBlockIndex;
 class CGovernanceVote;
-class CGovernanceObject;
+
+namespace Governance
+{
+    class Object;
+} //namespace Governance
+
 
 class CZMQAbstractPublishNotifier : public CZMQAbstractNotifier
 {
@@ -63,7 +68,7 @@ public:
 class CZMQPublishHashGovernanceObjectNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) override;
+    bool NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& object) override;
 };
 
 class CZMQPublishHashInstantSendDoubleSpendNotifier : public CZMQAbstractPublishNotifier
@@ -123,7 +128,7 @@ public:
 class CZMQPublishRawGovernanceObjectNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) override;
+    bool NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& object) override;
 };
 
 class CZMQPublishRawInstantSendDoubleSpendNotifier : public CZMQAbstractPublishNotifier

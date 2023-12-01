@@ -10,12 +10,16 @@
 #include <string>
 
 class CBlockIndex;
-class CGovernanceObject;
 class CGovernanceVote;
 class CTransaction;
 class CZMQAbstractNotifier;
 
 typedef std::shared_ptr<const CTransaction> CTransactionRef;
+
+namespace Governance
+{
+    class Object;
+} //namespace Governance
 
 namespace llmq {
     class CChainLockSig;
@@ -58,7 +62,7 @@ public:
     virtual bool NotifyTransaction(const CTransaction &transaction);
     virtual bool NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const llmq::CInstantSendLock>& islock);
     virtual bool NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
-    virtual bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
+    virtual bool NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& object);
     virtual bool NotifyInstantSendDoubleSpendAttempt(const CTransactionRef& currentTx, const CTransactionRef& previousTx);
     virtual bool NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig);
 

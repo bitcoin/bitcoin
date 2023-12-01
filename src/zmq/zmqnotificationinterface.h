@@ -33,7 +33,7 @@ protected:
     void NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig) override;
     void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock) override;
     void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) override;
-    void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) override;
+    void NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& object) override;
     void NotifyInstantSendDoubleSpendAttempt(const CTransactionRef& currentTx, const CTransactionRef& previousTx) override;
     void NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig) override;
 

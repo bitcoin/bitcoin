@@ -97,7 +97,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "spork -> validation -> spork"
     "governance/governance -> validation -> governance/governance"
     "evo/deterministicmns -> validationinterface -> governance/vote -> evo/deterministicmns"
-    "governance/object -> validationinterface -> governance/object"
     "governance/vote -> validation -> validationinterface -> governance/vote"
     "llmq/signing -> masternode/node -> validationinterface -> llmq/signing"
     "evo/mnhftx -> validation -> evo/mnhftx"
