@@ -30,7 +30,6 @@
 static const bool DEFAULT_FLUSHWALLET = true;
 
 struct CBlockLocator;
-class CGovernanceObject;
 class CHDChain;
 class CHDPubKey;
 class CKeyPool;
@@ -40,6 +39,11 @@ class CWallet;
 class CWalletTx;
 class uint160;
 class uint256;
+
+namespace Governance
+{
+    class Object;
+} // namespace Governance
 
 /** Error statuses for the wallet database */
 enum class DBErrors
@@ -200,7 +204,7 @@ public:
     bool WriteCoinJoinSalt(const uint256& salt);
 
     /** Write a CGovernanceObject to the database */
-    bool WriteGovernanceObject(const CGovernanceObject& obj);
+    bool WriteGovernanceObject(const Governance::Object& obj);
 
     /// Write destination data key,value tuple to database
     bool WriteDestData(const std::string &address, const std::string &key, const std::string &value);

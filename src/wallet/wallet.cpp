@@ -45,7 +45,6 @@
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
 #include <evo/providertx.h>
-#include <governance/governance.h>
 #include <masternode/sync.h>
 
 #include <univalue.h>
@@ -5091,23 +5090,23 @@ void CWallet::notifyChainLock(const CBlockIndex* pindexChainLock, const std::sha
     NotifyChainLockReceived(pindexChainLock->nHeight);
 }
 
-bool CWallet::LoadGovernanceObject(const CGovernanceObject& obj)
+bool CWallet::LoadGovernanceObject(const Governance::Object& obj)
 {
     AssertLockHeld(cs_wallet);
     return m_gobjects.emplace(obj.GetHash(), obj).second;
 }
 
-bool CWallet::WriteGovernanceObject(const CGovernanceObject& obj)
+bool CWallet::WriteGovernanceObject(const Governance::Object& obj)
 {
     AssertLockHeld(cs_wallet);
     WalletBatch batch(GetDatabase());
     return batch.WriteGovernanceObject(obj) && LoadGovernanceObject(obj);
 }
 
-std::vector<const CGovernanceObject*> CWallet::GetGovernanceObjects()
+std::vector<const Governance::Object*> CWallet::GetGovernanceObjects()
 {
     AssertLockHeld(cs_wallet);
-    std::vector<const CGovernanceObject*> vecObjects;
+    std::vector<const Governance::Object*> vecObjects;
     vecObjects.reserve(m_gobjects.size());
     for (auto& obj : m_gobjects) {
         vecObjects.push_back(&obj.second);

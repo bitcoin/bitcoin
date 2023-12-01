@@ -8,7 +8,7 @@
 
 #include <key_io.h>
 #include <fs.h>
-#include <governance/object.h>
+#include <governance/common.h>
 #include <hdchain.h>
 #include <protocol.h>
 #include <serialize.h>
@@ -216,7 +216,7 @@ bool WalletBatch::WriteCoinJoinSalt(const uint256& salt)
     return WriteIC(DBKeys::COINJOIN_SALT, salt);
 }
 
-bool WalletBatch::WriteGovernanceObject(const CGovernanceObject& obj)
+bool WalletBatch::WriteGovernanceObject(const Governance::Object& obj)
 {
     return WriteIC(std::make_pair(DBKeys::G_OBJECT, obj.GetHash()), obj, false);
 }
@@ -493,7 +493,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             }
         } else if (strType == DBKeys::G_OBJECT) {
             uint256 nObjectHash;
-            CGovernanceObject obj;
+            Governance::Object obj;
             ssKey >> nObjectHash;
             ssValue >> obj;
 

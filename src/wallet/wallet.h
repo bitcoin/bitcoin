@@ -8,6 +8,7 @@
 #define BITCOIN_WALLET_WALLET_H
 
 #include <amount.h>
+#include <governance/common.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <policy/feerate.h>
@@ -26,8 +27,6 @@
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
-
-#include <governance/object.h>
 
 #include <algorithm>
 #include <atomic>
@@ -828,7 +827,7 @@ public:
     const std::string& GetName() const { return m_name; }
 
     // Map from governance object hash to governance object, they are added by gobject_prepare.
-    std::map<uint256, CGovernanceObject> m_gobjects;
+    std::map<uint256, Governance::Object> m_gobjects;
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
@@ -1278,11 +1277,11 @@ public:
     void notifyChainLock(const CBlockIndex* pindexChainLock, const std::shared_ptr<const llmq::CChainLockSig>& clsig) override;
 
     /** Load a CGovernanceObject into m_gobjects. */
-    bool LoadGovernanceObject(const CGovernanceObject& obj);
+    bool LoadGovernanceObject(const Governance::Object& obj);
     /** Store a CGovernanceObject in the wallet database. This should only be used by governance objects that are created by this wallet via `gobject prepare`. */
-    bool WriteGovernanceObject(const CGovernanceObject& obj);
+    bool WriteGovernanceObject(const Governance::Object& obj);
     /** Returns a vector containing pointers to the governance objects in m_gobjects */
-    std::vector<const CGovernanceObject*> GetGovernanceObjects();
+    std::vector<const Governance::Object*> GetGovernanceObjects();
 
     /**
      * Blocks until the wallet state is up-to-date to /at least/ the current
