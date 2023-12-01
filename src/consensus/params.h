@@ -14,13 +14,32 @@
 
 namespace Consensus {
 
-enum DeploymentPos {
+enum BuriedDeployment : int16_t
+{
+    DEPLOYMENT_HEIGHTINCB = std::numeric_limits<int16_t>::min(),
+    DEPLOYMENT_DERSIG,
+    DEPLOYMENT_CLTV,
+    DEPLOYMENT_BIP147,
+    DEPLOYMENT_CSV,
+    DEPLOYMENT_DIP0001,
+    DEPLOYMENT_DIP0003,
+    DEPLOYMENT_DIP0008,
+    DEPLOYMENT_DIP0020,
+    DEPLOYMENT_DIP0024,
+    DEPLOYMENT_BRR,
+    DEPLOYMENT_V19,
+};
+constexpr bool ValidDeployment(BuriedDeployment dep) { return DEPLOYMENT_HEIGHTINCB <= dep && dep <= DEPLOYMENT_V19; }
+
+enum DeploymentPos : uint16_t
+{
     DEPLOYMENT_TESTDUMMY,
     DEPLOYMENT_V20,     // Deployment of EHF, LLMQ Randomness Beacon
     DEPLOYMENT_MN_RR,   // Deployment of Masternode Reward Location Reallocation
-    // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
+    // NOTE: Also add new deployments to VersionBitsDeploymentInfo in deploymentinfo.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
 };
+constexpr bool ValidDeployment(DeploymentPos dep) { return DEPLOYMENT_TESTDUMMY <= dep && dep <= DEPLOYMENT_MN_RR; }
 
 /**
  * Struct for each individual consensus rule change using BIP9.
@@ -144,7 +163,39 @@ struct Params {
     LLMQType llmqTypePlatform{LLMQType::LLMQ_NONE};
     LLMQType llmqTypeMnhf{LLMQType::LLMQ_NONE};
     LLMQType llmqTypeAssetLocks{LLMQType::LLMQ_NONE};
+
+    int DeploymentHeight(BuriedDeployment dep) const
+    {
+        switch (dep) {
+        case DEPLOYMENT_HEIGHTINCB:
+            return BIP34Height;
+        case DEPLOYMENT_DERSIG:
+            return BIP66Height;
+        case DEPLOYMENT_CLTV:
+            return BIP65Height;
+        case DEPLOYMENT_BIP147:
+            return BIP147Height;
+        case DEPLOYMENT_CSV:
+            return CSVHeight;
+        case DEPLOYMENT_DIP0001:
+            return DIP0001Height;
+        case DEPLOYMENT_DIP0003:
+            return DIP0003Height;
+        case DEPLOYMENT_DIP0008:
+            return DIP0008Height;
+        case DEPLOYMENT_DIP0020:
+            return DIP0020Height;
+        case DEPLOYMENT_DIP0024:
+            return DIP0024Height;
+        case DEPLOYMENT_BRR:
+            return BRRHeight;
+        case DEPLOYMENT_V19:
+            return V19Height;
+        } // no default case, so the compiler can warn about missing cases
+        return std::numeric_limits<int>::max();
+    }
 };
+
 } // namespace Consensus
 
 #endif // BITCOIN_CONSENSUS_PARAMS_H

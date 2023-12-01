@@ -8,12 +8,12 @@
 
 #include <chainparamsseeds.h>
 #include <consensus/merkle.h>
+#include <deploymentinfo.h>
 #include <llmq/params.h>
 #include <util/ranges.h>
 #include <util/system.h>
 #include <util/underlying.h>
 #include <versionbits.h>
-#include <versionbitsinfo.h>
 
 #include <arith_uint256.h>
 

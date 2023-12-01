@@ -13,6 +13,7 @@
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
+#include <deploymentstatus.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
@@ -132,11 +133,11 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
 
-    bool fDIP0003Active_context = nHeight >= chainparams.GetConsensus().DIP0003Height;
-    bool fDIP0008Active_context = nHeight >= chainparams.GetConsensus().DIP0008Height;
+    bool fDIP0003Active_context = DeploymentActiveAfter(pindexPrev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0003);
+    bool fDIP0008Active_context = DeploymentActiveAfter(pindexPrev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0008);
     bool fV20Active_context = llmq::utils::IsV20Active(pindexPrev);
 
-    pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
+    pblock->nVersion = g_versionbitscache.ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
     // Non-mainnet only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
     if (Params().NetworkIDString() != CBaseChainParams::MAIN)
