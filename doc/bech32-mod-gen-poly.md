@@ -1,4 +1,4 @@
-# bech32_mod generator polynomial generation
+# Bech32_mod generator polynomial generation
 
 ## Summary
 We made modification to bech32 implementation of Bitcoin so that it worked with 165-character bech32 string perfectly detecting up to 5 errors.
