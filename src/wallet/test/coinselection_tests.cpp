@@ -122,9 +122,13 @@ static void TestBnBSuccess(std::string test_title, std::vector<COutput>& utxo_po
     expected_result.Clear();
 }
 
-static void TestBnBFail(std::string test_title, std::vector<COutput>& utxo_pool, const CAmount& selection_target)
+static void TestBnBFail(std::string test_title, std::vector<COutput>& utxo_pool, const CAmount& selection_target, const std::string& expected_error = "")
 {
-    BOOST_CHECK_MESSAGE(!SelectCoinsBnB(GroupCoins(utxo_pool), selection_target, /*cost_of_change=*/ default_cs_params.m_cost_of_change, /*max_weight=*/MAX_STANDARD_TX_WEIGHT), "BnB-Fail: " + test_title);
+    const auto& no_res = SelectCoinsBnB(GroupCoins(utxo_pool), selection_target, /*cost_of_change=*/ default_cs_params.m_cost_of_change, /*max_weight=*/MAX_STANDARD_TX_WEIGHT);
+    BOOST_CHECK_MESSAGE(!no_res, "BnB-Fail: " + test_title);
+    if (expected_error != "") {
+        BOOST_CHECK_MESSAGE(util::ErrorString(no_res).original.find(expected_error) != std::string::npos, "Found expected error message: " + expected_error);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(bnb_test)
@@ -178,6 +182,17 @@ BOOST_AUTO_TEST_CASE(bnb_test)
 
     AddCoins(doppelganger_pool, {1 * CENT + default_cs_params.m_cost_of_change + 17});
     TestBnBFail("Exhaust looking for smallest 8 of 18 unique UTXOs", doppelganger_pool, /*selection_target=*/ 8 * CENT);
+}
+
+BOOST_AUTO_TEST_CASE(bnb_max_weight_test)
+{
+    std::vector<COutput> max_weight_pool;
+    AddCoins(max_weight_pool, {1 * CENT, 8 * CENT, 9 * CENT, 10 * CENT});
+    // Add a coin that is necessary for all solutions and too heavy
+    max_weight_pool.push_back(MakeCoin(/*effective_value=*/ 5 * CENT, true, 0, /*effective_feerate=*/ default_cs_params.m_effective_feerate, MAX_STANDARD_TX_WEIGHT));
+    TestBnBFail("Fail on excessive selection weight", max_weight_pool, /*selection_target=*/ 16 * CENT, /*expected_error=*/ "The inputs size exceeds the maximum weight");
+    AddCoins(max_weight_pool, {5 * CENT});
+    TestBnBSuccess("Avoid heavy input when unnecessary", max_weight_pool, /*selection_target=*/ 16 * CENT, /*expected_input_amounts=*/ {1 * CENT, 5 * CENT, 10 * CENT});
 }
 
 BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)

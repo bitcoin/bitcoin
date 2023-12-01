@@ -37,18 +37,6 @@ static const CoinEligibilityFilter filter_confirmed(1, 1, 0);
 static const CoinEligibilityFilter filter_standard_extra(6, 6, 0);
 static int nextLockTime = 0;
 
-static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result)
-{
-    CMutableTransaction tx;
-    tx.vout.resize(nInput + 1);
-    tx.vout[nInput].nValue = nValue;
-    tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
-    COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, /*fees=*/ 0);
-    OutputGroup group;
-    group.Insert(std::make_shared<COutput>(output), /*ancestors=*/ 0, /*descendants=*/ 0);
-    result.AddInput(group);
-}
-
 static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result, CAmount fee, CAmount long_term_fee)
 {
     CMutableTransaction tx;
@@ -93,25 +81,6 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
 {
     auto res{SelectCoinsBnB(utxo_pool, selection_target, cost_of_change, MAX_STANDARD_TX_WEIGHT)};
     return res ? std::optional<SelectionResult>(*res) : std::nullopt;
-}
-
-/** Check if SelectionResult a is equivalent to SelectionResult b.
- * Equivalent means same input values, but maybe different inputs (i.e. same value, different prevout) */
-static bool EquivalentResult(const SelectionResult& a, const SelectionResult& b)
-{
-    std::vector<CAmount> a_amts;
-    std::vector<CAmount> b_amts;
-    for (const auto& coin : a.GetInputSet()) {
-        a_amts.push_back(coin->txout.nValue);
-    }
-    for (const auto& coin : b.GetInputSet()) {
-        b_amts.push_back(coin->txout.nValue);
-    }
-    std::sort(a_amts.begin(), a_amts.end());
-    std::sort(b_amts.begin(), b_amts.end());
-
-    std::pair<std::vector<CAmount>::iterator, std::vector<CAmount>::iterator> ret = std::mismatch(a_amts.begin(), a_amts.end(), b_amts.begin());
-    return ret.first == a_amts.end() && ret.second == b_amts.end();
 }
 
 /** Check if this selection is equal to another one. Equal means same inputs (i.e same value and prevout) */
@@ -165,64 +134,6 @@ static std::unique_ptr<CWallet> NewWallet(const node::NodeContext& m_node, const
     wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
     wallet->SetupDescriptorScriptPubKeyMans();
     return wallet;
-}
-
-// Branch and bound coin selection tests
-BOOST_AUTO_TEST_CASE(bnb_search_test)
-{
-    FastRandomContext rand{};
-    // Setup
-    std::vector<COutput> utxo_pool;
-    SelectionResult expected_result(CAmount(0), SelectionAlgorithm::BNB);
-
-    ////////////////////
-    // Behavior tests //
-    ////////////////////
-    // Make sure that effective value is working in AttemptSelection when BnB is used
-    CoinSelectionParams coin_selection_params_bnb{
-        rand,
-        /*change_output_size=*/ 31,
-        /*change_spend_size=*/ 68,
-        /*min_change_target=*/ 0,
-        /*effective_feerate=*/ CFeeRate(3000),
-        /*long_term_feerate=*/ CFeeRate(1000),
-        /*discard_feerate=*/ CFeeRate(1000),
-        /*tx_noinputs_size=*/ 0,
-        /*avoid_partial=*/ false,
-    };
-    coin_selection_params_bnb.m_change_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_output_size);
-    coin_selection_params_bnb.m_cost_of_change = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_spend_size) + coin_selection_params_bnb.m_change_fee;
-    coin_selection_params_bnb.min_viable_change = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_spend_size);
-    {
-        // Test bnb max weight exceeded
-        // Inputs set [10, 9, 8, 5, 3, 1], Selection Target = 16 and coin 5 exceeding the max weight.
-
-        std::unique_ptr<CWallet> wallet = NewWallet(m_node);
-
-        CoinsResult available_coins;
-        add_coin(available_coins, *wallet, 10 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
-        add_coin(available_coins, *wallet, 9 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
-        add_coin(available_coins, *wallet, 8 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
-        add_coin(available_coins, *wallet, 5 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true, /*custom_size=*/MAX_STANDARD_TX_WEIGHT);
-        add_coin(available_coins, *wallet, 3 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
-        add_coin(available_coins, *wallet, 1 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
-
-        CAmount selection_target = 16 * CENT;
-        const auto& no_res = SelectCoinsBnB(GroupCoins(available_coins.All(), /*subtract_fee_outputs*/true),
-                                            selection_target, /*cost_of_change=*/0, MAX_STANDARD_TX_WEIGHT);
-        BOOST_REQUIRE(!no_res);
-        BOOST_CHECK(util::ErrorString(no_res).original.find("The inputs size exceeds the maximum weight") != std::string::npos);
-
-        // Now add same coin value with a good size and check that it gets selected
-        add_coin(available_coins, *wallet, 5 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
-        const auto& res = SelectCoinsBnB(GroupCoins(available_coins.All(), /*subtract_fee_outputs*/true), selection_target, /*cost_of_change=*/0);
-
-        expected_result.Clear();
-        add_coin(8 * CENT, 2, expected_result);
-        add_coin(5 * CENT, 2, expected_result);
-        add_coin(3 * CENT, 2, expected_result);
-        BOOST_CHECK(EquivalentResult(expected_result, *res));
-    }
 }
 
 BOOST_AUTO_TEST_CASE(bnb_sffo_restriction)
