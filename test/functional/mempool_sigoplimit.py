@@ -34,7 +34,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
-    assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
 from test_framework.wallet_util import generate_keypair
@@ -169,7 +168,8 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         assert_equal([x["package-error"] for x in packet_test], ["package-mempool-limits", "package-mempool-limits"])
 
         # When we actually try to submit, the parent makes it into the mempool, but the child would exceed ancestor vsize limits
-        assert_raises_rpc_error(-26, "too-long-mempool-chain", self.nodes[0].submitpackage, [tx_parent.serialize().hex(), tx_child.serialize().hex()])
+        res = self.nodes[0].submitpackage([tx_parent.serialize().hex(), tx_child.serialize().hex()])
+        assert "too-long-mempool-chain" in res["tx-results"][tx_child.getwtxid()]["error"]
         assert tx_parent.rehash() in self.nodes[0].getrawmempool()
 
         # Transactions are tiny in weight
