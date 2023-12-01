@@ -9,11 +9,13 @@ jobs:
   build:
     runs-on: [ "self-hosted", "linux", "x64", "ubuntu-core" ]
     if: contains(github.event.pull_request.labels.*.name, 'guix-build')
+    timeout-minutes: 480
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+          path: dash
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -21,31 +23,48 @@ jobs:
       - name: Commit variables
         id: dockerfile
         run: |
-          echo "hash=$(sha256sum ./contrib/containers/guix/Dockerfile | cut -d ' ' -f1)" >> $GITHUB_OUTPUT
+          echo "hash=$(sha256sum ./dash/contrib/containers/guix/Dockerfile | cut -d ' ' -f1)" >> $GITHUB_OUTPUT
           echo "host_user_id=$(id -u)" >> $GITHUB_OUTPUT
           echo "host_group_id=$(id -g)" >> $GITHUB_OUTPUT
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ${{ github.workspace }}
+          context: ${{ github.workspace }}/dash
           build-args: |
             USER_ID=${{ steps.dockerfile.outputs.host_user_id }}
             GROUP_ID=${{ steps.dockerfile.outputs.host_group_id }}
           build-contexts: |
-            docker_root=${{ github.workspace }}/contrib/containers/guix
-          file: ./contrib/containers/guix/Dockerfile
+            docker_root=${{ github.workspace }}/dash/contrib/containers/guix
+          file: ./dash/contrib/containers/guix/Dockerfile
           load: true
           tags: guix_ubuntu:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Restore Guix cache and depends
+        id: guix-cache-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            ${{ github.workspace }}/.cache
+            ${{ github.workspace }}/dash/depends/built
+            ${{ github.workspace }}/dash/depends/sources
+            ${{ github.workspace }}/dash/depends/work
+          key: ${{ runner.os }}-guix
+
+      - name: Create .cache folder if missing
+        if: steps.guix-cache-restore.outputs.cache-hit != 'true'
+        run: mkdir -p .cache
+
       - name: Run Guix build
+        timeout-minutes: 480
         run: |
           docker run --privileged -d --rm -t \
             --name guix-daemon \
             -e ADDITIONAL_GUIX_COMMON_FLAGS="--max-jobs=$(nproc --all)" \
-            -v ${{ github.workspace }}:/src/dash \
+            -v ${{ github.workspace }}/dash:/src/dash \
+            -v ${{ github.workspace }}/.cache:/home/ubuntu/.cache \
             -w /src/dash \
             guix_ubuntu:latest && \
           docker exec guix-daemon bash -c '/usr/local/bin/guix-start'
@@ -57,6 +76,17 @@ jobs:
             exit 1
           fi
 
+      - name: Save Guix cache and depends
+        id: guix-cache-save
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            ${{ github.workspace }}/.cache
+            ${{ github.workspace }}/dash/depends/built
+            ${{ github.workspace }}/dash/depends/sources
+            ${{ github.workspace }}/dash/depends/work
+          key: ${{ steps.guix-cache-restore.outputs.cache-primary-key }}
+
       - name: Compute SHA256 checksums
         run: |
-          ./contrib/containers/guix/scripts/guix-check ${{ github.workspace }}
+          ./dash/contrib/containers/guix/scripts/guix-check ${{ github.workspace }}/dash
