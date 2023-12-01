@@ -17,8 +17,6 @@ class CBLSSecretKey;
 class CBLSPublicKey;
 class CNode;
 
-class CGovernanceManager;
-class CGovernanceTriggerManager;
 class CGovernanceObject;
 class CGovernanceVote;
 
