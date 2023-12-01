@@ -17,6 +17,7 @@
 #include <util/time.h>
 #include <util/underlying.h>
 #include <validation.h>
+#include <versionbits.h>
 
 #include <univalue.h>
 

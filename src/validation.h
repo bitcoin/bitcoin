@@ -23,7 +23,6 @@
 #include <sync.h>
 #include <txdb.h>
 #include <txmempool.h> // For CTxMemPool::cs
-#include <versionbits.h>
 #include <serialize.h>
 #include <spentindex.h>
 #include <util/hasher.h>
@@ -1071,12 +1070,6 @@ CChain& ChainActive();
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern std::unique_ptr<CBlockTreeDB> pblocktree;
 
-extern VersionBitsCache versionbitscache;
-
-/**
- * Determine what nVersion a new block should use.
- */
-int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 
 /**
  * Return true if hash can be found in ::ChainActive() at nBlockHeight height.
