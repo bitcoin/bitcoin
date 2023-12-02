@@ -58,8 +58,11 @@ public:
     friend constexpr bool operator<(const base_blob& a, const base_blob& b) { return a.Compare(b) < 0; }
 
     std::string GetHex() const;
+    std::string GetHexBE() const;
     void SetHex(const char* psz);
     void SetHex(const std::string& str);
+    void SetHexBE(const char* psz);
+    void SetHexBE(const std::string& str);
     std::string ToString() const;
 
     constexpr const unsigned char* data() const { return m_data.data(); }
@@ -122,6 +125,7 @@ inline uint256 uint256S(const char *str)
     rv.SetHex(str);
     return rv;
 }
+
 /* uint256 from std::string.
  * This is a separate function because the constructor uint256(const std::string &str) can result
  * in dangerously catching uint256(0) via std::string(const char*).
@@ -130,6 +134,28 @@ inline uint256 uint256S(const std::string& str)
 {
     uint256 rv;
     rv.SetHex(str);
+    return rv;
+}
+
+/* uint256 from big endian-encoded hex const char *.
+ * This is a separate function because the constructor uint256(const char*) can result
+ * in dangerously catching uint256(0).
+ */
+inline uint256 uint256SBE(const char *str)
+{
+    uint256 rv;
+    rv.SetHexBE(str);
+    return rv;
+}
+
+/* uint256 from big endian-encoded hex std::string.
+ * This is a separate function because the constructor uint256(const std::string &str) can result
+ * in dangerously catching uint256(0) via std::string(const char*).
+ */
+inline uint256 uint256SBE(const std::string& str)
+{
+    uint256 rv;
+    rv.SetHexBE(str);
     return rv;
 }
 
