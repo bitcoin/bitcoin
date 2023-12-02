@@ -201,6 +201,20 @@ bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no
     return DecodeTx(tx, txData, try_no_witness, try_witness);
 }
 
+bool DecodeHexTxOut(CTxOut& txout, const std::string& hex_txout)
+{
+    if (!IsHex(hex_txout)) return false;
+
+    const std::vector<unsigned char> txout_data{ParseHex(hex_txout)};
+    DataStream ser_txout{txout_data};
+    try {
+        ser_txout >> txout;
+    } catch (const std::exception&) {
+        return false;
+    }
+    return true;
+}
+
 bool DecodeHexBlockHeader(CBlockHeader& header, const std::string& hex_header)
 {
     if (!IsHex(hex_header)) return false;
