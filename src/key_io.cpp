@@ -25,6 +25,7 @@ public:
     explicit DestinationEncoder(const CChainParams& params) : m_params(params) {}
 
     std::string operator()(const blsct::DoublePublicKey& id) const
+    {
         std::vector<unsigned char> data = m_params.Base58Prefix(CChainParams::BLSCT_ADDRESS);
         auto vchView = id.GetVkVch();
         auto vchSpend = id.GetSkVch();
