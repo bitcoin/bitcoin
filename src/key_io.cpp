@@ -25,7 +25,6 @@ public:
     explicit DestinationEncoder(const CChainParams& params) : m_params(params) {}
 
     std::string operator()(const blsct::DoublePublicKey& id) const
-    {
         std::vector<unsigned char> data = m_params.Base58Prefix(CChainParams::BLSCT_ADDRESS);
         auto vchView = id.GetVkVch();
         auto vchSpend = id.GetSkVch();
@@ -241,7 +240,6 @@ std::string EncodeSecret(const CKey& key)
         data.push_back(1);
     }
     std::string ret = EncodeBase58Check(data);
-
     memory_cleanse(data.data(), data.size());
     return ret;
 }
@@ -319,4 +317,3 @@ bool IsValidDestinationString(const std::string& str)
 {
     return IsValidDestinationString(str, Params());
 }
-
