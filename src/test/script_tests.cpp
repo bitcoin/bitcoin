@@ -2114,7 +2114,7 @@ BOOST_FIXTURE_TEST_CASE(script_assets_test, BasicTestingSetup)
 BOOST_FIXTURE_TEST_CASE(bip341_keypath_test_vectors, BasicTestingSetup)
 {
     UniValue tests;
-    tests.read((const char*)json_tests::bip341_wallet_vectors);
+    tests.read((const char*)json_tests::bip341_wallet_vectors, sizeof(json_tests::bip341_wallet_vectors));
 
     const auto& vectors = tests["keyPathSpending"];
 

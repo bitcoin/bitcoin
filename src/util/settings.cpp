@@ -112,7 +112,7 @@ bool WriteSettings(const fs::path& path,
 {
     SettingsValue out(SettingsValue::VOBJ);
     for (const auto& value : values) {
-        out.pushKVEnd(value.first, value.second);
+        out.__pushKV(value.first, value.second);
     }
     std::ofstream file;
     file.open(path);
