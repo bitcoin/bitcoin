@@ -12,4 +12,3 @@ export PACKAGES="clang-16 llvm-16 libclang-rt-16-dev libc++abi-16-dev libc++-16-
 export DEP_OPTS="CC=clang-16 CXX='clang++-16 -stdlib=libc++'"
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-zmq CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER -DDEBUG_LOCKCONTENTION' CXXFLAGS='-g' --with-sanitizers=thread"
-
