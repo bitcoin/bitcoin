@@ -153,7 +153,7 @@ void no_nul_test()
 {
     char buf[] = "___[1,2,3]___";
     UniValue val;
-    assert(val.read(buf + 3, 7));
+    assert(val.read({buf + 3, 7}));
 }
 
 int main (int argc, char *argv[])
