@@ -318,7 +318,8 @@ private:
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
 
-    int64_t m_stale_tip_check_time; //!< Next time to check for stale tip
+    /** Next time to check for stale tip */
+    int64_t m_stale_tip_check_time{0};
 
     /** Whether this node is running in blocks only mode */
     const bool m_ignore_incoming_txs;
@@ -443,16 +444,26 @@ private:
      *
      * Memory used: 1.3MB
      */
-    std::unique_ptr<CRollingBloomFilter> recentRejects GUARDED_BY(cs_main);
+    CRollingBloomFilter m_recent_rejects GUARDED_BY(::cs_main){120'000, 0.000'001};
     uint256 hashRecentRejectsChainTip GUARDED_BY(cs_main);
 
     /*
      * Filter for transactions that have been recently confirmed.
      * We use this to avoid requesting transactions that have already been
      * confirnmed.
+     *
+     * Blocks don't typically have more than 4000 transactions, so this should
+     * be at least six blocks (~1 hr) worth of transactions that we can store,
+     * inserting both a txid and wtxid for every observed transaction.
+     * If the number of transactions appearing in a block goes up, or if we are
+     * seeing getdata requests more than an hour after initial announcement, we
+     * can increase this number.
+     * The false positive rate of 1/1M should come out to less than 1
+     * transaction per day that would be inadvertently ignored (which is the
+     * same probability that we have in the reject filter).
      */
     Mutex m_recent_confirmed_transactions_mutex;
-    std::unique_ptr<CRollingBloomFilter> m_recent_confirmed_transactions GUARDED_BY(m_recent_confirmed_transactions_mutex);
+    CRollingBloomFilter m_recent_confirmed_transactions GUARDED_BY(m_recent_confirmed_transactions_mutex){48'000, 0.000'001};
 
     /* Returns a bool indicating whether we requested this block.
      * Also used if a block was /not/ received and timed out or started with another peer
@@ -1567,23 +1578,9 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
       m_cj_ctx(cj_ctx),
       m_llmq_ctx(llmq_ctx),
       m_govman(govman),
-      m_stale_tip_check_time(0),
       m_ignore_incoming_txs(ignore_incoming_txs)
 {
     assert(std::addressof(g_chainman) == std::addressof(m_chainman));
-    // Initialize global variables that cannot be constructed at startup.
-    recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
-
-    // Blocks don't typically have more than 4000 transactions, so this should
-    // be at least six blocks (~1 hr) worth of transactions that we can store.
-    // If the number of transactions appearing in a block goes up, or if we are
-    // seeing getdata requests more than an hour after initial announcement, we
-    // can increase this number.
-    // The false positive rate of 1/1M should come out to less than 1
-    // transaction per day that would be inadvertently ignored (which is the
-    // same probability that we have in the reject filter).
-    m_recent_confirmed_transactions.reset(new CRollingBloomFilter(24000, 0.000001));
-
     const Consensus::Params& consensusParams = Params().GetConsensus();
     // Stale tip checking and peer eviction are on two different timers, but we
     // don't want them to get out of sync due to drift in the scheduler, so we
@@ -1652,7 +1649,7 @@ void PeerManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock
     {
         LOCK(m_recent_confirmed_transactions_mutex);
         for (const auto& ptx : pblock->vtx) {
-            m_recent_confirmed_transactions->insert(ptx->GetHash());
+            m_recent_confirmed_transactions.insert(ptx->GetHash());
         }
     }
 }
@@ -1668,7 +1665,7 @@ void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &blo
     // presumably the most common case of relaying a confirmed transaction
     // should be just after a new block containing it is found.
     LOCK(m_recent_confirmed_transactions_mutex);
-    m_recent_confirmed_transactions->reset();
+    m_recent_confirmed_transactions.reset();
 }
 
 // All of the following cache a recent block, and are protected by cs_most_recent_block
@@ -1805,7 +1802,6 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
     case MSG_TX:
     case MSG_DSTX:
         {
-            assert(recentRejects);
             if (m_chainman.ActiveChain().Tip()->GetBlockHash() != hashRecentRejectsChainTip)
             {
                 // If the chain tip has changed previously rejected transactions
@@ -1813,7 +1809,7 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
                 // or a double-spend. Reset the rejects filter and give those
                 // txs a second chance.
                 hashRecentRejectsChainTip = m_chainman.ActiveChain().Tip()->GetBlockHash();
-                recentRejects->reset();
+                m_recent_rejects.reset();
             }
 
             {
@@ -1823,15 +1819,15 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
 
             {
                 LOCK(m_recent_confirmed_transactions_mutex);
-                if (m_recent_confirmed_transactions->contains(inv.hash)) return true;
+                if (m_recent_confirmed_transactions.contains(inv.hash)) return true;
             }
 
             // When we receive an islock for a previously rejected transaction, we have to
             // drop the first-seen tx (which such a locked transaction was conflicting with)
             // and re-request the locked transaction (which did not make it into the mempool
             // previously due to txn-mempool-conflict rule). This means that we must ignore
-            // recentRejects filter for such locked txes here.
-            // We also ignore recentRejects filter for DSTX-es because a malicious peer  might
+            // m_recent_rejects filter for such locked txes here.
+            // We also ignore m_recent_rejects filter for DSTX-es because a malicious peer  might
             // relay a valid DSTX as a regular TX first which would skip all the specific checks
             // but would cause such tx to be rejected by ATMP due to 0 fee. Ignoring it here
             // should let DSTX to be propagated by honest peer later. Note, that a malicious
@@ -1842,7 +1838,7 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
                                         m_llmq_ctx->isman->IsWaitingForTx(inv.hash) ||
                                         m_llmq_ctx->isman->IsLocked(inv.hash);
 
-            return (!fIgnoreRecentRejects && recentRejects->contains(inv.hash)) ||
+            return (!fIgnoreRecentRejects && m_recent_rejects.contains(inv.hash)) ||
                    (inv.type == MSG_DSTX && static_cast<bool>(CCoinJoin::GetDSTX(inv.hash))) ||
                    m_mempool.exists(inv.hash) ||
                    (g_txindex != nullptr && g_txindex->HasTx(inv.hash));
@@ -2553,8 +2549,7 @@ void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
             // Has inputs but not accepted to mempool
             // Probably non-standard or insufficient fee
             LogPrint(BCLog::MEMPOOL, "   removed orphan tx %s\n", orphanHash.ToString());
-            assert(recentRejects);
-            recentRejects->insert(orphanHash);
+            m_recent_rejects.insert(orphanHash);
             EraseOrphanTx(orphanHash);
             done = true;
         }
@@ -3608,7 +3603,7 @@ void PeerManagerImpl::ProcessMessage(
         {
             bool fRejectedParents = false; // It may be the case that the orphans parents have all been rejected
             for (const CTxIn& txin : tx.vin) {
-                if (recentRejects->contains(txin.prevout.hash)) {
+                if (m_recent_rejects.contains(txin.prevout.hash)) {
                     fRejectedParents = true;
                     break;
                 }
@@ -3637,12 +3632,11 @@ void PeerManagerImpl::ProcessMessage(
                 LogPrint(BCLog::MEMPOOL, "not keeping orphan with rejected parents %s\n",tx.GetHash().ToString());
                 // We will continue to reject this tx since it has rejected
                 // parents so avoid re-requesting it from other peers.
-                recentRejects->insert(tx.GetHash());
+                m_recent_rejects.insert(tx.GetHash());
                 m_llmq_ctx->isman->TransactionRemovedFromMempool(ptx);
             }
         } else {
-            assert(recentRejects);
-            recentRejects->insert(tx.GetHash());
+            m_recent_rejects.insert(tx.GetHash());
             if (RecursiveDynamicUsage(*ptx) < 100000) {
                 AddToCompactExtraTransactions(ptx);
             }
@@ -3661,21 +3655,21 @@ void PeerManagerImpl::ProcessMessage(
             }
         }
 
-        // If a tx has been detected by recentRejects, we will have reached
+        // If a tx has been detected by m_recent_rejects, we will have reached
         // this point and the tx will have been ignored. Because we haven't run
         // the tx through AcceptToMemoryPool, we won't have computed a DoS
         // score for it or determined exactly why we consider it invalid.
         //
         // This means we won't penalize any peer subsequently relaying a DoSy
         // tx (even if we penalized the first peer who gave it to us) because
-        // we have to account for recentRejects showing false positives. In
+        // we have to account for m_recent_rejects showing false positives. In
         // other words, we shouldn't penalize a peer if we aren't *sure* they
         // submitted a DoSy tx.
         //
-        // Note that recentRejects doesn't just record DoSy or invalid
+        // Note that m_recent_rejects doesn't just record DoSy or invalid
         // transactions, but any tx not accepted by the m_mempool, which may be
         // due to node policy (vs. consensus). So we can't blanket penalize a
-        // peer simply for relaying a tx that our recentRejects has caught,
+        // peer simply for relaying a tx that our m_recent_rejects has caught,
         // regardless of false positives.
 
         if (state.IsInvalid())
