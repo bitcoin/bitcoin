@@ -9,6 +9,7 @@
 
 #include <bls/bls.h>
 #include <chainparams.h>
+#include <deploymentstatus.h>
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
 #include <masternode/meta.h>
@@ -678,12 +679,7 @@ bool IsQuorumRotationEnabled(const Consensus::LLMQParams& llmqParams, gsl::not_n
         return false;
     }
     // It should activate at least 1 block prior to the cycle start
-    return IsDIP0024Active(pindex->GetAncestor(cycleQuorumBaseHeight - 1));
-}
-
-bool IsDIP0024Active(gsl::not_null<const CBlockIndex*> pindex)
-{
-    return pindex->nHeight + 1 >= Params().GetConsensus().DIP0024Height;
+    return DeploymentActiveAfter(pindex->GetAncestor(cycleQuorumBaseHeight - 1), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024);
 }
 
 bool IsV19Active(gsl::not_null<const CBlockIndex*> pindex)
@@ -942,16 +938,17 @@ bool IsQuorumActive(Consensus::LLMQType llmqType, const CQuorumManager& qman, co
     return ranges::any_of(quorums, [&quorumHash](const auto& q){ return q->qc->quorumHash == quorumHash; });
 }
 
-bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindex)
+bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindexPrev)
 {
-    return IsQuorumTypeEnabledInternal(llmqType, qman, pindex, std::nullopt, std::nullopt);
+    return IsQuorumTypeEnabledInternal(llmqType, qman, pindexPrev, std::nullopt, std::nullopt);
 }
 
-bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindex,
+bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindexPrev,
                                 std::optional<bool> optDIP0024IsActive, std::optional<bool> optHaveDIP0024Quorums)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
 
+    bool fDIP0024IsActive = optDIP0024IsActive.has_value() ? *optDIP0024IsActive : DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0024);
     switch (llmqType)
     {
         case Consensus::LLMQType::LLMQ_DEVNET:
@@ -960,12 +957,11 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumMana
             if (Params().NetworkIDString() == CBaseChainParams::TESTNET) return true;
             // fall through
         case Consensus::LLMQType::LLMQ_TEST_INSTANTSEND: {
-            bool fDIP0024IsActive = optDIP0024IsActive.has_value() ? *optDIP0024IsActive : IsDIP0024Active(pindex);
             if (!fDIP0024IsActive) return true;
 
             bool fHaveDIP0024Quorums = optHaveDIP0024Quorums.has_value() ? *optHaveDIP0024Quorums
                                                                          : !qman.ScanQuorums(
-                            consensusParams.llmqTypeDIP0024InstantSend, pindex, 1).empty();
+                            consensusParams.llmqTypeDIP0024InstantSend, pindexPrev, 1).empty();
             return !fHaveDIP0024Quorums;
         }
         case Consensus::LLMQType::LLMQ_TEST:
@@ -976,19 +972,18 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumMana
             return true;
 
         case Consensus::LLMQType::LLMQ_TEST_V17: {
-            return llmq_versionbitscache.State(pindex, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY) == ThresholdState::ACTIVE;
+            return llmq_versionbitscache.State(pindexPrev, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY) == ThresholdState::ACTIVE;
         }
         case Consensus::LLMQType::LLMQ_100_67:
-            return pindex->nHeight + 1 >= consensusParams.DIP0020Height;
+            return pindexPrev->nHeight + 1 >= consensusParams.DIP0020Height;
 
         case Consensus::LLMQType::LLMQ_60_75:
         case Consensus::LLMQType::LLMQ_DEVNET_DIP0024:
         case Consensus::LLMQType::LLMQ_TEST_DIP0024: {
-            bool fDIP0024IsActive = optDIP0024IsActive.has_value() ? *optDIP0024IsActive : IsDIP0024Active(pindex);
             return fDIP0024IsActive;
         }
         case Consensus::LLMQType::LLMQ_25_67:
-            return pindex->nHeight >= TESTNET_LLMQ_25_67_ACTIVATION_HEIGHT;
+            return pindexPrev->nHeight >= TESTNET_LLMQ_25_67_ACTIVATION_HEIGHT;
 
         default:
             throw std::runtime_error(strprintf("%s: Unknown LLMQ type %d", __func__, ToUnderlying(llmqType)));

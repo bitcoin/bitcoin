@@ -66,9 +66,9 @@ void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, gsl::not
 
 bool IsQuorumActive(Consensus::LLMQType llmqType, const CQuorumManager& qman, const uint256& quorumHash);
 // TODO options maybe not
-bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindex);
+bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindexPrev);
 // TODO options maybe not
-bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindex, std::optional<bool> optDIP0024IsActive, std::optional<bool> optHaveDIP0024Quorums);
+bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindexPrev, std::optional<bool> optDIP0024IsActive, std::optional<bool> optHaveDIP0024Quorums);
 
 // TODO options maybe not
 std::vector<Consensus::LLMQType> GetEnabledQuorumTypes(gsl::not_null<const CBlockIndex*> pindex);
@@ -77,8 +77,6 @@ std::vector<std::reference_wrapper<const Consensus::LLMQParams>> GetEnabledQuoru
 
 // TODO options
 bool IsQuorumRotationEnabled(const Consensus::LLMQParams& llmqParams, gsl::not_null<const CBlockIndex*> pindex);
-// TODO deployments
-bool IsDIP0024Active(gsl::not_null<const CBlockIndex*> pindex);
 // TODO deployments
 bool IsV19Active(gsl::not_null<const CBlockIndex*> pindex);
 // TODO deployments
