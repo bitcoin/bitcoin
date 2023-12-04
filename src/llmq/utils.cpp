@@ -25,6 +25,7 @@
 #include <atomic>
 #include <optional>
 
+// TODO remove this const
 static constexpr int TESTNET_LLMQ_25_67_ACTIVATION_HEIGHT = 847000;
 
 /**
