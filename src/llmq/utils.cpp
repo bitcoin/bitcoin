@@ -35,7 +35,6 @@ std::optional<std::pair<CBLSSignature, uint32_t>> GetNonNullCoinbaseChainlock(co
 namespace llmq
 {
 
-Mutex cs_llmq_vbc;
 VersionBitsCache llmq_versionbitscache;
 
 namespace utils
@@ -708,7 +707,6 @@ bool IsV19Active(gsl::not_null<const CBlockIndex*> pindex)
 
 bool IsV20Active(gsl::not_null<const CBlockIndex*> pindex)
 {
-    LOCK(cs_llmq_vbc);
     return llmq_versionbitscache.State(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20) == ThresholdState::ACTIVE;
 }
 
@@ -716,19 +714,16 @@ bool IsMNRewardReallocationActive(gsl::not_null<const CBlockIndex*> pindex)
 {
     if (!IsV20Active(pindex)) return false;
 
-    LOCK(cs_llmq_vbc);
     return llmq_versionbitscache.State(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_MN_RR) == ThresholdState::ACTIVE;
 }
 
 ThresholdState GetV20State(gsl::not_null<const CBlockIndex*> pindex)
 {
-    LOCK(cs_llmq_vbc);
     return llmq_versionbitscache.State(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20);
 }
 
 int GetV20Since(gsl::not_null<const CBlockIndex*> pindex)
 {
-    LOCK(cs_llmq_vbc);
     return llmq_versionbitscache.StateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20);
 }
 
@@ -1005,7 +1000,6 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumMana
             return true;
 
         case Consensus::LLMQType::LLMQ_TEST_V17: {
-            LOCK(cs_llmq_vbc);
             return llmq_versionbitscache.State(pindex, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY) == ThresholdState::ACTIVE;
         }
         case Consensus::LLMQType::LLMQ_100_67:
