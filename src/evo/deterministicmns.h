@@ -622,7 +622,7 @@ public:
     // Test if given TX is a ProRegTx which also contains the collateral at index n
     static bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);
 
-    bool IsDIP3Enforced(int nHeight = -1) LOCKS_EXCLUDED(cs);
+    bool IsDIP3Enforced(int nHeight);
 
     bool MigrateDBIfNeeded();
     bool MigrateDBIfNeeded2();
