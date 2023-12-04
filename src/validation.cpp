@@ -61,7 +61,6 @@
 
 #include <llmq/instantsend.h>
 #include <llmq/chainlocks.h>
-#include <llmq/utils.h>
 
 #include <statsd_client.h>
 
@@ -1171,7 +1170,7 @@ CAmount GetBlockSubsidyInner(int nPrevBits, int nPrevHeight, const Consensus::Pa
 CAmount GetBlockSubsidy(const CBlockIndex* const pindex, const Consensus::Params& consensusParams)
 {
     if (pindex->pprev == nullptr) return Params().GenesisBlock().vtx[0]->GetValueOut();
-    bool isV20Active = llmq::utils::IsV20Active(pindex->pprev);
+    const bool isV20Active{DeploymentActiveAt(*pindex, consensusParams, Consensus::DEPLOYMENT_V20)};
     return GetBlockSubsidyInner(pindex->pprev->nBits, pindex->pprev->nHeight, consensusParams, isV20Active);
 }
 
