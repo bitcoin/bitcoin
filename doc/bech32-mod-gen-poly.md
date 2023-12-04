@@ -284,3 +284,4 @@ if (c0 & 16)  c ^= 0x640f37688b; //  {16}k(x) =
 ```
 
 We replaced the corresponding part of the `PolyMod` function with this to use `U1PIRGA7` as the generator polynomial.
+
