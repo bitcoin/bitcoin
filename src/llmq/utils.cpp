@@ -40,13 +40,11 @@ static bool IsV19Active(gsl::not_null<const CBlockIndex*> pindexPrev)
 
 static bool IsV20Active(gsl::not_null<const CBlockIndex*> pindexPrev)
 {
-    return llmq_versionbitscache.State(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V20) == ThresholdState::ACTIVE;
+    return DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V20);
 }
 
 namespace llmq
 {
-
-VersionBitsCache llmq_versionbitscache;
 
 namespace utils
 
@@ -953,10 +951,10 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumMana
             return true;
 
         case Consensus::LLMQType::LLMQ_TEST_V17: {
-            return llmq_versionbitscache.State(pindexPrev, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY) == ThresholdState::ACTIVE;
+            return DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
         }
         case Consensus::LLMQType::LLMQ_100_67:
-            return pindexPrev->nHeight + 1 >= consensusParams.DIP0020Height;
+            return DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0020);
 
         case Consensus::LLMQType::LLMQ_60_75:
         case Consensus::LLMQType::LLMQ_DEVNET_DIP0024:
