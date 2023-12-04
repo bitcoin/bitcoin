@@ -34,6 +34,11 @@ static constexpr int TESTNET_LLMQ_25_67_ACTIVATION_HEIGHT = 847000;
  */
 std::optional<std::pair<CBLSSignature, uint32_t>> GetNonNullCoinbaseChainlock(const CBlockIndex* pindex);
 
+static bool IsV19Active(gsl::not_null<const CBlockIndex*> pindexPrev)
+{
+    return DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V19);
+}
+
 namespace llmq
 {
 
@@ -680,11 +685,6 @@ bool IsQuorumRotationEnabled(const Consensus::LLMQParams& llmqParams, gsl::not_n
     }
     // It should activate at least 1 block prior to the cycle start
     return DeploymentActiveAfter(pindex->GetAncestor(cycleQuorumBaseHeight - 1), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024);
-}
-
-bool IsV19Active(gsl::not_null<const CBlockIndex*> pindex)
-{
-    return pindex->nHeight + 1 >= Params().GetConsensus().V19Height;
 }
 
 bool IsV20Active(gsl::not_null<const CBlockIndex*> pindex)
