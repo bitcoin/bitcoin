@@ -223,8 +223,8 @@ static void MutateTxLocktime(CMutableTransaction& tx, const std::string& cmdVal)
 static void MutateTxRBFOptIn(CMutableTransaction& tx, const std::string& strInIdx)
 {
     // parse requested index
-    int64_t inIdx;
-    if (!ParseInt64(strInIdx, &inIdx) || inIdx < 0 || inIdx >= static_cast<int64_t>(tx.vin.size())) {
+    int64_t inIdx = -1;
+    if (strInIdx != "" && (!ParseInt64(strInIdx, &inIdx) || inIdx < 0 || inIdx >= static_cast<int64_t>(tx.vin.size()))) {
         throw std::runtime_error("Invalid TX input index '" + strInIdx + "'");
     }
 
