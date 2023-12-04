@@ -278,12 +278,13 @@ CMNHFManager::Signals CMNHFManager::GetForBlock(const CBlockIndex* pindex)
 
     const Consensus::Params& consensusParams{Params().GetConsensus()};
     while (!to_calculate.empty()) {
+        const CBlockIndex* pindex_top{to_calculate.top()};
         CBlock block;
-        if (!ReadBlockFromDisk(block, pindex, consensusParams)) {
+        if (!ReadBlockFromDisk(block, pindex_top, consensusParams)) {
             throw std::runtime_error("failed-getehfforblock-read");
         }
         BlockValidationState state;
-        signalsTmp = ProcessBlock(block, pindex, false, state);
+        signalsTmp = ProcessBlock(block, pindex_top, false, state);
         if (!signalsTmp.has_value()) {
             LogPrintf("%s: process block failed due to %s\n", __func__, state.ToString());
             throw std::runtime_error("failed-getehfforblock-construct");
