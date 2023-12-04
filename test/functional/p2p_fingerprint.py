@@ -118,7 +118,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
         block_hash = int(tip, 16)
         self.send_block_request(block_hash, node0)
         self.send_header_request(block_hash, node0)
-        node0.sync_with_ping()
+        node0.wait_for_block(block_hash, timeout=3)
 
         # Request for very old stale block should now fail
         self.send_block_request(stale_hash, node0)
@@ -143,6 +143,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
         self.send_header_request(block_hash, node0)
         test_function = lambda: self.last_header_equals(block_hash, node0)
         wait_until(test_function, timeout=3)
+
 
 if __name__ == '__main__':
     P2PFingerprintTest().main()
