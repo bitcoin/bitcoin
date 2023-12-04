@@ -9,6 +9,7 @@
 
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <deploymentstatus.h>
 #include <llmq/utils.h>
 #include <logging.h>
 #include <validation.h>
@@ -41,13 +42,8 @@ bool CFinalCommitment::Verify(gsl::not_null<const CBlockIndex*> pQuorumBaseBlock
     }
     const auto& llmq_params = llmq_params_opt.value();
 
-    uint16_t expected_nversion{CFinalCommitment::LEGACY_BLS_NON_INDEXED_QUORUM_VERSION};
-    if (utils::IsQuorumRotationEnabled(llmq_params, pQuorumBaseBlockIndex)) {
-        expected_nversion = utils::IsV19Active(pQuorumBaseBlockIndex) ? CFinalCommitment::BASIC_BLS_INDEXED_QUORUM_VERSION : CFinalCommitment::LEGACY_BLS_INDEXED_QUORUM_VERSION;
-    }
-    else {
-        expected_nversion = utils::IsV19Active(pQuorumBaseBlockIndex) ? CFinalCommitment::BASIC_BLS_NON_INDEXED_QUORUM_VERSION : CFinalCommitment::LEGACY_BLS_NON_INDEXED_QUORUM_VERSION;
-    }
+    const uint16_t expected_nversion{CFinalCommitment::GetVersion(utils::IsQuorumRotationEnabled(llmq_params, pQuorumBaseBlockIndex),
+            DeploymentActiveAfter(pQuorumBaseBlockIndex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19))};
     if (nVersion == 0 || nVersion != expected_nversion) {
         LogPrintfFinalCommitment("q[%s] invalid nVersion=%d expectednVersion\n", quorumHash.ToString(), nVersion, expected_nversion);
         return false;
