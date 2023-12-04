@@ -184,18 +184,7 @@ void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman);
 void StartScriptCheckWorkerThreads(int threads_num);
 /** Stop all of the script checking worker threads */
 void StopScriptCheckWorkerThreads();
-/**
- * Return transaction from the block at block_index.
- * If block_index is not provided, fall back to mempool.
- * If mempool is not provided or the tx couldn't be found in mempool, fall back to g_txindex.
- *
- * @param[in]  block_index     The block to read from disk, or nullptr
- * @param[in]  mempool         If block_index is not provided, look in the mempool, if provided
- * @param[in]  hash            The txid
- * @param[in]  consensusParams The params
- * @param[out] hashBlock       The hash of block_index, if the tx was found via block_index
- * @returns                    The tx if found, otherwise nullptr
- */
+
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock);
 
 double ConvertBitsToDouble(unsigned int nBits);

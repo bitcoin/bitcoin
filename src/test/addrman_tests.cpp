@@ -35,6 +35,7 @@ public:
     //! Ensure that bucket placement is always the same for testing purposes.
     void MakeDeterministic()
     {
+        LOCK(cs);
         nKey.SetNull();
         insecure_rand = FastRandomContext(true);
     }
@@ -77,7 +78,7 @@ public:
     {
          int64_t nLastSuccess = 1;
          // Set last good connection in the deep past.
-         Good(addr, true, nLastSuccess);
+         Good(addr, nLastSuccess);
 
          bool count_failure = false;
          int64_t nLastTry = GetAdjustedTime()-61;
@@ -88,11 +89,11 @@ public:
     {
         CAddrMan::Clear();
         if (deterministic) {
+            LOCK(cs);
             nKey.SetNull();
             insecure_rand = FastRandomContext(true);
         }
     }
-
 };
 
 static CNetAddr ResolveIP(const std::string& ip)

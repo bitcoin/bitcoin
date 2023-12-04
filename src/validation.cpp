@@ -20,7 +20,6 @@
 #include <flatfile.h>
 #include <hash.h>
 #include <index/blockfilterindex.h>
-#include <index/txindex.h>
 #include <logging.h>
 #include <logging/timer.h>
 #include <node/blockstorage.h>
@@ -1068,32 +1067,6 @@ bool GetAddressUnspent(uint160 addressHash, AddressType type,
     return true;
 }
 
-CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock)
-{
-    LOCK(cs_main);
-
-    if (block_index) {
-        CBlock block;
-        if (ReadBlockFromDisk(block, block_index, consensusParams)) {
-            for (const auto& tx : block.vtx) {
-                if (tx->GetHash() == hash) {
-                    hashBlock = block_index->GetBlockHash();
-                    return tx;
-                }
-            }
-        }
-        return nullptr;
-    }
-    if (mempool) {
-        CTransactionRef ptx = mempool->get(hash);
-        if (ptx) return ptx;
-    }
-    if (g_txindex) {
-        CTransactionRef tx;
-        if (g_txindex->FindTx(hash, hashBlock, tx)) return tx;
-    }
-    return nullptr;
-}
 
 double ConvertBitsToDouble(unsigned int nBits)
 {
