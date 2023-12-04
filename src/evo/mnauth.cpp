@@ -7,6 +7,7 @@
 #include <bls/bls.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <deploymentstatus.h>
 #include <evo/deterministicmns.h>
 #include <llmq/utils.h>
 #include <masternode/meta.h>
@@ -40,8 +41,8 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
     if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
         nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
     }
-    bool isV19active = llmq::utils::IsV19Active(tip);
-    const CBLSPublicKeyVersionWrapper pubKey(*activeMasternodeInfo.blsPubKeyOperator, !isV19active);
+    const bool is_basic_scheme_active{DeploymentActiveAfter(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
+    const CBLSPublicKeyVersionWrapper pubKey(*activeMasternodeInfo.blsPubKeyOperator, !is_basic_scheme_active);
     if (peer.nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
         signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.fInbound));
     } else {
@@ -106,8 +107,8 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connma
         nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
     }
     const CBlockIndex* tip = ::ChainActive().Tip();
-    bool isV19active = llmq::utils::IsV19Active(tip);
-    ConstCBLSPublicKeyVersionWrapper pubKey(dmn->pdmnState->pubKeyOperator.Get(), !isV19active);
+    const bool is_basic_scheme_active{DeploymentActiveAfter(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
+    ConstCBLSPublicKeyVersionWrapper pubKey(dmn->pdmnState->pubKeyOperator.Get(), !is_basic_scheme_active);
     // See comment in PushMNAUTH (fInbound is negated here as we're on the other side of the connection)
     if (peer.nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
         signHash = ::SerializeHash(std::make_tuple(pubKey, peer.GetSentMNAuthChallenge(), !peer.fInbound));
