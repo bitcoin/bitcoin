@@ -43,7 +43,7 @@ env:  # Global defaults
 # The following specific types should exist, with the following requirements:
 # - small: For an x86_64 machine, recommended to have 2 CPUs and 8 GB of memory.
 # - medium: For an x86_64 machine, recommended to have 4 CPUs and 16 GB of memory.
-# - mantic: For a machine running the Linux kernel shipped with exaclty Ubuntu Mantic 23.10. The machine is recommended to have 4 CPUs and 16 GB of memory.
+# - noble: For a machine running the Linux kernel shipped with exaclty Ubuntu Noble 24.04. The machine is recommended to have 4 CPUs and 16 GB of memory.
 # - arm64: For an aarch64 machine, recommended to have 2 CPUs and 8 GB of memory.
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
@@ -165,7 +165,7 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   persistent_worker:
     labels:
-      type: mantic  # Must use this specific worker (needed for USDT functional tests)
+      type: noble  # Must use this specific worker (needed for USDT functional tests)
   env:
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
