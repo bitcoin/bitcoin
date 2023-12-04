@@ -77,8 +77,6 @@ std::vector<std::reference_wrapper<const Consensus::LLMQParams>> GetEnabledQuoru
 
 // TODO options
 bool IsQuorumRotationEnabled(const Consensus::LLMQParams& llmqParams, gsl::not_null<const CBlockIndex*> pindex);
-// TODO deployments
-bool IsV20Active(gsl::not_null<const CBlockIndex*> pindex);
 
 /// Returns the state of `-llmq-data-recovery`
 // TODO options
