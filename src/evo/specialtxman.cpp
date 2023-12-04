@@ -6,6 +6,7 @@
 
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <deploymentstatus.h>
 #include <evo/cbtx.h>
 #include <evo/creditpool.h>
 #include <evo/deterministicmns.h>
@@ -276,7 +277,7 @@ bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex,
                                 const CAmount blockSubsidy, BlockValidationState& state)
 {
     try {
-        if (!llmq::utils::IsV20Active(pindex)) return true;
+        if (!DeploymentActiveAt(*pindex, consensusParams, Consensus::DEPLOYMENT_V20)) return true;
 
         auto creditPoolDiff = GetCreditPoolDiffForBlock(block, pindex->pprev, consensusParams, blockSubsidy, state);
         if (!creditPoolDiff.has_value()) return false;

@@ -218,16 +218,16 @@ CCreditPoolManager::CCreditPoolManager(CEvoDB& _evoDb)
 {
 }
 
-CCreditPoolDiff::CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindex, const Consensus::Params& consensusParams, const CAmount blockSubsidy) :
+CCreditPoolDiff::CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindexPrev, const Consensus::Params& consensusParams, const CAmount blockSubsidy) :
     pool(std::move(starter)),
-    pindex(pindex),
+    pindexPrev(pindexPrev),
     params(consensusParams)
 {
-    assert(pindex);
+    assert(pindexPrev);
 
-    if (llmq::utils::IsMNRewardReallocationActive(pindex)) {
+    if (llmq::utils::IsMNRewardReallocationActive(pindexPrev)) {
         // We consider V20 active if mn_rr is active
-        platformReward = MasternodePayments::PlatformShare(GetMasternodePayment(pindex->nHeight, blockSubsidy, /*fV20Active=*/ true));
+        platformReward = MasternodePayments::PlatformShare(GetMasternodePayment(pindexPrev->nHeight + 1, blockSubsidy, /*fV20Active=*/ true));
     }
 }
 
@@ -274,7 +274,7 @@ bool CCreditPoolDiff::ProcessLockUnlockTransaction(const CTransaction& tx, TxVal
     if (tx.nVersion != 3) return true;
     if (tx.nType != TRANSACTION_ASSET_LOCK && tx.nType != TRANSACTION_ASSET_UNLOCK) return true;
 
-    if (!CheckAssetLockUnlockTx(tx, pindex, pool.indexes, state)) {
+    if (!CheckAssetLockUnlockTx(tx, pindexPrev, pool.indexes, state)) {
         // pass the state returned by the function above
         return false;
     }

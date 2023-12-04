@@ -70,10 +70,10 @@ private:
     CAmount sessionUnlocked{0};
     CAmount platformReward{0};
 
-    const CBlockIndex *pindex{nullptr};
+    const CBlockIndex *pindexPrev{nullptr};
     const Consensus::Params& params;
 public:
-    explicit CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindex,
+    explicit CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindexPrev,
                              const Consensus::Params& consensusParams,
                              const CAmount blockSubsidy);
 
