@@ -78,6 +78,15 @@ void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target,
 static std::string_view g_fuzz_target;
 static const TypeTestOneInput* g_test_one_input{nullptr};
 
+const char* GetHarnessName()
+{
+#ifdef FUZZ_HARNESS
+    return STRINGIZE(FUZZ_HARNESS);
+#else
+    return std::getenv("FUZZ");
+#endif
+}
+
 void initialize()
 {
     // Terminate immediately if a fuzzing harness ever tries to create a TCP socket.
@@ -111,7 +120,7 @@ void initialize()
     if (should_exit) {
         std::exit(EXIT_SUCCESS);
     }
-    if (const auto* env_fuzz{std::getenv("FUZZ")}) {
+    if (const auto* env_fuzz{GetHarnessName()}) {
         // To allow for easier fuzz executable binary modification,
         static std::string g_copy{env_fuzz}; // create copy to avoid compiler optimizations, and
         g_fuzz_target = g_copy.c_str();      // strip string after the first null-char.

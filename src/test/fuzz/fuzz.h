@@ -6,6 +6,7 @@
 #define BITCOIN_TEST_FUZZ_FUZZ_H
 
 #include <span.h>
+#include <util/macros.h>
 
 #include <cstdint>
 #include <functional>
@@ -39,14 +40,25 @@ void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target,
 #define FUZZ_TARGET(...) DETAIL_FUZZ(__VA_ARGS__)
 #endif
 
-#define DETAIL_FUZZ(name, ...)                                                        \
-    void name##_fuzz_target(FuzzBufferType);                                          \
-    struct name##_Before_Main {                                                       \
-        name##_Before_Main()                                                          \
-        {                                                                             \
-            FuzzFrameworkRegisterTarget(#name, name##_fuzz_target, {__VA_ARGS__});    \
-        }                                                                             \
-    } const static g_##name##_before_main;                                            \
+constexpr bool should_compile_harness(std::string_view name)
+{
+#ifdef FUZZ_HARNESS
+    return name.compare(STRINGIZE(FUZZ_HARNESS)) == 0;
+#else
+    return true;
+#endif
+}
+
+#define DETAIL_FUZZ(name, ...)                                                         \
+    void name##_fuzz_target(FuzzBufferType);                                           \
+    struct name##_Before_Main {                                                        \
+        name##_Before_Main()                                                           \
+        {                                                                              \
+            if constexpr (should_compile_harness(#name)) {                             \
+                FuzzFrameworkRegisterTarget(#name, name##_fuzz_target, {__VA_ARGS__}); \
+            }                                                                          \
+        }                                                                              \
+    } const static g_##name##_before_main;                                             \
     void name##_fuzz_target(FuzzBufferType buffer)
 
 #endif // BITCOIN_TEST_FUZZ_FUZZ_H
