@@ -8,6 +8,7 @@
 if uploadtarget has been reached.
 * Verify that getdata requests for recent blocks are respected even
 if uploadtarget has been reached.
+* Verify that mempool requests lead to a disconnect if uploadtarget has been reached.
 * Verify that the upload counters are reset after 24 hours.
 """
 from collections import defaultdict
@@ -17,6 +18,7 @@ from test_framework.messages import (
     CInv,
     MSG_BLOCK,
     msg_getdata,
+    msg_mempool,
 )
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -165,13 +167,16 @@ class MaxUploadTest(BitcoinTestFramework):
 
         self.nodes[0].disconnect_p2ps()
 
-        self.log.info("Restarting node 0 with download permission and 1MB maxuploadtarget")
-        self.restart_node(0, ["-whitelist=download@127.0.0.1", "-maxuploadtarget=1"])
+        self.log.info("Restarting node 0 with download permission, bloom filter support and 1MB maxuploadtarget")
+        self.restart_node(0, ["-whitelist=download@127.0.0.1", "-peerbloomfilters", "-maxuploadtarget=1"])
         # Total limit isn't reached after restart, but 1 MB is too small to serve historical blocks
         self.assert_uploadtarget_state(target_reached=False, serve_historical_blocks=False)
 
         # Reconnect to self.nodes[0]
         peer = self.nodes[0].add_p2p_connection(TestP2PConn())
+
+        # Sending mempool message shouldn't disconnect peer, as total limit isn't reached yet
+        peer.send_and_ping(msg_mempool())
 
         #retrieve 20 blocks which should be enough to break the 1MB limit
         getdata_request.inv = [CInv(MSG_BLOCK, big_new_block)]
@@ -189,6 +194,11 @@ class MaxUploadTest(BitcoinTestFramework):
         peer_info = self.nodes[0].getpeerinfo()
         assert_equal(len(peer_info), 1)  # node is still connected
         assert_equal(peer_info[0]['permissions'], ['download'])
+
+        self.log.info("Peer gets disconnected for a mempool request after limit is reached")
+        with self.nodes[0].assert_debug_log(expected_msgs=["mempool request with bandwidth limit reached, disconnect peer"]):
+            peer.send_message(msg_mempool())
+            peer.wait_for_disconnect()
 
         self.log.info("Test passing an unparsable value to -maxuploadtarget throws an error")
         self.stop_node(0)
