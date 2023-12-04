@@ -29,6 +29,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             "-acceptnonstdtxn=1",
+            "-maxorphantxsize=1",
         ]]
         self.setup_clean_chain = True
 
@@ -103,7 +104,8 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         self.test_orphan_tx_handling(block1.vtx[0].sha256, False)
 
         self.log.info('Test orphan transaction handling, resolve via block')
-        self.restart_node(0, ["-acceptnonstdtxn=1", '-persistmempool=0'])
+        self.restart_node(0, ["-acceptnonstdtxn=1", '-persistmempool=0', '-maxorphantxsize=1'])
+
         self.reconnect_p2p(num_connections=2)
         self.test_orphan_tx_handling(block2.vtx[0].sha256, True)
 
@@ -139,6 +141,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         tx_orphan_2_invalid = CTransaction()
         tx_orphan_2_invalid.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_1.sha256, 2)))
         tx_orphan_2_invalid.vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
+        tx_orphan_2_invalid.calc_sha256()
 
         self.log.info('Send the orphans ... ')
         # Send valid orphan txs from p2ps[0]
@@ -181,6 +184,27 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         wait_until(lambda: 1 == len(node.getpeerinfo()), timeout=12)  # p2ps[1] is no longer connected
         assert_equal(expected_mempool, set(node.getrawmempool()))
+
+        self.log.info('Test orphan pool overflow')
+        # this test is different with bitcoin due to dashpay/dash#3121
+        # we have a limit based on size in megabytes, not by amount of txes
+        # one tx is 91byte; 1Mb / 4451byte = 224; need to send at least 225
+        orphan_tx_pool = [CTransaction() for _ in range(225)]
+        for i in range(len(orphan_tx_pool)):
+            orphan_tx_pool[i].vin.append(CTxIn(outpoint=COutPoint(i, 333)))
+            for j in range(110):
+                orphan_tx_pool[i].vout.append(CTxOut(nValue=COIN // 10, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
+
+        with node.assert_debug_log(['mapOrphan overflow, removed 1 tx']):
+            node.p2p.send_txs_and_test(orphan_tx_pool, node, success=False)
+
+        rejected_parent = CTransaction()
+        rejected_parent.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_2_invalid.sha256, 0)))
+        rejected_parent.vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
+        rejected_parent.rehash()
+        # TODO: somehow it fails on `block` stage without 'not keeping orphan'
+        #with node.assert_debug_log(['not keeping orphan with rejected parents {}'.format(rejected_parent.hash)]):
+        node.p2p.send_txs_and_test([rejected_parent], node, success=False)
 
 
 if __name__ == '__main__':

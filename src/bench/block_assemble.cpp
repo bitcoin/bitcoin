@@ -17,7 +17,13 @@
 
 static void AssembleBlock(benchmark::Bench& bench)
 {
-    RegTestingSetup test_setup;
+    TestingSetup test_setup{
+        CBaseChainParams::REGTEST,
+        /* extra_args */ {
+            "-nodebuglogfile",
+            "-nodebug",
+        },
+    };
     const CScript redeemScript = CScript() << OP_DROP << OP_TRUE;
     const CScript SCRIPT_PUB =
         CScript() << OP_HASH160 << ToByteVector(CScriptID(redeemScript))

@@ -91,7 +91,7 @@ SQLite is required for the wallet:
 
 To build Dash Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
-Optional port mapping libraries (see: `--with-miniupnpc`, `--enable-upnp-default`, and `--with-natpmp`, `--enable-natpmp-default`):
+Optional port mapping libraries (see: `--with-miniupnpc` and `--with-natpmp`):
 
     sudo apt install libminiupnpc-dev libnatpmp-dev
 
@@ -154,7 +154,7 @@ SQLite is required for the wallet:
 
 To build Dash Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
-Optional port mapping libraries (see: `--with-miniupnpc`, `--enable-upnp-default`, and `--with-natpmp`, `--enable-natpmp-default`):
+Optional port mapping libraries (see: `--with-miniupnpc` and `--with-natpmp`):
 
     sudo dnf install miniupnpc-devel libnatpmp-devel
 
@@ -198,22 +198,14 @@ miniupnpc
 
 [miniupnpc](https://miniupnp.tuxfamily.org) may be used for UPnP port mapping.  It can be downloaded from [here](
 https://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
-turned off by default.  See the configure options for upnp behavior desired:
-
-	--without-miniupnpc      No UPnP support miniupnp not required
-	--disable-upnp-default   (the default) UPnP support turned off by default at runtime
-	--enable-upnp-default    UPnP support turned on by default at runtime
+turned off by default.
 
 libnatpmp
 ---------
 
 [libnatpmp](https://miniupnp.tuxfamily.org/libnatpmp.html) may be used for NAT-PMP port mapping. It can be downloaded
 from [here](https://miniupnp.tuxfamily.org/files/). NAT-PMP support is compiled in and
-turned off by default. See the configure options for NAT-PMP behavior desired:
-
-	--without-natpmp          No NAT-PMP support, libnatpmp not required
-	--disable-natpmp-default  (the default) NAT-PMP support turned off by default at runtime
-	--enable-natpmp-default   NAT-PMP support turned on by default at runtime
+turned off by default.
 
 Berkeley DB
 -----------
