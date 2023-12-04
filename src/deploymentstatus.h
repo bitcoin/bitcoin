@@ -52,4 +52,10 @@ inline bool DeploymentEnabled(const Consensus::Params& params, Consensus::Deploy
     return params.vDeployments[dep].nTimeout != 0;
 }
 
+/** this function is convenient helper for DIP0003 because 'active' and 'enforced' are different statuses for DIP0003 */
+constexpr bool DeploymentDIP0003Enforced(const int nHeight, const Consensus::Params& params)
+{
+    return nHeight >= params.DIP0003EnforcementHeight;
+}
+
 #endif // BITCOIN_DEPLOYMENTSTATUS_H

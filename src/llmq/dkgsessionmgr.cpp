@@ -7,10 +7,10 @@
 #include <llmq/quorums.h>
 #include <llmq/utils.h>
 
-#include <evo/deterministicmns.h>
-
 #include <chainparams.h>
 #include <dbwrapper.h>
+#include <deploymentstatus.h>
+#include <evo/deterministicmns.h>
 #include <net_processing.h>
 #include <spork.h>
 #include <util/irange.h>
@@ -162,7 +162,7 @@ void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
 
     if (fInitialDownload)
         return;
-    if (!deterministicMNManager->IsDIP3Enforced(pindexNew->nHeight))
+    if (!DeploymentDIP0003Enforced(pindexNew->nHeight, Params().GetConsensus()))
         return;
     if (!IsQuorumDKGEnabled(spork_manager))
         return;

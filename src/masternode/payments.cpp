@@ -98,7 +98,7 @@
 [[nodiscard]] static bool IsTransactionValid(const CTransaction& txNew, const CBlockIndex* const pindexPrev, const CAmount blockSubsidy, const CAmount feeReward)
 {
     const int nBlockHeight = pindexPrev  == nullptr ? 0 : pindexPrev->nHeight + 1;
-    if (!deterministicMNManager->IsDIP3Enforced(nBlockHeight)) {
+    if (!DeploymentDIP0003Enforced(nBlockHeight, Params().GetConsensus())) {
         // can't verify historical blocks here
         return true;
     }
