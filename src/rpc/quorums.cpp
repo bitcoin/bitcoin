@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <deploymentstatus.h>
 #include <index/txindex.h>
 #include <node/context.h>
 #include <rpc/blockchain.h>
@@ -896,7 +897,7 @@ static UniValue verifychainlock(const JSONRPCRequest& request)
 
     CBLSSignature sig;
     if (pIndex) {
-        bool use_legacy_signature = !llmq::utils::IsV19Active(pIndex);
+        const bool use_legacy_signature{!DeploymentActiveAfter(pIndex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
         if (!sig.SetHexStr(request.params[1].get_str(), use_legacy_signature)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
         }
@@ -976,7 +977,7 @@ static UniValue verifyislock(const JSONRPCRequest& request)
     CHECK_NONFATAL(pBlockIndex != nullptr);
 
     CBLSSignature sig;
-    const bool use_bls_legacy = !llmq::utils::IsV19Active(pBlockIndex);
+    const bool use_bls_legacy{!DeploymentActiveAfter(pBlockIndex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     if (!sig.SetHexStr(request.params[2].get_str(), use_bls_legacy)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
     }
