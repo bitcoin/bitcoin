@@ -16,7 +16,6 @@
 #include <hash.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/commitment.h>
-#include <llmq/utils.h>
 #include <primitives/block.h>
 #include <validation.h>
 
@@ -27,7 +26,8 @@ static bool CheckSpecialTxInner(const CTransaction& tx, const CBlockIndex* pinde
     if (tx.nVersion != 3 || tx.nType == TRANSACTION_NORMAL)
         return true;
 
-    if (pindexPrev && pindexPrev->nHeight + 1 < Params().GetConsensus().DIP0003Height) {
+    const auto& consensusParams = Params().GetConsensus();
+    if (!DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0003)) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-tx-type");
     }
 
@@ -46,21 +46,21 @@ static bool CheckSpecialTxInner(const CTransaction& tx, const CBlockIndex* pinde
         case TRANSACTION_QUORUM_COMMITMENT:
             return llmq::CheckLLMQCommitment(tx, pindexPrev, state);
         case TRANSACTION_MNHF_SIGNAL:
-            if (!llmq::utils::IsV20Active(pindexPrev)) {
+            if (!DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "mnhf-before-v20");
             }
             return CheckMNHFTx(tx, pindexPrev, state);
         case TRANSACTION_ASSET_LOCK:
-            if (!llmq::utils::IsV20Active(pindexPrev)) {
+            if (!DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "assetlocks-before-v20");
             }
             return CheckAssetLockUnlockTx(tx, pindexPrev, indexes, state);
         case TRANSACTION_ASSET_UNLOCK:
-            if (Params().NetworkIDString() == CBaseChainParams::REGTEST && !llmq::utils::IsV20Active(pindexPrev)) {
+            if (Params().NetworkIDString() == CBaseChainParams::REGTEST && !DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20)) {
                 // TODO:  adjust functional tests to make it activated by MN_RR on regtest too
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "assetunlocks-before-v20");
             }
-            if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !llmq::utils::IsMNRewardReallocationActive(pindexPrev)) {
+            if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_MN_RR)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "assetunlocks-before-mn_rr");
             }
             return CheckAssetLockUnlockTx(tx, pindexPrev, indexes, state);
@@ -149,7 +149,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CM
         int64_t nTime1 = GetTimeMicros();
 
         const CCreditPool creditPool = creditPoolManager->GetCreditPool(pindex->pprev, consensusParams);
-        if (llmq::utils::IsV20Active(pindex->pprev)) {
+        if (DeploymentActiveAt(*pindex, consensusParams, Consensus::DEPLOYMENT_V20)) {
             LogPrint(BCLog::CREDITPOOL, "%s: CCreditPool is %s\n", __func__, creditPool.ToString());
         }
 
