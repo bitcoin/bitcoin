@@ -7,6 +7,7 @@
 #include <bls/bls.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <deploymentstatus.h>
 #include <messagesigner.h>
 #include <miner.h>
 #include <netbase.h>
@@ -26,7 +27,6 @@
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/instantsend.h>
-#include <llmq/utils.h>
 #include <masternode/payments.h>
 #include <util/enumerate.h>
 #include <util/irange.h>
@@ -206,7 +206,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         // next block should be signaling by default
         LOCK(cs_main);
         const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};
-        const bool isV20Active{llmq::utils::IsV20Active(tip)};
+        const bool isV20Active{DeploymentActiveAfter(tip, consensus_params, Consensus::DEPLOYMENT_V20)};
         deterministicMNManager->UpdatedBlockTip(tip);
         BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
         const CAmount block_subsidy = GetBlockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
@@ -222,7 +222,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
     {
         LOCK(cs_main);
         const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};
-        const bool isV20Active{llmq::utils::IsV20Active(tip)};
+        const bool isV20Active{DeploymentActiveAfter(tip, consensus_params, Consensus::DEPLOYMENT_V20)};
         const CAmount block_subsidy = GetBlockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
         const CAmount masternode_payment = GetMasternodePayment(tip->nHeight, block_subsidy, isV20Active);
         const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
@@ -240,20 +240,20 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
             }
             LOCK(cs_main);
             const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};
-            const bool isV20Active{llmq::utils::IsV20Active(tip)};
+            const bool isV20Active{DeploymentActiveAfter(tip, consensus_params, Consensus::DEPLOYMENT_V20)};
             const CAmount block_subsidy = GetBlockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
             const CAmount masternode_payment = GetMasternodePayment(tip->nHeight, block_subsidy, isV20Active);
             const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
             BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, masternode_payment);
         }
     }
-    BOOST_CHECK(llmq::utils::IsV20Active(m_node.chainman->ActiveChain().Tip()));
+    BOOST_CHECK(DeploymentActiveAfter(m_node.chainman->ActiveChain().Tip(), consensus_params, Consensus::DEPLOYMENT_V20));
     // Allocation of block subsidy is 60% MN, 20% miners and 20% treasury
     {
         // Reward split should reach ~75/25 after reallocation is done
         LOCK(cs_main);
         const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};
-        const bool isV20Active{llmq::utils::IsV20Active(tip)};
+        const bool isV20Active{DeploymentActiveAfter(tip, consensus_params, Consensus::DEPLOYMENT_V20)};
         const CAmount block_subsidy = GetBlockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
         const CAmount block_subsidy_sb = GetSuperblockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
         CAmount block_subsidy_potential = block_subsidy + block_subsidy_sb;
@@ -267,7 +267,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, masternode_payment);
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, 50662764); // 0.75
     }
-    BOOST_CHECK(!llmq::utils::IsMNRewardReallocationActive(m_node.chainman->ActiveChain().Tip()));
+    BOOST_CHECK(!DeploymentActiveAfter(m_node.chainman->ActiveChain().Tip(), consensus_params, Consensus::DEPLOYMENT_MN_RR));
 
     // Activate EHF "MN_RR"
     {
@@ -283,8 +283,8 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         }
         LOCK(cs_main);
         const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};
-        const bool isV20Active{llmq::utils::IsV20Active(tip)};
-        const bool isMNRewardReallocated{llmq::utils::IsMNRewardReallocationActive(tip)};
+        const bool isV20Active{DeploymentActiveAfter(tip, consensus_params, Consensus::DEPLOYMENT_V20)};
+        const bool isMNRewardReallocated{DeploymentActiveAfter(tip, consensus_params, Consensus::DEPLOYMENT_MN_RR)};
         const CAmount block_subsidy = GetBlockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
         CAmount masternode_payment = GetMasternodePayment(tip->nHeight, block_subsidy, isV20Active);
         const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
@@ -298,12 +298,12 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[payment_index].nValue, masternode_payment);
     }
 
-    BOOST_CHECK(llmq::utils::IsMNRewardReallocationActive(m_node.chainman->ActiveChain().Tip()));
+    BOOST_CHECK(DeploymentActiveAfter(m_node.chainman->ActiveChain().Tip(), consensus_params, Consensus::DEPLOYMENT_MN_RR));
     { // At this moment Masternode reward should be reallocated to platform
         // Allocation of block subsidy is 60% MN, 20% miners and 20% treasury
         LOCK(cs_main);
         const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};
-        const bool isV20Active{llmq::utils::IsV20Active(tip)};
+        const bool isV20Active{DeploymentActiveAfter(tip, consensus_params, Consensus::DEPLOYMENT_V20)};
         const CAmount block_subsidy = GetBlockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
         const CAmount block_subsidy_sb = GetSuperblockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
         CAmount masternode_payment = GetMasternodePayment(tip->nHeight, block_subsidy, isV20Active);
