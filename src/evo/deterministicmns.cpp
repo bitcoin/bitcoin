@@ -178,14 +178,14 @@ static bool CompareByLastPaid(const CDeterministicMN* _a, const CDeterministicMN
     return CompareByLastPaid(*_a, *_b);
 }
 
-CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(gsl::not_null<const CBlockIndex*> pIndex) const
+CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(gsl::not_null<const CBlockIndex*> pindexPrev) const
 {
     if (mnMap.size() == 0) {
         return nullptr;
     }
 
-    bool isv19Active = llmq::utils::IsV19Active(pIndex);
-    bool isMNRewardReallocation = llmq::utils::IsMNRewardReallocationActive(pIndex);
+    bool isv19Active = llmq::utils::IsV19Active(pindexPrev);
+    bool isMNRewardReallocation = llmq::utils::IsMNRewardReallocationActive(pindexPrev);
     // Starting from v19 and until MNRewardReallocation (Platform release), EvoNodes will be rewarded 4 blocks in a row
     CDeterministicMNCPtr best = nullptr;
     if (isv19Active && !isMNRewardReallocation) {
@@ -214,7 +214,7 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(gsl::not_null<const CBlock
     return best;
 }
 
-std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(gsl::not_null<const CBlockIndex* const> pindex, int nCount) const
+std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(gsl::not_null<const CBlockIndex* const> pindexPrev, int nCount) const
 {
     if (nCount < 0 ) {
         return {};
@@ -227,7 +227,7 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(gsl
 
     int remaining_evo_payments{0};
     CDeterministicMNCPtr evo_to_be_skipped{nullptr};
-    const bool isMNRewardReallocation = llmq::utils::IsMNRewardReallocationActive(pindex);
+    const bool isMNRewardReallocation = llmq::utils::IsMNRewardReallocationActive(pindexPrev);
     if (!isMNRewardReallocation) {
         ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
             if (dmn->pdmnState->nLastPaidHeight == nHeight) {
