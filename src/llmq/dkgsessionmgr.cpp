@@ -467,7 +467,8 @@ void CDKGSessionManager::CleanupOldContributions() const
 
     for (const auto& params : Params().GetConsensus().llmqs) {
         // For how many blocks recent DKG info should be kept
-        const int MAX_STORE_DEPTH = 2 * params.signingActiveQuorumCount * params.dkgInterval;
+        const int MAX_CYCLES = params.useRotation ? params.keepOldKeys / params.signingActiveQuorumCount : params.keepOldKeys;
+        const int MAX_STORE_DEPTH = MAX_CYCLES * params.dkgInterval;
 
         LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- looking for old entries for llmq type %d\n", __func__, ToUnderlying(params.type));
 
