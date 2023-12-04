@@ -81,7 +81,7 @@ task:
     cpu: 2
     memory: 5G
     docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:lunar
+      CI_IMAGE_NAME_TAG: ubuntu:23.04
       FILE_ENV: "./ci/test/00_setup_env_native_tidy.sh"
   # For faster CI feedback, immediately schedule the linters
   << : *CREDITS_TEMPLATE
@@ -210,7 +210,7 @@ task:
     cpu: 6  # Increase CPU and Memory to avoid timeout
     memory: 24G
     docker_arguments:
-      CI_IMAGE_NAME_TAG: ubuntu:lunar
+      CI_IMAGE_NAME_TAG: ubuntu:23.04
       FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
