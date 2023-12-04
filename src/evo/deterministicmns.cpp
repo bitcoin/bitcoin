@@ -21,6 +21,7 @@
 #include <messagesigner.h>
 #include <uint256.h>
 
+#include <optional>
 #include <memory>
 
 static const std::string DB_LIST_SNAPSHOT = "dmn_S3";
@@ -1509,21 +1510,35 @@ static bool CheckHashSig(const ProTx& proTx, const CBLSPublicKey& pubKey, TxVali
     return true;
 }
 
-bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs)
+template<typename ProTx>
+static std::optional<ProTx> GetValidatedPayload(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state)
 {
-    if (tx.nType != TRANSACTION_PROVIDER_REGISTER) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type");
+    if (tx.nType != ProTx::SPECIALTX_TYPE) {
+        state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type");
+        return std::nullopt;
     }
 
-    CProRegTx ptx;
+    ProTx ptx;
     if (!GetTxPayload(tx, ptx)) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-payload");
+        state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-payload");
+        return std::nullopt;
     }
 
     if (!ptx.IsTriviallyValid(llmq::utils::IsV19Active(pindexPrev), state)) {
         // pass the state returned by the function above
+        return std::nullopt;
+    }
+    return ptx;
+}
+
+bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs)
+{
+    const auto opt_ptx = GetValidatedPayload<CProRegTx>(tx, pindexPrev, state);
+    if (!opt_ptx) {
+        // pass the state returned by the function above
         return false;
     }
+    const auto& ptx{*opt_ptx};
 
     // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be issues later
     // If any of both is set, it must be valid however
@@ -1633,19 +1648,12 @@ bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pin
 
 bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, bool check_sigs)
 {
-    if (tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type");
-    }
-
-    CProUpServTx ptx;
-    if (!GetTxPayload(tx, ptx)) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-payload");
-    }
-
-    if (!ptx.IsTriviallyValid(llmq::utils::IsV19Active(pindexPrev), state)) {
+    const auto opt_ptx = GetValidatedPayload<CProUpServTx>(tx, pindexPrev, state);
+    if (!opt_ptx) {
         // pass the state returned by the function above
         return false;
     }
+    const auto& ptx{*opt_ptx};
 
     if (!CheckService(ptx, state)) {
         // pass the state returned by the function above
@@ -1701,19 +1709,12 @@ bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> 
 
 bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs)
 {
-    if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type");
-    }
-
-    CProUpRegTx ptx;
-    if (!GetTxPayload(tx, ptx)) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-payload");
-    }
-
-    if (!ptx.IsTriviallyValid(llmq::utils::IsV19Active(pindexPrev), state)) {
+    const auto opt_ptx = GetValidatedPayload<CProUpRegTx>(tx, pindexPrev, state);
+    if (!opt_ptx) {
         // pass the state returned by the function above
         return false;
     }
+    const auto& ptx{*opt_ptx};
 
     CTxDestination payoutDest;
     if (!ExtractDestination(ptx.scriptPayout, payoutDest)) {
@@ -1774,19 +1775,12 @@ bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> p
 
 bool CheckProUpRevTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, bool check_sigs)
 {
-    if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type");
-    }
-
-    CProUpRevTx ptx;
-    if (!GetTxPayload(tx, ptx)) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-payload");
-    }
-
-    if (!ptx.IsTriviallyValid(llmq::utils::IsV19Active(pindexPrev), state)) {
+    const auto opt_ptx = GetValidatedPayload<CProUpRevTx>(tx, pindexPrev, state);
+    if (!opt_ptx) {
         // pass the state returned by the function above
         return false;
     }
+    const auto& ptx{*opt_ptx};
 
     auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
     auto dmn = mnList.GetMN(ptx.proTxHash);
