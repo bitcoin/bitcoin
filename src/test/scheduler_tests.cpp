@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <functional>
 #include <mutex>
 #include <thread>
 #include <vector>

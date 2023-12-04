@@ -22,6 +22,7 @@
 #include <util/strencodings.h>
 #include <validation.h>
 
+#include <functional>
 #include <map>
 #include <string>
 

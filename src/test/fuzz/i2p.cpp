@@ -37,7 +37,7 @@ FUZZ_TARGET_INIT(i2p, initialize_i2p)
     if (sess.Listen(conn)) {
         if (sess.Accept(conn)) {
             try {
-                conn.sock->RecvUntilTerminator('\n', 10ms, interrupt, i2p::sam::MAX_MSG_SIZE);
+                (void)conn.sock->RecvUntilTerminator('\n', 10ms, interrupt, i2p::sam::MAX_MSG_SIZE);
             } catch (const std::runtime_error&) {
             }
         }

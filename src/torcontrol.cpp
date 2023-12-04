@@ -18,10 +18,11 @@
 #include <util/thread.h>
 #include <util/time.h>
 
-#include <vector>
 #include <deque>
+#include <functional>
 #include <set>
 #include <stdlib.h>
+#include <vector>
 
 #include <boost/signals2/signal.hpp>
 
