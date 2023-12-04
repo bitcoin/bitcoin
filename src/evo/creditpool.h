@@ -128,7 +128,7 @@ public:
     CCreditPool GetCreditPool(const CBlockIndex* block, const Consensus::Params& consensusParams);
 
 private:
-    std::optional<CCreditPool> GetFromCache(const CBlockIndex* const block_index);
+    std::optional<CCreditPool> GetFromCache(const CBlockIndex& block_index);
     void AddToCache(const uint256& block_hash, int height, const CCreditPool& pool);
 
     CCreditPool ConstructCreditPool(const CBlockIndex* block_index, CCreditPool prev, const Consensus::Params& consensusParams);

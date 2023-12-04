@@ -9,8 +9,9 @@
 #include <evo/specialtx.h>
 
 #include <chain.h>
+#include <chainparams.h>
 #include <consensus/validation.h>
-#include <llmq/utils.h>
+#include <deploymentstatus.h>
 #include <logging.h>
 #include <node/blockstorage.h>
 #include <validation.h>
@@ -80,11 +81,11 @@ std::string CCreditPool::ToString() const
             locked, currentLimit);
 }
 
-std::optional<CCreditPool> CCreditPoolManager::GetFromCache(const CBlockIndex* const block_index)
+std::optional<CCreditPool> CCreditPoolManager::GetFromCache(const CBlockIndex& block_index)
 {
-    if (!llmq::utils::IsV20Active(block_index)) return CCreditPool{};
+    if (!DeploymentActiveAt(block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) return CCreditPool{};
 
-    const uint256 block_hash = block_index->GetBlockHash();
+    const uint256 block_hash = block_index.GetBlockHash();
     CCreditPool pool;
     {
         LOCK(cache_mutex);
@@ -92,7 +93,7 @@ std::optional<CCreditPool> CCreditPoolManager::GetFromCache(const CBlockIndex* c
             return pool;
         }
     }
-    if (block_index->nHeight % DISK_SNAPSHOT_PERIOD == 0) {
+    if (block_index.nHeight % DISK_SNAPSHOT_PERIOD == 0) {
         if (evoDb.Read(std::make_pair(DB_CREDITPOOL_SNAPSHOT, block_hash), pool)) {
             LOCK(cache_mutex);
             creditPoolCache.insert(block_hash, pool);
@@ -202,10 +203,11 @@ CCreditPool CCreditPoolManager::GetCreditPool(const CBlockIndex* block_index, co
     std::stack<const CBlockIndex *> to_calculate;
 
     std::optional<CCreditPool> poolTmp;
-    while (!(poolTmp = GetFromCache(block_index)).has_value()) {
+    while (block_index != nullptr && !(poolTmp = GetFromCache(*block_index)).has_value()) {
         to_calculate.push(block_index);
         block_index = block_index->pprev;
     }
+    if (block_index == nullptr) poolTmp = CCreditPool{};
     while (!to_calculate.empty()) {
         poolTmp = ConstructCreditPool(to_calculate.top(), *poolTmp, consensusParams);
         to_calculate.pop();
@@ -225,7 +227,7 @@ CCreditPoolDiff::CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindexP
 {
     assert(pindexPrev);
 
-    if (llmq::utils::IsMNRewardReallocationActive(pindexPrev)) {
+    if (DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_MN_RR)) {
         // We consider V20 active if mn_rr is active
         platformReward = MasternodePayments::PlatformShare(GetMasternodePayment(pindexPrev->nHeight + 1, blockSubsidy, /*fV20Active=*/ true));
     }
