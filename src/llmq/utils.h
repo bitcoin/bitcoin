@@ -83,10 +83,6 @@ bool IsV19Active(gsl::not_null<const CBlockIndex*> pindex);
 bool IsV20Active(gsl::not_null<const CBlockIndex*> pindex);
 // TODO deployments
 bool IsMNRewardReallocationActive(gsl::not_null<const CBlockIndex*> pindex);
-// TODO deployments
-ThresholdState GetV20State(gsl::not_null<const CBlockIndex*> pindex);
-// TODO deployments
-int GetV20Since(gsl::not_null<const CBlockIndex*> pindex);
 
 /// Returns the state of `-llmq-data-recovery`
 // TODO options

@@ -699,16 +699,6 @@ bool IsMNRewardReallocationActive(gsl::not_null<const CBlockIndex*> pindex)
     return llmq_versionbitscache.State(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_MN_RR) == ThresholdState::ACTIVE;
 }
 
-ThresholdState GetV20State(gsl::not_null<const CBlockIndex*> pindex)
-{
-    return llmq_versionbitscache.State(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20);
-}
-
-int GetV20Since(gsl::not_null<const CBlockIndex*> pindex)
-{
-    return llmq_versionbitscache.StateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20);
-}
-
 uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2)
 {
     // We need to deterministically select who is going to initiate the connection. The naive way would be to simply
