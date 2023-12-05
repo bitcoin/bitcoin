@@ -895,7 +895,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // We check for ephemeral tx properties now that we have access to ws.m_base_fees,
     // have set ws.m_modified_fees and ws.m_vsize, and will potentially return a TX_RECONSIDERABLE
     // which require the various fee and size for reporting.
-    if (!CheckValidEphemeralTx(tx, state, ws.m_base_fees, args.m_package_submission)) {
+    if (!bypass_limits && !CheckValidEphemeralTx(tx, state, ws.m_base_fees, args.m_package_submission)) {
         return false; // state filled in by CheckValidEphemeralTx
     }
 
