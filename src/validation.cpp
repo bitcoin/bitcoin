@@ -1013,6 +1013,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "v3-tx-nonstandard", *err_string);
     }
 
+    // FIXME V3 checks preclude this being hit(?); can only be hit in case where
+    // anchor *isn't* RBF'd, which implies existence of another child of parent. remove? make an Assume()?
     if (auto err_string{CheckEphemeralSpends(ws.m_ptx, ws.m_ancestors)}) {
         return state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "ephemeral-anchor-unspent", *err_string);
     }
