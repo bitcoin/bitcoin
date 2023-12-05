@@ -66,6 +66,28 @@ std::optional<std::string> CheckV3Inheritance(const CTransactionRef& ptx,
     return std::nullopt;
 }
 
+bool CheckValidEphemeralTx(const CTransaction& tx, TxValidationState& state, CAmount& txfee, bool package_context)
+{
+    // No anchor; it's ok
+    if (!HasPayToAnchor(tx)) {
+        return true;
+    }
+
+    /* Only allow in package context; in single transaction context the anchor must be unspent */
+    if (!package_context) {
+        /* Allows re-evaluation in package context */
+        return state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "missing-ephemeral-spends");
+    }
+
+    if (tx.nVersion != 3) {
+        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "wrong-ephemeral-nversion");
+    } else if (txfee != 0) {
+        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "invalid-ephemeral-fee");
+    }
+
+    return true;
+}
+
 std::optional<std::string> ApplyV3Rules(const CTransactionRef& ptx,
                                         const CTxMemPool::setEntries& ancestors,
                                         const std::set<Txid>& direct_conflicts,
