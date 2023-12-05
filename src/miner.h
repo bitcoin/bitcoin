@@ -8,7 +8,6 @@
 
 #include <primitives/block.h>
 #include <txmempool.h>
-#include <validation.h>
 
 #include <memory>
 #include <optional>
@@ -20,6 +19,7 @@
 class CBlockIndex;
 class CChainParams;
 class CConnman;
+class CEvoDB;
 class CGovernanceManager;
 class CScript;
 class CSporkManager;
@@ -142,6 +142,7 @@ private:
 
     // Configuration parameters for the block size
     unsigned int nBlockMaxSize;
+    unsigned int nBlockMaxSigOps;
     CFeeRate blockMinFeeRate;
 
     // Information on the current status of the block
