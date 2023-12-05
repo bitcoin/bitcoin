@@ -281,7 +281,6 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/data_stream_addr_man.cpp \
  test/fuzz/decode_tx.cpp \
  test/fuzz/descriptor_parse.cpp \
- test/fuzz/deserialize.cpp \
  test/fuzz/ellswift_roundtrip.cpp \
  test/fuzz/eval_script.cpp \
  test/fuzz/fee_rate.cpp \
@@ -319,7 +318,6 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/p2p_transport_bidirectional_v1v2.cpp \
  test/fuzz/p2p_transport_bidirectional_v2.cpp \
  test/fuzz/p2p_transport_serialization.cpp \
- test/fuzz/tx_package_eval.cpp \
  test/fuzz/parse_hd_keypath.cpp \
  test/fuzz/parse_numbers.cpp \
  test/fuzz/parse_script.cpp \
@@ -365,7 +363,6 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/transaction.cpp \
  test/fuzz/tx_in.cpp \
  test/fuzz/tx_out.cpp \
- test/fuzz/tx_pool.cpp \
  test/fuzz/txorphan.cpp \
  test/fuzz/txrequest.cpp \
  test/fuzz/utxo_snapshot.cpp \
