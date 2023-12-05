@@ -133,8 +133,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
 
-    bool fDIP0003Active_context = DeploymentActiveAfter(pindexPrev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0003);
-    bool fDIP0008Active_context = DeploymentActiveAfter(pindexPrev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0008);
+    const bool fDIP0003Active_context{DeploymentActiveAfter(pindexPrev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0003)};
+    const bool fDIP0008Active_context{DeploymentActiveAfter(pindexPrev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0008)};
     const bool fV20Active_context{DeploymentActiveAfter(pindexPrev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_V20)};
 
     pblock->nVersion = g_versionbitscache.ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
@@ -396,7 +396,6 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
 // transaction package to work on next.
 void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated, const CBlockIndex* const pindexPrev)
 {
-    AssertLockHeld(cs_main); // for GetMNHFSignalsStage()
     AssertLockHeld(m_mempool.cs);
 
     // This credit pool is used only to check withdrawal limits and to find
