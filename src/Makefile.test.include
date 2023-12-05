@@ -307,6 +307,9 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/netaddress.cpp \
  test/fuzz/netbase_dns_lookup.cpp \
  test/fuzz/node_eviction.cpp \
+ test/fuzz/p2p_transport_bidirectional.cpp \
+ test/fuzz/p2p_transport_bidirectional_v1v2.cpp \
+ test/fuzz/p2p_transport_bidirectional_v2.cpp \
  test/fuzz/p2p_transport_serialization.cpp \
  test/fuzz/tx_package_eval.cpp \
  test/fuzz/parse_hd_keypath.cpp \
