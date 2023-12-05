@@ -133,9 +133,8 @@ class V2TransportTest(BitcoinTestFramework):
         V1_PREFIX = MAGIC_BYTES["regtest"] + b"version\x00\x00\x00\x00\x00"
         assert_equal(len(V1_PREFIX), 16)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            num_peers = len(self.nodes[0].getpeerinfo())
-            s.connect(("127.0.0.1", p2p_port(0)))
-            self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == num_peers + 1)
+            with self.nodes[0].wait_for_new_peer():
+                s.connect(("127.0.0.1", p2p_port(0)))
             s.sendall(V1_PREFIX[:-1])
             assert_equal(self.nodes[0].getpeerinfo()[-1]["transport_protocol_type"], "detecting")
             s.sendall(bytes([V1_PREFIX[-1]]))  # send out last prefix byte
@@ -144,22 +143,23 @@ class V2TransportTest(BitcoinTestFramework):
         # Check wrong network prefix detection (hits if the next 12 bytes correspond to a v1 version message)
         wrong_network_magic_prefix = MAGIC_BYTES["signet"] + V1_PREFIX[4:]
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect(("127.0.0.1", p2p_port(0)))
+            with self.nodes[0].wait_for_new_peer():
+                s.connect(("127.0.0.1", p2p_port(0)))
             with self.nodes[0].assert_debug_log(["V2 transport error: V1 peer with wrong MessageStart"]):
                 s.sendall(wrong_network_magic_prefix + b"somepayload")
 
         # Check detection of missing garbage terminator (hits after fixed amount of data if terminator never matches garbage)
         MAX_KEY_GARB_AND_GARBTERM_LEN = 64 + 4095 + 16
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            num_peers = len(self.nodes[0].getpeerinfo())
-            s.connect(("127.0.0.1", p2p_port(0)))
-            self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == num_peers + 1)
+            with self.nodes[0].wait_for_new_peer():
+                s.connect(("127.0.0.1", p2p_port(0)))
             s.sendall(b'\x00' * (MAX_KEY_GARB_AND_GARBTERM_LEN - 1))
             self.wait_until(lambda: self.nodes[0].getpeerinfo()[-1]["bytesrecv"] == MAX_KEY_GARB_AND_GARBTERM_LEN - 1)
             with self.nodes[0].assert_debug_log(["V2 transport error: missing garbage terminator"]):
+                peer_id = self.nodes[0].getpeerinfo()[-1]["id"]
                 s.sendall(b'\x00')  # send out last byte
                 # should disconnect immediately
-                self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == num_peers)
+                self.wait_until(lambda: not peer_id in [p["id"] for p in self.nodes[0].getpeerinfo()])
 
 
 if __name__ == '__main__':
