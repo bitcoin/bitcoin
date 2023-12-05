@@ -296,7 +296,10 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/locale.cpp \
  test/fuzz/merkleblock.cpp \
  test/fuzz/message.cpp \
- test/fuzz/miniscript.cpp \
+ test/fuzz/miniscript_script.cpp \
+ test/fuzz/miniscript_smart.cpp \
+ test/fuzz/miniscript_stable.cpp \
+ test/fuzz/miniscript_string.cpp \
  test/fuzz/minisketch.cpp \
  test/fuzz/mini_miner.cpp \
  test/fuzz/mini_miner_selection.cpp \
