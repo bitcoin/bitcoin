@@ -34,7 +34,7 @@ UniValue CMasternodeMetaInfo::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
 
-    auto now = GetTime<std::chrono::seconds>().count();
+    int64_t now = GetTime<std::chrono::seconds>().count();
 
     ret.pushKV("lastDSQ", nLastDsq);
     ret.pushKV("mixingTxCount", nMixingTxCount);

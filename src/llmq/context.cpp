@@ -60,10 +60,7 @@ LLMQContext::~LLMQContext() {
     llmq::chainLocksHandler.reset();
     llmq::quorumManager.reset();
     llmq::quorumBlockProcessor.reset();
-    {
-        LOCK(llmq::cs_llmq_vbc);
-        llmq::llmq_versionbitscache.Clear();
-    }
+    llmq::llmq_versionbitscache.Clear();
 }
 
 void LLMQContext::Interrupt() {

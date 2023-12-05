@@ -8,6 +8,7 @@
 #include <banman.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <deploymentstatus.h>
 #include <evo/deterministicmns.h>
 #include <governance/governance.h>
 #include <governance/object.h>

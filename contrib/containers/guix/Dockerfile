@@ -79,9 +79,14 @@ COPY --from=docker_root ./scripts/entrypoint /usr/local/bin/entrypoint
 COPY --from=docker_root ./scripts/guix-check /usr/local/bin/guix-check
 COPY --from=docker_root ./scripts/guix-start /usr/local/bin/guix-start
 
-# Create directory for mounting and grant necessary permissions
-RUN mkdir -p /src/dash && \
-    chown -R ${USER_ID}:${GROUP_ID} /src
+# Create directories for mounting to save/restore cache and grant necessary permissions
+RUN mkdir -p \
+        /home/${USERNAME}/.cache \
+        /src/dash/depends/{built,sources,work} && \
+    chown -R ${USER_ID}:${GROUP_ID} \
+        /home/${USERNAME}/.cache \
+        /src
+
 WORKDIR "/src/dash"
 
 # Switch to unprivileged context

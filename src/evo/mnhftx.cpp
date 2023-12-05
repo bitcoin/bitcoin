@@ -3,12 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
+#include <deploymentstatus.h>
 #include <evo/mnhftx.h>
 #include <evo/specialtx.h>
 #include <llmq/commitment.h>
 #include <llmq/signing.h>
 #include <llmq/utils.h>
 #include <llmq/quorums.h>
+#include <node/blockstorage.h>
 
 #include <chain.h>
 #include <chainparams.h>
@@ -16,6 +18,7 @@
 #include <versionbits.h>
 
 #include <algorithm>
+#include <stack>
 #include <string>
 #include <vector>
 
@@ -52,7 +55,7 @@ CMNHFManager::~CMNHFManager()
 
 CMNHFManager::Signals CMNHFManager::GetSignalsStage(const CBlockIndex* const pindexPrev)
 {
-    Signals signals = GetFromCache(pindexPrev);
+    Signals signals = GetForBlock(pindexPrev);
     const int height = pindexPrev->nHeight + 1;
     for (auto it = signals.begin(); it != signals.end(); ) {
         bool found{false};
@@ -98,7 +101,7 @@ bool MNHFTx::Verify(const uint256& quorumHash, const uint256& requestId, const u
     return true;
 }
 
-bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state)
 {
     if (tx.nVersion != 3 || tx.nType != TRANSACTION_MNHF_SIGNAL) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-type");
@@ -113,7 +116,7 @@ bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValida
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-version");
     }
 
-    const CBlockIndex* pindexQuorum = g_chainman.m_blockman.LookupBlockIndex(mnhfTx.signal.quorumHash);
+    const CBlockIndex* pindexQuorum = WITH_LOCK(::cs_main, return g_chainman.m_blockman.LookupBlockIndex(mnhfTx.signal.quorumHash));
     if (!pindexQuorum) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-quorum-hash");
     }
@@ -159,8 +162,6 @@ std::optional<uint8_t> extractEHFSignal(const CTransaction& tx)
 
 static bool extractSignals(const CBlock& block, const CBlockIndex* const pindex, std::vector<uint8_t>& new_signals, BlockValidationState& state)
 {
-    AssertLockHeld(cs_main);
-
     // we skip the coinbase
     for (size_t i = 1; i < block.vtx.size(); ++i) {
         const CTransaction& tx = *block.vtx[i];
@@ -189,13 +190,13 @@ static bool extractSignals(const CBlock& block, const CBlockIndex* const pindex,
     return true;
 }
 
-bool CMNHFManager::ProcessBlock(const CBlock& block, const CBlockIndex* const pindex, bool fJustCheck, BlockValidationState& state)
+std::optional<CMNHFManager::Signals> CMNHFManager::ProcessBlock(const CBlock& block, const CBlockIndex* const pindex, bool fJustCheck, BlockValidationState& state)
 {
     try {
         std::vector<uint8_t> new_signals;
         if (!extractSignals(block, pindex, new_signals, state)) {
             // state is set inside extractSignals
-            return false;
+            return std::nullopt;
         }
         Signals signals = GetSignalsStage(pindex->pprev);
         if (new_signals.empty()) {
@@ -203,25 +204,27 @@ bool CMNHFManager::ProcessBlock(const CBlock& block, const CBlockIndex* const pi
                 AddToCache(signals, pindex);
             }
             LogPrint(BCLog::EHF, "CMNHFManager::ProcessBlock: no new signals; number of known signals: %d\n", signals.size());
-            return true;
+            return signals;
         }
 
-        int mined_height = pindex->nHeight;
+        const int mined_height = pindex->nHeight;
 
         // Extra validation of signals to be sure that it can succeed
         for (const auto& versionBit : new_signals) {
             LogPrintf("CMNHFManager::ProcessBlock: add mnhf bit=%d block:%s number of known signals:%lld\n", versionBit, pindex->GetBlockHash().ToString(), signals.size());
             if (signals.find(versionBit) != signals.end()) {
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-mnhf-duplicate");
+                state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-mnhf-duplicate");
+                return std::nullopt;
             }
 
             if (!Params().IsValidMNActivation(versionBit, pindex->GetMedianTimePast())) {
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-mnhf-non-mn-fork");
+                state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-mnhf-non-mn-fork");
+                return std::nullopt;
             }
         }
         if (fJustCheck) {
             // We are done, no need actually update any params
-            return true;
+            return signals;
         }
         for (const auto& versionBit : new_signals) {
             if (Params().IsValidMNActivation(versionBit, pindex->GetMedianTimePast())) {
@@ -231,10 +234,11 @@ bool CMNHFManager::ProcessBlock(const CBlock& block, const CBlockIndex* const pi
         }
 
         AddToCache(signals, pindex);
-        return true;
+        return signals;
     } catch (const std::exception& e) {
         LogPrintf("CMNHFManager::ProcessBlock -- failed: %s\n", e.what());
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-proc-mnhf-inblock");
+        state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-proc-mnhf-inblock");
+        return std::nullopt;
     }
 }
 
@@ -250,7 +254,7 @@ bool CMNHFManager::UndoBlock(const CBlock& block, const CBlockIndex* const pinde
         return true;
     }
 
-    const Signals signals = GetFromCache(pindex);
+    const Signals signals = GetForBlock(pindex);
     for (const auto& versionBit : excluded_signals) {
         LogPrintf("%s: exclude mnhf bit=%d block:%s number of known signals:%lld\n", __func__, versionBit, pindex->GetBlockHash().ToString(), signals.size());
         assert(signals.find(versionBit) != signals.end());
@@ -260,34 +264,68 @@ bool CMNHFManager::UndoBlock(const CBlock& block, const CBlockIndex* const pinde
     return true;
 }
 
-CMNHFManager::Signals CMNHFManager::GetFromCache(const CBlockIndex* const pindex)
+CMNHFManager::Signals CMNHFManager::GetForBlock(const CBlockIndex* pindex)
 {
     if (pindex == nullptr) return {};
+
+    std::stack<const CBlockIndex *> to_calculate;
+
+    std::optional<CMNHFManager::Signals> signalsTmp;
+    while (!(signalsTmp = GetFromCache(pindex)).has_value()) {
+        to_calculate.push(pindex);
+        pindex = pindex->pprev;
+    }
+
+    const Consensus::Params& consensusParams{Params().GetConsensus()};
+    while (!to_calculate.empty()) {
+        const CBlockIndex* pindex_top{to_calculate.top()};
+        CBlock block;
+        if (!ReadBlockFromDisk(block, pindex_top, consensusParams)) {
+            throw std::runtime_error("failed-getehfforblock-read");
+        }
+        BlockValidationState state;
+        signalsTmp = ProcessBlock(block, pindex_top, false, state);
+        if (!signalsTmp.has_value()) {
+            LogPrintf("%s: process block failed due to %s\n", __func__, state.ToString());
+            throw std::runtime_error("failed-getehfforblock-construct");
+        }
+
+        to_calculate.pop();
+    }
+    return *signalsTmp;
+}
+
+std::optional<CMNHFManager::Signals> CMNHFManager::GetFromCache(const CBlockIndex* const pindex)
+{
+    Signals signals{};
+    if (pindex == nullptr) return signals;
 
     // TODO: remove this check of phashBlock to nullptr
     // This check is needed only because unit test 'versionbits_tests.cpp'
     // lets `phashBlock` to be nullptr
-    if (pindex->phashBlock == nullptr) return {};
+    if (pindex->phashBlock == nullptr) return signals;
 
 
     const uint256& blockHash = pindex->GetBlockHash();
-    Signals signals{};
     {
         LOCK(cs_cache);
         if (mnhfCache.get(blockHash, signals)) {
             return signals;
         }
     }
-    if (VersionBitsState(pindex->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_V20, versionbitscache) != ThresholdState::ACTIVE) {
+    {
         LOCK(cs_cache);
-        mnhfCache.insert(blockHash, {});
-        return {};
+        if (ThresholdState::ACTIVE != v20_activation.State(pindex->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) {
+            mnhfCache.insert(blockHash, signals);
+            return signals;
+        }
     }
-    bool ok = m_evoDb.Read(std::make_pair(DB_SIGNALS, blockHash), signals);
-    assert(ok);
-    LOCK(cs_cache);
-    mnhfCache.insert(blockHash, signals);
-    return signals;
+    if (m_evoDb.Read(std::make_pair(DB_SIGNALS, blockHash), signals)) {
+        LOCK(cs_cache);
+        mnhfCache.insert(blockHash, signals);
+        return signals;
+    }
+    return std::nullopt;
 }
 
 void CMNHFManager::AddToCache(const Signals& signals, const CBlockIndex* const pindex)
@@ -297,15 +335,17 @@ void CMNHFManager::AddToCache(const Signals& signals, const CBlockIndex* const p
         LOCK(cs_cache);
         mnhfCache.insert(blockHash, signals);
     }
-    if (VersionBitsState(pindex->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_V20, versionbitscache) != ThresholdState::ACTIVE) {
-        return;
+    assert(pindex != nullptr);
+    {
+        LOCK(cs_cache);
+        if (ThresholdState::ACTIVE != v20_activation.State(pindex->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) return;
     }
     m_evoDb.Write(std::make_pair(DB_SIGNALS, blockHash), signals);
 }
 
 void CMNHFManager::AddSignal(const CBlockIndex* const pindex, int bit)
 {
-    auto signals = GetFromCache(pindex->pprev);
+    auto signals = GetForBlock(pindex->pprev);
     signals.emplace(bit, pindex->nHeight);
     AddToCache(signals, pindex);
 }

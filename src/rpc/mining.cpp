@@ -11,6 +11,8 @@
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <deploymentinfo.h>
+#include <deploymentstatus.h>
 #include <key_io.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/context.h>
@@ -39,7 +41,6 @@
 #include <util/system.h>
 #include <validation.h>
 #include <validationinterface.h>
-#include <versionbitsinfo.h>
 #include <warnings.h>
 
 #include <governance/classes.h>
@@ -851,7 +852,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     UniValue vbavailable(UniValue::VOBJ);
     for (int j = 0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
         Consensus::DeploymentPos pos = Consensus::DeploymentPos(j);
-        ThresholdState state = VersionBitsState(pindexPrev, consensusParams, pos, versionbitscache);
+        ThresholdState state = g_versionbitscache.State(pindexPrev, consensusParams, pos);
         switch (state) {
             case ThresholdState::DEFINED:
             case ThresholdState::FAILED:
@@ -859,7 +860,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                 break;
             case ThresholdState::LOCKED_IN:
                 // Ensure bit is set in block version
-                pblock->nVersion |= VersionBitsMask(consensusParams, pos);
+                pblock->nVersion |= g_versionbitscache.Mask(consensusParams, pos);
                 // FALL THROUGH to get vbavailable set...
             case ThresholdState::STARTED:
             {
@@ -868,7 +869,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                 if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
                     if (!vbinfo.gbt_force) {
                         // If the client doesn't support this, don't indicate it in the [default] version
-                        pblock->nVersion &= ~VersionBitsMask(consensusParams, pos);
+                        pblock->nVersion &= ~g_versionbitscache.Mask(consensusParams, pos);
                     }
                 }
                 break;
@@ -955,7 +956,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     return result;
 }
 
-class submitblock_StateCatcher : public CValidationInterface
+class submitblock_StateCatcher final : public CValidationInterface
 {
 public:
     uint256 hash;
@@ -1016,17 +1017,17 @@ static UniValue submitblock(const JSONRPCRequest& request)
     }
 
     bool new_block;
-    submitblock_StateCatcher sc(block.GetHash());
-    RegisterValidationInterface(&sc);
+    auto sc = std::make_shared<submitblock_StateCatcher>(block.GetHash());
+    RegisterSharedValidationInterface(sc);
     bool accepted = chainman.ProcessNewBlock(Params(), blockptr, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
-    UnregisterValidationInterface(&sc);
+    UnregisterSharedValidationInterface(sc);
     if (!new_block && accepted) {
         return "duplicate";
     }
-    if (!sc.found) {
+    if (!sc->found) {
         return "inconclusive";
     }
-    return BIP22ValidationResult(sc.state);
+    return BIP22ValidationResult(sc->state);
 }
 
 static UniValue submitheader(const JSONRPCRequest& request)

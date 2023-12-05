@@ -1912,6 +1912,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 LOCK(cs_main);
                 node.evodb.reset();
                 node.evodb = std::make_unique<CEvoDB>(nEvoDbCache, false, fReset || fReindexChainState);
+                node.mnhf_manager.reset();
                 node.mnhf_manager = std::make_unique<CMNHFManager>(*node.evodb);
 
                 chainman.Reset();
@@ -1933,8 +1934,15 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 creditPoolManager.reset(new CCreditPoolManager(*node.evodb));
                 llmq::quorumSnapshotManager.reset();
                 llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*node.evodb));
+
+                if (node.llmq_ctx) {
+                    node.llmq_ctx->Interrupt();
+                    node.llmq_ctx->Stop();
+                }
                 node.llmq_ctx.reset();
                 node.llmq_ctx.reset(new LLMQContext(chainman.ActiveChainstate(), *node.connman, *node.evodb, *::sporkManager, *node.mempool, node.peerman, false, fReset || fReindexChainState));
+                // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
+                node.llmq_ctx->Start();
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
@@ -2120,6 +2128,10 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                             LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
                         }
 
+                        if (args.GetArg("-checklevel", DEFAULT_CHECKLEVEL) >= 3) {
+                            chainstate->ResetBlockFailureFlags(nullptr);
+                        }
+
                     } else {
                         // TODO: CEvoDB instance should probably be a part of CChainState
                         // (for multiple chainstates to actually work in parallel)
@@ -2130,10 +2142,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                             failed_verification = true;
                             break;
                         }
-                    }
-
-                    if (args.GetArg("-checklevel", DEFAULT_CHECKLEVEL) >= 3) {
-                        ::ChainstateActive().ResetBlockFailureFlags(nullptr);
                     }
                 }
             } catch (const std::exception& e) {
@@ -2305,8 +2313,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         int nStatsPeriod = std::min(std::max((int)args.GetArg("-statsperiod", DEFAULT_STATSD_PERIOD), MIN_STATSD_PERIOD), MAX_STATSD_PERIOD);
         node.scheduler->scheduleEvery(std::bind(&PeriodicStats, std::ref(*node.args), std::cref(*node.mempool)), std::chrono::seconds{nStatsPeriod});
     }
-
-    node.llmq_ctx->Start();
 
     // ********************************************************* Step 11: import blocks
 

@@ -35,7 +35,6 @@ std::optional<std::pair<CBLSSignature, uint32_t>> GetNonNullCoinbaseChainlock(co
 namespace llmq
 {
 
-Mutex cs_llmq_vbc;
 VersionBitsCache llmq_versionbitscache;
 
 namespace utils
@@ -708,28 +707,24 @@ bool IsV19Active(gsl::not_null<const CBlockIndex*> pindex)
 
 bool IsV20Active(gsl::not_null<const CBlockIndex*> pindex)
 {
-    LOCK(cs_llmq_vbc);
-    return VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20, llmq_versionbitscache) == ThresholdState::ACTIVE;
+    return llmq_versionbitscache.State(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20) == ThresholdState::ACTIVE;
 }
 
 bool IsMNRewardReallocationActive(gsl::not_null<const CBlockIndex*> pindex)
 {
     if (!IsV20Active(pindex)) return false;
 
-    LOCK(cs_llmq_vbc);
-    return VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_MN_RR, llmq_versionbitscache) == ThresholdState::ACTIVE;
+    return llmq_versionbitscache.State(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_MN_RR) == ThresholdState::ACTIVE;
 }
 
 ThresholdState GetV20State(gsl::not_null<const CBlockIndex*> pindex)
 {
-    LOCK(cs_llmq_vbc);
-    return VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20, llmq_versionbitscache);
+    return llmq_versionbitscache.State(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20);
 }
 
 int GetV20Since(gsl::not_null<const CBlockIndex*> pindex)
 {
-    LOCK(cs_llmq_vbc);
-    return VersionBitsStateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20, llmq_versionbitscache);
+    return llmq_versionbitscache.StateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20);
 }
 
 bool IsInstantSendLLMQTypeShared()
@@ -1005,8 +1000,7 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumMana
             return true;
 
         case Consensus::LLMQType::LLMQ_TEST_V17: {
-            LOCK(cs_llmq_vbc);
-            return VersionBitsState(pindex, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY, llmq_versionbitscache) == ThresholdState::ACTIVE;
+            return llmq_versionbitscache.State(pindex, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY) == ThresholdState::ACTIVE;
         }
         case Consensus::LLMQType::LLMQ_100_67:
             return pindex->nHeight + 1 >= consensusParams.DIP0020Height;
@@ -1110,17 +1104,17 @@ std::map<Consensus::LLMQType, QvvecSyncMode> GetEnabledQuorumVvecSyncEntries()
 }
 
 template <typename CacheType>
-void InitQuorumsCache(CacheType& cache)
+void InitQuorumsCache(CacheType& cache, bool limit_by_connections)
 {
     for (const auto& llmq : Params().GetConsensus().llmqs) {
         cache.emplace(std::piecewise_construct, std::forward_as_tuple(llmq.type),
-                      std::forward_as_tuple(llmq.keepOldConnections));
+                      std::forward_as_tuple(limit_by_connections ? llmq.keepOldConnections : llmq.keepOldKeys));
     }
 }
-template void InitQuorumsCache<std::map<Consensus::LLMQType, unordered_lru_cache<uint256, bool, StaticSaltedHasher>>>(std::map<Consensus::LLMQType, unordered_lru_cache<uint256, bool, StaticSaltedHasher>>& cache);
-template void InitQuorumsCache<std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>>>(std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>>& cache);
-template void InitQuorumsCache<std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>, std::less<Consensus::LLMQType>, std::allocator<std::pair<Consensus::LLMQType const, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>>>>>(std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>, std::less<Consensus::LLMQType>, std::allocator<std::pair<Consensus::LLMQType const, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>>>>&);
-template void InitQuorumsCache<std::map<Consensus::LLMQType, unordered_lru_cache<uint256, int, StaticSaltedHasher>>>(std::map<Consensus::LLMQType, unordered_lru_cache<uint256, int, StaticSaltedHasher>>& cache);
+template void InitQuorumsCache<std::map<Consensus::LLMQType, unordered_lru_cache<uint256, bool, StaticSaltedHasher>>>(std::map<Consensus::LLMQType, unordered_lru_cache<uint256, bool, StaticSaltedHasher>>& cache, bool limit_by_connections);
+template void InitQuorumsCache<std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>>>(std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>>& cache, bool limit_by_connections);
+template void InitQuorumsCache<std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>, std::less<Consensus::LLMQType>, std::allocator<std::pair<Consensus::LLMQType const, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>>>>>(std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>, std::less<Consensus::LLMQType>, std::allocator<std::pair<Consensus::LLMQType const, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>>>>&cache, bool limit_by_connections);
+template void InitQuorumsCache<std::map<Consensus::LLMQType, unordered_lru_cache<uint256, int, StaticSaltedHasher>>>(std::map<Consensus::LLMQType, unordered_lru_cache<uint256, int, StaticSaltedHasher>>& cache, bool limit_by_connections);
 
 } // namespace utils
 
