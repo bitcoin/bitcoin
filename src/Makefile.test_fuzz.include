@@ -12,6 +12,7 @@ TEST_FUZZ_H = \
     test/fuzz/FuzzedDataProvider.h \
     test/fuzz/util.h \
     test/fuzz/util/addrman.h \
+    test/fuzz/util/crypto.h \
     test/fuzz/util/descriptor.h \
     test/fuzz/util/mempool.h \
     test/fuzz/util/miniscript.h \
