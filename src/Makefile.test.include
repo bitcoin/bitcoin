@@ -253,6 +253,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/base_encode_decode.cpp \
  test/fuzz/bech32.cpp \
  test/fuzz/bip324_cipher_roundtrip.cpp \
+ test/fuzz/bip324_ecdh.cpp \
  test/fuzz/bitdeque.cpp \
  test/fuzz/block.cpp \
  test/fuzz/block_header.cpp \
@@ -277,6 +278,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/decode_tx.cpp \
  test/fuzz/descriptor_parse.cpp \
  test/fuzz/deserialize.cpp \
+ test/fuzz/ellswift_roundtrip.cpp \
  test/fuzz/eval_script.cpp \
  test/fuzz/fee_rate.cpp \
  test/fuzz/fees.cpp \
