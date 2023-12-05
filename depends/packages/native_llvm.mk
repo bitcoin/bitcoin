@@ -1,4 +1,4 @@
-package=native_clang
+package=native_llvm
 $(package)_version=17.0.6
 $(package)_major_version=$(firstword $(subst ., ,$($(package)_version)))
 $(package)_download_path=https://github.com/llvm/llvm-project/releases/download/llvmorg-$($(package)_version)
