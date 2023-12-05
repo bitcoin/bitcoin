@@ -1499,17 +1499,19 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
     if (format == DatabaseFormat::SQLITE) {
 #ifdef USE_SQLITE
         return MakeSQLiteDatabase(path, options, status, error);
-#endif
+#else
         error = Untranslated(strprintf("Failed to open database path '%s'. Build does not support SQLite database format.", fs::PathToString(path)));
         status = DatabaseStatus::FAILED_BAD_FORMAT;
         return nullptr;
+#endif
     }
 
 #ifdef USE_BDB
     return MakeBerkeleyDatabase(path, options, status, error);
-#endif
+#else
     error = Untranslated(strprintf("Failed to open database path '%s'. Build does not support Berkeley DB database format.", fs::PathToString(path)));
     status = DatabaseStatus::FAILED_BAD_FORMAT;
     return nullptr;
+#endif
 }
 } // namespace wallet
