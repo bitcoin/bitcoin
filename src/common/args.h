@@ -19,6 +19,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -66,6 +67,10 @@ enum class OptionsCategory {
     REGISTER_COMMANDS,
     CLI_COMMANDS,
     IPC,
+
+    // Specific to one or more commands (OptionsCategory::COMMANDS)
+    // These are only included in help with their associated commands.
+    COMMAND_OPTIONS,
 
     HIDDEN // Always the last option to avoid printing these in the help
 };
@@ -142,6 +147,7 @@ private:
     std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
     std::optional<unsigned int> m_default_flags GUARDED_BY(cs_args){};
+    std::map<std::string, std::set<std::string>> m_command_args GUARDED_BY(cs_args);
     bool m_accept_any_command GUARDED_BY(cs_args){true};
     std::list<SectionInfo> m_config_sections GUARDED_BY(cs_args);
     std::optional<fs::path> m_config_path GUARDED_BY(cs_args);
@@ -360,9 +366,9 @@ public:
     void AddArg(const std::string& name, const std::string& help, unsigned int flags, const OptionsCategory& cat) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
-     * Add subcommand
+     * Add command
      */
-    void AddCommand(const std::string& cmd, const std::string& help) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
+    void AddCommand(const std::string& cmd, const std::string& help, std::set<std::string> options = {}) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Add many hidden arguments
@@ -491,10 +497,12 @@ std::string HelpMessageGroup(const std::string& message);
 /**
  * Format a string to be used as option description in help messages
  *
- * @param option Option message (e.g. "-rpcuser=<user>")
+ * @param option Option name (e.g. "-rpcuser")
+ * @param help_param Help parameter (e.g. "=<user>" or "")
  * @param message Option description (e.g. "Username for JSON-RPC connections")
+ * @param subopt True if this is a suboption, instead of a top-level option.
  * @return the formatted string
  */
-std::string HelpMessageOpt(const std::string& option, const std::string& message);
+std::string HelpMessageOpt(std::string_view option, std::string_view help_param, std::string_view message, bool subopt = false);
 
 #endif // BITCOIN_COMMON_ARGS_H

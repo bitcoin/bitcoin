@@ -598,7 +598,7 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     m_settings.forced_settings[SettingName(strArg)] = strValue;
 }
 
-void ArgsManager::AddCommand(const std::string& cmd, const std::string& help)
+void ArgsManager::AddCommand(const std::string& cmd, const std::string& help, std::set<std::string> options)
 {
     Assert(cmd.find('=') == std::string::npos);
     Assert(cmd.at(0) != '-');
@@ -607,6 +607,18 @@ void ArgsManager::AddCommand(const std::string& cmd, const std::string& help)
     m_accept_any_command = false; // latch to false
     std::map<std::string, Arg>& arg_map = m_available_args[OptionsCategory::COMMANDS];
     auto ret = arg_map.emplace(cmd, Arg{"", help, ArgsManager::COMMAND});
+    if (!options.empty()) {
+        auto& cmdopts = m_available_args[OptionsCategory::COMMAND_OPTIONS];
+        bool command_has_all_options_defined = true;
+        for (const auto& opt : options) {
+            if (!cmdopts.contains(opt)) {
+                command_has_all_options_defined = false;
+            }
+        }
+        Assert(command_has_all_options_defined);
+
+        m_command_args.try_emplace(cmd, std::move(options));
+    }
     Assert(ret.second); // Fail on duplicate commands
 }
 
@@ -643,6 +655,7 @@ void ArgsManager::ClearArgs()
     LOCK(cs_args);
     m_settings = {};
     m_available_args.clear();
+    m_command_args.clear();
     m_network_only_args.clear();
     m_config_sections.clear();
 }
@@ -670,8 +683,20 @@ std::string ArgsManager::GetHelpMessage() const
 
     std::string usage;
     LOCK(cs_args);
-    for (const auto& arg_map : m_available_args) {
-        switch(arg_map.first) {
+
+    const auto command_options = m_available_args.find(OptionsCategory::COMMAND_OPTIONS);
+    const auto for_matching_cmd_opts = [&](const std::set<std::string>& select, auto&& fn) EXCLUSIVE_LOCKS_REQUIRED(cs_args) {
+        if (select.empty()) return;
+        if (command_options == m_available_args.end()) return;
+        for (const auto& [name, info] : command_options->second) {
+            if (!show_debug && (info.m_flags & ArgsManager::DEBUG_ONLY)) continue;
+            if (!select.contains(name)) continue;
+            fn(name, info);
+        }
+    };
+
+    for (const auto& [category, category_args] : m_available_args) {
+        switch(category) {
             case OptionsCategory::OPTIONS:
                 usage += HelpMessageGroup("Options:");
                 break;
@@ -717,22 +742,27 @@ std::string ArgsManager::GetHelpMessage() const
             case OptionsCategory::CLI_COMMANDS:
                 usage += HelpMessageGroup("CLI Commands:");
                 break;
+            case OptionsCategory::COMMAND_OPTIONS:
             case OptionsCategory::HIDDEN:
                 break;
         } // no default case, so the compiler can warn about missing cases
 
-        // When we get to the hidden options, stop
-        if (arg_map.first == OptionsCategory::HIDDEN) break;
+        if (category == OptionsCategory::COMMAND_OPTIONS) continue;
 
-        for (const auto& arg : arg_map.second) {
-            if (show_debug || !(arg.second.m_flags & ArgsManager::DEBUG_ONLY)) {
-                std::string name;
-                if (arg.second.m_help_param.empty()) {
-                    name = arg.first;
-                } else {
-                    name = arg.first + arg.second.m_help_param;
+        // When we get to the hidden options, stop
+        if (category == OptionsCategory::HIDDEN) break;
+
+        for (const auto& [arg_name, arg_info] : category_args) {
+            if (show_debug || !(arg_info.m_flags & ArgsManager::DEBUG_ONLY)) {
+                usage += HelpMessageOpt(arg_name, arg_info.m_help_param, arg_info.m_help_text);
+
+                if (category == OptionsCategory::COMMANDS) {
+                    const auto cmd_args = m_command_args.find(arg_name);
+                    if (cmd_args == m_command_args.end()) continue;
+                    for_matching_cmd_opts(cmd_args->second, [&](const auto& cmdopt_name, const auto& cmdopt_info) {
+                        usage += HelpMessageOpt(cmdopt_name, cmdopt_info.m_help_param, cmdopt_info.m_help_text, /*subopt=*/true);
+                    });
                 }
-                usage += HelpMessageOpt(name, arg.second.m_help_text);
             }
         }
     }
@@ -750,19 +780,26 @@ void SetupHelpOptions(ArgsManager& args)
     args.AddHiddenArgs({"-h", "-?"});
 }
 
-static const int screenWidth = 79;
-static const int optIndent = 2;
-static const int msgIndent = 7;
-
 std::string HelpMessageGroup(const std::string &message) {
     return std::string(message) + std::string("\n\n");
 }
 
-std::string HelpMessageOpt(const std::string &option, const std::string &message) {
-    return std::string(optIndent,' ') + std::string(option) +
-           std::string("\n") + std::string(msgIndent,' ') +
-           FormatParagraph(message, screenWidth - msgIndent, msgIndent) +
-           std::string("\n\n");
+std::string HelpMessageOpt(std::string_view option, std::string_view help_param, std::string_view message, bool subopt)
+{
+    constexpr int screen_width = 79;
+    int opt_indent = 2;
+    int msg_indent = 7;
+
+    if (subopt) {
+        int bump = msg_indent - opt_indent;
+        opt_indent += bump; // opt_indent now at the old msg_indent level
+        msg_indent += bump; // indent by the same amount
+    }
+    int msg_width = screen_width - msg_indent;
+
+    return strprintf("%*s%s%s\n%*s%s\n\n",
+                     opt_indent, "", option, help_param,
+                     msg_indent, "", FormatParagraph(message, msg_width, msg_indent));
 }
 
 const std::vector<std::string> TEST_OPTIONS_DOC{
