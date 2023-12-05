@@ -36,9 +36,6 @@ class TxReconciliationState
 {
 public:
     /**
-     * TODO: This field is public to ignore -Wunused-private-field. Make private once used in
-     * the following commits.
-     *
      * Reconciliation protocol assumes using one role consistently: either a reconciliation
      * initiator (requesting sketches), or responder (sending sketches). This defines our role,
      * based on the direction of the p2p connection.
@@ -47,9 +44,6 @@ public:
     bool m_we_initiate;
 
     /**
-     * TODO: These fields are public to ignore -Wunused-private-field. Make private once used in
-     * the following commits.
-     *
      * These values are used to salt short IDs, which is necessary for transaction reconciliations.
      */
     uint64_t m_k0, m_k1;
