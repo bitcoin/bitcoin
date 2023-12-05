@@ -14,6 +14,7 @@ TEST_FUZZ_H = \
     test/fuzz/util/addrman.h \
     test/fuzz/util/descriptor.h \
     test/fuzz/util/mempool.h \
+    test/fuzz/util/miniscript.h \
     test/fuzz/util/net.h
 
 libtest_fuzz_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
