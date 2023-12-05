@@ -306,6 +306,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/minisketch.cpp \
  test/fuzz/mini_miner.cpp \
  test/fuzz/mini_miner_selection.cpp \
+ test/fuzz/mocked_descriptor_parse.cpp \
  test/fuzz/muhash.cpp \
  test/fuzz/multiplication_overflow.cpp \
  test/fuzz/net.cpp \
