@@ -319,8 +319,9 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
 
     Shuffle(groups.begin(), groups.end(), rng);
 
+    bool sffo_active = groups.size() && groups.begin()->m_subtract_fee_outputs;
     for (const OutputGroup& group : groups) {
-        if (group.GetSelectionAmount() == nTargetValue) {
+        if (!sffo_active && group.GetSelectionAmount() == nTargetValue) {
             result.AddInput(group);
             return result;
         } else if (group.GetSelectionAmount() < nTargetValue + change_target) {
@@ -331,7 +332,7 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
         }
     }
 
-    if (nTotalLower == nTargetValue) {
+    if (!sffo_active && nTotalLower == nTargetValue) {
         for (const auto& group : applicable_groups) {
             result.AddInput(group);
         }
@@ -346,10 +347,14 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
 
     // Solve subset sum by stochastic approximation
     std::sort(applicable_groups.begin(), applicable_groups.end(), descending);
-    std::vector<char> vfBest;
-    CAmount nBest;
+    // Worst case "best" approximation is just all of the groups.
+    std::vector<char> vfBest(groups.size(), true);
+    CAmount nBest = nTotalLower;
 
-    ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue, vfBest, nBest);
+    if (!sffo_active) {
+        // Skip attempt at changeless Knapsack solution when SFFO is active
+        ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue, vfBest, nBest);
+    }
     if (nBest != nTargetValue && nTotalLower >= nTargetValue + change_target) {
         ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue + change_target, vfBest, nBest);
     }

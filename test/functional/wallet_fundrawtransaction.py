@@ -1337,7 +1337,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Because this test is specifically for ApproximateBestSubset, the target value must be greater
         # than any single input available, and require more than 1 input. So we make 3 outputs
-        for i in range(0, 3):
+        for i in range(0, 2):
             funds.sendtoaddress(tester.getnewaddress(address_type="bech32"), 1)
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
@@ -1345,6 +1345,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         change_tx = tester.fundrawtransaction(tester.createrawtransaction([], [{funds.getnewaddress(): 1.5}]))
         tx = tester.createrawtransaction([], [{funds.getnewaddress(): 2}])
         no_change_tx = tester.fundrawtransaction(tx, subtractFeeFromOutputs=[0])
+
+        # add a third coin
+        funds.sendtoaddress(tester.getnewaddress(address_type="bech32"), 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         overhead_fees = feerate * len(tx) / 2 / 1000
         cost_of_change = change_tx["fee"] - no_change_tx["fee"]
