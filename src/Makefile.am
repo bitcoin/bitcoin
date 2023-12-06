@@ -626,6 +626,8 @@ crypto_libbitcoin_crypto_arm_shani_la_SOURCES = crypto/sha256_arm_shani.cpp
 libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_consensus_a_SOURCES = \
+  addresstype.cpp \
+  addresstype.h \
   arith_uint256.cpp \
   arith_uint256.h \
   consensus/amount.h \
@@ -641,6 +643,8 @@ libbitcoin_consensus_a_SOURCES = \
   primitives/block.h \
   primitives/transaction.cpp \
   primitives/transaction.h \
+  primitives/compression.cpp \
+  primitives/compression.h \
   pubkey.cpp \
   pubkey.h \
   script/bitcoinconsensus.cpp \
@@ -650,6 +654,8 @@ libbitcoin_consensus_a_SOURCES = \
   script/script.h \
   script/script_error.cpp \
   script/script_error.h \
+  script/solver.cpp \
+  script/solver.h \
   serialize.h \
   span.h \
   tinyformat.h \
@@ -921,6 +927,7 @@ libbitcoinkernel_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -fvisibility=default
 #       shrink to only those which are absolutely necessary.
 libbitcoinkernel_la_SOURCES = \
   kernel/bitcoinkernel.cpp \
+  addresstype.cpp \
   arith_uint256.cpp \
   chain.cpp \
   clientversion.cpp \
@@ -957,6 +964,7 @@ libbitcoinkernel_la_SOURCES = \
   pow.cpp \
   primitives/block.cpp \
   primitives/transaction.cpp \
+  primitives/compression.cpp \
   pubkey.cpp \
   random.cpp \
   randomenv.cpp \

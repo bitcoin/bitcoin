@@ -24,6 +24,8 @@
 #include <utility>
 #include <vector>
 
+class CCompressedOutPoint;
+
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
@@ -35,6 +37,7 @@ public:
 
     COutPoint(): n(NULL_INDEX) { }
     COutPoint(const Txid& hashIn, uint32_t nIn): hash(hashIn), n(nIn) { }
+    COutPoint(const CCompressedOutPoint& cout);
 
     SERIALIZE_METHODS(COutPoint, obj) { READWRITE(obj.hash, obj.n); }
 
@@ -143,6 +146,8 @@ public:
     std::string ToString() const;
 };
 
+class CCompressedTxOut;
+
 /** An output of a transaction.  It contains the public key that the next input
  * must be able to sign with to claim it.
  */
@@ -157,6 +162,7 @@ public:
         SetNull();
     }
 
+    CTxOut(const CCompressedTxOut& txout);
     CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn);
 
     SERIALIZE_METHODS(CTxOut, obj) { READWRITE(obj.nValue, obj.scriptPubKey); }
@@ -373,6 +379,8 @@ public:
     bool HasWitness() const { return m_has_witness; }
 };
 
+class CCompressedTransaction;
+
 /** A mutable version of CTransaction. */
 struct CMutableTransaction
 {
@@ -383,6 +391,7 @@ struct CMutableTransaction
 
     explicit CMutableTransaction();
     explicit CMutableTransaction(const CTransaction& tx);
+    explicit CMutableTransaction(const CCompressedTransaction& tx, const std::vector<COutPoint>& prevouts, const std::vector<CTxOut>& outs);
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
