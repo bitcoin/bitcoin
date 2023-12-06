@@ -4,6 +4,7 @@
 
 #include <qt/psbtoperationsdialog.h>
 
+#include <common/messages.h>
 #include <core_io.h>
 #include <interfaces/node.h>
 #include <key_io.h>
@@ -13,7 +14,6 @@
 #include <qt/forms/ui_psbtoperationsdialog.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
-#include <util/error.h>
 #include <util/fs.h>
 #include <util/strencodings.h>
 
@@ -21,6 +21,7 @@
 #include <iostream>
 #include <string>
 
+using common::TransactionErrorString;
 using node::AnalyzePSBT;
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
 using node::PSBTAnalysis;

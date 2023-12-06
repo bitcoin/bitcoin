@@ -114,6 +114,9 @@
 #include <zmq/zmqrpc.h>
 #endif
 
+using common::AmountErrMsg;
+using common::InvalidPortErrMsg;
+using common::ResolveErrMsg;
 using kernel::DumpMempool;
 using kernel::LoadMempool;
 using kernel::ValidationCacheSizes;

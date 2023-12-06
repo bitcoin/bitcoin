@@ -13,6 +13,7 @@
 #include <chain.h>
 #include <coins.h>
 #include <common/args.h>
+#include <common/messages.h>
 #include <common/settings.h>
 #include <common/system.h>
 #include <consensus/amount.h>
@@ -51,7 +52,6 @@
 #include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
-#include <util/error.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/message.h>
@@ -83,6 +83,8 @@
 
 struct KeyOriginInfo;
 
+using common::AmountErrMsg;
+using common::AmountHighWarn;
 using common::PSBTError;
 using interfaces::FoundBlock;
 
