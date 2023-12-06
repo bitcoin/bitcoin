@@ -6,6 +6,7 @@
 
 Test the following RPCs:
    - getrawtransaction
+   - compressrawtransaction
    - createrawtransaction
    - signrawtransactionwithwallet
    - sendrawtransaction
@@ -86,6 +87,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
 
         self.getrawtransaction_tests()
+        self.compressrawtransaction_tests()
         self.createrawtransaction_tests()
         self.sendrawtransaction_tests()
         self.sendrawtransaction_testmempoolaccept_tests()
@@ -459,6 +461,13 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-22, 'TX decode failed', self.nodes[0].decoderawtransaction, encrawtx, False)  # fails to decode as non-witness transaction
         assert_equal(decrawtx, decrawtx_wit)  # the witness interpretation should be chosen
         assert_equal(decrawtx['vin'][0]['coinbase'], coinbase)
+
+    def compressrawtransaction_tests(self):
+        self.log.info("Test (de)compressrawtransaction")
+        tx = self.wallet.send_self_transfer(from_node=self.nodes[0])
+        ctx = self.nodes[0].compressrawtransaction(tx["hex"])
+        utx = self.nodes[0].decompressrawtransaction(ctx["result"])
+        assert_equal(tx["hex"], utx)
 
     def transaction_version_number_tests(self):
         self.log.info("Test transaction version numbers")
