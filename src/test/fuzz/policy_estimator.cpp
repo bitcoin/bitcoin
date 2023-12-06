@@ -45,12 +45,14 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
                 }
                 const CTransaction tx{*mtx};
                 const CTxMemPoolEntry& entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, tx);
+                const auto tx_submitted_in_package = fuzzed_data_provider.ConsumeBool();
+                const auto tx_has_mempool_parents = fuzzed_data_provider.ConsumeBool();
                 const auto tx_info = NewMempoolTransactionInfo(entry.GetSharedTx(), entry.GetFee(),
                                                                entry.GetTxSize(), entry.GetHeight(),
                                                                /*mempool_limit_bypassed=*/false,
-                                                               /*submitted_in_package=*/false,
+                                                               tx_submitted_in_package,
                                                                /*chainstate_is_current=*/true,
-                                                               /*has_no_mempool_parents=*/fuzzed_data_provider.ConsumeBool());
+                                                               tx_has_mempool_parents);
                 block_policy_estimator.processTransaction(tx_info);
                 if (fuzzed_data_provider.ConsumeBool()) {
                     (void)block_policy_estimator.removeTx(tx.GetHash());
