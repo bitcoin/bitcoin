@@ -8,6 +8,7 @@
 #include <key_io.h>
 #include <pubkey.h>
 #include <script/miniscript.h>
+#include <script/parsing.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
@@ -17,7 +18,6 @@
 #include <span.h>
 #include <util/bip32.h>
 #include <util/check.h>
-#include <util/spanparsing.h>
 #include <util/strencodings.h>
 #include <util/vector.h>
 
@@ -1350,8 +1350,6 @@ enum class ParseScriptContext {
 /** Parse a public key that excludes origin information. */
 std::unique_ptr<PubkeyProvider> ParsePubkeyInner(uint32_t key_exp_index, const Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, bool& apostrophe, std::string& error)
 {
-    using namespace spanparsing;
-
     bool permit_uncompressed = ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH;
     auto split = Split(sp, '/');
     std::string str(split[0].begin(), split[0].end());
@@ -1424,8 +1422,6 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(uint32_t key_exp_index, const S
 /** Parse a public key including origin information (if enabled). */
 std::unique_ptr<PubkeyProvider> ParsePubkey(uint32_t key_exp_index, const Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
 {
-    using namespace spanparsing;
-
     auto origin_split = Split(sp, ']');
     if (origin_split.size() > 2) {
         error = "Multiple ']' characters found for a single pubkey";
@@ -1589,7 +1585,7 @@ struct KeyParser {
 // NOLINTNEXTLINE(misc-no-recursion)
 std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
 {
-    using namespace spanparsing;
+    using namespace script;
 
     auto expr = Expr(sp);
     if (Func("pk", expr)) {
@@ -2038,8 +2034,6 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
 /** Check a descriptor checksum, and update desc to be the checksum-less part. */
 bool CheckChecksum(Span<const char>& sp, bool require_checksum, std::string& error, std::string* out_checksum = nullptr)
 {
-    using namespace spanparsing;
-
     auto check_split = Split(sp, '#');
     if (check_split.size() > 2) {
         error = "Multiple '#' symbols";

@@ -18,10 +18,10 @@
 
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <script/parsing.h>
 #include <script/script.h>
 #include <span.h>
 #include <util/check.h>
-#include <util/spanparsing.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/vector.h>
@@ -1764,7 +1764,7 @@ void BuildBack(const MiniscriptContext script_ctx, Fragment nt, std::vector<Node
 template<typename Key, typename Ctx>
 inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
 {
-    using namespace spanparsing;
+    using namespace script;
 
     // Account for the minimum script size for all parsed fragments so far. It "borrows" 1
     // script byte from all leaf nodes, counting it instead whenever a space for a recursive
