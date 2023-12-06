@@ -36,6 +36,7 @@
 
 
 using interfaces::FoundBlock;
+using util::SplitString;
 
 namespace wallet {
 std::string static EncodeDumpString(const std::string &str) {

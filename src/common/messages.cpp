@@ -20,6 +20,7 @@
 #include <vector>
 
 using node::TransactionError;
+using util::Join;
 
 namespace common {
 std::string StringForFeeReason(FeeReason reason)

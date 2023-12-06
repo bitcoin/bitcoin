@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+using util::Split;
+
 namespace {
 
 void CheckUnparsable(const std::string& prv, const std::string& pub, const std::string& expected_error)
