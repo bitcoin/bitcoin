@@ -359,11 +359,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Note, this is different to bitcoin. Bitcoin has a 32 bit integer
         # representing the version, we have 16 bits of version and 16 bits of
         # type.
+        # As transaction version is unsigned, this should convert to its unsigned equivalent.
         tx = CTransaction()
         tx.nVersion = -0x8000
         rawtx = ToHex(tx)
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
-        assert_equal(decrawtx['version'], -0x8000)
+        assert_equal(decrawtx['version'], 0x8000)
 
         # Test the maximum transaction version number that fits in a signed 32-bit integer.
         tx = CTransaction()
