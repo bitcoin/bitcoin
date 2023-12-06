@@ -1,4 +1,4 @@
-# Dash Core version v20.0.2
+# Dash Core version v20.0.1
 
 Release is now available from:
 
@@ -35,20 +35,17 @@ reindex or re-sync the whole chain.
 
 # Notable changes
 
-## Masternode fix
+## Qt Testnet Crash
 
-A problem has been fixed in the old quorum data cleanup mechanism. It was slowing down masternodes during DKG sessions and causing them to get PoSe scored.
+A crash has been fixed which has only been seen on testnet and only affects QT clients. 
 
-## Testnet Crash
+## Guix Build System Enhancements
+The Guix build system has been enhanced to enable building with custom options when needed.
+This will be used to support custom builds such as for nightly builds with extra debug options.
 
-A fix has been implemented for the reported crash that could occur when upgrading from v19.x to v20.0.0 after v20 activation without re-indexing.
+Additionally, the Guix system will now produce debug symbols for MacOS. 
 
-## Other changes
-
-Implemented improvements in Github CI and build system for macOS. Fixed compilation issues on FreeBSD.
-
-
-# v20.0.2 Change log
+# v20.0.1 Change log
 
 See detailed [set of changes][set-of-changes].
 
@@ -57,7 +54,6 @@ See detailed [set of changes][set-of-changes].
 Thanks to everyone who directly contributed to this release:
 
 - Konstantin Akimov (knst)
-- Odysseas Gabrielides (ogabrielides)
 - PastaPastaPasta
 - UdjinM6
 
@@ -86,7 +82,6 @@ Dash Core tree 0.12.1.x was a fork of Bitcoin Core tree 0.12.
 
 These release are considered obsolete. Old release notes can be found here:
 
-- [v20.0.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-20.0.1.md) released November/18/2023
 - [v20.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-20.0.0.md) released November/15/2023
 - [v19.3.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-19.3.0.md) released July/31/2023
 - [v19.2.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-19.2.0.md) released June/19/2023
@@ -130,4 +125,4 @@ These release are considered obsolete. Old release notes can be found here:
 - [v0.10.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.10.0.md) released Sep/25/2014
 - [v0.9.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.9.0.md) released Mar/13/2014
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v20.0.1...dashpay:v20.0.2
+[set-of-changes]: https://github.com/dashpay/dash/compare/v20.0.0...dashpay:v20.0.1
