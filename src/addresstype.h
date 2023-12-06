@@ -8,6 +8,7 @@
 #include <attributes.h>
 #include <pubkey.h>
 #include <script/script.h>
+#include <script/solver.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
@@ -132,6 +133,18 @@ using CTxDestination = std::variant<CNoDestination, PubKeyDestination, PKHash, S
 
 /** Check whether a CTxDestination corresponds to one with an address. */
 bool IsValidDestination(const CTxDestination& dest);
+
+/**
+ * Parse a vSolutions vector and script type into a destination address. Assigns result to
+ *
+ * For standard scripts that have addresses (and P2PK as an exception), a corresponding CTxDestination
+ * is assigned to addressRet.
+ * For all other scripts. addressRet is unassigned.
+ *
+ * Returns true for standard destinations with addresses - P2PKH, P2SH, P2WPKH, P2WSH, P2TR and P2W??? scripts.
+ * Returns false for non-standard destinations and those without addresses - P2PK, bare multisig, null data, and nonstandard scripts.
+ */
+bool BuildDestination(const std::vector<std::vector<unsigned char>>& vSolutions, const TxoutType& scriptType, CTxDestination& addressRet);
 
 /**
  * Parse a scriptPubKey for the destination.

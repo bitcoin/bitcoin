@@ -8,7 +8,6 @@
 #include <hash.h>
 #include <pubkey.h>
 #include <script/script.h>
-#include <script/solver.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
@@ -46,17 +45,15 @@ WitnessV0ScriptHash::WitnessV0ScriptHash(const CScript& in)
     CSHA256().Write(in.data(), in.size()).Finalize(begin());
 }
 
-bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
-{
-    std::vector<valtype> vSolutions;
-    TxoutType whichType = Solver(scriptPubKey, vSolutions);
+bool BuildDestination(const std::vector<std::vector<unsigned char>>& vSolutions, const TxoutType& scriptType, CTxDestination& addressRet) {
+    if (vSolutions.size() == 0) {
+        return false;
+    }
 
-    switch (whichType) {
+    switch (scriptType) {
     case TxoutType::PUBKEY: {
         CPubKey pubKey(vSolutions[0]);
-        if (!pubKey.IsValid()) {
-            addressRet = CNoDestination(scriptPubKey);
-        } else {
+        if (pubKey.IsValid()) {
             addressRet = PubKeyDestination(pubKey);
         }
         return false;
@@ -94,10 +91,17 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     case TxoutType::MULTISIG:
     case TxoutType::NULL_DATA:
     case TxoutType::NONSTANDARD:
-        addressRet = CNoDestination(scriptPubKey);
         return false;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
+}
+
+bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
+{
+    std::vector<valtype> vSolutions;
+    TxoutType scriptType = Solver(scriptPubKey, vSolutions);
+    addressRet = CNoDestination(scriptPubKey);
+    return BuildDestination(vSolutions, scriptType, addressRet);
 }
 
 namespace {
