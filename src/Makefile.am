@@ -144,6 +144,7 @@ BITCOIN_CORE_H = \
   compat/compat.h \
   compat/cpuid.h \
   compat/endian.h \
+  common/messages.h \
   common/settings.h \
   common/signmessage.h \
   common/system.h \
@@ -300,11 +301,9 @@ BITCOIN_CORE_H = \
   util/chaintype.h \
   util/check.h \
   util/epochguard.h \
-  util/error.h \
   util/exception.h \
   util/fastrange.h \
   util/feefrac.h \
-  util/fees.h \
   util/fs.h \
   util/fs_helpers.h \
   util/golombrice.h \
@@ -681,6 +680,7 @@ libbitcoin_common_a_SOURCES = \
   common/config.cpp \
   common/init.cpp \
   common/interfaces.cpp \
+  common/messages.cpp \
   common/run_command.cpp \
   common/settings.cpp \
   common/signmessage.cpp \
@@ -738,10 +738,8 @@ libbitcoin_util_a_SOURCES = \
   util/bytevectorhash.cpp \
   util/chaintype.cpp \
   util/check.cpp \
-  util/error.cpp \
   util/exception.cpp \
   util/feefrac.cpp \
-  util/fees.cpp \
   util/fs.cpp \
   util/fs_helpers.cpp \
   util/hasher.cpp \
