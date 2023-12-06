@@ -8,6 +8,7 @@
 #include <chain.h>
 #include <sync.h>
 
+#include <array>
 #include <map>
 
 /** What block version to use for new blocks (pre versionbits) */
@@ -81,7 +82,7 @@ class VersionBitsCache
 {
 private:
     Mutex m_mutex;
-    ThresholdConditionCache m_caches[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] GUARDED_BY(m_mutex);
+    std::array<ThresholdConditionCache,Consensus::MAX_VERSION_BITS_DEPLOYMENTS> m_caches GUARDED_BY(m_mutex);
 
 public:
     /** Get the numerical statistics for a given deployment for the signalling period that includes pindex.
