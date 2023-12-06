@@ -14,6 +14,7 @@ endif
 # directory, which might be "lib64" or something else, not "lib", on multiarch systems.
 define $(package)_set_vars :=
 $(package)_config_opts += -DCMAKE_INSTALL_LIBDIR=lib/
+$(package)_config_opts += -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 ifneq ($(host),$(build))
 $(package)_config_opts := -DCAPNP_EXECUTABLE="$$(native_capnp_prefixbin)/capnp"
 $(package)_config_opts += -DCAPNPC_CXX_EXECUTABLE="$$(native_capnp_prefixbin)/capnpc-c++"
