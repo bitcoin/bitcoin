@@ -86,6 +86,8 @@ using common::AmountErrMsg;
 using common::AmountHighWarn;
 using common::PSBTError;
 using interfaces::FoundBlock;
+using util::ReplaceAll;
+using util::ToString;
 
 namespace wallet {
 

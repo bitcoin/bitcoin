@@ -42,6 +42,9 @@
 #include <event2/keyvalq_struct.h>
 #include <support/events.h>
 
+using util::Join;
+using util::ToString;
+
 // The server returns time values from a mockable system clock, but it is not
 // trivial to get the mocked time from the server, nor is it needed for now, so
 // just use a plain system_clock.

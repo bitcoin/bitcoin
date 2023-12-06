@@ -13,6 +13,9 @@
 #include <cstdint>
 #include <optional>
 
+using util::ContainsNoNUL;
+using util::TrimString;
+
 std::string FormatMoney(const CAmount n)
 {
     // Note: not using straight sprintf here because we do NOT want

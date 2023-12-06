@@ -85,6 +85,8 @@ Q_DECLARE_METATYPE(uint256)
 Q_DECLARE_METATYPE(wallet::AddressPurpose)
 #endif // ENABLE_WALLET
 
+using util::MakeUnorderedList;
+
 static void RegisterMetaTypes()
 {
     // Register meta types used for QMetaObject::invokeMethod and Qt::QueuedConnection

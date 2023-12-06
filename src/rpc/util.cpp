@@ -37,6 +37,9 @@ using common::PSBTError;
 using common::PSBTErrorString;
 using common::TransactionErrorString;
 using node::TransactionError;
+using util::Join;
+using util::SplitString;
+using util::TrimString;
 
 const std::string UNIX_EPOCH_TIME = "UNIX epoch time";
 const std::string EXAMPLE_ADDRESS[2] = {"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl", "bc1q02ad21edsxd23d32dfgqqsz4vv4nmtfzuklhy3"};
@@ -796,7 +799,7 @@ std::string RPCHelpMan::ToString() const
         if (arg.m_opts.hidden) break; // Any arg that follows is also hidden
 
         // Push named argument name and description
-        sections.m_sections.emplace_back(::ToString(i + 1) + ". " + arg.GetFirstName(), arg.ToDescriptionString(/*is_named_arg=*/true));
+        sections.m_sections.emplace_back(util::ToString(i + 1) + ". " + arg.GetFirstName(), arg.ToDescriptionString(/*is_named_arg=*/true));
         sections.m_max_pad = std::max(sections.m_max_pad, sections.m_sections.back().m_left.size());
 
         // Recursively push nested args

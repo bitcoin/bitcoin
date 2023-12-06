@@ -122,7 +122,7 @@ T LocaleIndependentAtoi(std::string_view str)
     static_assert(std::is_integral<T>::value);
     T result;
     // Emulate atoi(...) handling of white space and leading +/-.
-    std::string_view s = TrimStringView(str);
+    std::string_view s = util::TrimStringView(str);
     if (!s.empty() && s[0] == '+') {
         if (s.length() >= 2 && s[1] == '-') {
             return 0;

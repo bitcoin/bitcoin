@@ -7,6 +7,8 @@
 #include <test/fuzz/fuzz.h>
 #include <util/string.h>
 
+using util::Split;
+
 FUZZ_TARGET(script_parsing)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());

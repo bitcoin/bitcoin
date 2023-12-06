@@ -42,6 +42,10 @@
 #include <event2/thread.h>
 #include <event2/util.h>
 
+using util::ReplaceAll;
+using util::SplitString;
+using util::ToString;
+
 /** Default control ip and port */
 const std::string DEFAULT_TOR_CONTROL = "127.0.0.1:" + ToString(DEFAULT_TOR_CONTROL_PORT);
 /** Tor cookie size (from control-spec.txt) */

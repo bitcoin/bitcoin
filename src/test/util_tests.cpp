@@ -45,6 +45,15 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace std::literals;
+using util::Join;
+using util::RemovePrefix;
+using util::RemovePrefixView;
+using util::ReplaceAll;
+using util::Split;
+using util::SplitString;
+using util::TrimString;
+using util::TrimStringView;
+
 static const std::string STRING_WITH_EMBEDDED_NULL_CHAR{"1"s "\0" "1"s};
 
 /* defined in logging.cpp */

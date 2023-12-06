@@ -24,6 +24,8 @@
 #include <string>
 #include <tuple>
 
+using util::Join;
+
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 static void SetupWalletToolArgs(ArgsManager& argsman)

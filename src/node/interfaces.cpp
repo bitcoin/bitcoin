@@ -71,6 +71,7 @@ using interfaces::Handler;
 using interfaces::MakeSignalHandler;
 using interfaces::Node;
 using interfaces::WalletLoader;
+using util::Join;
 
 namespace node {
 // All members of the classes in this namespace are intentionally public, as the

@@ -22,6 +22,7 @@
 #include <optional>
 
 using common::PSBTError;
+using util::ToString;
 
 namespace wallet {
 //! Value for the first BIP 32 hardened derivation. Can be used as a bit mask and as a value. See BIP 32 for more details.

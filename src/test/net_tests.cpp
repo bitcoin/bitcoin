@@ -32,6 +32,7 @@
 #include <string>
 
 using namespace std::literals;
+using util::ToString;
 
 BOOST_FIXTURE_TEST_SUITE(net_tests, RegTestingSetup)
 

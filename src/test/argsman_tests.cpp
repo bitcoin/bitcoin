@@ -20,6 +20,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using util::ToString;
+
 BOOST_FIXTURE_TEST_SUITE(argsman_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(util_datadir)

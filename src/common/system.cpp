@@ -28,6 +28,8 @@
 #include <string>
 #include <thread>
 
+using util::ReplaceAll;
+
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
 

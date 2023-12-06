@@ -863,8 +863,8 @@ public:
                     if (!key_str) return {};
                     return std::move(ret) + "pk_h(" + std::move(*key_str) + ")";
                 }
-                case Fragment::AFTER: return std::move(ret) + "after(" + ::ToString(node.k) + ")";
-                case Fragment::OLDER: return std::move(ret) + "older(" + ::ToString(node.k) + ")";
+                case Fragment::AFTER: return std::move(ret) + "after(" + util::ToString(node.k) + ")";
+                case Fragment::OLDER: return std::move(ret) + "older(" + util::ToString(node.k) + ")";
                 case Fragment::HASH256: return std::move(ret) + "hash256(" + HexStr(node.data) + ")";
                 case Fragment::HASH160: return std::move(ret) + "hash160(" + HexStr(node.data) + ")";
                 case Fragment::SHA256: return std::move(ret) + "sha256(" + HexStr(node.data) + ")";
@@ -883,7 +883,7 @@ public:
                     return std::move(ret) + "andor(" + std::move(subs[0]) + "," + std::move(subs[1]) + "," + std::move(subs[2]) + ")";
                 case Fragment::MULTI: {
                     CHECK_NONFATAL(!is_tapscript);
-                    auto str = std::move(ret) + "multi(" + ::ToString(node.k);
+                    auto str = std::move(ret) + "multi(" + util::ToString(node.k);
                     for (const auto& key : node.keys) {
                         auto key_str = ctx.ToString(key);
                         if (!key_str) return {};
@@ -893,7 +893,7 @@ public:
                 }
                 case Fragment::MULTI_A: {
                     CHECK_NONFATAL(is_tapscript);
-                    auto str = std::move(ret) + "multi_a(" + ::ToString(node.k);
+                    auto str = std::move(ret) + "multi_a(" + util::ToString(node.k);
                     for (const auto& key : node.keys) {
                         auto key_str = ctx.ToString(key);
                         if (!key_str) return {};
@@ -902,7 +902,7 @@ public:
                     return std::move(str) + ")";
                 }
                 case Fragment::THRESH: {
-                    auto str = std::move(ret) + "thresh(" + ::ToString(node.k);
+                    auto str = std::move(ret) + "thresh(" + util::ToString(node.k);
                     for (auto& sub : subs) {
                         str += "," + std::move(sub);
                     }

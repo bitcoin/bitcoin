@@ -21,6 +21,8 @@
 
 #include <system_error>
 
+using util::Join;
+
 namespace wallet {
 bool VerifyWallets(WalletContext& context)
 {

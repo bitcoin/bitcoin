@@ -20,6 +20,9 @@
 #include <iterator>
 #include <tuple>
 
+using util::ContainsNoNUL;
+using util::HasPrefix;
+
 CNetAddr::BIP155Network CNetAddr::GetBIP155Network() const
 {
     switch (m_net) {

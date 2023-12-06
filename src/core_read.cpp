@@ -16,6 +16,8 @@
 #include <algorithm>
 #include <string>
 
+using util::SplitString;
+
 namespace {
 class OpCodeParser
 {

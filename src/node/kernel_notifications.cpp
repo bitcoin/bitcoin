@@ -24,6 +24,8 @@
 #include <string>
 #include <thread>
 
+using util::ReplaceAll;
+
 static void AlertNotify(const std::string& strMessage)
 {
     uiInterface.NotifyAlertChanged();

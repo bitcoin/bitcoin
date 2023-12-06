@@ -51,7 +51,7 @@ FUZZ_TARGET(locale)
     int64_t parseint64_out_without_locale;
     const bool parseint64_without_locale = ParseInt64(random_string, &parseint64_out_without_locale);
     const int64_t random_int64 = fuzzed_data_provider.ConsumeIntegral<int64_t>();
-    const std::string tostring_without_locale = ToString(random_int64);
+    const std::string tostring_without_locale = util::ToString(random_int64);
     // The variable `random_int32` is no longer used, but the harness still needs to
     // consume the same data that it did previously to not invalidate existing seeds.
     const int32_t random_int32 = fuzzed_data_provider.ConsumeIntegral<int32_t>();
@@ -75,7 +75,7 @@ FUZZ_TARGET(locale)
     if (parseint64_without_locale) {
         assert(parseint64_out_without_locale == parseint64_out_with_locale);
     }
-    const std::string tostring_with_locale = ToString(random_int64);
+    const std::string tostring_with_locale = util::ToString(random_int64);
     assert(tostring_without_locale == tostring_with_locale);
     const std::string strprintf_int_with_locale = strprintf("%d", random_int64);
     assert(strprintf_int_without_locale == strprintf_int_with_locale);

@@ -18,6 +18,7 @@
 #include <vector>
 
 using namespace std::chrono_literals;
+using util::Join;
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 

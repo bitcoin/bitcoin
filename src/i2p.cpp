@@ -26,6 +26,8 @@
 #include <stdexcept>
 #include <string>
 
+using util::Split;
+
 namespace i2p {
 
 /**
