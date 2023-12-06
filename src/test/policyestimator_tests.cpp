@@ -112,6 +112,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
         }
     }
 
+    // Wait for fee estimator to catch up
+    SyncWithValidationInterfaceQueue();
+
     std::vector<CAmount> origFeeEst;
     // Highest feerate is 10*baseRate and gets in all blocks,
     // second highest feerate is 9*baseRate and gets in 9/10 blocks = 90%,
