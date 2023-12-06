@@ -371,6 +371,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/script_format.cpp \
  test/fuzz/script_interpreter.cpp \
  test/fuzz/script_ops.cpp \
+ test/fuzz/script_parsing.cpp \
  test/fuzz/script_sigcache.cpp \
  test/fuzz/script_sign.cpp \
  test/fuzz/scriptnum_ops.cpp \
@@ -380,7 +381,6 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/signet.cpp \
  test/fuzz/socks5.cpp \
  test/fuzz/span.cpp \
- test/fuzz/spanparsing.cpp \
  test/fuzz/string.cpp \
  test/fuzz/strprintf.cpp \
  test/fuzz/system.cpp \

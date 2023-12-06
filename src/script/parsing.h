@@ -2,15 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_SPANPARSING_H
-#define BITCOIN_UTIL_SPANPARSING_H
+#ifndef BITCOIN_SCRIPT_PARSING_H
+#define BITCOIN_SCRIPT_PARSING_H
 
 #include <span.h>
-#include <util/string.h>
 
 #include <string>
 
-namespace spanparsing {
+namespace script {
 
 /** Parse a constant.
  *
@@ -36,13 +35,6 @@ bool Func(const std::string& str, Span<const char>& sp);
  */
 Span<const char> Expr(Span<const char>& sp);
 
-/** Split alias for backwards compatibility */
-template <typename... Args>
-auto Split(Args&&... args)
-{
-    return ::Split(std::forward<Args>(args)...);
-}
+} // namespace script
 
-} // namespace spanparsing
-
-#endif // BITCOIN_UTIL_SPANPARSING_H
+#endif // BITCOIN_SCRIPT_PARSING_H
