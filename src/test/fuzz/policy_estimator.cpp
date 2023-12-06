@@ -47,10 +47,10 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
                 const CTxMemPoolEntry& entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, tx);
                 const auto tx_info = NewMempoolTransactionInfo(entry.GetSharedTx(), entry.GetFee(),
                                                                entry.GetTxSize(), entry.GetHeight(),
-                                                               /* m_from_disconnected_block */ false,
-                                                               /* m_submitted_in_package */ false,
-                                                               /* m_chainstate_is_current */ true,
-                                                               /* m_has_no_mempool_parents */ fuzzed_data_provider.ConsumeBool());
+                                                               /*mempool_limit_bypassed=*/false,
+                                                               /*submitted_in_package=*/false,
+                                                               /*chainstate_is_current=*/true,
+                                                               /*has_no_mempool_parents=*/fuzzed_data_provider.ConsumeBool());
                 block_policy_estimator.processTransaction(tx_info);
                 if (fuzzed_data_provider.ConsumeBool()) {
                     (void)block_policy_estimator.removeTx(tx.GetHash());

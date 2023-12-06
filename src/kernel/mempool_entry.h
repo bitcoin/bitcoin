@@ -226,7 +226,7 @@ struct NewMempoolTransactionInfo {
      * This boolean indicates whether the transaction was added
      * without enforcing mempool fee limits.
      */
-    const bool m_from_disconnected_block;
+    const bool m_mempool_limit_bypassed;
     /* This boolean indicates whether the transaction is part of a package. */
     const bool m_submitted_in_package;
     /*
@@ -239,11 +239,11 @@ struct NewMempoolTransactionInfo {
 
     explicit NewMempoolTransactionInfo(const CTransactionRef& tx, const CAmount& fee,
                                        const int64_t vsize, const unsigned int height,
-                                       const bool from_disconnected_block, const bool submitted_in_package,
+                                       const bool mempool_limit_bypassed, const bool submitted_in_package,
                                        const bool chainstate_is_current,
                                        const bool has_no_mempool_parents)
         : info{tx, fee, vsize, height},
-          m_from_disconnected_block{from_disconnected_block},
+          m_mempool_limit_bypassed{mempool_limit_bypassed},
           m_submitted_in_package{submitted_in_package},
           m_chainstate_is_current{chainstate_is_current},
           m_has_no_mempool_parents{has_no_mempool_parents} {}
