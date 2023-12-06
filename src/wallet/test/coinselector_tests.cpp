@@ -61,51 +61,6 @@ static void add_coin(CoinsResult& available_coins, CWallet& wallet, const CAmoun
 }
 
 // Helpers
-std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
-                                              CAmount change_target, FastRandomContext& rng)
-{
-    auto res{KnapsackSolver(groups, nTargetValue, change_target, rng, MAX_STANDARD_TX_WEIGHT)};
-    return res ? std::optional<SelectionResult>(*res) : std::nullopt;
-}
-
-std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change)
-{
-    auto res{SelectCoinsBnB(utxo_pool, selection_target, cost_of_change, MAX_STANDARD_TX_WEIGHT)};
-    return res ? std::optional<SelectionResult>(*res) : std::nullopt;
-}
-
-
-inline std::vector<OutputGroup>& GroupCoins(const std::vector<COutput>& available_coins, bool subtract_fee_outputs = false)
-{
-    static std::vector<OutputGroup> static_groups;
-    static_groups.clear();
-    for (auto& coin : available_coins) {
-        static_groups.emplace_back();
-        OutputGroup& group = static_groups.back();
-        group.Insert(std::make_shared<COutput>(coin), /*ancestors=*/ 0, /*descendants=*/ 0);
-        group.m_subtract_fee_outputs = subtract_fee_outputs;
-    }
-    return static_groups;
-}
-
-inline std::vector<OutputGroup>& KnapsackGroupOutputs(const CoinsResult& available_coins, CWallet& wallet, const CoinEligibilityFilter& filter)
-{
-    FastRandomContext rand{};
-    CoinSelectionParams coin_selection_params{
-        rand,
-        /*change_output_size=*/ 0,
-        /*change_spend_size=*/ 0,
-        /*min_change_target=*/ CENT,
-        /*effective_feerate=*/ CFeeRate(0),
-        /*long_term_feerate=*/ CFeeRate(0),
-        /*discard_feerate=*/ CFeeRate(0),
-        /*tx_noinputs_size=*/ 0,
-        /*avoid_partial=*/ false,
-    };
-    static OutputGroupTypeMap static_groups;
-    static_groups = GroupOutputs(wallet, available_coins, coin_selection_params, {{filter}})[filter];
-    return static_groups.all_groups.mixed_group;
-}
 
 static std::unique_ptr<CWallet> NewWallet(const node::NodeContext& m_node, const std::string& wallet_name = "")
 {
