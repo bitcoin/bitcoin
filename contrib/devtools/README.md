@@ -164,7 +164,7 @@ Perform basic security checks on a series of executables.
 symbol-check.py
 ===============
 
-A script to check that the executables produced by Gitian only contain
+A script to check that release executables only contain
 certain symbols and are only linked against allowed libraries.
 
 For Linux this means checking for allowed gcc, glibc and libstdc++ version symbols.
@@ -172,9 +172,9 @@ This makes sure they are still compatible with the minimum supported distributio
 
 For macOS and Windows we check that the executables are only linked against libraries we allow.
 
-Example usage after a Gitian build:
+Example usage:
 
-    find ../gitian-builder/build -type f -executable | xargs python3 contrib/devtools/symbol-check.py
+    find ../path/to/executables -type f -executable | xargs python3 contrib/devtools/symbol-check.py
 
 If no errors occur the return value will be 0 and the output will be empty.
 

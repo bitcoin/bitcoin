@@ -39,7 +39,7 @@ The following are developer notes on how to build Dash Core on your native platf
 - [Windows Build Notes](build-windows.md)
 - [OpenBSD Build Notes](build-openbsd.md)
 - [NetBSD Build Notes](build-netbsd.md)
-- [Gitian Building Guide](gitian-building.md)
+- [Android Build Notes](build-android.md)
 
 Development
 ---------------------
