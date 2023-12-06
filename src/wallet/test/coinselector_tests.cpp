@@ -155,24 +155,6 @@ BOOST_AUTO_TEST_CASE(bnb_sffo_restriction)
     BOOST_CHECK(result->GetAlgo() == SelectionAlgorithm::SRD || result->GetAlgo() == SelectionAlgorithm::KNAPSACK);
 }
 
-BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
-{
-    FastRandomContext rand{};
-    std::unique_ptr<CWallet> wallet = NewWallet(m_node);
-
-    CoinsResult available_coins;
-
-    // Test vValue sort order
-    for (int i = 0; i < 1000; i++)
-        add_coin(available_coins, *wallet, 1000 * COIN);
-    add_coin(available_coins, *wallet, 3 * COIN);
-
-    const auto result = KnapsackSolver(KnapsackGroupOutputs(available_coins, *wallet, filter_standard), 1003 * COIN, CENT, rand);
-    BOOST_CHECK(result);
-    BOOST_CHECK_EQUAL(result->GetSelectedValue(), 1003 * COIN);
-    BOOST_CHECK_EQUAL(result->GetInputSet().size(), 2U);
-}
-
 // Tests that with the ideal conditions, the coin selector will always be able to find a solution that can pay the target value
 BOOST_AUTO_TEST_CASE(SelectCoins_test)
 {

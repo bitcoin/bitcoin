@@ -196,6 +196,14 @@ BOOST_AUTO_TEST_CASE(knapsack_predictable_test)
     TestKnapsackMatch("Select more to get min_change", utxo_pool, /*selection_target=*/ 9.976 * CENT, /*expected_input_amounts=*/ {11 * CENT});
 }
 
+BOOST_AUTO_TEST_CASE(knapsack_exact_match_test)
+{
+    std::vector<COutput> exact_match_pool;
+    AddDuplicateCoins(exact_match_pool, /*count=*/ 1000, /*amount=*/ 5 * CENT);
+    AddDuplicateCoins(exact_match_pool, /*count=*/ 1000, /*amount=*/ 3 * CENT);
+    TestKnapsackMatch("Find exact match in large UTXO pool", exact_match_pool, /*selection_target=*/ 8 * CENT, /*expected_input_amounts=*/ {5 * CENT, 3 * CENT});
+}
+
 /** Check if this selection is equal to another one. Equal means same inputs (i.e same value and prevout) */
 static bool EqualResult(const SelectionResult& a, const SelectionResult& b)
 {
