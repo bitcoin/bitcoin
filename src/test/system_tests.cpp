@@ -90,7 +90,13 @@ BOOST_AUTO_TEST_CASE(run_command)
         });
     }
     {
-        BOOST_REQUIRE_THROW(RunCommandParseJSON("echo \"{\""), std::runtime_error); // Unable to parse JSON
+        // Unable to parse JSON
+#ifdef WIN32
+        const std::string command{"cmd.exe /c echo {"};
+#else
+        const std::string command{"echo {"};
+#endif
+        BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, HasReason("Unable to parse JSON: {"));
     }
     // Test std::in, except for Windows
 #ifndef WIN32
