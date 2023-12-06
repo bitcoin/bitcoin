@@ -6,6 +6,7 @@
 #define BITCOIN_NODE_COIN_H
 
 #include <map>
+#include <vector>
 
 class COutPoint;
 class Coin;
@@ -22,6 +23,18 @@ struct NodeContext;
  * @param[in,out] coins map to fill
  */
 void FindCoins(const node::NodeContext& node, std::map<COutPoint, Coin>& coins);
+
+/**
+ * Look up unspent output information. Returns coins in the mempool and in the
+ * current chain UTXO set. Iterates through all the outpoints and
+ * returns the corresponding coins.
+ *
+ * @param[in] node The node context to use for lookup
+ * @param[in] outpoints A Vector containing outpoints
+ */
+std::vector<Coin> FindCoins(const node::NodeContext& node, const std::vector<COutPoint>& outpoints);
 } // namespace node
+
+
 
 #endif // BITCOIN_NODE_COIN_H
