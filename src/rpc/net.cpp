@@ -547,11 +547,44 @@ static RPCHelpMan getaddednodeinfo()
 
 namespace net_stats {
 
+namespace aggregate_dimensions {
+static std::string DIRECTION{"direction"};
+static std::string NETWORK{"network"};
+static std::string CONNECTION_TYPE{"connection_type"};
+static std::string MESSAGE_TYPE{"message_type"};
+};
+
 UniValue CreateJSON(const RPCHelpMan&, const JSONRPCRequest& request)
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
 
+    // Used for a quick check if a string is in request.params[0] which is
+    // supposed to be a JSON array, e.g. ["direction", "network"].
+    std::unordered_set<std::string> aggregate_by;
+    if (request.params[0].isArray()) {
+        const UniValue& arr{request.params[0].get_array()};
+        for (size_t i = 0; i < arr.size(); ++i) {
+            const auto& agg{arr[i].get_str()};
+            if (agg != aggregate_dimensions::DIRECTION &&
+                agg != aggregate_dimensions::NETWORK &&
+                agg != aggregate_dimensions::CONNECTION_TYPE &&
+                agg != aggregate_dimensions::MESSAGE_TYPE) {
+                throw JSONRPCError(
+                    RPC_INVALID_PARAMS,
+                    strprintf(
+                        R"(Unrecognized aggregation parameter: "%s". The array should consist of zero or more of "%s", "%s", "%s", "%s".)",
+                        agg,
+                        aggregate_dimensions::DIRECTION,
+                        aggregate_dimensions::NETWORK,
+                        aggregate_dimensions::CONNECTION_TYPE,
+                        aggregate_dimensions::MESSAGE_TYPE));
+            }
+            aggregate_by.insert(agg);
+        }
+    }
+
+    // The keys might as well be an empty string (if aggregating by that dimension).
     std::unordered_map<
         std::string, // "sent" or "recv"
         std::unordered_map<std::string, // "ipv4", "tor", ...
@@ -560,20 +593,25 @@ UniValue CreateJSON(const RPCHelpMan&, const JSONRPCRequest& request)
                                                                  NetStats::BytesAndCount>>>>
         result_map;
 
-    connman.GetNetStats().ForEach([&result_map](NetStats::Direction dir,
-                                                Network net,
-                                                ConnectionType con,
-                                                const std::string& msg,
-                                                const NetStats::BytesAndCount& data) {
-        const std::string dir_str{dir == NetStats::SENT ? "sent" : "recv"};
-        const std::string net_str{GetNetworkName(net)};
-        const std::string con_str{ConnectionTypeAsString(con)};
+    connman.GetNetStats().ForEach([&aggregate_by, &result_map](NetStats::Direction dir,
+                                                               Network net,
+                                                               ConnectionType con,
+                                                               const std::string& msg,
+                                                               const NetStats::BytesAndCount& data) {
+        const std::string dir_str{aggregate_by.contains(aggregate_dimensions::DIRECTION) ? "" : dir == NetStats::SENT ? "sent" : "recv"};
+        const std::string net_str{aggregate_by.contains(aggregate_dimensions::NETWORK) ? "" : GetNetworkName(net)};
+        const std::string con_str{aggregate_by.contains(aggregate_dimensions::CONNECTION_TYPE) ? "" : ConnectionTypeAsString(con)};
+        const std::string msg_str{aggregate_by.contains(aggregate_dimensions::MESSAGE_TYPE) ? "" : msg};
 
-        result_map[dir_str][net_str][con_str][msg] += data;
+        result_map[dir_str][net_str][con_str][msg_str] += data;
     });
 
     auto Add = [](UniValue& target, const std::string& key, const UniValue& val) {
         if (val.empty()) {
+            return;
+        }
+        if (key == "") {
+            target = val;
             return;
         }
         target.pushKV(key, val);
@@ -614,9 +652,35 @@ static RPCHelpMan getnetmsgstats()
     return RPCHelpMan{
         /*name=*/"getnetmsgstats",
         /*description=*/
-        "\nReturns the messages count and total number of bytes for network traffic.\n",
+        "\nReturns the messages count and total number of bytes for network traffic.\n"
+        "Results may optionally be aggregated.\n",
         /*args=*/
-        {},
+        {RPCArg{
+            /*name=*/"aggregate_by",
+            /*type=*/RPCArg::Type::ARR,
+            /*fallback=*/RPCArg::DefaultHint{"empty (no aggregation)"},
+            /*description=*/"An array of keywords for aggregating the results.",
+            /*inner=*/
+            {RPCArg{/*name=*/"direction",
+                    /*type=*/RPCArg::Type::STR,
+                    /*fallback=*/RPCArg::Optional::OMITTED,
+                    /*description=*/
+                    "Aggregate by direction and don't show direction in the result."},
+             RPCArg{/*name=*/"network",
+                    /*type=*/RPCArg::Type::STR,
+                    /*fallback=*/RPCArg::Optional::OMITTED,
+                    /*description=*/
+                    "Aggregate by network and don't show network in the result."},
+             RPCArg{/*name=*/"connection_type",
+                    /*type=*/RPCArg::Type::STR,
+                    /*fallback=*/RPCArg::Optional::OMITTED,
+                    /*description=*/
+                    "Aggregate by connection type and don't show connection type in the result."},
+             RPCArg{/*name=*/"message_type",
+                    /*type=*/RPCArg::Type::STR,
+                    /*fallback=*/RPCArg::Optional::OMITTED,
+                    /*description=*/
+                    "Aggregate by message type and don't show message type in the result."}}}},
         /*results=*/
         {RPCResult{
             /*type=*/RPCResult::Type::OBJ_DYN,
@@ -669,7 +733,9 @@ static RPCHelpMan getnetmsgstats()
             /*skip_type_check=*/true}},
         /*examples=*/
         RPCExamples{HelpExampleCli("getnetmsgstats", "") +
-                    HelpExampleRpc("getnetmsgstats", "")},
+                    HelpExampleCli("getnetmsgstats", R"('["network", "message_type"]')") +
+                    HelpExampleRpc("getnetmsgstats", "") +
+                    HelpExampleRpc("getnetmsgstats", R"(["network", "message_type"])")},
         /*fun=*/net_stats::CreateJSON};
 }
 
