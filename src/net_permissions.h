@@ -34,11 +34,14 @@ enum class NetPermissionFlags : uint32_t {
     // Can request addrs without hitting a privacy-preserving cache, and send us
     // unlimited amounts of addrs.
     Addr = (1U << 7),
+    // Try harder to evict an existing connection if needed to open
+    // an inbound slot from this peer
+    ForceInbound = (1U << 8) | NoBan,
 
     // True if the user did not specifically set fine-grained permissions with
     // the -whitebind or -whitelist configuration options.
     Implicit = (1U << 31),
-    All = BloomFilter | ForceRelay | Relay | NoBan | Mempool | Download | Addr,
+    All = BloomFilter | ForceRelay | Relay | NoBan | Mempool | Download | Addr | ForceInbound,
 };
 static inline constexpr NetPermissionFlags operator|(NetPermissionFlags a, NetPermissionFlags b)
 {

@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <node/eviction.h>
+#include <random.h>
 
 #include <algorithm>
 #include <array>
@@ -175,13 +176,22 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     EraseLastKElements(eviction_candidates, ReverseCompareNodeTimeConnected, remaining_to_protect);
 }
 
-[[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates)
+[[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates, bool force)
 {
     // Protect connections with certain characteristics
 
     ProtectNoBanConnections(vEvictionCandidates);
 
     ProtectOutboundConnections(vEvictionCandidates);
+
+    if (vEvictionCandidates.empty()) return std::nullopt;
+
+    // Hang on to one random node to evict if forced
+    std::optional<NodeId> force_evict;
+    if (force) {
+        uint64_t randpos{FastRandomContext().randrange(vEvictionCandidates.size())};
+        force_evict = vEvictionCandidates.at(randpos).id;
+    }
 
     // Deterministically select 4 peers to protect by netgroup.
     // An attacker cannot predict which netgroups will be protected
@@ -204,7 +214,8 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     // or disadvantaged characteristics.
     ProtectEvictionCandidatesByRatio(vEvictionCandidates);
 
-    if (vEvictionCandidates.empty()) return std::nullopt;
+    // May still return nullopt is `force` argument is false
+    if (vEvictionCandidates.empty()) return force_evict;
 
     // If any remaining peers are preferred for eviction consider only them.
     // This happens after the other preferences since if a peer is really the best by other criteria (esp relaying blocks)
