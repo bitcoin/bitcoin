@@ -77,9 +77,9 @@ class InputMissing(BadTxTemplate):
     reject_reason = "bad-txns-vin-empty"
     expect_disconnect = True
 
+    # We use a blank transaction to align with bitcoin's implementation
     def get_tx(self):
         tx = CTransaction()
-        tx.vout.append(CTxOut(0, sc.CScript([sc.OP_TRUE] * 100)))
         tx.calc_sha256()
         return tx
 
