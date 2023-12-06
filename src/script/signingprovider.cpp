@@ -150,3 +150,13 @@ bool FillableSigningProvider::GetCScript(const CScriptID &hash, CScript& redeemS
     }
     return false;
 }
+
+CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& dest)
+{
+    // Only supports destinations which map to single public keys, i.e. P2PKH
+    const PKHash *pkhash = std::get_if<PKHash>(&dest);
+
+    if (pkhash != nullptr) return ToKeyID(*pkhash);
+
+    return CKeyID();
+}

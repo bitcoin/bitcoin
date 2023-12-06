@@ -23,7 +23,7 @@ bool LegacyScriptPubKeyMan::GetNewDestination(CTxDestination& dest, std::string&
     // Generate a new key that is added to wallet
     CPubKey new_key;
     if (!GetKeyFromPool(new_key, false)) {
-        error = "Error: Keypool ran out, please call keypoolrefill first";
+        error = _("Error: Keypool ran out, please call keypoolrefill first").translated;
         return false;
     }
     //LearnRelatedScripts(new_key);
@@ -749,9 +749,9 @@ const CKeyMetadata* LegacyScriptPubKeyMan::GetMetadata(const CTxDestination& des
 {
     LOCK(cs_KeyStore);
 
-    const PKHash *pkhash = std::get_if<PKHash>(&dest);
-    if (pkhash != nullptr && !ToKeyID(*pkhash).IsNull()) {
-        auto it = mapKeyMetadata.find(ToKeyID(*pkhash));
+    CKeyID key_id = GetKeyForDestination(*this, dest);
+    if (!key_id.IsNull()) {
+        auto it = mapKeyMetadata.find(key_id);
         if (it != mapKeyMetadata.end()) {
             return &it->second;
         }
