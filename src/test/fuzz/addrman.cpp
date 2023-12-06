@@ -286,7 +286,8 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
     (void)const_addr_man.GetAddr(
         /*max_addresses=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
         /*max_pct=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
-        network);
+        network,
+        /*filtered=*/fuzzed_data_provider.ConsumeBool());
     (void)const_addr_man.Select(fuzzed_data_provider.ConsumeBool(), network);
     std::optional<bool> in_new;
     if (fuzzed_data_provider.ConsumeBool()) {

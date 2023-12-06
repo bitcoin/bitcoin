@@ -88,7 +88,8 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 (void)connman.GetAddresses(
                     /*max_addresses=*/fuzzed_data_provider.ConsumeIntegral<size_t>(),
                     /*max_pct=*/fuzzed_data_provider.ConsumeIntegral<size_t>(),
-                    /*network=*/std::nullopt);
+                    /*network=*/std::nullopt,
+                    /*filtered=*/fuzzed_data_provider.ConsumeBool());
             },
             [&] {
                 (void)connman.GetAddresses(

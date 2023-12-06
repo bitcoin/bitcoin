@@ -41,6 +41,16 @@ public:
      */
     uint32_t GetMappedAS(const CNetAddr& address) const;
 
+    /**
+     *  Analyze and log current health of ASMap based buckets.
+     */
+    void ASMapHealthCheck(const std::vector<CNetAddr>& clearnet_addrs) const;
+
+    /**
+     *  Indicates whether ASMap is being used for clearnet bucketing.
+     */
+    bool UsingASMap() const;
+
 private:
     /** Compressed IP->ASN mapping, loaded from a file when a node starts.
      *
