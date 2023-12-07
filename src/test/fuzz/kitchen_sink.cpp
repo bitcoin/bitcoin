@@ -4,6 +4,7 @@
 
 #include <common/messages.h>
 #include <merkleblock.h>
+#include <node/types.h>
 #include <policy/fees.h>
 #include <rpc/util.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -17,6 +18,7 @@
 #include <vector>
 
 using common::TransactionErrorString;
+using node::TransactionError;
 
 namespace {
 constexpr TransactionError ALL_TRANSACTION_ERROR[] = {

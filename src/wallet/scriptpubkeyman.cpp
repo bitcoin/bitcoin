@@ -5,6 +5,7 @@
 #include <hash.h>
 #include <key_io.h>
 #include <logging.h>
+#include <node/types.h>
 #include <outputtype.h>
 #include <script/descriptor.h>
 #include <script/script.h>

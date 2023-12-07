@@ -9,6 +9,7 @@
 #include <net_processing.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <node/types.h>
 #include <txmempool.h>
 #include <validation.h>
 #include <validationinterface.h>

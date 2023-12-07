@@ -31,6 +31,7 @@
 #include <node/interface_ui.h>
 #include <node/mini_miner.h>
 #include <node/transaction.h>
+#include <node/types.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>

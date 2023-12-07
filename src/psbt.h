@@ -17,6 +17,10 @@
 
 #include <optional>
 
+namespace node {
+enum class TransactionError;
+} // namespace node
+
 // Magic bytes
 static constexpr uint8_t PSBT_MAGIC_BYTES[5] = {'p', 's', 'b', 't', 0xff};
 

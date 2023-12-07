@@ -10,6 +10,7 @@
 #include <common/signmessage.h>
 #include <common/types.h>
 #include <logging.h>
+#include <node/types.h>
 #include <psbt.h>
 #include <script/descriptor.h>
 #include <script/script.h>

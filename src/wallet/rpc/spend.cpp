@@ -6,6 +6,7 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <key_io.h>
+#include <node/types.h>
 #include <policy/policy.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/util.h>
@@ -27,6 +28,7 @@ using common::FeeModes;
 using common::InvalidEstimateModeErrorMessage;
 using common::StringForFeeReason;
 using common::TransactionErrorString;
+using node::TransactionError;
 
 namespace wallet {
 std::vector<CRecipient> CreateRecipients(const std::vector<std::pair<CTxDestination, CAmount>>& outputs, const std::set<int>& subtract_fee_outputs)
