@@ -991,6 +991,11 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
     });
     result = std::max(result, desc_res.m_result);
 
+    if (num_ckeys > 0 && num_keys != 0) {
+        pwallet->WalletLogPrintf("Error: Wallet has both encrypted and unencrypted HD keys\n");
+        return DBErrors::CORRUPT;
+    }
+
     // Load the active hd key
     if (wallet_xpub && !pwallet->LoadActiveHDPubKey(*wallet_xpub, wallet_key, wallet_crypted_key)) {
         pwallet->WalletLogPrintf("Error: Unable to load active hd pubkey\n");
