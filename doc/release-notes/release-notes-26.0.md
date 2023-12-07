@@ -173,6 +173,11 @@ Wallet
   Please also report an issue to help improve the software and make wallet loading more robust
   in these cases. (#24914)
 
+- The `createwallet` RPC will no longer create legacy (BDB) wallets when
+  setting `descriptors=false` without also providing the
+  `-deprecatedrpc=create_bdb` option. This is because the legacy wallet is
+  being deprecated in a future release. (#28597)
+
 - The `gettransaction`, `listtransactions`, `listsinceblock` RPCs now return
   the `abandoned` field for all transactions. Previously, the "abandoned" field
   was only returned for sent transactions. (#25158)
@@ -234,6 +239,14 @@ src/bitcoin-cli -named bumpfee txid options='{"fee_rate": 100}'
 
 - It's now possible to use [Miniscript](https://bitcoin.sipa.be/miniscript/) inside Taproot leaves for descriptor wallets. (#27255)
 
+Descriptors
+-----------
+
+- The usage of hybrid public keys in output descriptors has been removed. Hybrid
+  public keys are an exotic public key encoding not supported by output descriptors
+  (as specified in BIP380 and documented in doc/descriptors.md). Bitcoin Core would
+  previously incorrectly accept descriptors containing such hybrid keys. (#28587)
+
 GUI changes
 -----------
 
@@ -244,6 +257,15 @@ GUI changes
 - The PSBT operations dialog marks outputs paying your own wallet with "own address". (gui#740)
 
 - The ability to create legacy wallets is being removed. (gui#764)
+
+Contrib
+-------
+
+- Bash completion files have been renamed from `bitcoin*.bash-completion` to
+  `bitcoin*.bash`. This means completions can be automatically loaded on demand
+  based on invoked commands' names when they are put into the completion
+  directory (found with `pkg-config --variable=completionsdir
+  bash-completion`) without requiring renaming. (#28507)
 
 Low-level changes
 =================
