@@ -234,6 +234,7 @@ BITCOIN_CORE_H = \
   node/timeoffsets.h \
   node/transaction.h \
   node/txreconciliation.h \
+  node/types.h \
   node/utxo_snapshot.h \
   node/validation_cache_args.h \
   noui.h \

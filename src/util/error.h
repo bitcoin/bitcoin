@@ -15,26 +15,10 @@
  * translating errors passed across wallet/node/rpc/gui code boundaries.
  */
 
+#include <node/types.h>
 #include <string>
 
 struct bilingual_str;
-
-enum class TransactionError {
-    OK, //!< No error
-    MISSING_INPUTS,
-    ALREADY_IN_CHAIN,
-    P2P_DISABLED,
-    MEMPOOL_REJECTED,
-    MEMPOOL_ERROR,
-    INVALID_PSBT,
-    PSBT_MISMATCH,
-    SIGHASH_MISMATCH,
-    MAX_FEE_EXCEEDED,
-    MAX_BURN_EXCEEDED,
-    EXTERNAL_SIGNER_NOT_FOUND,
-    EXTERNAL_SIGNER_FAILED,
-    INVALID_PACKAGE,
-};
 
 bilingual_str TransactionErrorString(const TransactionError error);
 
