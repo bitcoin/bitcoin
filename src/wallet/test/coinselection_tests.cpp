@@ -52,6 +52,35 @@ static CoinSelectionParams init_default_params()
 
 static const CoinSelectionParams default_cs_params = init_default_params();
 
+static void AddCoinToWallet(CoinsResult& available_coins, CWallet& wallet, const CAmount& nValue, CFeeRate feerate = default_cs_params.m_effective_feerate, int nAge = 6*24, bool fIsFromMe = false, int nInput =0, bool spendable = false, int custom_size = 0)
+{
+    CMutableTransaction tx;
+    tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
+    tx.vout.resize(nInput + 1);
+    tx.vout[nInput].nValue = nValue;
+    if (spendable) {
+        tx.vout[nInput].scriptPubKey = GetScriptForDestination(*Assert(wallet.GetNewDestination(OutputType::BECH32, "")));
+    }
+    uint256 txid = tx.GetHash();
+
+    LOCK(wallet.cs_wallet);
+    auto ret = wallet.mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(txid), std::forward_as_tuple(MakeTransactionRef(std::move(tx)), TxStateInactive{}));
+    assert(ret.second);
+    CWalletTx& wtx = (*ret.first).second;
+    const auto& txout = wtx.tx->vout.at(nInput);
+    available_coins.Add(OutputType::BECH32, {COutPoint(wtx.GetHash(), nInput), txout, nAge, custom_size == 0 ? CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr) : custom_size, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, wtx.GetTxTime(), fIsFromMe, feerate});
+}
+
+static std::unique_ptr<CWallet> NewWallet(const node::NodeContext& m_node, const std::string& wallet_name = "")
+{
+    std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), wallet_name, CreateMockableWalletDatabase());
+    BOOST_CHECK(wallet->LoadWallet() == DBErrors::LOAD_OK);
+    LOCK(wallet->cs_wallet);
+    wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+    wallet->SetupDescriptorScriptPubKeyMans();
+    return wallet;
+}
+
 /** Check if SelectionResult a is equivalent to SelectionResult b.
  * Equivalent means same input values, but maybe different inputs (i.e. same value, different prevout) */
 static bool EquivalentResult(const SelectionResult& a, const SelectionResult& b)
@@ -373,6 +402,31 @@ BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
     std::vector<COutput> high_feerate_pool; // 25 sat/vB (greater than long_term_feerate of 10 sat/vB)
     AddCoins(high_feerate_pool, {2 * CENT, 3 * CENT, 5 * CENT, 10 * CENT}, CFeeRate{25'000});
     TestBnBSuccess("Select one input at high feerates", high_feerate_pool, /*selection_target=*/ 10 * CENT, /*expected_input_amounts=*/ {10 * CENT}, CFeeRate{25'000});
+}
+
+BOOST_AUTO_TEST_CASE(tx_creation_bnb_sffo_restriction)
+{
+    // Verify the transaction creation process does not produce a BnB solution when SFFO is enabled.
+    // This is currently problematic because it could require a change output. And BnB is specialized on changeless solutions.
+    std::unique_ptr<CWallet> wallet = NewWallet(m_node);
+    WITH_LOCK(wallet->cs_wallet, wallet->SetLastBlockProcessed(300, uint256{})); // set a high block so internal UTXOs are selectable
+
+    CoinSelectionParams params = init_default_params();
+    params.m_long_term_feerate = CFeeRate(1000); // LFTRE is less than Feerate, thrifty mode
+    params.m_subtract_fee_outputs = true;
+
+    // Add spendable coin at the BnB selection upper bound
+    CoinsResult available_coins;
+    AddCoinToWallet(available_coins, *wallet, COIN + params.m_cost_of_change, /*feerate=*/params.m_effective_feerate, /*nAge=*/6*24, /*fIsFromMe=*/true, /*nInput=*/0, /*spendable=*/true);
+    AddCoinToWallet(available_coins, *wallet, 0.7 * COIN, /*feerate=*/params.m_effective_feerate, /*nAge=*/6*24, /*fIsFromMe=*/true, /*nInput=*/0, /*spendable=*/true);
+    AddCoinToWallet(available_coins, *wallet, 0.6 * COIN, /*feerate=*/params.m_effective_feerate, /*nAge=*/6*24, /*fIsFromMe=*/true, /*nInput=*/0, /*spendable=*/true);
+    // Now verify coin selection does not produce BnB result
+    auto result = WITH_LOCK(wallet->cs_wallet, return SelectCoins(*wallet, available_coins, /*pre_set_inputs=*/{}, COIN, /*coin_control=*/{}, params));
+    BOOST_CHECK(result.has_value());
+    BOOST_CHECK_NE(result->GetAlgo(), SelectionAlgorithm::BNB);
+    // Knapsack will only find a changeless solution on an exact match to the satoshi, SRD doesn’t look for changeless
+    BOOST_CHECK(result->GetInputSet().size() == 2);
+    BOOST_CHECK(result->GetAlgo() == SelectionAlgorithm::SRD || result->GetAlgo() == SelectionAlgorithm::KNAPSACK);
 }
 
 //TODO: SelectCoins Test
