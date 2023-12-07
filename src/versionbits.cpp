@@ -179,15 +179,14 @@ namespace
  */
 class VersionBitsConditionChecker : public AbstractThresholdConditionChecker {
 private:
-    const Consensus::Params& params;
-    const Consensus::DeploymentPos id;
+    const Consensus::BIP9Deployment& dep;
 
 protected:
-    int64_t BeginTime() const override { return params.vDeployments[id].nStartTime; }
-    int64_t EndTime() const override { return params.vDeployments[id].nTimeout; }
-    int MinActivationHeight() const override { return params.vDeployments[id].min_activation_height; }
-    int Period() const override { return params.nMinerConfirmationWindow; }
-    int Threshold() const override { return params.nRuleChangeActivationThreshold; }
+    int64_t BeginTime() const override { return dep.nStartTime; }
+    int64_t EndTime() const override { return dep.nTimeout; }
+    int MinActivationHeight() const override { return dep.min_activation_height; }
+    int Period() const override { return dep.period; }
+    int Threshold() const override { return dep.threshold; }
 
     bool Condition(const CBlockIndex* pindex) const override
     {
@@ -195,8 +194,10 @@ protected:
     }
 
 public:
-    explicit VersionBitsConditionChecker(const Consensus::Params& params, Consensus::DeploymentPos id) : params{params}, id{id} {}
-    uint32_t Mask() const { return (uint32_t{1}) << params.vDeployments[id].bit; }
+    explicit VersionBitsConditionChecker(const Consensus::BIP9Deployment& dep) : dep{dep} {}
+    explicit VersionBitsConditionChecker(const Consensus::Params& params, Consensus::DeploymentPos id) : VersionBitsConditionChecker{params.vDeployments[id]} {}
+
+    uint32_t Mask() const { return (uint32_t{1}) << dep.bit; }
 };
 
 } // namespace

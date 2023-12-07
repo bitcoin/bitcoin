@@ -2378,8 +2378,20 @@ public:
 
     int64_t BeginTime() const override { return 0; }
     int64_t EndTime() const override { return std::numeric_limits<int64_t>::max(); }
-    int Period() const override { return m_chainman.GetConsensus().nMinerConfirmationWindow; }
-    int Threshold() const override { return m_chainman.GetConsensus().nRuleChangeActivationThreshold; }
+    int Period() const override {
+        if (m_chainman.GetParams().IsTestChain()) {
+            return m_chainman.GetConsensus().DifficultyAdjustmentInterval();
+        } else {
+            return 2016;
+        }
+    }
+    int Threshold() const override {
+        if (m_chainman.GetParams().IsTestChain()) {
+            return m_chainman.GetConsensus().DifficultyAdjustmentInterval() * 3 / 4; // 75% for test nets per BIP9 suggestion
+        } else {
+            return 1815; // 90% threshold used in BIP 341
+        }
+    }
 
     bool Condition(const CBlockIndex* pindex) const override
     {
