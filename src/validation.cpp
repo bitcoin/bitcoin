@@ -2376,17 +2376,17 @@ private:
 public:
     explicit WarningBitsConditionChecker(const ChainstateManager& chainman, int bit) : m_chainman{chainman}, m_bit(bit) {}
 
-    int64_t BeginTime(const Consensus::Params& params) const override { return 0; }
-    int64_t EndTime(const Consensus::Params& params) const override { return std::numeric_limits<int64_t>::max(); }
-    int Period(const Consensus::Params& params) const override { return params.nMinerConfirmationWindow; }
-    int Threshold(const Consensus::Params& params) const override { return params.nRuleChangeActivationThreshold; }
+    int64_t BeginTime() const override { return 0; }
+    int64_t EndTime() const override { return std::numeric_limits<int64_t>::max(); }
+    int Period() const override { return m_chainman.GetConsensus().nMinerConfirmationWindow; }
+    int Threshold() const override { return m_chainman.GetConsensus().nRuleChangeActivationThreshold; }
 
-    bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override
+    bool Condition(const CBlockIndex* pindex) const override
     {
-        return pindex->nHeight >= params.MinBIP9WarningHeight &&
+        return pindex->nHeight >= m_chainman.GetConsensus().MinBIP9WarningHeight &&
                ((pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) &&
                ((pindex->nVersion >> m_bit) & 1) != 0 &&
-               ((m_chainman.m_versionbitscache.ComputeBlockVersion(pindex->pprev, params) >> m_bit) & 1) == 0;
+               ((m_chainman.m_versionbitscache.ComputeBlockVersion(pindex->pprev, m_chainman.GetConsensus()) >> m_bit) & 1) == 0;
     }
 };
 
@@ -3029,7 +3029,7 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
         const CBlockIndex* pindex = pindexNew;
         for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
             WarningBitsConditionChecker checker(m_chainman, bit);
-            ThresholdState state = checker.GetStateFor(pindex, m_chainman.GetConsensus(), m_chainman.m_warningcache.at(bit));
+            ThresholdState state = checker.GetStateFor(pindex, m_chainman.m_warningcache.at(bit));
             if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {
                 const bilingual_str warning = strprintf(_("Unknown new rules activated (versionbit %i)"), bit);
                 if (state == ThresholdState::ACTIVE) {

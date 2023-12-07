@@ -24,7 +24,6 @@ class TestConditionChecker : public AbstractThresholdConditionChecker
 {
 private:
     mutable ThresholdConditionCache m_cache;
-    const Consensus::Params dummy_params{};
 
 public:
     const int64_t m_begin;
@@ -43,24 +42,21 @@ public:
         assert(0 <= m_min_activation_height);
     }
 
-    bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override { return Condition(pindex->nVersion); }
-    int64_t BeginTime(const Consensus::Params& params) const override { return m_begin; }
-    int64_t EndTime(const Consensus::Params& params) const override { return m_end; }
-    int Period(const Consensus::Params& params) const override { return m_period; }
-    int Threshold(const Consensus::Params& params) const override { return m_threshold; }
-    int MinActivationHeight(const Consensus::Params& params) const override { return m_min_activation_height; }
+    bool Condition(const CBlockIndex* pindex) const override { return Condition(pindex->nVersion); }
+    int64_t BeginTime() const override { return m_begin; }
+    int64_t EndTime() const override { return m_end; }
+    int Period() const override { return m_period; }
+    int Threshold() const override { return m_threshold; }
+    int MinActivationHeight() const override { return m_min_activation_height; }
 
-    ThresholdState GetStateFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateFor(pindexPrev, dummy_params, m_cache); }
-    int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, dummy_params, m_cache); }
-    BIP9Stats GetStateStatisticsFor(const CBlockIndex* pindex, std::vector<bool>* signals=nullptr) const { return AbstractThresholdConditionChecker::GetStateStatisticsFor(pindex, dummy_params, signals); }
+    ThresholdState GetStateFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateFor(pindexPrev, m_cache); }
+    int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, m_cache); }
 
     bool Condition(int32_t version) const
     {
         uint32_t mask = (uint32_t{1}) << m_bit;
         return (((version & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) && (version & mask) != 0);
     }
-
-    bool Condition(const CBlockIndex* pindex) const { return Condition(pindex->nVersion); }
 };
 
 /** Track blocks mined for test */

@@ -57,23 +57,23 @@ struct BIP9Stats {
  */
 class AbstractThresholdConditionChecker {
 protected:
-    virtual bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const =0;
-    virtual int64_t BeginTime(const Consensus::Params& params) const =0;
-    virtual int64_t EndTime(const Consensus::Params& params) const =0;
-    virtual int MinActivationHeight(const Consensus::Params& params) const { return 0; }
-    virtual int Period(const Consensus::Params& params) const =0;
-    virtual int Threshold(const Consensus::Params& params) const =0;
+    virtual bool Condition(const CBlockIndex* pindex) const =0;
+    virtual int64_t BeginTime() const =0;
+    virtual int64_t EndTime() const =0;
+    virtual int MinActivationHeight() const { return 0; }
+    virtual int Period() const =0;
+    virtual int Threshold() const =0;
 
 public:
     /** Returns the numerical statistics of an in-progress BIP9 softfork in the period including pindex
      * If provided, signalling_blocks is set to true/false based on whether each block in the period signalled
      */
-    BIP9Stats GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params, std::vector<bool>* signalling_blocks = nullptr) const;
+    BIP9Stats GetStateStatisticsFor(const CBlockIndex* pindex, std::vector<bool>* signalling_blocks = nullptr) const;
     /** Returns the state for pindex A based on parent pindexPrev B. Applies any state transition if conditions are present.
      *  Caches state from first block of period. */
-    ThresholdState GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
+    ThresholdState GetStateFor(const CBlockIndex* pindexPrev, ThresholdConditionCache& cache) const;
     /** Returns the height since when the ThresholdState has started for pindex A based on parent pindexPrev B, all blocks of a period share the same */
-    int GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
+    int GetStateSinceHeightFor(const CBlockIndex* pindexPrev, ThresholdConditionCache& cache) const;
 };
 
 /** BIP 9 allows multiple softforks to be deployed in parallel. We cache
