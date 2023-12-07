@@ -829,13 +829,7 @@ static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator
 std::vector<CTxMemPoolEntryRef> CTxMemPool::entryAll() const
 {
     AssertLockHeld(cs);
-
-    std::vector<CTxMemPoolEntryRef> ret;
-    ret.reserve(mapTx.size());
-    for (const auto& it : GetSortedDepthAndScore()) {
-        ret.emplace_back(*it);
-    }
-    return ret;
+    return {mapTx.begin(), mapTx.end()};
 }
 
 std::vector<TxMempoolInfo> CTxMemPool::infoAll() const
