@@ -9,6 +9,7 @@
 #include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
+#include <node/types.h>
 #include <numeric>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
@@ -32,6 +33,7 @@
 using common::StringForFeeReason;
 using common::TransactionErrorString;
 using interfaces::FoundBlock;
+using node::TransactionError;
 
 namespace wallet {
 static constexpr size_t OUTPUT_GROUP_MAX_ENTRIES{100};

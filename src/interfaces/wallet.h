@@ -35,6 +35,9 @@ struct bilingual_str;
 namespace common {
 enum class PSBTError;
 } // namespace common
+namespace node {
+enum class TransactionError;
+} // namespace node
 namespace wallet {
 class CCoinControl;
 class CWallet;

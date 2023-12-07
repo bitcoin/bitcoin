@@ -9,6 +9,7 @@
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <node/psbt.h>
+#include <node/types.h>
 #include <policy/policy.h>
 #include <qt/bitcoinunits.h>
 #include <qt/forms/ui_psbtoperationsdialog.h>
@@ -25,6 +26,7 @@ using common::TransactionErrorString;
 using node::AnalyzePSBT;
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
 using node::PSBTAnalysis;
+using node::TransactionError;
 
 PSBTOperationsDialog::PSBTOperationsDialog(
     QWidget* parent, WalletModel* wallet_model, ClientModel* client_model) : QDialog(parent, GUIUtil::dialog_flags),

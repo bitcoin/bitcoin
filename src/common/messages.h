@@ -11,13 +11,15 @@
 #ifndef BITCOIN_COMMON_MESSAGES_H
 #define BITCOIN_COMMON_MESSAGES_H
 
-#include <node/types.h>
 #include <string>
 
 struct bilingual_str;
 
 enum class FeeEstimateMode;
 enum class FeeReason;
+namespace node {
+enum class TransactionError;
+} // namespace node
 
 namespace common {
 enum class PSBTError;
@@ -26,7 +28,7 @@ std::string StringForFeeReason(FeeReason reason);
 std::string FeeModes(const std::string& delimiter);
 std::string InvalidEstimateModeErrorMessage();
 bilingual_str PSBTErrorString(PSBTError error);
-bilingual_str TransactionErrorString(const TransactionError error);
+bilingual_str TransactionErrorString(const node::TransactionError error);
 bilingual_str ResolveErrMsg(const std::string& optname, const std::string& strBind);
 bilingual_str InvalidPortErrMsg(const std::string& optname, const std::string& strPort);
 bilingual_str AmountHighWarn(const std::string& optname);

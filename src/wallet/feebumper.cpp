@@ -5,6 +5,7 @@
 #include <common/system.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
+#include <node/types.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <util/moneystr.h>

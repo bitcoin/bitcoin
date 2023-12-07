@@ -22,6 +22,7 @@
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <node/interface_ui.h>
+#include <node/types.h>
 #include <policy/fees.h>
 #include <txmempool.h>
 #include <validation.h>
