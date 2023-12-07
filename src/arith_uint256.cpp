@@ -8,14 +8,7 @@
 #include <uint256.h>
 #include <crypto/common.h>
 
-
-template <unsigned int BITS>
-base_uint<BITS>::base_uint(const std::string& str)
-{
-    static_assert(BITS/32 > 0 && BITS%32 == 0, "Template parameter BITS must be a positive multiple of 32.");
-
-    SetHex(str);
-}
+#include <cassert>
 
 template <unsigned int BITS>
 base_uint<BITS>& base_uint<BITS>::operator<<=(unsigned int shift)
@@ -151,22 +144,6 @@ std::string base_uint<BITS>::GetHex() const
         WriteLE32(b.begin() + x*4, this->pn[x]);
     }
     return b.GetHex();
-}
-
-template <unsigned int BITS>
-void base_uint<BITS>::SetHex(const char* psz)
-{
-    base_blob<BITS> b;
-    b.SetHex(psz);
-    for (int x = 0; x < this->WIDTH; ++x) {
-        this->pn[x] = ReadLE32(b.begin() + x*4);
-    }
-}
-
-template <unsigned int BITS>
-void base_uint<BITS>::SetHex(const std::string& str)
-{
-    SetHex(str.c_str());
 }
 
 template <unsigned int BITS>
