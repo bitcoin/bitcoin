@@ -6,6 +6,7 @@
 #include <node/context.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
+#include <policy/policy.h>
 #include <policy/v3_policy.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -162,6 +163,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
         // Make packages of 1-to-26 transactions
         const auto num_txs = (size_t) fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 26);
         std::set<COutPoint> package_outpoints;
+        std::set<COutPoint> ephemeral_package_outpoints;
         while (txs.size() < num_txs) {
 
             // Last transaction in a package needs to be a child of parents to get further in validation
@@ -195,7 +197,8 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
                     // Create input
                     const auto sequence = ConsumeSequence(fuzzed_data_provider);
                     const auto script_sig = CScript{};
-                    const auto script_wit_stack = fuzzed_data_provider.ConsumeBool() ? P2WSH_EMPTY_TRUE_STACK : P2WSH_EMPTY_TWO_STACK;
+                    const auto script_wit_stack = ephemeral_package_outpoints.count(outpoint) ? std::vector<std::vector<uint8_t>>{} :
+                        fuzzed_data_provider.ConsumeBool() ? P2WSH_EMPTY_TRUE_STACK : P2WSH_EMPTY_TWO_STACK;
 
                     CTxIn in;
                     in.prevout = outpoint;
@@ -222,8 +225,19 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
                 for (int i = 0; i < num_out; ++i) {
                     tx_mut.vout.emplace_back(amount_out, P2WSH_EMPTY);
                 }
-                // TODO vary transaction sizes to catch size-related issues
+
+                // maybe include an ephemeral anchor
+                if (fuzzed_data_provider.ConsumeBool()) {
+                    tx_mut.vout.emplace_back(0, CScript() << OP_TRUE << std::vector<unsigned char>{0x4e, 0x73});
+                }
+
                 auto tx = MakeTransactionRef(tx_mut);
+
+                if (HasPayToAnchor(*tx)) {
+                    Assert(tx->vout.back().scriptPubKey.IsPayToAnchor());
+                    ephemeral_package_outpoints.emplace(tx->GetHash(), tx_mut.vout.size() - 1);
+                }
+
                 // Restore previously removed outpoints, except in-package outpoints
                 if (!last_tx) {
                     for (const auto& in : tx->vin) {
@@ -250,7 +264,9 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
         if (fuzzed_data_provider.ConsumeBool()) {
             tx_pool.RollingFeeUpdate();
         }
-        if (fuzzed_data_provider.ConsumeBool()) {
+        // We don't prioritize ephemeral anchor tx since it means we can't assert
+        // a child remains for it.
+        if (ephemeral_package_outpoints.empty() && fuzzed_data_provider.ConsumeBool()) {
             const auto& txid = fuzzed_data_provider.ConsumeBool() ?
                                    txs.back()->GetHash() :
                                    PickValue(fuzzed_data_provider, mempool_outpoints).hash;
@@ -313,6 +329,14 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
             if (entry.GetCountWithAncestors() > 1) {
                 Assert(entry.GetTxSize() <= V3_CHILD_MAX_VSIZE);
             }
+            if (HasPayToAnchor(*tx_info.tx)) {
+                Assert(entry.GetCountWithDescendants() == 2);
+                Assert(entry.GetFee() == 0);
+                const auto children = entry.GetMemPoolChildren();
+                Assert(children.size() == 1);
+            }
+        } else {
+            Assert(!HasPayToAnchor(*tx_info.tx));
         }
         // Transactions with fees of 0 or lower should be proactively trimmed.
         if (tx_pool.m_min_relay_feerate.GetFeePerK() > 0) {
