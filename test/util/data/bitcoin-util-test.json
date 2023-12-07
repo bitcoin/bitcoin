@@ -163,7 +163,85 @@
      "replaceable=0foo"],
     "return_code": 1,
     "error_txt": "error: Invalid TX input index",
-    "description": "Tests the check for an invalid input index with replaceable"
+    "description": "Tests the check for an invalid string input index with replaceable"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "replaceable=-1"],
+    "return_code": 1,
+    "error_txt": "error: Invalid TX input index",
+    "description": "Tests the check for an invalid negative input index with replaceable"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "replaceable=1"],
+    "return_code": 1,
+    "error_txt": "error: Invalid TX input index",
+    "description": "Tests the check for an invalid positive out-of-bounds input index with replaceable"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "replaceable=0"],
+    "output_cmp": "txreplacesingleinput.hex",
+    "description": "Tests that the 'SEQUENCE' value for a single input is set to fdffffff for single input"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "replaceable="],
+    "output_cmp": "txreplacesingleinput.hex",
+    "description": "Tests that the 'SEQUENCE' value for a single input is set to fdffffff when N omitted"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "in=bf829c6bcf84579331337659d31f89dfd138f7f7785802d5501c92333145ca7c:18",
+     "in=22a6f904655d53ae2ff70e701a0bbd90aa3975c0f40bfc6cc996a9049e31cdfc:1",
+     "replaceable=1"],
+    "output_cmp": "txreplace1.hex",
+    "description": "Tests that only the 'SEQUENCE' value of input[1] is set to fdffffff"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "in=bf829c6bcf84579331337659d31f89dfd138f7f7785802d5501c92333145ca7c:18",
+     "in=22a6f904655d53ae2ff70e701a0bbd90aa3975c0f40bfc6cc996a9049e31cdfc:1",
+     "replaceable="],
+    "output_cmp": "txreplaceomittedn.hex",
+    "description": "Tests that the 'SEQUENCE' value for each input is set to fdffffff when N omitted"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "replaceable="],
+    "output_cmp": "txreplacenoinputs.hex",
+    "description": "Tests behavior when no inputs are provided in the transaction"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:abcdef00",
+     "replaceable="],
+    "return_code": 1,
+    "error_txt": "error: invalid TX sequence id 'abcdef00'",
+    "description": "Try to make invalid input replaceable"
   },
   { "exec": "./bitcoin-tx",
     "args":
