@@ -74,7 +74,9 @@ Release Process
 #### Before final release
 
 - Merge the release notes from [the wiki](https://github.com/bitcoin-core/bitcoin-devwiki/wiki/) into the branch.
-- Ensure the "Needs release note" label is removed from all relevant pull requests and issues.
+- Ensure the "Needs release note" label is removed from all relevant pull
+  requests and issues:
+  https://github.com/bitcoin/bitcoin/issues?q=label%3A%22Needs+release+note%22
 
 #### Tagging a release (candidate)
 
