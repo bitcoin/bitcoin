@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/params.h>
+#include <deploymentinfo.h>
 #include <kernel/chainparams.h>
 #include <util/check.h>
 #include <versionbits.h>
@@ -241,6 +242,37 @@ BIP9Info VersionBitsCache::Info(const CBlockIndex& block_index, const Consensus:
         result.active_since = block_index.nHeight + 1;
     }
 
+    return result;
+}
+
+BIP9GBTStatus VersionBitsCache::GBTStatus(const CBlockIndex& block_index, const Consensus::Params& params)
+{
+    BIP9GBTStatus result;
+
+    LOCK(m_mutex);
+    for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
+        Consensus::DeploymentPos pos = static_cast<Consensus::DeploymentPos>(i);
+        VersionBitsConditionChecker checker(params, pos);
+        ThresholdState state = checker.GetStateFor(&block_index, m_caches[pos]);
+        const VBDeploymentInfo& vbdepinfo = VersionBitsDeploymentInfo[pos];
+        BIP9GBTStatus::Info gbtinfo{.bit=params.vDeployments[pos].bit, .mask=checker.Mask(), .gbt_force=vbdepinfo.gbt_force};
+
+        switch (state) {
+        case ThresholdState::DEFINED:
+        case ThresholdState::FAILED:
+            // Not exposed to GBT
+            break;
+        case ThresholdState::STARTED:
+            result.signalling.try_emplace(vbdepinfo.name, gbtinfo);
+            break;
+        case ThresholdState::LOCKED_IN:
+            result.locked_in.try_emplace(vbdepinfo.name, gbtinfo);
+            break;
+        case ThresholdState::ACTIVE:
+            result.active.try_emplace(vbdepinfo.name, gbtinfo);
+            break;
+        }
+    }
     return result;
 }
 

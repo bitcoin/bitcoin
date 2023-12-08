@@ -66,6 +66,15 @@ struct BIP9Info {
     std::optional<int> active_since;
 };
 
+struct BIP9GBTStatus {
+    struct Info {
+        int bit;
+        uint32_t mask;
+        bool gbt_force;
+    };
+    std::map<std::string, const Info> signalling, locked_in, active;
+};
+
 /**
  * Abstract class that implements BIP9-style threshold logic, and caches results.
  */
@@ -108,6 +117,8 @@ public:
     static uint32_t Mask(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
     BIP9Info Info(const CBlockIndex& block_index, const Consensus::Params& params, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    BIP9GBTStatus GBTStatus(const CBlockIndex& block_index, const Consensus::Params& params) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Get the BIP9 state for a given deployment for the block after pindexPrev. */
     ThresholdState State(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
