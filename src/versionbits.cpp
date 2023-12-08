@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/params.h>
+#include <kernel/chainparams.h>
 #include <util/check.h>
 #include <versionbits.h>
 
@@ -224,20 +225,26 @@ uint32_t VersionBitsCache::Mask(const Consensus::Params& params, Consensus::Depl
     return VersionBitsConditionChecker(params, pos).Mask();
 }
 
-int32_t VersionBitsCache::ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params)
+static int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params, std::array<ThresholdConditionCache, Consensus::MAX_VERSION_BITS_DEPLOYMENTS>& caches)
 {
-    LOCK(m_mutex);
     int32_t nVersion = VERSIONBITS_TOP_BITS;
 
     for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
         Consensus::DeploymentPos pos = static_cast<Consensus::DeploymentPos>(i);
-        ThresholdState state = VersionBitsConditionChecker(params, pos).GetStateFor(pindexPrev, m_caches[pos]);
+        VersionBitsConditionChecker checker(params, pos);
+        ThresholdState state = checker.GetStateFor(pindexPrev, caches[pos]);
         if (state == ThresholdState::LOCKED_IN || state == ThresholdState::STARTED) {
-            nVersion |= Mask(params, pos);
+            nVersion |= checker.Mask();
         }
     }
 
     return nVersion;
+}
+
+int32_t VersionBitsCache::ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params)
+{
+    LOCK(m_mutex);
+    return ::ComputeBlockVersion(pindexPrev, params, m_caches);
 }
 
 void VersionBitsCache::Clear()
@@ -246,4 +253,59 @@ void VersionBitsCache::Clear()
     for (unsigned int d = 0; d < Consensus::MAX_VERSION_BITS_DEPLOYMENTS; d++) {
         m_caches[d].clear();
     }
+}
+
+namespace {
+/**
+ * Threshold condition checker that triggers when unknown versionbits are seen on the network.
+ */
+class WarningBitsConditionChecker : public AbstractThresholdConditionChecker
+{
+private:
+    const Consensus::Params& m_params;
+    std::array<ThresholdConditionCache, Consensus::MAX_VERSION_BITS_DEPLOYMENTS>& m_caches;
+    int m_bit;
+    int period{2016};
+    int threshold{0};
+
+public:
+    explicit WarningBitsConditionChecker(const CChainParams& chainparams, std::array<ThresholdConditionCache, Consensus::MAX_VERSION_BITS_DEPLOYMENTS>& caches, int bit)
+    : m_params{chainparams.GetConsensus()}, m_caches{caches}, m_bit(bit)
+    {
+        if (chainparams.IsTestChain()) {
+            period = 144;
+            threshold = 108;
+        } else {
+            period = 2016;
+            threshold = 1815;
+        }
+    }
+
+    int64_t BeginTime() const override { return 0; }
+    int64_t EndTime() const override { return std::numeric_limits<int64_t>::max(); }
+    int Period() const override { return period; }
+    int Threshold() const override { return threshold; }
+
+    bool Condition(const CBlockIndex* pindex) const override
+    {
+        return pindex->nHeight >= m_params.MinBIP9WarningHeight &&
+               ((pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) &&
+               ((pindex->nVersion >> m_bit) & 1) != 0 &&
+               ((::ComputeBlockVersion(pindex->pprev, m_params, m_caches) >> m_bit) & 1) == 0;
+    }
+};
+} // anonymous namespace
+
+std::vector<std::pair<int, bool>> VersionBitsCache::CheckUnknownActivations(const CBlockIndex* pindex, const CChainParams& chainparams)
+{
+    LOCK(m_mutex);
+    std::vector<std::pair<int, bool>> result;
+    for (int bit = 0; bit < VERSIONBITS_NUM_BITS; ++bit) {
+        WarningBitsConditionChecker checker(chainparams, m_caches, bit);
+        ThresholdState state = checker.GetStateFor(pindex, m_warning_caches.at(bit));
+        if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {
+            result.emplace_back(bit, state == ThresholdState::ACTIVE);
+        }
+    }
+    return result;
 }
