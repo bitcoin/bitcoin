@@ -798,7 +798,7 @@ class SingletonEnv {
  public:
   SingletonEnv() {
 #if !defined(NDEBUG)
-    env_initialized_.store(true, std::memory_order::memory_order_relaxed);
+    env_initialized_.store(true, std::memory_order_relaxed);
 #endif  // !defined(NDEBUG)
     static_assert(sizeof(env_storage_) >= sizeof(EnvType),
                   "env_storage_ will not fit the Env");
@@ -815,7 +815,7 @@ class SingletonEnv {
 
   static void AssertEnvNotInitialized() {
 #if !defined(NDEBUG)
-    assert(!env_initialized_.load(std::memory_order::memory_order_relaxed));
+    assert(!env_initialized_.load(std::memory_order_relaxed));
 #endif  // !defined(NDEBUG)
   }
 
