@@ -520,6 +520,24 @@ class TestNode():
                 str(expected_msgs), print_log))
 
     @contextlib.contextmanager
+    def wait_for_new_peer(self, timeout=5):
+        """
+        Wait until the node is connected to at least one new peer. We detect this
+        by watching for an increased highest peer id, using the `getpeerinfo` RPC call.
+        Note that the simpler approach of only accounting for the number of peers
+        suffers from race conditions, as disconnects from unrelated previous peers
+        could happen anytime in-between.
+        """
+        def get_highest_peer_id():
+            peer_info = self.getpeerinfo()
+            return peer_info[-1]["id"] if peer_info else -1
+
+        initial_peer_id = get_highest_peer_id()
+        yield
+        wait_until_helper_internal(lambda: get_highest_peer_id() > initial_peer_id,
+                                   timeout=timeout, timeout_factor=self.timeout_factor)
+
+    @contextlib.contextmanager
     def profile_with_perf(self, profile_name: str):
         """
         Context manager that allows easy profiling of node activity using `perf`.
