@@ -26,26 +26,31 @@ class SignetMinerTest(BitcoinTestFramework):
     def set_test_params(self):
         self.chain = "signet"
         self.setup_clean_chain = True
-        self.num_nodes = 1
+        self.num_nodes = 2
 
         # generate and specify signet challenge (simple p2wpkh script)
         privkey = ECKey()
         privkey.set(CHALLENGE_PRIVATE_KEY, True)
         pubkey = privkey.get_pubkey().get_bytes()
         challenge = key_to_p2wpkh_script(pubkey)
-        self.extra_args = [[f'-signetchallenge={challenge.hex()}']]
+
+        self.extra_args = [
+            ["-signetchallenge=51"], # OP_TRUE
+            [f'-signetchallenge={challenge.hex()}'],
+        ]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_cli()
         self.skip_if_no_wallet()
         self.skip_if_no_bitcoin_util()
 
-    def run_test(self):
-        node = self.nodes[0]
-        # import private key needed for signing block
-        node.importprivkey(bytes_to_wif(CHALLENGE_PRIVATE_KEY))
+    def setup_network(self):
+        self.setup_nodes()
+        # Nodes with different signet networks are not connected
 
-        # generate block with signet miner tool
+    # generate block with signet miner tool
+    def mine_block(self, node):
+        assert_equal(node.getblockcount(), 0)
         base_dir = self.config["environment"]["SRCDIR"]
         signet_miner_path = os.path.join(base_dir, "contrib", "signet", "miner")
         subprocess.run([
@@ -60,6 +65,14 @@ class SignetMinerTest(BitcoinTestFramework):
             ], check=True, stderr=subprocess.STDOUT)
         assert_equal(node.getblockcount(), 1)
 
+    def run_test(self):
+        self.log.info("Signet node with trivial challenge (OP_RETURN)")
+        self.mine_block(self.nodes[0])
+
+        self.log.info("Signet node with single signature challenge")
+        # import private key needed for signing block
+        self.nodes[1].importprivkey(bytes_to_wif(CHALLENGE_PRIVATE_KEY))
+        self.mine_block(self.nodes[1])
 
 if __name__ == "__main__":
     SignetMinerTest().main()
