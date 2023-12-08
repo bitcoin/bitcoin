@@ -7,15 +7,12 @@ Test starting bitcoind with -bind and/or -bind=...=onion and confirm
 that bind happens on the expected ports.
 """
 
-import sys
-
 from test_framework.netutil import (
     addr_to_hex,
     get_bind_addrs,
 )
 from test_framework.test_framework import (
     BitcoinTestFramework,
-    SkipTest,
 )
 from test_framework.util import (
     assert_equal,
@@ -32,12 +29,11 @@ class BindExtraTest(BitcoinTestFramework):
         self.bind_to_localhost_only = False
         self.num_nodes = 2
 
-    def setup_network(self):
+    def skip_test_if_missing_module(self):
         # Due to OS-specific network stats queries, we only run on Linux.
-        self.log.info("Checking for Linux")
-        if not sys.platform.startswith('linux'):
-            raise SkipTest("This test can only be run on Linux.")
+        self.skip_if_platform_not_linux()
 
+    def setup_network(self):
         loopback_ipv4 = addr_to_hex("127.0.0.1")
 
         # Start custom ports by reusing unused p2p ports
