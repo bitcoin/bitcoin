@@ -43,5 +43,5 @@ SpacesInAngles:  false
 SpacesInContainerLiterals: true
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
-Standard:        c++17
+Standard: c++20
 UseTab:          Never

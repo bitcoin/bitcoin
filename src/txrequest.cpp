@@ -73,7 +73,7 @@ struct Announcement {
     const bool m_is_wtxid : 1;
 
     /** What state this announcement is in. */
-    State m_state : 3;
+    State m_state : 3 {State::CANDIDATE_DELAYED};
     State GetState() const { return m_state; }
     void SetState(State state) { m_state = state; }
 
@@ -97,9 +97,9 @@ struct Announcement {
 
     /** Construct a new announcement from scratch, initially in CANDIDATE_DELAYED state. */
     Announcement(const GenTxid& gtxid, NodeId peer, bool preferred, std::chrono::microseconds reqtime,
-        SequenceNumber sequence) :
-        m_txhash(gtxid.GetHash()), m_time(reqtime), m_peer(peer), m_sequence(sequence), m_preferred(preferred),
-        m_is_wtxid{gtxid.IsWtxid()}, m_state{State::CANDIDATE_DELAYED} {}
+                 SequenceNumber sequence)
+        : m_txhash(gtxid.GetHash()), m_time(reqtime), m_peer(peer), m_sequence(sequence), m_preferred(preferred),
+          m_is_wtxid{gtxid.IsWtxid()} {}
 };
 
 //! Type alias for priorities.
