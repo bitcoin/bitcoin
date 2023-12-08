@@ -9,6 +9,18 @@
 
 using enum ThresholdState;
 
+static std::string StateName(ThresholdState state)
+{
+    switch (state) {
+    case DEFINED: return "defined";
+    case STARTED: return "started";
+    case LOCKED_IN: return "locked_in";
+    case ACTIVE: return "active";
+    case FAILED: return "failed";
+    }
+    return "invalid";
+}
+
 ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, ThresholdConditionCache& cache) const
 {
     int nPeriod = Period();
@@ -204,6 +216,35 @@ public:
 };
 
 } // namespace
+
+BIP9Info VersionBitsCache::Info(const CBlockIndex& block_index, const Consensus::Params& params, Consensus::DeploymentPos id)
+{
+    BIP9Info result;
+
+    const auto current_state = State(block_index.pprev, params, id);
+    result.current_state = StateName(current_state);
+    result.since = StateSinceHeight(block_index.pprev, params, id);
+
+    const auto next_state = State(&block_index, params, id);
+    result.next_state = StateName(next_state);
+
+    const bool has_signal = (STARTED == current_state || LOCKED_IN == current_state);
+    if (has_signal) {
+        result.stats.emplace(Statistics(&block_index, params, id, &result.signalling_blocks));
+        if (LOCKED_IN == current_state) {
+            result.stats->threshold = 0;
+            result.stats->possible = false;
+        }
+    }
+
+    if (current_state == ACTIVE) {
+        result.active_since = result.since;
+    } else if (next_state == ACTIVE) {
+        result.active_since = block_index.nHeight + 1;
+    }
+
+    return result;
+}
 
 ThresholdState VersionBitsCache::State(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)
 {

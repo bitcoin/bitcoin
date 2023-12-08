@@ -10,6 +10,8 @@
 
 #include <array>
 #include <map>
+#include <optional>
+#include <vector>
 
 class CChainParams;
 
@@ -43,15 +45,25 @@ typedef std::map<const CBlockIndex*, ThresholdState> ThresholdConditionCache;
 /** Display status of an in-progress BIP9 softfork */
 struct BIP9Stats {
     /** Length of blocks of the BIP9 signalling period */
-    uint32_t period;
+    uint32_t period{0};
     /** Number of blocks with the version bit set required to activate the softfork */
-    uint32_t threshold;
+    uint32_t threshold{0};
     /** Number of blocks elapsed since the beginning of the current period */
-    uint32_t elapsed;
+    uint32_t elapsed{0};
     /** Number of blocks with the version bit set since the beginning of the current period */
-    uint32_t count;
+    uint32_t count{0};
     /** False if there are not enough blocks left in this period to pass activation threshold */
-    bool possible;
+    bool possible{false};
+};
+
+/** Detailed status of an enabled BIP9 deployment */
+struct BIP9Info {
+    int since{0};
+    std::string current_state{};
+    std::string next_state{};
+    std::optional<BIP9Stats> stats;
+    std::vector<bool> signalling_blocks;
+    std::optional<int> active_since;
 };
 
 /**
@@ -94,6 +106,8 @@ public:
     static BIP9Stats Statistics(const CBlockIndex* pindex, const Consensus::Params& params, Consensus::DeploymentPos pos, std::vector<bool>* signalling_blocks = nullptr);
 
     static uint32_t Mask(const Consensus::Params& params, Consensus::DeploymentPos pos);
+
+    BIP9Info Info(const CBlockIndex& block_index, const Consensus::Params& params, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Get the BIP9 state for a given deployment for the block after pindexPrev. */
     ThresholdState State(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
