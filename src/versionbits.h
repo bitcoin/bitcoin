@@ -11,6 +11,8 @@
 #include <array>
 #include <map>
 
+class CChainParams;
+
 /** What block version to use for new blocks (pre versionbits) */
 static const int32_t VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4;
 /** What bits to set in version for versionbits blocks */
@@ -82,6 +84,7 @@ class VersionBitsCache
 {
 private:
     Mutex m_mutex;
+    std::array<ThresholdConditionCache,VERSIONBITS_NUM_BITS> m_warning_caches GUARDED_BY(m_mutex);
     std::array<ThresholdConditionCache,Consensus::MAX_VERSION_BITS_DEPLOYMENTS> m_caches GUARDED_BY(m_mutex);
 
 public:
@@ -101,6 +104,8 @@ public:
     /** Determine what nVersion a new block should use
      */
     int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    std::vector<std::pair<int,bool>> CheckUnknownActivations(const CBlockIndex* pindex, const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     void Clear() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 };
