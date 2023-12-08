@@ -24,6 +24,7 @@ import asyncio
 from collections import defaultdict
 from io import BytesIO
 import logging
+import platform
 import struct
 import sys
 import threading
@@ -592,7 +593,7 @@ class NetworkThread(threading.Thread):
 
         NetworkThread.listeners = {}
         NetworkThread.protos = {}
-        if sys.platform == 'win32':
+        if platform.system() == 'Windows':
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
         NetworkThread.network_event_loop = asyncio.new_event_loop()
 
