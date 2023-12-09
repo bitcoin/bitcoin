@@ -7,6 +7,7 @@
 #include <kernel/chainparams.h>
 #include <util/check.h>
 #include <versionbits.h>
+#include <versionbits_impl.h>
 
 static std::string StateName(ThresholdState state)
 {
