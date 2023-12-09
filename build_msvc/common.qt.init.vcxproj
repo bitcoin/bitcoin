@@ -13,4 +13,10 @@
     <QtDebugLibraries>$(QtPluginsLibraryDir)\platforms\qwindowsd.lib;$(QtPluginsLibraryDir)\platforms\qminimald.lib;$(QtPluginsLibraryDir)\styles\qwindowsvistastyled.lib;$(QtLibraryDir)\*d.lib;Wtsapi32.lib;crypt32.lib;userenv.lib;netapi32.lib;imm32.lib;Dwmapi.lib;version.lib;winmm.lib;UxTheme.lib</QtDebugLibraries>
   </PropertyGroup>
 
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>QT_NO_KEYWORDS;QT_USE_QSTRINGBUILDER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
 </Project>
