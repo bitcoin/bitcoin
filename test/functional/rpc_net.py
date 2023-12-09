@@ -110,7 +110,7 @@ class NetTest(BitcoinTestFramework):
         no_version_peer_id = 2
         no_version_peer_conntime = int(time.time())
         self.nodes[0].setmocktime(no_version_peer_conntime)
-        with self.nodes[0].assert_debug_log([f"Added connection peer={no_version_peer_id}"]):
+        with self.nodes[0].wait_for_new_peer():
             no_version_peer = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
         self.nodes[0].setmocktime(0)
         peer_info = self.nodes[0].getpeerinfo()[no_version_peer_id]
