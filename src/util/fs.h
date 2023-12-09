@@ -56,10 +56,8 @@ public:
 
     std::string u8string() const
     {
-        const auto& utf8_str{std::filesystem::path::u8string()};
-        // utf8_str might either be std::string (C++17) or std::u8string
-        // (C++20). Convert both to std::string. This method can be removed
-        // after switching to C++20.
+        const std::u8string& utf8_str{std::filesystem::path::u8string()};
+        // Convert to std::string as a convenience for use in RPC code.
         return std::string{utf8_str.begin(), utf8_str.end()};
     }
 
@@ -71,11 +69,7 @@ public:
 
 static inline path u8path(const std::string& utf8_str)
 {
-#if __cplusplus < 202002L
-    return std::filesystem::u8path(utf8_str);
-#else
     return std::filesystem::path(std::u8string{utf8_str.begin(), utf8_str.end()});
-#endif
 }
 
 // Disallow implicit std::string conversion for absolute to avoid
