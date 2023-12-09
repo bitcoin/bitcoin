@@ -220,16 +220,23 @@ BIP9Info VersionBitsCache::Info(const CBlockIndex& block_index, const Consensus:
 {
     BIP9Info result;
 
-    const auto current_state = State(block_index.pprev, params, id);
-    result.current_state = StateName(current_state);
-    result.since = StateSinceHeight(block_index.pprev, params, id);
+    VersionBitsConditionChecker checker(params, id);
 
-    const auto next_state = State(&block_index, params, id);
+    ThresholdState current_state, next_state;
+
+    {
+        LOCK(m_mutex);
+        current_state = checker.GetStateFor(block_index.pprev, m_caches[id]);
+        next_state = checker.GetStateFor(&block_index, m_caches[id]);
+        result.since = checker.GetStateSinceHeightFor(block_index.pprev, m_caches[id]);
+    }
+
+    result.current_state = StateName(current_state);
     result.next_state = StateName(next_state);
 
     const bool has_signal = (ThresholdState::STARTED == current_state || ThresholdState::LOCKED_IN == current_state);
     if (has_signal) {
-        result.stats.emplace(Statistics(&block_index, params, id, &result.signalling_blocks));
+        result.stats.emplace(checker.GetStateStatisticsFor(&block_index, &result.signalling_blocks));
         if (ThresholdState::LOCKED_IN == current_state) {
             result.stats->threshold = 0;
             result.stats->possible = false;
@@ -244,6 +251,7 @@ BIP9Info VersionBitsCache::Info(const CBlockIndex& block_index, const Consensus:
 
     return result;
 }
+
 
 BIP9GBTStatus VersionBitsCache::GBTStatus(const CBlockIndex& block_index, const Consensus::Params& params)
 {
@@ -276,26 +284,10 @@ BIP9GBTStatus VersionBitsCache::GBTStatus(const CBlockIndex& block_index, const 
     return result;
 }
 
-ThresholdState VersionBitsCache::State(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)
+bool VersionBitsCache::IsActiveAfter(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
     LOCK(m_mutex);
-    return VersionBitsConditionChecker(params, pos).GetStateFor(pindexPrev, m_caches[pos]);
-}
-
-BIP9Stats VersionBitsCache::Statistics(const CBlockIndex* pindex, const Consensus::Params& params, Consensus::DeploymentPos pos, std::vector<bool>* signalling_blocks)
-{
-    return VersionBitsConditionChecker(params, pos).GetStateStatisticsFor(pindex, signalling_blocks);
-}
-
-int VersionBitsCache::StateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos)
-{
-    LOCK(m_mutex);
-    return VersionBitsConditionChecker(params, pos).GetStateSinceHeightFor(pindexPrev, m_caches[pos]);
-}
-
-uint32_t VersionBitsCache::Mask(const Consensus::Params& params, Consensus::DeploymentPos pos)
-{
-    return VersionBitsConditionChecker(params, pos).Mask();
+    return ThresholdState::ACTIVE == VersionBitsConditionChecker(params, pos).GetStateFor(pindexPrev, m_caches[pos]);
 }
 
 static int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params, std::array<ThresholdConditionCache, Consensus::MAX_VERSION_BITS_DEPLOYMENTS>& caches)
