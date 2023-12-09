@@ -16,18 +16,6 @@
 /* Define a virtual block time, one block per 10 minutes after Nov 14 2014, 0:55:36am */
 static int32_t TestTime(int nHeight) { return 1415926536 + 600 * nHeight; }
 
-static std::string StateName(ThresholdState state)
-{
-    switch (state) {
-    case ThresholdState::DEFINED:   return "DEFINED";
-    case ThresholdState::STARTED:   return "STARTED";
-    case ThresholdState::LOCKED_IN: return "LOCKED_IN";
-    case ThresholdState::ACTIVE:    return "ACTIVE";
-    case ThresholdState::FAILED:    return "FAILED";
-    } // no default case, so the compiler can warn about missing cases
-    return "";
-}
-
 class TestConditionChecker : public AbstractThresholdConditionChecker
 {
 private:

@@ -9,7 +9,7 @@
 #include <versionbits.h>
 #include <versionbits_impl.h>
 
-static std::string StateName(ThresholdState state)
+std::string StateName(ThresholdState state)
 {
     switch (state) {
     case ThresholdState::DEFINED: return "defined";

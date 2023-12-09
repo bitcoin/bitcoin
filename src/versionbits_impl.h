@@ -25,6 +25,9 @@ enum class ThresholdState : uint8_t {
     FAILED,    // For all blocks once the first retarget period after the timeout time is hit, if LOCKED_IN wasn't already reached (final state)
 };
 
+/** Get a string with the state name */
+std::string StateName(ThresholdState state);
+
 /**
  * Abstract class that implements BIP9-style threshold logic, and caches results.
  */
