@@ -9,6 +9,7 @@
 #include <test/util/setup_common.h>
 #include <util/chaintype.h>
 #include <versionbits.h>
+#include <versionbits_impl.h>
 
 #include <boost/test/unit_test.hpp>
 

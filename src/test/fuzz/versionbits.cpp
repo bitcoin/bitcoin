@@ -9,6 +9,7 @@
 #include <primitives/block.h>
 #include <util/chaintype.h>
 #include <versionbits.h>
+#include <versionbits_impl.h>
 
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
