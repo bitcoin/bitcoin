@@ -8,6 +8,7 @@
 #include <amount.h>
 #include <fs.h>
 #include <qt/guiconstants.h>
+#include <netaddress.h>
 
 #include <QEvent>
 #include <QHeaderView>
@@ -402,22 +403,25 @@ namespace GUIUtil
     /** Update shortcuts for individual buttons in QButtonGroup based on their visibility. */
     void updateButtonGroupShortcuts(QButtonGroup* buttonGroup);
 
-    /* Convert QString to OS specific boost path through UTF-8 */
+    /** Convert QString to OS specific boost path through UTF-8 */
     fs::path qstringToBoostPath(const QString &path);
 
-    /* Convert OS specific boost path to QString through UTF-8 */
+    /** Convert OS specific boost path to QString through UTF-8 */
     QString boostPathToQString(const fs::path &path);
 
-    /* Convert seconds into a QString with days, hours, mins, secs */
+    /** Convert enum Network to QString */
+    QString NetworkToQString(Network net);
+
+    /** Convert seconds into a QString with days, hours, mins, secs */
     QString formatDurationStr(int secs);
 
-    /* Format CNodeStats.nServices bitmask into a user-readable string */
+    /** Format CNodeStats.nServices bitmask into a user-readable string */
     QString formatServicesStr(quint64 mask);
 
-    /* Format a CNodeStats.m_ping_usec into a user-readable string or display N/A, if 0*/
+    /** Format a CNodeStats.m_ping_usec into a user-readable string or display N/A, if 0 */
     QString formatPingTime(int64_t ping_usec);
 
-    /* Format a CNodeCombinedStats.nTimeOffset into a user-readable string. */
+    /** Format a CNodeCombinedStats.nTimeOffset into a user-readable string */
     QString formatTimeOffset(int64_t nTimeOffset);
 
     QString formatNiceTimeOffset(qint64 secs);
