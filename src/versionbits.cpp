@@ -11,7 +11,7 @@
 
 using enum ThresholdState;
 
-static std::string StateName(ThresholdState state)
+std::string StateName(ThresholdState state)
 {
     switch (state) {
     case DEFINED: return "defined";
