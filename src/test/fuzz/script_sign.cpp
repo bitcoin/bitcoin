@@ -111,7 +111,10 @@ FUZZ_TARGET(script_sign, .init = initialize_script_sign)
             }
             if (n_in < script_tx_to.vin.size()) {
                 SignatureData empty;
-                (void)SignSignature(provider, ConsumeScript(fuzzed_data_provider), script_tx_to, n_in, ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int>(), empty);
+                auto from_pub_key = ConsumeScript(fuzzed_data_provider);
+                auto amount = ConsumeMoney(fuzzed_data_provider);
+                auto n_hash_type = fuzzed_data_provider.ConsumeIntegral<int>();
+                (void)SignSignature(provider, from_pub_key, script_tx_to, n_in, amount, n_hash_type, empty);
                 MutableTransactionSignatureCreator signature_creator{tx_to, n_in, ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int>()};
                 std::vector<unsigned char> vch_sig;
                 CKeyID address;
@@ -122,7 +125,9 @@ FUZZ_TARGET(script_sign, .init = initialize_script_sign)
                 } else {
                     address = CKeyID{ConsumeUInt160(fuzzed_data_provider)};
                 }
-                (void)signature_creator.CreateSig(provider, vch_sig, address, ConsumeScript(fuzzed_data_provider), fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0}));
+                auto script_code = ConsumeScript(fuzzed_data_provider);
+                auto sigversion = fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0});
+                (void)signature_creator.CreateSig(provider, vch_sig, address, script_code, sigversion);
             }
             std::map<COutPoint, Coin> coins{ConsumeCoins(fuzzed_data_provider)};
             std::map<int, bilingual_str> input_errors;
