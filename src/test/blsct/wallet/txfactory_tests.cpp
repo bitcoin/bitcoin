@@ -197,4 +197,4 @@ BOOST_FIXTURE_TEST_CASE(addinput_test, TestingSetup)
     BOOST_ASSERT(TxGetCredit(*wallet, CTransaction(finalTx2.value()), wallet::ISMINE_SPENDABLE_BLSCT) == (1000 - 900 - 0.008 - 50 - 0.008) * COIN);
 }
 
-    BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()

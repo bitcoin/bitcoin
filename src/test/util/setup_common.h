@@ -215,8 +215,8 @@ struct TestBLSCTChain100Setup : public TestingSetup {
     blsct::SubAddress coinbaseDest;
 
     TestBLSCTChain100Setup(
-        const blsct::SubAddress& coinbaseDest,
-        const ChainType chain_type = ChainType::REGTEST,
+        const blsct::SubAddress& coinbaseDest_ = blsct::SubAddress(),
+        const ChainType chain_type = ChainType::BLSCTREGTEST,
         const std::vector<const char*>& extra_args = {},
         const bool coins_db_in_memory = true,
         const bool block_tree_db_in_memory = true);

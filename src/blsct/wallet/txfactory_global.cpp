@@ -42,7 +42,7 @@ Signature UnsignedOutput::GetSignature() const
     return Signature::Aggregate(txSigs);
 }
 
-UnsignedOutput CreateOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId)
+UnsignedOutput CreateOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId, const Scalar& blindingKey)
 {
     auto ret = UnsignedOutput();
 
@@ -54,7 +54,6 @@ UnsignedOutput CreateOutput(const SubAddress& destination, const CAmount& nAmoun
     vs.Add(nAmount);
 
     auto destKeys = destination.GetKeys();
-    auto blindingKey = Scalar::Rand();
 
     ret.blindingKey = blindingKey;
 
@@ -92,6 +91,7 @@ CTransactionRef AggregateTransactions(const std::vector<CTransactionRef>& txs)
     auto ret = CMutableTransaction();
     std::vector<Signature> vSigs;
     CAmount nFee = 0;
+    bool fCommitmentAdded = false;
 
     for (auto& tx : txs) {
         vSigs.push_back(tx->txSig);
@@ -101,7 +101,17 @@ CTransactionRef AggregateTransactions(const std::vector<CTransactionRef>& txs)
         for (auto& out : tx->vout) {
             if (out.IsBLSCT())
                 ret.vout.push_back(out);
-            else if (out.scriptPubKey.IsUnspendable())
+            else if (!fCommitmentAdded &&
+                     out.scriptPubKey.size() >= 38 &&
+                     out.scriptPubKey[0] == OP_RETURN &&
+                     out.scriptPubKey[1] == 0x24 &&
+                     out.scriptPubKey[2] == 0xaa &&
+                     out.scriptPubKey[3] == 0x21 &&
+                     out.scriptPubKey[4] == 0xa9 &&
+                     out.scriptPubKey[5] == 0xed) {
+                ret.vout.push_back(out);
+                fCommitmentAdded = true;
+            } else if (out.scriptPubKey.IsUnspendable())
                 nFee = out.nValue;
         }
     }

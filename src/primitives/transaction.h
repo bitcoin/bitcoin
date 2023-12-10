@@ -394,7 +394,7 @@ inline void SerializeTransaction(const TxType& tx, Stream& s)
             flags |= 1;
         }
     }
-    if (tx.vin.size() == 0) {
+    if (tx.vin.size() == 0 && tx.IsBLSCT()) {
         flags |= 2;
     }
     if (flags) {

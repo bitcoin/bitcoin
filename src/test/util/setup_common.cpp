@@ -274,13 +274,14 @@ TestingSetup::TestingSetup(
 }
 
 TestBLSCTChain100Setup::TestBLSCTChain100Setup(
-    const blsct::SubAddress& coinbaseDest,
+    const blsct::SubAddress& coinbaseDest_,
     const ChainType chain_type,
     const std::vector<const char*>& extra_args,
     const bool coins_db_in_memory,
     const bool block_tree_db_in_memory)
-    : TestingSetup{ChainType::BLSCTREGTEST, extra_args, coins_db_in_memory, block_tree_db_in_memory}, coinbaseDest{coinbaseDest}
+    : TestingSetup{ChainType::BLSCTREGTEST, extra_args, coins_db_in_memory, block_tree_db_in_memory}
 {
+    coinbaseDest = coinbaseDest_;
     SetMockTime(1598887952);
 
     // Generate a 100-block chain:
