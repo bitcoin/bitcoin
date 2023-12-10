@@ -21,6 +21,13 @@
 namespace bech32_mod
 {
 
+// double public key after encoding to bech32_mod is 165-byte long consisting of:
+// - 2-byte hrp
+// - 1-byte separator '1'
+// - 154-byte key data (96 bytes / 5 bits = 153.6)
+// - 8-byte checksum
+constexpr size_t DOUBLE_PUBKEY_ENC_SIZE = 2 + 1 + 154 + 8;
+
 enum class Encoding {
     INVALID, //!< Failed decoding
 

@@ -211,12 +211,7 @@ DecodeResult Decode(const std::string& str) {
     if (!CheckCharacters(str, errors)) return {};
     size_t pos = str.rfind('1');
 
-    // double public key bech32 string is 165-byte long and consists of:
-    // - 2-byte hrp
-    // - 1-byte separator '1'
-    // - 154-byte key data (96 bytes / 5 bits = 153.6)
-    // - 8-byte checksum
-    if (str.size() != 165  // double public key should be encoded to 165-byte bech32 string
+    if (str.size() != DOUBLE_PUBKEY_ENC_SIZE
         || pos == str.npos  // separator '1' should be included
         || pos == 0  // hrp part should not be empty
         || pos + 9 > str.size()  // data part should not be empty

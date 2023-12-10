@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "validationinterface.h"
 #include <bech32_mod.h>
 #include <test/util/str.h>
 #include <util/strencodings.h>
@@ -76,7 +77,6 @@ size_t test_error_detection(
     const size_t num_tests,
     const bool expect_errors
 ) {
-    std::string hrp = "nv";
     size_t unexpected_results = 0;
 
     for (size_t i=0; i<num_tests; ++i) {
@@ -89,7 +89,7 @@ size_t test_error_detection(
             std::vector<uint8_t> dpk_v5;
             ConvertBits<8, 5, true>([&](uint8_t c) { dpk_v5.push_back(c); }, dpk_v8.begin(), dpk_v8.end());
 
-            auto dpk_bech32 = bech32_mod::Encode(encoding, hrp, dpk_v5);
+            auto dpk_bech32 = bech32_mod::Encode(encoding, "nv", dpk_v5);
             embed_errors(dpk_bech32, num_errors);
 
             auto res = bech32_mod::Decode(dpk_bech32);

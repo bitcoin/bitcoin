@@ -21,7 +21,7 @@ private:
     PublicKey sk;
 
 public:
-    static constexpr size_t SIZE = 48 * 2;
+    static constexpr size_t SIZE = blsct::PublicKey::SIZE * 2;
 
     DoublePublicKey() {}
     DoublePublicKey(const PublicKey& vk_, const PublicKey& sk_) : vk(vk_), sk(sk_) {}

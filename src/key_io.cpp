@@ -2,10 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <key_io.h>
-
 #include <base58.h>
 #include <bech32.h>
+#include <bech32_mod.h>
+#include <blsct/arith/mcl/mcl.h>
+#include <blsct/double_public_key.h>
+#include <key_io.h>
+#include <net.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
@@ -26,12 +29,12 @@ public:
 
     std::string operator()(const blsct::DoublePublicKey& id) const
     {
-        std::vector<unsigned char> data = m_params.Base58Prefix(CChainParams::BLSCT_ADDRESS);
-        auto vchView = id.GetVkVch();
-        auto vchSpend = id.GetSkVch();
-        data.insert(data.end(), vchView.begin(), vchView.end());
-        data.insert(data.end(), vchSpend.begin(), vchSpend.end());
-        return EncodeBase58Check(data);
+        std::vector<uint8_t> dpk_v8 = id.GetVch();
+        std::vector<uint8_t> dpk_v5;
+        dpk_v5.reserve(bech32_mod::DOUBLE_PUBKEY_ENC_SIZE);
+        ConvertBits<8, 5, true>([&](uint8_t c) { dpk_v5.push_back(c); }, dpk_v8.begin(), dpk_v8.end());
+
+        return bech32_mod::Encode(bech32_mod::Encoding::BECH32, m_params.Bech32ModHRP(), dpk_v5);
     }
 
     std::string operator()(const PKHash& id) const
@@ -92,6 +95,26 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
     uint160 hash;
     error_str = "";
 
+    // if double public key
+    if (str.size() == bech32_mod::DOUBLE_PUBKEY_ENC_SIZE
+        && ToLower(str.substr(0, params.Bech32ModHRP().size())) == params.Bech32ModHRP()
+        && str[params.Bech32ModHRP().size()] == '1'
+    ) {
+        const auto dec = bech32_mod::Decode(str);
+        if ((dec.encoding == bech32_mod::Encoding::BECH32 || dec.encoding == bech32_mod::Encoding::BECH32M) && dec.data.size() > 0) {
+            // The data part consists of two concatenated 48-byte public keys
+            data.reserve(blsct::DoublePublicKey::SIZE);
+            if (!ConvertBits<5, 8, false>([&](unsigned char c) { data.push_back(c); }, dec.data.begin(), dec.data.end())) {
+                return CNoDestination();
+            }
+
+            auto dpk = blsct::DoublePublicKey(data);
+            return dpk.IsValid() ? CTxDestination(dpk) : CNoDestination();
+        }
+        return CNoDestination();
+    }
+
+    data.clear();
     // Note this will be false if it is a valid Bech32 address for a different network
     bool is_bech32 = (ToLower(str.substr(0, params.Bech32HRP().size())) == params.Bech32HRP());
 
@@ -123,17 +146,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         }
         return CNoDestination();
     } else if (!is_bech32) {
-        // Try Base58 decoding without the checksum, using a much larger max length
-        if (DecodeBase58Check(str, data, 100)) {
-            // base58-encoded BLSCT addresses.
-            const std::vector<unsigned char>& blsct_prefix = params.Base58Prefix(CChainParams::BLSCT_ADDRESS);
-            std::vector<unsigned char> blsctKeysData;
-            blsctKeysData.resize(2*blsct::PublicKey::SIZE);
-            if (data.size() == blsctKeysData.size() + blsct_prefix.size() && std::equal(blsct_prefix.begin(), blsct_prefix.end(), data.begin())) {
-                std::copy(data.begin() + blsct_prefix.size(), data.end(), blsctKeysData.begin());
-                return blsct::DoublePublicKey(blsctKeysData);
-            }
-        } if (!DecodeBase58(str, data, 100)) {
+        if (!DecodeBase58(str, data, 100)) {
             error_str = "Invalid or unsupported Segwit (Bech32) or Base58 encoding.";
         } else {
             error_str = "Invalid checksum or length of Base58 address (P2PKH or P2SH)";
