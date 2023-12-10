@@ -1467,10 +1467,18 @@ RPCHelpMan sendall()
                 }
             }
 
+            std::vector<COutPoint> outpoints_spent;
+            outpoints_spent.reserve(rawTx.vin.size());
+
+            for (const CTxIn& tx_in : rawTx.vin) {
+                outpoints_spent.push_back(tx_in.prevout);
+            }
+
             // estimate final size of tx
             const TxSize tx_size{CalculateMaximumSignedTxSize(CTransaction(rawTx), pwallet.get())};
             const CAmount fee_from_size{fee_rate.GetFee(tx_size.vsize)};
-            const CAmount effective_value{total_input_value - fee_from_size};
+            const std::optional<CAmount> total_bump_fees{pwallet->chain().calculateCombinedBumpFee(outpoints_spent, fee_rate)};
+            CAmount effective_value = total_input_value - fee_from_size - total_bump_fees.value_or(0);
 
             if (fee_from_size > pwallet->m_default_max_tx_fee) {
                 throw JSONRPCError(RPC_WALLET_ERROR, TransactionErrorString(TransactionError::MAX_FEE_EXCEEDED).original);
