@@ -203,10 +203,9 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
             errors.push_back(Untranslated(strprintf("%s:%u is already spent", txin.prevout.hash.GetHex(), txin.prevout.n)));
             return Result::MISC_ERROR;
         }
-        if (wallet.IsMine(txin.prevout)) {
-            new_coin_control.Select(txin.prevout);
-        } else {
-            new_coin_control.SelectExternal(txin.prevout, coin.out);
+        PreselectedInput& preset_txin = new_coin_control.Select(txin.prevout);
+        if (!wallet.IsMine(txin.prevout)) {
+            preset_txin.SetTxOut(coin.out);
         }
         input_value += coin.out.nValue;
         spent_outputs.push_back(coin.out);
@@ -317,8 +316,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // We cannot source new unconfirmed inputs(bip125 rule 2)
     new_coin_control.m_min_depth = 1;
 
-    constexpr int RANDOM_CHANGE_POSITION = -1;
-    auto res = CreateTransaction(wallet, recipients, RANDOM_CHANGE_POSITION, new_coin_control, false);
+    auto res = CreateTransaction(wallet, recipients, std::nullopt, new_coin_control, false);
     if (!res) {
         errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + util::ErrorString(res));
         return Result::WALLET_ERROR;

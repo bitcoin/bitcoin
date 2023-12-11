@@ -281,12 +281,12 @@ public:
         CAmount& fee) override
     {
         LOCK(m_wallet->cs_wallet);
-        auto res = CreateTransaction(*m_wallet, recipients, change_pos,
+        auto res = CreateTransaction(*m_wallet, recipients, change_pos == -1 ? std::nullopt : std::make_optional(change_pos),
                                      coin_control, sign);
         if (!res) return util::Error{util::ErrorString(res)};
         const auto& txr = *res;
         fee = txr.fee;
-        change_pos = txr.change_pos;
+        change_pos = txr.change_pos ? *txr.change_pos : -1;
 
         return txr.tx;
     }
