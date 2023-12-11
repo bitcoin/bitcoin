@@ -271,16 +271,13 @@ static UniValue gobject_list_prepared(const JSONRPCRequest& request)
     std::vector<const Governance::Object*> vecObjects = wallet->GetGovernanceObjects();
     // Sort the vector by the object creation time/hex data
     std::sort(vecObjects.begin(), vecObjects.end(), [](const Governance::Object* a, const Governance::Object* b) {
-        bool fGreater = a->time > b->time;
-        bool fEqual = a->time == b->time;
-        bool fHexGreater = a->GetDataAsHexString() > b->GetDataAsHexString();
-        return fGreater || (fEqual && fHexGreater);
+        if (a->time != b->time) return a->time < b->time;
+        return a->GetDataAsHexString() < b->GetDataAsHexString();
     });
 
     UniValue jsonArray(UniValue::VARR);
-    auto it = vecObjects.rbegin() + std::max<int>(0, vecObjects.size() - nCount);
-    while (it != vecObjects.rend()) {
-        jsonArray.push_back((*it++)->ToJson());
+    for (auto it = vecObjects.begin() + std::max<int>(0, vecObjects.size() - nCount); it != vecObjects.end(); ++it) {
+        jsonArray.push_back((*it)->ToJson());
     }
 
     return jsonArray;
