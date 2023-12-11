@@ -23,9 +23,7 @@
 #include <util/fs.h>
 #include <util/strencodings.h>
 
-#if defined(HAVE_CONSENSUS_LIB)
 #include <script/bitcoinconsensus.h>
-#endif
 
 #include <cstdint>
 #include <fstream>
@@ -140,7 +138,6 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
         BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message + strprintf(" (with flags %x)", combined_flags));
     }
 
-#if defined(HAVE_CONSENSUS_LIB)
     DataStream stream;
     stream << TX_WITH_WITNESS(tx2);
     uint32_t libconsensus_flags{flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL};
@@ -153,7 +150,6 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
             BOOST_CHECK_MESSAGE(bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), UCharCast(stream.data()), stream.size(), 0, libconsensus_flags, nullptr) == expectedSuccessCode, message);
         }
     }
-#endif
 }
 
 void static NegateSignatureS(std::vector<unsigned char>& vchSig) {
@@ -1497,8 +1493,6 @@ static CScriptWitness ScriptWitnessFromJSON(const UniValue& univalue)
     return scriptwitness;
 }
 
-#if defined(HAVE_CONSENSUS_LIB)
-
 /* Test simple (successful) usage of bitcoinconsensus_verify_script */
 BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_returns_true)
 {
@@ -1668,8 +1662,6 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_spent_outputs_required_err)
     BOOST_CHECK_EQUAL(err, bitcoinconsensus_ERR_SPENT_OUTPUTS_REQUIRED);
 }
 
-#endif // defined(HAVE_CONSENSUS_LIB)
-
 static std::vector<unsigned int> AllConsensusFlags()
 {
     std::vector<unsigned int> ret;
@@ -1717,7 +1709,6 @@ static void AssetTest(const UniValue& test)
         txdata.Init(tx, std::vector<CTxOut>(prevouts));
         CachingTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, true, txdata);
 
-#if defined(HAVE_CONSENSUS_LIB)
         DataStream stream;
         stream << TX_WITH_WITNESS(tx);
         std::vector<UTXO> utxos;
@@ -1727,7 +1718,6 @@ static void AssetTest(const UniValue& test)
             utxos[i].scriptPubKeySize = prevouts[i].scriptPubKey.size();
             utxos[i].value = prevouts[i].nValue;
         }
-#endif
 
         for (const auto flags : ALL_CONSENSUS_FLAGS) {
             // "final": true tests are valid for all flags. Others are only valid with flags that are
@@ -1735,10 +1725,8 @@ static void AssetTest(const UniValue& test)
             if (fin || ((flags & test_flags) == flags)) {
                 bool ret = VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck, nullptr);
                 BOOST_CHECK(ret);
-#if defined(HAVE_CONSENSUS_LIB)
                 int lib_ret = bitcoinconsensus_verify_script_with_spent_outputs(prevouts[idx].scriptPubKey.data(), prevouts[idx].scriptPubKey.size(), prevouts[idx].nValue, UCharCast(stream.data()), stream.size(), utxos.data(), utxos.size(), idx, flags, nullptr);
                 BOOST_CHECK(lib_ret == 1);
-#endif
             }
         }
     }
@@ -1751,7 +1739,6 @@ static void AssetTest(const UniValue& test)
         txdata.Init(tx, std::vector<CTxOut>(prevouts));
         CachingTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, true, txdata);
 
-#if defined(HAVE_CONSENSUS_LIB)
         DataStream stream;
         stream << TX_WITH_WITNESS(tx);
         std::vector<UTXO> utxos;
@@ -1761,17 +1748,14 @@ static void AssetTest(const UniValue& test)
             utxos[i].scriptPubKeySize = prevouts[i].scriptPubKey.size();
             utxos[i].value = prevouts[i].nValue;
         }
-#endif
 
         for (const auto flags : ALL_CONSENSUS_FLAGS) {
             // If a test is supposed to fail with test_flags, it should also fail with any superset thereof.
             if ((flags & test_flags) == test_flags) {
                 bool ret = VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck, nullptr);
                 BOOST_CHECK(!ret);
-#if defined(HAVE_CONSENSUS_LIB)
                 int lib_ret = bitcoinconsensus_verify_script_with_spent_outputs(prevouts[idx].scriptPubKey.data(), prevouts[idx].scriptPubKey.size(), prevouts[idx].nValue, UCharCast(stream.data()), stream.size(), utxos.data(), utxos.size(), idx, flags, nullptr);
                 BOOST_CHECK(lib_ret == 0);
-#endif
             }
         }
     }

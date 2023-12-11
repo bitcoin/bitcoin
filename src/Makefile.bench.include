@@ -53,7 +53,8 @@ bench_bench_bitcoin_SOURCES = \
   bench/strencodings.cpp \
   bench/util_time.cpp \
   bench/verify_script.cpp \
-  bench/xor.cpp
+  bench/xor.cpp \
+  script/bitcoinconsensus.cpp
 
 nodist_bench_bench_bitcoin_SOURCES = $(GENERATED_BENCH_FILES)
 
