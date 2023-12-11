@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <span>
 #include <type_traits>
 
 #ifdef DEBUG
@@ -283,13 +284,16 @@ Span<std::byte> MakeWritableByteSpan(V&& v) noexcept
     return AsWritableBytes(Span{std::forward<V>(v)});
 }
 
-// Helper functions to safely cast to unsigned char pointers.
+// Helper functions to safely cast basic byte pointers to unsigned char pointers.
 inline unsigned char* UCharCast(char* c) { return reinterpret_cast<unsigned char*>(c); }
 inline unsigned char* UCharCast(unsigned char* c) { return c; }
 inline unsigned char* UCharCast(std::byte* c) { return reinterpret_cast<unsigned char*>(c); }
 inline const unsigned char* UCharCast(const char* c) { return reinterpret_cast<const unsigned char*>(c); }
 inline const unsigned char* UCharCast(const unsigned char* c) { return c; }
 inline const unsigned char* UCharCast(const std::byte* c) { return reinterpret_cast<const unsigned char*>(c); }
+// Helper concept for the basic byte types.
+template <typename B>
+concept BasicByte = requires { UCharCast(std::span<B>{}.data()); };
 
 // Helper function to safely convert a Span to a Span<[const] unsigned char>.
 template <typename T> constexpr auto UCharSpanCast(Span<T> s) -> Span<typename std::remove_pointer<decltype(UCharCast(s.data()))>::type> { return {UCharCast(s.data()), s.size()}; }
