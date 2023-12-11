@@ -79,14 +79,23 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
     const auto mock_time = ConsumeTime(fuzzed_data_provider);
     SetMockTime(mock_time);
 
+    CSerializedNetMsg net_msg;
+    net_msg.m_type = random_message_type;
     // fuzzed_data_provider is fully consumed after this call, don't use it
-    DataStream random_bytes_data_stream{fuzzed_data_provider.ConsumeRemainingBytes<unsigned char>()};
-    try {
-        g_setup->m_node.peerman->ProcessMessage(p2p_node, random_message_type, random_bytes_data_stream,
-                                                GetTime<std::chrono::microseconds>(), std::atomic<bool>{false});
-    } catch (const std::ios_base::failure&) {
+    net_msg.data = fuzzed_data_provider.ConsumeRemainingBytes<unsigned char>();
+
+    connman.FlushSendBuffer(p2p_node);
+    (void)connman.ReceiveMsgFrom(p2p_node, std::move(net_msg));
+
+    bool more_work{true};
+    while (more_work) {
+        p2p_node.fPauseSend = false;
+        try {
+            more_work = connman.ProcessMessagesOnce(p2p_node);
+        } catch (const std::ios_base::failure&) {
+        }
+        g_setup->m_node.peerman->SendMessages(&p2p_node);
     }
-    g_setup->m_node.peerman->SendMessages(&p2p_node);
     SyncWithValidationInterfaceQueue();
     g_setup->m_node.connman->StopNodes();
 }
