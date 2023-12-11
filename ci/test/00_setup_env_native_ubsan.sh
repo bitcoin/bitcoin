@@ -4,6 +4,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+# TODO: use config `asan` instead `ubsan` for `undefined` sanitizer to unify with bitcoin
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_ubsan
