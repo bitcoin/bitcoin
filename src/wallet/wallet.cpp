@@ -44,7 +44,6 @@
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
 #include <evo/providertx.h>
-#include <masternode/sync.h>
 
 #include <univalue.h>
 
@@ -114,7 +113,7 @@ bool AddWallet(const std::shared_ptr<CWallet>& wallet)
     }
     wallet->ConnectScriptPubKeyManNotifiers();
     wallet->AutoLockMasternodeCollaterals();
-    assert(::masternodeSync != nullptr && ::coinJoinClientManagers != nullptr);
+    assert(::coinJoinClientManagers != nullptr);
     ::coinJoinClientManagers->Add(*wallet);
     wallet->NotifyCanGetAddressesChanged();
     return true;
@@ -4819,7 +4818,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
         walletInstance->GetDatabase().IncrementUpdateCounter();
     }
 
-    assert(::masternodeSync != nullptr && ::coinJoinClientManagers != nullptr);
+    assert(::coinJoinClientManagers != nullptr);
     ::coinJoinClientManagers->Add(*walletInstance);
 
     {
