@@ -1834,7 +1834,7 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
                                         m_llmq_ctx->isman->IsLocked(inv.hash);
 
             return (!fIgnoreRecentRejects && m_recent_rejects.contains(inv.hash)) ||
-                   (inv.type == MSG_DSTX && static_cast<bool>(CoinJoin::GetDSTX(inv.hash))) ||
+                   (inv.type == MSG_DSTX && static_cast<bool>(::dstxManager->GetDSTX(inv.hash))) ||
                    m_mempool.exists(inv.hash) ||
                    (g_txindex != nullptr && g_txindex->HasTx(inv.hash));
         }
@@ -1882,7 +1882,7 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
 
 void PeerManagerImpl::RelayTransaction(const uint256& txid)
 {
-    CInv inv(CoinJoin::GetDSTX(txid) ? MSG_DSTX : MSG_TX, txid);
+    CInv inv(::dstxManager->GetDSTX(txid) ? MSG_DSTX : MSG_TX, txid);
     m_connman.ForEachNode([&inv](CNode* pnode)
     {
         pnode->PushInventory(inv);
@@ -2149,7 +2149,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             if (tx) {
                 CCoinJoinBroadcastTx dstx;
                 if (inv.type == MSG_DSTX) {
-                    dstx = CoinJoin::GetDSTX(inv.hash);
+                    dstx = ::dstxManager->GetDSTX(inv.hash);
                 }
                 if (dstx) {
                     m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::DSTX, dstx));
@@ -2731,7 +2731,7 @@ std::pair<bool /*ret*/, bool /*do_return*/> static ValidateDSTX(CTxMemPool& memp
         LogPrint(BCLog::COINJOIN, "DSTX -- Invalid DSTX structure: %s\n", hashTx.ToString());
         return {false, true};
     }
-    if (CoinJoin::GetDSTX(hashTx)) {
+    if (::dstxManager->GetDSTX(hashTx)) {
         LogPrint(BCLog::COINJOIN, "DSTX -- Already have %s, skipping...\n", hashTx.ToString());
         return {true, true}; // not an error
     }
@@ -3589,7 +3589,7 @@ void PeerManagerImpl::ProcessMessage(
             if (nInvType == MSG_DSTX) {
                 LogPrint(BCLog::COINJOIN, "DSTX -- Masternode transaction accepted, txid=%s, peer=%d\n",
                          tx.GetHash().ToString(), pfrom.GetId());
-                CoinJoin::AddDSTX(dstx);
+                ::dstxManager->AddDSTX(dstx);
             }
 
             m_mempool.check(m_chainman.ActiveChainstate());
@@ -4992,7 +4992,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         pto->m_tx_relay->setInventoryTxToSend.erase(hash);
                         if (pto->m_tx_relay->pfilter && !pto->m_tx_relay->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
 
-                        int nInvType = CoinJoin::GetDSTX(hash) ? MSG_DSTX : MSG_TX;
+                        int nInvType = ::dstxManager->GetDSTX(hash) ? MSG_DSTX : MSG_TX;
                         queueAndMaybePushInv(CInv(nInvType, hash));
 
                         const auto islock = m_llmq_ctx->isman->GetInstantSendLockByTxid(hash);
@@ -5061,7 +5061,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                                 vRelayExpiration.push_back(std::make_pair(nNow + std::chrono::microseconds{RELAY_TX_CACHE_TIME}.count(), ret.first));
                             }
                         }
-                        int nInvType = CoinJoin::GetDSTX(hash) ? MSG_DSTX : MSG_TX;
+                        int nInvType = ::dstxManager->GetDSTX(hash) ? MSG_DSTX : MSG_TX;
                         queueAndMaybePushInv(CInv(nInvType, hash));
                     }
                 }

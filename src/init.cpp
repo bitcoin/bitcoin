@@ -68,6 +68,7 @@
 #include <validationinterface.h>
 
 #include <masternode/node.h>
+#include <coinjoin/coinjoin.h>
 #include <coinjoin/context.h>
 #ifdef ENABLE_WALLET
 #include <coinjoin/client.h>
@@ -306,6 +307,7 @@ void PrepareShutdown(NodeContext& node)
     ::masternodeSync.reset();
     ::netfulfilledman.reset();
     ::mmetaman.reset();
+    ::dstxManager.reset();
 
     // Stop and delete all indexes only after flushing background callbacks.
     if (g_txindex) {
@@ -2215,6 +2217,9 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
             return InitError(strprintf(_("Failed to clear governance cache at %s"), file_path));
         }
     }
+
+    assert(!::dstxManager);
+    ::dstxManager = std::make_unique<CDSTXManager>();
 
     assert(!::mmetaman);
     ::mmetaman = std::make_unique<CMasternodeMetaMan>(fLoadCacheFiles);

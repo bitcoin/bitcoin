@@ -18,6 +18,7 @@
 #include <version.h>
 
 #include <atomic>
+#include <map>
 #include <optional>
 #include <utility>
 
@@ -340,8 +341,6 @@ public:
 // Various helpers and dstx manager implementation
 namespace CoinJoin
 {
-    extern Mutex cs_mapdstx;
-
     bilingual_str GetMessageByID(PoolMessage nMessageID);
 
     /// Get the minimum/maximum number of participants for the pool
@@ -353,6 +352,15 @@ namespace CoinJoin
     /// If the collateral is valid given by a client
     bool IsCollateralValid(CTxMemPool& mempool, const CTransaction& txCollateral);
 
+}
+
+class CDSTXManager
+{
+    Mutex cs_mapdstx;
+    std::map<uint256, CCoinJoinBroadcastTx> mapDSTX GUARDED_BY(cs_mapdstx);
+
+public:
+    CDSTXManager() = default;
     void AddDSTX(const CCoinJoinBroadcastTx& dstx) LOCKS_EXCLUDED(cs_mapdstx);
     CCoinJoinBroadcastTx GetDSTX(const uint256& hash) LOCKS_EXCLUDED(cs_mapdstx);
 
@@ -362,6 +370,14 @@ namespace CoinJoin
     void TransactionAddedToMempool(const CTransactionRef& tx) LOCKS_EXCLUDED(cs_mapdstx);
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex) LOCKS_EXCLUDED(cs_mapdstx);
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex*) LOCKS_EXCLUDED(cs_mapdstx);
+
+private:
+    void CheckDSTXes(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler);
+    void UpdateDSTXConfirmedHeight(const CTransactionRef& tx, std::optional<int> nHeight);
+
 };
+
+
+extern std::unique_ptr<CDSTXManager> dstxManager;
 
 #endif // BITCOIN_COINJOIN_COINJOIN_H

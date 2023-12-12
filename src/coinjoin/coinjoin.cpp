@@ -307,10 +307,6 @@ bool CCoinJoinBaseSession::IsValidInOuts(const CTxMemPool& mempool, const std::v
     return true;
 }
 
-// Definitions for static data members
-Mutex CoinJoin::cs_mapdstx;
-std::map<uint256, CCoinJoinBroadcastTx> CoinJoin::mapDSTX GUARDED_BY(CoinJoin::cs_mapdstx);
-
 // check to make sure the collateral provided by the client is valid
 bool CoinJoin::IsCollateralValid(CTxMemPool& mempool, const CTransaction& txCollateral)
 {
@@ -418,14 +414,17 @@ bilingual_str CoinJoin::GetMessageByID(PoolMessage nMessageID)
     }
 }
 
-void CoinJoin::AddDSTX(const CCoinJoinBroadcastTx& dstx)
+// Definitions for static data members
+std::unique_ptr<CDSTXManager> dstxManager;
+
+void CDSTXManager::AddDSTX(const CCoinJoinBroadcastTx& dstx)
 {
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     mapDSTX.insert(std::make_pair(dstx.tx->GetHash(), dstx));
 }
 
-CCoinJoinBroadcastTx CoinJoin::GetDSTX(const uint256& hash)
+CCoinJoinBroadcastTx CDSTXManager::GetDSTX(const uint256& hash)
 {
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
@@ -433,7 +432,7 @@ CCoinJoinBroadcastTx CoinJoin::GetDSTX(const uint256& hash)
     return (it == mapDSTX.end()) ? CCoinJoinBroadcastTx() : it->second;
 }
 
-void CoinJoin::CheckDSTXes(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler)
+void CDSTXManager::CheckDSTXes(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler)
 {
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
@@ -448,21 +447,21 @@ void CoinJoin::CheckDSTXes(const CBlockIndex* pindex, const llmq::CChainLocksHan
     LogPrint(BCLog::COINJOIN, "CoinJoin::CheckDSTXes -- mapDSTX.size()=%llu\n", mapDSTX.size());
 }
 
-void CoinJoin::UpdatedBlockTip(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const CMasternodeSync& mn_sync)
+void CDSTXManager::UpdatedBlockTip(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const CMasternodeSync& mn_sync)
 {
     if (pindex && mn_sync.IsBlockchainSynced()) {
         CheckDSTXes(pindex, clhandler);
     }
 }
 
-void CoinJoin::NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const CMasternodeSync& mn_sync)
+void CDSTXManager::NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const CMasternodeSync& mn_sync)
 {
     if (pindex && mn_sync.IsBlockchainSynced()) {
         CheckDSTXes(pindex, clhandler);
     }
 }
 
-void CoinJoin::UpdateDSTXConfirmedHeight(const CTransactionRef& tx, std::optional<int> nHeight)
+void CDSTXManager::UpdateDSTXConfirmedHeight(const CTransactionRef& tx, std::optional<int> nHeight)
 {
     AssertLockHeld(cs_mapdstx);
 
@@ -472,17 +471,17 @@ void CoinJoin::UpdateDSTXConfirmedHeight(const CTransactionRef& tx, std::optiona
     }
 
     it->second.SetConfirmedHeight(nHeight);
-    LogPrint(BCLog::COINJOIN, "CoinJoin::%s -- txid=%s, nHeight=%d\n", __func__, tx->GetHash().ToString(), nHeight.value_or(-1));
+    LogPrint(BCLog::COINJOIN, "CDSTXManager::%s -- txid=%s, nHeight=%d\n", __func__, tx->GetHash().ToString(), nHeight.value_or(-1));
 }
 
-void CoinJoin::TransactionAddedToMempool(const CTransactionRef& tx)
+void CDSTXManager::TransactionAddedToMempool(const CTransactionRef& tx)
 {
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     UpdateDSTXConfirmedHeight(tx, std::nullopt);
 }
 
-void CoinJoin::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
+void CDSTXManager::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
@@ -492,7 +491,7 @@ void CoinJoin::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const
     }
 }
 
-void CoinJoin::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex*)
+void CDSTXManager::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex*)
 {
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);

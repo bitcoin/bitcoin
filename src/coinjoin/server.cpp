@@ -333,13 +333,13 @@ void CCoinJoinServer::CommitFinalTransaction()
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CommitFinalTransaction -- CREATING DSTX\n");
 
     // create and sign masternode dstx transaction
-    if (!CoinJoin::GetDSTX(hashTx)) {
+    if (!::dstxManager->GetDSTX(hashTx)) {
         CCoinJoinBroadcastTx dstxNew(finalTransaction,
                                     WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.outpoint),
                                     WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash),
                                     GetAdjustedTime());
         dstxNew.Sign();
-        CoinJoin::AddDSTX(dstxNew);
+        ::dstxManager->AddDSTX(dstxNew);
     }
 
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CommitFinalTransaction -- TRANSMITTING DSTX\n");
