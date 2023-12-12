@@ -282,10 +282,6 @@ jobs:
         run: py -3 test\util\rpcauth-test.py
 
       - name: Run functional tests
-        # Don't run functional tests for pull requests.
-        # The test suit regularly fails to complete in windows native github
-        # actions as a child process stops making progress. The root cause has
-        # not yet been determined.
-        # Discussed in https://github.com/bitcoin/bitcoin/pull/28509
-        if: github.event_name != 'pull_request'
-        run: py -3 test\functional\test_runner.py --jobs $env:NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix=$env:RUNNER_TEMP --combinedlogslen=99999999 --timeout-factor=$env:TEST_RUNNER_TIMEOUT_FACTOR --extended
+        env:
+          TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
+        run: py -3 test\functional\test_runner.py --jobs $env:NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix=$env:RUNNER_TEMP --combinedlogslen=99999999 --timeout-factor=$env:TEST_RUNNER_TIMEOUT_FACTOR $env:TEST_RUNNER_EXTRA
