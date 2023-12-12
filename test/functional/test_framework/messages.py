@@ -1132,10 +1132,7 @@ class msg_version:
 
         # Relay field is optional for version 70001 onwards
         # But, unconditionally check it to match behaviour in bitcoind
-        try:
-            self.relay = struct.unpack("<b", f.read(1))[0]
-        except struct.error:
-            self.relay = 0
+        self.relay = int.from_bytes(f.read(1), "little")  # f.read(1) may return an empty b''
 
     def serialize(self):
         r = b""
@@ -1147,7 +1144,7 @@ class msg_version:
         r += struct.pack("<Q", self.nNonce)
         r += ser_string(self.strSubVer.encode('utf-8'))
         r += struct.pack("<i", self.nStartingHeight)
-        r += struct.pack("<b", self.relay)
+        r += self.relay.to_bytes(1, "little")
         return r
 
     def __repr__(self):
