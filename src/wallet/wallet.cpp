@@ -39,7 +39,6 @@
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
 #include <wallet/fees.h>
-#include <walletinitinterface.h>
 #include <warnings.h>
 
 #include <coinjoin/client.h>
@@ -117,7 +116,6 @@ bool AddWallet(const std::shared_ptr<CWallet>& wallet)
     wallet->AutoLockMasternodeCollaterals();
     assert(::masternodeSync != nullptr && ::coinJoinClientManagers != nullptr);
     ::coinJoinClientManagers->Add(*wallet);
-    g_wallet_init_interface.InitCoinJoinSettings(*::coinJoinClientManagers);
     wallet->NotifyCanGetAddressesChanged();
     return true;
 }
@@ -140,7 +138,6 @@ bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, std::optional<bool> lo
 
     assert(::coinJoinClientManagers != nullptr);
     ::coinJoinClientManagers->Remove(name);
-    g_wallet_init_interface.InitCoinJoinSettings(*::coinJoinClientManagers);
 
     // Write the wallet setting
     UpdateWalletSetting(chain, name, load_on_start, warnings);

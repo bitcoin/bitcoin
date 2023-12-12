@@ -22,6 +22,7 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <version.h>
+#include <walletinitinterface.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 
@@ -1894,10 +1895,15 @@ void CJClientManager::Add(CWallet& wallet) {
         wallet.GetName(),
         std::make_unique<CCoinJoinClientManager>(wallet, *this, m_mn_sync, m_queueman)
     );
+    g_wallet_init_interface.InitCoinJoinSettings(*this);
 }
 
 void CJClientManager::DoMaintenance(CBlockPolicyEstimator& fee_estimator) {
     for (auto& [wallet_str, clientman] : m_wallet_manager_map) {
         clientman->DoMaintenance(m_connman, fee_estimator, m_mempool);
     }
+}
+void CJClientManager::Remove(const std::string& name) {
+    m_wallet_manager_map.erase(name);
+    g_wallet_init_interface.InitCoinJoinSettings(*this);
 }

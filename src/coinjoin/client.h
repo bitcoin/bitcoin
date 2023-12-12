@@ -86,9 +86,7 @@ public:
     void Add(CWallet& wallet);
     void DoMaintenance(CBlockPolicyEstimator& fee_estimator);
 
-    void Remove(const std::string& name) {
-        m_wallet_manager_map.erase(name);
-    }
+    void Remove(const std::string& name);
 
     CCoinJoinClientManager* Get(const CWallet& wallet) const {
         auto it = m_wallet_manager_map.find(wallet.GetName());
