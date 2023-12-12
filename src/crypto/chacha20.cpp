@@ -11,15 +11,14 @@
 #include <span.h>
 
 #include <algorithm>
+#include <bit>
 #include <string.h>
 
-constexpr static inline uint32_t rotl32(uint32_t v, int c) { return (v << c) | (v >> (32 - c)); }
-
 #define QUARTERROUND(a,b,c,d) \
-  a += b; d = rotl32(d ^ a, 16); \
-  c += d; b = rotl32(b ^ c, 12); \
-  a += b; d = rotl32(d ^ a, 8); \
-  c += d; b = rotl32(b ^ c, 7);
+  a += b; d = std::rotl(d ^ a, 16); \
+  c += d; b = std::rotl(b ^ c, 12); \
+  a += b; d = std::rotl(d ^ a, 8); \
+  c += d; b = std::rotl(b ^ c, 7);
 
 #define REPEAT10(a) do { {a}; {a}; {a}; {a}; {a}; {a}; {a}; {a}; {a}; {a}; } while(0)
 
