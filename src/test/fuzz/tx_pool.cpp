@@ -117,7 +117,7 @@ void MockTime(FuzzedDataProvider& fuzzed_data_provider, const Chainstate& chains
     SetMockTime(time);
 }
 
-std::unique_ptr<CTxMemPool> MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeContext& node)
+util::Result<std::unique_ptr<CTxMemPool>> MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeContext& node)
 {
     // Take the default options for tests...
     CTxMemPool::Options mempool_opts{MemPoolOptionsForTest(node)};
@@ -127,7 +127,7 @@ std::unique_ptr<CTxMemPool> MakeMempool(FuzzedDataProvider& fuzzed_data_provider
     mempool_opts.require_standard = fuzzed_data_provider.ConsumeBool();
 
     // ...and construct a CTxMemPool from it
-    return std::move(CTxMemPool::MakeUnique(mempool_opts).value());
+    return CTxMemPool::MakeUnique(mempool_opts);
 }
 
 void CheckATMPInvariants(const MempoolAcceptResult& res, bool txid_in_mempool, bool wtxid_in_mempool)
@@ -202,7 +202,14 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
 
     SetMempoolConstraints(*node.args, fuzzed_data_provider);
     auto tx_pool_{MakeMempool(fuzzed_data_provider, node)};
-    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(tx_pool_.get());
+    while (!tx_pool_) {
+        // Ensure this harness is updated when additional mempool construction failure paths are introduced
+        assert(util::ErrorString(tx_pool_).original.starts_with("-maxmempool must be at least"));
+        SetMempoolConstraints(*node.args, fuzzed_data_provider);
+        tx_pool_ = MakeMempool(fuzzed_data_provider, node);
+    }
+
+    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(tx_pool_.value().get());
 
     chainstate.SetMempool(&tx_pool);
 
@@ -379,7 +386,13 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
 
     SetMempoolConstraints(*node.args, fuzzed_data_provider);
     auto tx_pool_{MakeMempool(fuzzed_data_provider, node)};
-    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(tx_pool_.get());
+    while (!tx_pool_) {
+        // Ensure this harness is updated when additional mempool construction failure paths are introduced
+        assert(util::ErrorString(tx_pool_).original.starts_with("-maxmempool must be at least"));
+        SetMempoolConstraints(*node.args, fuzzed_data_provider);
+        tx_pool_ = MakeMempool(fuzzed_data_provider, node);
+    }
+    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(tx_pool_.value().get());
 
     chainstate.SetMempool(&tx_pool);
 

@@ -116,8 +116,11 @@ std::unique_ptr<CTxMemPool> MakeMempool(FuzzedDataProvider& fuzzed_data_provider
     mempool_opts.limits.ancestor_count = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 50);
     mempool_opts.limits.ancestor_size_vbytes = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202) * 1'000;
     mempool_opts.limits.descendant_count = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 50);
-    mempool_opts.limits.descendant_size_vbytes = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202) * 1'000;
-    mempool_opts.max_size_bytes = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 200) * 1'000'000;
+    auto set_descendants_size = [&]() {
+        mempool_opts.limits.descendant_size_vbytes = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202) * 1'000;
+        mempool_opts.max_size_bytes = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 200) * 1'000'000;
+    };
+    set_descendants_size();
     mempool_opts.expiry = std::chrono::hours{fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 999)};
     nBytesPerSigOp = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(1, 999);
 
@@ -125,7 +128,15 @@ std::unique_ptr<CTxMemPool> MakeMempool(FuzzedDataProvider& fuzzed_data_provider
     mempool_opts.require_standard = fuzzed_data_provider.ConsumeBool();
 
     // ...and construct a CTxMemPool from it
-    return std::move(Assert(CTxMemPool::MakeUnique(mempool_opts)).value());
+    while (true) {
+        if (auto res{CTxMemPool::MakeUnique(mempool_opts)}) {
+            return std::move(res.value());
+        } else {
+            // Ensure this harness is updated when additional mempool construction failure paths are introduced
+            assert(util::ErrorString(res).original.starts_with("-maxmempool must be at least"));
+            set_descendants_size();
+        }
+    }
 }
 
 FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
