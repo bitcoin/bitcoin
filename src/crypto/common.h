@@ -7,7 +7,6 @@
 
 #include <compat/endian.h>
 
-#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -81,12 +80,6 @@ void static inline WriteBE64(unsigned char* ptr, uint64_t x)
 {
     uint64_t v = htobe64(x);
     memcpy(ptr, &v, 8);
-}
-
-/** Return the smallest number n such that (x >> n) == 0 (or 64 if the highest bit in x is set. */
-uint64_t static inline CountBits(uint64_t x)
-{
-    return std::bit_width(x);
 }
 
 #endif // BITCOIN_CRYPTO_COMMON_H
