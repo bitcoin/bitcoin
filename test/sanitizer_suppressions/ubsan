@@ -69,7 +69,6 @@ implicit-signed-integer-truncation:crypto/
 implicit-unsigned-integer-truncation:crypto/
 shift-base:arith_uint256.cpp
 shift-base:crypto/
-shift-base:ROTL32
 shift-base:streams.h
 shift-base:FormatHDKeypath
 shift-base:xoroshiro128plusplus.h
