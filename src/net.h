@@ -1124,7 +1124,7 @@ public:
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     using NodeFn = std::function<void(CNode*)>;
-    void ForEachNode(const NodeFn& func)
+    void ForEachFullyConnectedNode(const NodeFn& func)
     {
         LOCK(m_nodes_mutex);
         for (auto&& node : m_nodes) {
@@ -1133,7 +1133,7 @@ public:
         }
     };
 
-    void ForEachNode(const NodeFn& func) const
+    void ForEachFullyConnectedNode(const NodeFn& func) const
     {
         LOCK(m_nodes_mutex);
         for (auto&& node : m_nodes) {
