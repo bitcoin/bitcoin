@@ -16,6 +16,7 @@
 
 #include <chainparams.h>
 #include <blsct/double_public_key.h>
+#include <optional>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -61,12 +62,10 @@ std::string EncodeDoublePublicKey(
     const blsct::DoublePublicKey& dpk
 );
 
-/** Decode a Bech32 or Bech32m string to concatenation of two serialized public keys
- *  Overwrite given data with the concatenated public keys if succeeded. */
-bool DecodeDoublePublicKey(
+/** Decode a Bech32 or Bech32m string to a DoublePublicKey. */
+std::optional<blsct::DoublePublicKey> DecodeDoublePublicKey(
     const CChainParams& params,
-    const std::string& str,
-    std::vector<uint8_t>& data
+    const std::string& str
 );
 
 } // namespace bech32_mod

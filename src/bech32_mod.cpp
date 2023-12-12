@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "blsct/double_public_key.h"
 #include <bech32_mod.h>
 #include <util/vector.h>
 
@@ -252,10 +253,9 @@ std::string EncodeDoublePublicKey(
     return Encode(encoding, params.Bech32ModHRP(), dpk_v5);
 }
 
-bool DecodeDoublePublicKey(
+std::optional<blsct::DoublePublicKey> DecodeDoublePublicKey(
     const CChainParams& params,
-    const std::string& str,
-    std::vector<uint8_t>& data
+    const std::string& str
 ) {
     const auto hrp = ToLower(str.substr(0, params.Bech32ModHRP().size()));
 
@@ -263,7 +263,7 @@ bool DecodeDoublePublicKey(
     if (str.size() != bech32_mod::DOUBLE_PUBKEY_ENC_SIZE
         || hrp != params.Bech32ModHRP()
         || str[params.Bech32ModHRP().size()] != '1'
-    ) return false;
+    ) return std::nullopt;
 
     // decode to 5-bit based byte vector
     const auto dec = bech32_mod::Decode(str);
@@ -271,14 +271,21 @@ bool DecodeDoublePublicKey(
     // check if it has expected encoding and the data is of the expected length
     if ((dec.encoding != bech32_mod::Encoding::BECH32 && dec.encoding != bech32_mod::Encoding::BECH32M)
         || dec.data.size() != 154
-    ) return false;
+    ) return std::nullopt;
 
     // The data part consists of two concatenated 48-byte public keys
+    std::vector<uint8_t> data;
     data.reserve(blsct::DoublePublicKey::SIZE);
     if (!ConvertBits<5, 8, false>([&](unsigned char c) { data.push_back(c); }, dec.data.begin(), dec.data.end())) {
-        return false;
+        return std::nullopt;
     }
-    return true;
+
+    blsct::DoublePublicKey dpk(data);
+    if (dpk.IsValid()) {
+        return dpk;
+    } else {
+        return std::nullopt;
+    }
 }
 
 } // namespace bech32_mod

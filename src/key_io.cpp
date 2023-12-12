@@ -90,19 +90,19 @@ public:
 
 CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str, std::vector<int>* error_locations)
 {
-    std::vector<unsigned char> data;
-    uint160 hash;
-    error_str = "";
-
-    // first try to decode str as a double public key
-    if (bech32_mod::DecodeDoublePublicKey(params, str, data)) {
-        auto dpk = blsct::DoublePublicKey(data);
+    // first try to decode str to a double public key
+    auto maybe_dpk = bech32_mod::DecodeDoublePublicKey(params, str);
+    if (maybe_dpk) {
+        auto dpk = maybe_dpk.value();
         if (dpk.IsValid()) {
             return CTxDestination(dpk);
         }
         // if invalid, try other types of destinations
     }
-    data.clear();
+
+    std::vector<unsigned char> data;
+    uint160 hash;
+    error_str = "";
 
     // Note this will be false if it is a valid Bech32 address for a different network
     bool is_bech32 = (ToLower(str.substr(0, params.Bech32HRP().size())) == params.Bech32HRP());
