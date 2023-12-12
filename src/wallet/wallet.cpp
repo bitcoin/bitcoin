@@ -44,14 +44,14 @@
 
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
+#include <evo/providertx.h>
 #include <governance/governance.h>
 #include <evo/deterministicmns.h>
 #include <masternode/sync.h>
 
 #include <univalue.h>
 
-#include <evo/providertx.h>
-
+#include <algorithm>
 #include <assert.h>
 
 using interfaces::FoundBlock;
@@ -2720,10 +2720,9 @@ struct CompareByPriority
 
 static bool isGroupISLocked(const OutputGroup& group, interfaces::Chain& chain)
 {
-    for (const auto& output : group.m_outputs) {
-        if (!chain.isInstantSendLockedTx(output.outpoint.hash)) return false;
-    }
-    return true;
+    return std::all_of(group.m_outputs.begin(), group.m_outputs.end(), [&chain](const auto& output) {
+        return chain.isInstantSendLockedTx(output.outpoint.hash);
+    });
 }
 
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<OutputGroup> groups,
