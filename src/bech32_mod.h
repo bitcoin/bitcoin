@@ -14,6 +14,8 @@
 #ifndef BITCOIN_BECH32_MOD_H
 #define BITCOIN_BECH32_MOD_H
 
+#include <chainparams.h>
+#include <blsct/double_public_key.h>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -51,6 +53,21 @@ struct DecodeResult
 
 /** Decode a Bech32 or Bech32m string. */
 DecodeResult Decode(const std::string& str);
+
+/** Encode DoublePublicKey to Bech32 or Bech32m string. Encoding must be one of BECH32 or BECH32M. */
+std::string EncodeDoublePublicKey(
+    const CChainParams& params,
+    const Encoding encoding,
+    const blsct::DoublePublicKey& dpk
+);
+
+/** Decode a Bech32 or Bech32m string to concatination of two serialized public keys
+ *  Overwrite given data with the concatenated public keys if succeeded. */
+bool DecodeDoublePublicKey(
+    const CChainParams& params,
+    const std::string& str,
+    std::vector<uint8_t>& data
+);
 
 } // namespace bech32_mod
 

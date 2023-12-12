@@ -22,6 +22,7 @@ DoublePublicKey::DoublePublicKey(const std::vector<unsigned char>& keys)
 
     vk = vkData;
     sk = skData;
+    is_fully_built = true;
 }
 
 CKeyID DoublePublicKey::GetID() const
@@ -76,7 +77,7 @@ bool DoublePublicKey::operator<(const DoublePublicKey& rhs) const
 
 bool DoublePublicKey::IsValid() const
 {
-    return vk.IsValid() && sk.IsValid();
+    return is_fully_built && vk.IsValid() && sk.IsValid();
 }
 
 std::vector<unsigned char> DoublePublicKey::GetVkVch() const

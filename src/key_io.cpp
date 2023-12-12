@@ -29,12 +29,11 @@ public:
 
     std::string operator()(const blsct::DoublePublicKey& id) const
     {
-        std::vector<uint8_t> dpk_v8 = id.GetVch();
-        std::vector<uint8_t> dpk_v5;
-        dpk_v5.reserve(bech32_mod::DOUBLE_PUBKEY_ENC_SIZE);
-        ConvertBits<8, 5, true>([&](uint8_t c) { dpk_v5.push_back(c); }, dpk_v8.begin(), dpk_v8.end());
-
-        return bech32_mod::Encode(bech32_mod::Encoding::BECH32, m_params.Bech32ModHRP(), dpk_v5);
+        return bech32_mod::EncodeDoublePublicKey(
+            m_params,
+            bech32_mod::Encoding::BECH32M,
+            id
+        );
     }
 
     std::string operator()(const PKHash& id) const
@@ -95,26 +94,16 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
     uint160 hash;
     error_str = "";
 
-    // if double public key
-    if (str.size() == bech32_mod::DOUBLE_PUBKEY_ENC_SIZE
-        && ToLower(str.substr(0, params.Bech32ModHRP().size())) == params.Bech32ModHRP()
-        && str[params.Bech32ModHRP().size()] == '1'
-    ) {
-        const auto dec = bech32_mod::Decode(str);
-        if ((dec.encoding == bech32_mod::Encoding::BECH32 || dec.encoding == bech32_mod::Encoding::BECH32M) && dec.data.size() > 0) {
-            // The data part consists of two concatenated 48-byte public keys
-            data.reserve(blsct::DoublePublicKey::SIZE);
-            if (!ConvertBits<5, 8, false>([&](unsigned char c) { data.push_back(c); }, dec.data.begin(), dec.data.end())) {
-                return CNoDestination();
-            }
-
-            auto dpk = blsct::DoublePublicKey(data);
-            return dpk.IsValid() ? CTxDestination(dpk) : CNoDestination();
+    // first try to decode str as a double public key
+    if (bech32_mod::DecodeDoublePublicKey(params, str, data)) {
+        auto dpk = blsct::DoublePublicKey(data);
+        if (dpk.IsValid()) {
+            return CTxDestination(dpk);
         }
-        return CNoDestination();
+        // if invalid, try other types of destinations
     }
-
     data.clear();
+
     // Note this will be false if it is a valid Bech32 address for a different network
     bool is_bech32 = (ToLower(str.substr(0, params.Bech32HRP().size())) == params.Bech32HRP());
 
