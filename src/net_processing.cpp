@@ -2261,10 +2261,10 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         m_most_recent_block_txs = std::move(most_recent_block_txs);
     }
 
-    m_connman.ForEachNode([this, pindex, &lazy_ser, &hashBlock](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+    m_connman.ForEachFullyConnectedNode([this, pindex, &lazy_ser, &hashBlock](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         AssertLockHeld(::cs_main);
 
-        if (pnode->GetCommonVersion() < INVALID_CB_NO_BAN_VERSION || pnode->fDisconnect)
+        if (pnode->GetCommonVersion() < INVALID_CB_NO_BAN_VERSION)
             return;
         ProcessBlockAvailability(pnode->GetId());
         CNodeState &state = *State(pnode->GetId());
@@ -5572,8 +5572,8 @@ void PeerManagerImpl::EvictExtraOutboundPeers(NodeClock::time_point now)
     if (m_connman.GetExtraBlockRelayCount() > 0) {
         std::pair<NodeId, std::chrono::seconds> youngest_peer{-1, 0}, next_youngest_peer{-1, 0};
 
-        m_connman.ForEachNode([&](CNode* pnode) {
-            if (!pnode->IsBlockOnlyConn() || pnode->fDisconnect) return;
+        m_connman.ForEachFullyConnectedNode([&](CNode* pnode) {
+            if (!pnode->IsBlockOnlyConn()) return;
             if (pnode->GetId() > youngest_peer.first) {
                 next_youngest_peer = youngest_peer;
                 youngest_peer.first = pnode->GetId();
@@ -5622,12 +5622,11 @@ void PeerManagerImpl::EvictExtraOutboundPeers(NodeClock::time_point now)
         };
         std::optional<WorstPeer> worst_peer;
 
-        m_connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_connman.GetNodesMutex()) {
+        m_connman.ForEachFullyConnectedNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_connman.GetNodesMutex()) {
             AssertLockHeld(::cs_main);
 
-            // Only consider outbound-full-relay peers that are not already
-            // marked for disconnection
-            if (!pnode->IsFullOutboundConn() || pnode->fDisconnect) return;
+            // Only consider outbound-full-relay peers
+            if (!pnode->IsFullOutboundConn()) return;
             CNodeState *state = State(pnode->GetId());
             if (state == nullptr) return; // shouldn't be possible, but just in case
             // Don't evict our protected peers
