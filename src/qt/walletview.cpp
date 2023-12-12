@@ -4,6 +4,7 @@
 
 #include <qt/walletview.h>
 
+#include <node/psbt.h>
 #include <node/transaction.h>
 #include <policy/policy.h>
 #include <qt/addressbookpage.h>

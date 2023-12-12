@@ -498,41 +498,6 @@ enum class PSBTRole {
     EXTRACTOR
 };
 
-/**
- * Holds an analysis of one input from a PSBT
- */
-struct PSBTInputAnalysis {
-    bool has_utxo; //!< Whether we have UTXO information for this input
-    bool is_final; //!< Whether the input has all required information including signatures
-    PSBTRole next; //!< Which of the BIP 174 roles needs to handle this input next
-
-    std::vector<CKeyID> missing_pubkeys; //!< Pubkeys whose BIP32 derivation path is missing
-    std::vector<CKeyID> missing_sigs;    //!< Pubkeys whose signatures are missing
-    uint160 missing_redeem_script;       //!< Hash160 of redeem script, if missing
-};
-
-/**
- * Holds the results of AnalyzePSBT (miscellaneous information about a PSBT)
- */
-struct PSBTAnalysis {
-    std::optional<size_t> estimated_vsize;      //!< Estimated weight of the transaction
-    std::optional<CFeeRate> estimated_feerate;  //!< Estimated feerate (fee / weight) of the transaction
-    std::optional<CAmount> fee;                 //!< Amount of fee being paid by the transaction
-    std::vector<PSBTInputAnalysis> inputs; //!< More information about the individual inputs of the transaction
-    PSBTRole next;                         //!< Which of the BIP 174 roles needs to handle the transaction next
-    std::string error;                     //!< Error message
-
-    void SetInvalid(std::string err_msg)
-    {
-        estimated_vsize = std::nullopt;
-        estimated_feerate = std::nullopt;
-        fee = std::nullopt;
-        inputs.clear();
-        next = PSBTRole::CREATOR;
-        error = err_msg;
-    }
-};
-
 std::string PSBTRoleName(PSBTRole role);
 
 /** Checks whether a PSBTInput is already signed. */
@@ -572,14 +537,6 @@ bool FinalizeAndExtractPSBT(PartiallySignedTransaction& psbtx, CMutableTransacti
  * @return error (OK if we successfully combined the transactions, other error if they were not compatible)
  */
 [[nodiscard]] TransactionError CombinePSBTs(PartiallySignedTransaction& out, const std::vector<PartiallySignedTransaction>& psbtxs);
-
-/**
- * Provides helpful miscellaneous information about where a PSBT is in the signing workflow.
- *
- * @param[in] psbtx the PSBT to analyze
- * @return A PSBTAnalysis with information about the provided PSBT.
- */
-PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx);
 
 //! Decode a base64ed PSBT into a PartiallySignedTransaction
 [[nodiscard]] bool DecodeBase64PSBT(PartiallySignedTransaction& decoded_psbt, const std::string& base64_psbt, std::string& error);
