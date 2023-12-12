@@ -25,7 +25,6 @@ from io import BytesIO
 import math
 import random
 import socket
-import struct
 import time
 import unittest
 
@@ -92,11 +91,11 @@ def ser_compact_size(l):
     if l < 253:
         r = l.to_bytes(1, "little")
     elif l < 0x10000:
-        r = struct.pack("<BH", 253, l)
+        r = (253).to_bytes(1, "little") + l.to_bytes(2, "little")
     elif l < 0x100000000:
-        r = struct.pack("<BI", 254, l)
+        r = (254).to_bytes(1, "little") + l.to_bytes(4, "little")
     else:
-        r = struct.pack("<BQ", 255, l)
+        r = (255).to_bytes(1, "little") + l.to_bytes(8, "little")
     return r
 
 
@@ -1635,12 +1634,12 @@ class msg_sendcmpct:
         self.version = version
 
     def deserialize(self, f):
-        self.announce = struct.unpack("<?", f.read(1))[0]
+        self.announce = bool(int.from_bytes(f.read(1), "little"))
         self.version = int.from_bytes(f.read(8), "little")
 
     def serialize(self):
         r = b""
-        r += struct.pack("<?", self.announce)
+        r += int(self.announce).to_bytes(1, "little")
         r += self.version.to_bytes(8, "little")
         return r
 
