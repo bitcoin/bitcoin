@@ -456,7 +456,7 @@ struct WalletTxOut
 
 //! Return implementation of Wallet interface. This function is defined in
 //! dummywallet.cpp and throws if the wallet component is not compiled.
-std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet, const CJClientManager& clientman);
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet);
 
 //! Return implementation of ChainClient interface for a wallet loader. This
 //! function will be undefined in builds where ENABLE_WALLET is false.

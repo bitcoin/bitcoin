@@ -639,14 +639,14 @@ public:
         options.require_create = true;
         options.create_flags = wallet_creation_flags;
         options.create_passphrase = passphrase;
-        return MakeWallet(CreateWallet(*m_context.chain, name, true /* load_on_start */, options, status, error, warnings), client_man);
+        return MakeWallet(CreateWallet(*m_context.chain, name, true /* load_on_start */, options, status, error, warnings));
     }
     std::unique_ptr<Wallet> loadWallet(const CJClientManager& client_man, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
         DatabaseOptions options;
         DatabaseStatus status;
         options.require_existing = true;
-        return MakeWallet(LoadWallet(*m_context.chain, name, true /* load_on_start */, options, status, error, warnings), client_man);
+        return MakeWallet(LoadWallet(*m_context.chain, name, true /* load_on_start */, options, status, error, warnings));
     }
     std::string getWalletDir() override
     {
@@ -664,7 +664,7 @@ public:
     {
         std::vector<std::unique_ptr<Wallet>> wallets;
         for (const auto& wallet : GetWallets()) {
-            wallets.emplace_back(MakeWallet(wallet, *::coinJoinClientManagers));
+            wallets.emplace_back(MakeWallet(wallet));
         }
         return wallets;
     }
@@ -682,7 +682,7 @@ public:
 } // namespace wallet
 
 namespace interfaces {
-std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet, const CJClientManager& clientman) { return wallet ? std::make_unique<wallet::WalletImpl>(wallet, clientman) : nullptr; }
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(wallet, *::coinJoinClientManagers) : nullptr; }
 std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args) {
     return std::make_unique<wallet::WalletLoaderImpl>(chain, args);
 }

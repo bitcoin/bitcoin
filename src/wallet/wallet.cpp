@@ -4824,7 +4824,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
     {
         LOCK(cs_wallets);
         for (auto& load_wallet : g_load_wallet_fns) {
-            load_wallet(interfaces::MakeWallet(walletInstance, *::coinJoinClientManagers));
+            load_wallet(interfaces::MakeWallet(walletInstance));
         }
     }
 

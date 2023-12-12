@@ -5,7 +5,6 @@
 #include <qt/test/wallettests.h>
 #include <qt/test/util.h>
 
-#include <coinjoin/client.h>
 #include <interfaces/chain.h>
 #include <interfaces/node.h>
 #include <qt/bitcoinamountfield.h>
@@ -135,8 +134,7 @@ void TestGUI(interfaces::Node& node)
     TransactionView transactionView;
     OptionsModel optionsModel(node);
     ClientModel clientModel(node, &optionsModel);
-    // TODO: replace access of CoinJoin objects with access through interface
-    WalletModel walletModel(interfaces::MakeWallet(wallet, *::coinJoinClientManagers), clientModel);;
+    WalletModel walletModel(interfaces::MakeWallet(wallet), clientModel);
     sendCoinsDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);
 
