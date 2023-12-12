@@ -290,6 +290,15 @@ bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx)
     return CachedTxIsTrusted(wallet, wtx, trusted_parents);
 }
 
+Balance GetFullBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse) {
+    Balance balance = GetBalance(wallet, min_depth, avoid_reuse);
+    // If the AVOID_REUSE flag is set, bal has been set to just the un-reused address balance. Get
+    // the total balance, and then subtract balance to get the reused address balance.
+    Balance full_balance = GetBalance(wallet, 0, false);
+    balance.m_mine_used = full_balance.m_mine_trusted + full_balance.m_mine_untrusted_pending - balance.m_mine_trusted - balance.m_mine_untrusted_pending;
+    return balance;
+}
+
 Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
 {
     Balance ret;

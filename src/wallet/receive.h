@@ -52,11 +52,13 @@ struct Balance {
     CAmount m_mine_trusted{0};           //!< Trusted, at depth=GetBalance.min_depth or more
     CAmount m_mine_untrusted_pending{0}; //!< Untrusted, but in mempool (pending)
     CAmount m_mine_immature{0};          //!< Immature coinbases in the main chain
+    CAmount m_mine_used{0};              //!< Used balance
     CAmount m_watchonly_trusted{0};
     CAmount m_watchonly_untrusted_pending{0};
     CAmount m_watchonly_immature{0};
 };
 Balance GetBalance(const CWallet& wallet, int min_depth = 0, bool avoid_reuse = true);
+Balance GetFullBalance(const CWallet& wallet, int min_depth = 0, bool avoid_reuse = true);
 
 std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet);
 std::set<std::set<CTxDestination>> GetAddressGroupings(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
