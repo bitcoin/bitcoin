@@ -366,20 +366,6 @@ bool CCoinJoin::IsCollateralValid(CTxMemPool& mempool, const CTransaction& txCol
     return true;
 }
 
-std::string CCoinJoin::DenominationToString(int nDenom)
-{
-    switch (CAmount nDenomAmount = DenominationToAmount(nDenom)) {
-        case  0: return "N/A";
-        case -1: return "out-of-bounds";
-        case -2: return "non-denom";
-        case -3: return "to-amount-error";
-        default: return ValueFromAmount(nDenomAmount).getValStr();
-    }
-
-    // shouldn't happen
-    return "to-string-error";
-}
-
 bilingual_str CCoinJoin::GetMessageByID(PoolMessage nMessageID)
 {
     switch (nMessageID) {

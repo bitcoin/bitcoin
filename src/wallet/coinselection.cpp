@@ -8,7 +8,7 @@
 #include <util/system.h>
 #include <util/moneystr.h>
 
-#include <coinjoin/coinjoin.h>
+#include <coinjoin/common.h>
 
 #include <optional>
 

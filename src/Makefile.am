@@ -149,6 +149,7 @@ BITCOIN_CORE_H = \
   clientversion.h \
   coinjoin/coinjoin.h \
   coinjoin/client.h \
+  coinjoin/common.h \
   coinjoin/context.h \
   coinjoin/options.h \
   coinjoin/server.h \
@@ -737,6 +738,8 @@ libbitcoin_util_a_SOURCES = \
   bls/bls_ies.h \
   bls/bls_worker.cpp \
   bls/bls_worker.h \
+  coinjoin/common.cpp \
+  coinjoin/options.cpp \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \

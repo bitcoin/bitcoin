@@ -9,6 +9,7 @@
 #include <atomic>
 #include <mutex>
 
+// This header is used by both Wallet and Server libraries
 class UniValue;
 
 static constexpr int MIN_COINJOIN_SESSIONS = 1;
