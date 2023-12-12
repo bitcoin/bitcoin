@@ -212,36 +212,6 @@ static void FastRandom_1bit(benchmark::Bench& bench)
     });
 }
 
-static void BitWidthCustom(benchmark::Bench& bench)
-{
-    uint64_t x = 0;
-    bench.run([&] {
-        x += CountBits(x);
-        x += CountBits(x + 1);
-        x += CountBits(x + 2);
-        x += CountBits(x + 3);
-        x += CountBits(x + 4);
-        x += CountBits(x + 5);
-        x += CountBits(x + 6);
-        x += CountBits(x + 7);
-    });
-}
-
-static void BitWidthStd(benchmark::Bench& bench)
-{
-    uint64_t x = 0;
-    bench.run([&] {
-        x += std::bit_width(x);
-        x += std::bit_width(x + 1);
-        x += std::bit_width(x + 2);
-        x += std::bit_width(x + 3);
-        x += std::bit_width(x + 4);
-        x += std::bit_width(x + 5);
-        x += std::bit_width(x + 6);
-        x += std::bit_width(x + 7);
-    });
-}
-
 static void MuHash(benchmark::Bench& bench)
 {
     MuHash3072 acc;
@@ -306,8 +276,6 @@ BENCHMARK(SHA256D64_1024_AVX2, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256D64_1024_SHANI, benchmark::PriorityLevel::HIGH);
 BENCHMARK(FastRandom_32bit, benchmark::PriorityLevel::HIGH);
 BENCHMARK(FastRandom_1bit, benchmark::PriorityLevel::HIGH);
-BENCHMARK(BitWidthStd, benchmark::PriorityLevel::HIGH);
-BENCHMARK(BitWidthCustom, benchmark::PriorityLevel::HIGH);
 
 BENCHMARK(MuHash, benchmark::PriorityLevel::HIGH);
 BENCHMARK(MuHashMul, benchmark::PriorityLevel::HIGH);
