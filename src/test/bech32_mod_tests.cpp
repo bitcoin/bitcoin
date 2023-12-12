@@ -3,7 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "validationinterface.h"
 #include <bech32_mod.h>
 #include <test/util/str.h>
 #include <util/strencodings.h>

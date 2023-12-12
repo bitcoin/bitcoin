@@ -61,7 +61,7 @@ std::string EncodeDoublePublicKey(
     const blsct::DoublePublicKey& dpk
 );
 
-/** Decode a Bech32 or Bech32m string to concatination of two serialized public keys
+/** Decode a Bech32 or Bech32m string to concatenation of two serialized public keys
  *  Overwrite given data with the concatenated public keys if succeeded. */
 bool DecodeDoublePublicKey(
     const CChainParams& params,
