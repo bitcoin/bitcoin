@@ -75,6 +75,10 @@ public:
     {
         m_walletman.Remove(name);
     }
+    void FlushWallet(const CWallet& wallet) override
+    {
+        m_walletman.Flush(wallet);
+    }
     std::unique_ptr<interfaces::CoinJoin::Client> GetClient(const CWallet& wallet) override
     {
         return interfaces::MakeCoinJoinClient(m_walletman, wallet);

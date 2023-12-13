@@ -1908,3 +1908,11 @@ void CoinJoinWalletManager::Remove(const std::string& name) {
     m_wallet_manager_map.erase(name);
     g_wallet_init_interface.InitCoinJoinSettings(*this);
 }
+
+void CoinJoinWalletManager::Flush(const CWallet& wallet)
+{
+    auto clientman = Get(wallet);
+    assert(clientman != nullptr);
+    clientman->ResetPool();
+    clientman->StopMixing();
+}

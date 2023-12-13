@@ -36,6 +36,7 @@ public:
     virtual void AddWallet(CWallet&) = 0;
     //! Remove wallet from CoinJoin client manager
     virtual void RemoveWallet(const std::string&) = 0;
+    virtual void FlushWallet(const CWallet&) = 0;
     virtual std::unique_ptr<CoinJoin::Client> GetClient(const CWallet& wallet) = 0;
 };
 } // namespace CoinJoin
