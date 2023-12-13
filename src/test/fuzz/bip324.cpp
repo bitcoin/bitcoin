@@ -10,6 +10,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/xoroshiro128plusplus.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <vector>
 
@@ -59,9 +60,9 @@ FUZZ_TARGET(bip324_cipher_roundtrip, .init=Initialize)
     XoRoShiRo128PlusPlus rng(provider.ConsumeIntegral<uint64_t>());
 
     // Compare session IDs and garbage terminators.
-    assert(initiator.GetSessionID() == responder.GetSessionID());
-    assert(initiator.GetSendGarbageTerminator() == responder.GetReceiveGarbageTerminator());
-    assert(initiator.GetReceiveGarbageTerminator() == responder.GetSendGarbageTerminator());
+    assert(std::ranges::equal(initiator.GetSessionID(), responder.GetSessionID()));
+    assert(std::ranges::equal(initiator.GetSendGarbageTerminator(), responder.GetReceiveGarbageTerminator()));
+    assert(std::ranges::equal(initiator.GetReceiveGarbageTerminator(), responder.GetSendGarbageTerminator()));
 
     LIMITED_WHILE(provider.remaining_bytes(), 1000) {
         // Mode:
