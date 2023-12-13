@@ -1255,7 +1255,7 @@ public:
         for (garblen = 0; garblen <= V2Transport::MAX_GARBAGE_LEN; ++garblen) {
             BOOST_REQUIRE(m_received.size() >= garblen + BIP324Cipher::GARBAGE_TERMINATOR_LEN);
             auto term_span = MakeByteSpan(Span{m_received}.subspan(garblen, BIP324Cipher::GARBAGE_TERMINATOR_LEN));
-            if (term_span == m_cipher.GetReceiveGarbageTerminator()) break;
+            if (std::ranges::equal(term_span, m_cipher.GetReceiveGarbageTerminator())) break;
         }
         // Copy the garbage to a buffer.
         m_recv_garbage.assign(m_received.begin(), m_received.begin() + garblen);
@@ -1280,7 +1280,7 @@ public:
         auto ret = ReceivePacket();
         BOOST_CHECK(ret.size() == payload.size() + 1);
         BOOST_CHECK(ret[0] == short_id);
-        BOOST_CHECK(Span{ret}.subspan(1) == payload);
+        BOOST_CHECK(std::ranges::equal(Span{ret}.subspan(1), payload));
     }
 
     /** Expect application packet to have been received, with specified 12-char message type and
@@ -1297,7 +1297,7 @@ public:
                 BOOST_CHECK(ret[1 + i] == 0);
             }
         }
-        BOOST_CHECK(Span{ret}.subspan(1 + CMessageHeader::COMMAND_SIZE) == payload);
+        BOOST_CHECK(std::ranges::equal(Span{ret}.subspan(1 + CMessageHeader::COMMAND_SIZE), payload));
     }
 
     /** Schedule an encrypted packet with specified message type and payload to be sent to
@@ -1365,9 +1365,9 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.SendMessage("tx", msg_data_2); // 12-character encoded message type
         ret = tester.Interact();
         BOOST_REQUIRE(ret && ret->size() == 3);
-        BOOST_CHECK((*ret)[0] && (*ret)[0]->m_type == "cmpctblock" && Span{(*ret)[0]->m_recv} == MakeByteSpan(msg_data_1));
+        BOOST_CHECK((*ret)[0] && (*ret)[0]->m_type == "cmpctblock" && std::ranges::equal((*ret)[0]->m_recv, MakeByteSpan(msg_data_1)));
         BOOST_CHECK(!(*ret)[1]);
-        BOOST_CHECK((*ret)[2] && (*ret)[2]->m_type == "tx" && Span{(*ret)[2]->m_recv} == MakeByteSpan(msg_data_2));
+        BOOST_CHECK((*ret)[2] && (*ret)[2]->m_type == "tx" && std::ranges::equal((*ret)[2]->m_recv, MakeByteSpan(msg_data_2)));
 
         // Then send a message with a bit error, expecting failure. It's possible this failure does
         // not occur immediately (when the length descriptor was modified), but it should come
@@ -1405,8 +1405,8 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.SendMessage(uint8_t(19), msg_data_2); // pong short id
         ret = tester.Interact();
         BOOST_REQUIRE(ret && ret->size() == 2);
-        BOOST_CHECK((*ret)[0] && (*ret)[0]->m_type == "inv" && Span{(*ret)[0]->m_recv} == MakeByteSpan(msg_data_1));
-        BOOST_CHECK((*ret)[1] && (*ret)[1]->m_type == "pong" && Span{(*ret)[1]->m_recv} == MakeByteSpan(msg_data_2));
+        BOOST_CHECK((*ret)[0] && (*ret)[0]->m_type == "inv" && std::ranges::equal((*ret)[0]->m_recv, MakeByteSpan(msg_data_1)));
+        BOOST_CHECK((*ret)[1] && (*ret)[1]->m_type == "pong" && std::ranges::equal((*ret)[1]->m_recv, MakeByteSpan(msg_data_2)));
 
         // Then send a too-large message.
         auto msg_data_3 = g_insecure_rand_ctx.randbytes<uint8_t>(4005000);
@@ -1471,8 +1471,8 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.AddMessage("barfoo", {}); // test sending unknown message type
         ret = tester.Interact();
         BOOST_REQUIRE(ret && ret->size() == 4);
-        BOOST_CHECK((*ret)[0] && (*ret)[0]->m_type == "addrv2" && Span{(*ret)[0]->m_recv} == MakeByteSpan(msg_data_1));
-        BOOST_CHECK((*ret)[1] && (*ret)[1]->m_type == "headers" && Span{(*ret)[1]->m_recv} == MakeByteSpan(msg_data_2));
+        BOOST_CHECK((*ret)[0] && (*ret)[0]->m_type == "addrv2" && std::ranges::equal((*ret)[0]->m_recv, MakeByteSpan(msg_data_1)));
+        BOOST_CHECK((*ret)[1] && (*ret)[1]->m_type == "headers" && std::ranges::equal((*ret)[1]->m_recv, MakeByteSpan(msg_data_2)));
         BOOST_CHECK(!(*ret)[2]);
         BOOST_CHECK((*ret)[3] && (*ret)[3]->m_type == "foobar" && (*ret)[3]->m_recv.empty());
         tester.ReceiveMessage("barfoo", {});
@@ -1539,7 +1539,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         ret = tester.Interact();
         BOOST_REQUIRE(ret && ret->size() == 2);
         BOOST_CHECK(!(*ret)[0]);
-        BOOST_CHECK((*ret)[1] && (*ret)[1]->m_type == "block" && Span{(*ret)[1]->m_recv} == MakeByteSpan(msg_data_1));
+        BOOST_CHECK((*ret)[1] && (*ret)[1]->m_type == "block" && std::ranges::equal((*ret)[1]->m_recv, MakeByteSpan(msg_data_1)));
         tester.ReceiveMessage(uint8_t(3), msg_data_2); // "blocktxn" short id
     }
 
