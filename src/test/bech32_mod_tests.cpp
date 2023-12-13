@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "blsct/double_public_key.h"
+#include <blsct/double_public_key.h>
 #include <bech32_mod.h>
 #include <test/util/str.h>
 #include <util/strencodings.h>

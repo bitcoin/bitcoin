@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "script/standard.h"
+#include <script/standard.h>
 #include <test/data/key_io_invalid.json.h>
 #include <test/data/key_io_valid.json.h>
 
