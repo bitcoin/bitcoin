@@ -8,7 +8,13 @@ ifneq ($(host),$(build))
 $(package)_dependencies += native_capnp
 endif
 
+# Hardcode library install path to "lib" to match the PKG_CONFIG_PATH
+# setting in depends/config.site.in, which also hardcodes "lib".
+# Without this setting, cmake by default would use the OS library
+# directory, which might be "lib64" or something else, not "lib", on multiarch systems.
 define $(package)_set_vars :=
+$(package)_config_opts += -DCMAKE_INSTALL_LIBDIR=lib/
+$(package)_config_opts += -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 ifneq ($(host),$(build))
 $(package)_config_opts := -DCAPNP_EXECUTABLE="$$(native_capnp_prefixbin)/capnp"
 $(package)_config_opts += -DCAPNPC_CXX_EXECUTABLE="$$(native_capnp_prefixbin)/capnpc-c++"
