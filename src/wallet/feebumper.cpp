@@ -343,8 +343,8 @@ bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx) {
         // so external signers are not asked to sign more than once.
         bool complete;
         wallet.FillPSBT(psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
-        const TransactionError err = wallet.FillPSBT(psbtx, complete, SIGHASH_ALL, true /* sign */, false  /* bip32derivs */);
-        if (err != TransactionError::OK) return false;
+        auto err{wallet.FillPSBT(psbtx, complete, SIGHASH_ALL, true /* sign */, false  /* bip32derivs */)};
+        if (err) return false;
         complete = FinalizeAndExtractPSBT(psbtx, mtx);
         return complete;
     } else {

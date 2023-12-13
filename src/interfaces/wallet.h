@@ -30,9 +30,11 @@ class CFeeRate;
 class CKey;
 enum class FeeReason;
 enum class OutputType;
-enum class TransactionError;
 struct PartiallySignedTransaction;
 struct bilingual_str;
+namespace common {
+enum class PSBTError;
+} // namespace common
 namespace wallet {
 class CCoinControl;
 class CWallet;
@@ -202,7 +204,7 @@ public:
         int& num_blocks) = 0;
 
     //! Fill PSBT.
-    virtual TransactionError fillPSBT(int sighash_type,
+    virtual std::optional<common::PSBTError> fillPSBT(int sighash_type,
         bool sign,
         bool bip32derivs,
         size_t* n_signed,

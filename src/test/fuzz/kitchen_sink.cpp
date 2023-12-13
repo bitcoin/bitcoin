@@ -18,15 +18,10 @@
 
 namespace {
 constexpr TransactionError ALL_TRANSACTION_ERROR[] = {
-    TransactionError::OK,
     TransactionError::MISSING_INPUTS,
     TransactionError::ALREADY_IN_CHAIN,
-    TransactionError::P2P_DISABLED,
     TransactionError::MEMPOOL_REJECTED,
     TransactionError::MEMPOOL_ERROR,
-    TransactionError::INVALID_PSBT,
-    TransactionError::PSBT_MISMATCH,
-    TransactionError::SIGHASH_MISMATCH,
     TransactionError::MAX_FEE_EXCEEDED,
 };
 }; // namespace
