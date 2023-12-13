@@ -20,6 +20,7 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
+#include <script/txhash.h>
 #include <streams.h>
 #include <test/util/json.h>
 #include <test/util/random.h>
@@ -115,16 +116,18 @@ std::string FormatScriptFlags(unsigned int flags)
 */
 bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& map_prevout_scriptPubKeys,
     const std::map<COutPoint, int64_t>& map_prevout_values, unsigned int flags,
-    const PrecomputedTransactionData& txdata, const std::string& strTest, bool expect_valid)
+    const PrecomputedTransactionData& txdata,
+    const std::string& strTest, bool expect_valid)
 {
     bool tx_valid = true;
     ScriptError err = expect_valid ? SCRIPT_ERR_UNKNOWN_ERROR : SCRIPT_ERR_OK;
+    TxHashCache txhash_cache;
     for (unsigned int i = 0; i < tx.vin.size() && tx_valid; ++i) {
         const CTxIn input = tx.vin[i];
         const CAmount amount = map_prevout_values.count(input.prevout) ? map_prevout_values.at(input.prevout) : 0;
         try {
             tx_valid = VerifyScript(input.scriptSig, map_prevout_scriptPubKeys.at(input.prevout),
-                &input.scriptWitness, flags, TransactionSignatureChecker(&tx, i, amount, txdata, MissingDataBehavior::ASSERT_FAIL), &err);
+                &input.scriptWitness, flags, TransactionSignatureChecker(&tx, i, amount, txdata, &txhash_cache, MissingDataBehavior::ASSERT_FAIL), &err);
         } catch (...) {
             BOOST_ERROR("Bad test: " << strTest);
             return true; // The test format is bad and an error is thrown. Return true to silence further error.
@@ -529,6 +532,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
 
     // check all inputs concurrently, with the cache
     PrecomputedTransactionData txdata(tx);
+    TxHashCache txhash_cache;
     CCheckQueue<CScriptCheck> scriptcheckqueue(/*batch_size=*/128, /*worker_threads_num=*/20);
     CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
 
@@ -544,7 +548,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
 
     for(uint32_t i = 0; i < mtx.vin.size(); i++) {
         std::vector<CScriptCheck> vChecks;
-        vChecks.emplace_back(coins[tx.vin[i].prevout.n].out, tx, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata);
+        vChecks.emplace_back(coins[tx.vin[i].prevout.n].out, tx, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata, &txhash_cache);
         control.Add(std::move(vChecks));
     }
 
@@ -557,7 +561,7 @@ SignatureData CombineSignatures(const CMutableTransaction& input1, const CMutabl
     SignatureData sigdata;
     sigdata = DataFromTransaction(input1, 0, tx->vout[0]);
     sigdata.MergeSignatureData(DataFromTransaction(input2, 0, tx->vout[0]));
-    ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(input1, 0, tx->vout[0].nValue, SIGHASH_ALL), tx->vout[0].scriptPubKey, sigdata);
+    ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(input1, 0, tx->vout[0].nValue, nullptr, SIGHASH_ALL), tx->vout[0].scriptPubKey, sigdata);
     return sigdata;
 }
 

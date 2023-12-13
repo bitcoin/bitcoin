@@ -317,9 +317,12 @@ bool PSBTInputSignedAndVerified(const PartiallySignedTransaction psbt, unsigned 
         return false;
     }
 
+    TxHashCache txhash_cache;
     if (txdata) {
-        return VerifyScript(input.final_script_sig, utxo.scriptPubKey, &input.final_script_witness, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker{&(*psbt.tx), input_index, utxo.nValue, *txdata, MissingDataBehavior::FAIL});
+        return VerifyScript(input.final_script_sig, utxo.scriptPubKey, &input.final_script_witness, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker{&(*psbt.tx), input_index, utxo.nValue, *txdata, &txhash_cache, MissingDataBehavior::FAIL});
     } else {
+        //TODO(stevenroose) I cant pass in txhash_cache here without passing in a non-null txdata..
+        //should I create a new constructor? is it fine to not have txhashcache if there's no txdata?
         return VerifyScript(input.final_script_sig, utxo.scriptPubKey, &input.final_script_witness, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker{&(*psbt.tx), input_index, utxo.nValue, MissingDataBehavior::FAIL});
     }
 }

@@ -213,6 +213,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
 
     // Figure out if we need to compute the input weight, and do so if necessary
     PrecomputedTransactionData txdata;
+    TxHashCache txhash_cache;
     txdata.Init(*wtx.tx, std::move(spent_outputs), /* force=*/ true);
     for (unsigned int i = 0; i < wtx.tx->vin.size(); ++i) {
         const CTxIn& txin = wtx.tx->vin.at(i);
@@ -226,7 +227,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
             // In order to do this, we verify the script with a special SignatureChecker which
             // will observe the signatures verified and record their sizes.
             SignatureWeights weights;
-            TransactionSignatureChecker tx_checker(wtx.tx.get(), i, coin.out.nValue, txdata, MissingDataBehavior::FAIL);
+            TransactionSignatureChecker tx_checker(wtx.tx.get(), i, coin.out.nValue, txdata, &txhash_cache, MissingDataBehavior::FAIL);
             SignatureWeightChecker size_checker(weights, tx_checker);
             VerifyScript(txin.scriptSig, coin.out.scriptPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, size_checker);
             // Add the difference between max and current to input_weight so that it represents the largest the input could be
