@@ -565,8 +565,7 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
         test_framework_tests.addTest(unittest.TestLoader().loadTestsFromName("test_framework.{}".format(module)))
     result = unittest.TextTestRunner(verbosity=1, failfast=True).run(test_framework_tests)
     if not result.wasSuccessful():
-        logging.debug("Early exiting after failure in TestFramework unit tests")
-        sys.exit(False)
+        sys.exit("Early exiting after failure in TestFramework unit tests")
 
     flags = ['--cachedir={}'.format(cache_dir)] + args
 
