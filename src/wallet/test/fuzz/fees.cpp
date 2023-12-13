@@ -37,6 +37,10 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
     }
 
     if (fuzzed_data_provider.ConsumeBool()) {
+        wallet.m_fallback_fee = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
+    }
+
+    if (fuzzed_data_provider.ConsumeBool()) {
         wallet.m_discard_rate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
     }
     (void)GetDiscardRate(wallet);
@@ -57,6 +61,9 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
     }
     if (fuzzed_data_provider.ConsumeBool()) {
         coin_control.m_confirm_target = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, 999'000);
+    }
+    if (fuzzed_data_provider.ConsumeBool()) {
+        coin_control.m_fee_mode = fuzzed_data_provider.ConsumeBool() ? FeeEstimateMode::CONSERVATIVE : FeeEstimateMode::ECONOMICAL;
     }
 
     FeeCalculation fee_calculation;
