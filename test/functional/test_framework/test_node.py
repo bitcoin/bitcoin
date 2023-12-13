@@ -260,7 +260,7 @@ class TestNode():
                 if self.version_is_at_least(190000):
                     # getmempoolinfo.loaded is available since commit
                     # bb8ae2c (version 0.19.0)
-                    wait_until_helper_internal(lambda: rpc.getmempoolinfo()['loaded'], timeout_factor=self.timeout_factor)
+                    self.wait_until(lambda: rpc.getmempoolinfo()['loaded'])
                     # Wait for the node to finish reindex, block import, and
                     # loading the mempool. Usually importing happens fast or
                     # even "immediate" when the node is started. However, there
@@ -414,7 +414,7 @@ class TestNode():
 
     def wait_until_stopped(self, *, timeout=BITCOIND_PROC_WAIT_TIMEOUT, expect_error=False, **kwargs):
         expected_ret_code = 1 if expect_error else 0  # Whether node shutdown return EXIT_FAILURE or EXIT_SUCCESS
-        wait_until_helper_internal(lambda: self.is_node_stopped(expected_ret_code=expected_ret_code, **kwargs), timeout=timeout, timeout_factor=self.timeout_factor)
+        self.wait_until(lambda: self.is_node_stopped(expected_ret_code=expected_ret_code, **kwargs), timeout=timeout)
 
     def replace_in_config(self, replacements):
         """
@@ -534,8 +534,7 @@ class TestNode():
 
         initial_peer_id = get_highest_peer_id()
         yield
-        wait_until_helper_internal(lambda: get_highest_peer_id() > initial_peer_id,
-                                   timeout=timeout, timeout_factor=self.timeout_factor)
+        self.wait_until(lambda: get_highest_peer_id() > initial_peer_id, timeout=timeout)
 
     @contextlib.contextmanager
     def profile_with_perf(self, profile_name: str):
@@ -747,7 +746,7 @@ class TestNode():
             p.peer_disconnect()
         del self.p2ps[:]
 
-        wait_until_helper_internal(lambda: self.num_test_p2p_connections() == 0, timeout_factor=self.timeout_factor)
+        self.wait_until(lambda: self.num_test_p2p_connections() == 0)
 
     def bumpmocktime(self, seconds):
         """Fast forward using setmocktime to self.mocktime + seconds. Requires setmocktime to have
@@ -755,6 +754,9 @@ class TestNode():
         assert self.mocktime
         self.mocktime += seconds
         self.setmocktime(self.mocktime)
+
+    def wait_until(self, test_function, timeout=60):
+        return wait_until_helper_internal(test_function, timeout=timeout, timeout_factor=self.timeout_factor)
 
 
 class TestNodeCLIAttr:
