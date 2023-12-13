@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <numeric>
 #include <optional>
+#include <stdexcept>
 
 namespace bech32_mod
 {
@@ -192,6 +193,9 @@ data CreateChecksum(Encoding encoding, const std::string& hrp, const data& value
 
 /** Encode a Bech32 or Bech32m string. */
 std::string Encode(Encoding encoding, const std::string& hrp, const data& values) {
+    if (values.size() != DOUBLE_PUBKEY_DATA_ENC_SIZE) {
+        throw std::runtime_error("Expected values to be a double public key");
+    }
     // First ensure that the HRP is all lowercase. BIP-173 and BIP350 require an encoder
     // to return a lowercase Bech32/Bech32m string, but if given an uppercase HRP, the
     // result will always be invalid.
@@ -206,19 +210,13 @@ std::string Encode(Encoding encoding, const std::string& hrp, const data& values
     return ret;
 }
 
-/** Decode a Bech32 or Bech32m string. */
+/** Decode a Bech32 or Bech32m string. Expects
+ *  str to be a valid encoding of DoublePublicKey */
 DecodeResult Decode(const std::string& str) {
     std::vector<int> errors;
     if (!CheckCharacters(str, errors)) return {};
     size_t pos = str.rfind('1');
 
-    if (str.size() != DOUBLE_PUBKEY_ENC_SIZE
-        || pos == str.npos  // separator '1' should be included
-        || pos == 0  // hrp part should not be empty
-        || pos + 9 > str.size()  // data part should not be empty
-    ) {
-        return {};
-    }
     data values(str.size() - 1 - pos);
     for (size_t i = 0; i < str.size() - 1 - pos; ++i) {
         unsigned char c = str[i + pos + 1];
@@ -236,56 +234,6 @@ DecodeResult Decode(const std::string& str) {
     Encoding result = VerifyChecksum(hrp, values);
     if (result == Encoding::INVALID) return {};
     return {result, std::move(hrp), data(values.begin(), values.end() - 8)};
-}
-
-std::string EncodeDoublePublicKey(
-    const CChainParams& params,
-    const Encoding encoding,
-    const blsct::DoublePublicKey& dpk
-) {
-    std::vector<uint8_t> dpk_v8 = dpk.GetVch();
-    std::vector<uint8_t> dpk_v5;
-    dpk_v5.reserve(DOUBLE_PUBKEY_ENC_SIZE);
-
-    // ignoring the return value since this conversion always succeeds
-    ConvertBits<8, 5, true>([&](uint8_t c) { dpk_v5.push_back(c); }, dpk_v8.begin(), dpk_v8.end());
-
-    return Encode(encoding, params.Bech32ModHRP(), dpk_v5);
-}
-
-std::optional<blsct::DoublePublicKey> DecodeDoublePublicKey(
-    const CChainParams& params,
-    const std::string& str
-) {
-    const auto hrp = ToLower(str.substr(0, params.Bech32ModHRP().size()));
-
-    // str needs to be of the expected length and have the expected hrp
-    if (str.size() != bech32_mod::DOUBLE_PUBKEY_ENC_SIZE
-        || hrp != params.Bech32ModHRP()
-        || str[params.Bech32ModHRP().size()] != '1'
-    ) return std::nullopt;
-
-    // decode to 5-bit based byte vector
-    const auto dec = bech32_mod::Decode(str);
-
-    // check if it has expected encoding and the data is of the expected length
-    if ((dec.encoding != bech32_mod::Encoding::BECH32 && dec.encoding != bech32_mod::Encoding::BECH32M)
-        || dec.data.size() != 154
-    ) return std::nullopt;
-
-    // The data part consists of two concatenated 48-byte public keys
-    std::vector<uint8_t> data;
-    data.reserve(blsct::DoublePublicKey::SIZE);
-    if (!ConvertBits<5, 8, false>([&](unsigned char c) { data.push_back(c); }, dec.data.begin(), dec.data.end())) {
-        return std::nullopt;
-    }
-
-    blsct::DoublePublicKey dpk(data);
-    if (dpk.IsValid()) {
-        return dpk;
-    } else {
-        return std::nullopt;
-    }
 }
 
 } // namespace bech32_mod

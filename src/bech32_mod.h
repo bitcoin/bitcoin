@@ -15,7 +15,6 @@
 #define BITCOIN_BECH32_MOD_H
 
 #include <chainparams.h>
-#include <blsct/double_public_key.h>
 #include <optional>
 #include <stdint.h>
 #include <string>
@@ -23,13 +22,6 @@
 
 namespace bech32_mod
 {
-
-// double public key after encoding to bech32_mod is 165-byte long consisting of:
-// - 2-byte hrp
-// - 1-byte separator '1'
-// - 154-byte key data (96 bytes / 5 bits = 153.6)
-// - 8-byte checksum
-constexpr size_t DOUBLE_PUBKEY_ENC_SIZE = 2 + 1 + 154 + 8;
 
 enum class Encoding {
     INVALID, //!< Failed decoding
@@ -55,18 +47,8 @@ struct DecodeResult
 /** Decode a Bech32 or Bech32m string. */
 DecodeResult Decode(const std::string& str);
 
-/** Encode DoublePublicKey to Bech32 or Bech32m string. Encoding must be one of BECH32 or BECH32M. */
-std::string EncodeDoublePublicKey(
-    const CChainParams& params,
-    const Encoding encoding,
-    const blsct::DoublePublicKey& dpk
-);
-
-/** Decode a Bech32 or Bech32m string to a DoublePublicKey. */
-std::optional<blsct::DoublePublicKey> DecodeDoublePublicKey(
-    const CChainParams& params,
-    const std::string& str
-);
+// 96 bytes / 5 bits = 153.6 -> 154 bytes
+constexpr size_t DOUBLE_PUBKEY_DATA_ENC_SIZE = 154;
 
 } // namespace bech32_mod
 
