@@ -62,7 +62,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "logging -> util/system -> sync -> logging"
     "logging -> util/system -> stacktraces -> logging"
     "logging -> util/system -> util/getuniquepath -> random -> logging"
-    "coinjoin/client -> coinjoin/util -> wallet/wallet -> coinjoin/client"
     "coinjoin/client -> net_processing -> coinjoin/context -> coinjoin/client"
     "coinjoin/context -> coinjoin/server -> net_processing -> coinjoin/context"
     "qt/appearancewidget -> qt/guiutil -> qt/optionsdialog -> qt/appearancewidget"
