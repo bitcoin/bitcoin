@@ -402,10 +402,11 @@ libbitcoin_server_a_SOURCES = \
   blockencodings.cpp \
   blockfilter.cpp \
   chain.cpp \
+  coinjoin/client.cpp \
   coinjoin/coinjoin.cpp \
   coinjoin/context.cpp \
-  coinjoin/options.cpp \
   coinjoin/server.cpp \
+  coinjoin/util.cpp \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
   deploymentstatus.cpp \
@@ -527,9 +528,6 @@ endif
 libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(SQLITE_CFLAGS)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
-  coinjoin/client.cpp \
-  coinjoin/options.cpp \
-  coinjoin/util.cpp \
   hdchain.cpp \
   wallet/coincontrol.cpp \
   wallet/context.cpp \
@@ -875,9 +873,7 @@ endif
 # https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking#circular-dependency)
 dash_wallet_LDADD = \
   $(LIBBITCOIN_WALLET_TOOL) \
-  $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
-  $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_UTIL) \
