@@ -21,6 +21,7 @@
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
+#include <algorithm>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -833,9 +834,9 @@ BOOST_AUTO_TEST_CASE(chacha20_midblock)
     c20.Keystream(b2);
     c20.Keystream(b3);
 
-    BOOST_CHECK(Span{block}.first(5) == Span{b1});
-    BOOST_CHECK(Span{block}.subspan(5, 7) == Span{b2});
-    BOOST_CHECK(Span{block}.last(52) == Span{b3});
+    BOOST_CHECK(std::ranges::equal(Span{block}.first(5), b1));
+    BOOST_CHECK(std::ranges::equal(Span{block}.subspan(5, 7), b2));
+    BOOST_CHECK(std::ranges::equal(Span{block}.last(52), b3));
 }
 
 BOOST_AUTO_TEST_CASE(poly1305_testvector)

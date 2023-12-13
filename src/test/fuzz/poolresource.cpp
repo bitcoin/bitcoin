@@ -78,7 +78,7 @@ public:
     {
         std::vector<std::byte> expect(entry.span.size());
         InsecureRandomContext(entry.seed).fillrand(expect);
-        assert(entry.span == expect);
+        assert(std::ranges::equal(entry.span, expect));
     }
 
     void Deallocate(const Entry& entry)
