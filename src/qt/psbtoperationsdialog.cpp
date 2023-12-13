@@ -13,6 +13,7 @@
 #include <qt/forms/ui_psbtoperationsdialog.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
+#include <util/error.h>
 #include <util/fs.h>
 #include <util/strencodings.h>
 
@@ -55,10 +56,10 @@ void PSBTOperationsDialog::openWithPSBT(PartiallySignedTransaction psbtx)
     bool complete = FinalizePSBT(psbtx); // Make sure all existing signatures are fully combined before checking for completeness.
     if (m_wallet_model) {
         size_t n_could_sign;
-        TransactionError err = m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, &n_could_sign, m_transaction_data, complete);
-        if (err != TransactionError::OK) {
+        const auto err{m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, &n_could_sign, m_transaction_data, complete)};
+        if (err) {
             showStatus(tr("Failed to load transaction: %1")
-                           .arg(QString::fromStdString(TransactionErrorString(err).translated)),
+                           .arg(QString::fromStdString(PSBTErrorString(*err).translated)),
                        StatusLevel::ERR);
             return;
         }
@@ -79,11 +80,11 @@ void PSBTOperationsDialog::signTransaction()
 
     WalletModel::UnlockContext ctx(m_wallet_model->requestUnlock());
 
-    TransactionError err = m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/true, /*bip32derivs=*/true, &n_signed, m_transaction_data, complete);
+    const auto err{m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/true, /*bip32derivs=*/true, &n_signed, m_transaction_data, complete)};
 
-    if (err != TransactionError::OK) {
+    if (err) {
         showStatus(tr("Failed to sign transaction: %1")
-            .arg(QString::fromStdString(TransactionErrorString(err).translated)), StatusLevel::ERR);
+            .arg(QString::fromStdString(PSBTErrorString(*err).translated)), StatusLevel::ERR);
         return;
     }
 
@@ -247,9 +248,9 @@ size_t PSBTOperationsDialog::couldSignInputs(const PartiallySignedTransaction &p
 
     size_t n_signed;
     bool complete;
-    TransactionError err = m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/false, &n_signed, m_transaction_data, complete);
+    const auto err{m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/false, &n_signed, m_transaction_data, complete)};
 
-    if (err != TransactionError::OK) {
+    if (err) {
         return 0;
     }
     return n_signed;

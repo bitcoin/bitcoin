@@ -137,6 +137,7 @@ BITCOIN_CORE_H = \
   common/bloom.h \
   common/init.h \
   common/run_command.h \
+  common/types.h \
   common/url.h \
   compat/assumptions.h \
   compat/byteswap.h \

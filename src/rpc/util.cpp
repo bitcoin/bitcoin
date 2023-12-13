@@ -7,6 +7,7 @@
 #include <clientversion.h>
 #include <core_io.h>
 #include <common/args.h>
+#include <common/types.h>
 #include <consensus/amount.h>
 #include <script/interpreter.h>
 #include <key_io.h>
@@ -29,6 +30,8 @@
 #include <string_view>
 #include <tuple>
 #include <utility>
+
+using common::PSBTError;
 
 const std::string UNIX_EPOCH_TIME = "UNIX epoch time";
 const std::string EXAMPLE_ADDRESS[2] = {"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl", "bc1q02ad21edsxd23d32dfgqqsz4vv4nmtfzuklhy3"};
@@ -364,6 +367,18 @@ unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target)
     return unsigned_target;
 }
 
+RPCErrorCode RPCErrorFromPSBTError(PSBTError err)
+{
+    switch (err) {
+        case PSBTError::UNSUPPORTED:
+            return RPC_INVALID_PARAMETER;
+        case PSBTError::SIGHASH_MISMATCH:
+            return RPC_DESERIALIZATION_ERROR;
+        default: break;
+    }
+    return RPC_TRANSACTION_ERROR;
+}
+
 RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
 {
     switch (terr) {
@@ -371,16 +386,14 @@ RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
             return RPC_TRANSACTION_REJECTED;
         case TransactionError::ALREADY_IN_CHAIN:
             return RPC_TRANSACTION_ALREADY_IN_CHAIN;
-        case TransactionError::P2P_DISABLED:
-            return RPC_CLIENT_P2P_DISABLED;
-        case TransactionError::INVALID_PSBT:
-        case TransactionError::PSBT_MISMATCH:
-            return RPC_INVALID_PARAMETER;
-        case TransactionError::SIGHASH_MISMATCH:
-            return RPC_DESERIALIZATION_ERROR;
         default: break;
     }
     return RPC_TRANSACTION_ERROR;
+}
+
+UniValue JSONRPCPSBTError(PSBTError err)
+{
+    return JSONRPCError(RPCErrorFromPSBTError(err), PSBTErrorString(err).original);
 }
 
 UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string)

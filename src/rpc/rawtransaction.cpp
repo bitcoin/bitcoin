@@ -1485,9 +1485,8 @@ static RPCHelpMan combinepsbt()
     }
 
     PartiallySignedTransaction merged_psbt;
-    const TransactionError error = CombinePSBTs(merged_psbt, psbtxs);
-    if (error != TransactionError::OK) {
-        throw JSONRPCTransactionError(error);
+    if (!CombinePSBTs(merged_psbt, psbtxs)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "PSBTs not compatible (different transactions)");
     }
 
     DataStream ssTx{};

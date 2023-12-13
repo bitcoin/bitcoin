@@ -19,6 +19,11 @@
 #include <string>
 
 struct bilingual_str;
+namespace common {
+enum class PSBTError;
+} // namespace common
+
+bilingual_str PSBTErrorString(common::PSBTError err);
 
 bilingual_str TransactionErrorString(const TransactionError error);
 

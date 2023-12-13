@@ -20,6 +20,8 @@
 
 #include <optional>
 
+using common::PSBTError;
+
 namespace wallet {
 //! Value for the first BIP 32 hardened derivation. Can be used as a bit mask and as a value. See BIP 32 for more details.
 const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
@@ -627,7 +629,7 @@ SigningResult LegacyScriptPubKeyMan::SignMessage(const std::string& message, con
     return SigningResult::SIGNING_FAILED;
 }
 
-TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
+std::optional<PSBTError> LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
 {
     if (n_signed) {
         *n_signed = 0;
@@ -642,13 +644,13 @@ TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psb
 
         // Get the Sighash type
         if (sign && input.sighash_type != std::nullopt && *input.sighash_type != sighash_type) {
-            return TransactionError::SIGHASH_MISMATCH;
+            return PSBTError::SIGHASH_MISMATCH;
         }
 
         // Check non_witness_utxo has specified prevout
         if (input.non_witness_utxo) {
             if (txin.prevout.n >= input.non_witness_utxo->vout.size()) {
-                return TransactionError::MISSING_INPUTS;
+                return PSBTError::MISSING_INPUTS;
             }
         } else if (input.witness_utxo.IsNull()) {
             // There's no UTXO so we can just skip this now
@@ -670,7 +672,7 @@ TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psb
         UpdatePSBTOutput(HidingSigningProvider(this, true, !bip32derivs), psbtx, i);
     }
 
-    return TransactionError::OK;
+    return {};
 }
 
 std::unique_ptr<CKeyMetadata> LegacyScriptPubKeyMan::GetMetadata(const CTxDestination& dest) const
@@ -2485,7 +2487,7 @@ SigningResult DescriptorScriptPubKeyMan::SignMessage(const std::string& message,
     return SigningResult::OK;
 }
 
-TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
+std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
 {
     if (n_signed) {
         *n_signed = 0;
@@ -2500,7 +2502,7 @@ TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction&
 
         // Get the Sighash type
         if (sign && input.sighash_type != std::nullopt && *input.sighash_type != sighash_type) {
-            return TransactionError::SIGHASH_MISMATCH;
+            return PSBTError::SIGHASH_MISMATCH;
         }
 
         // Get the scriptPubKey to know which SigningProvider to use
@@ -2509,7 +2511,7 @@ TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction&
             script = input.witness_utxo.scriptPubKey;
         } else if (input.non_witness_utxo) {
             if (txin.prevout.n >= input.non_witness_utxo->vout.size()) {
-                return TransactionError::MISSING_INPUTS;
+                return PSBTError::MISSING_INPUTS;
             }
             script = input.non_witness_utxo->vout[txin.prevout.n].scriptPubKey;
         } else {
@@ -2580,7 +2582,7 @@ TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction&
         UpdatePSBTOutput(HidingSigningProvider(keys.get(), /*hide_secret=*/true, /*hide_origin=*/!bip32derivs), psbtx, i);
     }
 
-    return TransactionError::OK;
+    return {};
 }
 
 std::unique_ptr<CKeyMetadata> DescriptorScriptPubKeyMan::GetMetadata(const CTxDestination& dest) const
