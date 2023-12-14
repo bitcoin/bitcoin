@@ -411,6 +411,24 @@ class ConfArgsTest(BitcoinTestFramework):
                 self.restart_node(0, extra_args=[connect_arg, '-dnsseed', '-proxy=localhost:1080'])
         self.stop_node(0)
 
+    def test_privatebroadcast(self):
+        self.log.info("Test that an invalid usage of -privatebroadcast throws an init error")
+        self.stop_node(0)
+        args_errors = {
+            "Private broadcast of own transactions requested (-privatebroadcast), "
+            "but none of Tor or I2P networks is reachable":
+            ["-privatebroadcast"],
+
+            "Private broadcast of own transactions requested (-privatebroadcast), "
+            "but -connect is also configured. They are incompatible because the "
+            "private broadcast needs to open new connections to randomly chosen "
+            "Tor or I2P peers. Consider using -maxconnections=0 -addnode=... instead" :
+            # -onion= makes the Tor network reachable
+            ["-privatebroadcast", "-connect=127.0.0.1:8333", "-onion=127.0.0.1:9050"]
+        }
+        for msg, args in args_errors.items():
+            self.nodes[0].assert_start_raises_init_error(extra_args=args, expected_msg=f"Error: {msg}")
+
     def test_ignored_conf(self):
         self.log.info('Test error is triggered when the datadir in use contains a bitcoin.conf file that would be ignored '
                       'because a conflicting -conf file argument is passed.')
@@ -496,6 +514,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_seed_peers()
         self.test_networkactive()
         self.test_connect_with_seednode()
+        self.test_privatebroadcast()
 
         self.test_dir_config()
         self.test_negated_config()
