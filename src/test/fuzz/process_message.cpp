@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,9 +8,6 @@
 #include <primitives/transaction.h>
 #include <protocol.h>
 #include <script/script.h>
-#include <serialize.h>
-#include <span.h>
-#include <streams.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -20,13 +17,10 @@
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
-#include <util/chaintype.h>
 #include <util/check.h>
 #include <util/time.h>
-#include <validation.h>
 #include <validationinterface.h>
 
-#include <atomic>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -81,8 +75,7 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
 
     CSerializedNetMsg net_msg;
     net_msg.m_type = random_message_type;
-    // fuzzed_data_provider is fully consumed after this call, don't use it
-    net_msg.data = fuzzed_data_provider.ConsumeRemainingBytes<unsigned char>();
+    net_msg.data = ConsumeRandomLengthByteVector(fuzzed_data_provider, MAX_PROTOCOL_MESSAGE_LENGTH);
 
     connman.FlushSendBuffer(p2p_node);
     (void)connman.ReceiveMsgFrom(p2p_node, std::move(net_msg));
