@@ -775,6 +775,7 @@ public:
             case ConnectionType::MANUAL:
             case ConnectionType::ADDR_FETCH:
             case ConnectionType::FEELER:
+            case ConnectionType::PRIVATE_BROADCAST:
                 return false;
         } // no default case, so the compiler can warn about missing cases
 
@@ -796,6 +797,7 @@ public:
         case ConnectionType::FEELER:
         case ConnectionType::BLOCK_RELAY:
         case ConnectionType::ADDR_FETCH:
+        case ConnectionType::PRIVATE_BROADCAST:
                 return false;
         case ConnectionType::OUTBOUND_FULL_RELAY:
         case ConnectionType::MANUAL:
@@ -817,6 +819,11 @@ public:
         return m_conn_type == ConnectionType::ADDR_FETCH;
     }
 
+    bool IsPrivateBroadcastConn() const
+    {
+        return m_conn_type == ConnectionType::PRIVATE_BROADCAST;
+    }
+
     bool IsInboundConn() const {
         return m_conn_type == ConnectionType::INBOUND;
     }
@@ -830,6 +837,7 @@ public:
             case ConnectionType::OUTBOUND_FULL_RELAY:
             case ConnectionType::BLOCK_RELAY:
             case ConnectionType::ADDR_FETCH:
+            case ConnectionType::PRIVATE_BROADCAST:
                 return true;
         } // no default case, so the compiler can warn about missing cases
 
