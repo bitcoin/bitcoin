@@ -669,7 +669,7 @@ fs::path QStringToPath(const QString &path)
 
 QString PathToQString(const fs::path &path)
 {
-    return QString::fromStdString(path.u8string());
+    return QString::fromStdString(path.utf8string());
 }
 
 QString NetworkToQString(Network net)

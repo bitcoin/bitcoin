@@ -165,7 +165,7 @@ static RPCHelpMan listwalletdir()
     UniValue wallets(UniValue::VARR);
     for (const auto& path : ListDatabases(GetWalletDir())) {
         UniValue wallet(UniValue::VOBJ);
-        wallet.pushKV("name", path.u8string());
+        wallet.pushKV("name", path.utf8string());
         wallets.push_back(wallet);
     }
 
@@ -802,7 +802,7 @@ static RPCHelpMan migratewallet()
             if (res->solvables_wallet) {
                 r.pushKV("solvables_name", res->solvables_wallet->GetName());
             }
-            r.pushKV("backup_path", res->backup_path.u8string());
+            r.pushKV("backup_path", res->backup_path.utf8string());
 
             return r;
         },
