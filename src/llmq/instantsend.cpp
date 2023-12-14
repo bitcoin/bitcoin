@@ -106,8 +106,7 @@ void CInstantSendDb::WriteNewInstantSendLock(const uint256& hash, const CInstant
     }
     db->WriteBatch(batch);
 
-    auto p = std::make_shared<CInstantSendLock>(islock);
-    islockCache.insert(hash, p);
+    islockCache.insert(hash, std::make_shared<CInstantSendLock>(islock));
     txidCache.insert(islock.txid, hash);
     for (const auto& in : islock.inputs) {
         outpointCache.insert(in, hash);
