@@ -81,6 +81,8 @@ static const std::string DEFAULT_MAX_UPLOAD_TARGET{"0M"};
 static const bool DEFAULT_BLOCKSONLY = false;
 /** -peertimeout default */
 static const int64_t DEFAULT_PEER_CONNECT_TIMEOUT = 60;
+/** Default for -privatebroadcast. */
+static constexpr bool DEFAULT_PRIVATE_BROADCAST{false};
 /** Number of file descriptors required for message capture **/
 static const int NUM_FDS_MESSAGE_CAPTURE = 1;
 /** Interval for ASMap Health Check **/
