@@ -655,6 +655,15 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                    OptionsCategory::NODE_RELAY);
     argsman.AddArg("-minrelaytxfee=<amt>", strprintf("Fees (in %s/kvB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)",
         CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-privatebroadcast",
+                   strprintf(
+                       "Broadcast transactions submitted via sendrawtransaction RPC using short lived "
+                       "connections through the Tor or I2P networks without putting them in the mempool first. "
+                       "Transactions submitted through the wallet are not affected by this option "
+                       "(default: %u)",
+                   DEFAULT_PRIVATE_BROADCAST),
+                   ArgsManager::ALLOW_ANY,
+                   OptionsCategory::NODE_RELAY);
     argsman.AddArg("-whitelistforcerelay", strprintf("Add 'forcerelay' permission to whitelisted peers with default permissions. This will relay transactions even if the transactions were already in the mempool. (default: %d)", DEFAULT_WHITELISTFORCERELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-whitelistrelay", strprintf("Add 'relay' permission to whitelisted peers with default permissions. This will accept relayed transactions even when not relaying transactions (default: %d)", DEFAULT_WHITELISTRELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
 
@@ -1652,13 +1661,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
+    const bool listenonion{args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)};
     if (onion_proxy.IsValid()) {
         SetProxy(NET_ONION, onion_proxy);
     } else {
         // If -listenonion is set, then we will (try to) connect to the Tor control port
         // later from the torcontrol thread and may retrieve the onion proxy from there.
-        const bool listenonion_disabled{!args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)};
-        if (onlynet_used_with_onion && listenonion_disabled) {
+        if (onlynet_used_with_onion && !listenonion) {
             return InitError(
                 _("Outbound connections restricted to Tor (-onlynet=onion) but the proxy for "
                   "reaching the Tor network is not provided: none of -proxy, -onion or "
@@ -2015,7 +2024,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         connOptions.onion_binds.push_back(onion_service_target);
     }
 
-    if (args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)) {
+    if (listenonion) {
         if (connOptions.onion_binds.size() > 1) {
             InitWarning(strprintf(_("More than one onion bind address is provided. Using %s "
                                     "for the automatically created Tor onion service."),
@@ -2080,6 +2089,32 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     connOptions.m_i2p_accept_incoming = args.GetBoolArg("-i2pacceptincoming", DEFAULT_I2P_ACCEPT_INCOMING);
+
+    if (args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)) {
+        // If -listenonion is set, then NET_ONION may not be reachable now
+        // but may become reachable later, thus only error here if it is not
+        // reachable and will not become reachable for sure.
+        const bool onion_may_become_reachable{listenonion && (!args.IsArgSet("-onlynet") || onlynet_used_with_onion)};
+        if (!g_reachable_nets.Contains(NET_I2P) &&
+            !g_reachable_nets.Contains(NET_ONION) &&
+            !onion_may_become_reachable) {
+            return InitError(_("Private broadcast of own transactions requested (-privatebroadcast), "
+                               "but none of Tor or I2P networks is reachable"));
+        }
+        if (!connOptions.m_use_addrman_outgoing) {
+            return InitError(_("Private broadcast of own transactions requested (-privatebroadcast), "
+                               "but -connect is also configured. They are incompatible because the "
+                               "private broadcast needs to open new connections to randomly "
+                               "chosen Tor or I2P peers. Consider using -maxconnections=0 -addnode=... "
+                               "instead"));
+        }
+        if (!proxyRandomize && (g_reachable_nets.Contains(NET_ONION) || onion_may_become_reachable)) {
+            InitWarning(_("Private broadcast of own transactions requested (-privatebroadcast) and "
+                          "-proxyrandomize is disabled. Tor circuits for private broadcast connections "
+                          "may be correlated to other connections over Tor. For maximum privacy set "
+                          "-proxyrandomize=1."));
+        }
+    }
 
     if (!node.connman->Start(scheduler, connOptions)) {
         return false;
