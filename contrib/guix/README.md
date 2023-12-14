@@ -259,7 +259,7 @@ details.
   Override the number of jobs to run simultaneously, you might want to do so on
   a memory-limited machine. This may be passed to:
 
-  - `guix` build commands as in `guix environment --cores="$JOBS"`
+  - `guix` build commands as in `guix shell --cores="$JOBS"`
   - `make` as in `make --jobs="$JOBS"`
   - `xargs` as in `xargs -P"$JOBS"`
 
@@ -301,7 +301,7 @@ details.
 
 * _**ADDITIONAL_GUIX_ENVIRONMENT_FLAGS**_
 
-  Additional flags to be passed to the invocation of `guix environment` inside
+  Additional flags to be passed to the invocation of `guix shell` inside
   `guix time-machine`.
 
 # Choosing your security model

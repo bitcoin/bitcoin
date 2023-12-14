@@ -310,11 +310,14 @@ public:
 
 private:
     /** Memory only. */
+    const bool m_has_witness;
     const Txid hash;
     const Wtxid m_witness_hash;
 
     Txid ComputeHash() const;
     Wtxid ComputeWitnessHash() const;
+
+    bool ComputeHasWitness() const;
 
 public:
     /** Convert a CMutableTransaction into a CTransaction. */
@@ -367,15 +370,7 @@ public:
 
     std::string ToString() const;
 
-    bool HasWitness() const
-    {
-        for (size_t i = 0; i < vin.size(); i++) {
-            if (!vin[i].scriptWitness.IsNull()) {
-                return true;
-            }
-        }
-        return false;
-    }
+    bool HasWitness() const { return m_has_witness; }
 };
 
 /** A mutable version of CTransaction. */

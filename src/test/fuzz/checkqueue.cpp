@@ -31,8 +31,8 @@ FUZZ_TARGET(checkqueue)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     const unsigned int batch_size = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, 1024);
-    CCheckQueue<DumbCheck> check_queue_1{batch_size};
-    CCheckQueue<DumbCheck> check_queue_2{batch_size};
+    CCheckQueue<DumbCheck> check_queue_1{batch_size, /*worker_threads_num=*/0};
+    CCheckQueue<DumbCheck> check_queue_2{batch_size, /*worker_threads_num=*/0};
     std::vector<DumbCheck> checks_1;
     std::vector<DumbCheck> checks_2;
     const int size = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 1024);

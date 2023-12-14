@@ -113,7 +113,7 @@ void TxOrphanage::EraseForPeer(NodeId peer)
     if (nErased > 0) LogPrint(BCLog::TXPACKAGES, "Erased %d orphan tx from peer=%d\n", nErased, peer);
 }
 
-void TxOrphanage::LimitOrphans(unsigned int max_orphans)
+void TxOrphanage::LimitOrphans(unsigned int max_orphans, FastRandomContext& rng)
 {
     LOCK(m_mutex);
 
@@ -138,7 +138,6 @@ void TxOrphanage::LimitOrphans(unsigned int max_orphans)
         nNextSweep = nMinExpTime + ORPHAN_TX_EXPIRE_INTERVAL;
         if (nErased > 0) LogPrint(BCLog::TXPACKAGES, "Erased %d orphan tx due to expiration\n", nErased);
     }
-    FastRandomContext rng;
     while (m_orphans.size() > max_orphans)
     {
         // Evict a random orphan:

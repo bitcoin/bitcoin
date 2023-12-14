@@ -74,49 +74,49 @@ BOOST_AUTO_TEST_CASE(streams_vector_writer)
     // point should yield the same results, even if the first test grew the
     // vector.
 
-    CVectorWriter{INIT_PROTO_VERSION, vch, 0, a, b};
+    VectorWriter{vch, 0, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{1, 2}}));
-    CVectorWriter{INIT_PROTO_VERSION, vch, 0, a, b};
+    VectorWriter{vch, 0, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{1, 2}}));
     vch.clear();
 
-    CVectorWriter{INIT_PROTO_VERSION, vch, 2, a, b};
+    VectorWriter{vch, 2, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2}}));
-    CVectorWriter{INIT_PROTO_VERSION, vch, 2, a, b};
+    VectorWriter{vch, 2, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2}}));
     vch.clear();
 
     vch.resize(5, 0);
-    CVectorWriter{INIT_PROTO_VERSION, vch, 2, a, b};
+    VectorWriter{vch, 2, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2, 0}}));
-    CVectorWriter{INIT_PROTO_VERSION, vch, 2, a, b};
+    VectorWriter{vch, 2, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2, 0}}));
     vch.clear();
 
     vch.resize(4, 0);
-    CVectorWriter{INIT_PROTO_VERSION, vch, 3, a, b};
+    VectorWriter{vch, 3, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 1, 2}}));
-    CVectorWriter{INIT_PROTO_VERSION, vch, 3, a, b};
+    VectorWriter{vch, 3, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 1, 2}}));
     vch.clear();
 
     vch.resize(4, 0);
-    CVectorWriter{INIT_PROTO_VERSION, vch, 4, a, b};
+    VectorWriter{vch, 4, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 0, 1, 2}}));
-    CVectorWriter{INIT_PROTO_VERSION, vch, 4, a, b};
+    VectorWriter{vch, 4, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 0, 1, 2}}));
     vch.clear();
 
-    CVectorWriter{INIT_PROTO_VERSION, vch, 0, bytes};
+    VectorWriter{vch, 0, bytes};
     BOOST_CHECK((vch == std::vector<unsigned char>{{3, 4, 5, 6}}));
-    CVectorWriter{INIT_PROTO_VERSION, vch, 0, bytes};
+    VectorWriter{vch, 0, bytes};
     BOOST_CHECK((vch == std::vector<unsigned char>{{3, 4, 5, 6}}));
     vch.clear();
 
     vch.resize(4, 8);
-    CVectorWriter{INIT_PROTO_VERSION, vch, 2, a, bytes, b};
+    VectorWriter{vch, 2, a, bytes, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{8, 8, 1, 3, 4, 5, 6, 2}}));
-    CVectorWriter{INIT_PROTO_VERSION, vch, 2, a, bytes, b};
+    VectorWriter{vch, 2, a, bytes, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{8, 8, 1, 3, 4, 5, 6, 2}}));
     vch.clear();
 }
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
 {
     std::vector<unsigned char> vch = {1, 255, 3, 4, 5, 6};
 
-    SpanReader reader{INIT_PROTO_VERSION, vch};
+    SpanReader reader{vch};
     BOOST_CHECK_EQUAL(reader.size(), 6U);
     BOOST_CHECK(!reader.empty());
 
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
     BOOST_CHECK_THROW(reader >> d, std::ios_base::failure);
 
     // Read a 4 bytes as a signed int from the beginning of the buffer.
-    SpanReader new_reader{INIT_PROTO_VERSION, vch};
+    SpanReader new_reader{vch};
     new_reader >> d;
     BOOST_CHECK_EQUAL(d, 67370753); // 1,255,3,4 in little-endian base-256
     BOOST_CHECK_EQUAL(new_reader.size(), 2U);
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
 BOOST_AUTO_TEST_CASE(streams_vector_reader_rvalue)
 {
     std::vector<uint8_t> data{0x82, 0xa7, 0x31};
-    SpanReader reader{INIT_PROTO_VERSION, data};
+    SpanReader reader{data};
     uint32_t varint = 0;
     // Deserialize into r-value
     reader >> VARINT(varint);

@@ -33,11 +33,7 @@ struct FuzzTargetOptions {
 
 void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, FuzzTargetOptions opts);
 
-#if defined(__clang__)
-#define FUZZ_TARGET(...) _Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wgnu-zero-variadic-macro-arguments\"") DETAIL_FUZZ(__VA_ARGS__) _Pragma("clang diagnostic pop")
-#else
 #define FUZZ_TARGET(...) DETAIL_FUZZ(__VA_ARGS__)
-#endif
 
 #define DETAIL_FUZZ(name, ...)                                                        \
     void name##_fuzz_target(FuzzBufferType);                                          \

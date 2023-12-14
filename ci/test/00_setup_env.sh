@@ -46,7 +46,6 @@ export RUN_TIDY=${RUN_TIDY:-false}
 # This is needed because some ci machines have slow CPU or disk, so sanitizers
 # might be slow or a reindex might be waiting on disk IO.
 export TEST_RUNNER_TIMEOUT_FACTOR=${TEST_RUNNER_TIMEOUT_FACTOR:-40}
-export TEST_RUNNER_ENV=${TEST_RUNNER_ENV:-}
 export RUN_FUZZ_TESTS=${RUN_FUZZ_TESTS:-false}
 
 # Randomize test order.

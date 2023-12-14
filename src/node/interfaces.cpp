@@ -428,9 +428,9 @@ public:
     explicit NotificationsProxy(std::shared_ptr<Chain::Notifications> notifications)
         : m_notifications(std::move(notifications)) {}
     virtual ~NotificationsProxy() = default;
-    void TransactionAddedToMempool(const CTransactionRef& tx, uint64_t mempool_sequence) override
+    void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t mempool_sequence) override
     {
-        m_notifications->transactionAddedToMempool(tx);
+        m_notifications->transactionAddedToMempool(tx.info.m_tx);
     }
     void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override
     {

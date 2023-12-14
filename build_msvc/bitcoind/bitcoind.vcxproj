@@ -74,15 +74,19 @@
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@BUILD_BITCOIN_CLI_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
+                  Replace="@BUILD_BITCOIN_UTIL_TRUE@" By=""></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@BUILD_BITCOIN_WALLET_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@BUILD_BITCOIND_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
-                  Replace="@ENABLE_FUZZ_TRUE@" By=""></ReplaceInFile>
+                  Replace="@ENABLE_FUZZ_BINARY_TRUE@" By="#"></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@ENABLE_ZMQ_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
-                  Replace="@ENABLE_EXTERNAL_SIGNER_TRUE@" By=""></ReplaceInFile>
+                  Replace="@ENABLE_EXTERNAL_SIGNER_TRUE@" By="#"></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
+                  Replace="@ENABLE_USDT_TRACEPOINTS_TRUE@" By="#"></ReplaceInFile>
   </Target>
   <Import Project="..\common.vcxproj" />
 </Project>

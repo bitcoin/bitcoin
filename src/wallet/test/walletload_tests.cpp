@@ -104,7 +104,7 @@ bool HasAnyRecordOfType(WalletDatabase& db, const std::string& key)
 template<typename... Args>
 SerializeData MakeSerializeData(const Args&... args)
 {
-    CDataStream s(0, 0);
+    DataStream s{};
     SerializeMany(s, args...);
     return {s.begin(), s.end()};
 }

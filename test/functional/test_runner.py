@@ -156,6 +156,7 @@ BASE_SCRIPTS = [
     'p2p_invalid_messages.py',
     'rpc_createmultisig.py',
     'p2p_timeouts.py',
+    'p2p_timeouts.py --v2transport',
     'wallet_dump.py --legacy-wallet',
     'rpc_signer.py',
     'wallet_signer.py --descriptors',
@@ -243,6 +244,7 @@ BASE_SCRIPTS = [
     'p2p_getdata.py',
     'p2p_addrfetch.py',
     'rpc_net.py',
+    'rpc_net.py --v2transport',
     'wallet_keypool.py --legacy-wallet',
     'wallet_keypool.py --descriptors',
     'wallet_descriptor.py --descriptors',
@@ -368,6 +370,7 @@ BASE_SCRIPTS = [
     'wallet_orphanedreward.py',
     'wallet_timelock.py',
     'p2p_node_network_limited.py',
+    'p2p_node_network_limited.py --v2transport',
     'p2p_permissions.py',
     'feature_blocksdir.py',
     'wallet_startup.py',
@@ -562,8 +565,7 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
         test_framework_tests.addTest(unittest.TestLoader().loadTestsFromName("test_framework.{}".format(module)))
     result = unittest.TextTestRunner(verbosity=1, failfast=True).run(test_framework_tests)
     if not result.wasSuccessful():
-        logging.debug("Early exiting after failure in TestFramework unit tests")
-        sys.exit(False)
+        sys.exit("Early exiting after failure in TestFramework unit tests")
 
     flags = ['--cachedir={}'.format(cache_dir)] + args
 

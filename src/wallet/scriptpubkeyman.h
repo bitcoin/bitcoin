@@ -366,7 +366,7 @@ private:
      */
     bool TopUpInactiveHDChain(const CKeyID seed_id, int64_t index, bool internal);
 
-    bool TopUpChain(CHDChain& chain, unsigned int size);
+    bool TopUpChain(WalletBatch& batch, CHDChain& chain, unsigned int size);
 public:
     LegacyScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size) : ScriptPubKeyMan(storage), m_keypool_size(keypool_size) {}
 
@@ -583,7 +583,10 @@ private:
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(int32_t index, bool include_private = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
 protected:
-  WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
+    WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
+
+    //! Same as 'TopUp' but designed for use within a batch transaction context
+    bool TopUpWithDB(WalletBatch& batch, unsigned int size = 0);
 
 public:
     DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
@@ -618,12 +621,7 @@ public:
     bool IsHDEnabled() const override;
 
     //! Setup descriptors based on the given CExtkey
-    bool SetupDescriptorGeneration(const CExtKey& master_key, OutputType addr_type, bool internal);
-
-    /** Provide a descriptor at setup time
-    * Returns false if already setup or setup fails, true if setup is successful
-    */
-    bool SetupDescriptor(std::unique_ptr<Descriptor>desc);
+    bool SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal);
 
     bool HavePrivateKeys() const override;
 

@@ -12,6 +12,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <netmessagemaker.h>
+#include <node/protocol_version.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
@@ -22,7 +23,6 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <validation.h>
-#include <version.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -845,7 +845,6 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
 
     const uint64_t services{NODE_NETWORK | NODE_WITNESS};
     const int64_t time{0};
-    const CNetMsgMaker msg_maker{PROTOCOL_VERSION};
 
     // Force ChainstateManager::IsInitialBlockDownload() to return false.
     // Otherwise PushAddress() isn't called by PeerManager::ProcessMessage().
@@ -858,14 +857,14 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     std::chrono::microseconds time_received_dummy{0};
 
     const auto msg_version =
-        msg_maker.Make(NetMsgType::VERSION, PROTOCOL_VERSION, services, time, services, CAddress::V1_NETWORK(peer_us));
-    CDataStream msg_version_stream{msg_version.data, SER_NETWORK, PROTOCOL_VERSION};
+        NetMsg::Make(NetMsgType::VERSION, PROTOCOL_VERSION, services, time, services, CAddress::V1_NETWORK(peer_us));
+    DataStream msg_version_stream{msg_version.data};
 
     m_node.peerman->ProcessMessage(
         peer, NetMsgType::VERSION, msg_version_stream, time_received_dummy, interrupt_dummy);
 
-    const auto msg_verack = msg_maker.Make(NetMsgType::VERACK);
-    CDataStream msg_verack_stream{msg_verack.data, SER_NETWORK, PROTOCOL_VERSION};
+    const auto msg_verack = NetMsg::Make(NetMsgType::VERACK);
+    DataStream msg_verack_stream{msg_verack.data};
 
     // Will set peer.fSuccessfullyConnected to true (necessary in SendMessages()).
     m_node.peerman->ProcessMessage(
@@ -1047,10 +1046,10 @@ class V2TransportTester
 
 public:
     /** Construct a tester object. test_initiator: whether the tested transport is initiator. */
-    V2TransportTester(bool test_initiator) :
-        m_transport(0, test_initiator, SER_NETWORK, INIT_PROTO_VERSION),
-        m_cipher{GenerateRandomTestKey(), MakeByteSpan(InsecureRand256())},
-        m_test_initiator(test_initiator) {}
+    explicit V2TransportTester(bool test_initiator)
+        : m_transport{0, test_initiator},
+          m_cipher{GenerateRandomTestKey(), MakeByteSpan(InsecureRand256())},
+          m_test_initiator(test_initiator) {}
 
     /** Data type returned by Interact:
      *
@@ -1127,7 +1126,7 @@ public:
     void SendV1Version(const MessageStartChars& magic)
     {
         CMessageHeader hdr(magic, "version", 126 + InsecureRandRange(11));
-        CDataStream ser(SER_NETWORK, CLIENT_VERSION);
+        DataStream ser{};
         ser << hdr;
         m_to_send.insert(m_to_send.end(), UCharCast(ser.data()), UCharCast(ser.data() + ser.size()));
     }

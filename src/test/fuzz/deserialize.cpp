@@ -28,7 +28,6 @@
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
 #include <undo.h>
-#include <version.h>
 
 #include <exception>
 #include <optional>
@@ -91,15 +90,15 @@ void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj, const P& params
 }
 
 template <typename T>
-CDataStream Serialize(const T& obj)
+DataStream Serialize(const T& obj)
 {
-    CDataStream ds{SER_NETWORK, INIT_PROTO_VERSION};
+    DataStream ds{};
     ds << obj;
     return ds;
 }
 
 template <typename T>
-T Deserialize(CDataStream ds)
+T Deserialize(DataStream ds)
 {
     T obj;
     ds >> obj;
@@ -109,16 +108,7 @@ T Deserialize(CDataStream ds)
 template <typename T>
 void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj)
 {
-    CDataStream ds{buffer, SER_NETWORK, INIT_PROTO_VERSION};
-    {
-        try {
-            int version;
-            ds >> version;
-            ds.SetVersion(version);
-        } catch (const std::ios_base::failure&) {
-            throw invalid_fuzzing_input_exception();
-        }
-    }
+    DataStream ds{buffer};
     try {
         ds >> obj;
     } catch (const std::ios_base::failure&) {

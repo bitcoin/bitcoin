@@ -7,6 +7,7 @@
 
 #include <attributes.h>
 
+#include <cassert> // IWYU pragma: export
 #include <stdexcept>
 #include <string>
 #include <string_view>

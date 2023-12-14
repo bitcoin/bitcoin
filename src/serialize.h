@@ -7,7 +7,10 @@
 #define BITCOIN_SERIALIZE_H
 
 #include <attributes.h>
+#include <compat/assumptions.h> // IWYU pragma: keep
 #include <compat/endian.h>
+#include <prevector.h>
+#include <span.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -18,12 +21,8 @@
 #include <memory>
 #include <set>
 #include <string>
-#include <string.h>
 #include <utility>
 #include <vector>
-
-#include <prevector.h>
-#include <span.h>
 
 /**
  * The maximum size of a serialized object in bytes or number of elements
@@ -118,20 +117,7 @@ template<typename Stream> inline uint64_t ser_readdata64(Stream &s)
 }
 
 
-/////////////////////////////////////////////////////////////////
-//
-// Templates for serializing to anything that looks like a stream,
-// i.e. anything that supports .read(Span<std::byte>) and .write(Span<const std::byte>)
-//
-
 class SizeComputer;
-
-enum
-{
-    // primary actions
-    SER_NETWORK         = (1 << 0),
-    SER_DISK            = (1 << 1),
-};
 
 /**
  * Convert any argument to a reference to X, maintaining constness.
@@ -269,6 +255,9 @@ const Out& AsBase(const In& x)
     BASE_SERIALIZE_METHODS(cls)                                \
     FORMATTER_METHODS_PARAMS(cls, obj, paramcls, paramobj)
 
+// Templates for serializing to anything that looks like a stream,
+// i.e. anything that supports .read(Span<std::byte>) and .write(Span<const std::byte>)
+//
 // clang-format off
 #ifndef CHAR_EQUALS_INT8
 template <typename Stream> void Serialize(Stream&, char) = delete; // char serialization forbidden. Use uint8_t or int8_t

@@ -9,7 +9,6 @@
 #include <core_io.h>
 #include <psbt.h>
 #include <util/strencodings.h>
-#include <version.h>
 
 #include <algorithm>
 #include <stdexcept>
@@ -74,7 +73,7 @@ UniValue ExternalSigner::GetDescriptors(const int account)
 bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::string& error)
 {
     // Serialize the PSBT
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    DataStream ssTx{};
     ssTx << psbtx;
     // parse ExternalSigner master fingerprint
     std::vector<unsigned char> parsed_m_fingerprint = ParseHex(m_fingerprint);

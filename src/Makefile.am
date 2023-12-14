@@ -230,6 +230,7 @@ BITCOIN_CORE_H = \
   node/mini_miner.h \
   node/minisketchwrapper.h \
   node/peerman_args.h \
+  node/protocol_version.h \
   node/psbt.h \
   node/transaction.h \
   node/txreconciliation.h \
@@ -303,7 +304,6 @@ BITCOIN_CORE_H = \
   util/fees.h \
   util/fs.h \
   util/fs_helpers.h \
-  util/getuniquepath.h \
   util/golombrice.h \
   util/hash_type.h \
   util/hasher.h \
@@ -658,8 +658,7 @@ libbitcoin_consensus_a_SOURCES = \
   uint256.cpp \
   uint256.h \
   util/strencodings.cpp \
-  util/strencodings.h \
-  version.h
+  util/strencodings.h
 #
 
 # common #
@@ -741,7 +740,6 @@ libbitcoin_util_a_SOURCES = \
   util/fees.cpp \
   util/fs.cpp \
   util/fs_helpers.cpp \
-  util/getuniquepath.cpp \
   util/hasher.cpp \
   util/sock.cpp \
   util/syserror.cpp \
@@ -954,7 +952,6 @@ libbitcoinkernel_la_SOURCES = \
   node/chainstate.cpp \
   node/utxo_snapshot.cpp \
   policy/feerate.cpp \
-  policy/fees.cpp \
   policy/packages.cpp \
   policy/policy.cpp \
   policy/rbf.cpp \
@@ -985,7 +982,6 @@ libbitcoinkernel_la_SOURCES = \
   util/exception.cpp \
   util/fs.cpp \
   util/fs_helpers.cpp \
-  util/getuniquepath.cpp \
   util/hasher.cpp \
   util/moneystr.cpp \
   util/rbf.cpp \

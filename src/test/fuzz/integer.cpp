@@ -33,7 +33,6 @@
 #include <util/overflow.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <version.h>
 
 #include <cassert>
 #include <chrono>

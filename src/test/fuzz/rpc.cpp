@@ -254,7 +254,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, b
                 good_data = false;
                 return;
             }
-            CDataStream data_stream{SER_NETWORK, PROTOCOL_VERSION};
+            DataStream data_stream{};
             data_stream << TX_WITH_WITNESS(*opt_block);
             r = HexStr(data_stream);
         },
@@ -288,7 +288,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, b
                 good_data = false;
                 return;
             }
-            CDataStream data_stream{SER_NETWORK, PROTOCOL_VERSION};
+            DataStream data_stream{};
             data_stream << *opt_psbt;
             r = EncodeBase64(data_stream);
         },
@@ -380,9 +380,7 @@ FUZZ_TARGET(rpc, .init = initialize_rpc)
         rpc_testing_setup->CallRPC(rpc_command, arguments);
     } catch (const UniValue& json_rpc_error) {
         const std::string error_msg{json_rpc_error.find_value("message").get_str()};
-        // Once c++20 is allowed, starts_with can be used.
-        // if (error_msg.starts_with("Internal bug detected")) {
-        if (0 == error_msg.rfind("Internal bug detected", 0)) {
+        if (error_msg.starts_with("Internal bug detected")) {
             // Only allow the intentional internal bug
             assert(error_msg.find("trigger_internal_bug") != std::string::npos);
         }

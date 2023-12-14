@@ -129,7 +129,7 @@ public:
     std::pair<CAddress, NodeSeconds> Select(bool new_only, std::optional<Network> network) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const
+    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     std::vector<std::pair<AddrInfo, AddressPosition>> GetEntries(bool from_tried) const
@@ -261,7 +261,7 @@ private:
      * */
     int GetEntry(bool use_tried, size_t bucket, size_t position) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    std::vector<CAddress> GetAddr_(size_t max_addresses, size_t max_pct, std::optional<Network> network) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::vector<CAddress> GetAddr_(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     std::vector<std::pair<AddrInfo, AddressPosition>> GetEntries_(bool from_tried) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 

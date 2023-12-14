@@ -44,13 +44,20 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
                     return;
                 }
                 const CTransaction tx{*mtx};
-                block_policy_estimator.processTransaction(ConsumeTxMemPoolEntry(fuzzed_data_provider, tx), fuzzed_data_provider.ConsumeBool());
+                const CTxMemPoolEntry& entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, tx);
+                const auto tx_info = NewMempoolTransactionInfo(entry.GetSharedTx(), entry.GetFee(),
+                                                               entry.GetTxSize(), entry.GetHeight(),
+                                                               /* m_from_disconnected_block */ false,
+                                                               /* m_submitted_in_package */ false,
+                                                               /* m_chainstate_is_current */ true,
+                                                               /* m_has_no_mempool_parents */ fuzzed_data_provider.ConsumeBool());
+                block_policy_estimator.processTransaction(tx_info);
                 if (fuzzed_data_provider.ConsumeBool()) {
-                    (void)block_policy_estimator.removeTx(tx.GetHash(), /*inBlock=*/fuzzed_data_provider.ConsumeBool());
+                    (void)block_policy_estimator.removeTx(tx.GetHash());
                 }
             },
             [&] {
-                std::vector<CTxMemPoolEntry> mempool_entries;
+                std::list<CTxMemPoolEntry> mempool_entries;
                 LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
                 {
                     const std::optional<CMutableTransaction> mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
@@ -59,17 +66,17 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
                         break;
                     }
                     const CTransaction tx{*mtx};
-                    mempool_entries.push_back(ConsumeTxMemPoolEntry(fuzzed_data_provider, tx));
+                    mempool_entries.emplace_back(CTxMemPoolEntry::ExplicitCopy, ConsumeTxMemPoolEntry(fuzzed_data_provider, tx));
                 }
-                std::vector<const CTxMemPoolEntry*> ptrs;
-                ptrs.reserve(mempool_entries.size());
+                std::vector<RemovedMempoolTransactionInfo> txs;
+                txs.reserve(mempool_entries.size());
                 for (const CTxMemPoolEntry& mempool_entry : mempool_entries) {
-                    ptrs.push_back(&mempool_entry);
+                    txs.emplace_back(mempool_entry);
                 }
-                block_policy_estimator.processBlock(fuzzed_data_provider.ConsumeIntegral<unsigned int>(), ptrs);
+                block_policy_estimator.processBlock(txs, fuzzed_data_provider.ConsumeIntegral<unsigned int>());
             },
             [&] {
-                (void)block_policy_estimator.removeTx(ConsumeUInt256(fuzzed_data_provider), /*inBlock=*/fuzzed_data_provider.ConsumeBool());
+                (void)block_policy_estimator.removeTx(ConsumeUInt256(fuzzed_data_provider));
             },
             [&] {
                 block_policy_estimator.FlushUnconfirmed();

@@ -20,6 +20,7 @@
 #include <netbase.h>
 #include <netgroup.h>
 #include <node/connection_types.h>
+#include <node/protocol_version.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -30,7 +31,6 @@
 #include <util/check.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
-#include <version.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -88,6 +88,8 @@ static const bool DEFAULT_BLOCKSONLY = false;
 static const int64_t DEFAULT_PEER_CONNECT_TIMEOUT = 60;
 /** Number of file descriptors required for message capture **/
 static const int NUM_FDS_MESSAGE_CAPTURE = 1;
+/** Interval for ASMap Health Check **/
+static constexpr std::chrono::hours ASMAP_HEALTH_CHECK_INTERVAL{24};
 
 static constexpr bool DEFAULT_FORCEDNSSEED{false};
 static constexpr bool DEFAULT_DNSSEED{true};
@@ -232,15 +234,16 @@ public:
  * Ideally it should only contain receive time, payload,
  * type and size.
  */
-class CNetMessage {
+class CNetMessage
+{
 public:
-    CDataStream m_recv;                  //!< received message data
+    DataStream m_recv;                   //!< received message data
     std::chrono::microseconds m_time{0}; //!< time of message receipt
     uint32_t m_message_size{0};          //!< size of the payload
     uint32_t m_raw_message_size{0};      //!< used wire size of the message (including header/checksum)
     std::string m_type;
 
-    CNetMessage(CDataStream&& recv_in) : m_recv(std::move(recv_in)) {}
+    explicit CNetMessage(DataStream&& recv_in) : m_recv(std::move(recv_in)) {}
     // Only one CNetMessage object will exist for the same message on either
     // the receive or processing queue. For performance reasons we therefore
     // delete the copy constructor and assignment operator to avoid the
@@ -249,11 +252,6 @@ public:
     CNetMessage(const CNetMessage&) = delete;
     CNetMessage& operator=(CNetMessage&&) = default;
     CNetMessage& operator=(const CNetMessage&) = delete;
-
-    void SetVersion(int nVersionIn)
-    {
-        m_recv.SetVersion(nVersionIn);
-    }
 };
 
 /** The Transport converts one connection's sent messages to wire bytes, and received bytes back. */
@@ -379,9 +377,9 @@ private:
     mutable CHash256 hasher GUARDED_BY(m_recv_mutex);
     mutable uint256 data_hash GUARDED_BY(m_recv_mutex);
     bool in_data GUARDED_BY(m_recv_mutex); // parsing header (false) or data (true)
-    CDataStream hdrbuf GUARDED_BY(m_recv_mutex); // partially received header
+    DataStream hdrbuf GUARDED_BY(m_recv_mutex){}; // partially received header
     CMessageHeader hdr GUARDED_BY(m_recv_mutex); // complete header
-    CDataStream vRecv GUARDED_BY(m_recv_mutex); // received message data
+    DataStream vRecv GUARDED_BY(m_recv_mutex){}; // received message data
     unsigned int nHdrPos GUARDED_BY(m_recv_mutex);
     unsigned int nDataPos GUARDED_BY(m_recv_mutex);
 
@@ -420,7 +418,7 @@ private:
     size_t m_bytes_sent GUARDED_BY(m_send_mutex) {0};
 
 public:
-    V1Transport(const NodeId node_id, int nTypeIn, int nVersionIn) noexcept;
+    explicit V1Transport(const NodeId node_id) noexcept;
 
     bool ReceivedMessageComplete() const override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
     {
@@ -598,10 +596,6 @@ private:
     std::vector<uint8_t> m_recv_aad GUARDED_BY(m_recv_mutex);
     /** Buffer to put decrypted contents in, for converting to CNetMessage. */
     std::vector<uint8_t> m_recv_decode_buffer GUARDED_BY(m_recv_mutex);
-    /** Deserialization type. */
-    const int m_recv_type;
-    /** Deserialization version number. */
-    const int m_recv_version;
     /** Current receiver state. */
     RecvState m_recv_state GUARDED_BY(m_recv_mutex);
 
@@ -647,13 +641,11 @@ public:
      *
      * @param[in] nodeid      the node's NodeId (only for debug log output).
      * @param[in] initiating  whether we are the initiator side.
-     * @param[in] type_in     the serialization type of returned CNetMessages.
-     * @param[in] version_in  the serialization version of returned CNetMessages.
      */
-    V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in) noexcept;
+    V2Transport(NodeId nodeid, bool initiating) noexcept;
 
     /** Construct a V2 transport with specified keys and garbage (test use only). */
-    V2Transport(NodeId nodeid, bool initiating, int type_in, int version_in, const CKey& key, Span<const std::byte> ent32, std::vector<uint8_t> garbage) noexcept;
+    V2Transport(NodeId nodeid, bool initiating, const CKey& key, Span<const std::byte> ent32, std::vector<uint8_t> garbage) noexcept;
 
     // Receive side functions.
     bool ReceivedMessageComplete() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
@@ -1122,6 +1114,7 @@ public:
     void SetNetworkActive(bool active);
     void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant&& grant_outbound, const char* strDest, ConnectionType conn_type, bool use_v2transport) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
     bool CheckIncomingNonce(uint64_t nonce);
+    void ASMapHealthCheck();
 
     // alias for thread safety annotations only, not defined
     RecursiveMutex& GetNodesMutex() const LOCK_RETURNED(m_nodes_mutex);
@@ -1156,8 +1149,9 @@ public:
      * @param[in] max_addresses  Maximum number of addresses to return (0 = all).
      * @param[in] max_pct        Maximum percentage of addresses to return (0 = all).
      * @param[in] network        Select only addresses of this network (nullopt = all).
+     * @param[in] filtered       Select only addresses that are considered high quality (false = all).
      */
-    std::vector<CAddress> GetAddresses(size_t max_addresses, size_t max_pct, std::optional<Network> network) const;
+    std::vector<CAddress> GetAddresses(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const;
     /**
      * Cache is used to minimize topology leaks, so it should
      * be used for all non-trusted calls, for example, p2p.

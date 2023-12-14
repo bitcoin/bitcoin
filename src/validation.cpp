@@ -45,7 +45,7 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <undo.h>
-#include <util/check.h> // For NDEBUG compile time check
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/hasher.h>
@@ -1126,17 +1126,8 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
         ws.m_replaced_transactions.push_back(it->GetSharedTx());
     }
     m_pool.RemoveStaged(ws.m_all_conflicting, false, MemPoolRemovalReason::REPLACED);
-
-    // This transaction should only count for fee estimation if:
-    // - it's not being re-added during a reorg which bypasses typical mempool fee limits
-    // - the node is not behind
-    // - the transaction is not dependent on any other transactions in the mempool
-    // - it's not part of a package. Since package relay is not currently supported, this
-    // transaction has not necessarily been accepted to miners' mempools.
-    bool validForFeeEstimation = !bypass_limits && !args.m_package_submission && IsCurrentForFeeEstimation(m_active_chainstate) && m_pool.HasNoInputsOf(tx);
-
     // Store transaction in memory
-    m_pool.addUnchecked(*entry, ws.m_ancestors, validForFeeEstimation);
+    m_pool.addUnchecked(*entry, ws.m_ancestors);
 
     // trim mempool and check if tx was trimmed
     // If we are validating a package, don't trim here because we could evict a previous transaction
@@ -1222,7 +1213,13 @@ bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& 
         results.emplace(ws.m_ptx->GetWitnessHash(),
                         MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize,
                                          ws.m_base_fees, effective_feerate, effective_feerate_wtxids));
-        GetMainSignals().TransactionAddedToMempool(ws.m_ptx, m_pool.GetAndIncrementSequence());
+        const CTransaction& tx = *ws.m_ptx;
+        const auto tx_info = NewMempoolTransactionInfo(ws.m_ptx, ws.m_base_fees,
+                                                       ws.m_vsize, ws.m_entry->GetHeight(),
+                                                       args.m_bypass_limits, args.m_package_submission,
+                                                       IsCurrentForFeeEstimation(m_active_chainstate),
+                                                       m_pool.HasNoInputsOf(tx));
+        GetMainSignals().TransactionAddedToMempool(tx_info, m_pool.GetAndIncrementSequence());
     }
     return all_submitted;
 }
@@ -1265,7 +1262,13 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
         return MempoolAcceptResult::FeeFailure(ws.m_state, CFeeRate(ws.m_modified_fees, ws.m_vsize), {ws.m_ptx->GetWitnessHash()});
     }
 
-    GetMainSignals().TransactionAddedToMempool(ptx, m_pool.GetAndIncrementSequence());
+    const CTransaction& tx = *ws.m_ptx;
+    const auto tx_info = NewMempoolTransactionInfo(ws.m_ptx, ws.m_base_fees,
+                                                   ws.m_vsize, ws.m_entry->GetHeight(),
+                                                   args.m_bypass_limits, args.m_package_submission,
+                                                   IsCurrentForFeeEstimation(m_active_chainstate),
+                                                   m_pool.HasNoInputsOf(tx));
+    GetMainSignals().TransactionAddedToMempool(tx_info, m_pool.GetAndIncrementSequence());
 
     return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_vsize, ws.m_base_fees,
                                         effective_feerate, single_wtxid);
@@ -2079,18 +2082,6 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
 
-static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
-
-void StartScriptCheckWorkerThreads(int threads_num)
-{
-    scriptcheckqueue.StartWorkerThreads(threads_num);
-}
-
-void StopScriptCheckWorkerThreads()
-{
-    scriptcheckqueue.StopWorkerThreads();
-}
-
 /**
  * Threshold condition checker that triggers when unknown versionbits are seen on the network.
  */
@@ -2179,7 +2170,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     uint256 block_hash{block.GetHash()};
     assert(*pindex->phashBlock == block_hash);
-    const bool parallel_script_checks{scriptcheckqueue.HasThreads()};
+    const bool parallel_script_checks{m_chainman.GetCheckQueue().HasThreads()};
 
     const auto time_start{SteadyClock::now()};
     const CChainParams& params{m_chainman.GetParams()};
@@ -2368,7 +2359,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // in multiple threads). Preallocate the vector size so a new allocation
     // doesn't invalidate pointers into the vector, and keep txsdata in scope
     // for as long as `control`.
-    CCheckQueueControl<CScriptCheck> control(fScriptChecks && parallel_script_checks ? &scriptcheckqueue : nullptr);
+    CCheckQueueControl<CScriptCheck> control(fScriptChecks && parallel_script_checks ? &m_chainman.GetCheckQueue() : nullptr);
     std::vector<PrecomputedTransactionData> txsdata(block.vtx.size());
 
     std::vector<int> prevheights;
@@ -5792,9 +5783,12 @@ static ChainstateManager::Options&& Flatten(ChainstateManager::Options&& opts)
 }
 
 ChainstateManager::ChainstateManager(const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options)
-    : m_interrupt{interrupt},
+    : m_script_check_queue{/*batch_size=*/128, options.worker_threads_num},
+      m_interrupt{interrupt},
       m_options{Flatten(std::move(options))},
-      m_blockman{interrupt, std::move(blockman_options)} {}
+      m_blockman{interrupt, std::move(blockman_options)}
+{
+}
 
 ChainstateManager::~ChainstateManager()
 {

@@ -155,6 +155,11 @@ static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
  * The PID file facilities.
  */
 static const char* BITCOIN_PID_FILENAME = "bitcoind.pid";
+/**
+ * True if this process has created a PID file.
+ * Used to determine whether we should remove the PID file on shutdown.
+ */
+static bool g_generated_pid{false};
 
 static fs::path GetPidFile(const ArgsManager& args)
 {
@@ -170,11 +175,23 @@ static fs::path GetPidFile(const ArgsManager& args)
 #else
         tfm::format(file, "%d\n", getpid());
 #endif
+        g_generated_pid = true;
         return true;
     } else {
         return InitError(strprintf(_("Unable to create the PID file '%s': %s"), fs::PathToString(GetPidFile(args)), SysErrorString(errno)));
     }
 }
+
+static void RemovePidFile(const ArgsManager& args)
+{
+    if (!g_generated_pid) return;
+    const auto pid_path{GetPidFile(args)};
+    if (std::error_code error; !fs::remove(pid_path, error)) {
+        std::string msg{error ? error.message() : "File does not exist"};
+        LogPrintf("Unable to remove PID file (%s): %s\n", fs::PathToString(pid_path), msg);
+    }
+}
+
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -268,10 +285,9 @@ void Shutdown(NodeContext& node)
     StopTorControl();
 
     // After everything has been shut down, but before things get flushed, stop the
-    // CScheduler/checkqueue, scheduler and load block thread.
+    // scheduler and load block thread.
     if (node.scheduler) node.scheduler->stop();
     if (node.chainman && node.chainman->m_thread_load.joinable()) node.chainman->m_thread_load.join();
-    StopScriptCheckWorkerThreads();
 
     // After the threads that potentially access these pointers have been stopped,
     // destruct and reset all to nullptr.
@@ -285,8 +301,12 @@ void Shutdown(NodeContext& node)
         DumpMempool(*node.mempool, MempoolPath(*node.args));
     }
 
-    // Drop transactions we were still watching, and record fee estimations.
-    if (node.fee_estimator) node.fee_estimator->Flush();
+    // Drop transactions we were still watching, record fee estimations and Unregister
+    // fee estimator from validation interface.
+    if (node.fee_estimator) {
+        node.fee_estimator->Flush();
+        UnregisterValidationInterface(node.fee_estimator.get());
+    }
 
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
     if (node.chainman) {
@@ -349,13 +369,7 @@ void Shutdown(NodeContext& node)
     node.scheduler.reset();
     node.kernel.reset();
 
-    try {
-        if (!fs::remove(GetPidFile(*node.args))) {
-            LogPrintf("%s: Unable to remove PID file: File does not exist\n", __func__);
-        }
-    } catch (const fs::filesystem_error& e) {
-        LogPrintf("%s: Unable to remove PID file: %s\n", __func__, fsbridge::get_filesystem_error_message(e));
-    }
+    RemovePidFile(*node.args);
 
     LogPrintf("%s: done\n", __func__);
 }
@@ -1033,13 +1047,14 @@ static bool LockDataDirectory(bool probeOnly)
 {
     // Make sure only a single Bitcoin process is using the data directory.
     const fs::path& datadir = gArgs.GetDataDirNet();
-    if (!DirIsWritable(datadir)) {
+    switch (util::LockDirectory(datadir, ".lock", probeOnly)) {
+    case util::LockResult::ErrorWrite:
         return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions."), fs::PathToString(datadir)));
-    }
-    if (!LockDirectory(datadir, ".lock", probeOnly)) {
+    case util::LockResult::ErrorLock:
         return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running."), fs::PathToString(datadir), PACKAGE_NAME));
-    }
-    return true;
+    case util::LockResult::Success: return true;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 bool AppInitSanityChecks(const kernel::Context& kernel)
@@ -1112,24 +1127,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         || !InitScriptExecutionCache(validation_cache_sizes.script_execution_cache_bytes))
     {
         return InitError(strprintf(_("Unable to allocate memory for -maxsigcachesize: '%s' MiB"), args.GetIntArg("-maxsigcachesize", DEFAULT_MAX_SIG_CACHE_BYTES >> 20)));
-    }
-
-    int script_threads = args.GetIntArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
-    if (script_threads <= 0) {
-        // -par=0 means autodetect (number of cores - 1 script threads)
-        // -par=-n means "leave n cores free" (number of cores - n - 1 script threads)
-        script_threads += GetNumCores();
-    }
-
-    // Subtract 1 because the main thread counts towards the par threads
-    script_threads = std::max(script_threads - 1, 0);
-
-    // Number of script-checking threads <= MAX_SCRIPTCHECK_THREADS
-    script_threads = std::min(script_threads, MAX_SCRIPTCHECK_THREADS);
-
-    LogPrintf("Script verification uses %d additional threads\n", script_threads);
-    if (script_threads >= 1) {
-        StartScriptCheckWorkerThreads(script_threads);
     }
 
     assert(!node.scheduler);
@@ -1258,6 +1255,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         // Flush estimates to disk periodically
         CBlockPolicyEstimator* fee_estimator = node.fee_estimator.get();
         node.scheduler->scheduleEvery([fee_estimator] { fee_estimator->FlushFeeEstimates(); }, FEE_FLUSH_INTERVAL);
+        RegisterValidationInterface(fee_estimator);
     }
 
     // Check port numbers
@@ -1471,7 +1469,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.chainman);
 
     CTxMemPool::Options mempool_opts{
-        .estimator = node.fee_estimator.get(),
         .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
     };
     auto result{ApplyArgsManOptions(args, chainparams, mempool_opts)};

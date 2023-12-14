@@ -84,7 +84,7 @@ CI_EXEC git config --global --add safe.directory \"*\"
 
 CI_EXEC mkdir -p "${BINS_SCRATCH_DIR}"
 
-CI_EXEC "${BASE_ROOT_DIR}/ci/test/06_script_b.sh"
+CI_EXEC "${BASE_ROOT_DIR}/ci/test/03_test_script.sh"
 
 if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   echo "Stop and remove CI container by ID"

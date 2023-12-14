@@ -429,6 +429,24 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
     BOOST_CHECK_EQUAL(addrman->Size(), 2006U);
 }
 
+BOOST_AUTO_TEST_CASE(getaddr_unfiltered)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+
+    // Set time on this addr so isTerrible = false
+    CAddress addr1 = CAddress(ResolveService("250.250.2.1", 8333), NODE_NONE);
+    addr1.nTime = Now<NodeSeconds>();
+    // Not setting time so this addr should be isTerrible = true
+    CAddress addr2 = CAddress(ResolveService("250.251.2.2", 9999), NODE_NONE);
+
+    CNetAddr source = ResolveIP("250.1.2.1");
+    BOOST_CHECK(addrman->Add({addr1, addr2}, source));
+
+    // Filtered GetAddr should only return addr1
+    BOOST_CHECK_EQUAL(addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt).size(), 1U);
+    // Unfiltered GetAddr should return addr1 and addr2
+    BOOST_CHECK_EQUAL(addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt, /*filtered=*/false).size(), 2U);
+}
 
 BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
 {

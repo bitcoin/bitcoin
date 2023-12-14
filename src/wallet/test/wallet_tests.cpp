@@ -558,8 +558,7 @@ public:
         CTransactionRef tx;
         CCoinControl dummy;
         {
-            constexpr int RANDOM_CHANGE_POSITION = -1;
-            auto res = CreateTransaction(*wallet, {recipient}, RANDOM_CHANGE_POSITION, dummy);
+            auto res = CreateTransaction(*wallet, {recipient}, /*change_pos=*/std::nullopt, dummy);
             BOOST_CHECK(res);
             tx = res->tx;
         }
@@ -752,14 +751,14 @@ bool malformed_descriptor(std::ios_base::failure e)
 BOOST_FIXTURE_TEST_CASE(wallet_descriptor_test, BasicTestingSetup)
 {
     std::vector<unsigned char> malformed_record;
-    CVectorWriter vw{0, malformed_record, 0};
+    VectorWriter vw{malformed_record, 0};
     vw << std::string("notadescriptor");
     vw << uint64_t{0};
     vw << int32_t{0};
     vw << int32_t{0};
     vw << int32_t{1};
 
-    SpanReader vr{0, malformed_record};
+    SpanReader vr{malformed_record};
     WalletDescriptor w_desc;
     BOOST_CHECK_EXCEPTION(vr >> w_desc, std::ios_base::failure, malformed_descriptor);
 }

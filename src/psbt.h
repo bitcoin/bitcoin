@@ -316,7 +316,7 @@ struct PSBTInput
                 const auto& [leaf_hashes, origin] = leaf_origin;
                 SerializeToVector(s, PSBT_IN_TAP_BIP32_DERIVATION, xonly);
                 std::vector<unsigned char> value;
-                CVectorWriter s_value{s.GetVersion(), value, 0};
+                VectorWriter s_value{value, 0};
                 s_value << leaf_hashes;
                 SerializeKeyOrigin(s_value, origin);
                 s << value;
@@ -382,7 +382,7 @@ struct PSBTInput
             }
 
             // Type is compact size uint at beginning of key
-            SpanReader skey{s.GetVersion(), key};
+            SpanReader skey{key};
             uint64_t type = ReadCompactSize(skey);
 
             // Do stuff based on type
@@ -590,7 +590,7 @@ struct PSBTInput
                     } else if (key.size() != 65) {
                         throw std::ios_base::failure("Input Taproot script signature key is not 65 bytes");
                     }
-                    SpanReader s_key{s.GetVersion(), Span{key}.subspan(1)};
+                    SpanReader s_key{Span{key}.subspan(1)};
                     XOnlyPubKey xonly;
                     uint256 hash;
                     s_key >> xonly;
@@ -632,7 +632,7 @@ struct PSBTInput
                     } else if (key.size() != 33) {
                         throw std::ios_base::failure("Input Taproot BIP32 keypath key is not at 33 bytes");
                     }
-                    SpanReader s_key{s.GetVersion(), Span{key}.subspan(1)};
+                    SpanReader s_key{Span{key}.subspan(1)};
                     XOnlyPubKey xonly;
                     s_key >> xonly;
                     std::set<uint256> leaf_hashes;
@@ -757,7 +757,7 @@ struct PSBTOutput
         if (!m_tap_tree.empty()) {
             SerializeToVector(s, PSBT_OUT_TAP_TREE);
             std::vector<unsigned char> value;
-            CVectorWriter s_value{s.GetVersion(), value, 0};
+            VectorWriter s_value{value, 0};
             for (const auto& [depth, leaf_ver, script] : m_tap_tree) {
                 s_value << depth;
                 s_value << leaf_ver;
@@ -771,7 +771,7 @@ struct PSBTOutput
             const auto& [leaf_hashes, origin] = leaf;
             SerializeToVector(s, PSBT_OUT_TAP_BIP32_DERIVATION, xonly);
             std::vector<unsigned char> value;
-            CVectorWriter s_value{s.GetVersion(), value, 0};
+            VectorWriter s_value{value, 0};
             s_value << leaf_hashes;
             SerializeKeyOrigin(s_value, origin);
             s << value;
@@ -807,7 +807,7 @@ struct PSBTOutput
             }
 
             // Type is compact size uint at beginning of key
-            SpanReader skey{s.GetVersion(), key};
+            SpanReader skey{key};
             uint64_t type = ReadCompactSize(skey);
 
             // Do stuff based on type
@@ -856,7 +856,7 @@ struct PSBTOutput
                     }
                     std::vector<unsigned char> tree_v;
                     s >> tree_v;
-                    SpanReader s_tree{s.GetVersion(), tree_v};
+                    SpanReader s_tree{tree_v};
                     if (s_tree.empty()) {
                         throw std::ios_base::failure("Output Taproot tree must not be empty");
                     }
@@ -1060,7 +1060,7 @@ struct PartiallySignedTransaction
             }
 
             // Type is compact size uint at beginning of key
-            SpanReader skey{s.GetVersion(), key};
+            SpanReader skey{key};
             uint64_t type = ReadCompactSize(skey);
 
             // Do stuff based on type
