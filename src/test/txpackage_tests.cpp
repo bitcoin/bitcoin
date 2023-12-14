@@ -6,6 +6,7 @@
 #include <key_io.h>
 #include <policy/packages.h>
 #include <policy/policy.h>
+#include <policy/rbf.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
@@ -937,5 +938,148 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
         expected_pool_size += 1;
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(package_rbf_tests, TestChain100Setup)
+{
+    mineBlocks(5);
+    LOCK(::cs_main);
+    size_t expected_pool_size = m_node.mempool->size();
+    CKey child_key{GenerateRandomKey()};
+    CScript parent_spk = GetScriptForDestination(WitnessV0KeyHash(child_key.GetPubKey()));
+    CKey grandchild_key{GenerateRandomKey()};
+    CScript child_spk = GetScriptForDestination(WitnessV0KeyHash(grandchild_key.GetPubKey()));
+
+    const CAmount coinbase_value{50 * COIN};
+    // Test that de-duplication works. This is not actually package rbf.
+    {
+        // 1 parent paying 200sat, 1 child paying 300sat
+        Package package1;
+        // 1 parent paying 200sat, 1 child paying 500sat
+        Package package2;
+        // Package1 and package2 have the same parent. The children conflict.
+        auto mtx_parent = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[0], /*input_vout=*/0,
+                                                        /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
+                                                        /*output_destination=*/parent_spk,
+                                                        /*output_amount=*/coinbase_value - low_fee_amt, /*submit=*/false);
+        CTransactionRef tx_parent = MakeTransactionRef(mtx_parent);
+        package1.push_back(tx_parent);
+        package2.push_back(tx_parent);
+
+        CTransactionRef tx_child_1 = MakeTransactionRef(CreateValidMempoolTransaction(tx_parent, 0, 101, child_key, child_spk, coinbase_value - low_fee_amt - 300, false));
+        package1.push_back(tx_child_1);
+        CTransactionRef tx_child_2 = MakeTransactionRef(CreateValidMempoolTransaction(tx_parent, 0, 101, child_key, child_spk, coinbase_value - low_fee_amt - 500, false));
+        package2.push_back(tx_child_2);
+
+        LOCK(m_node.mempool->cs);
+        const auto submit1 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package1, /*test_accept=*/false, std::nullopt);
+        if (auto err_1{CheckPackageMempoolAcceptResult(package1, submit1, /*expect_valid=*/true, m_node.mempool.get())}) {
+            BOOST_ERROR(err_1.value());
+        }
+
+        // Check precise ResultTypes and mempool size. We know it_parent_1 and it_child_1 exist from above call
+        auto it_parent_1 = submit1.m_tx_results.find(tx_parent->GetWitnessHash());
+        auto it_child_1 = submit1.m_tx_results.find(tx_child_1->GetWitnessHash());
+        BOOST_CHECK_EQUAL(it_parent_1->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK_EQUAL(it_child_1->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        expected_pool_size += 2;
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
+
+        const auto submit2 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package2, /*test_accept=*/false, std::nullopt);
+        if (auto err_2{CheckPackageMempoolAcceptResult(package2, submit2, /*expect_valid=*/true, m_node.mempool.get())}) {
+            BOOST_ERROR(err_2.value());
+        }
+
+        // Check precise ResultTypes and mempool size. We know it_parent_2 and it_child_2 exist from above call
+        auto it_parent_2 = submit2.m_tx_results.find(tx_parent->GetWitnessHash());
+        auto it_child_2 = submit2.m_tx_results.find(tx_child_2->GetWitnessHash());
+        BOOST_CHECK_EQUAL(it_parent_2->second.m_result_type, MempoolAcceptResult::ResultType::MEMPOOL_ENTRY);
+        BOOST_CHECK_EQUAL(it_child_2->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
+
+        // child1 has been replaced
+        BOOST_CHECK(!m_node.mempool->exists(GenTxid::Txid(tx_child_1->GetHash())));
+    }
+
+    // Test package rbf.
+    {
+        CTransactionRef tx_parent_1 = MakeTransactionRef(CreateValidMempoolTransaction(
+            m_coinbase_txns[1], /*input_vout=*/0, /*input_height=*/0,
+            coinbaseKey, parent_spk, coinbase_value - 200, /*submit=*/false));
+        CTransactionRef tx_child_1 = MakeTransactionRef(CreateValidMempoolTransaction(
+            tx_parent_1, /*input_vout=*/0, /*input_height=*/101,
+            child_key, child_spk, coinbase_value - 400, /*submit=*/false));
+
+        CTransactionRef tx_parent_2 = MakeTransactionRef(CreateValidMempoolTransaction(
+            m_coinbase_txns[1], /*input_vout=*/0, /*input_height=*/0,
+            coinbaseKey, parent_spk, coinbase_value - 800, /*submit=*/false));
+        CTransactionRef tx_child_2 = MakeTransactionRef(CreateValidMempoolTransaction(
+            tx_parent_2, /*input_vout=*/0, /*input_height=*/101,
+            child_key, child_spk, coinbase_value - 800 - 200, /*submit=*/false));
+
+        CTransactionRef tx_parent_3 = MakeTransactionRef(CreateValidMempoolTransaction(
+            m_coinbase_txns[1], /*input_vout=*/0, /*input_height=*/0,
+            coinbaseKey, parent_spk, coinbase_value - 199, /*submit=*/false));
+        CTransactionRef tx_child_3 = MakeTransactionRef(CreateValidMempoolTransaction(
+            tx_parent_3, /*input_vout=*/0, /*input_height=*/101,
+            child_key, child_spk, coinbase_value - 199 - 1300, /*submit=*/false));
+
+        // In all packages, the parents conflict with each other
+        BOOST_CHECK(tx_parent_1->GetHash() != tx_parent_2->GetHash() && tx_parent_2->GetHash() != tx_parent_3->GetHash());
+
+        // 1 parent paying 200sat, 1 child paying 200sat.
+        Package package1{tx_parent_1, tx_child_1};
+        // 1 parent paying 800sat, 1 child paying 200sat.
+        Package package2{tx_parent_2, tx_child_2};
+        // 1 parent paying 199sat, 1 child paying 1300sat.
+        Package package3{tx_parent_3, tx_child_3};
+
+        const auto submit1 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package1, false, std::nullopt);
+        if (auto err_1{CheckPackageMempoolAcceptResult(package1, submit1, /*expect_valid=*/true, m_node.mempool.get())}) {
+            BOOST_ERROR(err_1.value());
+        }
+        auto it_parent_1 = submit1.m_tx_results.find(tx_parent_1->GetWitnessHash());
+        auto it_child_1 = submit1.m_tx_results.find(tx_child_1->GetWitnessHash());
+        BOOST_CHECK_EQUAL(it_parent_1->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK_EQUAL(it_child_1->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        expected_pool_size += 2;
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
+
+        // This replacement is actually not package rbf; the parent carries enough fees
+        // to replace the entire package on its own.
+        const auto submit2 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package2, false, std::nullopt);
+        if (auto err_2{CheckPackageMempoolAcceptResult(package2, submit2, /*expect_valid=*/true, m_node.mempool.get())}) {
+            BOOST_ERROR(err_2.value());
+        }
+        auto it_parent_2 = submit2.m_tx_results.find(tx_parent_2->GetWitnessHash());
+        auto it_child_2 = submit2.m_tx_results.find(tx_child_2->GetWitnessHash());
+        BOOST_CHECK_EQUAL(it_parent_2->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK_EQUAL(it_child_2->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
+
+        // Package RBF, in which the replacement transaction's child sponsors the fees to meet RBF feerate rules
+        const auto submit3 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package3, false, std::nullopt);
+        if (auto err_3{CheckPackageMempoolAcceptResult(package3, submit3, /*expect_valid=*/true, m_node.mempool.get())}) {
+            BOOST_ERROR(err_3.value());
+        }
+        auto it_parent_3 = submit3.m_tx_results.find(tx_parent_3->GetWitnessHash());
+        auto it_child_3 = submit3.m_tx_results.find(tx_child_3->GetWitnessHash());
+        BOOST_CHECK_EQUAL(it_parent_3->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK_EQUAL(it_child_3->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+
+        // package3 was considered as a package to replace both package2 transactions
+        BOOST_CHECK(it_parent_3->second.m_replaced_transactions.size() == 2);
+        BOOST_CHECK(it_child_3->second.m_replaced_transactions.empty());
+
+        std::vector<Wtxid> expected_package3_wtxids({tx_parent_3->GetWitnessHash(), tx_child_3->GetWitnessHash()});
+        const auto package3_total_vsize{GetVirtualTransactionSize(*tx_parent_3) + GetVirtualTransactionSize(*tx_child_3)};
+        BOOST_CHECK(it_parent_3->second.m_wtxids_fee_calculations.value() == expected_package3_wtxids);
+        BOOST_CHECK(it_child_3->second.m_wtxids_fee_calculations.value() == expected_package3_wtxids);
+        BOOST_CHECK_EQUAL(it_parent_3->second.m_effective_feerate.value().GetFee(package3_total_vsize), 199 + 1300);
+        BOOST_CHECK_EQUAL(it_child_3->second.m_effective_feerate.value().GetFee(package3_total_vsize), 199 + 1300);
+
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
+    }
+
 }
 BOOST_AUTO_TEST_SUITE_END()
