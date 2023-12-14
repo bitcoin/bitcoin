@@ -23,6 +23,8 @@ static const uint32_t DEFAULT_MAX_ORPHAN_TRANSACTIONS{100};
 static const uint32_t DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN{100};
 static const bool DEFAULT_PEERBLOOMFILTERS = false;
 static const bool DEFAULT_PEERBLOCKFILTERS = false;
+/** Default for -privatebroadcast. */
+static const bool DEFAULT_PRIVATE_BROADCAST{false};
 /** Threshold for marking a node to be discouraged, e.g. disconnected and added to the discouragement filter. */
 static const int DISCOURAGEMENT_THRESHOLD{100};
 /** Maximum number of outstanding CMPCTBLOCK requests for the same block. */
