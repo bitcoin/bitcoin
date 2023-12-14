@@ -524,7 +524,7 @@ public:
                             /* m_bypass_limits */ false,
                             /* m_coins_to_uncache */ coins_to_uncache,
                             /* m_test_accept */ false,
-                            /* m_allow_replacement */ false,
+                            /* m_allow_replacement */ true,
                             /* m_allow_sibling_eviction */ false,
                             /* m_package_submission */ true,
                             /* m_package_feerates */ true,
@@ -602,8 +602,8 @@ public:
     /**
      * Submission of a subpackage.
      * If subpackage size == 1, calls AcceptSingleTransaction() with adjusted ATMPArgs to avoid
-     * package policy restrictions like no CPFP carve out (PackageMempoolChecks) and disabled RBF
-     * (m_allow_replacement), and creates a PackageMempoolAcceptResult wrapping the result.
+     * package policy restrictions like no CPFP carve out (PackageMempoolChecks)
+     * and creates a PackageMempoolAcceptResult wrapping the result.
      *
      * If subpackage size > 1, calls AcceptMultipleTransactions() with the provided ATMPArgs.
      *
@@ -666,12 +666,13 @@ private:
     // only tests that are fast should be done here (to avoid CPU DoS).
     bool PreChecks(ATMPArgs& args, Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
-    // Run checks for mempool replace-by-fee.
+    // Run checks for mempool replace-by-fee, only used in AcceptSingleTransaction.
     bool ReplacementChecks(Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Enforce package mempool ancestor/descendant limits (distinct from individual
-    // ancestor/descendant limits done in PreChecks).
+    // ancestor/descendant limits done in PreChecks) and run Package RBF checks.
     bool PackageMempoolChecks(const std::vector<CTransactionRef>& txns,
+                              std::vector<Workspace>& workspaces,
                               int64_t total_vsize,
                               PackageValidationState& package_state) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
@@ -949,7 +950,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     ws.m_iters_conflicting = m_pool.GetIterSet(ws.m_conflicts);
 
     // Note that these modifications are only applicable to single transaction scenarios;
-    // carve-outs and package RBF are disabled for multi-transaction evaluations.
+    // carve-outs are disabled for multi-transaction evaluations.
     CTxMemPool::Limits maybe_rbf_limits = m_pool.m_opts.limits;
 
     // Calculate in-mempool ancestors, up to a limit.
@@ -1088,10 +1089,9 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     //   descendant transaction of a direct conflict to pay a higher feerate than the transaction that
     //   might replace them, under these rules.
     if (const auto err_string{PaysMoreThanConflicts(ws.m_iters_conflicting, newFeeRate, hash)}) {
-        // Even though this is a fee-related failure, this result is TX_MEMPOOL_POLICY, not
-        // TX_RECONSIDERABLE, because it cannot be bypassed using package validation.
-        // This must be changed if package RBF is enabled.
-        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
+        // This fee-related failure is TX_RECONSIDERABLE because validating in a package may change
+        // the result.
+        return state.Invalid(TxValidationResult::TX_RECONSIDERABLE,
                              strprintf("insufficient fee%s", ws.m_sibling_eviction ? " (including sibling eviction)" : ""), *err_string);
     }
 
@@ -1116,16 +1116,15 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     }
     if (const auto err_string{PaysForRBF(m_subpackage.m_conflicting_fees, ws.m_modified_fees, ws.m_vsize,
                                          m_pool.m_opts.incremental_relay_feerate, hash)}) {
-        // Even though this is a fee-related failure, this result is TX_MEMPOOL_POLICY, not
-        // TX_RECONSIDERABLE, because it cannot be bypassed using package validation.
-        // This must be changed if package RBF is enabled.
-        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
+        // Result may change in a package context
+        return state.Invalid(TxValidationResult::TX_RECONSIDERABLE,
                              strprintf("insufficient fee%s", ws.m_sibling_eviction ? " (including sibling eviction)" : ""), *err_string);
     }
     return true;
 }
 
 bool MemPoolAccept::PackageMempoolChecks(const std::vector<CTransactionRef>& txns,
+                                         std::vector<Workspace>& workspaces,
                                          const int64_t total_vsize,
                                          PackageValidationState& package_state)
 {
@@ -1136,12 +1135,88 @@ bool MemPoolAccept::PackageMempoolChecks(const std::vector<CTransactionRef>& txn
     assert(std::all_of(txns.cbegin(), txns.cend(), [this](const auto& tx)
                        { return !m_pool.exists(GenTxid::Txid(tx->GetHash()));}));
 
+    assert(txns.size() == workspaces.size());
+
     auto result = m_pool.CheckPackageLimits(txns, total_vsize);
     if (!result) {
         // This is a package-wide error, separate from an individual transaction error.
         return package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-mempool-limits", util::ErrorString(result).original);
     }
-   return true;
+
+    // No conflicts means we're finished. Further checks are all RBF-only.
+    if (!m_subpackage.m_rbf) return true;
+
+    // We're in package RBF context; replacement proposal must be size 2
+    if (workspaces.size() != 2 || !Assume(IsChildWithParents(txns))) {
+        return package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package RBF failed: package must be 1-parent-1-child");
+    }
+
+    // If the package has in-mempool ancestors, we won't consider a package RBF
+    // since it would result in a cluster larger than 2.
+    // N.B. To relax this constraint we will need to revisit how CCoinsViewMemPool::PackageAddTransaction
+    // is being used inside AcceptMultipleTransactions to track available inputs while processing a package.
+    for (const auto& ws : workspaces) {
+        if (!ws.m_ancestors.empty()) {
+            return package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package RBF failed: new transaction cannot have mempool ancestors");
+        }
+    }
+
+    // Aggregate all conflicts into one set.
+    CTxMemPool::setEntries direct_conflict_iters;
+    for (Workspace& ws : workspaces) {
+        // Aggregate all conflicts into one set.
+        direct_conflict_iters.merge(ws.m_iters_conflicting);
+    }
+
+    const auto& parent_ws = workspaces[0];
+    const auto& child_ws = workspaces[1];
+
+    // Don't consider replacements that would cause us to remove a large number of mempool entries.
+    // This limit is not increased in a package RBF. Use the aggregate number of transactions.
+    if (const auto err_string{GetEntriesForConflicts(*child_ws.m_ptx, m_pool, direct_conflict_iters,
+                                                     m_subpackage.m_all_conflicts)}) {
+        return package_state.Invalid(PackageValidationResult::PCKG_POLICY,
+                                     "package RBF failed: too many potential replacements", *err_string);
+    }
+
+    for (CTxMemPool::txiter it : m_subpackage.m_all_conflicts) {
+        m_subpackage.m_conflicting_fees += it->GetModifiedFee();
+        m_subpackage.m_conflicting_size += it->GetTxSize();
+    }
+
+    // Use the child as the transaction for attributing errors to.
+    const Txid& child_hash = child_ws.m_ptx->GetHash();
+    if (const auto err_string{PaysForRBF(/*original_fees=*/m_subpackage.m_conflicting_fees,
+                                         /*replacement_fees=*/m_subpackage.m_total_modified_fees,
+                                         /*replacement_vsize=*/m_subpackage.m_total_vsize,
+                                         m_pool.m_opts.incremental_relay_feerate, child_hash)}) {
+        return package_state.Invalid(PackageValidationResult::PCKG_POLICY,
+                                     "package RBF failed: insufficient anti-DoS fees", *err_string);
+    }
+
+    // Ensure this two transaction package is a "chunk" on its own; we don't want the child
+    // to be only paying anti-DoS fees
+    const CFeeRate parent_feerate(parent_ws.m_modified_fees, parent_ws.m_vsize);
+    const CFeeRate package_feerate(m_subpackage.m_total_modified_fees, m_subpackage.m_total_vsize);
+    if (package_feerate <= parent_feerate) {
+        return package_state.Invalid(PackageValidationResult::PCKG_POLICY,
+                                     "package RBF failed: package feerate is less than parent feerate",
+                                     strprintf("package feerate %s <= parent feerate is %s", package_feerate.ToString(), parent_feerate.ToString()));
+    }
+
+    // Check if it's economically rational to mine this package rather than the ones it replaces.
+    // This takes the place of ReplacementChecks()'s PaysMoreThanConflicts() in the package RBF setting.
+    if (const auto err_tup{ImprovesFeerateDiagram(m_pool, direct_conflict_iters, m_subpackage.m_all_conflicts, m_subpackage.m_total_modified_fees, m_subpackage.m_total_vsize)}) {
+        return package_state.Invalid(PackageValidationResult::PCKG_POLICY,
+                                     "package RBF failed: " + err_tup.value().second, "");
+    }
+
+    LogPrint(BCLog::TXPACKAGES, "package RBF checks passed: parent %s (wtxid=%s), child %s (wtxid=%s)\n",
+        txns.front()->GetHash().ToString(), txns.front()->GetWitnessHash().ToString(),
+        txns.back()->GetHash().ToString(), txns.back()->GetWitnessHash().ToString());
+
+
+    return true;
 }
 
 bool MemPoolAccept::PolicyScriptChecks(const ATMPArgs& args, Workspace& ws)
@@ -1215,6 +1290,7 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
     const bool bypass_limits = args.m_bypass_limits;
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
 
+    if (!m_subpackage.m_all_conflicts.empty()) Assume(args.m_allow_replacement);
     // Remove conflicting transactions from the mempool
     for (CTxMemPool::txiter it : m_subpackage.m_all_conflicts)
     {
@@ -1361,7 +1437,13 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
         return MempoolAcceptResult::Failure(ws.m_state);
     }
 
-    if (m_subpackage.m_rbf && !ReplacementChecks(ws)) return MempoolAcceptResult::Failure(ws.m_state);
+    if (m_subpackage.m_rbf && !ReplacementChecks(ws)) {
+        if (ws.m_state.GetResult() == TxValidationResult::TX_RECONSIDERABLE) {
+            // Failed for incentives-based fee reasons. Provide the effective feerate and which tx was included.
+            return MempoolAcceptResult::FeeFailure(ws.m_state, CFeeRate(ws.m_modified_fees, ws.m_vsize), single_wtxid);
+        }
+        return MempoolAcceptResult::Failure(ws.m_state);
+    }
 
     // Perform the inexpensive checks first and avoid hashing and signature verification unless
     // those checks pass, to mitigate CPU exhaustion denial-of-service attacks.
@@ -1434,11 +1516,14 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
         }
 
         // Make the coins created by this transaction available for subsequent transactions in the
-        // package to spend. Since we already checked conflicts in the package and we don't allow
-        // replacements, we don't need to track the coins spent. Note that this logic will need to be
-        // updated if package replace-by-fee is allowed in the future.
-        assert(!args.m_allow_replacement);
-        assert(!m_subpackage.m_rbf);
+        // package to spend. If there are no conflicts within the package, no transaction can spend a coin
+        // needed by another transaction in the package. We also need to make sure that no package
+        // tx replaces (or replaces the ancestor of) the parent of another package tx. As long as we
+        // check these two things, we don't need to track the coins spent.
+        // If a package tx conflicts with a mempool tx, PackageMempoolChecks() ensures later that any package RBF attempt
+        // has *no* in-mempool ancestors, so we don't have to worry about subsequent transactions in
+        // same package spending the same in-mempool outpoints. This needs to be revisited for general
+        // package RBF.
         m_viewmempool.PackageAddTransaction(ws.m_ptx);
     }
 
@@ -1479,7 +1564,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
 
     // Apply package mempool ancestor/descendant limits. Skip if there is only one transaction,
     // because it's unnecessary.
-    if (txns.size() > 1 && !PackageMempoolChecks(txns, m_subpackage.m_total_vsize, package_state)) {
+    if (txns.size() > 1 && !PackageMempoolChecks(txns, workspaces, m_subpackage.m_total_vsize, package_state)) {
         return PackageMempoolAcceptResult(package_state, std::move(results));
     }
 
