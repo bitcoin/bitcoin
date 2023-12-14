@@ -806,7 +806,7 @@ static RPCHelpMan savemempool()
     }
 
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("filename", dump_path.u8string());
+    ret.pushKV("filename", dump_path.utf8string());
 
     return ret;
 },

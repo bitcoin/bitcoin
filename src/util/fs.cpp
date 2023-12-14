@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,6 +18,7 @@
 #endif
 
 #include <cassert>
+#include <cerrno>
 #include <string>
 
 namespace fsbridge {
@@ -130,4 +131,4 @@ std::string get_filesystem_error_message(const fs::filesystem_error& e)
 #endif
 }
 
-} // fsbridge
+} // namespace fsbridge

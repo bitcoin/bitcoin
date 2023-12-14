@@ -2601,7 +2601,7 @@ static RPCHelpMan dumptxoutset()
     if (fs::exists(path)) {
         throw JSONRPCError(
             RPC_INVALID_PARAMETER,
-            path.u8string() + " already exists. If you are sure this is what you want, "
+            path.utf8string() + " already exists. If you are sure this is what you want, "
             "move it out of the way first");
     }
 
@@ -2610,7 +2610,7 @@ static RPCHelpMan dumptxoutset()
     if (afile.IsNull()) {
         throw JSONRPCError(
             RPC_INVALID_PARAMETER,
-            "Couldn't open file " + temppath.u8string() + " for writing.");
+            "Couldn't open file " + temppath.utf8string() + " for writing.");
     }
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -2618,7 +2618,7 @@ static RPCHelpMan dumptxoutset()
         node, node.chainman->ActiveChainstate(), afile, path, temppath);
     fs::rename(temppath, path);
 
-    result.pushKV("path", path.u8string());
+    result.pushKV("path", path.utf8string());
     return result;
 },
     };
@@ -2690,7 +2690,7 @@ UniValue CreateUTXOSnapshot(
     result.pushKV("coins_written", maybe_stats->coins_count);
     result.pushKV("base_hash", tip->GetBlockHash().ToString());
     result.pushKV("base_height", tip->nHeight);
-    result.pushKV("path", path.u8string());
+    result.pushKV("path", path.utf8string());
     result.pushKV("txoutset_hash", maybe_stats->hashSerialized.ToString());
     result.pushKV("nchaintx", tip->nChainTx);
     return result;
@@ -2743,7 +2743,7 @@ static RPCHelpMan loadtxoutset()
     if (afile.IsNull()) {
         throw JSONRPCError(
             RPC_INVALID_PARAMETER,
-            "Couldn't open file " + path.u8string() + " for reading.");
+            "Couldn't open file " + path.utf8string() + " for reading.");
     }
 
     SnapshotMetadata metadata;
