@@ -143,7 +143,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     BOOST_REQUIRE(filter_index.StartBackgroundSync());
 
     // Allow filter index to catch up with the block index.
-    IndexWaitSynced(filter_index);
+    IndexWaitSynced(filter_index, *Assert(m_node.shutdown));
 
     // Check that filter index has all blocks that were in the chain before it started.
     {
