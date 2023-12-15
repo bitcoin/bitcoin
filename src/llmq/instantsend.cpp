@@ -199,10 +199,10 @@ std::unordered_map<uint256, CInstantSendLockPtr, StaticSaltedHasher> CInstantSen
         }
 
         auto& islockHash = std::get<2>(curKey);
-        auto islock = GetInstantSendLockByHashInternal(islockHash, false);
-        if (islock) {
+
+        if (auto islock = GetInstantSendLockByHashInternal(islockHash, false)) {
             RemoveInstantSendLock(batch, islockHash, islock);
-            ret.emplace(islockHash, islock);
+            ret.try_emplace(islockHash, std::move(islock));
         }
 
         // archive the islock hash, so that we're still able to check if we've seen the islock in the past
