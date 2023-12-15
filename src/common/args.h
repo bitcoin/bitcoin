@@ -447,6 +447,11 @@ bool HelpRequested(const ArgsManager& args);
 /** Add help options to the args manager */
 void SetupHelpOptions(ArgsManager& args);
 
+extern const std::vector<std::string> TEST_OPTIONS_DOC;
+
+/** Checks if a particular test option is present in -test command-line arg options */
+bool HasTestOption(const ArgsManager& args, const std::string& test_option);
+
 /**
  * Format a string to be used as group of options in help messages
  *
