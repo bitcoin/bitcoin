@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.nVersion = 0;
     CheckIsNotStandard(t, "version");
 
-    t.nVersion = 3;
+    t.nVersion = TX_MAX_STANDARD_VERSION + 1;
     CheckIsNotStandard(t, "version");
 
     // Allowed nVersion
