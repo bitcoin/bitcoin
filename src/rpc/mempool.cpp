@@ -199,7 +199,7 @@ static RPCHelpMan testmempoolaccept()
                 result_inner.pushKV("txid", tx->GetHash().GetHex());
                 result_inner.pushKV("wtxid", tx->GetWitnessHash().GetHex());
                 if (package_result.m_state.GetResult() == PackageValidationResult::PCKG_POLICY) {
-                    result_inner.pushKV("package-error", package_result.m_state.GetRejectReason());
+                    result_inner.pushKV("package-error", package_result.m_state.ToString());
                 }
                 auto it = package_result.m_tx_results.find(tx->GetWitnessHash());
                 if (exit_early || it == package_result.m_tx_results.end()) {
@@ -909,7 +909,7 @@ static RPCHelpMan submitpackage()
                 case PackageValidationResult::PCKG_TX:
                 {
                     // Package-wide error we want to return, but we also want to return individual responses
-                    package_msg = package_result.m_state.GetRejectReason();
+                    package_msg = package_result.m_state.ToString();
                     CHECK_NONFATAL(package_result.m_tx_results.size() == txns.size() ||
                             package_result.m_tx_results.empty());
                     break;
