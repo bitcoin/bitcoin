@@ -59,7 +59,7 @@ std::string gen_random_byte_str(const size_t size) {
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<size_t> dist(0, 255);
+    std::uniform_int_distribution<uint8_t> dist(0, 255);
 
     for (size_t i = 0; i < size; ++i) {
         s += dist(gen);
