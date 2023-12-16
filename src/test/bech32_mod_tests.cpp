@@ -62,7 +62,7 @@ std::string gen_random_byte_str(const size_t size) {
     std::uniform_int_distribution<uint8_t> dist(0, 255);
 
     for (size_t i = 0; i < size; ++i) {
-        s += dist(gen);
+        s += static_cast<char>(dist(gen));
     }
     return s;
 }
