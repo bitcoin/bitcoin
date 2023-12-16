@@ -4335,7 +4335,7 @@ void PeerManagerImpl::ProcessMessage(
 #ifdef ENABLE_WALLET
         m_cj_ctx->queueman->ProcessMessage(pfrom, *this, msg_type, vRecv);
         for (auto& pair : m_cj_ctx->walletman->raw()) {
-            pair.second->ProcessMessage(pfrom, *this, m_connman, m_mempool, msg_type, vRecv);
+            pair.second->ProcessMessage(pfrom, m_connman, m_mempool, msg_type, vRecv);
         }
 #endif // ENABLE_WALLET
         m_cj_ctx->server->ProcessMessage(pfrom, *this, msg_type, vRecv);

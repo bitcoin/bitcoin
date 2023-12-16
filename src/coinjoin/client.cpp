@@ -131,7 +131,7 @@ void CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, PeerManager&
     dsq.Relay(connman);
 }
 
-void CCoinJoinClientManager::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
+void CCoinJoinClientManager::ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
@@ -150,7 +150,7 @@ void CCoinJoinClientManager::ProcessMessage(CNode& peer, PeerManager& peerman, C
         AssertLockNotHeld(cs_deqsessions);
         LOCK(cs_deqsessions);
         for (auto& session : deqSessions) {
-            session.ProcessMessage(peer, peerman, connman, mempool, msg_type, vRecv);
+            session.ProcessMessage(peer, connman, mempool, msg_type, vRecv);
         }
     }
 }
@@ -164,7 +164,7 @@ CCoinJoinClientSession::CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletMa
     m_queueman(queueman)
 {}
 
-void CCoinJoinClientSession::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
+void CCoinJoinClientSession::ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
