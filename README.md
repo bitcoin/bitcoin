@@ -9,6 +9,10 @@ https://bitcoincore.org/en/download/.
 What is Bitcoin Core?
 ---------------------
 
+Bitcoin Core (Bitcoin core in Spanish) is an open source project, reference implementation for Bitcoin (BTC) nodes and a wallet capable of verifying payments in bitcoins autonomously. Also known as the satoshi client, it is a direct continuation of the original bitcoin client launched by Satoshi Nakamoto copyright 2009 (later renamed "Bitcoin Core").
+
+It has been the most used client by "full nodes" in the entire history of the Bitcoin network.2​ It receives contributions from casual contributors and is maintained by a team of developers called "maintainers." 
+
 Bitcoin Core connects to the Bitcoin peer-to-peer network to download and fully
 validate blocks and transactions. It also includes a wallet and graphical user
 interface, which can be optionally built.
