@@ -117,11 +117,11 @@ FUZZ_TARGET(versionbits, .init = initialize)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     // making period/max_periods larger slows these tests down significantly
-    const int period = 32;
+    const uint32_t period = 32;
     const size_t max_periods = 16;
     const size_t max_blocks = 2 * period * max_periods;
 
-    const int threshold = fuzzed_data_provider.ConsumeIntegralInRange(1, period);
+    const uint32_t threshold = fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(1, period);
     assert(0 < threshold && threshold <= period); // must be able to both pass and fail threshold!
 
     // too many blocks at 10min each might cause uint32_t time to overflow if
@@ -199,7 +199,7 @@ FUZZ_TARGET(versionbits, .init = initialize)
     while (fuzzed_data_provider.remaining_bytes() > 0) { // early exit; no need for LIMITED_WHILE
         // all blocks in these periods either do or don't signal
         bool signal = fuzzed_data_provider.ConsumeBool();
-        for (int b = 0; b < period; ++b) {
+        for (uint32_t b = 0; b < period; ++b) {
             blocks.mine_block(signal);
         }
 
@@ -211,7 +211,7 @@ FUZZ_TARGET(versionbits, .init = initialize)
     // now we mine the final period and check that everything looks sane
 
     // count the number of signalling blocks
-    int blocks_sig = 0;
+    uint32_t blocks_sig = 0;
 
     // get the info for the first block of the period
     CBlockIndex* prev = blocks.tip();
@@ -230,7 +230,7 @@ FUZZ_TARGET(versionbits, .init = initialize)
     assert(exp_since <= prev_next_height);
 
     // mine (period-1) blocks and check state
-    for (int b = 1; b < period; ++b) {
+    for (uint32_t b = 1; b < period; ++b) {
         const bool signal = (signalling_mask >> (b % 32)) & 1;
         if (signal) ++blocks_sig;
 
