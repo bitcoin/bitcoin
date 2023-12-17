@@ -41,13 +41,13 @@ typedef std::map<const CBlockIndex*, ThresholdState> ThresholdConditionCache;
 /** Display status of an in-progress BIP9 softfork */
 struct BIP9Stats {
     /** Length of blocks of the BIP9 signalling period */
-    int period;
+    uint32_t period;
     /** Number of blocks with the version bit set required to activate the softfork */
-    int threshold;
+    uint32_t threshold;
     /** Number of blocks elapsed since the beginning of the current period */
-    int elapsed;
+    uint32_t elapsed;
     /** Number of blocks with the version bit set since the beginning of the current period */
-    int count;
+    uint32_t count;
     /** False if there are not enough blocks left in this period to pass activation threshold */
     bool possible;
 };
