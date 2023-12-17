@@ -41,6 +41,8 @@ protected:
     virtual int Threshold() const =0;
 
 public:
+    virtual ~AbstractThresholdConditionChecker() = default;
+
     /** Returns the numerical statistics of an in-progress BIP9 softfork in the period including pindex
      * If provided, signalling_blocks is set to true/false based on whether each block in the period signalled
      */

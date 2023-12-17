@@ -16,39 +16,40 @@
 /* Define a virtual block time, one block per 10 minutes after Nov 14 2014, 0:55:36am */
 static int32_t TestTime(int nHeight) { return 1415926536 + 600 * nHeight; }
 
-class TestConditionChecker : public AbstractThresholdConditionChecker
+class TestConditionChecker final : public VersionBitsConditionChecker
 {
 private:
     mutable ThresholdConditionCache cache;
 
 public:
-    int64_t BeginTime() const override { return TestTime(10000); }
-    int64_t EndTime() const override { return TestTime(20000); }
-    int Period() const override { return 1000; }
-    int Threshold() const override { return 900; }
-    bool Condition(const CBlockIndex* pindex) const override { return (pindex->nVersion & 0x100); }
+    TestConditionChecker(const Consensus::BIP9Deployment& dep) : VersionBitsConditionChecker{dep} { }
+    ~TestConditionChecker() = default;
 
     ThresholdState GetStateFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateFor(pindexPrev, cache); }
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, cache); }
+    void clear() { cache.clear(); }
 };
 
-class TestDelayedActivationConditionChecker : public TestConditionChecker
+namespace {
+struct Deployments
 {
-public:
-    int MinActivationHeight() const override { return 15000; }
+    const Consensus::BIP9Deployment normal{
+        .bit = 8,
+        .nStartTime = TestTime(10000),
+        .nTimeout = TestTime(20000),
+        .min_activation_height = 0,
+        .period = 1000,
+        .threshold = 900,
+    };
+    Consensus::BIP9Deployment always, never, delayed;
+    Deployments()
+    {
+        delayed = normal; delayed.min_activation_height = 15000;
+        always = normal; always.nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
+        never = normal; never.nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+    }
 };
-
-class TestAlwaysActiveConditionChecker : public TestConditionChecker
-{
-public:
-    int64_t BeginTime() const override { return Consensus::BIP9Deployment::ALWAYS_ACTIVE; }
-};
-
-class TestNeverActiveConditionChecker : public TestConditionChecker
-{
-public:
-    int64_t BeginTime() const override { return Consensus::BIP9Deployment::NEVER_ACTIVE; }
-};
+}
 
 #define CHECKERS 6
 
@@ -58,22 +59,28 @@ class VersionBitsTester
     // A fake blockchain
     std::vector<CBlockIndex*> vpblock;
 
+    // Used to automatically set the top bits for manual calls to Mine()
+    const int32_t nVersionBase{0};
+
+    // Setup BIP9Deployment structs for the checkers
+    const Deployments test_deployments;
+
     // 6 independent checkers for the same bit.
     // The first one performs all checks, the second only 50%, the third only 25%, etc...
     // This is to test whether lack of cached information leads to the same results.
-    TestConditionChecker checker[CHECKERS];
+    std::vector<TestConditionChecker> checker{CHECKERS, {test_deployments.normal}};
     // Another 6 that assume delayed activation
-    TestDelayedActivationConditionChecker checker_delayed[CHECKERS];
+    std::vector<TestConditionChecker> checker_delayed{CHECKERS, {test_deployments.delayed}};
     // Another 6 that assume always active activation
-    TestAlwaysActiveConditionChecker checker_always[CHECKERS];
+    std::vector<TestConditionChecker> checker_always{CHECKERS, {test_deployments.always}};
     // Another 6 that assume never active activation
-    TestNeverActiveConditionChecker checker_never[CHECKERS];
+    std::vector<TestConditionChecker> checker_never{CHECKERS, {test_deployments.never}};
 
     // Test counter (to identify failures)
     int num{1000};
 
 public:
-    VersionBitsTester(FastRandomContext& rng) : m_rng{rng} {}
+    explicit VersionBitsTester(FastRandomContext& rng, int32_t nVersionBase=0) : m_rng{rng}, nVersionBase{nVersionBase} { }
 
     VersionBitsTester& Reset() {
         // Have each group of tests be counted by the 1000s part, starting at 1000
@@ -83,10 +90,10 @@ public:
             delete vpblock[i];
         }
         for (unsigned int  i = 0; i < CHECKERS; i++) {
-            checker[i] = TestConditionChecker();
-            checker_delayed[i] = TestDelayedActivationConditionChecker();
-            checker_always[i] = TestAlwaysActiveConditionChecker();
-            checker_never[i] = TestNeverActiveConditionChecker();
+            checker[i].clear();
+            checker_delayed[i].clear();
+            checker_always[i].clear();
+            checker_never[i].clear();
         }
         vpblock.clear();
         return *this;
@@ -102,7 +109,7 @@ public:
             pindex->nHeight = vpblock.size();
             pindex->pprev = Tip();
             pindex->nTime = nTime;
-            pindex->nVersion = nVersion;
+            pindex->nVersion = (nVersionBase | nVersion);
             pindex->BuildSkip();
             vpblock.push_back(pindex);
         }
@@ -180,7 +187,7 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
 {
     for (int i = 0; i < 64; i++) {
         // DEFINED -> STARTED after timeout reached -> FAILED
-        VersionBitsTester(m_rng).TestDefined().TestStateSinceHeight(0)
+        VersionBitsTester(m_rng, VERSIONBITS_TOP_BITS).TestDefined().TestStateSinceHeight(0)
                            .Mine(1, TestTime(1), 0x100).TestDefined().TestStateSinceHeight(0)
                            .Mine(11, TestTime(11), 0x100).TestDefined().TestStateSinceHeight(0)
                            .Mine(989, TestTime(989), 0x100).TestDefined().TestStateSinceHeight(0)
