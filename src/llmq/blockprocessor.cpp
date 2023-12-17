@@ -646,28 +646,29 @@ bool CQuorumBlockProcessor::HasMineableCommitment(const uint256& hash) const
 
 void CQuorumBlockProcessor::AddMineableCommitment(const CFinalCommitment& fqc)
 {
-    bool relay = false;
-    uint256 commitmentHash = ::SerializeHash(fqc);
+    const uint256 commitmentHash = ::SerializeHash(fqc);
 
-    {
+    const bool relay = [&]() {
         LOCK(minableCommitmentsCs);
 
         auto k = std::make_pair(fqc.llmqType, fqc.quorumHash);
-        auto ins = minableCommitmentsByQuorum.try_emplace(k, commitmentHash);
-        if (ins.second) {
+        auto [itInserted, successfullyInserted] = minableCommitmentsByQuorum.try_emplace(k, commitmentHash);
+        if (successfullyInserted) {
             minableCommitments.try_emplace(commitmentHash, fqc);
-            relay = true;
+            return true;
         } else {
-            const auto& oldFqc = minableCommitments.at(ins.first->second);
+            auto& insertedQuorumHash = itInserted->second;
+            const auto& oldFqc = minableCommitments.at(insertedQuorumHash);
             if (fqc.CountSigners() > oldFqc.CountSigners()) {
                 // new commitment has more signers, so override the known one
-                ins.first->second = commitmentHash;
-                minableCommitments.erase(ins.first->second);
+                insertedQuorumHash = commitmentHash;
+                minableCommitments.erase(insertedQuorumHash);
                 minableCommitments.try_emplace(commitmentHash, fqc);
-                relay = true;
+                return true;
             }
         }
-    }
+        return false;
+    }();
 
     // We only relay the new commitment if it's new or better then the old one
     if (relay) {
