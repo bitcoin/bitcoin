@@ -17,6 +17,7 @@
 #include <merkleblock.h>
 #include <netmessagemaker.h>
 #include <netbase.h>
+#include <net_types.h>
 #include <node/blockstorage.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
@@ -4341,7 +4342,7 @@ void PeerManagerImpl::ProcessMessage(
     {
         //probably one the extensions
 #ifdef ENABLE_WALLET
-        m_cj_ctx->queueman->ProcessMessage(pfrom, *this, msg_type, vRecv);
+        ProcessPeerMsgRet(m_cj_ctx->queueman->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         for (auto& pair : m_cj_ctx->walletman->raw()) {
             pair.second->ProcessMessage(pfrom, m_connman, m_mempool, msg_type, vRecv);
         }
