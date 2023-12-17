@@ -495,9 +495,8 @@ void CChainLocksHandler::EnforceBestChainLock()
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- enforcing block %s via CLSIG (%s)\n", __func__, pindex->GetBlockHash().ToString(), clsig->ToString());
     m_chainstate.EnforceBlock(dummy_state, pindex);
 
-    bool activateNeeded = WITH_LOCK(::cs_main, return m_chainstate.m_chain.Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight)) != currentBestChainLockBlockIndex;
 
-    if (activateNeeded) {
+    if (/*activateNeeded =*/ WITH_LOCK(::cs_main, return m_chainstate.m_chain.Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight)) != currentBestChainLockBlockIndex) {
         if (!m_chainstate.ActivateBestChain(dummy_state)) {
             LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, dummy_state.ToString());
             return;
