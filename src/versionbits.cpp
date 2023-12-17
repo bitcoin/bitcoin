@@ -187,36 +187,6 @@ int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex*
     return pindexPrev->nHeight + 1;
 }
 
-namespace
-{
-/**
- * Class to implement versionbits logic.
- */
-class VersionBitsConditionChecker : public AbstractThresholdConditionChecker {
-private:
-    const Consensus::BIP9Deployment& dep;
-
-protected:
-    int64_t BeginTime() const override { return dep.nStartTime; }
-    int64_t EndTime() const override { return dep.nTimeout; }
-    int MinActivationHeight() const override { return dep.min_activation_height; }
-    int Period() const override { return dep.period; }
-    int Threshold() const override { return dep.threshold; }
-
-    bool Condition(const CBlockIndex* pindex) const override
-    {
-        return (((pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) && (pindex->nVersion & Mask()) != 0);
-    }
-
-public:
-    explicit VersionBitsConditionChecker(const Consensus::BIP9Deployment& dep) : dep{dep} {}
-    explicit VersionBitsConditionChecker(const Consensus::Params& params, Consensus::DeploymentPos id) : VersionBitsConditionChecker{params.vDeployments[id]} {}
-
-    uint32_t Mask() const { return (uint32_t{1}) << dep.bit; }
-};
-
-} // namespace
-
 BIP9Info VersionBitsCache::Info(const CBlockIndex& block_index, const Consensus::Params& params, Consensus::DeploymentPos id)
 {
     BIP9Info result;
@@ -252,7 +222,6 @@ BIP9Info VersionBitsCache::Info(const CBlockIndex& block_index, const Consensus:
 
     return result;
 }
-
 
 BIP9GBTStatus VersionBitsCache::GBTStatus(const CBlockIndex& block_index, const Consensus::Params& params)
 {
