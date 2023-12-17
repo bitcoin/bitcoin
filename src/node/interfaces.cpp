@@ -16,6 +16,8 @@
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
+#include <llmq/chainlocks.h>
+#include <llmq/context.h>
 #include <llmq/instantsend.h>
 #include <mapport.h>
 #include <masternode/sync.h>
@@ -714,6 +716,32 @@ public:
         LOCK(cs_main);
         assert(std::addressof(::ChainActive()) == std::addressof(m_node.chainman->ActiveChain()));
         return CheckFinalTx(m_node.chainman->ActiveChain().Tip(), tx);
+    }
+    bool isInstantSendLockedTx(const uint256& hash) override
+    {
+        if (m_node.llmq_ctx == nullptr || m_node.llmq_ctx->isman == nullptr) return false;
+        return m_node.llmq_ctx->isman->IsLocked(hash);
+    }
+    bool hasChainLock(int height, const uint256& hash) override
+    {
+        if (m_node.llmq_ctx == nullptr || m_node.llmq_ctx->clhandler == nullptr) return false;
+        return m_node.llmq_ctx->clhandler->HasChainLock(height, hash);
+    }
+    std::vector<COutPoint> listMNCollaterials(const std::vector<std::pair<const CTransactionRef&, unsigned int>>& outputs) override
+    {
+        const CBlockIndex *tip = WITH_LOCK(::cs_main, return ::ChainActive().Tip());
+        CDeterministicMNList mnList{};
+        if  (tip != nullptr && deterministicMNManager != nullptr) {
+            mnList = deterministicMNManager->GetListForBlock(tip);
+        }
+        std::vector<COutPoint> listRet;
+        for (const auto& [tx, index]: outputs) {
+            COutPoint nextOut{tx->GetHash(), index};
+            if (CDeterministicMNManager::IsProTxWithCollateral(tx, index) || mnList.HasMNByCollateral(nextOut)) {
+                listRet.emplace_back(nextOut);
+            }
+        }
+        return listRet;
     }
     bool findBlock(const uint256& hash, const FoundBlock& block) override
     {

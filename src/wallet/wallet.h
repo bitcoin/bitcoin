@@ -855,6 +855,8 @@ public:
     bool IsLocked(bool fForMixing = false) const override;
     bool Lock(bool fForMixing = false);
 
+    void UpdateProgress(const std::string& title, int nProgress) override;
+
     std::map<uint256, CWalletTx> mapWallet GUARDED_BY(cs_wallet);
 
     typedef std::multimap<int64_t, CWalletTx*> TxItems;

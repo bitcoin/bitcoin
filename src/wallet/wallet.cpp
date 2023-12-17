@@ -44,16 +44,13 @@
 
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
+#include <evo/providertx.h>
 #include <governance/governance.h>
-#include <evo/deterministicmns.h>
 #include <masternode/sync.h>
 
 #include <univalue.h>
 
-#include <evo/providertx.h>
-
-#include <llmq/instantsend.h>
-#include <llmq/chainlocks.h>
+#include <algorithm>
 #include <assert.h>
 
 using interfaces::FoundBlock;
@@ -882,14 +879,15 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
         wtx.nTimeSmart = ComputeTimeSmart(wtx);
         AddToSpends(hash);
 
-        auto mnList = deterministicMNManager->GetListAtChainTip();
+        std::vector<std::pair<const CTransactionRef&, unsigned int>> outputs;
         for(unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
             if (IsMine(wtx.tx->vout[i]) && !IsSpent(hash, i)) {
                 setWalletUTXO.insert(COutPoint(hash, i));
-                if (deterministicMNManager->IsProTxWithCollateral(wtx.tx, i) || mnList.HasMNByCollateral(COutPoint(hash, i))) {
-                    LockCoin(COutPoint(hash, i));
-                }
+                outputs.emplace_back(wtx.tx, i);
             }
+        }
+        for (const auto& outPoint : m_chain->listMNCollaterials(outputs)) {
+            LockCoin(outPoint);
         }
     }
 
@@ -907,15 +905,18 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
             assert(wtx.m_confirm.block_height == confirm.block_height);
         }
 
-        auto mnList = deterministicMNManager->GetListAtChainTip();
-        for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
+        std::vector<std::pair<const CTransactionRef&, unsigned int>> outputs;
+        for(unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
             if (IsMine(wtx.tx->vout[i]) && !IsSpent(hash, i)) {
                 bool new_utxo = setWalletUTXO.insert(COutPoint(hash, i)).second;
-                if (new_utxo && (deterministicMNManager->IsProTxWithCollateral(wtx.tx, i) || mnList.HasMNByCollateral(COutPoint(hash, i)))) {
-                    LockCoin(COutPoint(hash, i));
+                if (new_utxo) {
+                    outputs.emplace_back(wtx.tx, i);
+                    fUpdated = true;
                 }
-                fUpdated |= new_utxo;
             }
+        }
+        for (const auto& outPoint : m_chain->listMNCollaterials(outputs)) {
+            LockCoin(outPoint);
         }
     }
 
@@ -2720,6 +2721,13 @@ struct CompareByPriority
     }
 };
 
+static bool isGroupISLocked(const OutputGroup& group, interfaces::Chain& chain)
+{
+    return std::all_of(group.m_outputs.begin(), group.m_outputs.end(), [&chain](const auto& output) {
+        return chain.isInstantSendLockedTx(output.outpoint.hash);
+    });
+}
+
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<OutputGroup> groups,
                                  std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params, bool& bnb_used, CoinType nCoinType) const
 {
@@ -2739,7 +2747,8 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
 
         // Filter by the min conf specs and add to utxo_pool and calculate effective value
         for (OutputGroup& group : groups) {
-            if (!group.EligibleForSpending(eligibility_filter)) continue;
+            bool isISLocked = isGroupISLocked(group, chain());
+            if (!group.EligibleForSpending(eligibility_filter, isISLocked)) continue;
 
             if (coin_selection_params.m_subtract_fee_outputs) {
                 // Set the effective feerate to 0 as we don't want to use the effective value since the fees will be deducted from the output
@@ -2758,7 +2767,8 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     } else {
         // Filter by the min conf specs and add to utxo_pool
         for (const OutputGroup& group : groups) {
-            if (!group.EligibleForSpending(eligibility_filter)) continue;
+            bool isISLocked = isGroupISLocked(group, chain());
+            if (!group.EligibleForSpending(eligibility_filter, isISLocked)) continue;
             utxo_pool.push_back(group);
         }
         bnb_used = false;
@@ -3856,17 +3866,18 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 // This avoids accidental spending of collaterals. They can still be unlocked manually if a spend is really intended.
 void CWallet::AutoLockMasternodeCollaterals()
 {
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    std::vector<std::pair<const CTransactionRef&, unsigned int>> outputs;
 
     LOCK(cs_wallet);
     for (const auto& pair : mapWallet) {
         for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
             if (IsMine(pair.second.tx->vout[i]) && !IsSpent(pair.first, i)) {
-                if (deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i))) {
-                    LockCoin(COutPoint(pair.first, i));
-                }
+                outputs.emplace_back(pair.second.tx, i);
             }
         }
+    }
+    for (const auto& outPoint : m_chain->listMNCollaterials(outputs)) {
+        LockCoin(outPoint);
     }
 }
 
@@ -4292,18 +4303,17 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
 
 void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
 {
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    std::vector<std::pair<const CTransactionRef&, unsigned int>> outputs;
 
     AssertLockHeld(cs_wallet);
     for (const auto &o : setWalletUTXO) {
         auto it = mapWallet.find(o.hash);
         if (it != mapWallet.end()) {
-            const auto &p = it->second;
-            if (deterministicMNManager->IsProTxWithCollateral(p.tx, o.n) || mnList.HasMNByCollateral(o)) {
-                vOutpts.emplace_back(o);
-            }
+            const auto &ptx = it->second;
+            outputs.emplace_back(ptx.tx, o.n);
         }
     }
+    vOutpts = m_chain->listMNCollaterials(outputs);
 }
 
 /** @} */ // end of Actions
@@ -5132,7 +5142,7 @@ bool CWalletTx::IsLockedByInstantSend() const
     if (fIsChainlocked) {
         fIsInstantSendLocked = false;
     } else if (!fIsInstantSendLocked) {
-        fIsInstantSendLocked = llmq::quorumInstantSendManager->IsLocked(GetHash());
+        fIsInstantSendLocked = pwallet->chain().isInstantSendLockedTx(GetHash());
     }
     return fIsInstantSendLocked;
 }
@@ -5145,7 +5155,7 @@ bool CWalletTx::IsChainLocked() const
         bool active;
         int height;
         if (pwallet->chain().findBlock(m_confirm.hashBlock, FoundBlock().inActiveChain(active).height(height)) && active) {
-            fIsChainlocked = llmq::chainLocksHandler->HasChainLock(height, m_confirm.hashBlock);
+            fIsChainlocked = pwallet->chain().hasChainLock(height, m_confirm.hashBlock);
         }
     }
     return fIsChainlocked;
@@ -5500,4 +5510,9 @@ bool CWallet::GenerateNewHDChainEncrypted(const SecureString& secureMnemonic, co
     }
 
     return false;
+}
+
+void CWallet::UpdateProgress(const std::string& title, int nProgress)
+{
+    ShowProgress(title, nProgress);
 }

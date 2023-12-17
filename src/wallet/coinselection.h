@@ -94,8 +94,7 @@ struct OutputGroup
     }
     void Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants);
     std::vector<CInputCoin>::iterator Discard(const CInputCoin& output);
-    bool IsLockedByInstantSend() const;
-    bool EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const;
+    bool EligibleForSpending(const CoinEligibilityFilter& eligibility_filter, bool isISLocked) const;
 
     //! Update the OutputGroup's fee, long_term_fee, and effective_value based on the given feerates
     void SetFees(const CFeeRate effective_feerate, const CFeeRate long_term_feerate);
