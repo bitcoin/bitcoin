@@ -249,6 +249,9 @@ public:
     bool IsBanned(NodeId pnode) override EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 private:
+    /** Helper to process result of external handlers of message */
+    void ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom);
+
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
     void ConsiderEviction(CNode& pto, int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -2798,6 +2801,11 @@ void PeerManagerImpl::ProcessBlock(CNode& pfrom, const std::shared_ptr<const CBl
         LOCK(cs_main);
         mapBlockSource.erase(pblock->GetHash());
     }
+}
+
+void PeerManagerImpl::ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom)
+{
+    if (!ret) Misbehaving(pfrom.GetId(), ret.error().score, ret.error().message);
 }
 
 void PeerManagerImpl::ProcessMessage(
