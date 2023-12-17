@@ -186,8 +186,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, gsl::not_null<cons
         }
     }
 
-    for (const auto& p : qcs) {
-        const auto& qc = p.second;
+    for (const auto& [_, qc] : qcs) {
         if (!ProcessCommitment(pindex->nHeight, blockHash, qc, state, fJustCheck, fBLSChecks)) {
             LogPrintf("[ProcessBlock] failed h[%d] llmqType[%d] version[%d] quorumIndex[%d] quorumHash[%s]\n", pindex->nHeight, ToUnderlying(qc.llmqType), qc.nVersion, qc.quorumIndex, qc.quorumHash.ToString());
             return false;
@@ -317,8 +316,8 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, gsl::not_null<const C
         return false;
     }
 
-    for (auto& p : qcs) {
-        auto& qc = p.second;
+    for (auto& [_, qc2] : qcs) {
+        auto& qc = qc2; // cannot capture structured binding into lambda
         if (qc.IsNull()) {
             continue;
         }
