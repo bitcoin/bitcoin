@@ -94,8 +94,8 @@ PeerMsgRet CQuorumBlockProcessor::ProcessMessage(const CNode& peer, std::string_
             // same, can't punish
             return {};
         }
-        int quorumHeight = pQuorumBaseBlockIndex->nHeight - (pQuorumBaseBlockIndex->nHeight % llmq_params_opt->dkgInterval) + int(qc.quorumIndex);
-        if (quorumHeight != pQuorumBaseBlockIndex->nHeight) {
+        if (int quorumHeight = pQuorumBaseBlockIndex->nHeight - (pQuorumBaseBlockIndex->nHeight % llmq_params_opt->dkgInterval) + int(qc.quorumIndex);
+                quorumHeight != pQuorumBaseBlockIndex->nHeight) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is not the first block in the DKG interval, peer=%d\n", __func__,
                      qc.quorumHash.ToString(), peer.GetId());
             return tl::unexpected{100};
@@ -149,8 +149,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, gsl::not_null<cons
 
     const auto blockHash = pindex->GetBlockHash();
 
-    bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
-    if (!fDIP0003Active) {
+    if (bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height; !fDIP0003Active) {
         m_evoDb.Write(DB_BEST_BLOCK_UPGRADE, blockHash);
         return true;
     }
@@ -314,8 +313,7 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, gsl::not_null<const C
     PreComputeQuorumMembers(pindex, true);
 
     std::multimap<Consensus::LLMQType, CFinalCommitment> qcs;
-    BlockValidationState dummy;
-    if (!GetCommitmentsFromBlock(block, pindex, qcs, dummy)) {
+    if (BlockValidationState dummy; !GetCommitmentsFromBlock(block, pindex, qcs, dummy)) {
         return false;
     }
 
@@ -506,8 +504,8 @@ std::vector<const CBlockIndex*> CQuorumBlockProcessor::GetMinedCommitmentsUntilB
             break;
         }
 
-        uint32_t nMinedHeight = std::numeric_limits<uint32_t>::max() - be32toh(std::get<2>(curKey));
-        if (nMinedHeight > static_cast<uint32_t>(pindex->nHeight)) {
+        if (uint32_t nMinedHeight = std::numeric_limits<uint32_t>::max() - be32toh(std::get<2>(curKey));
+                nMinedHeight > static_cast<uint32_t>(pindex->nHeight)) {
             break;
         }
 
@@ -549,8 +547,8 @@ std::optional<const CBlockIndex*> CQuorumBlockProcessor::GetLastMinedCommitments
             return std::nullopt;
         }
 
-        uint32_t nMinedHeight = std::numeric_limits<uint32_t>::max() - be32toh(std::get<3>(curKey));
-        if (nMinedHeight > static_cast<uint32_t>(pindex->nHeight)) {
+        if (uint32_t nMinedHeight = std::numeric_limits<uint32_t>::max() - be32toh(std::get<3>(curKey));
+                nMinedHeight > static_cast<uint32_t>(pindex->nHeight)) {
             return std::nullopt;
         }
 
@@ -724,8 +722,7 @@ std::optional<std::vector<CFinalCommitment>> CQuorumBlockProcessor::GetMineableC
         LOCK(minableCommitmentsCs);
 
         auto k = std::make_pair(llmqParams.type, quorumHash);
-        auto it = minableCommitmentsByQuorum.find(k);
-        if (it == minableCommitmentsByQuorum.end()) {
+        if (auto it = minableCommitmentsByQuorum.find(k); it == minableCommitmentsByQuorum.end()) {
             // null commitment required
             cf = CFinalCommitment(llmqParams, quorumHash);
             cf.quorumIndex = static_cast<int16_t>(quorumIndex);

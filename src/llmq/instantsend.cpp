@@ -1210,8 +1210,7 @@ void CInstantSendManager::RemoveNonLockedTx(const uint256& txid, bool retryChild
 
     if (info.tx) {
         for (const auto& in : info.tx->vin) {
-            auto jt = nonLockedTxs.find(in.prevout.hash);
-            if (jt != nonLockedTxs.end()) {
+            if (auto jt = nonLockedTxs.find(in.prevout.hash); jt != nonLockedTxs.end()) {
                 jt->second.children.erase(txid);
                 if (!jt->second.tx && jt->second.children.empty()) {
                     nonLockedTxs.erase(jt);
@@ -1254,11 +1253,9 @@ void CInstantSendManager::NotifyChainLock(const CBlockIndex* pindexChainLock)
 
 void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
 {
-    if (!fUpgradedDB) {
-        if (pindexNew->nHeight + 1 >= Params().GetConsensus().DIP0020Height) {
-            db.Upgrade(mempool);
-            fUpgradedDB = true;
-        }
+    if (!fUpgradedDB && pindexNew->nHeight + 1 >= Params().GetConsensus().DIP0020Height) {
+        db.Upgrade(mempool);
+        fUpgradedDB = true;
     }
 
     bool fDIP0008Active = pindexNew->pprev && pindexNew->pprev->nHeight >= Params().GetConsensus().DIP0008Height;
