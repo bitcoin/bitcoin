@@ -70,7 +70,7 @@ protected:
 
     bool Condition(const CBlockIndex* pindex) const override
     {
-        return (((pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) && (pindex->nVersion & Mask()) != 0);
+        return Condition(pindex->nVersion);
     }
 
 public:
@@ -78,6 +78,11 @@ public:
     explicit VersionBitsConditionChecker(const Consensus::Params& params, Consensus::DeploymentPos id) : VersionBitsConditionChecker{params.vDeployments[id]} {}
 
     uint32_t Mask() const { return (uint32_t{1}) << dep.bit; }
+
+    bool Condition(int32_t nVersion) const
+    {
+        return (((nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) && (nVersion & Mask()) != 0);
+    }
 };
 
 #endif // BITCOIN_VERSIONBITS_IMPL_H
