@@ -1296,8 +1296,9 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
     if (gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS)) {
         // Lastly, ensure this tx will pass the mempool's chain limits
-        if (!wallet.chain().checkChainLimits(tx)) {
-            return util::Error{_("Transaction has too long of a mempool chain")};
+        auto result = wallet.chain().checkChainLimits(tx);
+        if (!result) {
+            return util::Error{util::ErrorString(result)};
         }
     }
 
