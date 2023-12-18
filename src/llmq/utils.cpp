@@ -948,7 +948,7 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumMana
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
 
-    bool fDIP0024IsActive = optDIP0024IsActive.has_value() ? *optDIP0024IsActive : DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0024);
+    const bool fDIP0024IsActive{optDIP0024IsActive.value_or(DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0024))};
     switch (llmqType)
     {
         case Consensus::LLMQType::LLMQ_DEVNET:
@@ -959,9 +959,8 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumMana
         case Consensus::LLMQType::LLMQ_TEST_INSTANTSEND: {
             if (!fDIP0024IsActive) return true;
 
-            bool fHaveDIP0024Quorums = optHaveDIP0024Quorums.has_value() ? *optHaveDIP0024Quorums
-                                                                         : !qman.ScanQuorums(
-                            consensusParams.llmqTypeDIP0024InstantSend, pindexPrev, 1).empty();
+            const bool fHaveDIP0024Quorums{optHaveDIP0024Quorums.value_or(!qman.ScanQuorums(
+                            consensusParams.llmqTypeDIP0024InstantSend, pindexPrev, 1).empty())};
             return !fHaveDIP0024Quorums;
         }
         case Consensus::LLMQType::LLMQ_TEST:
