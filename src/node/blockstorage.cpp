@@ -176,6 +176,13 @@ bool CBlockIndexHeightOnlyComparator::operator()(const CBlockIndex* pa, const CB
     return pa->nHeight < pb->nHeight;
 }
 
+/** The number of blocks to keep below the deepest prune lock.
+ *  There is nothing special about this number. It is higher than what we
+ *  expect to see in regular mainnet reorgs, but not so high that it would
+ *  noticeably interfere with the pruning mechanism.
+ * */
+static constexpr int PRUNE_LOCK_BUFFER{10};
+
 std::vector<CBlockIndex*> BlockManager::GetAllBlockIndices()
 {
     AssertLockHeld(cs_main);
@@ -269,6 +276,21 @@ void BlockManager::PruneOneBlockFile(const int fileNumber)
     m_dirty_fileinfo.insert(fileNumber);
 }
 
+bool BlockManager::DoPruneLocksForbidPruning(const CBlockFileInfo& block_file_info)
+{
+    AssertLockHeld(cs_main);
+    for (const auto& prune_lock : m_prune_locks) {
+        if (prune_lock.second.height_first == std::numeric_limits<int>::max()) continue;
+        // Remove the buffer and one additional block here to get actual height that is outside of the buffer
+        const unsigned int lock_height{(unsigned)std::max(1, prune_lock.second.height_first - PRUNE_LOCK_BUFFER - 1)};
+        if (block_file_info.nHeightLast > lock_height) {
+            LogPrint(BCLog::PRUNE, "%s limited pruning to height %d\n", prune_lock.first, lock_height);
+            return true;
+        }
+    }
+    return false;
+}
+
 void BlockManager::FindFilesToPruneManual(
     std::set<int>& setFilesToPrune,
     int nManualPruneHeight,
@@ -290,6 +312,8 @@ void BlockManager::FindFilesToPruneManual(
         if (fileinfo.nSize == 0 || fileinfo.nHeightLast > (unsigned)last_block_can_prune || fileinfo.nHeightFirst < (unsigned)min_block_to_prune) {
             continue;
         }
+
+        if (DoPruneLocksForbidPruning(m_blockfile_info[fileNumber])) continue;
 
         PruneOneBlockFile(fileNumber);
         setFilesToPrune.insert(fileNumber);
@@ -358,6 +382,8 @@ void BlockManager::FindFilesToPrune(
             if (fileinfo.nHeightLast > (unsigned)last_block_can_prune || fileinfo.nHeightFirst < (unsigned)min_block_to_prune) {
                 continue;
             }
+
+            if (DoPruneLocksForbidPruning(m_blockfile_info[fileNumber])) continue;
 
             PruneOneBlockFile(fileNumber);
             // Queue up the files for removal
