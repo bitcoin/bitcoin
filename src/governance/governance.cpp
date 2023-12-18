@@ -17,7 +17,6 @@
 #include <masternode/meta.h>
 #include <masternode/node.h>
 #include <masternode/sync.h>
-#include <net_processing.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <protocol.h>
@@ -115,17 +114,17 @@ bool CGovernanceManager::SerializeVoteForHash(const uint256& nHash, CDataStream&
     return cmapVoteToObject.Get(nHash, pGovobj) && pGovobj->GetVoteFile().SerializeVoteToStream(nHash, ss);
 }
 
-void CGovernanceManager::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
+PeerMsgRet CGovernanceManager::ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
 {
-    if (fDisableGovernance) return;
-    if (::masternodeSync == nullptr || !::masternodeSync->IsBlockchainSynced()) return;
+    if (fDisableGovernance) return {};
+    if (::masternodeSync == nullptr || !::masternodeSync->IsBlockchainSynced()) return {};
 
     // ANOTHER USER IS ASKING US TO HELP THEM SYNC GOVERNANCE OBJECT DATA
     if (msg_type == NetMsgType::MNGOVERNANCESYNC) {
         // Ignore such requests until we are fully synced.
         // We could start processing this after masternode list is synced
         // but this is a heavy one so it's better to finish sync first.
-        if (!::masternodeSync->IsSynced()) return;
+        if (!::masternodeSync->IsSynced()) return {};
 
         uint256 nProp;
         CBloomFilter filter;
@@ -134,12 +133,12 @@ void CGovernanceManager::ProcessMessage(CNode& peer, PeerManager& peerman, CConn
 
         vRecv >> filter;
 
+        LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- syncing governance objects to our peer %s\n", peer.GetLogString());
         if (nProp == uint256()) {
-            SyncObjects(peer, peerman, connman);
+            return SyncObjects(peer, connman);
         } else {
             SyncSingleObjVotes(peer, nProp, filter, connman);
         }
-        LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- syncing governance objects to our peer %s\n", peer.GetLogString());
     }
 
     // A NEW GOVERNANCE OBJECT HAS ARRIVED
@@ -158,7 +157,7 @@ void CGovernanceManager::ProcessMessage(CNode& peer, PeerManager& peerman, CConn
 
         if (!::masternodeSync->IsBlockchainSynced()) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode list not synced\n");
-            return;
+            return {};
         }
 
         std::string strHash = nHash.ToString();
@@ -167,7 +166,7 @@ void CGovernanceManager::ProcessMessage(CNode& peer, PeerManager& peerman, CConn
 
         if (!AcceptObjectMessage(nHash)) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received unrequested object: %s\n", strHash);
-            return;
+            return {};
         }
 
         LOCK2(cs_main, cs);
@@ -175,13 +174,13 @@ void CGovernanceManager::ProcessMessage(CNode& peer, PeerManager& peerman, CConn
         if (mapObjects.count(nHash) || mapPostponedObjects.count(nHash) || mapErasedGovernanceObjects.count(nHash)) {
             // TODO - print error code? what if it's GOVOBJ_ERROR_IMMATURE?
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received already seen object: %s\n", strHash);
-            return;
+            return {};
         }
 
         bool fRateCheckBypassed = false;
         if (!MasternodeRateCheck(govobj, true, false, fRateCheckBypassed)) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode rate check failed - %s - (current block height %d) \n", strHash, nCachedBlockHeight);
-            return;
+            return {};
         }
 
         std::string strError;
@@ -192,7 +191,7 @@ void CGovernanceManager::ProcessMessage(CNode& peer, PeerManager& peerman, CConn
 
         if (fRateCheckBypassed && fIsValid && !MasternodeRateCheck(govobj, true)) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode rate check failed (after signature verification) - %s - (current block height %d)\n", strHash, nCachedBlockHeight);
-            return;
+            return {};
         }
 
         if (!fIsValid) {
@@ -202,10 +201,10 @@ void CGovernanceManager::ProcessMessage(CNode& peer, PeerManager& peerman, CConn
             } else {
                 LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Governance object is invalid - %s\n", strError);
                 // apply node's ban score
-                peerman.Misbehaving(peer.GetId(), 20);
+                return tl::unexpected{20};
             }
 
-            return;
+            return {};
         }
 
         AddGovernanceObject(govobj, connman, &peer);
@@ -226,7 +225,7 @@ void CGovernanceManager::ProcessMessage(CNode& peer, PeerManager& peerman, CConn
         // Ignore such messages until masternode list is synced
         if (!::masternodeSync->IsBlockchainSynced()) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- masternode list not synced\n");
-            return;
+            return {};
         }
 
         LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Received vote: %s\n", vote.ToString());
@@ -236,7 +235,7 @@ void CGovernanceManager::ProcessMessage(CNode& peer, PeerManager& peerman, CConn
         if (!AcceptVoteMessage(nHash)) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Received unrequested vote object: %s, hash: %s, peer = %d\n",
                 vote.ToString(), strHash, peer.GetId());
-            return;
+            return {};
         }
 
         CGovernanceException exception;
@@ -247,11 +246,12 @@ void CGovernanceManager::ProcessMessage(CNode& peer, PeerManager& peerman, CConn
         } else {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Rejected vote, error = %s\n", exception.what());
             if ((exception.GetNodePenalty() != 0) && ::masternodeSync->IsSynced()) {
-                peerman.Misbehaving(peer.GetId(), exception.GetNodePenalty());
+                return tl::unexpected{exception.GetNodePenalty()};
             }
-            return;
+            return {};
         }
     }
+    return {};
 }
 
 void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, CConnman& connman)
@@ -895,16 +895,15 @@ void CGovernanceManager::SyncSingleObjVotes(CNode& peer, const uint256& nProp, c
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- sent %d votes to peer=%d\n", __func__, nVoteCount, peer.GetId());
 }
 
-void CGovernanceManager::SyncObjects(CNode& peer, PeerManager& peerman, CConnman& connman) const
+PeerMsgRet CGovernanceManager::SyncObjects(CNode& peer, CConnman& connman) const
 {
     // do not provide any data until our node is synced
-    if (!::masternodeSync->IsSynced()) return;
+    if (!::masternodeSync->IsSynced()) return {};
 
     if (netfulfilledman->HasFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC)) {
         // Asking for the whole list multiple times in a short period of time is no good
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- peer already asked me for the list\n", __func__);
-        peerman.Misbehaving(peer.GetId(), 20);
-        return;
+        return tl::unexpected{20};
     }
     netfulfilledman->AddFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC);
 
@@ -952,6 +951,7 @@ void CGovernanceManager::SyncObjects(CNode& peer, PeerManager& peerman, CConnman
     CNetMsgMaker msgMaker(peer.GetSendVersion());
     connman.PushMessage(&peer, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ, nObjCount));
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- sent %d objects to peer=%d\n", __func__, nObjCount, peer.GetId());
+    return {};
 }
 
 void CGovernanceManager::MasternodeRateUpdate(const CGovernanceObject& govobj)

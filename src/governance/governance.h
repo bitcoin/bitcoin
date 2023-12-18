@@ -5,10 +5,13 @@
 #ifndef BITCOIN_GOVERNANCE_GOVERNANCE_H
 #define BITCOIN_GOVERNANCE_GOVERNANCE_H
 
-#include <cachemap.h>
-#include <cachemultimap.h>
 #include <governance/classes.h>
 #include <governance/object.h>
+
+#include <cachemap.h>
+#include <cachemultimap.h>
+#include <net_types.h>
+
 #include <optional>
 
 class CBloomFilter;
@@ -22,7 +25,6 @@ class CGovernanceTriggerManager;
 class CGovernanceObject;
 class CGovernanceVote;
 class CSporkManager;
-class PeerManager;
 
 extern std::unique_ptr<CGovernanceManager> governance;
 
@@ -278,9 +280,9 @@ public:
     bool ConfirmInventoryRequest(const CInv& inv);
 
     void SyncSingleObjVotes(CNode& peer, const uint256& nProp, const CBloomFilter& filter, CConnman& connman);
-    void SyncObjects(CNode& peer, PeerManager& peerman, CConnman& connman) const;
+    PeerMsgRet SyncObjects(CNode& peer, CConnman& connman) const;
 
-    void ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
+    PeerMsgRet ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
 
     void ResetVotedFundingTrigger();
 
