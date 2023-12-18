@@ -2325,12 +2325,11 @@ void CConnman::QueryDNSSeeds()
 void CConnman::ProcessFixedSeeds(std::chrono::microseconds start)
 {
     const bool dnsseed = gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED);
-    bool add_fixed_seeds = gArgs.GetBoolArg("-fixedseeds", DEFAULT_FIXEDSEEDS);
     const bool use_seednodes{gArgs.IsArgSet("-seednode")};
 
     while (!interruptNet) {
         const std::unordered_set<Network> fixed_seed_networks{GetReachableEmptyNetworks()};
-        if (add_fixed_seeds && !fixed_seed_networks.empty()) {
+        if (!fixed_seed_networks.empty()) {
             // When the node starts with an empty peers.dat, there are a few other sources of peers before
             // we fallback on to fixed seeds: -dnsseed, -seednode, -addnode
             // If none of those are available, we fallback on to fixed seeds immediately, else we allow
@@ -2365,7 +2364,6 @@ void CConnman::ProcessFixedSeeds(std::chrono::microseconds start)
                 CNetAddr local;
                 local.SetInternal("fixedseeds");
                 addrman.Add(seed_addrs, local);
-                add_fixed_seeds = false;
                 LogPrintf("Added %d fixed seeds from reachable networks.\n", seed_addrs.size());
                 return;
             }
