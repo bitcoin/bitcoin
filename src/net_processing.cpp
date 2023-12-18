@@ -4348,7 +4348,7 @@ void PeerManagerImpl::ProcessMessage(
         }
 #endif // ENABLE_WALLET
         ProcessPeerMsgRet(m_cj_ctx->server->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
-        sporkManager->ProcessMessage(pfrom, *this, m_connman, msg_type, vRecv);
+        ProcessPeerMsgRet(sporkManager->ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom);
         ::masternodeSync->ProcessMessage(pfrom, msg_type, vRecv);
         m_govman.ProcessMessage(pfrom, *this, m_connman, msg_type, vRecv);
         CMNAuth::ProcessMessage(pfrom, *this, m_connman, msg_type, vRecv);

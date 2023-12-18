@@ -11,7 +11,6 @@
 #include <logging.h>
 #include <messagesigner.h>
 #include <net.h>
-#include <net_processing.h>
 #include <netmessagemaker.h>
 #include <primitives/block.h>
 #include <protocol.h>
@@ -130,16 +129,17 @@ void CSporkManager::CheckAndRemove()
     }
 }
 
-void CSporkManager::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
+PeerMsgRet CSporkManager::ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
 {
     if (msg_type == NetMsgType::SPORK) {
-        ProcessSpork(peer, peerman, connman, vRecv);
+        return ProcessSpork(peer, connman, vRecv);
     } else if (msg_type == NetMsgType::GETSPORKS) {
         ProcessGetSporks(peer, connman);
     }
+    return {};
 }
 
-void CSporkManager::ProcessSpork(const CNode& peer, PeerManager& peerman, CConnman& connman, CDataStream& vRecv)
+PeerMsgRet CSporkManager::ProcessSpork(const CNode& peer, CConnman& connman, CDataStream& vRecv)
 {
     CSporkMessage spork;
     vRecv >> spork;
@@ -150,22 +150,20 @@ void CSporkManager::ProcessSpork(const CNode& peer, PeerManager& peerman, CConnm
     {
         LOCK(cs_main);
         EraseObjectRequest(peer.GetId(), CInv(MSG_SPORK, hash));
-        if (!::ChainActive().Tip()) return;
+        if (!::ChainActive().Tip()) return {};
         strLogMsg = strprintf("SPORK -- hash: %s id: %d value: %10d bestHeight: %d peer=%d", hash.ToString(), spork.nSporkID, spork.nValue, ::ChainActive().Height(), peer.GetId());
     }
 
     if (spork.nTimeSigned > GetAdjustedTime() + 2 * 60 * 60) {
         LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: too far into the future\n");
-        peerman.Misbehaving(peer.GetId(), 100);
-        return;
+        return tl::unexpected{100};
     }
 
     auto opt_keyIDSigner = spork.GetSignerKeyID();
 
     if (opt_keyIDSigner == std::nullopt || WITH_LOCK(cs, return !setSporkPubKeyIDs.count(*opt_keyIDSigner))) {
         LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: invalid signature\n");
-        peerman.Misbehaving(peer.GetId(), 100);
-        return;
+        return tl::unexpected{100};
     }
 
     auto keyIDSigner = *opt_keyIDSigner;
@@ -176,7 +174,7 @@ void CSporkManager::ProcessSpork(const CNode& peer, PeerManager& peerman, CConnm
             if (mapSporksActive[spork.nSporkID].count(keyIDSigner)) {
                 if (mapSporksActive[spork.nSporkID][keyIDSigner].nTimeSigned >= spork.nTimeSigned) {
                     LogPrint(BCLog::SPORK, "%s seen\n", strLogMsg);
-                    return;
+                    return {};
                 } else {
                     LogPrintf("%s updated\n", strLogMsg);
                 }
@@ -198,6 +196,7 @@ void CSporkManager::ProcessSpork(const CNode& peer, PeerManager& peerman, CConnm
         WITH_LOCK(cs_mapSporksCachedValues, mapSporksCachedValues.erase(spork.nSporkID));
     }
     spork.Relay(connman);
+    return {};
 }
 
 void CSporkManager::ProcessGetSporks(CNode& peer, CConnman& connman)
