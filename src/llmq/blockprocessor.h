@@ -9,6 +9,7 @@
 
 #include <chain.h>
 #include <consensus/params.h>
+#include <net_types.h>
 #include <primitives/block.h>
 #include <saltedhasher.h>
 #include <sync.h>
@@ -23,7 +24,6 @@ class CConnman;
 class CDataStream;
 class CEvoDB;
 class CNode;
-class PeerManager;
 
 extern RecursiveMutex cs_main;
 
@@ -39,7 +39,6 @@ private:
     CChainState& m_chainstate;
     CConnman& connman;
     CEvoDB& m_evoDb;
-    const std::unique_ptr<PeerManager>& m_peerman;
 
     mutable RecursiveMutex minableCommitmentsCs;
     std::map<std::pair<Consensus::LLMQType, uint256>, uint256> minableCommitmentsByQuorum GUARDED_BY(minableCommitmentsCs);
@@ -48,9 +47,9 @@ private:
     mutable std::map<Consensus::LLMQType, unordered_lru_cache<uint256, bool, StaticSaltedHasher>> mapHasMinedCommitmentCache GUARDED_BY(minableCommitmentsCs);
 
 public:
-    explicit CQuorumBlockProcessor(CChainState& chainstate, CConnman& _connman, CEvoDB& evoDb, const std::unique_ptr<PeerManager>& peerman);
+    explicit CQuorumBlockProcessor(CChainState& chainstate, CConnman& _connman, CEvoDB& evoDb);
 
-    void ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv);
+    PeerMsgRet ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv);
 
     bool ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex, BlockValidationState& state, bool fJustCheck, bool fBLSChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool UndoBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

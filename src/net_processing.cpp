@@ -4352,7 +4352,7 @@ void PeerManagerImpl::ProcessMessage(
         ::masternodeSync->ProcessMessage(pfrom, msg_type, vRecv);
         ProcessPeerMsgRet(m_govman.ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(CMNAuth::ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom);
-        m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv);
+        ProcessPeerMsgRet(m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         m_llmq_ctx->qdkgsman->ProcessMessage(pfrom, *m_llmq_ctx->qman, msg_type, vRecv);
         m_llmq_ctx->qman->ProcessMessage(pfrom, msg_type, vRecv);
         m_llmq_ctx->shareman->ProcessMessage(pfrom, *sporkManager, msg_type, vRecv);
