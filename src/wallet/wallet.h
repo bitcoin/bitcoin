@@ -237,6 +237,12 @@ struct CAddressBookData
      */
     std::optional<std::string> label;
 
+    /** Whether address is the destination of any wallet transation.
+     * Unlike other fields in address data struct, the used value is determined
+     * at runtime and not serialized as part of address data.
+     */
+    bool m_used{false};
+
     /**
      * Address purpose which was originally recorded for payment protocol
      * support but now serves as a cached IsMine value. Wallet code should
@@ -336,6 +342,9 @@ private:
     TxSpends mapTxSpends GUARDED_BY(cs_wallet);
     void AddToSpends(const COutPoint& outpoint, const uint256& wtxid, WalletBatch* batch = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void AddToSpends(const CWalletTx& wtx, WalletBatch* batch = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    void InitialiseAddressBookUsed() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void UpdateAddressBookUsed(const CWalletTx&) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Add a transaction to the wallet, or update it.  confirm.block_* should
@@ -792,7 +801,8 @@ public:
     CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const;
     void chainStateFlushed(ChainstateRole role, const CBlockLocator& loc) override;
 
-    DBErrors LoadWallet();
+    enum class do_init_used_flag { Init, Skip };
+    DBErrors LoadWallet(const do_init_used_flag do_init_used_flag_val = do_init_used_flag::Init);
 
     /** Erases the provided transactions from the wallet. */
     util::Result<void> RemoveTxs(std::vector<uint256>& txs_to_remove) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

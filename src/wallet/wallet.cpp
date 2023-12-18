@@ -786,6 +786,23 @@ void CWallet::AddToSpends(const CWalletTx& wtx, WalletBatch* batch)
         AddToSpends(txin.prevout, wtx.GetHash(), batch);
 }
 
+void CWallet::InitialiseAddressBookUsed()
+{
+    for (const auto& entry : mapWallet) {
+        const CWalletTx& wtx = entry.second;
+        UpdateAddressBookUsed(wtx);
+    }
+}
+
+void CWallet::UpdateAddressBookUsed(const CWalletTx& wtx)
+{
+    for (const auto& output : wtx.tx->vout) {
+        CTxDestination dest;
+        if (!ExtractDestination(output.scriptPubKey, dest)) continue;
+        m_address_book[dest].m_used = true;
+    }
+}
+
 bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 {
     if (IsCrypted())
@@ -1083,6 +1100,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 
         // Update birth time when tx time is older than it.
         MaybeUpdateBirthTime(wtx.GetTxTime());
+        UpdateAddressBookUsed(wtx);
     }
 
     if (!fInsertedNew)
@@ -2306,7 +2324,7 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
     }
 }
 
-DBErrors CWallet::LoadWallet()
+DBErrors CWallet::LoadWallet(const do_init_used_flag do_init_used_flag_val)
 {
     LOCK(cs_wallet);
 
@@ -2328,7 +2346,13 @@ DBErrors CWallet::LoadWallet()
         assert(m_internal_spk_managers.empty());
     }
 
-    return nLoadWalletRet;
+    if (nLoadWalletRet != DBErrors::LOAD_OK) {
+        return nLoadWalletRet;
+    }
+
+    if (do_init_used_flag_val == do_init_used_flag::Init) InitialiseAddressBookUsed();
+
+    return DBErrors::LOAD_OK;
 }
 
 util::Result<void> CWallet::RemoveTxs(std::vector<uint256>& txs_to_remove)
