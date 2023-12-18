@@ -15,7 +15,7 @@
 #include <bls/bls_worker.h>
 
 #include <evo/evodb.h>
-
+#include <net_types.h>
 #include <gsl/pointers.h>
 
 #include <atomic>
@@ -27,7 +27,6 @@ class CConnman;
 class CDeterministicMN;
 class CMasternodeSync;
 class CNode;
-class PeerManager;
 
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
@@ -225,7 +224,6 @@ private:
     CEvoDB& m_evoDb;
     CQuorumBlockProcessor& quorumBlockProcessor;
     const std::unique_ptr<CMasternodeSync>& m_mn_sync;
-    const std::unique_ptr<PeerManager>& m_peerman;
 
     mutable RecursiveMutex cs_map_quorums;
     mutable std::map<Consensus::LLMQType, unordered_lru_cache<uint256, CQuorumPtr, StaticSaltedHasher>> mapQuorumsCache GUARDED_BY(cs_map_quorums);
@@ -239,8 +237,7 @@ private:
 
 public:
     CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGSessionManager& _dkgManager,
-                   CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor, const std::unique_ptr<CMasternodeSync>& mn_sync,
-                   const std::unique_ptr<PeerManager>& peerman);
+                   CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor, const std::unique_ptr<CMasternodeSync>& mn_sync);
     ~CQuorumManager() { Stop(); };
 
     void Start();
@@ -250,7 +247,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload) const;
 
-    void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv);
+    PeerMsgRet ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv);
 
     static bool HasQuorum(Consensus::LLMQType llmqType, const CQuorumBlockProcessor& quorum_block_processor, const uint256& quorumHash);
 
