@@ -39,7 +39,7 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CEvoDB& evo
     shareman{std::make_unique<llmq::CSigSharesManager>(connman, *llmq::quorumManager, *sigman, peerman)},
     clhandler{[&]() -> llmq::CChainLocksHandler* const {
         assert(llmq::chainLocksHandler == nullptr);
-        llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(chainstate, connman, *::masternodeSync, *llmq::quorumManager, *sigman, *shareman, sporkman, mempool, peerman);
+        llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(chainstate, connman, *::masternodeSync, *llmq::quorumManager, *sigman, *shareman, sporkman, mempool);
         return llmq::chainLocksHandler.get();
     }()},
     isman{[&]() -> llmq::CInstantSendManager* const {
