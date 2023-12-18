@@ -3,7 +3,6 @@
 
 #include <attributes.h>
 #include <uint256.h>
-#include <util/types.h>
 
 /** transaction_identifier represents the two canonical transaction identifier
  * types (txid, wtxid).*/
@@ -22,7 +21,7 @@ class transaction_identifier
     template <typename Other>
     constexpr int Compare(const Other& other) const
     {
-        static_assert(ALWAYS_FALSE<Other>, "Forbidden comparison type");
+        static_assert(false, "Forbidden comparison type");
         return 0;
     }
 
