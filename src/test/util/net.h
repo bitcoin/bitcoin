@@ -28,9 +28,6 @@
 
 class FastRandomContext;
 
-template <typename C>
-class Span;
-
 struct ConnmanTestMsg : public CConnman {
     using CConnman::CConnman;
 
