@@ -31,15 +31,8 @@ namespace Governance
 {
 class Object
 {
-    Object() :
-        type{GovernanceObject::UNKNOWN},
-        hashParent{},
-        revision{0},
-        time{0},
-        collateralHash{},
-        vchData{}
-    {
-    }
+public:
+    Object() = default;
 
     Object(const uint256& nHashParent, int nRevision, int64_t nTime, const uint256& nCollateralHash, const std::string& strDataHex);
 
@@ -51,23 +44,23 @@ class Object
     std::string GetDataAsPlainString() const;
 
     /// Object typecode
-    GovernanceObject type;
+    GovernanceObject type{GovernanceObject::UNKNOWN};
 
     /// parent object, 0 is root
-    uint256 hashParent;
+    uint256 hashParent{};
 
     /// object revision in the system
-    int revision;
+    int revision{0};
 
     /// time this object was created
-    int64_t time;
+    int64_t time{0};
 
     /// fee-tx
-    uint256 collateralHash;
+    uint256 collateralHash{};
 
     /// Masternode info for signed objects
     COutPoint masternodeOutpoint;
-    std::vector<unsigned char> vchSig;
+    std::vector<unsigned char> vchSig{};
 
     /// Data field - can be used for anything
     std::vector<unsigned char> vchData;
