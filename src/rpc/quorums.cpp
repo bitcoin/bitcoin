@@ -986,6 +986,49 @@ static UniValue verifyislock(const JSONRPCRequest& request)
     return llmq_ctx.sigman->VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, txid, sig, 0) ||
            llmq_ctx.sigman->VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, txid, sig, signOffset);
 }
+
+static void submitchainlock_help(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"submitchainlock",
+               "Submit a ChainLock signature if needed\n",
+               {
+                       {"blockHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash of the ChainLock."},
+                       {"signature", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The signature of the ChainLock."},
+                       {"blockHeight", RPCArg::Type::NUM, RPCArg::Optional::NO, "The height of the ChainLock."},
+               },
+               RPCResults{},
+               RPCExamples{""},
+    }.Check(request);
+}
+
+static UniValue submitchainlock(const JSONRPCRequest& request)
+{
+    submitchainlock_help(request);
+
+    const uint256 nBlockHash(ParseHashV(request.params[0], "blockHash"));
+
+    const int nBlockHeight = ParseInt32V(request.params[2], "blockHeight");
+    if (nBlockHeight <= 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid block height");
+    }
+
+    CBLSSignature sig;
+    if (!sig.SetHexStr(request.params[1].get_str(), false) && !sig.SetHexStr(request.params[1].get_str(), true)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
+    }
+
+
+    const LLMQContext& llmq_ctx = EnsureLLMQContext(EnsureAnyNodeContext(request.context));
+    auto clsig = llmq::CChainLockSig(nBlockHeight, nBlockHash, sig);
+    if (!llmq_ctx.clhandler->VerifyChainLock(clsig)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature");
+    }
+
+    llmq_ctx.clhandler->ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig));
+    return true;
+}
+
+
 void RegisterQuorumsRPCCommands(CRPCTable &tableRPC)
 {
 // clang-format off
@@ -993,6 +1036,7 @@ static const CRPCCommand commands[] =
 { //  category              name                      actor (function)
   //  --------------------- ------------------------  -----------------------
     { "evo",                "quorum",                 &_quorum,                 {}  },
+    { "evo",                "submitchainlock",        &submitchainlock,        {"blockHash", "signature", "blockHeight"}  },
     { "evo",                "verifychainlock",        &verifychainlock,        {"blockHash", "signature", "blockHeight"} },
     { "evo",                "verifyislock",           &verifyislock,           {"id", "txid", "signature", "maxHeight"}  },
 };

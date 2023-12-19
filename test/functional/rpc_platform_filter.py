@@ -61,6 +61,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
                        "getblockcount",
                        "getbestchainlock",
                        "quorum",
+                       "submitchainlock",
                        "verifyislock"]
 
         help_output = self.nodes[0].help().split('\n')
