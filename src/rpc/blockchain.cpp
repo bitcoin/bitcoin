@@ -2464,7 +2464,7 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
     CTxMemPool& mempool = EnsureMemPool(node);
     LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    uint256 hash(ParseHashV(request.params[0], "blockhash"));
+    uint256 blockhash(ParseHashV(request.params[0], "blockhash"));
 
     int nTxType = -1;
     if (!request.params[1].isNull()) {
@@ -2493,7 +2493,7 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
         }
     }
 
-    const CBlockIndex* pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
+    const CBlockIndex* pblockindex = chainman.m_blockman.LookupBlockIndex(blockhash);
     if (!pblockindex) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
@@ -2521,7 +2521,7 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
             case 2 :
                 {
                     UniValue objTx(UniValue::VOBJ);
-                    TxToJSON(*tx, uint256(), mempool, chainman.ActiveChainstate(), *llmq_ctx.clhandler, *llmq_ctx.isman, objTx);
+                    TxToJSON(*tx, blockhash, mempool, chainman.ActiveChainstate(), *llmq_ctx.clhandler, *llmq_ctx.isman, objTx);
                     result.push_back(objTx);
                     break;
                 }

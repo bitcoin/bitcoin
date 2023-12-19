@@ -40,8 +40,13 @@ class LLMQChainLocksTest(DashTestFramework):
         self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=False)
 
         # v20 is active, no quorums, no CLs - null CL in CbTx
-        self.nodes[0].generate(1)
+        nocl_block_hash = self.nodes[0].generate(1)[0]
         self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=True, expected_null_cl=True)
+        cbtx = self.nodes[0].getspecialtxes(nocl_block_hash, 5, 1, 0, 2)[0]
+        assert_equal(cbtx["instantlock"], False)
+        assert_equal(cbtx["instantlock_internal"], False)
+        assert_equal(cbtx["chainlock"], False)
+
 
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
@@ -59,6 +64,12 @@ class LLMQChainLocksTest(DashTestFramework):
         self.nodes[0].generate(1)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         self.test_coinbase_best_cl(self.nodes[0])
+
+        # ChainLock locks all the blocks below it so nocl_block_hash should be locked too
+        cbtx = self.nodes[0].getspecialtxes(nocl_block_hash, 5, 1, 0, 2)[0]
+        assert_equal(cbtx["instantlock"], True)
+        assert_equal(cbtx["instantlock_internal"], False)
+        assert_equal(cbtx["chainlock"], True)
 
         self.log.info("Mine many blocks, wait for chainlock")
         self.nodes[0].generate(20)
