@@ -2581,56 +2581,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
 
         PerformReconnections();
 
-        CSemaphoreGrant grant(*semOutbound);
-        if (interruptNet)
-            return;
-
-        const std::unordered_set<Network> fixed_seed_networks{GetReachableEmptyNetworks()};
-        if (add_fixed_seeds && !fixed_seed_networks.empty()) {
-            // When the node starts with an empty peers.dat, there are a few other sources of peers before
-            // we fallback on to fixed seeds: -dnsseed, -seednode, -addnode
-            // If none of those are available, we fallback on to fixed seeds immediately, else we allow
-            // 60 seconds for any of those sources to populate addrman.
-            bool add_fixed_seeds_now = false;
-            // It is cheapest to check if enough time has passed first.
-            if (GetTime<std::chrono::seconds>() > start + std::chrono::minutes{1}) {
-                add_fixed_seeds_now = true;
-                LogPrintf("Adding fixed seeds as 60 seconds have passed and addrman is empty for at least one reachable network\n");
-            }
-
-            // Perform cheap checks before locking a mutex.
-            else if (!dnsseed && !use_seednodes) {
-                LOCK(m_added_nodes_mutex);
-                if (m_added_node_params.empty()) {
-                    add_fixed_seeds_now = true;
-                    LogPrintf("Adding fixed seeds as -dnsseed=0 (or IPv4/IPv6 connections are disabled via -onlynet) and neither -addnode nor -seednode are provided\n");
-                }
-            }
-
-            if (add_fixed_seeds_now) {
-                std::vector<CAddress> seed_addrs{ConvertSeeds(m_params.FixedSeeds())};
-                // We will not make outgoing connections to peers that are unreachable
-                // (e.g. because of -onlynet configuration).
-                // Therefore, we do not add them to addrman in the first place.
-                // In case previously unreachable networks become reachable
-                // (e.g. in case of -onlynet changes by the user), fixed seeds will
-                // be loaded only for networks for which we have no addresses.
-                seed_addrs.erase(std::remove_if(seed_addrs.begin(), seed_addrs.end(),
-                                                [&fixed_seed_networks](const CAddress& addr) { return fixed_seed_networks.count(addr.GetNetwork()) == 0; }),
-                                 seed_addrs.end());
-                CNetAddr local;
-                local.SetInternal("fixedseeds");
-                addrman.Add(seed_addrs, local);
-                add_fixed_seeds = false;
-                LogPrintf("Added %d fixed seeds from reachable networks.\n", seed_addrs.size());
-            }
-        }
-
-        //
-        // Choose an address to connect to based on most recently seen
-        //
-        CAddress addrConnect;
-
         // Only connect out to one peer per ipv4/ipv6 network group (/16 for IPv4).
         int nOutboundFullRelay = 0;
         int nOutboundBlockRelay = 0;
@@ -2681,6 +2631,56 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
                 add_addr_fetch = true;
             }
         }
+
+        CSemaphoreGrant grant(*semOutbound);
+        if (interruptNet)
+            return;
+
+        const std::unordered_set<Network> fixed_seed_networks{GetReachableEmptyNetworks()};
+        if (add_fixed_seeds && !fixed_seed_networks.empty()) {
+            // When the node starts with an empty peers.dat, there are a few other sources of peers before
+            // we fallback on to fixed seeds: -dnsseed, -seednode, -addnode
+            // If none of those are available, we fallback on to fixed seeds immediately, else we allow
+            // 60 seconds for any of those sources to populate addrman.
+            bool add_fixed_seeds_now = false;
+            // It is cheapest to check if enough time has passed first.
+            if (GetTime<std::chrono::seconds>() > start + std::chrono::minutes{1}) {
+                add_fixed_seeds_now = true;
+                LogPrintf("Adding fixed seeds as 60 seconds have passed and addrman is empty for at least one reachable network\n");
+            }
+
+            // Perform cheap checks before locking a mutex.
+            else if (!dnsseed && !use_seednodes) {
+                LOCK(m_added_nodes_mutex);
+                if (m_added_node_params.empty()) {
+                    add_fixed_seeds_now = true;
+                    LogPrintf("Adding fixed seeds as -dnsseed=0 (or IPv4/IPv6 connections are disabled via -onlynet) and neither -addnode nor -seednode are provided\n");
+                }
+            }
+
+            if (add_fixed_seeds_now) {
+                std::vector<CAddress> seed_addrs{ConvertSeeds(m_params.FixedSeeds())};
+                // We will not make outgoing connections to peers that are unreachable
+                // (e.g. because of -onlynet configuration).
+                // Therefore, we do not add them to addrman in the first place.
+                // In case previously unreachable networks become reachable
+                // (e.g. in case of -onlynet changes by the user), fixed seeds will
+                // be loaded only for networks for which we have no addresses.
+                seed_addrs.erase(std::remove_if(seed_addrs.begin(), seed_addrs.end(),
+                                                [&fixed_seed_networks](const CAddress& addr) { return fixed_seed_networks.count(addr.GetNetwork()) == 0; }),
+                                 seed_addrs.end());
+                CNetAddr local;
+                local.SetInternal("fixedseeds");
+                addrman.Add(seed_addrs, local);
+                add_fixed_seeds = false;
+                LogPrintf("Added %d fixed seeds from reachable networks.\n", seed_addrs.size());
+            }
+        }
+
+        //
+        // Choose an address to connect to based on most recently seen
+        //
+        CAddress addrConnect;
 
         ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
         auto now = GetTime<std::chrono::microseconds>();
