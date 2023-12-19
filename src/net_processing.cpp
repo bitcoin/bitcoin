@@ -499,6 +499,7 @@ public:
     /** Implement NetEventsInterface */
     void InitializeNode(CNode& node, ServiceFlags our_services) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void FinalizeNode(const CNode& node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_headers_presync_mutex);
+    bool HasAllDesirableServiceFlags(ServiceFlags services) const override;
     bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex);
     bool SendMessages(CNode* pto) override
@@ -523,6 +524,7 @@ public:
                         const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex);
     void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) override;
+    ServiceFlags GetDesirableServiceFlags(ServiceFlags services) const override;
 
 private:
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
@@ -1666,6 +1668,20 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         m_headers_presync_stats.erase(nodeid);
     }
     LogPrint(BCLog::NET, "Cleared nodestate for peer=%d\n", nodeid);
+}
+
+bool PeerManagerImpl::HasAllDesirableServiceFlags(ServiceFlags services) const
+{
+    // Shortcut for (services & GetDesirableServiceFlags(services)) == GetDesirableServiceFlags(services)
+    return !(GetDesirableServiceFlags(services) & (~services));
+}
+
+ServiceFlags PeerManagerImpl::GetDesirableServiceFlags(ServiceFlags services) const
+{
+    if (services & NODE_NETWORK_LIMITED && GetServicesFlagsIBDCache()) {
+        return ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS);
+    }
+    return ServiceFlags(NODE_NETWORK | NODE_WITNESS);
 }
 
 PeerRef PeerManagerImpl::GetPeerRef(NodeId id) const

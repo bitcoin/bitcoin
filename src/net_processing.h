@@ -110,6 +110,29 @@ public:
 
     /** This function is used for testing the stale tip eviction logic, see denialofservice_tests.cpp */
     virtual void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) = 0;
+
+    /**
+     * Gets the set of service flags which are "desirable" for a given peer.
+     *
+     * These are the flags which are required for a peer to support for them
+     * to be "interesting" to us, ie for us to wish to use one of our few
+     * outbound connection slots for or for us to wish to prioritize keeping
+     * their connection around.
+     *
+     * Relevant service flags may be peer- and state-specific in that the
+     * version of the peer may determine which flags are required (eg in the
+     * case of NODE_NETWORK_LIMITED where we seek out NODE_NETWORK peers
+     * unless they set NODE_NETWORK_LIMITED and we are out of IBD, in which
+     * case NODE_NETWORK_LIMITED suffices).
+     *
+     * Thus, generally, avoid calling with 'services' == NODE_NONE, unless
+     * state-specific flags must absolutely be avoided. When called with
+     * 'services' == NODE_NONE, the returned desirable service flags are
+     * guaranteed to not change dependent on state - ie they are suitable for
+     * use when describing peers which we know to be desirable, but for which
+     * we do not have a confirmed set of service flags.
+    */
+    virtual ServiceFlags GetDesirableServiceFlags(ServiceFlags services) const = 0;
 };
 
 #endif // BITCOIN_NET_PROCESSING_H

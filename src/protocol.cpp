@@ -125,17 +125,11 @@ bool CMessageHeader::IsCommandValid() const
     return true;
 }
 
-
-ServiceFlags GetDesirableServiceFlags(ServiceFlags services) {
-    if ((services & NODE_NETWORK_LIMITED) && g_initial_block_download_completed) {
-        return ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS);
-    }
-    return ServiceFlags(NODE_NETWORK | NODE_WITNESS);
-}
-
 void SetServiceFlagsIBDCache(bool state) {
     g_initial_block_download_completed = state;
 }
+
+bool GetServicesFlagsIBDCache() { return g_initial_block_download_completed; }
 
 CInv::CInv()
 {
