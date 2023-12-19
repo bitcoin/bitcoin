@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <blsct/double_public_key.h>
 #include <bech32_mod.h>
 #include <test/util/str.h>
 #include <util/strencodings.h>
@@ -53,20 +54,15 @@ void embed_errors(std::string& s, const size_t num_errors) {
     }
 }
 
-std::string gen_random_str(const size_t size) {
-    static const char charset[] =
-        "0123456789"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz";
-    const size_t max_index = (sizeof(charset) - 1);
+std::string gen_random_byte_str(const size_t size) {
     std::string s;
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<size_t> dist(0, max_index);
+    std::uniform_int_distribution<uint8_t> dist(0, 255);
 
     for (size_t i = 0; i < size; ++i) {
-        s += charset[dist(gen)];
+        s += static_cast<char>(dist(gen));
     }
     return s;
 }
@@ -76,20 +72,19 @@ size_t test_error_detection(
     const size_t num_tests,
     const bool expect_errors
 ) {
-    std::string hrp = "nv";
     size_t unexpected_results = 0;
 
     for (size_t i=0; i<num_tests; ++i) {
         for (auto encoding : {bech32_mod::Encoding::BECH32, bech32_mod::Encoding::BECH32M}) {
-            // generate random 96-byte double public key
-            std::string dpk = gen_random_str(96);
+            // generate random double public key
+            std::string dpk = gen_random_byte_str(blsct::DoublePublicKey::SIZE);
 
             // convert 8-bit vector to 5-bit vector
             std::vector<uint8_t> dpk_v8(dpk.begin(), dpk.end());
             std::vector<uint8_t> dpk_v5;
             ConvertBits<8, 5, true>([&](uint8_t c) { dpk_v5.push_back(c); }, dpk_v8.begin(), dpk_v8.end());
 
-            auto dpk_bech32 = bech32_mod::Encode(encoding, hrp, dpk_v5);
+            auto dpk_bech32 = bech32_mod::Encode(encoding, "nv", dpk_v5);
             embed_errors(dpk_bech32, num_errors);
 
             auto res = bech32_mod::Decode(dpk_bech32);
@@ -123,3 +118,4 @@ BOOST_AUTO_TEST_CASE(bech32_mod_test_detecting_errors)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
