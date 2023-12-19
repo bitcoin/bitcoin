@@ -4,7 +4,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_COMPAT_COMPAT_H
-#define BITCOIN_COMPAT_COMPAT_H
 
 #if defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h>
