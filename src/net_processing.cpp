@@ -513,7 +513,11 @@ public:
     bool IgnoresIncomingTxs() override { return m_opts.ignore_incoming_txs; }
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void SetBestHeight(int height) override { m_best_height = height; };
+    void SetBestBlock(int height, std::chrono::seconds time) override
+    {
+        m_best_height = height;
+        m_best_block_time = time;
+    };
     void UnitTestMisbehaving(NodeId peer_id, int howmuch) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex) { Misbehaving(*Assert(GetPeerRef(peer_id)), howmuch, ""); };
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, DataStream& vRecv,
                         const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override
@@ -721,6 +725,8 @@ private:
 
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
+    /** The time of the best chain tip block */
+    std::atomic<std::chrono::seconds> m_best_block_time{0s};
 
     /** Next time to check for stale tip */
     std::chrono::seconds m_stale_tip_check_time GUARDED_BY(cs_main){0s};
@@ -991,6 +997,12 @@ private:
     /** Update tracking information about which blocks a peer is assumed to have. */
     void UpdateBlockAvailability(NodeId nodeid, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool CanDirectFetch() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * Estimates the distance, in blocks, between the best-known block and the network chain tip.
+     * Utilizes the best-block time and the chainparams blocks spacing to approximate it.
+     */
+    int64_t ApproximateBestBlockDepth() const;
 
     /**
      * To prevent fingerprinting attacks, only send blocks/headers outside of
@@ -1309,6 +1321,11 @@ bool PeerManagerImpl::TipMayBeStale()
         m_last_tip_update = GetTime<std::chrono::seconds>();
     }
     return m_last_tip_update.load() < GetTime<std::chrono::seconds>() - std::chrono::seconds{consensusParams.nPowTargetSpacing * 3} && mapBlocksInFlight.empty();
+}
+
+int64_t PeerManagerImpl::ApproximateBestBlockDepth() const
+{
+    return (GetTime<std::chrono::seconds>() - m_best_block_time.load()).count() / m_chainparams.GetConsensus().nPowTargetSpacing;
 }
 
 bool PeerManagerImpl::CanDirectFetch()
@@ -2047,7 +2064,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
  */
 void PeerManagerImpl::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
-    SetBestHeight(pindexNew->nHeight);
+    SetBestBlock(pindexNew->nHeight, std::chrono::seconds{pindexNew->GetBlockTime()});
     SetServiceFlagsIBDCache(!fInitialDownload);
 
     // Don't relay inventory during initial block download.
