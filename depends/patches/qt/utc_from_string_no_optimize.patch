@@ -1,0 +1,84 @@
+Modify optimisation flags for various functions.
+This fixes non-determinism issues in the asm produced for
+these function when cross-compiling on x86_64 and aarch64 for
+the arm64-apple-darwin HOST.
+
+--- a/qtbase/src/corelib/itemmodels/qitemselectionmodel.cpp
++++ b/qtbase/src/corelib/itemmodels/qitemselectionmodel.cpp
+@@ -1078,9 +1078,9 @@ void QItemSelectionModelPrivate::_q_layoutChanged(const QList<QPersistentModelIn
+ 
+     if (hint != QAbstractItemModel::VerticalSortHint) {
+         // sort the "new" selection, as preparation for merging
+-        std::stable_sort(savedPersistentIndexes.begin(), savedPersistentIndexes.end(),
++        std::sort(savedPersistentIndexes.begin(), savedPersistentIndexes.end(),
+                          qt_PersistentModelIndexLessThan);
+-        std::stable_sort(savedPersistentCurrentIndexes.begin(), savedPersistentCurrentIndexes.end(),
++        std::sort(savedPersistentCurrentIndexes.begin(), savedPersistentCurrentIndexes.end(),
+                          qt_PersistentModelIndexLessThan);
+ 
+         // update the selection by merging the individual indexes
+@@ -1092,8 +1092,8 @@ void QItemSelectionModelPrivate::_q_layoutChanged(const QList<QPersistentModelIn
+         savedPersistentCurrentIndexes.clear();
+     } else {
+         // sort the "new" selection, as preparation for merging
+-        std::stable_sort(savedPersistentRowLengths.begin(), savedPersistentRowLengths.end());
+-        std::stable_sort(savedPersistentCurrentRowLengths.begin(), savedPersistentCurrentRowLengths.end());
++        std::sort(savedPersistentRowLengths.begin(), savedPersistentRowLengths.end());
++        std::sort(savedPersistentCurrentRowLengths.begin(), savedPersistentCurrentRowLengths.end());
+ 
+         // update the selection by merging the individual indexes
+         ranges = mergeRowLengths(savedPersistentRowLengths);
+
+--- a/qtbase/src/corelib/itemmodels/qitemselectionmodel_p.h
++++ b/qtbase/src/corelib/itemmodels/qitemselectionmodel_p.h
+@@ -76,7 +76,7 @@ public:
+     void _q_rowsAboutToBeInserted(const QModelIndex &parent, int start, int end);
+     void _q_columnsAboutToBeInserted(const QModelIndex &parent, int start, int end);
+     void _q_layoutAboutToBeChanged(const QList<QPersistentModelIndex> &parents = QList<QPersistentModelIndex>(), QAbstractItemModel::LayoutChangeHint hint = QAbstractItemModel::NoLayoutChangeHint);
+-    void _q_layoutChanged(const QList<QPersistentModelIndex> &parents = QList<QPersistentModelIndex>(), QAbstractItemModel::LayoutChangeHint hint = QAbstractItemModel::NoLayoutChangeHint);
++    __attribute__ ((optnone)) void _q_layoutChanged(const QList<QPersistentModelIndex> &parents = QList<QPersistentModelIndex>(), QAbstractItemModel::LayoutChangeHint hint = QAbstractItemModel::NoLayoutChangeHint);
+ 
+     inline void remove(QList<QItemSelectionRange> &r)
+     {
+
+--- a/qtbase/src/corelib/time/qdatetimeparser_p.h
++++ b/qtbase/src/corelib/time/qdatetimeparser_p.h
+@@ -215,7 +215,7 @@ private:
+             : value(ok == Invalid ? -1 : val), used(read), zeroes(zs), state(ok)
+             {}
+     };
+-    ParsedSection parseSection(const QDateTime &currentValue, int sectionIndex,
++    __attribute__ ((optnone)) ParsedSection parseSection(const QDateTime &currentValue, int sectionIndex,
+                                int offset, QString *text) const;
+     int findMonth(const QString &str1, int monthstart, int sectionIndex,
+                   int year, QString *monthName = nullptr, int *used = nullptr) const;
+
+--- a/qtbase/src/corelib/time/qtimezoneprivate_p.h
++++ b/qtbase/src/corelib/time/qtimezoneprivate_p.h
+@@ -191,7 +191,7 @@ public:
+     virtual ~QUtcTimeZonePrivate();
+ 
+     // Fall-back for UTC[+-]\d+(:\d+){,2} IDs.
+-    static qint64 offsetFromUtcString(const QByteArray &id);
++    static __attribute__ ((optnone)) qint64 offsetFromUtcString(const QByteArray &id);
+ 
+     QUtcTimeZonePrivate *clone() const override;
+ 
+--- a/qtbase/src/widgets/widgets/qcalendarwidget.cpp
++++ b/qtbase/src/widgets/widgets/qcalendarwidget.cpp
+@@ -329,13 +329,13 @@ class QCalendarYearValidator : public QCalendarDateSectionValidator
+ 
+ public:
+     QCalendarYearValidator();
+-    virtual Section handleKey(int key) override;
++    __attribute__ ((optnone)) virtual Section handleKey(int key) override;
+     virtual QDate applyToDate(QDate date, QCalendar cal) const override;
+     virtual void setDate(QDate date, QCalendar cal) override;
+     virtual QString text() const override;
+     virtual QString text(QDate date, QCalendar cal, int repeat) const override;
+ private:
+-    int pow10(int n);
++    __attribute__ ((optnone)) int pow10(int n);
+     int m_pos;
+     int m_year;
+     int m_oldYear;
