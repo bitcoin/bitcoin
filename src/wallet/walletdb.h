@@ -62,6 +62,7 @@ namespace DBKeys {
 extern const std::string ACENTRY;
 extern const std::string ACTIVEEXTERNALSPK;
 extern const std::string ACTIVEINTERNALSPK;
+extern const std::string ACTIVEHDKEY; // Active HD Master key, identified by extended pubkey
 extern const std::string BESTBLOCK;
 extern const std::string BESTBLOCK_NOMERKLE;
 extern const std::string CRYPTED_KEY;
@@ -273,6 +274,25 @@ public:
 
     bool WriteActiveScriptPubKeyMan(uint8_t type, const uint256& id, bool internal);
     bool EraseActiveScriptPubKeyMan(uint8_t type, bool internal);
+
+    /**
+     * The active hd key for a wallet is the xpub of the xprv used to generate the
+     * automatically generated descriptors. However not all descriptor wallets will
+     * have this record, and so will need to be upgraded to include it.
+     * Additionally, it is possible to load a wallet that has had the upgrade performed
+     * into an older version of the software which does not know about this record,
+     * then generate new descriptors by encrypting, and then loading in a version that
+     * does know about the record. There would then be a mismatch between the stored
+     * xpub and the actual keys used to generate those descriptors. To account for this,
+     * we store whether the wallet was encrypted at the time this record was written,
+     * and can perform the upgrade again if the stored encryption status doesn't
+     * match the real status.
+     *
+     * Although this can be computed from the existing descriptors, we prefer to store
+     * it to avoid user confusion if the user does something that would result in the
+     * upgrade finding a different key.
+     */
+    bool WriteActiveHDKey(const CExtPubKey& extpub, bool encryption_status);
 
     DBErrors LoadWallet(CWallet* pwallet);
     DBErrors FindWalletTxHashes(std::vector<uint256>& tx_hashes);

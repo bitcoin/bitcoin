@@ -33,6 +33,7 @@ namespace DBKeys {
 const std::string ACENTRY{"acentry"};
 const std::string ACTIVEEXTERNALSPK{"activeexternalspk"};
 const std::string ACTIVEINTERNALSPK{"activeinternalspk"};
+const std::string ACTIVEHDKEY{"activehdkey"};
 const std::string BESTBLOCK_NOMERKLE{"bestblock_nomerkle"};
 const std::string BESTBLOCK{"bestblock"};
 const std::string CRYPTED_KEY{"ckey"};
@@ -297,6 +298,14 @@ bool WalletBatch::WriteLockedUTXO(const COutPoint& output)
 bool WalletBatch::EraseLockedUTXO(const COutPoint& output)
 {
     return EraseIC(std::make_pair(DBKeys::LOCKED_UTXO, std::make_pair(output.hash, output.n)));
+}
+
+bool WalletBatch::WriteActiveHDKey(const CExtPubKey& extpub, bool encryption_status)
+{
+    std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
+    extpub.Encode(xpub.data());
+
+    return WriteIC(DBKeys::ACTIVEHDKEY, std::make_pair(xpub, encryption_status), true);
 }
 
 bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
@@ -782,6 +791,25 @@ static DataStream PrefixStream(const Args&... args)
 static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& batch, int last_client) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     AssertLockHeld(pwallet->cs_wallet);
+    DBErrors result = DBErrors::LOAD_OK;
+
+    // Get Active HD Key
+    LoadResult active_hdkey_res = LoadRecords(pwallet, batch, DBKeys::ACTIVEHDKEY,
+        [] (CWallet*, DataStream& key, DataStream& value, std::string& err) {
+        std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
+        bool enc_status = false;
+        value >> xpub;
+        value >> enc_status;
+        CExtPubKey extpub;
+        extpub.Decode(xpub.data());
+        if (!extpub.pubkey.IsValid()) {
+            err = "Error reading wallet database: CExtPubKey corrupt";
+            return DBErrors::CORRUPT;
+        }
+        // TODO: Load extpub into the wallet
+        return DBErrors::LOAD_OK;
+    });
+    result = std::max(result, active_hdkey_res.m_result);
 
     // Load descriptor record
     int num_keys = 0;
@@ -940,14 +968,15 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
 
         return result;
     });
+    result = std::max(result, desc_res.m_result);
 
-    if (desc_res.m_result <= DBErrors::NONCRITICAL_ERROR) {
+    if (result <= DBErrors::NONCRITICAL_ERROR) {
         // Only log if there are no critical errors
         pwallet->WalletLogPrintf("Descriptors: %u, Descriptor Keys: %u plaintext, %u encrypted, %u total.\n",
                desc_res.m_records, num_keys, num_ckeys, num_keys + num_ckeys);
     }
 
-    return desc_res.m_result;
+    return result;
 }
 
 static DBErrors LoadAddressBookRecords(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
