@@ -558,6 +558,117 @@ void CWallet::UpgradeDescriptorCache()
     SetWalletFlag(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED);
 }
 
+/**
+ * UpgradeToGlobalHDKey searches through the descriptors in a descriptor wallet
+ * and tries to find a CExtPubKey which is likely to be the most recent one used
+ * to generate all of the automatically generated descriptors. The automatically
+ * generated descriptors are guaranteed to be 2 p2pkh, 2 p2sh-segwit, and 2 p2wpkh.
+ * There may be 2 p2tr descriptors, as well as imports. Those are ignored as they
+ * are not guaranteed to be present in all wallets.
+ * Candidate CExtKeys are those that appear in the aforementioned descriptors as
+ * the only key. The best candidate is selected as the one that was most recently
+ * used.
+ *
+ * The best candidate will be added to the wallet as the current active HD key.
+ *
+ * WALLET_FLAG_GLOBAL_HD_KEY will be set in order to indicate that this upgrade
+ * has occurred, regardless of whether the active HD key was found.
+ */
+void CWallet::UpgradeToGlobalHDKey(bool encryption_status)
+{
+    if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) ||
+        IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ||
+        (IsWalletFlagSet(WALLET_FLAG_GLOBAL_HD_KEY) && encryption_status == IsCrypted())
+        ) {
+        return;
+    }
+
+
+    std::map<CKeyID, CKey> desc_keys;
+    std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>> desc_crypt_keys;
+    std::map<CExtPubKey, std::pair<std::map<OutputType, int>, uint64_t>> key_counts;
+    std::map<OutputType, int> tmpl = {{OutputType::LEGACY, 0}, {OutputType::P2SH_SEGWIT, 0}, {OutputType::BECH32, 0}};
+
+    for (const auto& spkm : GetAllScriptPubKeyMans()) {
+        const DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
+        assert(desc_spkm);
+        LOCK(desc_spkm->cs_desc_man);
+        WalletDescriptor w_desc = desc_spkm->GetWalletDescriptor();
+
+        // Automatically generated descriptors are ranged
+        if (!w_desc.descriptor->IsRange()) {
+            continue;
+        }
+
+        // Automatically generated descriptors have exactly 1 xpub and no other keys
+        std::set<CPubKey> desc_pubkeys;
+        std::set<CExtPubKey> desc_xpubs;
+        w_desc.descriptor->GetPubKeys(desc_pubkeys, desc_xpubs);
+        if (desc_xpubs.size() != 1 || desc_pubkeys.size() != 0) {
+            continue;
+        }
+        const CExtPubKey& xpub = *desc_xpubs.begin();
+
+        if (key_counts.count(xpub) == 0) {
+            key_counts.emplace(xpub, std::make_pair(tmpl, 0));
+        }
+
+        // Automatically generated descriptors have an output type that is one of legacy, p2sh-segwit, or bech32
+        std::optional<OutputType> output_type = w_desc.descriptor->GetOutputType();
+        if (!output_type.has_value()) {
+            continue;
+        }
+        if (tmpl.count(output_type.value()) == 0) {
+            continue;
+        }
+        key_counts[xpub].first[output_type.value()]++;
+
+        if (w_desc.creation_time > key_counts[xpub].second) {
+            key_counts[xpub].second = w_desc.creation_time;
+        }
+        desc_keys.merge(desc_spkm->GetKeys());
+        desc_crypt_keys.merge(desc_spkm->GetCryptedKeys());
+    }
+
+    // Find candidate xpubs
+    // These are the ones that are used in 2 pkh(), 2 sh(wpkh()), and 2 wpkh() descriptors
+    // If the wallet's descriptors have been rotated before, then we want to get the most recent ones
+    // as those contain the master key that we currently want to use.
+    uint64_t best_time = 0;
+    std::optional<CExtPubKey> best_xpub;
+    std::map<CKeyID, CExtPubKey> xpubs;
+    for (const auto& [xpub, info] : key_counts) {
+        const auto& [dtypes, desc_time] = info;
+        if (std::all_of(dtypes.begin(), dtypes.end(), [](const auto& p) { return p.second == 2;})) {
+            xpubs.emplace(xpub.pubkey.GetID(), xpub);
+            if (!best_xpub || desc_time > best_time) {
+                best_time = desc_time;
+                best_xpub.emplace(xpub);
+            }
+        }
+    }
+
+    if (best_xpub) {
+        std::optional<CKey> key;
+        auto key_it = desc_keys.find(best_xpub->pubkey.GetID());
+        // May not be in desc_keys as it could be encrypted
+        if (key_it != desc_keys.end()) {
+            key = key_it->second;
+        }
+        std::vector<unsigned char> crypted_key;
+        // May not be in desc_crypt_keys as it could be unencrypted
+        auto ckey_it = desc_crypt_keys.find(best_xpub->pubkey.GetID());
+        if (ckey_it != desc_crypt_keys.end()) {
+            crypted_key = ckey_it->second.second;
+        }
+        // Only one of key or crypted_key must be set at this point.
+        // SetActiveHDKey will check this for us.
+        Assume(SetActiveHDKey(*best_xpub, key, crypted_key));
+    } else {
+        SetWalletFlag(WALLET_FLAG_GLOBAL_HD_KEY);
+    }
+}
+
 bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool accept_no_keys)
 {
     CCrypter crypter;
@@ -4399,6 +4510,9 @@ bool CWallet::SetActiveHDKey(const CExtPubKey& xpub, const std::optional<CKey>& 
     AssertLockHeld(cs_wallet);
     if (!LoadActiveHDPubKey(xpub, key, crypted_key)) {
         return false;
+    }
+    if (!IsWalletFlagSet(WALLET_FLAG_GLOBAL_HD_KEY)) {
+        SetWalletFlag(WALLET_FLAG_GLOBAL_HD_KEY);
     }
     return WalletBatch(GetDatabase()).WriteActiveHDKey(xpub, IsCrypted());
 }

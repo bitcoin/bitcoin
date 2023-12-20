@@ -2137,6 +2137,12 @@ std::map<CKeyID, CKey> DescriptorScriptPubKeyMan::GetKeys() const
     return m_map_keys;
 }
 
+std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>> DescriptorScriptPubKeyMan::GetCryptedKeys() const
+{
+    AssertLockHeld(cs_desc_man);
+    return m_map_crypted_keys;
+}
+
 bool DescriptorScriptPubKeyMan::TopUp(unsigned int size)
 {
     WalletBatch batch(m_storage.GetDatabase());

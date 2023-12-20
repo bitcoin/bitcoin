@@ -805,10 +805,10 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
     std::optional<CExtPubKey> wallet_xpub;
     std::optional<CKey> wallet_key;
     std::vector<unsigned char> wallet_crypted_key;
+    bool enc_status = false;
     LoadResult active_hdkey_res = LoadRecords(pwallet, batch, DBKeys::ACTIVEHDKEY,
-        [&wallet_xpub] (CWallet*, DataStream& key, DataStream& value, std::string& err) {
+        [&wallet_xpub, &enc_status] (CWallet*, DataStream& key, DataStream& value, std::string& err) {
         std::vector<unsigned char> xpub(BIP32_EXTKEY_SIZE);
-        bool enc_status = false;
         value >> xpub;
         value >> enc_status;
         CExtPubKey extpub;
@@ -997,6 +997,9 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
         // Only log if there are no critical errors
         pwallet->WalletLogPrintf("Descriptors: %u, Descriptor Keys: %u plaintext, %u encrypted, %u total.\n",
                desc_res.m_records, num_keys, num_ckeys, num_keys + num_ckeys);
+
+        // Upgrade the wallet to have a global HD key
+        pwallet->UpgradeToGlobalHDKey(enc_status);
     }
 
     return result;
@@ -1222,6 +1225,9 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         }
 #endif
 
+        // Load decryption keys
+        result = std::max(LoadDecryptionKeys(pwallet, *m_batch), result);
+
         // Load legacy wallet keys
         result = std::max(LoadLegacyWalletRecords(pwallet, *m_batch, last_client), result);
 
@@ -1240,9 +1246,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
         // Load SPKMs
         result = std::max(LoadActiveSPKMs(pwallet, *m_batch), result);
-
-        // Load decryption keys
-        result = std::max(LoadDecryptionKeys(pwallet, *m_batch), result);
     } catch (...) {
         // Exceptions that can be ignored or treated as non-critical are handled by the individual loading functions.
         // Any uncaught exceptions will be caught here and treated as critical.
