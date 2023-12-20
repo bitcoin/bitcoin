@@ -885,6 +885,7 @@ static RPCHelpMan listprunelocks()
                 heights_uv.push_back(lock_info.height_last);
             }
             prune_lock_uv.pushKV("height", heights_uv);
+            prune_lock_uv.pushKV("temporary", lock_info.temporary);
             locks_uv.push_back(prune_lock_uv);
         }
     }
