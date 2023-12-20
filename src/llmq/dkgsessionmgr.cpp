@@ -466,10 +466,6 @@ void CDKGSessionManager::CleanupOldContributions() const
     const auto prefixes = {DB_VVEC, DB_SKCONTRIB, DB_ENC_CONTRIB};
 
     for (const auto& params : Params().GetConsensus().llmqs) {
-        // For how many blocks recent DKG info should be kept
-        const int MAX_CYCLES = params.useRotation ? params.keepOldKeys / params.signingActiveQuorumCount : params.keepOldKeys;
-        const int MAX_STORE_DEPTH = MAX_CYCLES * params.dkgInterval;
-
         LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- looking for old entries for llmq type %d\n", __func__, ToUnderlying(params.type));
 
         CDBBatch batch(*db);
@@ -487,7 +483,7 @@ void CDKGSessionManager::CleanupOldContributions() const
                 }
                 cnt_all++;
                 const CBlockIndex* pindexQuorum = m_chainstate.m_blockman.LookupBlockIndex(std::get<2>(k));
-                if (pindexQuorum == nullptr || m_chainstate.m_chain.Tip()->nHeight - pindexQuorum->nHeight > MAX_STORE_DEPTH) {
+                if (pindexQuorum == nullptr || m_chainstate.m_chain.Tip()->nHeight - pindexQuorum->nHeight > utils::max_store_depth(params)) {
                     // not found or too old
                     batch.Erase(k);
                     cnt_old++;
