@@ -116,8 +116,8 @@ public:
     /** Get peer manager info. */
     virtual PeerManagerInfo GetInfo() const = 0;
 
-    /** Relay transaction to all peers. */
-    virtual void RelayTransaction(const Txid& txid, const Wtxid& wtxid) = 0;
+    /** Schedule a transaction to be broadcast to all peers at a later time. */
+    virtual void ScheduleTxForBroadcastToAll(const Txid& txid, const Wtxid& wtxid) = 0;
 
     /** Send ping message to all peers */
     virtual void SendPings() = 0;
