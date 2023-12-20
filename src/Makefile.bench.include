@@ -23,6 +23,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/ccoins_caching.cpp \
   bench/chacha20.cpp \
   bench/checkblock.cpp \
+  bench/checkblockindex.cpp \
   bench/checkqueue.cpp \
   bench/crypto_hash.cpp \
   bench/data.cpp \
