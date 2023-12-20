@@ -835,6 +835,10 @@ RPCHelpMan gethdkey()
             if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "gethdkey is not available for non-descriptor wallets");
             }
+            // We should be upgrading in the background on loading, but check the flag just in case
+            if (!Assume(pwallet->IsWalletFlagSet(WALLET_FLAG_GLOBAL_HD_KEY))) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Wallet has not been upgraded to support global hd keys");
+            }
 
             LOCK(pwallet->cs_wallet);
 
