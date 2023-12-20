@@ -16,6 +16,7 @@ needs an older patch version.
 
 import os
 import shutil
+import time
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
@@ -306,86 +307,143 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         self.log.info("Test that a wallet can upgrade to and downgrade from master, from:")
         for node in descriptors_nodes if self.options.descriptors else legacy_nodes:
-            self.log.info(f"- {node.version}")
-            wallet_name = f"up_{node.version}"
-            if self.major_version_less_than(node, 17):
-                # createwallet is only available in 0.17+
-                self.restart_node(node.index, extra_args=[f"-wallet={wallet_name}"])
-                wallet_prev = node.get_wallet_rpc(wallet_name)
-                address = wallet_prev.getnewaddress('', "bech32")
-                addr_info = wallet_prev.validateaddress(address)
-            else:
-                if self.major_version_at_least(node, 21):
-                    node.rpc.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors)
+            # Run twice for each node to also test encrypted wallets
+            for encrypt in [False, True]:
+                self.log.info(f"- {node.version} {'encrypted' if encrypt else ''}")
+                wallet_name = f"up_{node.version}{'_enc' if encrypt else ''}"
+                if self.major_version_less_than(node, 17):
+                    # createwallet is only available in 0.17+
+                    self.restart_node(node.index, extra_args=[f"-wallet={wallet_name}"])
+                    wallet_prev = node.get_wallet_rpc(wallet_name)
+                    address = wallet_prev.getnewaddress('', "bech32")
+                    addr_info = wallet_prev.validateaddress(address)
                 else:
-                    node.rpc.createwallet(wallet_name=wallet_name)
-                wallet_prev = node.get_wallet_rpc(wallet_name)
-                address = wallet_prev.getnewaddress('', "bech32")
-                addr_info = wallet_prev.getaddressinfo(address)
+                    if self.major_version_at_least(node, 21):
+                        node.rpc.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors)
+                    else:
+                        node.rpc.createwallet(wallet_name=wallet_name)
+                    wallet_prev = node.get_wallet_rpc(wallet_name)
+                    address = wallet_prev.getnewaddress('', "bech32")
+                    addr_info = wallet_prev.getaddressinfo(address)
 
-            hdkeypath = addr_info["hdkeypath"].replace("'", "h")
-            pubkey = addr_info["pubkey"]
+                if encrypt:
+                    # Mock time forward so that the new active descriptors have a distinct timestamp
+                    node.setmocktime(int(time.time()) + 60)
+                    wallet_prev.encryptwallet("pass")
 
-            # Make a backup of the wallet file
-            backup_path = os.path.join(self.options.tmpdir, f"{wallet_name}.dat")
-            wallet_prev.backupwallet(backup_path)
+                if self.options.descriptors and self.major_version_at_least(node, 23):
+                    # Retrieve the xprv that is expected for the wallet hd key upgrade
+                    # This depends on listdescriptors(True) which requires at least 23.0
+                    if encrypt:
+                        wallet_prev.walletpassphrase("pass", 100000)
+                    descs = wallet_prev.listdescriptors(True)["descriptors"]
+                    for desc in descs:
+                        if desc["active"] and desc["desc"].startswith("wpkh("):
+                            expected_xprv = desc["desc"][5:116]
+                            break
+                    # Import a few new descriptors as active, but not enough to be considered the active hd key
+                    wallet_prev.importdescriptors([
+                        {
+                            "desc": descsum_create("wpkh(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/0/*"),
+                            "timestamp": int(time.time()) + 70,
+                            "active": True,
+                        },
+                        {
+                            "desc": descsum_create("wpkh(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/1/*"),
+                            "timestamp": int(time.time()) + 70,
+                            "active": True,
+                            "internal": True,
+                        },
+                        {
+                            "desc": descsum_create("pkh(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/2/*"),
+                            "timestamp": int(time.time()) + 70,
+                            "active": True,
+                        },
+                        {
+                            "desc": descsum_create("pkh(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/3/*"),
+                            "timestamp": int(time.time()) + 70,
+                            "active": True,
+                            "internal": True,
+                        },
+                    ])
 
-            # Remove the wallet from old node
-            if self.major_version_at_least(node, 17):
-                wallet_prev.unloadwallet()
-            else:
-                self.stop_node(node.index)
+                hdkeypath = addr_info["hdkeypath"].replace("'", "h")
+                pubkey = addr_info["pubkey"]
 
-            # Restore the wallet to master
-            load_res = node_master.restorewallet(wallet_name, backup_path)
+                # Make a backup of the wallet file
+                backup_path = os.path.join(self.options.tmpdir, f"{wallet_name}.dat")
+                wallet_prev.backupwallet(backup_path)
 
-            # Make sure this wallet opens with only the migration warning. See https://github.com/bitcoin/bitcoin/pull/19054
-            if not self.options.descriptors:
-                # Legacy wallets will have only a deprecation warning
-                assert_equal(load_res["warnings"], ["Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet."])
-            else:
-                assert "warnings" not in load_res
+                # Remove the wallet from old node
+                if self.major_version_at_least(node, 17):
+                    wallet_prev.unloadwallet()
+                else:
+                    self.stop_node(node.index)
 
-            wallet = node_master.get_wallet_rpc(wallet_name)
-            info = wallet.getaddressinfo(address)
-            descriptor = f"wpkh([{info['hdmasterfingerprint']}{hdkeypath[1:]}]{pubkey})"
-            assert_equal(info["desc"], descsum_create(descriptor))
+                # Restore the wallet to master
+                load_res = node_master.restorewallet(wallet_name, backup_path)
 
-            # Check that descriptor wallets have hd key
-            if self.options.descriptors:
-                descs = wallet.listdescriptors(True)
-                xpub_info = wallet.gethdkey(True)
-                for desc in descs["descriptors"]:
-                    assert xpub_info["xprv"] in desc["desc"]
+                # Make sure this wallet opens with only the migration warning. See https://github.com/bitcoin/bitcoin/pull/19054
+                if not self.options.descriptors:
+                    # Legacy wallets will have only a deprecation warning
+                    assert_equal(load_res["warnings"], ["Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet."])
+                else:
+                    assert "warnings" not in load_res
 
-            # Make backup so the wallet can be copied back to old node
-            down_wallet_name = f"re_down_{node.version}"
-            down_backup_path = os.path.join(self.options.tmpdir, f"{down_wallet_name}.dat")
-            wallet.backupwallet(down_backup_path)
-            wallet.unloadwallet()
+                wallet = node_master.get_wallet_rpc(wallet_name)
+                if encrypt:
+                    wallet.walletpassphrase("pass", 100000)
 
-            # Check that no automatic upgrade broke the downgrading the wallet
-            if self.major_version_less_than(node, 17):
-                # loadwallet is only available in 0.17+
-                shutil.copyfile(
-                    down_backup_path,
-                    node.wallets_path / down_wallet_name
-                )
-                self.start_node(node.index, extra_args=[f"-wallet={down_wallet_name}"])
-                wallet_res = node.get_wallet_rpc(down_wallet_name)
-                info = wallet_res.validateaddress(address)
-                assert_equal(info, addr_info)
-            else:
-                target_dir = node.wallets_path / down_wallet_name
-                os.makedirs(target_dir, exist_ok=True)
-                shutil.copyfile(
-                    down_backup_path,
-                    target_dir / "wallet.dat"
-                )
-                node.loadwallet(down_wallet_name)
-                wallet_res = node.get_wallet_rpc(down_wallet_name)
-                info = wallet_res.getaddressinfo(address)
-                assert_equal(info, addr_info)
+                info = wallet.getaddressinfo(address)
+                descriptor = f"wpkh([{info['hdmasterfingerprint']}{hdkeypath[1:]}]{pubkey})"
+                assert_equal(info["desc"], descsum_create(descriptor))
+
+                # Check that descriptor wallets have hd key
+                if self.options.descriptors:
+                    descs = wallet.listdescriptors(True)
+                    xpub_info = wallet.gethdkey(True)
+                    if self.major_version_at_least(node, 23):
+                        assert_equal(xpub_info["xprv"], expected_xprv)
+                    expected_xprv_count = 6
+                    found_xprv_count = 0
+                    for desc in descs["descriptors"]:
+                        if xpub_info["xprv"] in desc["desc"]:
+                            found_xprv_count += 1
+                        if desc["desc"].startswith("tr("):
+                            expected_xprv_count = 8
+                    assert_equal(found_xprv_count, expected_xprv_count)
+
+                if encrypt:
+                    wallet.walletlock()
+
+                # Make backup so the wallet can be copied back to old node
+                down_wallet_name = f"re_down_{node.version}{'_enc' if encrypt else ''}"
+                down_backup_path = os.path.join(self.options.tmpdir, f"{down_wallet_name}.dat")
+                wallet.backupwallet(down_backup_path)
+                wallet.unloadwallet()
+
+                # Check that no automatic upgrade broke the downgrading the wallet
+                if self.major_version_less_than(node, 17):
+                    # loadwallet is only available in 0.17+
+                    shutil.copyfile(
+                        down_backup_path,
+                        node.wallets_path / down_wallet_name
+                    )
+                    self.start_node(node.index, extra_args=[f"-wallet={down_wallet_name}"])
+                    wallet_res = node.get_wallet_rpc(down_wallet_name)
+                    info = wallet_res.validateaddress(address)
+                    assert_equal(info, addr_info)
+                else:
+                    target_dir = node.wallets_path / down_wallet_name
+                    os.makedirs(target_dir, exist_ok=True)
+                    shutil.copyfile(
+                        down_backup_path,
+                        target_dir / "wallet.dat"
+                    )
+                    node.loadwallet(down_wallet_name)
+                    wallet_res = node.get_wallet_rpc(down_wallet_name)
+                    info = wallet_res.getaddressinfo(address)
+                    assert_equal(info, addr_info)
 
 if __name__ == '__main__':
     BackwardsCompatibilityTest().main()
