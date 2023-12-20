@@ -88,8 +88,8 @@ public:
     /** Whether this node ignores txs received over p2p. */
     virtual bool IgnoresIncomingTxs() = 0;
 
-    /** Relay transaction to all peers. */
-    virtual void RelayTransaction(const uint256& txid, const uint256& wtxid) = 0;
+    /** Schedule a transaction to be broadcast to all peers at a later time. */
+    virtual void ScheduleTxForBroadcastToAll(const uint256& txid, const uint256& wtxid) = 0;
 
     /** Send ping message to all peers */
     virtual void SendPings() = 0;
