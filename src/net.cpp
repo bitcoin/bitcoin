@@ -458,14 +458,25 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
 
     for (auto& target_addr: connect_to) {
         if (target_addr.IsValid()) {
-            const bool use_proxy{GetProxy(target_addr.GetNetwork(), proxy)};
+            const Network net{addrConnect.GetNetwork()};
+            bool use_proxy{GetProxy(net, proxy)};
+            if (conn_type == ConnectionType::PRIVATE_BROADCAST && (net == NET_IPV4 || net == NET_IPV6)) {
+                const auto proxy_opt{m_private_broadcast.ProxyForIPv4or6()};
+                if (proxy_opt.has_value()) {
+                    use_proxy = true;
+                    proxy = proxy_opt.value();
+                }
+            }
             bool proxyConnectionFailed = false;
 
             if (target_addr.IsI2P() && use_proxy) {
                 i2p::Connection conn;
                 bool connected{false};
 
-                if (m_i2p_sam_session) {
+                // If an I2P SAM session already exists, normally we would re-use it. But in the case of
+                // private broadcast we force a new transient session. A Connect() using m_i2p_sam_session
+                // would use our permanent I2P address as a source address.
+                if (m_i2p_sam_session && conn_type != ConnectionType::PRIVATE_BROADCAST) {
                     connected = m_i2p_sam_session->Connect(target_addr, conn, proxyConnectionFailed);
                 } else {
                     {
@@ -2502,6 +2513,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
         LogPrintf("Fixed seeds are disabled\n");
     }
 
+    // Private broadcast connections are opened with priority over others, but only half
+    // of the time to avoid depriving other connection types if private broadcast is
+    // needed but opening such connections is unsuccessful for some reason.
+    std::optional<Network> open_private_broadcast_to;
+
     while (!interruptNet)
     {
         if (add_addr_fetch) {
@@ -2527,6 +2543,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
         int nOutboundFullRelay = 0;
         int nOutboundBlockRelay = 0;
         int outbound_privacy_network_peers = 0;
+        size_t num_private_broadcast_opened{0};
         std::set<std::vector<unsigned char>> outbound_ipv46_peer_netgroups;
 
         {
@@ -2545,7 +2562,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
                     // peers from addrman.
                     case ConnectionType::ADDR_FETCH:
                     case ConnectionType::FEELER:
+                        break;
                     case ConnectionType::PRIVATE_BROADCAST:
+                        ++num_private_broadcast_opened;
                         break;
                     case ConnectionType::MANUAL:
                     case ConnectionType::OUTBOUND_FULL_RELAY:
@@ -2574,7 +2593,21 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
             }
         }
 
-        CSemaphoreGrant grant(*semOutbound);
+        CSemaphoreGrant grant{*semOutbound, /*fTry=*/true};
+        if (open_private_broadcast_to.has_value() && grant) {
+            // Previous connection was private broadcast, thus yield to other connection types
+            // if we are ready to do so (the outbound semaphore gave green light).
+            open_private_broadcast_to = std::optional<Network>{}; // Same as .reset(), but with .reset() GCC produces bogus warning about uninitialized value later when we try to use it.
+        } else {
+            open_private_broadcast_to = m_private_broadcast.ShouldOpen(num_private_broadcast_opened);
+            if (!open_private_broadcast_to.has_value()) {
+                // No need for private broadcast connections, go with other ones. Acquire the
+                // grant if not already acquired.
+                grant.Acquire();
+            }
+            // else private broadcast is needed to network *open_private_broadcast_to, try to open one.
+        }
+
         if (interruptNet)
             return;
 
@@ -2630,18 +2663,19 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
         bool fFeeler = false;
         std::optional<Network> preferred_net;
 
-        // Determine what type of connection to open. Opening
-        // BLOCK_RELAY connections to addresses from anchors.dat gets the highest
-        // priority. Then we open OUTBOUND_FULL_RELAY priority until we
-        // meet our full-relay capacity. Then we open BLOCK_RELAY connection
-        // until we hit our block-relay-only peer limit.
-        // GetTryNewOutboundPeer() gets set when a stale tip is detected, so we
-        // try opening an additional OUTBOUND_FULL_RELAY connection. If none of
-        // these conditions are met, check to see if it's time to try an extra
-        // block-relay-only peer (to confirm our tip is current, see below) or the next_feeler
-        // timer to decide if we should open a FEELER.
+        // Determine what type of connection to open, in order of priority:
+        // * PRIVATE_BROADCAST if needed
+        // * BLOCK_RELAY connections to addresses from anchors.dat until we reach m_max_outbound_block_relay
+        // * OUTBOUND_FULL_RELAY until we reach m_max_outbound_full_relay
+        // * BLOCK_RELAY until we reach m_max_outbound_block_relay
+        // * OUTBOUND_FULL_RELAY if GetTryNewOutboundPeer() is true (a stale tip is detected)
+        // * BLOCK_RELAY if it's time to try an extra block-relay-only peer (to confirm our tip is current)
+        // * FEELER if it's time to try a feeler
+        // * else retry the loop (sleep a bit and start from the top of this list)
 
-        if (!m_anchors.empty() && (nOutboundBlockRelay < m_max_outbound_block_relay)) {
+        if (open_private_broadcast_to.has_value()) {
+            conn_type = ConnectionType::PRIVATE_BROADCAST;
+        } else if (!m_anchors.empty() && nOutboundBlockRelay < m_max_outbound_block_relay) {
             conn_type = ConnectionType::BLOCK_RELAY;
             anchor = true;
         } else if (nOutboundFullRelay < m_max_outbound_full_relay) {
@@ -2723,7 +2757,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
             CAddress addr;
             NodeSeconds addr_last_try{0s};
 
-            if (fFeeler) {
+            if (open_private_broadcast_to.has_value()) {
+                std::tie(addr, addr_last_try) = addrman.Select(/*new_only=*/false, {open_private_broadcast_to.value()});
+            } else if (fFeeler) {
                 // First, try to get a tried table collision address. This returns
                 // an empty (invalid) address if there are no collisions to try.
                 std::tie(addr, addr_last_try) = addrman.SelectTriedCollision();
@@ -2954,6 +2990,17 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         return;
     pnode->grantOutbound = std::move(grant_outbound);
 
+    if (conn_type == ConnectionType::PRIVATE_BROADCAST) {
+        const size_t before_sub{m_private_broadcast.NumToOpenSub(1)};
+        Assume(before_sub > 0);
+        LogPrintLevel(BCLog::PRIVATE_BROADCAST,
+                      BCLog::Level::Debug,
+                      "Connected to %s, decremented the number of required connections from %d to %d\n",
+                      addrConnect.ToStringAddrPort(),
+                      before_sub,
+                      before_sub - 1);
+    }
+
     m_msgproc->InitializeNode(*pnode, m_local_services);
     {
         LOCK(m_nodes_mutex);
@@ -2962,6 +3009,116 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         // update connection count by network
         if (pnode->IsManualOrFullOutboundConn()) ++m_network_conn_counts[pnode->addr.GetNetwork()];
     }
+}
+
+std::optional<Proxy> CConnman::PrivateBroadcast::ProxyForIPv4or6() const
+{
+    if (!m_outbound_tor_ok_at_least_once.load()) {
+        return std::nullopt;
+    }
+    Proxy tor_proxy;
+    Assume(GetProxy(NET_ONION, tor_proxy));
+    return tor_proxy;
+}
+
+std::optional<Network>
+CConnman::PrivateBroadcast::ShouldOpen(size_t num_opened) const
+{
+    const size_t num_to_open{m_num_to_open.load()};
+
+    if (num_to_open == 0) {
+        return std::nullopt;
+    }
+
+    if (num_opened >= MAX_PRIVATE_BROADCAST_CONNECTIONS) {
+        LogPrintLevel(BCLog::PRIVATE_BROADCAST,
+                      BCLog::Level::Info,
+                      "Requested to open %d connection(s), but there are already %d "
+                      "connections opened. Will wait for some of them to be closed "
+                      "before opening a new one\n",
+                      num_to_open,
+                      num_opened);
+        return std::nullopt;
+    }
+
+    prevector<4, Network> nets;
+    std::optional<Proxy> proxy_for_ipv4or6;
+    if (g_reachable_nets.Contains(NET_ONION)) {
+        nets.push_back(NET_ONION);
+
+        proxy_for_ipv4or6 = ProxyForIPv4or6();
+        if (proxy_for_ipv4or6.has_value()) {
+            nets.push_back(NET_IPV4);
+            nets.push_back(NET_IPV6);
+        }
+    }
+    if (g_reachable_nets.Contains(NET_I2P)) {
+        nets.push_back(NET_I2P);
+    }
+
+    if (nets.empty()) {
+        LogPrintLevel(BCLog::PRIVATE_BROADCAST,
+                      BCLog::Level::Warning,
+                      "Requested to open %d connection(s) but none of the Tor or I2P networks is reachable.\n",
+                      num_to_open);
+        return std::nullopt;
+    }
+
+    const Network net{nets[FastRandomContext{}.randrange(nets.size())]};
+
+    LogPrintLevel(BCLog::PRIVATE_BROADCAST,
+                  BCLog::Level::Debug,
+                  "Requested to open %d connection(s), trying to open one to %s%s\n",
+                  num_to_open,
+                  GetNetworkName(net),
+                  (net == NET_IPV4 || net == NET_IPV6) && proxy_for_ipv4or6.has_value() ?
+                      " through the Tor proxy at " + proxy_for_ipv4or6->ToString() :
+                      "");
+
+    return net;
+}
+
+size_t CConnman::PrivateBroadcast::NumToOpen() const
+{
+    return m_num_to_open.load();
+}
+
+void CConnman::PrivateBroadcast::NumToOpenAdd(size_t n)
+{
+    const size_t before{m_num_to_open.fetch_add(n)};
+
+    LogPrintLevel(BCLog::PRIVATE_BROADCAST,
+                  BCLog::Level::Debug,
+                  "Request to increment the needed new connections by %d, changed from %d to %d\n",
+                  n,
+                  before,
+                  before + n);
+}
+
+size_t CConnman::PrivateBroadcast::NumToOpenSub(size_t n)
+{
+    // Do the following atomically:
+    // if (m_num_to_open > n) {
+    //     m_num_to_open -= n;
+    // } else {
+    //     m_num_to_open = 0;
+    // }
+    // m_num_to_open is maintained in a loose way. It may end up more or less
+    // than needed. In any case make sure that it does not become negative.
+    // Thus we don't do the simpler m_num_to_open.fetch_sub(n).
+    size_t before{m_num_to_open.load()};
+    size_t desired;
+    do {
+        desired = before > n ? before - n : 0;
+    } while (!m_num_to_open.compare_exchange_weak(before, desired));
+
+    LogPrintLevel(BCLog::PRIVATE_BROADCAST,
+                  BCLog::Level::Debug,
+                  "Request to decrement the needed new connections by %d, changed from %d to %d\n",
+                  n,
+                  before,
+                  desired);
+    return before;
 }
 
 Mutex NetEventsInterface::g_msgproc_mutex;
@@ -3807,6 +3964,14 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
+
+    if (!m_private_broadcast.m_outbound_tor_ok_at_least_once.load() && !pnode->IsInboundConn() &&
+        pnode->addr.IsTor() && msg.m_type == NetMsgType::VERACK) {
+        // If we are sending the peer VERACK that means we successfully sent
+        // and received another message to/from that peer (VERSION).
+        m_private_broadcast.m_outbound_tor_ok_at_least_once.store(true);
+    }
+
     size_t nMessageSize = msg.data.size();
     LogDebug(BCLog::NET, "sending %s (%d bytes) peer=%d\n", msg.m_type, nMessageSize, pnode->GetId());
     if (gArgs.GetBoolArg("-capturemessages", false)) {
