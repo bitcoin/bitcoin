@@ -116,8 +116,13 @@ public:
     /** Get peer manager info. */
     virtual PeerManagerInfo GetInfo() const = 0;
 
-    /** Relay transaction to all peers. */
-    virtual void RelayTransaction(const Txid& txid, const Wtxid& wtxid) = 0;
+    /**
+     * Initiate a transaction broadcast to eligible peers.
+     * Queue the witness transaction id to `Peer::TxRelay::m_tx_inventory_to_send`
+     * for each peer. Later, depending on `Peer::TxRelay::m_next_inv_send_time` and if
+     * the transaction is in the mempool, an `INV` about it may be sent to the peer.
+     */
+    virtual void InitiateTxBroadcastToAll(const Txid& txid, const Wtxid& wtxid) = 0;
 
     /** Send ping message to all peers */
     virtual void SendPings() = 0;
