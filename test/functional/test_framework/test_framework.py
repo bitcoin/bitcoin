@@ -577,10 +577,16 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # Wait for nodes to stop
             node.wait_until_stopped()
 
-    def restart_node(self, i, extra_args=None):
+    def restart_node(self, i, extra_args=None, clear_addrman=False):
         """Stop and start a test node"""
         self.stop_node(i)
-        self.start_node(i, extra_args)
+        if clear_addrman:
+            peers_dat = self.nodes[i].chain_path / "peers.dat"
+            os.remove(peers_dat)
+            with self.nodes[i].assert_debug_log(expected_msgs=[f'Creating peers.dat because the file was not found ("{peers_dat}")']):
+                self.start_node(i, extra_args)
+        else:
+            self.start_node(i, extra_args)
 
     def wait_for_node_exit(self, i, timeout):
         self.nodes[i].process.wait(timeout)
