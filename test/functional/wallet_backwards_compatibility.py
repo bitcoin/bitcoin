@@ -351,6 +351,13 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             descriptor = f"wpkh([{info['hdmasterfingerprint']}{hdkeypath[1:]}]{pubkey})"
             assert_equal(info["desc"], descsum_create(descriptor))
 
+            # Check that descriptor wallets have hd key
+            if self.options.descriptors:
+                descs = wallet.listdescriptors(True)
+                xpub_info = wallet.gethdkey(True)
+                for desc in descs["descriptors"]:
+                    assert xpub_info["xprv"] in desc["desc"]
+
             # Make backup so the wallet can be copied back to old node
             down_wallet_name = f"re_down_{node.version}"
             down_backup_path = os.path.join(self.options.tmpdir, f"{down_wallet_name}.dat")
