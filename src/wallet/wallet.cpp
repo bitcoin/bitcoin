@@ -4023,6 +4023,12 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         // Use the existing master key if we have it
         if (data.master_key.key.IsValid()) {
             SetupDescriptorScriptPubKeyMans(data.master_key);
+
+            // Store the master key as our active hd key
+            if (!SetActiveHDKey(data.master_key)) {
+                error = _("Error: Unable to set original seed's HD key as active");
+                return false;
+            }
         } else {
             // Setup with a new seed if we don't.
             SetupDescriptorScriptPubKeyMans();
@@ -4213,7 +4219,7 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
         empty_context.args = context.args;
 
         // Make the wallets
-        options.create_flags = WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET | WALLET_FLAG_DESCRIPTORS;
+        options.create_flags = WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET | WALLET_FLAG_DESCRIPTORS | WALLET_FLAG_GLOBAL_HD_KEY;
         if (wallet.IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE)) {
             options.create_flags |= WALLET_FLAG_AVOID_REUSE;
         }

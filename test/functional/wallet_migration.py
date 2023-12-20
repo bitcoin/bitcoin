@@ -121,6 +121,10 @@ class WalletMigrationTest(BitcoinTestFramework):
         # So, should have a total of 11 descriptors on it.
         assert_equal(len(basic0.listdescriptors()["descriptors"]), 11)
 
+        # A global hd key should be added which matches the ones in the descriptors
+        xprv = basic0.gethdkey(True)["xprv"]
+        assert all([xprv in desc["desc"] for desc in filter(lambda x: "range" in x, basic0.listdescriptors(True)["descriptors"])])
+
         # Compare addresses info
         addr_info = basic0.getaddressinfo(addr)
         change_addr_info = basic0.getaddressinfo(change)
