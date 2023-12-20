@@ -133,7 +133,7 @@ TransactionError BroadcastTransaction(NodeContext& node,
     case TxBroadcast::MEMPOOL_NO_BROADCAST:
         break;
     case TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
-        node.peerman->RelayTransaction(txid, wtxid);
+        node.peerman->InitiateTxBroadcastToAll(txid, wtxid);
         break;
     }
 
