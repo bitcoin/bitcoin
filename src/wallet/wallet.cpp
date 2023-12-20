@@ -4336,4 +4336,34 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     }
     return res;
 }
+
+bool CWallet::LoadActiveHDPubKey(const CExtPubKey& xpub, const std::optional<CKey>& key, const std::vector<unsigned char>& crypted_key)
+{
+    AssertLockHeld(cs_wallet);
+    HDKey hdkey;
+    if (!Assume(xpub.pubkey.IsValid())) {
+        return false;
+    }
+    hdkey.xpub = xpub;
+
+    if (key) {
+        if (!Assume(key->IsValid() && crypted_key.empty() && xpub.pubkey == key->GetPubKey())) {
+            return false;
+        }
+        hdkey.xprv = *key;
+        m_hd_key = hdkey;
+        return true;
+    }
+    if (!crypted_key.empty()) {
+        if (!Assume(!key)) {
+            return false;
+        }
+        hdkey.xprv = crypted_key;
+        m_hd_key = hdkey;
+        return true;
+    }
+
+    // We should have had either a key or a crypted key. Having neither is an error.
+    return Assume(false);
+}
 } // namespace wallet
