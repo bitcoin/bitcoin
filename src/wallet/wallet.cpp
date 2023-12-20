@@ -4408,4 +4408,49 @@ std::optional<CExtPubKey> CWallet::GetActiveHDPubKey()
     }
     return std::nullopt;
 }
+
+std::optional<CExtKey> CWallet::GetActiveHDPrivKey()
+{
+    AssertLockHeld(cs_wallet);
+
+    if (!m_hd_key) {
+        return std::nullopt;
+    }
+    CPubKey& pubkey = m_hd_key->xpub.pubkey;
+
+    std::optional<CKey> key = std::visit(util::Overloaded{
+        [&](const CKey& key) -> std::optional<CKey> {
+            if (!Assume(!IsCrypted())) {
+                return std::nullopt;
+            }
+            if (!Assume(key.IsValid())) {
+                return std::nullopt;
+            }
+            return key;
+        },
+       [&](const std::vector<unsigned char> ckey) -> std::optional<CKey> {
+            if (!Assume(IsCrypted())) {
+                return std::nullopt;
+            }
+            if (IsLocked()) {
+                return std::nullopt;
+            }
+            if (!Assume(!ckey.empty())) {
+                return std::nullopt;
+            }
+            CKey key;
+            if (!Assume(DecryptKey(GetEncryptionKey(), ckey, pubkey, key))) {
+                return std::nullopt;
+            }
+            return key;
+        },
+    }, m_hd_key->xprv);
+
+    if (!key) {
+        return std::nullopt;
+    }
+
+    CExtKey extkey(m_hd_key->xpub, *key);
+    return extkey;
+}
 } // namespace wallet
