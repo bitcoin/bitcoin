@@ -205,5 +205,29 @@ BOOST_AUTO_TEST_CASE(db_cursor_prefix_byte_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(db_availability_after_write_error)
+{
+    // Ensures the database remains accessible without deadlocking after a write error.
+    // To simulate the behavior, record overwrites are disallowed, and the test verifies
+    // that the database remains active after failing to store an existing record.
+    for (const auto& database : TestDatabases(m_path_root)) {
+        // Write original record
+        std::unique_ptr<DatabaseBatch> batch = database->MakeBatch();
+        std::string key = "key";
+        std::string value = "value";
+        std::string value2 = "value_2";
+        BOOST_CHECK(batch->Write(key, value));
+        // Attempt to overwrite the record (expect failure)
+        BOOST_CHECK(!batch->Write(key, value2, /*fOverwrite=*/false));
+        // Successfully overwrite the record
+        BOOST_CHECK(batch->Write(key, value2, /*fOverwrite=*/true));
+        // Sanity-check; read and verify the overwritten value
+        std::string read_value;
+        BOOST_CHECK(batch->Read(key, read_value));
+        BOOST_CHECK_EQUAL(read_value, value2);
+    }
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
