@@ -330,7 +330,7 @@ class PruneTest(BitcoinTestFramework):
             "desc": "Testing",
             "height": [2, 2],
         })
-        assert_equal(node.listprunelocks(), {'prune_locks': [{'id': 'test', 'desc': 'Testing', 'height': [2, 2]}]})
+        assert_equal(node.listprunelocks(), {'prune_locks': [{'id': 'test', 'desc': 'Testing', 'height': [2, 2], 'temporary': False}]})
         prune(500)
         assert has_block(0), "blk00000.dat is missing when should still be there"
         node.setprunelock("test", {})  # delete prune lock
