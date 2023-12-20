@@ -809,6 +809,59 @@ static RPCHelpMan migratewallet()
     };
 }
 
+RPCHelpMan gethdkey()
+{
+    return RPCHelpMan{"gethdkey",
+                "Returns the HD key most recently used to generate descriptors for this descriptor wallet. ",
+                {
+                    {"private", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include the xprv"},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {{
+                        {RPCResult::Type::STR, "xpub", "The xpub"},
+                        {RPCResult::Type::STR, "xprv", /*optional=*/true, "The xprv if private is true"},
+                    }},
+                },
+                RPCExamples{
+                    HelpExampleCli("gethdkey", "")
+            + HelpExampleRpc("gethdkey", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            const std::shared_ptr<CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return NullUniValue;
+
+            if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "gethdkey is not available for non-descriptor wallets");
+            }
+
+            LOCK(pwallet->cs_wallet);
+
+            UniValue obj(UniValue::VOBJ);
+            std::optional<CExtPubKey> extpub = pwallet->GetActiveHDPubKey();
+            if (!extpub) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "This wallet does not have an active HD key");
+            }
+            std::string xpub = EncodeExtPubKey(*extpub);
+            obj.pushKV("xpub", xpub);
+
+            bool priv = !request.params[0].isNull() && request.params[0].get_bool();
+            if (priv) {
+                EnsureWalletIsUnlocked(*pwallet);
+                std::optional<CExtKey> extkey = pwallet->GetActiveHDPrivKey();
+                if (!extkey) {
+                    throw JSONRPCError(RPC_WALLET_ERROR, "Could not find the xprv for active HD key");
+                }
+                std::string xprv = EncodeExtKey(*extkey);
+                obj.pushKV("xprv", xprv);
+            }
+
+            return obj;
+        },
+    };
+}
+
 // addresses
 RPCHelpMan getaddressinfo();
 RPCHelpMan getnewaddress();
@@ -907,6 +960,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &getunconfirmedbalance},
         {"wallet", &getbalances},
         {"wallet", &getwalletinfo},
+        {"wallet", &gethdkey},
         {"wallet", &importaddress},
         {"wallet", &importdescriptors},
         {"wallet", &importmulti},
