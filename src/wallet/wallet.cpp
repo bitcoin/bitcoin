@@ -4507,4 +4507,19 @@ std::set<CExtPubKey> CWallet::GetActiveHDPubKeys() const
     }
     return active_xpubs;
 }
+
+std::optional<CKey> CWallet::GetKey(const CKeyID& keyid) const
+{
+    Assert(IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+
+    for (const auto& spkm : GetAllScriptPubKeyMans()) {
+        const DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
+        assert(desc_spkm);
+        LOCK(desc_spkm->cs_desc_man);
+        if (std::optional<CKey> key = desc_spkm->GetKey(keyid)) {
+            return key;
+        }
+    }
+    return std::nullopt;
+}
 } // namespace wallet
