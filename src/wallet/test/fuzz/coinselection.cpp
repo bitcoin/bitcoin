@@ -86,7 +86,6 @@ FUZZ_TARGET(coinselection)
     const CFeeRate effective_fee_rate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
     // Discard feerate must be at least dust relay feerate
     const CFeeRate discard_fee_rate{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(DUST_RELAY_TX_FEE, COIN)};
-    const CAmount min_viable_change{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
     const CAmount target{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY)};
     const bool subtract_fee_outputs{fuzzed_data_provider.ConsumeBool()};
 
@@ -95,12 +94,15 @@ FUZZ_TARGET(coinselection)
     coin_params.m_subtract_fee_outputs = subtract_fee_outputs;
     coin_params.m_long_term_feerate = long_term_fee_rate;
     coin_params.m_effective_feerate = effective_fee_rate;
-    coin_params.min_viable_change = min_viable_change;
-    coin_params.change_output_size = fuzzed_data_provider.ConsumeIntegralInRange<int>(10, 1000);
+    coin_params.change_output_size = fuzzed_data_provider.ConsumeIntegralInRange(1, MAX_SCRIPT_SIZE);
     coin_params.m_change_fee = effective_fee_rate.GetFee(coin_params.change_output_size);
     coin_params.m_discard_feerate = discard_fee_rate;
     coin_params.change_spend_size = fuzzed_data_provider.ConsumeIntegralInRange<int>(41, 1000);
-    coin_params.m_cost_of_change = coin_params.m_change_fee + coin_params.m_discard_feerate.GetFee(coin_params.change_spend_size);
+    const auto change_spend_fee{coin_params.m_discard_feerate.GetFee(coin_params.change_spend_size)};
+    coin_params.m_cost_of_change = coin_params.m_change_fee + change_spend_fee;
+    CScript change_out_script = CScript() << std::vector<unsigned char>(coin_params.change_output_size, OP_TRUE);
+    const auto dust{GetDustThreshold(CTxOut{/*nValueIn=*/0, change_out_script}, coin_params.m_discard_feerate)};
+    coin_params.min_viable_change = std::max(change_spend_fee + 1, dust);
 
     int next_locktime{0};
     CAmount total_balance{CreateCoins(fuzzed_data_provider, utxo_pool, coin_params, next_locktime)};
@@ -119,7 +121,7 @@ FUZZ_TARGET(coinselection)
     auto result_bnb = coin_params.m_subtract_fee_outputs ? util::Error{Untranslated("BnB disabled when SFFO is enabled")} :
                       SelectCoinsBnB(group_pos, target, coin_params.m_cost_of_change, MAX_STANDARD_TX_WEIGHT);
     if (result_bnb) {
-        assert(result_bnb->GetChange(coin_params.m_cost_of_change, CAmount{0}) == 0);
+        assert(result_bnb->GetChange(coin_params.min_viable_change, coin_params.m_change_fee) == 0);
         assert(result_bnb->GetSelectedValue() >= target);
         (void)result_bnb->GetShuffledInputVector();
         (void)result_bnb->GetInputSet();
