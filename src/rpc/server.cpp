@@ -30,7 +30,7 @@ static RPCTimerInterface* timerInterface = nullptr;
 /* Map of name to timer. */
 static Mutex g_deadline_timers_mutex;
 static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers GUARDED_BY(g_deadline_timers_mutex);
-static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler, std::multimap<std::string, std::vector<UniValue>> mapPlatformRestrictions);
+static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler, const std::multimap<std::string, std::vector<UniValue>>& mapPlatformRestrictions);
 
 // Any commands submitted by this user will have their commands filtered based on the mapPlatformRestrictions
 static const std::string defaultPlatformUser = "platform-user";
@@ -504,7 +504,7 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
     throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
 }
 
-static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler, std::multimap<std::string, std::vector<UniValue>> mapPlatformRestrictions)
+static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler, const std::multimap<std::string, std::vector<UniValue>>& mapPlatformRestrictions)
 {
     // Before executing the RPC Command, filter commands from platform rpc user
     if (fMasternodeMode && request.authUser == gArgs.GetArg("-platform-user", defaultPlatformUser)) {
