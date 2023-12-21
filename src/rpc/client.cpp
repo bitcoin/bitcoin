@@ -278,6 +278,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "gethdkeys", 0, "active_only" },
     { "gethdkeys", 0, "options" },
     { "gethdkeys", 0, "private" },
+    { "createwalletdescriptor", 1, "options" },
+    { "createwalletdescriptor", 1, "internal" },
     // Echo with conversion (For testing only)
     { "echojson", 0, "arg0" },
     { "echojson", 1, "arg1" },
