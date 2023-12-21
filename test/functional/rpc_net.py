@@ -299,16 +299,8 @@ class NetTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Network not recognized: Foo", self.nodes[0].getnodeaddresses, 1, "Foo")
 
     def test_addpeeraddress(self):
-        """RPC addpeeraddress sets the source address equal to the destination address.
-        If an address with the same /16 as an existing new entry is passed, it will be
-        placed in the same new bucket and have a 1/64 chance of the bucket positions
-        colliding (depending on the value of nKey in the addrman), in which case the
-        new address won't be added.  The probability of collision can be reduced to
-        1/2^16 = 1/65536 by using an address from a different /16.  We avoid this here
-        by first testing adding a tried table entry before testing adding a new table one.
-        """
         self.log.info("Test addpeeraddress")
-        self.restart_node(1, ["-checkaddrman=1"])
+        self.restart_node(1, ["-checkaddrman=1", "-test=addrman"])
         node = self.nodes[1]
 
         self.log.debug("Test that addpeerinfo is a hidden RPC")
