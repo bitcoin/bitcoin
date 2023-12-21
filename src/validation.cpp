@@ -5034,6 +5034,14 @@ void ChainstateManager::LoadExternalBlockFile(
     LogPrintf("Loaded %i blocks from external file in %dms\n", nLoaded, Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
 }
 
+bool ChainstateManager::ShouldCheckBlockIndex() const
+{
+    // Assert to verify Flatten() has been called.
+    if (!*Assert(m_options.check_block_index)) return false;
+    if (GetRand(*m_options.check_block_index) >= 1) return false;
+    return true;
+}
+
 void ChainstateManager::CheckBlockIndex()
 {
     if (!ShouldCheckBlockIndex()) {
