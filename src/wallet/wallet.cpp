@@ -4486,4 +4486,25 @@ void CWallet::TopUpCallback(const std::set<CScript>& spks, ScriptPubKeyMan* spkm
     // Update scriptPubKey cache
     CacheNewScriptPubKeys(spks, spkm);
 }
+
+std::set<CExtPubKey> CWallet::GetActiveHDPubKeys() const
+{
+    AssertLockHeld(cs_wallet);
+
+    Assert(IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+
+    std::set<CExtPubKey> active_xpubs;
+    for (const auto& spkm : GetActiveScriptPubKeyMans()) {
+        const DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
+        assert(desc_spkm);
+        LOCK(desc_spkm->cs_desc_man);
+        WalletDescriptor w_desc = desc_spkm->GetWalletDescriptor();
+
+        std::set<CPubKey> desc_pubkeys;
+        std::set<CExtPubKey> desc_xpubs;
+        w_desc.descriptor->GetPubKeys(desc_pubkeys, desc_xpubs);
+        active_xpubs.merge(std::move(desc_xpubs));
+    }
+    return active_xpubs;
+}
 } // namespace wallet
