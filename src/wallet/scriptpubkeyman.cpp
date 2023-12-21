@@ -11,6 +11,7 @@
 #include <script/sign.h>
 #include <script/solver.h>
 #include <util/bip32.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
@@ -2141,6 +2142,36 @@ std::map<CKeyID, CKey> DescriptorScriptPubKeyMan::GetKeys() const
         return keys;
     }
     return m_map_keys;
+}
+
+bool DescriptorScriptPubKeyMan::HasPrivKey(const CKeyID& keyid) const
+{
+    AssertLockHeld(cs_desc_man);
+    return m_map_keys.contains(keyid) || m_map_crypted_keys.contains(keyid);
+}
+
+std::optional<CKey> DescriptorScriptPubKeyMan::GetKey(const CKeyID& keyid) const
+{
+    AssertLockHeld(cs_desc_man);
+    if (m_storage.HasEncryptionKeys() && !m_storage.IsLocked()) {
+        const auto& it = m_map_crypted_keys.find(keyid);
+        if (it == m_map_crypted_keys.end()) {
+            return std::nullopt;
+        }
+        const std::vector<unsigned char>& crypted_secret = it->second.second;
+        CKey key;
+        if (!Assume(m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
+            return DecryptKey(encryption_key, crypted_secret, it->second.first, key);
+        }))) {
+            return std::nullopt;
+        }
+        return key;
+    }
+    const auto& it = m_map_keys.find(keyid);
+    if (it == m_map_keys.end()) {
+        return std::nullopt;
+    }
+    return it->second;
 }
 
 bool DescriptorScriptPubKeyMan::TopUp(unsigned int size)
