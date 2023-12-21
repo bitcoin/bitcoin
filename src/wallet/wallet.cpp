@@ -3463,6 +3463,17 @@ std::set<ScriptPubKeyMan*> CWallet::GetActiveScriptPubKeyMans() const
     return spk_mans;
 }
 
+bool CWallet::IsActiveScriptPubKeyMan(const ScriptPubKeyMan& spkm) const
+{
+    for (const auto& [_, ext_spkm] : m_external_spk_managers) {
+        if (ext_spkm == &spkm) return true;
+    }
+    for (const auto& [_, int_spkm] : m_internal_spk_managers) {
+        if (int_spkm == &spkm) return true;
+    }
+    return false;
+}
+
 std::set<ScriptPubKeyMan*> CWallet::GetAllScriptPubKeyMans() const
 {
     std::set<ScriptPubKeyMan*> spk_mans;
