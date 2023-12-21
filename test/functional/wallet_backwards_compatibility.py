@@ -355,6 +355,25 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             down_wallet_name = f"re_down_{node.version}"
             down_backup_path = os.path.join(self.options.tmpdir, f"{down_wallet_name}.dat")
             wallet.backupwallet(down_backup_path)
+
+            # Check that taproot descriptors can be added to 0.21 wallets
+            # This must be done after the backup is created so that 0.21 can still load
+            # the backup
+            if self.options.descriptors and self.major_version_equals(node, 21):
+                assert_raises_rpc_error(-12, "No bech32m addresses available", wallet.getnewaddress, address_type="bech32m")
+                xpubs = wallet.gethdkeys(active_only=True)
+                assert_equal(len(xpubs), 1)
+                assert_equal(len(xpubs[0]["descriptors"]), 6)
+                wallet.createwalletdescriptor("bech32m")
+                xpubs = wallet.gethdkeys(active_only=True)
+                assert_equal(len(xpubs), 1)
+                assert_equal(len(xpubs[0]["descriptors"]), 8)
+                tr_descs = [desc["desc"] for desc in xpubs[0]["descriptors"] if desc["desc"].startswith("tr(")]
+                assert_equal(len(tr_descs), 2)
+                for desc in tr_descs:
+                    assert info["hdmasterfingerprint"] in desc
+                wallet.getnewaddress(address_type="bech32m")
+
             wallet.unloadwallet()
 
             # Check that no automatic upgrade broke the downgrading the wallet
