@@ -672,7 +672,7 @@ public:
     std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys(int32_t minimum_index) const;
     int32_t GetEndRange() const;
 
-    bool GetDescriptorString(std::string& out, const bool priv) const;
+    [[nodiscard]] bool GetDescriptorString(std::string& out, const bool priv) const;
 
     void UpgradeDescriptorCache();
 };
