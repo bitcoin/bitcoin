@@ -70,7 +70,7 @@ void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, std::optio
     }
 }
 
-void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
+UniValue NormalizeOutputs(const UniValue& outputs_in)
 {
     if (outputs_in.isNull()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output argument must be non-null");
@@ -94,6 +94,13 @@ void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
         }
         outputs = std::move(outputs_dict);
     }
+    return outputs;
+}
+
+void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
+{
+    UniValue outputs(UniValue::VOBJ);
+    outputs = NormalizeOutputs(outputs_in);
 
     // Duplicate checking
     std::set<CTxDestination> destinations;

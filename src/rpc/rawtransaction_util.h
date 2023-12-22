@@ -42,7 +42,10 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
 /** Normalize univalue-represented inputs and add them to the transaction */
 void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, bool rbf);
 
-/** Normalize univalue-represented outputs and add them to the transaction */
+/** Normalize univalue-represented outputs */
+UniValue NormalizeOutputs(const UniValue& outputs_in);
+
+/** Normalize, parse, and add outputs to the transaction */
 void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in);
 
 /** Create a transaction from univalue parameters */
