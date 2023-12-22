@@ -1135,6 +1135,94 @@ BOOST_AUTO_TEST_CASE(srd_tests)
     }
 }
 
+static util::Result<SelectionResult> GutterGuard(const CAmount& target,
+                                                 const CoinSelectionParams& cs_params,
+                                                 const node::NodeContext& m_node,
+                                                 int max_weight,
+                                                 std::function<CoinsResult(CWallet&)> coin_setup)
+{
+    std::unique_ptr<CWallet> wallet = NewWallet(m_node);
+    CoinEligibilityFilter filter(0, 0, 0); // accept all coins without ancestors
+    Groups group = GroupOutputs(*wallet, coin_setup(*wallet), cs_params, {{filter}})[filter].all_groups;
+    return SelectCoinsGG(group.positive_group, target, cs_params.m_change_fee, cs_params.rng_fast, max_weight);
+}
+
+BOOST_AUTO_TEST_CASE(gg_tests)
+{
+    // Test GutterGuard:
+    // 1) Insufficient funds
+    // 2) Exceeded max weight, coin selection always surpasses the max allowed weight.
+    // 3) Select coins without surpassing the max weight (some coins surpasses the max allowed weight, some others not)
+
+    FastRandomContext rand;
+    CoinSelectionParams dummy_params{ // Only used to provide the 'avoid_partial' flag.
+            rand,
+            /*change_output_size=*/34,
+            /*change_spend_size=*/68,
+            /*min_change_target=*/CENT,
+            /*effective_feerate=*/CFeeRate(0),
+            /*long_term_feerate=*/CFeeRate(0),
+            /*discard_feerate=*/CFeeRate(0),
+            /*tx_noinputs_size=*/10 + 34, // static header size + output size
+            /*avoid_partial=*/false,
+    };
+
+    {
+        // #########################################################
+        // 1) Insufficient funds, select all provided coins and fail
+        // #########################################################
+        CAmount target = 49.5L * COIN;
+        int max_weight = 10000; // high enough to not fail for this reason.
+        const auto& res = GutterGuard(target, dummy_params, m_node, max_weight, [&](CWallet& wallet) {
+            CoinsResult available_coins;
+            for (int j = 0; j < 10; ++j) {
+                add_coin(available_coins, wallet, CAmount(1 * COIN));
+                add_coin(available_coins, wallet, CAmount(2 * COIN));
+            }
+            return available_coins;
+        });
+        BOOST_CHECK(!res);
+        BOOST_CHECK(util::ErrorString(res).empty()); // empty means "insufficient funds"
+    }
+
+    {
+        // ###########################
+        // 2) Test max weight exceeded
+        // ###########################
+        CAmount target = 29.5L * COIN;
+        int max_weight = 3000;
+        const auto& res = GutterGuard(target, dummy_params, m_node, max_weight, [&](CWallet& wallet) {
+            CoinsResult available_coins;
+            for (int j = 0; j < 10; ++j) {
+                add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(0), 144, false, 0, true);
+                add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(0), 144, false, 0, true);
+            }
+            return available_coins;
+        });
+        BOOST_CHECK(!res);
+        BOOST_CHECK(util::ErrorString(res).original.find("The inputs size exceeds the maximum weight") != std::string::npos);
+    }
+
+    {
+        // ################################################################################################################
+        // 3) Test selection when some coins surpass the max allowed weight while others not. --> must find a good solution
+        // ################################################################################################################
+        CAmount target = 25.33L * COIN;
+        int max_weight = 10000; // WU
+        const auto& res = GutterGuard(target, dummy_params, m_node, max_weight, [&](CWallet& wallet) {
+            CoinsResult available_coins;
+            for (int j = 0; j < 60; ++j) { // 60 UTXO --> 19,8 BTC total --> 60 × 272 WU = 16320 WU
+                add_coin(available_coins, wallet, CAmount(0.33 * COIN), CFeeRate(0), 144, false, 0, true);
+            }
+            for (int i = 0; i < 10; i++) { // 10 UTXO --> 20 BTC total --> 10 × 272 WU = 2720 WU
+                add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(0), 144, false, 0, true);
+            }
+            return available_coins;
+        });
+        BOOST_CHECK(res);
+    }
+}
+
 static util::Result<SelectionResult> select_coins(const CAmount& target, const CoinSelectionParams& cs_params, const CCoinControl& cc, std::function<CoinsResult(CWallet&)> coin_setup, const node::NodeContext& m_node)
 {
     std::unique_ptr<CWallet> wallet = NewWallet(m_node);
