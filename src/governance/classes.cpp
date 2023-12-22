@@ -7,9 +7,9 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <deploymentstatus.h>
 #include <governance/governance.h>
 #include <key_io.h>
-#include <llmq/utils.h>
 #include <primitives/transaction.h>
 #include <script/standard.h>
 #include <util/moneystr.h>
@@ -496,13 +496,13 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
     const CBlockIndex* pindex = ::ChainActive().Tip();
     if (pindex->nHeight > nBlockHeight) pindex = pindex->GetAncestor(nBlockHeight);
 
-    const auto v20_state = llmq::utils::GetV20State(pindex);
+    const auto v20_state = g_versionbitscache.State(pindex, consensusParams, Consensus::DEPLOYMENT_V20);
     bool fV20Active{v20_state == ThresholdState::ACTIVE};
     if (!fV20Active && nBlockHeight > pindex->nHeight) {
         // If fV20Active isn't active yet and nBlockHeight refers to a future SuperBlock
         // then we need to check if the fork is locked_in and see if it will be active by the time of the future SuperBlock
         if (v20_state == ThresholdState::LOCKED_IN) {
-            int activation_height = llmq::utils::GetV20Since(pindex) + static_cast<int>(Params().GetConsensus().vDeployments[Consensus::DEPLOYMENT_V20].nWindowSize);
+            int activation_height = g_versionbitscache.StateSinceHeight(pindex, consensusParams, Consensus::DEPLOYMENT_V20) + static_cast<int>(Params().GetConsensus().vDeployments[Consensus::DEPLOYMENT_V20].nWindowSize);
             if (nBlockHeight >= activation_height) {
                 fV20Active = true;
             }

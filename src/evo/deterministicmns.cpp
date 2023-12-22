@@ -13,6 +13,7 @@
 #include <base58.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <deploymentstatus.h>
 #include <script/standard.h>
 #include <ui_interface.h>
 #include <validation.h>
@@ -21,6 +22,7 @@
 #include <messagesigner.h>
 #include <uint256.h>
 
+#include <optional>
 #include <memory>
 
 static const std::string DB_LIST_SNAPSHOT = "dmn_S3";
@@ -178,15 +180,16 @@ static bool CompareByLastPaid(const CDeterministicMN* _a, const CDeterministicMN
     return CompareByLastPaid(*_a, *_b);
 }
 
-CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(gsl::not_null<const CBlockIndex*> pIndex) const
+CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(gsl::not_null<const CBlockIndex*> pindexPrev) const
 {
     if (mnMap.size() == 0) {
         return nullptr;
     }
 
-    bool isv19Active = llmq::utils::IsV19Active(pIndex);
-    bool isMNRewardReallocation = llmq::utils::IsMNRewardReallocationActive(pIndex);
-    // Starting from v19 and until MNRewardReallocation (Platform release), EvoNodes will be rewarded 4 blocks in a row
+    const bool isv19Active{DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
+    const bool isMNRewardReallocation{DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_MN_RR)};
+    // EvoNodes are rewarded 4 blocks in a row until MNRewardReallocation (Platform release)
+    // For optimization purposes we also check if v19 active to avoid loop over all masternodes
     CDeterministicMNCPtr best = nullptr;
     if (isv19Active && !isMNRewardReallocation) {
         ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
@@ -214,7 +217,7 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee(gsl::not_null<const CBlock
     return best;
 }
 
-std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(gsl::not_null<const CBlockIndex* const> pindex, int nCount) const
+std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(gsl::not_null<const CBlockIndex* const> pindexPrev, int nCount) const
 {
     if (nCount < 0 ) {
         return {};
@@ -227,7 +230,7 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(gsl
 
     int remaining_evo_payments{0};
     CDeterministicMNCPtr evo_to_be_skipped{nullptr};
-    const bool isMNRewardReallocation = llmq::utils::IsMNRewardReallocationActive(pindex);
+    const bool isMNRewardReallocation{DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_MN_RR)};
     if (!isMNRewardReallocation) {
         ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
             if (dmn->pdmnState->nLastPaidHeight == nHeight) {
@@ -599,8 +602,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
     AssertLockHeld(cs_main);
 
     const auto& consensusParams = Params().GetConsensus();
-    bool fDIP0003Active = pindex->nHeight >= consensusParams.DIP0003Height;
-    if (!fDIP0003Active) {
+    if (!DeploymentActiveAt(*pindex, consensusParams, Consensus::DEPLOYMENT_DIP0003)) {
         return true;
     }
 
@@ -731,7 +733,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, gsl::no
 
     newList.DecreaseScores();
 
-    bool isMNRewardReallocation = llmq::utils::IsMNRewardReallocationActive(pindexPrev);
+    const bool isV19Active{DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
+    const bool isMNRewardReallocation{DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_MN_RR)};
 
     // we skip the coinbase
     for (int i = 1; i < (int)block.vtx.size(); i++) {
@@ -748,7 +751,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, gsl::no
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
             }
 
-            if (proTx.nType == MnType::Evo && !llmq::utils::IsV19Active(pindexPrev)) {
+            if (proTx.nType == MnType::Evo && !isV19Active) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
             }
 
@@ -811,7 +814,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, gsl::no
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
             }
 
-            if (proTx.nType == MnType::Evo && !llmq::utils::IsV19Active(pindexPrev)) {
+            if (proTx.nType == MnType::Evo && !DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-payload");
             }
 
@@ -1115,21 +1118,6 @@ bool CDeterministicMNManager::IsProTxWithCollateral(const CTransactionRef& tx, u
     return true;
 }
 
-bool CDeterministicMNManager::IsDIP3Enforced(int nHeight)
-{
-    if (nHeight == -1) {
-        LOCK(cs);
-        if (tipIndex == nullptr) {
-            // Since EnforcementHeight can be set to block 1, we shouldn't just return false here
-            nHeight = 1;
-        } else {
-            nHeight = tipIndex->nHeight;
-        }
-    }
-
-    return nHeight >= Params().GetConsensus().DIP0003EnforcementHeight;
-}
-
 void CDeterministicMNManager::CleanupCache(int nHeight)
 {
     AssertLockHeld(cs);
@@ -1203,6 +1191,7 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
     static const std::string DB_OLD_LIST_DIFF = "dmn_D";
     static const std::string DB_OLD_BEST_BLOCK = "b_b2";
     static const std::string DB_OLD_BEST_BLOCK2 = "b_b3";
+    const auto& consensusParams = Params().GetConsensus();
 
     LOCK(cs_main);
 
@@ -1231,7 +1220,7 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
         return true;
     }
 
-    if (m_chainstate.m_chain.Tip()->pprev != nullptr && llmq::utils::IsV19Active(m_chainstate.m_chain.Tip()->pprev)) {
+    if (DeploymentActiveAt(*m_chainstate.m_chain.Tip(), consensusParams, Consensus::DEPLOYMENT_V19)) {
         // too late
         LogPrintf("CDeterministicMNManager::%s -- migration is not possible\n", __func__);
         return false;
@@ -1246,7 +1235,7 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
     }
     m_evoDb.GetRawDB().Erase(DB_OLD_BEST_BLOCK);
 
-    if (m_chainstate.m_chain.Height() < Params().GetConsensus().DIP0003Height) {
+    if (!DeploymentActiveAt(*m_chainstate.m_chain.Tip(), consensusParams, Consensus::DEPLOYMENT_DIP0003)) {
         // not reached DIP3 height yet, so no upgrade needed
         LogPrintf("CDeterministicMNManager::%s -- migration not needed. dip3 not reached\n", __func__);
         auto dbTx = m_evoDb.BeginTransaction();
@@ -1313,6 +1302,7 @@ bool CDeterministicMNManager::MigrateDBIfNeeded2()
     static const std::string DB_OLD_LIST_SNAPSHOT = "dmn_S2";
     static const std::string DB_OLD_LIST_DIFF = "dmn_D2";
     static const std::string DB_OLD_BEST_BLOCK = "b_b3";
+    const auto& consensusParams = Params().GetConsensus();
 
     LOCK(cs_main);
 
@@ -1341,7 +1331,7 @@ bool CDeterministicMNManager::MigrateDBIfNeeded2()
         return true;
     }
 
-    if (m_chainstate.m_chain.Tip()->pprev != nullptr && llmq::utils::IsV19Active(m_chainstate.m_chain.Tip()->pprev)) {
+    if (DeploymentActiveAt(*m_chainstate.m_chain.Tip(), consensusParams, Consensus::DEPLOYMENT_V19)) {
         // too late
         LogPrintf("CDeterministicMNManager::%s -- migration is not possible\n", __func__);
         return false;
@@ -1356,7 +1346,7 @@ bool CDeterministicMNManager::MigrateDBIfNeeded2()
     }
     m_evoDb.GetRawDB().Erase(DB_OLD_BEST_BLOCK);
 
-    if (m_chainstate.m_chain.Height() < Params().GetConsensus().DIP0003Height) {
+    if (!DeploymentActiveAt(*m_chainstate.m_chain.Tip(), consensusParams, Consensus::DEPLOYMENT_DIP0003)) {
         // not reached DIP3 height yet, so no upgrade needed
         LogPrintf("CDeterministicMNManager::%s -- migration not needed. dip3 not reached\n", __func__);
         auto dbTx = m_evoDb.BeginTransaction();
@@ -1509,21 +1499,35 @@ static bool CheckHashSig(const ProTx& proTx, const CBLSPublicKey& pubKey, TxVali
     return true;
 }
 
+template<typename ProTx>
+static std::optional<ProTx> GetValidatedPayload(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state)
+{
+    if (tx.nType != ProTx::SPECIALTX_TYPE) {
+        state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type");
+        return std::nullopt;
+    }
+
+    ProTx ptx;
+    if (!GetTxPayload(tx, ptx)) {
+        state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-payload");
+        return std::nullopt;
+    }
+    const bool is_basic_scheme_active{DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
+    if (!ptx.IsTriviallyValid(is_basic_scheme_active, state)) {
+        // pass the state returned by the function above
+        return std::nullopt;
+    }
+    return ptx;
+}
+
 bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs)
 {
-    if (tx.nType != TRANSACTION_PROVIDER_REGISTER) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type");
-    }
-
-    CProRegTx ptx;
-    if (!GetTxPayload(tx, ptx)) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-payload");
-    }
-
-    if (!ptx.IsTriviallyValid(llmq::utils::IsV19Active(pindexPrev), state)) {
+    const auto opt_ptx = GetValidatedPayload<CProRegTx>(tx, pindexPrev, state);
+    if (!opt_ptx) {
         // pass the state returned by the function above
         return false;
     }
+    const auto& ptx{*opt_ptx};
 
     // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be issues later
     // If any of both is set, it must be valid however
@@ -1603,7 +1607,7 @@ bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pin
             }
         }
 
-        if (!deterministicMNManager->IsDIP3Enforced(pindexPrev->nHeight)) {
+        if (!DeploymentDIP0003Enforced(pindexPrev->nHeight, Params().GetConsensus())) {
             if (ptx.keyIDOwner != ptx.keyIDVoting) {
                 return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-key-not-same");
             }
@@ -1633,19 +1637,12 @@ bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pin
 
 bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, bool check_sigs)
 {
-    if (tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type");
-    }
-
-    CProUpServTx ptx;
-    if (!GetTxPayload(tx, ptx)) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-payload");
-    }
-
-    if (!ptx.IsTriviallyValid(llmq::utils::IsV19Active(pindexPrev), state)) {
+    const auto opt_ptx = GetValidatedPayload<CProUpServTx>(tx, pindexPrev, state);
+    if (!opt_ptx) {
         // pass the state returned by the function above
         return false;
     }
+    const auto& ptx{*opt_ptx};
 
     if (!CheckService(ptx, state)) {
         // pass the state returned by the function above
@@ -1701,19 +1698,12 @@ bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> 
 
 bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs)
 {
-    if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type");
-    }
-
-    CProUpRegTx ptx;
-    if (!GetTxPayload(tx, ptx)) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-payload");
-    }
-
-    if (!ptx.IsTriviallyValid(llmq::utils::IsV19Active(pindexPrev), state)) {
+    const auto opt_ptx = GetValidatedPayload<CProUpRegTx>(tx, pindexPrev, state);
+    if (!opt_ptx) {
         // pass the state returned by the function above
         return false;
     }
+    const auto& ptx{*opt_ptx};
 
     CTxDestination payoutDest;
     if (!ExtractDestination(ptx.scriptPayout, payoutDest)) {
@@ -1754,7 +1744,7 @@ bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> p
         }
     }
 
-    if (!deterministicMNManager->IsDIP3Enforced(pindexPrev->nHeight)) {
+    if (!DeploymentDIP0003Enforced(pindexPrev->nHeight, Params().GetConsensus())) {
         if (dmn->pdmnState->keyIDOwner != ptx.keyIDVoting) {
             return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-key-not-same");
         }
@@ -1774,19 +1764,12 @@ bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> p
 
 bool CheckProUpRevTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, bool check_sigs)
 {
-    if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type");
-    }
-
-    CProUpRevTx ptx;
-    if (!GetTxPayload(tx, ptx)) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-payload");
-    }
-
-    if (!ptx.IsTriviallyValid(llmq::utils::IsV19Active(pindexPrev), state)) {
+    const auto opt_ptx = GetValidatedPayload<CProUpRevTx>(tx, pindexPrev, state);
+    if (!opt_ptx) {
         // pass the state returned by the function above
         return false;
     }
+    const auto& ptx{*opt_ptx};
 
     auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
     auto dmn = mnList.GetMN(ptx.proTxHash);

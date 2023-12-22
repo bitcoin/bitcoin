@@ -3,15 +3,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/ehf_signals.h>
-#include <llmq/utils.h>
 #include <llmq/quorums.h>
 #include <llmq/signing_shares.h>
 #include <llmq/commitment.h>
+#include <llmq/utils.h>
 
 #include <evo/mnhftx.h>
 #include <evo/specialtx.h>
 
 #include <consensus/validation.h>
+#include <deploymentstatus.h>
 #include <index/txindex.h> // g_txindex
 #include <primitives/transaction.h>
 #include <spork.h>
@@ -43,7 +44,9 @@ CEHFSignalsHandler::~CEHFSignalsHandler()
 
 void CEHFSignalsHandler::UpdatedBlockTip(const CBlockIndex* const pindexNew)
 {
-    if (!fMasternodeMode || !llmq::utils::IsV20Active(pindexNew) || (Params().IsTestChain() && !sporkman.IsSporkActive(SPORK_24_TEST_EHF))) {
+    if (!DeploymentActiveAfter(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) return;
+
+    if (!fMasternodeMode || (Params().IsTestChain() && !sporkman.IsSporkActive(SPORK_24_TEST_EHF))) {
         return;
     }
 

@@ -7,6 +7,7 @@
 #include <base58.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <deploymentstatus.h>
 #include <messagesigner.h>
 #include <netbase.h>
 #include <policy/policy.h>
@@ -21,7 +22,6 @@
 #include <evo/deterministicmns.h>
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
-#include <llmq/utils.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -267,7 +267,7 @@ void FuncDIP3Activation(TestChainSetup& setup)
 
 void FuncV19Activation(TestChainSetup& setup)
 {
-    BOOST_ASSERT(!llmq::utils::IsV19Active(::ChainActive().Tip()));
+    BOOST_ASSERT(!DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
 
     // create
     auto utxos = BuildSimpleUtxoMap(setup.m_coinbase_txns);
@@ -283,7 +283,7 @@ void FuncV19Activation(TestChainSetup& setup)
 
     auto block = std::make_shared<CBlock>(setup.CreateBlock({tx_reg}, setup.coinbaseKey));
     BOOST_ASSERT(Assert(setup.m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
-    BOOST_ASSERT(!llmq::utils::IsV19Active(::ChainActive().Tip()));
+    BOOST_ASSERT(!DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
@@ -301,7 +301,7 @@ void FuncV19Activation(TestChainSetup& setup)
 
     block = std::make_shared<CBlock>(setup.CreateBlock({tx_upreg}, setup.coinbaseKey));
     BOOST_ASSERT(Assert(setup.m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
-    BOOST_ASSERT(!llmq::utils::IsV19Active(::ChainActive().Tip()));
+    BOOST_ASSERT(!DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
@@ -321,7 +321,7 @@ void FuncV19Activation(TestChainSetup& setup)
     BOOST_ASSERT(SignSignature(signing_provider, CTransaction(tx_reg), tx_spend, 0, SIGHASH_ALL));
     block = std::make_shared<CBlock>(setup.CreateBlock({tx_spend}, setup.coinbaseKey));
     BOOST_ASSERT(Assert(setup.m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
-    BOOST_ASSERT(!llmq::utils::IsV19Active(::ChainActive().Tip()));
+    BOOST_ASSERT(!DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
@@ -333,7 +333,7 @@ void FuncV19Activation(TestChainSetup& setup)
 
     // mine another block so that it's not the last one before V19
     setup.CreateAndProcessBlock({}, setup.coinbaseKey);
-    BOOST_ASSERT(!llmq::utils::IsV19Active(::ChainActive().Tip()));
+    BOOST_ASSERT(!DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
@@ -345,7 +345,7 @@ void FuncV19Activation(TestChainSetup& setup)
 
     // this block should activate V19
     setup.CreateAndProcessBlock({}, setup.coinbaseKey);
-    BOOST_ASSERT(llmq::utils::IsV19Active(::ChainActive().Tip()));
+    BOOST_ASSERT(DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
     deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
@@ -365,7 +365,7 @@ void FuncV19Activation(TestChainSetup& setup)
     for (int i = 0; i < 10; ++i)
     {
         setup.CreateAndProcessBlock({}, setup.coinbaseKey);
-        BOOST_ASSERT(llmq::utils::IsV19Active(::ChainActive().Tip()));
+        BOOST_ASSERT(DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
         BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 1 + i);
         deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
         deterministicMNManager->DoMaintenance();

@@ -18,6 +18,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <context.h>
+#include <deploymentstatus.h>
 #include <node/coinstats.h>
 #include <fs.h>
 #include <hash.h>
@@ -2109,9 +2110,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                             failed_verification = true;
                             break;
                         }
-
-                        bool v19active = llmq::utils::IsV19Active(tip);
-                        if (llmq::utils::IsV19Active(tip)) {
+                        const bool v19active{DeploymentActiveAfter(tip, chainparams.GetConsensus(), Consensus::DEPLOYMENT_V19)};
+                        if (v19active) {
                             bls::bls_legacy_scheme.store(false);
                             LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
                         }

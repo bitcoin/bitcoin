@@ -70,10 +70,10 @@ private:
     CAmount sessionUnlocked{0};
     CAmount platformReward{0};
 
-    const CBlockIndex *pindex{nullptr};
+    const CBlockIndex *pindexPrev{nullptr};
     const Consensus::Params& params;
 public:
-    explicit CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindex,
+    explicit CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindexPrev,
                              const Consensus::Params& consensusParams,
                              const CAmount blockSubsidy);
 
@@ -128,7 +128,7 @@ public:
     CCreditPool GetCreditPool(const CBlockIndex* block, const Consensus::Params& consensusParams);
 
 private:
-    std::optional<CCreditPool> GetFromCache(const CBlockIndex* const block_index);
+    std::optional<CCreditPool> GetFromCache(const CBlockIndex& block_index);
     void AddToCache(const uint256& block_hash, int height, const CCreditPool& pool);
 
     CCreditPool ConstructCreditPool(const CBlockIndex* block_index, CCreditPool prev, const Consensus::Params& consensusParams);

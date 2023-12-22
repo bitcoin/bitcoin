@@ -9,8 +9,9 @@
 #include <evo/specialtx.h>
 
 #include <chain.h>
+#include <chainparams.h>
 #include <consensus/validation.h>
-#include <llmq/utils.h>
+#include <deploymentstatus.h>
 #include <logging.h>
 #include <node/blockstorage.h>
 #include <validation.h>
@@ -80,11 +81,11 @@ std::string CCreditPool::ToString() const
             locked, currentLimit);
 }
 
-std::optional<CCreditPool> CCreditPoolManager::GetFromCache(const CBlockIndex* const block_index)
+std::optional<CCreditPool> CCreditPoolManager::GetFromCache(const CBlockIndex& block_index)
 {
-    if (!llmq::utils::IsV20Active(block_index)) return CCreditPool{};
+    if (!DeploymentActiveAt(block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) return CCreditPool{};
 
-    const uint256 block_hash = block_index->GetBlockHash();
+    const uint256 block_hash = block_index.GetBlockHash();
     CCreditPool pool;
     {
         LOCK(cache_mutex);
@@ -92,7 +93,7 @@ std::optional<CCreditPool> CCreditPoolManager::GetFromCache(const CBlockIndex* c
             return pool;
         }
     }
-    if (block_index->nHeight % DISK_SNAPSHOT_PERIOD == 0) {
+    if (block_index.nHeight % DISK_SNAPSHOT_PERIOD == 0) {
         if (evoDb.Read(std::make_pair(DB_CREDITPOOL_SNAPSHOT, block_hash), pool)) {
             LOCK(cache_mutex);
             creditPoolCache.insert(block_hash, pool);
@@ -202,10 +203,11 @@ CCreditPool CCreditPoolManager::GetCreditPool(const CBlockIndex* block_index, co
     std::stack<const CBlockIndex *> to_calculate;
 
     std::optional<CCreditPool> poolTmp;
-    while (!(poolTmp = GetFromCache(block_index)).has_value()) {
+    while (block_index != nullptr && !(poolTmp = GetFromCache(*block_index)).has_value()) {
         to_calculate.push(block_index);
         block_index = block_index->pprev;
     }
+    if (block_index == nullptr) poolTmp = CCreditPool{};
     while (!to_calculate.empty()) {
         poolTmp = ConstructCreditPool(to_calculate.top(), *poolTmp, consensusParams);
         to_calculate.pop();
@@ -218,16 +220,16 @@ CCreditPoolManager::CCreditPoolManager(CEvoDB& _evoDb)
 {
 }
 
-CCreditPoolDiff::CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindex, const Consensus::Params& consensusParams, const CAmount blockSubsidy) :
+CCreditPoolDiff::CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindexPrev, const Consensus::Params& consensusParams, const CAmount blockSubsidy) :
     pool(std::move(starter)),
-    pindex(pindex),
+    pindexPrev(pindexPrev),
     params(consensusParams)
 {
-    assert(pindex);
+    assert(pindexPrev);
 
-    if (llmq::utils::IsMNRewardReallocationActive(pindex)) {
+    if (DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_MN_RR)) {
         // We consider V20 active if mn_rr is active
-        platformReward = MasternodePayments::PlatformShare(GetMasternodePayment(pindex->nHeight, blockSubsidy, /*fV20Active=*/ true));
+        platformReward = MasternodePayments::PlatformShare(GetMasternodePayment(pindexPrev->nHeight + 1, blockSubsidy, /*fV20Active=*/ true));
     }
 }
 
@@ -274,7 +276,7 @@ bool CCreditPoolDiff::ProcessLockUnlockTransaction(const CTransaction& tx, TxVal
     if (tx.nVersion != 3) return true;
     if (tx.nType != TRANSACTION_ASSET_LOCK && tx.nType != TRANSACTION_ASSET_UNLOCK) return true;
 
-    if (!CheckAssetLockUnlockTx(tx, pindex, pool.indexes, state)) {
+    if (!CheckAssetLockUnlockTx(tx, pindexPrev, pool.indexes, state)) {
         // pass the state returned by the function above
         return false;
     }

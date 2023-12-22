@@ -29,7 +29,7 @@
 #include <util/thread.h>
 #include <util/time.h>
 #include <util/translation.h>
-#include <validation.h>
+#include <validation.h> // for fDIP0001ActiveAtTip
 
 #include <masternode/meta.h>
 #include <masternode/sync.h>

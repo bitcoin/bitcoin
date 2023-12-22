@@ -9,6 +9,7 @@
 
 #include <bls/bls.h>
 #include <chainparams.h>
+#include <deploymentstatus.h>
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
 #include <masternode/meta.h>
@@ -32,10 +33,18 @@ static constexpr int TESTNET_LLMQ_25_67_ACTIVATION_HEIGHT = 847000;
  */
 std::optional<std::pair<CBLSSignature, uint32_t>> GetNonNullCoinbaseChainlock(const CBlockIndex* pindex);
 
+static bool IsV19Active(gsl::not_null<const CBlockIndex*> pindexPrev)
+{
+    return DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V19);
+}
+
+static bool IsV20Active(gsl::not_null<const CBlockIndex*> pindexPrev)
+{
+    return DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V20);
+}
+
 namespace llmq
 {
-
-VersionBitsCache llmq_versionbitscache;
 
 namespace utils
 
@@ -677,39 +686,7 @@ bool IsQuorumRotationEnabled(const Consensus::LLMQParams& llmqParams, gsl::not_n
         return false;
     }
     // It should activate at least 1 block prior to the cycle start
-    return IsDIP0024Active(pindex->GetAncestor(cycleQuorumBaseHeight - 1));
-}
-
-bool IsDIP0024Active(gsl::not_null<const CBlockIndex*> pindex)
-{
-    return pindex->nHeight + 1 >= Params().GetConsensus().DIP0024Height;
-}
-
-bool IsV19Active(gsl::not_null<const CBlockIndex*> pindex)
-{
-    return pindex->nHeight + 1 >= Params().GetConsensus().V19Height;
-}
-
-bool IsV20Active(gsl::not_null<const CBlockIndex*> pindex)
-{
-    return llmq_versionbitscache.State(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20) == ThresholdState::ACTIVE;
-}
-
-bool IsMNRewardReallocationActive(gsl::not_null<const CBlockIndex*> pindex)
-{
-    if (!IsV20Active(pindex)) return false;
-
-    return llmq_versionbitscache.State(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_MN_RR) == ThresholdState::ACTIVE;
-}
-
-ThresholdState GetV20State(gsl::not_null<const CBlockIndex*> pindex)
-{
-    return llmq_versionbitscache.State(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20);
-}
-
-int GetV20Since(gsl::not_null<const CBlockIndex*> pindex)
-{
-    return llmq_versionbitscache.StateSinceHeight(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20);
+    return DeploymentActiveAfter(pindex->GetAncestor(cycleQuorumBaseHeight - 1), Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0024);
 }
 
 uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2)
@@ -941,16 +918,17 @@ bool IsQuorumActive(Consensus::LLMQType llmqType, const CQuorumManager& qman, co
     return ranges::any_of(quorums, [&quorumHash](const auto& q){ return q->qc->quorumHash == quorumHash; });
 }
 
-bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindex)
+bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindexPrev)
 {
-    return IsQuorumTypeEnabledInternal(llmqType, qman, pindex, std::nullopt, std::nullopt);
+    return IsQuorumTypeEnabledInternal(llmqType, qman, pindexPrev, std::nullopt, std::nullopt);
 }
 
-bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindex,
+bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindexPrev,
                                 std::optional<bool> optDIP0024IsActive, std::optional<bool> optHaveDIP0024Quorums)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
 
+    const bool fDIP0024IsActive{optDIP0024IsActive.value_or(DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0024))};
     switch (llmqType)
     {
         case Consensus::LLMQType::LLMQ_DEVNET:
@@ -959,12 +937,10 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumMana
             if (Params().NetworkIDString() == CBaseChainParams::TESTNET) return true;
             // fall through
         case Consensus::LLMQType::LLMQ_TEST_INSTANTSEND: {
-            bool fDIP0024IsActive = optDIP0024IsActive.has_value() ? *optDIP0024IsActive : IsDIP0024Active(pindex);
             if (!fDIP0024IsActive) return true;
 
-            bool fHaveDIP0024Quorums = optHaveDIP0024Quorums.has_value() ? *optHaveDIP0024Quorums
-                                                                         : !qman.ScanQuorums(
-                            consensusParams.llmqTypeDIP0024InstantSend, pindex, 1).empty();
+            const bool fHaveDIP0024Quorums{optHaveDIP0024Quorums.value_or(!qman.ScanQuorums(
+                            consensusParams.llmqTypeDIP0024InstantSend, pindexPrev, 1).empty())};
             return !fHaveDIP0024Quorums;
         }
         case Consensus::LLMQType::LLMQ_TEST:
@@ -975,19 +951,18 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumMana
             return true;
 
         case Consensus::LLMQType::LLMQ_TEST_V17: {
-            return llmq_versionbitscache.State(pindex, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY) == ThresholdState::ACTIVE;
+            return DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
         }
         case Consensus::LLMQType::LLMQ_100_67:
-            return pindex->nHeight + 1 >= consensusParams.DIP0020Height;
+            return DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0020);
 
         case Consensus::LLMQType::LLMQ_60_75:
         case Consensus::LLMQType::LLMQ_DEVNET_DIP0024:
         case Consensus::LLMQType::LLMQ_TEST_DIP0024: {
-            bool fDIP0024IsActive = optDIP0024IsActive.has_value() ? *optDIP0024IsActive : IsDIP0024Active(pindex);
             return fDIP0024IsActive;
         }
         case Consensus::LLMQType::LLMQ_25_67:
-            return pindex->nHeight >= TESTNET_LLMQ_25_67_ACTIVATION_HEIGHT;
+            return pindexPrev->nHeight >= TESTNET_LLMQ_25_67_ACTIVATION_HEIGHT;
 
         default:
             throw std::runtime_error(strprintf("%s: Unknown LLMQ type %d", __func__, ToUnderlying(llmqType)));

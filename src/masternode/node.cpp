@@ -7,6 +7,7 @@
 #include <evo/deterministicmns.h>
 
 #include <chainparams.h>
+#include <deploymentstatus.h>
 #include <net.h>
 #include <netbase.h>
 #include <protocol.h>
@@ -68,7 +69,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 
     if (!fMasternodeMode) return;
 
-    if (!deterministicMNManager->IsDIP3Enforced(pindex->nHeight)) return;
+    if (!DeploymentDIP0003Enforced(pindex->nHeight, Params().GetConsensus())) return;
 
     // Check that our local network configuration is correct
     if (!fListen && Params().RequireRoutableExternalIP()) {
@@ -141,7 +142,7 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
 
     if (!fMasternodeMode) return;
 
-    if (!deterministicMNManager->IsDIP3Enforced(pindexNew->nHeight)) return;
+    if (!DeploymentDIP0003Enforced(pindexNew->nHeight, Params().GetConsensus())) return;
 
     if (state == MASTERNODE_READY) {
         auto oldMNList = deterministicMNManager->GetListForBlock(pindexNew->pprev);

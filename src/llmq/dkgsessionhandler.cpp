@@ -12,6 +12,7 @@
 
 #include <evo/deterministicmns.h>
 
+#include <deploymentstatus.h>
 #include <masternode/node.h>
 #include <chainparams.h>
 #include <net_processing.h>
@@ -168,7 +169,7 @@ bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex)
 {
     curSession = std::make_unique<CDKGSession>(params, blsWorker, dkgManager, dkgDebugManager, connman);
 
-    if (!deterministicMNManager->IsDIP3Enforced(pQuorumBaseBlockIndex->nHeight)) {
+    if (!DeploymentDIP0003Enforced(pQuorumBaseBlockIndex->nHeight, Params().GetConsensus())) {
         return false;
     }
 

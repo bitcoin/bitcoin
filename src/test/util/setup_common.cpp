@@ -10,6 +10,7 @@
 #include <consensus/consensus.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
+#include <deploymentstatus.h>
 #include <crypto/sha256.h>
 #include <flat-database.h>
 #include <governance/governance.h>
@@ -27,7 +28,6 @@
 #include <llmq/signing.h>
 #include <llmq/signing_shares.h>
 #include <llmq/snapshot.h>
-#include <llmq/utils.h>
 #include <masternode/sync.h>
 #include <miner.h>
 #include <net.h>
@@ -464,14 +464,14 @@ CBlock getBlock13b8a()
 
 TestChainV19Setup::TestChainV19Setup() : TestChainSetup(899)
 {
-    bool v19_just_activated = llmq::utils::IsV19Active(::ChainActive().Tip()) &&
-                              !llmq::utils::IsV19Active(::ChainActive().Tip()->pprev);
+    bool v19_just_activated{DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19) &&
+                            !DeploymentActiveAt(*::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     assert(v19_just_activated);
 }
 
 // 5 blocks earlier
 TestChainV19BeforeActivationSetup::TestChainV19BeforeActivationSetup() : TestChainSetup(894)
 {
-    bool v19_active = llmq::utils::IsV19Active(::ChainActive().Tip());
+    bool v19_active{DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     assert(!v19_active);
 }

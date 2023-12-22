@@ -13,6 +13,7 @@
 #include <chainparams.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
+#include <deploymentstatus.h>
 #include <net.h>
 #include <net_processing.h>
 #include <primitives/block.h>
@@ -708,7 +709,7 @@ std::optional<std::vector<CFinalCommitment>> CQuorumBlockProcessor::GetMineableC
     const auto *const pindex = m_chainstate.m_chain.Height() < nHeight ? m_chainstate.m_chain.Tip() : m_chainstate.m_chain.Tip()->GetAncestor(nHeight);
 
     bool rotation_enabled = utils::IsQuorumRotationEnabled(llmqParams, pindex);
-    bool basic_bls_enabled = utils::IsV19Active(pindex);
+    bool basic_bls_enabled{DeploymentActiveAfter(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     size_t quorums_num = rotation_enabled ? llmqParams.signingActiveQuorumCount : 1;
 
     std::stringstream ss;

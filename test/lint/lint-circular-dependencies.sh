@@ -100,7 +100,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "governance/object -> validationinterface -> governance/object"
     "governance/vote -> validation -> validationinterface -> governance/vote"
     "llmq/signing -> masternode/node -> validationinterface -> llmq/signing"
-    "llmq/utils -> validation -> llmq/utils"
     "evo/mnhftx -> validation -> evo/mnhftx"
     "evo/deterministicmns -> validation -> evo/deterministicmns"
 )

@@ -7,12 +7,12 @@
 #include <amount.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <deploymentstatus.h>
 #include <evo/deterministicmns.h>
 #include <governance/classes.h>
 #include <governance/governance.h>
 #include <key_io.h>
 #include <logging.h>
-#include <llmq/utils.h>
 #include <masternode/sync.h>
 #include <primitives/block.h>
 #include <script/standard.h>
@@ -29,11 +29,12 @@
     voutMasternodePaymentsRet.clear();
 
     const int nBlockHeight = pindexPrev  == nullptr ? 0 : pindexPrev->nHeight + 1;
+    const Consensus::Params& consensusParams = Params().GetConsensus();
 
-    bool fV20Active =  llmq::utils::IsV20Active(pindexPrev);
+    bool fV20Active = DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20);
     CAmount masternodeReward = GetMasternodePayment(nBlockHeight, blockSubsidy + feeReward, fV20Active);
 
-    if (llmq::utils::IsMNRewardReallocationActive(pindexPrev)) {
+    if (DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_MN_RR)) {
         CAmount masternodeSubsidyReward = GetMasternodePayment(nBlockHeight, blockSubsidy, fV20Active);
         const CAmount platformReward = MasternodePayments::PlatformShare(masternodeSubsidyReward);
         masternodeReward -= platformReward;
@@ -97,7 +98,7 @@
 [[nodiscard]] static bool IsTransactionValid(const CTransaction& txNew, const CBlockIndex* const pindexPrev, const CAmount blockSubsidy, const CAmount feeReward)
 {
     const int nBlockHeight = pindexPrev  == nullptr ? 0 : pindexPrev->nHeight + 1;
-    if (!deterministicMNManager->IsDIP3Enforced(nBlockHeight)) {
+    if (!DeploymentDIP0003Enforced(nBlockHeight, Params().GetConsensus())) {
         // can't verify historical blocks here
         return true;
     }

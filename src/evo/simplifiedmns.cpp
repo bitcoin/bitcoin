@@ -6,11 +6,11 @@
 
 #include <evo/cbtx.h>
 #include <core_io.h>
+#include <deploymentstatus.h>
 #include <evo/deterministicmns.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/commitment.h>
 #include <llmq/quorums.h>
-#include <llmq/utils.h>
 #include <node/blockstorage.h>
 #include <evo/specialtx.h>
 
@@ -363,7 +363,7 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
         return false;
     }
 
-    if (llmq::utils::IsV20Active(blockIndex)) {
+    if (DeploymentActiveAfter(blockIndex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) {
         if (!mnListDiffRet.BuildQuorumChainlockInfo(blockIndex)) {
             errorRet = strprintf("failed to build quorums chainlocks info");
             return false;

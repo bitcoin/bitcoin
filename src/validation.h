@@ -766,7 +766,7 @@ public:
         size_t max_mempool_size_bytes) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Return list of MN EHF signals for current Tip() */
-    std::unordered_map<uint8_t, int> GetMNHFSignalsStage(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    std::unordered_map<uint8_t, int> GetMNHFSignalsStage(const CBlockIndex* pindex);
 
     std::string ToString() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 private:

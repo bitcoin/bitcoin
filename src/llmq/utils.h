@@ -29,11 +29,6 @@ namespace llmq
 class CQuorumManager;
 class CQuorumSnapshot;
 
-// A separate cache instance instead of versionbitscache has been introduced to avoid locking cs_main
-// and dealing with all kinds of deadlocks.
-// TODO: drop llmq_versionbitscache completely so far as VersionBitsCache do not uses anymore cs_main
-extern VersionBitsCache llmq_versionbitscache;
-
 static const bool DEFAULT_ENABLE_QUORUM_DATA_RECOVERY = true;
 
 enum class QvvecSyncMode {
@@ -63,19 +58,13 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, gsl::not_n
 void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, CConnman& connman, const uint256& myProTxHash);
 
 bool IsQuorumActive(Consensus::LLMQType llmqType, const CQuorumManager& qman, const uint256& quorumHash);
-bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindex);
-bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindex, std::optional<bool> optDIP0024IsActive, std::optional<bool> optHaveDIP0024Quorums);
+bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindexPrev);
+bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumManager& qman, gsl::not_null<const CBlockIndex*> pindexPrev, std::optional<bool> optDIP0024IsActive, std::optional<bool> optHaveDIP0024Quorums);
 
 std::vector<Consensus::LLMQType> GetEnabledQuorumTypes(gsl::not_null<const CBlockIndex*> pindex);
 std::vector<std::reference_wrapper<const Consensus::LLMQParams>> GetEnabledQuorumParams(gsl::not_null<const CBlockIndex*> pindex);
 
 bool IsQuorumRotationEnabled(const Consensus::LLMQParams& llmqParams, gsl::not_null<const CBlockIndex*> pindex);
-bool IsDIP0024Active(gsl::not_null<const CBlockIndex*> pindex);
-bool IsV19Active(gsl::not_null<const CBlockIndex*> pindex);
-bool IsV20Active(gsl::not_null<const CBlockIndex*> pindex);
-bool IsMNRewardReallocationActive(gsl::not_null<const CBlockIndex*> pindex);
-ThresholdState GetV20State(gsl::not_null<const CBlockIndex*> pindex);
-int GetV20Since(gsl::not_null<const CBlockIndex*> pindex);
 
 /// Returns the state of `-llmq-data-recovery`
 bool QuorumDataRecoveryEnabled();
