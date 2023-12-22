@@ -6,7 +6,7 @@ $(package)_sha256_hash=d4d46c64622f13d6938cecf989046d9561011bb59e8ee835f8f39825d
 $(package)_patches=disable_zlib.patch
 
 ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
-$(package)_dependencies=native_clang
+$(package)_dependencies=native_llvm
 endif
 
 define $(package)_preprocess_cmds
