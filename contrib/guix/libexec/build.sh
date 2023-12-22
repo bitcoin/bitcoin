@@ -173,16 +173,6 @@ esac
 # Environment variables for determinism
 export TAR_OPTIONS="--owner=0 --group=0 --numeric-owner --mtime='@${SOURCE_DATE_EPOCH}' --sort=name"
 export TZ="UTC"
-case "$HOST" in
-    *darwin*)
-        # cctools AR, unlike GNU binutils AR, does not have a deterministic mode
-        # or a configure flag to enable determinism by default, it only
-        # understands if this env-var is set or not. See:
-        #
-        # https://github.com/tpoechtrager/cctools-port/blob/55562e4073dea0fbfd0b20e0bf69ffe6390c7f97/cctools/ar/archive.c#L334
-        export ZERO_AR_DATE=yes
-        ;;
-esac
 
 ####################
 # Depends Building #

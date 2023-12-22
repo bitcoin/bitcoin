@@ -63,9 +63,6 @@ functionality so that a vanilla clang can take advantage. It supports the use of
 `-target`, `-mmacosx-version-min`, and `-isysroot`, which are all necessary when
 building for macOS.
 
-These tools inject timestamps by default, which produce non-deterministic binaries. The
-`ZERO_AR_DATE` environment variable is used to disable that.
-
 To complicate things further, all builds must target an Apple SDK. These SDKs are free to
 download, but not redistributable. See the SDK Extraction notes above for how to obtain it.
 
