@@ -24,8 +24,9 @@
 
 
 namespace wallet {
-static void ParseRecipients(const UniValue& address_amounts, const UniValue& subtract_fee_outputs, std::vector<CRecipient>& recipients)
+std::vector<CRecipient> CreateRecipients(const UniValue& address_amounts, const UniValue& subtract_fee_outputs)
 {
+    std::vector<CRecipient> recipients;
     std::set<CTxDestination> destinations;
     int i = 0;
     for (const std::string& address: address_amounts.getKeys()) {
@@ -52,6 +53,7 @@ static void ParseRecipients(const UniValue& address_amounts, const UniValue& sub
         CRecipient recipient = {dest, amount, subtract_fee};
         recipients.push_back(recipient);
     }
+    return recipients;
 }
 
 static void InterpretFeeEstimationInstructions(const UniValue& conf_target, const UniValue& estimate_mode, const UniValue& fee_rate, UniValue& options)
@@ -301,8 +303,7 @@ RPCHelpMan sendtoaddress()
         subtractFeeFromAmount.push_back(address);
     }
 
-    std::vector<CRecipient> recipients;
-    ParseRecipients(address_amounts, subtractFeeFromAmount, recipients);
+    std::vector<CRecipient> recipients = CreateRecipients(address_amounts, subtractFeeFromAmount);
     const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
 
     return SendMoney(*pwallet, coin_control, recipients, mapValue, verbose);
@@ -397,8 +398,7 @@ RPCHelpMan sendmany()
 
     SetFeeEstimateMode(*pwallet, coin_control, /*conf_target=*/request.params[6], /*estimate_mode=*/request.params[7], /*fee_rate=*/request.params[8], /*override_min_fee=*/false);
 
-    std::vector<CRecipient> recipients;
-    ParseRecipients(sendTo, subtractFeeFromAmount, recipients);
+    std::vector<CRecipient> recipients = CreateRecipients(sendTo, subtractFeeFromAmount);
     const bool verbose{request.params[9].isNull() ? false : request.params[9].get_bool()};
 
     return SendMoney(*pwallet, coin_control, recipients, std::move(mapValue), verbose);
