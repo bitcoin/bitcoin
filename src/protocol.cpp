@@ -9,8 +9,6 @@
 
 #include <atomic>
 
-static std::atomic<bool> g_initial_block_download_completed(false);
-
 namespace NetMsgType {
 const char* VERSION = "version";
 const char* VERACK = "verack";
@@ -124,12 +122,6 @@ bool CMessageHeader::IsCommandValid() const
 
     return true;
 }
-
-void SetServiceFlagsIBDCache(bool state) {
-    g_initial_block_download_completed = state;
-}
-
-bool GetServicesFlagsIBDCache() { return g_initial_block_download_completed; }
 
 CInv::CInv()
 {

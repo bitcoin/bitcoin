@@ -2086,7 +2086,6 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
 void PeerManagerImpl::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
     SetBestBlock(pindexNew->nHeight, std::chrono::seconds{pindexNew->GetBlockTime()});
-    SetServiceFlagsIBDCache(!fInitialDownload);
 
     // Don't relay inventory during initial block download.
     if (fInitialDownload) return;
