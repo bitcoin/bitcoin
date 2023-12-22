@@ -130,6 +130,7 @@ static RPCHelpMan getwalletinfo()
     }
     obj.pushKV("descriptors", pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
     obj.pushKV("external_signer", pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
+    obj.pushKV("blsct", pwallet->IsWalletFlagSet(WALLET_FLAG_BLSCT));
 
     AppendLastProcessedBlock(obj, *pwallet);
     return obj;
@@ -349,92 +350,88 @@ static RPCHelpMan createwallet()
                                                                        " support for creating and opening legacy wallets will be removed in the future."},
             {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
             {"external_signer", RPCArg::Type::BOOL, RPCArg::Default{false}, "Use an external signer such as a hardware wallet. Requires -signer to be configured. Wallet creation will fail if keys cannot be fetched. Requires disable_private_keys and descriptors set to true."},
+            {"blsct", RPCArg::Type::BOOL, RPCArg::Default{false}, "Create a wallet with BLSCT keys."},
         },
         RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "name", "The wallet name if created successfully. If the wallet was created using a full path, the wallet_name will be the full path."},
-                {RPCResult::Type::STR, "warning", /*optional=*/true, "Warning messages, if any, related to creating the wallet. Multiple messages will be delimited by newlines. (DEPRECATED, returned only if config option -deprecatedrpc=walletwarningfield is passed.)"},
-                {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Warning messages, if any, related to creating the wallet.",
-                {
-                    {RPCResult::Type::STR, "", ""},
-                }},
+            RPCResult::Type::OBJ, "", "", {
+                                              {RPCResult::Type::STR, "name", "The wallet name if created successfully. If the wallet was created using a full path, the wallet_name will be the full path."},
+                                              {RPCResult::Type::STR, "warning", /*optional=*/true, "Warning messages, if any, related to creating the wallet. Multiple messages will be delimited by newlines. (DEPRECATED, returned only if config option -deprecatedrpc=walletwarningfield is passed.)"},
+                                              {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Warning messages, if any, related to creating the wallet.", {
+                                                                                                                                                                     {RPCResult::Type::STR, "", ""},
+                                                                                                                                                                 }},
+                                          }},
+        RPCExamples{HelpExampleCli("createwallet", "\"testwallet\"") + HelpExampleRpc("createwallet", "\"testwallet\"") + HelpExampleCliNamed("createwallet", {{"wallet_name", "descriptors"}, {"avoid_reuse", true}, {"descriptors", true}, {"load_on_startup", true}}) + HelpExampleRpcNamed("createwallet", {{"wallet_name", "descriptors"}, {"avoid_reuse", true}, {"descriptors", true}, {"load_on_startup", true}})},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            WalletContext& context = EnsureWalletContext(request.context);
+            uint64_t flags = 0;
+            if (!request.params[1].isNull() && request.params[1].get_bool()) {
+                flags |= WALLET_FLAG_DISABLE_PRIVATE_KEYS;
             }
-        },
-        RPCExamples{
-            HelpExampleCli("createwallet", "\"testwallet\"")
-            + HelpExampleRpc("createwallet", "\"testwallet\"")
-            + HelpExampleCliNamed("createwallet", {{"wallet_name", "descriptors"}, {"avoid_reuse", true}, {"descriptors", true}, {"load_on_startup", true}})
-            + HelpExampleRpcNamed("createwallet", {{"wallet_name", "descriptors"}, {"avoid_reuse", true}, {"descriptors", true}, {"load_on_startup", true}})
-        },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    WalletContext& context = EnsureWalletContext(request.context);
-    uint64_t flags = 0;
-    if (!request.params[1].isNull() && request.params[1].get_bool()) {
-        flags |= WALLET_FLAG_DISABLE_PRIVATE_KEYS;
-    }
 
-    if (!request.params[2].isNull() && request.params[2].get_bool()) {
-        flags |= WALLET_FLAG_BLANK_WALLET;
-    }
-    SecureString passphrase;
-    passphrase.reserve(100);
-    std::vector<bilingual_str> warnings;
-    if (!request.params[3].isNull()) {
-        passphrase = std::string_view{request.params[3].get_str()};
-        if (passphrase.empty()) {
-            // Empty string means unencrypted
-            warnings.emplace_back(Untranslated("Empty string given as passphrase, wallet will not be encrypted."));
-        }
-    }
+            if (!request.params[2].isNull() && request.params[2].get_bool()) {
+                flags |= WALLET_FLAG_BLANK_WALLET;
+            }
+            SecureString passphrase;
+            passphrase.reserve(100);
+            std::vector<bilingual_str> warnings;
+            if (!request.params[3].isNull()) {
+                passphrase = std::string_view{request.params[3].get_str()};
+                if (passphrase.empty()) {
+                    // Empty string means unencrypted
+                    warnings.emplace_back(Untranslated("Empty string given as passphrase, wallet will not be encrypted."));
+                }
+            }
 
-    if (!request.params[4].isNull() && request.params[4].get_bool()) {
-        flags |= WALLET_FLAG_AVOID_REUSE;
-    }
-    if (request.params[5].isNull() || request.params[5].get_bool()) {
+            if (!request.params[4].isNull() && request.params[4].get_bool()) {
+                flags |= WALLET_FLAG_AVOID_REUSE;
+            }
+            if (request.params[5].isNull() || request.params[5].get_bool()) {
 #ifndef USE_SQLITE
-        throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without sqlite support (required for descriptor wallets)");
+                throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without sqlite support (required for descriptor wallets)");
 #endif
-        flags |= WALLET_FLAG_DESCRIPTORS;
-    }
-    if (!request.params[7].isNull() && request.params[7].get_bool()) {
+                flags |= WALLET_FLAG_DESCRIPTORS;
+            }
+            if (!request.params[7].isNull() && request.params[7].get_bool()) {
 #ifdef ENABLE_EXTERNAL_SIGNER
-        flags |= WALLET_FLAG_EXTERNAL_SIGNER;
+                flags |= WALLET_FLAG_EXTERNAL_SIGNER;
 #else
-        throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without external signing support (required for external signing)");
+                throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without external signing support (required for external signing)");
 #endif
-    }
+            }
 
 #ifndef USE_BDB
-    if (!(flags & WALLET_FLAG_DESCRIPTORS)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without bdb support (required for legacy wallets)");
-    }
+            if (!(flags & WALLET_FLAG_DESCRIPTORS)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without bdb support (required for legacy wallets)");
+            }
 #endif
 
-    DatabaseOptions options;
-    DatabaseStatus status;
-    ReadDatabaseArgs(*context.args, options);
-    options.require_create = true;
-    options.create_flags = flags;
-    options.create_passphrase = passphrase;
-    bilingual_str error;
-    std::optional<bool> load_on_start = request.params[6].isNull() ? std::nullopt : std::optional<bool>(request.params[6].get_bool());
-    const std::shared_ptr<CWallet> wallet = CreateWallet(context, request.params[0].get_str(), load_on_start, options, status, error, warnings);
-    if (!wallet) {
-        RPCErrorCode code = status == DatabaseStatus::FAILED_ENCRYPT ? RPC_WALLET_ENCRYPTION_FAILED : RPC_WALLET_ERROR;
-        throw JSONRPCError(code, error.original);
-    }
+            if (!request.params[8].isNull() && request.params[8].get_bool()) {
+                flags |= WALLET_FLAG_BLSCT;
+            }
 
-    UniValue obj(UniValue::VOBJ);
-    obj.pushKV("name", wallet->GetName());
-    if (wallet->chain().rpcEnableDeprecated("walletwarningfield")) {
-        obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
-    }
-    PushWarnings(warnings, obj);
+            DatabaseOptions options;
+            DatabaseStatus status;
+            ReadDatabaseArgs(*context.args, options);
+            options.require_create = true;
+            options.create_flags = flags;
+            options.create_passphrase = passphrase;
+            bilingual_str error;
+            std::optional<bool> load_on_start = request.params[6].isNull() ? std::nullopt : std::optional<bool>(request.params[6].get_bool());
+            const std::shared_ptr<CWallet> wallet = CreateWallet(context, request.params[0].get_str(), load_on_start, options, status, error, warnings);
+            if (!wallet) {
+                RPCErrorCode code = status == DatabaseStatus::FAILED_ENCRYPT ? RPC_WALLET_ENCRYPTION_FAILED : RPC_WALLET_ERROR;
+                throw JSONRPCError(code, error.original);
+            }
 
-    return obj;
-},
+            UniValue obj(UniValue::VOBJ);
+            obj.pushKV("name", wallet->GetName());
+            if (wallet->chain().rpcEnableDeprecated("walletwarningfield")) {
+                obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
+            }
+            PushWarnings(warnings, obj);
+
+            return obj;
+        },
     };
 }
 
