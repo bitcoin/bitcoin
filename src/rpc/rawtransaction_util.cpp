@@ -97,15 +97,12 @@ UniValue NormalizeOutputs(const UniValue& outputs_in)
     return outputs;
 }
 
-void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
+std::vector<std::pair<CTxDestination, CAmount>> ParseOutputs(const UniValue& outputs)
 {
-    UniValue outputs(UniValue::VOBJ);
-    outputs = NormalizeOutputs(outputs_in);
-
     // Duplicate checking
     std::set<CTxDestination> destinations;
+    std::vector<std::pair<CTxDestination, CAmount>> parsed_outputs;
     bool has_data{false};
-
     for (const std::string& name_ : outputs.getKeys()) {
         if (name_ == "data") {
             if (has_data) {
@@ -113,11 +110,12 @@ void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
             }
             has_data = true;
             std::vector<unsigned char> data = ParseHexV(outputs[name_].getValStr(), "Data");
-
-            CTxOut out(0, CScript() << OP_RETURN << data);
-            rawTx.vout.push_back(out);
+            CTxDestination destination{CNoDestination{CScript() << OP_RETURN << data}};
+            CAmount amount{0};
+            parsed_outputs.emplace_back(destination, amount);
         } else {
-            CTxDestination destination = DecodeDestination(name_);
+            CTxDestination destination{DecodeDestination(name_)};
+            CAmount amount{AmountFromValue(outputs[name_])};
             if (!IsValidDestination(destination)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + name_);
             }
@@ -125,13 +123,23 @@ void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
             if (!destinations.insert(destination).second) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + name_);
             }
-
-            CScript scriptPubKey = GetScriptForDestination(destination);
-            CAmount nAmount = AmountFromValue(outputs[name_]);
-
-            CTxOut out(nAmount, scriptPubKey);
-            rawTx.vout.push_back(out);
+            parsed_outputs.emplace_back(destination, amount);
         }
+    }
+    return parsed_outputs;
+}
+
+void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
+{
+    UniValue outputs(UniValue::VOBJ);
+    outputs = NormalizeOutputs(outputs_in);
+
+    std::vector<std::pair<CTxDestination, CAmount>> parsed_outputs = ParseOutputs(outputs);
+    for (const auto& [destination, nAmount] : parsed_outputs) {
+        CScript scriptPubKey = GetScriptForDestination(destination);
+
+        CTxOut out(nAmount, scriptPubKey);
+        rawTx.vout.push_back(out);
     }
 }
 
