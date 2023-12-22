@@ -53,6 +53,29 @@ bool TxFactory::AddInput(const CCoinsViewCache& cache, const COutPoint& outpoint
 
     return true;
 }
+bool TxFactory::AddInput(wallet::CWallet* wallet, const COutPoint& outpoint, const bool& rbf)
+{
+    auto tx = wallet->GetWalletTx(outpoint.hash);
+
+    if (tx == nullptr)
+        return false;
+
+    auto out = tx->tx->vout[outpoint.n];
+
+    if (vInputs.count(out.tokenId) <= 0)
+        vInputs[out.tokenId] = std::vector<UnsignedInput>();
+
+    auto recoveredInfo = tx->GetBLSCTRecoveryData(outpoint.n);
+
+    vInputs[out.tokenId].push_back({CTxIn(outpoint, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL), recoveredInfo.amount, recoveredInfo.gamma, km->GetSpendingKeyForOutput(out)});
+
+    if (nAmounts.count(out.tokenId) <= 0)
+        nAmounts[out.tokenId] = {0, 0};
+
+    nAmounts[out.tokenId].nFromInputs += recoveredInfo.amount;
+
+    return true;
+}
 
 std::optional<CMutableTransaction> TxFactory::BuildTx()
 {
@@ -97,9 +120,6 @@ std::optional<CMutableTransaction> TxFactory::BuildTx()
 
         if (nFee == (long long)(BLSCT_DEFAULT_FEE * (tx.vin.size() + tx.vout.size() + 1))) {
             CTxOut fee_out{nFee, CScript(OP_RETURN)};
-            auto blindingKey = PrivateKey(Scalar::Rand());
-            fee_out.blsctData.ephemeralKey = blindingKey.GetPublicKey().GetG1Point();
-            txSigs.push_back(blindingKey.Sign(fee_out.GetHash()));
             tx.vout.push_back(fee_out);
             txSigs.push_back(PrivateKey(gammaAcc).SignBalance());
             tx.txSig = Signature::Aggregate(txSigs);
@@ -112,7 +132,7 @@ std::optional<CMutableTransaction> TxFactory::BuildTx()
     return std::nullopt;
 }
 
-std::optional<CMutableTransaction> TxFactory::CreateTransaction(std::shared_ptr<wallet::CWallet> wallet, blsct::KeyMan* blsct_km, const CCoinsViewCache& cache, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId)
+std::optional<CMutableTransaction> TxFactory::CreateTransaction(wallet::CWallet* wallet, blsct::KeyMan* blsct_km, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId)
 {
     wallet::CoinFilterParams coins_params;
     coins_params.min_amount = 0;
@@ -124,8 +144,7 @@ std::optional<CMutableTransaction> TxFactory::CreateTransaction(std::shared_ptr<
     for (const wallet::COutput& output : WITH_LOCK(wallet->cs_wallet,
                                                    return AvailableCoins(*wallet, nullptr, std::nullopt, coins_params))
                                              .All()) {
-        CHECK_NONFATAL(output.input_bytes > 0);
-        tx.AddInput(cache, COutPoint(output.outpoint.hash, output.outpoint.n));
+        tx.AddInput(wallet, COutPoint(output.outpoint.hash, output.outpoint.n));
 
         if (tx.nAmounts[tokenId].nFromInputs > nAmount + (long long)(BLSCT_DEFAULT_FEE * (tx.vInputs.size() + 3))) break;
     }

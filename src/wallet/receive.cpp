@@ -222,7 +222,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
     CAmount nDebit = CachedTxGetDebit(wallet, wtx, filter);
     if (nDebit > 0) // debit>0 means we signed/sent this transaction
     {
-        CAmount nValueOut = wtx.tx->GetValueOut();
+        CAmount nValueOut = wtx.GetValueOut();
         nFee = nDebit - nValueOut;
     }
 
@@ -246,14 +246,28 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
         // In either case, we need to get the destination address
         CTxDestination address;
 
-        if (!ExtractDestination(txout.scriptPubKey, address) && !txout.scriptPubKey.IsUnspendable())
-        {
-            wallet.WalletLogPrintf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
-                                    wtx.GetHash().ToString());
-            address = CNoDestination();
+        if (txout.IsBLSCT()) {
+            auto blsct_km = wallet.GetBLSCTKeyMan();
+            if (!blsct_km) {
+                address = CNoDestination();
+            } else {
+                auto hashId = blsct_km->GetHashId(txout);
+                blsct::SubAddress subAdd;
+                if (!blsct_km->GetSubAddress(hashId, subAdd)) {
+                    address = CNoDestination();
+                } else {
+                    address = CTxDestination(subAdd.GetKeys());
+                }
+            }
+        } else {
+            if (!ExtractDestination(txout.scriptPubKey, address) && !txout.scriptPubKey.IsUnspendable()) {
+                wallet.WalletLogPrintf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
+                                       wtx.GetHash().ToString());
+                address = CNoDestination();
+            }
         }
 
-        COutputEntry output = {address, txout.nValue, (int)i};
+        COutputEntry output = {address, txout.IsBLSCT() ? wtx.GetBLSCTRecoveryData(i).amount : txout.nValue, (int)i};
 
         // If we are debited by the transaction, add the output as a "sent" entry
         if (nDebit > 0)
@@ -291,7 +305,7 @@ bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uin
         if (parent == nullptr) return false;
         const CTxOut& parentOut = parent->tx->vout[txin.prevout.n];
         // Check that this specific input being spent is trusted
-        if (wallet.IsMine(parentOut) != ISMINE_SPENDABLE) return false;
+        if (wallet.IsMine(parentOut) != ISMINE_SPENDABLE || wallet.IsMine(parentOut) != ISMINE_SPENDABLE_BLSCT) return false;
         // If we've already trusted this parent, continue
         if (trusted_parents.count(parent->GetHash())) continue;
         // Recurse to check that the parent is also trusted
@@ -330,7 +344,7 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
                 ret.m_mine_untrusted_pending += tx_credit_mine;
                 ret.m_watchonly_untrusted_pending += tx_credit_watchonly;
             }
-            ret.m_mine_immature += CachedTxGetImmatureCredit(wallet, wtx, ISMINE_SPENDABLE);
+            ret.m_mine_immature += CachedTxGetImmatureCredit(wallet, wtx, ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT);
             ret.m_watchonly_immature += CachedTxGetImmatureCredit(wallet, wtx, ISMINE_WATCH_ONLY);
         }
     }

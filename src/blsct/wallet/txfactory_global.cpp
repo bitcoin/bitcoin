@@ -92,11 +92,17 @@ CTransactionRef AggregateTransactions(const std::vector<CTransactionRef>& txs)
     std::vector<Signature> vSigs;
     CAmount nFee = 0;
     bool fCommitmentAdded = false;
+    bool fCoinbaseAdded = false;
 
     for (auto& tx : txs) {
         vSigs.push_back(tx->txSig);
         for (auto& in : tx->vin) {
-            ret.vin.push_back(in);
+            if (!fCoinbaseAdded && in.prevout.IsNull()) {
+                fCoinbaseAdded = true;
+                ret.vin.insert(ret.vin.begin(), in);
+            } else {
+                ret.vin.push_back(in);
+            }
         }
         for (auto& out : tx->vout) {
             if (out.IsBLSCT())
@@ -111,14 +117,15 @@ CTransactionRef AggregateTransactions(const std::vector<CTransactionRef>& txs)
                      out.scriptPubKey[5] == 0xed) {
                 ret.vout.push_back(out);
                 fCommitmentAdded = true;
-            } else if (out.scriptPubKey.IsUnspendable())
-                nFee = out.nValue;
+            } else if (out.scriptPubKey.IsFee())
+                nFee += out.nValue;
         }
     }
 
     ret.vout.push_back(CTxOut{nFee, CScript{OP_RETURN}});
 
     ret.txSig = blsct::Signature::Aggregate(vSigs);
+    ret.nVersion = CTransaction::BLSCT_MARKER;
 
     return MakeTransactionRef(ret);
 }

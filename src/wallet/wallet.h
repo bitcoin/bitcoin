@@ -264,6 +264,13 @@ struct CRecipient {
     bool fSubtractFeeFromAmount;
 };
 
+struct CBLSCTRecipient {
+    CAmount nAmount;
+    std::string sMemo;
+    blsct::SubAddress destination;
+    bool fSubtractFeeFromAmount;
+};
+
 class WalletRescanReserver; // forward declarations for ScanForWalletTransactions/RescanFromTime
 /**
  * A CWallet maintains a set of transactions and balances, and provides the ability to create new transactions.

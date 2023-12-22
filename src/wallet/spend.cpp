@@ -281,7 +281,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             const CTxOut& output = wtx.tx->vout[i];
             const COutPoint outpoint(wtxid, i);
 
-            auto nValue = output.IsBLSCT() ? wtx.blsctRecoveryData.at(i).amount : output.nValue;
+            auto nValue = output.IsBLSCT() ? wtx.GetBLSCTRecoveryData(i).amount : output.nValue;
 
             if (nValue < params.min_amount || nValue > params.max_amount)
                 continue;
@@ -317,7 +317,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
             int input_bytes = CalculateMaximumSignedInputSize(output, COutPoint(), provider.get(), can_grind_r, coinControl);
             bool solvable = provider ? InferDescriptor(output.scriptPubKey, *provider)->IsSolvable() : false;
-            bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
+            bool spendable = ((mine & (ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT)) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
 
             // Filter by spendable outputs only
             if (!spendable && params.only_spendable) continue;

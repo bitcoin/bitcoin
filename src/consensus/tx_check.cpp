@@ -50,9 +50,14 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state, const bo
     }
     else
     {
-        for (const auto& txin : tx.vin)
-            if (txin.prevout.IsNull())
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-prevout-null");
+        bool fFoundNullPrevout = false;
+        for (const auto& txin : tx.vin) {
+            if (txin.prevout.IsNull()) {
+                if (fFoundNullPrevout)
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-prevout-null");
+                fFoundNullPrevout = true;
+            }
+        }
     }
 
     return true;

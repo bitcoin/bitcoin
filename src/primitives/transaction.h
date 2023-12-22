@@ -508,7 +508,7 @@ public:
         return a.hash != b.hash;
     }
 
-    std::string ToString(bool fIncludeSignatures = false) const;
+    std::string ToString(bool fIncludeSignatures = true) const;
 
     bool HasWitness() const
     {

@@ -79,7 +79,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
     if (!params[1].isNull())
         fIncludeEmpty = params[1].get_bool();
 
-    isminefilter filter = ISMINE_SPENDABLE;
+    isminefilter filter = ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT;
 
     if (ParseIncludeWatchonly(params[2], wallet)) {
         filter |= ISMINE_WATCH_ONLY;
@@ -497,7 +497,7 @@ RPCHelpMan listtransactions()
     int nFrom = 0;
     if (!request.params[2].isNull())
         nFrom = request.params[2].getInt<int>();
-    isminefilter filter = ISMINE_SPENDABLE;
+    isminefilter filter = ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT;
 
     if (ParseIncludeWatchonly(request.params[3], *pwallet)) {
         filter |= ISMINE_WATCH_ONLY;
@@ -606,7 +606,7 @@ RPCHelpMan listsinceblock()
     std::optional<int> height;    // Height of the specified block or the common ancestor, if the block provided was in a deactivated chain.
     std::optional<int> altheight; // Height of the specified block, even if it's in a deactivated chain.
     int target_confirms = 1;
-    isminefilter filter = ISMINE_SPENDABLE;
+    isminefilter filter = ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT;
 
     uint256 blockId;
     if (!request.params[0].isNull() && !request.params[0].get_str().empty()) {
@@ -753,7 +753,7 @@ RPCHelpMan gettransaction()
 
     uint256 hash(ParseHashV(request.params[0], "txid"));
 
-    isminefilter filter = ISMINE_SPENDABLE;
+    isminefilter filter = ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT;
 
     if (ParseIncludeWatchonly(request.params[1], *pwallet)) {
         filter |= ISMINE_WATCH_ONLY;

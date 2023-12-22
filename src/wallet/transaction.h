@@ -244,7 +244,14 @@ public:
     std::map<uint32_t, range_proof::RecoveredData<Mcl>> blsctRecoveryData;
     TxState m_state;
 
-    template<typename Stream>
+    range_proof::RecoveredData<Mcl> GetBLSCTRecoveryData(const uint32_t& forOutput) const
+    {
+        if (blsctRecoveryData.find(forOutput) == blsctRecoveryData.end())
+            return range_proof::RecoveredData<Mcl>{0, 0, 0, ""};
+        return blsctRecoveryData.at(forOutput);
+    };
+
+    template <typename Stream>
     void Serialize(Stream& s) const
     {
         mapValue_t mapValueCopy = mapValue;
@@ -324,6 +331,17 @@ public:
     const uint256& GetHash() const { return tx->GetHash(); }
     const uint256& GetWitnessHash() const { return tx->GetWitnessHash(); }
     bool IsCoinBase() const { return tx->IsCoinBase(); }
+
+    CAmount GetValueOut() const
+    {
+        CAmount ret = 0;
+        size_t i = 0;
+        for (auto& output : tx->vout) {
+            ret += output.IsBLSCT() ? GetBLSCTRecoveryData(i).amount : output.nValue;
+            i++;
+        }
+        return ret;
+    }
 
     // Disable copying of CWalletTx objects to prevent bugs where instances get
     // copied in and out of the mapWallet map, and fields are updated in the

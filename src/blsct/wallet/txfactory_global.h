@@ -28,6 +28,24 @@ struct UnsignedOutput {
     void GenerateKeys(Scalar blindingKey, DoublePublicKey destKeys);
 
     Signature GetSignature() const;
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        ::Serialize(s, out);
+        ::Serialize(s, blindingKey);
+        ::Serialize(s, value);
+        ::Serialize(s, gamma);
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        ::Unserialize(s, out);
+        ::Unserialize(s, blindingKey);
+        ::Unserialize(s, value);
+        ::Unserialize(s, gamma);
+    }
 };
 
 struct UnsignedInput {

@@ -227,8 +227,8 @@ struct TestBLSCTChain100Setup : public TestingSetup {
      * If no chainstate is specified, default to the active.
      */
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
-                                 Chainstate* chainstate = nullptr,
-                                 const std::optional<blsct::SubAddress>& dest = std::nullopt);
+                                 const std::optional<blsct::SubAddress>& dest = std::nullopt,
+                                 Chainstate* chainstate = nullptr);
 
     /**
      * Create a new block with just given transactions, coinbase paying to

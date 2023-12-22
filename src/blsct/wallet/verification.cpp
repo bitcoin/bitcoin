@@ -24,8 +24,16 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
         balanceKey = (gen.G * MclScalar(blockReward));
     }
 
+    bool fCoinbaseInput = false;
+
     for (auto& in : tx.vin) {
         Coin coin;
+        if (in.prevout.IsNull()) {
+            if (fCoinbaseInput)
+                return false;
+            fCoinbaseInput = true;
+            continue;
+        }
 
         if (!view.GetCoin(in.prevout, coin)) {
             return false;
@@ -40,11 +48,11 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
     CAmount nFee = 0;
 
     for (auto& out : tx.vout) {
-        vPubKeys.push_back(out.blsctData.ephemeralKey);
-        auto out_hash = out.GetHash();
-        vMessages.push_back(Message(out_hash.begin(), out_hash.end()));
-
         if (out.IsBLSCT()) {
+            vPubKeys.push_back(out.blsctData.ephemeralKey);
+            auto out_hash = out.GetHash();
+            vMessages.push_back(Message(out_hash.begin(), out_hash.end()));
+
             vProofs.push_back(out.blsctData.rangeProof);
             balanceKey = balanceKey - out.blsctData.rangeProof.Vs[0];
         } else {

@@ -1510,7 +1510,7 @@ CAmount CWallet::GetDebit(const CTxIn& txin, const isminefilter& filter) const
             const CWalletTx& prev = (*mi).second;
             if (txin.prevout.n < prev.tx->vout.size()) {
                 if (prev.tx->vout[txin.prevout.n].IsBLSCT() && filter & ISMINE_SPENDABLE_BLSCT) {
-                    return prev.blsctRecoveryData.at(txin.prevout.n).amount;
+                    return prev.GetBLSCTRecoveryData(txin.prevout.n).amount;
                 } else if (IsMine(prev.tx->vout[txin.prevout.n]) & filter)
                     return prev.tx->vout[txin.prevout.n].nValue;
             }

@@ -370,10 +370,13 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
     // will contain result of successful requests only
     std::vector<range_proof::RecoveredData<T>> xs;
 
+    size_t i = -1;
+
     for (const AmountRecoveryRequest<T>& req : reqs) {
         const range_proof::Generators<T> gens = m_common.Gf().GetInstance(req.token_id);
         Point G = gens.G;
         Point H = gens.H;
+        i++;
 
         // failure if sizes of Ls and Rs differ or Vs is empty
         auto Ls_Rs_valid = req.Ls.Size() > 0 && req.Ls.Size() == req.Rs.Size();
@@ -420,11 +423,10 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
         auto msg_amt = maybe_msg_amt.value();
 
         auto x = range_proof::RecoveredData<T>(
-            req.id,
+            i,
             msg_amt.amount,
             req.nonce.GetHashWithSalt(100), // gamma for vs[0]
-            msg_amt.msg
-        );
+            msg_amt.msg);
 
         xs.push_back(x);
     }

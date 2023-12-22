@@ -774,9 +774,19 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     const CCoinsViewCache& coins_cache = m_active_chainstate.CoinsTip();
     // do all inputs exist?
+    bool fCoinbaseInput = false;
+
     for (const CTxIn& txin : tx.vin) {
         if (!coins_cache.HaveCoinInCache(txin.prevout)) {
             coins_to_uncache.push_back(txin.prevout);
+        }
+
+        if (txin.prevout.IsNull()) {
+            if (!fCoinbaseInput) {
+                fCoinbaseInput = true;
+                continue;
+            }
+            return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-double-coinbase");
         }
 
         // Note: this call may add txin.prevout to the coins cache
@@ -1074,8 +1084,9 @@ bool MemPoolAccept::ConsensusScriptChecks(const ATMPArgs& args, Workspace& ws)
     }
 
     if (args.m_chainparams.GetConsensus().fBLSCT) {
-        if (!blsct::VerifyTx(tx, m_view))
+        if (!blsct::VerifyTx(tx, m_view)) {
             return Assume(false);
+        }
     }
 
     return true;
@@ -1739,6 +1750,8 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
         txundo.vprevout.reserve(tx.vin.size());
         for (const CTxIn &txin : tx.vin) {
             txundo.vprevout.emplace_back();
+            if (txin.prevout.IsNull())
+                continue;
             bool is_spent = inputs.SpendCoin(txin.prevout, &txundo.vprevout.back());
             assert(is_spent);
         }
@@ -1823,6 +1836,10 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         spent_outputs.reserve(tx.vin.size());
 
         for (const auto& txin : tx.vin) {
+            if (txin.prevout.IsNull()) {
+                spent_outputs.emplace_back();
+                continue;
+            }
             const COutPoint& prevout = txin.prevout;
             const Coin& coin = inputs.AccessCoin(prevout);
             assert(!coin.IsSpent());
@@ -1841,6 +1858,8 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         // spent being checked as a part of CScriptCheck.
 
         // Verify signature
+        if (tx.vin[i].prevout.IsNull()) continue;
+
         CScriptCheck check(txdata.m_spent_outputs[i], tx, i, flags, cacheSigStore, &txdata);
         if (pvChecks) {
             pvChecks->emplace_back(std::move(check));

@@ -681,7 +681,7 @@ RPCHelpMan simulaterawtransaction()
         include_watchonly = options["include_watchonly"];
     }
 
-    isminefilter filter = ISMINE_SPENDABLE;
+    isminefilter filter = ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT;
     if (ParseIncludeWatchonly(include_watchonly, wallet)) {
         filter |= ISMINE_WATCH_ONLY;
     }
@@ -860,6 +860,7 @@ RPCHelpMan encryptwallet();
 
 // spend
 RPCHelpMan sendtoaddress();
+RPCHelpMan sendtoblsctaddress();
 RPCHelpMan sendmany();
 RPCHelpMan settxfee();
 RPCHelpMan fundrawtransaction();
@@ -938,6 +939,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &send},
         {"wallet", &sendmany},
         {"wallet", &sendtoaddress},
+        {"wallet", &sendtoblsctaddress},
         {"wallet", &sethdseed},
         {"wallet", &setlabel},
         {"wallet", &settxfee},

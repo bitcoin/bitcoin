@@ -327,8 +327,8 @@ CBlock TestBLSCTChain100Setup::CreateBlock(
 
 CBlock TestBLSCTChain100Setup::CreateAndProcessBlock(
     const std::vector<CMutableTransaction>& txns,
-    Chainstate* chainstate,
-    const std::optional<blsct::SubAddress>& dest)
+    const std::optional<blsct::SubAddress>& dest,
+    Chainstate* chainstate)
 {
     if (!chainstate) {
         chainstate = &Assert(m_node.chainman)->ActiveChainstate();

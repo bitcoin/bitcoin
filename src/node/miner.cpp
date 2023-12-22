@@ -245,6 +245,12 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTPOWBlock(const bls
     coinbaseTx.vout[0] = out.out;
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
+
+    auto aggregatedTx = blsct::AggregateTransactions(pblock->vtx);
+    pblock->vtx.clear();
+    pblock->vtx.push_back(aggregatedTx);
+    Assert(pblock->vtx.size() == 1);
+
     pblocktemplate->vchCoinbaseCommitment = m_chainstate.m_chainman.GenerateCoinbaseCommitment(*pblock, pindexPrev);
     pblocktemplate->vTxFees[0] = -nFees;
 

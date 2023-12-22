@@ -129,7 +129,7 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx)
 
 unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& inputs)
 {
-    if (tx.IsCoinBase())
+    if (tx.IsCoinBase() || tx.IsBLSCT())
         return 0;
 
     unsigned int nSigOps = 0;
@@ -148,7 +148,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
 {
     int64_t nSigOps = GetLegacySigOpCount(tx) * WITNESS_SCALE_FACTOR;
 
-    if (tx.IsCoinBase())
+    if (tx.IsCoinBase() || tx.IsBLSCT())
         return nSigOps;
 
     if (flags & SCRIPT_VERIFY_P2SH) {
@@ -174,8 +174,19 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
     }
 
     if (tx.IsBLSCT()) {
+        bool fCoinbaseInput = false;
+
         for (unsigned int i = 0; i < tx.vin.size(); ++i) {
             const COutPoint& prevout = tx.vin[i].prevout;
+
+            if (prevout.IsNull()) {
+                if (!fCoinbaseInput) {
+                    fCoinbaseInput = true;
+                    continue;
+                }
+                return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-double-coinbase");
+            }
+
             const Coin& coin = inputs.AccessCoin(prevout);
             assert(!coin.IsSpent());
         }
@@ -183,7 +194,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         bool fFeeFound = false;
 
         for (auto& out : tx.vout) {
-            if (!out.IsBLSCT() && out.scriptPubKey.IsUnspendable()) {
+            if (!out.IsBLSCT() && out.scriptPubKey.IsFee()) {
                 if (fFeeFound)
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "more-than-one-fee-output");
                 txfee = out.nValue;

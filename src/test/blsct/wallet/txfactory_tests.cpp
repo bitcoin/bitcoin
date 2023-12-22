@@ -53,7 +53,7 @@ BOOST_FIXTURE_TEST_CASE(createtransaction_test, TestingSetup)
     wallet::DatabaseOptions options;
     options.create_flags |= wallet::WALLET_FLAG_BLSCT;
 
-    std::shared_ptr<wallet::CWallet> wallet(new wallet::CWallet(m_node.chain.get(), "", wallet::CreateMockWalletDatabase(options)));
+    wallet::CWallet* wallet(new wallet::CWallet(m_node.chain.get(), "", wallet::CreateMockWalletDatabase(options)));
 
     LOCK(wallet->cs_wallet);
     auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
@@ -91,7 +91,7 @@ BOOST_FIXTURE_TEST_CASE(createtransaction_test, TestingSetup)
     bool fFoundChange = false;
 
     // Wallet does not have the coins available yet
-    BOOST_ASSERT(blsct::TxFactory::CreateTransaction(wallet, wallet->GetOrCreateBLSCTKeyMan(), coins_view_cache, recvAddress, 900 * COIN, "test") == std::nullopt);
+    BOOST_ASSERT(blsct::TxFactory::CreateTransaction(wallet, wallet->GetOrCreateBLSCTKeyMan(), recvAddress, 900 * COIN, "test") == std::nullopt);
 
     auto result = blsct_km->RecoverOutputs(finalTx.value().vout);
 
@@ -104,7 +104,7 @@ BOOST_FIXTURE_TEST_CASE(createtransaction_test, TestingSetup)
     wallet->transactionAddedToMempool(MakeTransactionRef(finalTx.value()));
 
     // Wallet does not have the coins available yet (not confirmed in block)
-    BOOST_ASSERT(blsct::TxFactory::CreateTransaction(wallet, wallet->GetOrCreateBLSCTKeyMan(), coins_view_cache, recvAddress, 900 * COIN, "test") == std::nullopt);
+    BOOST_ASSERT(blsct::TxFactory::CreateTransaction(wallet, wallet->GetOrCreateBLSCTKeyMan(), recvAddress, 900 * COIN, "test") == std::nullopt);
 }
 
 BOOST_FIXTURE_TEST_CASE(addinput_test, TestingSetup)
