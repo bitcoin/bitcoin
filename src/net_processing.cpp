@@ -133,6 +133,8 @@ static const unsigned int MAX_BLOCKS_TO_ANNOUNCE = 8;
 static const int MAX_NUM_UNCONNECTING_HEADERS_MSGS = 10;
 /** Minimum blocks required to signal NODE_NETWORK_LIMITED */
 static const unsigned int NODE_NETWORK_LIMITED_MIN_BLOCKS = 288;
+/** Window, in blocks, for connecting to NODE_NETWORK_LIMITED peers */
+static const unsigned int NODE_NETWORK_LIMITED_ALLOW_CONN_BLOCKS = 144;
 /** Average delay between local address broadcasts */
 static constexpr auto AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL{24h};
 /** Average delay between peer address broadcasts */
@@ -1678,8 +1680,11 @@ bool PeerManagerImpl::HasAllDesirableServiceFlags(ServiceFlags services) const
 
 ServiceFlags PeerManagerImpl::GetDesirableServiceFlags(ServiceFlags services) const
 {
-    if (services & NODE_NETWORK_LIMITED && GetServicesFlagsIBDCache()) {
-        return ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS);
+    if (services & NODE_NETWORK_LIMITED) {
+        // Limited peers are desirable when we are close to the tip.
+        if (ApproximateBestBlockDepth() < NODE_NETWORK_LIMITED_ALLOW_CONN_BLOCKS) {
+            return ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS);
+        }
     }
     return ServiceFlags(NODE_NETWORK | NODE_WITNESS);
 }
