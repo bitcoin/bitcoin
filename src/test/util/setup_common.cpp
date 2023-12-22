@@ -169,6 +169,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
     llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*m_node.evodb));
     creditPoolManager = std::make_unique<CCreditPoolManager>(*m_node.evodb);
+    m_node.creditPoolManager = creditPoolManager.get();
     static bool noui_connected = false;
     if (!noui_connected) {
         noui_connect();
@@ -182,6 +183,7 @@ BasicTestingSetup::~BasicTestingSetup()
     connman.reset();
     llmq::quorumSnapshotManager.reset();
     creditPoolManager.reset();
+    m_node.creditPoolManager = nullptr;
     m_node.mnhf_manager.reset();
     m_node.evodb.reset();
 
@@ -215,7 +217,9 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     ::mmetaman = std::make_unique<CMasternodeMetaMan>(/* load_cache */ false);
     ::netfulfilledman = std::make_unique<CNetFulfilledRequestManager>(/* load_cache */ false);
 
-    m_node.creditPoolManager = std::make_unique<CCreditPoolManager>(*m_node.evodb);
+    creditPoolManager = std::make_unique<CCreditPoolManager>(*m_node.evodb);
+    m_node.creditPoolManager = creditPoolManager.get();
+
 
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
     constexpr int script_check_threads = 2;
@@ -226,7 +230,8 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 ChainTestingSetup::~ChainTestingSetup()
 {
     m_node.scheduler->stop();
-    m_node.creditPoolManager.reset();
+    creditPoolManager.reset();
+    m_node.creditPoolManager = nullptr;
     StopScriptCheckWorkerThreads();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();

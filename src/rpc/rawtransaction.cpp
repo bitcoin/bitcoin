@@ -10,6 +10,7 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <evo/creditpool.h>
 #include <index/txindex.h>
 #include <init.h>
 #include <key_io.h>
@@ -40,11 +41,13 @@
 #include <validationinterface.h>
 #include <util/irange.h>
 
+#include <evo/cbtx.h>
 #include <evo/specialtx.h>
 
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/instantsend.h>
+#include <llmq/utils.h>
 
 #include <numeric>
 #include <stdint.h>
@@ -333,6 +336,118 @@ static UniValue gettxchainlocks(const JSONRPCRequest& request)
         result.pushKV("chainlock", chainLock);
         result_arr.push_back(result);
     }
+    return result_arr;
+}
+
+static void getassetunlockstatuses_help(const JSONRPCRequest& request)
+{
+    RPCHelpMan{
+            "getassetunlockstatuses",
+            "\nReturns the status of given Asset Unlock indexes.\n",
+            {
+                    {"indexes", RPCArg::Type::ARR, RPCArg::Optional::NO, "The Asset Unlock indexes (no more than 100)",
+                     {
+                             {"index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "An Asset Unlock index"},
+                     },
+                    },
+            },
+            RPCResult{
+                    RPCResult::Type::ARR, "", "Response is an array with the same size as the input txids",
+                    {
+                            {RPCResult::Type::OBJ, "", "",
+                             {
+                                {RPCResult::Type::NUM, "index", "The Asset Unlock index"},
+                                {RPCResult::Type::STR, "status", "Status of the Asset Unlock index: {chainlocked|mined|mempooled|unknown}"},
+                             }},
+                    }
+            },
+            RPCExamples{
+                    HelpExampleCli("getassetunlockstatuses", "'[\"myindex\",...]'")
+                    + HelpExampleRpc("getassetunlockstatuses", "[\"myindex\",...]")
+            },
+    }.Check(request);
+}
+
+static UniValue getassetunlockstatuses(const JSONRPCRequest& request)
+{
+    getassetunlockstatuses_help(request);
+
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const CTxMemPool& mempool = EnsureMemPool(node);
+    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    const ChainstateManager& chainman = EnsureChainman(node);
+
+    UniValue result_arr(UniValue::VARR);
+    const UniValue str_indexes = request.params[0].get_array();
+    if (str_indexes.size() > 100) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Up to 100 indexes only");
+    }
+
+    if (g_txindex) {
+        g_txindex->BlockUntilSyncedToCurrentChain();
+    }
+
+    const CBlockIndex* pTipBlockIndex{WITH_LOCK(cs_main, return chainman.ActiveChain().Tip())};
+
+    if (!pTipBlockIndex) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "No blocks in chain");
+    }
+
+    const auto pBlockIndexBestCL = [&]() -> const CBlockIndex* {
+        if (llmq_ctx.clhandler->GetBestChainLock().IsNull()) {
+            // If no CL info is available, try to use CbTx CL information
+            if (const auto cbtx_best_cl = GetNonNullCoinbaseChainlock(pTipBlockIndex)) {
+                return pTipBlockIndex->GetAncestor(pTipBlockIndex->nHeight - cbtx_best_cl->second - 1);
+            }
+        }
+        return nullptr;
+    }();
+
+    // We need in 2 credit pools: at tip of chain and on best CL to know if tx is mined or chainlocked
+    // Sometimes that's two different blocks, sometimes not and we need to initialize 2nd creditPoolManager
+    std::optional<CCreditPool> poolCL = pBlockIndexBestCL ?
+                                        std::make_optional(node.creditPoolManager->GetCreditPool(pBlockIndexBestCL, Params().GetConsensus())) :
+                                        std::nullopt;
+    auto poolOnTip = [&]() -> std::optional<CCreditPool> {
+        if (pTipBlockIndex != pBlockIndexBestCL) {
+            return std::make_optional(node.creditPoolManager->GetCreditPool(pTipBlockIndex, Params().GetConsensus()));
+        }
+        return std::nullopt;
+    }();
+
+    for (const auto i : irange::range(str_indexes.size())) {
+        UniValue obj(UniValue::VOBJ);
+        uint64_t index{};
+        if (!ParseUInt64(str_indexes[i].get_str(), &index)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid index");
+        }
+        obj.pushKV("index", index);
+        auto status_to_push = [&]() -> std::string {
+            if (poolCL.has_value() && poolCL->indexes.Contains(index)) {
+                return "chainlocked";
+            }
+            if (poolOnTip.has_value() && poolOnTip->indexes.Contains(index)) {
+                return "mined";
+            }
+            bool is_mempooled = [&]() {
+                LOCK(mempool.cs);
+                return std::any_of(mempool.mapTx.begin(), mempool.mapTx.end(), [index](const CTxMemPoolEntry &e) {
+                    if (e.GetTx().nType == CAssetUnlockPayload::SPECIALTX_TYPE) {
+                        if (CAssetUnlockPayload assetUnlockTx; GetTxPayload(e.GetTx(), assetUnlockTx)) {
+                            return index == assetUnlockTx.getIndex();
+                        } else {
+                            throw JSONRPCError(RPC_TRANSACTION_ERROR, "bad-assetunlocktx-payload");
+                        }
+                    }
+                    return false;
+                });
+            }();
+            return is_mempooled ? "mempooled" : "unknown";
+        };
+        obj.pushKV("status", status_to_push());
+        result_arr.push_back(obj);
+    }
+
     return result_arr;
 }
 
@@ -1757,6 +1872,7 @@ void RegisterRawTransactionRPCCommands(CRPCTable &t)
 static const CRPCCommand commands[] =
 { //  category              name                            actor (function)            argNames
   //  --------------------- ------------------------        -----------------------     ----------
+    { "rawtransactions",    "getassetunlockstatuses",       &getassetunlockstatuses,    {"indexes"} },
     { "rawtransactions",    "getrawtransaction",            &getrawtransaction,         {"txid","verbose","blockhash"} },
     { "rawtransactions",    "gettxchainlocks",              &gettxchainlocks,           {"txids"} },
     { "rawtransactions",    "createrawtransaction",         &createrawtransaction,      {"inputs","outputs","locktime"} },

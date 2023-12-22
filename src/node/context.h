@@ -60,7 +60,7 @@ struct NodeContext {
     std::function<void()> rpc_interruption_point = [] {};
     //! Dash
     std::unique_ptr<LLMQContext> llmq_ctx;
-    std::unique_ptr<CCreditPoolManager> creditPoolManager;
+    CCreditPoolManager* creditPoolManager;
     std::unique_ptr<CMNHFManager> mnhf_manager;
     std::unique_ptr<CJContext> cj_ctx;
 

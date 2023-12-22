@@ -340,6 +340,7 @@ void PrepareShutdown(NodeContext& node)
         llmq::quorumSnapshotManager.reset();
         deterministicMNManager.reset();
         creditPoolManager.reset();
+        node.creditPoolManager = nullptr;
         node.mnhf_manager.reset();
         node.evodb.reset();
     }
@@ -1926,6 +1927,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 node.mnhf_manager.reset();
                 node.mnhf_manager = std::make_unique<CMNHFManager>(*node.evodb);
 
+
                 chainman.Reset();
                 chainman.InitializeChainstate(Assert(node.mempool.get()), *node.mnhf_manager, *node.evodb, llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor);
                 chainman.m_total_coinstip_cache = nCoinCacheUsage;
@@ -1942,7 +1944,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 deterministicMNManager.reset();
                 deterministicMNManager.reset(new CDeterministicMNManager(chainman.ActiveChainstate(), *node.connman, *node.evodb));
                 creditPoolManager.reset();
-                creditPoolManager.reset(new CCreditPoolManager(*node.evodb));
+                creditPoolManager = std::make_unique<CCreditPoolManager>(*node.evodb);
+                node.creditPoolManager = creditPoolManager.get();
                 llmq::quorumSnapshotManager.reset();
                 llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*node.evodb));
 
