@@ -7,12 +7,12 @@
 
 #include <chain.h>
 #include <consensus/validation.h>
+#include <governance/common.h>
 #include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <scheduler.h>
 
-#include <governance/object.h>
 #include <governance/vote.h>
 #include <llmq/clsig.h>
 #include <llmq/signing.h>
@@ -295,7 +295,7 @@ void CMainSignals::NotifyGovernanceVote(const std::shared_ptr<const CGovernanceV
     ENQUEUE_AND_LOG_EVENT(event, "%s: notify governance vote: %s", __func__, vote->GetHash().ToString());
 }
 
-void CMainSignals::NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) {
+void CMainSignals::NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& object) {
     auto event = [object, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceObject(object); });
     };

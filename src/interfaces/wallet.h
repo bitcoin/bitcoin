@@ -29,6 +29,7 @@ class CFeeRate;
 class CJClientManager;
 class CKey;
 class CWallet;
+class UniValue;
 enum class FeeReason;
 enum class TransactionError;
 enum isminetype : unsigned int;

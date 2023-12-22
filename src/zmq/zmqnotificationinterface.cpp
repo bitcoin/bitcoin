@@ -198,7 +198,7 @@ void CZMQNotificationInterface::NotifyGovernanceVote(const std::shared_ptr<const
     });
 }
 
-void CZMQNotificationInterface::NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject> &object)
+void CZMQNotificationInterface::NotifyGovernanceObject(const std::shared_ptr<const Governance::Object> &object)
 {
     TryForEachAndRemoveFailed(notifiers, [&object](CZMQAbstractNotifier* notifier) {
         return notifier->NotifyGovernanceObject(object);

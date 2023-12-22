@@ -12,6 +12,7 @@
 #include <evo/deterministicmns.h>
 #include <flat-database.h>
 #include <governance/classes.h>
+#include <governance/common.h>
 #include <governance/validators.h>
 #include <masternode/meta.h>
 #include <masternode/node.h>
@@ -333,7 +334,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
     CheckOrphanVotes(govobj, connman);
 
     // SEND NOTIFICATION TO SCRIPT/ZMQ
-    GetMainSignals().NotifyGovernanceObject(std::make_shared<const CGovernanceObject>(govobj));
+    GetMainSignals().NotifyGovernanceObject(std::make_shared<const Governance::Object>(govobj.Object()));
 }
 
 void CGovernanceManager::UpdateCachesAndClean()

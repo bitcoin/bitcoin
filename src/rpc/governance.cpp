@@ -18,6 +18,7 @@
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
+#include <governance/common.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <validation.h>
@@ -227,7 +228,7 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, err);
     }
 
-    if (!wallet->WriteGovernanceObject({hashParent, nRevision, nTime, tx->GetHash(), strDataHex})) {
+    if (!wallet->WriteGovernanceObject(Governance::Object{hashParent, nRevision, nTime, tx->GetHash(), strDataHex})) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "WriteGovernanceObject failed");
     }
 
@@ -267,19 +268,16 @@ static UniValue gobject_list_prepared(const JSONRPCRequest& request)
     }
     // Get a list of all prepared governance objects stored in the wallet
     LOCK(wallet->cs_wallet);
-    std::vector<const CGovernanceObject*> vecObjects = wallet->GetGovernanceObjects();
+    std::vector<const Governance::Object*> vecObjects = wallet->GetGovernanceObjects();
     // Sort the vector by the object creation time/hex data
-    std::sort(vecObjects.begin(), vecObjects.end(), [](const CGovernanceObject* a, const CGovernanceObject* b) {
-        bool fGreater = a->GetCreationTime() > b->GetCreationTime();
-        bool fEqual = a->GetCreationTime() == b->GetCreationTime();
-        bool fHexGreater = a->GetDataAsHexString() > b->GetDataAsHexString();
-        return fGreater || (fEqual && fHexGreater);
+    std::sort(vecObjects.begin(), vecObjects.end(), [](const Governance::Object* a, const Governance::Object* b) {
+        if (a->time != b->time) return a->time < b->time;
+        return a->GetDataAsHexString() < b->GetDataAsHexString();
     });
 
     UniValue jsonArray(UniValue::VARR);
-    auto it = vecObjects.rbegin() + std::max<int>(0, vecObjects.size() - nCount);
-    while (it != vecObjects.rend()) {
-        jsonArray.push_back((*it++)->ToJson());
+    for (auto it = vecObjects.begin() + std::max<int>(0, vecObjects.size() - nCount); it != vecObjects.end(); ++it) {
+        jsonArray.push_back((*it)->ToJson());
     }
 
     return jsonArray;

@@ -187,6 +187,7 @@ BITCOIN_CORE_H = \
   dsnotificationinterface.h \
   governance/governance.h \
   governance/classes.h \
+  governance/common.h \
   governance/exceptions.h \
   governance/object.h \
   governance/validators.h \
@@ -702,6 +703,7 @@ libbitcoin_common_a_SOURCES = \
   core_read.cpp \
   core_write.cpp \
   deploymentinfo.cpp \
+  governance/common.cpp \
   key.cpp \
   key_io.cpp \
   merkleblock.cpp \

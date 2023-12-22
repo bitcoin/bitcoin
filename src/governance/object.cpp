@@ -24,15 +24,8 @@
 
 CGovernanceObject::CGovernanceObject() :
     cs(),
-    nObjectType(GovernanceObject::UNKNOWN),
-    nHashParent(),
-    nRevision(0),
-    nTime(0),
+    m_obj{},
     nDeletionTime(0),
-    nCollateralHash(),
-    vchData(),
-    masternodeOutpoint(),
-    vchSig(),
     fCachedLocalValidity(false),
     strLocalValidityError(),
     fCachedFunding(false),
@@ -51,15 +44,8 @@ CGovernanceObject::CGovernanceObject() :
 
 CGovernanceObject::CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nTimeIn, const uint256& nCollateralHashIn, const std::string& strDataHexIn) :
     cs(),
-    nObjectType(GovernanceObject::UNKNOWN),
-    nHashParent(nHashParentIn),
-    nRevision(nRevisionIn),
-    nTime(nTimeIn),
+    m_obj{nHashParentIn, nRevisionIn, nTimeIn, nCollateralHashIn, strDataHexIn},
     nDeletionTime(0),
-    nCollateralHash(nCollateralHashIn),
-    vchData(ParseHex(strDataHexIn)),
-    masternodeOutpoint(),
-    vchSig(),
     fCachedLocalValidity(false),
     strLocalValidityError(),
     fCachedFunding(false),
@@ -78,15 +64,8 @@ CGovernanceObject::CGovernanceObject(const uint256& nHashParentIn, int nRevision
 
 CGovernanceObject::CGovernanceObject(const CGovernanceObject& other) :
     cs(),
-    nObjectType(other.nObjectType),
-    nHashParent(other.nHashParent),
-    nRevision(other.nRevision),
-    nTime(other.nTime),
+    m_obj{other.m_obj},
     nDeletionTime(other.nDeletionTime),
-    nCollateralHash(other.nCollateralHash),
-    vchData(other.vchData),
-    masternodeOutpoint(other.masternodeOutpoint),
-    vchSig(other.vchSig),
     fCachedLocalValidity(other.fCachedLocalValidity),
     strLocalValidityError(other.strLocalValidityError),
     fCachedFunding(other.fCachedFunding),
@@ -186,7 +165,7 @@ bool CGovernanceObject::ProcessVote(const CGovernanceVote& vote, CGovernanceExce
         nVoteTimeUpdate = nNow;
     }
 
-    bool onlyVotingKeyAllowed = nObjectType == GovernanceObject::PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
+    bool onlyVotingKeyAllowed = m_obj.type == GovernanceObject::PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
 
     // Finally check that the vote is actually valid (done last because of cost of signature verification)
     if (!vote.IsValid(onlyVotingKeyAllowed)) {
@@ -247,7 +226,7 @@ std::set<uint256> CGovernanceObject::RemoveInvalidVotes(const COutPoint& mnOutpo
         return {};
     }
 
-    auto removedVotes = fileVotes.RemoveInvalidVotes(mnOutpoint, nObjectType == GovernanceObject::PROPOSAL);
+    auto removedVotes = fileVotes.RemoveInvalidVotes(mnOutpoint, m_obj.type == GovernanceObject::PROPOSAL);
     if (removedVotes.empty()) {
         return {};
     }
@@ -278,20 +257,7 @@ std::set<uint256> CGovernanceObject::RemoveInvalidVotes(const COutPoint& mnOutpo
 
 uint256 CGovernanceObject::GetHash() const
 {
-    // Note: doesn't match serialization
-
-    // CREATE HASH OF ALL IMPORTANT PIECES OF DATA
-
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    ss << nHashParent;
-    ss << nRevision;
-    ss << nTime;
-    ss << GetDataAsHexString();
-    ss << masternodeOutpoint << uint8_t{} << 0xffffffff; // adding dummy values here to match old hashing
-    ss << vchSig;
-    // fee_tx is left out on purpose
-
-    return ss.GetHash();
+    return m_obj.GetHash();
 }
 
 uint256 CGovernanceObject::GetDataHash() const
@@ -309,7 +275,7 @@ uint256 CGovernanceObject::GetSignatureHash() const
 
 void CGovernanceObject::SetMasternodeOutpoint(const COutPoint& outpoint)
 {
-    masternodeOutpoint = outpoint;
+    m_obj.masternodeOutpoint = outpoint;
 }
 
 bool CGovernanceObject::Sign(const CBLSSecretKey& key)
@@ -318,14 +284,14 @@ bool CGovernanceObject::Sign(const CBLSSecretKey& key)
     if (!sig.IsValid()) {
         return false;
     }
-    vchSig = sig.ToByteVector(false);
+    m_obj.vchSig = sig.ToByteVector(false);
     return true;
 }
 
 bool CGovernanceObject::CheckSignature(const CBLSPublicKey& pubKey) const
 {
     CBLSSignature sig;
-    sig.SetByteVector(vchSig, false);
+    sig.SetByteVector(m_obj.vchSig, false);
     if (!sig.VerifyInsecure(pubKey, GetSignatureHash(), false)) {
         LogPrintf("CGovernanceObject::CheckSignature -- VerifyInsecure() failed\n");
         return false;
@@ -341,7 +307,7 @@ bool CGovernanceObject::CheckSignature(const CBLSPublicKey& pubKey) const
 UniValue CGovernanceObject::GetJSONObject() const
 {
     UniValue obj(UniValue::VOBJ);
-    if (vchData.empty()) {
+    if (m_obj.vchData.empty()) {
         return obj;
     }
 
@@ -369,7 +335,7 @@ UniValue CGovernanceObject::GetJSONObject() const
 
 void CGovernanceObject::LoadData()
 {
-    if (vchData.empty()) {
+    if (m_obj.vchData.empty()) {
         return;
     }
 
@@ -379,7 +345,7 @@ void CGovernanceObject::LoadData()
         GetData(objResult);
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::LoadData -- GetDataAsPlainString = %s\n", GetDataAsPlainString());
         UniValue obj = GetJSONObject();
-        nObjectType = GovernanceObject(obj["type"].get_int());
+        m_obj.type = GovernanceObject(obj["type"].get_int());
     } catch (std::exception& e) {
         fUnparsable = true;
         std::ostringstream ostr;
@@ -417,36 +383,19 @@ void CGovernanceObject::GetData(UniValue& objResult) const
 *   --------------------------------------------------------
 *
 */
-
 std::string CGovernanceObject::GetDataAsHexString() const
 {
-    return HexStr(vchData);
+    return m_obj.GetDataAsHexString();
 }
 
 std::string CGovernanceObject::GetDataAsPlainString() const
 {
-    return std::string(vchData.begin(), vchData.end());
+    return m_obj.GetDataAsPlainString();
 }
 
 UniValue CGovernanceObject::ToJson() const
 {
-    UniValue obj(UniValue::VOBJ);
-    obj.pushKV("objectHash", GetHash().ToString());
-    obj.pushKV("parentHash", nHashParent.ToString());
-    obj.pushKV("collateralHash", GetCollateralHash().ToString());
-    obj.pushKV("createdAt", GetCreationTime());
-    obj.pushKV("revision", nRevision);
-    UniValue data;
-    if (!data.read(GetDataAsPlainString())) {
-        data.clear();
-        data.setObject();
-        data.pushKV("plain", GetDataAsPlainString());
-        data.pushKV("hex", GetDataAsHexString());
-    } else {
-        data.pushKV("hex", GetDataAsHexString());
-    }
-    obj.pushKV("data", data);
-    return obj;
+    return m_obj.ToJson();
 }
 
 void CGovernanceObject::UpdateLocalValidity()
@@ -475,7 +424,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
         return false;
     }
 
-    switch (nObjectType) {
+    switch (m_obj.type) {
     case GovernanceObject::PROPOSAL: {
         CProposalValidator validator(GetDataAsHexString());
         // Note: It's ok to have expired proposals
@@ -499,8 +448,8 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
 
         auto mnList = deterministicMNManager->GetListAtChainTip();
 
-        std::string strOutpoint = masternodeOutpoint.ToStringShort();
-        auto dmn = mnList.GetMNByCollateral(masternodeOutpoint);
+        std::string strOutpoint = m_obj.masternodeOutpoint.ToStringShort();
+        auto dmn = mnList.GetMNByCollateral(m_obj.masternodeOutpoint);
         if (!dmn) {
             strError = "Failed to find Masternode by UTXO, missing masternode=" + strOutpoint;
             return false;
@@ -515,7 +464,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
         return true;
     }
     default: {
-        strError = strprintf("Invalid object type %d", ToUnderlying(nObjectType));
+        strError = strprintf("Invalid object type %d", ToUnderlying(m_obj.type));
         return false;
     }
     }
@@ -524,7 +473,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
 CAmount CGovernanceObject::GetMinCollateralFee() const
 {
     // Only 1 type has a fee for the moment but switch statement allows for future object types
-    switch (nObjectType) {
+    switch (m_obj.type) {
         case GovernanceObject::PROPOSAL: {
             return GOVERNANCE_PROPOSAL_FEE_TX;
         }
@@ -547,9 +496,9 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
 
     // RETRIEVE TRANSACTION IN QUESTION
     uint256 nBlockHash;
-    CTransactionRef txCollateral = GetTransaction(/* block_index */ nullptr, /* mempool */ nullptr, nCollateralHash, Params().GetConsensus(), nBlockHash);
+    CTransactionRef txCollateral = GetTransaction(/* block_index */ nullptr, /* mempool */ nullptr, m_obj.collateralHash, Params().GetConsensus(), nBlockHash);
     if (!txCollateral) {
-        strError = strprintf("Can't find collateral tx %s", nCollateralHash.ToString());
+        strError = strprintf("Can't find collateral tx %s", m_obj.collateralHash.ToString());
         LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }
@@ -694,7 +643,7 @@ void CGovernanceObject::Relay(CConnman& connman) const
     }
 
     int minProtoVersion = MIN_PEER_PROTO_VERSION;
-    if (nObjectType == GovernanceObject::PROPOSAL) {
+    if (m_obj.type == GovernanceObject::PROPOSAL) {
         // We know this proposal is valid locally, otherwise we would not get to the point we should relay it.
         // But we don't want to relay it to pre-GOVSCRIPT_PROTO_VERSION peers if payment_address is p2sh
         // because they won't accept it anyway and will simply ban us eventually.

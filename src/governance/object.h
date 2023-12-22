@@ -5,11 +5,11 @@
 #ifndef BITCOIN_GOVERNANCE_OBJECT_H
 #define BITCOIN_GOVERNANCE_OBJECT_H
 
+#include <governance/common.h>
 #include <governance/exceptions.h>
 #include <governance/vote.h>
 #include <governance/votedb.h>
 #include <sync.h>
-#include <util/underlying.h>
 
 #include <univalue.h>
 
@@ -17,21 +17,12 @@ class CBLSSecretKey;
 class CBLSPublicKey;
 class CNode;
 
-class CGovernanceManager;
-class CGovernanceTriggerManager;
 class CGovernanceObject;
 class CGovernanceVote;
 
 extern RecursiveMutex cs_main;
 
 static constexpr double GOVERNANCE_FILTER_FP_RATE = 0.001;
-
-enum class GovernanceObject : int {
-    UNKNOWN = 0,
-    PROPOSAL,
-    TRIGGER
-};
-template<> struct is_serializable_enum<GovernanceObject> : std::true_type {};
 
 
 static constexpr CAmount GOVERNANCE_PROPOSAL_FEE_TX = (1 * COIN);
@@ -104,30 +95,11 @@ private:
     /// critical section to protect the inner data structures
     mutable RecursiveMutex cs;
 
-    /// Object typecode
-    GovernanceObject nObjectType;
-
-    /// parent object, 0 is root
-    uint256 nHashParent;
-
-    /// object revision in the system
-    int nRevision;
-
-    /// time this object was created
-    int64_t nTime;
+    Governance::Object m_obj;
 
     /// time this object was marked for deletion
     int64_t nDeletionTime;
 
-    /// fee-tx
-    uint256 nCollateralHash;
-
-    /// Data field - can be used for anything
-    std::vector<unsigned char> vchData;
-
-    /// Masternode info for signed objects
-    COutPoint masternodeOutpoint;
-    std::vector<unsigned char> vchSig;
 
     /// is valid by blockchain
     bool fCachedLocalValidity;
@@ -171,9 +143,14 @@ public:
 
     // Public Getter methods
 
+    const Governance::Object& Object() const
+    {
+        return m_obj;
+    }
+
     int64_t GetCreationTime() const
     {
-        return nTime;
+        return m_obj.time;
     }
 
     int64_t GetDeletionTime() const
@@ -183,17 +160,17 @@ public:
 
     GovernanceObject GetObjectType() const
     {
-        return nObjectType;
+        return m_obj.type;
     }
 
     const uint256& GetCollateralHash() const
     {
-        return nCollateralHash;
+        return m_obj.collateralHash;
     }
 
     const COutPoint& GetMasternodeOutpoint() const
     {
-        return masternodeOutpoint;
+        return m_obj.masternodeOutpoint;
     }
 
     bool IsSetCachedFunding() const
@@ -296,18 +273,7 @@ public:
     SERIALIZE_METHODS(CGovernanceObject, obj)
     {
         // SERIALIZE DATA FOR SAVING/LOADING OR NETWORK FUNCTIONS
-        READWRITE(
-                obj.nHashParent,
-                obj.nRevision,
-                obj.nTime,
-                obj.nCollateralHash,
-                obj.vchData,
-                obj.nObjectType,
-                obj.masternodeOutpoint
-                );
-        if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(obj.vchSig);
-        }
+        READWRITE(obj.m_obj);
         if (s.GetType() & SER_DISK) {
             // Only include these for the disk file format
             READWRITE(obj.nDeletionTime, obj.fExpired, obj.mapCurrentMNVotes, obj.fileVotes);
