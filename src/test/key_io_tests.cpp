@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <script/standard.h>
 #include <test/data/key_io_invalid.json.h>
 #include <test/data/key_io_valid.json.h>
 
@@ -146,17 +147,30 @@ BOOST_AUTO_TEST_CASE(key_io_invalid)
     }
 }
 
-BOOST_AUTO_TEST_CASE(key_io_blsct)
+BOOST_AUTO_TEST_CASE(key_io_double_public_key_endode_decode)
 {
-    // Generate two random public keys
-    blsct::PublicKey keyFromPointRandom{MclG1Point::Rand()};
-    blsct::PublicKey keyFromPointRandom2{MclG1Point::Rand()};
+    // randomly generated double public key
+    blsct::PublicKey pk1(MclG1Point::Rand());
+    blsct::PublicKey pk2(MclG1Point::Rand());
+    blsct::DoublePublicKey dpk(pk1, pk2);
 
-    blsct::DoublePublicKey doubleKey{keyFromPointRandom, keyFromPointRandom2};
+    // check if encoding and then decoding it
+    // produces the original double public key
+    auto act = DecodeDestination(EncodeDestination(dpk.GetVch()));
 
-    auto dest = EncodeDestination(doubleKey);
+    BOOST_CHECK(act == CTxDestination(dpk));
+}
 
-    BOOST_CHECK(DecodeDestination(dest) == CTxDestination(doubleKey));
+BOOST_AUTO_TEST_CASE(key_io_double_public_key_decode_encode)
+{
+    // a valid bech32_mod encoded double public key
+    std::string dpk_bech32_mod = "nv1jlca8fe3jltegf54vwxyl2dvplpk3rz0ja6tjpdpfcar79cm43vxc40g8luh5xh0lva0qzkmytrthftje04fqnt8g6yq3j8t2z552ryhy8dnpyfgqyj58ypdptp43f32u28htwu0r37y9su6332jn0c0fcvan8l53m";
+
+    // check if decoding and then encoding it produces
+    // the original bech32_mod encoded double public key
+    auto act = EncodeDestination(DecodeDestination(dpk_bech32_mod));
+
+    BOOST_CHECK(act == dpk_bech32_mod);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

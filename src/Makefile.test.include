@@ -77,6 +77,7 @@ BITCOIN_TESTS =\
   test/base58_tests.cpp \
   test/base64_tests.cpp \
   test/bech32_tests.cpp \
+  test/bech32_mod_tests.cpp \
   test/bip32_tests.cpp \
   test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
@@ -275,6 +276,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/banman.cpp \
  test/fuzz/base_encode_decode.cpp \
  test/fuzz/bech32.cpp \
+ test/fuzz/bech32_mod.cpp \
  test/fuzz/bitdeque.cpp \
  test/fuzz/block.cpp \
  test/fuzz/block_header.cpp \
