@@ -328,7 +328,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_ckey, TestingSetup)
 //         std::unique_ptr<WalletDatabase> db = get_db(dbs);
 //         {
 //             CPubKey invalid_key;
-//             BOOST_ASSERT(!invalid_key.IsValid());
+//             BOOST_CHECK(!invalid_key.IsValid());
 //             const auto key = std::make_pair(DBKeys::CRYPTED_KEY, invalid_key);
 //             std::pair<std::vector<unsigned char>, uint256> value;
 //             BOOST_CHECK(db->MakeBatch(false)->Write(key, value, /*fOverwrite=*/true));
