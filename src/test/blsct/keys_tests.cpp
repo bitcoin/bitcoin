@@ -200,4 +200,47 @@ BOOST_AUTO_TEST_CASE(aggretate_empty_public_keys)
     BOOST_CHECK_THROW(pks.Aggregate(), std::runtime_error);
 }
 
+BOOST_AUTO_TEST_CASE(double_public_key_with_bad_input_vector)
+{
+    {
+        // empty input vector
+        std::vector<uint8_t> keys;
+        blsct::DoublePublicKey dpk(keys);
+        BOOST_CHECK(dpk.IsValid() == false);
+    }
+    {
+        // input vector of invalid shorter size
+        auto g = MclG1Point::GetBasePoint();
+        auto keys = g.GetVch();
+
+        // drop the last element
+        keys.pop_back();
+
+        blsct::DoublePublicKey dpk(keys);
+        BOOST_CHECK(dpk.IsValid() == false);
+    }
+    {
+        // input vector of invalid larger size
+        auto g = MclG1Point::GetBasePoint();
+        auto keys = g.GetVch();
+
+        // append an element
+        keys.push_back(1);
+
+        blsct::DoublePublicKey dpk(keys);
+        BOOST_CHECK(dpk.IsValid() == false);
+    }
+    {
+        // input vector of valid size with bad content
+        auto g = MclG1Point::GetBasePoint();
+        auto keys = g.GetVch();
+
+        // alter keys[0] from 151 to 152
+        keys[0] = keys[0] + 1;
+
+        blsct::DoublePublicKey dpk(keys);
+        BOOST_CHECK(dpk.IsValid() == false);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
