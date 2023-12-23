@@ -25,6 +25,8 @@ std::string ShellEscape(const std::string& arg);
 void runCommand(const std::string& strCommand);
 #endif
 
+bool SystemNeedsMemoryReleased();
+
 /**
  * Return the number of cores available on the current system.
  * @note This does count virtual cores, such as those provided by HyperThreading.
