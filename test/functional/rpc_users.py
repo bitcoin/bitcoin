@@ -158,11 +158,12 @@ class HTTPBasicsTest(BitcoinTestFramework):
         init_error = 'Error: Unable to start HTTP server. See debug log for details.'
 
         self.log.info('Check -rpcauth are validated')
-        self.log.info('Empty -rpcauth are treated as error')
+        self.log.info('Empty -rpcauth= are ignored')
+        self.restart_node(0, extra_args=['-rpcauth=', '-rpcauth=abc:$2e32c2f20c67e29c328dd64a4214180f18da9e667d67c458070fd856f1e9e5e7'])
+        self.restart_node(0, extra_args=['-rpcauth='])
+        # ...without disrupting usage of other -rpcauth tokens
+        self.test_auth(self.nodes[0], 'rt', self.rtpassword)
         self.stop_node(0)
-        self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth'])
-        self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth='])
-        self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth=""'])
         self.log.info('Check malformed -rpcauth')
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth=foo'])
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth=foo:bar'])
@@ -170,13 +171,9 @@ class HTTPBasicsTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth=foo$bar:baz'])
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth=foo$bar$baz'])
 
-        self.log.info('Check interactions between blank and non-blank rpcauth')
         # pw = bitcoin
         rpcauth_user1 = '-rpcauth=user1:6dd184e5e69271fdd69103464630014f$eb3d7ce67c4d1ff3564270519b03b636c0291012692a5fa3dd1d2075daedd07b'
         rpcauth_user2 = '-rpcauth=user2:57b2f77c919eece63cfa46c2f06e46ae$266b63902f99f97eeaab882d4a87f8667ab84435c3799f2ce042ef5a994d620b'
-        self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=[rpcauth_user1, rpcauth_user2, '-rpcauth='])
-        self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=[rpcauth_user1, '-rpcauth=', rpcauth_user2])
-        self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth=', rpcauth_user1, rpcauth_user2])
 
         self.log.info('Check -norpcauth disables previous -rpcauth params')
         self.restart_node(0, extra_args=[rpcauth_user1, rpcauth_user2, '-norpcauth'])
