@@ -40,6 +40,7 @@ env:  # Global defaults
 #   RESTART_CI_DOCKER_BEFORE_RUN=1 screen cirrus worker run --labels type=todo_fill_in_type --token todo_fill_in_token
 #   ```
 #
+#
 # The following specific types should exist, with the following requirements:
 # - small: For an x86_64 machine, recommended to have 2 CPUs and 8 GB of memory.
 # - medium: For an x86_64 machine, recommended to have 4 CPUs and 16 GB of memory.
