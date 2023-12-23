@@ -103,7 +103,10 @@ class HTTPBasicsTest(BitcoinTestFramework):
 
         self.log.info('Check -rpcauth are validated')
         # Empty -rpcauth= are ignored
+        self.restart_node(0, extra_args=['-rpcauth=', '-rpcauth=abc:$2e32c2f20c67e29c328dd64a4214180f18da9e667d67c458070fd856f1e9e5e7'])
         self.restart_node(0, extra_args=['-rpcauth='])
+        # ...without disrupting usage of other -rpcauth tokens
+        self.test_auth(self.nodes[0], 'rt', self.rtpassword)
         self.stop_node(0)
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth=foo'])
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth=foo:bar'])
