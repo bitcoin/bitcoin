@@ -43,6 +43,8 @@ bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid);
  * @param[out] new_fee the fee that the bump transaction pays
  * @param[out] mtx The bump transaction itself
  * @param[in] require_mine Whether the original transaction must consist of inputs that can be spent by the wallet
+ * @param[in] outputs Vector of new outputs to replace the bumped transaction's outputs
+ * @param[in] original_change_index The position of the change output to deduct the fee from in the transaction being bumped
  */
 Result CreateRateBumpTransaction(CWallet& wallet,
     const uint256& txid,
@@ -52,7 +54,8 @@ Result CreateRateBumpTransaction(CWallet& wallet,
     CAmount& new_fee,
     CMutableTransaction& mtx,
     bool require_mine,
-    const std::vector<CTxOut>& outputs);
+    const std::vector<CTxOut>& outputs,
+    std::optional<uint32_t> original_change_index = std::nullopt);
 
 //! Sign the new transaction,
 //! @return false if the tx couldn't be found or if it was

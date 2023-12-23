@@ -6,8 +6,8 @@
 #ifndef BITCOIN_OUTPUTTYPE_H
 #define BITCOIN_OUTPUTTYPE_H
 
+#include <addresstype.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
 
 #include <array>
 #include <optional>

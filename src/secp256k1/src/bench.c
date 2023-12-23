@@ -38,6 +38,8 @@ static void help(int default_iters) {
     printf("    ecdsa             : all ECDSA algorithms--sign, verify, recovery (if enabled)\n");
     printf("    ecdsa_sign        : ECDSA siging algorithm\n");
     printf("    ecdsa_verify      : ECDSA verification algorithm\n");
+    printf("    ec                : all EC public key algorithms (keygen)\n");
+    printf("    ec_keygen         : EC public key generation\n");
 
 #ifdef ENABLE_MODULE_RECOVERY
     printf("    ecdsa_recover     : ECDSA public key recovery algorithm\n");
@@ -53,6 +55,14 @@ static void help(int default_iters) {
     printf("    schnorrsig_verify : Schnorr verification algorithm\n");
 #endif
 
+#ifdef ENABLE_MODULE_ELLSWIFT
+    printf("    ellswift          : all ElligatorSwift benchmarks (encode, decode, keygen, ecdh)\n");
+    printf("    ellswift_encode   : ElligatorSwift encoding\n");
+    printf("    ellswift_decode   : ElligatorSwift decoding\n");
+    printf("    ellswift_keygen   : ElligatorSwift key generation\n");
+    printf("    ellswift_ecdh     : ECDH on ElligatorSwift keys\n");
+#endif
+
     printf("\n");
 }
 
@@ -64,11 +74,11 @@ typedef struct {
     size_t siglen;
     unsigned char pubkey[33];
     size_t pubkeylen;
-} bench_verify_data;
+} bench_data;
 
 static void bench_verify(void* arg, int iters) {
     int i;
-    bench_verify_data* data = (bench_verify_data*)arg;
+    bench_data* data = (bench_data*)arg;
 
     for (i = 0; i < iters; i++) {
         secp256k1_pubkey pubkey;
@@ -85,15 +95,9 @@ static void bench_verify(void* arg, int iters) {
     }
 }
 
-typedef struct {
-    secp256k1_context* ctx;
-    unsigned char msg[32];
-    unsigned char key[32];
-} bench_sign_data;
-
 static void bench_sign_setup(void* arg) {
     int i;
-    bench_sign_data *data = (bench_sign_data*)arg;
+    bench_data *data = (bench_data*)arg;
 
     for (i = 0; i < 32; i++) {
         data->msg[i] = i + 1;
@@ -105,7 +109,7 @@ static void bench_sign_setup(void* arg) {
 
 static void bench_sign_run(void* arg, int iters) {
     int i;
-    bench_sign_data *data = (bench_sign_data*)arg;
+    bench_data *data = (bench_data*)arg;
 
     unsigned char sig[74];
     for (i = 0; i < iters; i++) {
@@ -121,6 +125,30 @@ static void bench_sign_run(void* arg, int iters) {
     }
 }
 
+static void bench_keygen_setup(void* arg) {
+    int i;
+    bench_data *data = (bench_data*)arg;
+
+    for (i = 0; i < 32; i++) {
+        data->key[i] = i + 65;
+    }
+}
+
+static void bench_keygen_run(void *arg, int iters) {
+    int i;
+    bench_data *data = (bench_data*)arg;
+
+    for (i = 0; i < iters; i++) {
+        unsigned char pub33[33];
+        size_t len = 33;
+        secp256k1_pubkey pubkey;
+        CHECK(secp256k1_ec_pubkey_create(data->ctx, &pubkey, data->key));
+        CHECK(secp256k1_ec_pubkey_serialize(data->ctx, pub33, &len, &pubkey, SECP256K1_EC_COMPRESSED));
+        memcpy(data->key, pub33 + 1, 32);
+    }
+}
+
+
 #ifdef ENABLE_MODULE_ECDH
 # include "modules/ecdh/bench_impl.h"
 #endif
@@ -133,11 +161,15 @@ static void bench_sign_run(void* arg, int iters) {
 # include "modules/schnorrsig/bench_impl.h"
 #endif
 
+#ifdef ENABLE_MODULE_ELLSWIFT
+# include "modules/ellswift/bench_impl.h"
+#endif
+
 int main(int argc, char** argv) {
     int i;
     secp256k1_pubkey pubkey;
     secp256k1_ecdsa_signature sig;
-    bench_verify_data data;
+    bench_data data;
 
     int d = argc == 1;
     int default_iters = 20000;
@@ -145,7 +177,9 @@ int main(int argc, char** argv) {
 
     /* Check for invalid user arguments */
     char* valid_args[] = {"ecdsa", "verify", "ecdsa_verify", "sign", "ecdsa_sign", "ecdh", "recover",
-                         "ecdsa_recover", "schnorrsig", "schnorrsig_verify", "schnorrsig_sign"};
+                         "ecdsa_recover", "schnorrsig", "schnorrsig_verify", "schnorrsig_sign", "ec",
+                         "keygen", "ec_keygen", "ellswift", "encode", "ellswift_encode", "decode",
+                         "ellswift_decode", "ellswift_keygen", "ellswift_ecdh"};
     size_t valid_args_size = sizeof(valid_args)/sizeof(valid_args[0]);
     int invalid_args = have_invalid_args(argc, argv, valid_args, valid_args_size);
 
@@ -187,6 +221,16 @@ int main(int argc, char** argv) {
     }
 #endif
 
+#ifndef ENABLE_MODULE_ELLSWIFT
+    if (have_flag(argc, argv, "ellswift") || have_flag(argc, argv, "ellswift_encode") || have_flag(argc, argv, "ellswift_decode") ||
+        have_flag(argc, argv, "encode") || have_flag(argc, argv, "decode") || have_flag(argc, argv, "ellswift_keygen") ||
+        have_flag(argc, argv, "ellswift_ecdh")) {
+        fprintf(stderr, "./bench: ElligatorSwift module not enabled.\n");
+        fprintf(stderr, "Use ./configure --enable-module-ellswift.\n\n");
+        return 1;
+    }
+#endif
+
     /* ECDSA benchmark */
     data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
 
@@ -207,6 +251,7 @@ int main(int argc, char** argv) {
     if (d || have_flag(argc, argv, "ecdsa") || have_flag(argc, argv, "verify") || have_flag(argc, argv, "ecdsa_verify")) run_benchmark("ecdsa_verify", bench_verify, NULL, NULL, &data, 10, iters);
 
     if (d || have_flag(argc, argv, "ecdsa") || have_flag(argc, argv, "sign") || have_flag(argc, argv, "ecdsa_sign")) run_benchmark("ecdsa_sign", bench_sign_run, bench_sign_setup, NULL, &data, 10, iters);
+    if (d || have_flag(argc, argv, "ec") || have_flag(argc, argv, "keygen") || have_flag(argc, argv, "ec_keygen")) run_benchmark("ec_keygen", bench_keygen_run, bench_keygen_setup, NULL, &data, 10, iters);
 
     secp256k1_context_destroy(data.ctx);
 
@@ -223,6 +268,11 @@ int main(int argc, char** argv) {
 #ifdef ENABLE_MODULE_SCHNORRSIG
     /* Schnorr signature benchmarks */
     run_schnorrsig_bench(iters, argc, argv);
+#endif
+
+#ifdef ENABLE_MODULE_ELLSWIFT
+    /* ElligatorSwift benchmarks */
+    run_ellswift_bench(iters, argc, argv);
 #endif
 
     return 0;

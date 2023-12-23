@@ -18,10 +18,10 @@
 #define BLS_ETH 1
 #include <bls/bls384_256.h>
 #include <hash.h>
+#include <node/protocol_version.h>
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
-#include <version.h>
 
 using namespace std::literals::string_literals;
 

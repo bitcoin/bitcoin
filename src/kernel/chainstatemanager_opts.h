@@ -5,6 +5,8 @@
 #ifndef BITCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
 #define BITCOIN_KERNEL_CHAINSTATEMANAGER_OPTS_H
 
+#include <kernel/notifications_interface.h>
+
 #include <arith_uint256.h>
 #include <dandelion.h>
 #include <dbwrapper.h>
@@ -44,6 +46,9 @@ struct ChainstateManagerOpts {
     DBOptions block_tree_db{};
     DBOptions coins_db{};
     CoinsViewOptions coins_view{};
+    Notifications& notifications;
+    //! Number of script check worker threads. Zero means no parallel verification.
+    int worker_threads_num{0};
 };
 
 } // namespace kernel

@@ -20,7 +20,7 @@ public:
         'B', 'L', 'S', 'C', 'T', 'B', 'A', 'L', 'A', 'N', 'C', 'E'
     };
 
-    static std::vector<uint8_t> CDataStreamToVector(const CDataStream& st);
+    static std::vector<uint8_t> DataStreamToVector(const DataStream& st);
 
     /**
      * Returns power of 2 that is greater or equal to input_value_len

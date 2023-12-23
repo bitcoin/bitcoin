@@ -5,6 +5,7 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
@@ -32,7 +33,6 @@
 #include <univalue.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -49,13 +49,22 @@ using node::UpdateTime;
 
 /**
  * Return average network hashes per second based on the last 'lookup' blocks,
- * or from the last difficulty change if 'lookup' is nonpositive.
- * If 'height' is nonnegative, compute the estimate at the time when a given block was found.
+ * or from the last difficulty change if 'lookup' is -1.
+ * If 'height' is -1, compute the estimate from current chain tip.
+ * If 'height' is a valid block height, compute the estimate at the time when a given block was found.
  */
 static UniValue GetNetworkHashPS(int lookup, int height, const CChain& active_chain) {
+    if (lookup < -1 || lookup == 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid nblocks. Must be a positive number or -1.");
+    }
+
+    if (height < -1 || height > active_chain.Height()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Block does not exist at specified height");
+    }
+
     const CBlockIndex* pb = active_chain.Tip();
 
-    if (height >= 0 && height < active_chain.Height()) {
+    if (height >= 0) {
         pb = active_chain[height];
     }
 
@@ -63,7 +72,7 @@ static UniValue GetNetworkHashPS(int lookup, int height, const CChain& active_ch
         return 0;
 
     // If lookup is -1, then use blocks since last difficulty change.
-    if (lookup <= 0)
+    if (lookup == -1)
         lookup = pb->nHeight % Params().GetConsensus().DifficultyAdjustmentInterval() + 1;
 
     // If lookup is larger than chain, then set it to chain length.
@@ -97,7 +106,7 @@ static RPCHelpMan getnetworkhashps()
                 "Pass in [blocks] to override # of blocks, -1 specifies since last difficulty change.\n"
                 "Pass in [height] to estimate the network speed at the time when a certain block was found.\n",
                 {
-                    {"nblocks", RPCArg::Type::NUM, RPCArg::Default{120}, "The number of blocks, or -1 for blocks since last difficulty change."},
+                    {"nblocks", RPCArg::Type::NUM, RPCArg::Default{120}, "The number of previous blocks to calculate estimate from, or -1 for blocks since last difficulty change."},
                     {"height", RPCArg::Type::NUM, RPCArg::Default{-1}, "To estimate at the time of the given height."},
                 },
                 RPCResult{
@@ -110,7 +119,7 @@ static RPCHelpMan getnetworkhashps()
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
-    return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].getInt<int>() : 120, !request.params[1].isNull() ? request.params[1].getInt<int>() : -1, chainman.ActiveChain());
+    return GetNetworkHashPS(self.Arg<int>(0), self.Arg<int>(1), chainman.ActiveChain());
 },
     };
 }
@@ -217,12 +226,12 @@ static RPCHelpMan generatetodescriptor()
             "\nGenerate 11 blocks to mydesc\n" + HelpExampleCli("generatetodescriptor", "11 \"mydesc\"")},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const int num_blocks{request.params[0].getInt<int>()};
-    const uint64_t max_tries{request.params[2].isNull() ? DEFAULT_MAX_TRIES : request.params[2].getInt<int>()};
+    const auto num_blocks{self.Arg<int>(0)};
+    const auto max_tries{self.Arg<uint64_t>(2)};
 
     CScript coinbase_script;
     std::string error;
-    if (!getScriptFromDescriptor(request.params[1].get_str(), coinbase_script, error)) {
+    if (!getScriptFromDescriptor(self.Arg<std::string>(1), coinbase_script, error)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
 
@@ -390,8 +399,8 @@ static RPCHelpMan generateblock()
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("hash", block_out->GetHash().GetHex());
     if (!process_new_block) {
-        CDataStream block_ser{SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags()};
-        block_ser << *block_out;
+        DataStream block_ser;
+        block_ser << RPCTxSerParams(*block_out);
         obj.pushKV("hex", HexStr(block_ser));
     }
     return obj;
@@ -468,15 +477,50 @@ static RPCHelpMan prioritisetransaction()
     LOCK(cs_main);
 
     uint256 hash(ParseHashV(request.params[0], "txid"));
+    const auto dummy{self.MaybeArg<double>(1)};
     CAmount nAmount = request.params[2].getInt<int64_t>();
 
-    if (!(request.params[1].isNull() || request.params[1].get_real() == 0)) {
+    if (dummy && *dummy != 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Priority is no longer supported, dummy argument to prioritisetransaction must be 0.");
     }
 
     EnsureAnyMemPool(request.context).PrioritiseTransaction(hash, nAmount);
     return true;
 },
+    };
+}
+
+static RPCHelpMan getprioritisedtransactions()
+{
+    return RPCHelpMan{"getprioritisedtransactions",
+        "Returns a map of all user-created (see prioritisetransaction) fee deltas by txid, and whether the tx is present in mempool.",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ_DYN, "prioritisation-map", "prioritisation keyed by txid",
+            {
+                {RPCResult::Type::OBJ, "txid", "", {
+                    {RPCResult::Type::NUM, "fee_delta", "transaction fee delta in satoshis"},
+                    {RPCResult::Type::BOOL, "in_mempool", "whether this transaction is currently in mempool"},
+                }}
+            },
+        },
+        RPCExamples{
+            HelpExampleCli("getprioritisedtransactions", "")
+            + HelpExampleRpc("getprioritisedtransactions", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            NodeContext& node = EnsureAnyNodeContext(request.context);
+            CTxMemPool& mempool = EnsureMemPool(node);
+            UniValue rpc_result{UniValue::VOBJ};
+            for (const auto& delta_info : mempool.GetPrioritisedTransactions()) {
+                UniValue result_inner{UniValue::VOBJ};
+                result_inner.pushKV("fee_delta", delta_info.delta);
+                result_inner.pushKV("in_mempool", delta_info.in_mempool);
+                rpc_result.pushKV(delta_info.txid.GetHex(), result_inner);
+            }
+            return rpc_result;
+        },
     };
 }
 
@@ -520,7 +564,7 @@ static RPCHelpMan getblocktemplate()
         "    https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki#getblocktemplate_changes\n"
         "    https://github.com/bitcoin/bips/blob/master/bip-0145.mediawiki\n",
         {
-            {"template_request", RPCArg::Type::OBJ, RPCArg::Default{UniValue::VOBJ}, "Format of the template",
+            {"template_request", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Format of the template",
             {
                 {"mode", RPCArg::Type::STR, /* treat as named arg */ RPCArg::Optional::OMITTED, "This must be set to \"template\", \"proposal\" (see BIP 23), or omitted"},
                 {"capabilities", RPCArg::Type::ARR, /* treat as named arg */ RPCArg::Optional::OMITTED, "A list of strings",
@@ -532,8 +576,10 @@ static RPCHelpMan getblocktemplate()
                     {"segwit", RPCArg::Type::STR, RPCArg::Optional::NO, "(literal) indicates client side segwit support"},
                     {"str", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "other client side supported softfork deployment"},
                 }},
+                {"longpollid", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "delay processing request until the result would vary significantly from the \"longpollid\" of a prior template"},
+                {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "proposed block data to check, encoded in hexadecimal; valid only for mode=\"proposal\""},
             },
-            RPCArgOptions{.oneline_description="\"template_request\""}},
+            },
         },
         {
             RPCResult{"If the proposal was accepted with mode=='proposal'", RPCResult::Type::NONE, "", ""},
@@ -670,7 +716,7 @@ static RPCHelpMan getblocktemplate()
             throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, PACKAGE_NAME " is not connected!");
         }
 
-        if (active_chainstate.IsInitialBlockDownload()) {
+        if (chainman.IsInitialBlockDownload()) {
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is in initial sync and waiting for blocks...");
         }
     }
@@ -1048,6 +1094,7 @@ void RegisterMiningRPCCommands(CRPCTable& t)
         {"mining", &getnetworkhashps},
         {"mining", &getmininginfo},
         {"mining", &prioritisetransaction},
+        {"mining", &getprioritisedtransactions},
         {"mining", &getblocktemplate},
         {"mining", &submitblock},
         {"mining", &submitheader},

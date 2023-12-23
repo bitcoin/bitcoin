@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(test_exec_ypow_loop)
 
 BOOST_AUTO_TEST_CASE(test_gen_all_round_xs_xinvs)
 {
-    CHashWriter fiat_shamir(0, 0);
+    HashWriter fiat_shamir{};
 
     Points Ls, Rs;
     Point g = Point::GetBasePoint();

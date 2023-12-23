@@ -11,7 +11,6 @@
 #include <primitives/transaction.h>
 #include <script/keyorigin.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
 
 #include <algorithm>
 #include <map>

@@ -16,7 +16,6 @@
 #include <test/util/setup_common.h>
 #include <util/chaintype.h>
 #include <validation.h>
-#include <version.h>
 
 FUZZ_TARGET(utxo_total_supply)
 {
@@ -94,8 +93,8 @@ FUZZ_TARGET(utxo_total_supply)
     assert(ActiveHeight() == 0);
     // Get at which height we duplicate the coinbase
     // Assuming that the fuzzer will mine relatively short chains (less than 200 blocks), we want the duplicate coinbase to be not too high.
-    // Up to 2000 seems reasonable.
-    int64_t duplicate_coinbase_height = fuzzed_data_provider.ConsumeIntegralInRange(0, 20 * COINBASE_MATURITY);
+    // Up to 300 seems reasonable.
+    int64_t duplicate_coinbase_height = fuzzed_data_provider.ConsumeIntegralInRange(0, 300);
     // Always pad with OP_0 at the end to avoid bad-cb-length error
     const CScript duplicate_coinbase_script = CScript() << duplicate_coinbase_height << OP_0;
     // Mine the first block with this duplicate
@@ -119,7 +118,9 @@ FUZZ_TARGET(utxo_total_supply)
     current_block = PrepareNextBlock();
     StoreLastTxo();
 
-    LIMITED_WHILE(fuzzed_data_provider.remaining_bytes(), 100'000)
+    // Limit to avoid timeout, but enough to cover duplicate_coinbase_height
+    // and CVE-2018-17144.
+    LIMITED_WHILE(fuzzed_data_provider.remaining_bytes(), 2'00)
     {
         CallOneOf(
             fuzzed_data_provider,
@@ -144,12 +145,12 @@ FUZZ_TARGET(utxo_total_supply)
 
                 const auto prev_utxo_stats = utxo_stats;
                 if (was_valid) {
-                    circulation += GetBlockSubsidy(ActiveHeight(), Params().GetConsensus());
-
                     if (duplicate_coinbase_height == ActiveHeight()) {
                         // we mined the duplicate coinbase
                         assert(current_block->vtx.at(0)->vin.at(0).scriptSig == duplicate_coinbase_script);
                     }
+
+                    circulation += GetBlockSubsidy(ActiveHeight(), Params().GetConsensus());
                 }
 
                 UpdateUtxoStats();

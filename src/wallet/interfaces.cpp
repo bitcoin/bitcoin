@@ -11,7 +11,7 @@
 #include <policy/fees.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
-#include <script/standard.h>
+#include <scheduler.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
 #include <uint256.h>
@@ -42,6 +42,7 @@ using interfaces::Wallet;
 using interfaces::WalletAddress;
 using interfaces::WalletBalances;
 using interfaces::WalletLoader;
+using interfaces::WalletMigrationResult;
 using interfaces::WalletOrderForm;
 using interfaces::WalletTx;
 using interfaces::WalletTxOut;
@@ -67,6 +68,7 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
     result.txout_address_is_mine.reserve(wtx.tx->vout.size());
     for (const auto& txout : wtx.tx->vout) {
         result.txout_is_mine.emplace_back(wallet.IsMine(txout));
+        result.txout_is_change.push_back(OutputIsChange(wallet, txout));
         result.txout_address.emplace_back();
         result.txout_address_is_mine.emplace_back(ExtractDestination(txout.scriptPubKey, result.txout_address.back()) ?
                                                       wallet.IsMine(result.txout_address.back()) :
@@ -211,7 +213,7 @@ public:
         }
         return true;
     }
-    std::vector<WalletAddress> getAddresses() const override
+    std::vector<WalletAddress> getAddresses() override
     {
         LOCK(m_wallet->cs_wallet);
         std::vector<WalletAddress> result;
@@ -584,10 +586,15 @@ public:
     }
     bool verify() override { return VerifyWallets(m_context); }
     bool load() override { return LoadWallets(m_context); }
-    void start(CScheduler& scheduler) override { return StartWallets(m_context, scheduler); }
+    void start(CScheduler& scheduler) override
+    {
+        m_context.scheduler = &scheduler;
+        return StartWallets(m_context);
+    }
     void flush() override { return FlushWallets(m_context); }
     void stop() override { return StopWallets(m_context); }
     void setMockTime(int64_t time) override { return SetMockTime(time); }
+    void schedulerMockForward(std::chrono::seconds delta) override { Assert(m_context.scheduler)->MockForward(delta); }
 
     //! WalletLoader methods
     util::Result<std::unique_ptr<Wallet>> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, std::vector<bilingual_str>& warnings) override
@@ -601,7 +608,7 @@ public:
         bilingual_str error;
         std::unique_ptr<Wallet> wallet{MakeWallet(m_context, CreateWallet(m_context, name, /*load_on_start=*/true, options, status, error, warnings))};
         if (wallet) {
-            return {std::move(wallet)};
+            return wallet;
         } else {
             return util::Error{error};
         }
@@ -615,7 +622,7 @@ public:
         bilingual_str error;
         std::unique_ptr<Wallet> wallet{MakeWallet(m_context, LoadWallet(m_context, name, /*load_on_start=*/true, options, status, error, warnings))};
         if (wallet) {
-            return {std::move(wallet)};
+            return wallet;
         } else {
             return util::Error{error};
         }
@@ -626,10 +633,22 @@ public:
         bilingual_str error;
         std::unique_ptr<Wallet> wallet{MakeWallet(m_context, RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings))};
         if (wallet) {
-            return {std::move(wallet)};
+            return wallet;
         } else {
             return util::Error{error};
         }
+    }
+    util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase) override
+    {
+        auto res = wallet::MigrateLegacyToDescriptor(name, passphrase, m_context);
+        if (!res) return util::Error{util::ErrorString(res)};
+        WalletMigrationResult out{
+            .wallet = MakeWallet(m_context, res->wallet),
+            .watchonly_wallet_name = res->watchonly_wallet ? std::make_optional(res->watchonly_wallet->GetName()) : std::nullopt,
+            .solvables_wallet_name = res->solvables_wallet ? std::make_optional(res->solvables_wallet->GetName()) : std::nullopt,
+            .backup_path = res->backup_path,
+        };
+        return out;
     }
     std::string getWalletDir() override
     {

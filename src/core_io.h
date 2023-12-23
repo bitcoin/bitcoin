@@ -8,6 +8,7 @@
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/range_proof/bulletproofs/range_proof.h>
 #include <consensus/amount.h>
+#include <util/result.h>
 
 #include <string>
 #include <vector>
@@ -47,16 +48,15 @@ bool DecodeHexBlockHeader(CBlockHeader&, const std::string& hex_header);
  * @see ParseHashV for an RPC-oriented version of this
  */
 bool ParseHashStr(const std::string& strHex, uint256& result);
-std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName);
-int ParseSighashString(const UniValue& sighash);
+[[nodiscard]] util::Result<int> SighashFromStr(const std::string& sighash);
 
 // core_write.cpp
 UniValue ValueFromAmount(const CAmount amount);
 std::string FormatScript(const CScript& script);
-std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
+std::string EncodeHexTx(const CTransaction& tx, const bool without_witness = false);
 std::string SighashToStr(unsigned char sighash_type);
 void RangeProofToUniv(const bulletproofs::RangeProof<Mcl>& rp, UniValue& entry, const bool& extended = false);
 void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex = true, bool include_address = false, const SigningProvider* provider = nullptr);
-void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex = true, int serialize_flags = 0, const CTxUndo* txundo = nullptr, TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS, bool extendedRangeProof = false);
+void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex = true, bool without_witness = false, const CTxUndo* txundo = nullptr, TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS, bool extendedRangeProof = false);
 
 #endif // BITCOIN_CORE_IO_H

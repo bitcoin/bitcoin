@@ -45,14 +45,14 @@ CSipHasher& CSipHasher::Write(uint64_t data)
     return *this;
 }
 
-CSipHasher& CSipHasher::Write(const unsigned char* data, size_t size)
+CSipHasher& CSipHasher::Write(Span<const unsigned char> data)
 {
     uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
     uint64_t t = tmp;
     uint8_t c = count;
 
-    while (size--) {
-        t |= ((uint64_t)(*(data++))) << (8 * (c % 8));
+    while (data.size() > 0) {
+        t |= uint64_t{data.front()} << (8 * (c % 8));
         c++;
         if ((c & 7) == 0) {
             v3 ^= t;
@@ -61,6 +61,7 @@ CSipHasher& CSipHasher::Write(const unsigned char* data, size_t size)
             v0 ^= t;
             t = 0;
         }
+        data = data.subspan(1);
     }
 
     v[0] = v0;

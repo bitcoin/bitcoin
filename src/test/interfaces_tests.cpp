@@ -5,8 +5,8 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
-#include <script/standard.h>
 #include <test/util/setup_common.h>
+#include <script/solver.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>

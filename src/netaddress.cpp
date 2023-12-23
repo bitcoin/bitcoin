@@ -309,10 +309,6 @@ bool CNetAddr::IsBindAny() const
     return std::all_of(m_addr.begin(), m_addr.end(), [](uint8_t b) { return b == 0; });
 }
 
-bool CNetAddr::IsIPv4() const { return m_net == NET_IPV4; }
-
-bool CNetAddr::IsIPv6() const { return m_net == NET_IPV6; }
-
 bool CNetAddr::IsRFC1918() const
 {
     return IsIPv4() && (
@@ -400,22 +396,6 @@ bool CNetAddr::IsHeNet() const
     return IsIPv6() && HasPrefix(m_addr, std::array<uint8_t, 4>{0x20, 0x01, 0x04, 0x70});
 }
 
-/**
- * Check whether this object represents a TOR address.
- * @see CNetAddr::SetSpecial(const std::string &)
- */
-bool CNetAddr::IsTor() const { return m_net == NET_ONION; }
-
-/**
- * Check whether this object represents an I2P address.
- */
-bool CNetAddr::IsI2P() const { return m_net == NET_I2P; }
-
-/**
- * Check whether this object represents a CJDNS address.
- */
-bool CNetAddr::IsCJDNS() const { return m_net == NET_CJDNS; }
-
 bool CNetAddr::IsLocal() const
 {
     // IPv4 loopback (127.0.0.0/8 or 0.0.0.0/8)
@@ -450,8 +430,7 @@ bool CNetAddr::IsValid() const
         return false;
     }
 
-    // CJDNS addresses always start with 0xfc
-    if (IsCJDNS() && (m_addr[0] != 0xFC)) {
+    if (IsCJDNS() && !HasCJDNSPrefix()) {
         return false;
     }
 
@@ -723,19 +702,16 @@ std::vector<unsigned char> CNetAddr::GetAddrBytes() const
 
 // private extensions to enum Network, only returned by GetExtNetwork,
 // and only used in GetReachabilityFrom
-static const int NET_UNKNOWN = NET_MAX + 0;
-static const int NET_TEREDO  = NET_MAX + 1;
-int static GetExtNetwork(const CNetAddr *addr)
+static const int NET_TEREDO = NET_MAX;
+int static GetExtNetwork(const CNetAddr& addr)
 {
-    if (addr == nullptr)
-        return NET_UNKNOWN;
-    if (addr->IsRFC4380())
+    if (addr.IsRFC4380())
         return NET_TEREDO;
-    return addr->GetNetwork();
+    return addr.GetNetwork();
 }
 
 /** Calculates a metric for how reachable (*this) is from a given partner */
-int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
+int CNetAddr::GetReachabilityFrom(const CNetAddr& paddrPartner) const
 {
     enum Reachability {
         REACH_UNREACHABLE,
@@ -750,7 +726,7 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
     if (!IsRoutable() || IsInternal())
         return REACH_UNREACHABLE;
 
-    int ourNet = GetExtNetwork(this);
+    int ourNet = GetExtNetwork(*this);
     int theirNet = GetExtNetwork(paddrPartner);
     bool fTunnel = IsRFC3964() || IsRFC6052() || IsRFC6145();
 
@@ -790,7 +766,6 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
         case NET_IPV6:    return REACH_IPV6_WEAK;
         case NET_IPV4:    return REACH_IPV4;
         }
-    case NET_UNKNOWN:
     case NET_UNROUTABLE:
     default:
         switch(ourNet) {

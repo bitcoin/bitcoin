@@ -18,5 +18,5 @@ SaltedSipHasher::SaltedSipHasher() : m_k0(GetRand<uint64_t>()), m_k1(GetRand<uin
 
 size_t SaltedSipHasher::operator()(const Span<const unsigned char>& script) const
 {
-    return CSipHasher(m_k0, m_k1).Write(script.data(), script.size()).Finalize();
+    return CSipHasher(m_k0, m_k1).Write(script).Finalize();
 }

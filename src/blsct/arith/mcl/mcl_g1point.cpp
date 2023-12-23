@@ -204,7 +204,7 @@ std::string MclG1Point::GetString(const uint8_t& radix) const
 
 MclG1Point::Scalar MclG1Point::GetHashWithSalt(const uint64_t salt) const
 {
-    CHashWriter hasher(0, 0);
+    HashWriter hasher{};
     hasher << *this;
     hasher << salt;
     MclScalar hash(hasher.GetHash());

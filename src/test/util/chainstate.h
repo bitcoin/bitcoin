@@ -50,7 +50,7 @@ CreateAndActivateUTXOSnapshot(
     UniValue result = CreateUTXOSnapshot(
         node, node.chainman->ActiveChainstate(), auto_outfile, snapshot_path, snapshot_path);
     LogPrintf(
-        "Wrote UTXO snapshot to %s: %s", fs::PathToString(snapshot_path.make_preferred()), result.write());
+        "Wrote UTXO snapshot to %s: %s\n", fs::PathToString(snapshot_path.make_preferred()), result.write());
 
     // Read the written snapshot in and then activate it.
     //
@@ -71,6 +71,7 @@ CreateAndActivateUTXOSnapshot(
             // This is a stripped-down version of node::LoadChainstate which
             // preserves the block index.
             LOCK(::cs_main);
+            CBlockIndex *orig_tip = node.chainman->ActiveChainstate().m_chain.Tip();
             uint256 gen_hash = node.chainman->ActiveChainstate().m_chain[0]->GetBlockHash();
             node.chainman->ResetChainstates();
             node.chainman->InitializeChainstate(node.mempool.get());
@@ -83,6 +84,22 @@ CreateAndActivateUTXOSnapshot(
             chain.setBlockIndexCandidates.insert(node.chainman->m_blockman.LookupBlockIndex(gen_hash));
             chain.LoadChainTip();
             node.chainman->MaybeRebalanceCaches();
+
+            // Reset the HAVE_DATA flags below the snapshot height, simulating
+            // never-having-downloaded them in the first place.
+            // TODO: perhaps we could improve this by using pruning to delete
+            // these blocks instead
+            CBlockIndex *pindex = orig_tip;
+            while (pindex && pindex != chain.m_chain.Tip()) {
+                pindex->nStatus &= ~BLOCK_HAVE_DATA;
+                pindex->nStatus &= ~BLOCK_HAVE_UNDO;
+                // We have to set the ASSUMED_VALID flag, because otherwise it
+                // would not be possible to have a block index entry without HAVE_DATA
+                // and with nTx > 0 (since we aren't setting the pruned flag);
+                // see CheckBlockIndex().
+                pindex->nStatus |= BLOCK_ASSUMED_VALID;
+                pindex = pindex->pprev;
+            }
         }
         BlockValidationState state;
         if (!node.chainman->ActiveChainstate().ActivateBestChain(state)) {
@@ -92,7 +109,23 @@ CreateAndActivateUTXOSnapshot(
             0 == WITH_LOCK(node.chainman->GetMutex(), return node.chainman->ActiveHeight()));
     }
 
-    return node.chainman->ActivateSnapshot(auto_infile, metadata, in_memory_chainstate);
+    auto& new_active = node.chainman->ActiveChainstate();
+    auto* tip = new_active.m_chain.Tip();
+
+    // Disconnect a block so that the snapshot chainstate will be ahead, otherwise
+    // it will refuse to activate.
+    //
+    // TODO this is a unittest-specific hack, and we should probably rethink how to
+    // better generate/activate snapshots in unittests.
+    if (tip->pprev) {
+        new_active.m_chain.SetTip(*(tip->pprev));
+    }
+
+    bool res = node.chainman->ActivateSnapshot(auto_infile, metadata, in_memory_chainstate);
+
+    // Restore the old tip.
+    new_active.m_chain.SetTip(*tip);
+    return res;
 }
 
 

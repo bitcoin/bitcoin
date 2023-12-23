@@ -13,25 +13,26 @@ from test_framework.script import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import TestNode
-from test_framework.util import (
-    assert_raises_rpc_error,
-    random_bytes,
-)
+from test_framework.util import assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
+
+from random import randbytes
 
 
 class DataCarrierTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 3
+        self.num_nodes = 4
         self.extra_args = [
             [],
             ["-datacarrier=0"],
-            ["-datacarrier=1", f"-datacarriersize={MAX_OP_RETURN_RELAY - 1}"]
+            ["-datacarrier=1", f"-datacarriersize={MAX_OP_RETURN_RELAY - 1}"],
+            ["-datacarrier=1", f"-datacarriersize=2"],
         ]
 
-    def test_null_data_transaction(self, node: TestNode, data: bytes, success: bool) -> None:
+    def test_null_data_transaction(self, node: TestNode, data, success: bool) -> None:
         tx = self.wallet.create_self_transfer(fee_rate=0)["tx"]
-        tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN, data])))
+        data = [] if data is None else [data]
+        tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN] + data)))
         tx.vout[0].nValue -= tx.get_vsize()  # simply pay 1sat/vbyte fee
 
         tx_hex = tx.serialize().hex()
@@ -46,9 +47,11 @@ class DataCarrierTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
 
         # By default, only 80 bytes are used for data (+1 for OP_RETURN, +2 for the pushdata opcodes).
-        default_size_data = random_bytes(MAX_OP_RETURN_RELAY - 3)
-        too_long_data = random_bytes(MAX_OP_RETURN_RELAY - 2)
-        small_data = random_bytes(MAX_OP_RETURN_RELAY - 4)
+        default_size_data = randbytes(MAX_OP_RETURN_RELAY - 3)
+        too_long_data = randbytes(MAX_OP_RETURN_RELAY - 2)
+        small_data = randbytes(MAX_OP_RETURN_RELAY - 4)
+        one_byte = randbytes(1)
+        zero_bytes = randbytes(0)
 
         self.log.info("Testing null data transaction with default -datacarrier and -datacarriersize values.")
         self.test_null_data_transaction(node=self.nodes[0], data=default_size_data, success=True)
@@ -64,6 +67,24 @@ class DataCarrierTest(BitcoinTestFramework):
 
         self.log.info("Testing a null data transaction with a size smaller than accepted by -datacarriersize.")
         self.test_null_data_transaction(node=self.nodes[2], data=small_data, success=True)
+
+        self.log.info("Testing a null data transaction with no data.")
+        self.test_null_data_transaction(node=self.nodes[0], data=None, success=True)
+        self.test_null_data_transaction(node=self.nodes[1], data=None, success=False)
+        self.test_null_data_transaction(node=self.nodes[2], data=None, success=True)
+        self.test_null_data_transaction(node=self.nodes[3], data=None, success=True)
+
+        self.log.info("Testing a null data transaction with zero bytes of data.")
+        self.test_null_data_transaction(node=self.nodes[0], data=zero_bytes, success=True)
+        self.test_null_data_transaction(node=self.nodes[1], data=zero_bytes, success=False)
+        self.test_null_data_transaction(node=self.nodes[2], data=zero_bytes, success=True)
+        self.test_null_data_transaction(node=self.nodes[3], data=zero_bytes, success=True)
+
+        self.log.info("Testing a null data transaction with one byte of data.")
+        self.test_null_data_transaction(node=self.nodes[0], data=one_byte, success=True)
+        self.test_null_data_transaction(node=self.nodes[1], data=one_byte, success=False)
+        self.test_null_data_transaction(node=self.nodes[2], data=one_byte, success=True)
+        self.test_null_data_transaction(node=self.nodes[3], data=one_byte, success=False)
 
 
 if __name__ == '__main__':

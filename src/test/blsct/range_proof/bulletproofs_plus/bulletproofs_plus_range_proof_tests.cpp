@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(test_de_ser)
 {
     auto p = GenProof();
 
-    CDataStream st(SER_DISK, PROTOCOL_VERSION);
+    DataStream st{};
     p.Serialize(st);
 
     bulletproofs_plus::RangeProof<T> q;

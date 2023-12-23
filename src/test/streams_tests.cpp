@@ -6,12 +6,62 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/fs.h>
+#include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 
 using namespace std::string_literals;
 
 BOOST_FIXTURE_TEST_SUITE(streams_tests, BasicTestingSetup)
+
+BOOST_AUTO_TEST_CASE(xor_file)
+{
+    fs::path xor_path{m_args.GetDataDirBase() / "test_xor.bin"};
+    auto raw_file{[&](const auto& mode) { return fsbridge::fopen(xor_path, mode); }};
+    const std::vector<uint8_t> test1{1, 2, 3};
+    const std::vector<uint8_t> test2{4, 5};
+    const std::vector<std::byte> xor_pat{std::byte{0xff}, std::byte{0x00}};
+    {
+        // Check errors for missing file
+        AutoFile xor_file{raw_file("rb"), xor_pat};
+        BOOST_CHECK_EXCEPTION(xor_file << std::byte{}, std::ios_base::failure, HasReason{"AutoFile::write: file handle is nullpt"});
+        BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: file handle is nullpt"});
+        BOOST_CHECK_EXCEPTION(xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: file handle is nullpt"});
+    }
+    {
+        AutoFile xor_file{raw_file("wbx"), xor_pat};
+        xor_file << test1 << test2;
+    }
+    {
+        // Read raw from disk
+        AutoFile non_xor_file{raw_file("rb")};
+        std::vector<std::byte> raw(7);
+        non_xor_file >> Span{raw};
+        BOOST_CHECK_EQUAL(HexStr(raw), "fc01fd03fd04fa");
+        // Check that no padding exists
+        BOOST_CHECK_EXCEPTION(non_xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: end of file"});
+    }
+    {
+        AutoFile xor_file{raw_file("rb"), xor_pat};
+        std::vector<std::byte> read1, read2;
+        xor_file >> read1 >> read2;
+        BOOST_CHECK_EQUAL(HexStr(read1), HexStr(test1));
+        BOOST_CHECK_EQUAL(HexStr(read2), HexStr(test2));
+        // Check that eof was reached
+        BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
+    }
+    {
+        AutoFile xor_file{raw_file("rb"), xor_pat};
+        std::vector<std::byte> read2;
+        // Check that ignore works
+        xor_file.ignore(4);
+        xor_file >> read2;
+        BOOST_CHECK_EQUAL(HexStr(read2), HexStr(test2));
+        // Check that ignore and read fail now
+        BOOST_CHECK_EXCEPTION(xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: end of file"});
+        BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
+    }
+}
 
 BOOST_AUTO_TEST_CASE(streams_vector_writer)
 {
@@ -24,49 +74,49 @@ BOOST_AUTO_TEST_CASE(streams_vector_writer)
     // point should yield the same results, even if the first test grew the
     // vector.
 
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 0, a, b);
+    VectorWriter{vch, 0, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{1, 2}}));
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 0, a, b);
+    VectorWriter{vch, 0, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{1, 2}}));
     vch.clear();
 
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, b);
+    VectorWriter{vch, 2, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2}}));
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, b);
+    VectorWriter{vch, 2, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2}}));
     vch.clear();
 
     vch.resize(5, 0);
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, b);
+    VectorWriter{vch, 2, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2, 0}}));
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, b);
+    VectorWriter{vch, 2, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2, 0}}));
     vch.clear();
 
     vch.resize(4, 0);
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 3, a, b);
+    VectorWriter{vch, 3, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 1, 2}}));
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 3, a, b);
+    VectorWriter{vch, 3, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 1, 2}}));
     vch.clear();
 
     vch.resize(4, 0);
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 4, a, b);
+    VectorWriter{vch, 4, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 0, 1, 2}}));
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 4, a, b);
+    VectorWriter{vch, 4, a, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 0, 1, 2}}));
     vch.clear();
 
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 0, bytes);
+    VectorWriter{vch, 0, bytes};
     BOOST_CHECK((vch == std::vector<unsigned char>{{3, 4, 5, 6}}));
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 0, bytes);
+    VectorWriter{vch, 0, bytes};
     BOOST_CHECK((vch == std::vector<unsigned char>{{3, 4, 5, 6}}));
     vch.clear();
 
     vch.resize(4, 8);
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, bytes, b);
+    VectorWriter{vch, 2, a, bytes, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{8, 8, 1, 3, 4, 5, 6, 2}}));
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, bytes, b);
+    VectorWriter{vch, 2, a, bytes, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{8, 8, 1, 3, 4, 5, 6, 2}}));
     vch.clear();
 }
@@ -75,7 +125,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
 {
     std::vector<unsigned char> vch = {1, 255, 3, 4, 5, 6};
 
-    SpanReader reader{SER_NETWORK, INIT_PROTO_VERSION, vch};
+    SpanReader reader{vch};
     BOOST_CHECK_EQUAL(reader.size(), 6U);
     BOOST_CHECK(!reader.empty());
 
@@ -105,7 +155,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
     BOOST_CHECK_THROW(reader >> d, std::ios_base::failure);
 
     // Read a 4 bytes as a signed int from the beginning of the buffer.
-    SpanReader new_reader{SER_NETWORK, INIT_PROTO_VERSION, vch};
+    SpanReader new_reader{vch};
     new_reader >> d;
     BOOST_CHECK_EQUAL(d, 67370753); // 1,255,3,4 in little-endian base-256
     BOOST_CHECK_EQUAL(new_reader.size(), 2U);
@@ -119,7 +169,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
 BOOST_AUTO_TEST_CASE(streams_vector_reader_rvalue)
 {
     std::vector<uint8_t> data{0x82, 0xa7, 0x31};
-    SpanReader reader{SER_NETWORK, INIT_PROTO_VERSION, data};
+    SpanReader reader{data};
     uint32_t varint = 0;
     // Deserialize into r-value
     reader >> VARINT(varint);
@@ -199,18 +249,18 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 BOOST_AUTO_TEST_CASE(streams_buffered_file)
 {
     fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
-    FILE* file = fsbridge::fopen(streams_test_filename, "w+b");
+    AutoFile file{fsbridge::fopen(streams_test_filename, "w+b")};
 
     // The value at each offset is the offset.
     for (uint8_t j = 0; j < 40; ++j) {
-        fwrite(&j, 1, 1, file);
+        file << j;
     }
-    rewind(file);
+    std::rewind(file.Get());
 
     // The buffer size (second arg) must be greater than the rewind
     // amount (third arg).
     try {
-        CBufferedFile bfbad(file, 25, 25, 222, 333);
+        BufferedFile bfbad{file, 25, 25};
         BOOST_CHECK(false);
     } catch (const std::exception& e) {
         BOOST_CHECK(strstr(e.what(),
@@ -218,12 +268,8 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     }
 
     // The buffer is 25 bytes, allow rewinding 10 bytes.
-    CBufferedFile bf(file, 25, 10, 222, 333);
+    BufferedFile bf{file, 25, 10};
     BOOST_CHECK(!bf.eof());
-
-    // These two members have no functional effect.
-    BOOST_CHECK_EQUAL(bf.GetType(), 222);
-    BOOST_CHECK_EQUAL(bf.GetVersion(), 333);
 
     uint8_t i;
     bf >> i;
@@ -307,7 +353,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
         BOOST_CHECK(false);
     } catch (const std::exception& e) {
         BOOST_CHECK(strstr(e.what(),
-                        "CBufferedFile::Fill: end of file") != nullptr);
+                        "BufferedFile::Fill: end of file") != nullptr);
     }
     // Attempting to read beyond the end sets the EOF indicator.
     BOOST_CHECK(bf.eof());
@@ -326,7 +372,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     BOOST_CHECK(bf.GetPos() <= 30U);
 
     // We can explicitly close the file, or the destructor will do it.
-    bf.fclose();
+    file.fclose();
 
     fs::remove(streams_test_filename);
 }
@@ -334,15 +380,15 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
 BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
 {
     fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
-    FILE* file = fsbridge::fopen(streams_test_filename, "w+b");
+    AutoFile file{fsbridge::fopen(streams_test_filename, "w+b")};
     // The value at each offset is the byte offset (e.g. byte 1 in the file has the value 0x01).
     for (uint8_t j = 0; j < 40; ++j) {
-        fwrite(&j, 1, 1, file);
+        file << j;
     }
-    rewind(file);
+    std::rewind(file.Get());
 
     // The buffer is 25 bytes, allow rewinding 10 bytes.
-    CBufferedFile bf(file, 25, 10, 222, 333);
+    BufferedFile bf{file, 25, 10};
 
     uint8_t i;
     // This is like bf >> (7-byte-variable), in that it will cause data
@@ -376,7 +422,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
     bf.SkipTo(13);
     BOOST_CHECK_EQUAL(bf.GetPos(), 13U);
 
-    bf.fclose();
+    file.fclose();
     fs::remove(streams_test_filename);
 }
 
@@ -387,16 +433,16 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
 
     fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
     for (int rep = 0; rep < 50; ++rep) {
-        FILE* file = fsbridge::fopen(streams_test_filename, "w+b");
+        AutoFile file{fsbridge::fopen(streams_test_filename, "w+b")};
         size_t fileSize = InsecureRandRange(256);
         for (uint8_t i = 0; i < fileSize; ++i) {
-            fwrite(&i, 1, 1, file);
+            file << i;
         }
-        rewind(file);
+        std::rewind(file.Get());
 
         size_t bufSize = InsecureRandRange(300) + 1;
         size_t rewindSize = InsecureRandRange(bufSize);
-        CBufferedFile bf(file, bufSize, rewindSize, 222, 333);
+        BufferedFile bf{file, bufSize, rewindSize};
         size_t currentPos = 0;
         size_t maxPos = 0;
         for (int step = 0; step < 100; ++step) {
@@ -503,12 +549,12 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
 
 BOOST_AUTO_TEST_CASE(streams_hashed)
 {
-    CDataStream stream(SER_NETWORK, INIT_PROTO_VERSION);
+    DataStream stream{};
     HashedSourceWriter hash_writer{stream};
     const std::string data{"bitcoin"};
     hash_writer << data;
 
-    CHashVerifier hash_verifier{&stream};
+    HashVerifier hash_verifier{stream};
     std::string result;
     hash_verifier >> result;
     BOOST_CHECK_EQUAL(data, result);

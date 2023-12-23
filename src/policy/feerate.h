@@ -62,7 +62,7 @@ public:
     /**
      * Return the fee in satoshis for a vsize of 1000 vbytes
      */
-    CAmount GetFeePerK() const { return GetFee(1000); }
+    CAmount GetFeePerK() const { return nSatoshisPerK; }
     friend bool operator<(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK < b.nSatoshisPerK; }
     friend bool operator>(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK > b.nSatoshisPerK; }
     friend bool operator==(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK == b.nSatoshisPerK; }

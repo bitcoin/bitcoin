@@ -27,7 +27,7 @@ void initialize_net()
     static const auto testing_setup = MakeNoLogFileContext<>(ChainType::MAIN);
 }
 
-FUZZ_TARGET_INIT(net, initialize_net)
+FUZZ_TARGET(net, .init = initialize_net)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
@@ -53,7 +53,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
                 }
             },
             [&] {
-                const std::optional<CService> service_opt = ConsumeDeserializable<CService>(fuzzed_data_provider);
+                const std::optional<CService> service_opt = ConsumeDeserializable<CService>(fuzzed_data_provider, ConsumeDeserializationParams<CNetAddr::SerParams>(fuzzed_data_provider));
                 if (!service_opt) {
                     return;
                 }

@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(test_de_ser)
         omega
     );
 
-    CDataStream st(SER_DISK, PROTOCOL_VERSION);
+    DataStream st{};
     p.Serialize(st);
 
     SetMemProof<Mcl> q;

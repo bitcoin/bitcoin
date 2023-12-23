@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <cstddef>
 #include <cstdio>
 #include <ios>
 #include <limits>
@@ -23,65 +24,40 @@
 #include <utility>
 #include <vector>
 
-template<typename Stream>
-class OverrideStream
+namespace util {
+inline void Xor(Span<std::byte> write, Span<const std::byte> key, size_t key_offset = 0)
 {
-    Stream* stream;
-
-    const int nType;
-    const int nVersion;
-
-public:
-    OverrideStream(Stream* stream_, int nType_, int nVersion_) : stream(stream_), nType(nType_), nVersion(nVersion_) {}
-
-    template<typename T>
-    OverrideStream<Stream>& operator<<(const T& obj)
-    {
-        // Serialize to this stream
-        ::Serialize(*this, obj);
-        return (*this);
+    if (key.size() == 0) {
+        return;
     }
+    key_offset %= key.size();
 
-    template<typename T>
-    OverrideStream<Stream>& operator>>(T&& obj)
-    {
-        // Unserialize from this stream
-        ::Unserialize(*this, obj);
-        return (*this);
+    for (size_t i = 0, j = key_offset; i != write.size(); i++) {
+        write[i] ^= key[j++];
+
+        // This potentially acts on very many bytes of data, so it's
+        // important that we calculate `j`, i.e. the `key` index in this
+        // way instead of doing a %, which would effectively be a division
+        // for each byte Xor'd -- much slower than need be.
+        if (j == key.size())
+            j = 0;
     }
-
-    void write(Span<const std::byte> src)
-    {
-        stream->write(src);
-    }
-
-    void read(Span<std::byte> dst)
-    {
-        stream->read(dst);
-    }
-
-    int GetVersion() const { return nVersion; }
-    int GetType() const { return nType; }
-    size_t size() const { return stream->size(); }
-    void ignore(size_t size) { return stream->ignore(size); }
-};
+}
+} // namespace util
 
 /* Minimal stream for overwriting and/or appending to an existing byte vector
  *
  * The referenced vector will grow as necessary
  */
-class CVectorWriter
+class VectorWriter
 {
- public:
-
+public:
 /*
- * @param[in]  nTypeIn Serialization Type
- * @param[in]  nVersionIn Serialization Version (including any flags)
  * @param[in]  vchDataIn  Referenced byte vector to overwrite/append
  * @param[in]  nPosIn Starting position. Vector index where writes should start. The vector will initially
  *                    grow as necessary to max(nPosIn, vec.size()). So to append, use vec.size().
 */
-    CVectorWriter(int nTypeIn, int nVersionIn, std::vector<unsigned char>& vchDataIn, size_t nPosIn) : nType(nTypeIn), nVersion(nVersionIn), vchData(vchDataIn), nPos(nPosIn)
+    VectorWriter(std::vector<unsigned char>& vchDataIn, size_t nPosIn) : vchData{vchDataIn}, nPos{nPosIn}
     {
         if(nPos > vchData.size())
             vchData.resize(nPos);
@@ -91,7 +67,7 @@ class CVectorWriter
  * @param[in]  args  A list of items to serialize starting at nPosIn.
 */
     template <typename... Args>
-    CVectorWriter(int nTypeIn, int nVersionIn, std::vector<unsigned char>& vchDataIn, size_t nPosIn, Args&&... args) : CVectorWriter(nTypeIn, nVersionIn, vchDataIn, nPosIn)
+    VectorWriter(std::vector<unsigned char>& vchDataIn, size_t nPosIn, Args&&... args) : VectorWriter{vchDataIn, nPosIn}
     {
         ::SerializeMany(*this, std::forward<Args>(args)...);
     }
@@ -107,24 +83,14 @@ class CVectorWriter
         }
         nPos += src.size();
     }
-    template<typename T>
-    CVectorWriter& operator<<(const T& obj)
+    template <typename T>
+    VectorWriter& operator<<(const T& obj)
     {
-        // Serialize to this stream
         ::Serialize(*this, obj);
         return (*this);
     }
-    int GetVersion() const
-    {
-        return nVersion;
-    }
-    int GetType() const
-    {
-        return nType;
-    }
+
 private:
-    const int nType;
-    const int nVersion;
     std::vector<unsigned char>& vchData;
     size_t nPos;
 };
@@ -134,30 +100,20 @@ private:
 class SpanReader
 {
 private:
-    const int m_type;
-    const int m_version;
     Span<const unsigned char> m_data;
 
 public:
-
     /**
-     * @param[in]  type Serialization Type
-     * @param[in]  version Serialization Version (including any flags)
      * @param[in]  data Referenced byte vector to overwrite/append
      */
-    SpanReader(int type, int version, Span<const unsigned char> data)
-        : m_type(type), m_version(version), m_data(data) {}
+    explicit SpanReader(Span<const unsigned char> data) : m_data{data} {}
 
     template<typename T>
     SpanReader& operator>>(T&& obj)
     {
-        // Unserialize from this stream
         ::Unserialize(*this, obj);
         return (*this);
     }
-
-    int GetVersion() const { return m_version; }
-    int GetType() const { return m_type; }
 
     size_t size() const { return m_data.size(); }
     bool empty() const { return m_data.empty(); }
@@ -174,6 +130,11 @@ public:
         }
         memcpy(dst.data(), m_data.data(), dst.size());
         m_data = m_data.subspan(dst.size());
+    }
+
+    void ignore(size_t n)
+    {
+        m_data = m_data.subspan(n);
     }
 };
 
@@ -293,18 +254,9 @@ public:
         vch.insert(vch.end(), src.begin(), src.end());
     }
 
-    template<typename Stream>
-    void Serialize(Stream& s) const
-    {
-        // Special case: stream << stream concatenates like stream += stream
-        if (!vch.empty())
-            s.write(MakeByteSpan(vch));
-    }
-
     template<typename T>
     DataStream& operator<<(const T& obj)
     {
-        // Serialize to this stream
         ::Serialize(*this, obj);
         return (*this);
     }
@@ -312,7 +264,6 @@ public:
     template<typename T>
     DataStream& operator>>(T&& obj)
     {
-        // Unserialize from this stream
         ::Unserialize(*this, obj);
         return (*this);
     }
@@ -324,56 +275,7 @@ public:
      */
     void Xor(const std::vector<unsigned char>& key)
     {
-        if (key.size() == 0) {
-            return;
-        }
-
-        for (size_type i = 0, j = 0; i != size(); i++) {
-            vch[i] ^= std::byte{key[j++]};
-
-            // This potentially acts on very many bytes of data, so it's
-            // important that we calculate `j`, i.e. the `key` index in this
-            // way instead of doing a %, which would effectively be a division
-            // for each byte Xor'd -- much slower than need be.
-            if (j == key.size())
-                j = 0;
-        }
-    }
-};
-
-class CDataStream : public DataStream
-{
-private:
-    int nType;
-    int nVersion;
-
-public:
-    explicit CDataStream(int nTypeIn, int nVersionIn)
-        : nType{nTypeIn},
-          nVersion{nVersionIn} {}
-
-    explicit CDataStream(Span<const uint8_t> sp, int type, int version) : CDataStream{AsBytes(sp), type, version} {}
-    explicit CDataStream(Span<const value_type> sp, int nTypeIn, int nVersionIn)
-        : DataStream{sp},
-          nType{nTypeIn},
-          nVersion{nVersionIn} {}
-
-    int GetType() const          { return nType; }
-    void SetVersion(int n)       { nVersion = n; }
-    int GetVersion() const       { return nVersion; }
-
-    template <typename T>
-    CDataStream& operator<<(const T& obj)
-    {
-        ::Serialize(*this, obj);
-        return *this;
-    }
-
-    template <typename T>
-    CDataStream& operator>>(T&& obj)
-    {
-        ::Unserialize(*this, obj);
-        return *this;
+        util::Xor(MakeWritableByteSpan(*this), MakeByteSpan(key));
     }
 };
 
@@ -477,7 +379,6 @@ public:
     }
 };
 
-
 /** Non-refcounted RAII wrapper for FILE*
  *
  * Will automatically close the file when it goes out of scope if not null.
@@ -487,81 +388,63 @@ public:
 class AutoFile
 {
 protected:
-    FILE* file;
+    std::FILE* m_file;
+    std::vector<std::byte> m_xor;
 
 public:
-    explicit AutoFile(FILE* filenew) : file{filenew} {}
+    explicit AutoFile(std::FILE* file, std::vector<std::byte> data_xor={}) : m_file{file}, m_xor{std::move(data_xor)} {}
 
-    ~AutoFile()
-    {
-        fclose();
-    }
+    ~AutoFile() { fclose(); }
 
     // Disallow copies
     AutoFile(const AutoFile&) = delete;
     AutoFile& operator=(const AutoFile&) = delete;
 
+    bool feof() const { return std::feof(m_file); }
+
     int fclose()
     {
-        int retval{0};
-        if (file) {
-            retval = ::fclose(file);
-            file = nullptr;
-        }
-        return retval;
+        if (auto rel{release()}) return std::fclose(rel);
+        return 0;
     }
 
     /** Get wrapped FILE* with transfer of ownership.
      * @note This will invalidate the AutoFile object, and makes it the responsibility of the caller
      * of this function to clean up the returned FILE*.
      */
-    FILE* release()             { FILE* ret = file; file = nullptr; return ret; }
+    std::FILE* release()
+    {
+        std::FILE* ret{m_file};
+        m_file = nullptr;
+        return ret;
+    }
 
     /** Get wrapped FILE* without transfer of ownership.
      * @note Ownership of the FILE* will remain with this class. Use this only if the scope of the
      * AutoFile outlives use of the passed pointer.
      */
-    FILE* Get() const           { return file; }
+    std::FILE* Get() const { return m_file; }
 
     /** Return true if the wrapped FILE* is nullptr, false otherwise.
      */
-    bool IsNull() const         { return (file == nullptr); }
+    bool IsNull() const { return m_file == nullptr; }
+
+    /** Continue with a different XOR key */
+    void SetXor(std::vector<std::byte> data_xor) { m_xor = data_xor; }
+
+    /** Implementation detail, only used internally. */
+    std::size_t detail_fread(Span<std::byte> dst);
 
     //
     // Stream subset
     //
-    void read(Span<std::byte> dst)
-    {
-        if (!file) throw std::ios_base::failure("AutoFile::read: file handle is nullptr");
-        if (fread(dst.data(), 1, dst.size(), file) != dst.size()) {
-            throw std::ios_base::failure(feof(file) ? "AutoFile::read: end of file" : "AutoFile::read: fread failed");
-        }
-    }
-
-    void ignore(size_t nSize)
-    {
-        if (!file) throw std::ios_base::failure("AutoFile::ignore: file handle is nullptr");
-        unsigned char data[4096];
-        while (nSize > 0) {
-            size_t nNow = std::min<size_t>(nSize, sizeof(data));
-            if (fread(data, 1, nNow, file) != nNow)
-                throw std::ios_base::failure(feof(file) ? "AutoFile::ignore: end of file" : "AutoFile::read: fread failed");
-            nSize -= nNow;
-        }
-    }
-
-    void write(Span<const std::byte> src)
-    {
-        if (!file) throw std::ios_base::failure("AutoFile::write: file handle is nullptr");
-        if (fwrite(src.data(), 1, src.size(), file) != src.size()) {
-            throw std::ios_base::failure("AutoFile::write: write failed");
-        }
-    }
+    void read(Span<std::byte> dst);
+    void ignore(size_t nSize);
+    void write(Span<const std::byte> src);
 
     template <typename T>
     AutoFile& operator<<(const T& obj)
     {
-        if (!file) throw std::ios_base::failure("AutoFile::operator<<: file handle is nullptr");
         ::Serialize(*this, obj);
         return *this;
     }
@@ -569,57 +452,21 @@ public:
     template <typename T>
     AutoFile& operator>>(T&& obj)
     {
-        if (!file) throw std::ios_base::failure("AutoFile::operator>>: file handle is nullptr");
         ::Unserialize(*this, obj);
         return *this;
     }
 };
 
-class CAutoFile : public AutoFile
-{
-private:
-    const int nType;
-    const int nVersion;
-
-public:
-    CAutoFile(FILE* filenew, int nTypeIn, int nVersionIn) : AutoFile{filenew}, nType(nTypeIn), nVersion(nVersionIn) {}
-    int GetType() const          { return nType; }
-    int GetVersion() const       { return nVersion; }
-
-    template<typename T>
-    CAutoFile& operator<<(const T& obj)
-    {
-        // Serialize to this stream
-        if (!file)
-            throw std::ios_base::failure("CAutoFile::operator<<: file handle is nullptr");
-        ::Serialize(*this, obj);
-        return (*this);
-    }
-
-    template<typename T>
-    CAutoFile& operator>>(T&& obj)
-    {
-        // Unserialize from this stream
-        if (!file)
-            throw std::ios_base::failure("CAutoFile::operator>>: file handle is nullptr");
-        ::Unserialize(*this, obj);
-        return (*this);
-    }
-};
-
-/** Non-refcounted RAII wrapper around a FILE* that implements a ring buffer to
+/** Wrapper around an AutoFile& that implements a ring buffer to
  *  deserialize from. It guarantees the ability to rewind a given number of bytes.
  *
  *  Will automatically close the file when it goes out of scope if not null.
  *  If you need to close the file early, use file.fclose() instead of fclose(file).
  */
-class CBufferedFile
+class BufferedFile
 {
 private:
-    const int nType;
-    const int nVersion;
-
-    FILE *src;            //!< source file
+    AutoFile& m_src;
     uint64_t nSrcPos{0};  //!< how many bytes have been read from source
     uint64_t m_read_pos{0}; //!< how many bytes have been read from this
     uint64_t nReadLimit;  //!< up to which position we're allowed to read
@@ -635,9 +482,9 @@ private:
             readNow = nAvail;
         if (readNow == 0)
             return false;
-        size_t nBytes = fread((void*)&vchBuf[pos], 1, readNow, src);
+        size_t nBytes{m_src.detail_fread(Span{vchBuf}.subspan(pos, readNow))};
         if (nBytes == 0) {
-            throw std::ios_base::failure(feof(src) ? "CBufferedFile::Fill: end of file" : "CBufferedFile::Fill: fread failed");
+            throw std::ios_base::failure{m_src.feof() ? "BufferedFile::Fill: end of file" : "BufferedFile::Fill: fread failed"};
         }
         nSrcPos += nBytes;
         return true;
@@ -666,37 +513,16 @@ private:
     }
 
 public:
-    CBufferedFile(FILE* fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nTypeIn, int nVersionIn)
-        : nType(nTypeIn), nVersion(nVersionIn), nReadLimit(std::numeric_limits<uint64_t>::max()), nRewind(nRewindIn), vchBuf(nBufSize, std::byte{0})
+    BufferedFile(AutoFile& file, uint64_t nBufSize, uint64_t nRewindIn)
+        : m_src{file}, nReadLimit{std::numeric_limits<uint64_t>::max()}, nRewind{nRewindIn}, vchBuf(nBufSize, std::byte{0})
     {
         if (nRewindIn >= nBufSize)
             throw std::ios_base::failure("Rewind limit must be less than buffer size");
-        src = fileIn;
-    }
-
-    ~CBufferedFile()
-    {
-        fclose();
-    }
-
-    // Disallow copies
-    CBufferedFile(const CBufferedFile&) = delete;
-    CBufferedFile& operator=(const CBufferedFile&) = delete;
-
-    int GetVersion() const { return nVersion; }
-    int GetType() const { return nType; }
-
-    void fclose()
-    {
-        if (src) {
-            ::fclose(src);
-            src = nullptr;
-        }
     }
 
     //! check whether we're at the end of the source file
     bool eof() const {
-        return m_read_pos == nSrcPos && feof(src);
+        return m_read_pos == nSrcPos && m_src.feof();
     }
 
     //! read a number of bytes
@@ -749,8 +575,7 @@ public:
     }
 
     template<typename T>
-    CBufferedFile& operator>>(T&& obj) {
-        // Unserialize from this stream
+    BufferedFile& operator>>(T&& obj) {
         ::Unserialize(*this, obj);
         return (*this);
     }

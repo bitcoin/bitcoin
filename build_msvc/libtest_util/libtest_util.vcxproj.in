@@ -14,6 +14,7 @@
     <ProjectReference Include="..\..\src\bls\mcl\src\proj\mcl.vcxproj">
       <Project>{1DBB979A-C212-45CD-9563-446A96F87F71}</Project>
     </ProjectReference>
+    <ClCompile Include="..\..\src\wallet\test\util.cpp" />
 @SOURCE_FILES@
   </ItemGroup>
   <Import Project="$(SolutionDir)common.props" />

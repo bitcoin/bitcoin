@@ -6,7 +6,7 @@ template <typename T>
 Elements<typename T::Scalar> Util<T>::GetYPows(
     const typename T::Scalar& y,
     const size_t& n,
-    CHashWriter& fiat_shamir
+    HashWriter& fiat_shamir
 ) {
     using Scalar = typename T::Scalar;
     using Scalars = Elements<Scalar>;
@@ -25,7 +25,7 @@ Elements<typename T::Scalar> Util<T>::GetYPows(
 template Elements<Mcl::Scalar> Util<Mcl>::GetYPows(
     const Mcl::Scalar& y,
     const size_t& n,
-    CHashWriter& fiat_shamir
+    HashWriter& fiat_shamir
 );
 
 } // namespace bulletproofs_plus

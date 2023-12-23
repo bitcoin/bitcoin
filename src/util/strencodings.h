@@ -17,8 +17,8 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
-#include <string>
-#include <string_view>
+#include <string>      // IWYU pragma: export
+#include <string_view> // IWYU pragma: export
 #include <system_error>
 #include <type_traits>
 #include <vector>
@@ -260,7 +260,6 @@ bool TimingResistantEqual(const T& a, const T& b)
 }
 
 /** Parse number as fixed point according to JSON number syntax.
- * See https://json.org/number.gif
  * @returns true on success, false on error.
  * @note The result must be in the range (-10^18,10^18), otherwise an overflow error will trigger.
  */

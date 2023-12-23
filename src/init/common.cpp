@@ -13,6 +13,7 @@
 #include <tinyformat.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
+#include <util/result.h>
 #include <util/string.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -58,27 +59,28 @@ void SetLoggingOptions(const ArgsManager& args)
     fLogIPs = args.GetBoolArg("-logips", DEFAULT_LOGIPS);
 }
 
-void SetLoggingLevel(const ArgsManager& args)
+util::Result<void> SetLoggingLevel(const ArgsManager& args)
 {
     if (args.IsArgSet("-loglevel")) {
         for (const std::string& level_str : args.GetArgs("-loglevel")) {
             if (level_str.find_first_of(':', 3) == std::string::npos) {
                 // user passed a global log level, i.e. -loglevel=<level>
                 if (!LogInstance().SetLogLevel(level_str)) {
-                    InitWarning(strprintf(_("Unsupported global logging level -loglevel=%s. Valid values: %s."), level_str, LogInstance().LogLevelsString()));
+                    return util::Error{strprintf(_("Unsupported global logging level %s=%s. Valid values: %s."), "-loglevel", level_str, LogInstance().LogLevelsString())};
                 }
             } else {
                 // user passed a category-specific log level, i.e. -loglevel=<category>:<level>
                 const auto& toks = SplitString(level_str, ':');
                 if (!(toks.size() == 2 && LogInstance().SetCategoryLogLevel(toks[0], toks[1]))) {
-                    InitWarning(strprintf(_("Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=<category>:<loglevel>. Valid categories: %s. Valid loglevels: %s."), level_str, LogInstance().LogCategoriesString(), LogInstance().LogLevelsString()));
+                    return util::Error{strprintf(_("Unsupported category-specific logging level %1$s=%2$s. Expected %1$s=<category>:<loglevel>. Valid categories: %3$s. Valid loglevels: %4$s."), "-loglevel", level_str, LogInstance().LogCategoriesString(), LogInstance().LogLevelsString())};
                 }
             }
         }
     }
+    return {};
 }
 
-void SetLoggingCategories(const ArgsManager& args)
+util::Result<void> SetLoggingCategories(const ArgsManager& args)
 {
     if (args.IsArgSet("-debug")) {
         // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
@@ -88,7 +90,7 @@ void SetLoggingCategories(const ArgsManager& args)
             [](std::string cat){return cat == "0" || cat == "none";})) {
             for (const auto& cat : categories) {
                 if (!LogInstance().EnableCategory(cat)) {
-                    InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debug", cat));
+                    return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debug", cat)};
                 }
             }
         }
@@ -97,9 +99,10 @@ void SetLoggingCategories(const ArgsManager& args)
     // Now remove the logging categories which were explicitly excluded
     for (const std::string& cat : args.GetArgs("-debugexclude")) {
         if (!LogInstance().DisableCategory(cat)) {
-            InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat));
+            return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat)};
         }
     }
+    return {};
 }
 
 bool StartLogging(const ArgsManager& args)

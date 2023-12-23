@@ -419,7 +419,7 @@ bool KeyMan::IsMine(const blsct::PublicKey& ephemeralKey, const blsct::PublicKey
     if (!fViewKeyDefined || !viewKey.IsValid())
         return false;
 
-    CHashWriter hash(SER_GETHASH, PROTOCOL_VERSION);
+    HashWriter hash{};
     hash << (ephemeralKey.GetG1Point() * viewKey.GetScalar());
 
     if (viewTag != (hash.GetHash().GetUint64(0) & 0xFF))

@@ -19,17 +19,19 @@ bench_bench_navcoin_SOURCES = \
   bench/bench.cpp \
   bench/bench.h \
   bench/bench_bitcoin.cpp \
+  bench/bip324_ecdh.cpp \
   bench/block_assemble.cpp \
   bench/ccoins_caching.cpp \
   bench/chacha20.cpp \
-  bench/chacha_poly_aead.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
   bench/crypto_hash.cpp \
   bench/data.cpp \
   bench/data.h \
   bench/descriptors.cpp \
+  bench/disconnected_transactions.cpp \
   bench/duplicate_inputs.cpp \
+  bench/ellswift.cpp \
   bench/examples.cpp \
   bench/gcs_filter.cpp \
   bench/hashpadding.cpp \
@@ -51,7 +53,8 @@ bench_bench_navcoin_SOURCES = \
   bench/streams_findbyte.cpp \
   bench/strencodings.cpp \
   bench/util_time.cpp \
-  bench/verify_script.cpp
+  bench/verify_script.cpp \
+  bench/xor.cpp
 
 nodist_bench_bench_navcoin_SOURCES = $(GENERATED_BENCH_FILES)
 
@@ -84,8 +87,9 @@ endif
 if ENABLE_WALLET
 bench_bench_navcoin_SOURCES += bench/coin_selection.cpp
 bench_bench_navcoin_SOURCES += bench/wallet_balance.cpp
-bench_bench_navcoin_SOURCES += bench/wallet_loading.cpp
+bench_bench_navcoin_SOURCES += bench/wallet_create.cpp
 bench_bench_navcoin_SOURCES += bench/wallet_create_tx.cpp
+bench_bench_navcoin_SOURCES += bench/wallet_loading.cpp
 bench_bench_navcoin_LDADD += $(BDB_LIBS) $(SQLITE_LIBS)
 endif
 

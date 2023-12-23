@@ -12,19 +12,14 @@
 #include <sync.h>
 #include <util/fs.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
-#include <string>
-#include <utility>
 #include <vector>
 
-class CBlockFileInfo;
-class CBlockIndex;
+class COutPoint;
 class uint256;
-namespace Consensus {
-struct Params;
-};
-struct bilingual_str;
 
 //! -dbcache default (MiB)
 static const int64_t nDefaultDbCache = 450;
@@ -81,23 +76,5 @@ public:
     //! @returns filesystem path to on-disk storage or std::nullopt if in memory.
     std::optional<fs::path> StoragePath() { return m_db->StoragePath(); }
 };
-
-/** Access to the block database (blocks/index/) */
-class CBlockTreeDB : public CDBWrapper
-{
-public:
-    using CDBWrapper::CDBWrapper;
-    bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
-    bool ReadBlockFileInfo(int nFile, CBlockFileInfo &info);
-    bool ReadLastBlockFile(int &nFile);
-    bool WriteReindexing(bool fReindexing);
-    void ReadReindexing(bool &fReindexing);
-    bool WriteFlag(const std::string &name, bool fValue);
-    bool ReadFlag(const std::string &name, bool &fValue);
-    bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex)
-        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-};
-
-std::optional<bilingual_str> CheckLegacyTxindex(CBlockTreeDB& block_tree_db);
 
 #endif // BITCOIN_TXDB_H

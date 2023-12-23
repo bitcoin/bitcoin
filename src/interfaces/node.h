@@ -5,13 +5,13 @@
 #ifndef BITCOIN_INTERFACES_NODE_H
 #define BITCOIN_INTERFACES_NODE_H
 
+#include <common/settings.h>
 #include <consensus/amount.h>          // For CAmount
 #include <net.h>                       // For NodeId
 #include <net_types.h>                 // For banmap_t
 #include <netaddress.h>                // For Network
 #include <netbase.h>                   // For ConnectionDirection
 #include <support/allocators/secure.h> // For SecureString
-#include <util/settings.h>             // For util::SettingsValue
 #include <util/translation.h>
 
 #include <functional>
@@ -80,6 +80,9 @@ public:
     //! Get warnings.
     virtual bilingual_str getWarnings() = 0;
 
+    //! Get exit status.
+    virtual int getExitStatus() = 0;
+
     // Get log flags.
     virtual uint32_t getLogCategories() = 0;
 
@@ -103,14 +106,14 @@ public:
     virtual bool isSettingIgnored(const std::string& name) = 0;
 
     //! Return setting value from <datadir>/settings.json or bitcoin.conf.
-    virtual util::SettingsValue getPersistentSetting(const std::string& name) = 0;
+    virtual common::SettingsValue getPersistentSetting(const std::string& name) = 0;
 
     //! Update a setting in <datadir>/settings.json.
-    virtual void updateRwSetting(const std::string& name, const util::SettingsValue& value) = 0;
+    virtual void updateRwSetting(const std::string& name, const common::SettingsValue& value) = 0;
 
     //! Force a setting value to be applied, overriding any other configuration
     //! source, but not being persisted.
-    virtual void forceSetting(const std::string& name, const util::SettingsValue& value) = 0;
+    virtual void forceSetting(const std::string& name, const common::SettingsValue& value) = 0;
 
     //! Clear all settings in <datadir>/settings.json and store a backup of
     //! previous settings in <datadir>/settings.json.bak.
@@ -201,8 +204,8 @@ public:
     //! Unset RPC timer interface.
     virtual void rpcUnsetTimerInterface(RPCTimerInterface* iface) = 0;
 
-    //! Get unspent outputs associated with a transaction.
-    virtual bool getUnspentOutput(const COutPoint& output, Coin& coin) = 0;
+    //! Get unspent output associated with a transaction.
+    virtual std::optional<Coin> getUnspentOutput(const COutPoint& output) = 0;
 
     //! Broadcast transaction.
     virtual TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) = 0;

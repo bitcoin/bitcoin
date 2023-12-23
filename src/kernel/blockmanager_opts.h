@@ -5,6 +5,11 @@
 #ifndef BITCOIN_KERNEL_BLOCKMANAGER_OPTS_H
 #define BITCOIN_KERNEL_BLOCKMANAGER_OPTS_H
 
+#include <kernel/notifications_interface.h>
+#include <util/fs.h>
+
+#include <cstdint>
+
 class CChainParams;
 
 namespace kernel {
@@ -16,6 +21,9 @@ namespace kernel {
 struct BlockManagerOpts {
     const CChainParams& chainparams;
     uint64_t prune_target{0};
+    bool fast_prune{false};
+    const fs::path blocks_dir;
+    Notifications& notifications;
 };
 
 } // namespace kernel

@@ -113,7 +113,7 @@ static void bench_ecmult_const(void* arg, int iters) {
     int i;
 
     for (i = 0; i < iters; ++i) {
-        secp256k1_ecmult_const(&data->output[i], &data->pubkeys[(data->offset1+i) % POINTS], &data->scalars[(data->offset2+i) % POINTS], 256);
+        secp256k1_ecmult_const(&data->output[i], &data->pubkeys[(data->offset1+i) % POINTS], &data->scalars[(data->offset2+i) % POINTS]);
     }
 }
 
@@ -138,12 +138,10 @@ static void bench_ecmult_1p_teardown(void* arg, int iters) {
 
 static void bench_ecmult_0p_g(void* arg, int iters) {
     bench_data* data = (bench_data*)arg;
-    secp256k1_scalar zero;
     int i;
 
-    secp256k1_scalar_set_int(&zero, 0);
     for (i = 0; i < iters; ++i) {
-        secp256k1_ecmult(&data->output[i], NULL, &zero, &data->scalars[(data->offset1+i) % POINTS]);
+        secp256k1_ecmult(&data->output[i], NULL, &secp256k1_scalar_zero, &data->scalars[(data->offset1+i) % POINTS]);
     }
 }
 
@@ -246,7 +244,6 @@ static void generate_scalar(uint32_t num, secp256k1_scalar* scalar) {
 
 static void run_ecmult_multi_bench(bench_data* data, size_t count, int includes_g, int num_iters) {
     char str[32];
-    static const secp256k1_scalar zero = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
     size_t iters = 1 + num_iters / count;
     size_t iter;
 
@@ -264,7 +261,7 @@ static void run_ecmult_multi_bench(bench_data* data, size_t count, int includes_
             secp256k1_scalar_add(&total, &total, &tmp);
         }
         secp256k1_scalar_negate(&total, &total);
-        secp256k1_ecmult(&data->expected_output[iter], NULL, &zero, &total);
+        secp256k1_ecmult(&data->expected_output[iter], NULL, &secp256k1_scalar_zero, &total);
     }
 
     /* Run the benchmark. */

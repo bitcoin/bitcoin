@@ -14,13 +14,13 @@ BOOST_FIXTURE_TEST_SUITE(common_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_cdatastream_to_vector)
 {
-    CDataStream st(SER_DISK, PROTOCOL_VERSION);
+    DataStream st{};
     uint64_t one = 1;
     uint64_t two = 2;
     uint64_t three = 3;
 
     st << one << two << three;
-    auto vec = blsct::Common::CDataStreamToVector(st);
+    auto vec = blsct::Common::DataStreamToVector(st);
     size_t unit = sizeof(uint64_t);
 
     BOOST_CHECK_EQUAL(vec.size(), unit * 3);

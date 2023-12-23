@@ -12,6 +12,7 @@
 #include <clientversion.h>
 #include <common/args.h>
 #include <common/init.h>
+#include <common/system.h>
 #include <common/url.h>
 #include <compat/compat.h>
 #include <init.h>
@@ -24,9 +25,7 @@
 #include <util/check.h>
 #include <util/exception.h>
 #include <util/strencodings.h>
-#include <util/syscall_sandbox.h>
 #include <util/syserror.h>
-#include <util/system.h>
 #include <util/threadnames.h>
 #include <util/tokenpipe.h>
 #include <util/translation.h>
@@ -113,21 +112,29 @@ int fork_daemon(bool nochdir, bool noclose, TokenPipeEnd& endpoint)
 
 #endif
 
-static bool AppInit(NodeContext& node, int argc, char* argv[])
+static bool ParseArgs(ArgsManager& args, int argc, char* argv[])
 {
-    bool fRet = false;
-    static volatile MclInit for_side_effect_only;
-
-    util::ThreadSetInternalName("init");
-
-    // If Qt is used, parameters/navcoin.conf are parsed in qt/bitcoin.cpp's main()
-    ArgsManager& args = *Assert(node.args);
     SetupServerArgs(args);
     std::string error;
     if (!args.ParseParameters(argc, argv, error)) {
         return InitError(Untranslated(strprintf("Error parsing command line arguments: %s", error)));
     }
 
+    if (auto error = common::InitConfig(args)) {
+        return InitError(error->message, error->details);
+    }
+
+    // Error out when loose non-argument tokens are encountered on command line
+    for (int i = 1; i < argc; i++) {
+        if (!IsSwitchChar(argv[i][0])) {
+            return InitError(Untranslated(strprintf("Command line contains unexpected token '%s', see bitcoind -h for a list of options.", argv[i])));
+        }
+    }
+    return true;
+}
+
+static bool ProcessInitCommands(ArgsManager& args)
+{
     // Process help and version before taking care about datadir
     if (HelpRequested(args) || args.IsArgSet("-version")) {
         std::string strUsage = PACKAGE_NAME " version " + FormatFullVersion() + "\n";
@@ -144,6 +151,14 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
         return true;
     }
 
+    return false;
+}
+
+static bool AppInit(NodeContext& node)
+{
+    bool fRet = false;
+    ArgsManager& args = *Assert(node.args);
+
 #if HAVE_DECL_FORK
     // Communication with parent after daemonizing. This is used for signalling in the following ways:
     // - a boolean token is sent when the initialization process (all the Init* functions) have finished to indicate
@@ -155,23 +170,12 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
     std::any context{&node};
     try
     {
-        if (auto error = common::InitConfig(args)) {
-            return InitError(error->message, error->details);
-        }
-
-        // Error out when loose non-argument tokens are encountered on command line
-        for (int i = 1; i < argc; i++) {
-            if (!IsSwitchChar(argv[i][0])) {
-                return InitError(Untranslated(strprintf("Command line contains unexpected token '%s', see bitcoind -h for a list of options.", argv[i])));
-            }
-        }
-
         // -server defaults to true for bitcoind but not for the GUI so do this here
         args.SoftSetBoolArg("-server", true);
         // Set this early so that parameter interactions go to console
         InitLogging(args);
         InitParameterInteraction(args);
-        if (!AppInitBasicSetup(args)) {
+        if (!AppInitBasicSetup(args, node.exit_status)) {
             // InitError will have been called with detailed error, which ends up on console
             return false;
         }
@@ -237,13 +241,6 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
         daemon_ep.Close();
     }
 #endif
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::SHUTOFF);
-    if (fRet) {
-        WaitForShutdown();
-    }
-    Interrupt(node);
-    Shutdown(node);
-
     return fRet;
 }
 
@@ -266,5 +263,22 @@ MAIN_FUNCTION
     // Connect bitcoind signal handlers
     noui_connect();
 
-    return (AppInit(node, argc, argv) ? EXIT_SUCCESS : EXIT_FAILURE);
+    util::ThreadSetInternalName("init");
+
+    // Interpret command line arguments
+    ArgsManager& args = *Assert(node.args);
+    if (!ParseArgs(args, argc, argv)) return EXIT_FAILURE;
+    // Process early info return commands such as -help or -version
+    if (ProcessInitCommands(args)) return EXIT_SUCCESS;
+
+    // Start application
+    if (AppInit(node)) {
+        WaitForShutdown();
+    } else {
+        node.exit_status = EXIT_FAILURE;
+    }
+    Interrupt(node);
+    Shutdown(node);
+
+    return node.exit_status;
 }

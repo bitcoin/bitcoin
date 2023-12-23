@@ -6,10 +6,12 @@
 #include <key_io.h>
 #include <node/context.h>
 #include <script/script.h>
-#include <script/standard.h>
+#include <script/solver.h>
+#include <script/signingprovider.h>
 #include <test/util/setup_common.h>
 #include <wallet/types.h>
 #include <wallet/wallet.h>
+#include <wallet/test/util.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -55,7 +57,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2PK compressed - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         scriptPubKey = GetScriptForRawPubKey(pubkeys[0]);
@@ -74,7 +76,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2PK compressed - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         std::string desc_str = "pk(" + EncodeSecret(keys[0]) + ")";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, true);
@@ -86,7 +88,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2PK uncompressed - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         scriptPubKey = GetScriptForRawPubKey(uncompressedPubkey);
@@ -105,7 +107,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2PK uncompressed - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         std::string desc_str = "pk(" + EncodeSecret(uncompressedKey) + ")";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, true);
@@ -117,7 +119,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2PKH compressed - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         scriptPubKey = GetScriptForDestination(PKHash(pubkeys[0]));
@@ -136,7 +138,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2PKH compressed - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         std::string desc_str = "pkh(" + EncodeSecret(keys[0]) + ")";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, true);
@@ -148,7 +150,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2PKH uncompressed - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         scriptPubKey = GetScriptForDestination(PKHash(uncompressedPubkey));
@@ -167,7 +169,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2PKH uncompressed - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         std::string desc_str = "pkh(" + EncodeSecret(uncompressedKey) + ")";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, true);
@@ -179,7 +181,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2SH - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
@@ -206,7 +208,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2SH - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         std::string desc_str = "sh(pkh(" + EncodeSecret(keys[0]) + "))";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, true);
@@ -219,7 +221,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // (P2PKH inside) P2SH inside P2SH (invalid) - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
@@ -238,7 +240,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // (P2PKH inside) P2SH inside P2SH (invalid) - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         std::string desc_str = "sh(sh(" + EncodeSecret(keys[0]) + "))";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, false);
@@ -247,7 +249,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // (P2PKH inside) P2SH inside P2WSH (invalid) - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
@@ -266,7 +268,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // (P2PKH inside) P2SH inside P2WSH (invalid) - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         std::string desc_str = "wsh(sh(" + EncodeSecret(keys[0]) + "))";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, false);
@@ -275,7 +277,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WPKH inside P2WSH (invalid) - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
@@ -292,7 +294,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WPKH inside P2WSH (invalid) - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         std::string desc_str = "wsh(wpkh(" + EncodeSecret(keys[0]) + "))";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, false);
@@ -301,7 +303,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // (P2PKH inside) P2WSH inside P2WSH (invalid) - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
@@ -320,7 +322,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // (P2PKH inside) P2WSH inside P2WSH (invalid) - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         std::string desc_str = "wsh(wsh(" + EncodeSecret(keys[0]) + "))";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, false);
@@ -329,7 +331,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WPKH compressed - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
@@ -345,7 +347,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WPKH compressed - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         std::string desc_str = "wpkh(" + EncodeSecret(keys[0]) + ")";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, true);
@@ -357,7 +359,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WPKH uncompressed - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(uncompressedKey));
@@ -378,7 +380,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WPKH uncompressed (invalid) - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         std::string desc_str = "wpkh(" + EncodeSecret(uncompressedKey) + ")";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, false);
@@ -387,7 +389,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // scriptPubKey multisig - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
@@ -422,7 +424,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // scriptPubKey multisig - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         std::string desc_str = "multi(2, " + EncodeSecret(uncompressedKey) + ", " + EncodeSecret(keys[1]) + ")";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, true);
@@ -434,7 +436,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2SH multisig - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(uncompressedKey));
@@ -457,7 +459,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2SH multisig - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
 
         std::string desc_str = "sh(multi(2, " + EncodeSecret(uncompressedKey) + ", " + EncodeSecret(keys[1]) + "))";
 
@@ -471,7 +473,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WSH multisig with compressed keys - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
@@ -500,7 +502,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WSH multisig with compressed keys - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
 
         std::string desc_str = "wsh(multi(2, " + EncodeSecret(keys[0]) + ", " + EncodeSecret(keys[1]) + "))";
 
@@ -514,7 +516,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WSH multisig with uncompressed key - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(uncompressedKey));
@@ -543,7 +545,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WSH multisig with uncompressed key (invalid) - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
 
         std::string desc_str = "wsh(multi(2, " + EncodeSecret(uncompressedKey) + ", " + EncodeSecret(keys[1]) + "))";
 
@@ -553,7 +555,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WSH multisig wrapped in P2SH - Legacy
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
@@ -583,7 +585,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WSH multisig wrapped in P2SH - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
 
         std::string desc_str = "sh(wsh(multi(2, " + EncodeSecret(keys[0]) + ", " + EncodeSecret(keys[1]) + ")))";
 
@@ -598,7 +600,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // Combo - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
 
         std::string desc_str = "combo(" + EncodeSecret(keys[0]) + ")";
 
@@ -642,7 +644,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // Taproot - Descriptor
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
 
         std::string desc_str = "tr(" + EncodeSecret(keys[0]) + ")";
 
@@ -660,7 +662,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // OP_RETURN
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
@@ -675,7 +677,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // witness unspendable
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
@@ -690,7 +692,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // witness unknown
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
@@ -705,7 +707,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // Nonstandard
     {
-        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
+        CWallet keystore(chain.get(), "", CreateMockableWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));

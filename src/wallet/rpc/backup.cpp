@@ -12,7 +12,7 @@
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/script.h>
-#include <script/standard.h>
+#include <script/solver.h>
 #include <sync.h>
 #include <uint256.h>
 #include <util/bip32.h>
@@ -573,13 +573,13 @@ RPCHelpMan importwallet()
                     }
                 }
                 nTimeBegin = std::min(nTimeBegin, nTime);
-                keys.push_back(std::make_tuple(key, nTime, fLabel, strLabel));
+                keys.emplace_back(key, nTime, fLabel, strLabel);
             } else if(IsHex(vstr[0])) {
                 std::vector<unsigned char> vData(ParseHex(vstr[0]));
                 CScript script = CScript(vData.begin(), vData.end());
                 int64_t birth_time = ParseISO8601DateTime(vstr[1]);
                 if (birth_time > 0) nTimeBegin = std::min(nTimeBegin, birth_time);
-                scripts.push_back(std::pair<CScript, int64_t>(script, birth_time));
+                scripts.emplace_back(script, birth_time);
             }
         }
         file.close();
@@ -759,7 +759,7 @@ RPCHelpMan dumpwallet()
     std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
     vKeyBirth.reserve(mapKeyBirth.size());
     for (const auto& entry : mapKeyBirth) {
-        vKeyBirth.push_back(std::make_pair(entry.second, entry.first));
+        vKeyBirth.emplace_back(entry.second, entry.first);
     }
     mapKeyBirth.clear();
     std::sort(vKeyBirth.begin(), vKeyBirth.end());
@@ -1297,12 +1297,12 @@ RPCHelpMan importmulti()
                                 },
                             },
                         },
-                        RPCArgOptions{.oneline_description="\"requests\""}},
-                    {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                        RPCArgOptions{.oneline_description="requests"}},
+                    {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                         {
                             {"rescan", RPCArg::Type::BOOL, RPCArg::Default{true}, "Scan the chain and mempool for wallet transactions after all imports."},
                         },
-                        RPCArgOptions{.oneline_description="\"options\""}},
+                        RPCArgOptions{.oneline_description="options"}},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "Response is an array with the same size as the input that has the execution result",
@@ -1617,7 +1617,7 @@ RPCHelpMan importdescriptors()
                                 },
                             },
                         },
-                        RPCArgOptions{.oneline_description="\"requests\""}},
+                        RPCArgOptions{.oneline_description="requests"}},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "Response is an array with the same size as the input that has the execution result",
@@ -1862,7 +1862,7 @@ RPCHelpMan listdescriptors()
 RPCHelpMan backupwallet()
 {
     return RPCHelpMan{"backupwallet",
-                "\nSafely copies current wallet file to destination, which can be a directory or a path with filename.\n",
+                "\nSafely copies the current wallet file to the specified destination, which can either be a directory or a path with a filename.\n",
                 {
                     {"destination", RPCArg::Type::STR, RPCArg::Optional::NO, "The destination directory or file"},
                 },
@@ -1897,7 +1897,7 @@ RPCHelpMan restorewallet()
 {
     return RPCHelpMan{
         "restorewallet",
-        "\nRestore and loads a wallet from backup.\n"
+        "\nRestores and loads a wallet from backup.\n"
         "\nThe rescan is significantly faster if a descriptor wallet is restored"
         "\nand block filters are available (using startup option \"-blockfilterindex=1\").\n",
         {
@@ -1909,8 +1909,7 @@ RPCHelpMan restorewallet()
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::STR, "name", "The wallet name if restored successfully."},
-                {RPCResult::Type::STR, "warning", /*optional=*/true, "Warning messages, if any, related to restoring the wallet. Multiple messages will be delimited by newlines. (DEPRECATED, returned only if config option -deprecatedrpc=walletwarningfield is passed.)"},
-                {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Warning messages, if any, related to restoring the wallet.",
+                {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Warning messages, if any, related to restoring and loading the wallet.",
                 {
                     {RPCResult::Type::STR, "", ""},
                 }},
@@ -1943,9 +1942,6 @@ RPCHelpMan restorewallet()
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
-    if (wallet->chain().rpcEnableDeprecated("walletwarningfield")) {
-        obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
-    }
     PushWarnings(warnings, obj);
 
     return obj;

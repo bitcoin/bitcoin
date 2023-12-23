@@ -13,15 +13,20 @@
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
+#include <script/solver.h>
 #include <streams.h>
+#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/fuzz/util.h>
 #include <util/chaintype.h>
 #include <util/strencodings.h>
 
+#include <array>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <numeric>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -31,7 +36,7 @@ void initialize_key()
     SelectParams(ChainType::REGTEST);
 }
 
-FUZZ_TARGET_INIT(key, initialize_key)
+FUZZ_TARGET(key, .init = initialize_key)
 {
     const CKey key = [&] {
         CKey k;
@@ -181,7 +186,7 @@ FUZZ_TARGET_INIT(key, initialize_key)
         const CTxDestination tx_destination = GetDestinationForKey(pubkey, output_type);
         assert(output_type == OutputType::LEGACY);
         assert(IsValidDestination(tx_destination));
-        assert(CTxDestination{PKHash{pubkey}} == tx_destination);
+        assert(PKHash{pubkey} == *std::get_if<PKHash>(&tx_destination));
 
         const CScript script_for_destination = GetScriptForDestination(tx_destination);
         assert(script_for_destination.size() == 25);
@@ -301,5 +306,72 @@ FUZZ_TARGET_INIT(key, initialize_key)
             assert(ok);
             assert(key == loaded_key);
         }
+    }
+}
+
+FUZZ_TARGET(ellswift_roundtrip, .init = initialize_key)
+{
+    FuzzedDataProvider fdp{buffer.data(), buffer.size()};
+
+    CKey key = ConsumePrivateKey(fdp, /*compressed=*/true);
+    if (!key.IsValid()) return;
+
+    auto ent32 = fdp.ConsumeBytes<std::byte>(32);
+    ent32.resize(32);
+
+    auto encoded_ellswift = key.EllSwiftCreate(ent32);
+    auto decoded_pubkey = encoded_ellswift.Decode();
+
+    assert(key.VerifyPubKey(decoded_pubkey));
+}
+
+FUZZ_TARGET(bip324_ecdh, .init = initialize_key)
+{
+    FuzzedDataProvider fdp{buffer.data(), buffer.size()};
+
+    // We generate private key, k1.
+    CKey k1 = ConsumePrivateKey(fdp, /*compressed=*/true);
+    if (!k1.IsValid()) return;
+
+    // They generate private key, k2.
+    CKey k2 = ConsumePrivateKey(fdp, /*compressed=*/true);
+    if (!k2.IsValid()) return;
+
+    // We construct an ellswift encoding for our key, k1_ellswift.
+    auto ent32_1 = fdp.ConsumeBytes<std::byte>(32);
+    ent32_1.resize(32);
+    auto k1_ellswift = k1.EllSwiftCreate(ent32_1);
+
+    // They construct an ellswift encoding for their key, k2_ellswift.
+    auto ent32_2 = fdp.ConsumeBytes<std::byte>(32);
+    ent32_2.resize(32);
+    auto k2_ellswift = k2.EllSwiftCreate(ent32_2);
+
+    // They construct another (possibly distinct) ellswift encoding for their key, k2_ellswift_bad.
+    auto ent32_2_bad = fdp.ConsumeBytes<std::byte>(32);
+    ent32_2_bad.resize(32);
+    auto k2_ellswift_bad = k2.EllSwiftCreate(ent32_2_bad);
+    assert((ent32_2_bad == ent32_2) == (k2_ellswift_bad == k2_ellswift));
+
+    // Determine who is who.
+    bool initiating = fdp.ConsumeBool();
+
+    // We compute our shared secret using our key and their public key.
+    auto ecdh_secret_1 = k1.ComputeBIP324ECDHSecret(k2_ellswift, k1_ellswift, initiating);
+    // They compute their shared secret using their key and our public key.
+    auto ecdh_secret_2 = k2.ComputeBIP324ECDHSecret(k1_ellswift, k2_ellswift, !initiating);
+    // Those must match, as everyone is behaving correctly.
+    assert(ecdh_secret_1 == ecdh_secret_2);
+
+    if (k1_ellswift != k2_ellswift) {
+        // Unless the two keys are exactly identical, acting as the wrong party breaks things.
+        auto ecdh_secret_bad = k1.ComputeBIP324ECDHSecret(k2_ellswift, k1_ellswift, !initiating);
+        assert(ecdh_secret_bad != ecdh_secret_1);
+    }
+
+    if (k2_ellswift_bad != k2_ellswift) {
+        // Unless both encodings created by them are identical, using the second one breaks things.
+        auto ecdh_secret_bad = k1.ComputeBIP324ECDHSecret(k2_ellswift_bad, k1_ellswift, initiating);
+        assert(ecdh_secret_bad != ecdh_secret_1);
     }
 }

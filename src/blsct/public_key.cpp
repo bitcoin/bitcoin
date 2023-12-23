@@ -14,7 +14,7 @@ using Point = MclG1Point;
 
 uint256 PublicKey::GetHash() const
 {
-    CHashWriter ss(SER_GETHASH, 0);
+    HashWriter ss{};
     ss << GetVch();
     return ss.GetHash();
 }

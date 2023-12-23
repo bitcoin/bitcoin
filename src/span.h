@@ -5,10 +5,10 @@
 #ifndef BITCOIN_SPAN_H
 #define BITCOIN_SPAN_H
 
-#include <type_traits>
-#include <cstddef>
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
+#include <cstddef>
+#include <type_traits>
 
 #ifdef DEBUG
 #define CONSTEXPR_IF_NOT_DEBUG
@@ -222,15 +222,32 @@ public:
     template <typename O> friend class Span;
 };
 
+// Return result of calling .data() method on type T. This is used to be able to
+// write template deduction guides for the single-parameter Span constructor
+// below that will work if the value that is passed has a .data() method, and if
+// the data method does not return a void pointer.
+//
+// It is important to check for the void type specifically below, so the
+// deduction guides can be used in SFINAE contexts to check whether objects can
+// be converted to spans. If the deduction guides did not explicitly check for
+// void, and an object was passed that returned void* from data (like
+// std::vector<bool>), the template deduction would succeed, but the Span<void>
+// object instantiation would fail, resulting in a hard error, rather than a
+// SFINAE error.
+// https://stackoverflow.com/questions/68759148/sfinae-to-detect-the-explicitness-of-a-ctad-deduction-guide
+// https://stackoverflow.com/questions/16568986/what-happens-when-you-call-data-on-a-stdvectorbool
+template<typename T>
+using DataResult = std::remove_pointer_t<decltype(std::declval<T&>().data())>;
+
 // Deduction guides for Span
 // For the pointer/size based and iterator based constructor:
 template <typename T, typename EndOrSize> Span(T*, EndOrSize) -> Span<T>;
 // For the array constructor:
 template <typename T, std::size_t N> Span(T (&)[N]) -> Span<T>;
 // For the temporaries/rvalue references constructor, only supporting const output.
-template <typename T> Span(T&&) -> Span<std::enable_if_t<!std::is_lvalue_reference_v<T>, const std::remove_pointer_t<decltype(std::declval<T&&>().data())>>>;
+template <typename T> Span(T&&) -> Span<std::enable_if_t<!std::is_lvalue_reference_v<T> && !std::is_void_v<DataResult<T&&>>, const DataResult<T&&>>>;
 // For (lvalue) references, supporting mutable output.
-template <typename T> Span(T&) -> Span<std::remove_pointer_t<decltype(std::declval<T&>().data())>>;
+template <typename T> Span(T&) -> Span<std::enable_if_t<!std::is_void_v<DataResult<T&>>, DataResult<T&>>>;
 
 /** Pop the last element off a span, and return a reference to that element. */
 template <typename T>
@@ -243,21 +260,16 @@ T& SpanPopBack(Span<T>& span)
     return back;
 }
 
-//! Convert a data pointer to a std::byte data pointer.
-//! Where possible, please use the safer AsBytes helpers.
-inline const std::byte* AsBytePtr(const void* data) { return reinterpret_cast<const std::byte*>(data); }
-inline std::byte* AsBytePtr(void* data) { return reinterpret_cast<std::byte*>(data); }
-
 // From C++20 as_bytes and as_writeable_bytes
 template <typename T>
 Span<const std::byte> AsBytes(Span<T> s) noexcept
 {
-    return {AsBytePtr(s.data()), s.size_bytes()};
+    return {reinterpret_cast<const std::byte*>(s.data()), s.size_bytes()};
 }
 template <typename T>
 Span<std::byte> AsWritableBytes(Span<T> s) noexcept
 {
-    return {AsBytePtr(s.data()), s.size_bytes()};
+    return {reinterpret_cast<std::byte*>(s.data()), s.size_bytes()};
 }
 
 template <typename V>
@@ -272,9 +284,10 @@ Span<std::byte> MakeWritableByteSpan(V&& v) noexcept
 }
 
 // Helper functions to safely cast to unsigned char pointers.
-inline unsigned char* UCharCast(char* c) { return (unsigned char*)c; }
+inline unsigned char* UCharCast(char* c) { return reinterpret_cast<unsigned char*>(c); }
 inline unsigned char* UCharCast(unsigned char* c) { return c; }
-inline const unsigned char* UCharCast(const char* c) { return (unsigned char*)c; }
+inline unsigned char* UCharCast(std::byte* c) { return reinterpret_cast<unsigned char*>(c); }
+inline const unsigned char* UCharCast(const char* c) { return reinterpret_cast<const unsigned char*>(c); }
 inline const unsigned char* UCharCast(const unsigned char* c) { return c; }
 inline const unsigned char* UCharCast(const std::byte* c) { return reinterpret_cast<const unsigned char*>(c); }
 

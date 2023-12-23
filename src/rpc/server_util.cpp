@@ -11,7 +11,7 @@
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <txmempool.h>
-#include <util/system.h>
+#include <util/any.h>
 #include <validation.h>
 
 #include <any>
@@ -107,4 +107,17 @@ PeerManager& EnsurePeerman(const NodeContext& node)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
     return *node.peerman;
+}
+
+AddrMan& EnsureAddrman(const NodeContext& node)
+{
+    if (!node.addrman) {
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
+    }
+    return *node.addrman;
+}
+
+AddrMan& EnsureAnyAddrman(const std::any& context)
+{
+    return EnsureAddrman(EnsureAnyNodeContext(context));
 }

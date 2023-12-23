@@ -7,10 +7,11 @@
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
-
-import hashlib
-from pathlib import Path
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+    sha256sum_file,
+)
 
 
 class DumptxoutsetTest(BitcoinTestFramework):
@@ -27,7 +28,7 @@ class DumptxoutsetTest(BitcoinTestFramework):
 
         FILENAME = 'txoutset.dat'
         out = node.dumptxoutset(FILENAME)
-        expected_path = Path(node.datadir) / self.chain / FILENAME
+        expected_path = node.datadir_path / self.chain / FILENAME
 
         assert expected_path.is_file()
 
@@ -39,20 +40,19 @@ class DumptxoutsetTest(BitcoinTestFramework):
             out['base_hash'],
             '09abf0e7b510f61ca6cf33bab104e9ee99b3528b371d27a2d4b39abb800fba7e')
 
-        with open(str(expected_path), 'rb') as f:
-            digest = hashlib.sha256(f.read()).hexdigest()
-            # UTXO snapshot hash should be deterministic based on mocked time.
-            assert_equal(
-                digest, 'b1bacb602eacf5fbc9a7c2ef6eeb0d229c04e98bdf0c2ea5929012cd0eae3830')
+        # UTXO snapshot hash should be deterministic based on mocked time.
+        assert_equal(
+            sha256sum_file(str(expected_path)).hex(),
+            'b1bacb602eacf5fbc9a7c2ef6eeb0d229c04e98bdf0c2ea5929012cd0eae3830')
 
         assert_equal(
-            out['txoutset_hash'], '1f7e3befd45dc13ae198dfbb22869a9c5c4196f8e9ef9735831af1288033f890')
+            out['txoutset_hash'], 'a0b7baa3bf5ccbd3279728f230d7ca0c44a76e9923fca8f32dbfd08d65ea496a')
         assert_equal(out['nchaintx'], 101)
 
         # Specifying a path to an existing or invalid file will fail.
         assert_raises_rpc_error(
             -8, '{} already exists'.format(FILENAME),  node.dumptxoutset, FILENAME)
-        invalid_path = str(Path(node.datadir) / "invalid" / "path")
+        invalid_path = node.datadir_path / "invalid" / "path"
         assert_raises_rpc_error(
             -8, "Couldn't open file {}.incomplete for writing".format(invalid_path), node.dumptxoutset, invalid_path)
 

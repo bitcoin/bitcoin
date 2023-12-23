@@ -73,13 +73,17 @@ TEST_EXIT_SKIPPED = 77
 # the output of `git grep unittest.TestCase ./test/functional/test_framework`
 TEST_FRAMEWORK_MODULES = [
     "address",
+    "crypto.bip324_cipher",
     "blocktools",
-    "muhash",
+    "crypto.chacha20",
+    "crypto.ellswift",
     "key",
-    "ripemd160",
+    "messages",
+    "crypto.muhash",
+    "crypto.poly1305",
+    "crypto.ripemd160",
     "script",
     "segwit_addr",
-    "util",
 ]
 
 EXTENDED_SCRIPTS = [
@@ -114,12 +118,14 @@ BASE_SCRIPTS = [
     'wallet_backup.py --descriptors',
     'feature_segwit.py --legacy-wallet',
     'feature_segwit.py --descriptors',
+    'feature_segwit.py --descriptors --v2transport',
     'p2p_tx_download.py',
     'wallet_avoidreuse.py --legacy-wallet',
     'wallet_avoidreuse.py --descriptors',
     'feature_abortnode.py',
     'wallet_address_types.py --legacy-wallet',
     'wallet_address_types.py --descriptors',
+    'p2p_orphan_handling.py',
     'wallet_basic.py --legacy-wallet',
     'wallet_basic.py --descriptors',
     'feature_maxtipage.py',
@@ -143,10 +149,12 @@ BASE_SCRIPTS = [
     'p2p_sendheaders.py',
     'wallet_listtransactions.py --legacy-wallet',
     'wallet_listtransactions.py --descriptors',
+    'wallet_miniscript.py --descriptors',
     # vv Tests less than 30s vv
     'p2p_invalid_messages.py',
     'rpc_createmultisig.py',
     'p2p_timeouts.py',
+    'p2p_timeouts.py --v2transport',
     'wallet_dump.py --legacy-wallet',
     'rpc_signer.py',
     'wallet_signer.py --descriptors',
@@ -158,17 +166,21 @@ BASE_SCRIPTS = [
     'wallet_abandonconflict.py --legacy-wallet',
     'wallet_abandonconflict.py --descriptors',
     'feature_reindex.py',
+    'feature_reindex_readonly.py',
     'wallet_labels.py --legacy-wallet',
     'wallet_labels.py --descriptors',
     'p2p_compactblocks.py',
     'p2p_compactblocks_blocksonly.py',
     'wallet_hd.py --legacy-wallet',
     'wallet_hd.py --descriptors',
+    'wallet_blank.py --legacy-wallet',
+    'wallet_blank.py --descriptors',
     'wallet_keypool_topup.py --legacy-wallet',
     'wallet_keypool_topup.py --descriptors',
     'wallet_fast_rescan.py --descriptors',
     'interface_zmq.py',
     'rpc_invalid_address_message.py',
+    'rpc_validateaddress.py',
     'interface_navcoin_cli.py --legacy-wallet',
     'interface_navcoin_cli.py --descriptors',
     'feature_bind_extra.py',
@@ -187,12 +199,15 @@ BASE_SCRIPTS = [
     'wallet_avoid_mixing_output_types.py --descriptors',
     'mempool_reorg.py',
     'p2p_block_sync.py',
+    'p2p_block_sync.py --v2transport',
     'wallet_createwallet.py --legacy-wallet',
     'wallet_createwallet.py --usecli',
     'wallet_createwallet.py --descriptors',
     'wallet_watchonly.py --legacy-wallet',
     'wallet_watchonly.py --usecli --legacy-wallet',
     'wallet_reorgsrestore.py',
+    'wallet_conflicts.py --legacy-wallet',
+    'wallet_conflicts.py --descriptors',
     'interface_http.py',
     'interface_rpc.py',
     'interface_usdt_coinselection.py',
@@ -203,7 +218,6 @@ BASE_SCRIPTS = [
     'rpc_users.py',
     'rpc_whitelist.py',
     'feature_proxy.py',
-    'feature_syscall_sandbox.py',
     'wallet_signrawtransactionwithwallet.py --legacy-wallet',
     'wallet_signrawtransactionwithwallet.py --descriptors',
     'rpc_signrawtransactionwithkey.py',
@@ -212,10 +226,13 @@ BASE_SCRIPTS = [
     'wallet_transactiontime_rescan.py --legacy-wallet',
     'p2p_addrv2_relay.py',
     'p2p_compactblocks_hb.py',
+    'p2p_compactblocks_hb.py --v2transport',
     'p2p_disconnect_ban.py',
+    'p2p_disconnect_ban.py --v2transport',
     'feature_posix_fs_permissions.py',
     'rpc_decodescript.py',
     'rpc_blockchain.py',
+    'rpc_blockchain.py --v2transport',
     'rpc_deprecated.py',
     'wallet_disable.py',
     'wallet_change_address.py --legacy-wallet',
@@ -225,10 +242,10 @@ BASE_SCRIPTS = [
     'p2p_getdata.py',
     'p2p_addrfetch.py',
     'rpc_net.py',
+    'rpc_net.py --v2transport',
     'wallet_keypool.py --legacy-wallet',
     'wallet_keypool.py --descriptors',
     'wallet_descriptor.py --descriptors',
-    'wallet_miniscript.py --descriptors',
     'p2p_nobloomfilter_messages.py',
     'p2p_filter.py',
     'rpc_setban.py',
@@ -236,7 +253,10 @@ BASE_SCRIPTS = [
     'mining_prioritisetransaction.py',
     'p2p_invalid_locator.py',
     'p2p_invalid_block.py',
+    'p2p_invalid_block.py --v2transport',
     'p2p_invalid_tx.py',
+    'p2p_invalid_tx.py --v2transport',
+    'p2p_v2_transport.py',
     'example_test.py',
     'wallet_txn_doublespend.py --legacy-wallet',
     'wallet_multisig_descriptor_psbt.py --descriptors',
@@ -258,8 +278,12 @@ BASE_SCRIPTS = [
     'wallet_importprunedfunds.py --legacy-wallet',
     'wallet_importprunedfunds.py --descriptors',
     'p2p_leak_tx.py',
+    'p2p_leak_tx.py --v2transport',
     'p2p_eviction.py',
     'p2p_ibd_stalling.py',
+    'p2p_ibd_stalling.py --v2transport',
+    'p2p_net_deadlock.py',
+    'p2p_net_deadlock.py --v2transport',
     'wallet_signmessagewithaddress.py',
     'rpc_signmessagewithprivkey.py',
     'rpc_generate.py',
@@ -306,6 +330,7 @@ BASE_SCRIPTS = [
     'wallet_sendall.py --descriptors',
     'wallet_create_tx.py --descriptors',
     'wallet_inactive_hdchains.py --legacy-wallet',
+    'wallet_spend_unconfirmed.py',
     'p2p_fingerprint.py',
     'feature_uacomment.py',
     'feature_init.py',
@@ -313,6 +338,7 @@ BASE_SCRIPTS = [
     'wallet_coinbase_category.py --descriptors',
     'feature_filelock.py',
     'feature_loadblock.py',
+    'feature_assumeutxo.py',
     'p2p_dos_header_tree.py',
     'p2p_add_connections.py',
     'feature_bind_port_discover.py',
@@ -334,7 +360,6 @@ BASE_SCRIPTS = [
     'rpc_scanblocks.py',
     'p2p_sendtxrcncl.py',
     'rpc_scantxoutset.py',
-    'feature_txindex_compatibility.py',
     'feature_unsupported_utxo_db.py',
     'feature_logging.py',
     'feature_anchors.py',
@@ -343,6 +368,7 @@ BASE_SCRIPTS = [
     'wallet_orphanedreward.py',
     'wallet_timelock.py',
     'p2p_node_network_limited.py',
+    'p2p_node_network_limited.py --v2transport',
     'p2p_permissions.py',
     'feature_blocksdir.py',
     'wallet_startup.py',
@@ -531,6 +557,12 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
 
     # Test Framework Tests
     print("Running Unit Tests for Test Framework Modules")
+
+    tests_dir = src_dir + '/test/functional/'
+    # This allows `test_runner.py` to work from an out-of-source build directory using a symlink,
+    # a hard link or a copy on any platform. See https://github.com/bitcoin/bitcoin/pull/27561.
+    sys.path.append(tests_dir)
+
     test_framework_tests = unittest.TestSuite()
     for module in TEST_FRAMEWORK_MODULES:
         test_framework_tests.addTest(unittest.TestLoader().loadTestsFromName("test_framework.{}".format(module)))
@@ -538,8 +570,6 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
     if not result.wasSuccessful():
         logging.debug("Early exiting after failure in TestFramework unit tests")
         sys.exit(False)
-
-    tests_dir = src_dir + '/test/functional/'
 
     flags = ['--cachedir={}'.format(cache_dir)] + args
 
@@ -778,8 +808,8 @@ def check_script_prefixes():
 def check_script_list(*, src_dir, fail_on_warn):
     """Check scripts directory.
 
-    Check that there are no scripts in the functional tests directory which are
-    not being run by pull-tester.py."""
+    Check that all python files in this directory are categorized
+    as a test script or meta script."""
     script_dir = src_dir + '/test/functional/'
     python_files = set([test_file for test_file in os.listdir(script_dir) if test_file.endswith(".py")])
     missed_tests = list(python_files - set(map(lambda x: x.split()[0], ALL_SCRIPTS + NON_SCRIPTS)))

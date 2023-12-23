@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/system.h>
 #include <net_permissions.h>
 #include <netbase.h>
 #include <util/error.h>
-#include <util/system.h>
 #include <util/translation.h>
 
 const std::vector<std::string> NET_PERMISSIONS_DOC{
@@ -71,13 +71,13 @@ bool TryParsePermissionFlags(const std::string& str, NetPermissionFlags& output,
 std::vector<std::string> NetPermissions::ToStrings(NetPermissionFlags flags)
 {
     std::vector<std::string> strings;
-    if (NetPermissions::HasFlag(flags, NetPermissionFlags::BloomFilter)) strings.push_back("bloomfilter");
-    if (NetPermissions::HasFlag(flags, NetPermissionFlags::NoBan)) strings.push_back("noban");
-    if (NetPermissions::HasFlag(flags, NetPermissionFlags::ForceRelay)) strings.push_back("forcerelay");
-    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Relay)) strings.push_back("relay");
-    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Mempool)) strings.push_back("mempool");
-    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Download)) strings.push_back("download");
-    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Addr)) strings.push_back("addr");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::BloomFilter)) strings.emplace_back("bloomfilter");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::NoBan)) strings.emplace_back("noban");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::ForceRelay)) strings.emplace_back("forcerelay");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Relay)) strings.emplace_back("relay");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Mempool)) strings.emplace_back("mempool");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Download)) strings.emplace_back("download");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Addr)) strings.emplace_back("addr");
     return strings;
 }
 
@@ -88,18 +88,18 @@ bool NetWhitebindPermissions::TryParse(const std::string& str, NetWhitebindPermi
     if (!TryParsePermissionFlags(str, flags, offset, error)) return false;
 
     const std::string strBind = str.substr(offset);
-    CService addrBind;
-    if (!Lookup(strBind, addrBind, 0, false)) {
+    const std::optional<CService> addrBind{Lookup(strBind, 0, false)};
+    if (!addrBind.has_value()) {
         error = ResolveErrMsg("whitebind", strBind);
         return false;
     }
-    if (addrBind.GetPort() == 0) {
+    if (addrBind.value().GetPort() == 0) {
         error = strprintf(_("Need to specify a port with -whitebind: '%s'"), strBind);
         return false;
     }
 
     output.m_flags = flags;
-    output.m_service = addrBind;
+    output.m_service = addrBind.value();
     error = Untranslated("");
     return true;
 }
@@ -111,8 +111,7 @@ bool NetWhitelistPermissions::TryParse(const std::string& str, NetWhitelistPermi
     if (!TryParsePermissionFlags(str, flags, offset, error)) return false;
 
     const std::string net = str.substr(offset);
-    CSubNet subnet;
-    LookupSubNet(net, subnet);
+    const CSubNet subnet{LookupSubNet(net)};
     if (!subnet.IsValid()) {
         error = strprintf(_("Invalid netmask specified in -whitelist: '%s'"), net);
         return false;

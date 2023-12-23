@@ -66,7 +66,7 @@ struct WeightedInnerProdArg {
         Elements<typename T::Scalar>& a,
         Elements<typename T::Scalar>& b,
         const typename T::Scalar& alpha_src,  // alpha is a part of the proof and shouldn't be modified
-        CHashWriter& fiat_shamir
+        HashWriter& fiat_shamir
     );
 };
 

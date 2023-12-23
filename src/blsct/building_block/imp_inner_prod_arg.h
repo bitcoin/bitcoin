@@ -33,7 +33,7 @@ struct ImpInnerProdArg {
         Elements<typename T::Scalar>& b,
         const typename T::Scalar& c_factor,
         const typename T::Scalar& y,
-        CHashWriter& fiat_shamir
+        HashWriter& fiat_shamir
     );
 
     // Returns list of exponents to be multiplied to G_i and H_i generator vectors
@@ -60,7 +60,7 @@ struct ImpInnerProdArg {
         const size_t& num_rounds,
         const Elements<typename T::Point>& Ls,
         const Elements<typename T::Point>& Rs,
-        CHashWriter& fiat_shamir
+        HashWriter& fiat_shamir
     );
 };
 

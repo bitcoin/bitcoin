@@ -50,7 +50,7 @@ int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *output, const se
     overflow |= secp256k1_scalar_is_zero(&s);
     secp256k1_scalar_cmov(&s, &secp256k1_scalar_one, overflow);
 
-    secp256k1_ecmult_const(&res, &pt, &s, 256);
+    secp256k1_ecmult_const(&res, &pt, &s);
     secp256k1_ge_set_gej(&pt, &res);
 
     /* Compute a hash of the point */

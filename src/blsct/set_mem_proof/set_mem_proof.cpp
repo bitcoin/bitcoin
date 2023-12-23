@@ -63,7 +63,7 @@ void SetMemProof<T>::Serialize(Stream& st) const
        << omega;
 }
 template
-void SetMemProof<Mcl>::Serialize(CDataStream& st) const;
+void SetMemProof<Mcl>::Serialize(DataStream& st) const;
 
 template <typename T>
 template <typename Stream>
@@ -90,4 +90,4 @@ void SetMemProof<T>::Unserialize(Stream& st)
        >> omega;
 }
 template
-void SetMemProof<Mcl>::Unserialize(CDataStream& st);
+void SetMemProof<Mcl>::Unserialize(DataStream& st);

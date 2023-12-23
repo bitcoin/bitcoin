@@ -311,7 +311,8 @@ Num3072 MuHash3072::ToNum3072(Span<const unsigned char> in)
     unsigned char tmp[Num3072::SIZE_BYTE];
 
     uint256 hashed_in{(HashWriter{} << in).GetSHA256()};
-    ChaCha20Aligned(hashed_in.data()).Keystream64(tmp, Num3072::SIZE_BYTE / 64);
+    static_assert(sizeof(tmp) % ChaCha20Aligned::BLOCKLEN == 0);
+    ChaCha20Aligned{MakeByteSpan(hashed_in)}.Keystream(MakeWritableByteSpan(tmp));
     Num3072 out{tmp};
 
     return out;

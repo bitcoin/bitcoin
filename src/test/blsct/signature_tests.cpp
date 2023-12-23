@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(test_serialization_with_func_calls)
 {
     PrivateKey sk(12345);
     auto sig = sk.SignBalance();
-    CDataStream st(0, 0);
+    DataStream st{};
     sig.Serialize(st);
     Signature recovered_sig;
     recovered_sig.Unserialize(st);
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(test_serialization_with_operators)
 {
     PrivateKey sk(12345);
     auto sig = sk.SignBalance();
-    CDataStream st(0, 0);
+    DataStream st{};
     st << sig;
     Signature recovered_sig;
     st >> recovered_sig;

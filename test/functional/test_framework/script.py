@@ -10,7 +10,6 @@ This file is modified from python-bitcoinlib.
 from collections import namedtuple
 import struct
 import unittest
-from typing import List, Dict
 
 from .key import TaggedHash, tweak_add_pubkey, compute_xonly_pubkey
 
@@ -24,7 +23,7 @@ from .messages import (
     uint256_from_str,
 )
 
-from .ripemd160 import ripemd160
+from .crypto.ripemd160 import ripemd160
 
 MAX_SCRIPT_ELEMENT_SIZE = 520
 MAX_PUBKEYS_PER_MULTI_A = 999
@@ -110,8 +109,8 @@ class CScriptOp(int):
             _opcode_instances.append(super().__new__(cls, n))
             return _opcode_instances[n]
 
-OPCODE_NAMES: Dict[CScriptOp, str] = {}
-_opcode_instances: List[CScriptOp] = []
+OPCODE_NAMES: dict[CScriptOp, str] = {}
+_opcode_instances: list[CScriptOp] = []
 
 # Populate opcode instance table
 for n in range(0xff + 1):
@@ -688,6 +687,25 @@ def LegacySignatureHash(*args, **kwargs):
         return (HASH_ONE, err)
     else:
         return (hash256(msg), err)
+
+def sign_input_legacy(tx, input_index, input_scriptpubkey, privkey, sighash_type=SIGHASH_ALL):
+    """Add legacy ECDSA signature for a given transaction input. Note that the signature
+       is prepended to the scriptSig field, i.e. additional data pushes necessary for more
+       complex spends than P2PK (e.g. pubkey for P2PKH) can be already set before."""
+    (sighash, err) = LegacySignatureHash(input_scriptpubkey, tx, input_index, sighash_type)
+    assert err is None
+    der_sig = privkey.sign_ecdsa(sighash)
+    tx.vin[input_index].scriptSig = bytes(CScript([der_sig + bytes([sighash_type])])) + tx.vin[input_index].scriptSig
+    tx.rehash()
+
+def sign_input_segwitv0(tx, input_index, input_scriptpubkey, input_amount, privkey, sighash_type=SIGHASH_ALL):
+    """Add segwitv0 ECDSA signature for a given transaction input. Note that the signature
+       is inserted at the bottom of the witness stack, i.e. additional witness data
+       needed (e.g. pubkey for P2WPKH) can already be set before."""
+    sighash = SegwitV0SignatureHash(input_scriptpubkey, tx, input_index, sighash_type, input_amount)
+    der_sig = privkey.sign_ecdsa(sighash)
+    tx.wit.vtxinwit[input_index].scriptWitness.stack.insert(0, der_sig + bytes([sighash_type]))
+    tx.rehash()
 
 # TODO: Allow cached hashPrevouts/hashSequence/hashOutputs to be provided.
 # Performance optimization probably not necessary for python tests, however.

@@ -6,13 +6,13 @@
 #include <rpc/server.h>
 
 #include <common/args.h>
+#include <common/system.h>
 #include <logging.h>
 #include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/time.h>
 
 #include <boost/signals2/signal.hpp>
@@ -88,7 +88,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
     vCommands.reserve(mapCommands.size());
 
     for (const auto& entry : mapCommands)
-        vCommands.push_back(make_pair(entry.second.front()->category + entry.first, entry.second.front()));
+        vCommands.emplace_back(entry.second.front()->category + entry.first, entry.second.front());
     sort(vCommands.begin(), vCommands.end());
 
     JSONRPCRequest jreq = helpreq;
@@ -392,7 +392,7 @@ std::string JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq)
  * Process named arguments into a vector of positional arguments, based on the
  * passed-in specification for the RPC call's arguments.
  */
-static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, const std::vector<std::string>& argNames)
+static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, const std::vector<std::pair<std::string, bool>>& argNames)
 {
     JSONRPCRequest out = in;
     out.params = UniValue(UniValue::VARR);
@@ -409,7 +409,7 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     }
     // Process expected parameters. If any parameters were left unspecified in
     // the request before a parameter that was specified, null values need to be
-    // inserted at the unspecifed parameter positions, and the "hole" variable
+    // inserted at the unspecified parameter positions, and the "hole" variable
     // below tracks the number of null values that need to be inserted.
     // The "initial_hole_size" variable stores the size of the initial hole,
     // i.e. how many initial positional arguments were left unspecified. This is
@@ -417,7 +417,9 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     // "args" parameter, if present.
     int hole = 0;
     int initial_hole_size = 0;
-    for (const std::string &argNamePattern: argNames) {
+    const std::string* initial_param = nullptr;
+    UniValue options{UniValue::VOBJ};
+    for (const auto& [argNamePattern, named_only]: argNames) {
         std::vector<std::string> vargNames = SplitString(argNamePattern, '|');
         auto fr = argsIn.end();
         for (const std::string & argName : vargNames) {
@@ -426,7 +428,22 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
                 break;
             }
         }
-        if (fr != argsIn.end()) {
+
+        // Handle named-only parameters by pushing them into a temporary options
+        // object, and then pushing the accumulated options as the next
+        // positional argument.
+        if (named_only) {
+            if (fr != argsIn.end()) {
+                if (options.exists(fr->first)) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + fr->first + " specified multiple times");
+                }
+                options.pushKVEnd(fr->first, *fr->second);
+                argsIn.erase(fr);
+            }
+            continue;
+        }
+
+        if (!options.empty() || fr != argsIn.end()) {
             for (int i = 0; i < hole; ++i) {
                 // Fill hole between specified parameters with JSON nulls,
                 // but not at the end (for backwards compatibility with calls
@@ -434,11 +451,25 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
                 out.params.push_back(UniValue());
             }
             hole = 0;
-            out.params.push_back(*fr->second);
-            argsIn.erase(fr);
+            if (!initial_param) initial_param = &argNamePattern;
         } else {
             hole += 1;
             if (out.params.empty()) initial_hole_size = hole;
+        }
+
+        // If named input parameter "fr" is present, push it onto out.params. If
+        // options are present, push them onto out.params. If both are present,
+        // throw an error.
+        if (fr != argsIn.end()) {
+            if (!options.empty()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + fr->first + " conflicts with parameter " + options.getKeys().front());
+            }
+            out.params.push_back(*fr->second);
+            argsIn.erase(fr);
+        }
+        if (!options.empty()) {
+            out.params.push_back(std::move(options));
+            options = UniValue{UniValue::VOBJ};
         }
     }
     // If leftover "args" param was found, use it as a source of positional
@@ -447,9 +478,8 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     // arguments as described in doc/JSON-RPC-interface.md#parameter-passing
     auto positional_args{argsIn.extract("args")};
     if (positional_args && positional_args.mapped()->isArray()) {
-        const bool has_named_arguments{initial_hole_size < (int)argNames.size()};
-        if (initial_hole_size < (int)positional_args.mapped()->size() && has_named_arguments) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + argNames[initial_hole_size] + " specified twice both as positional and named argument");
+        if (initial_hole_size < (int)positional_args.mapped()->size() && initial_param) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + *initial_param + " specified twice both as positional and named argument");
         }
         // Assign positional_args to out.params and append named_args after.
         UniValue named_args{std::move(out.params)};
@@ -565,12 +595,9 @@ void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nS
     deadlineTimers.emplace(name, std::unique_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000)));
 }
 
-int RPCSerializationFlags()
+bool RPCSerializationWithoutWitness()
 {
-    int flag = 0;
-    if (gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) == 0)
-        flag |= SERIALIZE_TRANSACTION_NO_WITNESS;
-    return flag;
+    return (gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) == 0);
 }
 
 CRPCTable tableRPC;

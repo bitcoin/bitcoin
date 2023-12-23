@@ -5,7 +5,6 @@
 """Test dust limit mempool policy (`-dustrelayfee` parameter)"""
 from decimal import Decimal
 
-from test_framework.key import ECKey
 from test_framework.messages import (
     COIN,
     CTxOut,
@@ -32,6 +31,7 @@ from test_framework.util import (
     get_fee,
 )
 from test_framework.wallet import MiniWallet
+from test_framework.wallet_util import generate_keypair
 
 
 DUST_RELAY_TX_FEE = 3000  # default setting [sat/kvB]
@@ -74,11 +74,8 @@ class DustRelayFeeTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
 
         # prepare output scripts of each standard type
-        key = ECKey()
-        key.generate(compressed=False)
-        uncompressed_pubkey = key.get_pubkey().get_bytes()
-        key.generate(compressed=True)
-        pubkey = key.get_pubkey().get_bytes()
+        _, uncompressed_pubkey = generate_keypair(compressed=False)
+        _, pubkey = generate_keypair(compressed=True)
 
         output_scripts = (
             (key_to_p2pk_script(uncompressed_pubkey),          "P2PK (uncompressed)"),

@@ -1,12 +1,31 @@
 dnl escape "$0x" below using the m4 quadrigaph @S|@, and escape it again with a \ for the shell.
-AC_DEFUN([SECP_64BIT_ASM_CHECK],[
+AC_DEFUN([SECP_X86_64_ASM_CHECK],[
 AC_MSG_CHECKING(for x86_64 assembly availability)
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[
   #include <stdint.h>]],[[
   uint64_t a = 11, tmp;
   __asm__ __volatile__("movq \@S|@0x100000000,%1; mulq %%rsi" : "+a"(a) : "S"(tmp) : "cc", "%rdx");
-  ]])],[has_64bit_asm=yes],[has_64bit_asm=no])
-AC_MSG_RESULT([$has_64bit_asm])
+  ]])], [has_x86_64_asm=yes], [has_x86_64_asm=no])
+AC_MSG_RESULT([$has_x86_64_asm])
+])
+
+AC_DEFUN([SECP_ARM32_ASM_CHECK], [
+  AC_MSG_CHECKING(for ARM32 assembly availability)
+  SECP_ARM32_ASM_CHECK_CFLAGS_saved_CFLAGS="$CFLAGS"
+  CFLAGS="-x assembler"
+  AC_LINK_IFELSE([AC_LANG_SOURCE([[
+    .syntax unified
+    .eabi_attribute 24, 1
+    .eabi_attribute 25, 1
+    .text
+    .global main
+    main:
+      ldr r0, =0x002A
+      mov r7, #1
+      swi 0   
+    ]])], [has_arm32_asm=yes], [has_arm32_asm=no])
+  AC_MSG_RESULT([$has_arm32_asm])
+  CFLAGS="$SECP_ARM32_ASM_CHECK_CFLAGS_saved_CFLAGS"
 ])
 
 AC_DEFUN([SECP_VALGRIND_CHECK],[
@@ -21,6 +40,7 @@ if test x"$has_valgrind" != x"yes"; then
     #  error "Valgrind does not support this platform."
     #endif
   ]])], [has_valgrind=yes])
+  CPPFLAGS="$CPPFLAGS_TEMP"
 fi
 AC_MSG_RESULT($has_valgrind)
 ])

@@ -345,7 +345,7 @@ void MclScalar::SetPow2(const uint32_t& n)
 
 uint256 MclScalar::GetHashWithSalt(const uint64_t& salt) const
 {
-    CHashWriter hasher(0, 0);
+    HashWriter hasher{};
     hasher << *this;
     hasher << salt;
     return hasher.GetHash();

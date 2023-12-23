@@ -1,0 +1,18 @@
+Ensure that Qt handles the minimum macOS version properly
+
+This patch can be dropped for LLVM Clang 17+, after commit
+https://github.com/llvm/llvm-project/commit/c8e2dd8c6f490b68e41fe663b44535a8a21dfeab
+
+
+--- a/qtbase/src/corelib/global/qsystemdetection.h
++++ b/qtbase/src/corelib/global/qsystemdetection.h
+@@ -220,6 +220,9 @@
+ #  include <Availability.h>
+ #  include <AvailabilityMacros.h>
+ #
++#  undef __MAC_OS_X_VERSION_MIN_REQUIRED
++#  define __MAC_OS_X_VERSION_MIN_REQUIRED MAC_OS_X_VERSION_MIN_REQUIRED
++#
+ #  ifdef Q_OS_MACOS
+ #    if !defined(__MAC_OS_X_VERSION_MIN_REQUIRED) || __MAC_OS_X_VERSION_MIN_REQUIRED < __MAC_10_6
+ #       undef __MAC_OS_X_VERSION_MIN_REQUIRED
