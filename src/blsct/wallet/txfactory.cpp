@@ -55,6 +55,8 @@ bool TxFactory::AddInput(const CCoinsViewCache& cache, const COutPoint& outpoint
 }
 bool TxFactory::AddInput(wallet::CWallet* wallet, const COutPoint& outpoint, const bool& rbf)
 {
+    AssertLockHeld(wallet->cs_wallet);
+
     auto tx = wallet->GetWalletTx(outpoint.hash);
 
     if (tx == nullptr)

@@ -18,6 +18,8 @@ using Scalars = Elements<Scalar>;
 #define BLSCT_DEFAULT_FEE 200000
 
 namespace blsct {
+class SubAddress;
+
 struct UnsignedOutput {
     CTxOut out;
     Scalar blindingKey;

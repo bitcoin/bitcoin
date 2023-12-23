@@ -691,7 +691,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
             base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
             bech32_hrp = "bcrt";
-            bech32_hrp_mod = "nvrt";
+            bech32_mod_hrp = "nvrt";
         }
     };
 

@@ -857,7 +857,7 @@ libbitcoin_common_a_SOURCES = \
   blsct/set_mem_proof/set_mem_proof_setup.cpp \
   blsct/set_mem_proof/set_mem_proof_prover.cpp \
   blsct/signature.cpp \
-  blsct/wallet/address.cpp \ 
+  blsct/wallet/address.cpp \
   blsct/wallet/txfactory_global.cpp \
   chainparams.cpp \
   coins.cpp \
