@@ -12,7 +12,6 @@
 #include <blsct/range_proof/bulletproofs/range_proof.h>
 #include <blsct/signature.h>
 #include <consensus/amount.h>
-#include <consensus/amount.h>
 #include <ctokens/tokenid.h>
 #include <prevector.h>
 #include <script/script.h>
