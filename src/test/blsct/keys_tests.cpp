@@ -14,7 +14,7 @@
 #include <blsct/signature.h>
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(blsct_keys_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(keys_tests, BasicTestingSetup)
 
 using Point = MclG1Point;
 using Scalar = MclScalar;

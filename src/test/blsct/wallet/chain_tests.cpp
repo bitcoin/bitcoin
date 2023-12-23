@@ -16,7 +16,7 @@
 #include <boost/test/unit_test.hpp>
 
 namespace wallet {
-BOOST_FIXTURE_TEST_SUITE(blsct_chain_tests, WalletTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(chain_tests, WalletTestingSetup)
 
 BOOST_FIXTURE_TEST_CASE(SyncTest, TestBLSCTChain100Setup)
 {

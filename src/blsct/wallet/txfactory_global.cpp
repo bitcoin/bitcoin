@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <blsct/wallet/address.h>
 #include <blsct/wallet/txfactory_global.h>
 
 using T = Mcl;

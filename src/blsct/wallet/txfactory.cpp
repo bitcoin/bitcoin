@@ -118,7 +118,7 @@ std::optional<CMutableTransaction> TxFactory::BuildTx()
             txSigs.push_back(PrivateKey(changeOutput.blindingKey).Sign(changeOutput.out.GetHash()));
         }
 
-        if (nFee == (long long)(BLSCT_DEFAULT_FEE * (tx.vin.size() + tx.vout.size() + 1))) {
+        if (nFee == (long long)(BLSCT_DEFAULT_FEE * (tx.vin.size() + tx.vout.size()))) {
             CTxOut fee_out{nFee, CScript(OP_RETURN)};
             tx.vout.push_back(fee_out);
             txSigs.push_back(PrivateKey(gammaAcc).SignBalance());
@@ -126,7 +126,7 @@ std::optional<CMutableTransaction> TxFactory::BuildTx()
             return tx;
         }
 
-        nFee = BLSCT_DEFAULT_FEE * (tx.vin.size() + tx.vout.size() + 1);
+        nFee = BLSCT_DEFAULT_FEE * (tx.vin.size() + tx.vout.size());
     }
 
     return std::nullopt;

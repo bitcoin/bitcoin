@@ -7,7 +7,6 @@
 
 #include <blsct/double_public_key.h>
 #include <blsct/range_proof/bulletproofs/range_proof_logic.h>
-#include <blsct/wallet/address.h>
 #include <primitives/transaction.h>
 
 using T = Mcl;
