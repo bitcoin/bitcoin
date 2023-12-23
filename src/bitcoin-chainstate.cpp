@@ -125,14 +125,14 @@ int main(int argc, char* argv[])
         .blocks_dir = abs_datadir / "blocks",
         .notifications = chainman_opts.notifications,
     };
-    ChainstateManager chainman{kernel_context.interrupt, chainman_opts, blockman_opts};
+    util::SignalInterrupt interrupt;
+    ChainstateManager chainman{interrupt, chainman_opts, blockman_opts};
 
     node::CacheSizes cache_sizes;
     cache_sizes.block_tree_db = 2 << 20;
     cache_sizes.coins_db = 2 << 22;
     cache_sizes.coins = (450 << 20) - (2 << 20) - (2 << 22);
     node::ChainstateLoadOptions options;
-    options.check_interrupt = [] { return false; };
     auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);
     if (status != node::ChainstateLoadStatus::SUCCESS) {
         std::cerr << "Failed to load Chain state from your datadir." << std::endl;

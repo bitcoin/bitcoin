@@ -9,6 +9,7 @@ Tests correspond to code in rpc/net.cpp.
 
 from decimal import Decimal
 from itertools import product
+import platform
 import time
 
 import test_framework.messages
@@ -110,7 +111,7 @@ class NetTest(BitcoinTestFramework):
         no_version_peer_id = 2
         no_version_peer_conntime = int(time.time())
         self.nodes[0].setmocktime(no_version_peer_conntime)
-        with self.nodes[0].assert_debug_log([f"Added connection peer={no_version_peer_id}"]):
+        with self.nodes[0].wait_for_new_peer():
             no_version_peer = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
         self.nodes[0].setmocktime(0)
         peer_info = self.nodes[0].getpeerinfo()[no_version_peer_id]
@@ -220,8 +221,10 @@ class NetTest(BitcoinTestFramework):
         ip_port = "127.0.0.1:{}".format(p2p_port(2))
         self.nodes[0].addnode(node=ip_port, command='add')
         # try to add an equivalent ip
-        ip_port2 = "127.1:{}".format(p2p_port(2))
-        assert_raises_rpc_error(-23, "Node already added", self.nodes[0].addnode, node=ip_port2, command='add')
+        # (note that OpenBSD doesn't support the IPv4 shorthand notation with omitted zero-bytes)
+        if platform.system() != "OpenBSD":
+            ip_port2 = "127.1:{}".format(p2p_port(2))
+            assert_raises_rpc_error(-23, "Node already added", self.nodes[0].addnode, node=ip_port2, command='add')
         # check that the node has indeed been added
         added_nodes = self.nodes[0].getaddednodeinfo()
         assert_equal(len(added_nodes), 1)

@@ -35,7 +35,7 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
 
     BOOST_REQUIRE(coin_stats_index.StartBackgroundSync());
 
-    IndexWaitSynced(coin_stats_index);
+    IndexWaitSynced(coin_stats_index, *Assert(m_node.shutdown));
 
     // Check that CoinStatsIndex works for genesis block.
     const CBlockIndex* genesis_block_index;
@@ -86,7 +86,7 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_unclean_shutdown, TestChain100Setup)
         CoinStatsIndex index{interfaces::MakeChain(m_node), 1 << 20};
         BOOST_REQUIRE(index.Init());
         BOOST_REQUIRE(index.StartBackgroundSync());
-        IndexWaitSynced(index);
+        IndexWaitSynced(index, *Assert(m_node.shutdown));
         std::shared_ptr<const CBlock> new_block;
         CBlockIndex* new_block_index = nullptr;
         {

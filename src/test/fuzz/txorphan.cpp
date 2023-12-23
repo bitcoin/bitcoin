@@ -33,6 +33,7 @@ void initialize_orphanage()
 FUZZ_TARGET(txorphan, .init = initialize_orphanage)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    FastRandomContext limit_orphans_rng{/*fDeterministic=*/true};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     TxOrphanage orphanage;
@@ -132,7 +133,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                     // test mocktime and expiry
                     SetMockTime(ConsumeTime(fuzzed_data_provider));
                     auto limit = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
-                    orphanage.LimitOrphans(limit);
+                    orphanage.LimitOrphans(limit, limit_orphans_rng);
                     Assert(orphanage.Size() <= limit);
                 });
         }

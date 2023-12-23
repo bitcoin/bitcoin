@@ -217,6 +217,10 @@ EXTRA_DIST += \
     test/util/data/txcreatesignv1.hex \
     test/util/data/txcreatesignv1.json \
     test/util/data/txcreatesignv2.hex \
+    test/util/data/txreplace1.hex \
+    test/util/data/txreplacenoinputs.hex \
+    test/util/data/txreplaceomittedn.hex \
+    test/util/data/txreplacesingleinput.hex \
     test/util/rpcauth-test.py
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-man

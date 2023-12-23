@@ -8,6 +8,7 @@
 #include <blockfilter.h>
 #include <common/settings.h>
 #include <primitives/transaction.h> // For CTransactionRef
+#include <util/result.h>
 
 #include <functional>
 #include <memory>
@@ -260,7 +261,7 @@ public:
     virtual void getPackageLimits(unsigned int& limit_ancestor_count, unsigned int& limit_descendant_count) = 0;
 
     //! Check if transaction will pass the mempool's chain limits.
-    virtual bool checkChainLimits(const CTransactionRef& tx) = 0;
+    virtual util::Result<void> checkChainLimits(const CTransactionRef& tx) = 0;
 
     //! Estimate smart fee.
     virtual CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc = nullptr) = 0;

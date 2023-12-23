@@ -559,8 +559,7 @@ public:
         CTransactionRef tx;
         CCoinControl dummy;
         {
-            constexpr int RANDOM_CHANGE_POSITION = -1;
-            auto res = CreateTransaction(*wallet, {recipient}, RANDOM_CHANGE_POSITION, dummy);
+            auto res = CreateTransaction(*wallet, {recipient}, /*change_pos=*/std::nullopt, dummy);
             BOOST_CHECK(res);
             tx = res->tx;
         }

@@ -65,6 +65,11 @@
       <Project>{1DBB979A-C212-45CD-9563-446A96F87F71}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemDefinitionGroup>
+     <ClCompile>
+       <DisableSpecificWarnings>4018;4244;4267;4703;4715;4805</DisableSpecificWarnings>
+     </ClCompile>
+  </ItemDefinitionGroup>
   <Target Name="RawBenchHeaderGen" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>There was an error executing the JSON test header generation task.</ErrorText>

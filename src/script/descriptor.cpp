@@ -1777,13 +1777,13 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         const auto script_ctx{ctx == ParseScriptContext::P2WSH ? miniscript::MiniscriptContext::P2WSH : miniscript::MiniscriptContext::TAPSCRIPT};
         KeyParser parser(/*out = */&out, /* in = */nullptr, /* ctx = */script_ctx, key_exp_index);
         auto node = miniscript::FromString(std::string(expr.begin(), expr.end()), parser);
+        if (parser.m_key_parsing_error != "") {
+            error = std::move(parser.m_key_parsing_error);
+            return nullptr;
+        }
         if (node) {
             if (ctx != ParseScriptContext::P2WSH && ctx != ParseScriptContext::P2TR) {
                 error = "Miniscript expressions can only be used in wsh or tr.";
-                return nullptr;
-            }
-            if (parser.m_key_parsing_error != "") {
-                error = std::move(parser.m_key_parsing_error);
                 return nullptr;
             }
             if (!node->IsSane() || node->IsNotSatisfiable()) {
