@@ -99,6 +99,8 @@
 /* Define this symbol to build code that uses getauxval */
 #cmakedefine HAVE_STRONG_GETAUXVAL 1
 
+#cmakedefine HAVE_LINUX_SYSINFO 1
+
 /* Define this symbol if the BSD sysctl() is available */
 #cmakedefine HAVE_SYSCTL 1
 
