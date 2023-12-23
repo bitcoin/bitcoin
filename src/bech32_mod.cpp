@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <blsct/double_public_key.h>
 #include <bech32_mod.h>
 #include <util/vector.h>
 
@@ -10,6 +11,7 @@
 #include <assert.h>
 #include <numeric>
 #include <optional>
+#include <stdexcept>
 
 namespace bech32_mod
 {
@@ -191,6 +193,9 @@ data CreateChecksum(Encoding encoding, const std::string& hrp, const data& value
 
 /** Encode a Bech32 or Bech32m string. */
 std::string Encode(Encoding encoding, const std::string& hrp, const data& values) {
+    if (values.size() != DOUBLE_PUBKEY_DATA_ENC_SIZE) {
+        throw std::runtime_error("Expected values to be a double public key");
+    }
     // First ensure that the HRP is all lowercase. BIP-173 and BIP350 require an encoder
     // to return a lowercase Bech32/Bech32m string, but if given an uppercase HRP, the
     // result will always be invalid.
@@ -205,24 +210,13 @@ std::string Encode(Encoding encoding, const std::string& hrp, const data& values
     return ret;
 }
 
-/** Decode a Bech32 or Bech32m string. */
+/** Decode a Bech32 or Bech32m string. Expects
+ *  str to be a valid encoding of DoublePublicKey */
 DecodeResult Decode(const std::string& str) {
     std::vector<int> errors;
     if (!CheckCharacters(str, errors)) return {};
     size_t pos = str.rfind('1');
 
-    // double public key bech32 string is 165-byte long and consists of:
-    // - 2-byte hrp
-    // - 1-byte separator '1'
-    // - 154-byte key data (96 bytes / 5 bits = 153.6)
-    // - 8-byte checksum
-    if (str.size() != 165  // double public key should be encoded to 165-byte bech32 string
-        || pos == str.npos  // separator '1' should be included
-        || pos == 0  // hrp part should not be empty
-        || pos + 9 > str.size()  // data part should not be empty
-    ) {
-        return {};
-    }
     data values(str.size() - 1 - pos);
     for (size_t i = 0; i < str.size() - 1 - pos; ++i) {
         unsigned char c = str[i + pos + 1];

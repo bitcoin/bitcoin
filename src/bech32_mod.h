@@ -14,6 +14,8 @@
 #ifndef BITCOIN_BECH32_MOD_H
 #define BITCOIN_BECH32_MOD_H
 
+#include <chainparams.h>
+#include <optional>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -44,6 +46,9 @@ struct DecodeResult
 
 /** Decode a Bech32 or Bech32m string. */
 DecodeResult Decode(const std::string& str);
+
+// 96 bytes / 5 bits = 153.6 -> 154 bytes
+constexpr size_t DOUBLE_PUBKEY_DATA_ENC_SIZE = 154;
 
 } // namespace bech32_mod
 

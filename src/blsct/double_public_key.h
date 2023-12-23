@@ -19,14 +19,21 @@ private:
 
     PublicKey vk;
     PublicKey sk;
+    bool is_fully_built = false;
 
 public:
-    static constexpr size_t SIZE = 48 * 2;
+    static constexpr size_t SIZE = blsct::PublicKey::SIZE * 2;
 
-    DoublePublicKey() {}
-    DoublePublicKey(const PublicKey& vk_, const PublicKey& sk_) : vk(vk_), sk(sk_) {}
-    DoublePublicKey(const Point& vk_, const Point& sk_) : vk(vk_), sk(sk_) {}
-    DoublePublicKey(const std::vector<unsigned char>& vk_, const std::vector<unsigned char>& sk_) : vk(vk_), sk(sk_) {}
+    DoublePublicKey() : is_fully_built(true) {}
+    DoublePublicKey(const PublicKey& vk_, const PublicKey& sk_) : vk(vk_), sk(sk_), is_fully_built(true) {}
+    DoublePublicKey(const Point& vk_, const Point& sk_) : vk(vk_), sk(sk_), is_fully_built(true) {}
+
+    DoublePublicKey(const std::vector<unsigned char>& vk_, const std::vector<unsigned char>& sk_) : vk(vk_), sk(sk_)
+    {
+        MclG1Point p;
+        is_fully_built = p.SetVch(vk_) && p.SetVch(sk_);
+    }
+
     DoublePublicKey(const std::vector<unsigned char>& keys);
 
     SERIALIZE_METHODS(DoublePublicKey, obj) { READWRITE(obj.vk, obj.sk); }
