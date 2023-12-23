@@ -15,7 +15,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "chainparamsbase -> common/args -> chainparamsbase",
     "node/blockstorage -> validation -> node/blockstorage",
     "node/utxo_snapshot -> validation -> node/utxo_snapshot",
-    "wallet/fees -> wallet/wallet -> wallet/fees",
     "wallet/wallet -> wallet/walletdb -> wallet/wallet",
     "kernel/coinstats -> validation -> kernel/coinstats",
 
