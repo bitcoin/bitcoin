@@ -62,7 +62,7 @@ static CBlock CreateBLSCTGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t 
     return genesis;
 }
 
-static CBlock CreateBLSCTGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const blsct::DoublePublicKey& dest, const CAmount& genesisReward)
+/*static CBlock CreateBLSCTGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const blsct::DoublePublicKey& dest, const CAmount& genesisReward)
 {
     auto out = blsct::CreateOutput(dest, genesisReward, "Reward", TokenId(), 1);
 
@@ -70,7 +70,7 @@ static CBlock CreateBLSCTGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t 
     ss << out;
 
     return CreateBLSCTGenesisBlock(nTime, nNonce, nBits, nVersion, out);
-}
+}*/
 
 static CBlock CreateBLSCTGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const std::string& outHex)
 {
