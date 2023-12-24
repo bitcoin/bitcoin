@@ -205,7 +205,7 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl& coin_control, std::vecto
 
 UniValue SendBLSCTMoney(CWallet& wallet, std::vector<CBLSCTRecipient>& recipients, bool verbose)
 {
-    AssertLockHeld(wallet->cs_wallet);
+    AssertLockHeld(wallet.cs_wallet);
     EnsureWalletIsUnlocked(wallet);
 
     if (recipients.size() == 0)
