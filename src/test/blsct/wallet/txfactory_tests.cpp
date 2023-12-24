@@ -26,7 +26,7 @@ BOOST_FIXTURE_TEST_CASE(ismine_test, TestingSetup)
     auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
     BOOST_CHECK(blsct_km->SetupGeneration(true));
 
-    auto recvAddress = blsct::SubAddress(std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(0).value()));
+    auto recvAddress = std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(0).value());
 
     auto out = blsct::CreateOutput(recvAddress, 1000, "test");
     BOOST_ASSERT(blsct_km->IsMine(out.out));
@@ -59,7 +59,7 @@ BOOST_FIXTURE_TEST_CASE(createtransaction_test, TestingSetup)
     auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
     BOOST_CHECK(blsct_km->SetupGeneration(true));
 
-    auto recvAddress = blsct::SubAddress(std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(0).value()));
+    auto recvAddress = std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(0).value());
 
     const uint256 txid{InsecureRand256()};
     COutPoint outpoint{txid, /*nIn=*/0};
@@ -121,7 +121,7 @@ BOOST_FIXTURE_TEST_CASE(addinput_test, TestingSetup)
     auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
     BOOST_CHECK(blsct_km->SetupGeneration(true));
 
-    auto recvAddress = blsct::SubAddress(std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(0).value()));
+    auto recvAddress = std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(0).value());
 
     const uint256 txid{InsecureRand256()};
     COutPoint outpoint{txid, /*nIn=*/0};

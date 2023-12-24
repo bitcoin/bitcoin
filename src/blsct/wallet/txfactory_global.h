@@ -18,8 +18,6 @@ using Scalars = Elements<Scalar>;
 #define BLSCT_DEFAULT_FEE 200000
 
 namespace blsct {
-class SubAddress;
-
 struct UnsignedOutput {
     CTxOut out;
     Scalar blindingKey;
@@ -62,7 +60,7 @@ struct Amounts {
 };
 
 CTransactionRef AggregateTransactions(const std::vector<CTransactionRef>& txs);
-UnsignedOutput CreateOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId(), const Scalar& blindingKey = Scalar::Rand(), const std::vector<uint8_t>& outputNonce = std::vector<uint8_t>());
+UnsignedOutput CreateOutput(const blsct::DoublePublicKey& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId(), const Scalar& blindingKey = Scalar::Rand(), const std::vector<uint8_t>& outputNonce = std::vector<uint8_t>());
 } // namespace blsct
 
 #endif // TXFACTORY_GLOBAL_H

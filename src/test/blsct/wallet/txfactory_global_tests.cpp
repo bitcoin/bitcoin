@@ -14,7 +14,7 @@ BOOST_FIXTURE_TEST_CASE(create_output_test, TestingSetup)
     std::string destAddr = "nv1szddvednme8p63xcxhcm3h3k4tlw5vnesudwe66km0w6jrqyymqz969xmknnz0w9unqczu58sp0rhqjc4tdmgt6hmtn9tpavrzckfdfcuwyx4w0s7dgvjce34377psjen6ug4s2xfg9smrw6qx70xtja6s8wrt28dc";
     MclScalar blindingKey{ParseHex("42c0926471b3bd01ae130d9382c5fca2e2b5000abbf826a93132696ffa5f2c65")};
 
-    auto out = blsct::CreateOutput(destAddr, 1, "", TokenId(), blindingKey);
+    auto out = blsct::CreateOutput(blsct::SubAddress(destAddr).GetKeys(), 1, "", TokenId(), blindingKey);
 
     BOOST_CHECK(out.out.blsctData.viewTag == 20232);
     BOOST_CHECK(HexStr(out.out.blsctData.spendingKey.GetVch()) == "84ee3e9c40fe65f91776033b5ddb3bf280bbd549924028280dad0d6ea464bb728886910f53bd66bcc2b59e37f1b8f55e");

@@ -16,7 +16,7 @@ namespace blsct {
 void TxFactory::AddOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId)
 {
     UnsignedOutput out;
-    out = CreateOutput(destination, nAmount, sMemo, tokenId);
+    out = CreateOutput(destination.GetKeys(), nAmount, sMemo, tokenId);
 
     if (nAmounts.count(tokenId) <= 0)
         nAmounts[tokenId] = {0, 0};
@@ -114,7 +114,7 @@ std::optional<CMutableTransaction> TxFactory::BuildTx()
         }
 
         for (auto& change : mapChange) {
-            auto changeOutput = CreateOutput(blsct::SubAddress(std::get<blsct::DoublePublicKey>(km->GetNewDestination(-1).value())), change.second, "Change", change.first);
+            auto changeOutput = CreateOutput(std::get<blsct::DoublePublicKey>(km->GetNewDestination(-1).value()), change.second, "Change", change.first);
             tx.vout.push_back(changeOutput.out);
             gammaAcc = gammaAcc - changeOutput.gamma;
             txSigs.push_back(PrivateKey(changeOutput.blindingKey).Sign(changeOutput.out.GetHash()));

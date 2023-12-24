@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <blsct/wallet/address.h>
 #include <blsct/wallet/txfactory_global.h>
 
 using T = Mcl;
@@ -43,7 +42,7 @@ Signature UnsignedOutput::GetSignature() const
     return Signature::Aggregate(txSigs);
 }
 
-UnsignedOutput CreateOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId, const Scalar& blindingKey, const std::vector<uint8_t>& outputNonce)
+UnsignedOutput CreateOutput(const blsct::DoublePublicKey& destKeys, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId, const Scalar& blindingKey, const std::vector<uint8_t>& outputNonce)
 {
     auto ret = UnsignedOutput();
 
@@ -56,8 +55,6 @@ UnsignedOutput CreateOutput(const SubAddress& destination, const CAmount& nAmoun
 
     Scalars vs;
     vs.Add(nAmount);
-
-    auto destKeys = destination.GetKeys();
 
     ret.blindingKey = blindingKey.IsZero() ? MclScalar::Rand() : blindingKey;
 

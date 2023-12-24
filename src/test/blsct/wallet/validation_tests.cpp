@@ -29,7 +29,7 @@ BOOST_FIXTURE_TEST_CASE(validation_test, TestingSetup)
     auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
     BOOST_CHECK(blsct_km->SetupGeneration(true));
 
-    auto recvAddress = blsct::SubAddress(std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(0).value()));
+    auto recvAddress = std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(0).value());
 
     const uint256 txid{InsecureRand256()};
     COutPoint outpoint{txid, /*nIn=*/0};
@@ -66,7 +66,7 @@ BOOST_FIXTURE_TEST_CASE(validation_reward_test, TestingSetup)
 
     CMutableTransaction tx;
 
-    auto out = blsct::CreateOutput(blsct::SubAddress(), 900 * COIN, " Reward ");
+    auto out = blsct::CreateOutput(blsct::DoublePublicKey(), 900 * COIN, " Reward ");
     tx.vout.push_back(out.out);
     tx.txSig = out.GetSignature();
 

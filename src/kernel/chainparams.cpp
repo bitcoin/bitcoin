@@ -6,7 +6,6 @@
 #include <kernel/chainparams.h>
 
 #include <arith_uint256.h>
-#include <blsct/wallet/address.h>
 #include <blsct/wallet/txfactory_global.h>
 #include <chainparamsseeds.h>
 #include <consensus/amount.h>
