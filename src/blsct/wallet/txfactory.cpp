@@ -136,6 +136,8 @@ std::optional<CMutableTransaction> TxFactory::BuildTx()
 
 std::optional<CMutableTransaction> TxFactory::CreateTransaction(wallet::CWallet* wallet, blsct::KeyMan* blsct_km, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId)
 {
+    AssertLockHeld(wallet->cs_wallet);
+
     wallet::CoinFilterParams coins_params;
     coins_params.min_amount = 0;
     coins_params.only_blsct = true;

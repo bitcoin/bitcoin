@@ -92,8 +92,6 @@ CTransactionRef AggregateTransactions(const std::vector<CTransactionRef>& txs)
     auto ret = CMutableTransaction();
     std::vector<Signature> vSigs;
     CAmount nFee = 0;
-    bool fCommitmentAdded = false;
-    bool fCoinbaseAdded = false;
 
     for (auto& tx : txs) {
         vSigs.push_back(tx->txSig);
