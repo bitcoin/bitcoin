@@ -337,6 +337,10 @@ public:
         CAmount ret = 0;
         size_t i = 0;
         for (auto& output : tx->vout) {
+            if (tx->IsBLSCT() && output.scriptPubKey.IsFee()) {
+                i++;
+                continue;
+            }
             ret += output.IsBLSCT() ? GetBLSCTRecoveryData(i).amount : output.nValue;
             i++;
         }

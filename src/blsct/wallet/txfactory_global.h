@@ -62,7 +62,7 @@ struct Amounts {
 };
 
 CTransactionRef AggregateTransactions(const std::vector<CTransactionRef>& txs);
-UnsignedOutput CreateOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId(), const Scalar& blindingKey = Scalar::Rand());
+UnsignedOutput CreateOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId(), const Scalar& blindingKey = Scalar::Rand(), const std::vector<uint8_t>& outputNonce = std::vector<uint8_t>());
 } // namespace blsct
 
 #endif // TXFACTORY_GLOBAL_H

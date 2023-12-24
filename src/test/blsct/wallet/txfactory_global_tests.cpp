@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(blsct_txfactory_global_tests)
 
 BOOST_FIXTURE_TEST_CASE(create_output_test, TestingSetup)
 {
-    std::string destAddr = "xNTWKN8kaGR5tR8qbyMLrqkHXM8Esui3PbMBbL95EtoVsiLWTsU72E3tayw8CF81AJbSgRyV1GqyAaPnYJabZgfQYu1A11kqFhqicGTgv9J3Yk8BXSpxZmTXPRuQnyZMMHZrUxhczke ";
+    std::string destAddr = "nv1szddvednme8p63xcxhcm3h3k4tlw5vnesudwe66km0w6jrqyymqz969xmknnz0w9unqczu58sp0rhqjc4tdmgt6hmtn9tpavrzckfdfcuwyx4w0s7dgvjce34377psjen6ug4s2xfg9smrw6qx70xtja6s8wrt28dc";
     MclScalar blindingKey{ParseHex("42c0926471b3bd01ae130d9382c5fca2e2b5000abbf826a93132696ffa5f2c65")};
 
     auto out = blsct::CreateOutput(destAddr, 1, "", TokenId(), blindingKey);

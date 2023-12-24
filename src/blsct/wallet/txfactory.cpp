@@ -114,7 +114,7 @@ std::optional<CMutableTransaction> TxFactory::BuildTx()
         }
 
         for (auto& change : mapChange) {
-            auto changeOutput = CreateOutput(blsct::SubAddress(std::get<blsct::DoublePublicKey>(km->GetNewDestination(0).value())), change.second, "Change", change.first);
+            auto changeOutput = CreateOutput(blsct::SubAddress(std::get<blsct::DoublePublicKey>(km->GetNewDestination(-1).value())), change.second, "Change", change.first);
             tx.vout.push_back(changeOutput.out);
             gammaAcc = gammaAcc - changeOutput.gamma;
             txSigs.push_back(PrivateKey(changeOutput.blindingKey).Sign(changeOutput.out.GetHash()));

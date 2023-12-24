@@ -794,7 +794,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.nVersion = 0;
     CheckIsNotStandard(t, "version");
 
-    t.nVersion = 3;
+    t.nVersion = 1 << 7;
     CheckIsNotStandard(t, "version");
 
     // Allowed nVersion

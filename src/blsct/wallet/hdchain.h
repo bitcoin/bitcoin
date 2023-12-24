@@ -16,6 +16,7 @@ public:
     CKeyID seed_id;  //!< seed hash160
     CKeyID spend_id; //!< spend hash160
     CKeyID view_id;  //!< view hash160
+    CKeyID blinding_id; //!< blinding hash160
     CKeyID token_id; //!< token hash160
     std::map<uint64_t, uint64_t> nSubAddressCounter;
 
@@ -36,13 +37,14 @@ public:
         seed_id.SetNull();
         spend_id.SetNull();
         view_id.SetNull();
+        blinding_id.SetNull();
         token_id.SetNull();
         nSubAddressCounter.clear();
     }
 
     bool operator==(const HDChain& chain) const
     {
-        return seed_id == chain.seed_id && spend_id == chain.spend_id && view_id == chain.view_id && token_id == chain.token_id && nSubAddressCounter == chain.nSubAddressCounter;
+        return seed_id == chain.seed_id && spend_id == chain.spend_id && view_id == chain.view_id && token_id == chain.token_id && blinding_id == chain.blinding_id && nSubAddressCounter == chain.nSubAddressCounter;
     }
 };
 } // namespace blsct

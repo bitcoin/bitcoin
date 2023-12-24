@@ -30,7 +30,7 @@ public:
 };
 
 struct SubAddressIdentifier {
-    uint64_t account;
+    int64_t account;
     uint64_t address;
 };
 

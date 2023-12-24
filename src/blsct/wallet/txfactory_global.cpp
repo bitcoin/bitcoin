@@ -43,7 +43,7 @@ Signature UnsignedOutput::GetSignature() const
     return Signature::Aggregate(txSigs);
 }
 
-UnsignedOutput CreateOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId, const Scalar& blindingKey)
+UnsignedOutput CreateOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId, const Scalar& blindingKey, const std::vector<uint8_t>& outputNonce)
 {
     auto ret = UnsignedOutput();
 
@@ -51,12 +51,15 @@ UnsignedOutput CreateOutput(const SubAddress& destination, const CAmount& nAmoun
     ret.out.tokenId = tokenId;
     ret.out.scriptPubKey = CScript(OP_TRUE);
 
+    if (outputNonce.size() > 0)
+        ret.out.scriptPubKey << outputNonce;
+
     Scalars vs;
     vs.Add(nAmount);
 
     auto destKeys = destination.GetKeys();
 
-    ret.blindingKey = blindingKey;
+    ret.blindingKey = blindingKey.IsZero() ? MclScalar::Rand() : blindingKey;
 
     Points nonces;
     Point vk;
@@ -98,28 +101,14 @@ CTransactionRef AggregateTransactions(const std::vector<CTransactionRef>& txs)
     for (auto& tx : txs) {
         vSigs.push_back(tx->txSig);
         for (auto& in : tx->vin) {
-            if (!fCoinbaseAdded && in.prevout.IsNull()) {
-                fCoinbaseAdded = true;
-                ret.vin.insert(ret.vin.begin(), in);
-            } else {
-                ret.vin.push_back(in);
-            }
+            ret.vin.push_back(in);
         }
         for (auto& out : tx->vout) {
-            if (out.IsBLSCT())
-                ret.vout.push_back(out);
-            else if (!fCommitmentAdded &&
-                     out.scriptPubKey.size() >= 38 &&
-                     out.scriptPubKey[0] == OP_RETURN &&
-                     out.scriptPubKey[1] == 0x24 &&
-                     out.scriptPubKey[2] == 0xaa &&
-                     out.scriptPubKey[3] == 0x21 &&
-                     out.scriptPubKey[4] == 0xa9 &&
-                     out.scriptPubKey[5] == 0xed) {
-                ret.vout.push_back(out);
-                fCommitmentAdded = true;
-            } else if (out.scriptPubKey.IsFee())
+            if (out.scriptPubKey.IsFee()) {
                 nFee += out.nValue;
+                continue;
+            }
+            ret.vout.push_back(out);
         }
     }
 

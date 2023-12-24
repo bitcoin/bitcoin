@@ -774,19 +774,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     const CCoinsViewCache& coins_cache = m_active_chainstate.CoinsTip();
     // do all inputs exist?
-    bool fCoinbaseInput = false;
-
     for (const CTxIn& txin : tx.vin) {
         if (!coins_cache.HaveCoinInCache(txin.prevout)) {
             coins_to_uncache.push_back(txin.prevout);
-        }
-
-        if (txin.prevout.IsNull()) {
-            if (!fCoinbaseInput) {
-                fCoinbaseInput = true;
-                continue;
-            }
-            return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-double-coinbase");
         }
 
         // Note: this call may add txin.prevout to the coins cache
@@ -1750,8 +1740,6 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
         txundo.vprevout.reserve(tx.vin.size());
         for (const CTxIn &txin : tx.vin) {
             txundo.vprevout.emplace_back();
-            if (txin.prevout.IsNull())
-                continue;
             bool is_spent = inputs.SpendCoin(txin.prevout, &txundo.vprevout.back());
             assert(is_spent);
         }
@@ -1836,10 +1824,6 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         spent_outputs.reserve(tx.vin.size());
 
         for (const auto& txin : tx.vin) {
-            if (txin.prevout.IsNull()) {
-                spent_outputs.emplace_back();
-                continue;
-            }
             const COutPoint& prevout = txin.prevout;
             const Coin& coin = inputs.AccessCoin(prevout);
             assert(!coin.IsSpent());
@@ -1858,8 +1842,6 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         // spent being checked as a part of CScriptCheck.
 
         // Verify signature
-        if (tx.vin[i].prevout.IsNull()) continue;
-
         CScriptCheck check(txdata.m_spent_outputs[i], tx, i, flags, cacheSigStore, &txdata);
         if (pvChecks) {
             pvChecks->emplace_back(std::move(check));
@@ -2372,16 +2354,19 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
                     tx.GetHash().ToString(), state.ToString());
             }
             control.Add(std::move(vChecks));
-        }
 
-        if (tx.IsBLSCT()) {
-            if (params.GetConsensus().fBLSCT)
-                blsct::VerifyTx(tx, view, params.GetConsensus().nBLSCTBlockReward);
-            else
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "non-blsct-tx-not-allowed");
-        } else {
-            if (params.GetConsensus().fBLSCT)
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "blsct-tx-not-allowed");
+            if (tx.IsBLSCT()) {
+                if (params.GetConsensus().fBLSCT) {
+                    if (!blsct::VerifyTx(tx, view, 0)) {
+                        return error("ConnectBlock(): VerifyTx on transaction %s failed",
+                                     tx.GetHash().ToString());
+                    }
+                } else
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "blsct-tx-not-allowed");
+            } else {
+                if (params.GetConsensus().fBLSCT)
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "non-blsct-tx-not-allowed");
+            }
         }
 
         CTxUndo undoDummy;
@@ -2399,7 +2384,11 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<MillisecondsDouble>(time_connect) / num_blocks_total);
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, params.GetConsensus());
-    if (block.vtx[0]->GetValueOut() > blockReward) {
+    if (block.IsBLSCT()) {
+        if (!blsct::VerifyTx(*block.vtx[0], view, nFees + params.GetConsensus().nBLSCTBlockReward))
+            return error("ConnectBlock(): VerifyTx on coinbase of block %s failed",
+                         block.GetHash().ToString());
+    } else if (block.vtx[0]->GetValueOut() > blockReward) {
         LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)\n", block.vtx[0]->GetValueOut(), blockReward);
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
     }
@@ -3589,14 +3578,13 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-length", "size limits failed");
 
     // First transaction must be coinbase, the rest must not be
-    if (!consensusParams.fBLSCT) {
-        if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "first tx is not coinbase");
-        for (unsigned int i = 1; i < block.vtx.size(); i++)
-            if (block.vtx[i]->IsCoinBase())
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-multiple", "more than one coinbase");
-    } else if (block.vtx.size() > 1)
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "multiple-tx", "more than one transaction in blsct block");
+    if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "first tx is not coinbase");
+    for (unsigned int i = 1; i < block.vtx.size(); i++)
+        if (block.vtx[i]->IsCoinBase())
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-multiple", "more than one coinbase");
+
+    if (consensusParams.fBLSCT && block.vtx.size() > 2) return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "multiple-tx", "more than two transactions in blsct block");
 
     // Check transactions
     // Must check for duplicate inputs (see CVE-2018-17144)
@@ -3629,7 +3617,7 @@ void ChainstateManager::UpdateUncommittedBlockStructures(CBlock& block, const CB
 {
     int commitpos = GetWitnessCommitmentIndex(block);
     static const std::vector<unsigned char> nonce(32, 0x00);
-    if (commitpos != NO_WITNESS_COMMITMENT && DeploymentActiveAfter(pindexPrev, *this, Consensus::DEPLOYMENT_SEGWIT) && !block.vtx[0]->HasWitness() && block.vtx[0]->vin.size() > 0) {
+    if (commitpos != NO_WITNESS_COMMITMENT && DeploymentActiveAfter(pindexPrev, *this, Consensus::DEPLOYMENT_SEGWIT) && !block.vtx[0]->HasWitness()) {
         CMutableTransaction tx(*block.vtx[0]);
         tx.vin[0].scriptWitness.stack.resize(1);
         tx.vin[0].scriptWitness.stack[0] = nonce;
@@ -3761,7 +3749,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     }
 
     // Enforce rule that the coinbase starts with serialized block height
-    if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_HEIGHTINCB) && !block.IsBLSCT()) {
+    if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_HEIGHTINCB)) {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
             !std::equal(expect.begin(), expect.end(), block.vtx[0]->vin[0].scriptSig.begin())) {

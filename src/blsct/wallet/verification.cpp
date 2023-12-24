@@ -24,25 +24,19 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
         balanceKey = (gen.G * MclScalar(blockReward));
     }
 
-    bool fCoinbaseInput = false;
+    if (!tx.IsCoinBase()) {
+        for (auto& in : tx.vin) {
+            Coin coin;
 
-    for (auto& in : tx.vin) {
-        Coin coin;
-        if (in.prevout.IsNull()) {
-            if (fCoinbaseInput)
+            if (!view.GetCoin(in.prevout, coin)) {
                 return false;
-            fCoinbaseInput = true;
-            continue;
-        }
+            }
 
-        if (!view.GetCoin(in.prevout, coin)) {
-            return false;
+            vPubKeys.push_back(coin.out.blsctData.spendingKey);
+            auto in_hash = in.GetHash();
+            vMessages.push_back(Message(in_hash.begin(), in_hash.end()));
+            balanceKey = balanceKey + coin.out.blsctData.rangeProof.Vs[0];
         }
-
-        vPubKeys.push_back(coin.out.blsctData.spendingKey);
-        auto in_hash = in.GetHash();
-        vMessages.push_back(Message(in_hash.begin(), in_hash.end()));
-        balanceKey = balanceKey + coin.out.blsctData.rangeProof.Vs[0];
     }
 
     CAmount nFee = 0;
@@ -69,6 +63,7 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
     vMessages.push_back(blsct::Common::BLSCTBALANCE);
     vPubKeys.push_back(balanceKey);
 
-    return PublicKeys{vPubKeys}.VerifyBatch(vMessages, tx.txSig, true) && rp.Verify(vProofs);
+    return PublicKeys{vPubKeys}.VerifyBatch(vMessages, tx.txSig, true) &&
+           rp.Verify(vProofs);
 }
 } // namespace blsct

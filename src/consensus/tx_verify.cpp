@@ -129,7 +129,7 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx)
 
 unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& inputs)
 {
-    if (tx.IsCoinBase() || tx.IsBLSCT())
+    if (tx.IsCoinBase())
         return 0;
 
     unsigned int nSigOps = 0;
@@ -148,7 +148,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
 {
     int64_t nSigOps = GetLegacySigOpCount(tx) * WITNESS_SCALE_FACTOR;
 
-    if (tx.IsCoinBase() || tx.IsBLSCT())
+    if (tx.IsCoinBase())
         return nSigOps;
 
     if (flags & SCRIPT_VERIFY_P2SH) {
@@ -173,54 +173,26 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
                          strprintf("%s: inputs missing/spent", __func__));
     }
 
-    if (tx.IsBLSCT()) {
-        bool fCoinbaseInput = false;
+    CAmount nValueIn = 0;
+    for (unsigned int i = 0; i < tx.vin.size(); ++i) {
+        const COutPoint& prevout = tx.vin[i].prevout;
+        const Coin& coin = inputs.AccessCoin(prevout);
+        assert(!coin.IsSpent());
 
-        for (unsigned int i = 0; i < tx.vin.size(); ++i) {
-            const COutPoint& prevout = tx.vin[i].prevout;
-
-            if (prevout.IsNull()) {
-                if (!fCoinbaseInput) {
-                    fCoinbaseInput = true;
-                    continue;
-                }
-                return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-double-coinbase");
-            }
-
-            const Coin& coin = inputs.AccessCoin(prevout);
-            assert(!coin.IsSpent());
+        // If prev is coinbase, check that it's matured
+        if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
+            return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
+                                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
 
-        bool fFeeFound = false;
-
-        for (auto& out : tx.vout) {
-            if (!out.IsBLSCT() && out.scriptPubKey.IsFee()) {
-                if (fFeeFound)
-                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "more-than-one-fee-output");
-                txfee = out.nValue;
-                fFeeFound = true;
-            }
+        // Check for negative or overflow input values
+        nValueIn += coin.out.nValue;
+        if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn)) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputvalues-outofrange");
         }
-    } else {
-        CAmount nValueIn = 0;
-        for (unsigned int i = 0; i < tx.vin.size(); ++i) {
-            const COutPoint& prevout = tx.vin[i].prevout;
-            const Coin& coin = inputs.AccessCoin(prevout);
-            assert(!coin.IsSpent());
+    }
 
-            // If prev is coinbase, check that it's matured
-            if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
-                return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
-                                     strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
-            }
-
-            // Check for negative or overflow input values
-            nValueIn += coin.out.nValue;
-            if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn)) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputvalues-outofrange");
-            }
-        }
-
+    if (!tx.IsBLSCT()) {
         const CAmount value_out = tx.GetValueOut();
         if (nValueIn < value_out) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-in-belowout",
@@ -234,6 +206,12 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         }
 
         txfee = txfee_aux;
+    } else {
+        for (auto& out : tx.vout) {
+            if (out.scriptPubKey.IsFee())
+                txfee = out.nValue;
+        }
     }
+
     return true;
 }

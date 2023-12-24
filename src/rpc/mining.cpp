@@ -168,9 +168,7 @@ static UniValue generateBlsctBlocks(ChainstateManager& chainman, const CTxMemPoo
     const Consensus::Params& consensusParams = chainman.GetParams().GetConsensus();
     UniValue blockHashes(UniValue::VARR);
     while (nGenerate > 0 && !ShutdownRequested()) {
-        auto out = blsct::CreateOutput(blsct::SubAddress(destination), consensusParams.nBLSCTBlockReward, "Reward");
-
-        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler{chainman.ActiveChainstate(), &mempool}.CreateNewBLSCTPOWBlock(out));
+        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler{chainman.ActiveChainstate(), &mempool}.CreateNewBLSCTPOWBlock(blsct::SubAddress(destination), consensusParams.nBLSCTBlockReward));
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
 

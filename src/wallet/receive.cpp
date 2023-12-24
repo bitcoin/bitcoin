@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <blsct/wallet/txfactory_global.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <wallet/receive.h>
@@ -90,6 +91,10 @@ bool ScriptIsChange(const CWallet& wallet, const CScript& script)
 
 bool OutputIsChange(const CWallet& wallet, const CTxOut& txout)
 {
+    if (txout.IsBLSCT()) {
+        auto blsct_km = wallet.GetBLSCTKeyMan();
+        if (blsct_km) return blsct_km->OutputIsChange(txout);
+    }
     return ScriptIsChange(wallet, txout.scriptPubKey);
 }
 
@@ -220,13 +225,20 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
 
     // Compute fee:
     CAmount nDebit = CachedTxGetDebit(wallet, wtx, filter);
+    CAmount nNet;
+
     if (nDebit > 0) // debit>0 means we signed/sent this transaction
     {
         CAmount nValueOut = wtx.GetValueOut();
-        nFee = nDebit - nValueOut;
+        if (wtx.tx->IsBLSCT()) {
+            nNet = nDebit - nValueOut;
+        } else {
+            nFee = nDebit - nValueOut;
+        }
     }
 
     LOCK(wallet.cs_wallet);
+
     // Sent/received.
     for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i)
     {
@@ -237,10 +249,12 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
         //   2) the output is to us (received)
         if (nDebit > 0)
         {
-            if (!include_change && OutputIsChange(wallet, txout))
-                continue;
-        }
-        else if (!(fIsMine & filter))
+            if (OutputIsChange(wallet, txout) && (txout.IsBLSCT() || !include_change)) continue;
+
+        } else if (!(fIsMine & filter))
+            continue;
+
+        if (wtx.tx->IsBLSCT() && txout.scriptPubKey.IsFee())
             continue;
 
         // In either case, we need to get the destination address
@@ -251,33 +265,39 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
             if (!blsct_km) {
                 address = CNoDestination();
             } else {
-                auto hashId = blsct_km->GetHashId(txout);
-                blsct::SubAddress subAdd;
-                if (!blsct_km->GetSubAddress(hashId, subAdd)) {
-                    address = CNoDestination();
-                } else {
-                    address = CTxDestination(subAdd.GetKeys());
-                }
+                address = blsct_km->GetDestination(txout);
             }
+
+            auto recoveryData = wtx.GetBLSCTRecoveryData(i);
+
+            COutputEntry output = {address, recoveryData.amount, (int)i};
+
+            // If we are receiving the output, add it as a "received" entry
+            if (fIsMine & filter)
+                listReceived.push_back(output);
         } else {
             if (!ExtractDestination(txout.scriptPubKey, address) && !txout.scriptPubKey.IsUnspendable()) {
                 wallet.WalletLogPrintf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
                                        wtx.GetHash().ToString());
                 address = CNoDestination();
             }
+
+            COutputEntry output = {address, txout.nValue, (int)i};
+
+            // If we are debited by the transaction, add the output as a "sent" entry
+            if (nDebit > 0 && !wtx.tx->IsBLSCT())
+                listSent.push_back(output);
+
+            // If we are receiving the output, add it as a "received" entry
+            if (fIsMine & filter)
+                listReceived.push_back(output);
         }
-
-        COutputEntry output = {address, txout.IsBLSCT() ? wtx.GetBLSCTRecoveryData(i).amount : txout.nValue, (int)i};
-
-        // If we are debited by the transaction, add the output as a "sent" entry
-        if (nDebit > 0)
-            listSent.push_back(output);
-
-        // If we are receiving the output, add it as a "received" entry
-        if (fIsMine & filter)
-            listReceived.push_back(output);
     }
 
+    if (wtx.tx->IsBLSCT() && nDebit > 0) {
+        COutputEntry output = {CNoDestination(), nNet, -1};
+        listSent.push_back(output);
+    }
 }
 
 bool CachedTxIsFromMe(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter)

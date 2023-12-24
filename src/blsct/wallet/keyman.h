@@ -108,9 +108,9 @@ public:
     bool Encrypt(const wallet::CKeyingMaterial& master_key, wallet::WalletBatch* batch);
     bool CheckDecryptionKey(const wallet::CKeyingMaterial& master_key, bool accept_no_keys);
 
-    SubAddress GenerateNewSubAddress(const uint64_t& account, SubAddressIdentifier& id);
+    SubAddress GenerateNewSubAddress(const int64_t& account, SubAddressIdentifier& id);
     SubAddress GetSubAddress(const SubAddressIdentifier& id = {0, 0}) const;
-    util::Result<CTxDestination> GetNewDestination(const uint64_t& account = 0);
+    util::Result<CTxDestination> GetNewDestination(const int64_t& account = 0);
 
     /* Set the HD chain model (chain child index counters) and writes it to the database */
     void AddHDChain(const blsct::HDChain& chain);
@@ -130,6 +130,7 @@ public:
     bool IsMine(const blsct::PublicKey& blindingKey, const blsct::PublicKey& spendingKey, const uint16_t& viewTag);
     CKeyID GetHashId(const CTxOut& txout) const { return GetHashId(txout.blsctData.blindingKey, txout.blsctData.spendingKey); }
     CKeyID GetHashId(const blsct::PublicKey& blindingKey, const blsct::PublicKey& spendingKey) const;
+    CTxDestination GetDestination(const CTxOut& txout) const;
     blsct::PrivateKey GetMasterSeedKey() const;
     blsct::PrivateKey GetSpendingKey() const;
     blsct::PrivateKey GetSpendingKeyForOutput(const CTxOut& out) const;
@@ -146,18 +147,21 @@ public:
     void LoadSubAddressStr(const SubAddress& subAddress, const CKeyID& hashId);
     bool AddSubAddressStr(const SubAddress& subAddress, const CKeyID& hashId);
     bool HaveSubAddressStr(const SubAddress& subAddress) const;
-    bool NewSubAddressPool(const uint64_t& account = 0);
+    bool NewSubAddressPool(const int64_t& account = 0);
     bool TopUp(const unsigned int& size = 0);
-    bool TopUpAccount(const uint64_t& account, const unsigned int& size = 0);
-    void ReserveSubAddressFromPool(const uint64_t& account, int64_t& nIndex, SubAddressPool& keypool);
+    bool TopUpAccount(const int64_t& account, const unsigned int& size = 0);
+    void ReserveSubAddressFromPool(const int64_t& account, int64_t& nIndex, SubAddressPool& keypool);
     void KeepSubAddress(const SubAddressIdentifier& id);
     void ReturnSubAddress(const SubAddressIdentifier& id);
-    bool GetSubAddressFromPool(const uint64_t& account, CKeyID& result, SubAddressIdentifier& id);
-    int64_t GetOldestSubAddressPoolTime(const uint64_t& account);
-    int GetSubAddressPoolSize(const uint64_t& account) const;
+    bool GetSubAddressFromPool(const int64_t& account, CKeyID& result, SubAddressIdentifier& id);
+    int64_t GetOldestSubAddressPoolTime(const int64_t& account);
+    int GetSubAddressPoolSize(const int64_t& account) const;
+
+    bool OutputIsChange(const CTxOut& out) const;
 
     /** Keypool has new keys */
-    boost::signals2::signal<void()> NotifyCanGetAddressesChanged;
+    boost::signals2::signal<void()>
+        NotifyCanGetAddressesChanged;
 
     // Map from Key ID to key metadata.
     std::map<CKeyID, wallet::CKeyMetadata> mapKeyMetadata GUARDED_BY(cs_KeyStore);

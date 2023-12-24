@@ -343,6 +343,7 @@ inline void UnserializeTransaction(TxType& tx, Stream& s)
     tx.vout.clear();
     /* Try to read the vin. In case the dummy is there, this will be read as an empty vector. */
     s >> tx.vin;
+
     if (tx.vin.size() == 0 && fAllowWitness) {
         /* We read a dummy or an empty vin. */
         s >> flags;
@@ -354,10 +355,7 @@ inline void UnserializeTransaction(TxType& tx, Stream& s)
         /* We read a non-empty vin. Assume a normal vout follows. */
         s >> tx.vout;
     }
-    if (flags & 2) {
-        /* Only coinbase */
-        flags ^= 2;
-    }
+
     if ((flags & 1) && fAllowWitness) {
         /* The witness flag is present, and we support witnesses. */
         flags ^= 1;
@@ -393,9 +391,6 @@ inline void SerializeTransaction(const TxType& tx, Stream& s)
         if (tx.HasWitness()) {
             flags |= 1;
         }
-    }
-    if (tx.vin.size() == 0 && tx.IsBLSCT()) {
-        flags |= 2;
     }
     if (flags) {
         /* Use extended format in case witnesses are to be serialized. */

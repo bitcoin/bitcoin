@@ -96,7 +96,7 @@ BOOST_FIXTURE_TEST_CASE(createtransaction_test, TestingSetup)
     auto result = blsct_km->RecoverOutputs(finalTx.value().vout);
 
     for (auto& res : result.amounts) {
-        if (res.message == "Change" && res.amount == (1000 - 900 - 0.008) * COIN) fFoundChange = true;
+        if (res.message == "Change" && res.amount == (1000 - 900 - 0.006) * COIN) fFoundChange = true;
     }
 
     BOOST_ASSERT(fFoundChange);
@@ -155,7 +155,7 @@ BOOST_FIXTURE_TEST_CASE(addinput_test, TestingSetup)
     auto result = blsct_km->RecoverOutputs(finalTx.value().vout);
 
     for (auto& res : result.amounts) {
-        if (res.message == "Change" && res.amount == (1000 - 900 - 0.008) * COIN) fFoundChange = true;
+        if (res.message == "Change" && res.amount == (1000 - 900 - 0.006) * COIN) fFoundChange = true;
     }
 
     BOOST_ASSERT(fFoundChange);
@@ -169,7 +169,7 @@ BOOST_FIXTURE_TEST_CASE(addinput_test, TestingSetup)
     uint32_t nChangePosition = 0;
 
     for (auto& res : wtx->blsctRecoveryData) {
-        if (res.second.message == "Change" && res.second.amount == (1000 - 900 - 0.008) * COIN) {
+        if (res.second.message == "Change" && res.second.amount == (1000 - 900 - 0.006) * COIN) {
             nChangePosition = res.second.id;
             fFoundChange = true;
             break;
@@ -193,8 +193,8 @@ BOOST_FIXTURE_TEST_CASE(addinput_test, TestingSetup)
     auto finalTx2 = tx2.BuildTx();
     wallet->transactionAddedToMempool(MakeTransactionRef(finalTx2.value()));
 
-    BOOST_ASSERT(wallet->GetDebit(CTransaction(finalTx2.value()), wallet::ISMINE_SPENDABLE_BLSCT) == (1000 - 900 - 0.008) * COIN);
-    BOOST_ASSERT(TxGetCredit(*wallet, CTransaction(finalTx2.value()), wallet::ISMINE_SPENDABLE_BLSCT) == (1000 - 900 - 0.008 - 50 - 0.008) * COIN);
+    BOOST_ASSERT(wallet->GetDebit(CTransaction(finalTx2.value()), wallet::ISMINE_SPENDABLE_BLSCT) == (1000 - 900 - 0.006) * COIN);
+    BOOST_ASSERT(TxGetCredit(*wallet, CTransaction(finalTx2.value()), wallet::ISMINE_SPENDABLE_BLSCT) == (1000 - 900 - 0.006 - 50 - 0.006) * COIN);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

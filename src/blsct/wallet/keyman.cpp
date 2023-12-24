@@ -198,7 +198,7 @@ void KeyMan::SetHDSeed(const PrivateKey& key)
     auto scalarMasterKey = key.GetScalar();
     auto childKey = BLS12_381_KeyGen::derive_child_SK(scalarMasterKey, 130);
     auto transactionKey = BLS12_381_KeyGen::derive_child_SK(childKey, 0);
-    // auto blindingKey = BLS12_381_KeyGen::derive_child_SK(childKey, 1);
+    auto blindingKey = PrivateKey(BLS12_381_KeyGen::derive_child_SK(childKey, 1));
     auto tokenKey = PrivateKey(BLS12_381_KeyGen::derive_child_SK(childKey, 2));
     auto viewKey = PrivateKey(BLS12_381_KeyGen::derive_child_SK(transactionKey, 0));
     auto spendKey = PrivateKey(BLS12_381_KeyGen::derive_child_SK(transactionKey, 1));
@@ -208,11 +208,13 @@ void KeyMan::SetHDSeed(const PrivateKey& key)
     newHdChain.spend_id = spendKey.GetPublicKey().GetID();
     newHdChain.view_id = viewKey.GetPublicKey().GetID();
     newHdChain.token_id = tokenKey.GetPublicKey().GetID();
+    newHdChain.blinding_id = blindingKey.GetPublicKey().GetID();
 
     int64_t nCreationTime = GetTime();
 
     wallet::CKeyMetadata spendMetadata(nCreationTime);
     wallet::CKeyMetadata viewMetadata(nCreationTime);
+    wallet::CKeyMetadata blindingMetadata(nCreationTime);
     wallet::CKeyMetadata tokenMetadata(nCreationTime);
 
     spendMetadata.hdKeypath = "spend";
@@ -223,6 +225,10 @@ void KeyMan::SetHDSeed(const PrivateKey& key)
     viewMetadata.has_key_origin = false;
     viewMetadata.hd_seed_id = newHdChain.view_id;
 
+    blindingMetadata.hdKeypath = "blinding";
+    blindingMetadata.has_key_origin = false;
+    blindingMetadata.hd_seed_id = newHdChain.blinding_id;
+
     tokenMetadata.hdKeypath = "token";
     tokenMetadata.has_key_origin = false;
     tokenMetadata.hd_seed_id = newHdChain.token_id;
@@ -230,6 +236,7 @@ void KeyMan::SetHDSeed(const PrivateKey& key)
     // mem store the metadata
     mapKeyMetadata[newHdChain.spend_id] = spendMetadata;
     mapKeyMetadata[newHdChain.view_id] = viewMetadata;
+    mapKeyMetadata[newHdChain.blinding_id] = blindingMetadata;
     mapKeyMetadata[newHdChain.token_id] = tokenMetadata;
 
     // write the keys to the database
@@ -248,6 +255,9 @@ void KeyMan::SetHDSeed(const PrivateKey& key)
     if (!AddKeyPubKey(tokenKey, tokenKey.GetPublicKey()))
         throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
 
+    if (!AddKeyPubKey(blindingKey, blindingKey.GetPublicKey()))
+        throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
+
     AddHDChain(newHdChain);
     NotifyCanGetAddressesChanged();
     wallet::WalletBatch batch(m_storage.GetDatabase());
@@ -260,7 +270,7 @@ bool KeyMan::SetupGeneration(bool force)
     }
 
     SetHDSeed(GenerateNewSeed());
-    if (!NewSubAddressPool()) {
+    if (!NewSubAddressPool() || !NewSubAddressPool(-1)) {
         return false;
     }
     return true;
@@ -412,6 +422,19 @@ bool KeyMan::Encrypt(const wallet::CKeyingMaterial& master_key, wallet::WalletBa
     }
     encrypted_batch = nullptr;
     return true;
+}
+
+CTxDestination KeyMan::GetDestination(const CTxOut& txout) const
+{
+    auto hashId = GetHashId(txout);
+    blsct::SubAddress subAdd;
+    CTxDestination ret;
+    if (!GetSubAddress(hashId, subAdd)) {
+        ret = CNoDestination();
+    } else {
+        ret = CTxDestination(subAdd.GetKeys());
+    }
+    return ret;
 }
 
 CKeyID KeyMan::GetHashId(const blsct::PublicKey& blindingKey, const blsct::PublicKey& spendingKey) const
@@ -590,7 +613,7 @@ bool KeyMan::HaveSubAddressStr(const SubAddress& subAddress) const
     return mapSubAddressesStr.count(subAddress) > 0;
 }
 
-SubAddress KeyMan::GenerateNewSubAddress(const uint64_t& account, SubAddressIdentifier& id)
+SubAddress KeyMan::GenerateNewSubAddress(const int64_t& account, SubAddressIdentifier& id)
 {
     if (m_hd_chain.nSubAddressCounter.count(account) == 0)
         m_hd_chain.nSubAddressCounter.insert(std::make_pair(account, 0));
@@ -627,7 +650,7 @@ SubAddress KeyMan::GenerateNewSubAddress(const uint64_t& account, SubAddressIden
 
 // BLSCT Sub Address Key Pool
 
-bool KeyMan::NewSubAddressPool(const uint64_t& account)
+bool KeyMan::NewSubAddressPool(const int64_t& account)
 {
     LOCK(cs_KeyStore);
     wallet::WalletBatch batch(m_storage.GetDatabase());
@@ -666,7 +689,7 @@ bool KeyMan::TopUp(const unsigned int& size)
     return true;
 }
 
-bool KeyMan::TopUpAccount(const uint64_t& account, const unsigned int& size)
+bool KeyMan::TopUpAccount(const int64_t& account, const unsigned int& size)
 {
     LOCK(cs_KeyStore);
 
@@ -696,7 +719,7 @@ bool KeyMan::TopUpAccount(const uint64_t& account, const unsigned int& size)
     return true;
 }
 
-void KeyMan::ReserveSubAddressFromPool(const uint64_t& account, int64_t& nIndex, SubAddressPool& keypool)
+void KeyMan::ReserveSubAddressFromPool(const int64_t& account, int64_t& nIndex, SubAddressPool& keypool)
 {
     nIndex = -1;
     keypool.hashId = CKeyID();
@@ -757,7 +780,7 @@ void KeyMan::ReturnSubAddress(const SubAddressIdentifier& id)
     WalletLogPrintf("KeyMan::ReturnSubAddress(): return %d/%d\n", id.account / id.address);
 }
 
-bool KeyMan::GetSubAddressFromPool(const uint64_t& account, CKeyID& result, SubAddressIdentifier& id)
+bool KeyMan::GetSubAddressFromPool(const int64_t& account, CKeyID& result, SubAddressIdentifier& id)
 {
     LOCK(cs_KeyStore);
 
@@ -778,13 +801,13 @@ bool KeyMan::GetSubAddressFromPool(const uint64_t& account, CKeyID& result, SubA
     return true;
 }
 
-int KeyMan::GetSubAddressPoolSize(const uint64_t& account) const
+int KeyMan::GetSubAddressPoolSize(const int64_t& account) const
 {
     LOCK(cs_KeyStore);
     return setSubAddressPool.count(account) > 0 ? setSubAddressPool.at(account).size() : 0;
 }
 
-int64_t KeyMan::GetOldestSubAddressPoolTime(const uint64_t& account)
+int64_t KeyMan::GetOldestSubAddressPoolTime(const int64_t& account)
 {
     LOCK(cs_KeyStore);
 
@@ -804,7 +827,7 @@ int64_t KeyMan::GetOldestSubAddressPoolTime(const uint64_t& account)
     return keypool.nTime;
 }
 
-util::Result<CTxDestination> KeyMan::GetNewDestination(const uint64_t& account)
+util::Result<CTxDestination> KeyMan::GetNewDestination(const int64_t& account)
 {
     // Fill-up keypool if needed
     TopUp();
@@ -818,5 +841,17 @@ util::Result<CTxDestination> KeyMan::GetNewDestination(const uint64_t& account)
         return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
     }
     return CTxDestination(GetSubAddress(id).GetKeys());
+}
+
+bool KeyMan::OutputIsChange(const CTxOut& out) const
+{
+    auto id = GetHashId(out);
+    blsct::SubAddressIdentifier subAddId;
+
+    if (GetSubAddressId(id, subAddId)) {
+        return subAddId.account == -1;
+    }
+
+    return false;
 }
 } // namespace blsct

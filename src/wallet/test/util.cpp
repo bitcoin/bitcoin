@@ -57,6 +57,7 @@ std::unique_ptr<CWallet> CreateBLSCTWallet(interfaces::Chain& chain, CChain& cch
         auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
         blsct_km->SetHDSeed(MclScalar(uint256(1)));
         assert(blsct_km->NewSubAddressPool());
+        assert(blsct_km->NewSubAddressPool(-1));
     }
     WalletRescanReserver reserver(*wallet);
     reserver.reserve();

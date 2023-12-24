@@ -184,7 +184,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     return std::move(pblocktemplate);
 }
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTPOWBlock(const blsct::UnsignedOutput& out)
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTPOWBlock(const blsct::SubAddress& destination, CAmount nReward)
 {
     const auto time_start{SteadyClock::now()};
 
@@ -234,6 +234,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTPOWBlock(const bls
 
     std::vector<blsct::Signature> txSigs;
 
+    auto out = blsct::CreateOutput(destination, nReward + nFees, "Reward");
+
     txSigs.push_back(blsct::PrivateKey(out.blindingKey).Sign(out.out.GetHash()));
     txSigs.push_back(blsct::PrivateKey(out.gamma.Negate()).SignBalance());
 
@@ -245,11 +247,13 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTPOWBlock(const bls
     coinbaseTx.vout[0] = out.out;
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
-
-    auto aggregatedTx = blsct::AggregateTransactions(pblock->vtx);
-    pblock->vtx.clear();
-    pblock->vtx.push_back(aggregatedTx);
-    Assert(pblock->vtx.size() == 1);
+    if (pblock->vtx.size() > 1) {
+        std::vector<CTransactionRef> vToAggregate(pblock->vtx.begin() + 1, pblock->vtx.begin() + pblock->vtx.size());
+        auto aggregatedTx = blsct::AggregateTransactions(vToAggregate);
+        pblock->vtx.resize(1);
+        pblock->vtx.push_back(aggregatedTx);
+    }
+    Assert(pblock->vtx.size() <= 2);
 
     pblocktemplate->vchCoinbaseCommitment = m_chainstate.m_chainman.GenerateCoinbaseCommitment(*pblock, pindexPrev);
     pblocktemplate->vTxFees[0] = -nFees;
@@ -322,7 +326,14 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
     nBlockWeight += iter->GetTxWeight();
     ++nBlockTx;
     nBlockSigOpsCost += iter->GetSigOpCost();
-    nFees += iter->GetFee();
+    if (iter->GetTx().IsBLSCT()) {
+        for (auto& out : iter->GetTx().vout) {
+            if (out.scriptPubKey.IsFee())
+                nFees += out.nValue;
+        }
+    } else {
+        nFees += iter->GetFee();
+    }
     inBlock.insert(iter);
 
     bool fPrintPriority = gArgs.GetBoolArg("-printpriority", DEFAULT_PRINTPRIORITY);

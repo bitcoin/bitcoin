@@ -32,7 +32,9 @@ static CBlock CreateBLSCTGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t 
 {
     CMutableTransaction txNew;
     txNew.nVersion = CTransaction::BLSCT_MARKER;
+    txNew.vin.resize(1);
     txNew.vout.resize(1);
+    txNew.vin[0].scriptSig = CScript() << 486604799;
     txNew.vout[0] = out.out;
     txNew.txSig = out.GetSignature();
 
@@ -579,7 +581,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
             base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
             bech32_hrp = "bcrt";
-            bech32_mod_hrp = "nvrt";
+            bech32_mod_hrp = "nr";
         }
     };
 
@@ -691,7 +693,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
             base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
             bech32_hrp = "bcrt";
-            bech32_mod_hrp = "nvrt";
+            bech32_mod_hrp = "nr";
         }
     };
 
