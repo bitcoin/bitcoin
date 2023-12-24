@@ -22,8 +22,6 @@
 
 #include <univalue.h>
 
-using node::NodeContext;
-
 namespace wallet {
 static void ParseRecipients(const UniValue& address_amounts, const UniValue& subtract_fee_outputs, std::vector<CRecipient>& recipients)
 {
