@@ -269,7 +269,7 @@ static UniValue gettxchainlocks(const JSONRPCRequest& request)
 {
     RPCHelpMan{
         "gettxchainlocks",
-        "\nReturns the block height each transaction was mined at and whether it is chainlocked or not.\n",
+        "\nReturns the block height at which each transaction was mined, and indicates whether it is in the mempool, chainlocked, or neither.\n",
         {
             {"txids", RPCArg::Type::ARR, RPCArg::Optional::NO, "The transaction ids (no more than 100)",
                 {
@@ -284,6 +284,7 @@ static UniValue gettxchainlocks(const JSONRPCRequest& request)
                 {
                     {RPCResult::Type::NUM, "height", "The block height"},
                     {RPCResult::Type::BOOL, "chainlock", "Chainlock status for the block containing the transaction"},
+                    {RPCResult::Type::BOOL, "mempool", "Mempool status for the transaction"},
                 }},
             }
         },
@@ -320,7 +321,15 @@ static UniValue gettxchainlocks(const JSONRPCRequest& request)
         int height{-1};
         bool chainLock{false};
 
-        GetTransaction(nullptr, nullptr, txid, Params().GetConsensus(), hash_block);
+        const auto tx_ref = GetTransaction(nullptr, node.mempool.get(), txid, Params().GetConsensus(), hash_block);
+
+        if (tx_ref == nullptr) {
+            result.pushKV("height", -1);
+            result.pushKV("chainlock", false);
+            result.pushKV("mempool", false);
+            result_arr.push_back(result);
+            continue;
+        }
 
         if (!hash_block.IsNull()) {
             LOCK(cs_main);
@@ -334,6 +343,7 @@ static UniValue gettxchainlocks(const JSONRPCRequest& request)
         }
         result.pushKV("height", height);
         result.pushKV("chainlock", chainLock);
+        result.pushKV("mempool", height == -1);
         result_arr.push_back(result);
     }
     return result_arr;
