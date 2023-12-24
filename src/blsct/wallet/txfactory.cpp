@@ -145,9 +145,7 @@ std::optional<CMutableTransaction> TxFactory::CreateTransaction(wallet::CWallet*
 
     auto tx = blsct::TxFactory(blsct_km);
 
-    for (const wallet::COutput& output : WITH_LOCK(wallet->cs_wallet,
-                                                   return AvailableCoins(*wallet, nullptr, std::nullopt, coins_params))
-                                             .All()) {
+    for (const wallet::COutput& output : AvailableCoins(*wallet, nullptr, std::nullopt, coins_params).All()) {
         tx.AddInput(wallet, COutPoint(output.outpoint.hash, output.outpoint.n));
 
         if (tx.nAmounts[tokenId].nFromInputs > nAmount + (long long)(BLSCT_DEFAULT_FEE * (tx.vInputs.size() + 3))) break;
