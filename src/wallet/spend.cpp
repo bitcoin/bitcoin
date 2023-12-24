@@ -231,8 +231,9 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
         // We should not consider coins which aren't at least in our mempool
         // It's possible for these to be conflicted via ancestors which we may never be able to detect
-        if (nDepth == 0 && !wtx.InMempool())
+        if (nDepth == 0 && !wtx.InMempool()) {
             continue;
+        }
 
         bool safeTx = CachedTxIsTrusted(wallet, wtx, trusted_parents);
 
@@ -282,7 +283,6 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             const COutPoint outpoint(wtxid, i);
 
             auto nValue = output.IsBLSCT() ? wtx.GetBLSCTRecoveryData(i).amount : output.nValue;
-
             if (nValue < params.min_amount || nValue > params.max_amount)
                 continue;
 
@@ -334,6 +334,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             if (type == TxoutType::SCRIPTHASH && solvable) {
                 CScript script;
                 if (!provider->GetCScript(CScriptID(uint160(script_solutions[0])), script)) continue;
+
                 type = Solver(script, script_solutions);
                 is_from_p2sh = true;
             }

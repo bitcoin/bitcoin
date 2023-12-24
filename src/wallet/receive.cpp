@@ -310,6 +310,7 @@ bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uin
     AssertLockHeld(wallet.cs_wallet);
     int nDepth = wallet.GetTxDepthInMainChain(wtx);
     if (nDepth >= 1) return true;
+    if (nDepth == 0 && wtx.tx->IsBLSCT()) return false;
     if (nDepth < 0) return false;
     // using wtx's cached debit
     if (!wallet.m_spend_zero_conf_change || !CachedTxIsFromMe(wallet, wtx, ISMINE_ALL)) return false;
@@ -325,7 +326,7 @@ bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uin
         if (parent == nullptr) return false;
         const CTxOut& parentOut = parent->tx->vout[txin.prevout.n];
         // Check that this specific input being spent is trusted
-        if (wallet.IsMine(parentOut) != ISMINE_SPENDABLE || wallet.IsMine(parentOut) != ISMINE_SPENDABLE_BLSCT) return false;
+        if (wallet.IsMine(parentOut) != ISMINE_SPENDABLE && wallet.IsMine(parentOut) != ISMINE_SPENDABLE_BLSCT) return false;
         // If we've already trusted this parent, continue
         if (trusted_parents.count(parent->GetHash())) continue;
         // Recurse to check that the parent is also trusted

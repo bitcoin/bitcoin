@@ -303,21 +303,7 @@ CBlock TestBLSCTChain100Setup::CreateBlock(
     Chainstate& chainstate,
     const std::optional<blsct::SubAddress>& dest)
 {
-    CBlock block = BlockAssembler{chainstate, nullptr}.CreateNewBLSCTPOWBlock(dest.has_value() ? dest.value() : coinbaseDest, m_node.chainman->GetConsensus().nBLSCTBlockReward)->block;
-
-    Assert(block.vtx.size() == 1);
-    std::vector<CTransactionRef> vToAggregate;
-    for (const CMutableTransaction& tx : txns) {
-        vToAggregate.push_back(MakeTransactionRef(tx));
-    }
-
-    if (vToAggregate.size() > 0) {
-        auto aggregatedTx = blsct::AggregateTransactions(vToAggregate);
-        block.vtx.resize(1);
-        block.vtx.push_back(aggregatedTx);
-        Assert(block.vtx.size() == 2);
-    }
-
+    CBlock block = BlockAssembler{chainstate, nullptr}.CreateNewBLSCTPOWBlock(dest.has_value() ? dest.value() : coinbaseDest, m_node.chainman->GetConsensus().nBLSCTBlockReward, txns)->block;
     RegenerateCommitments(block, *Assert(m_node.chainman));
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, m_node.chainman->GetConsensus()))

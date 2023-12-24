@@ -46,14 +46,16 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
             vPubKeys.push_back(out.blsctData.ephemeralKey);
             auto out_hash = out.GetHash();
             vMessages.push_back(Message(out_hash.begin(), out_hash.end()));
-
             vProofs.push_back(out.blsctData.rangeProof);
             balanceKey = balanceKey - out.blsctData.rangeProof.Vs[0];
         } else {
-            if (!out.scriptPubKey.IsUnspendable())
+            if (!out.scriptPubKey.IsUnspendable() && out.nValue > 0) {
                 return false;
-            if (nFee > 0)
+            }
+            if (nFee > 0 || !MoneyRange(out.nValue)) {
                 return false;
+            }
+            if (out.nValue == 0) continue;
             nFee = out.nValue;
             range_proof::Generators<Mcl> gen = gf.GetInstance(out.tokenId);
             balanceKey = balanceKey - (gen.G * MclScalar(out.nValue));

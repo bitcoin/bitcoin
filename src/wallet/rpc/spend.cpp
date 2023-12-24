@@ -285,8 +285,8 @@ RPCHelpMan sendtoblsctaddress()
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The BLSCT address to send to."},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
-            {"memo", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A memo used to store in the transaction.\n"
-                                                                   "The recipient will see its value."},
+            {"memo", RPCArg::Type::STR, RPCArg::Default{""}, "A memo used to store in the transaction.\n"
+                                                             "The recipient will see its value."},
             {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, return extra information about the transaction."},
         },
         {

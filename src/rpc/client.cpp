@@ -43,7 +43,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getnetworkhashps", 0, "nblocks" },
     { "getnetworkhashps", 1, "height" },
     { "sendtoblsctaddress", 1, "amount" },
-    { "sendtoblsctaddress", 2, "memo" },
     { "sendtoblsctaddress", 3, "verbose" },
     { "sendtoaddress", 1, "amount" },
     { "sendtoaddress", 4, "subtractfeefromamount" },

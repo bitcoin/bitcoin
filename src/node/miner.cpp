@@ -184,7 +184,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     return std::move(pblocktemplate);
 }
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTPOWBlock(const blsct::SubAddress& destination, CAmount nReward)
+
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTPOWBlock(const blsct::SubAddress& destination, CAmount nReward, const std::vector<CMutableTransaction>& txns)
 {
     const auto time_start{SteadyClock::now()};
 
@@ -224,6 +225,15 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTPOWBlock(const bls
         addPackageTxs(*m_mempool, nPackagesSelected, nDescendantsUpdated);
     }
 
+    for (const CMutableTransaction& tx : txns) {
+        for (auto& out : tx.vout) {
+            if (out.scriptPubKey.IsFee()) {
+                nFees += out.nValue;
+            }
+        }
+        pblock->vtx.push_back(MakeTransactionRef(tx));
+    }
+
     const auto time_1{SteadyClock::now()};
 
     m_last_block_num_txs = nBlockTx;
@@ -238,6 +248,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTPOWBlock(const bls
 
     txSigs.push_back(blsct::PrivateKey(out.blindingKey).Sign(out.out.GetHash()));
     txSigs.push_back(blsct::PrivateKey(out.gamma.Negate()).SignBalance());
+
 
     coinbaseTx.nVersion = CTransaction::BLSCT_MARKER;
     coinbaseTx.txSig = blsct::Signature::Aggregate(txSigs);

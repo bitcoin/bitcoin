@@ -2361,11 +2361,13 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
                         return error("ConnectBlock(): VerifyTx on transaction %s failed",
                                      tx.GetHash().ToString());
                     }
-                } else
+                } else {
                     return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "blsct-tx-not-allowed");
+                }
             } else {
-                if (params.GetConsensus().fBLSCT)
+                if (params.GetConsensus().fBLSCT) {
                     return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "non-blsct-tx-not-allowed");
+                }
             }
         }
 
@@ -2385,9 +2387,10 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, params.GetConsensus());
     if (block.IsBLSCT()) {
-        if (!blsct::VerifyTx(*block.vtx[0], view, nFees + params.GetConsensus().nBLSCTBlockReward))
+        if (!blsct::VerifyTx(*block.vtx[0], view, nFees + params.GetConsensus().nBLSCTBlockReward)) {
             return error("ConnectBlock(): VerifyTx on coinbase of block %s failed",
                          block.GetHash().ToString());
+        }
     } else if (block.vtx[0]->GetValueOut() > blockReward) {
         LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)\n", block.vtx[0]->GetValueOut(), blockReward);
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");

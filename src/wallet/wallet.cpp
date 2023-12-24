@@ -402,15 +402,17 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
             // Set a seed for the wallet
             {
                 LOCK(wallet->cs_wallet);
-                wallet->SetupBLSCTKeyMan();
-                {
-                    auto blsct_man = wallet->GetBLSCTKeyMan();
+                if (wallet->IsWalletFlagSet(WALLET_FLAG_BLSCT)) {
+                    wallet->SetupBLSCTKeyMan();
+                    {
+                        auto blsct_man = wallet->GetBLSCTKeyMan();
 
-                    if (blsct_man) {
-                        if (!blsct_man->SetupGeneration()) {
-                            error = Untranslated("Unable to generate initial blsct keys");
-                            status = DatabaseStatus::FAILED_CREATE;
-                            return nullptr;
+                        if (blsct_man) {
+                            if (!blsct_man->SetupGeneration()) {
+                                error = Untranslated("Unable to generate initial blsct keys");
+                                status = DatabaseStatus::FAILED_CREATE;
+                                return nullptr;
+                            }
                         }
                     }
                 }

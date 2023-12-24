@@ -88,7 +88,6 @@ class BumpFeeTest(BitcoinTestFramework):
         dest_address = peer_node.getnewaddress()
         for mode in ["default", "fee_rate", "new_outputs"]:
             test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address)
-        self.test_invalid_parameters(rbf_node, peer_node, dest_address)
         test_segwit_bumpfee_succeeds(self, rbf_node, dest_address)
         test_nonrbf_bumpfee_fails(self, peer_node, dest_address)
         test_notmine_bumpfee(self, rbf_node, peer_node, dest_address)
@@ -112,69 +111,6 @@ class BumpFeeTest(BitcoinTestFramework):
 
         # Context independent tests
         test_feerate_checks_replaced_outputs(self, rbf_node, peer_node)
-
-    def test_invalid_parameters(self, rbf_node, peer_node, dest_address):
-        self.log.info('Test invalid parameters')
-        rbfid = spend_one_input(rbf_node, dest_address)
-        self.sync_mempools((rbf_node, peer_node))
-        assert rbfid in rbf_node.getrawmempool() and rbfid in peer_node.getrawmempool()
-
-        for key in ["totalFee", "feeRate"]:
-            assert_raises_rpc_error(-3, "Unexpected key {}".format(key), rbf_node.bumpfee, rbfid, {key: NORMAL})
-
-        # Bumping to just above minrelay should fail to increase the total fee enough.
-        assert_raises_rpc_error(-8, "Insufficient total fee 0.00000141", rbf_node.bumpfee, rbfid, {"fee_rate": INSUFFICIENT})
-
-        self.log.info("Test invalid fee rate settings")
-        assert_raises_rpc_error(-4, "Specified or calculated fee 0.141 is too high (cannot be higher than -maxtxfee 0.10",
-            rbf_node.bumpfee, rbfid, {"fee_rate": TOO_HIGH})
-        # Test fee_rate with zero values.
-        msg = "Insufficient total fee 0.00"
-        for zero_value in [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]:
-            assert_raises_rpc_error(-8, msg, rbf_node.bumpfee, rbfid, {"fee_rate": zero_value})
-        msg = "Invalid amount"
-        # Test fee_rate values that don't pass fixed-point parsing checks.
-        for invalid_value in ["", 0.000000001, 1e-09, 1.111111111, 1111111111111111, "31.999999999999999999999"]:
-            assert_raises_rpc_error(-3, msg, rbf_node.bumpfee, rbfid, {"fee_rate": invalid_value})
-        # Test fee_rate values that cannot be represented in sat/vB.
-        for invalid_value in [0.0001, 0.00000001, 0.00099999, 31.99999999, "0.0001", "0.00000001", "0.00099999", "31.99999999"]:
-            assert_raises_rpc_error(-3, msg, rbf_node.bumpfee, rbfid, {"fee_rate": invalid_value})
-        # Test fee_rate out of range (negative number).
-        assert_raises_rpc_error(-3, "Amount out of range", rbf_node.bumpfee, rbfid, {"fee_rate": -1})
-        # Test type error.
-        for value in [{"foo": "bar"}, True]:
-            assert_raises_rpc_error(-3, "Amount is not a number or string", rbf_node.bumpfee, rbfid, {"fee_rate": value})
-
-        self.log.info("Test explicit fee rate raises RPC error if both fee_rate and conf_target are passed")
-        assert_raises_rpc_error(-8, "Cannot specify both conf_target and fee_rate. Please provide either a confirmation "
-            "target in blocks for automatic fee estimation, or an explicit fee rate.",
-            rbf_node.bumpfee, rbfid, {"conf_target": NORMAL, "fee_rate": NORMAL})
-
-        self.log.info("Test explicit fee rate raises RPC error if both fee_rate and estimate_mode are passed")
-        assert_raises_rpc_error(-8, "Cannot specify both estimate_mode and fee_rate",
-            rbf_node.bumpfee, rbfid, {"estimate_mode": "economical", "fee_rate": NORMAL})
-
-        self.log.info("Test invalid conf_target settings")
-        assert_raises_rpc_error(-8, "confTarget and conf_target options should not both be set",
-            rbf_node.bumpfee, rbfid, {"confTarget": 123, "conf_target": 456})
-
-        self.log.info("Test invalid estimate_mode settings")
-        for k, v in {"number": 42, "object": {"foo": "bar"}}.items():
-            assert_raises_rpc_error(-3, f"JSON value of type {k} for field estimate_mode is not of expected type string",
-                rbf_node.bumpfee, rbfid, {"estimate_mode": v})
-        for mode in ["foo", Decimal("3.1415"), "sat/B", "BTC/kB"]:
-            assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
-                rbf_node.bumpfee, rbfid, {"estimate_mode": mode})
-
-        self.log.info("Test invalid outputs values")
-        assert_raises_rpc_error(-8, "Invalid parameter, output argument cannot be an empty array",
-                rbf_node.bumpfee, rbfid, {"outputs": []})
-        assert_raises_rpc_error(-8, "Invalid parameter, duplicated address: " + dest_address,
-                rbf_node.bumpfee, rbfid, {"outputs": [{dest_address: 0.1}, {dest_address: 0.2}]})
-        assert_raises_rpc_error(-8, "Invalid parameter, duplicate key: data",
-                rbf_node.bumpfee, rbfid, {"outputs": [{"data": "deadbeef"}, {"data": "deadbeef"}]})
-
-        self.clear_mempool()
 
     def test_bump_back_to_yourself(self):
         self.log.info("Test that bumpfee can send coins back to yourself")

@@ -39,102 +39,101 @@ bool HaveKey(const SigningProvider& wallet, const CKey& key)
 
 static RPCHelpMan getwalletinfo()
 {
-    return RPCHelpMan{"getwalletinfo",
-                "Returns an object containing various wallet state info.\n",
-                {},
-                RPCResult{
-                    RPCResult::Type::OBJ, "", "",
-                    {
-                        {
-                        {RPCResult::Type::STR, "walletname", "the wallet name"},
-                        {RPCResult::Type::NUM, "walletversion", "the wallet version"},
-                        {RPCResult::Type::STR, "format", "the database format (bdb or sqlite)"},
-                        {RPCResult::Type::STR_AMOUNT, "balance", "DEPRECATED. Identical to getbalances().mine.trusted"},
-                        {RPCResult::Type::STR_AMOUNT, "unconfirmed_balance", "DEPRECATED. Identical to getbalances().mine.untrusted_pending"},
-                        {RPCResult::Type::STR_AMOUNT, "immature_balance", "DEPRECATED. Identical to getbalances().mine.immature"},
-                        {RPCResult::Type::NUM, "txcount", "the total number of transactions in the wallet"},
-                        {RPCResult::Type::NUM_TIME, "keypoololdest", /*optional=*/true, "the " + UNIX_EPOCH_TIME + " of the oldest pre-generated key in the key pool. Legacy wallets only."},
-                        {RPCResult::Type::NUM, "keypoolsize", "how many new keys are pre-generated (only counts external keys)"},
-                        {RPCResult::Type::NUM, "keypoolsize_hd_internal", /*optional=*/true, "how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used)"},
-                        {RPCResult::Type::NUM_TIME, "unlocked_until", /*optional=*/true, "the " + UNIX_EPOCH_TIME + " until which the wallet is unlocked for transfers, or 0 if the wallet is locked (only present for passphrase-encrypted wallets)"},
-                        {RPCResult::Type::STR_AMOUNT, "paytxfee", "the transaction fee configuration, set in " + CURRENCY_UNIT + "/kvB"},
-                        {RPCResult::Type::STR_HEX, "hdseedid", /*optional=*/true, "the Hash160 of the HD seed (only present when HD is enabled)"},
-                        {RPCResult::Type::BOOL, "private_keys_enabled", "false if privatekeys are disabled for this wallet (enforced watch-only wallet)"},
-                        {RPCResult::Type::BOOL, "avoid_reuse", "whether this wallet tracks clean/dirty coins in terms of reuse"},
-                        {RPCResult::Type::OBJ, "scanning", "current scanning details, or false if no scan is in progress",
-                        {
-                            {RPCResult::Type::NUM, "duration", "elapsed seconds since scan start"},
-                            {RPCResult::Type::NUM, "progress", "scanning progress percentage [0.0, 1.0]"},
-                        }, /*skip_type_check=*/true},
-                        {RPCResult::Type::BOOL, "descriptors", "whether this wallet uses descriptors for scriptPubKey management"},
-                        {RPCResult::Type::BOOL, "external_signer", "whether this wallet is configured to use an external signer such as a hardware wallet"},
-                        RESULT_LAST_PROCESSED_BLOCK,
-                    }},
-                },
-                RPCExamples{
-                    HelpExampleCli("getwalletinfo", "")
-            + HelpExampleRpc("getwalletinfo", "")
-                },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
+    return RPCHelpMan{
+        "getwalletinfo",
+        "Returns an object containing various wallet state info.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ,
+            "",
+            "",
+            {{
+                {RPCResult::Type::STR, "walletname", "the wallet name"},
+                {RPCResult::Type::NUM, "walletversion", "the wallet version"},
+                {RPCResult::Type::STR, "format", "the database format (bdb or sqlite)"},
+                {RPCResult::Type::STR_AMOUNT, "balance", "DEPRECATED. Identical to getbalances().mine.trusted"},
+                {RPCResult::Type::STR_AMOUNT, "unconfirmed_balance", "DEPRECATED. Identical to getbalances().mine.untrusted_pending"},
+                {RPCResult::Type::STR_AMOUNT, "immature_balance", "DEPRECATED. Identical to getbalances().mine.immature"},
+                {RPCResult::Type::NUM, "txcount", "the total number of transactions in the wallet"},
+                {RPCResult::Type::NUM_TIME, "keypoololdest", /*optional=*/true, "the " + UNIX_EPOCH_TIME + " of the oldest pre-generated key in the key pool. Legacy wallets only."},
+                {RPCResult::Type::NUM, "keypoolsize", "how many new keys are pre-generated (only counts external keys)"},
+                {RPCResult::Type::NUM, "keypoolsize_hd_internal", /*optional=*/true, "how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used)"},
+                {RPCResult::Type::NUM_TIME, "unlocked_until", /*optional=*/true, "the " + UNIX_EPOCH_TIME + " until which the wallet is unlocked for transfers, or 0 if the wallet is locked (only present for passphrase-encrypted wallets)"},
+                {RPCResult::Type::STR_AMOUNT, "paytxfee", "the transaction fee configuration, set in " + CURRENCY_UNIT + "/kvB"},
+                {RPCResult::Type::STR_HEX, "hdseedid", /*optional=*/true, "the Hash160 of the HD seed (only present when HD is enabled)"},
+                {RPCResult::Type::BOOL, "private_keys_enabled", "false if privatekeys are disabled for this wallet (enforced watch-only wallet)"},
+                {RPCResult::Type::BOOL, "avoid_reuse", "whether this wallet tracks clean/dirty coins in terms of reuse"},
+                {RPCResult::Type::OBJ, "scanning", "current scanning details, or false if no scan is in progress", {
+                                                                                                                       {RPCResult::Type::NUM, "duration", "elapsed seconds since scan start"},
+                                                                                                                       {RPCResult::Type::NUM, "progress", "scanning progress percentage [0.0, 1.0]"},
+                                                                                                                   },
+                 /*skip_type_check=*/true},
+                {RPCResult::Type::BOOL, "descriptors", "whether this wallet uses descriptors for scriptPubKey management"},
+                {RPCResult::Type::BOOL, "external_signer", "whether this wallet is configured to use an external signer such as a hardware wallet"},
+                {RPCResult::Type::BOOL, "blsct", "whether this wallet supports BLSCT keys"},
+                RESULT_LAST_PROCESSED_BLOCK,
+            }},
+        },
+        RPCExamples{HelpExampleCli("getwalletinfo", "") + HelpExampleRpc("getwalletinfo", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
 
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+            // Make sure the results are valid at least up to the most recent block
+            // the user could have gotten from another RPC command prior to now
+            pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK(pwallet->cs_wallet);
+            LOCK(pwallet->cs_wallet);
 
-    UniValue obj(UniValue::VOBJ);
+            UniValue obj(UniValue::VOBJ);
 
-    size_t kpExternalSize = pwallet->KeypoolCountExternalKeys();
-    const auto bal = GetBalance(*pwallet);
-    obj.pushKV("walletname", pwallet->GetName());
-    obj.pushKV("walletversion", pwallet->GetVersion());
-    obj.pushKV("format", pwallet->GetDatabase().Format());
-    obj.pushKV("balance", ValueFromAmount(bal.m_mine_trusted));
-    obj.pushKV("unconfirmed_balance", ValueFromAmount(bal.m_mine_untrusted_pending));
-    obj.pushKV("immature_balance", ValueFromAmount(bal.m_mine_immature));
-    obj.pushKV("txcount",       (int)pwallet->mapWallet.size());
-    const auto kp_oldest = pwallet->GetOldestKeyPoolTime();
-    if (kp_oldest.has_value()) {
-        obj.pushKV("keypoololdest", kp_oldest.value());
-    }
-    obj.pushKV("keypoolsize", (int64_t)kpExternalSize);
+            size_t kpExternalSize = pwallet->KeypoolCountExternalKeys();
+            const auto bal = GetBalance(*pwallet);
+            obj.pushKV("walletname", pwallet->GetName());
+            obj.pushKV("walletversion", pwallet->GetVersion());
+            obj.pushKV("format", pwallet->GetDatabase().Format());
+            obj.pushKV("balance", ValueFromAmount(bal.m_mine_trusted));
+            obj.pushKV("unconfirmed_balance", ValueFromAmount(bal.m_mine_untrusted_pending));
+            obj.pushKV("immature_balance", ValueFromAmount(bal.m_mine_immature));
+            obj.pushKV("txcount", (int)pwallet->mapWallet.size());
+            const auto kp_oldest = pwallet->GetOldestKeyPoolTime();
+            if (kp_oldest.has_value()) {
+                obj.pushKV("keypoololdest", kp_oldest.value());
+            }
+            obj.pushKV("keypoolsize", (int64_t)kpExternalSize);
 
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
-    if (spk_man) {
-        CKeyID seed_id = spk_man->GetHDChain().seed_id;
-        if (!seed_id.IsNull()) {
-            obj.pushKV("hdseedid", seed_id.GetHex());
-        }
-    }
+            LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+            if (spk_man) {
+                CKeyID seed_id = spk_man->GetHDChain().seed_id;
+                if (!seed_id.IsNull()) {
+                    obj.pushKV("hdseedid", seed_id.GetHex());
+                }
+            }
 
-    if (pwallet->CanSupportFeature(FEATURE_HD_SPLIT)) {
-        obj.pushKV("keypoolsize_hd_internal",   (int64_t)(pwallet->GetKeyPoolSize() - kpExternalSize));
-    }
-    if (pwallet->IsCrypted()) {
-        obj.pushKV("unlocked_until", pwallet->nRelockTime);
-    }
-    obj.pushKV("paytxfee", ValueFromAmount(pwallet->m_pay_tx_fee.GetFeePerK()));
-    obj.pushKV("private_keys_enabled", !pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
-    obj.pushKV("avoid_reuse", pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE));
-    if (pwallet->IsScanning()) {
-        UniValue scanning(UniValue::VOBJ);
-        scanning.pushKV("duration", Ticks<std::chrono::seconds>(pwallet->ScanningDuration()));
-        scanning.pushKV("progress", pwallet->ScanningProgress());
-        obj.pushKV("scanning", scanning);
-    } else {
-        obj.pushKV("scanning", false);
-    }
-    obj.pushKV("descriptors", pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
-    obj.pushKV("external_signer", pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
-    obj.pushKV("blsct", pwallet->IsWalletFlagSet(WALLET_FLAG_BLSCT));
+            if (pwallet->CanSupportFeature(FEATURE_HD_SPLIT)) {
+                obj.pushKV("keypoolsize_hd_internal", (int64_t)(pwallet->GetKeyPoolSize() - kpExternalSize));
+            }
+            if (pwallet->IsCrypted()) {
+                obj.pushKV("unlocked_until", pwallet->nRelockTime);
+            }
+            obj.pushKV("paytxfee", ValueFromAmount(pwallet->m_pay_tx_fee.GetFeePerK()));
+            obj.pushKV("private_keys_enabled", !pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
+            obj.pushKV("avoid_reuse", pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE));
+            if (pwallet->IsScanning()) {
+                UniValue scanning(UniValue::VOBJ);
+                scanning.pushKV("duration", Ticks<std::chrono::seconds>(pwallet->ScanningDuration()));
+                scanning.pushKV("progress", pwallet->ScanningProgress());
+                obj.pushKV("scanning", scanning);
+            } else {
+                obj.pushKV("scanning", false);
+            }
+            obj.pushKV("descriptors", pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+            obj.pushKV("external_signer", pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
+            obj.pushKV("blsct", pwallet->IsWalletFlagSet(WALLET_FLAG_BLSCT));
 
-    AppendLastProcessedBlock(obj, *pwallet);
-    return obj;
-},
+            AppendLastProcessedBlock(obj, *pwallet);
+            return obj;
+        },
     };
 }
 
