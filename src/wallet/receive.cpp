@@ -225,7 +225,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
 
     // Compute fee:
     CAmount nDebit = CachedTxGetDebit(wallet, wtx, filter);
-    CAmount nNet;
+    CAmount nNet = 0;
 
     if (nDebit > 0) // debit>0 means we signed/sent this transaction
     {
