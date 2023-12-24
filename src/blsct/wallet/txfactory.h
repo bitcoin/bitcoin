@@ -27,7 +27,7 @@ public:
     TxFactory(KeyMan* km) : km(km){};
 
     void AddOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId());
-    bool AddInput(wallet::CWallet* wallet, const COutPoint& outpoint, const bool& rbf = false);
+    bool AddInput(wallet::CWallet* wallet, const COutPoint& outpoint, const bool& rbf = false) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
     bool AddInput(const CCoinsViewCache& cache, const COutPoint& outpoint, const bool& rbf = false);
     std::optional<CMutableTransaction> BuildTx();
     static std::optional<CMutableTransaction> CreateTransaction(wallet::CWallet* wallet, blsct::KeyMan* blsct_km, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId());
