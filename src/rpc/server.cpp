@@ -28,8 +28,9 @@ static std::string rpcWarmupStatus GUARDED_BY(g_rpc_warmup_mutex) = "RPC server 
 /* Timer-creating functions */
 static RPCTimerInterface* timerInterface = nullptr;
 /* Map of name to timer. */
-static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers;
-static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler, std::multimap<std::string, std::vector<UniValue>> mapPlatformRestrictions);
+static Mutex g_deadline_timers_mutex;
+static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers GUARDED_BY(g_deadline_timers_mutex);
+static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler, const std::multimap<std::string, std::vector<UniValue>>& mapPlatformRestrictions);
 
 // Any commands submitted by this user will have their commands filtered based on the mapPlatformRestrictions
 static const std::string defaultPlatformUser = "platform-user";
@@ -330,7 +331,7 @@ void InterruptRPC()
 void StopRPC()
 {
     LogPrint(BCLog::RPC, "Stopping RPC\n");
-    deadlineTimers.clear();
+    WITH_LOCK(g_deadline_timers_mutex, deadlineTimers.clear());
     DeleteAuthCookie();
     g_rpcSignals.Stopped();
 }
@@ -502,7 +503,7 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
     throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
 }
 
-static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler, std::multimap<std::string, std::vector<UniValue>> mapPlatformRestrictions)
+static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler, const std::multimap<std::string, std::vector<UniValue>>& mapPlatformRestrictions)
 {
     // Before executing the RPC Command, filter commands from platform rpc user
     if (fMasternodeMode && request.authUser == gArgs.GetArg("-platform-user", defaultPlatformUser)) {
@@ -609,6 +610,7 @@ void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nS
 {
     if (!timerInterface)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No timer handler registered for RPC");
+    LOCK(g_deadline_timers_mutex);
     deadlineTimers.erase(name);
     LogPrint(BCLog::RPC, "queue run of timer %s in %i seconds (using %s)\n", name, nSeconds, timerInterface->Name());
     deadlineTimers.emplace(name, std::unique_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000)));

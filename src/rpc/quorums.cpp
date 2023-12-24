@@ -36,7 +36,10 @@ static void quorum_list_help(const JSONRPCRequest& request)
     RPCHelpMan{"quorum list",
         "List of on-chain quorums\n",
         {
-            {"count", RPCArg::Type::NUM, /* default */ "", "Number of quorums to list. Will list active quorums if \"count\" is not specified."},
+            {"count", RPCArg::Type::NUM, /* default */ "",
+                "Number of quorums to list. Will list active quorums if \"count\" is not specified.\n"
+                "Can be CPU/disk heavy when the value is larger than the number of active quorums."
+            },
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -365,8 +368,10 @@ static void quorum_memberof_help(const JSONRPCRequest& request)
         {
             {"proTxHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "ProTxHash of the masternode."},
             {"scanQuorumsCount", RPCArg::Type::NUM, /* default */ "",
-                "Number of quorums to scan for. If not specified,\n"
-                "the active quorum count for each specific quorum type is used."},
+                "Number of quorums to scan for.\n"
+                "If not specified, the active quorum count for each specific quorum type is used.\n"
+                "Can be CPU/disk heavy when the value is larger than the number of active quorums."
+            },
         },
         RPCResults{},
         RPCExamples{""},
