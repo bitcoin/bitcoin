@@ -51,7 +51,7 @@ private:
     using CryptedKeyMap = std::map<CKeyID, std::pair<PublicKey, std::vector<unsigned char>>>;
     using SubAddressMap = std::map<CKeyID, SubAddressIdentifier>;
     using SubAddressStrMap = std::map<SubAddress, CKeyID>;
-    using SubAddressPoolMapSet = std::map<uint64_t, std::set<uint64_t>>;
+    using SubAddressPoolMapSet = std::map<int64_t, std::set<uint64_t>>;
 
     CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
     SubAddressMap mapSubAddresses GUARDED_BY(cs_KeyStore);
