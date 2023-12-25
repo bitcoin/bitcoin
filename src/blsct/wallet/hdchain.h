@@ -18,7 +18,7 @@ public:
     CKeyID view_id;  //!< view hash160
     CKeyID blinding_id; //!< blinding hash160
     CKeyID token_id; //!< token hash160
-    std::map<uint64_t, uint64_t> nSubAddressCounter;
+    std::map<int64_t, uint64_t> nSubAddressCounter;
 
     static const int VERSION_HD_BASE = 1;
     static const int CURRENT_VERSION = VERSION_HD_BASE;
