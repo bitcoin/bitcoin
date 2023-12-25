@@ -743,7 +743,7 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
             CKeyID hashId;
             ssKey >> hashId;
 
-            std::pair<uint64_t, uint64_t> index;
+            std::pair<int64_t, uint64_t> index;
 
             wss.nSubAddresses++;
             ssValue >> index;
@@ -763,7 +763,7 @@ ReadKeyValue(CWallet* pwallet, DataStream& ssKey, CDataStream& ssValue,
 
             pwallet->GetOrCreateBLSCTKeyMan()->LoadSubAddressStr(subAddress, hashId);
         } else if (strType == DBKeys::BLSCTSUBADDRESSPOOL) {
-            std::pair<uint64_t, uint64_t> index;
+            std::pair<int64_t, uint64_t> index;
 
             wss.nSubAddresses++;
             ssKey >> index;
