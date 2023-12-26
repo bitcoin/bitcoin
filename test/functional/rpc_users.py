@@ -203,24 +203,34 @@ class HTTPBasicsTest(BitcoinTestFramework):
         # ...without disrupting usage of other -rpcauth tokens
         assert_equal(200, call_with_auth(self.nodes[0], 'def', 'abc').status)
         assert_equal(200, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+        for info in self.authinfo:
+            assert_equal(200, call_with_auth(self.nodes[0], *info).status)
 
-        self.log.info('Check -norpcauth disables all previous -rpcauth params')
+        self.log.info('Check -norpcauth disables all previous -rpcauth* params')
         self.restart_node(0, extra_args=[rpcauth_def, '-norpcauth'])
         assert_equal(401, call_with_auth(self.nodes[0], 'def', 'abc').status)
         assert_equal(401, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+        for info in self.authinfo:
+            assert_equal(401, call_with_auth(self.nodes[0], *info).status)
 
         self.log.info('Check -norpcauth can be reversed with -rpcauth')
         self.restart_node(0, extra_args=[rpcauth_def, '-norpcauth', '-rpcauth'])
         # FIXME: assert_equal(200, call_with_auth(self.nodes[0], 'def', 'abc').status)
         assert_equal(200, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+        for info in self.authinfo:
+            assert_equal(200, call_with_auth(self.nodes[0], *info).status)
 
         self.log.info('Check -norpcauth followed by a specific -rpcauth=* restores config file -rpcauth=* values too')
         self.restart_node(0, extra_args=[rpcauth_def, '-norpcauth', rpcauth_abc])
         assert_equal(401, call_with_auth(self.nodes[0], 'def', 'abc').status)
         assert_equal(200, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+        for info in self.authinfo:
+            assert_equal(200, call_with_auth(self.nodes[0], *info).status)
         self.restart_node(0, extra_args=[rpcauth_def, '-norpcauth', '-rpcauth='])
         assert_equal(401, call_with_auth(self.nodes[0], 'def', 'abc').status)
         assert_equal(200, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+        for info in self.authinfo:
+            assert_equal(200, call_with_auth(self.nodes[0], *info).status)
 
         self.log.info('Check -rpcauth are validated')
         self.stop_node(0)
