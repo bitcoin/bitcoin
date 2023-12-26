@@ -221,30 +221,36 @@ static std::set<std::string> g_unloading_wallet_set GUARDED_BY(g_wallet_release_
 // Custom deleter for shared_ptr<CWallet>.
 static void ReleaseWallet(CWallet* wallet)
 {
+    LOCK(g_wallet_release_mutex);
     const std::string name = wallet->GetName();
     wallet->WalletLogPrintf("Releasing wallet\n");
     wallet->Flush();
     delete wallet;
     // Wallet is now released, notify UnloadWallet, if any.
-    {
-        LOCK(g_wallet_release_mutex);
-        if (g_unloading_wallet_set.erase(name) == 0) {
-            // UnloadWallet was not called for this wallet, all done.
-            return;
-        }
+    if (g_unloading_wallet_set.erase(name) == 0) {
+        // UnloadWallet was not called for this wallet, all done.
+        return;
     }
     g_wallet_release_cv.notify_all();
 }
 
-void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
+bool UnloadWallet(std::shared_ptr<CWallet>&& wallet)
 {
     // Mark wallet for unloading.
+    bool wallet_already_marked_for_unloading = false;
     const std::string name = wallet->GetName();
     {
         LOCK(g_wallet_release_mutex);
         auto it = g_unloading_wallet_set.insert(name);
-        assert(it.second);
+        if (it.second == 0) {
+            wallet_already_marked_for_unloading = true;
+        }
     }
+    // Wallet already marked for unloading, no need to proceed further.
+    if (wallet_already_marked_for_unloading) {
+        return false;
+    }
+
     // The wallet can be in use so it's not possible to explicitly unload here.
     // Notify the unload intent so that all remaining shared pointers are
     // released.
@@ -258,6 +264,7 @@ void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
             g_wallet_release_cv.wait(lock);
         }
     }
+    return true;
 }
 
 namespace {

@@ -493,7 +493,9 @@ static RPCHelpMan unloadwallet()
         }
     }
 
-    UnloadWallet(std::move(wallet));
+    if (!UnloadWallet(std::move(wallet))) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet already marked for unloading");
+    }
 
     UniValue result(UniValue::VOBJ);
     PushWarnings(warnings, result);
