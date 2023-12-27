@@ -79,7 +79,7 @@ BITCOIN_TESTS =\
   test/bech32_tests.cpp \
   test/bech32_mod_tests.cpp \
   test/bip32_tests.cpp \
-  # test/bip324_tests.cpp \
+  # test/bip324_tests.cpp \ TODO: NEED TO FIX THIS
   test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
   test/blockfilter_index_tests.cpp \
