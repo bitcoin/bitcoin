@@ -217,10 +217,10 @@ jobs:
           key: ${{ github.job }}-ccache-${{ github.run_id }}
 
       - name: Run unit tests
-        run: src\test_bitcoin.exe -l test_suite
+        run: src\test_navcoin.exe -l test_suite
 
       - name: Run benchmarks
-        run: src\bench_bitcoin.exe -sanity-check
+        run: src\bench_navcoin.exe -sanity-check
 
       - name: Run util tests
         run: py -3 test\util\test_runner.py
