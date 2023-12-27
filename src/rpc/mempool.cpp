@@ -374,6 +374,36 @@ UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose, bool include_mempoo
     }
 }
 
+static RPCHelpMan maxmempool()
+{
+    return RPCHelpMan{"maxmempool",
+                "\nSets the allocated memory for the memory pool.\n",
+                {
+                    {"megabytes", RPCArg::Type::NUM, RPCArg::Optional::NO, "The memory allocated in MB"},
+                },
+                RPCResult{
+                    RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("maxmempool", "150") + HelpExampleRpc("maxmempool", "150")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    int nSize = request.params[0].getInt<int>();
+    int64_t nMempoolSizeMax = nSize * 1000000;
+
+    CTxMemPool& mempool = EnsureAnyMemPool(request.context);
+    LOCK(mempool.cs);
+
+    int64_t nMempoolSizeMin = mempool.m_opts.limits.descendant_size_vbytes * 40;
+    if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("MaxMempool size %d is too small", nSize));
+    mempool.m_opts.max_size_bytes = nSize;
+
+    return NullUniValue;
+}
+    };
+}
+
 static RPCHelpMan getrawmempool()
 {
     return RPCHelpMan{"getrawmempool",
@@ -1027,6 +1057,7 @@ void RegisterMempoolRPCCommands(CRPCTable& t)
         {"blockchain", &getrawmempool},
         {"blockchain", &importmempool},
         {"blockchain", &savemempool},
+        {"blockchain", &maxmempool},
         {"rawtransactions", &submitpackage},
     };
     for (const auto& c : commands) {
