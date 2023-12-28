@@ -228,6 +228,8 @@ bool RangeProofLogic<T>::VerifyProofs(
     using Scalars = Elements<Scalar>;
 
     for (const RangeProofWithTranscript<T>& p : proof_transcripts) {
+        if (p.proof.Ls.Size() != p.proof.Rs.Size()) return false;
+
         const range_proof::Generators<T> gens = m_common.Gf().GetInstance(p.proof.token_id);
         G_H_Gi_Hi_ZeroVerifier<T> verifier(max_mn);
 
@@ -370,13 +372,11 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
     // will contain result of successful requests only
     std::vector<range_proof::RecoveredData<T>> xs;
 
-    int i = -1;
-
-    for (const AmountRecoveryRequest<T>& req : reqs) {
+    for (size_t i = 0; i < reqs.size(); ++i) {
+        auto req = reqs[i];
         const range_proof::Generators<T> gens = m_common.Gf().GetInstance(req.token_id);
         Point G = gens.G;
         Point H = gens.H;
-        i++;
 
         // failure if sizes of Ls and Rs differ or Vs is empty
         auto Ls_Rs_valid = req.Ls.Size() > 0 && req.Ls.Size() == req.Rs.Size();
@@ -415,15 +415,14 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
             m_common.Uint64Max(),
             H,
             G,
-            req.Vs[0]
-        );
+            req.Vs[0]);
         if (maybe_msg_amt == std::nullopt) {
             continue;
         }
         auto msg_amt = maybe_msg_amt.value();
 
         auto x = range_proof::RecoveredData<T>(
-            (size_t)i,
+            i,
             msg_amt.amount,
             req.nonce.GetHashWithSalt(100), // gamma for vs[0]
             msg_amt.msg);
@@ -432,8 +431,7 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
     }
     return {
         true,
-        xs
-    };
+        xs};
 }
 template AmountRecoveryResult<Mcl> RangeProofLogic<Mcl>::RecoverAmounts(
     const std::vector<AmountRecoveryRequest<Mcl>>&

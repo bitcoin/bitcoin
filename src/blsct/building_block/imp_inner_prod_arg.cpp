@@ -142,23 +142,20 @@ void ImpInnerProdArg::LoopWithYPows<Mcl>(
 
 template <typename T>
 std::optional<Elements<typename T::Scalar>> ImpInnerProdArg::GenAllRoundXs(
-    const size_t& num_rounds,
     const Elements<typename T::Point>& Ls,
     const Elements<typename T::Point>& Rs,
-    CHashWriter& fiat_shamir
-) {
+    CHashWriter& fiat_shamir)
+{
     using Scalar = typename T::Scalar;
     using Scalars = Elements<Scalar>;
 
     Scalars xs;
 
-    if (Rs.Size() == Ls.Size()) {
-        for (size_t i = 0; i < std::min(Ls.Size(), num_rounds); ++i) {
-            fiat_shamir << Ls[i];
-            fiat_shamir << Rs[i];
-            GEN_FIAT_SHAMIR_VAR(x, fiat_shamir, retry);
-            xs.Add(x);
-        }
+    for (size_t i = 0; i < Ls.Size(); ++i) {
+        fiat_shamir << Ls[i];
+        fiat_shamir << Rs[i];
+        GEN_FIAT_SHAMIR_VAR(x, fiat_shamir, retry);
+        xs.Add(x);
     }
 
     return xs;
@@ -166,10 +163,7 @@ std::optional<Elements<typename T::Scalar>> ImpInnerProdArg::GenAllRoundXs(
 retry:
     return std::nullopt;
 }
-template
-std::optional<Elements<Mcl::Scalar>> ImpInnerProdArg::GenAllRoundXs<Mcl>(
-    const size_t& num_rounds,
+template std::optional<Elements<Mcl::Scalar>> ImpInnerProdArg::GenAllRoundXs<Mcl>(
     const Elements<Mcl::Point>& Ls,
     const Elements<Mcl::Point>& Rs,
-    CHashWriter& fiat_shamir
-);
+    CHashWriter& fiat_shamir);

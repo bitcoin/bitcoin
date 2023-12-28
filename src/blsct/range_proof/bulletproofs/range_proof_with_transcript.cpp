@@ -43,11 +43,7 @@ retry:
 
     GEN_FIAT_SHAMIR_VAR(c_factor, fiat_shamir, retry);
 
-    auto num_rounds = range_proof::Common<T>::GetNumRoundsExclLast(
-        proof.Vs.Size()
-    );
     auto maybe_xs = ImpInnerProdArg::GenAllRoundXs<T>(
-        num_rounds,
         proof.Ls,
         proof.Rs,
         fiat_shamir
