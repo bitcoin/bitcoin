@@ -400,6 +400,43 @@ class SendallTest(BitcoinTestFramework):
         self.wallet.sendall(recipients=[self.remainder_target], inputs=[unspent])
         assert_equal(self.wallet.getbalance(), 0)
 
+    @cleanup
+    def sendall_does_ancestor_aware_funding(self):
+        self.log.info("Test that sendall does ancestor aware funding for unconfirmed inputs")
+
+        # higher parent feerate
+        self.def_wallet.sendtoaddress(address=self.wallet.getnewaddress(), amount=17, fee_rate=20)
+        self.wallet.syncwithvalidationinterfacequeue()
+
+        assert_equal(self.wallet.getbalances()["mine"]["untrusted_pending"], 17)
+        unspent = self.wallet.listunspent(minconf=0)[0]
+
+        parent_txid = unspent["txid"]
+        assert_equal(self.wallet.gettransaction(parent_txid)["confirmations"], 0)
+
+        res_1 = self.wallet.sendall(recipients=[self.def_wallet.getnewaddress()], inputs=[unspent], fee_rate=20, add_to_wallet=False, lock_unspents=True)
+        child_hex = res_1["hex"]
+
+        child_tx = self.wallet.decoderawtransaction(child_hex)
+        higher_parent_feerate_amount = child_tx["vout"][0]["value"]
+
+        # lower parent feerate
+        self.def_wallet.sendtoaddress(address=self.wallet.getnewaddress(), amount=17, fee_rate=10)
+        self.wallet.syncwithvalidationinterfacequeue()
+        assert_equal(self.wallet.getbalances()["mine"]["untrusted_pending"], 34)
+        unspent = self.wallet.listunspent(minconf=0)[0]
+
+        parent_txid = unspent["txid"]
+        assert_equal(self.wallet.gettransaction(parent_txid)["confirmations"], 0)
+
+        res_2 = self.wallet.sendall(recipients=[self.def_wallet.getnewaddress()], inputs=[unspent], fee_rate=20, add_to_wallet=False, lock_unspents=True)
+        child_hex = res_2["hex"]
+
+        child_tx = self.wallet.decoderawtransaction(child_hex)
+        lower_parent_feerate_amount = child_tx["vout"][0]["value"]
+
+        assert_greater_than(higher_parent_feerate_amount, lower_parent_feerate_amount)
+
     # This tests needs to be the last one otherwise @cleanup will fail with "Transaction too large" error
     def sendall_fails_with_transaction_too_large(self):
         self.log.info("Test that sendall fails if resulting transaction is too large")
@@ -486,6 +523,9 @@ class SendallTest(BitcoinTestFramework):
 
         # Sendall spends unconfirmed inputs if they are specified
         self.sendall_spends_unconfirmed_inputs_if_specified()
+
+        # Sendall does ancestor aware funding when spending an unconfirmed UTXO
+        self.sendall_does_ancestor_aware_funding()
 
         # Sendall fails when many inputs result to too large transaction
         self.sendall_fails_with_transaction_too_large()
