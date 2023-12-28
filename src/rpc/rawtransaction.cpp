@@ -1939,13 +1939,13 @@ RPCHelpMan descriptorprocesspsbt()
                     }},
                     {"options|sighashtype", {RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Type::STR}, RPCArg::Optional::OMITTED, "",
                         {
-                            {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT for Taproot, ALL otherwise"}, "The signature hash type to sign with if not specified by the PSBT. Must be one of\n"
-                    "       \"DEFAULT\"\n"
-                    "       \"ALL\"\n"
-                    "       \"NONE\"\n"
-                    "       \"SINGLE\"\n"
-                    "       \"ALL|ANYONECANPAY\"\n"
-                    "       \"NONE|ANYONECANPAY\"\n"
+                    {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT for Taproot, ALL otherwise"}, "The signature hash type to sign with if not specified by the PSBT. Must be one of\n"
+            "       \"DEFAULT\"\n"
+            "       \"ALL\"\n"
+            "       \"NONE\"\n"
+            "       \"SINGLE\"\n"
+            "       \"ALL|ANYONECANPAY\"\n"
+            "       \"NONE|ANYONECANPAY\"\n"
                     "       \"SINGLE|ANYONECANPAY\"",
                                 RPCArgOptions{.also_positional = true}},
                             {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them", RPCArgOptions{.also_positional = true}},
