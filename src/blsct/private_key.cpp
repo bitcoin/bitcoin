@@ -87,4 +87,4 @@ bool PrivateKey::VerifyPubKey(const PublicKey& pk) const
     return GetPublicKey() == pk;
 }
 
-    } // namespace blsct
+} // namespace blsct
