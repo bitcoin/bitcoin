@@ -669,7 +669,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-blockmintxfee=<amt>", strprintf("Set lowest fee rate (in %s/kvB) for transactions to be included in block creation. (default: %s)", CURRENCY_UNIT, FormatMoney(DEFAULT_BLOCK_MIN_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockversion=<n>", "Override block version to test forking scenarios", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::BLOCK_CREATION);
 #ifdef WITH_SV2
-    argsman.AddArg("-sv2", "Bitcoind will act as a Stratum v2 Template Provider (default: false)", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
+    argsman.AddArg("-sv2", "Bitcoind will act as a Stratum v2 Template Provider, see doc/stratum-v2.md (default: false)", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-sv2interval", strprintf("Template Provider block template update interval (default: %d seconds)", Sv2TemplateProviderOptions().fee_check_interval.count()), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-sv2feedelta", strprintf("Minimum fee delta for Template Provider to send update upstream (default: %d sat)", uint64_t(Sv2TemplateProviderOptions().fee_delta)), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
 #endif
