@@ -1,16 +1,19 @@
 #ifndef BITCOIN_NODE_SV2_TEMPLATE_PROVIDER_H
 #define BITCOIN_NODE_SV2_TEMPLATE_PROVIDER_H
 
+#include <chrono>
 #include <common/sv2_noise.h>
 #include <common/sv2_messages.h>
 #include <common/sv2_transport.h>
 #include <logging.h>
 #include <net.h>
+#include <node/miner.h>
 #include <util/sock.h>
 #include <util/time.h>
 #include <streams.h>
 
 class ChainstateManager;
+class CTxMemPool;
 
 struct Sv2Client
 {
@@ -77,6 +80,11 @@ struct Sv2TemplateProviderOptions
      * The default option for the additional space required for coinbase output.
      */
     unsigned int default_coinbase_tx_additional_output_size = 0;
+
+    /**
+     * The default flag for all new work.
+     */
+    bool default_future_templates = true;
 };
 
 /**
@@ -118,13 +126,43 @@ private:
     std::atomic<bool> m_flag_interrupt_sv2{false};
     CThreadInterrupt m_interrupt_sv2;
 
+    /**
+    * ChainstateManager and CTxMemPool are both used to build new valid blocks,
+    * getting the best known block hash and checking whether the node is still
+    * in IBD.
+    */
     ChainstateManager& m_chainman;
+    CTxMemPool& m_mempool;
 
     /**
      * A list of all connected stratum v2 clients.
      */
     using Clients = std::vector<std::unique_ptr<Sv2Client>>;
     Clients m_sv2_clients GUARDED_BY(m_clients_mutex);
+
+    /**
+     * The most recent template id. This is incremented on creating new template,
+     * which happens for each connected client.
+     */
+    uint64_t m_template_id GUARDED_BY(m_tp_mutex){0};
+
+    /**
+     * The current best known SetNewPrevHash that references the current best known
+     * block hash in the network.
+     */
+    uint256 m_best_prev_hash GUARDED_BY(m_tp_mutex){uint256(0)};
+
+
+    /** When we last saw a new block connection. Used to cache stale templates
+      * for some time after this.
+      */
+    std::chrono::nanoseconds m_last_block_time GUARDED_BY(m_tp_mutex);
+
+    /**
+     * A cache that maps ids used in NewTemplate messages and its associated block template.
+     */
+    using BlockTemplateCache = std::map<uint64_t, std::unique_ptr<node::CBlockTemplate>>;
+    BlockTemplateCache m_block_template_cache GUARDED_BY(m_tp_mutex);
 
     /**
      * The currently supported protocol version.
@@ -142,6 +180,11 @@ private:
     unsigned int m_default_coinbase_tx_additional_output_size;
 
     /**
+     * The default setting for sending future templates.
+     */
+    bool m_default_future_templates;
+
+    /**
      * The configured port to listen for new connections.
      */
     uint16_t m_port;
@@ -149,7 +192,11 @@ private:
 public:
     Mutex m_clients_mutex;
 
-    explicit Sv2TemplateProvider(ChainstateManager& chainman);
+    Mutex m_tp_mutex;
+
+    XOnlyPubKey m_authority_pubkey;
+
+    explicit Sv2TemplateProvider(ChainstateManager& chainman, CTxMemPool& mempool);
 
     ~Sv2TemplateProvider();
     /**
@@ -171,7 +218,7 @@ public:
     /**
      * Main handler for all received stratum v2 messages.
      */
-    void ProcessSv2Message(const node::Sv2NetMsg& sv2_header, Sv2Client& client);
+    void ProcessSv2Message(const node::Sv2NetMsg& sv2_header, Sv2Client& client) EXCLUSIVE_LOCKS_REQUIRED(!m_tp_mutex);
 
     /**
      *  Helper function to process incoming bytes before a session is established.
@@ -197,7 +244,30 @@ private:
      * The main thread for the template provider, contains an event loop handling
      * all tasks for the template provider.
      */
-    void ThreadSv2Handler();
+    void ThreadSv2Handler() EXCLUSIVE_LOCKS_REQUIRED(!m_clients_mutex, !m_tp_mutex);
+
+    /**
+     * NewWorkSet contains the messages matching block for valid stratum v2 work.
+     */
+    struct NewWorkSet
+    {
+        node::Sv2NewTemplateMsg new_template;
+        std::unique_ptr<node::CBlockTemplate> block_template;
+        node::Sv2SetNewPrevHashMsg prev_hash;
+    };
+
+    /**
+     * Builds a NewWorkSet that contains the Sv2NewTemplateMsg, a new full block and a Sv2SetNewPrevHashMsg that are all linked to the same work.
+     */
+    [[nodiscard]] NewWorkSet BuildNewWorkSet(bool future_template, unsigned int coinbase_output_max_additional_size) EXCLUSIVE_LOCKS_REQUIRED(m_tp_mutex);
+
+    /* Forget templates from before the last block, but with a few seconds margin. */
+    void PruneBlockTemplateCache() EXCLUSIVE_LOCKS_REQUIRED(m_tp_mutex);
+
+    /**
+     * Sends the best NewTemplate and SetNewPrevHash to a client.
+     */
+    [[nodiscard]] bool SendWork(Sv2Client& client, bool send_new_prevhash) EXCLUSIVE_LOCKS_REQUIRED(m_tp_mutex);
 
     /**
      * Generates the socket events for each Sv2Client socket and the main listening socket.
