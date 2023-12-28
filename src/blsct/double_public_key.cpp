@@ -27,7 +27,7 @@ DoublePublicKey::DoublePublicKey(const std::vector<unsigned char>& keys)
 
 CKeyID DoublePublicKey::GetID() const
 {
-    return CKeyID(Hash160(GetVch()));
+    return sk.GetID();
 }
 
 bool DoublePublicKey::GetViewKey(PublicKey& ret) const

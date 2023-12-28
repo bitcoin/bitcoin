@@ -282,7 +282,7 @@ class SendallTest(BitcoinTestFramework):
                 "Fee exceeds maximum configured by user",
                 self.wallet.sendall,
                 recipients=[self.remainder_target],
-                fee_rate=100000)
+                fee_rate=100000000)
 
     @cleanup
     def sendall_fails_on_low_fee(self):

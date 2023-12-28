@@ -57,7 +57,6 @@ struct ImpInnerProdArg {
     // inner product argument from a given hasher
     template <typename T>
     static std::optional<Elements<typename T::Scalar>> GenAllRoundXs(
-        const size_t& num_rounds,
         const Elements<typename T::Point>& Ls,
         const Elements<typename T::Point>& Rs,
         CHashWriter& fiat_shamir

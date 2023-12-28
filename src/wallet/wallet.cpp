@@ -402,15 +402,17 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
             // Set a seed for the wallet
             {
                 LOCK(wallet->cs_wallet);
-                wallet->SetupBLSCTKeyMan();
-                {
-                    auto blsct_man = wallet->GetBLSCTKeyMan();
+                if (wallet->IsWalletFlagSet(WALLET_FLAG_BLSCT)) {
+                    wallet->SetupBLSCTKeyMan();
+                    {
+                        auto blsct_man = wallet->GetBLSCTKeyMan();
 
-                    if (blsct_man) {
-                        if (!blsct_man->SetupGeneration()) {
-                            error = Untranslated("Unable to generate initial blsct keys");
-                            status = DatabaseStatus::FAILED_CREATE;
-                            return nullptr;
+                        if (blsct_man) {
+                            if (!blsct_man->SetupGeneration()) {
+                                error = Untranslated("Unable to generate initial blsct keys");
+                                status = DatabaseStatus::FAILED_CREATE;
+                                return nullptr;
+                            }
                         }
                     }
                 }
@@ -1101,6 +1103,21 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         }
     }
 
+    for (auto& txout : wtx.tx->vout) {
+        if (txout.IsBLSCT()) {
+            auto blsct_man = GetBLSCTKeyMan();
+            if (blsct_man) {
+                auto result = blsct_man->RecoverOutputs({wtx.tx->vout});
+                if (result.is_completed) {
+                    auto xs = result.amounts;
+                    for (auto& res : xs) {
+                        wtx.blsctRecoveryData[res.id] = res;
+                    }
+                }
+            }
+        }
+    }
+
     //// debug print
     WalletLogPrintf("AddToWallet %s  %s%s\n", hash.ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
 
@@ -1199,8 +1216,12 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(txin.prevout);
                 while (range.first != range.second) {
                     if (range.first->second != tx.GetHash()) {
-                        WalletLogPrintf("Transaction %s (in block %s) conflicts with wallet transaction %s (both spend %s:%i)\n", tx.GetHash().ToString(), conf->confirmed_block_hash.ToString(), range.first->second.ToString(), range.first->first.hash.ToString(), range.first->first.n);
-                        MarkConflicted(conf->confirmed_block_hash, conf->confirmed_block_height, range.first->second);
+                        if (!tx.IsBLSCT()) {
+                            WalletLogPrintf("Transaction %s (in block %s) conflicts with wallet transaction %s (both spend %s:%i)\n", tx.GetHash().ToString(), conf->confirmed_block_hash.ToString(), range.first->second.ToString(), range.first->first.hash.ToString(), range.first->first.n);
+                            MarkConflicted(conf->confirmed_block_hash, conf->confirmed_block_height, range.first->second);
+                        } else {
+                            AbandonTransaction(range.first->second);
+                        }
                     }
                     range.first++;
                 }
@@ -1493,9 +1514,12 @@ CAmount CWallet::GetDebit(const CTxIn& txin, const isminefilter& filter) const
         const auto mi = mapWallet.find(txin.prevout.hash);
         if (mi != mapWallet.end()) {
             const CWalletTx& prev = (*mi).second;
-            if (txin.prevout.n < prev.tx->vout.size())
-                if (IsMine(prev.tx->vout[txin.prevout.n]) & filter)
+            if (txin.prevout.n < prev.tx->vout.size()) {
+                if (prev.tx->vout[txin.prevout.n].IsBLSCT() && IsMine(prev.tx->vout[txin.prevout.n]) & filter) {
+                    return prev.GetBLSCTRecoveryData(txin.prevout.n).amount;
+                } else if (IsMine(prev.tx->vout[txin.prevout.n]) & filter)
                     return prev.tx->vout[txin.prevout.n].nValue;
+            }
         }
     }
     return 0;
@@ -1504,12 +1528,24 @@ CAmount CWallet::GetDebit(const CTxIn& txin, const isminefilter& filter) const
 isminetype CWallet::IsMine(const CTxOut& txout) const
 {
     AssertLockHeld(cs_wallet);
+    if (txout.IsBLSCT()) {
+        auto blsct_man = GetBLSCTKeyMan();
+        if (blsct_man) {
+            return blsct_man->IsMine(txout) ? ISMINE_SPENDABLE_BLSCT : ISMINE_NO;
+        }
+    }
     return IsMine(txout.scriptPubKey);
 }
 
 isminetype CWallet::IsMine(const CTxDestination& dest) const
 {
     AssertLockHeld(cs_wallet);
+    if (std::holds_alternative<blsct::DoublePublicKey>(dest)) {
+        auto blsct_man = GetBLSCTKeyMan();
+        if (blsct_man) {
+            return blsct_man->HaveSubAddressStr(blsct::SubAddress(std::get<blsct::DoublePublicKey>(dest))) ? ISMINE_SPENDABLE_BLSCT : ISMINE_NO;
+        }
+    }
     return IsMine(GetScriptForDestination(dest));
 }
 

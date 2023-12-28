@@ -31,7 +31,7 @@ CAmount CachedTxGetDebit(const CWallet& wallet, const CWalletTx& wtx, const ismi
 CAmount CachedTxGetChange(const CWallet& wallet, const CWalletTx& wtx);
 CAmount CachedTxGetImmatureCredit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter)
     EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
-CAmount CachedTxGetAvailableCredit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter = ISMINE_SPENDABLE)
+CAmount CachedTxGetAvailableCredit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter = ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT)
     EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 struct COutputEntry
 {

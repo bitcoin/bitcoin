@@ -78,7 +78,67 @@ void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& opti
             vbparams.min_activation_height = 0;
         }
         bool found = false;
-        for (int j=0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
+        for (int j = 0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
+            if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
+                options.version_bits_parameters[Consensus::DeploymentPos(j)] = vbparams;
+                found = true;
+                LogPrintf("Setting version bits activation parameters for %s to start=%ld, timeout=%ld, min_activation_height=%d\n", vDeploymentParams[0], vbparams.start_time, vbparams.timeout, vbparams.min_activation_height);
+                break;
+            }
+        }
+        if (!found) {
+            throw std::runtime_error(strprintf("Invalid deployment (%s)", vDeploymentParams[0]));
+        }
+    }
+}
+
+void ReadBLSCTRegTestArgs(const ArgsManager& args, CChainParams::BLSCTRegTestOptions& options)
+{
+    if (auto value = args.GetBoolArg("-fastprune")) options.fastprune = *value;
+
+    for (const std::string& arg : args.GetArgs("-testactivationheight")) {
+        const auto found{arg.find('@')};
+        if (found == std::string::npos) {
+            throw std::runtime_error(strprintf("Invalid format (%s) for -testactivationheight=name@height.", arg));
+        }
+
+        const auto value{arg.substr(found + 1)};
+        int32_t height;
+        if (!ParseInt32(value, &height) || height < 0 || height >= std::numeric_limits<int>::max()) {
+            throw std::runtime_error(strprintf("Invalid height value (%s) for -testactivationheight=name@height.", arg));
+        }
+
+        const auto deployment_name{arg.substr(0, found)};
+        if (const auto buried_deployment = GetBuriedDeployment(deployment_name)) {
+            options.activation_heights[*buried_deployment] = height;
+        } else {
+            throw std::runtime_error(strprintf("Invalid name (%s) for -testactivationheight=name@height.", arg));
+        }
+    }
+
+    if (!args.IsArgSet("-vbparams")) return;
+
+    for (const std::string& strDeployment : args.GetArgs("-vbparams")) {
+        std::vector<std::string> vDeploymentParams = SplitString(strDeployment, ':');
+        if (vDeploymentParams.size() < 3 || 4 < vDeploymentParams.size()) {
+            throw std::runtime_error("Version bits parameters malformed, expecting deployment:start:end[:min_activation_height]");
+        }
+        CChainParams::VersionBitsParameters vbparams{};
+        if (!ParseInt64(vDeploymentParams[1], &vbparams.start_time)) {
+            throw std::runtime_error(strprintf("Invalid nStartTime (%s)", vDeploymentParams[1]));
+        }
+        if (!ParseInt64(vDeploymentParams[2], &vbparams.timeout)) {
+            throw std::runtime_error(strprintf("Invalid nTimeout (%s)", vDeploymentParams[2]));
+        }
+        if (vDeploymentParams.size() >= 4) {
+            if (!ParseInt32(vDeploymentParams[3], &vbparams.min_activation_height)) {
+                throw std::runtime_error(strprintf("Invalid min_activation_height (%s)", vDeploymentParams[3]));
+            }
+        } else {
+            vbparams.min_activation_height = 0;
+        }
+        bool found = false;
+        for (int j = 0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
             if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
                 options.version_bits_parameters[Consensus::DeploymentPos(j)] = vbparams;
                 found = true;
@@ -115,6 +175,11 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
         auto opts = CChainParams::RegTestOptions{};
         ReadRegTestArgs(args, opts);
         return CChainParams::RegTest(opts);
+    }
+    case ChainType::BLSCTREGTEST: {
+        auto opts = CChainParams::BLSCTRegTestOptions{};
+        ReadBLSCTRegTestArgs(args, opts);
+        return CChainParams::BLSCTRegTest(opts);
     }
     }
     assert(false);

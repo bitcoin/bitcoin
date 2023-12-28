@@ -558,7 +558,7 @@ RPCHelpMan getaddressinfo()
             std::unique_ptr<SigningProvider> provider = pwallet->GetSolvingProvider(scriptPubKey);
 
             isminetype mine = pwallet->IsMine(dest);
-            ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
+            ret.pushKV("ismine", bool(mine & (ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT)));
 
             if (provider) {
                 auto inferred = InferDescriptor(scriptPubKey, *provider);

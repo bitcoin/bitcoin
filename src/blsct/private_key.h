@@ -54,6 +54,7 @@ public:
     Signature SignBalance() const;
 
     // Message augmentation scheme
+    Signature Sign(const uint256& msg) const;
     Signature Sign(const Message& msg) const;
 
     // Core operations
