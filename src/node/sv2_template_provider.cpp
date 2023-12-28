@@ -37,9 +37,6 @@ Sv2TemplateProvider::Sv2TemplateProvider(interfaces::Mining& mining) : m_mining{
     // TODO: persist certificate
 
     m_connman = std::make_unique<Sv2Connman>(TP_SUBPROTOCOL, static_key, m_authority_pubkey, certificate);
-
-    // Suppress unused variable warning, result is unused.
-    m_mining.getTipHash();
 }
 
 bool Sv2TemplateProvider::Start(const Sv2TemplateProviderOptions& options)
@@ -80,7 +77,41 @@ void Sv2TemplateProvider::StopThreads()
 void Sv2TemplateProvider::ThreadSv2Handler()
 {
     while (!m_flag_interrupt_sv2) {
-        // TODO: handle messages
+
+        auto tip{m_mining.waitTipChanged(50ms)};
+        bool best_block_changed{WITH_LOCK(m_tp_mutex, return m_best_prev_hash != tip.first;)};
+
+        // Keep m_best_prev_hash unset during IBD to avoid pushing outdated
+        // templates. Except for signet, because we might be the only miner.
+        if (m_mining.isInitialBlockDownload() && gArgs.GetChainType() != ChainType::SIGNET) {
+            best_block_changed = false;
+        }
+
+        if (best_block_changed) {
+            LOCK(m_tp_mutex);
+            m_best_prev_hash = tip.first;
+            m_last_block_time = GetTime<std::chrono::seconds>();
+        }
+
+        // In a later commit we'll also push new templates based on changes to
+        // the mempool, so this if condition will no longer match the one above.
+        if (best_block_changed) {
+            m_connman->ForEachClient([this, best_block_changed](Sv2Client& client) {
+                // For newly connected clients, we call SendWork after receiving
+                // CoinbaseOutputDataSize.
+                if (client.m_coinbase_tx_outputs_size == 0) return;
+
+                LOCK(this->m_tp_mutex);
+                if (!SendWork(client, /*send_new_prevhash=*/best_block_changed)) {
+                    LogPrintLevel(BCLog::SV2, BCLog::Level::Trace, "Disconnecting client id=%zu\n",
+                                    client.m_id);
+                    client.m_disconnect_flag = true;
+                }
+            });
+        }
+
+        LOCK(m_tp_mutex);
+        PruneBlockTemplateCache();
     }
 }
 
@@ -90,9 +121,85 @@ void Sv2TemplateProvider::ReceivedMessage(Sv2Client& client, node::Sv2MsgType ms
     case node::Sv2MsgType::COINBASE_OUTPUT_DATA_SIZE:
     {
         LOCK(m_tp_mutex);
-        // TODO: Send new template and prevout
+        if (!SendWork(client, /*send_new_prevhash=*/true)) {
+            return;
+        }
         break;
     }
     default: {}
     }
+}
+
+Sv2TemplateProvider::NewWorkSet Sv2TemplateProvider::BuildNewWorkSet(bool future_template, unsigned int coinbase_output_max_additional_size)
+{
+    AssertLockHeld(m_tp_mutex);
+
+    const auto time_start{SteadyClock::now()};
+    auto block_template = m_mining.createNewBlock(CScript(), {.use_mempool = true, .coinbase_max_additional_weight = coinbase_output_max_additional_size});
+    LogPrintLevel(BCLog::SV2, BCLog::Level::Trace, "Assemble template: %.2fms\n",
+        Ticks<MillisecondsDouble>(SteadyClock::now() - time_start));
+    CBlockHeader header{block_template->getBlockHeader()};
+    node::Sv2NewTemplateMsg new_template{header,
+                                         block_template->getCoinbaseTx(),
+                                         block_template->getCoinbaseMerklePath(),
+                                         block_template->getWitnessCommitmentIndex(),
+                                         m_template_id,
+                                         future_template};
+    node::Sv2SetNewPrevHashMsg set_new_prev_hash{header, m_template_id};
+
+    return NewWorkSet { new_template, std::move(block_template), set_new_prev_hash};
+}
+
+void Sv2TemplateProvider::PruneBlockTemplateCache()
+{
+    AssertLockHeld(m_tp_mutex);
+
+    // Allow a few seconds for clients to submit a block
+    auto recent = GetTime<std::chrono::seconds>() - std::chrono::seconds(10);
+    if (m_last_block_time > recent) return;
+    // If the blocks prevout is not the tip's prevout, delete it.
+    uint256 prev_hash = m_best_prev_hash;
+    std::erase_if(m_block_template_cache, [prev_hash] (const auto& kv) {
+        if (kv.second->getBlockHeader().hashPrevBlock != prev_hash) {
+            return true;
+        }
+        return false;
+    });
+}
+
+bool Sv2TemplateProvider::SendWork(Sv2Client& client, bool send_new_prevhash)
+{
+    AssertLockHeld(m_tp_mutex);
+
+    // The current implementation doesn't create templates for future empty
+    // or speculative blocks. Despite that, we first send NewTemplate with
+    // future_template set to true, followed by SetNewPrevHash. We do this
+    // both when first connecting and when a new block is found.
+    //
+    // When the template is update to take newer mempool transactions into
+    // account, we set future_template to false and don't send SetNewPrevHash.
+
+    // TODO: reuse template_id for clients with the same m_default_coinbase_tx_additional_output_size
+    ++m_template_id;
+    // https://github.com/bitcoin/bitcoin/pull/30356#issuecomment-2199791658
+    uint32_t additional_coinbase_weight{(client.m_coinbase_tx_outputs_size + 100 + 0 + 2) * 4};
+    auto new_work_set = BuildNewWorkSet(/*future_template=*/send_new_prevhash, additional_coinbase_weight);
+
+    if (m_best_prev_hash == uint256(0)) {
+        // g_best_block is set UpdateTip(), so will be 0 when the node starts
+        // and no new blocks have arrived.
+        m_best_prev_hash = new_work_set.block_template->getBlockHeader().hashPrevBlock;
+    }
+
+    LogPrintLevel(BCLog::SV2, BCLog::Level::Debug, "Send 0x71 NewTemplate id=%lu to client id=%zu\n", m_template_id, client.m_id);
+    client.m_send_messages.emplace_back(new_work_set.new_template);
+
+    if (send_new_prevhash) {
+        LogPrintLevel(BCLog::SV2, BCLog::Level::Debug, "Send 0x72 SetNewPrevHash to client id=%zu\n", client.m_id);
+        client.m_send_messages.emplace_back(new_work_set.prev_hash);
+    }
+
+    m_block_template_cache.insert({m_template_id, std::move(new_work_set.block_template)});
+
+    return true;
 }

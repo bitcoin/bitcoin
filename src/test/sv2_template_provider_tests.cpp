@@ -122,6 +122,12 @@ public:
 
         return node::Sv2NetMsg{node::Sv2MsgType::SETUP_CONNECTION, std::move(bytes)};
     }
+
+    size_t GetBlockTemplateCount()
+    {
+        LOCK(m_tp->m_tp_mutex);
+        return m_tp->GetBlockTemplates().size();
+    }
 };
 
 BOOST_AUTO_TEST_CASE(client_tests)
@@ -142,12 +148,47 @@ BOOST_AUTO_TEST_CASE(client_tests)
     // SetupConnection.Success is 6 bytes
     BOOST_REQUIRE_EQUAL(tester.PeerReceiveBytes(), SV2_HEADER_ENCRYPTED_SIZE + 6 + Poly1305::TAGLEN);
 
+    // There should be no block templates before any client gave us their coinbase
+    // output data size:
+    BOOST_REQUIRE(tester.GetBlockTemplateCount() == 0);
+
     std::vector<uint8_t> coinbase_output_max_additional_size_bytes{
         0x01, 0x00, 0x00, 0x00
     };
     node::Sv2NetMsg msg{node::Sv2MsgType::COINBASE_OUTPUT_DATA_SIZE, std::move(coinbase_output_max_additional_size_bytes)};
-    // No reply expected, not yet implemented
+    BOOST_TEST_MESSAGE("The reply should be NewTemplate and SetNewPrevHash");
     tester.receiveMessage(msg);
+    BOOST_REQUIRE_EQUAL(tester.PeerReceiveBytes(), 2 * SV2_HEADER_ENCRYPTED_SIZE + 91 + 80 + 2 * Poly1305::TAGLEN);
+
+    // There should now be one template
+    BOOST_REQUIRE_EQUAL(tester.GetBlockTemplateCount(), 1);
+
+    // Create a new block
+    mineBlocks(1);
+
+    // We should send out another NewTemplate and SetNewPrevHash
+    // The new template contains the new prevhash.
+    BOOST_REQUIRE_EQUAL(tester.PeerReceiveBytes(), 2 * SV2_HEADER_ENCRYPTED_SIZE + 91 + 80 + 2 * Poly1305::TAGLEN);
+    // The SetNewPrevHash message is redundant
+    // TODO: don't send it?
+    // Background: in the future we want to send an empty or optimistic template
+    //             before a block is found, so ASIC's can preload it. We would
+    //             then immedidately send a SetNewPrevHash message when there's
+    //             a new block, and construct a better template _after_ that.
+
+    // Templates are briefly preserved
+    BOOST_REQUIRE_EQUAL(tester.GetBlockTemplateCount(), 2);
+
+    // Do not provide transactions for stale templates
+    // TODO
+
+    // But do allow SubmitSolution
+    // TODO
+
+    // Until after some time
+    SetMockTime(GetMockTime() + std::chrono::seconds{15});
+    UninterruptibleSleep(std::chrono::milliseconds{100});
+    BOOST_REQUIRE_EQUAL(tester.GetBlockTemplateCount(), 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
