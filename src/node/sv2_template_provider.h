@@ -6,11 +6,13 @@
 #include <common/sv2_transport.h>
 #include <logging.h>
 #include <net.h>
+#include <node/miner.h>
 #include <util/sock.h>
 #include <util/time.h>
 #include <streams.h>
 
 class ChainstateManager;
+class CTxMemPool;
 
 struct Sv2Client
 {
@@ -77,6 +79,11 @@ struct Sv2TemplateProviderOptions
      * The default option for the additional space required for coinbase output.
      */
     unsigned int default_coinbase_tx_additional_output_size = 0;
+
+    /**
+     * The default flag for all new work.
+     */
+    bool default_future_templates = true;
 };
 
 /**
@@ -118,13 +125,37 @@ private:
     std::atomic<bool> m_flag_interrupt_sv2{false};
     CThreadInterrupt m_interrupt_sv2;
 
+    /**
+    * ChainstateManager and CTxMemPool are both used to build new valid blocks,
+    * getting the best known block hash and checking whether the node is still
+    * in IBD.
+    */
     ChainstateManager& m_chainman;
+    CTxMemPool& m_mempool;
 
     /**
      * A list of all connected stratum v2 clients.
      */
     using Clients = std::vector<std::unique_ptr<Sv2Client>>;
     Clients m_sv2_clients;
+
+    /**
+     * The most recent template id. This is incremented on creating new template,
+     * which happens for each connected client.
+     */
+    uint64_t m_template_id;
+
+    /**
+     * The current best known SetNewPrevHash that references the current best known
+     * block hash in the network.
+     */
+    node::Sv2SetNewPrevHashMsg m_best_prev_hash;
+
+    /**
+     * A cache that maps ids used in NewTemplate messages and its associated block.
+     */
+    using BlockCache = std::map<uint64_t, std::unique_ptr<node::CBlockTemplate>>;
+    BlockCache m_block_cache;
 
     /**
      * The currently supported protocol version.
@@ -142,13 +173,18 @@ private:
     unsigned int m_default_coinbase_tx_additional_output_size;
 
     /**
+     * The default setting for sending future templates.
+     */
+    bool m_default_future_templates;
+
+    /**
      * The configured port to listen for new connections.
      */
     uint16_t m_port;
 
 public:
 
-    explicit Sv2TemplateProvider(ChainstateManager& chainman);
+    explicit Sv2TemplateProvider(ChainstateManager& chainman, CTxMemPool& mempool);
 
     ~Sv2TemplateProvider();
     /**
@@ -197,6 +233,26 @@ private:
      * all tasks for the template provider.
      */
     void ThreadSv2Handler();
+
+    /**
+     * NewWorkSet contains the messages matching block for valid stratum v2 work.
+     */
+    struct NewWorkSet
+    {
+        node::Sv2NewTemplateMsg new_template;
+        std::unique_ptr<node::CBlockTemplate> block_template;
+        node::Sv2SetNewPrevHashMsg prev_hash;
+    };
+
+    /**
+     * Builds a NewWorkSet that contains the Sv2NewTemplateMsg, a new full block and a Sv2SetNewPrevHashMsg that are all linked to the same work.
+     */
+    [[nodiscard]] NewWorkSet BuildNewWorkSet(bool future_template, unsigned int coinbase_output_max_additional_size);
+
+    /**
+     * Sends the best NewTemplate and SetNewPrevHash to a client.
+     */
+    [[nodiscard]] bool SendWork(Sv2Client& client, bool send_new_prevhash);
 
     /**
      * Generates the socket events for each Sv2Client socket and the main listening socket.

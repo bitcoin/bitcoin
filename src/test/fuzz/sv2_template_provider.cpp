@@ -16,7 +16,7 @@ FUZZ_TARGET(sv2_template_provider)
 
     std::vector<uint8_t> random_bytes{buffer.begin(), buffer.end()};
 
-    Sv2TemplateProvider template_provider{*setup->m_node.chainman};
+    Sv2TemplateProvider template_provider{*setup->m_node.chainman, *setup->m_node.mempool};
 
     // node::Sv2NewTemplateMsg best_new_template;
     // node::Sv2SetNewPrevHashMsg best_prev_hash;

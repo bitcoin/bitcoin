@@ -43,7 +43,7 @@ static void connect(Sv2TemplateProvider& template_provider, Sv2Client& client, s
 
 BOOST_AUTO_TEST_CASE(Sv2TemplateProvider_Connection_test)
 {
-    Sv2TemplateProvider template_provider{*m_node.chainman};
+    Sv2TemplateProvider template_provider{*m_node.chainman, *m_node.mempool};
 
     auto sock = std::make_shared<StaticContentsSock>(std::string(1, 'a'));
     auto static_key{GenerateRandomKey()};
@@ -133,13 +133,16 @@ BOOST_AUTO_TEST_CASE(Sv2TemplateProvider_Connection_test)
 
 BOOST_AUTO_TEST_CASE(Sv2TemplateProvider_Message_CoinbaseOutputDataSize_test)
 {
-    // Sv2TemplateProvider template_provider{*m_node.chainman};
+    // Sv2TemplateProvider template_provider{*m_node.chainman, *m_node.mempool};
 
     // auto sock = std::make_shared<StaticContentsSock>(std::string(1, 'a'));
     // Sv2Client client{sock};
 
     // std::vector<uint8_t> setup_conn_bytes = get_setup_conn_bytes();
     // connect(template_provider, client, setup_conn_bytes);
+
+    // std::map<uint64_t, std::unique_ptr<node::CBlockTemplate>> block_cache;
+    // uint64_t template_id{0};
 
     // Check that receiving a valid coinbase_output_max_additional_size_bytes results
     // in a new block in the block cache matched with an incremented template id.
@@ -152,11 +155,7 @@ BOOST_AUTO_TEST_CASE(Sv2TemplateProvider_Message_CoinbaseOutputDataSize_test)
     // TODO: fix test: error: no viable conversion from 'node::Sv2NetHeader' to 'const node::Sv2NetMsg'
     // template_provider.ProcessSv2Message(node::Sv2NetHeader{node::Sv2MsgType::COINBASE_OUTPUT_DATA_SIZE, sizeof(coinbase_output_max_additional_size_bytes)},
     //                                     // ss_coinbase_output_max_additional_size,
-    //                                     client,
-    //                                     best_new_template,
-    //                                     best_prev_hash,
-    //                                     block_cache,
-    //                                     template_id);
+    //                                     client);
     // BOOST_CHECK_EQUAL(template_id, 1);
     // BOOST_CHECK(block_cache.count(template_id));
 }
