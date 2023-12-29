@@ -5,6 +5,7 @@
 #include <node/txreconciliation.h>
 
 #include <common/system.h>
+#include <hash.h>
 #include <logging.h>
 #include <util/check.h>
 
