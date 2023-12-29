@@ -45,6 +45,9 @@ extern const std::function<std::string()> G_TEST_GET_FULL_NAME;
 
 static constexpr CAmount CENT{1000000};
 
+/** Register common test args. Shared across binaries that rely on the test framework. */
+void SetupCommonTestArgs(ArgsManager& argsman);
+
 struct TestOpts {
     std::vector<const char*> extra_args{};
     bool coins_db_in_memory{true};

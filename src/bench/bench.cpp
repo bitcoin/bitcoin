@@ -27,7 +27,15 @@ using util::Join;
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
-const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS{};
+/**
+ * Retrieves the available test setup command line arguments that may be used
+ * in the benchmark. They will be used only if the benchmark utilizes a
+ * 'BasicTestingSetup' or any child of it.
+ */
+static std::function<std::vector<const char*>()> g_bench_command_line_args{};
+const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS = []() {
+    return g_bench_command_line_args();
+};
 
 /**
  * Retrieve the name of the currently in-use benchmark.
@@ -102,6 +110,14 @@ void BenchRunner::RunAll(const Args& args)
     if (args.sanity_check) {
         std::cout << "Running with -sanity-check option, output is being suppressed as benchmark results will be useless." << std::endl;
     }
+
+    // Load inner test setup args
+    g_bench_command_line_args = [&args]() {
+        std::vector<const char*> ret;
+        ret.reserve(args.setup_args.size());
+        for (const auto& arg : args.setup_args) ret.emplace_back(arg.c_str());
+        return ret;
+    };
 
     std::vector<ankerl::nanobench::Result> benchmarkResults;
     for (const auto& [name, bench_func] : benchmarks()) {

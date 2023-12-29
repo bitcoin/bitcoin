@@ -85,8 +85,7 @@ struct NetworkSetup
 };
 static NetworkSetup g_networksetup_instance;
 
-/** Register test-only arguments */
-static void SetupUnitTestArgs(ArgsManager& argsman)
+void SetupCommonTestArgs(ArgsManager& argsman)
 {
     argsman.AddArg("-testdatadir", strprintf("Custom data directory (default: %s<random_string>)", fs::PathToString(fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / "")),
                    ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
@@ -125,7 +124,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
     gArgs.ClearPathCache();
     {
         SetupServerArgs(*m_node.args);
-        SetupUnitTestArgs(*m_node.args);
+        SetupCommonTestArgs(*m_node.args);
         std::string error;
         if (!m_node.args->ParseParameters(arguments.size(), arguments.data(), error)) {
             m_node.args->ClearArgs();
