@@ -386,6 +386,8 @@ bool RangeProofLogic<T>::VerifyProofs(
     using Scalars = Elements<Scalar>;
 
     for (const RangeProofWithTranscript<T>& pt : proof_transcripts) {
+        if (pt.proof.Ls.Size() != pt.proof.Rs.Size()) return false;
+
         range_proof::Generators<T> gens = m_common.Gf().GetInstance(pt.proof.token_id);
 
         auto gs = gens.GetGiSubset(pt.mn);

@@ -77,6 +77,7 @@ BITCOIN_TESTS =\
   test/base58_tests.cpp \
   test/base64_tests.cpp \
   test/bech32_tests.cpp \
+  test/bech32_mod_tests.cpp \
   test/bip32_tests.cpp \
   test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
@@ -195,6 +196,12 @@ BITCOIN_TESTS =\
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \
+  test/blsct/wallet/address_tests.cpp \
+  test/blsct/wallet/chain_tests.cpp \
+  test/blsct/wallet/keyman_tests.cpp \
+  test/blsct/wallet/txfactory_global_tests.cpp \
+  test/blsct/wallet/txfactory_tests.cpp \
+  test/blsct/wallet/validation_tests.cpp \
   wallet/test/feebumper_tests.cpp \
   wallet/test/psbt_wallet_tests.cpp \
   wallet/test/spend_tests.cpp \
@@ -269,6 +276,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/banman.cpp \
  test/fuzz/base_encode_decode.cpp \
  test/fuzz/bech32.cpp \
+ test/fuzz/bech32_mod.cpp \
  test/fuzz/bitdeque.cpp \
  test/fuzz/block.cpp \
  test/fuzz/block_header.cpp \
@@ -366,7 +374,6 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/transaction.cpp \
  test/fuzz/tx_in.cpp \
  test/fuzz/tx_out.cpp \
- test/fuzz/tx_pool.cpp \
  test/fuzz/txorphan.cpp \
  test/fuzz/txrequest.cpp \
  test/fuzz/utxo_snapshot.cpp \

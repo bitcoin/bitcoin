@@ -185,9 +185,7 @@ std::vector<uint8_t> MclG1Point::GetVch() const
 bool MclG1Point::SetVch(const std::vector<uint8_t>& b)
 {
     if (mclBnG1_deserialize(&m_point, &b[0], b.size()) == 0) {
-        mclBnG1 x;
-        mclBnG1_clear(&x);
-        m_point = x;
+        mclBnG1_clear(&m_point);
         return false;
     }
     return true;

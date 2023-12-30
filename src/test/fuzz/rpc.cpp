@@ -68,20 +68,21 @@ std::string g_limit_to_rpc_command;
 // reading or writing to a filename passed as an RPC parameter, RPC commands
 // resulting in network activity, etc.
 const std::vector<std::string> RPC_COMMANDS_NOT_SAFE_FOR_FUZZING{
-    "addconnection",  // avoid DNS lookups
-    "addnode",        // avoid DNS lookups
-    "addpeeraddress", // avoid DNS lookups
-    "dumptxoutset",   // avoid writing to disk
-    "dumpwallet", // avoid writing to disk
-    "echoipc",              // avoid assertion failure (Assertion `"EnsureAnyNodeContext(request.context).init" && check' failed.)
-    "generatetoaddress",    // avoid prohibitively slow execution (when `num_blocks` is large)
-    "generatetodescriptor", // avoid prohibitively slow execution (when `nblocks` is large)
-    "gettxoutproof",        // avoid prohibitively slow execution
-    "importwallet", // avoid reading from disk
-    "loadwallet",   // avoid reading from disk
-    "savemempool",           // disabled as a precautionary measure: may take a file path argument in the future
-    "setban",                // avoid DNS lookups
-    "stop",                  // avoid shutdown state
+    "addconnection",          // avoid DNS lookups
+    "addnode",                // avoid DNS lookups
+    "addpeeraddress",         // avoid DNS lookups
+    "dumptxoutset",           // avoid writing to disk
+    "dumpwallet",             // avoid writing to disk
+    "echoipc",                // avoid assertion failure (Assertion `"EnsureAnyNodeContext(request.context).init" && check' failed.)
+    "generatetoaddress",      // avoid prohibitively slow execution (when `num_blocks` is large)
+    "generatetoblsctaddress", // avoid prohibitively slow execution (when `num_blocks` is large)
+    "generatetodescriptor",   // avoid prohibitively slow execution (when `nblocks` is large)
+    "gettxoutproof",          // avoid prohibitively slow execution
+    "importwallet",           // avoid reading from disk
+    "loadwallet",             // avoid reading from disk
+    "savemempool",            // disabled as a precautionary measure: may take a file path argument in the future
+    "setban",                 // avoid DNS lookups
+    "stop",                   // avoid shutdown state
 };
 
 // RPC commands which are safe for fuzzing.
@@ -155,6 +156,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "scanblocks",
     "scantxoutset",
     "sendrawtransaction",
+    "sendtoblsctaddress",
     "setmocktime",
     "setnetworkactive",
     "signmessagewithprivkey",

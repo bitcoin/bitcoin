@@ -44,6 +44,47 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
     return wallet;
 }
 
+std::unique_ptr<CWallet> CreateBLSCTWallet(interfaces::Chain& chain, CChain& cchain)
+{
+    auto wallet = std::make_unique<CWallet>(&chain, "", CreateMockWalletDatabase());
+    {
+        LOCK2(wallet->cs_wallet, ::cs_main);
+        wallet->SetLastBlockProcessed(cchain.Height(), cchain.Tip()->GetBlockHash());
+    }
+    wallet->LoadWallet();
+    {
+        LOCK(wallet->cs_wallet);
+        auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
+        blsct_km->SetHDSeed(MclScalar(uint256(1)));
+        assert(blsct_km->NewSubAddressPool());
+        assert(blsct_km->NewSubAddressPool(-1));
+    }
+    WalletRescanReserver reserver(*wallet);
+    reserver.reserve();
+    CWallet::ScanResult result = wallet->ScanForWalletTransactions(cchain.Genesis()->GetBlockHash(), /*start_height=*/0, /*max_height=*/{}, reserver, /*fUpdate=*/false, /*save_progress=*/false);
+    assert(result.status == CWallet::ScanResult::SUCCESS);
+    assert(result.last_scanned_block == cchain.Tip()->GetBlockHash());
+    assert(*result.last_scanned_height == cchain.Height());
+    assert(result.last_failed_block.IsNull());
+    return wallet;
+}
+
+bool SyncBLSCTWallet(std::unique_ptr<CWallet>& wallet, CChain& cchain)
+{
+    {
+        LOCK2(wallet->cs_wallet, ::cs_main);
+        wallet->SetLastBlockProcessed(cchain.Height(), cchain.Tip()->GetBlockHash());
+    }
+    WalletRescanReserver reserver(*wallet);
+    reserver.reserve();
+    CWallet::ScanResult result = wallet->ScanForWalletTransactions(cchain.Genesis()->GetBlockHash(), /*start_height=*/0, /*max_height=*/{}, reserver, /*fUpdate=*/false, /*save_progress=*/false);
+    assert(result.status == CWallet::ScanResult::SUCCESS);
+    assert(result.last_scanned_block == cchain.Tip()->GetBlockHash());
+    assert(*result.last_scanned_height == cchain.Height());
+    assert(result.last_failed_block.IsNull());
+    return true;
+}
+
 std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database, DatabaseOptions& options)
 {
     auto new_database = CreateMockWalletDatabase(options);

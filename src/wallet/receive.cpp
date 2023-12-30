@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <blsct/wallet/txfactory_global.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <wallet/receive.h>
@@ -30,10 +31,28 @@ bool AllInputsMine(const CWallet& wallet, const CTransaction& tx, const isminefi
 
 CAmount OutputGetCredit(const CWallet& wallet, const CTxOut& txout, const isminefilter& filter)
 {
-    if (!MoneyRange(txout.nValue))
+    if (!txout.IsBLSCT() && !MoneyRange(txout.nValue))
         throw std::runtime_error(std::string(__func__) + ": value out of range");
     LOCK(wallet.cs_wallet);
-    return ((wallet.IsMine(txout) & filter) ? txout.nValue : 0);
+    if (txout.IsBLSCT()) {
+        if (wallet.IsMine(txout) & filter) {
+            CAmount ret = 0;
+            auto blsct_man = wallet.GetBLSCTKeyMan();
+            if (blsct_man) {
+                auto result = blsct_man->RecoverOutputs({txout});
+                if (result.is_completed) {
+                    auto xs = result.amounts;
+                    for (auto& res : xs) {
+                        ret = res.amount;
+                    }
+                }
+            }
+            return ret;
+        } else {
+            return 0;
+        }
+    } else
+        return ((wallet.IsMine(txout) & filter) ? txout.nValue : 0);
 }
 
 CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx, const isminefilter& filter)
@@ -72,13 +91,17 @@ bool ScriptIsChange(const CWallet& wallet, const CScript& script)
 
 bool OutputIsChange(const CWallet& wallet, const CTxOut& txout)
 {
+    if (txout.IsBLSCT()) {
+        auto blsct_km = wallet.GetBLSCTKeyMan();
+        if (blsct_km) return blsct_km->OutputIsChange(txout);
+    }
     return ScriptIsChange(wallet, txout.scriptPubKey);
 }
 
 CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout)
 {
     AssertLockHeld(wallet.cs_wallet);
-    if (!MoneyRange(txout.nValue))
+    if (!txout.IsBLSCT() && !MoneyRange(txout.nValue))
         throw std::runtime_error(std::string(__func__) + ": value out of range");
     return (OutputIsChange(wallet, txout) ? txout.nValue : 0);
 }
@@ -202,13 +225,20 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
 
     // Compute fee:
     CAmount nDebit = CachedTxGetDebit(wallet, wtx, filter);
+    CAmount nNet = 0;
+
     if (nDebit > 0) // debit>0 means we signed/sent this transaction
     {
-        CAmount nValueOut = wtx.tx->GetValueOut();
-        nFee = nDebit - nValueOut;
+        CAmount nValueOut = wtx.GetValueOut();
+        if (wtx.tx->IsBLSCT()) {
+            nNet = nDebit - nValueOut;
+        } else {
+            nFee = nDebit - nValueOut;
+        }
     }
 
     LOCK(wallet.cs_wallet);
+
     // Sent/received.
     for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i)
     {
@@ -219,33 +249,55 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
         //   2) the output is to us (received)
         if (nDebit > 0)
         {
-            if (!include_change && OutputIsChange(wallet, txout))
-                continue;
-        }
-        else if (!(fIsMine & filter))
+            if (OutputIsChange(wallet, txout) && (txout.IsBLSCT() || !include_change)) continue;
+
+        } else if (!(fIsMine & filter))
+            continue;
+
+        if (wtx.tx->IsBLSCT() && txout.scriptPubKey.IsFee())
             continue;
 
         // In either case, we need to get the destination address
         CTxDestination address;
 
-        if (!ExtractDestination(txout.scriptPubKey, address) && !txout.scriptPubKey.IsUnspendable())
-        {
-            wallet.WalletLogPrintf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
-                                    wtx.GetHash().ToString());
-            address = CNoDestination();
+        if (txout.IsBLSCT()) {
+            auto blsct_km = wallet.GetBLSCTKeyMan();
+            if (!blsct_km) {
+                address = CNoDestination();
+            } else {
+                address = blsct_km->GetDestination(txout);
+            }
+
+            auto recoveryData = wtx.GetBLSCTRecoveryData(i);
+
+            COutputEntry output = {address, recoveryData.amount, (int)i};
+
+            // If we are receiving the output, add it as a "received" entry
+            if (fIsMine & filter)
+                listReceived.push_back(output);
+        } else {
+            if (!ExtractDestination(txout.scriptPubKey, address) && !txout.scriptPubKey.IsUnspendable()) {
+                wallet.WalletLogPrintf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
+                                       wtx.GetHash().ToString());
+                address = CNoDestination();
+            }
+
+            COutputEntry output = {address, txout.nValue, (int)i};
+
+            // If we are debited by the transaction, add the output as a "sent" entry
+            if (nDebit > 0 && !wtx.tx->IsBLSCT())
+                listSent.push_back(output);
+
+            // If we are receiving the output, add it as a "received" entry
+            if (fIsMine & filter)
+                listReceived.push_back(output);
         }
-
-        COutputEntry output = {address, txout.nValue, (int)i};
-
-        // If we are debited by the transaction, add the output as a "sent" entry
-        if (nDebit > 0)
-            listSent.push_back(output);
-
-        // If we are receiving the output, add it as a "received" entry
-        if (fIsMine & filter)
-            listReceived.push_back(output);
     }
 
+    if (wtx.tx->IsBLSCT() && nDebit > 0) {
+        COutputEntry output = {CNoDestination(), nNet, -1};
+        listSent.push_back(output);
+    }
 }
 
 bool CachedTxIsFromMe(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter)
@@ -258,6 +310,7 @@ bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uin
     AssertLockHeld(wallet.cs_wallet);
     int nDepth = wallet.GetTxDepthInMainChain(wtx);
     if (nDepth >= 1) return true;
+    if (nDepth == 0 && wtx.tx->IsBLSCT()) return false;
     if (nDepth < 0) return false;
     // using wtx's cached debit
     if (!wallet.m_spend_zero_conf_change || !CachedTxIsFromMe(wallet, wtx, ISMINE_ALL)) return false;
@@ -273,7 +326,7 @@ bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uin
         if (parent == nullptr) return false;
         const CTxOut& parentOut = parent->tx->vout[txin.prevout.n];
         // Check that this specific input being spent is trusted
-        if (wallet.IsMine(parentOut) != ISMINE_SPENDABLE) return false;
+        if (wallet.IsMine(parentOut) != ISMINE_SPENDABLE && wallet.IsMine(parentOut) != ISMINE_SPENDABLE_BLSCT) return false;
         // If we've already trusted this parent, continue
         if (trusted_parents.count(parent->GetHash())) continue;
         // Recurse to check that the parent is also trusted
@@ -302,7 +355,7 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
             const CWalletTx& wtx = entry.second;
             const bool is_trusted{CachedTxIsTrusted(wallet, wtx, trusted_parents)};
             const int tx_depth{wallet.GetTxDepthInMainChain(wtx)};
-            const CAmount tx_credit_mine{CachedTxGetAvailableCredit(wallet, wtx, ISMINE_SPENDABLE | reuse_filter)};
+            const CAmount tx_credit_mine{CachedTxGetAvailableCredit(wallet, wtx, ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT | reuse_filter)};
             const CAmount tx_credit_watchonly{CachedTxGetAvailableCredit(wallet, wtx, ISMINE_WATCH_ONLY | reuse_filter)};
             if (is_trusted && tx_depth >= min_depth) {
                 ret.m_mine_trusted += tx_credit_mine;
@@ -312,7 +365,7 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
                 ret.m_mine_untrusted_pending += tx_credit_mine;
                 ret.m_watchonly_untrusted_pending += tx_credit_watchonly;
             }
-            ret.m_mine_immature += CachedTxGetImmatureCredit(wallet, wtx, ISMINE_SPENDABLE);
+            ret.m_mine_immature += CachedTxGetImmatureCredit(wallet, wtx, ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT);
             ret.m_watchonly_immature += CachedTxGetImmatureCredit(wallet, wtx, ISMINE_WATCH_ONLY);
         }
     }

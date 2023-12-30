@@ -1201,7 +1201,7 @@ static UniValue ProcessImport(CWallet& wallet, const UniValue& data, const int64
 
         // Check whether we have any work to do
         for (const CScript& script : script_pub_keys) {
-            if (wallet.IsMine(script) & ISMINE_SPENDABLE) {
+            if (wallet.IsMine(script) & (ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT)) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script (\"" + HexStr(script) + "\")");
             }
         }

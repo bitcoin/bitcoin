@@ -163,6 +163,28 @@ static UniValue generateBlocks(ChainstateManager& chainman, const CTxMemPool& me
     return blockHashes;
 }
 
+static UniValue generateBlsctBlocks(ChainstateManager& chainman, const CTxMemPool& mempool, const CTxDestination& destination, int nGenerate, uint64_t nMaxTries)
+{
+    const Consensus::Params& consensusParams = chainman.GetParams().GetConsensus();
+    UniValue blockHashes(UniValue::VARR);
+    while (nGenerate > 0 && !ShutdownRequested()) {
+        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler{chainman.ActiveChainstate(), &mempool}.CreateNewBLSCTPOWBlock(blsct::SubAddress(destination), consensusParams.nBLSCTBlockReward, {}));
+        if (!pblocktemplate.get())
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
+
+        std::shared_ptr<const CBlock> block_out;
+        if (!GenerateBlock(chainman, pblocktemplate->block, nMaxTries, block_out, /*process_new_block=*/true)) {
+            break;
+        }
+
+        if (block_out) {
+            --nGenerate;
+            blockHashes.push_back(block_out->GetHash().GetHex());
+        }
+    }
+    return blockHashes;
+}
+
 static bool getScriptFromDescriptor(const std::string& descriptor, CScript& script, std::string& error)
 {
     FlatSigningProvider key_provider;
@@ -242,44 +264,71 @@ static RPCHelpMan generate()
     }};
 }
 
+static RPCHelpMan generatetoblsctaddress()
+{
+    return RPCHelpMan{
+        "generatetoblsctaddress",
+        "Mine to a specified BLSCT address and return the block hashes.",
+        {
+            {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated."},
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated nav to."},
+            {"maxtries", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_MAX_TRIES}, "How many iterations to try."},
+        },
+        RPCResult{
+            RPCResult::Type::ARR, "", "hashes of blocks generated", {
+                                                                        {RPCResult::Type::STR_HEX, "", "blockhash"},
+                                                                    }},
+        RPCExamples{"\nGenerate 11 blocks to myaddress\n" + HelpExampleCli("generatetoaddress", "11 \"myaddress\"") + "If you are using the " PACKAGE_NAME " wallet, you can get a new address to send the newly generated nav to with:\n" + HelpExampleCli("getnewaddress", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            const int num_blocks{request.params[0].getInt<int>()};
+            const uint64_t max_tries{request.params[2].isNull() ? DEFAULT_MAX_TRIES : request.params[2].getInt<int>()};
+
+            CTxDestination destination = DecodeDestination(request.params[1].get_str());
+            if (!IsValidDestination(destination) || destination.index() != 7) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
+            }
+
+            NodeContext& node = EnsureAnyNodeContext(request.context);
+            const CTxMemPool& mempool = EnsureMemPool(node);
+            ChainstateManager& chainman = EnsureChainman(node);
+
+            return generateBlsctBlocks(chainman, mempool, destination, num_blocks, max_tries);
+        },
+    };
+}
+
 static RPCHelpMan generatetoaddress()
 {
-    return RPCHelpMan{"generatetoaddress",
+    return RPCHelpMan{
+        "generatetoaddress",
         "Mine to a specified address and return the block hashes.",
-         {
-             {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated."},
-             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated bitcoin to."},
-             {"maxtries", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_MAX_TRIES}, "How many iterations to try."},
-         },
-         RPCResult{
-             RPCResult::Type::ARR, "", "hashes of blocks generated",
-             {
-                 {RPCResult::Type::STR_HEX, "", "blockhash"},
-             }},
-         RPCExamples{
-            "\nGenerate 11 blocks to myaddress\n"
-            + HelpExampleCli("generatetoaddress", "11 \"myaddress\"")
-            + "If you are using the " PACKAGE_NAME " wallet, you can get a new address to send the newly generated bitcoin to with:\n"
-            + HelpExampleCli("getnewaddress", "")
-                },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    const int num_blocks{request.params[0].getInt<int>()};
-    const uint64_t max_tries{request.params[2].isNull() ? DEFAULT_MAX_TRIES : request.params[2].getInt<int>()};
+        {
+            {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated."},
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated nav to."},
+            {"maxtries", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_MAX_TRIES}, "How many iterations to try."},
+        },
+        RPCResult{
+            RPCResult::Type::ARR, "", "hashes of blocks generated", {
+                                                                        {RPCResult::Type::STR_HEX, "", "blockhash"},
+                                                                    }},
+        RPCExamples{"\nGenerate 11 blocks to myaddress\n" + HelpExampleCli("generatetoaddress", "11 \"myaddress\"") + "If you are using the " PACKAGE_NAME " wallet, you can get a new address to send the newly generated bitcoin to with:\n" + HelpExampleCli("getnewaddress", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            const int num_blocks{request.params[0].getInt<int>()};
+            const uint64_t max_tries{request.params[2].isNull() ? DEFAULT_MAX_TRIES : request.params[2].getInt<int>()};
 
-    CTxDestination destination = DecodeDestination(request.params[1].get_str());
-    if (!IsValidDestination(destination)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
-    }
+            CTxDestination destination = DecodeDestination(request.params[1].get_str());
+            if (!IsValidDestination(destination)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
+            }
 
-    NodeContext& node = EnsureAnyNodeContext(request.context);
-    const CTxMemPool& mempool = EnsureMemPool(node);
-    ChainstateManager& chainman = EnsureChainman(node);
+            NodeContext& node = EnsureAnyNodeContext(request.context);
+            const CTxMemPool& mempool = EnsureMemPool(node);
+            ChainstateManager& chainman = EnsureChainman(node);
 
-    CScript coinbase_script = GetScriptForDestination(destination);
+            CScript coinbase_script = GetScriptForDestination(destination);
 
-    return generateBlocks(chainman, mempool, coinbase_script, num_blocks, max_tries);
-},
+            return generateBlocks(chainman, mempool, coinbase_script, num_blocks, max_tries);
+        },
     };
 }
 
@@ -1053,6 +1102,7 @@ void RegisterMiningRPCCommands(CRPCTable& t)
         {"mining", &submitheader},
 
         {"hidden", &generatetoaddress},
+        {"hidden", &generatetoblsctaddress},
         {"hidden", &generatetodescriptor},
         {"hidden", &generateblock},
         {"hidden", &generate},

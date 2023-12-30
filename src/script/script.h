@@ -551,6 +551,11 @@ public:
         return (size() > 0 && *begin() == OP_RETURN) || (size() > MAX_SCRIPT_SIZE);
     }
 
+    bool IsFee() const
+    {
+        return (size() == 1 && *begin() == OP_RETURN);
+    }
+
     void clear()
     {
         // The default prevector::clear() does not release memory

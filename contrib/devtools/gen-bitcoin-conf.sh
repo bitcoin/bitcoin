@@ -80,4 +80,7 @@ cat >> "${EXAMPLE_CONF_FILE}" << 'EOF'
 
 # Options for regtest
 [regtest]
+
+# Options for blsctregtest
+[blsctregtest]
 EOF

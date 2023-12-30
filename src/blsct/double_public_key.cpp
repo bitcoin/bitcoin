@@ -3,23 +3,31 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/double_public_key.h>
+#include <blsct/arith/mcl/mcl.h>
 
 namespace blsct {
 
 DoublePublicKey::DoublePublicKey(const std::vector<unsigned char>& keys)
 {
     if (keys.size() != SIZE) return;
-    std::vector<unsigned char> vkData(SIZE / 2);
-    std::vector<unsigned char> skData(SIZE / 2);
-    std::copy(keys.begin(), keys.begin() + SIZE / 2, vkData.begin());
-    std::copy(keys.begin() + SIZE / 2, keys.end(), skData.begin());
+
+    std::vector<unsigned char> vkData(blsct::PublicKey::SIZE);
+    std::vector<unsigned char> skData(blsct::PublicKey::SIZE);
+    std::copy(keys.begin(), keys.begin() + blsct::PublicKey::SIZE, vkData.begin());
+    std::copy(keys.begin() + blsct::PublicKey::SIZE, keys.end(), skData.begin());
+
+    // check vkData and skData are valid serialization of points
+    MclG1Point p;
+    if (!p.SetVch(vkData) || !p.SetVch(skData)) return;
+
     vk = vkData;
     sk = skData;
+    is_fully_built = true;
 }
 
 CKeyID DoublePublicKey::GetID() const
 {
-    return CKeyID(Hash160(GetVch()));
+    return sk.GetID();
 }
 
 bool DoublePublicKey::GetViewKey(PublicKey& ret) const
@@ -69,7 +77,7 @@ bool DoublePublicKey::operator<(const DoublePublicKey& rhs) const
 
 bool DoublePublicKey::IsValid() const
 {
-    return vk.IsValid() && sk.IsValid();
+    return is_fully_built && vk.IsValid() && sk.IsValid();
 }
 
 std::vector<unsigned char> DoublePublicKey::GetVkVch() const

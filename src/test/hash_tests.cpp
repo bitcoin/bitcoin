@@ -124,7 +124,7 @@ BOOST_FIXTURE_TEST_CASE(siphash, BasicTestingSetup)
     // and the test would be affected by default tx version bumps if not fixed.
     tx.nVersion = 1;
     ss << tx;
-    BOOST_CHECK_EQUAL(SipHashUint256(1, 2, ss.GetHash()), 0x79751e980c2a0a35ULL);
+    BOOST_CHECK_EQUAL(SipHashUint256(1, 2, ss.GetHash()), 0x79751E980C2A0A35ULL);
 
     // Check consistency between CSipHasher and SipHashUint256[Extra].
     FastRandomContext ctx;

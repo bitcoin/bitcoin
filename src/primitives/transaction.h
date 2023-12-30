@@ -16,6 +16,7 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <util/moneystr.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -158,6 +159,7 @@ public:
     }
 
     std::string ToString() const;
+    uint256 GetHash() const;
 };
 
 class CTxOutBLSCTData
@@ -192,6 +194,17 @@ public:
         ::Unserialize(s, blindingKey);
         ::Unserialize(s, ephemeralKey);
         ::Unserialize(s, viewTag);
+    }
+
+    void SetNull()
+    {
+        viewTag = 0;
+        rangeProof.Vs.Clear();
+    }
+
+    bool IsNull() const
+    {
+        return viewTag == 0 && rangeProof.Vs.Size() == 0;
     }
 
     friend bool operator==(const CTxOutBLSCTData& a, const CTxOutBLSCTData& b)
@@ -272,12 +285,16 @@ public:
     {
         nValue = -1;
         scriptPubKey.clear();
-        blsctData.viewTag = 0;
     }
 
     bool IsNull() const
     {
-        return (nValue == -1);
+        return nValue == -1;
+    }
+
+    bool IsBLSCT() const
+    {
+        return blsctData.rangeProof.Vs.Size() > 0;
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
@@ -293,6 +310,7 @@ public:
     }
 
     std::string ToString() const;
+    uint256 GetHash() const;
 };
 
 struct CMutableTransaction;
@@ -325,6 +343,7 @@ inline void UnserializeTransaction(TxType& tx, Stream& s)
     tx.vout.clear();
     /* Try to read the vin. In case the dummy is there, this will be read as an empty vector. */
     s >> tx.vin;
+
     if (tx.vin.size() == 0 && fAllowWitness) {
         /* We read a dummy or an empty vin. */
         s >> flags;
@@ -336,6 +355,7 @@ inline void UnserializeTransaction(TxType& tx, Stream& s)
         /* We read a non-empty vin. Assume a normal vout follows. */
         s >> tx.vout;
     }
+
     if ((flags & 1) && fAllowWitness) {
         /* The witness flag is present, and we support witnesses. */
         flags ^= 1;
@@ -352,6 +372,7 @@ inline void UnserializeTransaction(TxType& tx, Stream& s)
         throw std::ios_base::failure("Unknown transaction optional data");
     }
     s >> tx.nLockTime;
+
     if (tx.IsBLSCT()) {
         s >> tx.txSig;
     }
@@ -482,7 +503,7 @@ public:
         return a.hash != b.hash;
     }
 
-    std::string ToString(bool fIncludeSignatures = false) const;
+    std::string ToString(bool fIncludeSignatures = true) const;
 
     bool HasWitness() const
     {

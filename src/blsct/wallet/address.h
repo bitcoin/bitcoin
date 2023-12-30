@@ -30,7 +30,7 @@ public:
 };
 
 struct SubAddressIdentifier {
-    uint64_t account;
+    int64_t account;
     uint64_t address;
 };
 
@@ -40,14 +40,22 @@ private:
     DoublePublicKey pk;
 
 public:
+    SubAddress(){};
+    SubAddress(const std::string& sAddress);
     SubAddress(const PrivateKey& viewKey, const PublicKey& spendKey, const SubAddressIdentifier& subAddressId);
     SubAddress(const DoublePublicKey& pk) : pk(pk){};
+    SubAddress(const CTxDestination& dest) : pk(std::get<blsct::DoublePublicKey>(dest)){};
 
     bool IsValid() const;
 
     std::string GetString() const;
     CTxDestination GetDestination() const;
     DoublePublicKey GetKeys() const { return pk; };
+
+    SERIALIZE_METHODS(SubAddress, obj) { READWRITE(obj.pk); }
+
+    bool operator==(const SubAddress& rhs) const;
+    bool operator<(const SubAddress& rhs) const;
 };
 } // namespace blsct
 

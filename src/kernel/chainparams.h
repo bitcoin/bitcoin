@@ -124,6 +124,7 @@ public:
     const std::vector<std::string>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::string& Bech32HRP() const { return bech32_hrp; }
+    const std::string& Bech32ModHRP() const { return bech32_mod_hrp; }
     const std::vector<uint8_t>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
 
@@ -159,7 +160,17 @@ public:
         bool fastprune{false};
     };
 
+    /**
+     * BLSCTRegTestOptions holds configurations for creating a regtest BLSCT CChainParams.
+     */
+    struct BLSCTRegTestOptions {
+        std::unordered_map<Consensus::DeploymentPos, VersionBitsParameters> version_bits_parameters{};
+        std::unordered_map<Consensus::BuriedDeployment, int> activation_heights{};
+        bool fastprune{false};
+    };
+
     static std::unique_ptr<const CChainParams> RegTest(const RegTestOptions& options);
+    static std::unique_ptr<const CChainParams> BLSCTRegTest(const BLSCTRegTestOptions& options);
     static std::unique_ptr<const CChainParams> SigNet(const SigNetOptions& options);
     static std::unique_ptr<const CChainParams> Main();
     static std::unique_ptr<const CChainParams> TestNet();
@@ -176,6 +187,7 @@ protected:
     std::vector<std::string> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
     std::string bech32_hrp;
+    std::string bech32_mod_hrp;
     ChainType m_chain_type;
     CBlock genesis;
     std::vector<uint8_t> vFixedSeeds;

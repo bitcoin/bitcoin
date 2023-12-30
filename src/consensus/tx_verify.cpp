@@ -175,14 +175,14 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
 
     CAmount nValueIn = 0;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
-        const COutPoint &prevout = tx.vin[i].prevout;
+        const COutPoint& prevout = tx.vin[i].prevout;
         const Coin& coin = inputs.AccessCoin(prevout);
         assert(!coin.IsSpent());
 
         // If prev is coinbase, check that it's matured
         if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
             return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
-                strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
+                                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
 
         // Check for negative or overflow input values
@@ -192,18 +192,26 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         }
     }
 
-    const CAmount value_out = tx.GetValueOut();
-    if (nValueIn < value_out) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-in-belowout",
-            strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
+    if (!tx.IsBLSCT()) {
+        const CAmount value_out = tx.GetValueOut();
+        if (nValueIn < value_out) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-in-belowout",
+                                 strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
+        }
+
+        // Tally transaction fees
+        const CAmount txfee_aux = nValueIn - value_out;
+        if (!MoneyRange(txfee_aux)) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-fee-outofrange");
+        }
+
+        txfee = txfee_aux;
+    } else {
+        for (auto& out : tx.vout) {
+            if (out.scriptPubKey.IsFee())
+                txfee = out.nValue;
+        }
     }
 
-    // Tally transaction fees
-    const CAmount txfee_aux = nValueIn - value_out;
-    if (!MoneyRange(txfee_aux)) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-fee-outofrange");
-    }
-
-    txfee = txfee_aux;
     return true;
 }
