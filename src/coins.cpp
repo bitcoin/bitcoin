@@ -12,6 +12,7 @@
 
 bool CCoinsView::GetCoin(const COutPoint& outpoint, Coin& coin) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }
+OrderedElements<MclG1Point> CCoinsView::GetStakedOutputs() const { return OrderedElements<MclG1Point>(); };
 std::vector<uint256> CCoinsView::GetHeadBlocks() const { return std::vector<uint256>(); }
 bool CCoinsView::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase) { return false; }
 std::unique_ptr<CCoinsViewCursor> CCoinsView::Cursor() const { return nullptr; }
@@ -26,6 +27,7 @@ CCoinsViewBacked::CCoinsViewBacked(CCoinsView* viewIn) : base(viewIn) {}
 bool CCoinsViewBacked::GetCoin(const COutPoint& outpoint, Coin& coin) const { return base->GetCoin(outpoint, coin); }
 bool CCoinsViewBacked::HaveCoin(const COutPoint& outpoint) const { return base->HaveCoin(outpoint); }
 uint256 CCoinsViewBacked::GetBestBlock() const { return base->GetBestBlock(); }
+OrderedElements<MclG1Point> CCoinsViewBacked::GetStakedOutputs() const { base->GetStakedOutputs(); };
 std::vector<uint256> CCoinsViewBacked::GetHeadBlocks() const { return base->GetHeadBlocks(); }
 void CCoinsViewBacked::SetBackend(CCoinsView &viewIn) { base = &viewIn; }
 bool CCoinsViewBacked::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase) { return base->BatchWrite(mapCoins, hashBlock, erase); }
@@ -184,6 +186,15 @@ uint256 CCoinsViewCache::GetBestBlock() const
         hashBlock = base->GetBestBlock();
     return hashBlock;
 }
+
+OrderedElements<MclG1Point> CCoinsViewCache::GetStakedOutputs() const
+{
+    if (cacheStakedOutputs.Empty()) {
+        cacheStakedOutputs = base->GetStakedOutputs();
+    }
+    return cacheStakedOutputs;
+};
+
 
 void CCoinsViewCache::SetBestBlock(const uint256& hashBlockIn)
 {
