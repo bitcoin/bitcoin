@@ -109,6 +109,9 @@ void DashTestSetup(NodeContext& node)
     CChainState& chainstate = Assert(node.chainman)->ActiveChainstate();
 
     node.cj_ctx = std::make_unique<CJContext>(chainstate, *node.connman, *node.mempool, *::masternodeSync, /* relay_txes */ true);
+#ifdef ENABLE_WALLET
+    node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*::coinJoinWalletManager);
+#endif // ENABLE_WALLET
     ::deterministicMNManager = std::make_unique<CDeterministicMNManager>(chainstate, *node.connman, *node.evodb);
     node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.evodb, *sporkManager, *node.mempool, node.peerman, true, false);
 }

@@ -29,6 +29,9 @@ namespace interfaces {
 class Chain;
 class ChainClient;
 class WalletLoader;
+namespace CoinJoin {
+class Loader;
+} // namspace CoinJoin
 } // namespace interfaces
 
 //! NodeContext struct containing references to chain state and connection
@@ -56,6 +59,7 @@ struct NodeContext {
     //! Reference to chain client that should used to load or create wallets
     //! opened by the gui.
     interfaces::WalletLoader* wallet_loader{nullptr};
+    std::unique_ptr<interfaces::CoinJoin::Loader> coinjoin_loader{nullptr};
     std::unique_ptr<CScheduler> scheduler;
     std::function<void()> rpc_interruption_point = [] {};
     //! Dash

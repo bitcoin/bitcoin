@@ -6,6 +6,7 @@
 #ifndef BITCOIN_WALLET_LOAD_H
 #define BITCOIN_WALLET_LOAD_H
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -15,13 +16,16 @@ class CScheduler;
 
 namespace interfaces {
 class Chain;
+namespace CoinJoin {
+class Loader;
+} // namespace CoinJoin
 } // namespace interfaces
 
 //! Responsible for reading and validating the -wallet arguments and verifying the wallet database.
 bool VerifyWallets(interfaces::Chain& chain);
 
 //! Load wallet databases.
-bool LoadWallets(interfaces::Chain& chain);
+bool LoadWallets(interfaces::Chain& chain, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader);
 
 //! Complete startup of wallets.
 void StartWallets(CScheduler& scheduler, const ArgsManager& args);

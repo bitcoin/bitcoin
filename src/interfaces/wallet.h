@@ -68,6 +68,16 @@ public:
     virtual bool startMixing() = 0;
     virtual void stopMixing() = 0;
 };
+class Loader
+{
+public:
+    virtual ~Loader() {}
+    //! Add new wallet to CoinJoin client manager
+    virtual void AddWallet(CWallet&) = 0;
+    //! Remove wallet from CoinJoin client manager
+    virtual void RemoveWallet(const std::string&) = 0;
+    virtual std::unique_ptr<CoinJoin::Client> GetClient(const CWallet& wallet) = 0;
+};
 }
 
 //! Interface for accessing a wallet.
@@ -355,10 +365,10 @@ class WalletLoader : public ChainClient
 {
 public:
     //! Create new wallet.
-    virtual std::unique_ptr<Wallet> createWallet(const CoinJoinWalletManager& cjwalletman, const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
+    virtual std::unique_ptr<Wallet> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
 
    //! Load existing wallet.
-   virtual std::unique_ptr<Wallet> loadWallet(const CoinJoinWalletManager& cjwalletman, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
+   virtual std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
 
    //! Return default wallet directory.
    virtual std::string getWalletDir() = 0;
@@ -460,7 +470,10 @@ std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet);
 
 //! Return implementation of ChainClient interface for a wallet loader. This
 //! function will be undefined in builds where ENABLE_WALLET is false.
-std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args);
+std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, const std::unique_ptr<CoinJoin::Loader>& coinjoin_loader, ArgsManager& args);
+
+std::unique_ptr<CoinJoin::Client> MakeCoinJoinClient(const CoinJoinWalletManager& walletman, const CWallet& wallet);
+std::unique_ptr<CoinJoin::Loader> MakeCoinJoinLoader(CoinJoinWalletManager& walletman);
 
 } // namespace interfaces
 
