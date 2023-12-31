@@ -113,8 +113,8 @@ bool AddWallet(const std::shared_ptr<CWallet>& wallet)
     }
     wallet->ConnectScriptPubKeyManNotifiers();
     wallet->AutoLockMasternodeCollaterals();
-    assert(::coinJoinClientManagers != nullptr);
-    ::coinJoinClientManagers->Add(*wallet);
+    assert(::coinJoinWalletManager != nullptr);
+    ::coinJoinWalletManager->Add(*wallet);
     wallet->NotifyCanGetAddressesChanged();
     return true;
 }
@@ -135,8 +135,8 @@ bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, std::optional<bool> lo
         vpwallets.erase(i);
     }
 
-    assert(::coinJoinClientManagers != nullptr);
-    ::coinJoinClientManagers->Remove(name);
+    assert(::coinJoinWalletManager != nullptr);
+    ::coinJoinWalletManager->Remove(name);
 
     // Write the wallet setting
     UpdateWalletSetting(chain, name, load_on_start, warnings);
@@ -1632,8 +1632,8 @@ void CWallet::UnsetBlankWalletFlag(WalletBatch& batch)
 
 void CWallet::NewKeyPoolCallback()
 {
-    assert(::coinJoinClientManagers != nullptr);
-    auto cj_clientman = ::coinJoinClientManagers->Get(*this);
+    assert(::coinJoinWalletManager != nullptr);
+    auto cj_clientman = ::coinJoinWalletManager->Get(*this);
     if (cj_clientman != nullptr) cj_clientman->StopMixing();
     nKeysLeftSinceAutoBackup = 0;
 }
@@ -4818,8 +4818,8 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
         walletInstance->GetDatabase().IncrementUpdateCounter();
     }
 
-    assert(::coinJoinClientManagers != nullptr);
-    ::coinJoinClientManagers->Add(*walletInstance);
+    assert(::coinJoinWalletManager != nullptr);
+    ::coinJoinWalletManager->Add(*walletInstance);
 
     {
         LOCK(cs_wallets);

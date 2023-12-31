@@ -207,8 +207,8 @@ public:
 
 BOOST_FIXTURE_TEST_CASE(coinjoin_manager_start_stop_tests, CTransactionBuilderTestSetup)
 {
-    BOOST_CHECK_EQUAL(::coinJoinClientManagers->raw().size(), 1);
-    auto& cj_man = ::coinJoinClientManagers->raw().begin()->second;
+    BOOST_CHECK_EQUAL(::coinJoinWalletManager->raw().size(), 1);
+    auto& cj_man = ::coinJoinWalletManager->raw().begin()->second;
     BOOST_CHECK_EQUAL(cj_man->IsMixing(), false);
     BOOST_CHECK_EQUAL(cj_man->StartMixing(), true);
     BOOST_CHECK_EQUAL(cj_man->IsMixing(), true);

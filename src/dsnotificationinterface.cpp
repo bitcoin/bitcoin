@@ -69,7 +69,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
     ::dstxManager->UpdatedBlockTip(pindexNew, *llmq_ctx->clhandler, m_mn_sync);
 #ifdef ENABLE_WALLET
-    for (auto& pair : cj_ctx->clientman->raw()) {
+    for (auto& pair : cj_ctx->walletman->raw()) {
         pair.second->UpdatedBlockTip(pindexNew);
     }
 #endif // ENABLE_WALLET

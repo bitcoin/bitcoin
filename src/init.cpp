@@ -2201,7 +2201,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.cj_ctx = std::make_unique<CJContext>(chainman.ActiveChainstate(), *node.connman, *node.mempool, *::masternodeSync, !ignores_incoming_txs);
 
 #ifdef ENABLE_WALLET
-    g_wallet_init_interface.InitCoinJoinSettings(*node.cj_ctx->clientman);
+    g_wallet_init_interface.InitCoinJoinSettings(*node.cj_ctx->walletman);
 #endif // ENABLE_WALLET
 
     // ********************************************************* Step 7d: Setup other Dash services
@@ -2319,7 +2319,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 #ifdef ENABLE_WALLET
     } else if (!ignores_incoming_txs) {
         node.scheduler->scheduleEvery(std::bind(&CCoinJoinClientQueueManager::DoMaintenance, std::ref(*node.cj_ctx->queueman)), std::chrono::seconds{1});
-        node.scheduler->scheduleEvery(std::bind(&CJClientManager::DoMaintenance, std::ref(*node.cj_ctx->clientman), std::ref(*node.fee_estimator)), std::chrono::seconds{1});
+        node.scheduler->scheduleEvery(std::bind(&CoinJoinWalletManager::DoMaintenance, std::ref(*node.cj_ctx->walletman), std::ref(*node.fee_estimator)), std::chrono::seconds{1});
 #endif // ENABLE_WALLET
     }
 
