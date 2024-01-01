@@ -334,6 +334,17 @@ void BitcoinApplication::requestShutdown()
     window->setClientModel(nullptr);
     pollShutdownTimer->stop();
 
+#ifdef ENABLE_WALLET
+    // Delete wallet controller here manually, instead of relying on Qt object
+    // tracking (https://doc.qt.io/qt-5/objecttrees.html). This makes sure
+    // walletmodel m_handle_* notification handlers are deleted before wallets
+    // are unloaded, which can simplify wallet implementations. It also avoids
+    // these notifications having to be handled while GUI objects are being
+    // destroyed, making GUI code less fragile as well.
+    delete m_wallet_controller;
+    m_wallet_controller = nullptr;
+#endif // ENABLE_WALLET
+
     delete clientModel;
     clientModel = nullptr;
 
@@ -412,6 +423,16 @@ WId BitcoinApplication::getMainWinId() const
         return 0;
 
     return window->winId();
+}
+
+bool BitcoinApplication::event(QEvent* e)
+{
+    if (e->type() == QEvent::Quit) {
+        requestShutdown();
+        return true;
+    }
+
+    return QApplication::event(e);
 }
 
 static void SetupUIArgs(ArgsManager& argsman)
