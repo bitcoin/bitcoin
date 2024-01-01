@@ -1632,7 +1632,7 @@ void CWallet::NewKeyPoolCallback()
 {
     // Note: GetClient(*this) can return nullptr when this wallet is in the middle of its creation.
     // Skipping stopMixing() is fine in this case.
-    if (std::unique_ptr<interfaces::CoinJoin::Client> coinjoin_client = coinjoin_loader().GetClient(*this)) {
+    if (std::unique_ptr<interfaces::CoinJoin::Client> coinjoin_client = coinjoin_loader().GetClient(GetName())) {
         coinjoin_client->stopMixing();
     }
     nKeysLeftSinceAutoBackup = 0;

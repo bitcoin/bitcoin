@@ -36,12 +36,12 @@ public:
     virtual void AddWallet(CWallet&) = 0;
     //! Remove wallet from CoinJoin client manager
     virtual void RemoveWallet(const std::string&) = 0;
-    virtual void FlushWallet(const CWallet&) = 0;
-    virtual std::unique_ptr<CoinJoin::Client> GetClient(const CWallet& wallet) = 0;
+    virtual void FlushWallet(const std::string&) = 0;
+    virtual std::unique_ptr<CoinJoin::Client> GetClient(const std::string&) = 0;
 };
 } // namespace CoinJoin
 
-std::unique_ptr<CoinJoin::Client> MakeCoinJoinClient(const CoinJoinWalletManager& walletman, const CWallet& wallet);
+std::unique_ptr<CoinJoin::Client> MakeCoinJoinClient(const CoinJoinWalletManager& walletman, const std::string& name);
 std::unique_ptr<CoinJoin::Loader> MakeCoinJoinLoader(CoinJoinWalletManager& walletman);
 
 } // namespace interfaces

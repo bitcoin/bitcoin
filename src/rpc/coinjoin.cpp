@@ -51,7 +51,7 @@ static UniValue coinjoin(const JSONRPCRequest& request)
         }
     }
 
-    auto cj_clientman = ::coinJoinWalletManager->Get(*wallet);
+    auto cj_clientman = ::coinJoinWalletManager->Get(wallet->GetName());
     CHECK_NONFATAL(cj_clientman != nullptr);
 
     if (request.params[0].get_str() == "start") {
@@ -163,7 +163,7 @@ static UniValue getcoinjoininfo(const JSONRPCRequest& request)
         return obj;
     }
 
-    auto manager = ::coinJoinWalletManager->Get(*wallet);
+    auto manager = ::coinJoinWalletManager->Get(wallet->GetName());
     CHECK_NONFATAL(manager != nullptr);
     manager->GetJsonInfo(obj);
 

@@ -207,7 +207,7 @@ void WalletInit::InitCoinJoinSettings(const CoinJoinWalletManager& cjwalletman) 
     }
     bool fAutoStart = gArgs.GetBoolArg("-coinjoinautostart", DEFAULT_COINJOIN_AUTOSTART);
     for (auto& pwallet : GetWallets()) {
-        auto manager = cjwalletman.Get(*pwallet);
+        auto manager = cjwalletman.Get(pwallet->GetName());
         assert(manager != nullptr);
         if (pwallet->IsLocked()) {
             manager->StopMixing();

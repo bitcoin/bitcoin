@@ -506,7 +506,7 @@ public:
     bool privateKeysDisabled() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS); }
     interfaces::CoinJoin::Client& coinJoin() override
     {
-        if (m_coinjoin_client == nullptr) m_coinjoin_client = interfaces::MakeCoinJoinClient(m_cjwalletman, *m_wallet);
+        if (m_coinjoin_client == nullptr) m_coinjoin_client = interfaces::MakeCoinJoinClient(m_cjwalletman, m_wallet->GetName());
         return *m_coinjoin_client;
     }
     CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }

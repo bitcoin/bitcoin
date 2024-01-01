@@ -141,7 +141,7 @@ void FlushWallets()
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         if (CCoinJoinClientOptions::IsEnabled()) {
             // Stop CoinJoin, release keys
-            pwallet->coinjoin_loader().FlushWallet(*pwallet);
+            pwallet->coinjoin_loader().FlushWallet(pwallet->GetName());
         }
         pwallet->Flush();
     }

@@ -87,12 +87,9 @@ public:
     void DoMaintenance(CBlockPolicyEstimator& fee_estimator);
 
     void Remove(const std::string& name);
-    void Flush(const CWallet& wallet);
+    void Flush(const std::string& name);
 
-    CCoinJoinClientManager* Get(const CWallet& wallet) const {
-        auto it = m_wallet_manager_map.find(wallet.GetName());
-        return (it != m_wallet_manager_map.end()) ? it->second.get() : nullptr;
-    }
+    CCoinJoinClientManager* Get(const std::string& name) const;
 
     const wallet_name_cjman_map& raw() const { return m_wallet_manager_map; }
 
@@ -162,7 +159,7 @@ private:
     void SetNull() EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
 public:
-    explicit CCoinJoinClientSession(CWallet& pwallet, CoinJoinWalletManager& walletman, const CMasternodeSync& mn_sync,
+    explicit CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletManager& walletman, const CMasternodeSync& mn_sync,
                                     const std::unique_ptr<CCoinJoinClientQueueManager>& queueman);
 
     void ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv);

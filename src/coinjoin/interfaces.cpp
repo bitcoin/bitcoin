@@ -75,13 +75,13 @@ public:
     {
         m_walletman.Remove(name);
     }
-    void FlushWallet(const CWallet& wallet) override
+    void FlushWallet(const std::string& name) override
     {
-        m_walletman.Flush(wallet);
+        m_walletman.Flush(name);
     }
-    std::unique_ptr<interfaces::CoinJoin::Client> GetClient(const CWallet& wallet) override
+    std::unique_ptr<interfaces::CoinJoin::Client> GetClient(const std::string& name) override
     {
-        return interfaces::MakeCoinJoinClient(m_walletman, wallet);
+        return interfaces::MakeCoinJoinClient(m_walletman, name);
     }
 };
 
@@ -89,9 +89,9 @@ public:
 } // namespace coinjoin
 
 namespace interfaces {
-std::unique_ptr<CoinJoin::Client> MakeCoinJoinClient(const CoinJoinWalletManager& walletman, const CWallet& wallet)
+std::unique_ptr<CoinJoin::Client> MakeCoinJoinClient(const CoinJoinWalletManager& walletman, const std::string& name)
 {
-    auto clientman = walletman.Get(wallet);
+    auto clientman = walletman.Get(name);
     return clientman ? std::make_unique<coinjoin::CoinJoinClientImpl>(*clientman) : nullptr;
 }
 std::unique_ptr<CoinJoin::Loader> MakeCoinJoinLoader(CoinJoinWalletManager& walletman) { return std::make_unique<coinjoin::CoinJoinLoaderImpl>(walletman); }
