@@ -15,6 +15,7 @@
 #include <governance/object.h>
 #include <init.h>
 #include <interfaces/chain.h>
+#include <interfaces/coinjoin.h>
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
 #include <llmq/chainlocks.h>
@@ -451,6 +452,7 @@ public:
     LLMQ& llmq() override { return m_llmq; }
     Masternode::Sync& masternodeSync() override { return m_masternodeSync; }
     CoinJoin::Options& coinJoinOptions() override { return m_coinjoin; }
+    std::unique_ptr<interfaces::CoinJoin::Loader>& coinJoinLoader() override { return m_context->coinjoin_loader; }
 
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {

@@ -15,6 +15,7 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 
+#include <interfaces/coinjoin.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
 #include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
@@ -411,7 +412,7 @@ void OptionsDialog::on_okButton_clicked()
 #ifdef ENABLE_WALLET
     if (m_enable_wallet) {
         for (auto& wallet : model->node().walletLoader().getWallets()) {
-            wallet->coinJoin().resetCachedBlocks();
+            model->node().coinJoinLoader()->GetClient(wallet->getWalletName())->resetCachedBlocks();
             wallet->markDirty();
         }
     }

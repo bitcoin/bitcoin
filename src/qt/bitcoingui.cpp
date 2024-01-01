@@ -33,6 +33,7 @@
 #include <functional>
 #include <chain.h>
 #include <chainparams.h>
+#include <interfaces/coinjoin.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <qt/governancelist.h>
@@ -1379,7 +1380,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
 #ifdef ENABLE_WALLET
     if (enableWallet) {
         for (const auto& wallet : m_node.walletLoader().getWallets()) {
-            disableAppNap |= wallet->coinJoin().isMixing();
+            disableAppNap |= m_node.coinJoinLoader()->GetClient(wallet->getWalletName())->isMixing();
         }
     }
 #endif // ENABLE_WALLET
