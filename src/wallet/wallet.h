@@ -10,8 +10,8 @@
 #include <amount.h>
 #include <governance/common.h>
 #include <interfaces/chain.h>
+#include <interfaces/coinjoin.h>
 #include <interfaces/handler.h>
-#include <interfaces/wallet.h>
 #include <policy/feerate.h>
 #include <psbt.h>
 #include <saltedhasher.h>

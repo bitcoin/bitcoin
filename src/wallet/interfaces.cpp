@@ -7,6 +7,7 @@
 #include <amount.h>
 #include <coinjoin/client.h>
 #include <interfaces/chain.h>
+#include <interfaces/coinjoin.h>
 #include <interfaces/handler.h>
 #include <policy/fees.h>
 #include <primitives/transaction.h>
@@ -119,75 +120,6 @@ WalletTxOut MakeWalletTxOut(const CWallet& wallet,
     result.is_spent = wallet.IsSpent(wtx.GetHash(), n);
     return result;
 }
-
-namespace CoinJoin = interfaces::CoinJoin;
-class CoinJoinClientImpl : public CoinJoin::Client
-{
-    CCoinJoinClientManager& m_clientman;
-
-public:
-    CoinJoinClientImpl(CCoinJoinClientManager& clientman)
-        : m_clientman(clientman) {}
-
-    void resetCachedBlocks() override
-    {
-        m_clientman.nCachedNumBlocks = std::numeric_limits<int>::max();
-    }
-    void resetPool() override
-    {
-        m_clientman.ResetPool();
-    }
-    void disableAutobackups() override
-    {
-        m_clientman.fCreateAutoBackups = false;
-    }
-    int getCachedBlocks() override
-    {
-        return m_clientman.nCachedNumBlocks;
-    }
-    std::string getSessionDenoms() override
-    {
-        return m_clientman.GetSessionDenoms();
-    }
-    void setCachedBlocks(int nCachedBlocks) override
-    {
-       m_clientman.nCachedNumBlocks = nCachedBlocks;
-    }
-    bool isMixing() override
-    {
-        return m_clientman.IsMixing();
-    }
-    bool startMixing() override
-    {
-        return m_clientman.StartMixing();
-    }
-    void stopMixing() override
-    {
-        m_clientman.StopMixing();
-    }
-};
-
-class CoinJoinLoaderImpl : public CoinJoin::Loader
-{
-    CoinJoinWalletManager& m_walletman;
-
-public:
-    CoinJoinLoaderImpl(CoinJoinWalletManager& walletman)
-        : m_walletman(walletman) {}
-
-    void AddWallet(CWallet& wallet) override
-    {
-        m_walletman.Add(wallet);
-    }
-    void RemoveWallet(const std::string& name) override
-    {
-        m_walletman.Remove(name);
-    }
-    std::unique_ptr<CoinJoin::Client> GetClient(const CWallet& wallet) override
-    {
-        return MakeCoinJoinClient(m_walletman, wallet);
-    }
-};
 
 class WalletImpl : public Wallet
 {
@@ -572,9 +504,9 @@ public:
     bool hdEnabled() override { return m_wallet->IsHDEnabled(); }
     bool canGetAddresses() override { return m_wallet->CanGetAddresses(); }
     bool privateKeysDisabled() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS); }
-    CoinJoin::Client& coinJoin() override
+    interfaces::CoinJoin::Client& coinJoin() override
     {
-        if (m_coinjoin_client == nullptr) m_coinjoin_client = MakeCoinJoinClient(m_cjwalletman, *m_wallet);
+        if (m_coinjoin_client == nullptr) m_coinjoin_client = interfaces::MakeCoinJoinClient(m_cjwalletman, *m_wallet);
         return *m_coinjoin_client;
     }
     CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
@@ -627,13 +559,13 @@ public:
 
     std::shared_ptr<CWallet> m_wallet;
     CoinJoinWalletManager& m_cjwalletman;
-    std::unique_ptr<CoinJoin::Client> m_coinjoin_client;
+    std::unique_ptr<interfaces::CoinJoin::Client> m_coinjoin_client;
 };
 
 class WalletLoaderImpl : public WalletLoader
 {
 public:
-    WalletLoaderImpl(Chain& chain, const std::unique_ptr<CoinJoin::Loader>& coinjoin_loader, ArgsManager& args) :
+    WalletLoaderImpl(Chain& chain, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader, ArgsManager& args) :
         m_context(coinjoin_loader)
     {
         m_context.chain = &chain;
@@ -713,13 +645,7 @@ public:
 
 namespace interfaces {
 std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(wallet, *::coinJoinWalletManager) : nullptr; }
-std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, const std::unique_ptr<CoinJoin::Loader>& coinjoin_loader, ArgsManager& args) {
+std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader, ArgsManager& args) {
     return std::make_unique<wallet::WalletLoaderImpl>(chain, coinjoin_loader, args);
 }
-std::unique_ptr<CoinJoin::Client> MakeCoinJoinClient(const CoinJoinWalletManager& walletman, const CWallet& wallet)
-{
-    auto clientman = walletman.Get(wallet);
-    return clientman ? std::make_unique<wallet::CoinJoinClientImpl>(*clientman) : nullptr;
-}
-std::unique_ptr<CoinJoin::Loader> MakeCoinJoinLoader(CoinJoinWalletManager& walletman) { return std::make_unique<wallet::CoinJoinLoaderImpl>(walletman); }
 } // namespace interfaces

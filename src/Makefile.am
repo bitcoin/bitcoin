@@ -211,6 +211,7 @@ BITCOIN_CORE_H = \
   indirectmap.h \
   init.h \
   interfaces/chain.h \
+  interfaces/coinjoin.h \
   interfaces/handler.h \
   interfaces/node.h \
   interfaces/wallet.h \
@@ -528,6 +529,7 @@ endif
 libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(SQLITE_CFLAGS)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
+  coinjoin/interfaces.cpp \
   hdchain.cpp \
   wallet/coincontrol.cpp \
   wallet/context.cpp \
