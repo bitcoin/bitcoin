@@ -403,11 +403,9 @@ libbitcoin_server_a_SOURCES = \
   blockencodings.cpp \
   blockfilter.cpp \
   chain.cpp \
-  coinjoin/client.cpp \
   coinjoin/coinjoin.cpp \
   coinjoin/context.cpp \
   coinjoin/server.cpp \
-  coinjoin/util.cpp \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
   deploymentstatus.cpp \
@@ -529,7 +527,9 @@ endif
 libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(SQLITE_CFLAGS)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
+  coinjoin/client.cpp \
   coinjoin/interfaces.cpp \
+  coinjoin/util.cpp \
   hdchain.cpp \
   wallet/coincontrol.cpp \
   wallet/context.cpp \
