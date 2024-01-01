@@ -105,8 +105,15 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
     {
         const CRPCCommand *pcmd = command.second;
         std::string strMethod = pcmd->name;
-        if ((strCommand != "" || pcmd->category == "hidden") && strMethod != strCommand)
-            continue;
+
+        const bool is_specific_command{strCommand != "" && strCommand != "helpdetail"};
+        const bool is_match{strMethod == strCommand};
+        const bool is_hidden{pcmd->category == "hidden"};
+        const bool is_detail{strCommand != ""};
+
+        if (is_specific_command && !is_match) continue;
+        if (!is_specific_command && is_hidden) continue;
+
         jreq.strMethod = strMethod;
         try
         {
@@ -118,8 +125,14 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
         {
             // Help text is returned in an exception
             std::string strHelp = std::string(e.what());
-            if (strCommand == "")
-            {
+            if (is_detail && !is_specific_command) {
+                // Full help for all commands, preface each with its category.
+                strRet += "== " + Capitalize(pcmd->category) + " ==\n";
+            }
+            if (!is_detail) {
+                // Print only the one-line summary for each RPC, which is
+                // the first line of its full help text, and also the
+                // category when entering a new category.
                 if (strHelp.find('\n') != std::string::npos)
                     strHelp = strHelp.substr(0, strHelp.find('\n'));
 
@@ -164,6 +177,60 @@ static RPCHelpMan help()
     }
 
     return tableRPC.help(strCommand, jsonRequest);
+},
+    };
+}
+
+std::string CRPCTable::helpdetail(const JSONRPCRequest& helpreq) const
+{
+    std::string strRet;
+    std::set<intptr_t> setDone;
+    std::vector<std::pair<std::string, const CRPCCommand*> > vCommands;
+    vCommands.reserve(mapCommands.size());
+
+    for (const auto& entry : mapCommands)
+        vCommands.emplace_back(entry.second.front()->category + entry.first, entry.second.front());
+    sort(vCommands.begin(), vCommands.end());
+
+    JSONRPCRequest jreq = helpreq;
+    jreq.mode = JSONRPCRequest::GET_HELP;
+    jreq.params = UniValue();
+
+    for (const std::pair<std::string, const CRPCCommand*>& command : vCommands)
+    {
+        const CRPCCommand *pcmd = command.second;
+        jreq.strMethod = pcmd->name;
+        try
+        {
+            UniValue unused_result;
+            if (setDone.insert(pcmd->unique_id).second || true)
+                pcmd->actor(jreq, unused_result, /*last_handler=*/true);
+        }
+        catch (const std::exception& e)
+        {
+            // Help text is returned in an exception
+            strRet += "== " + Capitalize(pcmd->category) + " ==\n";
+            strRet += std::string(e.what()) + '\n';
+        }
+    }
+    if (strRet.size() > 0) strRet = strRet.substr(0, strRet.size()-1);
+    return strRet;
+}
+
+static RPCHelpMan helpdetail()
+{
+    return RPCHelpMan{"helpdetail",
+                "\nList full help for all commands\n",
+                {},
+                {
+                    RPCResult{RPCResult::Type::STR, "", "The full help text"},
+                    RPCResult{RPCResult::Type::ANY, "", ""},
+                },
+                RPCExamples{""},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& jsonRequest) -> UniValue
+{
+    return tableRPC.help("helpdetail", jsonRequest);
+    return tableRPC.helpdetail(jsonRequest);
 },
     };
 }
@@ -262,6 +329,7 @@ static const CRPCCommand vRPCCommands[]{
     /* Overall control/query calls */
     {"control", &getrpcinfo},
     {"control", &help},
+    {"control", &helpdetail},
     {"control", &stop},
     {"control", &uptime},
 };

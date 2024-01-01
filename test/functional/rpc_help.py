@@ -125,6 +125,18 @@ class HelpRpcTest(BitcoinTestFramework):
                 # Make sure the node can generate the help at runtime without crashing
                 f.write(self.nodes[0].help(call))
 
+        help_detail = self.nodes[0].helpdetail()
+
+        # the test-only (hidden) RPCs should not appear in the result
+        assert "This RPC is for testing only" not in help_detail
+
+        # These strings should only appear in the full text
+        # (and not in the one-line summary "bitcoin-cli help")
+        assert "Arguments:" in help_detail
+        assert "Result" in help_detail
+        assert "The block size excluding witness data" in help_detail
+
+
     def wallet_help(self):
         assert 'getnewaddress ( "label" "address_type" )' in self.nodes[0].help('getnewaddress')
         self.restart_node(0, extra_args=['-nowallet=1'])

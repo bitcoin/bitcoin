@@ -136,6 +136,7 @@ private:
 public:
     CRPCTable();
     std::string help(const std::string& name, const JSONRPCRequest& helpreq) const;
+    std::string helpdetail(const JSONRPCRequest& helpreq) const;
 
     /**
      * Execute a method.

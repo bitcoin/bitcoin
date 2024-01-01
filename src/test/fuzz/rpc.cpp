@@ -150,6 +150,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "gettxoutsetinfo",
     "gettxspendingprevout",
     "help",
+    "helpdetail",
     "invalidateblock",
     "joinpsbts",
     "listbanned",
