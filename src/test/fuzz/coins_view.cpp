@@ -62,18 +62,21 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                     return;
                 }
                 Coin coin = random_coin;
-                bool expected_code_path = false;
                 const bool possible_overwrite = fuzzed_data_provider.ConsumeBool();
                 try {
                     coins_view_cache.AddCoin(random_out_point, std::move(coin), possible_overwrite);
-                    expected_code_path = true;
                 } catch (const std::logic_error& e) {
                     if (e.what() == std::string{"Attempted to overwrite an unspent coin (when possible_overwrite is false)"}) {
                         assert(!possible_overwrite);
-                        expected_code_path = true;
+                        // AddCoin() decreases cachedCoinsUsage by the memory usage of the old coin at the beginning and
+                        // increase it by the value of the new coin at the end. If it throws in the process, the value
+                        // of cachedCoinsUsage would have been incorrectly decreased, leading to an underflow later on.
+                        good_data = false;
+                        return;
+                    } else {
+                        throw e;
                     }
                 }
-                assert(expected_code_path);
             },
             [&] {
                 (void)coins_view_cache.Flush();
@@ -152,6 +155,8 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                 assert(expected_code_path);
             });
     }
+
+    if (!good_data) return;
 
     {
         const Coin& coin_using_access_coin = coins_view_cache.AccessCoin(random_out_point);
