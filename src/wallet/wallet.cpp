@@ -3958,30 +3958,33 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         }
     }
     for (const auto& [_pos, wtx] : wtxOrdered) {
-        if (!IsMine(*wtx->tx) && !IsFromMe(*wtx->tx)) {
-            // Check it is the watchonly wallet's
-            // solvable_wallet doesn't need to be checked because transactions for those scripts weren't being watched for
-            if (data.watchonly_wallet) {
-                LOCK(data.watchonly_wallet->cs_wallet);
-                if (data.watchonly_wallet->IsMine(*wtx->tx) || data.watchonly_wallet->IsFromMe(*wtx->tx)) {
-                    // Add to watchonly wallet
-                    const uint256& hash = wtx->GetHash();
-                    const CWalletTx& to_copy_wtx = *wtx;
-                    if (!data.watchonly_wallet->LoadToWallet(hash, [&](CWalletTx& ins_wtx, bool new_tx) EXCLUSIVE_LOCKS_REQUIRED(data.watchonly_wallet->cs_wallet) {
-                        if (!new_tx) return false;
-                        ins_wtx.SetTx(to_copy_wtx.tx);
-                        ins_wtx.CopyFrom(to_copy_wtx);
-                        return true;
-                    })) {
-                        error = strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex());
-                        return false;
-                    }
-                    watchonly_batch->WriteTx(data.watchonly_wallet->mapWallet.at(hash));
-                    // Mark as to remove from this wallet
-                    txids_to_delete.push_back(hash);
-                    continue;
+        // Check it is the watchonly wallet's
+        // solvable_wallet doesn't need to be checked because transactions for those scripts weren't being watched for
+        bool is_mine = IsMine(*wtx->tx) || IsFromMe(*wtx->tx);
+        if (data.watchonly_wallet) {
+            LOCK(data.watchonly_wallet->cs_wallet);
+            if (data.watchonly_wallet->IsMine(*wtx->tx) || data.watchonly_wallet->IsFromMe(*wtx->tx)) {
+                // Add to watchonly wallet
+                const uint256& hash = wtx->GetHash();
+                const CWalletTx& to_copy_wtx = *wtx;
+                if (!data.watchonly_wallet->LoadToWallet(hash, [&](CWalletTx& ins_wtx, bool new_tx) EXCLUSIVE_LOCKS_REQUIRED(data.watchonly_wallet->cs_wallet) {
+                    if (!new_tx) return false;
+                    ins_wtx.SetTx(to_copy_wtx.tx);
+                    ins_wtx.CopyFrom(to_copy_wtx);
+                    return true;
+                })) {
+                    error = strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex());
+                    return false;
                 }
+                watchonly_batch->WriteTx(data.watchonly_wallet->mapWallet.at(hash));
+                // Mark as to remove from the migrated wallet only if it does not also belong to it
+                if (!is_mine) {
+                    txids_to_delete.push_back(hash);
+                }
+                continue;
             }
+        }
+        if (!is_mine) {
             // Both not ours and not in the watchonly wallet
             error = strprintf(_("Error: Transaction %s in wallet cannot be identified to belong to migrated wallets"), wtx->GetHash().GetHex());
             return false;
