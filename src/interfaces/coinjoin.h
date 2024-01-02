@@ -38,10 +38,10 @@ public:
     virtual void RemoveWallet(const std::string&) = 0;
     virtual void FlushWallet(const std::string&) = 0;
     virtual std::unique_ptr<CoinJoin::Client> GetClient(const std::string&) = 0;
+    virtual CoinJoinWalletManager& walletman() = 0;
 };
 } // namespace CoinJoin
 
-std::unique_ptr<CoinJoin::Client> MakeCoinJoinClient(const CoinJoinWalletManager& walletman, const std::string& name);
 std::unique_ptr<CoinJoin::Loader> MakeCoinJoinLoader(CoinJoinWalletManager& walletman);
 
 } // namespace interfaces

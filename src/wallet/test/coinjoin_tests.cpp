@@ -7,6 +7,7 @@
 #include <amount.h>
 #include <coinjoin/client.h>
 #include <coinjoin/coinjoin.h>
+#include <coinjoin/context.h>
 #include <coinjoin/options.h>
 #include <coinjoin/util.h>
 #include <node/context.h>
@@ -207,8 +208,8 @@ public:
 
 BOOST_FIXTURE_TEST_CASE(coinjoin_manager_start_stop_tests, CTransactionBuilderTestSetup)
 {
-    BOOST_CHECK_EQUAL(::coinJoinWalletManager->raw().size(), 1);
-    auto& cj_man = ::coinJoinWalletManager->raw().begin()->second;
+    BOOST_CHECK_EQUAL(m_node.cj_ctx->walletman->raw().size(), 1);
+    auto& cj_man = m_node.cj_ctx->walletman->raw().begin()->second;
     BOOST_CHECK_EQUAL(cj_man->IsMixing(), false);
     BOOST_CHECK_EQUAL(cj_man->StartMixing(), true);
     BOOST_CHECK_EQUAL(cj_man->IsMixing(), true);

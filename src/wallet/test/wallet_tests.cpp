@@ -11,7 +11,9 @@
 #include <vector>
 
 #include <coinjoin/client.h>
+#include <coinjoin/context.h>
 #include <interfaces/chain.h>
+#include <interfaces/coinjoin.h>
 #include <key_io.h>
 #include <node/context.h>
 #include <policy/policy.h>
@@ -1335,8 +1337,7 @@ static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
     node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
     node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get());
     auto chain = interfaces::MakeChain(node);
-    auto coinjoin_loader = interfaces::MakeCoinJoinLoader(*::coinJoinWalletManager);
-    CWallet wallet(chain.get(), coinjoin_loader, "", CreateDummyWalletDatabase());
+    CWallet wallet(chain.get(), /*coinjoin_loader=*/ nullptr, "", CreateDummyWalletDatabase());
     AddKey(wallet, key);
     auto spk_man = wallet.GetLegacyScriptPubKeyMan();
     spk_man->AddCScript(inner_script);

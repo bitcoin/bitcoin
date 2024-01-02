@@ -8,7 +8,6 @@
 #include <amount.h>                    // For CAmount
 #include <fs.h>                        // For fs::path
 #include <interfaces/chain.h>          // For ChainClient
-#include <interfaces/coinjoin.h>       // For CoinJoin::*
 #include <pubkey.h>                    // For CKeyID and CScriptID (definitions needed in CTxDestination instantiation)
 #include <script/standard.h>           // For CTxDestination
 #include <support/allocators/secure.h> // For SecureString
@@ -48,6 +47,9 @@ struct WalletBalances;
 struct WalletTx;
 struct WalletTxOut;
 struct WalletTxStatus;
+namespace CoinJoin {
+class Loader;
+}
 
 using WalletOrderForm = std::vector<std::pair<std::string, std::string>>;
 using WalletValueMap = std::map<std::string, std::string>;
@@ -277,8 +279,6 @@ public:
 
     // Return whether private keys enabled.
     virtual bool privateKeysDisabled() = 0;
-
-    virtual CoinJoin::Client& coinJoin() = 0;
 
     //! Get max tx fee.
     virtual CAmount getDefaultMaxTxFee() = 0;

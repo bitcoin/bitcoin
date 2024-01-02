@@ -124,7 +124,7 @@ WalletTxOut MakeWalletTxOut(const CWallet& wallet,
 class WalletImpl : public Wallet
 {
 public:
-    explicit WalletImpl(const std::shared_ptr<CWallet>& wallet, CoinJoinWalletManager& cjwalletman) : m_wallet(wallet), m_cjwalletman(cjwalletman) {}
+    explicit WalletImpl(const std::shared_ptr<CWallet>& wallet) : m_wallet(wallet) {}
 
     void markDirty() override
     {
@@ -504,11 +504,6 @@ public:
     bool hdEnabled() override { return m_wallet->IsHDEnabled(); }
     bool canGetAddresses() override { return m_wallet->CanGetAddresses(); }
     bool privateKeysDisabled() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS); }
-    interfaces::CoinJoin::Client& coinJoin() override
-    {
-        if (m_coinjoin_client == nullptr) m_coinjoin_client = interfaces::MakeCoinJoinClient(m_cjwalletman, m_wallet->GetName());
-        return *m_coinjoin_client;
-    }
     CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
     void remove() override
     {
@@ -558,7 +553,6 @@ public:
     CWallet* wallet() override { return m_wallet.get(); }
 
     std::shared_ptr<CWallet> m_wallet;
-    CoinJoinWalletManager& m_cjwalletman;
     std::unique_ptr<interfaces::CoinJoin::Client> m_coinjoin_client;
 };
 
@@ -644,7 +638,7 @@ public:
 } // namespace wallet
 
 namespace interfaces {
-std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(wallet, *::coinJoinWalletManager) : nullptr; }
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(wallet) : nullptr; }
 std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader, ArgsManager& args) {
     return std::make_unique<wallet::WalletLoaderImpl>(chain, coinjoin_loader, args);
 }

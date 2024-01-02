@@ -303,7 +303,7 @@ public:
     //! Return interface for accessing masternode related handler.
     virtual Masternode::Sync& masternodeSync() = 0;
 
-    //! Return interface for accessing coinjoin related handler.
+    //! Return interface for accessing coinjoin options related handler.
     virtual CoinJoin::Options& coinJoinOptions() = 0;
 
     //! Return interface for accessing coinjoin loader handler.

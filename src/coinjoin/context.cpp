@@ -5,8 +5,8 @@
 #include <coinjoin/context.h>
 
 #include <net.h>
-#include <policy/fees.h>
 #include <txmempool.h>
+#include <validation.h>
 
 #ifdef ENABLE_WALLET
 #include <coinjoin/client.h>
@@ -15,20 +15,10 @@
 
 CJContext::CJContext(CChainState& chainstate, CConnman& connman, CTxMemPool& mempool, const CMasternodeSync& mn_sync, bool relay_txes) :
 #ifdef ENABLE_WALLET
-    walletman {
-        [&]() -> CoinJoinWalletManager* const {
-            assert(::coinJoinWalletManager == nullptr);
-            ::coinJoinWalletManager = std::make_unique<CoinJoinWalletManager>(connman, mempool, mn_sync, queueman);
-            return ::coinJoinWalletManager.get();
-        }()
-    },
+    walletman{std::make_unique<CoinJoinWalletManager>(connman, mempool, mn_sync, queueman)},
     queueman {relay_txes ? std::make_unique<CCoinJoinClientQueueManager>(connman, *walletman, mn_sync) : nullptr},
 #endif // ENABLE_WALLET
     server{std::make_unique<CCoinJoinServer>(chainstate, connman, mempool, mn_sync)}
 {}
 
-CJContext::~CJContext() {
-#ifdef ENABLE_WALLET
-    ::coinJoinWalletManager.reset();
-#endif // ENABLE_WALLET
-}
+CJContext::~CJContext() {}

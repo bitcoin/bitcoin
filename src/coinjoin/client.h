@@ -29,9 +29,6 @@ class UniValue;
 
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
-// The main object for accessing mixing
-extern std::unique_ptr<CoinJoinWalletManager> coinJoinWalletManager;
-
 class CPendingDsaRequest
 {
 private:

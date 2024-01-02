@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
 
 #include <interfaces/chain.h>
+#include <interfaces/coinjoin.h>
 #include <interfaces/wallet.h>
 #include <node/context.h>
 #include <test/util/setup_common.h>
