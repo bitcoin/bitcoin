@@ -20,6 +20,12 @@ class ArgsManager;
 struct bilingual_str;
 
 namespace wallet {
+// BytePrefix compares equality with other byte spans that begin with the same prefix.
+struct BytePrefix {
+    Span<const std::byte> prefix;
+};
+bool operator<(BytePrefix a, Span<const std::byte> b);
+bool operator<(Span<const std::byte> a, BytePrefix b);
 
 class DatabaseCursor
 {

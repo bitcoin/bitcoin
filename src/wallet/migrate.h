@@ -10,6 +10,9 @@
 #include <optional>
 
 namespace wallet {
+
+using BerkeleyROData = std::map<SerializeData, SerializeData, std::less<>>;
+
 /**
  * A class representing a BerkeleyDB file from which we can only read records.
  * This is used only for migration of legacy to descriptor wallets
@@ -26,6 +29,8 @@ public:
         if (open) Open();
     }
     ~BerkeleyRODatabase(){};
+
+    BerkeleyROData m_records;
 
     /** Open the database if it is not already opened. */
     void Open() override;
@@ -69,7 +74,15 @@ public:
 
 class BerkeleyROCursor : public DatabaseCursor
 {
+private:
+    const BerkeleyRODatabase& m_database;
+    BerkeleyROData::const_iterator m_cursor;
+    BerkeleyROData::const_iterator m_cursor_end;
+
 public:
+    explicit BerkeleyROCursor(const BerkeleyRODatabase& database, Span<const std::byte> prefix = {});
+    ~BerkeleyROCursor() {}
+
     Status Next(DataStream& key, DataStream& value) override;
 };
 
@@ -97,8 +110,8 @@ public:
     void Flush() override {}
     void Close() override {}
 
-    std::unique_ptr<DatabaseCursor> GetNewCursor() override { return std::make_unique<BerkeleyROCursor>(); }
-    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) override { return std::make_unique<BerkeleyROCursor>(); }
+    std::unique_ptr<DatabaseCursor> GetNewCursor() override { return std::make_unique<BerkeleyROCursor>(m_database); }
+    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) override;
     bool TxnBegin() override { return false; }
     bool TxnCommit() override { return false; }
     bool TxnAbort() override { return false; }
