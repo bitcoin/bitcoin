@@ -23,6 +23,7 @@
 #ifdef USE_BDB
 #include <wallet/bdb.h>
 #endif
+#include <wallet/migrate.h>
 #ifdef USE_SQLITE
 #include <wallet/sqlite.h>
 #endif
@@ -1389,6 +1390,11 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
         return nullptr;
     }
 
+    // If BERKELEY was the format, then change the format from BERKELEY to BERKELEY_RO
+    if (format && options.require_format && format == DatabaseFormat::BERKELEY && options.require_format == DatabaseFormat::BERKELEY_RO) {
+        format = DatabaseFormat::BERKELEY_RO;
+    }
+
     // A db already exists so format is set, but options also specifies the format, so make sure they agree
     if (format && options.require_format && format != options.require_format) {
         error = Untranslated(strprintf("Failed to load database path '%s'. Data is not in required format.", fs::PathToString(path)));
@@ -1420,6 +1426,10 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
             status = DatabaseStatus::FAILED_BAD_FORMAT;
             return nullptr;
         }
+    }
+
+    if (format == DatabaseFormat::BERKELEY_RO) {
+        return MakeBerkeleyRODatabase(path, options, status, error);
     }
 
 #ifdef USE_BDB

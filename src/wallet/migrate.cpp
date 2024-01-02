@@ -5,6 +5,7 @@
 #include <crypto/common.h> // For ReadBE32
 #include <logging.h>
 #include <streams.h>
+#include <util/translation.h>
 #include <wallet/migrate.h>
 
 #include <optional>
@@ -747,5 +748,19 @@ DatabaseCursor::Status BerkeleyROCursor::Next(DataStream& ssKey, DataStream& ssV
 std::unique_ptr<DatabaseCursor> BerkeleyROBatch::GetNewPrefixCursor(Span<const std::byte> prefix)
 {
     return std::make_unique<BerkeleyROCursor>(m_database, prefix);
+}
+
+std::unique_ptr<BerkeleyRODatabase> MakeBerkeleyRODatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
+{
+    fs::path data_file = BDBDataFile(path);
+    try {
+        std::unique_ptr<BerkeleyRODatabase> db = std::make_unique<BerkeleyRODatabase>(data_file);
+        status = DatabaseStatus::SUCCESS;
+        return db;
+    } catch (const std::runtime_error& e) {
+        error.original = e.what();
+        status = DatabaseStatus::FAILED_LOAD;
+        return nullptr;
+    }
 }
 } // namespace wallet
