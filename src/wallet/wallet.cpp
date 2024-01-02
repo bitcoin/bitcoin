@@ -4213,11 +4213,13 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     std::vector<bilingual_str> warnings;
 
     // If the wallet is still loaded, unload it so that nothing else tries to use it while we're changing it
+    bool was_loaded = false;
     if (auto wallet = GetWallet(context, wallet_name)) {
         if (!RemoveWallet(context, wallet, /*load_on_start=*/std::nullopt, warnings)) {
             return util::Error{_("Unable to unload the wallet before migrating")};
         }
         UnloadWallet(std::move(wallet));
+        was_loaded = true;
     }
 
     // Load the wallet but only in the context of this function.
@@ -4238,8 +4240,20 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         return util::Error{Untranslated("Wallet loading failed.") + Untranslated(" ") + error};
     }
 
+    // Helper to reload as normal for some of our exit scenarios
+    const auto& reload_wallet = [&](std::shared_ptr<CWallet>& to_reload) {
+        assert(to_reload.use_count() == 1);
+        std::string name = to_reload->GetName();
+        to_reload.reset();
+        to_reload = LoadWallet(context, name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
+        return to_reload != nullptr;
+    };
+
     // Before anything else, check if there is something to migrate.
     if (local_wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        if (was_loaded) {
+            reload_wallet(local_wallet);
+        }
         return util::Error{_("Error: This wallet is already a descriptor wallet")};
     }
 
@@ -4248,27 +4262,33 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     fs::path backup_filename = fs::PathFromString(strprintf("%s-%d.legacy.bak", wallet_name, GetTime()));
     fs::path backup_path = this_wallet_dir / backup_filename;
     if (!local_wallet->BackupWallet(fs::PathToString(backup_path))) {
+        if (was_loaded) {
+            reload_wallet(local_wallet);
+        }
         return util::Error{_("Error: Unable to make a backup of your wallet")};
     }
     res.backup_path = backup_path;
 
     bool success = false;
+
+    // Unlock the wallet if needed
+    if (local_wallet->IsLocked() && !local_wallet->Unlock(passphrase)) {
+        if (was_loaded) {
+            reload_wallet(local_wallet);
+        }
+        if (passphrase.find('\0') == std::string::npos) {
+            return util::Error{Untranslated("Error: Wallet decryption failed, the wallet passphrase was not provided or was incorrect.")};
+        } else {
+            return util::Error{Untranslated("Error: Wallet decryption failed, the wallet passphrase entered was incorrect. "
+                                            "The passphrase contains a null character (ie - a zero byte). "
+                                            "If this passphrase was set with a version of this software prior to 25.0, "
+                                            "please try again with only the characters up to — but not including — "
+                                            "the first null character.")};
+        }
+    }
+
     {
         LOCK(local_wallet->cs_wallet);
-
-        // Unlock the wallet if needed
-        if (local_wallet->IsLocked() && !local_wallet->Unlock(passphrase)) {
-            if (passphrase.find('\0') == std::string::npos) {
-                return util::Error{Untranslated("Error: Wallet decryption failed, the wallet passphrase was not provided or was incorrect.")};
-            } else {
-                return util::Error{Untranslated("Error: Wallet decryption failed, the wallet passphrase entered was incorrect. "
-                                                "The passphrase contains a null character (ie - a zero byte). "
-                                                "If this passphrase was set with a version of this software prior to 25.0, "
-                                                "please try again with only the characters up to — but not including — "
-                                                "the first null character.")};
-            }
-        }
-
         // First change to using SQLite
         if (!local_wallet->MigrateToSQLite(error)) return util::Error{error};
 
@@ -4286,24 +4306,19 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     std::set<fs::path> wallet_dirs;
     if (success) {
         // Migration successful, unload all wallets locally, then reload them.
-        const auto& reload_wallet = [&](std::shared_ptr<CWallet>& to_reload) {
-            assert(to_reload.use_count() == 1);
-            std::string name = to_reload->GetName();
-            wallet_dirs.insert(fs::PathFromString(to_reload->GetDatabase().Filename()).parent_path());
-            to_reload.reset();
-            to_reload = LoadWallet(context, name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
-            return to_reload != nullptr;
-        };
         // Reload the main wallet
+        wallet_dirs.insert(fs::PathFromString(local_wallet->GetDatabase().Filename()).parent_path());
         success = reload_wallet(local_wallet);
         res.wallet = local_wallet;
         res.wallet_name = wallet_name;
         if (success && res.watchonly_wallet) {
             // Reload watchonly
+            wallet_dirs.insert(fs::PathFromString(res.watchonly_wallet->GetDatabase().Filename()).parent_path());
             success = reload_wallet(res.watchonly_wallet);
         }
         if (success && res.solvables_wallet) {
             // Reload solvables
+            wallet_dirs.insert(fs::PathFromString(res.solvables_wallet->GetDatabase().Filename()).parent_path());
             success = reload_wallet(res.solvables_wallet);
         }
     }
