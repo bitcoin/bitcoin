@@ -219,12 +219,10 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
 
     updateCoinJoinProgress();
 
-    if (walletModel) {
-        int numISLocks = walletModel->getNumISLocks();
-        if(cachedNumISLocks != numISLocks) {
-            cachedNumISLocks = numISLocks;
-            ui->listTransactions->update();
-        }
+    int numISLocks = walletModel->getNumISLocks();
+    if(cachedNumISLocks != numISLocks) {
+        cachedNumISLocks = numISLocks;
+        ui->listTransactions->update();
     }
 }
 
@@ -638,7 +636,7 @@ void OverviewPage::toggleCoinJoin(){
         }
 
         // if wallet is locked, ask for a passphrase
-        if (walletModel && walletModel->getEncryptionStatus() == WalletModel::Locked)
+        if (walletModel->getEncryptionStatus() == WalletModel::Locked)
         {
             WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
             if(!ctx.isValid())

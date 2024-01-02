@@ -367,11 +367,6 @@ void CGovernanceManager::UpdateCachesAndClean()
     while (it != mapObjects.end()) {
         CGovernanceObject* pObj = &((*it).second);
 
-        if (!pObj) {
-            ++it;
-            continue;
-        }
-
         uint256 nHash = it->first;
         std::string strHash = nHash.ToString();
 

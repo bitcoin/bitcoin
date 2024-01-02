@@ -42,7 +42,7 @@ public:
     int32_t nHeight{0};
     uint256 merkleRootMNList;
     uint256 merkleRootQuorums;
-    uint32_t bestCLHeightDiff;
+    uint32_t bestCLHeightDiff{0};
     CBLSSignature bestCLSignature;
     CAmount creditPoolBalance{0};
 

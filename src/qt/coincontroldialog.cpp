@@ -481,7 +481,6 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
     unsigned int nBytesInputs   = 0;
     unsigned int nQuantity      = 0;
     bool fUnselectedSpent{false};
-    bool fUnselectedNonMixed{false};
 
     std::vector<COutPoint> vCoinControl;
     m_coin_control.ListSelected(vCoinControl);
@@ -575,7 +574,7 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
 
     // actually update labels
     int nDisplayUnit = BitcoinUnits::DASH;
-    if (model && model->getOptionsModel())
+    if (model->getOptionsModel())
         nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
 
     QLabel *l1 = dialog->findChild<QLabel *>("labelCoinControlQuantity");
@@ -638,10 +637,6 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
     if (fUnselectedSpent) {
         QMessageBox::warning(dialog, "CoinControl",
             tr("Some coins were unselected because they were spent."),
-            QMessageBox::Ok, QMessageBox::Ok);
-    } else if (fUnselectedNonMixed) {
-        QMessageBox::warning(dialog, "CoinControl",
-            tr("Some coins were unselected because they do not have enough mixing rounds."),
             QMessageBox::Ok, QMessageBox::Ok);
     }
 }

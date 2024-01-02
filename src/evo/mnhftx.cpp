@@ -330,12 +330,12 @@ std::optional<CMNHFManager::Signals> CMNHFManager::GetFromCache(const CBlockInde
 
 void CMNHFManager::AddToCache(const Signals& signals, const CBlockIndex* const pindex)
 {
+    assert(pindex != nullptr);
     const uint256& blockHash = pindex->GetBlockHash();
     {
         LOCK(cs_cache);
         mnhfCache.insert(blockHash, signals);
     }
-    assert(pindex != nullptr);
     {
         LOCK(cs_cache);
         if (ThresholdState::ACTIVE != v20_activation.State(pindex->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) return;

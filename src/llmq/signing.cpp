@@ -1020,7 +1020,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(const Consensus::LLMQParams&
         //Extract last 64 bits of selectionHash
         uint64_t b = selectionHash.GetUint64(3);
         //Take last n bits of b
-        uint64_t signer = (((1 << n) - 1) & (b >> (64 - n - 1)));
+        uint64_t signer = (((1ull << n) - 1) & (b >> (64 - n - 1)));
 
         if (signer > quorums.size()) {
             return nullptr;
