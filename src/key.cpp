@@ -369,6 +369,13 @@ ECDHSecret CKey::ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift, c
     return output;
 }
 
+CKey GenerateRandomKey(bool compressed) noexcept
+{
+    CKey key;
+    key.MakeNewKey(/*fCompressed=*/compressed);
+    return key;
+}
+
 bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {
     if (nDepth == std::numeric_limits<unsigned char>::max()) return false;
     out.nDepth = nDepth + 1;
@@ -420,8 +427,7 @@ void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
 }
 
 bool ECC_InitSanityCheck() {
-    CKey key;
-    key.MakeNewKey(true);
+    CKey key = GenerateRandomKey();
     CPubKey pubkey = key.GetPubKey();
     return key.VerifyPubKey(pubkey);
 }

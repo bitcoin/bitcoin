@@ -205,6 +205,8 @@ public:
                                        bool initiating) const;
 };
 
+CKey GenerateRandomKey(bool compressed = true) noexcept;
+
 struct CExtKey {
     unsigned char nDepth;
     unsigned char vchFingerprint[4];
