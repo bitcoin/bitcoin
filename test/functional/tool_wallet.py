@@ -21,6 +21,7 @@ from test_framework.util import (
 class ToolWalletTest(BitcoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
+        parser.add_argument("--bdbro", action="store_true", help="Use the BerkeleyRO internal parser when dumping a Berkeley DB wallet file")
 
     def set_test_params(self):
         self.num_nodes = 1
@@ -35,6 +36,8 @@ class ToolWalletTest(BitcoinTestFramework):
         default_args = ['-datadir={}'.format(self.nodes[0].datadir_path), '-chain=%s' % self.chain]
         if not self.options.descriptors and 'create' in args:
             default_args.append('-legacy')
+        if "dump" in args and self.options.bdbro:
+            default_args.append("-withinternalbdb")
 
         return subprocess.Popen([self.options.bitcoinwallet] + default_args + list(args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
