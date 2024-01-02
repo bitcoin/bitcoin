@@ -1,6 +1,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <compat/byteswap.h>
 #include <crypto/common.h> // For ReadBE32
 #include <logging.h>
 #include <streams.h>
@@ -94,6 +95,7 @@ public:
     unsigned char iv[20];          // Crypto IV
     unsigned char chksum[16];      // Checksum
 
+    bool other_endian;
     uint32_t expected_page_num;
 
     MetaPage(uint32_t expected_page_num) : expected_page_num(expected_page_num) {}
@@ -110,6 +112,8 @@ public:
         s >> pagesize;
         s >> encrypt_algo;
 
+        other_endian = magic == BTREE_MAGIC_OE;
+
         uint8_t uint8_type;
         s >> uint8_type;
         type = static_cast<PageType>(uint8_type);
@@ -124,6 +128,9 @@ public:
 
         uint32_t uint32_flags;
         s >> uint32_flags;
+        if (other_endian) {
+            uint32_flags = internal_bswap_32(uint32_flags);
+        }
         flags = static_cast<BTreeFlags>(uint32_flags);
 
         s >> uid;
@@ -137,6 +144,26 @@ public:
         s >> trash;
         s >> iv;
         s >> chksum;
+
+        if (other_endian) {
+            lsn_file = internal_bswap_32(lsn_file);
+            lsn_offset = internal_bswap_32(lsn_offset);
+            page_num = internal_bswap_32(page_num);
+            magic = internal_bswap_32(magic);
+            version = internal_bswap_32(version);
+            pagesize = internal_bswap_32(pagesize);
+            free_list = internal_bswap_32(free_list);
+            last_page = internal_bswap_32(last_page);
+            partitions = internal_bswap_32(partitions);
+            key_count = internal_bswap_32(key_count);
+            record_count = internal_bswap_32(record_count);
+            unused2 = internal_bswap_32(unused2);
+            minkey = internal_bswap_32(minkey);
+            re_len = internal_bswap_32(re_len);
+            re_pad = internal_bswap_32(re_pad);
+            root = internal_bswap_32(root);
+            crypto_magic = internal_bswap_32(crypto_magic);
+        }
 
         // Page number must match
         if (page_num != expected_page_num) {
@@ -180,6 +207,11 @@ public:
 
     static constexpr size_t SIZE = 3; // The record header is 3 bytes
 
+    bool other_endian;
+
+    RecordHeader(bool other_endian) : other_endian(other_endian) {}
+    RecordHeader() = delete;
+
     template <typename Stream>
     void Unserialize(Stream& s)
     {
@@ -189,6 +221,10 @@ public:
         s >> uint8_type;
         type = static_cast<RecordType>(uint8_type & ~static_cast<uint8_t>(RecordType::DELETE));
         deleted = uint8_type & static_cast<uint8_t>(RecordType::DELETE);
+
+        if (other_endian) {
+            len = internal_bswap_16(len);
+        }
     }
 };
 
@@ -236,6 +272,11 @@ public:
 
         data.resize(m_header.len);
         s.read(AsWritableBytes(Span(data.data(), data.size())));
+
+        if (m_header.other_endian) {
+            page_num = internal_bswap_32(page_num);
+            records = internal_bswap_32(records);
+        }
     }
 };
 
@@ -263,6 +304,11 @@ public:
         s >> unused2;
         s >> page_number;
         s >> item_len;
+
+        if (m_header.other_endian) {
+            page_number = internal_bswap_32(page_number);
+            item_len = internal_bswap_32(item_len);
+        }
     }
 };
 
@@ -283,8 +329,9 @@ public:
     static constexpr int64_t SIZE = 26; // The header is 26 bytes
 
     uint32_t expected_page_num;
+    bool other_endian;
 
-    PageHeader(uint32_t page_num) : expected_page_num(page_num) {}
+    PageHeader(uint32_t page_num, bool other_endian) : expected_page_num(page_num), other_endian(other_endian) {}
     PageHeader() = delete;
 
     template <typename Stream>
@@ -302,6 +349,16 @@ public:
         uint8_t uint8_type;
         s >> uint8_type;
         type = static_cast<PageType>(uint8_type);
+
+        if (other_endian) {
+            lsn_file = internal_bswap_32(lsn_file);
+            lsn_offset = internal_bswap_32(lsn_offset);
+            page_num = internal_bswap_32(page_num);
+            prev_page = internal_bswap_32(prev_page);
+            next_page = internal_bswap_32(next_page);
+            entries = internal_bswap_16(entries);
+            hf_offset = internal_bswap_16(hf_offset);
+        }
 
         if (expected_page_num != page_num) {
             throw std::runtime_error("Page number mismatch");
@@ -335,6 +392,9 @@ public:
             // Get the index
             uint16_t index;
             s >> index;
+            if (m_header.other_endian) {
+                index = internal_bswap_16(index);
+            }
             indexes.push_back(index);
             pos += sizeof(uint16_t);
 
@@ -346,7 +406,7 @@ public:
             s.ignore(to_jump);
 
             // Read the record
-            RecordHeader rec_hdr;
+            RecordHeader rec_hdr(m_header.other_endian);
             s >> rec_hdr;
             to_jump += RecordHeader::SIZE;
 
@@ -422,6 +482,9 @@ public:
             // Get the index
             uint16_t index;
             s >> index;
+            if (m_header.other_endian) {
+                index = internal_bswap_16(index);
+            }
             indexes.push_back(index);
             pos += sizeof(uint16_t);
 
@@ -433,7 +496,7 @@ public:
             s.ignore(to_jump);
 
             // Read the record
-            RecordHeader rec_hdr;
+            RecordHeader rec_hdr(m_header.other_endian);
             s >> rec_hdr;
             to_jump += RecordHeader::SIZE;
 
@@ -499,7 +562,7 @@ void BerkeleyRODatabase::Open()
 
     // Read the root page
     SeekToPage(db_file, outer_meta.root, page_size);
-    PageHeader header(outer_meta.root);
+    PageHeader header(outer_meta.root, outer_meta.other_endian);
     db_file >> header;
     if (header.type != PageType::BTREE_LEAF) {
         throw std::runtime_error("Unexpected outer database root page type");
@@ -558,7 +621,7 @@ void BerkeleyRODatabase::Open()
         // }
         pages.pop_back();
         SeekToPage(db_file, curr_page, page_size);
-        PageHeader header(curr_page);
+        PageHeader header(curr_page, inner_meta.other_endian);
         db_file >> header;
         switch (header.type) {
         case PageType::BTREE_INTERNAL: {
@@ -589,7 +652,7 @@ void BerkeleyRODatabase::Open()
                     uint32_t next_page = orec->page_number;
                     while (next_page != 0) {
                         SeekToPage(db_file, next_page, page_size);
-                        PageHeader opage_header(next_page);
+                        PageHeader opage_header(next_page, inner_meta.other_endian);
                         db_file >> opage_header;
                         if (opage_header.type != PageType::OVERFLOW_DATA) {
                             throw std::runtime_error("Bad overflow record page type");
