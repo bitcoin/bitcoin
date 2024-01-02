@@ -1,6 +1,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <logging.h>
 #include <wallet/migrate.h>
 
 namespace wallet {
@@ -16,7 +17,25 @@ std::unique_ptr<DatabaseBatch> BerkeleyRODatabase::MakeBatch(bool flush_on_close
 
 bool BerkeleyRODatabase::Backup(const std::string& dest) const
 {
-    return false;
+    fs::path src(m_filepath);
+    fs::path dst(fs::PathFromString(dest));
+
+    if (fs::is_directory(dst)) {
+        dst = BDBDataFile(dst);
+    }
+    try {
+        if (fs::exists(dst) && fs::equivalent(src, dst)) {
+            LogPrintf("cannot backup to wallet source file %s\n", fs::PathToString(dst));
+            return false;
+        }
+
+        fs::copy_file(src, dst, fs::copy_options::overwrite_existing);
+        LogPrintf("copied %s to %s\n", fs::PathToString(m_filepath), fs::PathToString(dst));
+        return true;
+    } catch (const fs::filesystem_error& e) {
+        LogPrintf("error copying %s to %s - %s\n", fs::PathToString(m_filepath), fs::PathToString(dst), fsbridge::get_filesystem_error_message(e));
+        return false;
+    }
 }
 
 bool BerkeleyROBatch::ReadKey(DataStream&& key, DataStream& value)
