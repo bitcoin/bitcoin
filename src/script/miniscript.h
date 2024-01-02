@@ -123,12 +123,12 @@ class Type {
     //! Internal bitmap of properties (see ""_mst operator for details).
     uint32_t m_flags;
 
+public:
     //! Internal constructor used by the ""_mst operator.
     explicit constexpr Type(uint32_t flags) : m_flags(flags) {}
 
-public:
     //! The only way to publicly construct a Type is using this literal operator.
-    friend constexpr Type operator"" _mst(const char* c, size_t l);
+    friend consteval Type operator"" _mst(const char* c, size_t l);
 
     //! Compute the type with the union of properties.
     constexpr Type operator|(Type x) const { return Type(m_flags | x.m_flags); }
@@ -150,7 +150,7 @@ public:
 };
 
 //! Literal operator to construct Type objects.
-inline constexpr Type operator"" _mst(const char* c, size_t l) {
+inline consteval Type operator"" _mst(const char* c, size_t l) {
     Type typ{0};
 
     for (const char *p = c; p < c + l; p++) {
