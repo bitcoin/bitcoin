@@ -157,6 +157,7 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
     }
 
     if (!good_data) return;
+    coins_view_cache.SanityCheck();
 
     {
         const Coin& coin_using_access_coin = coins_view_cache.AccessCoin(random_out_point);
