@@ -30,12 +30,12 @@ BOOST_AUTO_TEST_SUITE(blsct_txfactory_tests)
 //     auto recvAddress = std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(0).value());
 //
 //     auto out = blsct::CreateOutput(recvAddress, 1000, "test");
-//     BOOST_ASSERT(blsct_km->IsMine(out.out));
+//     BOOST_CHECK(blsct_km->IsMine(out.out));
 //
 //     auto hashId = blsct_km->GetHashId(out.out);
 //     blsct::SubAddress subAddressId;
 //
-//     BOOST_ASSERT(blsct_km->GetSubAddress(hashId, subAddressId));
+//     BOOST_CHECK(blsct_km->GetSubAddress(hashId, subAddressId));
 //
 //     auto result = blsct_km->RecoverOutputs({out.out});
 //
@@ -77,23 +77,23 @@ BOOST_AUTO_TEST_SUITE(blsct_txfactory_tests)
 //         CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
 //         coins_view_cache.SetBestBlock(InsecureRand256());
 //         coins_view_cache.AddCoin(outpoint, std::move(coin), true);
-//         BOOST_ASSERT(coins_view_cache.Flush());
+//         BOOST_CHECK(coins_view_cache.Flush());
 //     }
 //
 //     CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
-//     BOOST_ASSERT(tx.AddInput(coins_view_cache, outpoint));
+//     BOOST_CHECK(tx.AddInput(coins_view_cache, outpoint));
 //
 //     tx.AddOutput(recvAddress, 900 * COIN, "test");
 //
 //     auto finalTx = tx.BuildTx();
 //
-//     BOOST_ASSERT(finalTx.has_value());
-//     BOOST_ASSERT(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache));
+//     BOOST_CHECK(finalTx.has_value());
+//     BOOST_CHECK(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache));
 //
 //     bool fFoundChange = false;
 //
 //     // Wallet does not have the coins available yet
-//     BOOST_ASSERT(blsct::TxFactory::CreateTransaction(wallet, wallet->GetOrCreateBLSCTKeyMan(), recvAddress, 900 * COIN, "test") == std::nullopt);
+//     BOOST_CHECK(blsct::TxFactory::CreateTransaction(wallet, wallet->GetOrCreateBLSCTKeyMan(), recvAddress, 900 * COIN, "test") == std::nullopt);
 //
 //     auto result = blsct_km->RecoverOutputs(finalTx.value().vout);
 //
@@ -101,12 +101,12 @@ BOOST_AUTO_TEST_SUITE(blsct_txfactory_tests)
 //         if (res.message == "Change" && res.amount == (1000 - 900 - 0.006) * COIN) fFoundChange = true;
 //     }
 //
-//     BOOST_ASSERT(fFoundChange);
+//     BOOST_CHECK(fFoundChange);
 //
 //     wallet->transactionAddedToMempool(MakeTransactionRef(finalTx.value()));
 //
 //     // Wallet does not have the coins available yet (not confirmed in block)
-//     BOOST_ASSERT(blsct::TxFactory::CreateTransaction(wallet, wallet->GetOrCreateBLSCTKeyMan(), recvAddress, 900 * COIN, "test") == std::nullopt);
+//     BOOST_CHECK(blsct::TxFactory::CreateTransaction(wallet, wallet->GetOrCreateBLSCTKeyMan(), recvAddress, 900 * COIN, "test") == std::nullopt);
 // }
 
 // TODO: FIX THIS
@@ -140,18 +140,18 @@ BOOST_AUTO_TEST_SUITE(blsct_txfactory_tests)
 //         CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
 //         coins_view_cache.SetBestBlock(InsecureRand256());
 //         coins_view_cache.AddCoin(outpoint, std::move(coin), true);
-//         BOOST_ASSERT(coins_view_cache.Flush());
+//         BOOST_CHECK(coins_view_cache.Flush());
 //     }
 //
 //     CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
-//     BOOST_ASSERT(tx.AddInput(coins_view_cache, outpoint));
+//     BOOST_CHECK(tx.AddInput(coins_view_cache, outpoint));
 //
 //     tx.AddOutput(recvAddress, 900 * COIN, "test");
 //
 //     auto finalTx = tx.BuildTx();
 //
-//     BOOST_ASSERT(finalTx.has_value());
-//     BOOST_ASSERT(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache));
+//     BOOST_CHECK(finalTx.has_value());
+//     BOOST_CHECK(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache));
 //
 //     bool fFoundChange = false;
 //
@@ -161,12 +161,12 @@ BOOST_AUTO_TEST_SUITE(blsct_txfactory_tests)
 //         if (res.message == "Change" && res.amount == (1000 - 900 - 0.006) * COIN) fFoundChange = true;
 //     }
 //
-//     BOOST_ASSERT(fFoundChange);
+//     BOOST_CHECK(fFoundChange);
 //
 //     wallet->transactionAddedToMempool(MakeTransactionRef(finalTx.value()));
 //
 //     auto wtx = wallet->GetWalletTx(finalTx.value().GetHash());
-//     BOOST_ASSERT(wtx != nullptr);
+//     BOOST_CHECK(wtx != nullptr);
 //
 //     fFoundChange = false;
 //     uint32_t nChangePosition = 0;
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_SUITE(blsct_txfactory_tests)
 //         }
 //     }
 //
-//     BOOST_ASSERT(fFoundChange);
+//     BOOST_CHECK(fFoundChange);
 //
 //     auto tx2 = blsct::TxFactory(blsct_km);
 //     auto outpoint2 = COutPoint(finalTx.value().GetHash(), nChangePosition);
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_SUITE(blsct_txfactory_tests)
 //     coin2.out = finalTx.value().vout[nChangePosition];
 //     coins_view_cache.AddCoin(outpoint2, std::move(coin2), true);
 //
-//     BOOST_ASSERT(tx2.AddInput(coins_view_cache, outpoint2));
+//     BOOST_CHECK(tx2.AddInput(coins_view_cache, outpoint2));
 //
 //     blsct::SubAddress randomAddress(blsct::DoublePublicKey(MclG1Point::MapToPoint("test1"), MclG1Point::MapToPoint("test2")));
 //     tx2.AddOutput(randomAddress, 50 * COIN, "test");
@@ -196,8 +196,8 @@ BOOST_AUTO_TEST_SUITE(blsct_txfactory_tests)
 //     auto finalTx2 = tx2.BuildTx();
 //     wallet->transactionAddedToMempool(MakeTransactionRef(finalTx2.value()));
 //
-//     BOOST_ASSERT(wallet->GetDebit(CTransaction(finalTx2.value()), wallet::ISMINE_SPENDABLE_BLSCT) == (1000 - 900 - 0.006) * COIN);
-//     BOOST_ASSERT(TxGetCredit(*wallet, CTransaction(finalTx2.value()), wallet::ISMINE_SPENDABLE_BLSCT) == (1000 - 900 - 0.006 - 50 - 0.006) * COIN);
+//     BOOST_CHECK(wallet->GetDebit(CTransaction(finalTx2.value()), wallet::ISMINE_SPENDABLE_BLSCT) == (1000 - 900 - 0.006) * COIN);
+//     BOOST_CHECK(TxGetCredit(*wallet, CTransaction(finalTx2.value()), wallet::ISMINE_SPENDABLE_BLSCT) == (1000 - 900 - 0.006 - 50 - 0.006) * COIN);
 // }
 
 BOOST_AUTO_TEST_SUITE_END()

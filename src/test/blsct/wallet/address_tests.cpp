@@ -31,8 +31,8 @@ BOOST_FIXTURE_TEST_CASE(address_test, BasicTestingSetup)
     blsct::PublicKey viewKey;
     blsct::PublicKey spendKey;
 
-    BOOST_ASSERT(subAddressDoubleKey.GetViewKey(viewKey));
-    BOOST_ASSERT(subAddressDoubleKey.GetSpendKey(spendKey));
+    BOOST_CHECK(subAddressDoubleKey.GetViewKey(viewKey));
+    BOOST_CHECK(subAddressDoubleKey.GetSpendKey(spendKey));
 
     BOOST_CHECK(viewKey.ToString() == "809ad665b3de4e1d44d835f1b8de36aafeea3279871aeceb56dbdda90c0426c022e8a6dda7313dc5e4c1817287805e3b");
 

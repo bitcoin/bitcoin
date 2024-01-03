@@ -46,18 +46,18 @@ BOOST_AUTO_TEST_SUITE(blsct_validation_tests)
 //         CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
 //         coins_view_cache.SetBestBlock(InsecureRand256());
 //         coins_view_cache.AddCoin(outpoint, std::move(coin), true);
-//         BOOST_ASSERT(coins_view_cache.Flush());
+//         BOOST_CHECK(coins_view_cache.Flush());
 //     }
 //
 //     CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
-//     BOOST_ASSERT(tx.AddInput(coins_view_cache, outpoint));
+//     BOOST_CHECK(tx.AddInput(coins_view_cache, outpoint));
 //
 //     tx.AddOutput(recvAddress, 900 * COIN, "test");
 //
 //     auto finalTx = tx.BuildTx();
 //
-//     BOOST_ASSERT(finalTx.has_value());
-//     BOOST_ASSERT(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache));
+//     BOOST_CHECK(finalTx.has_value());
+//     BOOST_CHECK(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache));
 // }
 
 BOOST_FIXTURE_TEST_CASE(validation_reward_test, TestingSetup)
@@ -71,8 +71,8 @@ BOOST_FIXTURE_TEST_CASE(validation_reward_test, TestingSetup)
     tx.vout.push_back(out.out);
     tx.txSig = out.GetSignature();
 
-    BOOST_ASSERT(!blsct::VerifyTx(CTransaction(tx), coins_view_cache));
-    BOOST_ASSERT(blsct::VerifyTx(CTransaction(tx), coins_view_cache, 900 * COIN));
+    BOOST_CHECK(!blsct::VerifyTx(CTransaction(tx), coins_view_cache));
+    BOOST_CHECK(blsct::VerifyTx(CTransaction(tx), coins_view_cache, 900 * COIN));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
