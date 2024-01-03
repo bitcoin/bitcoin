@@ -58,10 +58,15 @@ store_path() {
 }
 
 
-# Set environment variables to point the NATIVE toolchain to the right
-# includes/libs
-NATIVE_GCC="$(store_path gcc-toolchain)"
-NATIVE_GCC_STATIC="$(store_path gcc-toolchain static)"
+case "$HOST" in
+    *darwin*) ;;
+    *)
+        # Set environment variables to point the NATIVE toolchain to the right
+        # includes/libs
+        NATIVE_GCC="$(store_path gcc-toolchain)"
+        NATIVE_GCC_STATIC="$(store_path gcc-toolchain static)"
+        ;;
+esac
 
 unset LIBRARY_PATH
 unset CPATH
