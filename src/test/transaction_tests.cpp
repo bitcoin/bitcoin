@@ -487,8 +487,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
     CMutableTransaction mtx;
     mtx.nVersion = 1;
 
-    CKey key;
-    key.MakeNewKey(true); // Need to use compressed keys in segwit or the signing will fail
+    CKey key = GenerateRandomKey(); // Need to use compressed keys in segwit or the signing will fail
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKeyPubKey(key, key.GetPubKey()));
     CKeyID hash = key.GetPubKey().GetID();
@@ -564,18 +563,16 @@ SignatureData CombineSignatures(const CMutableTransaction& input1, const CMutabl
 BOOST_AUTO_TEST_CASE(test_witness)
 {
     FillableSigningProvider keystore, keystore2;
-    CKey key1, key2, key3, key1L, key2L;
-    CPubKey pubkey1, pubkey2, pubkey3, pubkey1L, pubkey2L;
-    key1.MakeNewKey(true);
-    key2.MakeNewKey(true);
-    key3.MakeNewKey(true);
-    key1L.MakeNewKey(false);
-    key2L.MakeNewKey(false);
-    pubkey1 = key1.GetPubKey();
-    pubkey2 = key2.GetPubKey();
-    pubkey3 = key3.GetPubKey();
-    pubkey1L = key1L.GetPubKey();
-    pubkey2L = key2L.GetPubKey();
+    CKey key1 = GenerateRandomKey();
+    CKey key2 = GenerateRandomKey();
+    CKey key3 = GenerateRandomKey();
+    CKey key1L = GenerateRandomKey(/*compressed=*/false);
+    CKey key2L = GenerateRandomKey(/*compressed=*/false);
+    CPubKey pubkey1 = key1.GetPubKey();
+    CPubKey pubkey2 = key2.GetPubKey();
+    CPubKey pubkey3 = key3.GetPubKey();
+    CPubKey pubkey1L = key1L.GetPubKey();
+    CPubKey pubkey2L = key2L.GetPubKey();
     BOOST_CHECK(keystore.AddKeyPubKey(key1, pubkey1));
     BOOST_CHECK(keystore.AddKeyPubKey(key2, pubkey2));
     BOOST_CHECK(keystore.AddKeyPubKey(key1L, pubkey1L));
@@ -756,8 +753,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
     t.vout.resize(1);
     t.vout[0].nValue = 90*CENT;
-    CKey key;
-    key.MakeNewKey(true);
+    CKey key = GenerateRandomKey();
     t.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
 
     constexpr auto CheckIsStandard = [](const auto& t) {

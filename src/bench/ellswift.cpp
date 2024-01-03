@@ -11,9 +11,7 @@ static void EllSwiftCreate(benchmark::Bench& bench)
 {
     ECC_Start();
 
-    CKey key;
-    key.MakeNewKey(true);
-
+    CKey key = GenerateRandomKey();
     uint256 entropy = GetRandHash();
 
     bench.batch(1).unit("pubkey").run([&] {

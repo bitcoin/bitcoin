@@ -150,7 +150,7 @@ protected:
     virtual void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex) {}
     /**
      * Notifies listeners of a block being disconnected
-     *  Provides the block that was connected.
+     * Provides the block that was disconnected.
      *
      * Called on a background thread. Only called for the active chainstate, since
      * background chainstates should never disconnect blocks.

@@ -18,6 +18,7 @@
 #include <consensus/consensus.h>
 #include <crypto/sha256.h>
 #include <i2p.h>
+#include <key.h>
 #include <logging.h>
 #include <memusage.h>
 #include <net_permissions.h>
@@ -942,13 +943,6 @@ public:
 };
 
 const V2MessageMap V2_MESSAGE_MAP;
-
-CKey GenerateRandomKey() noexcept
-{
-    CKey key;
-    key.MakeNewKey(/*fCompressed=*/true);
-    return key;
-}
 
 std::vector<uint8_t> GenerateRandomGarbage() noexcept
 {

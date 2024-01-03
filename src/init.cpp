@@ -313,7 +313,7 @@ void Shutdown(NodeContext& node)
         DumpMempool(*node.mempool, MempoolPath(*node.args));
     }
 
-    // Drop transactions we were still watching, record fee estimations and Unregister
+    // Drop transactions we were still watching, record fee estimations and unregister
     // fee estimator from validation interface.
     if (node.fee_estimator) {
         node.fee_estimator->Flush();
