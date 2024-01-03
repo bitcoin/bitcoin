@@ -195,9 +195,6 @@ task:
 
 task:
   name: '[previous releases, dev package and depends packages, DEBUG] [focal]'
-  previous_releases_cache:
-    folder: "releases"
-    fingerprint_script: echo $CIRRUS_TASK_NAME $(git rev-parse HEAD:depends)
   << : *GLOBAL_TASK_TEMPLATE
   << : *PERSISTENT_WORKER_TEMPLATE
   env:
