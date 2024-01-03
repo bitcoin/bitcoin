@@ -6,7 +6,7 @@
 #ifndef BITCOIN_KEY_IO_H
 #define BITCOIN_KEY_IO_H
 
-#include <bech32_mod.h>
+#include <blsct/bech32_mod.h>
 #include <blsct/double_public_key.h>
 #include <chainparams.h>
 #include <key.h>

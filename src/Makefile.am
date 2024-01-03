@@ -154,7 +154,6 @@ BITCOIN_CORE_H = \
   banman.h \
   base58.h \
   bech32.h \
-  bech32_mod.h \
   blockencodings.h \
   blockfilter.h \
   blsct/arith/mcl/mcl.h \
@@ -164,6 +163,7 @@ BITCOIN_CORE_H = \
   blsct/arith/mcl/mcl_util.h \
   blsct/arith/elements.h \
   blsct/arith/endianness.h \
+  blsct/bech32_mod.h \
   blsct/building_block/fiat_shamir.h \
   blsct/building_block/generator_deriver.h \
   blsct/building_block/g_h_gi_hi_zero_verifier.h \
@@ -822,8 +822,8 @@ libbitcoin_common_a_SOURCES = \
   bech32.cpp \
   blsct/arith/mcl/mcl_g1point.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
-  bech32_mod.cpp \
   blsct/arith/elements.cpp \
+  blsct/bech32_mod.cpp \
   blsct/building_block/generator_deriver.cpp \
   blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
   blsct/building_block/imp_inner_prod_arg.cpp \
