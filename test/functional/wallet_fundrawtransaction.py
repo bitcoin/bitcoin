@@ -6,6 +6,7 @@
 
 
 from decimal import Decimal
+from itertools import product
 from math import ceil
 
 from test_framework.descriptors import descsum_create
@@ -14,6 +15,7 @@ from test_framework.messages import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_approx,
     assert_equal,
     assert_fee_amount,
     assert_greater_than,
