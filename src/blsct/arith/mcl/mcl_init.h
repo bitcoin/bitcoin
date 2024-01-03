@@ -15,7 +15,7 @@
  * Create an instance of this class somewhere at the beginning
  * of the execution of an executable to initialize Mcl library.
  * volatile keyword is necessary to protect the instance from
- * comipler optimization. e.g.
+ * compiler optimization. e.g.
  *
  * ```
  * void main() {
