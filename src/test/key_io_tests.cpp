@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(key_io_invalid)
         std::string exp_base58string = test[0].get_str();
 
         // must be invalid as public and as private key
-        for (const auto& chain : {ChainType::MAIN, ChainType::TESTNET, ChainType::SIGNET, ChainType::REGTEST}) {
+        for (const auto& chain : {ChainType::MAIN, ChainType::TESTNET, ChainType::SIGNET, ChainType::REGTEST, ChainType::BLSCTREGTEST}) {
             SelectParams(chain);
             destination = DecodeDestination(exp_base58string);
             BOOST_CHECK_MESSAGE(!IsValidDestination(destination), "IsValid pubkey in mainnet:" + strTest);

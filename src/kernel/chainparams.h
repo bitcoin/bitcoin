@@ -86,6 +86,7 @@ public:
         SECRET_KEY,
         EXT_PUBLIC_KEY,
         EXT_SECRET_KEY,
+        BLSCT_ADDRESS,
 
         MAX_BASE58_TYPES
     };
@@ -157,7 +158,17 @@ public:
         bool fastprune{false};
     };
 
+    /**
+     * BLSCTRegTestOptions holds configurations for creating a regtest BLSCT CChainParams.
+     */
+    struct BLSCTRegTestOptions {
+        std::unordered_map<Consensus::DeploymentPos, VersionBitsParameters> version_bits_parameters{};
+        std::unordered_map<Consensus::BuriedDeployment, int> activation_heights{};
+        bool fastprune{false};
+    };
+
     static std::unique_ptr<const CChainParams> RegTest(const RegTestOptions& options);
+    static std::unique_ptr<const CChainParams> BLSCTRegTest(const BLSCTRegTestOptions& options);
     static std::unique_ptr<const CChainParams> SigNet(const SigNetOptions& options);
     static std::unique_ptr<const CChainParams> Main();
     static std::unique_ptr<const CChainParams> TestNet();

@@ -69,6 +69,11 @@ Signature PrivateKey::SignBalance() const
     return CoreSign(Common::BLSCTBALANCE);
 }
 
+Signature PrivateKey::Sign(const uint256& msg) const
+{
+    return Sign(Message(msg.begin(), msg.end()));
+}
+
 Signature PrivateKey::Sign(const Message& msg) const
 {
     auto pk = GetPublicKey();
@@ -77,8 +82,9 @@ Signature PrivateKey::Sign(const Message& msg) const
     return sig;
 }
 
-bool PrivateKey::VerifyPubKey(const PublicKey& pk) const {
+bool PrivateKey::VerifyPubKey(const PublicKey& pk) const
+{
     return GetPublicKey() == pk;
 }
 
-}  // namespace blsct
+} // namespace blsct

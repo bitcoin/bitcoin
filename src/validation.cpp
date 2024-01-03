@@ -1101,6 +1101,12 @@ bool MemPoolAccept::ConsensusScriptChecks(const ATMPArgs& args, Workspace& ws)
         return Assume(false);
     }
 
+    if (args.m_chainparams.GetConsensus().fBLSCT) {
+        if (!blsct::VerifyTx(tx, m_view)) {
+            return Assume(false);
+        }
+    }
+
     return true;
 }
 
@@ -2438,6 +2444,21 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
                     tx.GetHash().ToString(), state.ToString());
             }
             control.Add(std::move(vChecks));
+
+            if (tx.IsBLSCT()) {
+                if (params.GetConsensus().fBLSCT) {
+                    if (!blsct::VerifyTx(tx, view, 0)) {
+                        return error("ConnectBlock(): VerifyTx on transaction %s failed",
+                                     tx.GetHash().ToString());
+                    }
+                } else {
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "blsct-tx-not-allowed");
+                }
+            } else {
+                if (params.GetConsensus().fBLSCT) {
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "non-blsct-tx-not-allowed");
+                }
+            }
         }
 
         CTxUndo undoDummy;
@@ -2455,7 +2476,12 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<MillisecondsDouble>(time_connect) / num_blocks_total);
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, params.GetConsensus());
-    if (block.vtx[0]->GetValueOut() > blockReward) {
+    if (block.IsBLSCT()) {
+        if (!blsct::VerifyTx(*block.vtx[0], view, nFees + params.GetConsensus().nBLSCTBlockReward)) {
+            return error("ConnectBlock(): VerifyTx on coinbase of block %s failed",
+                         block.GetHash().ToString());
+        }
+    } else if (block.vtx[0]->GetValueOut() > blockReward) {
         LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)\n", block.vtx[0]->GetValueOut(), blockReward);
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
     }
@@ -3643,6 +3669,10 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
 
 static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
+    if ((consensusParams.fBLSCT && !(block.nVersion & VERSIONBITS_TOP_BLSCT_BITS)) || (!consensusParams.fBLSCT && block.nVersion & VERSIONBITS_TOP_BLSCT_BITS)) {
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "blsct-block-version", "wrong blsct block version");
+    }
+
     // Check proof of work matches claimed amount
     if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
@@ -3698,11 +3728,14 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         if (block.vtx[i]->IsCoinBase())
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-multiple", "more than one coinbase");
 
+    if (consensusParams.fBLSCT && block.vtx.size() > 2) return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "multiple-tx", "more than two transactions in blsct block");
+
     // Check transactions
     // Must check for duplicate inputs (see CVE-2018-17144)
+
     for (const auto& tx : block.vtx) {
         TxValidationState tx_state;
-        if (!CheckTransaction(*tx, tx_state)) {
+        if (!CheckTransaction(*tx, tx_state, consensusParams.fBLSCT)) {
             // CheckBlock() does context-free validation checks. The only
             // possible failures are consensus failures.
             assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS);
@@ -3860,8 +3893,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     }
 
     // Enforce rule that the coinbase starts with serialized block height
-    if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_HEIGHTINCB))
-    {
+    if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_HEIGHTINCB)) {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
             !std::equal(expect.begin(), expect.end(), block.vtx[0]->vin[0].scriptSig.begin())) {

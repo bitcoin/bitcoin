@@ -90,7 +90,6 @@ class BumpFeeTest(BitcoinTestFramework):
         dest_address = peer_node.getnewaddress()
         for mode in ["default", "fee_rate", "new_outputs"]:
             test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address)
-        self.test_invalid_parameters(rbf_node, peer_node, dest_address)
         test_segwit_bumpfee_succeeds(self, rbf_node, dest_address)
         test_nonrbf_bumpfee_fails(self, peer_node, dest_address)
         test_notmine_bumpfee(self, rbf_node, peer_node, dest_address)

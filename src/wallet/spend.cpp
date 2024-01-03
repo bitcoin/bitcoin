@@ -334,8 +334,9 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
         // We should not consider coins which aren't at least in our mempool
         // It's possible for these to be conflicted via ancestors which we may never be able to detect
-        if (nDepth == 0 && !wtx.InMempool())
+        if (nDepth == 0 && !wtx.InMempool()) {
             continue;
+        }
 
         bool safeTx = CachedTxIsTrusted(wallet, wtx, trusted_parents);
 
@@ -384,7 +385,8 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             const CTxOut& output = wtx.tx->vout[i];
             const COutPoint outpoint(Txid::FromUint256(txid), i);
 
-            if (output.nValue < params.min_amount || output.nValue > params.max_amount)
+            auto nValue = output.IsBLSCT() ? wtx.GetBLSCTRecoveryData(i).amount : output.nValue;
+            if (nValue < params.min_amount || nValue > params.max_amount)
                 continue;
 
             // Skip manually selected coins (the caller can fetch them directly)
@@ -398,8 +400,15 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                 continue;
 
             isminetype mine = wallet.IsMine(output);
-
             if (mine == ISMINE_NO) {
+                continue;
+            }
+
+            if (params.only_blsct && !output.IsBLSCT()) {
+                continue;
+            }
+
+            if (params.token_id != output.tokenId) {
                 continue;
             }
 
@@ -410,10 +419,8 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(output.scriptPubKey);
 
             int input_bytes = CalculateMaximumSignedInputSize(output, COutPoint(), provider.get(), can_grind_r, coinControl);
-            // Because CalculateMaximumSignedInputSize infers a solvable descriptor to get the satisfaction size,
-            // it is safe to assume that this input is solvable if input_bytes is greater than -1.
-            bool solvable = input_bytes > -1;
-            bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
+            bool solvable = provider ? InferDescriptor(output.scriptPubKey, *provider)->IsSolvable() : false;
+            bool spendable = ((mine & (ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT)) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
 
             // Filter by spendable outputs only
             if (!spendable && params.only_spendable) continue;
@@ -430,6 +437,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             if (type == TxoutType::SCRIPTHASH && solvable) {
                 CScript script;
                 if (!provider->GetCScript(CScriptID(uint160(script_solutions[0])), script)) continue;
+
                 type = Solver(script, script_solutions);
                 is_from_p2sh = true;
             }

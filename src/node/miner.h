@@ -6,6 +6,7 @@
 #ifndef BITCOIN_NODE_MINER_H
 #define BITCOIN_NODE_MINER_H
 
+#include <blsct/wallet/txfactory.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <txmempool.h>
@@ -166,6 +167,7 @@ public:
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
     std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
+    std::unique_ptr<CBlockTemplate> CreateNewBLSCTPOWBlock(const blsct::SubAddress& destination, CAmount nReward, const std::vector<CMutableTransaction>& txns);
 
     inline static std::optional<int64_t> m_last_block_num_txs{};
     inline static std::optional<int64_t> m_last_block_weight{};

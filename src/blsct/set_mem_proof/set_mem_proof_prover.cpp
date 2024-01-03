@@ -258,6 +258,8 @@ bool SetMemProofProver<T>::Verify(
 ) {
     using LazyPoint = LazyPoint<T>;
 
+    if (proof.Ls.Size() != proof.Rs.Size()) return false;
+
     size_t n = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(Ys_src.Size());
     if (n > setup.N) {
         throw std::runtime_error(std::string(__func__) + ": # of commitments exceeds the setup maximum");
@@ -320,7 +322,7 @@ retry:
 
         Scalars xs;
         {
-            auto maybe_xs = ImpInnerProdArg::GenAllRoundXs<T>(num_rounds, proof.Ls, proof.Rs, fiat_shamir);
+            auto maybe_xs = ImpInnerProdArg::GenAllRoundXs<T>(proof.Ls, proof.Rs, fiat_shamir);
             if (!maybe_xs.has_value()) goto retry;
             xs = maybe_xs.value();
         }

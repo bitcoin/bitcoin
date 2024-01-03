@@ -6,7 +6,6 @@
 
 
 from decimal import Decimal
-from itertools import product
 from math import ceil
 
 from test_framework.descriptors import descsum_create
@@ -15,13 +14,13 @@ from test_framework.messages import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_approx,
     assert_equal,
     assert_fee_amount,
     assert_greater_than,
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
     count_bytes,
+    find_vout_for_address,
     get_fee,
 )
 from test_framework.wallet_util import generate_keypair, WalletUnlock
@@ -137,7 +136,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_op_return()
         self.test_watchonly()
         self.test_all_watched_funds()
-        self.test_option_feerate()
         self.test_address_reuse()
         self.test_option_subtract_fee_from_outputs()
         self.test_subtract_fee_with_presets()

@@ -6,8 +6,13 @@
 #define BITCOIN_WALLET_TRANSACTION_H
 
 #include <attributes.h>
+#include <bitset>
+#include <blsct/range_proof/bulletproofs/range_proof_logic.h>
 #include <consensus/amount.h>
+#include <cstdint>
 #include <primitives/transaction.h>
+#include <serialize.h>
+#include <threadsafety.h>
 #include <tinyformat.h>
 #include <uint256.h>
 #include <util/overloaded.h>
@@ -256,9 +261,17 @@ public:
     }
 
     CTransactionRef tx;
+    std::map<uint32_t, range_proof::RecoveredData<Mcl>> blsctRecoveryData;
     TxState m_state;
 
-    template<typename Stream>
+    range_proof::RecoveredData<Mcl> GetBLSCTRecoveryData(const uint32_t& forOutput) const
+    {
+        if (blsctRecoveryData.find(forOutput) == blsctRecoveryData.end())
+            return range_proof::RecoveredData<Mcl>{0, 0, 0, ""};
+        return blsctRecoveryData.at(forOutput);
+    };
+
+    template <typename Stream>
     void Serialize(Stream& s) const
     {
         mapValue_t mapValueCopy = mapValue;
@@ -276,7 +289,7 @@ public:
         bool dummy_bool = false; //!< Used to be fSpent
         uint256 serializedHash = TxStateSerializedBlockHash(m_state);
         int serializedIndex = TxStateSerializedIndex(m_state);
-        s << TX_WITH_WITNESS(tx) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << mapValueCopy << vOrderForm << fTimeReceivedIsTxTime << nTimeReceived << fFromMe << dummy_bool;
+        s << TX_WITH_WITNESS(tx) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << mapValueCopy << vOrderForm << fTimeReceivedIsTxTime << nTimeReceived << fFromMe << dummy_bool << blsctRecoveryData;
     }
 
     template<typename Stream>
@@ -289,7 +302,7 @@ public:
         bool dummy_bool; //! Used to be fSpent
         uint256 serialized_block_hash;
         int serializedIndex;
-        s >> TX_WITH_WITNESS(tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> mapValue >> vOrderForm >> fTimeReceivedIsTxTime >> nTimeReceived >> fFromMe >> dummy_bool;
+        s >> TX_WITH_WITNESS(tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> mapValue >> vOrderForm >> fTimeReceivedIsTxTime >> nTimeReceived >> fFromMe >> dummy_bool >> blsctRecoveryData;
 
         m_state = TxStateInterpretSerialized({serialized_block_hash, serializedIndex});
 
@@ -342,6 +355,21 @@ public:
     const Txid& GetHash() const LIFETIMEBOUND { return tx->GetHash(); }
     const Wtxid& GetWitnessHash() const LIFETIMEBOUND { return tx->GetWitnessHash(); }
     bool IsCoinBase() const { return tx->IsCoinBase(); }
+
+    CAmount GetValueOut() const
+    {
+        CAmount ret = 0;
+        size_t i = 0;
+        for (auto& output : tx->vout) {
+            if (tx->IsBLSCT() && output.scriptPubKey.IsFee()) {
+                i++;
+                continue;
+            }
+            ret += output.IsBLSCT() ? GetBLSCTRecoveryData(i).amount : output.nValue;
+            i++;
+        }
+        return ret;
+    }
 
 private:
     // Disable copying of CWalletTx objects to prevent bugs where instances get

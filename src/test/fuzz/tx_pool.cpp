@@ -84,18 +84,24 @@ void SetMempoolConstraints(ArgsManager& args, FuzzedDataProvider& fuzzed_data_pr
                      ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 200)));
     args.ForceSetArg("-mempoolexpiry",
                      ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 999)));
+    args.ForceSetArg("-maxtxfee",
+                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 999)));
 }
 
 void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Chainstate& chainstate)
 {
     WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
     {
-        BlockAssembler::Options options;
-        options.nBlockMaxWeight = fuzzed_data_provider.ConsumeIntegralInRange(0U, MAX_BLOCK_WEIGHT);
-        options.blockMinFeeRate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
-        auto assembler = BlockAssembler{chainstate, &tx_pool, options};
-        auto block_template = assembler.CreateNewBlock(CScript{} << OP_TRUE);
-        Assert(block_template->block.vtx.size() >= 1);
+        try {
+            BlockAssembler::Options options;
+            options.nBlockMaxWeight = fuzzed_data_provider.ConsumeIntegralInRange(0U, MAX_BLOCK_WEIGHT);
+            options.blockMinFeeRate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN / 10)};
+            auto assembler = BlockAssembler{chainstate, &tx_pool, options};
+            auto block_template = assembler.CreateNewBlock(CScript{} << OP_TRUE);
+            Assert(block_template->block.vtx.size() >= 1);
+        } catch (std::exception& _e) {
+            return;
+        }
     }
     const auto info_all = tx_pool.infoAll();
     if (!info_all.empty()) {

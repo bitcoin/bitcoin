@@ -53,6 +53,7 @@ libtest_util_a_SOURCES = \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \
   blsct/signature.h \
+  blsct/wallet/txfactory_global.cpp \
   test/util/blockfilter.cpp \
   test/util/coins.cpp \
   test/util/index.cpp \

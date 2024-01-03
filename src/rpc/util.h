@@ -57,6 +57,7 @@ extern const std::string UNIX_EPOCH_TIME;
  * invalid to prevent accidental transactions by users.
  */
 extern const std::string EXAMPLE_ADDRESS[2];
+extern const std::string BLSCT_EXAMPLE_ADDRESS[2];
 
 class FillableSigningProvider;
 class CScript;

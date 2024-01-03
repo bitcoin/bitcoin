@@ -7,6 +7,7 @@
 
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_init.h>
+#include <blsct/wallet/address.h>
 #include <chainparamsbase.h>
 #include <common/args.h> // IWYU pragma: export
 #include <key.h>
@@ -212,6 +213,43 @@ struct TestChain100Setup : public TestingSetup {
 
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey;                             // private/public key needed to spend coinbase transactions
+};
+
+/**
+ * Testing fixture that pre-creates a 100-block REGTEST-mode BLSCT block chain
+ */
+struct TestBLSCTChain100Setup : public TestingSetup {
+    blsct::SubAddress coinbaseDest;
+
+    TestBLSCTChain100Setup(
+        const blsct::SubAddress& coinbaseDest_ = blsct::SubAddress(),
+        const ChainType chain_type = ChainType::BLSCTREGTEST,
+        const std::vector<const char*>& extra_args = {},
+        const bool coins_db_in_memory = true,
+        const bool block_tree_db_in_memory = true);
+
+    /**
+     * Create a new block with just given transactions, coinbase paying to
+     * dest (or default coinbaseDest), and try to add it to the current chain.
+     * If no chainstate is specified, default to the active.
+     */
+    CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
+                                 const std::optional<blsct::SubAddress>& dest = std::nullopt,
+                                 Chainstate* chainstate = nullptr);
+
+    /**
+     * Create a new block with just given transactions, coinbase paying to
+     * dest (or default coinbaseDest).
+     */
+    CBlock CreateBlock(
+        const std::vector<CMutableTransaction>& txns,
+        Chainstate& chainstate,
+        const std::optional<blsct::SubAddress>& dest);
+
+    //! Mine a series of new blocks on the active chain.
+    void mineBlocks(int num_blocks);
+
+    std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
 };
 
 /**

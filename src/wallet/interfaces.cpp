@@ -171,7 +171,7 @@ public:
     bool isSpendable(const CTxDestination& dest) override
     {
         LOCK(m_wallet->cs_wallet);
-        return m_wallet->IsMine(dest) & ISMINE_SPENDABLE;
+        return m_wallet->IsMine(dest) & (ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT);
     }
     bool haveWatchOnly() override
     {

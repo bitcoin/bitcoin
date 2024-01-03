@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <blsct/wallet/txfactory.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <key_io.h>
@@ -22,13 +23,12 @@
 
 #include <univalue.h>
 
-
 namespace wallet {
 static void ParseRecipients(const UniValue& address_amounts, const UniValue& subtract_fee_outputs, std::vector<CRecipient>& recipients)
 {
     std::set<CTxDestination> destinations;
     int i = 0;
-    for (const std::string& address: address_amounts.getKeys()) {
+    for (const std::string& address : address_amounts.getKeys()) {
         CTxDestination dest = DecodeDestination(address);
         if (!IsValidDestination(dest)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + address);
@@ -50,6 +50,36 @@ static void ParseRecipients(const UniValue& address_amounts, const UniValue& sub
         }
 
         CRecipient recipient = {dest, amount, subtract_fee};
+        recipients.push_back(recipient);
+    }
+}
+
+static void ParseBLSCTRecipients(const UniValue& address_amounts, const UniValue& subtract_fee_outputs, const std::string& sMemo, std::vector<CBLSCTRecipient>& recipients)
+{
+    std::set<CTxDestination> destinations;
+    int i = 0;
+    for (const std::string& address : address_amounts.getKeys()) {
+        CTxDestination dest = DecodeDestination(address);
+        if (!IsValidDestination(dest) || dest.index() != 7) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid BLSCT address: ") + address);
+        }
+
+        if (destinations.count(dest)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + address);
+        }
+        destinations.insert(dest);
+
+        CAmount amount = AmountFromValue(address_amounts[i++]);
+
+        bool subtract_fee = false;
+        for (unsigned int idx = 0; idx < subtract_fee_outputs.size(); idx++) {
+            const UniValue& addr = subtract_fee_outputs[idx];
+            if (addr.get_str() == address) {
+                subtract_fee = true;
+            }
+        }
+
+        CBLSCTRecipient recipient = {amount, sMemo, dest, subtract_fee};
         recipients.push_back(recipient);
     }
 }
@@ -141,7 +171,7 @@ static void PreventOutdatedOptions(const UniValue& options)
     }
 }
 
-UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose)
+UniValue SendMoney(CWallet& wallet, const CCoinControl& coin_control, std::vector<CRecipient>& recipients, mapValue_t map_value, bool verbose)
 {
     EnsureWalletIsUnlocked(wallet);
 
@@ -165,6 +195,40 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vecto
         UniValue entry(UniValue::VOBJ);
         entry.pushKV("txid", tx->GetHash().GetHex());
         entry.pushKV("fee_reason", StringForFeeReason(res->fee_calc.reason));
+        return entry;
+    }
+    return tx->GetHash().GetHex();
+}
+
+UniValue SendBLSCTMoney(CWallet& wallet, std::vector<CBLSCTRecipient>& recipients, bool verbose)
+{
+    EnsureWalletIsUnlocked(wallet);
+
+    if (recipients.size() == 0)
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Error: No recipients");
+
+    // This function is only used by sendtoaddress and sendmany.
+    // This should always try to sign, if we don't have private keys, don't try to do anything here.
+    if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
+    }
+
+    // Shuffle recipient list
+    std::shuffle(recipients.begin(), recipients.end(), FastRandomContext());
+
+    // Send
+    auto res = blsct::TxFactory::CreateTransaction(&wallet, wallet.GetBLSCTKeyMan(), recipients[0].destination, recipients[0].nAmount, recipients[0].sMemo);
+
+    if (!res) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Not enough funds available");
+    }
+
+    const CTransactionRef& tx = MakeTransactionRef(res.value());
+    mapValue_t map_value;
+    wallet.CommitTransaction(tx, std::move(map_value), /*orderForm=*/{});
+    if (verbose) {
+        UniValue entry(UniValue::VOBJ);
+        entry.pushKV("txid", tx->GetHash().GetHex());
         return entry;
     }
     return tx->GetHash().GetHex();
@@ -208,107 +272,161 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
     }
 }
 
-RPCHelpMan sendtoaddress()
+
+RPCHelpMan sendtoblsctaddress()
 {
-    return RPCHelpMan{"sendtoaddress",
-                "\nSend an amount to a given address." +
-        HELP_REQUIRING_PASSPHRASE,
-                {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to send to."},
-                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
-                    {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A comment used to store what the transaction is for.\n"
-                                         "This is not part of the transaction, just kept in your wallet."},
-                    {"comment_to", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A comment to store the name of the person or organization\n"
-                                         "to which you're sending the transaction. This is not part of the \n"
-                                         "transaction, just kept in your wallet."},
-                    {"subtractfeefromamount", RPCArg::Type::BOOL, RPCArg::Default{false}, "The fee will be deducted from the amount being sent.\n"
-                                         "The recipient will receive less bitcoins than you enter in the amount field."},
-                    {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Signal that this transaction can be replaced by a transaction (BIP 125)"},
-                    {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
-                    {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
-                     "\"" + FeeModes("\"\n\"") + "\""},
-                    {"avoid_reuse", RPCArg::Type::BOOL, RPCArg::Default{true}, "(only available if avoid_reuse wallet flag is set) Avoid spending from dirty addresses; addresses are considered\n"
-                                         "dirty if they have previously been used in a transaction. If true, this also activates avoidpartialspends, grouping outputs by their addresses."},
-                    {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
-                    {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, return extra information about the transaction."},
-                },
-                {
-                    RPCResult{"if verbose is not set or set to false",
-                        RPCResult::Type::STR_HEX, "txid", "The transaction id."
-                    },
-                    RPCResult{"if verbose is set to true",
-                        RPCResult::Type::OBJ, "", "",
-                        {
-                            {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
-                            {RPCResult::Type::STR, "fee_reason", "The transaction fee reason."}
-                        },
-                    },
-                },
-                RPCExamples{
-                    "\nSend 0.1 BTC\n"
-                    + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1") +
-                    "\nSend 0.1 BTC with a confirmation target of 6 blocks in economical fee estimate mode using positional arguments\n"
-                    + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"donation\" \"sean's outpost\" false true 6 economical") +
-                    "\nSend 0.1 BTC with a fee rate of 1.1 " + CURRENCY_ATOM + "/vB, subtract fee from amount, BIP125-replaceable, using positional arguments\n"
-                    + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"drinks\" \"room77\" true true null \"unset\" null 1.1") +
-                    "\nSend 0.2 BTC with a confirmation target of 6 blocks in economical fee estimate mode using named arguments\n"
-                    + HelpExampleCli("-named sendtoaddress", "address=\"" + EXAMPLE_ADDRESS[0] + "\" amount=0.2 conf_target=6 estimate_mode=\"economical\"") +
-                    "\nSend 0.5 BTC with a fee rate of 25 " + CURRENCY_ATOM + "/vB using named arguments\n"
-                    + HelpExampleCli("-named sendtoaddress", "address=\"" + EXAMPLE_ADDRESS[0] + "\" amount=0.5 fee_rate=25")
-                    + HelpExampleCli("-named sendtoaddress", "address=\"" + EXAMPLE_ADDRESS[0] + "\" amount=0.5 fee_rate=25 subtractfeefromamount=false replaceable=true avoid_reuse=true comment=\"2 pizzas\" comment_to=\"jeremy\" verbose=true")
-                },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
+    return RPCHelpMan{
+        "sendtoblsctaddress",
+        "\nSend an amount to a given blsct address." +
+            HELP_REQUIRING_PASSPHRASE,
+        {
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The BLSCT address to send to."},
+            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
+            {"memo", RPCArg::Type::STR, RPCArg::Default{""}, "A memo used to store in the transaction.\n"
+                                                             "The recipient will see its value."},
+            {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, return extra information about the transaction."},
+        },
+        {
+            RPCResult{"if verbose is not set or set to false",
+                      RPCResult::Type::STR_HEX, "txid", "The transaction id."},
+            RPCResult{
+                "if verbose is set to true",
+                RPCResult::Type::OBJ,
+                "",
+                "",
+                {{RPCResult::Type::STR_HEX, "txid", "The transaction id."}},
+            },
+        },
+        RPCExamples{
+            "\nSend 0.1 " + CURRENCY_UNIT + "\n" + HelpExampleCli("sendtoblsctaddress", "\"" + BLSCT_EXAMPLE_ADDRESS[0] + "\" 0.1") +
+            "\nSend 0.1 " + CURRENCY_UNIT + " including \"donation\" as memo in the transaction using positional arguments\n" + HelpExampleCli("sendtoblsctaddress", "\"" + BLSCT_EXAMPLE_ADDRESS[0] + "\" 0.1 \"donation\"")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
 
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+            // Make sure the results are valid at least up to the most recent block
+            // the user could have gotten from another RPC command prior to now
+            pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK(pwallet->cs_wallet);
+            LOCK(pwallet->cs_wallet);
 
-    // Wallet comments
-    mapValue_t mapValue;
-    if (!request.params[2].isNull() && !request.params[2].get_str().empty())
-        mapValue["comment"] = request.params[2].get_str();
-    if (!request.params[3].isNull() && !request.params[3].get_str().empty())
-        mapValue["to"] = request.params[3].get_str();
+            // Wallet comments
+            std::string sMemo;
+            if (!request.params[2].isNull() && !request.params[2].get_str().empty())
+                sMemo = request.params[2].get_str();
 
-    bool fSubtractFeeFromAmount = false;
-    if (!request.params[4].isNull()) {
-        fSubtractFeeFromAmount = request.params[4].get_bool();
-    }
+            UniValue address_amounts(UniValue::VOBJ);
+            const std::string address = request.params[0].get_str();
+            address_amounts.pushKV(address, request.params[1]);
 
-    CCoinControl coin_control;
-    if (!request.params[5].isNull()) {
-        coin_control.m_signal_bip125_rbf = request.params[5].get_bool();
-    }
+            UniValue subtractFeeFromAmount(UniValue::VARR);
 
-    coin_control.m_avoid_address_reuse = GetAvoidReuseFlag(*pwallet, request.params[8]);
-    // We also enable partial spend avoidance if reuse avoidance is set.
-    coin_control.m_avoid_partial_spends |= coin_control.m_avoid_address_reuse;
+            std::vector<CBLSCTRecipient> recipients;
+            ParseBLSCTRecipients(address_amounts, false, sMemo, recipients);
+            const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
 
-    SetFeeEstimateMode(*pwallet, coin_control, /*conf_target=*/request.params[6], /*estimate_mode=*/request.params[7], /*fee_rate=*/request.params[9], /*override_min_fee=*/false);
-
-    EnsureWalletIsUnlocked(*pwallet);
-
-    UniValue address_amounts(UniValue::VOBJ);
-    const std::string address = request.params[0].get_str();
-    address_amounts.pushKV(address, request.params[1]);
-    UniValue subtractFeeFromAmount(UniValue::VARR);
-    if (fSubtractFeeFromAmount) {
-        subtractFeeFromAmount.push_back(address);
-    }
-
-    std::vector<CRecipient> recipients;
-    ParseRecipients(address_amounts, subtractFeeFromAmount, recipients);
-    const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
-
-    return SendMoney(*pwallet, coin_control, recipients, mapValue, verbose);
-},
+            return SendBLSCTMoney(*pwallet, recipients, verbose);
+        },
     };
 }
+
+
+RPCHelpMan sendtoaddress()
+{
+    return RPCHelpMan{
+        "sendtoaddress",
+        "\nSend an amount to a given address." +
+            HELP_REQUIRING_PASSPHRASE,
+        {
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to send to."},
+            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
+            {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A comment used to store what the transaction is for.\n"
+                                                                      "This is not part of the transaction, just kept in your wallet."},
+            {"comment_to", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A comment to store the name of the person or organization\n"
+                                                                         "to which you're sending the transaction. This is not part of the \n"
+                                                                         "transaction, just kept in your wallet."},
+            {"subtractfeefromamount", RPCArg::Type::BOOL, RPCArg::Default{false}, "The fee will be deducted from the amount being sent.\n"
+                                                                                  "The recipient will receive less bitcoins than you enter in the amount field."},
+            {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Signal that this transaction can be replaced by a transaction (BIP 125)"},
+            {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
+            {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
+                                                                           "\"" +
+                                                                               FeeModes("\"\n\"") + "\""},
+            {"avoid_reuse", RPCArg::Type::BOOL, RPCArg::Default{true}, "(only available if avoid_reuse wallet flag is set) Avoid spending from dirty addresses; addresses are considered\n"
+                                                                       "dirty if they have previously been used in a transaction. If true, this also activates avoidpartialspends, grouping outputs by their addresses."},
+            {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
+            {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, return extra information about the transaction."},
+        },
+        {
+            RPCResult{"if verbose is not set or set to false",
+                      RPCResult::Type::STR_HEX, "txid", "The transaction id."},
+            RPCResult{
+                "if verbose is set to true",
+                RPCResult::Type::OBJ,
+                "",
+                "",
+                {{RPCResult::Type::STR_HEX, "txid", "The transaction id."},
+                 {RPCResult::Type::STR, "fee_reason", "The transaction fee reason."}},
+            },
+        },
+        RPCExamples{
+            "\nSend 0.1 BTC\n" + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1") +
+            "\nSend 0.1 BTC with a confirmation target of 6 blocks in economical fee estimate mode using positional arguments\n" + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"donation\" \"sean's outpost\" false true 6 economical") +
+            "\nSend 0.1 BTC with a fee rate of 1.1 " + CURRENCY_ATOM + "/vB, subtract fee from amount, BIP125-replaceable, using positional arguments\n" + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"drinks\" \"room77\" true true null \"unset\" null 1.1") +
+            "\nSend 0.2 BTC with a confirmation target of 6 blocks in economical fee estimate mode using named arguments\n" + HelpExampleCli("-named sendtoaddress", "address=\"" + EXAMPLE_ADDRESS[0] + "\" amount=0.2 conf_target=6 estimate_mode=\"economical\"") +
+            "\nSend 0.5 BTC with a fee rate of 25 " + CURRENCY_ATOM + "/vB using named arguments\n" + HelpExampleCli("-named sendtoaddress", "address=\"" + EXAMPLE_ADDRESS[0] + "\" amount=0.5 fee_rate=25") + HelpExampleCli("-named sendtoaddress", "address=\"" + EXAMPLE_ADDRESS[0] + "\" amount=0.5 fee_rate=25 subtractfeefromamount=false replaceable=true avoid_reuse=true comment=\"2 pizzas\" comment_to=\"jeremy\" verbose=true")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+
+            // Make sure the results are valid at least up to the most recent block
+            // the user could have gotten from another RPC command prior to now
+            pwallet->BlockUntilSyncedToCurrentChain();
+
+            LOCK(pwallet->cs_wallet);
+
+            // Wallet comments
+            mapValue_t mapValue;
+            if (!request.params[2].isNull() && !request.params[2].get_str().empty())
+                mapValue["comment"] = request.params[2].get_str();
+            if (!request.params[3].isNull() && !request.params[3].get_str().empty())
+                mapValue["to"] = request.params[3].get_str();
+
+            bool fSubtractFeeFromAmount = false;
+            if (!request.params[4].isNull()) {
+                fSubtractFeeFromAmount = request.params[4].get_bool();
+            }
+
+            CCoinControl coin_control;
+            if (!request.params[5].isNull()) {
+                coin_control.m_signal_bip125_rbf = request.params[5].get_bool();
+            }
+
+            coin_control.m_avoid_address_reuse = GetAvoidReuseFlag(*pwallet, request.params[8]);
+            // We also enable partial spend avoidance if reuse avoidance is set.
+            coin_control.m_avoid_partial_spends |= coin_control.m_avoid_address_reuse;
+
+            SetFeeEstimateMode(*pwallet, coin_control, /*conf_target=*/request.params[6], /*estimate_mode=*/request.params[7], /*fee_rate=*/request.params[9], /*override_min_fee=*/false);
+
+            EnsureWalletIsUnlocked(*pwallet);
+
+            UniValue address_amounts(UniValue::VOBJ);
+            const std::string address = request.params[0].get_str();
+            address_amounts.pushKV(address, request.params[1]);
+            UniValue subtractFeeFromAmount(UniValue::VARR);
+            if (fSubtractFeeFromAmount) {
+                subtractFeeFromAmount.push_back(address);
+            }
+
+            std::vector<CRecipient> recipients;
+            ParseRecipients(address_amounts, subtractFeeFromAmount, recipients);
+            const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
+
+            return SendMoney(*pwallet, coin_control, recipients, mapValue, verbose);
+        },
+    };
+}
+
 
 RPCHelpMan sendmany()
 {
