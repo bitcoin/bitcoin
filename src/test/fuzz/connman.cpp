@@ -38,6 +38,10 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                      *g_setup->m_node.netgroupman,
                      Params(),
                      fuzzed_data_provider.ConsumeBool()};
+
+    const uint64_t max_outbound_limit{fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
+    connman.Init({ .nMaxOutboundLimit = max_outbound_limit });
+
     CNetAddr random_netaddr;
     CNode random_node = ConsumeNode(fuzzed_data_provider);
     CSubNet random_subnet;
@@ -125,7 +129,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     (void)connman.GetAddedNodeInfo(fuzzed_data_provider.ConsumeBool());
     (void)connman.GetExtraFullOutboundCount();
     (void)connman.GetLocalServices();
-    (void)connman.GetMaxOutboundTarget();
+    assert(connman.GetMaxOutboundTarget() == max_outbound_limit);
     (void)connman.GetMaxOutboundTimeframe();
     (void)connman.GetMaxOutboundTimeLeftInCycle();
     (void)connman.GetNetworkActive();
