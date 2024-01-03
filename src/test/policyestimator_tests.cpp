@@ -70,10 +70,10 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       feeV[j],
                                                                                       virtual_size,
                                                                                       entry.nHeight,
-                                                                                      /* m_from_disconnected_block */ false,
-                                                                                      /* m_submitted_in_package */ false,
-                                                                                      /* m_chainstate_is_current */ true,
-                                                                                      /* m_has_no_mempool_parents */ true)};
+                                                                                      /*mempool_limit_bypassed=*/false,
+                                                                                      /*submitted_in_package=*/false,
+                                                                                      /*chainstate_is_current=*/true,
+                                                                                      /*has_no_mempool_parents=*/true)};
                     GetMainSignals().TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
                 }
                 uint256 hash = tx.GetHash();
@@ -111,6 +111,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             BOOST_CHECK(feeEst.estimateFee(2).GetFeePerK() > 9*baseRate.GetFeePerK() - deltaFee);
         }
     }
+
+    // Wait for fee estimator to catch up
+    SyncWithValidationInterfaceQueue();
 
     std::vector<CAmount> origFeeEst;
     // Highest feerate is 10*baseRate and gets in all blocks,
@@ -168,10 +171,10 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       feeV[j],
                                                                                       virtual_size,
                                                                                       entry.nHeight,
-                                                                                      /* m_from_disconnected_block */ false,
-                                                                                      /* m_submitted_in_package */ false,
-                                                                                      /* m_chainstate_is_current */ true,
-                                                                                      /* m_has_no_mempool_parents */ true)};
+                                                                                      /*mempool_limit_bypassed=*/false,
+                                                                                      /*submitted_in_package=*/false,
+                                                                                      /*chainstate_is_current=*/true,
+                                                                                      /*has_no_mempool_parents=*/true)};
                     GetMainSignals().TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
                 }
                 uint256 hash = tx.GetHash();
@@ -232,10 +235,10 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       feeV[j],
                                                                                       virtual_size,
                                                                                       entry.nHeight,
-                                                                                      /* m_from_disconnected_block */ false,
-                                                                                      /* m_submitted_in_package */ false,
-                                                                                      /* m_chainstate_is_current */ true,
-                                                                                      /* m_has_no_mempool_parents */ true)};
+                                                                                      /*mempool_limit_bypassed=*/false,
+                                                                                      /*submitted_in_package=*/false,
+                                                                                      /*chainstate_is_current=*/true,
+                                                                                      /*has_no_mempool_parents=*/true)};
                     GetMainSignals().TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
                 }
                 uint256 hash = tx.GetHash();
