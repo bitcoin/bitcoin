@@ -500,9 +500,10 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
     g_mock_deterministic_tests = false;
 }
 
-/** TODO: Reenable when the blsct data fields are implemented in the class
-  * TxOutCompressor.
-  *
+/**
+ * TODO: Re-enable when the blsct data fields are implemented in the class
+ * TxOutCompressor.
+ *
 BOOST_AUTO_TEST_CASE(ccoins_serialization)
 {
     // Good example

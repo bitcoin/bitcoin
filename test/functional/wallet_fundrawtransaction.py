@@ -20,7 +20,6 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
     count_bytes,
-    find_vout_for_address,
     get_fee,
 )
 from test_framework.wallet_util import generate_keypair, WalletUnlock

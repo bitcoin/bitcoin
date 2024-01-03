@@ -6,10 +6,8 @@
 #define BITCOIN_WALLET_TRANSACTION_H
 
 #include <attributes.h>
-#include <bitset>
 #include <blsct/range_proof/bulletproofs/range_proof_logic.h>
 #include <consensus/amount.h>
-#include <cstdint>
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <threadsafety.h>

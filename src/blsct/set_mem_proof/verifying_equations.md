@@ -108,7 +108,7 @@ for (size_t i=0; i<num_rounds; ++i) {
 }
 ```
 
-This adds $L$ and $R$ of each round of `IIPA` to the sum mutiplying $x^2$ and $x^{-2}$ of the corresponding round.
+This adds $L$ and $R$ of each round of `IIPA` to the sum multiplying $x^2$ and $x^{-2}$ of the corresponding round.
 
 Note that $x$ and $x^{-1}$ are random values generated in each round except for the final round.  $L$ and $R$ are not calculated in the final round either.
 
