@@ -211,7 +211,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
                     tx_mut.vin.push_back(tx_mut.vin.back());
                 }
 
-                // Refer to a non-existant input
+                // Refer to a non-existent input
                 if (fuzzed_data_provider.ConsumeBool()) {
                     tx_mut.vin.emplace_back();
                 }
