@@ -1,7 +1,7 @@
 #include <blsct/external_api/blsct.h>
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/mcl/mcl_init.h>
-#include <cstdio>
+#include <iostream>
 
 extern "C" {
 
@@ -18,7 +18,7 @@ void BlsctTest() {
 
     auto s = c.GetString();
 
-    printf("The answer is %s\n", s.c_str());
+    std::cout << "The answer is " << s << std::endl;
 }
 
 } // extern "C"
