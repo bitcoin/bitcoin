@@ -932,6 +932,40 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(len(watchonly_utxos), 1)
         assert_equal(watchonly_utxos[0]["reused"], True)
 
+    def test_preserve_tx_extra_info(self):
+        self.log.info("Test that tx extra data is preserved after migration")
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        # Create and fund wallet
+        wallet = self.create_legacy_wallet("persist_comments")
+        def_wallet.sendtoaddress(wallet.getnewaddress(), 2)
+
+        self.generate(self.nodes[0], 6)
+
+        # Create tx and bump it to store 'replaced_by_txid' and 'replaces_txid' data within the transactions.
+        # Additionally, store an extra comment within the original tx.
+        extra_comment = "don't discard me"
+        original_tx_id = wallet.sendtoaddress(address=wallet.getnewaddress(), amount=1, comment=extra_comment)
+        bumped_tx = wallet.bumpfee(txid=original_tx_id)
+
+        def check_comments():
+            for record in wallet.listtransactions():
+                if record["txid"] == original_tx_id:
+                    assert_equal(record["replaced_by_txid"], bumped_tx["txid"])
+                    assert_equal(record['comment'], extra_comment)
+                elif record["txid"] == bumped_tx["txid"]:
+                    assert_equal(record["replaces_txid"], original_tx_id)
+
+        # Pre-migration verification
+        check_comments()
+        # Migrate
+        wallet.migratewallet()
+        # Post-migration verification
+        check_comments()
+
+        wallet.unloadwallet()
+
+
     def run_test(self):
         self.generate(self.nodes[0], 101)
 
@@ -952,6 +986,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_hybrid_pubkey()
         self.test_failed_migration_cleanup()
         self.test_avoidreuse()
+        self.test_preserve_tx_extra_info()
 
 if __name__ == '__main__':
     WalletMigrationTest().main()
