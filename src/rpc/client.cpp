@@ -88,6 +88,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendmany", 9, "verbose" },
     { "deriveaddresses", 1, "range" },
     { "deriveaddresses", 2, "options" },
+    { "deriveaddresses", 2, "require_checksum" },
     { "scanblocks", 1, "scanobjects" },
     { "scanblocks", 2, "start_height" },
     { "scanblocks", 3, "stop_height" },
