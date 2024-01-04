@@ -557,7 +557,7 @@ static RPCHelpMan sweepprivkeys()
     return RPCHelpMan{"sweepprivkeys",
         "\nSends bitcoins controlled by private key to specified destinations.\n",
         {
-            {"options", RPCArg::Type::OBJ, RPCArg::Optional::NO, "",
+            {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::NO, "",
                 {
                     {"privkeys", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of WIF private key(s)",
                         {
