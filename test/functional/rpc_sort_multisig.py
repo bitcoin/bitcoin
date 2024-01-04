@@ -25,36 +25,36 @@ class SortMultisigTest(BitcoinTestFramework):
         pubs = [pub1,pub2,pub3]
 
         default = self.nodes[0].createmultisig(2, pubs)
-        unsorted = self.nodes[0].createmultisig(2, pubs, {"sort": False})
+        unsorted_ms = self.nodes[0].createmultisig(2, pubs, {"sort": False})
 
-        assert_equal("2N2BchzwfyuqJep7sKmFfBucfopHZQuPnpt", unsorted["address"])
-        assert_equal("5221022df8750480ad5b26950b25c7ba79d3e37d75f640f8e5d9bcd5b150a0f85014da2103e3818b65bcc73a7d64064106a859cc1a5a728c4345ff0b641209fba0d90de6e921021f2f6e1e50cb6a953935c3601284925decd3fd21bc445712576873fb8c6ebc1853ae", unsorted["redeemScript"])
-        assert_equal(default["address"], unsorted["address"])
-        assert_equal(default["redeemScript"], unsorted["redeemScript"])
+        assert_equal("2N2BchzwfyuqJep7sKmFfBucfopHZQuPnpt", unsorted_ms["address"])
+        assert_equal("5221022df8750480ad5b26950b25c7ba79d3e37d75f640f8e5d9bcd5b150a0f85014da2103e3818b65bcc73a7d64064106a859cc1a5a728c4345ff0b641209fba0d90de6e921021f2f6e1e50cb6a953935c3601284925decd3fd21bc445712576873fb8c6ebc1853ae", unsorted_ms["redeemScript"])
+        assert_equal(default["address"], unsorted_ms["address"])
+        assert_equal(default["redeemScript"], unsorted_ms["redeemScript"])
 
-        sorted = self.nodes[0].createmultisig(2, pubs, {"sort": True})
-        assert_equal("2NFd5JqpwmQNz3gevZJ3rz9ofuHvqaP9Cye", sorted["address"])
-        assert_equal("5221021f2f6e1e50cb6a953935c3601284925decd3fd21bc445712576873fb8c6ebc1821022df8750480ad5b26950b25c7ba79d3e37d75f640f8e5d9bcd5b150a0f85014da2103e3818b65bcc73a7d64064106a859cc1a5a728c4345ff0b641209fba0d90de6e953ae", sorted["redeemScript"])
+        sorted_ms = self.nodes[0].createmultisig(2, pubs, {"sort": True})
+        assert_equal("2NFd5JqpwmQNz3gevZJ3rz9ofuHvqaP9Cye", sorted_ms["address"])
+        assert_equal("5221021f2f6e1e50cb6a953935c3601284925decd3fd21bc445712576873fb8c6ebc1821022df8750480ad5b26950b25c7ba79d3e37d75f640f8e5d9bcd5b150a0f85014da2103e3818b65bcc73a7d64064106a859cc1a5a728c4345ff0b641209fba0d90de6e953ae", sorted_ms["redeemScript"])
 
     def run_demonstrate_sorting(self):
         pub1 = "022df8750480ad5b26950b25c7ba79d3e37d75f640f8e5d9bcd5b150a0f85014da"
         pub2 = "03e3818b65bcc73a7d64064106a859cc1a5a728c4345ff0b641209fba0d90de6e9"
         pub3 = "021f2f6e1e50cb6a953935c3601284925decd3fd21bc445712576873fb8c6ebc18"
 
-        sorted = self.nodes[0].createmultisig(2, [pub3,pub1,pub2,])
+        sorted_ms = self.nodes[0].createmultisig(2, [pub3,pub1,pub2,])
 
-        self.test_if_result_matches(2, [pub1,pub2,pub3], True, sorted["address"])
-        self.test_if_result_matches(2, [pub1,pub3,pub2], True, sorted["address"])
-        self.test_if_result_matches(2, [pub2,pub3,pub1], True, sorted["address"])
-        self.test_if_result_matches(2, [pub2,pub1,pub3], True, sorted["address"])
-        self.test_if_result_matches(2, [pub3,pub1,pub2], True, sorted["address"])
-        self.test_if_result_matches(2, [pub3,pub2,pub1], True, sorted["address"])
+        self.test_if_result_matches(2, [pub1,pub2,pub3], True, sorted_ms["address"])
+        self.test_if_result_matches(2, [pub1,pub3,pub2], True, sorted_ms["address"])
+        self.test_if_result_matches(2, [pub2,pub3,pub1], True, sorted_ms["address"])
+        self.test_if_result_matches(2, [pub2,pub1,pub3], True, sorted_ms["address"])
+        self.test_if_result_matches(2, [pub3,pub1,pub2], True, sorted_ms["address"])
+        self.test_if_result_matches(2, [pub3,pub2,pub1], True, sorted_ms["address"])
 
-        self.test_if_result_matches(2, [pub1,pub2,pub3], False, sorted["address"])
-        self.test_if_result_matches(2, [pub1,pub3,pub2], False, sorted["address"])
-        self.test_if_result_matches(2, [pub2,pub3,pub1], False, sorted["address"])
-        self.test_if_result_matches(2, [pub2,pub1,pub3], False, sorted["address"])
-        self.test_if_result_matches(2, [pub3,pub2,pub1], False, sorted["address"])
+        self.test_if_result_matches(2, [pub1,pub2,pub3], False, sorted_ms["address"])
+        self.test_if_result_matches(2, [pub1,pub3,pub2], False, sorted_ms["address"])
+        self.test_if_result_matches(2, [pub2,pub3,pub1], False, sorted_ms["address"])
+        self.test_if_result_matches(2, [pub2,pub1,pub3], False, sorted_ms["address"])
+        self.test_if_result_matches(2, [pub3,pub2,pub1], False, sorted_ms["address"])
 
     def test_if_result_matches(self, m, keys, sort, against):
         result = self.nodes[0].createmultisig(m, keys, {"sort": sort})
@@ -69,10 +69,10 @@ class SortMultisigTest(BitcoinTestFramework):
         default = self.nodes[0].createmultisig(2, pubs)
         assert_equal(rs, default["redeemScript"])
 
-        unsorted = self.nodes[0].createmultisig(2, pubs, {"sort": False})
-        assert_equal(rs, unsorted["redeemScript"])
-        assert_equal(default["address"], unsorted["address"])
-        assert_equal(default["redeemScript"], unsorted["redeemScript"])
+        unsorted_ms = self.nodes[0].createmultisig(2, pubs, {"sort": False})
+        assert_equal(rs, unsorted_ms["redeemScript"])
+        assert_equal(default["address"], unsorted_ms["address"])
+        assert_equal(default["redeemScript"], unsorted_ms["redeemScript"])
 
         assert_raises_rpc_error(-1, "Compressed key required for BIP67: 04823336da95f0b4cf745839dff26992cef239ad2f08f494e5b57c209e4f3602d5526bc251d480e3284d129f736441560e17f3a7eb7ed665fdf0158f44550b926c", self.nodes[0].createmultisig, 2, pubs, {"sort": True})
 
