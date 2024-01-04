@@ -36,7 +36,6 @@ static void test_ecdsa_recovery_api(void) {
     secp256k1_ecdsa_recoverable_signature recsig;
     unsigned char privkey[32] = { 1 };
     unsigned char message[32] = { 2 };
-    int32_t ecount = 0;
     int recid = 0;
     unsigned char sig[74];
     unsigned char zero_privkey[32] = { 0 };
@@ -45,86 +44,52 @@ static void test_ecdsa_recovery_api(void) {
                                        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                                        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
-    secp256k1_context_set_error_callback(CTX, counting_illegal_callback_fn, &ecount);
-    secp256k1_context_set_illegal_callback(CTX, counting_illegal_callback_fn, &ecount);
-    secp256k1_context_set_error_callback(STATIC_CTX, counting_illegal_callback_fn, &ecount);
-    secp256k1_context_set_illegal_callback(STATIC_CTX, counting_illegal_callback_fn, &ecount);
-
     /* Construct and verify corresponding public key. */
     CHECK(secp256k1_ec_seckey_verify(CTX, privkey) == 1);
     CHECK(secp256k1_ec_pubkey_create(CTX, &pubkey, privkey) == 1);
 
     /* Check bad contexts and NULLs for signing */
-    ecount = 0;
     CHECK(secp256k1_ecdsa_sign_recoverable(CTX, &recsig, message, privkey, NULL, NULL) == 1);
-    CHECK(ecount == 0);
-    CHECK(secp256k1_ecdsa_sign_recoverable(CTX, NULL, message, privkey, NULL, NULL) == 0);
-    CHECK(ecount == 1);
-    CHECK(secp256k1_ecdsa_sign_recoverable(CTX, &recsig, NULL, privkey, NULL, NULL) == 0);
-    CHECK(ecount == 2);
-    CHECK(secp256k1_ecdsa_sign_recoverable(CTX, &recsig, message, NULL, NULL, NULL) == 0);
-    CHECK(ecount == 3);
-    CHECK(secp256k1_ecdsa_sign_recoverable(STATIC_CTX, &recsig, message, privkey, NULL, NULL) == 0);
-    CHECK(ecount == 4);
+    CHECK_ILLEGAL(CTX, secp256k1_ecdsa_sign_recoverable(CTX, NULL, message, privkey, NULL, NULL));
+    CHECK_ILLEGAL(CTX, secp256k1_ecdsa_sign_recoverable(CTX, &recsig, NULL, privkey, NULL, NULL));
+    CHECK_ILLEGAL(CTX, secp256k1_ecdsa_sign_recoverable(CTX, &recsig, message, NULL, NULL, NULL));
+    CHECK_ILLEGAL(STATIC_CTX, secp256k1_ecdsa_sign_recoverable(STATIC_CTX, &recsig, message, privkey, NULL, NULL));
     /* This will fail or succeed randomly, and in either case will not ARG_CHECK failure */
     secp256k1_ecdsa_sign_recoverable(CTX, &recsig, message, privkey, recovery_test_nonce_function, NULL);
-    CHECK(ecount == 4);
     /* These will all fail, but not in ARG_CHECK way */
     CHECK(secp256k1_ecdsa_sign_recoverable(CTX, &recsig, message, zero_privkey, NULL, NULL) == 0);
     CHECK(secp256k1_ecdsa_sign_recoverable(CTX, &recsig, message, over_privkey, NULL, NULL) == 0);
     /* This one will succeed. */
     CHECK(secp256k1_ecdsa_sign_recoverable(CTX, &recsig, message, privkey, NULL, NULL) == 1);
-    CHECK(ecount == 4);
 
     /* Check signing with a goofy nonce function */
 
     /* Check bad contexts and NULLs for recovery */
-    ecount = 0;
     CHECK(secp256k1_ecdsa_recover(CTX, &recpubkey, &recsig, message) == 1);
-    CHECK(ecount == 0);
-    CHECK(secp256k1_ecdsa_recover(CTX, NULL, &recsig, message) == 0);
-    CHECK(ecount == 1);
-    CHECK(secp256k1_ecdsa_recover(CTX, &recpubkey, NULL, message) == 0);
-    CHECK(ecount == 2);
-    CHECK(secp256k1_ecdsa_recover(CTX, &recpubkey, &recsig, NULL) == 0);
-    CHECK(ecount == 3);
+    CHECK_ILLEGAL(CTX, secp256k1_ecdsa_recover(CTX, NULL, &recsig, message));
+    CHECK_ILLEGAL(CTX, secp256k1_ecdsa_recover(CTX, &recpubkey, NULL, message));
+    CHECK_ILLEGAL(CTX, secp256k1_ecdsa_recover(CTX, &recpubkey, &recsig, NULL));
 
     /* Check NULLs for conversion */
     CHECK(secp256k1_ecdsa_sign(CTX, &normal_sig, message, privkey, NULL, NULL) == 1);
-    ecount = 0;
-    CHECK(secp256k1_ecdsa_recoverable_signature_convert(CTX, NULL, &recsig) == 0);
-    CHECK(ecount == 1);
-    CHECK(secp256k1_ecdsa_recoverable_signature_convert(CTX, &normal_sig, NULL) == 0);
-    CHECK(ecount == 2);
+    CHECK_ILLEGAL(CTX, secp256k1_ecdsa_recoverable_signature_convert(CTX, NULL, &recsig));
+    CHECK_ILLEGAL(CTX, secp256k1_ecdsa_recoverable_signature_convert(CTX, &normal_sig, NULL));
     CHECK(secp256k1_ecdsa_recoverable_signature_convert(CTX, &normal_sig, &recsig) == 1);
 
     /* Check NULLs for de/serialization */
     CHECK(secp256k1_ecdsa_sign_recoverable(CTX, &recsig, message, privkey, NULL, NULL) == 1);
-    ecount = 0;
-    CHECK(secp256k1_ecdsa_recoverable_signature_serialize_compact(CTX, NULL, &recid, &recsig) == 0);
-    CHECK(ecount == 1);
-    CHECK(secp256k1_ecdsa_recoverable_signature_serialize_compact(CTX, sig, NULL, &recsig) == 0);
-    CHECK(ecount == 2);
-    CHECK(secp256k1_ecdsa_recoverable_signature_serialize_compact(CTX, sig, &recid, NULL) == 0);
-    CHECK(ecount == 3);
+    CHECK_ILLEGAL(CTX, secp256k1_ecdsa_recoverable_signature_serialize_compact(CTX, NULL, &recid, &recsig));
+    CHECK_ILLEGAL(CTX, secp256k1_ecdsa_recoverable_signature_serialize_compact(CTX, sig, NULL, &recsig));
+    CHECK_ILLEGAL(CTX, secp256k1_ecdsa_recoverable_signature_serialize_compact(CTX, sig, &recid, NULL));
     CHECK(secp256k1_ecdsa_recoverable_signature_serialize_compact(CTX, sig, &recid, &recsig) == 1);
 
-    CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(CTX, NULL, sig, recid) == 0);
-    CHECK(ecount == 4);
-    CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(CTX, &recsig, NULL, recid) == 0);
-    CHECK(ecount == 5);
-    CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(CTX, &recsig, sig, -1) == 0);
-    CHECK(ecount == 6);
-    CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(CTX, &recsig, sig, 5) == 0);
-    CHECK(ecount == 7);
-    /* overflow in signature will fail but not affect ecount */
+    CHECK_ILLEGAL(CTX, secp256k1_ecdsa_recoverable_signature_parse_compact(CTX, NULL, sig, recid));
+    CHECK_ILLEGAL(CTX, secp256k1_ecdsa_recoverable_signature_parse_compact(CTX, &recsig, NULL, recid));
+    CHECK_ILLEGAL(CTX, secp256k1_ecdsa_recoverable_signature_parse_compact(CTX, &recsig, sig, -1));
+    CHECK_ILLEGAL(CTX, secp256k1_ecdsa_recoverable_signature_parse_compact(CTX, &recsig, sig, 5));
+    /* overflow in signature will not result in calling illegal_callback */
     memcpy(sig, over_privkey, 32);
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(CTX, &recsig, sig, recid) == 0);
-    CHECK(ecount == 7);
-
-    /* cleanup */
-    secp256k1_context_set_error_callback(STATIC_CTX, NULL, NULL);
-    secp256k1_context_set_illegal_callback(STATIC_CTX, NULL, NULL);
 }
 
 static void test_ecdsa_recovery_end_to_end(void) {

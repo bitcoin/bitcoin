@@ -32,7 +32,7 @@ static void test_exhaustive_ellswift(const secp256k1_context *ctx, const secp256
         /* Decode ellswift pubkey and check that it matches the precomputed group element. */
         secp256k1_ellswift_decode(ctx, &pub_decoded, ell64);
         secp256k1_pubkey_load(ctx, &ge_decoded, &pub_decoded);
-        ge_equals_ge(&ge_decoded, &group[i]);
+        CHECK(secp256k1_ge_eq_var(&ge_decoded, &group[i]));
     }
 }
 

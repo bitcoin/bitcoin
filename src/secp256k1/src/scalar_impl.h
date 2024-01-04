@@ -31,14 +31,12 @@ static int secp256k1_scalar_set_b32_seckey(secp256k1_scalar *r, const unsigned c
     int overflow;
     secp256k1_scalar_set_b32(r, bin, &overflow);
 
-    secp256k1_scalar_verify(r);
+    SECP256K1_SCALAR_VERIFY(r);
     return (!overflow) & (!secp256k1_scalar_is_zero(r));
 }
 
 static void secp256k1_scalar_verify(const secp256k1_scalar *r) {
-#ifdef VERIFY
     VERIFY_CHECK(secp256k1_scalar_check_overflow(r) == 0);
-#endif
 
     (void)r;
 }
@@ -63,7 +61,7 @@ static void secp256k1_scalar_verify(const secp256k1_scalar *r) {
  * (arbitrarily) set r2 = k + 5 (mod n) and r1 = k - r2 * lambda (mod n).
  */
 static void secp256k1_scalar_split_lambda(secp256k1_scalar * SECP256K1_RESTRICT r1, secp256k1_scalar * SECP256K1_RESTRICT r2, const secp256k1_scalar * SECP256K1_RESTRICT k) {
-    secp256k1_scalar_verify(k);
+    SECP256K1_SCALAR_VERIFY(k);
     VERIFY_CHECK(r1 != k);
     VERIFY_CHECK(r2 != k);
     VERIFY_CHECK(r1 != r2);
@@ -71,8 +69,8 @@ static void secp256k1_scalar_split_lambda(secp256k1_scalar * SECP256K1_RESTRICT 
     *r2 = (*k + 5) % EXHAUSTIVE_TEST_ORDER;
     *r1 = (*k + (EXHAUSTIVE_TEST_ORDER - *r2) * EXHAUSTIVE_TEST_LAMBDA) % EXHAUSTIVE_TEST_ORDER;
 
-    secp256k1_scalar_verify(r1);
-    secp256k1_scalar_verify(r2);
+    SECP256K1_SCALAR_VERIFY(r1);
+    SECP256K1_SCALAR_VERIFY(r2);
 }
 #else
 /**
@@ -155,7 +153,7 @@ static void secp256k1_scalar_split_lambda(secp256k1_scalar * SECP256K1_RESTRICT 
         0xE4437ED6UL, 0x010E8828UL, 0x6F547FA9UL, 0x0ABFE4C4UL,
         0x221208ACUL, 0x9DF506C6UL, 0x1571B4AEUL, 0x8AC47F71UL
     );
-    secp256k1_scalar_verify(k);
+    SECP256K1_SCALAR_VERIFY(k);
     VERIFY_CHECK(r1 != k);
     VERIFY_CHECK(r2 != k);
     VERIFY_CHECK(r1 != r2);
@@ -170,8 +168,8 @@ static void secp256k1_scalar_split_lambda(secp256k1_scalar * SECP256K1_RESTRICT 
     secp256k1_scalar_negate(r1, r1);
     secp256k1_scalar_add(r1, r1, k);
 
-    secp256k1_scalar_verify(r1);
-    secp256k1_scalar_verify(r2);
+    SECP256K1_SCALAR_VERIFY(r1);
+    SECP256K1_SCALAR_VERIFY(r2);
 #ifdef VERIFY
     secp256k1_scalar_split_lambda_verify(r1, r2, k);
 #endif
