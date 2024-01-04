@@ -5,6 +5,7 @@
 """Stress tests related to node initialization."""
 import os
 from pathlib import Path
+from random import randint
 import shutil
 
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
@@ -134,11 +135,16 @@ class InitStressTest(BitcoinTestFramework):
             for target_file in target_files:
                 self.log.info(f"Perturbing file to ensure failure {target_file}")
                 with open(target_file, "r+b") as tf:
-                    # Since the genesis block is not checked by -checkblocks, the
+                    # We start at 150 since the genesis block is not checked by -checkblocks, the
                     # perturbation window must be chosen such that a higher block
-                    # in blk*.dat is affected.
-                    tf.seek(150)
-                    tf.write(b"1" * 200)
+                    # in blk*.dat is affected. Ldb files are excluded from randomization since they
+                    # are too small in size for randomization.
+                    if str(target_file).endswith(".ldb"):
+                        tf.seek(150)
+                        tf.write(b"1" * 200)
+                    else:
+                        tf.seek(randint(150, 15000))
+                        tf.write(b'1' * randint(20, 2000))
 
             start_expecting_error(err_fragment)
 
