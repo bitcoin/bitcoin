@@ -30,6 +30,10 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   # Though, exclude those with newlines to avoid parsing problems.
   python3 -c 'import os; [print(f"{key}={value}") for key, value in os.environ.items() if "\n" not in value]' | tee /tmp/env
   echo "Creating $CI_IMAGE_NAME_TAG container to run in"
+  echo "ci_retry: $CI_RETRY_EXE"
+  echo "root_dir: $BASE_ROOT_DIR"
+  echo "env: $FILE_ENV"
+  echo "container: $CONTAINER_NAME"
   DOCKER_BUILDKIT=1 ${CI_RETRY_EXE} docker build \
       --file "${BASE_ROOT_DIR}/ci/test_imagefile" \
       --build-arg "CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG}" \
