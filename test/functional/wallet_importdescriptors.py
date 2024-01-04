@@ -102,6 +102,20 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                              wallet=wallet)
         wallet.unloadwallet()
 
+    def test_import_unused_noprivs(self):
+        self.log.info("Test import of unused(KEY) to wallet without privkeys")
+        self.nodes[0].createwallet(wallet_name="import_unused_noprivs", disable_private_keys=True)
+        wallet = self.nodes[0].get_wallet_rpc("import_unused_noprivs")
+
+        xpub = "tpubD6NzVbkrYhZ4YNXVQbNhMK1WqguFsUXceaVJKbmno2aZ3B6QfbMeraaYvnBSGpV3vxLyTTK9DYT1yoEck4XUScMzXoQ2U2oSmE2JyMedq3H"
+        self.test_importdesc({"timestamp": "now", "desc": descsum_create(f"unused({xpub})")},
+                             success=False,
+                             error_code=-4,
+                             error_message="Cannot import unused() to wallet without private keys enabled",
+                             wallet=wallet)
+        wallet.unloadwallet()
+
+
     def run_test(self):
         self.log.info('Setting up wallets')
         self.nodes[0].createwallet(wallet_name='w0', disable_private_keys=False)
@@ -811,6 +825,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
         self.test_import_unused_key()
         self.test_import_unused_key_existing()
+        self.test_import_unused_noprivs()
 
 if __name__ == '__main__':
     ImportDescriptorsTest(__file__).main()
