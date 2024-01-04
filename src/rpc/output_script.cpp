@@ -230,7 +230,7 @@ static RPCHelpMan deriveaddresses()
         {
             {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
             {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
-            {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+            {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                 {
                     {"require_checksum", RPCArg::Type::BOOL, RPCArg::Default{true}, "Require a checksum. If a checksum is provided it will be verified regardless of this parameter."},
                 },
