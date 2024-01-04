@@ -73,6 +73,10 @@ LIBBITCOIN_WALLET_TOOL=libbitcoin_wallet_tool.a
 endif
 
 LIBBITCOIN_CRYPTO = $(LIBBITCOIN_CRYPTO_BASE)
+if USE_ASM
+LIBBITCOIN_CRYPTO_SSE4 = crypto/libbitcoin_crypto_sse4.la
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SSE4)
+endif
 if ENABLE_SSE41
 LIBBITCOIN_CRYPTO_SSE41 = crypto/libbitcoin_crypto_sse41.la
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SSE41)
@@ -642,6 +646,10 @@ libbitcoin_wallet_tool_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
+
+# crypto_base contains the unspecialized (unoptimized) versions of our
+# crypto functions. Functions that require custom compiler flags and/or
+# runtime opt-in are omitted.
 crypto_libbitcoin_crypto_base_la_CPPFLAGS = $(AM_CPPFLAGS) $(PIC_FLAGS)
 
 # Specify -static in both CXXFLAGS and LDFLAGS so libtool will only build a
@@ -684,9 +692,12 @@ crypto_libbitcoin_crypto_base_la_SOURCES = \
   crypto/siphash.cpp \
   crypto/siphash.h
 
-if USE_ASM
-crypto_libbitcoin_crypto_base_la_SOURCES += crypto/sha256_sse4.cpp
-endif
+# See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
+# CXXFLAGS above
+crypto_libbitcoin_crypto_sse4_la_LDFLAGS = $(AM_LDFLAGS) -static
+crypto_libbitcoin_crypto_sse4_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -static
+crypto_libbitcoin_crypto_sse4_la_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libbitcoin_crypto_sse4_la_SOURCES = crypto/sha256_sse4.cpp
 
 # See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
 # CXXFLAGS above
@@ -1001,7 +1012,7 @@ libdashconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_bas
 
 libdashconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
 libdashconsensus_la_LIBADD = $(LIBDASHBLS) $(LIBSECP256K1) $(GMP_LIBS)
-libdashconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libdashconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL -DDISABLE_OPTIMIZED_SHA256
 libdashconsensus_la_CPPFLAGS += -isystem$(srcdir)/dashbls/include -isystem$(srcdir)/dashbls/depends/relic/include -isystem$(srcdir)/dashbls/depends/minialloc/include
 libdashconsensus_la_CPPFLAGS += -isystem$(srcdir)/immer
 libdashconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
