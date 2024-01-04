@@ -11,7 +11,7 @@ project(libsecp256k1
   # The package (a.k.a. release) version is based on semantic versioning 2.0.0 of
   # the API. All changes in experimental modules are treated as
   # backwards-compatible and therefore at most increase the minor version.
-  VERSION 0.4.0
+  VERSION 0.4.2
   DESCRIPTION "Optimized C library for ECDSA signatures and secret/public key operations on curve secp256k1."
   HOMEPAGE_URL "https://github.com/bitcoin-core/secp256k1"
   LANGUAGES C
@@ -35,7 +35,7 @@ endif()
 # All changes in experimental modules are treated as if they don't affect the
 # interface and therefore only increase the revision.
 set(${PROJECT_NAME}_LIB_VERSION_CURRENT 3)
-set(${PROJECT_NAME}_LIB_VERSION_REVISION 0)
+set(${PROJECT_NAME}_LIB_VERSION_REVISION 2)
 set(${PROJECT_NAME}_LIB_VERSION_AGE 1)
 
 set(CMAKE_C_STANDARD 90)
@@ -107,7 +107,7 @@ if(SECP256K1_TEST_OVERRIDE_WIDE_MULTIPLY)
 endif()
 mark_as_advanced(FORCE SECP256K1_TEST_OVERRIDE_WIDE_MULTIPLY)
 
-set(SECP256K1_ASM "AUTO" CACHE STRING "Assembly optimizations to use: \"AUTO\", \"OFF\", \"x86_64\" or \"arm32\" (experimental). [default=AUTO]")
+set(SECP256K1_ASM "AUTO" CACHE STRING "Assembly to use: \"AUTO\", \"OFF\", \"x86_64\" or \"arm32\" (experimental). [default=AUTO]")
 set_property(CACHE SECP256K1_ASM PROPERTY STRINGS "AUTO" "OFF" "x86_64" "arm32")
 check_string_option_value(SECP256K1_ASM)
 if(SECP256K1_ASM STREQUAL "arm32")
@@ -117,7 +117,7 @@ if(SECP256K1_ASM STREQUAL "arm32")
   if(HAVE_ARM32_ASM)
     add_compile_definitions(USE_EXTERNAL_ASM=1)
   else()
-    message(FATAL_ERROR "ARM32 assembly optimization requested but not available.")
+    message(FATAL_ERROR "ARM32 assembly requested but not available.")
   endif()
 elseif(SECP256K1_ASM)
   include(CheckX86_64Assembly)
@@ -128,14 +128,14 @@ elseif(SECP256K1_ASM)
   elseif(SECP256K1_ASM STREQUAL "AUTO")
     set(SECP256K1_ASM "OFF")
   else()
-    message(FATAL_ERROR "x86_64 assembly optimization requested but not available.")
+    message(FATAL_ERROR "x86_64 assembly requested but not available.")
   endif()
 endif()
 
 option(SECP256K1_EXPERIMENTAL "Allow experimental configuration options." OFF)
 if(NOT SECP256K1_EXPERIMENTAL)
   if(SECP256K1_ASM STREQUAL "arm32")
-    message(FATAL_ERROR "ARM32 assembly optimization is experimental. Use -DSECP256K1_EXPERIMENTAL=ON to allow.")
+    message(FATAL_ERROR "ARM32 assembly is experimental. Use -DSECP256K1_EXPERIMENTAL=ON to allow.")
   endif()
 endif()
 
@@ -280,7 +280,7 @@ message("Parameters:")
 message("  ecmult window size .................. ${SECP256K1_ECMULT_WINDOW_SIZE}")
 message("  ecmult gen precision bits ........... ${SECP256K1_ECMULT_GEN_PREC_BITS}")
 message("Optional features:")
-message("  assembly optimization ............... ${SECP256K1_ASM}")
+message("  assembly ............................ ${SECP256K1_ASM}")
 message("  external callbacks .................. ${SECP256K1_USE_EXTERNAL_DEFAULT_CALLBACKS}")
 if(SECP256K1_TEST_OVERRIDE_WIDE_MULTIPLY)
   message("  wide multiplication (test-only) ..... ${SECP256K1_TEST_OVERRIDE_WIDE_MULTIPLY}")

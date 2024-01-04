@@ -102,6 +102,9 @@ static void secp256k1_ge_set_all_gej_var(secp256k1_ge *r, const secp256k1_gej *a
  */
 static void secp256k1_ge_table_set_globalz(size_t len, secp256k1_ge *a, const secp256k1_fe *zr);
 
+/** Check two group elements (affine) for equality in variable time. */
+static int secp256k1_ge_eq_var(const secp256k1_ge *a, const secp256k1_ge *b);
+
 /** Set a group element (affine) equal to the point at infinity. */
 static void secp256k1_ge_set_infinity(secp256k1_ge *r);
 
@@ -113,6 +116,9 @@ static void secp256k1_gej_set_ge(secp256k1_gej *r, const secp256k1_ge *a);
 
 /** Check two group elements (jacobian) for equality in variable time. */
 static int secp256k1_gej_eq_var(const secp256k1_gej *a, const secp256k1_gej *b);
+
+/** Check two group elements (jacobian and affine) for equality in variable time. */
+static int secp256k1_gej_eq_ge_var(const secp256k1_gej *a, const secp256k1_ge *b);
 
 /** Compare the X coordinate of a group element (jacobian).
   * The magnitude of the group element's X coordinate must not exceed 31. */
@@ -181,8 +187,10 @@ static int secp256k1_ge_is_in_correct_subgroup(const secp256k1_ge* ge);
 
 /** Check invariants on an affine group element (no-op unless VERIFY is enabled). */
 static void secp256k1_ge_verify(const secp256k1_ge *a);
+#define SECP256K1_GE_VERIFY(a) secp256k1_ge_verify(a)
 
 /** Check invariants on a Jacobian group element (no-op unless VERIFY is enabled). */
 static void secp256k1_gej_verify(const secp256k1_gej *a);
+#define SECP256K1_GEJ_VERIFY(a) secp256k1_gej_verify(a)
 
 #endif /* SECP256K1_GROUP_H */

@@ -126,9 +126,8 @@ static void secp256k1_ellswift_xswiftec_frac_var(secp256k1_fe *xn, secp256k1_fe 
     secp256k1_fe_mul(&l, &p, &u1);                               /* l = u*(g+s) */
     secp256k1_fe_add(&n, &l);                                    /* n = u*(c1*s+c2*g)+u*(g+s) */
     secp256k1_fe_negate(xn, &n, 2);                              /* n = -u*(c1*s+c2*g)-u*(g+s) */
-#ifdef VERIFY
+
     VERIFY_CHECK(secp256k1_ge_x_frac_on_curve_var(xn, &p));
-#endif
     /* Return x3 = n/p = -(u*(c1*s+c2*g)/(g+s)+u) */
 }
 
@@ -193,10 +192,8 @@ static int secp256k1_ellswift_xswiftec_inv_var(secp256k1_fe *t, const secp256k1_
     secp256k1_fe_normalize_weak(&x);
     secp256k1_fe_normalize_weak(&u);
 
-#ifdef VERIFY
     VERIFY_CHECK(c >= 0 && c < 8);
     VERIFY_CHECK(secp256k1_ge_x_on_curve_var(&x));
-#endif
 
     if (!(c & 2)) {
         /* c is in {0, 1, 4, 5}. In this case we look for an inverse under the x1 (if c=0 or
@@ -230,9 +227,7 @@ static int secp256k1_ellswift_xswiftec_inv_var(secp256k1_fe *t, const secp256k1_
          * that (-u-x)^3 + B is not square (the secp256k1_ge_x_on_curve_var(&m)
          * test above would have failed). This is a contradiction, and thus the
          * assumption s=0 is false. */
-#ifdef VERIFY
         VERIFY_CHECK(!secp256k1_fe_normalizes_to_zero_var(&s));
-#endif
 
         /* If s is not square, fail. We have not fully computed s yet, but s is square iff
          * -(u^3+7)*(u^2+u*x+x^2) is square (because a/b is square iff a*b is square and b is
@@ -272,7 +267,11 @@ static int secp256k1_ellswift_xswiftec_inv_var(secp256k1_fe *t, const secp256k1_
         secp256k1_fe_negate(&q, &q, 1);                 /* q = -s*(4*(u^3+7)+3*u^2*s) */
         if (!secp256k1_fe_is_square_var(&q)) return 0;
         ret = secp256k1_fe_sqrt(&r, &q);                /* r = sqrt(-s*(4*(u^3+7)+3*u^2*s)) */
+#ifdef VERIFY
         VERIFY_CHECK(ret);
+#else
+        (void)ret;
+#endif
 
         /* If (c & 1) = 1 and r = 0, fail. */
         if (EXPECT((c & 1) && secp256k1_fe_normalizes_to_zero_var(&r), 0)) return 0;
@@ -320,10 +319,9 @@ static void secp256k1_ellswift_prng(unsigned char* out32, const secp256k1_sha256
     buf4[3] = cnt >> 24;
     secp256k1_sha256_write(&hash, buf4, 4);
     secp256k1_sha256_finalize(&hash, out32);
-#ifdef VERIFY
+
     /* Writing and finalizing together should trigger exactly one SHA256 compression. */
     VERIFY_CHECK(((hash.bytes) >> 6) == (blocks + 1));
-#endif
 }
 
 /** Find an ElligatorSwift encoding (u, t) for X coordinate x, and random Y coordinate.
@@ -361,9 +359,8 @@ static void secp256k1_ellswift_xelligatorswift_var(unsigned char *u32, secp256k1
         /* Since u is the output of a hash, it should practically never be 0. We could apply the
          * u=0 to u=1 correction here too to deal with that case still, but it's such a low
          * probability event that we do not bother. */
-#ifdef VERIFY
         VERIFY_CHECK(!secp256k1_fe_normalizes_to_zero_var(&u));
-#endif
+
         /* Find a remainder t, and return it if found. */
         if (EXPECT(secp256k1_ellswift_xswiftec_inv_var(t, x, &u, branch), 0)) break;
     }
@@ -417,7 +414,11 @@ int secp256k1_ellswift_encode(const secp256k1_context *ctx, unsigned char *ell64
          * BIP340 tagged hash with tag "secp256k1_ellswift_encode". */
         secp256k1_ellswift_sha256_init_encode(&hash);
         ser_ret = secp256k1_eckey_pubkey_serialize(&p, p64, &ser_size, 1);
+#ifdef VERIFY
         VERIFY_CHECK(ser_ret && ser_size == 33);
+#else
+        (void)ser_ret;
+#endif
         secp256k1_sha256_write(&hash, p64, sizeof(p64));
         secp256k1_sha256_write(&hash, rnd32, 32);
 

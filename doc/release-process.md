@@ -24,15 +24,20 @@ Perform these checks before creating a release:
 2. Check installation with autotools:
 ```shell
 dir=$(mktemp -d)
-./autogen.sh && ./configure --prefix=$dir && make clean && make install && ls -l $dir/include $dir/lib
+./autogen.sh && ./configure --prefix=$dir && make clean && make install && ls -RlAh $dir
 gcc -o ecdsa examples/ecdsa.c $(PKG_CONFIG_PATH=$dir/lib/pkgconfig pkg-config --cflags --libs libsecp256k1) -Wl,-rpath,"$dir/lib" && ./ecdsa
 ```
 3. Check installation with CMake:
 ```shell
 dir=$(mktemp -d)
 build=$(mktemp -d)
-cmake -B $build -DCMAKE_INSTALL_PREFIX=$dir && cmake --build $build --target install && ls -l $dir/include $dir/lib*
+cmake -B $build -DCMAKE_INSTALL_PREFIX=$dir && cmake --build $build --target install && ls -RlAh $dir
 gcc -o ecdsa examples/ecdsa.c -I $dir/include -L $dir/lib*/ -l secp256k1 -Wl,-rpath,"$dir/lib",-rpath,"$dir/lib64" && ./ecdsa
+```
+4. Use the [`check-abi.sh`](/tools/check-abi.sh) tool to ensure there are no unexpected ABI incompatibilities and that the version number and release notes accurately reflect all potential ABI changes. To run this tool, the `abi-dumper` and `abi-compliance-checker` packages are required.
+
+```shell
+tools/check-abi.sh
 ```
 
 ## Regular release
@@ -41,7 +46,7 @@ gcc -o ecdsa examples/ecdsa.c -I $dir/include -L $dir/lib*/ -l secp256k1 -Wl,-rp
    * finalizes the release notes in [CHANGELOG.md](../CHANGELOG.md) by
        * adding a section for the release (make sure that the version number is a link to a diff between the previous and new version),
        * removing the `[Unreleased]` section header, and
-       * including an entry for `### ABI Compatibility` if it doesn't exist that mentions the library soname of the release,
+       * including an entry for `### ABI Compatibility` if it doesn't exist,
    * sets `_PKG_VERSION_IS_RELEASE` to `true` in `configure.ac`, and
    * if this is not a patch release
        * updates `_PKG_VERSION_*` and `_LIB_VERSION_*`  in `configure.ac` and
