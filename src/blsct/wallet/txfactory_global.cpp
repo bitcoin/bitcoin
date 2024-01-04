@@ -107,7 +107,7 @@ CTransactionRef AggregateTransactions(const std::vector<CTransactionRef>& txs)
         }
     }
 
-    ret.vout.push_back(CTxOut{nFee, CScript{OP_RETURN}});
+    ret.vout.emplace_back(CTxOut{nFee, CScript{OP_RETURN}});
 
     ret.txSig = blsct::Signature::Aggregate(vSigs);
     ret.nVersion = CTransaction::BLSCT_MARKER;
