@@ -49,9 +49,21 @@ void initialize_spkm()
     MOCKED_DESC_CONVERTER.Init();
 }
 
+/**
+ * Key derivation is expensive. Deriving deep derivation paths take a lot of compute and we'd rather spend time
+ * elsewhere in this target, like on actually fuzzing the DescriptorScriptPubKeyMan. So rule out strings which could
+ * correspond to a descriptor containing a too large derivation path.
+ */
+static bool TooDeepDerivPath(std::string_view desc)
+{
+    const FuzzBufferType desc_buf{reinterpret_cast<const unsigned char *>(desc.data()), desc.size()};
+    return HasDeepDerivPath(desc_buf);
+}
+
 static std::optional<std::pair<WalletDescriptor, FlatSigningProvider>> CreateWalletDescriptor(FuzzedDataProvider& fuzzed_data_provider)
 {
     const std::string mocked_descriptor{fuzzed_data_provider.ConsumeRandomLengthString()};
+    if (TooDeepDerivPath(mocked_descriptor)) return {};
     const auto desc_str{MOCKED_DESC_CONVERTER.GetDescriptor(mocked_descriptor)};
     if (!desc_str.has_value()) return std::nullopt;
 
