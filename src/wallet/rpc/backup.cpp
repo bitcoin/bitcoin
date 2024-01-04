@@ -260,6 +260,9 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
 
             // If this is an unused(KEY) descriptor, check that the wallet doesn't already have other descriptors with this key
             if (!parsed_desc->HasScripts()) {
+                if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+                    throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import unused() to wallet without private keys enabled");
+                }
                 // Unused descriptors must contain a single key.
                 // Earlier checks will have enforced that this key is either a private key when private keys are enabled,
                 // or that this key is a public key when private keys are disabled.
