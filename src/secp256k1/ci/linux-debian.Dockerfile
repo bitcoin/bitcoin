@@ -29,11 +29,15 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
         gcc-i686-linux-gnu libc6-dev-i386-cross libc6-dbg:i386 libubsan1:i386 libasan8:i386 \
         gcc-s390x-linux-gnu libc6-dev-s390x-cross libc6-dbg:s390x \
         gcc-arm-linux-gnueabihf libc6-dev-armhf-cross libc6-dbg:armhf \
-        gcc-aarch64-linux-gnu libc6-dev-arm64-cross libc6-dbg:arm64 \
         gcc-powerpc64le-linux-gnu libc6-dev-ppc64el-cross libc6-dbg:ppc64el \
         gcc-mingw-w64-x86-64-win32 wine64 wine \
         gcc-mingw-w64-i686-win32 wine32 \
-        python3
+        python3 && \
+        if ! ( dpkg --print-architecture | grep --quiet "arm64" ) ; then \
+         apt-get install --no-install-recommends -y \
+         gcc-aarch64-linux-gnu libc6-dev-arm64-cross libc6-dbg:arm64 ;\
+        fi && \
+        apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Build and install gcc snapshot
 ARG GCC_SNAPSHOT_MAJOR=14
@@ -44,7 +48,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y wget libgmp-dev
     sha512sum --check --ignore-missing sha512.sum && \
     # We should have downloaded exactly one tar.xz file
     ls && \
-    [[ $(ls *.tar.xz | wc -l) -eq "1" ]] && \
+    [ $(ls *.tar.xz | wc -l) -eq "1" ] && \
     tar xf *.tar.xz && \
     mkdir gcc-build && cd gcc-build && \
     ../*/configure --prefix=/opt/gcc-snapshot --enable-languages=c --disable-bootstrap --disable-multilib --without-isl && \

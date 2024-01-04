@@ -5,8 +5,8 @@ AC_PREREQ([2.60])
 # backwards-compatible and therefore at most increase the minor version.
 define(_PKG_VERSION_MAJOR, 0)
 define(_PKG_VERSION_MINOR, 4)
-define(_PKG_VERSION_PATCH, 0)
-define(_PKG_VERSION_IS_RELEASE, true)
+define(_PKG_VERSION_PATCH, 2)
+define(_PKG_VERSION_IS_RELEASE, false)
 
 # The library version is based on libtool versioning of the ABI. The set of
 # rules for updating the version can be found here:
@@ -14,7 +14,7 @@ define(_PKG_VERSION_IS_RELEASE, true)
 # All changes in experimental modules are treated as if they don't affect the
 # interface and therefore only increase the revision.
 define(_LIB_VERSION_CURRENT, 3)
-define(_LIB_VERSION_REVISION, 0)
+define(_LIB_VERSION_REVISION, 2)
 define(_LIB_VERSION_AGE, 1)
 
 AC_INIT([libsecp256k1],m4_join([.], _PKG_VERSION_MAJOR, _PKG_VERSION_MINOR, _PKG_VERSION_PATCH)m4_if(_PKG_VERSION_IS_RELEASE, [true], [], [-dev]),[https://github.com/bitcoin-core/secp256k1/issues],[libsecp256k1],[https://github.com/bitcoin-core/secp256k1])
@@ -201,7 +201,7 @@ AC_ARG_ENABLE(external_default_callbacks,
 AC_ARG_WITH([test-override-wide-multiply], [] ,[set_widemul=$withval], [set_widemul=auto])
 
 AC_ARG_WITH([asm], [AS_HELP_STRING([--with-asm=x86_64|arm32|no|auto],
-[assembly optimizations to use (experimental: arm32) [default=auto]])],[req_asm=$withval], [req_asm=auto])
+[assembly to use (experimental: arm32) [default=auto]])],[req_asm=$withval], [req_asm=auto])
 
 AC_ARG_WITH([ecmult-window], [AS_HELP_STRING([--with-ecmult-window=SIZE|auto],
 [window size for ecmult precomputation for verification, specified as integer in range [2..24].]
@@ -279,24 +279,24 @@ else
   x86_64)
     SECP_X86_64_ASM_CHECK
     if test x"$has_x86_64_asm" != x"yes"; then
-      AC_MSG_ERROR([x86_64 assembly optimization requested but not available])
+      AC_MSG_ERROR([x86_64 assembly requested but not available])
     fi
     ;;
   arm32)
     SECP_ARM32_ASM_CHECK
     if test x"$has_arm32_asm" != x"yes"; then
-      AC_MSG_ERROR([ARM32 assembly optimization requested but not available])
+      AC_MSG_ERROR([ARM32 assembly requested but not available])
     fi
     ;;
   no)
     ;;
   *)
-    AC_MSG_ERROR([invalid assembly optimization selection])
+    AC_MSG_ERROR([invalid assembly selection])
     ;;
   esac
 fi
 
-# Select assembly optimization
+# Select assembly
 enable_external_asm=no
 
 case $set_asm in
@@ -309,7 +309,7 @@ arm32)
 no)
   ;;
 *)
-  AC_MSG_ERROR([invalid assembly optimizations])
+  AC_MSG_ERROR([invalid assembly selection])
   ;;
 esac
 
@@ -425,7 +425,7 @@ if test x"$enable_experimental" = x"yes"; then
   AC_MSG_NOTICE([******])
 else
   if test x"$set_asm" = x"arm32"; then
-    AC_MSG_ERROR([ARM32 assembly optimization is experimental. Use --enable-experimental to allow.])
+    AC_MSG_ERROR([ARM32 assembly is experimental. Use --enable-experimental to allow.])
   fi
 fi
 

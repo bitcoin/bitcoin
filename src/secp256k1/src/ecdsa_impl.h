@@ -66,8 +66,7 @@ static int secp256k1_der_read_len(size_t *len, const unsigned char **sigp, const
     }
     if (lenleft > sizeof(size_t)) {
         /* The resulting length would exceed the range of a size_t, so
-         * certainly longer than the passed array size.
-         */
+         * it is certainly longer than the passed array size. */
         return 0;
     }
     while (lenleft > 0) {
@@ -76,7 +75,9 @@ static int secp256k1_der_read_len(size_t *len, const unsigned char **sigp, const
         lenleft--;
     }
     if (*len > (size_t)(sigend - *sigp)) {
-        /* Result exceeds the length of the passed array. */
+        /* Result exceeds the length of the passed array.
+           (Checking this is the responsibility of the caller but it
+           can't hurt do it here, too.) */
         return 0;
     }
     if (*len < 128) {
