@@ -86,6 +86,22 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(hdkeys[0]["xpub"], xpub)
         wallet.unloadwallet()
 
+    def test_import_unused_key_existing(self):
+        self.log.info("Test import of unused(KEY) with existing KEY")
+        self.nodes[0].createwallet(wallet_name="import_existing_unused")
+        wallet = self.nodes[0].get_wallet_rpc("import_existing_unused")
+
+        hdkeys = wallet.gethdkeys(private=True)
+        assert_equal(len(hdkeys), 1)
+        xprv = hdkeys[0]["xprv"]
+
+        self.test_importdesc({"timestamp": "now", "desc": descsum_create(f"unused({xprv})")},
+                             success=False,
+                             error_code=-4,
+                             error_message="Cannot import an unused() descriptor when its private key is already in the wallet",
+                             wallet=wallet)
+        wallet.unloadwallet()
+
     def run_test(self):
         self.log.info('Setting up wallets')
         self.nodes[0].createwallet(wallet_name='w0', disable_private_keys=False)
@@ -794,6 +810,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(sorted(w_multipath.listdescriptors()["descriptors"], key=lambda x: x["desc"]), sorted(w_multisplit.listdescriptors()["descriptors"], key=lambda x: x["desc"]))
 
         self.test_import_unused_key()
+        self.test_import_unused_key_existing()
 
 if __name__ == '__main__':
     ImportDescriptorsTest(__file__).main()
