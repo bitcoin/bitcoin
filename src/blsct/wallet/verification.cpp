@@ -34,7 +34,7 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
 
             vPubKeys.emplace_back(coin.out.blsctData.spendingKey);
             auto in_hash = in.GetHash();
-            vMessages.emplace_back(Message(in_hash.begin(), in_hash.end()));
+            vMessages.emplace_back(in_hash.begin(), in_hash.end());
             balanceKey = balanceKey + coin.out.blsctData.rangeProof.Vs[0];
         }
     }
@@ -45,7 +45,7 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
         if (out.IsBLSCT()) {
             vPubKeys.emplace_back(out.blsctData.ephemeralKey);
             auto out_hash = out.GetHash();
-            vMessages.emplace_back(Message(out_hash.begin(), out_hash.end()));
+            vMessages.emplace_back(out_hash.begin(), out_hash.end());
             vProofs.emplace_back(out.blsctData.rangeProof);
             balanceKey = balanceKey - out.blsctData.rangeProof.Vs[0];
         } else {
