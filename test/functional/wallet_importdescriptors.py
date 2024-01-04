@@ -63,6 +63,29 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             assert_equal(result[0]['error']['code'], error_code)
             assert_equal(result[0]['error']['message'], error_message)
 
+    def test_import_unused_key(self):
+        self.log.info("Test import of unused(KEY)")
+        self.nodes[0].createwallet(wallet_name="import_unused", blank=True)
+        wallet = self.nodes[0].get_wallet_rpc("import_unused")
+
+        assert_equal(len(wallet.gethdkeys()), 0)
+
+        xprv = "tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg"
+        xpub = "tpubD6NzVbkrYhZ4YNXVQbNhMK1WqguFsUXceaVJKbmno2aZ3B6QfbMeraaYvnBSGpV3vxLyTTK9DYT1yoEck4XUScMzXoQ2U2oSmE2JyMedq3H"
+        self.test_importdesc({"desc":descsum_create(f"unused({xpub})"),
+                              "timestamp": "now"},
+                              success=False,
+                              error_code=-4,
+                              error_message='Cannot import descriptor without private keys to a wallet with private keys enabled',
+                              wallet=wallet)
+        self.test_importdesc({"timestamp": "now", "desc": descsum_create(f"unused({xprv})")},
+                             success=True,
+                             wallet=wallet)
+        hdkeys = wallet.gethdkeys()
+        assert_equal(len(hdkeys), 1)
+        assert_equal(hdkeys[0]["xpub"], xpub)
+        wallet.unloadwallet()
+
     def run_test(self):
         self.log.info('Setting up wallets')
         self.nodes[0].createwallet(wallet_name='w0', disable_private_keys=False)
@@ -769,6 +792,8 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             assert_equal(w_multipath.getnewaddress(address_type="bech32"), w_multisplit.getnewaddress(address_type="bech32"))
             assert_equal(w_multipath.getrawchangeaddress(address_type="bech32"), w_multisplit.getrawchangeaddress(address_type="bech32"))
         assert_equal(sorted(w_multipath.listdescriptors()["descriptors"], key=lambda x: x["desc"]), sorted(w_multisplit.listdescriptors()["descriptors"], key=lambda x: x["desc"]))
+
+        self.test_import_unused_key()
 
 if __name__ == '__main__':
     ImportDescriptorsTest(__file__).main()
