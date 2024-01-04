@@ -156,14 +156,42 @@ bool CBlockIndexWorkComparator::operator()(const CBlockIndex* pa, const CBlockIn
     if (pa->nChainWork > pb->nChainWork) return false;
     if (pa->nChainWork < pb->nChainWork) return true;
 
-    // ... then by earliest time received, ...
-    if (pa->nSequenceId < pb->nSequenceId) return false;
-    if (pa->nSequenceId > pb->nSequenceId) return true;
+    // ... then by earliest activateable time: for each block, find the maximum sequence number
+    // among all blocks not shared by both ancestries. The side with the lowest maximum wins, as
+    // for that side all relevant data was available earlier.
+    int32_t max_sequence_a = std::numeric_limits<int32_t>::min();
+    int32_t max_sequence_b = std::numeric_limits<int32_t>::min();
+    const CBlockIndex* walk_a = pa;
+    const CBlockIndex* walk_b = pb;
+    // If walk_a->nHeight > walk_b->nHeight, walk walk_a back.
+    while (walk_a->nHeight > walk_b->nHeight) {
+        max_sequence_a = std::max(max_sequence_a, walk_a->nSequenceId);
+        walk_a = walk_a->pprev;
+    }
+    // If walk_b->nHeight > walk_a->nHeight, walk walk_b back.
+    while (walk_b->nHeight > walk_a->nHeight) {
+        max_sequence_b = std::max(max_sequence_b, walk_b->nSequenceId);
+        walk_b = walk_b->pprev;
+    }
+    // Now both walk_a and walk_b are at the same height. Walk both back to the fork point.
+    while (walk_a != walk_b) {
+        Assume(walk_a->nHeight == walk_b->nHeight);
+        Assume(walk_a->nHeight > 0);
+        max_sequence_a = std::max(max_sequence_a, walk_a->nSequenceId);
+        walk_a = walk_a->pprev;
+        max_sequence_b = std::max(max_sequence_b, walk_b->nSequenceId);
+        walk_b = walk_b->pprev;
+    }
+    // Compare the largest observed nSequenceId numbers.
+    if (max_sequence_a < max_sequence_b) return false;
+    if (max_sequence_a > max_sequence_b) return true;
 
-    // Use pointer address as tie breaker (should only happen with blocks
-    // loaded from disk, as those all have id 0).
-    if (pa < pb) return false;
-    if (pa > pb) return true;
+    // Use pointer address as tie breaker (should only happen if both blocks, and all blocks since
+    // the fork point between them, were loaded from disk, as those all have nSequenceId=0).
+    // Comparing unrelated pointers with < is technically unspecified, so use std::less instead
+    // (which is guaranteed to provide a total ordering on all pointers).
+    if (std::less()(pa, pb)) return false;
+    if (std::less()(pb, pa)) return true;
 
     // Identical blocks.
     return false;

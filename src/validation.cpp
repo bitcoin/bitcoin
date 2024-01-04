@@ -3363,7 +3363,14 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
         }
         m_chainman.nLastPreciousChainwork = m_chain.Tip()->nChainWork;
         setBlockIndexCandidates.erase(pindex);
-        pindex->nSequenceId = m_chainman.nBlockReverseSequenceId;
+        // Give pindex and all its ancestors nSequenceId = nBlockReverseSequenceId.
+        auto walk = pindex;
+        while (walk) {
+            walk->nSequenceId = m_chainman.nBlockReverseSequenceId;
+            walk = walk->pprev;
+        }
+        // Then decrement nBlockReverseSequenceId so that future PreciousBlock calls
+        // take priority over this one.
         if (m_chainman.nBlockReverseSequenceId > std::numeric_limits<int32_t>::min()) {
             // We can't keep reducing the counter if somebody really wants to
             // call preciousblock 2**31-1 times on the same set of tips...
