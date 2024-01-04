@@ -232,10 +232,10 @@ RPCHelpMan addmultisigaddress()
                             {"key", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "bitcoin address or hex-encoded public key"},
                         },
                         },
-                    {"options|label", {RPCArg::Type::OBJ, RPCArg::Type::STR}, RPCArg::Optional::OMITTED, "",
+                    {"options|label", {RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Type::STR}, RPCArg::Optional::OMITTED, "",
                         {
-                            {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
-                            {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A label to assign the address to."},
+                            {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\".", RPCArgOptions{.also_positional = true}},
+                            {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A label to assign the address to.", RPCArgOptions{.also_positional = true}},
                             {"sort", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to sort public keys according to BIP67."},
                         },
                         RPCArgOptions{.oneline_description="\"options\""}},

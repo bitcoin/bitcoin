@@ -97,9 +97,9 @@ static RPCHelpMan createmultisig()
                 {
                     {"key", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The hex-encoded public key"},
                 }},
-            {"options|address_type", {RPCArg::Type::OBJ, RPCArg::Type::STR}, RPCArg::Optional::OMITTED, "",
+            {"options|address_type", {RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Type::STR}, RPCArg::Optional::OMITTED, "",
                 {
-                    {"address_type", RPCArg::Type::STR, RPCArg::Default{"legacy"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::Default{"legacy"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\".", RPCArgOptions{.also_positional = true}},
                     {"sort", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to sort public keys according to BIP67."},
                 },
                 RPCArgOptions{.oneline_description="options"}},
