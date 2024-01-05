@@ -4,7 +4,6 @@
 
 #include <addresstype.h>
 #include <bench/bench.h>
-#include <bitcoin-build-config.h> // IWYU pragma: keep
 #include <key.h>
 #include <key_io.h>
 #include <script/descriptor.h>
@@ -67,10 +66,8 @@ static void WalletIsMine(benchmark::Bench& bench, int num_combo = 0)
     TestUnloadWallet(std::move(wallet));
 }
 
-#ifdef USE_SQLITE
 static void WalletIsMineDescriptors(benchmark::Bench& bench) { WalletIsMine(bench); }
 static void WalletIsMineMigratedDescriptors(benchmark::Bench& bench) { WalletIsMine(bench, /*num_combo=*/2000); }
 BENCHMARK(WalletIsMineDescriptors, benchmark::PriorityLevel::LOW);
 BENCHMARK(WalletIsMineMigratedDescriptors, benchmark::PriorityLevel::LOW);
-#endif
 } // namespace wallet
