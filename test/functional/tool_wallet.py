@@ -145,21 +145,15 @@ class ToolWalletTest(BitcoinTestFramework):
         for k, v in e.items():
             assert_equal(v, r[k])
 
-    def do_tool_createfromdump(self, wallet_name, dumpfile, file_format=None):
+    def do_tool_createfromdump(self, wallet_name, dumpfile):
         dumppath = self.nodes[0].datadir_path / dumpfile
         rt_dumppath = self.nodes[0].datadir_path / "rt-{}.dump".format(wallet_name)
 
-        dump_data = self.read_dump(dumppath)
-
         args = ["-wallet={}".format(wallet_name),
                 "-dumpfile={}".format(dumppath)]
-        if file_format is not None:
-            args.append("-format={}".format(file_format))
         args.append("createfromdump")
 
         load_output = ""
-        if file_format is not None and file_format != dump_data["format"]:
-            load_output += "Warning: Dumpfile wallet format \"{}\" does not match command line specified format \"{}\".\n".format(dump_data["format"], file_format)
         self.assert_tool_output(load_output, *args)
         assert (self.nodes[0].wallets_path / wallet_name).is_dir()
 
@@ -316,7 +310,6 @@ class ToolWalletTest(BitcoinTestFramework):
         self.log.info('Checking createfromdump arguments')
         self.assert_raises_tool_error('No dump file provided. To use createfromdump, -dumpfile=<filename> must be provided.', '-wallet=todump', 'createfromdump')
         non_exist_dump = self.nodes[0].datadir_path / "wallet.nodump"
-        self.assert_raises_tool_error('Unknown wallet file format "notaformat" provided. Please provide one of "bdb" or "sqlite".', '-wallet=todump', '-format=notaformat', '-dumpfile={}'.format(wallet_dump), 'createfromdump')
         self.assert_raises_tool_error('Dump file {} does not exist.'.format(non_exist_dump), '-wallet=todump', '-dumpfile={}'.format(non_exist_dump), 'createfromdump')
         wallet_path = self.nodes[0].wallets_path / "todump2"
         self.assert_raises_tool_error('Failed to create database path \'{}\'. Database already exists.'.format(wallet_path), '-wallet=todump2', '-dumpfile={}'.format(wallet_dump), 'createfromdump')
@@ -324,10 +317,6 @@ class ToolWalletTest(BitcoinTestFramework):
 
         self.log.info('Checking createfromdump')
         self.do_tool_createfromdump("load", "wallet.dump")
-        if self.is_bdb_compiled():
-            self.do_tool_createfromdump("load-bdb", "wallet.dump", "bdb")
-        if self.is_sqlite_compiled():
-            self.do_tool_createfromdump("load-sqlite", "wallet.dump", "sqlite")
 
         self.log.info('Checking createfromdump handling of magic and versions')
         bad_ver_wallet_dump = self.nodes[0].datadir_path / "wallet-bad_ver1.dump"
