@@ -197,10 +197,6 @@ private:
         if (!m_batch->Write(key, value, fOverwrite)) {
             return false;
         }
-        m_database.IncrementUpdateCounter();
-        if (m_database.nUpdateCounter % 1000 == 0) {
-            m_batch->Flush();
-        }
         return true;
     }
 
@@ -210,16 +206,12 @@ private:
         if (!m_batch->Erase(key)) {
             return false;
         }
-        m_database.IncrementUpdateCounter();
-        if (m_database.nUpdateCounter % 1000 == 0) {
-            m_batch->Flush();
-        }
         return true;
     }
 
 public:
-    explicit WalletBatch(WalletDatabase &database, bool _fFlushOnClose = true) :
-        m_batch(database.MakeBatch(_fFlushOnClose)),
+    explicit WalletBatch(WalletDatabase &database) :
+        m_batch(database.MakeBatch()),
         m_database(database)
     {
     }
@@ -308,9 +300,6 @@ private:
  * @return true if the db txn executed successfully, false otherwise.
  */
 bool RunWithinTxn(WalletDatabase& database, std::string_view process_desc, const std::function<bool(WalletBatch&)>& func);
-
-//! Compacts BDB state so that wallet.dat is self-contained (if there are changes)
-void MaybeCompactWalletDB(WalletContext& context);
 
 bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);
 bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);
