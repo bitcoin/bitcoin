@@ -8,23 +8,6 @@ OSX_SDK=$(SDK_PATH)/Xcode-$(XCODE_VERSION)-$(XCODE_BUILD_ID)-extracted-SDK-with-
 
 darwin_native_binutils=native_cctools
 
-ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
-# FORCE_USE_SYSTEM_CLANG is empty, so we use our depends-managed, pinned clang
-# from llvm.org
-
-# Clang is a dependency of native_cctools when FORCE_USE_SYSTEM_CLANG is empty
-darwin_native_toolchain=native_cctools
-
-clang_prog=$(build_prefix)/bin/clang
-clangxx_prog=$(clang_prog)++
-llvm_config_prog=$(build_prefix)/bin/llvm-config
-
-else
-# FORCE_USE_SYSTEM_CLANG is non-empty, so we use the clang from the user's
-# system
-
-darwin_native_toolchain=
-
 # We can't just use $(shell command -v clang) because GNU Make handles builtins
 # in a special way and doesn't know that `command` is a POSIX-standard builtin
 # prior to 1af314465e5dfe3e8baa839a32a72e83c04f26ef, first released in v4.2.90.
@@ -35,9 +18,6 @@ darwin_native_toolchain=
 clang_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang")
 clangxx_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang++")
 llvm_config_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-config")
-
-llvm_lib_dir=$(shell $(llvm_config_prog) --libdir)
-endif
 
 cctools_TOOLS=AR RANLIB STRIP NM LIBTOOL OTOOL INSTALL_NAME_TOOL DSYMUTIL
 

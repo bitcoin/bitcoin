@@ -14,14 +14,6 @@ define $(package)_set_vars
   $(package)_cxx=$(clangxx_prog)
 endef
 
-ifneq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
-define $(package)_preprocess_cmds
-  mkdir -p $($(package)_staging_prefix_dir)/lib && \
-  cp $(llvm_lib_dir)/libLTO.so $($(package)_staging_prefix_dir)/lib/
-endef
-else
-endif
-
 define $(package)_config_cmds
   $($(package)_autoconf)
 endef
