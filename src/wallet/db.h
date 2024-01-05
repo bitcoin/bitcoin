@@ -184,7 +184,6 @@ public:
 enum class DatabaseFormat {
     SQLITE,
     BERKELEY_RO,
-    BERKELEY_SWAP,
 };
 
 struct DatabaseOptions {
