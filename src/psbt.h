@@ -147,7 +147,7 @@ void DeserializeHDKeypaths(Stream& s, const std::vector<unsigned char>& key, std
     if (!pubkey.IsFullyValid()) {
        throw std::ios_base::failure("Invalid pubkey");
     }
-    if (hd_keypaths.count(pubkey) > 0) {
+    if (hd_keypaths.contains(pubkey)) {
         throw std::ios_base::failure("Duplicate Key, pubkey derivation path already provided");
     }
 
@@ -417,7 +417,7 @@ struct PSBTInput
                     if (!pubkey.IsFullyValid()) {
                        throw std::ios_base::failure("Invalid pubkey");
                     }
-                    if (partial_sigs.count(pubkey.GetID()) > 0) {
+                    if (partial_sigs.contains(pubkey.GetID())) {
                         throw std::ios_base::failure("Duplicate Key, input partial signature for pubkey already provided");
                     }
 
@@ -493,7 +493,7 @@ struct PSBTInput
                     // Read in the hash from key
                     std::vector<unsigned char> hash_vec(key.begin() + 1, key.end());
                     uint160 hash(hash_vec);
-                    if (ripemd160_preimages.count(hash) > 0) {
+                    if (ripemd160_preimages.contains(hash)) {
                         throw std::ios_base::failure("Duplicate Key, input ripemd160 preimage already provided");
                     }
 
@@ -514,7 +514,7 @@ struct PSBTInput
                     // Read in the hash from key
                     std::vector<unsigned char> hash_vec(key.begin() + 1, key.end());
                     uint256 hash(hash_vec);
-                    if (sha256_preimages.count(hash) > 0) {
+                    if (sha256_preimages.contains(hash)) {
                         throw std::ios_base::failure("Duplicate Key, input sha256 preimage already provided");
                     }
 
@@ -535,7 +535,7 @@ struct PSBTInput
                     // Read in the hash from key
                     std::vector<unsigned char> hash_vec(key.begin() + 1, key.end());
                     uint160 hash(hash_vec);
-                    if (hash160_preimages.count(hash) > 0) {
+                    if (hash160_preimages.contains(hash)) {
                         throw std::ios_base::failure("Duplicate Key, input hash160 preimage already provided");
                     }
 
@@ -556,7 +556,7 @@ struct PSBTInput
                     // Read in the hash from key
                     std::vector<unsigned char> hash_vec(key.begin() + 1, key.end());
                     uint256 hash(hash_vec);
-                    if (hash256_preimages.count(hash) > 0) {
+                    if (hash256_preimages.contains(hash)) {
                         throw std::ios_base::failure("Duplicate Key, input hash256 preimage already provided");
                     }
 
@@ -675,7 +675,7 @@ struct PSBTInput
                     this_prop.subtype = ReadCompactSize(skey);
                     this_prop.key = key;
 
-                    if (m_proprietary.count(this_prop) > 0) {
+                    if (m_proprietary.contains(this_prop)) {
                         throw std::ios_base::failure("Duplicate Key, proprietary key already found");
                     }
                     s >> this_prop.value;
@@ -684,7 +684,7 @@ struct PSBTInput
                 }
                 // Unknown stuff
                 default:
-                    if (unknown.count(key) > 0) {
+                    if (unknown.contains(key)) {
                         throw std::ios_base::failure("Duplicate Key, key for unknown value already provided");
                     }
                     // Read in the value
@@ -910,7 +910,7 @@ struct PSBTOutput
                     this_prop.subtype = ReadCompactSize(skey);
                     this_prop.key = key;
 
-                    if (m_proprietary.count(this_prop) > 0) {
+                    if (m_proprietary.contains(this_prop)) {
                         throw std::ios_base::failure("Duplicate Key, proprietary key already found");
                     }
                     s >> this_prop.value;
@@ -919,7 +919,7 @@ struct PSBTOutput
                 }
                 // Unknown stuff
                 default: {
-                    if (unknown.count(key) > 0) {
+                    if (unknown.contains(key)) {
                         throw std::ios_base::failure("Duplicate Key, key for unknown value already provided");
                     }
                     // Read in the value
@@ -1095,7 +1095,7 @@ struct PartiallySignedTransaction
                     if (!xpub.pubkey.IsFullyValid()) {
                        throw std::ios_base::failure("Invalid pubkey");
                     }
-                    if (global_xpubs.count(xpub) > 0) {
+                    if (global_xpubs.contains(xpub)) {
                        throw std::ios_base::failure("Duplicate key, global xpub already provided");
                     }
                     global_xpubs.insert(xpub);
@@ -1105,7 +1105,7 @@ struct PartiallySignedTransaction
 
                     // Note that we store these swapped to make searches faster.
                     // Serialization uses xpub -> keypath to enqure key uniqueness
-                    if (m_xpubs.count(keypath) == 0) {
+                    if (!m_xpubs.contains(keypath)) {
                         // Make a new set to put the xpub in
                         m_xpubs[keypath] = {xpub};
                     } else {
@@ -1136,7 +1136,7 @@ struct PartiallySignedTransaction
                     this_prop.subtype = ReadCompactSize(skey);
                     this_prop.key = key;
 
-                    if (m_proprietary.count(this_prop) > 0) {
+                    if (m_proprietary.contains(this_prop)) {
                         throw std::ios_base::failure("Duplicate Key, proprietary key already found");
                     }
                     s >> this_prop.value;
@@ -1145,7 +1145,7 @@ struct PartiallySignedTransaction
                 }
                 // Unknown stuff
                 default: {
-                    if (unknown.count(key) > 0) {
+                    if (unknown.contains(key)) {
                         throw std::ios_base::failure("Duplicate Key, key for unknown value already provided");
                     }
                     // Read in the value

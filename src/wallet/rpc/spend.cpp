@@ -34,7 +34,7 @@ static void ParseRecipients(const UniValue& address_amounts, const UniValue& sub
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + address);
         }
 
-        if (destinations.count(dest)) {
+        if (destinations.contains(dest)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + address);
         }
         destinations.insert(dest);
@@ -708,7 +708,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
 
     for (unsigned int idx = 0; idx < subtractFeeFromOutputs.size(); idx++) {
         int pos = subtractFeeFromOutputs[idx].getInt<int>();
-        if (setSubtractFeeFromOutputs.count(pos))
+        if (setSubtractFeeFromOutputs.contains(pos))
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, duplicated position: %d", pos));
         if (pos < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, negative position: %d", pos));
@@ -1510,7 +1510,7 @@ RPCHelpMan sendall()
                 CTxDestination dest;
                 ExtractDestination(out.scriptPubKey, dest);
                 std::string addr{EncodeDestination(dest)};
-                if (addresses_without_amount.count(addr) > 0) {
+                if (addresses_without_amount.contains(addr)) {
                     out.nValue = per_output_without_amount;
                     if (!gave_remaining_to_first) {
                         out.nValue += remainder % addresses_without_amount.size();

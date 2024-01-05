@@ -93,7 +93,7 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
         // collisions (i.e. available.count(i) > 0 does not imply
         // IsTxAvailable(i) == true).
         if (init_status == READ_STATUS_OK) {
-            assert(!pdb.IsTxAvailable(i) || available.count(i) > 0);
+            assert(!pdb.IsTxAvailable(i) || available.contains(i));
         }
 
         bool skip{fuzzed_data_provider.ConsumeBool()};

@@ -188,7 +188,7 @@ void BlockAssembler::onlyUnconfirmed(CTxMemPool::setEntries& testSet)
 {
     for (CTxMemPool::setEntries::iterator iit = testSet.begin(); iit != testSet.end(); ) {
         // Only test txs not already in the block
-        if (inBlock.count((*iit)->GetSharedTx()->GetHash())) {
+        if (inBlock.contains((*iit)->GetSharedTx()->GetHash())) {
             testSet.erase(iit++);
         } else {
             iit++;
@@ -254,7 +254,7 @@ static int UpdatePackagesForAdded(const CTxMemPool& mempool,
         mempool.CalculateDescendants(it, descendants);
         // Insert all descendants (not yet in block) into the modified set
         for (CTxMemPool::txiter desc : descendants) {
-            if (alreadyAdded.count(desc)) {
+            if (alreadyAdded.contains(desc)) {
                 continue;
             }
             ++nDescendantsUpdated;
@@ -326,7 +326,7 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
         if (mi != mempool.mapTx.get<ancestor_score>().end()) {
             auto it = mempool.mapTx.project<0>(mi);
             assert(it != mempool.mapTx.end());
-            if (mapModifiedTx.count(it) || inBlock.count(it->GetSharedTx()->GetHash()) || failedTx.count(it->GetSharedTx()->GetHash())) {
+            if (mapModifiedTx.count(it) || inBlock.contains(it->GetSharedTx()->GetHash()) || failedTx.contains(it->GetSharedTx()->GetHash())) {
                 ++mi;
                 continue;
             }
@@ -360,7 +360,7 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
 
         // We skip mapTx entries that are inBlock, and mapModifiedTx shouldn't
         // contain anything that is inBlock.
-        assert(!inBlock.count(iter->GetSharedTx()->GetHash()));
+        assert(!inBlock.contains(iter->GetSharedTx()->GetHash()));
 
         uint64_t packageSize = iter->GetSizeWithAncestors();
         CAmount packageFees = iter->GetModFeesWithAncestors();

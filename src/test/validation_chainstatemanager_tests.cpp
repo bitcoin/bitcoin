@@ -527,8 +527,8 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
     //   chainstate, and only blocks where are ancestors of the snapshot block
     //   are added as candidates for the background chainstate.
     BOOST_CHECK_EQUAL(cs1.setBlockIndexCandidates.size(), 2);
-    BOOST_CHECK_EQUAL(cs1.setBlockIndexCandidates.count(validated_tip), 1);
-    BOOST_CHECK_EQUAL(cs1.setBlockIndexCandidates.count(assumed_base), 1);
+    BOOST_CHECK(cs1.setBlockIndexCandidates.contains(validated_tip));
+    BOOST_CHECK(cs1.setBlockIndexCandidates.contains(assumed_base));
 
     // The assumed-valid tolerant chain has the assumed valid base as a
     // candidate, but otherwise has none of the assumed-valid (which do not
@@ -544,13 +544,13 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
     // - Blocks 111-120 are added because they have data.
 
     // Check that block 90 is absent
-    BOOST_CHECK_EQUAL(cs2.setBlockIndexCandidates.count(validated_tip), 0);
+    BOOST_CHECK(!cs2.setBlockIndexCandidates.contains(validated_tip));
     // Check that block 109 is absent
-    BOOST_CHECK_EQUAL(cs2.setBlockIndexCandidates.count(assumed_base->pprev), 0);
+    BOOST_CHECK(!cs2.setBlockIndexCandidates.contains(assumed_base->pprev));
     // Check that block 110 is present
-    BOOST_CHECK_EQUAL(cs2.setBlockIndexCandidates.count(assumed_base), 1);
+    BOOST_CHECK(cs2.setBlockIndexCandidates.contains(assumed_base));
     // Check that block 120 is present
-    BOOST_CHECK_EQUAL(cs2.setBlockIndexCandidates.count(assumed_tip), 1);
+    BOOST_CHECK(cs2.setBlockIndexCandidates.contains(assumed_tip));
     // Check that 11 blocks total are present.
     BOOST_CHECK_EQUAL(cs2.setBlockIndexCandidates.size(), num_indexes - last_assumed_valid_idx + 1);
 }

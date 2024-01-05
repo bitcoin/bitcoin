@@ -934,7 +934,7 @@ std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, con
         LOCK(cs_db); // Lock env.m_databases until insert in BerkeleyDatabase constructor
         fs::path data_filename = data_file.filename();
         std::shared_ptr<BerkeleyEnvironment> env = GetBerkeleyEnv(data_file.parent_path(), options.use_shared_memory);
-        if (env->m_databases.count(data_filename)) {
+        if (env->m_databases.contains(data_filename)) {
             error = Untranslated(strprintf("Refusing to load database. Data file '%s' is already loaded.", fs::PathToString(env->Directory() / data_filename)));
             status = DatabaseStatus::FAILED_ALREADY_LOADED;
             return nullptr;

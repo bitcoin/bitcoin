@@ -44,7 +44,7 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
         return feebumper::Result::WALLET_ERROR;
     }
 
-    if (wtx.mapValue.count("replaced_by_txid")) {
+    if (wtx.mapValue.contains("replaced_by_txid")) {
         errors.push_back(strprintf(Untranslated("Cannot bump transaction %s which was already bumped by transaction %s"), wtx.GetHash().ToString(), wtx.mapValue.at("replaced_by_txid")));
         return feebumper::Result::WALLET_ERROR;
     }

@@ -134,7 +134,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     {
         strHTML += "<b>" + tr("Source") + ":</b> " + tr("Generated") + "<br>";
     }
-    else if (wtx.value_map.count("from") && !wtx.value_map["from"].empty())
+    else if (wtx.value_map.contains("from") && !wtx.value_map["from"].empty())
     {
         // Online transaction
         strHTML += "<b>" + tr("From") + ":</b> " + GUIUtil::HtmlEscape(wtx.value_map["from"]) + "<br>";
@@ -168,7 +168,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     //
     // To
     //
-    if (wtx.value_map.count("to") && !wtx.value_map["to"].empty())
+    if (wtx.value_map.contains("to") && !wtx.value_map["to"].empty())
     {
         // Online transaction
         std::string strAddress = wtx.value_map["to"];
@@ -236,7 +236,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
                 if ((toSelf == ISMINE_SPENDABLE) && (fAllFromMe == ISMINE_SPENDABLE))
                     continue;
 
-                if (!wtx.value_map.count("to") || wtx.value_map["to"].empty())
+                if (!wtx.value_map.contains("to") || wtx.value_map["to"].empty())
                 {
                     // Offline transaction
                     CTxDestination address;
@@ -299,9 +299,9 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     //
     // Message
     //
-    if (wtx.value_map.count("message") && !wtx.value_map["message"].empty())
+    if (wtx.value_map.contains("message") && !wtx.value_map["message"].empty())
         strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.value_map["message"], true) + "<br>";
-    if (wtx.value_map.count("comment") && !wtx.value_map["comment"].empty())
+    if (wtx.value_map.contains("comment") && !wtx.value_map["comment"].empty())
         strHTML += "<br><b>" + tr("Comment") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.value_map["comment"], true) + "<br>";
 
     strHTML += "<b>" + tr("Transaction ID") + ":</b> " + rec->getTxHash() + "<br>";

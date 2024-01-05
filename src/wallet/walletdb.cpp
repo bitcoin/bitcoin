@@ -413,7 +413,7 @@ bool LoadEncryptionKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue,
         ssKey >> nID;
         CMasterKey kMasterKey;
         ssValue >> kMasterKey;
-        if(pwallet->mapMasterKeys.count(nID) != 0)
+        if(pwallet->mapMasterKeys.contains(nID))
         {
             strErr = strprintf("Error reading wallet database: duplicate CMasterKey id %u", nID);
             return false;
@@ -1406,7 +1406,7 @@ bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
         std::string type;
         key >> type;
 
-        if (types.count(type) > 0) {
+        if (types.contains(type)) {
             if (!m_batch->Erase(Span{key_data})) {
                 cursor.reset(nullptr);
                 m_batch->TxnAbort();

@@ -594,7 +594,7 @@ void CBlockPolicyEstimator::processTransaction(const NewMempoolTransactionInfo& 
     LOCK(m_cs_fee_estimator);
     const unsigned int txHeight = tx.info.txHeight;
     const auto& hash = tx.info.m_tx->GetHash();
-    if (mapMemPoolTxs.count(hash)) {
+    if (mapMemPoolTxs.contains(hash)) {
         LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error mempool tx %s already being tracked\n",
                  hash.ToString());
         return;

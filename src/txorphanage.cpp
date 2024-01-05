@@ -23,7 +23,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
 
     const Txid& hash = tx->GetHash();
     const Wtxid& wtxid = tx->GetWitnessHash();
-    if (m_orphans.count(hash))
+    if (m_orphans.contains(hash))
         return false;
 
     // Ignore big transactions, to avoid a
@@ -173,9 +173,9 @@ bool TxOrphanage::HaveTx(const GenTxid& gtxid) const
 {
     LOCK(m_mutex);
     if (gtxid.IsWtxid()) {
-        return m_wtxid_to_orphan_it.count(Wtxid::FromUint256(gtxid.GetHash()));
+        return m_wtxid_to_orphan_it.contains(Wtxid::FromUint256(gtxid.GetHash()));
     } else {
-        return m_orphans.count(Txid::FromUint256(gtxid.GetHash()));
+        return m_orphans.contains(Txid::FromUint256(gtxid.GetHash()));
     }
 }
 

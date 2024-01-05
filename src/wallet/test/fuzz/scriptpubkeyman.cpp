@@ -121,7 +121,7 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                 const CScript script{ConsumeScript(fuzzed_data_provider)};
                 auto is_mine{spk_manager->IsMine(script)};
                 if (is_mine == isminetype::ISMINE_SPENDABLE) {
-                    assert(spk_manager->GetScriptPubKeys().count(script));
+                    assert(spk_manager->GetScriptPubKeys().contains(script));
                 }
             },
             [&] {

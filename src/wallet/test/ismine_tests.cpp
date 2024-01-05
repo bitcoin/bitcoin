@@ -64,13 +64,13 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         // Keystore does not have key
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has key
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 1);
+        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // P2PK compressed - Descriptor
@@ -95,13 +95,13 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         // Keystore does not have key
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has key
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(uncompressedKey));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 1);
+        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // P2PK uncompressed - Descriptor
@@ -126,13 +126,13 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         // Keystore does not have key
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has key
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 1);
+        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey));
     }
 
     // P2PKH compressed - Descriptor
@@ -157,13 +157,13 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         // Keystore does not have key
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has key
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(uncompressedKey));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 1);
+        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // P2PKH uncompressed - Descriptor
@@ -190,19 +190,19 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         // Keystore does not have redeemScript or key
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has redeemScript but no key
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(redeemScript));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has redeemScript and key
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 1);
+        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // P2SH - Descriptor
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // (P2PKH inside) P2SH inside P2SH (invalid) - Descriptor
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // (P2PKH inside) P2SH inside P2WSH (invalid) - Descriptor
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // P2WPKH inside P2WSH (invalid) - Descriptor
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // (P2PKH inside) P2WSH inside P2WSH (invalid) - Descriptor
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 1);
+        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // P2WPKH compressed - Descriptor
@@ -368,13 +368,13 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         // Keystore has key, but no P2SH redeemScript
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has key and P2SH redeemScript
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // P2WPKH uncompressed (invalid) - Descriptor
@@ -397,28 +397,28 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         // Keystore does not have any keys
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has 1/2 keys
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(uncompressedKey));
 
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has 2/2 keys
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[1]));
 
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has 2/2 keys and the script
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey));
 
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // scriptPubKey multisig - Descriptor
@@ -447,13 +447,13 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         // Keystore has no redeemScript
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has redeemScript
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(redeemScript));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 1);
+        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // P2SH multisig - Descriptor
@@ -484,19 +484,19 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         // Keystore has keys, but no witnessScript or P2SH redeemScript
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has keys and witnessScript, but no P2SH redeemScript
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(witnessScript));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has keys, witnessScript, P2SH redeemScript
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 1);
+        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // P2WSH multisig with compressed keys - Descriptor
@@ -527,19 +527,19 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         // Keystore has keys, but no witnessScript or P2SH redeemScript
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has keys and witnessScript, but no P2SH redeemScript
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(witnessScript));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has keys, witnessScript, P2SH redeemScript
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // P2WSH multisig with uncompressed key (invalid) - Descriptor
@@ -565,21 +565,21 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         // Keystore has no witnessScript, P2SH redeemScript, or keys
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has witnessScript and P2SH redeemScript, but no keys
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(redeemScript));
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(witnessScript));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
 
         // Keystore has keys, witnessScript, P2SH redeemScript
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[1]));
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 1);
+        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // P2WSH multisig wrapped in P2SH - Descriptor
@@ -671,7 +671,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // witness unspendable
@@ -686,7 +686,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // witness unknown
@@ -701,7 +701,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 
     // Nonstandard
@@ -716,7 +716,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().count(scriptPubKey) == 0);
+        BOOST_CHECK(!keystore.GetLegacyScriptPubKeyMan()->GetScriptPubKeys().contains(scriptPubKey));
     }
 }
 

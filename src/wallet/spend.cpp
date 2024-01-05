@@ -208,7 +208,7 @@ void CoinsResult::Erase(const std::unordered_set<COutPoint, SaltedOutpointHasher
     for (auto& [type, vec] : coins) {
         auto remove_it = std::remove_if(vec.begin(), vec.end(), [&](const COutput& coin) {
             // remove it if it's on the set
-            if (coins_to_remove.count(coin.outpoint) == 0) return false;
+            if (!coins_to_remove.contains(coin.outpoint)) return false;
 
             // update cached amounts
             total_amount -= coin.txout.nValue;
@@ -354,7 +354,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         // be a 1-block reorg away from the chain where transactions A and C
         // were accepted to another chain where B, B', and C were all
         // accepted.
-        if (nDepth == 0 && wtx.mapValue.count("replaces_txid")) {
+        if (nDepth == 0 && wtx.mapValue.contains("replaces_txid")) {
             safeTx = false;
         }
 
@@ -366,7 +366,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         // intending to replace A', but potentially resulting in a scenario
         // where A, A', and D could all be accepted (instead of just B and
         // D, or just A and A' like the user would want).
-        if (nDepth == 0 && wtx.mapValue.count("replaced_by_txid")) {
+        if (nDepth == 0 && wtx.mapValue.contains("replaced_by_txid")) {
             safeTx = false;
         }
 
@@ -1374,7 +1374,7 @@ util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CM
         const CTxOut& txOut = tx.vout[idx];
         CTxDestination dest;
         ExtractDestination(txOut.scriptPubKey, dest);
-        CRecipient recipient = {dest, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
+        CRecipient recipient = {dest, txOut.nValue, setSubtractFeeFromOutputs.contains(idx)};
         vecSend.push_back(recipient);
     }
 

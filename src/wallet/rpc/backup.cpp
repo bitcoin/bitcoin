@@ -798,7 +798,7 @@ RPCHelpMan dumpwallet()
                 file << strprintf("label=%s", strLabel);
             } else if (keyid == seed_id) {
                 file << "hdseed=1";
-            } else if (mapKeyPool.count(keyid)) {
+            } else if (mapKeyPool.contains(keyid)) {
                 file << "reserve=1";
             } else if (metadata.hdKeypath == "s") {
                 file << "inactivehdseed=1";
@@ -1006,7 +1006,7 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
         }
         CPubKey pubkey = key.GetPubKey();
         CKeyID id = pubkey.GetID();
-        if (pubkey_map.count(id)) {
+        if (pubkey_map.contains(id)) {
             pubkey_map.erase(id);
         }
         privkey_map.emplace(id, key);
@@ -1020,7 +1020,7 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
         auto error = RecurseImportData(script, import_data, ScriptContext::TOP);
 
         // Verify whether the watchonly option corresponds to the availability of private keys.
-        bool spendable = std::all_of(import_data.used_keys.begin(), import_data.used_keys.end(), [&](const std::pair<CKeyID, bool>& used_key){ return privkey_map.count(used_key.first) > 0; });
+        bool spendable = std::all_of(import_data.used_keys.begin(), import_data.used_keys.end(), [&](const std::pair<CKeyID, bool>& used_key){ return privkey_map.contains(used_key.first); });
         if (!watchOnly && !spendable) {
             warnings.push_back("Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag.");
         }
@@ -1032,7 +1032,7 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
         if (error.empty()) {
             for (const auto& require_key : import_data.used_keys) {
                 if (!require_key.second) continue; // Not a required key
-                if (pubkey_map.count(require_key.first) == 0 && privkey_map.count(require_key.first) == 0) {
+                if (!pubkey_map.contains(require_key.first) && !privkey_map.contains(require_key.first)) {
                     error = "some required keys are missing";
                 }
             }
@@ -1050,7 +1050,7 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
             if (import_data.witnessscript) warnings.push_back("Ignoring witnessscript as this is not a (P2SH-)P2WSH script.");
             for (auto it = privkey_map.begin(); it != privkey_map.end(); ) {
                 auto oldit = it++;
-                if (import_data.used_keys.count(oldit->first) == 0) {
+                if (!import_data.used_keys.contains(oldit->first)) {
                     warnings.push_back("Ignoring irrelevant private key.");
                     privkey_map.erase(oldit);
                 }
@@ -1130,7 +1130,7 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
         CKeyID id = pubkey.GetID();
 
         // Check if this private key corresponds to a public key from the descriptor
-        if (!pubkey_map.count(id)) {
+        if (!pubkey_map.contains(id)) {
             warnings.push_back("Ignoring irrelevant private key.");
         } else {
             privkey_map.emplace(id, key);
@@ -1143,10 +1143,10 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
     // perhaps triggering a false warning message. This is consistent with the current wallet IsMine check.
     bool spendable = std::all_of(pubkey_map.begin(), pubkey_map.end(),
         [&](const std::pair<CKeyID, CPubKey>& used_key) {
-            return privkey_map.count(used_key.first) > 0;
+            return privkey_map.contains(used_key.first);
         }) && std::all_of(import_data.key_origins.begin(), import_data.key_origins.end(),
         [&](const std::pair<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& entry) {
-            return privkey_map.count(entry.first) > 0;
+            return privkey_map.contains(entry.first);
         });
     if (!watch_only && !spendable) {
         warnings.push_back("Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag.");
@@ -1819,7 +1819,7 @@ RPCHelpMan listdescriptors()
         wallet_descriptors.push_back({
             descriptor,
             wallet_descriptor.creation_time,
-            active_spk_mans.count(desc_spk_man) != 0,
+            active_spk_mans.contains(desc_spk_man),
             wallet->IsInternalScriptPubKeyMan(desc_spk_man),
             is_range ? std::optional(std::make_pair(wallet_descriptor.range_start, wallet_descriptor.range_end)) : std::nullopt,
             wallet_descriptor.next_index
