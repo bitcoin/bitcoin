@@ -26,9 +26,7 @@ class WalletDatabase;
 struct WalletContext;
 
 static const DatabaseFormat DATABASE_FORMATS[] = {
-#ifdef USE_SQLITE
        DatabaseFormat::SQLITE,
-#endif
 #ifdef USE_BDB
        DatabaseFormat::BERKELEY,
 #endif

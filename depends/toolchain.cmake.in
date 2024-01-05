@@ -132,13 +132,6 @@ else()
   set(WITH_BDB ON CACHE BOOL "")
 endif()
 
-set(sqlite_packages @sqlite_packages@)
-if("${wallet_packages}" STREQUAL "" OR "${sqlite_packages}" STREQUAL "")
-  set(WITH_SQLITE OFF CACHE BOOL "")
-else()
-  set(WITH_SQLITE ON CACHE BOOL "")
-endif()
-
 set(upnp_packages @upnp_packages@)
 if("${upnp_packages}" STREQUAL "")
   set(WITH_MINIUPNPC OFF CACHE BOOL "")
