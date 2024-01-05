@@ -9,4 +9,10 @@
   { include: [ "<boost/operators.hpp>", public, "<boost/multi_index/hashed_index.hpp>", public ] },
   { include: [ "<boost/operators.hpp>", public, "<boost/multi_index/ordered_index.hpp>", public ] },
   { include: [ "<boost/operators.hpp>", public, "<boost/multi_index/sequenced_index.hpp>", public ] },
+
+  # Boost.Signals2
+  { symbol: ["boost::function", "private", "<boost/signals2/signal.hpp>", "public" ] },
+  { symbol: ["boost::optional", "private", "<boost/signals2/optional_last_value.hpp>", "public" ] },
+  { symbol: ["boost::signals2::mutex", "private", "<boost/signals2/signal.hpp>", "public" ] },
+  { symbol: ["boost::signals2::signal", "private", "<boost/signals2/signal.hpp>", "public" ] },
 ]
