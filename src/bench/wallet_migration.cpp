@@ -49,7 +49,7 @@ static void WalletMigration(benchmark::Bench& bench)
         mtx.vout.emplace_back(COIN, GetScriptForDestination(*Assert(wallet->GetNewDestination(OutputType::LEGACY, strprintf("legacy_%d", j)))));
         mtx.vout.emplace_back(COIN, scripts_watch_only.at(j % NUM_WATCH_ONLY_ADDR));
         mtx.vin.resize(2);
-        wallet->AddToWallet(MakeTransactionRef(mtx), TxStateInactive{}, /*update_wtx=*/nullptr, /*fFlushOnClose=*/false, /*rescanning_old_block=*/true);
+        wallet->AddToWallet(MakeTransactionRef(mtx), TxStateInactive{}, /*update_wtx=*/nullptr, /*rescanning_old_block=*/true);
     }
 
     // As we don't support legacy wallets anymore, remove wallet from context to make it look like it was externally loaded.
