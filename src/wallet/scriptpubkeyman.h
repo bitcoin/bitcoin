@@ -501,7 +501,6 @@ public:
 
     /* Set the HD chain model (chain child index counters) and writes it to the database */
     void AddHDChain(const CHDChain& chain);
-    const CHDChain& GetHDChain() const { return m_hd_chain; }
 
     //! Remove a watch only script from the keystore
     bool RemoveWatchOnly(const CScript &dest);
