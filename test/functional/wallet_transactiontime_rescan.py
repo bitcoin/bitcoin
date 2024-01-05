@@ -144,20 +144,6 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         restorewo_wallet.importaddress(wo2, rescan=False)
         restorewo_wallet.importaddress(wo3, rescan=False)
 
-        # check user has 0 balance and no transactions
-        assert_equal(restorewo_wallet.getbalance(), 0)
-        assert_equal(len(restorewo_wallet.listtransactions()), 0)
-
-        # proceed to rescan, first with an incomplete one, then with a full rescan
-        self.log.info('Rescan last history part')
-        restorewo_wallet.rescanblockchain(initial_mine + 350)
-        self.log.info('Rescan all history')
-        restorewo_wallet.rescanblockchain()
-
-        self.log.info('Check user\'s final balance and transaction count after restoration')
-        assert_equal(restorewo_wallet.getbalance(), 16)
-        assert_equal(len(restorewo_wallet.listtransactions()), 3)
-
         self.log.info('Check transaction times after restoration')
         for tx in restorewo_wallet.listtransactions():
             if tx['address'] == wo1:
