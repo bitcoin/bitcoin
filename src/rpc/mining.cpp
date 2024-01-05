@@ -399,7 +399,7 @@ static RPCHelpMan generateblock()
     obj.pushKV("hash", block_out->GetHash().GetHex());
     if (!process_new_block) {
         DataStream block_ser;
-        block_ser << RPCTxSerParams(*block_out);
+        block_ser << TX_WITH_WITNESS(*block_out);
         obj.pushKV("hex", HexStr(block_ser));
     }
     return obj;

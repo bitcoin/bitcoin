@@ -316,7 +316,7 @@ static bool rest_block(const std::any& context,
     switch (rf) {
     case RESTResponseFormat::BINARY: {
         DataStream ssBlock;
-        ssBlock << RPCTxSerParams(block);
+        ssBlock << TX_WITH_WITNESS(block);
         std::string binaryBlock = ssBlock.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
         req->WriteReply(HTTP_OK, binaryBlock);
@@ -325,7 +325,7 @@ static bool rest_block(const std::any& context,
 
     case RESTResponseFormat::HEX: {
         DataStream ssBlock;
-        ssBlock << RPCTxSerParams(block);
+        ssBlock << TX_WITH_WITNESS(block);
         std::string strHex = HexStr(ssBlock) + "\n";
         req->WriteHeader("Content-Type", "text/plain");
         req->WriteReply(HTTP_OK, strHex);
@@ -722,7 +722,7 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
     switch (rf) {
     case RESTResponseFormat::BINARY: {
         DataStream ssTx;
-        ssTx << RPCTxSerParams(tx);
+        ssTx << TX_WITH_WITNESS(tx);
 
         std::string binaryTx = ssTx.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
@@ -732,7 +732,7 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
 
     case RESTResponseFormat::HEX: {
         DataStream ssTx;
-        ssTx << RPCTxSerParams(tx);
+        ssTx << TX_WITH_WITNESS(tx);
 
         std::string strHex = HexStr(ssTx) + "\n";
         req->WriteHeader("Content-Type", "text/plain");
