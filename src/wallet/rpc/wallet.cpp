@@ -398,10 +398,7 @@ static RPCHelpMan createwallet()
     if (self.Arg<bool>("descriptors")) {
         flags |= WALLET_FLAG_DESCRIPTORS;
     } else {
-        if (!context.chain->rpcEnableDeprecated("create_bdb")) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "BDB wallet creation is deprecated and will be removed in a future release."
-                                                 " In this release it can be re-enabled temporarily with the -deprecatedrpc=create_bdb setting.");
-        }
+        throw JSONRPCError(RPC_WALLET_ERROR, "It is no longer possible to create a legacy wallet.");
     }
     if (!request.params[7].isNull() && request.params[7].get_bool()) {
 #ifdef ENABLE_EXTERNAL_SIGNER
@@ -410,12 +407,6 @@ static RPCHelpMan createwallet()
         throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without external signing support (required for external signing)");
 #endif
     }
-
-#ifndef USE_BDB
-    if (!(flags & WALLET_FLAG_DESCRIPTORS)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without bdb support (required for legacy wallets)");
-    }
-#endif
 
     DatabaseOptions options;
     DatabaseStatus status;
