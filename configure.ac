@@ -142,12 +142,6 @@ AC_ARG_WITH([sqlite],
   [use_sqlite=$withval],
   [use_sqlite=auto])
 
-AC_ARG_WITH([bdb],
-  [AS_HELP_STRING([--without-bdb],
-  [disable bdb wallet support (default is enabled if wallet is enabled)])],
-  [use_bdb=$withval],
-  [use_bdb=auto])
-
 AC_ARG_ENABLE([usdt],
   [AS_HELP_STRING([--enable-usdt],
   [enable tracepoints for Userspace, Statically Defined Tracing (default is yes if sys/sdt.h is found)])],
@@ -695,13 +689,6 @@ case $host in
            AX_CHECK_PREPROC_FLAG([-Xclang -internal-isystem -Xclang /usr/local/include/], [CORE_CPPFLAGS="$CORE_CPPFLAGS -Xclang -internal-isystem -Xclang /usr/local/include/"], [], [$CXXFLAG_WERROR])
          fi
 
-         if test "$use_bdb" != "no" && $BREW list --versions berkeley-db@4 >/dev/null && test "$BDB_CFLAGS" = "" && test "$BDB_LIBS" = ""; then
-           bdb_prefix=$($BREW --prefix berkeley-db@4 2>/dev/null)
-           dnl This must precede the call to BITCOIN_FIND_BDB48 below.
-           BDB_CFLAGS="-I$bdb_prefix/include"
-           BDB_LIBS="-L$bdb_prefix/lib -ldb_cxx-4.8"
-         fi
-
          if $BREW list --versions qt@5 >/dev/null; then
            export PKG_CONFIG_PATH="$($BREW --prefix qt@5 2>/dev/null)/lib/pkgconfig:$PKG_CONFIG_PATH"
          fi
@@ -1170,14 +1157,6 @@ if test "$enable_fuzz_binary" = "yes"; then
 fi
 
 if test "$enable_wallet" != "no"; then
-    dnl Check for libdb_cxx only if wallet enabled
-    if test "$use_bdb" != "no"; then
-      BITCOIN_FIND_BDB48
-      if test "$suppress_external_warnings" != "no" ; then
-        BDB_CPPFLAGS=SUPPRESS_WARNINGS($BDB_CPPFLAGS)
-      fi
-    fi
-
     dnl Check for sqlite3
     if test "$use_sqlite" != "no"; then
       PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.7.17], [have_sqlite=yes], [have_sqlite=no])
@@ -1187,14 +1166,6 @@ if test "$enable_wallet" != "no"; then
     fi
     use_sqlite=yes
     AC_MSG_RESULT([$use_sqlite])
-
-    dnl Disable wallet if both --without-bdb and --without-sqlite
-    if test "$use_bdb$use_sqlite" = "nono"; then
-        if test "$enable_wallet" = "yes"; then
-            AC_MSG_ERROR([wallet functionality requested but no BDB or SQLite support available.])
-        fi
-        enable_wallet=no
-    fi
 fi
 
 if test "$use_usdt" != "no"; then
@@ -1592,7 +1563,6 @@ AM_CONDITIONAL([BUILD_DARWIN], [test "$BUILD_OS" = "darwin"])
 AM_CONDITIONAL([TARGET_LINUX], [test "$TARGET_OS" = "linux"])
 AM_CONDITIONAL([TARGET_WINDOWS], [test "$TARGET_OS" = "windows"])
 AM_CONDITIONAL([ENABLE_WALLET], [test "$enable_wallet" = "yes"])
-AM_CONDITIONAL([USE_BDB], [test "$use_bdb" = "yes"])
 AM_CONDITIONAL([ENABLE_TESTS], [test "$BUILD_TEST" = "yes"])
 AM_CONDITIONAL([ENABLE_FUZZ], [test "$enable_fuzz" = "yes"])
 AM_CONDITIONAL([ENABLE_FUZZ_BINARY], [test "$enable_fuzz_binary" = "yes"])
@@ -1667,7 +1637,6 @@ AC_SUBST(X86_SHANI_CXXFLAGS)
 AC_SUBST(ARM_CRC_CXXFLAGS)
 AC_SUBST(ARM_SHANI_CXXFLAGS)
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
-AC_SUBST(USE_BDB)
 AC_SUBST(ENABLE_EXTERNAL_SIGNER)
 AC_SUBST(USE_UPNP)
 AC_SUBST(USE_QRCODE)
@@ -1739,7 +1708,6 @@ echo "  multiprocess    = $build_multiprocess"
 echo "  with wallet     = $enable_wallet"
 if test "$enable_wallet" != "no"; then
     echo "    with sqlite   = $use_sqlite"
-    echo "    with bdb      = $use_bdb"
 fi
 echo "  with gui / qt   = $bitcoin_enable_qt"
 if test $bitcoin_enable_qt != "no"; then
