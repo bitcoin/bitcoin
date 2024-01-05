@@ -31,9 +31,6 @@ from test_framework.wallet_util import (
 )
 
 class ImportDescriptorsTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.num_nodes = 2
         # whitelist peers to speed up tx relay / mempool sync

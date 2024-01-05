@@ -28,9 +28,6 @@ from test_framework.util import (
 
 
 class BackwardsCompatibilityTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 12
@@ -91,44 +88,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
     def major_version_at_least(self, node, major):
         node_major, _, _ = self.split_version(node)
         return node_major >= major
-
-    def test_v19_addmultisigaddress(self):
-        if not self.is_bdb_compiled():
-            return
-        # Specific test for addmultisigaddress using v19
-        # See #18075
-        self.log.info("Testing 0.19 addmultisigaddress case (#18075)")
-        node_master = self.nodes[1]
-        node_v19 = self.nodes[self.num_nodes - 4]
-        node_v19.rpc.createwallet(wallet_name="w1_v19")
-        wallet = node_v19.get_wallet_rpc("w1_v19")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled']
-        assert info['keypoolsize'] > 0
-        # Use addmultisigaddress (see #18075)
-        address_18075 = wallet.rpc.addmultisigaddress(1, ["0296b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52", "037211a824f55b505228e4c3d5194c1fcfaa15a456abdf37f9b9d97a4040afc073"], "", "legacy")["address"]
-        assert wallet.getaddressinfo(address_18075)["solvable"]
-        node_v19.unloadwallet("w1_v19")
-
-        # Copy the 0.19 wallet to the last Bitcoin Core version and open it:
-        shutil.copytree(
-            os.path.join(node_v19.wallets_path, "w1_v19"),
-            os.path.join(node_master.wallets_path, "w1_v19")
-        )
-        node_master.loadwallet("w1_v19")
-        wallet = node_master.get_wallet_rpc("w1_v19")
-        assert wallet.getaddressinfo(address_18075)["solvable"]
-
-        # Now copy that same wallet back to 0.19 to make sure no automatic upgrade breaks it
-        node_master.unloadwallet("w1_v19")
-        shutil.rmtree(os.path.join(node_v19.wallets_path, "w1_v19"))
-        shutil.copytree(
-            os.path.join(node_master.wallets_path, "w1_v19"),
-            os.path.join(node_v19.wallets_path, "w1_v19")
-        )
-        node_v19.loadwallet("w1_v19")
-        wallet = node_v19.get_wallet_rpc("w1_v19")
-        assert wallet.getaddressinfo(address_18075)["solvable"]
 
     def run_test(self):
         node_miner = self.nodes[0]
@@ -208,8 +167,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                     shutil.copyfile(source / "wallet.dat", dest)
                 else:
                     shutil.copytree(source, dest)
-
-        self.test_v19_addmultisigaddress()
 
         self.log.info("Test that a wallet made on master can be opened on:")
         # This test only works on the nodes that support descriptor wallets

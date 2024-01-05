@@ -20,7 +20,6 @@ from test_framework.util import (
 
 class ToolWalletTest(BitcoinTestFramework):
     def add_options(self, parser):
-        self.add_wallet_options(parser)
         parser.add_argument("--bdbro", action="store_true", help="Use the BerkeleyRO internal parser when dumping a Berkeley DB wallet file")
 
     def set_test_params(self):
@@ -34,8 +33,6 @@ class ToolWalletTest(BitcoinTestFramework):
 
     def bitcoin_wallet_process(self, *args):
         default_args = ['-datadir={}'.format(self.nodes[0].datadir_path), '-chain=%s' % self.chain]
-        if not self.options.descriptors and 'create' in args:
-            default_args.append('-legacy')
         if "dump" in args and self.options.bdbro:
             default_args.append("-withinternalbdb")
 
@@ -70,34 +67,19 @@ class ToolWalletTest(BitcoinTestFramework):
 
     def get_expected_info_output(self, name="", transactions=0, keypool=2, address=0, imported_privs=0):
         wallet_name = self.default_wallet_name if name == "" else name
-        if self.options.descriptors:
-            output_types = 4  # p2pkh, p2sh, segwit, bech32m
-            return textwrap.dedent('''\
-                Wallet info
-                ===========
-                Name: %s
-                Format: sqlite
-                Descriptors: yes
-                Encrypted: no
-                HD (hd seed available): yes
-                Keypool Size: %d
-                Transactions: %d
-                Address Book: %d
-            ''' % (wallet_name, keypool * output_types, transactions, imported_privs * 3 + address))
-        else:
-            output_types = 3  # p2pkh, p2sh, segwit. Legacy wallets do not support bech32m.
-            return textwrap.dedent('''\
-                Wallet info
-                ===========
-                Name: %s
-                Format: bdb
-                Descriptors: no
-                Encrypted: no
-                HD (hd seed available): yes
-                Keypool Size: %d
-                Transactions: %d
-                Address Book: %d
-            ''' % (wallet_name, keypool, transactions, (address + imported_privs) * output_types))
+        output_types = 4  # p2pkh, p2sh, segwit, bech32m
+        return textwrap.dedent('''\
+            Wallet info
+            ===========
+            Name: %s
+            Format: sqlite
+            Descriptors: yes
+            Encrypted: no
+            HD (hd seed available): yes
+            Keypool Size: %d
+            Transactions: %d
+            Address Book: %d
+        ''' % (wallet_name, keypool * output_types, transactions, imported_privs * 3 + address))
 
     def read_dump(self, filename):
         dump = OrderedDict()
@@ -191,10 +173,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error('Error parsing command line arguments: Invalid parameter -foo', '-foo')
         self.assert_raises_tool_error('No method provided. Run `bitcoin-wallet -help` for valid methods.')
         self.assert_raises_tool_error('Wallet name must be provided when creating a new wallet.', 'create')
-        locked_dir = self.nodes[0].wallets_path
-        error = 'Error initializing wallet database environment "{}"!'.format(locked_dir)
-        if self.options.descriptors:
-            error = f"SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['PACKAGE_NAME']}?"
+        error = f"SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['PACKAGE_NAME']}?"
         self.assert_raises_tool_error(
             error,
             '-wallet=' + self.default_wallet_name,
@@ -294,27 +273,13 @@ class ToolWalletTest(BitcoinTestFramework):
         self.log.debug('Wallet file timestamp after calling getwalletinfo: {}'.format(timestamp_after))
 
         assert_equal(0, out['txcount'])
-        if not self.options.descriptors:
-            assert_equal(1000, out['keypoolsize'])
-            assert_equal(1000, out['keypoolsize_hd_internal'])
-            assert_equal(True, 'hdseedid' in out)
-        else:
-            assert_equal(4000, out['keypoolsize'])
-            assert_equal(4000, out['keypoolsize_hd_internal'])
+        assert_equal(4000, out['keypoolsize'])
+        assert_equal(4000, out['keypoolsize_hd_internal'])
 
         self.log_wallet_timestamp_comparison(timestamp_before, timestamp_after)
         assert_equal(timestamp_before, timestamp_after)
         assert_equal(shasum_after, shasum_before)
         self.log.debug('Wallet file shasum unchanged\n')
-
-    def test_salvage(self):
-        # TODO: Check salvage actually salvages and doesn't break things. https://github.com/bitcoin/bitcoin/issues/7463
-        self.log.info('Check salvage')
-        self.start_node(0)
-        self.nodes[0].createwallet("salvage")
-        self.stop_node(0)
-
-        self.assert_tool_output('', '-wallet=salvage', 'salvage')
 
     def test_dump_createfromdump(self):
         self.start_node(0)
@@ -440,15 +405,15 @@ class ToolWalletTest(BitcoinTestFramework):
         self.stop_node(0)
 
         # Wallet tool should successfully give info for this wallet
-        expected_output = textwrap.dedent(f'''\
+        expected_output = textwrap.dedent('''\
             Wallet info
             ===========
             Name: conflicts
-            Format: {"sqlite" if self.options.descriptors else "bdb"}
-            Descriptors: {"yes" if self.options.descriptors else "no"}
+            Format: sqlite
+            Descriptors: yes
             Encrypted: no
             HD (hd seed available): yes
-            Keypool Size: {"8" if self.options.descriptors else "1"}
+            Keypool Size: 8
             Transactions: 4
             Address Book: 4
         ''')
@@ -462,9 +427,6 @@ class ToolWalletTest(BitcoinTestFramework):
         self.test_tool_wallet_info_after_transaction()
         self.test_tool_wallet_create_on_existing_wallet()
         self.test_getwalletinfo_on_different_wallet()
-        if not self.options.descriptors:
-            # Salvage is a legacy wallet only thing
-            self.test_salvage()
         self.test_dump_createfromdump()
         self.test_chainless_conflicts()
 

@@ -19,9 +19,6 @@ from test_framework.wallet_util import generate_keypair
 from decimal import Decimal
 
 class ListSinceBlockTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
@@ -44,8 +41,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         self.test_double_send()
         self.double_spends_filtered()
         self.test_targetconfirmations()
-        if self.options.descriptors:
-            self.test_desc()
+        self.test_desc()
         self.test_send_to_self()
         self.test_op_return()
         self.test_label()

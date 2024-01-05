@@ -45,9 +45,6 @@ SEQUENCE_LOCKTIME_MASK = 0x0000ffff
 NOT_FINAL_ERROR = "non-BIP68-final"
 
 class BIP68Test(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [
@@ -58,6 +55,7 @@ class BIP68Test(BitcoinTestFramework):
                 '-testactivationheight=csv@432',
             ],
         ]
+        self.uses_wallet = None
 
     def run_test(self):
         self.relayfee = self.nodes[0].getnetworkinfo()["relayfee"]

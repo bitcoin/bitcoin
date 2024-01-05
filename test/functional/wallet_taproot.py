@@ -187,9 +187,6 @@ def compute_raw_taproot_address(pubkey):
 class WalletTaprootTest(BitcoinTestFramework):
     """Test generation and spending of P2TR address outputs."""
 
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
