@@ -45,7 +45,6 @@ static void SetupWalletToolArgs(ArgsManager& argsman)
 
     argsman.AddCommand("info", "Get wallet info");
     argsman.AddCommand("create", "Create new wallet file");
-    argsman.AddCommand("salvage", "Attempt to recover private keys from a corrupt wallet. Warning: 'salvage' is experimental.");
     argsman.AddCommand("dump", "Print out all of the wallet key-value records");
     argsman.AddCommand("createfromdump", "Create new wallet file from dumped records");
 }
