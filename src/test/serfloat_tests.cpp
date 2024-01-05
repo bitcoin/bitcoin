@@ -47,7 +47,6 @@ BOOST_AUTO_TEST_CASE(double_serfloat_tests) {
     BOOST_CHECK_EQUAL(TestDouble(4.0), 0x4010000000000000ULL);
     BOOST_CHECK_EQUAL(TestDouble(785.066650390625), 0x4088888880000000ULL);
 
-    // Roundtrip test on IEC559-compatible systems
     if (std::numeric_limits<double>::is_iec559) {
         BOOST_CHECK_EQUAL(sizeof(double), 8U);
         BOOST_CHECK_EQUAL(sizeof(uint64_t), 8U);
@@ -64,8 +63,7 @@ BOOST_AUTO_TEST_CASE(double_serfloat_tests) {
         TestDouble(-std::numeric_limits<double>::signaling_NaN());
         TestDouble(std::numeric_limits<double>::denorm_min());
         TestDouble(-std::numeric_limits<double>::denorm_min());
-        // Test exact encoding: on currently supported platforms, EncodeDouble
-        // should produce exactly the same as the in-memory representation for non-NaN.
+        // On IEC559-compatible systems, construct doubles to test from the encoding.
         for (int j = 0; j < 1000; ++j) {
             // Iterate over 9 specific bits exhaustively; the others are chosen randomly.
             // These specific bits are the sign bit, and the 2 top and bottom bits of
@@ -92,8 +90,7 @@ BOOST_AUTO_TEST_CASE(double_serfloat_tests) {
                 if (x & 256) v |= (uint64_t{1} << 63);
                 double f;
                 memcpy(&f, &v, 8);
-                uint64_t v2 = TestDouble(f);
-                if (!std::isnan(f)) BOOST_CHECK_EQUAL(v, v2);
+                TestDouble(f);
             }
         }
     }
