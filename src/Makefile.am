@@ -359,7 +359,6 @@ BITCOIN_CORE_H = \
   wallet/receive.h \
   wallet/rpc/util.h \
   wallet/rpc/wallet.h \
-  wallet/salvage.h \
   wallet/scriptpubkeyman.h \
   wallet/spend.h \
   wallet/sqlite.h \
@@ -540,7 +539,7 @@ if USE_SQLITE
 libbitcoin_wallet_a_SOURCES += wallet/sqlite.cpp
 endif
 if USE_BDB
-libbitcoin_wallet_a_SOURCES += wallet/bdb.cpp wallet/salvage.cpp
+libbitcoin_wallet_a_SOURCES += wallet/bdb.cpp
 endif
 #
 
