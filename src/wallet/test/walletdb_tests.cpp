@@ -29,31 +29,5 @@ BOOST_AUTO_TEST_CASE(walletdb_readkeyvalue)
     BOOST_CHECK_THROW(ssValue >> dummy, std::ios_base::failure);
 }
 
-BOOST_AUTO_TEST_CASE(walletdb_read_write_deadlock)
-{
-    // Exercises a db read write operation that shouldn't deadlock.
-    for (const DatabaseFormat& db_format : DATABASE_FORMATS) {
-        // Context setup
-        DatabaseOptions options;
-        options.require_format = db_format;
-        DatabaseStatus status;
-        bilingual_str error_string;
-        std::unique_ptr<WalletDatabase> db = MakeDatabase(m_path_root / strprintf("wallet_%d_.dat", db_format).c_str(), options, status, error_string);
-        BOOST_CHECK_EQUAL(status, DatabaseStatus::SUCCESS);
-
-        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(db)));
-        wallet->m_keypool_size = 4;
-
-        // Create legacy spkm
-        LOCK(wallet->cs_wallet);
-        auto legacy_spkm = wallet->GetOrCreateLegacyScriptPubKeyMan();
-        BOOST_CHECK(legacy_spkm->SetupGeneration(true));
-        wallet->Flush();
-
-        // Now delete all records, which performs a read write operation.
-        BOOST_CHECK(wallet->GetLegacyScriptPubKeyMan()->DeleteRecords());
-    }
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet

@@ -774,7 +774,6 @@ void BitcoinGUI::setCurrentWallet(WalletModel* wallet_model)
         }
     }
     updateWindowTitle();
-    m_migrate_wallet_action->setEnabled(wallet_model->wallet().isLegacy());
 }
 
 void BitcoinGUI::setCurrentWalletBySelectorIndex(int index)
