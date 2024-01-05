@@ -11,7 +11,7 @@ We achieve bootstrappability by using Guix as a functional package manager.
 
 # Requirements
 
-Conservatively, you will need an x86_64 machine with:
+Conservatively, you will need:
 
 - 16GB of free disk space on the partition that /gnu/store will reside in
 - 8GB of free disk space **per platform triple** you're planning on building
