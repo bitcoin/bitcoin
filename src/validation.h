@@ -377,7 +377,6 @@ bool TestBlockValidity(BlockValidationState& state,
                        Chainstate& chainstate,
                        const CBlock& block,
                        CBlockIndex* pindexPrev,
-                       const std::function<NodeClock::time_point()>& adjusted_time_callback,
                        bool fCheckPOW = true,
                        bool fCheckMerkleRoot = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
