@@ -21,7 +21,6 @@ class WalletRescanUnconfirmed(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
-        self.skip_if_no_sqlite()
 
     def run_test(self):
         self.log.info("Create wallets and mine initial chain")
