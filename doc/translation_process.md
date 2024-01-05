@@ -18,7 +18,7 @@ We use automated scripts to help extract translations in both Qt, and non-Qt sou
 
 To automatically regenerate the `bitcoin_en.ts` file, run the following commands:
 ```sh
-cmake -B build --preset dev-mode -DWITH_BDB=ON -DBUILD_GUI=ON
+cmake -B build --preset dev-mode -DBUILD_GUI=ON
 cmake --build build --target translate
 ```
 
