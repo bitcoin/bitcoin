@@ -152,13 +152,6 @@ void StartWallets(WalletContext& context)
     context.scheduler->scheduleEvery([&context] { MaybeResendWalletTxs(context); }, 1min);
 }
 
-void FlushWallets(WalletContext& context)
-{
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
-        pwallet->Flush();
-    }
-}
-
 void StopWallets(WalletContext& context)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
