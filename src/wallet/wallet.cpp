@@ -3016,7 +3016,11 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
             error = strprintf(_("Unexpected legacy entry in descriptor wallet found. Loading wallet %s\n\n"
                                 "The wallet might have been tampered with or created with malicious intent.\n"), walletFile);
             return nullptr;
-        } else {
+        } else if (nLoadWalletRet == DBErrors::LEGACY_WALLET) {
+            error = strprintf(_("Error loading %s: Wallet is a legacy wallet. Please migrate to a descriptor wallet using the migration tool (migratewallet RPC)."), walletFile);
+            return nullptr;
+        }
+        else {
             error = strprintf(_("Error loading %s"), walletFile);
             return nullptr;
         }

@@ -181,7 +181,6 @@ public:
 };
 
 enum class DatabaseFormat {
-    BERKELEY,
     SQLITE,
     BERKELEY_RO,
     BERKELEY_SWAP,

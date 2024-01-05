@@ -313,5 +313,41 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             info = wallet_res.getaddressinfo(address)
             assert_equal(info, addr_info)
 
+        self.log.info("Test that a wallet from a legacy only node must be migrated, from:")
+        for node in legacy_nodes:
+            self.log.info(f"- {node.version}")
+            wallet_name = f"legacy_up_{node.version}"
+            if self.major_version_less_than(node, 17):
+                # createwallet is only available in 0.17+
+                self.restart_node(node.index, extra_args=[f"-wallet={wallet_name}"])
+                wallet_prev = node.get_wallet_rpc(wallet_name)
+                address = wallet_prev.getnewaddress('', "bech32")
+                addr_info = wallet_prev.validateaddress(address)
+            else:
+                if self.major_version_at_least(node, 21):
+                    node.rpc.createwallet(wallet_name=wallet_name, descriptors=False)
+                else:
+                    node.rpc.createwallet(wallet_name=wallet_name)
+                wallet_prev = node.get_wallet_rpc(wallet_name)
+                address = wallet_prev.getnewaddress('', "bech32")
+                addr_info = wallet_prev.getaddressinfo(address)
+
+            hdkeypath = addr_info["hdkeypath"].replace("'", "h")
+            pubkey = addr_info["pubkey"]
+
+            # Make a backup of the wallet file
+            backup_path = os.path.join(self.options.tmpdir, f"{wallet_name}.dat")
+            wallet_prev.backupwallet(backup_path)
+
+            # Remove the wallet from old node
+            if self.major_version_at_least(node, 17):
+                wallet_prev.unloadwallet()
+            else:
+                self.stop_node(node.index)
+
+            # Restore the wallet to master
+            # Legacy wallets are no longer supported. Trying to load these should result in an error
+            assert_raises_rpc_error(-18, "The wallet appears to be a Legacy wallet, please use the wallet migration tool (migratewallet RPC)", node_master.restorewallet, wallet_name, backup_path)
+
 if __name__ == '__main__':
     BackwardsCompatibilityTest().main()

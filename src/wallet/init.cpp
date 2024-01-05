@@ -98,11 +98,6 @@ void WalletInit::AddWalletOptions(ArgsManager& argsman) const
 
 bool WalletInit::ParameterInteraction() const
 {
-#ifdef USE_BDB
-     if (!BerkeleyDatabaseSanityCheck()) {
-         return InitError(Untranslated("A version conflict was detected between the run-time BerkeleyDB library and the one used during compilation."));
-     }
-#endif
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         for (const std::string& wallet : gArgs.GetArgs("-wallet")) {
             LogPrintf("%s: parameter interaction: -disablewallet -> ignoring -wallet=%s\n", __func__, wallet);

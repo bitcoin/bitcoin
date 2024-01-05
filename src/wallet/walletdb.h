@@ -55,7 +55,8 @@ enum class DBErrors : int
     UNKNOWN_DESCRIPTOR = 6,
     LOAD_FAIL = 7,
     UNEXPECTED_LEGACY_ENTRY = 8,
-    CORRUPT = 9,
+    LEGACY_WALLET = 9,
+    CORRUPT = 10,
 };
 
 namespace DBKeys {
