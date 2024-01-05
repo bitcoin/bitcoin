@@ -193,6 +193,8 @@ if [ "${RUN_TIDY}" = "true" ]; then
   python3 "/include-what-you-use/iwyu_tool.py" \
            -p . "${MAKEJOBS}" \
            -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_BUILD_DIR}/bitcoin-$HOST/contrib/devtools/iwyu/bitcoin.core.imp" \
+           -Xiwyu --mapping_file="${DIR_IWYU}/include-what-you-use/boost-1.75-all.imp" \
+           -Xiwyu --mapping_file="${DIR_IWYU}/include-what-you-use/qt5_11.imp" \
            -Xiwyu --max_line_length=160 \
            2>&1 | tee /tmp/iwyu_ci.out
   cd "${BASE_ROOT_DIR}/src"
