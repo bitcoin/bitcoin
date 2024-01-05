@@ -4,4 +4,9 @@
   { include: [ "<bits/termios-struct.h>", private, "<termios.h>", public ] },
   { include: [ "<bits/termios-tcflow.h>", private, "<termios.h>", public ] },
   { include: [ "<bits/chrono.h>", private, "<chrono>", public ] },
+
+  # Boost.MultiIndex
+  { include: [ "<boost/operators.hpp>", public, "<boost/multi_index/hashed_index.hpp>", public ] },
+  { include: [ "<boost/operators.hpp>", public, "<boost/multi_index/ordered_index.hpp>", public ] },
+  { include: [ "<boost/operators.hpp>", public, "<boost/multi_index/sequenced_index.hpp>", public ] },
 ]
