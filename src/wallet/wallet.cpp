@@ -3617,6 +3617,16 @@ LegacyScriptPubKeyMan* CWallet::GetLegacyScriptPubKeyMan() const
     return dynamic_cast<LegacyScriptPubKeyMan*>(it->second);
 }
 
+LegacyDataSPKM* CWallet::GetLegacyDataSPKM() const
+{
+    if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        return nullptr;
+    }
+    auto it = m_internal_spk_managers.find(OutputType::LEGACY);
+    if (it == m_internal_spk_managers.end()) return nullptr;
+    return dynamic_cast<LegacyDataSPKM*>(it->second);
+}
+
 LegacyScriptPubKeyMan* CWallet::GetOrCreateLegacyScriptPubKeyMan()
 {
     SetupLegacyScriptPubKeyMan();
@@ -3633,13 +3643,22 @@ void CWallet::AddScriptPubKeyMan(const uint256& id, std::unique_ptr<ScriptPubKey
     MaybeUpdateBirthTime(spkm->GetTimeFirstKey());
 }
 
+LegacyDataSPKM* CWallet::GetOrCreateLegacyDataSPKM()
+{
+    SetupLegacyScriptPubKeyMan();
+    return GetLegacyDataSPKM();
+}
+
 void CWallet::SetupLegacyScriptPubKeyMan()
 {
     if (!m_internal_spk_managers.empty() || !m_external_spk_managers.empty() || !m_spk_managers.empty() || IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
         return;
     }
 
-    auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new LegacyScriptPubKeyMan(*this, m_keypool_size));
+    std::unique_ptr<ScriptPubKeyMan> spk_manager = m_database->Format() == "bdb_ro" ?
+        std::make_unique<LegacyDataSPKM>(*this) :
+        std::make_unique<LegacyScriptPubKeyMan>(*this, m_keypool_size);
+
     for (const auto& type : LEGACY_OUTPUT_TYPES) {
         m_internal_spk_managers[type] = spk_manager.get();
         m_external_spk_managers[type] = spk_manager.get();
@@ -4007,7 +4026,7 @@ std::optional<MigrationData> CWallet::GetDescriptorsForLegacy(bilingual_str& err
 {
     AssertLockHeld(cs_wallet);
 
-    LegacyScriptPubKeyMan* legacy_spkm = GetLegacyScriptPubKeyMan();
+    LegacyDataSPKM* legacy_spkm = GetLegacyDataSPKM();
     if (!Assume(legacy_spkm)) {
         // This shouldn't happen
         error = Untranslated(STR_INTERNAL_BUG("Error: Legacy wallet data missing"));
@@ -4026,7 +4045,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
 {
     AssertLockHeld(cs_wallet);
 
-    LegacyScriptPubKeyMan* legacy_spkm = GetLegacyScriptPubKeyMan();
+    LegacyDataSPKM* legacy_spkm = GetLegacyDataSPKM();
     if (!Assume(legacy_spkm)) {
         // This shouldn't happen
         error = Untranslated(STR_INTERNAL_BUG("Error: Legacy wallet data missing"));
