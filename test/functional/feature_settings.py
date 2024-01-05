@@ -13,13 +13,11 @@ from test_framework.util import assert_equal
 
 
 class SettingsTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.wallet_names = []
+        self.uses_wallet = None
 
     def test_wallet_settings(self, settings_path):
         if not self.is_wallet_compiled():

@@ -7,13 +7,11 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_raises_rpc_error
 
 class DeprecatedRpcTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
         self.extra_args = [[]]
+        self.uses_wallet = None
 
     def run_test(self):
         # This test should be used to verify the errors of the currently
