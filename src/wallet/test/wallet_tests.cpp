@@ -35,9 +35,6 @@
 using node::MAX_BLOCKFILE_SIZE;
 
 namespace wallet {
-RPCHelpMan importmulti();
-RPCHelpMan dumpwallet();
-RPCHelpMan importwallet();
 
 // Ensure that fee levels defined in the wallet are at least as high
 // as the default levels for node policy.
