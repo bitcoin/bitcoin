@@ -49,6 +49,6 @@ target_link_libraries(bitcoin_wallet
     $<TARGET_NAME_IF_EXISTS:SQLite::SQLite3>
 )
 if(USE_BDB)
-  target_sources(bitcoin_wallet PRIVATE bdb.cpp salvage.cpp)
+  target_sources(bitcoin_wallet PRIVATE bdb.cpp)
   target_link_libraries(bitcoin_wallet PUBLIC BerkeleyDB::BerkeleyDB)
 endif()
