@@ -1700,50 +1700,192 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
     return set_address;
 }
 
+// This function is only used by legacy wallet migration. It builds the set of all output scripts
+// that LegacyScriptPubKeyMan::IsMine() would detect as belonging to the wallet (IsMine() returns
+// either ISMINE_SPENDABLE or ISMINE_WATCHONLY).
+// LegacyScriptPubKeyMan::IsMine() would take an output script and performs tests on it involving
+// lookups to map(Crypted)Keys, mapScripts, and setWatchOnly to determine whether that script
+// belongs to the wallet.
+// This function reverses this by iterating map(Crypted)Keys, mapScripts, and setWatchOnly to compute
+// all of the output scripts that LegacyScriptPubKeyMan::IsMine() would detect.
 std::unordered_set<CScript, SaltedSipHasher> LegacyDataSPKM::GetScriptPubKeys() const
 {
     LOCK(cs_KeyStore);
     std::unordered_set<CScript, SaltedSipHasher> spks;
 
-    // All keys have at least P2PK and P2PKH
-    for (const auto& key_pair : mapKeys) {
-        const CPubKey& pub = key_pair.second.GetPubKey();
+    // When a P2PK or P2PKH output script is given to IsMine(), it would check that the pubkey
+    // exists in map(Crypted)Keys. Therefore every key has a P2PK and P2PKH output script.
+    // Addiitonally, although P2WPKH and P2SH-P2WPKH require having the P2WPKH in mapScripts, these
+    // were always added to mapScripts upon loading a compressed key. Hence they can also be added to "spks".
+    // Lambda to do this for a key
+    const auto& add_pubkey = [&spks](const CPubKey& pub) -> void {
         spks.insert(GetScriptForRawPubKey(pub));
         spks.insert(GetScriptForDestination(PKHash(pub)));
+        if (pub.IsCompressed()) {
+            CScript wpkh = GetScriptForDestination(WitnessV0KeyHash(pub));
+            spks.insert(wpkh);
+            spks.insert(GetScriptForDestination(ScriptHash(wpkh)));
+        }
+    };
+    for (const auto& key_pair : mapKeys) {
+        add_pubkey(key_pair.second.GetPubKey());
     }
     for (const auto& key_pair : mapCryptedKeys) {
-        const CPubKey& pub = key_pair.second.first;
-        spks.insert(GetScriptForRawPubKey(pub));
-        spks.insert(GetScriptForDestination(PKHash(pub)));
+        add_pubkey(key_pair.second.first);
     }
 
-    // For every script in mapScript, only the ISMINE_SPENDABLE ones are being tracked.
-    // The watchonly ones will be in setWatchOnly which we deal with later
-    // For all keys, if they have segwit scripts, those scripts will end up in mapScripts
-    for (const auto& script_pair : mapScripts) {
-        const CScript& script = script_pair.second;
-        if (IsMine(script) == ISMINE_SPENDABLE) {
-            // Add ScriptHash for scripts that are not already P2SH
-            if (!script.IsPayToScriptHash()) {
-                spks.insert(GetScriptForDestination(ScriptHash(script)));
-            }
-            // For segwit scripts, we only consider them spendable if we have the segwit spk
-            int wit_ver = -1;
-            std::vector<unsigned char> witprog;
-            if (script.IsWitnessProgram(wit_ver, witprog) && wit_ver == 0) {
-                spks.insert(script);
-            }
-        } else {
-            // Multisigs are special. They don't show up as ISMINE_SPENDABLE unless they are in a P2SH
-            // So check the P2SH of a multisig to see if we should insert it
-            std::vector<std::vector<unsigned char>> sols;
-            TxoutType type = Solver(script, sols);
-            if (type == TxoutType::MULTISIG) {
-                CScript ms_spk = GetScriptForDestination(ScriptHash(script));
-                if (IsMine(ms_spk) != ISMINE_NO) {
-                    spks.insert(ms_spk);
+    // Enum to track the execution context of a script, similar to the script interpreter's SigVersion.
+    // It is separate to distinguish between top level scriptPubKey execution and P2SH redeemScript execution
+    // which SigVersion does not distinguish. It also excludes Taproot and Tapscript as the legacy wallet
+    // never supported those.
+    enum class ScriptContext {
+        OUTPUT,
+        P2SH,
+        P2WSH,
+    };
+    // Lambda helper function to determine whether a script is valid, mainly looking at key compression requirements.
+    std::function<bool(const CScript&, const ScriptContext)> is_valid_script = [&](const CScript& script, const ScriptContext ctx) -> bool {
+        std::vector<valtype> solutions;
+        TxoutType spk_type = Solver(script, solutions);
+
+        CKeyID keyID;
+        switch (spk_type) {
+        // Scripts with no nesting (arbitrary, unknown scripts) are always valid.
+        case TxoutType::NONSTANDARD:
+        case TxoutType::NULL_DATA:
+        case TxoutType::WITNESS_UNKNOWN:
+        case TxoutType::ANCHOR:
+        // Taproot output scripts are always valid. Legacy wallets did not support Taproot spending so no nested inspection is required.
+        case TxoutType::WITNESS_V1_TAPROOT:
+            return ctx == ScriptContext::OUTPUT;
+        // P2PK in any nesting level is valid, but inside of P2WSH, the pubkey must also be compressed.
+        case TxoutType::PUBKEY:
+            if (ctx == ScriptContext::P2WSH && solutions[0].size() != CPubKey::COMPRESSED_SIZE) return false;
+            return true;
+        // P2WPKH is allowed as an output script or in P2SH, but not inside of P2WSH
+        case TxoutType::WITNESS_V0_KEYHASH:
+            return ctx != ScriptContext::P2WSH;
+        // P2PKH in any nesting level is valid, but inside of P2WSH, the pubkey must also be compressed.
+        // If the pubkey cannot be retrieved to check for compression, then the P2WSH-P2PKH is allowed.
+        case TxoutType::PUBKEYHASH:
+            if (ctx == ScriptContext::P2WSH) {
+                CPubKey pubkey;
+                if (GetPubKey(CKeyID(uint160(solutions[0])), pubkey) && !pubkey.IsCompressed()) {
+                    return false;
                 }
             }
+            return true;
+        // P2SH is allowed only as an output script.
+        // If the redeemScript is known, it must also be a valid script within P2SH.
+        // If the redeemScript is not known, the P2SH output script is valid.
+        case TxoutType::SCRIPTHASH:
+        {
+            if (ctx != ScriptContext::OUTPUT) return false;
+            CScriptID script_id = CScriptID(uint160(solutions[0]));
+            CScript subscript;
+            if (GetCScript(script_id, subscript)) {
+                return is_valid_script(subscript, ScriptContext::P2SH);
+            }
+            return true;
+        }
+        // P2WSH is allowed as an output script or inside of P2SH, but not P2WSH.
+        // If the witnessScript is known, it must also be a valid script within P2WSH.
+        // If the witnessScript is not known, the P2WSH output script is valid.
+        case TxoutType::WITNESS_V0_SCRIPTHASH:
+        {
+            if (ctx == ScriptContext::P2WSH) return false;
+            // CScriptID is the hash160 of the script. For P2WSH, we already have the SHA256 of the script,
+            // so only RIPEMD160 of that is required to get the CScriptID for lookup.
+            CScriptID script_id{RIPEMD160(solutions[0])};
+            CScript subscript;
+            if (GetCScript(script_id, subscript)) {
+                return is_valid_script(subscript, ScriptContext::P2WSH);
+            }
+            return true;
+        }
+        // Multisig in any nesting level is valid, but inside of P2WSH, all pubkeys must be compressed.
+        case TxoutType::MULTISIG:
+        {
+            if (ctx == ScriptContext::P2WSH) {
+                Assert(solutions.size() >= 2);
+                std::vector<std::vector<unsigned char>> keys(solutions.begin() + 1, solutions.begin() + solutions.size() - 1);
+                if (!std::all_of(keys.cbegin(), keys.cend(), [](const auto& key) { return key.size() == CPubKey::COMPRESSED_SIZE; })) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        }
+        assert(false);
+    };
+
+    // mapScripts is iterated to compute all additional spendable output scripts that utilize the contained scripts
+    // as redeemScripts and witnessScripts.
+    //
+    // mapScripts contains redeemScripts and witnessScripts. All scripts are treated as redeemScripts, unless it is
+    // a P2SH output script.
+    // A script is only treated as a witnessScript if its corresponding P2WSH output script is in the map.
+    // P2WPKH and P2WSH output scripts are also in this map so that they can be redeemScripts in P2SH netsted segwit.
+    // These are also valid output scripts that the legacy wallet detects, so these scripts will also be included in spks.
+    for (const auto& [_, script] : mapScripts) {
+        std::vector<std::vector<unsigned char>> solutions;
+        TxoutType type = Solver(script, solutions);
+        switch (type) {
+        // We don't care about these types because LegacyScriptPubKeyMan::IsMine() would not consider them spendable
+        case TxoutType::NONSTANDARD:
+        case TxoutType::NULL_DATA:
+        case TxoutType::WITNESS_UNKNOWN:
+        case TxoutType::ANCHOR:
+        // P2TR are not spendable as the legacy wallet never supported them.
+        case TxoutType::WITNESS_V1_TAPROOT:
+        // These are only spendable if the witness script is also spendable as a scriptPubKey
+        // We will check these later after "spks" has been updated with the computed output scripts from mapScripts.
+        case TxoutType::WITNESS_V0_SCRIPTHASH:
+        // A P2SH output script is not a valid redeemScript nor witnessScript, so can be skipped.
+        case TxoutType::SCRIPTHASH:
+        // P2WPKH scripts were added to "spks" in the private keys loop. Either the script is already in "spks"
+        // or it is unspendable as the wallet does not have the private key. Therefore they can be skipped.
+        case TxoutType::WITNESS_V0_KEYHASH:
+            break;
+        // Any P2PK or P2PKH scripts found in mapScripts can be spent as P2SH-P2PK or P2SH-P2PKH respectively,
+        // if we have the private key.
+        // Since all private keys were iterated earlier and their corresponding P2PK and P2PKH scripts inserted
+        // to "spks", we can simply check whether this P2PK or P2PKH script is in "spks" to determine spendability.
+        // Additionally, if the key is compressed, and if there is a P2WSH script that uses this P2PK or P2PKH as
+        // its witnessScript, both the P2WSH and the P2SH-P2WSH can be added to "spks".
+        case TxoutType::PUBKEY:
+        case TxoutType::PUBKEYHASH:
+            if (spks.contains(script)) {
+                spks.insert(GetScriptForDestination(ScriptHash(script)));
+                CScript wsh = GetScriptForDestination(WitnessV0ScriptHash(script));
+                if (HaveCScript(CScriptID(wsh)) && is_valid_script(script, ScriptContext::P2WSH)) {
+                    spks.insert(wsh);
+                    spks.insert(GetScriptForDestination(ScriptHash(wsh)));
+                }
+            }
+            break;
+        // LegacyScriptPubKeyMan::IsMine() would only consider a multisig spendable if the wallet had all of the
+        // private keys, and if the multisig were contained within a P2SH, P2WSH, or P2SH-P2WSH.
+        // For P2WSH and P2SH-P2WSH, the P2WSH has to also be in mapScripts.
+        // Bare multisigs are never considered spendable so the multisig is not added directly to "spks".
+        case TxoutType::MULTISIG:
+        {
+            Assert(solutions.size() >= 2);
+            std::vector<std::vector<unsigned char>> keys(solutions.begin() + 1, solutions.begin() + solutions.size() - 1);
+            if (!HaveKeys(keys, *this)) {
+                break;
+            }
+            // Insert P2SH-Multisig
+            spks.insert(GetScriptForDestination(ScriptHash(script)));
+            // P2WSH-Multisig output scripts are spendable if the P2WSH output script is also in mapScripts,
+            // and all keys are compressed
+            CScript ms_wsh = GetScriptForDestination(WitnessV0ScriptHash(script));
+            if (HaveCScript(CScriptID(ms_wsh)) && is_valid_script(script, ScriptContext::P2WSH)) {
+                spks.insert(ms_wsh);
+                spks.insert(GetScriptForDestination(ScriptHash(ms_wsh)));
+            }
+            break;
+        }
         }
     }
 
@@ -1752,7 +1894,7 @@ std::unordered_set<CScript, SaltedSipHasher> LegacyDataSPKM::GetScriptPubKeys() 
         // As the legacy wallet allowed to import any script, we need to verify the validity here.
         // LegacyScriptPubKeyMan::IsMine() return 'ISMINE_NO' for invalid or not watched scripts (IsMineResult::INVALID or IsMineResult::NO).
         // e.g. a "sh(sh(pkh()))" which legacy wallets allowed to import!.
-        if (IsMine(script) != ISMINE_NO) spks.insert(script);
+        if (is_valid_script(script, ScriptContext::OUTPUT)) spks.insert(script);
     }
 
     return spks;
@@ -1851,7 +1993,6 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
         for (const CScript& spk : desc_spks) {
             size_t erased = spks.erase(spk);
             assert(erased == 1);
-            assert(IsMine(spk) == ISMINE_SPENDABLE);
         }
 
         out.desc_spkms.push_back(std::move(desc_spk_man));
@@ -1897,7 +2038,6 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
             for (const CScript& spk : desc_spks) {
                 size_t erased = spks.erase(spk);
                 assert(erased == 1);
-                assert(IsMine(spk) == ISMINE_SPENDABLE);
             }
 
             out.desc_spkms.push_back(std::move(desc_spk_man));
@@ -1969,7 +2109,6 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
         for (const CScript& desc_spk : desc_spks) {
             auto del_it = spks.find(desc_spk);
             assert(del_it != spks.end());
-            assert(IsMine(desc_spk) != ISMINE_NO);
             it = spks.erase(del_it);
         }
     }
@@ -2004,8 +2143,6 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
             // * The P2WSH script is in the wallet and it is being watched
             std::vector<std::vector<unsigned char>> keys(sols.begin() + 1, sols.begin() + sols.size() - 1);
             if (HaveWatchOnly(sh_spk) || HaveWatchOnly(script) || HaveKeys(keys, *this) || (HaveCScript(CScriptID(witprog)) && HaveWatchOnly(witprog))) {
-                // The above emulates IsMine for these 3 scriptPubKeys, so double check that by running IsMine
-                assert(IsMine(sh_spk) != ISMINE_NO || IsMine(witprog) != ISMINE_NO || IsMine(sh_wsh_spk) != ISMINE_NO);
                 continue;
             }
             assert(IsMine(sh_spk) == ISMINE_NO && IsMine(witprog) == ISMINE_NO && IsMine(sh_wsh_spk) == ISMINE_NO);
