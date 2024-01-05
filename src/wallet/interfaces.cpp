@@ -587,7 +587,7 @@ public:
         m_context.scheduler = &scheduler;
         return StartWallets(m_context);
     }
-    void flush() override { return FlushWallets(m_context); }
+    void flush() override {}
     void stop() override { return StopWallets(m_context); }
     void setMockTime(int64_t time) override { return SetMockTime(time); }
     void schedulerMockForward(std::chrono::seconds delta) override { Assert(m_context.scheduler)->MockForward(delta); }
