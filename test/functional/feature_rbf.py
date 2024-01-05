@@ -21,9 +21,6 @@ from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 
 MAX_REPLACEMENT_LIMIT = 100
 class ReplaceByFeeTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [
@@ -38,6 +35,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             ],
         ]
         self.supports_cli = False
+        self.uses_wallet = None
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
@@ -615,7 +613,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_equal(json0["vin"][0]["sequence"], 4294967293)
         assert_equal(json1["vin"][0]["sequence"], 4294967295)
 
-        if self.is_specified_wallet_compiled():
+        if self.is_wallet_compiled():
             self.init_wallet(node=0)
             rawtx2 = self.nodes[0].createrawtransaction([], outs)
             frawtx2a = self.nodes[0].fundrawtransaction(rawtx2, {"replaceable": True})

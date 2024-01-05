@@ -15,11 +15,9 @@ from test_framework.wallet import MiniWallet
 MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
 
 class MempoolUnbroadcastTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 2
+        self.uses_wallet = None
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
