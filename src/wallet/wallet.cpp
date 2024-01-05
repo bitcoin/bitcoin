@@ -2966,7 +2966,11 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
             error = strprintf(_("Unexpected legacy entry in descriptor wallet found. Loading wallet %s\n\n"
                                 "The wallet might have been tampered with or created with malicious intent.\n"), walletFile);
             return nullptr;
-        } else {
+        } else if (nLoadWalletRet == DBErrors::LEGACY_WALLET) {
+            error = strprintf(_("Error loading %s: Wallet is a legacy wallet. Please migrate to a descriptor wallet using the migration tool (migratewallet RPC)."), walletFile);
+            return nullptr;
+        }
+        else {
             error = strprintf(_("Error loading %s"), walletFile);
             return nullptr;
         }
@@ -4334,20 +4338,23 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         DatabaseOptions options;
         options.require_existing = true;
         DatabaseStatus status;
-        std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, error);
-        if (!database) {
-            return util::Error{Untranslated("Wallet file verification failed.") + Untranslated(" ") + error};
-        }
-        wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, error, warnings);
-        if (!wallet) {
-            return util::Error{Untranslated("Wallet loading failed.") + Untranslated(" ") + error};
-        }
+        bilingual_str preload_error;
+        std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, preload_error);
+        // Since we no longer load BDB, we expect MakeWalletDatabase to fail
+        if (database) {
+            wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, error, warnings);
+            if (!wallet) {
+                return util::Error{Untranslated("Wallet loading failed.") + Untranslated(" ") + error};
+            }
 
-        if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-            return util::Error{_("Error: This wallet is already a descriptor wallet")};
+            if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+                return util::Error{_("Error: This wallet is already a descriptor wallet")};
+            }
+            // We loaded a legacy wallet that is also sqlite.
+            // This is an unsupported configuration so just give an error.
+            // TODO: Migrate legacy-sqlite wallets
+            return util::Error{_("Error: Unable to migrate legacy wallets in a sqlite database")};
         }
-        // Unload
-        wallet.reset();
     }
 
     // Load the wallet but only in the context of this function.

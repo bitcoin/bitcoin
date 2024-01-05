@@ -471,6 +471,11 @@ static DBErrors LoadWalletFlags(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIV
             pwallet->WalletLogPrintf("Error reading wallet database: Unknown non-tolerable wallet flags found\n");
             return DBErrors::TOO_NEW;
         }
+        // All wallets must be descriptor wallets unless opened with a bdb_ro db
+        // bdb_ro is only used for legacy to descriptor migration.
+        if (pwallet->GetDatabase().Format() != "bdb_ro" && !pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+            return DBErrors::LEGACY_WALLET;
+        }
     }
     return DBErrors::LOAD_OK;
 }
@@ -1406,9 +1411,6 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
     // If the format is not specified or detected, choose the default format based on what is available. We prefer BDB over SQLite for now.
     if (!format) {
         format = DatabaseFormat::SQLITE;
-#ifdef USE_BDB
-        format = DatabaseFormat::BERKELEY;
-#endif
     }
 
     if (format == DatabaseFormat::SQLITE) {
@@ -1419,15 +1421,8 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
         return MakeBerkeleyRODatabase(path, options, status, error);
     }
 
-#ifdef USE_BDB
-    if constexpr (true) {
-        return MakeBerkeleyDatabase(path, options, status, error);
-    } else
-#endif
-    {
-        error = Untranslated(strprintf("Failed to open database path '%s'. Build does not support Berkeley DB database format.", fs::PathToString(path)));
-        status = DatabaseStatus::FAILED_BAD_FORMAT;
-        return nullptr;
-    }
+    error = Untranslated(strprintf("Failed to open database path '%s'. The wallet appears to be a Legacy wallet, please use the wallet migration tool (migratewallet RPC).", fs::PathToString(path)));
+    status = DatabaseStatus::FAILED_BAD_FORMAT;
+    return nullptr;
 }
 } // namespace wallet

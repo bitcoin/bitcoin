@@ -29,9 +29,6 @@ struct WalletContext;
 
 static const DatabaseFormat DATABASE_FORMATS[] = {
        DatabaseFormat::SQLITE,
-#ifdef USE_BDB
-       DatabaseFormat::BERKELEY,
-#endif
 };
 
 const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
