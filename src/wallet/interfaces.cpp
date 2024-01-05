@@ -175,14 +175,6 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->IsMine(dest) & ISMINE_SPENDABLE;
     }
-    bool haveWatchOnly() override
-    {
-        auto spk_man = m_wallet->GetLegacyScriptPubKeyMan();
-        if (spk_man) {
-            return spk_man->HaveWatchOnly();
-        }
-        return false;
-    };
     bool setAddressBook(const CTxDestination& dest, const std::string& name, const std::optional<AddressPurpose>& purpose) override
     {
         return m_wallet->SetAddressBook(dest, name, purpose);
@@ -407,12 +399,7 @@ public:
         result.balance = bal.m_mine_trusted;
         result.unconfirmed_balance = bal.m_mine_untrusted_pending;
         result.immature_balance = bal.m_mine_immature;
-        result.have_watch_only = haveWatchOnly();
-        if (result.have_watch_only) {
-            result.watch_only_balance = bal.m_watchonly_trusted;
-            result.unconfirmed_watch_only_balance = bal.m_watchonly_untrusted_pending;
-            result.immature_watch_only_balance = bal.m_watchonly_immature;
-        }
+        result.have_watch_only = false;
         return result;
     }
     bool tryGetBalances(WalletBalances& balances, uint256& block_hash) override
@@ -516,7 +503,6 @@ public:
     bool hasExternalSigner() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER); }
     bool privateKeysDisabled() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS); }
     bool taprootEnabled() override {
-        if (m_wallet->IsLegacy()) return false;
         auto spk_man = m_wallet->GetScriptPubKeyMan(OutputType::BECH32M, /*internal=*/false);
         return spk_man != nullptr;
     }
@@ -526,7 +512,6 @@ public:
     {
         RemoveWallet(m_context, m_wallet, /*load_on_start=*/false);
     }
-    bool isLegacy() override { return m_wallet->IsLegacy(); }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {
         return MakeSignalHandler(m_wallet->NotifyUnload.connect(fn));

@@ -7,6 +7,7 @@
 #include <wallet/wallettool.h>
 
 #include <common/args.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/translation.h>
 #include <wallet/dump.h>
@@ -33,12 +34,8 @@ static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flag
     wallet_instance->SetMinVersion(FEATURE_LATEST);
     wallet_instance->InitWalletFlags(wallet_creation_flags);
 
-    if (!wallet_instance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-        auto spk_man = wallet_instance->GetOrCreateLegacyScriptPubKeyMan();
-        spk_man->SetupGeneration(false);
-    } else {
-        wallet_instance->SetupDescriptorScriptPubKeyMans();
-    }
+    Assert(wallet_instance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+    wallet_instance->SetupDescriptorScriptPubKeyMans();
 
     tfm::format(std::cout, "Topping up keypool...\n");
     wallet_instance->TopUpKeyPool();

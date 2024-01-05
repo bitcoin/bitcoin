@@ -5,8 +5,6 @@
 
 # race (TODO fix)
 race:LoadWallet
-race:WalletBatch::WriteHDChain
-race:BerkeleyBatch
 race:DatabaseBatch
 race:zmq::*
 race:bitcoin-qt

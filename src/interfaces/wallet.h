@@ -107,9 +107,6 @@ public:
     //! Return whether wallet has private key.
     virtual bool isSpendable(const CTxDestination& dest) = 0;
 
-    //! Return whether wallet has watch only keys.
-    virtual bool haveWatchOnly() = 0;
-
     //! Add or update address.
     virtual bool setAddressBook(const CTxDestination& dest, const std::string& name, const std::optional<wallet::AddressPurpose>& purpose) = 0;
 
@@ -281,9 +278,6 @@ public:
 
     // Remove wallet.
     virtual void remove() = 0;
-
-    //! Return whether is a legacy wallet
-    virtual bool isLegacy() = 0;
 
     //! Register handler for unload message.
     using UnloadFn = std::function<void()>;
