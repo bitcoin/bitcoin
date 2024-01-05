@@ -61,11 +61,6 @@ static void WalletIsMine(benchmark::Bench& bench, bool legacy_wallet, int num_co
     TestUnloadWallet(std::move(wallet));
 }
 
-#ifdef USE_BDB
-static void WalletIsMineLegacy(benchmark::Bench& bench) { WalletIsMine(bench, /*legacy_wallet=*/true); }
-BENCHMARK(WalletIsMineLegacy, benchmark::PriorityLevel::LOW);
-#endif
-
 #ifdef USE_SQLITE
 static void WalletIsMineDescriptors(benchmark::Bench& bench) { WalletIsMine(bench, /*legacy_wallet=*/false); }
 static void WalletIsMineMigratedDescriptors(benchmark::Bench& bench) { WalletIsMine(bench, /*legacy_wallet=*/false, /*num_combo=*/2000); }
