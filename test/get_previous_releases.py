@@ -98,6 +98,15 @@ SHA256_SUMS = {
     "fe6e347a66043946920c72c9c4afca301968101e6b82fb90a63d7885ebcceb32": {"tag": "v25.0", "tarball": "bitcoin-25.0-riscv64-linux-gnu.tar.gz"},
     "5708fc639cdfc27347cccfd50db9b73b53647b36fb5f3a4a93537cbe8828c27f": {"tag": "v25.0", "tarball": "bitcoin-25.0-x86_64-apple-darwin.tar.gz"},
     "33930d432593e49d58a9bff4c30078823e9af5d98594d2935862788ce8a20aec": {"tag": "v25.0", "tarball": "bitcoin-25.0-x86_64-linux-gnu.tar.gz"},
+
+    "e198461d981b675d39caaec4d5e69e79d7fd52c3d3508f5821e2effe7d4f12c2": {"tag": "v26.1", "tarball": "bitcoin-26.1-aarch64-linux-gnu.tar.gz"},
+    "7e655c8fd72277f6b3467ae2330e5b24913f5e06089ffb24ec4464d961d5e0c2": {"tag": "v26.1", "tarball": "bitcoin-26.1-arm-linux-gnueabihf.tar.gz"},
+    "8a8e415763b7ffd5988153cf03967d812eca629016dd3b0ddf6da3ab6f4a3621": {"tag": "v26.1", "tarball": "bitcoin-26.1-arm64-apple-darwin.tar.gz"},
+    "d7ed4a32d0242a4183b34dcc223d6aa23d18dee31fe683636139b4532fda2f46": {"tag": "v26.1", "tarball": "bitcoin-26.1-powerpc64-linux-gnu.tar.gz"},
+    "574e82550b261db0826391b5b41c687235646b7c0179371f617ed3a61d142bab": {"tag": "v26.1", "tarball": "bitcoin-26.1-powerpc64le-linux-gnu.tar.gz"},
+    "b05b6b10c4ec2bd9c2fb340d019397e55d592cd431fed3bc0acf4479964969d0": {"tag": "v26.1", "tarball": "bitcoin-26.1-riscv64-linux-gnu.tar.gz"},
+    "acb50edd20692a9d023de12da573b64ca0fd9b4e9a2b88d1251020a3022b0f27": {"tag": "v26.1", "tarball": "bitcoin-26.1-x86_64-apple-darwin.tar.gz"},
+    "a5b7d206384a8100058d3f2e2f02123a8e49e83f523499e70e86e121a4897d5b": {"tag": "v26.1", "tarball": "bitcoin-26.1-x86_64-linux-gnu.tar.gz"},
 }
 
 
