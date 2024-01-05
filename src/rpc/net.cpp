@@ -333,7 +333,7 @@ static RPCHelpMan addnode()
                 {
                     {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the peer to connect to"},
                     {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once"},
-                    {"v2transport", RPCArg::Type::BOOL, RPCArg::DefaultHint{"set by -v2transport"}, "Attempt to connect using BIP324 v2 transport protocol (ignored for 'remove' command)"},
+                    {"v2transport|connection_type_compat", {RPCArg::Type::BOOL, RPCArg::Type::STR}, RPCArg::DefaultHint{"set by -v2transport"}, "Attempt to connect using BIP324 v2 transport protocol (ignored for 'remove' command)"},
                     {"connection_type", RPCArg::Type::STR, RPCArg::Default{"manual"}, "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + "\nOnly supported for command \"onetry\" for now."},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
@@ -354,13 +354,24 @@ static RPCHelpMan addnode()
 
     const auto node_arg{self.Arg<std::string>("node")};
     bool node_v2transport = connman.GetLocalServices() & NODE_P2P_V2;
-    bool use_v2transport = self.MaybeArg<bool>("v2transport").value_or(node_v2transport);
+    bool use_v2transport{node_v2transport};
     ConnectionType connection_type = ConnectionType::MANUAL;
-    if (!request.params[3].isNull()) {
-        if (command == "remove") {
+    std::string connection_type_arg;
+    if (request.params[2].isStr()) {
+        // connection_type used to occupy this position (v0.21.0.knots20210130-v25.1.knots20231115)
+        if (command == "remove" || request.params.size() > 3) {
+            // Same behaviour as too many args passed normally
             throw std::runtime_error(self.ToString());
         }
-        connection_type = ConnectionTypeFromValue(request.params[3]);
+        connection_type = ConnectionTypeFromValue(request.params[2]);
+    } else {
+        use_v2transport = self.MaybeArg<bool>("v2transport").value_or(node_v2transport);
+        if (!request.params[3].isNull()) {
+            if (command == "remove") {
+                throw std::runtime_error(self.ToString());
+            }
+            connection_type = ConnectionTypeFromValue(request.params[3]);
+        }
     }
 
     if (use_v2transport && !node_v2transport) {
