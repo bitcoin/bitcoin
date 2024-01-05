@@ -35,9 +35,6 @@
 /* Define to 1 to enable BDB wallet */
 #define USE_BDB 1
 
-/* Define to 1 to enable SQLite wallet */
-#define USE_SQLITE 1
-
 /* Define this symbol to enable ZMQ functions */
 #define ENABLE_ZMQ 1
 
