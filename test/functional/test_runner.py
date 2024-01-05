@@ -274,7 +274,6 @@ BASE_SCRIPTS = [
     'wallet_txn_doublespend.py --legacy-wallet',
     'wallet_multisig_descriptor_psbt.py --descriptors',
     'wallet_txn_doublespend.py --descriptors',
-    'wallet_backwards_compatibility.py --legacy-wallet',
     'wallet_backwards_compatibility.py --descriptors',
     'wallet_txn_clone.py --mineblock',
     'feature_notifications.py',
