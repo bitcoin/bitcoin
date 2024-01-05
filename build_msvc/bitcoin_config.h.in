@@ -32,9 +32,6 @@
 /* Define to 1 to enable wallet functions */
 #define ENABLE_WALLET 1
 
-/* Define to 1 to enable BDB wallet */
-#define USE_BDB 1
-
 /* Define this symbol to enable ZMQ functions */
 #define ENABLE_ZMQ 1
 
