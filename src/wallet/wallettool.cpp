@@ -112,10 +112,6 @@ static void WalletShowInfo(CWallet* wallet_instance)
 
 bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
 {
-    if (args.IsArgSet("-format") && command != "createfromdump") {
-        tfm::format(std::cerr, "The -format option can only be used with the \"createfromdump\" command.\n");
-        return false;
-    }
     if (args.IsArgSet("-dumpfile") && command != "dump" && command != "createfromdump") {
         tfm::format(std::cerr, "The -dumpfile option can only be used with the \"dump\" and \"createfromdump\" commands.\n");
         return false;
