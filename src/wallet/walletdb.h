@@ -21,7 +21,6 @@ class uint256;
 struct CBlockLocator;
 
 namespace wallet {
-class CKeyPool;
 class CMasterKey;
 class CWallet;
 class CWalletTx;
@@ -258,10 +257,6 @@ public:
     bool IsEncrypted();
 
     bool WriteOrderPosNext(int64_t nOrderPosNext);
-
-    bool ReadPool(int64_t nPool, CKeyPool& keypool);
-    bool WritePool(int64_t nPool, const CKeyPool& keypool);
-    bool ErasePool(int64_t nPool);
 
     bool WriteMinVersion(int nVersion);
 
