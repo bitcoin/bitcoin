@@ -57,23 +57,21 @@ class MempoolPersistTest(BitcoinTestFramework):
 
     def run_test(self):
         self.mini_wallet = MiniWallet(self.nodes[2])
-        if self.is_sqlite_compiled():
-            self.nodes[2].createwallet(
-                wallet_name="watch",
-                descriptors=True,
-                disable_private_keys=True,
-                load_on_startup=False,
-            )
-            wallet_watch = self.nodes[2].get_wallet_rpc("watch")
-            assert_equal([{'success': True}], wallet_watch.importdescriptors([{'desc': self.mini_wallet.get_descriptor(), 'timestamp': 0}]))
+        self.nodes[2].createwallet(
+            wallet_name="watch",
+            descriptors=True,
+            disable_private_keys=True,
+            load_on_startup=False,
+        )
+        wallet_watch = self.nodes[2].get_wallet_rpc("watch")
+        assert_equal([{'success': True}], wallet_watch.importdescriptors([{'desc': self.mini_wallet.get_descriptor(), 'timestamp': 0}]))
 
         self.log.debug("Send 5 transactions from node2 (to its own address)")
         tx_creation_time_lower = int(time.time())
         for _ in range(5):
             last_txid = self.mini_wallet.send_self_transfer(from_node=self.nodes[2])["txid"]
-        if self.is_sqlite_compiled():
-            self.nodes[2].syncwithvalidationinterfacequeue()  # Flush mempool to wallet
-            node2_balance = wallet_watch.getbalance()
+        self.nodes[2].syncwithvalidationinterfacequeue()  # Flush mempool to wallet
+        node2_balance = wallet_watch.getbalance()
         self.sync_all()
         tx_creation_time_higher = int(time.time())
 
@@ -135,11 +133,10 @@ class MempoolPersistTest(BitcoinTestFramework):
         assert_equal(entry_prioritised_before_restart['fees']['base'] + Decimal('0.00009999'), entry_prioritised_before_restart['fees']['modified'])
 
         # Verify accounting of mempool transactions after restart is correct
-        if self.is_sqlite_compiled():
-            self.nodes[2].loadwallet("watch")
-            wallet_watch = self.nodes[2].get_wallet_rpc("watch")
-            self.nodes[2].syncwithvalidationinterfacequeue()  # Flush mempool to wallet
-            assert_equal(node2_balance, wallet_watch.getbalance())
+        self.nodes[2].loadwallet("watch")
+        wallet_watch = self.nodes[2].get_wallet_rpc("watch")
+        self.nodes[2].syncwithvalidationinterfacequeue()  # Flush mempool to wallet
+        assert_equal(node2_balance, wallet_watch.getbalance())
 
         mempooldat0 = os.path.join(self.nodes[0].chain_path, 'mempool.dat')
         mempooldat1 = os.path.join(self.nodes[1].chain_path, 'mempool.dat')

@@ -398,9 +398,6 @@ static RPCHelpMan createwallet()
         flags |= WALLET_FLAG_AVOID_REUSE;
     }
     if (self.Arg<bool>(5)) {
-#ifndef USE_SQLITE
-        throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without sqlite support (required for descriptor wallets)");
-#endif
         flags |= WALLET_FLAG_DESCRIPTORS;
     } else {
         if (!context.chain->rpcEnableDeprecated("create_bdb")) {

@@ -12,9 +12,7 @@
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/translation.h>
-#ifdef USE_SQLITE
 #include <wallet/sqlite.h>
-#endif
 #include <wallet/migrate.h>
 #include <wallet/test/util.h>
 #include <wallet/walletutil.h> // for WALLET_FLAG_DESCRIPTORS
@@ -68,9 +66,7 @@ static std::vector<std::unique_ptr<WalletDatabase>> TestDatabases(const fs::path
     DatabaseStatus status;
     bilingual_str error;
     // Unable to test BerkeleyRO since we cannot create a new BDB database to open
-#ifdef USE_SQLITE
     dbs.emplace_back(MakeSQLiteDatabase(path_root / "sqlite", options, status, error));
-#endif
     dbs.emplace_back(CreateMockableWalletDatabase());
     return dbs;
 }
@@ -204,8 +200,6 @@ BOOST_AUTO_TEST_CASE(erase_prefix)
         BOOST_CHECK(batch->Exists(make_key(value, key)));
     }
 }
-
-#ifdef USE_SQLITE
 
 // Test-only statement execution error
 constexpr int TEST_SQLITE_ERROR = -999;
