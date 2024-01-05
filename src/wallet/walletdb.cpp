@@ -356,7 +356,7 @@ bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::stri
         }
         if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadKey(key, vchPubKey))
         {
-            strErr = "Error reading wallet database: LegacyScriptPubKeyMan::LoadKey failed";
+            strErr = "Error reading wallet database: LegacyDataSPKM::LoadKey failed";
             return false;
         }
     } catch (const std::exception& e) {
@@ -395,7 +395,7 @@ bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, st
 
         if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadCryptedKey(vchPubKey, vchPrivKey, checksum_valid))
         {
-            strErr = "Error reading wallet database: LegacyScriptPubKeyMan::LoadCryptedKey failed";
+            strErr = "Error reading wallet database: LegacyDataSPKM::LoadCryptedKey failed";
             return false;
         }
     } catch (const std::exception& e) {
@@ -586,7 +586,7 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
         value >> script;
         if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadCScript(script))
         {
-            strErr = "Error reading wallet database: LegacyScriptPubKeyMan::LoadCScript failed";
+            strErr = "Error reading wallet database: LegacyDataSPKM::LoadCScript failed";
             return DBErrors::NONCRITICAL_ERROR;
         }
         return DBErrors::LOAD_OK;
