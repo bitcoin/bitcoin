@@ -939,13 +939,13 @@ RPCHelpMan rescanblockchain()
 RPCHelpMan abortrescan()
 {
     return RPCHelpMan{"abortrescan",
-                "\nStops current wallet rescan triggered by an RPC call, e.g. by an importprivkey call.\n"
+                "\nStops current wallet rescan triggered by an RPC call, e.g. by an rescanblockchain call.\n"
                 "Note: Use \"getwalletinfo\" to query the scanning progress.\n",
                 {},
                 RPCResult{RPCResult::Type::BOOL, "", "Whether the abort was successful"},
                 RPCExamples{
             "\nImport a private key\n"
-            + HelpExampleCli("importprivkey", "\"mykey\"") +
+            + HelpExampleCli("rescanblockchain", "") +
             "\nAbort the running wallet rescan\n"
             + HelpExampleCli("abortrescan", "") +
             "\nAs a JSON-RPC call\n"
