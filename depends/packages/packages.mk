@@ -15,7 +15,6 @@ ifneq ($(host),$(build))
 qt_native_packages := native_qt
 endif
 
-bdb_packages=bdb
 sqlite_packages=sqlite
 
 zmq_packages=zeromq

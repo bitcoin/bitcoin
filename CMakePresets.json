@@ -78,8 +78,6 @@
         "BUILD_WALLET_TOOL": "ON",
         "ENABLE_EXTERNAL_SIGNER": "ON",
         "ENABLE_WALLET": "ON",
-        "WARN_INCOMPATIBLE_BDB": "OFF",
-        "WITH_BDB": "ON",
         "ENABLE_IPC": "ON",
         "WITH_QRENCODE": "ON",
         "WITH_USDT": "ON",

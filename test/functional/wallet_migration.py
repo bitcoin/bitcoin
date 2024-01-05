@@ -15,7 +15,6 @@ from test_framework.address import (
     script_to_p2sh,
     script_to_p2wsh,
 )
-from test_framework.bdb import BTREE_MAGIC
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECPubKey
 from test_framework.test_framework import BitcoinTestFramework
@@ -32,6 +31,8 @@ from test_framework.wallet_util import (
     get_generate_key,
     generate_keypair,
 )
+
+BTREE_MAGIC = 0x053162
 
 
 class WalletMigrationTest(BitcoinTestFramework):
