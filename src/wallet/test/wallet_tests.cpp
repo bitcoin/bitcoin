@@ -621,7 +621,6 @@ public:
     }
 
     std::unique_ptr<CWallet> wallet;
-    std::unique_ptr<interfaces::CoinJoin::Loader> coinjoin_loader;
 };
 
 BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
@@ -731,7 +730,6 @@ public:
         RemoveWallet(wallet, std::nullopt);
     }
 
-    std::unique_ptr<interfaces::CoinJoin::Loader> coinjoin_loader;
     std::shared_ptr<CWallet> wallet;
     CCoinControl coinControl;
 
