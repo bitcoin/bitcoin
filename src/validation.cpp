@@ -3087,12 +3087,20 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
             warning_messages.push_back(warning);
         }
     }
-    auto warning_messages_joined = util::Join(warning_messages, Untranslated(", "));
-    UpdateTipLog(m_chainman, coins_tip, pindexNew, __func__, "",
-                 warning_messages_joined.original);
+
     if (!warning_messages.empty()) {
+        auto warning_messages_joined = util::Join(warning_messages, Untranslated(", "));
         m_chainman.GetNotifications().warningSet(kernel::Warning::UNKNOWN_NEW_RULES_ACTIVATED, warning_messages_joined, /*update=*/true);
     }
+
+    static constexpr int32_t BIP320_MASK = 0x1fffe000UL;
+    if ((pindexNew->nVersion & BIP320_MASK) && pindexNew->nVersion != m_chainman.m_versionbitscache.ComputeBlockVersion(pindexNew->pprev, m_chainman.GetConsensus())) {
+        const auto warning = _("Miner violated version bit protocol");
+        warning_messages.push_back(warning);
+    }
+
+    UpdateTipLog(m_chainman, coins_tip, pindexNew, __func__, "",
+                 util::Join(warning_messages, Untranslated(", ")).original);
 }
 
 /** Disconnect m_chain's tip.
