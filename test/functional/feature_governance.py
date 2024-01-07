@@ -303,13 +303,34 @@ class DashGovernanceTest (DashTestFramework):
         self.check_superblockbudget(True)
         self.check_superblock()
 
+        # Move a few block past the recent superblock height and make sure we have no new votes
+        for _ in range(5):
+            with self.nodes[1].assert_debug_log("", [f"Voting NO-FUNDING for trigger:{winning_trigger_hash} success"]):
+                self.nodes[0].generate(1)
+                self.bump_mocktime(1)
+                self.sync_blocks()
+            # Votes on both triggers should NOT change
+            assert_equal(self.nodes[0].gobject("list", "valid", "triggers")[winning_trigger_hash]['NoCount'], 1)
+            assert_equal(self.nodes[0].gobject("list", "valid", "triggers")[isolated_trigger_hash]['NoCount'], self.mn_count - 1)
+
+        block_count = self.nodes[0].getblockcount()
+        n = sb_cycle - block_count % sb_cycle
+
+        # Move remaining n blocks until the next Superblock
+        for i in range(n):
+            self.nodes[0].generate(1)
+            self.bump_mocktime(1)
+            self.sync_blocks()
+        assert_equal(self.nodes[0].getblockcount(), 260)
+        assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["bip9"]["status"], "active")
+
         # Mine and check a couple more superblocks
         for i in range(2):
             for _ in range(20):
                 self.nodes[0].generate(1)
                 self.bump_mocktime(1)
                 self.sync_blocks()
-            assert_equal(self.nodes[0].getblockcount(), 240 + (i + 1) * 20)
+            assert_equal(self.nodes[0].getblockcount(), 260 + (i + 1) * 20)
             assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["bip9"]["status"], "active")
             self.check_superblockbudget(True)
             self.check_superblock()
