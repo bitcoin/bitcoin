@@ -152,6 +152,9 @@ bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& 
 
 unsigned int TrimFlags(unsigned int flags)
 {
+    // !LNHANCE requires !DISCOURGE_OP_SUCCESS
+    if (!(flags & SCRIPT_VERIFY_LNHANCE)) flags &= ~(unsigned int)SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS;
+
     // WITNESS requires P2SH
     if (!(flags & SCRIPT_VERIFY_P2SH)) flags &= ~(unsigned int)SCRIPT_VERIFY_WITNESS;
 

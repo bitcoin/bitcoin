@@ -229,6 +229,10 @@ struct ScriptExecutionData
     //! The tapleaf hash.
     uint256 m_tapleaf_hash;
 
+    //! Whether m_internal_key is initialized.
+    bool m_internal_key_init = false;
+    uint256 m_internal_key;
+
     //! Whether m_codeseparator_pos is initialized.
     bool m_codeseparator_pos_init = false;
     //! Opcode position of the last executed OP_CODESEPARATOR (or 0xFFFFFFFF if none executed).
