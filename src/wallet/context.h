@@ -28,6 +28,8 @@ class Loader;
 struct WalletContext {
     interfaces::Chain* chain{nullptr};
     ArgsManager* args{nullptr};
+    // TODO: replace this unique_ptr to a pointer
+    // probably possible to do after bitcoin/bitcoin#22219
     const std::unique_ptr<interfaces::CoinJoin::Loader>& m_coinjoin_loader;
 
     //! Declare default constructor and destructor that are not inline, so code

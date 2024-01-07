@@ -165,6 +165,9 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     InitScriptExecutionCache();
     m_node.addrman = std::make_unique<CAddrMan>();
     m_node.chain = interfaces::MakeChain(m_node);
+    // while g_wallet_init_interface is init here at very early stage
+    // we can't get rid of unique_ptr from wallet/contex.h
+    // TODO: remove unique_ptr from wallet/context.h after bitcoin/bitcoin#22219
     g_wallet_init_interface.Construct(m_node);
     fCheckBlockIndex = true;
     m_node.evodb = std::make_unique<CEvoDB>(1 << 20, true, true);
