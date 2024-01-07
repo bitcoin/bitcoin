@@ -179,6 +179,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             sys.exit(exit_code)
 
     def parse_args(self):
+        previous_releases_path = os.getenv("PREVIOUS_RELEASES_DIR") or os.getcwd() + "/releases"
         parser = argparse.ArgumentParser(usage="%(prog)s [options]")
         parser.add_argument("--nocleanup", dest="nocleanup", default=False, action="store_true",
                             help="Leave dashds and test.* datadir on exit or error")
@@ -193,6 +194,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                             help="Print out all RPC calls as they are made")
         parser.add_argument("--portseed", dest="port_seed", default=os.getpid(), type=int,
                             help="The seed to use for assigning port numbers (default: current process id)")
+        parser.add_argument("--previous-releases", dest="prev_releases", action="store_true",
+                            default=os.path.isdir(previous_releases_path) and bool(os.listdir(previous_releases_path)),
+                            help="Force test of previous releases (default: %(default)s)")
         parser.add_argument("--coveragedir", dest="coveragedir",
                             help="Write tested RPC commands into this directory")
         parser.add_argument("--configfile", dest="configfile",
@@ -216,6 +220,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         self.add_options(parser)
         self.options = parser.parse_args()
+        self.options.previous_releases_path = previous_releases_path
 
         config = configparser.ConfigParser()
         config.read_file(open(self.options.configfile))
@@ -243,19 +248,17 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         fname_bitcoind = os.path.join(
             config["environment"]["BUILDDIR"],
             "src",
-            "dashd" + config["environment"]["EXEEXT"]
+            "dashd" + config["environment"]["EXEEXT"],
         )
         fname_bitcoincli = os.path.join(
             config["environment"]["BUILDDIR"],
             "src",
-            "dash-cli" + config["environment"]["EXEEXT"]
+            "dash-cli" + config["environment"]["EXEEXT"],
         )
         self.options.bitcoind = os.getenv("BITCOIND", default=fname_bitcoind)
         self.options.bitcoincli = os.getenv("BITCOINCLI", default=fname_bitcoincli)
 
         self.extra_args_from_options = self.options.dashd_extra_args
-
-        self.options.previous_releases_path = os.getenv("PREVIOUS_RELEASES_DIR") or os.getcwd() + "/releases"
 
         os.environ['PATH'] = os.pathsep.join([
             os.path.join(config['environment']['BUILDDIR'], 'src'),
@@ -959,17 +962,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def has_previous_releases(self):
         """Checks whether previous releases are present and enabled."""
-        if os.getenv("TEST_PREVIOUS_RELEASES") == "false":
-            # disabled
-            return False
-
         if not os.path.isdir(self.options.previous_releases_path):
-            if os.getenv("TEST_PREVIOUS_RELEASES") == "true":
-                raise AssertionError("TEST_PREVIOUS_RELEASES=true but releases missing: {}".format(
+            if self.options.prev_releases:
+                raise AssertionError("Force test of previous releases but releases missing: {}".format(
                     self.options.previous_releases_path))
-            # missing
-            return False
-        return True
+        return self.options.prev_releases
 
     def is_cli_compiled(self):
         """Checks whether dash-cli was compiled."""

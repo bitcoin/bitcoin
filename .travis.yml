@@ -74,7 +74,6 @@ builddocker: &builddocker
     # no need to run tests again here
     - if [ "$DOCKER_BUILD" = "true" ]; then $DOCKER_RUN_IN_BUILDER ./ci/dash/build_depends.sh && $DOCKER_RUN_IN_BUILDER ./ci/dash/build_src.sh && BUILD_DIR=build-ci/dashcore-$BUILD_TARGET ./ci/dash/build-docker.sh; fi
     - CI_RETRY_EXE="travis_retry"
-    - CI_WAIT="while sleep 500; do echo .; done"
     - CACHE_ERR_MSG="Error! Initial build successful, but not enough time remains to run later build stages and tests. See https://docs.travis-ci.com/user/customizing-the-build#build-timeouts . Please manually re-run this job by using the travis restart button. The next run should not time out because the build cache has been saved."
 before_install:
   - set -o errexit; source ./ci/test/00_setup_env.sh
@@ -209,26 +208,6 @@ after_success:
         FILE_ENV="./ci/test/00_setup_env_arm.sh"
         QEMU_USER_CMD=""
 
-    - stage: test
-      name: 's390x native BE [GOAL: install] [bionic] [no depends, no GUI]'
-      arch: s390x
-      dist: bionic
-      addons:
-        apt:
-          packages:
-            - bsdmainutils
-            - libboost-filesystem-dev
-            - libboost-system-dev
-            - libboost-test-dev
-            - libboost-thread-dev
-            - libdb++-dev
-            - libdb-dev
-            - libevent-dev
-      env: >-
-        DANGER_RUN_CI_ON_HOST=true
-        CI_USE_APT_INSTALL=no
-        FILE_ENV="./ci/test/00_setup_env_s390x_host.sh"
-
 # s390 build was disabled temporarily because of disk space issues on the Travis VM
 #
 #    - stage: test
@@ -249,10 +228,12 @@ after_success:
         FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
 # x86_64 Linux (xenial, no depends, only system libs, sanitizers: thread (TSan))
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
+      # Not enough memory on travis machines, so feature_block is excluded for now
       env: >-
+        TEST_RUNNER_EXTRA="--exclude feature_block"
         FILE_ENV="./ci/test/00_setup_env_native_tsan.sh"
-        TEST_RUNNER_EXTRA="--exclude feature_block"  # Not enough memory on travis machines
+
 # x86_64 Linux (no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer)
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'

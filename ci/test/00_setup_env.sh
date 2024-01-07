@@ -39,7 +39,6 @@ export USE_BUSY_BOX=${USE_BUSY_BOX:-false}
 export RUN_UNIT_TESTS=${RUN_UNIT_TESTS:-true}
 export RUN_INTEGRATION_TESTS=${RUN_INTEGRATION_TESTS:-true}
 export RUN_SECURITY_TESTS=${RUN_SECURITY_TESTS:-false}
-export TEST_PREVIOUS_RELEASES=${TEST_PREVIOUS_RELEASES:-false}
 export RUN_FUZZ_TESTS=${RUN_FUZZ_TESTS:-false}
 export RUN_SYMBOL_TESTS=${RUN_SYMBOL_TESTS:-true}
 export CONTAINER_NAME=${CONTAINER_NAME:-ci_unnamed}
@@ -47,6 +46,8 @@ export DOCKER_NAME_TAG=${DOCKER_NAME_TAG:-ubuntu:focal}
 # Randomize test order.
 # See https://www.boost.org/doc/libs/1_71_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/random.html
 export BOOST_TEST_RANDOM=${BOOST_TEST_RANDOM:-1}
+# See man 7 debconf
+export DEBIAN_FRONTEND=noninteractive
 export HOST_CACHE_DIR=${HOST_CACHE_DIR:-$BASE_ROOT_DIR/ci-cache-$BUILD_TARGET}
 export CACHE_DIR=${CACHE_DIR:-$HOST_CACHE_DIR}
 export CCACHE_SIZE=${CCACHE_SIZE:-100M}

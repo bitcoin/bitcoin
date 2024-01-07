@@ -3569,7 +3569,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                         nBytes += GetSizeOfCompactSize(nExtraPayloadSize) + nExtraPayloadSize;
                     }
 
-                    if (nBytes > MAX_STANDARD_TX_SIZE) {
+                    if (static_cast<size_t>(nBytes) > MAX_STANDARD_TX_SIZE) {
                         // Do not create oversized transactions (bad-txns-oversize).
                         error = _("Transaction too large");
                         return false;

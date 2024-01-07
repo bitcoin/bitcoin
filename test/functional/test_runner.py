@@ -435,12 +435,12 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, attempts=1, enab
     args = args or []
 
     # Warn if dashd is already running
-    # pidof might fail or return an empty string if bitcoind is not running
     try:
-        pidof_output = subprocess.check_output(["pidof", "dashd"])
-        if not (pidof_output is None or pidof_output == b''):
+        # pgrep exits with code zero when one or more matching processes found
+        if subprocess.run(["pgrep", "-x", "dashd"], stdout=subprocess.DEVNULL).returncode == 0:
             print("%sWARNING!%s There is already a dashd process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
-    except (OSError, subprocess.SubprocessError):
+    except OSError:
+        # pgrep not supported
         pass
 
     # Warn if there is a cache directory
