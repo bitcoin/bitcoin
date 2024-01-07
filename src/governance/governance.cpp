@@ -735,6 +735,11 @@ void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGover
     const auto activeTriggers = triggerman.GetActiveTriggers();
     for (const auto& trigger : activeTriggers) {
         const uint256 trigger_hash = trigger->GetGovernanceObject(*this)->GetHash();
+        if (trigger->GetBlockHeight() <= nCachedBlockHeight) {
+            // ignore triggers from the past
+            LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Not voting NO-FUNDING for outdated trigger:%s\n", __func__, trigger_hash.ToString());
+            continue;
+        }
         if (trigger_hash == votedFundingYesTriggerHash) {
             // Skip actual trigger
             LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Not voting NO-FUNDING for trigger:%s, we voted yes for it already\n", __func__, trigger_hash.ToString());
