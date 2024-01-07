@@ -219,7 +219,7 @@ void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
 }
 
 namespace {
-std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     try {
         std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(name, options, status, error);
@@ -249,7 +249,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, const std:
 }
 } // namespace
 
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     auto result = WITH_LOCK(g_loading_wallet_mutex, return g_loading_wallet_set.insert(name));
     if (!result.second) {
@@ -262,7 +262,7 @@ std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::unique_
     return wallet;
 }
 
-std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     uint64_t wallet_creation_flags = options.create_flags;
     const SecureString& passphrase = options.create_passphrase;
@@ -4508,9 +4508,8 @@ std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, cons
     return MakeDatabase(wallet_path, options, status, error_string);
 }
 
-std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader, const std::string& name, std::unique_ptr<WalletDatabase> database, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const std::string& name, std::unique_ptr<WalletDatabase> database, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
-    assert(coinjoin_loader);
     const std::string& walletFile = database->Filename();
 
     chain.initMessage(_("Loading wallet...").translated);
@@ -4519,7 +4518,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::un
     bool fFirstRun = true;
     // TODO: Can't use std::make_shared because we need a custom deleter but
     // should be possible to use std::allocate_shared.
-    std::shared_ptr<CWallet> walletInstance(new CWallet(&chain, coinjoin_loader, name, std::move(database)), ReleaseWallet);
+    std::shared_ptr<CWallet> walletInstance(new CWallet(&chain, &coinjoin_loader, name, std::move(database)), ReleaseWallet);
     if (!walletInstance->AutoBackupWallet(walletFile, error, warnings) && !error.original.empty()) {
         return nullptr;
     }
@@ -4819,7 +4818,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::un
         walletInstance->GetDatabase().IncrementUpdateCounter();
     }
 
-    coinjoin_loader->AddWallet(*walletInstance);
+    coinjoin_loader.AddWallet(*walletInstance);
 
     {
         LOCK(cs_wallets);

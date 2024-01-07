@@ -578,7 +578,7 @@ public:
         }
     }
     bool verify() override { return VerifyWallets(*m_context.chain); }
-    bool load() override { assert(m_context.m_coinjoin_loader); return LoadWallets(*m_context.chain, m_context.m_coinjoin_loader); }
+    bool load() override { assert(m_context.m_coinjoin_loader); return LoadWallets(*m_context.chain, *m_context.m_coinjoin_loader); }
     void start(CScheduler& scheduler) override { return StartWallets(scheduler, *Assert(m_context.args)); }
     void flush() override { return FlushWallets(); }
     void stop() override { return StopWallets(); }
@@ -594,7 +594,7 @@ public:
         options.create_flags = wallet_creation_flags;
         options.create_passphrase = passphrase;
         assert(m_context.m_coinjoin_loader);
-        return MakeWallet(CreateWallet(*m_context.chain, m_context.m_coinjoin_loader, name, true /* load_on_start */, options, status, error, warnings));
+        return MakeWallet(CreateWallet(*m_context.chain, *m_context.m_coinjoin_loader, name, true /* load_on_start */, options, status, error, warnings));
     }
     std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
@@ -602,7 +602,7 @@ public:
         DatabaseStatus status;
         options.require_existing = true;
         assert(m_context.m_coinjoin_loader);
-        return MakeWallet(LoadWallet(*m_context.chain, m_context.m_coinjoin_loader, name, true /* load_on_start */, options, status, error, warnings));
+        return MakeWallet(LoadWallet(*m_context.chain, *m_context.m_coinjoin_loader, name, true /* load_on_start */, options, status, error, warnings));
     }
     std::string getWalletDir() override
     {

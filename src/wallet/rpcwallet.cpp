@@ -2805,7 +2805,7 @@ static UniValue loadwallet(const JSONRPCRequest& request)
     bilingual_str error;
     std::vector<bilingual_str> warnings;
     std::optional<bool> load_on_start = request.params[1].isNull() ? std::nullopt : std::optional<bool>(request.params[1].get_bool());
-    std::shared_ptr<CWallet> const wallet = LoadWallet(*context.chain, context.m_coinjoin_loader, name, load_on_start, options, status, error, warnings);
+    std::shared_ptr<CWallet> const wallet = LoadWallet(*context.chain, *context.m_coinjoin_loader, name, load_on_start, options, status, error, warnings);
     if (!wallet) {
         // Map bad format to not found, since bad format is returned when the
         // wallet directory exists, but doesn't contain a data file.
@@ -2954,7 +2954,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
     options.create_passphrase = passphrase;
     bilingual_str error;
     std::optional<bool> load_on_start = request.params[5].isNull() ? std::nullopt : std::optional<bool>(request.params[5].get_bool());
-    std::shared_ptr<CWallet> wallet = CreateWallet(*context.chain, context.m_coinjoin_loader, request.params[0].get_str(), load_on_start, options, status, error, warnings);
+    std::shared_ptr<CWallet> wallet = CreateWallet(*context.chain, *context.m_coinjoin_loader, request.params[0].get_str(), load_on_start, options, status, error, warnings);
     if (!wallet) {
         RPCErrorCode code = status == DatabaseStatus::FAILED_ENCRYPT ? RPC_WALLET_ENCRYPTION_FAILED : RPC_WALLET_ERROR;
         throw JSONRPCError(code, error.original);

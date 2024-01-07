@@ -24,7 +24,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
     };
     const auto& ADDRESS_WATCHONLY = ADDRESS_B58T_UNSPENDABLE;
 
-    CWallet wallet{test_setup.m_node.chain.get(), test_setup.m_node.coinjoin_loader, "", CreateMockWalletDatabase()};
+    CWallet wallet{test_setup.m_node.chain.get(), test_setup.m_node.coinjoin_loader.get(), "", CreateMockWalletDatabase()};
     {
         wallet.SetupLegacyScriptPubKeyMan();
         bool first_run;

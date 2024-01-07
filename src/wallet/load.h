@@ -6,7 +6,6 @@
 #ifndef BITCOIN_WALLET_LOAD_H
 #define BITCOIN_WALLET_LOAD_H
 
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -25,7 +24,7 @@ class Loader;
 bool VerifyWallets(interfaces::Chain& chain);
 
 //! Load wallet databases.
-bool LoadWallets(interfaces::Chain& chain, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader);
+bool LoadWallets(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader);
 
 //! Complete startup of wallets.
 void StartWallets(CScheduler& scheduler, const ArgsManager& args);

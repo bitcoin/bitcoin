@@ -90,7 +90,7 @@ bool VerifyWallets(interfaces::Chain& chain)
     return true;
 }
 
-bool LoadWallets(interfaces::Chain& chain, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader)
+bool LoadWallets(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader)
 {
     try {
         std::set<fs::path> wallet_paths;

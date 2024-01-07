@@ -52,7 +52,7 @@ static std::shared_ptr<CWallet> TestLoadWallet(NodeContext& node)
     bilingual_str error;
     std::vector<bilingual_str> warnings;
     auto database = MakeWalletDatabase("", options, status, error);
-    auto wallet = CWallet::Create(*node.chain, node.coinjoin_loader, "", std::move(database), options.create_flags, error, warnings);
+    auto wallet = CWallet::Create(*node.chain, *node.coinjoin_loader, "", std::move(database), options.create_flags, error, warnings);
     wallet->postInitProcess();
     return wallet;
 }
@@ -97,7 +97,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
 
     // Verify ScanForWalletTransactions fails to read an unknown start block.
     {
-        CWallet wallet(m_node.chain.get(), m_node.coinjoin_loader, "", CreateDummyWalletDatabase());
+        CWallet wallet(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateDummyWalletDatabase());
         wallet.SetupLegacyScriptPubKeyMan();
         {
             LOCK(wallet.cs_wallet);
@@ -117,7 +117,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     // Verify ScanForWalletTransactions picks up transactions in both the old
     // and new block files.
     {
-        CWallet wallet(m_node.chain.get(), m_node.coinjoin_loader, "", CreateDummyWalletDatabase());
+        CWallet wallet(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateDummyWalletDatabase());
         {
             LOCK(wallet.cs_wallet);
             wallet.SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
@@ -143,7 +143,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     // Verify ScanForWalletTransactions only picks transactions in the new block
     // file.
     {
-        CWallet wallet(m_node.chain.get(), m_node.coinjoin_loader, "", CreateDummyWalletDatabase());
+        CWallet wallet(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateDummyWalletDatabase());
         {
             LOCK(wallet.cs_wallet);
             wallet.SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
@@ -168,7 +168,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
 
     // Verify ScanForWalletTransactions scans no blocks.
     {
-        CWallet wallet(m_node.chain.get(), m_node.coinjoin_loader, "", CreateDummyWalletDatabase());
+        CWallet wallet(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateDummyWalletDatabase());
         {
             LOCK(wallet.cs_wallet);
             wallet.SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
@@ -204,7 +204,7 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
     // before the missing block, and success for a key whose creation time is
     // after.
     {
-        std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(m_node.chain.get(), m_node.coinjoin_loader, "", CreateDummyWalletDatabase());
+        std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateDummyWalletDatabase());
         wallet->SetupLegacyScriptPubKeyMan();
         WITH_LOCK(wallet->cs_wallet, wallet->SetLastBlockProcessed(newTip->nHeight, newTip->GetBlockHash()));
         AddWallet(wallet);
@@ -266,7 +266,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 
     // Import key into wallet and call dumpwallet to create backup file.
     {
-        std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(m_node.chain.get(), m_node.coinjoin_loader, "", CreateDummyWalletDatabase());
+        std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateDummyWalletDatabase());
         {
             auto spk_man = wallet->GetOrCreateLegacyScriptPubKeyMan();
             LOCK2(wallet->cs_wallet, spk_man->cs_KeyStore);
@@ -289,7 +289,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     // Call importwallet RPC and verify all blocks with timestamps >= BLOCK_TIME
     // were scanned, and no prior blocks were scanned.
     {
-        std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(m_node.chain.get(), m_node.coinjoin_loader, "", CreateDummyWalletDatabase());
+        std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateDummyWalletDatabase());
         LOCK(wallet->cs_wallet);
         wallet->SetupLegacyScriptPubKeyMan();
 
@@ -317,7 +317,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 // Verify getaddressinfo RPC produces more or less expected results
 BOOST_FIXTURE_TEST_CASE(rpc_getaddressinfo, TestChain100Setup)
 {
-    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(m_node.chain.get(), m_node.coinjoin_loader, "", CreateMockWalletDatabase());
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateMockWalletDatabase());
     wallet->SetupLegacyScriptPubKeyMan();
     AddWallet(wallet);
     CoreContext context{m_node};
@@ -398,7 +398,7 @@ BOOST_FIXTURE_TEST_CASE(rpc_getaddressinfo, TestChain100Setup)
 // debit functions.
 BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
 {
-    CWallet wallet(m_node.chain.get(), m_node.coinjoin_loader, "", CreateDummyWalletDatabase());
+    CWallet wallet(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateDummyWalletDatabase());
     auto spk_man = wallet.GetOrCreateLegacyScriptPubKeyMan();
     CWalletTx wtx(&wallet, m_coinbase_txns.back());
 
@@ -573,7 +573,7 @@ public:
     ListCoinsTestingSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        wallet = std::make_unique<CWallet>(m_node.chain.get(), m_node.coinjoin_loader, "", CreateMockWalletDatabase());
+        wallet = std::make_unique<CWallet>(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateMockWalletDatabase());
         {
             LOCK(wallet->cs_wallet);
             wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
@@ -710,7 +710,7 @@ public:
     CreateTransactionTestSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        wallet = std::make_unique<CWallet>(m_node.chain.get(), m_node.coinjoin_loader, "", CreateMockWalletDatabase());
+        wallet = std::make_unique<CWallet>(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateMockWalletDatabase());
         bool firstRun;
         wallet->LoadWallet(firstRun);
         AddWallet(wallet);
@@ -1191,7 +1191,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
     node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
     node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get());
     auto chain = interfaces::MakeChain(node);
-    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), m_node.coinjoin_loader, "", CreateDummyWalletDatabase());
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), m_node.coinjoin_loader.get(), "", CreateDummyWalletDatabase());
     wallet->SetupLegacyScriptPubKeyMan();
     wallet->SetMinVersion(FEATURE_LATEST);
     wallet->SetWalletFlag(WALLET_FLAG_DISABLE_PRIVATE_KEYS);

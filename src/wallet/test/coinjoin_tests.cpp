@@ -130,7 +130,7 @@ public:
     CTransactionBuilderTestSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        wallet = std::make_unique<CWallet>(m_node.chain.get(), m_node.coinjoin_loader, "", CreateMockWalletDatabase());
+        wallet = std::make_unique<CWallet>(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateMockWalletDatabase());
         wallet->SetupLegacyScriptPubKeyMan();
         bool firstRun;
         wallet->LoadWallet(firstRun);

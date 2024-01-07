@@ -60,7 +60,7 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
 {
     TestChain100Setup test;
     node.setContext(&test.m_node);
-    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), node.context()->coinjoin_loader, "", CreateMockWalletDatabase());
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), node.context()->coinjoin_loader.get(), "", CreateMockWalletDatabase());
     wallet->SetupLegacyScriptPubKeyMan();
     bool firstRun;
     wallet->LoadWallet(firstRun);
