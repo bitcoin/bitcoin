@@ -121,6 +121,8 @@ WalletView::WalletView(QWidget* parent) :
     // Pass through messages from transactionView
     connect(transactionView, &TransactionView::message, this, &WalletView::message);
 
+    connect(this, &WalletView::setPrivacy, overviewPage, &OverviewPage::setPrivacy);
+
     GUIUtil::disableMacFocusRect(this);
 }
 

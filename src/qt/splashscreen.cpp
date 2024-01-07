@@ -135,6 +135,8 @@ SplashScreen::SplashScreen(interfaces::Node& node, const NetworkStyle *networkSt
 
     subscribeToCoreSignals();
     installEventFilter(this);
+
+    GUIUtil::handleCloseWindowShortcut(this);
 }
 
 SplashScreen::~SplashScreen()
