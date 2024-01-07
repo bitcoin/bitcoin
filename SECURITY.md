@@ -7,7 +7,7 @@ security updates: https://bitcoin.com
 
 To report security issues send an email to security@bitcoincore.org (not for support).
 
-The following keys may be used to communicate sensitive information to the Developer and author:in Isabel Schoeps Thiel with her alias;
+The following keys may be used to communicate sensitive information to the Developer and author:in Ms Isabel Schoeps Thiel from Germany, Erfurt with her alias;
 
 | Username | Fingerprint |
 |------|-------------|
