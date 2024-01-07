@@ -90,6 +90,7 @@ else
 fi
 
 if [ -z "$NO_DEPENDS" ]; then
+  SET_LD_LIBRARY_PATH_IF_NEEDED="LD_LIBRARY_PATH=${DEPENDS_DIR}/${HOST}/lib"
   if [[ $CI_IMAGE_NAME_TAG == *centos* ]]; then
     SHELL_OPTS="CONFIG_SHELL=/bin/dash"
   else
@@ -163,16 +164,18 @@ if [ -n "$USE_VALGRIND" ]; then
 fi
 
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
-  DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" make "${MAKEJOBS}" check VERBOSE=1
+  # shellcheck disable=SC2086
+  env DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" $SET_LD_LIBRARY_PATH_IF_NEEDED make "${MAKEJOBS}" check VERBOSE=1
 fi
 
 if [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
-  DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" "${BASE_OUTDIR}"/bin/test_bitcoin --catch_system_errors=no -l test_suite
+  # shellcheck disable=SC2086
+  env DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" $SET_LD_LIBRARY_PATH_IF_NEEDED "${BASE_OUTDIR}"/bin/test_bitcoin --catch_system_errors=no -l test_suite
 fi
 
 if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
   # shellcheck disable=SC2086
-  LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" test/functional/test_runner.py --ci "${MAKEJOBS}" --tmpdirprefix "${BASE_SCRATCH_DIR}"/test_runner/ --ansi --combinedlogslen=99999999 --timeout-factor="${TEST_RUNNER_TIMEOUT_FACTOR}" ${TEST_RUNNER_EXTRA} --quiet --failfast
+  env $SET_LD_LIBRARY_PATH_IF_NEEDED test/functional/test_runner.py --ci "${MAKEJOBS}" --tmpdirprefix "${BASE_SCRATCH_DIR}"/test_runner/ --ansi --combinedlogslen=99999999 --timeout-factor="${TEST_RUNNER_TIMEOUT_FACTOR}" ${TEST_RUNNER_EXTRA} --quiet --failfast
 fi
 
 if [ "${RUN_TIDY}" = "true" ]; then
@@ -202,5 +205,5 @@ fi
 
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   # shellcheck disable=SC2086
-  LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" test/fuzz/test_runner.py ${FUZZ_TESTS_CONFIG} "${MAKEJOBS}" -l DEBUG "${DIR_FUZZ_IN}" --empty_min_time=60
+  env $SET_LD_LIBRARY_PATH_IF_NEEDED test/fuzz/test_runner.py ${FUZZ_TESTS_CONFIG} "${MAKEJOBS}" -l DEBUG "${DIR_FUZZ_IN}" --empty_min_time=60
 fi
