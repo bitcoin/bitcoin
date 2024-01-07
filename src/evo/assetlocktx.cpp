@@ -114,7 +114,7 @@ bool CAssetUnlockPayload::VerifySig(const uint256& msgHash, gsl::not_null<const 
     // and at the quorumHash must be active in either the current or previous quorum cycle
     // and the sig must validate against that specific quorumHash.
 
-    Consensus::LLMQType llmqType = Params().GetConsensus().llmqTypeAssetLocks;
+    Consensus::LLMQType llmqType = Params().GetConsensus().llmqTypePlatform;
 
     // We check at most 2 quorums
     const auto quorums = llmq::quorumManager->ScanQuorums(llmqType, pindexTip, 2);

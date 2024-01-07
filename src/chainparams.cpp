@@ -283,7 +283,6 @@ public:
         consensus.llmqTypeDIP0024InstantSend = Consensus::LLMQType::LLMQ_60_75;
         consensus.llmqTypePlatform = Consensus::LLMQType::LLMQ_100_67;
         consensus.llmqTypeMnhf = Consensus::LLMQType::LLMQ_400_85;
-        consensus.llmqTypeAssetLocks = consensus.llmqTypePlatform;
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
@@ -475,7 +474,6 @@ public:
         consensus.llmqTypeDIP0024InstantSend = Consensus::LLMQType::LLMQ_60_75;
         consensus.llmqTypePlatform = Consensus::LLMQType::LLMQ_25_67;
         consensus.llmqTypeMnhf = Consensus::LLMQType::LLMQ_50_60;
-        consensus.llmqTypeAssetLocks = consensus.llmqTypePlatform;
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
@@ -650,7 +648,6 @@ public:
         consensus.llmqTypeDIP0024InstantSend = Consensus::LLMQType::LLMQ_DEVNET_DIP0024;
         consensus.llmqTypePlatform = Consensus::LLMQType::LLMQ_DEVNET_PLATFORM;
         consensus.llmqTypeMnhf = Consensus::LLMQType::LLMQ_DEVNET;
-        consensus.llmqTypeAssetLocks = consensus.llmqTypePlatform;
 
         UpdateDevnetLLMQChainLocksFromArgs(args);
         UpdateDevnetLLMQInstantSendDIP0024FromArgs(args);
@@ -723,7 +720,6 @@ public:
     void UpdateDevnetLLMQPlatform(Consensus::LLMQType llmqType)
     {
         consensus.llmqTypePlatform = llmqType;
-        consensus.llmqTypeAssetLocks = llmqType;
     }
 
     /**
@@ -927,7 +923,6 @@ public:
         consensus.llmqTypeDIP0024InstantSend = Consensus::LLMQType::LLMQ_TEST_DIP0024;
         consensus.llmqTypePlatform = Consensus::LLMQType::LLMQ_TEST_PLATFORM;
         consensus.llmqTypeMnhf = Consensus::LLMQType::LLMQ_TEST;
-        consensus.llmqTypeAssetLocks = Consensus::LLMQType::LLMQ_TEST;
 
         UpdateLLMQTestParametersFromArgs(args, Consensus::LLMQType::LLMQ_TEST);
         UpdateLLMQTestParametersFromArgs(args, Consensus::LLMQType::LLMQ_TEST_INSTANTSEND);
