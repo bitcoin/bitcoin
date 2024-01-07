@@ -11,6 +11,7 @@
 #include <primitives/transaction.h>
 #include <script/script_error.h> // IWYU pragma: export
 #include <span.h>
+#include <pubkey.h>
 #include <uint256.h>
 
 #include <cstddef>
@@ -143,6 +144,12 @@ enum : uint32_t {
     // Making unknown public key versions (in BIP 342 scripts) non-standard
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE = (1U << 20),
 
+    // Executing OP_INTERNALKEY
+    SCRIPT_VERIFY_INTERNALKEY = (1U << 21),
+
+    // Making OP_INTERNALKEY non-standard
+    SCRIPT_VERIFY_DISCOURAGE_INTERNALKEY = (1U << 22),
+
     // Constants to point to the highest flag in use. Add new flags above this line.
     //
     SCRIPT_VERIFY_END_MARKER
@@ -221,6 +228,9 @@ struct ScriptExecutionData
 
     //! The hash of the corresponding output
     std::optional<uint256> m_output_hash;
+
+    //! The taproot internal key. */
+    std::optional<XOnlyPubKey> m_internal_key = std::nullopt;
 };
 
 /** Signature hash sizes */
