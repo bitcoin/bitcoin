@@ -74,6 +74,7 @@ noinst_LTLIBRARIES += $(LIBBITCOIN_CRYPTO)
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
+LIBBLS_A = bls/lib/libbls384_256.a
 $(LIBBLS):
 	$(AM_V_at) \
 		ARCH='$(firstword $(subst -, ,$(HOST)))' \
@@ -85,8 +86,9 @@ $(LIBBLS):
 		AR='$(AR)' \
 		RANLIB='$(RANLIB)' \
 		$(MAKE) $(AM_MAKEFLAGS) BLS_ETH=1 -C bls lib/libbls384_256.a
-	$(RANLIB) bls/lib/libbls384_256.a
+	$(RANLIB) $(LIBBLS_A)
 
+LIBMCL_A = bls/mcl/lib/libmcl.a
 $(LIBMCL):
 	$(AM_V_at) \
 		MCL_USE_LLVM=0 \
@@ -99,7 +101,7 @@ $(LIBMCL):
 		AR='$(AR)' \
 		RANLIB='$(RANLIB)' \
 		$(MAKE) $(AM_MAKEFLAGS) -C bls/mcl lib/libmcl.a
-	$(RANLIB) bls/mcl/lib/libmcl.a
+	$(RANLIB) $(LIBMCL_A)
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
@@ -144,19 +146,7 @@ if BUILD_BITCOIN_CHAINSTATE
   bin_PROGRAMS += navcoin-chainstate
 endif
 
-.PHONY: FORCE check-symbols check-security
-# navcoin core #
-BITCOIN_CORE_H = \
-  addrdb.h \
-  addrman.h \
-  addrman_impl.h \
-  attributes.h \
-  banman.h \
-  base58.h \
-  bech32.h \
-  bech32_mod.h \
-  blockencodings.h \
-  blockfilter.h \
+BLSCT_H = \
   blsct/arith/mcl/mcl.h \
   blsct/arith/mcl/mcl_g1point.h \
   blsct/arith/mcl/mcl_init.h \
@@ -164,6 +154,7 @@ BITCOIN_CORE_H = \
   blsct/arith/mcl/mcl_util.h \
   blsct/arith/elements.h \
   blsct/arith/endianness.h \
+  blsct/bech32_mod.h \
   blsct/building_block/fiat_shamir.h \
   blsct/building_block/generator_deriver.h \
   blsct/building_block/g_h_gi_hi_zero_verifier.h \
@@ -205,7 +196,57 @@ BITCOIN_CORE_H = \
   blsct/wallet/keyring.h \
   blsct/wallet/txfactory.h \
   blsct/wallet/txfactory_global.h \
-  blsct/wallet/verification.h \
+  blsct/wallet/verification.h
+
+BLSCT_CPP = \
+  blsct/arith/mcl/mcl_g1point.cpp \
+  blsct/arith/mcl/mcl_scalar.cpp \
+  blsct/arith/elements.cpp \
+  blsct/building_block/generator_deriver.cpp \
+  blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
+  blsct/building_block/imp_inner_prod_arg.cpp \
+  blsct/building_block/lazy_point.cpp \
+  blsct/building_block/lazy_points.cpp \
+  blsct/building_block/weighted_inner_prod_arg.cpp \
+  blsct/common.cpp \
+  blsct/double_public_key.cpp \
+  blsct/eip_2333/bls12_381_keygen.cpp \
+  blsct/private_key.cpp \
+  blsct/public_key.cpp \
+  blsct/public_keys.cpp \
+  blsct/range_proof/bulletproofs/amount_recovery_request.cpp \
+  blsct/range_proof/bulletproofs/amount_recovery_result.cpp \
+  blsct/range_proof/bulletproofs/range_proof_logic.cpp \
+  blsct/range_proof/bulletproofs/range_proof.cpp \
+  blsct/range_proof/bulletproofs/range_proof_with_transcript.cpp \
+  blsct/range_proof/bulletproofs_plus/amount_recovery_request.cpp \
+  blsct/range_proof/bulletproofs_plus/amount_recovery_result.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof_logic.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof_with_transcript.cpp \
+  blsct/range_proof/bulletproofs_plus/util.cpp \
+  blsct/range_proof/common.cpp \
+  blsct/range_proof/generators.cpp \
+  blsct/range_proof/msg_amt_cipher.cpp \
+  blsct/range_proof/proof_base.cpp \
+  blsct/set_mem_proof/set_mem_proof.cpp \
+  blsct/set_mem_proof/set_mem_proof_setup.cpp \
+  blsct/set_mem_proof/set_mem_proof_prover.cpp \
+  blsct/wallet/verification.cpp \
+  blsct/signature.cpp
+
+.PHONY: FORCE check-symbols check-security
+# navcoin core #
+BITCOIN_CORE_H = \
+  addrdb.h \
+  addrman.h \
+  addrman_impl.h \
+  attributes.h \
+  banman.h \
+  base58.h \
+  bech32.h \
+  blockencodings.h \
+  blockfilter.h \
   dandelion.h \
   chain.h \
   chainparams.h \
@@ -434,7 +475,8 @@ BITCOIN_CORE_H = \
   zmq/zmqnotificationinterface.h \
   zmq/zmqpublishnotifier.h \
   zmq/zmqrpc.h \
-  zmq/zmqutil.h
+  zmq/zmqutil.h \
+  $(BLSCT_H)
 
 
 obj/build.h: FORCE
@@ -452,41 +494,6 @@ libbitcoin_node_a_SOURCES = \
   banman.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
-  blsct/arith/mcl/mcl_g1point.cpp \
-  blsct/arith/mcl/mcl_scalar.cpp \
-  blsct/arith/elements.cpp \
-  blsct/building_block/generator_deriver.cpp \
-  blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
-  blsct/building_block/imp_inner_prod_arg.cpp \
-  blsct/building_block/lazy_point.cpp \
-  blsct/building_block/lazy_points.cpp \
-  blsct/building_block/weighted_inner_prod_arg.cpp \
-  blsct/common.cpp \
-  blsct/double_public_key.cpp \
-  blsct/eip_2333/bls12_381_keygen.cpp \
-  blsct/private_key.cpp \
-  blsct/public_key.cpp \
-  blsct/public_keys.cpp \
-  blsct/range_proof/bulletproofs/amount_recovery_request.cpp \
-  blsct/range_proof/bulletproofs/amount_recovery_result.cpp \
-  blsct/range_proof/bulletproofs/range_proof_logic.cpp \
-  blsct/range_proof/bulletproofs/range_proof.cpp \
-  blsct/range_proof/bulletproofs/range_proof_with_transcript.cpp \
-  blsct/range_proof/bulletproofs_plus/amount_recovery_request.cpp \
-  blsct/range_proof/bulletproofs_plus/amount_recovery_result.cpp \
-  blsct/range_proof/bulletproofs_plus/range_proof_logic.cpp \
-  blsct/range_proof/bulletproofs_plus/range_proof.cpp \
-  blsct/range_proof/bulletproofs_plus/range_proof_with_transcript.cpp \
-  blsct/range_proof/bulletproofs_plus/util.cpp \
-  blsct/range_proof/common.cpp \
-  blsct/range_proof/generators.cpp \
-  blsct/range_proof/msg_amt_cipher.cpp \
-  blsct/range_proof/proof_base.cpp \
-  blsct/set_mem_proof/set_mem_proof.cpp \
-  blsct/set_mem_proof/set_mem_proof_setup.cpp \
-  blsct/set_mem_proof/set_mem_proof_prover.cpp \
-  blsct/wallet/verification.cpp \
-  blsct/signature.cpp \
   chain.cpp \
   chainparams.cpp \
   consensus/tx_verify.cpp \
@@ -566,6 +573,7 @@ libbitcoin_node_a_SOURCES = \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
+  $(BLSCT_CPP) \
   $(BITCOIN_CORE_H)
 
 if ENABLE_WALLET
@@ -822,8 +830,8 @@ libbitcoin_common_a_SOURCES = \
   bech32.cpp \
   blsct/arith/mcl/mcl_g1point.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
-  bech32_mod.cpp \
   blsct/arith/elements.cpp \
+  blsct/bech32_mod.cpp \
   blsct/building_block/generator_deriver.cpp \
   blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
   blsct/building_block/imp_inner_prod_arg.cpp \
@@ -1296,9 +1304,52 @@ CLEANFILES += wallet/*.gcda wallet/*.gcno
 CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += obj/build.h
+CLEANFILES += $(LIBBLS_A)
+CLEANFILES += $(LIBMCL_A)
 
 EXTRA_DIST = $(CTAES_DIST)
 
+# blsct library #
+if BUILD_LIBBLSCT_ONLY
+LIBBLSCT_A = libblsct.a
+noinst_LIBRARIES = $(LIBBLSCT_A)
+libblsct_a_SOURCES = \
+  crypto/sha256_arm_shani.cpp \
+  crypto/sha256_avx2.cpp \
+  crypto/sha256_sse4.cpp \
+  crypto/sha256_sse41.cpp \
+  crypto/sha256_x86_shani.cpp \
+  crypto/sha256.cpp \
+  blsct/external_api/blsct.cpp \
+  $(BLSCT_CPP)
+libblsct_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libblsct_a_CPPFLAGS = $(AM_CPPFLAGS) $(BLS_INCLUDES) $(BOOST_CPPFLAGS)
+
+if ENABLE_SSE41
+libblsct_a_CXXFLAGS += $(SSE41_CXXFLAGS)
+libblsct_a_CPPFLAGS += -DENABLE_SSE41
+endif
+
+if ENABLE_AVX2
+libblsct_a_CXXFLAGS += $(AVX2_CXXFLAGS)
+libblsct_a_CPPFLAGS += -DENABLE_AVX2
+endif
+
+if ENABLE_X86_SHANI
+libblsct_a_CXXFLAGS += $(X86_SHANI_CXXFLAGS)
+libblsct_a_CPPFLAGS += -DENABLE_X86_SHANI
+endif
+
+if ENABLE_ARM_SHANI
+libblsct_a_CXXFLAGS += $(ARM_SHANI_CXXFLAGS)
+libblsct_a_CPPFLAGS += -DENABLE_ARM_SHANI
+endif
+
+$(LIBBLSCT_A): $(LIBBLS) $(LIBMCL)
+
+CLEANFILES += $(LIBBLSCT_A) blsct/include/libblsct_a-blsct.o
+endif
+#
 
 config/bitcoin-config.h: config/stamp-h1
 	@$(MAKE) -C $(top_builddir) $(subdir)/$(@)

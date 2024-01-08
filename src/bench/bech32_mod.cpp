@@ -4,7 +4,7 @@
 
 #include <bench/bench.h>
 
-#include <bech32_mod.h>
+#include <blsct/bech32_mod.h>
 #include <util/strencodings.h>
 
 #include <string>

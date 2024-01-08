@@ -323,6 +323,12 @@ AC_ARG_ENABLE([lto],
     [enable_lto=$enableval],
     [enable_lto=no])
 
+AC_ARG_ENABLE([build-libblsct-only],
+  [AS_HELP_STRING([--enable-build-libblsct-only],
+  [build libblsct.a only and do not build others (default is to build everything)])],
+  [enable_build_libblsct_only=$enableval],
+  [enable_build_libblsct_only=no])
+
 AC_LANG_PUSH([C++])
 
 dnl Check for a flag to turn compiler warnings into errors. This is helpful for checks which may
@@ -1310,6 +1316,26 @@ if test "$enable_fuzz" = "yes"; then
   AX_CHECK_PREPROC_FLAG([-DABORT_ON_FAILED_ASSUME], [DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DABORT_ON_FAILED_ASSUME"], [], [$CXXFLAG_WERROR])
 fi
 
+if test "$enable_build_libblsct_only" = "yes"; then
+  AC_MSG_WARN([enable-build-libblsct-only will disable all other targets overriding enable-fuzz])
+  build_bitcoin_utils=no
+  build_bitcoin_cli=no
+  build_bitcoin_tx=no
+  build_bitcoin_util=no
+  build_bitcoin_chainstate=no
+  build_bitcoin_wallet=no
+  build_bitcoind=no
+  build_bitcoin_libs=no
+  use_bench=no
+  use_tests=no
+  use_external_signer=no
+  use_upnp=no
+  use_natpmp=no
+  use_zmq=no
+  enable_fuzz=no
+  enable_fuzz_binary=no
+fi
+
 if test "$enable_fuzz_binary" = "yes"; then
   AC_MSG_CHECKING([whether main function is needed for fuzz binary])
   AX_CHECK_LINK_FLAG(
@@ -1809,6 +1835,7 @@ AM_CONDITIONAL([USE_ASM], [test "$use_asm" = "yes"])
 AM_CONDITIONAL([WORDS_BIGENDIAN], [test "$ac_cv_c_bigendian" = "yes"])
 AM_CONDITIONAL([USE_NATPMP], [test "$use_natpmp" = "yes"])
 AM_CONDITIONAL([USE_UPNP], [test "$use_upnp" = "yes"])
+AM_CONDITIONAL([BUILD_LIBBLSCT_ONLY], [test "$enable_build_libblsct_only" = "yes"])
 
 dnl for minisketch
 AM_CONDITIONAL([ENABLE_CLMUL], [test "$enable_clmul" = "yes"])
@@ -1947,6 +1974,7 @@ echo "  debug enabled   = $enable_debug"
 echo "  gprof enabled   = $enable_gprof"
 echo "  werror          = $enable_werror"
 echo "  LTO             = $enable_lto"
+echo "  libblsct only   = $enable_build_libblsct_only"
 echo
 echo "  target os       = $host_os"
 echo "  build os        = $build_os"

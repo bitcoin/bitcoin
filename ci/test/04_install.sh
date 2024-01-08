@@ -41,8 +41,8 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   docker volume create "${CONTAINER_NAME}_previous_releases" || true
 
   if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
-    echo "Restart docker before run to stop and clear all containers started with --rm"
-    systemctl restart docker
+    echo "Prune stopped containers"
+    podman container prune -f
     echo "Prune all dangling images"
     docker image prune --force
   fi
