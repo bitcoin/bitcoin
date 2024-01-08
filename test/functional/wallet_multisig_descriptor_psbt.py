@@ -7,6 +7,7 @@
 This is meant to be documentation as much as functional tests, so it is kept as simple and readable as possible.
 """
 
+import random
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
@@ -53,8 +54,11 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         for i, node in enumerate(self.nodes):
             node.createwallet(wallet_name=f"{self.name}_{i}", blank=True, descriptors=True, disable_private_keys=True)
             multisig = node.get_wallet_rpc(f"{self.name}_{i}")
-            external = multisig.getdescriptorinfo(f"wsh(sortedmulti({self.M},{f','.join(external_xpubs)}))")
-            internal = multisig.getdescriptorinfo(f"wsh(sortedmulti({self.M},{f','.join(internal_xpubs)}))")
+            # Each watch-only multisig is created with xpubs in a different order to test the `sorted` functionality
+            # a critical component of multisigs is that users must store/backup the descriptor. This asserts that order
+            # of xpubs does not matter, and may give users more flexibility when storing/backing up descriptors.
+            external = multisig.getdescriptorinfo(f"wsh(sortedmulti({self.M},{f','.join(random.sample(external_xpubs, self.num_nodes))}))")
+            internal = multisig.getdescriptorinfo(f"wsh(sortedmulti({self.M},{f','.join(random.sample(internal_xpubs, self.num_nodes))}))")
             result = multisig.importdescriptors([
                 {  # receiving addresses (internal: False)
                     "desc": external["descriptor"],
@@ -120,7 +124,7 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
 
         psbts = []
         self.log.info("Now at least M users check the psbt with decodepsbt and (if OK) signs it with walletprocesspsbt...")
-        for m in range(self.M):
+        for m in random.sample(range(self.M), self.M):
             signers_multisig = participants["multisigs"][m]
             self._check_psbt(psbt["psbt"], to, value, signers_multisig)
             signing_wallet = participants["signers"][m]
@@ -139,12 +143,12 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
 
         self.log.info("Send another transaction from the multisig, this time with a daisy chained signing flow (one after another in series)!")
         psbt = participants["multisigs"][0].walletcreatefundedpsbt(inputs=[], outputs={to: value}, feeRate=0.00010)
-        for m in range(self.M):
+        for i, m in enumerate(random.sample(range(self.M), self.M)):
             signers_multisig = participants["multisigs"][m]
             self._check_psbt(psbt["psbt"], to, value, signers_multisig)
             signing_wallet = participants["signers"][m]
             psbt = signing_wallet.walletprocesspsbt(psbt["psbt"])
-            assert_equal(psbt["complete"], m == self.M - 1)
+            assert_equal(psbt["complete"], i == self.M - 1)
         coordinator_wallet.sendrawtransaction(psbt["hex"])
 
         self.log.info("Check that balances are correct after the transaction has been included in a block.")
