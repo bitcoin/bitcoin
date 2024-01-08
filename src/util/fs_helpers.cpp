@@ -294,6 +294,23 @@ std::string PermsToSymbolicString(fs::perms p)
     return perm_str;
 }
 
+static std::optional<unsigned> StringToOctal(const std::string& str)
+{
+    unsigned ret = 0;
+    for (char c : str) {
+        if (c < '0' || c > '7') return std::nullopt;
+        ret = (ret << 3) | (c - '0');
+    }
+    return ret;
+}
+
+static auto ConvertPermsToOctal(const std::string& str) noexcept -> std::optional<unsigned>
+{
+    // Don't permit setting special bits as they're not relevant to cookie files
+    if (str.length() == 3) return StringToOctal(str);
+    return std::nullopt;
+}
+
 std::optional<fs::perms> InterpretPermString(const std::string& s)
 {
     if (s == "owner") {
@@ -305,6 +322,8 @@ std::optional<fs::perms> InterpretPermString(const std::string& s)
         return fs::perms::owner_read | fs::perms::owner_write |
                fs::perms::group_read |
                fs::perms::others_read;
+    } else if (auto octal_perms = ConvertPermsToOctal(s)) {
+        return static_cast<fs::perms>(*octal_perms);
     } else {
         return std::nullopt;
     }
