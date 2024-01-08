@@ -228,6 +228,59 @@ BOOST_AUTO_TEST_CASE(db_availability_after_write_error)
     }
 }
 
+#ifdef USE_SQLITE
+
+// Test-only statement execution error
+constexpr int TEST_SQLITE_ERROR = -999;
+
+class DbExecBlocker : public SQliteExecHandler
+{
+private:
+    SQliteExecHandler m_base_exec;
+    std::set<std::string> m_blocked_statements;
+public:
+    DbExecBlocker(std::set<std::string> blocked_statements) : m_blocked_statements(blocked_statements) {}
+    int Exec(SQLiteDatabase& database, const std::string& statement) override {
+        if (m_blocked_statements.contains(statement)) return TEST_SQLITE_ERROR;
+        return m_base_exec.Exec(database, statement);
+    }
+};
+
+BOOST_AUTO_TEST_CASE(txn_close_failure_dangling_txn)
+{
+    // Verifies that there is no active dangling, to-be-reversed db txn
+    // after the batch object that initiated it is destroyed.
+    DatabaseOptions options;
+    DatabaseStatus status;
+    bilingual_str error;
+    std::unique_ptr<SQLiteDatabase> database = MakeSQLiteDatabase(m_path_root / "sqlite", options, status, error);
+
+    std::string key = "key";
+    std::string value = "value";
+
+    std::unique_ptr<SQLiteBatch> batch = std::make_unique<SQLiteBatch>(*database);
+    BOOST_CHECK(batch->TxnBegin());
+    BOOST_CHECK(batch->Write(key, value));
+    // Set a handler to prevent txn abortion during destruction.
+    // Mimicking a db statement execution failure.
+    batch->SetExecHandler(std::make_unique<DbExecBlocker>(std::set<std::string>{"ROLLBACK TRANSACTION"}));
+    // Destroy batch
+    batch.reset();
+
+    // Ensure there is no dangling, to-be-reversed db txn
+    BOOST_CHECK(!database->HasActiveTxn());
+
+    // And, just as a sanity check; verify that new batchs only write what they suppose to write
+    // and nothing else.
+    std::string key2 = "key2";
+    std::unique_ptr<SQLiteBatch> batch2 = std::make_unique<SQLiteBatch>(*database);
+    BOOST_CHECK(batch2->Write(key2, value));
+    // The first key must not exist
+    BOOST_CHECK(!batch2->Exists(key));
+}
+
+#endif // USE_SQLITE
+
 
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
