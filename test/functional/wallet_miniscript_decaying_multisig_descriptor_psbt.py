@@ -8,6 +8,7 @@ Spending policy: `thresh(4,pk(key_1),pk(key_2),pk(key_3),pk(key_4),after(t1),aft
 This is based off of `test/functional/wallet_multisig_descriptor_psbt.py` and most code is the same.
 """
 
+import random
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
@@ -126,7 +127,7 @@ class WalletMiniscriptDecayingMultisigDescriptorPSBTTest(BitcoinTestFramework):
 
         psbts = []
         self.log.info("Now at least M users check the psbt with decodepsbt and (if OK) signs it with walletprocesspsbt...")
-        for m in range(self.M):
+        for m in random.sample(range(self.M), self.M):
             signers_multisig = participants["multisigs"][m]
             self._check_psbt(psbt["psbt"], to, value, signers_multisig)
             signing_wallet = participants["signers"][m]
@@ -151,12 +152,12 @@ class WalletMiniscriptDecayingMultisigDescriptorPSBTTest(BitcoinTestFramework):
             current_height = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['height']
 
             psbt = participants["multisigs"][0].walletcreatefundedpsbt(inputs=[], outputs={to: value}, feeRate=0.00010, locktime=locktime)
-            for m in range(self.M):
+            for i, m in enumerate(random.sample(range(self.M), self.M)):
                 signers_multisig = participants["multisigs"][m]
                 self._check_psbt(psbt["psbt"], to, value, signers_multisig)
                 signing_wallet = participants["signers"][m]
                 psbt = signing_wallet.walletprocesspsbt(psbt["psbt"])
-                assert_equal(psbt["complete"], m == self.M - 1)
+                assert_equal(psbt["complete"], i == self.M - 1)
             self.log.info("Check that the time-locked transaction is too immature to spend...")
             assert_equal(current_height >= locktime, False)
             assert_raises_rpc_error(-26, "non-final", coordinator_wallet.sendrawtransaction, psbt["hex"])
