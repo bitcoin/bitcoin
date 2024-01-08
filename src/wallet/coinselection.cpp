@@ -37,6 +37,18 @@ struct {
     }
 } descending;
 
+// Sort by descending (effective) value prefer lower weight on tie
+struct {
+    bool operator()(const OutputGroup& a, const OutputGroup& b) const
+    {
+        if (a.GetSelectionAmount() == b.GetSelectionAmount()) {
+            // Sort lower weight to front on tied effective_value
+            return a.m_weight < b.m_weight;
+        }
+        return a.GetSelectionAmount() > b.GetSelectionAmount();
+    }
+} descending_effval_weight;
+
 /*
  * This is the Branch and Bound Coin Selection algorithm designed by Murch. It searches for an input
  * set that can pay for the spending target and does not exceed the spending target by more than the
@@ -303,7 +315,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
  * set in the node.
  *
  * @param std::vector<OutputGroup>& utxo_pool The UTXOs that we are choosing from. These UTXOs will be sorted in
- *        descending order by effective value, with lower waste preferred as a tie-breaker. (We can think of an output
+ *        descending order by effective value, with lower weight preferred as a tie-breaker. (We can think of an output
  *        group with multiple as a heavier UTXO with the combined amount here.)
  * @param const CAmount& selection_target This is the minimum amount that we need for the transaction without considering change.
  * @param const CAmount& change_target The minimum budget for creating a change output, by which we increase the selection_target.
@@ -312,7 +324,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
  */
 util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, CAmount change_target, int max_weight)
 {
-    std::sort(utxo_pool.begin(), utxo_pool.end(), descending);
+    std::sort(utxo_pool.begin(), utxo_pool.end(), descending_effval_weight);
     // The sum of UTXO amounts after this UTXO index, e.g. lookahead[5] = Σ(UTXO[6+].amount)
     std::vector<CAmount> lookahead(utxo_pool.size());
 
