@@ -413,6 +413,9 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
             // max_weight exceeded: SHIFT
             max_tx_weight_exceeded = true;
             should_shift  = true;
+        } else if (curr_weight > best_selection_weight) {
+            // Worse weight than best solution. More UTXOs only increase weight: SHIFT
+            should_shift  = true;
         } else if (curr_amount >= total_target) {
             // Success, adding more weight cannot be better: SHIFT
             should_shift  = true;

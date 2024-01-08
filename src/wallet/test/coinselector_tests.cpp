@@ -1231,7 +1231,7 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         add_coin(4 * COIN, 3, expected_result);
         BOOST_CHECK(EquivalentResult(expected_result, *res));
         // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
-        size_t expected_attempts = 2041;
+        size_t expected_attempts = 525;
         BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
     }
 
