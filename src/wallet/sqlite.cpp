@@ -377,6 +377,11 @@ void SQLiteDatabase::Close()
     m_db = nullptr;
 }
 
+int SQliteExecHandler::Exec(SQLiteDatabase& database, const std::string& statement)
+{
+    return sqlite3_exec(database.m_db, statement.data(), nullptr, nullptr, nullptr);
+}
+
 std::unique_ptr<DatabaseBatch> SQLiteDatabase::MakeBatch(bool flush_on_close)
 {
     // We ignore flush_on_close because we don't do manual flushing for SQLite
@@ -607,7 +612,7 @@ std::unique_ptr<DatabaseCursor> SQLiteBatch::GetNewPrefixCursor(Span<const std::
 bool SQLiteBatch::TxnBegin()
 {
     if (!m_database.m_db || sqlite3_get_autocommit(m_database.m_db) == 0) return false;
-    int res = sqlite3_exec(m_database.m_db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
+    int res = Assert(m_exec_handler)->Exec(m_database, "BEGIN TRANSACTION");
     if (res != SQLITE_OK) {
         LogPrintf("SQLiteBatch: Failed to begin the transaction\n");
     }
@@ -617,7 +622,7 @@ bool SQLiteBatch::TxnBegin()
 bool SQLiteBatch::TxnCommit()
 {
     if (!m_database.m_db || sqlite3_get_autocommit(m_database.m_db) != 0) return false;
-    int res = sqlite3_exec(m_database.m_db, "COMMIT TRANSACTION", nullptr, nullptr, nullptr);
+    int res = Assert(m_exec_handler)->Exec(m_database, "COMMIT TRANSACTION");
     if (res != SQLITE_OK) {
         LogPrintf("SQLiteBatch: Failed to commit the transaction\n");
     }
@@ -627,7 +632,7 @@ bool SQLiteBatch::TxnCommit()
 bool SQLiteBatch::TxnAbort()
 {
     if (!m_database.m_db || sqlite3_get_autocommit(m_database.m_db) != 0) return false;
-    int res = sqlite3_exec(m_database.m_db, "ROLLBACK TRANSACTION", nullptr, nullptr, nullptr);
+    int res = Assert(m_exec_handler)->Exec(m_database, "ROLLBACK TRANSACTION");
     if (res != SQLITE_OK) {
         LogPrintf("SQLiteBatch: Failed to abort the transaction\n");
     }
