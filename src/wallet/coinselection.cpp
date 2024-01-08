@@ -327,15 +327,20 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
     std::sort(utxo_pool.begin(), utxo_pool.end(), descending_effval_weight);
     // The sum of UTXO amounts after this UTXO index, e.g. lookahead[5] = Σ(UTXO[6+].amount)
     std::vector<CAmount> lookahead(utxo_pool.size());
+    // The minimum UTXO weight among the remaining UTXOs after this UTXO index, e.g. min_tail_weight[5] = min(UTXO[6+].weight)
+    std::vector<int> min_tail_weight(utxo_pool.size());
 
-    // Calculate lookahead values, and check that there are sufficient funds
+    // Calculate lookahead values, min_tail_weights, and check that there are sufficient funds
     CAmount total_available = 0;
+    int min_group_weight = std::numeric_limits<int>::max();
     for (size_t i = 0; i < utxo_pool.size(); ++i) {
         size_t index = utxo_pool.size() - 1 - i; // Loop over every element in reverse order
         lookahead[index] = total_available;
+        min_tail_weight[index] = min_group_weight;
         // UTXOs with non-positive effective value must have been filtered
         Assume(utxo_pool[index].GetSelectionAmount() > 0);
         total_available += utxo_pool[index].GetSelectionAmount();
+        min_group_weight = std::min(min_group_weight, utxo_pool[index].m_weight);
     }
 
     const CAmount total_target = selection_target + change_target;
@@ -426,16 +431,26 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
         ++curr_try;
 
         // EVALUATE current selection: check for solutions and see whether we can CUT or SHIFT before EXPLORING further
-        if (curr_amount + lookahead[curr_selection.back()] < total_target) {
+        auto curr_tail = curr_selection.back();
+        if (curr_amount + lookahead[curr_tail] < total_target) {
             // Insufficient funds with lookahead: CUT
             should_cut = true;
         } else if (curr_weight > max_weight) {
-            // max_weight exceeded: SHIFT
+            // max_weight exceeded: CUT if last selected group had minimal weight, else SHIFT
             max_tx_weight_exceeded = true;
-            should_shift  = true;
+            if (utxo_pool[curr_tail].m_weight <= min_tail_weight[curr_tail]) {
+                should_cut = true;
+            } else {
+                should_shift  = true;
+            }
         } else if (curr_weight > best_selection_weight) {
-            // Worse weight than best solution. More UTXOs only increase weight: SHIFT
-            should_shift  = true;
+            // Worse weight than best solution. More UTXOs only increase weight:
+            // CUT if last selected group had minimal weight, else SHIFT
+            if (utxo_pool[curr_tail].m_weight <= min_tail_weight[curr_tail]) {
+                should_cut = true;
+            } else {
+                should_shift  = true;
+            }
         } else if (curr_amount >= total_target) {
             // Success, adding more weight cannot be better: SHIFT
             should_shift  = true;
