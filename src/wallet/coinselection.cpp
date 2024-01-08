@@ -313,13 +313,17 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
 util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, CAmount change_target, int max_weight)
 {
     std::sort(utxo_pool.begin(), utxo_pool.end(), descending);
+    // The sum of UTXO amounts after this UTXO index, e.g. lookahead[5] = Σ(UTXO[6+].amount)
+    std::vector<CAmount> lookahead(utxo_pool.size());
 
-    // Check that there are sufficient funds
+    // Calculate lookahead values, and check that there are sufficient funds
     CAmount total_available = 0;
-    for (const OutputGroup& utxo : utxo_pool) {
-        // Assert UTXOs with non-positive effective value have been filtered
-        Assume(utxo.GetSelectionAmount() > 0);
-        total_available += utxo.GetSelectionAmount();
+    for (size_t i = 0; i < utxo_pool.size(); ++i) {
+        size_t index = utxo_pool.size() - 1 - i; // Loop over every element in reverse order
+        lookahead[index] = total_available;
+        // UTXOs with non-positive effective value must have been filtered
+        Assume(utxo_pool[index].GetSelectionAmount() > 0);
+        total_available += utxo_pool[index].GetSelectionAmount();
     }
 
     const CAmount total_target = selection_target + change_target;
@@ -409,7 +413,10 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
         ++curr_try;
 
         // EVALUATE current selection: check for solutions and see whether we can CUT or SHIFT before EXPLORING further
-        if (curr_weight > max_weight) {
+        if (curr_amount + lookahead[curr_selection.back()] < total_target) {
+            // Insufficient funds with lookahead: CUT
+            should_cut = true;
+        } else if (curr_weight > max_weight) {
             // max_weight exceeded: SHIFT
             max_tx_weight_exceeded = true;
             should_shift  = true;
