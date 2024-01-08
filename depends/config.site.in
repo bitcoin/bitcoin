@@ -89,9 +89,7 @@ fi
 PKG_CONFIG="$(which pkg-config) --static"
 
 PKG_CONFIG_PATH="${depends_prefix}/share/pkgconfig:${depends_prefix}/lib/pkgconfig"
-if test -z "@allow_host_packages@"; then
-  PKG_CONFIG_LIBDIR="${depends_prefix}/lib/pkgconfig"
-fi
+PKG_CONFIG_LIBDIR="${depends_prefix}/lib/pkgconfig"
 
 CPPFLAGS="-I${depends_prefix}/include/ ${CPPFLAGS}"
 LDFLAGS="-L${depends_prefix}/lib ${LDFLAGS}"
