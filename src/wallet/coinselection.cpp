@@ -454,6 +454,13 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
                 best_selection_weight = curr_weight;
                 best_selection_amount = curr_amount;
             }
+        } else if (!best_selection.empty() && curr_weight + int64_t{min_tail_weight[curr_tail]} * ((total_target - curr_amount + utxo_pool[curr_tail].GetSelectionAmount() - 1) / utxo_pool[curr_tail].GetSelectionAmount()) > best_selection_weight) {
+            // Compare minimal tail weight and last selected amount with the amount missing to gauge whether a better weight is still possible.
+            if (utxo_pool[curr_tail].m_weight <= min_tail_weight[curr_tail]) {
+                should_cut = true;
+            } else {
+                should_shift = true;
+            }
         }
 
         if (curr_try >= TOTAL_TRIES) {
