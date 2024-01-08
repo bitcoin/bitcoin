@@ -359,7 +359,7 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
 
     // The weight of the currently selected input set, and the weight of the best selection
     int curr_weight = 0;
-    int best_selection_weight = std::numeric_limits<int>::max();
+    int best_selection_weight = max_weight; // Tie is fine, because we prefer lower selection amount
 
     // Whether the input sets generated during this search have exceeded the maximum transaction weight at any point
     bool max_tx_weight_exceeded = false;
@@ -435,15 +435,9 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
         if (curr_amount + lookahead[curr_tail] < total_target) {
             // Insufficient funds with lookahead: CUT
             should_cut = true;
-        } else if (curr_weight > max_weight) {
-            // max_weight exceeded: CUT if last selected group had minimal weight, else SHIFT
-            max_tx_weight_exceeded = true;
-            if (utxo_pool[curr_tail].m_weight <= min_tail_weight[curr_tail]) {
-                should_cut = true;
-            } else {
-                should_shift  = true;
-            }
         } else if (curr_weight > best_selection_weight) {
+            // best_selection_weight is initialized to max_weight
+            if (curr_weight > max_weight) max_tx_weight_exceeded = true;
             // Worse weight than best solution. More UTXOs only increase weight:
             // CUT if last selected group had minimal weight, else SHIFT
             if (utxo_pool[curr_tail].m_weight <= min_tail_weight[curr_tail]) {
