@@ -142,6 +142,7 @@ BITCOIN_CORE_H = \
   common/run_command.h \
   common/sv2_messages.h \
   common/sv2_noise.h \
+  common/sv2_transport.h \
   common/url.h \
   common/v1_transport.h \
   common/v2_transport.h \
@@ -683,6 +684,7 @@ libbitcoin_common_a_SOURCES = \
   common/sv2_messages.cpp \
   common/sv2_noise.cpp \
   common/settings.cpp \
+  common/sv2_transport.cpp \
   common/system.cpp \
   common/transport.cpp \
   common/v1_transport.cpp \
