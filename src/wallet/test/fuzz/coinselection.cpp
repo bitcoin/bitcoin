@@ -77,6 +77,63 @@ static SelectionResult ManualSelection(std::vector<COutput>& utxos, const CAmoun
 // Returns true if the result contains an error and the message is not empty
 static bool HasErrorMsg(const util::Result<SelectionResult>& res) { return !util::ErrorString(res).empty(); }
 
+FUZZ_TARGET(coin_grinder)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    std::vector<COutput> utxo_pool;
+
+    const CAmount target{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY)};
+
+    FastRandomContext fast_random_context{ConsumeUInt256(fuzzed_data_provider)};
+    CoinSelectionParams coin_params{fast_random_context};
+    coin_params.m_subtract_fee_outputs = fuzzed_data_provider.ConsumeBool();
+    coin_params.m_long_term_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
+    coin_params.m_effective_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
+    coin_params.change_output_size = fuzzed_data_provider.ConsumeIntegralInRange<int>(10, 1000);
+    coin_params.change_spend_size = fuzzed_data_provider.ConsumeIntegralInRange<int>(10, 1000);
+    coin_params.m_cost_of_change= coin_params.m_effective_feerate.GetFee(coin_params.change_output_size) + coin_params.m_long_term_feerate.GetFee(coin_params.change_spend_size);
+    coin_params.m_change_fee = coin_params.m_effective_feerate.GetFee(coin_params.change_output_size);
+    // For other results to be comparable to SRD, we must align the change_target with SRD’s hardcoded behavior
+    coin_params.m_min_change_target = CHANGE_LOWER + coin_params.m_change_fee;
+
+    // Create some coins
+    CAmount total_balance{0};
+    CAmount max_spendable{0};
+    int next_locktime{0};
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
+    {
+        const int n_input{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 10)};
+        const int n_input_bytes{fuzzed_data_provider.ConsumeIntegralInRange<int>(41, 10000)};
+        const CAmount amount{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY)};
+        if (total_balance + amount >= MAX_MONEY) {
+            break;
+        }
+        AddCoin(amount, n_input, n_input_bytes, ++next_locktime, utxo_pool, coin_params.m_effective_feerate);
+        total_balance += amount;
+        CAmount eff_value = amount - coin_params.m_effective_feerate.GetFee(n_input_bytes);
+        max_spendable += eff_value;
+    }
+
+    std::vector<OutputGroup> group_pos;
+    GroupCoins(fuzzed_data_provider, utxo_pool, coin_params, /*positive_only=*/true, group_pos);
+
+    // Run coinselection algorithms
+    auto result_cg = CoinGrinder(group_pos, target, coin_params.m_min_change_target, MAX_STANDARD_TX_WEIGHT);
+    if (target + coin_params.m_min_change_target > max_spendable || HasErrorMsg(result_cg)) return; // We only need to compare algorithms if CoinGrinder has a solution
+    assert(result_cg);
+    if (!result_cg->GetAlgoCompleted()) return; // Bail out if CoinGrinder solution is not optimal
+
+    auto result_srd = SelectCoinsSRD(group_pos, target, coin_params.m_change_fee, fast_random_context, MAX_STANDARD_TX_WEIGHT);
+    if (result_srd && result_srd->GetChange(CHANGE_LOWER, coin_params.m_change_fee) > 0) { // exclude any srd solutions that don’t have change, err on excluding
+        assert(result_srd->GetWeight() >= result_cg->GetWeight());
+    }
+
+    auto result_knapsack = KnapsackSolver(group_pos, target, coin_params.m_min_change_target, fast_random_context, MAX_STANDARD_TX_WEIGHT);
+    if (result_knapsack && result_knapsack->GetChange(CHANGE_LOWER, coin_params.m_change_fee) > 0) { // exclude any knapsack solutions that don’t have change, err on excluding
+        assert(result_knapsack->GetWeight() >= result_cg->GetWeight());
+    }
+}
+
 FUZZ_TARGET(coinselection)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
