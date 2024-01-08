@@ -330,6 +330,8 @@ private:
     bool m_use_effective{false};
     /** The computed waste */
     std::optional<CAmount> m_waste;
+    /** False if algorithm was cut short by hitting limit of attempts and solution is non-optimal */
+    bool m_algo_completed{true};
     /** The count of selections that were evaluated by this coin selection attempt */
     size_t m_selections_evaluated;
     /** Total weight of the selected inputs */
@@ -388,6 +390,12 @@ public:
     /** Calculates and stores the waste for this selection via GetSelectionWaste */
     void ComputeAndSetWaste(const CAmount min_viable_change, const CAmount change_cost, const CAmount change_fee);
     [[nodiscard]] CAmount GetWaste() const;
+
+    /** Tracks that algorithm was able to exhaustively search the entire combination space before hitting limit of tries */
+    void SetAlgoCompleted(bool algo_completed);
+
+    /** Get m_algo_completed */
+    bool GetAlgoCompleted() const;
 
     /** Record the number of selections that were evaluated */
     void SetSelectionsEvaluated(size_t attempts);
