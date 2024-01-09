@@ -141,6 +141,9 @@ public:
     void SetServices(const CService& addr, ServiceFlags nServices)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
+    void DeleteAddresses(const std::set<Network>& networks)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
     std::optional<AddressPosition> FindAddressEntry(const CAddress& addr)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
@@ -268,6 +271,8 @@ private:
     void Connected_(const CService& addr, NodeSeconds time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void SetServices_(const CService& addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    void DeleteAddresses_(const std::set<Network>& addresses) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void ResolveCollisions_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 

@@ -899,6 +899,53 @@ void AddrManImpl::SetServices_(const CService& addr, ServiceFlags nServices)
     info.nServices = nServices;
 }
 
+void AddrManImpl::DeleteAddresses_(const std::set<Network>& networks)
+{
+    AssertLockHeld(cs);
+
+    int new_count = 0;
+    int tried_count = 0;
+
+    for (auto& network_count : m_network_counts) {
+        auto network = network_count.first;
+        if (networks.contains(network)) {
+            continue;
+        }
+        new_count += m_network_counts[network].n_new;
+        tried_count += m_network_counts[network].n_tried;
+    }
+
+    for (int n = 0; n < ADDRMAN_NEW_BUCKET_COUNT && new_count != 0; n++) {
+        for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
+            AddrInfo& info = mapInfo[vvNew[n][i]];
+            const auto network = info.GetNetwork();
+            if (networks.contains(network)) {
+                continue;
+            }
+            ClearNew(n, i);
+            new_count--;
+        }
+    }
+
+    for (int n = 0; n < ADDRMAN_TRIED_BUCKET_COUNT && tried_count != 0; n++) {
+        for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
+            auto id = vvTried[n][i];
+            AddrInfo& info = mapInfo[vvTried[n][i]];
+            const auto network = info.GetNetwork();
+            if (networks.contains(network) || !info.IsValid()) {
+                continue;
+            }
+            SwapRandom(info.nRandomPos, vRandom.size() - 1);
+            vRandom.pop_back();
+            mapAddr.erase(info);
+            mapInfo.erase(id);
+            m_network_counts[network].n_tried--;
+            vvTried[n][i] = -1;
+            tried_count--;
+        }
+    }
+}
+
 void AddrManImpl::ResolveCollisions_()
 {
     AssertLockHeld(cs);
@@ -1250,6 +1297,14 @@ void AddrManImpl::SetServices(const CService& addr, ServiceFlags nServices)
     Check();
 }
 
+void AddrManImpl::DeleteAddresses(const std::set<Network>& networks)
+{
+    LOCK(cs);
+    Check();
+    DeleteAddresses_(networks);
+    Check();
+}
+
 std::optional<AddressPosition> AddrManImpl::FindAddressEntry(const CAddress& addr)
 {
     LOCK(cs);
@@ -1337,6 +1392,11 @@ void AddrMan::Connected(const CService& addr, NodeSeconds time)
 void AddrMan::SetServices(const CService& addr, ServiceFlags nServices)
 {
     m_impl->SetServices(addr, nServices);
+}
+
+void AddrMan::DeleteAddresses(const std::set<Network>& networks)
+{
+    m_impl->DeleteAddresses(networks);
 }
 
 std::optional<AddressPosition> AddrMan::FindAddressEntry(const CAddress& addr)

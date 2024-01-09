@@ -200,6 +200,9 @@ public:
     //! Update an entry's service bits.
     void SetServices(const CService& addr, ServiceFlags nServices);
 
+    //! Delete addresses from addrman that are not from the specified networks
+    void DeleteAddresses(const std::set<Network>& networks);
+
     /** Test-only function
      * Find the address record in AddrMan and return information about its
      * position.
