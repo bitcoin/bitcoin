@@ -63,6 +63,17 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/module)
 
 set(configure_warnings)
 
+include(CheckPIESupported)
+check_pie_supported(OUTPUT_VARIABLE check_pie_output LANGUAGES CXX)
+if(CMAKE_CXX_LINK_PIE_SUPPORTED)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+elseif(NOT WIN32)
+  # The warning is superfluous for Windows.
+  message(WARNING "PIE is not supported at link time: ${check_pie_output}")
+  list(APPEND configure_warnings "Position independent code disabled.")
+endif()
+unset(check_pie_output)
+
 # The core_interface library aims to encapsulate common build flags.
 # It is a usage requirement for all targets except for secp256k1, which
 # gets its flags by other means.
