@@ -335,6 +335,7 @@ BASE_SCRIPTS = [
     'wallet_create_tx.py --descriptors',
     'wallet_inactive_hdchains.py --legacy-wallet',
     'wallet_spend_unconfirmed.py',
+    'wallet_rescan_unconfirmed.py --descriptors',
     'p2p_fingerprint.py',
     'feature_uacomment.py',
     'feature_init.py',
