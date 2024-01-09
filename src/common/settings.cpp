@@ -81,7 +81,9 @@ bool ReadSettings(const fs::path& path, std::map<std::string, SettingsValue>& va
 
     SettingsValue in;
     if (!in.read(std::string{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()})) {
-        errors.emplace_back(strprintf("Unable to parse settings file %s", fs::PathToString(path)));
+        errors.emplace_back(strprintf("Settings file %s does not contain valid JSON. This is probably caused by disk corruption or a crash, "
+                                      "and can be fixed by removing the file, which will reset settings to default values.",
+                                      fs::PathToString(path)));
         return false;
     }
 

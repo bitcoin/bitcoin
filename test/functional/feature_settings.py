@@ -53,7 +53,7 @@ class SettingsTest(BitcoinTestFramework):
         # Test invalid json
         with settings.open("w") as fp:
             fp.write("invalid json")
-        node.assert_start_raises_init_error(expected_msg='Unable to parse settings file', match=ErrorMatch.PARTIAL_REGEX)
+        node.assert_start_raises_init_error(expected_msg='does not contain valid JSON. This is probably caused by disk corruption or a crash', match=ErrorMatch.PARTIAL_REGEX)
 
         # Test invalid json object
         with settings.open("w") as fp:
