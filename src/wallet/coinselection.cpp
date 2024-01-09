@@ -229,7 +229,7 @@ struct CompareByPriority
     bool operator()(const OutputGroup& group1,
                     const OutputGroup& group2) const
     {
-        return CCoinJoin::CalculateAmountPriority(group1.m_value) > CCoinJoin::CalculateAmountPriority(group2.m_value);
+        return CoinJoin::CalculateAmountPriority(group1.m_value) > CoinJoin::CalculateAmountPriority(group2.m_value);
     }
 };
 
@@ -238,7 +238,7 @@ bool less_then_denom (const OutputGroup& group1, const OutputGroup& group2)
 {
     bool found1 = false;
     bool found2 = false;
-    for (const auto& d : CCoinJoin::GetStandardDenominations()) // loop through predefined denoms
+    for (const auto& d : CoinJoin::GetStandardDenominations()) // loop through predefined denoms
     {
         if(group1.m_value == d) found1 = true;
         if(group2.m_value == d) found2 = true;
@@ -280,7 +280,7 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& group
         applicable_groups.clear();
         nTotalLower = 0;
         for (const OutputGroup& group : groups) {
-            if (tryDenom == 0 && CCoinJoin::IsDenominatedAmount(group.m_value)) {
+            if (tryDenom == 0 && CoinJoin::IsDenominatedAmount(group.m_value)) {
                 continue; // we don't want denom values on first run
             }
             if (group.m_value == nTargetValue) {

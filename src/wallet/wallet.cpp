@@ -1366,21 +1366,21 @@ int CWallet::GetRealOutpointCoinJoinRounds(const COutPoint& outpoint, int nRound
 
     auto txOutRef = &wtx->tx->vout[outpoint.n];
 
-    if (CCoinJoin::IsCollateralAmount(txOutRef->nValue)) {
+    if (CoinJoin::IsCollateralAmount(txOutRef->nValue)) {
         *nRoundsRef = -3;
         WalletCJLogPrint((*this), "%s UPDATED   %-70s %3d\n", __func__, outpoint.ToStringShort(), *nRoundsRef);
         return *nRoundsRef;
     }
 
     // make sure the final output is non-denominate
-    if (!CCoinJoin::IsDenominatedAmount(txOutRef->nValue)) { //NOT DENOM
+    if (!CoinJoin::IsDenominatedAmount(txOutRef->nValue)) { //NOT DENOM
         *nRoundsRef = -2;
         WalletCJLogPrint((*this), "%s UPDATED   %-70s %3d\n", __func__, outpoint.ToStringShort(), *nRoundsRef);
         return *nRoundsRef;
     }
 
     for (const auto& out : wtx->tx->vout) {
-        if (!CCoinJoin::IsDenominatedAmount(out.nValue)) {
+        if (!CoinJoin::IsDenominatedAmount(out.nValue)) {
             // this one is denominated but there is another non-denominated output found in the same tx
             *nRoundsRef = 0;
             WalletCJLogPrint((*this), "%s UPDATED   %-70s %3d\n", __func__, outpoint.ToStringShort(), *nRoundsRef);
@@ -1429,7 +1429,7 @@ bool CWallet::IsDenominated(const COutPoint& outpoint) const
         return false;
     }
 
-    return CCoinJoin::IsDenominatedAmount(it->second.tx->vout[outpoint.n].nValue);
+    return CoinJoin::IsDenominatedAmount(it->second.tx->vout[outpoint.n].nValue);
 }
 
 bool CWallet::IsFullyMixed(const COutPoint& outpoint) const
@@ -2209,7 +2209,7 @@ CAmount CWalletTx::GetAnonymizedCredit(const CCoinControl* coinControl) const
             continue;
         }
 
-        if (pwallet->IsSpent(hashTx, i) || !CCoinJoin::IsDenominatedAmount(txout.nValue)) continue;
+        if (pwallet->IsSpent(hashTx, i) || !CoinJoin::IsDenominatedAmount(txout.nValue)) continue;
 
         if (pwallet->IsFullyMixed(outpoint)) {
             nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
@@ -2256,7 +2256,7 @@ CAmount CWalletTx::GetDenominatedCredit(bool unconfirmed, bool fUseCache) const
     {
         const CTxOut &txout = tx->vout[i];
 
-        if (pwallet->IsSpent(hashTx, i) || !CCoinJoin::IsDenominatedAmount(txout.nValue)) continue;
+        if (pwallet->IsSpent(hashTx, i) || !CoinJoin::IsDenominatedAmount(txout.nValue)) continue;
 
         nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
         if (!MoneyRange(nCredit))
@@ -2455,10 +2455,10 @@ CAmount CWallet::GetAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfi
 
     CAmount nTotal = 0;
 
-    const CAmount nSmallestDenom = CCoinJoin::GetSmallestDenomination();
-    const CAmount nMixingCollateral = CCoinJoin::GetCollateralAmount();
+    const CAmount nSmallestDenom = CoinJoin::GetSmallestDenomination();
+    const CAmount nMixingCollateral = CoinJoin::GetCollateralAmount();
     for (const auto& item : vecTally) {
-        bool fIsDenominated = CCoinJoin::IsDenominatedAmount(item.nAmount);
+        bool fIsDenominated = CoinJoin::IsDenominatedAmount(item.nAmount);
         if(fSkipDenominated && fIsDenominated) continue;
         // assume that the fee to create denoms should be mixing collateral at max
         if(item.nAmount >= nSmallestDenom + (fIsDenominated ? 0 : nMixingCollateral))
@@ -2504,7 +2504,7 @@ CAmount CWallet::GetNormalizedAnonymizedBalance() const
         if (it == mapWallet.end()) continue;
 
         CAmount nValue = it->second.tx->vout[outpoint.n].nValue;
-        if (!CCoinJoin::IsDenominatedAmount(nValue)) continue;
+        if (!CoinJoin::IsDenominatedAmount(nValue)) continue;
         if (it->second.GetDepthInMainChain() < 0) continue;
 
         int nRounds = GetCappedOutpointCoinJoinRounds(outpoint);
@@ -2573,18 +2573,18 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
         for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
             bool found = false;
             if (nCoinType == CoinType::ONLY_FULLY_MIXED) {
-                if (!CCoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
+                if (!CoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
                 found = IsFullyMixed(COutPoint(wtxid, i));
             } else if(nCoinType == CoinType::ONLY_READY_TO_MIX) {
-                if (!CCoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
+                if (!CoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
                 found = !IsFullyMixed(COutPoint(wtxid, i));
             } else if(nCoinType == CoinType::ONLY_NONDENOMINATED) {
-                if (CCoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue)) continue; // do not use collateral amounts
-                found = !CCoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
+                if (CoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue)) continue; // do not use collateral amounts
+                found = !CoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
             } else if(nCoinType == CoinType::ONLY_MASTERNODE_COLLATERAL) {
                 found = dmn_types::IsCollateralAmount(pcoin->tx->vout[i].nValue);
             } else if(nCoinType == CoinType::ONLY_COINJOIN_COLLATERAL) {
-                found = CCoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue);
+                found = CoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue);
             } else {
                 found = true;
             }
@@ -2716,7 +2716,7 @@ struct CompareByPriority
     bool operator()(const COutput& t1,
                     const COutput& t2) const
     {
-        return CCoinJoin::CalculateAmountPriority(t1.GetInputCoin().effective_value) > CCoinJoin::CalculateAmountPriority(t2.GetInputCoin().effective_value);
+        return CoinJoin::CalculateAmountPriority(t1.GetInputCoin().effective_value) > CoinJoin::CalculateAmountPriority(t2.GetInputCoin().effective_value);
     }
 };
 
@@ -3127,10 +3127,10 @@ bool CWallet::SelectTxDSInsByDenomination(int nDenom, CAmount nValueMax, std::ve
 
     vecTxDSInRet.clear();
 
-    if (!CCoinJoin::IsValidDenomination(nDenom)) {
+    if (!CoinJoin::IsValidDenomination(nDenom)) {
         return false;
     }
-    CAmount nDenomAmount = CCoinJoin::DenominationToAmount(nDenom);
+    CAmount nDenomAmount = CoinJoin::DenominationToAmount(nDenom);
 
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_READY_TO_MIX;
@@ -3241,7 +3241,7 @@ std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipD
         }
     }
 
-    CAmount nSmallestDenom = CCoinJoin::GetSmallestDenomination();
+    CAmount nSmallestDenom = CoinJoin::GetSmallestDenomination();
 
     // Tally
     std::map<CTxDestination, CompactTallyItem> mapTally;
@@ -3271,11 +3271,11 @@ std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipD
 
             if(IsSpent(outpoint.hash, i) || IsLockedCoin(outpoint.hash, i)) continue;
 
-            if(fSkipDenominated && CCoinJoin::IsDenominatedAmount(wtx.tx->vout[i].nValue)) continue;
+            if(fSkipDenominated && CoinJoin::IsDenominatedAmount(wtx.tx->vout[i].nValue)) continue;
 
             if(fAnonymizable) {
                 // ignore collaterals
-                if(CCoinJoin::IsCollateralAmount(wtx.tx->vout[i].nValue)) continue;
+                if(CoinJoin::IsCollateralAmount(wtx.tx->vout[i].nValue)) continue;
                 if (fMasternodeMode && dmn_types::IsCollateralAmount(wtx.tx->vout[i].nValue)) continue;
                 // ignore outputs that are 10 times smaller then the smallest denomination
                 // otherwise they will just lead to higher fee / lower priority
@@ -3346,7 +3346,7 @@ bool CWallet::SelectDenominatedAmounts(CAmount nValueMax, std::set<CAmount>& set
         }
     }
 
-    return nValueTotal >= CCoinJoin::GetSmallestDenomination();
+    return nValueTotal >= CoinJoin::GetSmallestDenomination();
 }
 
 int CWallet::CountInputsWithAmount(CAmount nInputAmount) const

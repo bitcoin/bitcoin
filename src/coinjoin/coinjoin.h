@@ -338,7 +338,7 @@ public:
 };
 
 // Various helpers and dstx manager implementation
-namespace CCoinJoin
+namespace CoinJoin
 {
     extern Mutex cs_mapdstx;
 

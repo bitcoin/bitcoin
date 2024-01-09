@@ -192,27 +192,27 @@ public:
     }
     bool isCollateralAmount(CAmount nAmount) override
     {
-        return CCoinJoin::IsCollateralAmount(nAmount);
+        return CoinJoin::IsCollateralAmount(nAmount);
     }
     CAmount getMinCollateralAmount() override
     {
-        return CCoinJoin::GetCollateralAmount();
+        return CoinJoin::GetCollateralAmount();
     }
     CAmount getMaxCollateralAmount() override
     {
-        return CCoinJoin::GetMaxCollateralAmount();
+        return CoinJoin::GetMaxCollateralAmount();
     }
     CAmount getSmallestDenomination() override
     {
-        return CCoinJoin::GetSmallestDenomination();
+        return CoinJoin::GetSmallestDenomination();
     }
     bool isDenominated(CAmount nAmount) override
     {
-        return CCoinJoin::IsDenominatedAmount(nAmount);
+        return CoinJoin::IsDenominatedAmount(nAmount);
     }
     std::array<CAmount, 5> getStandardDenominations() override
     {
-        return CCoinJoin::GetStandardDenominations();
+        return CoinJoin::GetStandardDenominations();
     }
 };
 

@@ -223,7 +223,7 @@ void CCoinJoinClientSession::ProcessMessage(CNode& peer, PeerManager& peerman, C
             return;
         }
 
-        WalletCJLogPrint(m_wallet, "DSCOMPLETE -- nMsgSessionID %d  nMsgMessageID %d (%s)\n", nMsgSessionID, nMsgMessageID, CCoinJoin::GetMessageByID(nMsgMessageID).translated);
+        WalletCJLogPrint(m_wallet, "DSCOMPLETE -- nMsgSessionID %d  nMsgMessageID %d (%s)\n", nMsgSessionID, nMsgMessageID, CoinJoin::GetMessageByID(nMsgMessageID).translated);
 
         CompletedTransaction(nMsgMessageID);
     }
@@ -354,7 +354,7 @@ std::string CCoinJoinClientManager::GetSessionDenoms()
     AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     for (const auto& session : deqSessions) {
-        strSessionDenoms += CCoinJoin::DenominationToString(session.nSessionDenom);
+        strSessionDenoms += CoinJoin::DenominationToString(session.nSessionDenom);
         strSessionDenoms += "; ";
     }
     return strSessionDenoms.empty() ? "N/A" : strSessionDenoms;
@@ -410,7 +410,7 @@ bool CCoinJoinClientSession::CheckTimeout()
     UnlockCoins();
     keyHolderStorage.ReturnAll();
     nTimeLastSuccessfulStep = GetTime();
-    strLastMessage = CCoinJoin::GetMessageByID(ERR_SESSION);
+    strLastMessage = CoinJoin::GetMessageByID(ERR_SESSION);
 
     return true;
 }
@@ -511,7 +511,7 @@ void CCoinJoinClientSession::ProcessPoolStateUpdate(CCoinJoinStatusUpdate psssup
         return;
     }
 
-    bilingual_str strMessageTmp = CCoinJoin::GetMessageByID(psssup.nMessageID);
+    bilingual_str strMessageTmp = CoinJoin::GetMessageByID(psssup.nMessageID);
     strAutoDenomResult = _("Masternode:") + Untranslated(" ") + strMessageTmp;
 
     switch (psssup.nStatusUpdate) {
@@ -576,7 +576,7 @@ bool CCoinJoinClientSession::SignFinalTransaction(const CTxMemPool& mempool, con
     // Make sure all inputs/outputs are valid
     PoolMessage nMessageID{MSG_NOERR};
     if (!IsValidInOuts(mempool, finalMutableTransaction.vin, finalMutableTransaction.vout, nMessageID, nullptr)) {
-        WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- ERROR! IsValidInOuts() failed: %s\n", __func__, CCoinJoin::GetMessageByID(nMessageID).translated);
+        WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- ERROR! IsValidInOuts() failed: %s\n", __func__, CoinJoin::GetMessageByID(nMessageID).translated);
         UnlockCoins();
         keyHolderStorage.ReturnAll();
         SetNull();
@@ -691,7 +691,7 @@ void CCoinJoinClientSession::CompletedTransaction(PoolMessage nMessageID)
     }
     UnlockCoins();
     WITH_LOCK(cs_coinjoin, SetNull());
-    strLastMessage = CCoinJoin::GetMessageByID(nMessageID);
+    strLastMessage = CoinJoin::GetMessageByID(nMessageID);
 }
 
 void CCoinJoinClientManager::UpdatedSuccessBlock()
@@ -831,12 +831,12 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, CBlockPo
             return false;
         }
 
-        CAmount nValueMin = CCoinJoin::GetSmallestDenomination();
+        CAmount nValueMin = CoinJoin::GetSmallestDenomination();
 
         // if there are no confirmed DS collateral inputs yet
         if (!m_wallet.HasCollateralInputs()) {
             // should have some additional amount for them
-            nValueMin += CCoinJoin::GetMaxCollateralAmount();
+            nValueMin += CoinJoin::GetMaxCollateralAmount();
         }
 
         // including denoms but applying some restrictions
@@ -859,7 +859,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, CBlockPo
 
         // adjust nBalanceNeedsAnonymized to consume final denom
         if (nBalanceDenominated - nBalanceAnonymized > nBalanceNeedsAnonymized) {
-            auto denoms = CCoinJoin::GetStandardDenominations();
+            auto denoms = CoinJoin::GetStandardDenominations();
             CAmount nAdditionalDenom{0};
             for (const auto& denom : denoms) {
                 if (nBalanceNeedsAnonymized < denom) {
@@ -897,7 +897,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, CBlockPo
         // Check if we have should create more denominated inputs i.e.
         // there are funds to denominate and denominated balance does not exceed
         // max amount to mix yet.
-        if (nBalanceAnonimizableNonDenom >= nValueMin + CCoinJoin::GetCollateralAmount() && nBalanceToDenominate > 0) {
+        if (nBalanceAnonimizableNonDenom >= nValueMin + CoinJoin::GetCollateralAmount() && nBalanceToDenominate > 0) {
             CreateDenominated(fee_estimator, nBalanceToDenominate);
         }
 
@@ -932,7 +932,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, CBlockPo
                 return false;
             }
         } else {
-            if (!CCoinJoin::IsCollateralValid(mempool, CTransaction(txMyCollateral))) {
+            if (!CoinJoin::IsCollateralValid(mempool, CTransaction(txMyCollateral))) {
                 WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::DoAutomaticDenominating -- invalid collateral, recreating...\n");
                 if (!CreateCollateralTransaction(txMyCollateral, strReason)) {
                     WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::DoAutomaticDenominating -- create collateral error: %s\n", strReason);
@@ -1091,7 +1091,7 @@ bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, 
 
         // Try to match their denominations if possible, select exact number of denominations
         if (!m_wallet.SelectTxDSInsByDenomination(dsq.nDenom, nBalanceNeedsAnonymized, vecTxDSInTmp)) {
-            WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::JoinExistingQueue -- Couldn't match denomination %d (%s)\n", dsq.nDenom, CCoinJoin::DenominationToString(dsq.nDenom));
+            WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::JoinExistingQueue -- Couldn't match denomination %d (%s)\n", dsq.nDenom, CoinJoin::DenominationToString(dsq.nDenom));
             continue;
         }
 
@@ -1109,7 +1109,7 @@ bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, 
         SetState(POOL_STATE_QUEUE);
         nTimeLastSuccessfulStep = GetTime();
         WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::JoinExistingQueue -- pending connection (from queue): nSessionDenom: %d (%s), addr=%s\n",
-            nSessionDenom, CCoinJoin::DenominationToString(nSessionDenom), dmn->pdmnState->addr.ToString());
+            nSessionDenom, CoinJoin::DenominationToString(nSessionDenom), dmn->pdmnState->addr.ToString());
         strAutoDenomResult = _("Trying to connect...");
         return true;
     }
@@ -1177,7 +1177,7 @@ bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CCon
         while (nSessionDenom == 0) {
             for (auto it = setAmounts.rbegin(); it != setAmounts.rend(); ++it) {
                 if (setAmounts.size() > 1 && GetRandInt(2)) continue;
-                nSessionDenom = CCoinJoin::AmountToDenomination(*it);
+                nSessionDenom = CoinJoin::AmountToDenomination(*it);
                 break;
             }
         }
@@ -1188,7 +1188,7 @@ bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CCon
         SetState(POOL_STATE_QUEUE);
         nTimeLastSuccessfulStep = GetTime();
         WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::StartNewQueue -- pending connection, nSessionDenom: %d (%s), addr=%s\n",
-            nSessionDenom, CCoinJoin::DenominationToString(nSessionDenom), dmn->pdmnState->addr.ToString());
+            nSessionDenom, CoinJoin::DenominationToString(nSessionDenom), dmn->pdmnState->addr.ToString());
         strAutoDenomResult = _("Trying to connect...");
         return true;
     }
@@ -1325,7 +1325,7 @@ bool CCoinJoinClientSession::SelectDenominate(std::string& strErrorRet, std::vec
 
     vecTxDSInRet.clear();
 
-    bool fSelected = m_wallet.SelectTxDSInsByDenomination(nSessionDenom, CCoinJoin::GetMaxPoolAmount(), vecTxDSInRet);
+    bool fSelected = m_wallet.SelectTxDSInsByDenomination(nSessionDenom, CoinJoin::GetMaxPoolAmount(), vecTxDSInRet);
     if (!fSelected) {
         strErrorRet = "Can't select current denominated inputs";
         return false;
@@ -1338,11 +1338,11 @@ bool CCoinJoinClientSession::PrepareDenominate(int nMinRounds, int nMaxRounds, s
 {
     AssertLockHeld(m_wallet.cs_wallet);
 
-    if (!CCoinJoin::IsValidDenomination(nSessionDenom)) {
+    if (!CoinJoin::IsValidDenomination(nSessionDenom)) {
         strErrorRet = "Incorrect session denom";
         return false;
     }
-    CAmount nDenomAmount = CCoinJoin::DenominationToAmount(nSessionDenom);
+    CAmount nDenomAmount = CoinJoin::DenominationToAmount(nSessionDenom);
 
     // NOTE: No need to randomize order of inputs because they were
     // initially shuffled in CWallet::SelectTxDSInsByDenomination already.
@@ -1443,12 +1443,12 @@ bool CCoinJoinClientSession::MakeCollateralAmounts(const CBlockPolicyEstimator& 
     if (!CCoinJoinClientOptions::IsEnabled()) return false;
 
     // Denominated input is always a single one, so we can check its amount directly and return early
-    if (!fTryDenominated && tallyItem.vecInputCoins.size() == 1 && CCoinJoin::IsDenominatedAmount(tallyItem.nAmount)) {
+    if (!fTryDenominated && tallyItem.vecInputCoins.size() == 1 && CoinJoin::IsDenominatedAmount(tallyItem.nAmount)) {
         return false;
     }
 
     // Skip single inputs that can be used as collaterals already
-    if (tallyItem.vecInputCoins.size() == 1 && CCoinJoin::IsCollateralAmount(tallyItem.nAmount)) {
+    if (tallyItem.vecInputCoins.size() == 1 && CoinJoin::IsCollateralAmount(tallyItem.nAmount)) {
         return false;
     }
 
@@ -1464,29 +1464,29 @@ bool CCoinJoinClientSession::MakeCollateralAmounts(const CBlockPolicyEstimator& 
     WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- Start %s\n", __func__, txBuilder.ToString());
 
     // Skip way too tiny amounts. Smallest we want is minimum collateral amount in a one output tx
-    if (!txBuilder.CouldAddOutput(CCoinJoin::GetCollateralAmount())) {
+    if (!txBuilder.CouldAddOutput(CoinJoin::GetCollateralAmount())) {
         return false;
     }
 
     int nCase{0}; // Just for debug logs
-    if (txBuilder.CouldAddOutputs({CCoinJoin::GetMaxCollateralAmount(), CCoinJoin::GetCollateralAmount()})) {
+    if (txBuilder.CouldAddOutputs({CoinJoin::GetMaxCollateralAmount(), CoinJoin::GetCollateralAmount()})) {
         nCase = 1;
         // <case1>, see TransactionRecord::decomposeTransaction
-        // Out1 == CCoinJoin::GetMaxCollateralAmount()
-        // Out2 >= CCoinJoin::GetCollateralAmount()
+        // Out1 == CoinJoin::GetMaxCollateralAmount()
+        // Out2 >= CoinJoin::GetCollateralAmount()
 
-        txBuilder.AddOutput(CCoinJoin::GetMaxCollateralAmount());
+        txBuilder.AddOutput(CoinJoin::GetMaxCollateralAmount());
         // Note, here we first add a zero amount output to get the remainder after all fees and then assign it
         CTransactionBuilderOutput* out = txBuilder.AddOutput();
         CAmount nAmountLeft = txBuilder.GetAmountLeft();
         // If remainder is denominated add one duff to the fee
-        out->UpdateAmount(CCoinJoin::IsDenominatedAmount(nAmountLeft) ? nAmountLeft - 1 : nAmountLeft);
+        out->UpdateAmount(CoinJoin::IsDenominatedAmount(nAmountLeft) ? nAmountLeft - 1 : nAmountLeft);
 
-    } else if (txBuilder.CouldAddOutputs({CCoinJoin::GetCollateralAmount(), CCoinJoin::GetCollateralAmount()})) {
+    } else if (txBuilder.CouldAddOutputs({CoinJoin::GetCollateralAmount(), CoinJoin::GetCollateralAmount()})) {
         nCase = 2;
         // <case2>, see TransactionRecord::decomposeTransaction
-        // Out1 CCoinJoin::IsCollateralAmount()
-        // Out2 CCoinJoin::IsCollateralAmount()
+        // Out1 CoinJoin::IsCollateralAmount()
+        // Out2 CoinJoin::IsCollateralAmount()
 
         // First add two outputs to get the available value after all fees
         CTransactionBuilderOutput* out1 = txBuilder.AddOutput();
@@ -1495,20 +1495,20 @@ bool CCoinJoinClientSession::MakeCollateralAmounts(const CBlockPolicyEstimator& 
         // Create two equal outputs from the available value. This adds one duff to the fee if txBuilder.GetAmountLeft() is odd.
         CAmount nAmountOutputs = txBuilder.GetAmountLeft() / 2;
 
-        assert(CCoinJoin::IsCollateralAmount(nAmountOutputs));
+        assert(CoinJoin::IsCollateralAmount(nAmountOutputs));
 
         out1->UpdateAmount(nAmountOutputs);
         out2->UpdateAmount(nAmountOutputs);
 
-    } else { // still at least possible to add one CCoinJoin::GetCollateralAmount() output
+    } else { // still at least possible to add one CoinJoin::GetCollateralAmount() output
         nCase = 3;
         // <case3>, see TransactionRecord::decomposeTransaction
-        // Out1 CCoinJoin::IsCollateralAmount()
+        // Out1 CoinJoin::IsCollateralAmount()
         // Out2 Skipped
         CTransactionBuilderOutput* out = txBuilder.AddOutput();
         out->UpdateAmount(txBuilder.GetAmountLeft());
 
-        assert(CCoinJoin::IsCollateralAmount(out->GetAmount()));
+        assert(CoinJoin::IsCollateralAmount(out->GetAmount()));
     }
 
     WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- Done with case %d: %s\n", __func__, nCase, txBuilder.ToString());
@@ -1552,8 +1552,8 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
 
     // pay collateral charge in fees
     // NOTE: no need for protobump patch here,
-    // CCoinJoin::IsCollateralAmount in GetCollateralTxDSIn should already take care of this
-    if (txout.nValue >= CCoinJoin::GetCollateralAmount() * 2) {
+    // CoinJoin::IsCollateralAmount in GetCollateralTxDSIn should already take care of this
+    if (txout.nValue >= CoinJoin::GetCollateralAmount() * 2) {
         // make our change address
         CScript scriptChange;
         CTxDestination dest;
@@ -1563,8 +1563,8 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
         scriptChange = GetScriptForDestination(dest);
         reserveDest.KeepDestination();
         // return change
-        txCollateral.vout.emplace_back(txout.nValue - CCoinJoin::GetCollateralAmount(), scriptChange);
-    } else { // txout.nValue < CCoinJoin::GetCollateralAmount() * 2
+        txCollateral.vout.emplace_back(txout.nValue - CoinJoin::GetCollateralAmount(), scriptChange);
+    } else { // txout.nValue < CoinJoin::GetCollateralAmount() * 2
         // create dummy data output only and pay everything as a fee
         txCollateral.vout.emplace_back(0, CScript() << OP_RETURN);
     }
@@ -1618,7 +1618,7 @@ bool CCoinJoinClientSession::CreateDenominated(CBlockPolicyEstimator& fee_estima
     if (!CCoinJoinClientOptions::IsEnabled()) return false;
 
     // denominated input is always a single one, so we can check its amount directly and return early
-    if (tallyItem.vecInputCoins.size() == 1 && CCoinJoin::IsDenominatedAmount(tallyItem.nAmount)) {
+    if (tallyItem.vecInputCoins.size() == 1 && CoinJoin::IsDenominatedAmount(tallyItem.nAmount)) {
         return false;
     }
 
@@ -1635,7 +1635,7 @@ bool CCoinJoinClientSession::CreateDenominated(CBlockPolicyEstimator& fee_estima
 
     // ****** Add an output for mixing collaterals ************ /
 
-    if (fCreateMixingCollaterals && !txBuilder.AddOutput(CCoinJoin::GetMaxCollateralAmount())) {
+    if (fCreateMixingCollaterals && !txBuilder.AddOutput(CoinJoin::GetMaxCollateralAmount())) {
         WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- Failed to add collateral output\n", __func__);
         return false;
     }
@@ -1643,7 +1643,7 @@ bool CCoinJoinClientSession::CreateDenominated(CBlockPolicyEstimator& fee_estima
     // ****** Add outputs for denoms ************ /
 
     bool fAddFinal = true;
-    auto denoms = CCoinJoin::GetStandardDenominations();
+    auto denoms = CoinJoin::GetStandardDenominations();
 
     std::map<CAmount, int> mapDenomCount;
     for (auto nDenomValue : denoms) {
@@ -1659,7 +1659,7 @@ bool CCoinJoinClientSession::CreateDenominated(CBlockPolicyEstimator& fee_estima
     // Now, in this system, so long as we don't reach COINJOIN_DENOM_OUTPUTS_THRESHOLD outputs the process repeats in
     // the same transaction, creating up to nCoinJoinDenomsHardCap per denomination in a single transaction.
 
-    while (txBuilder.CouldAddOutput(CCoinJoin::GetSmallestDenomination()) && txBuilder.CountOutputs() < COINJOIN_DENOM_OUTPUTS_THRESHOLD) {
+    while (txBuilder.CouldAddOutput(CoinJoin::GetSmallestDenomination()) && txBuilder.CountOutputs() < COINJOIN_DENOM_OUTPUTS_THRESHOLD) {
         for (auto it = denoms.rbegin(); it != denoms.rend(); ++it) {
             CAmount nDenomValue = *it;
             auto currentDenomIt = mapDenomCount.find(nDenomValue);
@@ -1719,7 +1719,7 @@ bool CCoinJoinClientSession::CreateDenominated(CBlockPolicyEstimator& fee_estima
     }
 
     // Now that nCoinJoinDenomsGoal worth of each denom have been created or the max number of denoms given the value of the input, do something with the remainder.
-    if (txBuilder.CouldAddOutput(CCoinJoin::GetSmallestDenomination()) && nBalanceToDenominate >= CCoinJoin::GetSmallestDenomination() && txBuilder.CountOutputs() < COINJOIN_DENOM_OUTPUTS_THRESHOLD) {
+    if (txBuilder.CouldAddOutput(CoinJoin::GetSmallestDenomination()) && nBalanceToDenominate >= CoinJoin::GetSmallestDenomination() && txBuilder.CountOutputs() < COINJOIN_DENOM_OUTPUTS_THRESHOLD) {
         CAmount nLargestDenomValue = denoms.front();
 
         WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- 2 - Process remainder: %s\n", __func__, txBuilder.ToString());
@@ -1866,7 +1866,7 @@ void CCoinJoinClientSession::GetJsonInfo(UniValue& obj) const
         obj.pushKV("outpoint",  mixingMasternode->collateralOutpoint.ToStringShort());
         obj.pushKV("service",   mixingMasternode->pdmnState->addr.ToString());
     }
-    obj.pushKV("denomination",  ValueFromAmount(CCoinJoin::DenominationToAmount(nSessionDenom)));
+    obj.pushKV("denomination",  ValueFromAmount(CoinJoin::DenominationToAmount(nSessionDenom)));
     obj.pushKV("state",         GetStateString());
     obj.pushKV("entries_count", GetEntriesCount());
 }

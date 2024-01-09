@@ -7,7 +7,7 @@
 #include <core_io.h>
 #include <univalue.h>
 
-namespace CCoinJoin
+namespace CoinJoin
 {
 std::string DenominationToString(int nDenom)
 {
@@ -23,4 +23,4 @@ std::string DenominationToString(int nDenom)
     return "to-string-error";
 }
 
-} // namespace CCoinJoin
+} // namespace CoinJoin

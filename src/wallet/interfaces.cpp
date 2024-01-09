@@ -69,7 +69,7 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
         result.txout_address_is_mine.emplace_back(ExtractDestination(txout.scriptPubKey, result.txout_address.back()) ?
                                                       wallet.IsMine(result.txout_address.back()) :
                                                       ISMINE_NO);
-        if (!fOutputDenomFound && result.txout_address_is_mine.back() && CCoinJoin::IsDenominatedAmount(txout.nValue)) {
+        if (!fOutputDenomFound && result.txout_address_is_mine.back() && CoinJoin::IsDenominatedAmount(txout.nValue)) {
             fOutputDenomFound = true;
         }
     }

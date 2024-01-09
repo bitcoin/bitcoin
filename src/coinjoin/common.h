@@ -32,7 +32,7 @@ public:
     CTxDSIn() = default;
 };
 
-namespace CCoinJoin
+namespace CoinJoin
 {
 
 constexpr std::array<CAmount, 5> vecStandardDenominations{
@@ -130,6 +130,6 @@ constexpr int CalculateAmountPriority(CAmount nInputAmount)
     return -1 * (nInputAmount / COIN);
 }
 
-} // namespace CCoinJoin
+} // namespace CoinJoin
 
 #endif
