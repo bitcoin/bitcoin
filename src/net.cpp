@@ -2316,10 +2316,13 @@ void CConnman::ProcessAddrFetch()
         strDest = m_addr_fetches.front();
         m_addr_fetches.pop_front();
     }
+    // Attempt v2 connection if we support v2 - we'll reconnect with v1 if our
+    // peer doesn't support it or immediately disconnects us for another reason.
+    const bool use_v2transport(GetLocalServices() & NODE_P2P_V2);
     CAddress addr;
     CSemaphoreGrant grant(*semOutbound, /*fTry=*/true);
     if (grant) {
-        OpenNetworkConnection(addr, false, std::move(grant), strDest.c_str(), ConnectionType::ADDR_FETCH, /*use_v2transport=*/false);
+        OpenNetworkConnection(addr, false, std::move(grant), strDest.c_str(), ConnectionType::ADDR_FETCH, use_v2transport);
     }
 }
 
@@ -2417,12 +2420,15 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
     // Connect to specific addresses
     if (!connect.empty())
     {
+        // Attempt v2 connection if we support v2 - we'll reconnect with v1 if our
+        // peer doesn't support it or immediately disconnects us for another reason.
+        const bool use_v2transport(GetLocalServices() & NODE_P2P_V2);
         for (int64_t nLoop = 0;; nLoop++)
         {
             for (const std::string& strAddr : connect)
             {
                 CAddress addr(CService(), NODE_NONE);
-                OpenNetworkConnection(addr, false, {}, strAddr.c_str(), ConnectionType::MANUAL, /*use_v2transport=*/false);
+                OpenNetworkConnection(addr, false, {}, strAddr.c_str(), ConnectionType::MANUAL, /*use_v2transport=*/use_v2transport);
                 for (int i = 0; i < 10 && i < nLoop; i++)
                 {
                     if (!interruptNet.sleep_for(std::chrono::milliseconds(500)))
@@ -2431,6 +2437,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
             if (!interruptNet.sleep_for(std::chrono::milliseconds(500)))
                 return;
+            PerformReconnections();
         }
     }
 
@@ -2840,11 +2847,11 @@ void CConnman::ThreadOpenAddedConnections()
             if (!interruptNet.sleep_for(std::chrono::milliseconds(500))) return;
             grant = CSemaphoreGrant(*semAddnode, /*fTry=*/true);
         }
+        // See if any reconnections are desired.
+        PerformReconnections();
         // Retry every 60 seconds if a connection was attempted, otherwise two seconds
         if (!interruptNet.sleep_for(std::chrono::seconds(tried ? 60 : 2)))
             return;
-        // See if any reconnections are desired.
-        PerformReconnections();
     }
 }
 
