@@ -320,6 +320,16 @@ if(BUILD_TX)
 endif()
 
 
+if(BUILD_UTIL)
+  add_executable(bitcoin-util bitcoin-util.cpp)
+  target_link_libraries(bitcoin-util
+    core_interface
+    bitcoin_common
+    bitcoin_util
+  )
+endif()
+
+
 add_subdirectory(test/util)
 if(BUILD_TESTS)
   add_subdirectory(test)
