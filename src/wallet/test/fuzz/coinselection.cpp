@@ -116,7 +116,8 @@ FUZZ_TARGET(coinselection)
     }
 
     // Run coinselection algorithms
-    auto result_bnb = SelectCoinsBnB(group_pos, target, coin_params.m_cost_of_change, MAX_STANDARD_TX_WEIGHT);
+    auto result_bnb = coin_params.m_subtract_fee_outputs ? util::Error{Untranslated("BnB disabled when SFFO is enabled")} :
+                      SelectCoinsBnB(group_pos, target, coin_params.m_cost_of_change, MAX_STANDARD_TX_WEIGHT);
     if (result_bnb) {
         assert(result_bnb->GetChange(coin_params.m_cost_of_change, CAmount{0}) == 0);
         assert(result_bnb->GetSelectedValue() >= target);
