@@ -8,6 +8,7 @@
 #include <banman.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <coinjoin/common.h>
 #include <deploymentstatus.h>
 #include <evo/deterministicmns.h>
 #include <governance/governance.h>
@@ -192,27 +193,27 @@ public:
     }
     bool isCollateralAmount(CAmount nAmount) override
     {
-        return CoinJoin::IsCollateralAmount(nAmount);
+        return ::CoinJoin::IsCollateralAmount(nAmount);
     }
     CAmount getMinCollateralAmount() override
     {
-        return CoinJoin::GetCollateralAmount();
+        return ::CoinJoin::GetCollateralAmount();
     }
     CAmount getMaxCollateralAmount() override
     {
-        return CoinJoin::GetMaxCollateralAmount();
+        return ::CoinJoin::GetMaxCollateralAmount();
     }
     CAmount getSmallestDenomination() override
     {
-        return CoinJoin::GetSmallestDenomination();
+        return ::CoinJoin::GetSmallestDenomination();
     }
     bool isDenominated(CAmount nAmount) override
     {
-        return CoinJoin::IsDenominatedAmount(nAmount);
+        return ::CoinJoin::IsDenominatedAmount(nAmount);
     }
     std::array<CAmount, 5> getStandardDenominations() override
     {
-        return CoinJoin::GetStandardDenominations();
+        return ::CoinJoin::GetStandardDenominations();
     }
 };
 
