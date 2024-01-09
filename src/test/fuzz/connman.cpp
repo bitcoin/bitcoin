@@ -40,7 +40,9 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                      fuzzed_data_provider.ConsumeBool()};
 
     const uint64_t max_outbound_limit{fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
-    connman.Init({ .nMaxOutboundLimit = max_outbound_limit });
+    CConnman::Options options;
+    options.nMaxOutboundLimit = max_outbound_limit;
+    connman.Init(options);
 
     CNetAddr random_netaddr;
     CNode random_node = ConsumeNode(fuzzed_data_provider);
