@@ -1271,13 +1271,15 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
     // Remove conflicting transactions from the mempool
     for (CTxMemPool::txiter it : m_all_conflicts)
     {
-        LogPrint(BCLog::MEMPOOL, "replacing tx %s (wtxid=%s) with %s (wtxid=%s) for %s additional fees, %d delta bytes\n",
+        LogPrint(BCLog::MEMPOOL, "replacing mempool tx %s (wtxid=%s, fees=%s, vsize=%s). New tx %s (wtxid=%s, fees=%s, vsize=%s)\n",
                 it->GetTx().GetHash().ToString(),
                 it->GetTx().GetWitnessHash().ToString(),
+                it->GetFee(),
+                it->GetTxSize(),
                 hash.ToString(),
                 tx.GetWitnessHash().ToString(),
-                FormatMoney(ws.m_modified_fees - m_conflicting_fees),
-                (int)entry->GetTxSize() - (int)m_conflicting_size);
+                entry->GetFee(),
+                entry->GetTxSize());
         TRACE7(mempool, replaced,
                 it->GetTx().GetHash().data(),
                 it->GetTxSize(),
@@ -1369,6 +1371,13 @@ bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& 
     std::transform(workspaces.cbegin(), workspaces.cend(), std::back_inserter(all_package_wtxids),
                    [](const auto& ws) { return ws.m_ptx->GetWitnessHash(); });
 
+    if (!m_replaced_transactions.empty()) {
+        LogPrint(BCLog::MEMPOOL, "replaced %u mempool transactions with %u new one(s) for %s additional fees, %d delta bytes\n",
+                 m_replaced_transactions.size(), workspaces.size(),
+                 m_total_modified_fees - (int)m_conflicting_fees,
+                 m_total_vsize - (int)m_conflicting_size);
+    }
+
     // Add successful results. The returned results may change later if LimitMempoolSize() evicts them.
     for (Workspace& ws : workspaces) {
         const auto effective_feerate = args.m_package_feerates ? ws.m_package_feerate :
@@ -1448,6 +1457,13 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
                                                        IsCurrentForFeeEstimation(m_active_chainstate),
                                                        m_pool.HasNoInputsOf(tx));
         m_pool.m_signals->TransactionAddedToMempool(tx_info, m_pool.GetAndIncrementSequence());
+    }
+
+    if (!m_replaced_transactions.empty()) {
+        LogPrint(BCLog::MEMPOOL, "replaced %u mempool transactions with 1 new one for %s additional fees, %d delta bytes\n",
+                 m_replaced_transactions.size(),
+                 ws.m_modified_fees - (int)m_conflicting_fees,
+                 ws.m_vsize - (int)m_conflicting_size);
     }
 
     return MempoolAcceptResult::Success(std::move(m_replaced_transactions), ws.m_vsize, ws.m_base_fees,
