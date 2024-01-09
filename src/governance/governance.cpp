@@ -1274,7 +1274,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(Span<CNode*> vNodesCopy, CC
             // Don't try to sync any data from outbound non-relay "masternode" connections.
             // Inbound connection this early is most likely a "masternode" connection
             // initiated from another node, so skip it too.
-            if (!pnode->CanRelay() || (fMasternodeMode && pnode->fInbound)) continue;
+            if (!pnode->CanRelay() || (fMasternodeMode && pnode->IsInboundConn())) continue;
             // stop early to prevent setAskFor overflow
             {
                 LOCK(cs_main);

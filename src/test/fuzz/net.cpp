@@ -123,7 +123,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
     const int ref_count = node.GetRefCount();
     assert(ref_count >= 0);
     (void)node.GetSendVersion();
-    (void)node.IsAddrRelayPeer();
+    (void)node.RelayAddrsWithConn();
 
     const NetPermissionFlags net_permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
     (void)node.HasPermission(net_permission_flags);

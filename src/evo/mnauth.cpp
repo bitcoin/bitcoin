@@ -44,9 +44,9 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
     const bool is_basic_scheme_active{DeploymentActiveAfter(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     const CBLSPublicKeyVersionWrapper pubKey(*activeMasternodeInfo.blsPubKeyOperator, !is_basic_scheme_active);
     if (peer.nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
-        signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.fInbound));
+        signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.IsInboundConn()));
     } else {
-        signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.fInbound, nOurNodeVersion));
+        signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.IsInboundConn(), nOurNodeVersion));
     }
 
     CMNAuth mnauth;
@@ -111,9 +111,9 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connma
     ConstCBLSPublicKeyVersionWrapper pubKey(dmn->pdmnState->pubKeyOperator.Get(), !is_basic_scheme_active);
     // See comment in PushMNAUTH (fInbound is negated here as we're on the other side of the connection)
     if (peer.nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
-        signHash = ::SerializeHash(std::make_tuple(pubKey, peer.GetSentMNAuthChallenge(), !peer.fInbound));
+        signHash = ::SerializeHash(std::make_tuple(pubKey, peer.GetSentMNAuthChallenge(), !peer.IsInboundConn()));
     } else {
-        signHash = ::SerializeHash(std::make_tuple(pubKey, peer.GetSentMNAuthChallenge(), !peer.fInbound, peer.nVersion.load()));
+        signHash = ::SerializeHash(std::make_tuple(pubKey, peer.GetSentMNAuthChallenge(), !peer.IsInboundConn(), peer.nVersion.load()));
     }
     LogPrint(BCLog::NET_NETCONN, "CMNAuth::%s -- constructed signHash for nVersion %d, peer=%d\n", __func__, peer.nVersion, peer.GetId());
 
@@ -124,7 +124,7 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connma
         return;
     }
 
-    if (!peer.fInbound) {
+    if (!peer.IsInboundConn()) {
         mmetaman->GetMetaInfo(mnauth.proRegTxHash)->SetLastOutboundSuccess(GetTime<std::chrono::seconds>().count());
         if (peer.m_masternode_probe_connection) {
             LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- Masternode probe successful for %s, disconnecting. peer=%d\n",
@@ -150,18 +150,18 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connma
                 if (deterministicOutbound == myProTxHash) {
                     // NOTE: do not drop inbound nodes here, mark them as probes so that
                     // they would be disconnected later in CMasternodeUtils::DoMaintenance
-                    if (pnode2->fInbound) {
+                    if (pnode2->IsInboundConn()) {
                         LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- marking old inbound for dropping it later, peer=%d\n", pnode2->GetId());
                         pnode2->m_masternode_probe_connection = true;
-                    } else if (peer.fInbound) {
+                    } else if (peer.IsInboundConn()) {
                         LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- marking new inbound for dropping it later, peer=%d\n", peer.GetId());
                         peer.m_masternode_probe_connection = true;
                     }
                 } else {
-                    if (!pnode2->fInbound) {
+                    if (!pnode2->IsInboundConn()) {
                         LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- dropping old outbound, peer=%d\n", pnode2->GetId());
                         pnode2->fDisconnect = true;
-                    } else if (!peer.fInbound) {
+                    } else if (!peer.IsInboundConn()) {
                         LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- dropping new outbound, peer=%d\n", peer.GetId());
                         peer.fDisconnect = true;
                     }

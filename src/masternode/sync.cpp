@@ -157,10 +157,10 @@ void CMasternodeSync::ProcessTick()
         // Don't try to sync any data from outbound non-relay "masternode" connections.
         // Inbound connection this early is most likely a "masternode" connection
         // initiated from another node, so skip it too.
-        if (!pnode->CanRelay() || (fMasternodeMode && pnode->fInbound)) continue;
+        if (!pnode->CanRelay() || (fMasternodeMode && pnode->IsInboundConn())) continue;
 
         {
-            if ((pnode->HasPermission(PF_NOBAN) || pnode->m_manual_connection) && !netfulfilledman->HasFulfilledRequest(pnode->addr, strAllow)) {
+            if ((pnode->HasPermission(PF_NOBAN) || pnode->IsManualConn()) && !netfulfilledman->HasFulfilledRequest(pnode->addr, strAllow)) {
                 netfulfilledman->RemoveAllFulfilledRequests(pnode->addr);
                 netfulfilledman->AddFulfilledRequest(pnode->addr, strAllow);
                 LogPrintf("CMasternodeSync::ProcessTick -- skipping mnsync restrictions for peer=%d\n", pnode->GetId());
@@ -203,7 +203,7 @@ void CMasternodeSync::ProcessTick()
                         // Now that the blockchain is synced request the mempool from the connected outbound nodes if possible
                         for (auto pNodeTmp : vNodesCopy) {
                             bool fRequestedEarlier = netfulfilledman->HasFulfilledRequest(pNodeTmp->addr, "mempool-sync");
-                            if (pNodeTmp->nVersion >= 70216 && !pNodeTmp->fInbound && !fRequestedEarlier && !pNodeTmp->IsBlockRelayOnly()) {
+                            if (pNodeTmp->nVersion >= 70216 && !pNodeTmp->IsInboundConn() && !fRequestedEarlier && !pNodeTmp->IsBlockRelayOnly()) {
                                 netfulfilledman->AddFulfilledRequest(pNodeTmp->addr, "mempool-sync");
                                 connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::MEMPOOL));
                                 LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d -- syncing mempool from peer=%d\n", nTick, nCurrentAsset, pNodeTmp->GetId());
