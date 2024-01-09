@@ -1,54 +1,21 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <netaddress.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/fuzz/util/net.h>
 
 #include <cassert>
 #include <cstdint>
-#include <netinet/in.h>
 #include <vector>
 
-namespace {
-CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    const Network network = fuzzed_data_provider.PickValueInArray({Network::NET_IPV4, Network::NET_IPV6, Network::NET_INTERNAL, Network::NET_ONION});
-    if (network == Network::NET_IPV4) {
-        const in_addr v4_addr = {
-            .s_addr = fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
-        return CNetAddr{v4_addr};
-    } else if (network == Network::NET_IPV6) {
-        if (fuzzed_data_provider.remaining_bytes() < 16) {
-            return CNetAddr{};
-        }
-        in6_addr v6_addr = {};
-        memcpy(v6_addr.s6_addr, fuzzed_data_provider.ConsumeBytes<uint8_t>(16).data(), 16);
-        return CNetAddr{v6_addr, fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
-    } else if (network == Network::NET_INTERNAL) {
-        CNetAddr net_addr;
-        net_addr.SetInternal(fuzzed_data_provider.ConsumeBytesAsString(32));
-        return net_addr;
-    } else if (network == Network::NET_ONION) {
-        CNetAddr net_addr;
-        net_addr.SetSpecial(fuzzed_data_provider.ConsumeBytesAsString(32));
-        return net_addr;
-    } else {
-        assert(false);
-    }
-}
-}; // namespace
-
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(netaddress)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     const CNetAddr net_addr = ConsumeNetAddr(fuzzed_data_provider);
-    for (int i = 0; i < 15; ++i) {
-        (void)net_addr.GetByte(i);
-    }
-    (void)net_addr.GetHash();
     (void)net_addr.GetNetClass();
     if (net_addr.GetNetwork() == Network::NET_IPV4) {
         assert(net_addr.IsIPv4());
@@ -86,7 +53,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)net_addr.IsRFC3927();
     (void)net_addr.IsRFC3964();
     if (net_addr.IsRFC4193()) {
-        assert(net_addr.GetNetwork() == Network::NET_ONION || net_addr.GetNetwork() == Network::NET_INTERNAL || net_addr.GetNetwork() == Network::NET_UNROUTABLE);
+        assert(net_addr.GetNetwork() == Network::NET_INTERNAL || net_addr.GetNetwork() == Network::NET_UNROUTABLE);
     }
     (void)net_addr.IsRFC4380();
     (void)net_addr.IsRFC4843();
@@ -103,22 +70,21 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(net_addr.GetNetwork() == Network::NET_ONION);
     }
     (void)net_addr.IsValid();
-    (void)net_addr.ToString();
-    (void)net_addr.ToStringIP();
+    (void)net_addr.ToStringAddr();
 
-    const CSubNet sub_net{net_addr, fuzzed_data_provider.ConsumeIntegral<int32_t>()};
+    const CSubNet sub_net{net_addr, fuzzed_data_provider.ConsumeIntegral<uint8_t>()};
     (void)sub_net.IsValid();
     (void)sub_net.ToString();
 
     const CService service{net_addr, fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
     (void)service.GetKey();
     (void)service.GetPort();
-    (void)service.ToString();
-    (void)service.ToStringIPPort();
-    (void)service.ToStringPort();
+    (void)service.ToStringAddrPort();
+    (void)CServiceHash()(service);
+    (void)CServiceHash(0, 0)(service);
 
     const CNetAddr other_net_addr = ConsumeNetAddr(fuzzed_data_provider);
-    (void)net_addr.GetReachabilityFrom(&other_net_addr);
+    (void)net_addr.GetReachabilityFrom(other_net_addr);
     (void)sub_net.Match(other_net_addr);
 
     const CService other_service{net_addr, fuzzed_data_provider.ConsumeIntegral<uint16_t>()};

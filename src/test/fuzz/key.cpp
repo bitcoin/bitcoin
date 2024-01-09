@@ -1,9 +1,8 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <chainparamsbase.h>
 #include <key.h>
 #include <key_io.h>
 #include <outputtype.h>
@@ -14,26 +13,30 @@
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
+#include <script/solver.h>
 #include <streams.h>
+#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <util/memory.h>
+#include <test/fuzz/util.h>
+#include <util/chaintype.h>
 #include <util/strencodings.h>
 
+#include <array>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <numeric>
+#include <optional>
 #include <string>
 #include <vector>
 
-void initialize()
+void initialize_key()
 {
-    static const ECCVerifyHandle ecc_verify_handle;
     ECC_Start();
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(ChainType::REGTEST);
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(key, .init = initialize_key)
 {
     const CKey key = [&] {
         CKey k;
@@ -85,7 +88,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(negated_key == key);
     }
 
-    const uint256 random_uint256 = Hash(buffer.begin(), buffer.end());
+    const uint256 random_uint256 = Hash(buffer);
 
     {
         CKey child_key;
@@ -108,12 +111,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(pubkey.IsCompressed());
         assert(pubkey.IsValid());
         assert(pubkey.IsFullyValid());
-        assert(HexToPubKey(HexStr(pubkey.begin(), pubkey.end())) == pubkey);
+        assert(HexToPubKey(HexStr(pubkey)) == pubkey);
         assert(GetAllDestinationsForKey(pubkey).size() == 3);
     }
 
     {
-        CDataStream data_stream{SER_NETWORK, INIT_PROTO_VERSION};
+        DataStream data_stream{};
         pubkey.Serialize(data_stream);
 
         CPubKey pubkey_deserialized;
@@ -139,8 +142,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(tx_multisig_script.size() == 37);
 
         FillableSigningProvider fillable_signing_provider;
-        assert(IsSolvable(fillable_signing_provider, tx_pubkey_script));
-        assert(IsSolvable(fillable_signing_provider, tx_multisig_script));
         assert(!IsSegWitOutput(fillable_signing_provider, tx_pubkey_script));
         assert(!IsSegWitOutput(fillable_signing_provider, tx_multisig_script));
         assert(fillable_signing_provider.GetKeys().size() == 0);
@@ -157,25 +158,25 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(ok_add_key_pubkey);
         assert(fillable_signing_provider_pub.HaveKey(pubkey.GetID()));
 
-        txnouttype which_type_tx_pubkey;
-        const bool is_standard_tx_pubkey = IsStandard(tx_pubkey_script, which_type_tx_pubkey);
+        TxoutType which_type_tx_pubkey;
+        const bool is_standard_tx_pubkey = IsStandard(tx_pubkey_script, std::nullopt, which_type_tx_pubkey);
         assert(is_standard_tx_pubkey);
-        assert(which_type_tx_pubkey == txnouttype::TX_PUBKEY);
+        assert(which_type_tx_pubkey == TxoutType::PUBKEY);
 
-        txnouttype which_type_tx_multisig;
-        const bool is_standard_tx_multisig = IsStandard(tx_multisig_script, which_type_tx_multisig);
+        TxoutType which_type_tx_multisig;
+        const bool is_standard_tx_multisig = IsStandard(tx_multisig_script, std::nullopt, which_type_tx_multisig);
         assert(is_standard_tx_multisig);
-        assert(which_type_tx_multisig == txnouttype::TX_MULTISIG);
+        assert(which_type_tx_multisig == TxoutType::MULTISIG);
 
         std::vector<std::vector<unsigned char>> v_solutions_ret_tx_pubkey;
-        const txnouttype outtype_tx_pubkey = Solver(tx_pubkey_script, v_solutions_ret_tx_pubkey);
-        assert(outtype_tx_pubkey == txnouttype::TX_PUBKEY);
+        const TxoutType outtype_tx_pubkey = Solver(tx_pubkey_script, v_solutions_ret_tx_pubkey);
+        assert(outtype_tx_pubkey == TxoutType::PUBKEY);
         assert(v_solutions_ret_tx_pubkey.size() == 1);
         assert(v_solutions_ret_tx_pubkey[0].size() == 33);
 
         std::vector<std::vector<unsigned char>> v_solutions_ret_tx_multisig;
-        const txnouttype outtype_tx_multisig = Solver(tx_multisig_script, v_solutions_ret_tx_multisig);
-        assert(outtype_tx_multisig == txnouttype::TX_MULTISIG);
+        const TxoutType outtype_tx_multisig = Solver(tx_multisig_script, v_solutions_ret_tx_multisig);
+        assert(outtype_tx_multisig == TxoutType::MULTISIG);
         assert(v_solutions_ret_tx_multisig.size() == 3);
         assert(v_solutions_ret_tx_multisig[0].size() == 1);
         assert(v_solutions_ret_tx_multisig[1].size() == 33);
@@ -185,7 +186,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         const CTxDestination tx_destination = GetDestinationForKey(pubkey, output_type);
         assert(output_type == OutputType::LEGACY);
         assert(IsValidDestination(tx_destination));
-        assert(CTxDestination{PKHash{pubkey}} == tx_destination);
+        assert(PKHash{pubkey} == *std::get_if<PKHash>(&tx_destination));
 
         const CScript script_for_destination = GetScriptForDestination(tx_destination);
         assert(script_for_destination.size() == 25);
@@ -305,5 +306,72 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             assert(ok);
             assert(key == loaded_key);
         }
+    }
+}
+
+FUZZ_TARGET(ellswift_roundtrip, .init = initialize_key)
+{
+    FuzzedDataProvider fdp{buffer.data(), buffer.size()};
+
+    CKey key = ConsumePrivateKey(fdp, /*compressed=*/true);
+    if (!key.IsValid()) return;
+
+    auto ent32 = fdp.ConsumeBytes<std::byte>(32);
+    ent32.resize(32);
+
+    auto encoded_ellswift = key.EllSwiftCreate(ent32);
+    auto decoded_pubkey = encoded_ellswift.Decode();
+
+    assert(key.VerifyPubKey(decoded_pubkey));
+}
+
+FUZZ_TARGET(bip324_ecdh, .init = initialize_key)
+{
+    FuzzedDataProvider fdp{buffer.data(), buffer.size()};
+
+    // We generate private key, k1.
+    CKey k1 = ConsumePrivateKey(fdp, /*compressed=*/true);
+    if (!k1.IsValid()) return;
+
+    // They generate private key, k2.
+    CKey k2 = ConsumePrivateKey(fdp, /*compressed=*/true);
+    if (!k2.IsValid()) return;
+
+    // We construct an ellswift encoding for our key, k1_ellswift.
+    auto ent32_1 = fdp.ConsumeBytes<std::byte>(32);
+    ent32_1.resize(32);
+    auto k1_ellswift = k1.EllSwiftCreate(ent32_1);
+
+    // They construct an ellswift encoding for their key, k2_ellswift.
+    auto ent32_2 = fdp.ConsumeBytes<std::byte>(32);
+    ent32_2.resize(32);
+    auto k2_ellswift = k2.EllSwiftCreate(ent32_2);
+
+    // They construct another (possibly distinct) ellswift encoding for their key, k2_ellswift_bad.
+    auto ent32_2_bad = fdp.ConsumeBytes<std::byte>(32);
+    ent32_2_bad.resize(32);
+    auto k2_ellswift_bad = k2.EllSwiftCreate(ent32_2_bad);
+    assert((ent32_2_bad == ent32_2) == (k2_ellswift_bad == k2_ellswift));
+
+    // Determine who is who.
+    bool initiating = fdp.ConsumeBool();
+
+    // We compute our shared secret using our key and their public key.
+    auto ecdh_secret_1 = k1.ComputeBIP324ECDHSecret(k2_ellswift, k1_ellswift, initiating);
+    // They compute their shared secret using their key and our public key.
+    auto ecdh_secret_2 = k2.ComputeBIP324ECDHSecret(k1_ellswift, k2_ellswift, !initiating);
+    // Those must match, as everyone is behaving correctly.
+    assert(ecdh_secret_1 == ecdh_secret_2);
+
+    if (k1_ellswift != k2_ellswift) {
+        // Unless the two keys are exactly identical, acting as the wrong party breaks things.
+        auto ecdh_secret_bad = k1.ComputeBIP324ECDHSecret(k2_ellswift, k1_ellswift, !initiating);
+        assert(ecdh_secret_bad != ecdh_secret_1);
+    }
+
+    if (k2_ellswift_bad != k2_ellswift) {
+        // Unless both encodings created by them are identical, using the second one breaks things.
+        auto ecdh_secret_bad = k1.ComputeBIP324ECDHSecret(k2_ellswift_bad, k1_ellswift, initiating);
+        assert(ecdh_secret_bad != ecdh_secret_1);
     }
 }

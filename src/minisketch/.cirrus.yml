@@ -1,0 +1,154 @@
+env:
+  BUILD: check
+  HOST:
+  MAKEFLAGS: -j4
+  BENCH: yes
+  TESTRUNS:
+  EXEC_CMD:
+  ENABLE_FIELDS:
+
+cat_logs_snippet: &CAT_LOGS
+  on_failure:
+    cat_test_log_script:
+      - cat test-suite.log || true
+    cat_config_log_script:
+      - cat config.log || true
+    cat_test_env_script:
+      - cat test_env.log || true
+    cat_ci_env_script:
+      - env
+
+merge_base_script_snippet: &MERGE_BASE
+  merge_base_script:
+    - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
+    - git fetch $CIRRUS_REPO_CLONE_URL $CIRRUS_BASE_BRANCH
+    - git config --global user.email "ci@ci.ci"
+    - git config --global user.name "ci"
+    - git merge FETCH_HEAD  # Merge base to detect silent merge conflicts
+
+env_matrix_snippet: &ENV_MATRIX_VALGRIND
+  - env:
+      ENABLE_FIELDS: "7,32,58"
+  - env:
+      BUILD: distcheck
+  - env:
+      EXEC_CMD: valgrind --error-exitcode=42
+      TESTRUNS: 1
+      BUILD:
+
+env_matrix_snippet: &ENV_MATRIX_SAN
+  - env:
+      ENABLE_FIELDS: 28
+  - env:
+      BUILD: distcheck
+  - env:
+      CXXFLAGS:  "-fsanitize=undefined -fno-omit-frame-pointer"
+      LDFLAGS: "-fsanitize=undefined -fno-omit-frame-pointer"
+      UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
+      BENCH: no
+
+env_matrix_snippet: &ENV_MATRIX_SAN_VALGRIND
+  - env:
+      ENABLE_FIELDS: "11,64,37"
+  - env:
+      BUILD: distcheck
+  - env:
+      EXEC_CMD: valgrind --error-exitcode=42
+      TESTRUNS: 1
+      BUILD:
+  - env:
+      CXXFLAGS:  "-fsanitize=undefined -fno-omit-frame-pointer"
+      LDFLAGS: "-fsanitize=undefined -fno-omit-frame-pointer"
+      UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
+      BENCH: no
+
+task:
+  name: "x86_64: Linux (Debian stable)"
+  container:
+    dockerfile: ci/linux-debian.Dockerfile
+    memory: 2G
+    cpu: 4
+  matrix:
+    << : *ENV_MATRIX_SAN_VALGRIND
+  matrix:
+    - env:
+        CC: gcc
+    - env:
+        CC: clang
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "i686: Linux (Debian stable)"
+  container:
+    dockerfile: ci/linux-debian.Dockerfile
+    memory: 2G
+    cpu: 4
+  env:
+    HOST: i686-linux-gnu
+  matrix:
+    << : *ENV_MATRIX_VALGRIND
+  matrix:
+    - env:
+        CC: i686-linux-gnu-gcc
+    - env:
+        CC: clang --target=i686-pc-linux-gnu -isystem /usr/i686-linux-gnu/include
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "x86_64: macOS Catalina"
+  macos_instance:
+    image: catalina-base
+  env:
+    # Cirrus gives us a fixed number of 12 virtual CPUs.
+    MAKEFLAGS: -j13
+  matrix:
+    << : *ENV_MATRIX_SAN
+  matrix:
+    - env:
+        CC: gcc-9
+    - env:
+        CC: clang
+  brew_script:
+    - brew update
+    - brew install automake libtool gcc@9
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "s390x (big-endian): Linux (Debian stable, QEMU)"
+  container:
+    dockerfile: ci/linux-debian.Dockerfile
+    cpu: 4
+    memory: 2G
+  env:
+    EXEC_CMD: qemu-s390x -L /usr/s390x-linux-gnu
+    HOST: s390x-linux-gnu
+    BUILD:
+  << : *MERGE_BASE
+  test_script:
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=27008
+    - rm /etc/ld.so.cache
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS
+
+task:
+  name: "x86_64-w64-mingw32: Linux (Debian stable, Wine)"
+  container:
+    dockerfile: ci/linux-debian.Dockerfile
+    cpu: 4
+    memory: 2G
+  env:
+    EXEC_CMD: wine
+    HOST: x86_64-w64-mingw32
+    BUILD:
+  << : *MERGE_BASE
+  test_script:
+    - ./ci/cirrus.sh
+  << : *CAT_LOGS

@@ -1,21 +1,25 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_OPTIONSMODEL_H
 #define BITCOIN_QT_OPTIONSMODEL_H
 
-#include <amount.h>
+#include <cstdint>
+#include <qt/bitcoinunits.h>
 #include <qt/guiconstants.h>
 
 #include <QAbstractListModel>
 
+#include <assert.h>
+
+struct bilingual_str;
 namespace interfaces {
 class Node;
 }
 
 extern const char *DEFAULT_GUI_PROXY_HOST;
-static constexpr unsigned short DEFAULT_GUI_PROXY_PORT = 9050;
+static constexpr uint16_t DEFAULT_GUI_PROXY_PORT = 9050;
 
 /**
  * Convert configured prune target MiB to displayed GB. Round up to avoid underestimating max disk usage.
@@ -38,13 +42,14 @@ class OptionsModel : public QAbstractListModel
     Q_OBJECT
 
 public:
-    explicit OptionsModel(interfaces::Node& node, QObject *parent = nullptr, bool resetSettings = false);
+    explicit OptionsModel(interfaces::Node& node, QObject *parent = nullptr);
 
     enum OptionID {
         StartAtStartup,         // bool
-        HideTrayIcon,           // bool
+        ShowTrayIcon,           // bool
         MinimizeToTray,         // bool
         MapPortUPnP,            // bool
+        MapPortNatpmp,          // bool
         MinimizeOnClose,        // bool
         ProxyUse,               // bool
         ProxyIP,                // QString
@@ -52,40 +57,53 @@ public:
         ProxyUseTor,            // bool
         ProxyIPTor,             // QString
         ProxyPortTor,           // int
-        DisplayUnit,            // BitcoinUnits::Unit
+        DisplayUnit,            // BitcoinUnit
         ThirdPartyTxUrls,       // QString
         Language,               // QString
+        UseEmbeddedMonospacedFont, // bool
         CoinControlFeatures,    // bool
+        SubFeeFromAmount,       // bool
         ThreadsScriptVerif,     // int
         Prune,                  // bool
         PruneSize,              // int
         DatabaseCache,          // int
+        ExternalSignerPath,     // QString
         SpendZeroConfChange,    // bool
         Listen,                 // bool
+        Server,                 // bool
+        EnablePSBTControls,     // bool
+        MaskValues,             // bool
         OptionIDRowCount,
     };
 
-    void Init(bool resetSettings = false);
+    bool Init(bilingual_str& error);
     void Reset();
 
     int rowCount(const QModelIndex & parent = QModelIndex()) const override;
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
     bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole) override;
-    /** Updates current unit in memory, settings and emits displayUnitChanged(newUnit) signal */
-    void setDisplayUnit(const QVariant &value);
+    QVariant getOption(OptionID option, const std::string& suffix="") const;
+    bool setOption(OptionID option, const QVariant& value, const std::string& suffix="");
+    /** Updates current unit in memory, settings and emits displayUnitChanged(new_unit) signal */
+    void setDisplayUnit(const QVariant& new_unit);
 
     /* Explicit getters */
-    bool getHideTrayIcon() const { return fHideTrayIcon; }
+    bool getShowTrayIcon() const { return m_show_tray_icon; }
     bool getMinimizeToTray() const { return fMinimizeToTray; }
     bool getMinimizeOnClose() const { return fMinimizeOnClose; }
-    int getDisplayUnit() const { return nDisplayUnit; }
+    BitcoinUnit getDisplayUnit() const { return m_display_bitcoin_unit; }
     QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
+    bool getUseEmbeddedMonospacedFont() const { return m_use_embedded_monospaced_font; }
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
+    bool getSubFeeFromAmount() const { return m_sub_fee_from_amount; }
+    bool getEnablePSBTControls() const { return m_enable_psbt_controls; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
+    /** Whether -signer was set or not */
+    bool hasSigner();
+
     /* Explicit setters */
-    void SetPruneEnabled(bool prune, bool force = false);
-    void SetPruneTargetGB(int prune_target_gb, bool force = false);
+    void SetPruneTargetGB(int prune_target_gb);
 
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
@@ -96,13 +114,18 @@ public:
 private:
     interfaces::Node& m_node;
     /* Qt-only settings */
-    bool fHideTrayIcon;
+    bool m_show_tray_icon;
     bool fMinimizeToTray;
     bool fMinimizeOnClose;
     QString language;
-    int nDisplayUnit;
+    BitcoinUnit m_display_bitcoin_unit;
     QString strThirdPartyTxUrls;
+    bool m_use_embedded_monospaced_font;
     bool fCoinControlFeatures;
+    bool m_sub_fee_from_amount;
+    bool m_enable_psbt_controls;
+    bool m_mask_values;
+
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
 
@@ -111,10 +134,12 @@ private:
 
     // Check settings version and upgrade default values if required
     void checkAndMigrate();
+
 Q_SIGNALS:
-    void displayUnitChanged(int unit);
+    void displayUnitChanged(BitcoinUnit unit);
     void coinControlFeaturesChanged(bool);
-    void hideTrayIconChanged(bool);
+    void showTrayIconChanged(bool);
+    void useEmbeddedMonospacedFontChanged(bool);
 };
 
 #endif // BITCOIN_QT_OPTIONSMODEL_H

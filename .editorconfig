@@ -1,0 +1,26 @@
+# This is the top-most EditorConfig file.
+root = true
+
+# For all files.
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Source code files
+[*.{h,cpp,py,sh}]
+indent_size = 4
+
+# .cirrus.yml, .fuzzbuzz.yml, etc.
+[*.yml]
+indent_size = 2
+
+# Makefiles
+[{*.am,Makefile.*.include}]
+indent_style = tab
+
+# Autoconf scripts
+[configure.ac]
+indent_size = 2

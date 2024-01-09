@@ -1,0 +1,19 @@
+{
+  "cmakeMinimumRequired": {"major": 3, "minor": 21, "patch": 0}, 
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "dev-mode",
+      "displayName": "Development mode (intended only for developers of the library)",
+      "cacheVariables": {
+        "SECP256K1_EXPERIMENTAL": "ON",
+        "SECP256K1_ENABLE_MODULE_RECOVERY": "ON",
+        "SECP256K1_BUILD_EXAMPLES": "ON"
+      },
+      "warnings": {
+        "dev": true,
+        "uninitialized": true
+      }
+    }
+  ]
+}

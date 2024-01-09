@@ -5,29 +5,40 @@ etc.
 
 This directory contains the following sets of tests:
 
+- [fuzz](/test/fuzz) A runner to execute all fuzz targets from
+  [/src/test/fuzz](/src/test/fuzz).
 - [functional](/test/functional) which test the functionality of
 bitcoind and bitcoin-qt by interacting with them through the RPC and P2P
 interfaces.
-- [util](/test/util) which tests the bitcoin utilities, currently only
-bitcoin-tx.
+- [util](/test/util) which tests the utilities (bitcoin-util, bitcoin-tx, ...).
 - [lint](/test/lint/) which perform various static analysis checks.
 
-The util tests are run as part of `make check` target. The functional
+The util tests are run as part of `make check` target. The fuzz tests, functional
 tests and lint scripts can be run as explained in the sections below.
 
 # Running tests locally
 
 Before tests can be run locally, Bitcoin Core must be built.  See the [building instructions](/doc#building) for help.
 
+## Fuzz tests
+
+See [/doc/fuzzing.md](/doc/fuzzing.md)
 
 ### Functional tests
 
-#### Dependencies
+#### Dependencies and prerequisites
 
 The ZMQ functional test requires a python ZMQ library. To install it:
 
 - on Unix, run `sudo apt-get install python3-zmq`
 - on mac OS, run `pip3 install pyzmq`
+
+
+On Windows the `PYTHONUTF8` environment variable must be set to 1:
+
+```cmd
+set PYTHONUTF8=1
+```
 
 #### Running the tests
 
@@ -84,11 +95,70 @@ Run all possible tests with
 test/functional/test_runner.py --extended
 ```
 
+In order to run backwards compatibility tests, first run:
+
+```
+test/get_previous_releases.py -b
+```
+
+to download the necessary previous release binaries.
+
 By default, up to 4 tests will be run in parallel by test_runner. To specify
 how many jobs to run, append `--jobs=n`
 
 The individual tests and the test_runner harness have many command-line
 options. Run `test/functional/test_runner.py -h` to see them all.
+
+#### Speed up test runs with a RAM disk
+
+If you have available RAM on your system you can create a RAM disk to use as the `cache` and `tmp` directories for the functional tests in order to speed them up.
+Speed-up amount varies on each system (and according to your RAM speed and other variables), but a 2-3x speed-up is not uncommon.
+
+**Linux**
+
+To create a 4 GiB RAM disk at `/mnt/tmp/`:
+
+```bash
+sudo mkdir -p /mnt/tmp
+sudo mount -t tmpfs -o size=4g tmpfs /mnt/tmp/
+```
+
+Configure the size of the RAM disk using the `size=` option.
+The size of the RAM disk needed is relative to the number of concurrent jobs the test suite runs.
+For example running the test suite with `--jobs=100` might need a 4 GiB RAM disk, but running with `--jobs=32` will only need a 2.5 GiB RAM disk.
+
+To use, run the test suite specifying the RAM disk as the `cachedir` and `tmpdir`:
+
+```bash
+test/functional/test_runner.py --cachedir=/mnt/tmp/cache --tmpdir=/mnt/tmp
+```
+
+Once finished with the tests and the disk, and to free the RAM, simply unmount the disk:
+
+```bash
+sudo umount /mnt/tmp
+```
+
+**macOS**
+
+To create a 4 GiB RAM disk named "ramdisk" at `/Volumes/ramdisk/`:
+
+```bash
+diskutil erasevolume HFS+ ramdisk $(hdiutil attach -nomount ram://8388608)
+```
+
+Configure the RAM disk size, expressed as the number of blocks, at the end of the command
+(`4096 MiB * 2048 blocks/MiB = 8388608 blocks` for 4 GiB). To run the tests using the RAM disk:
+
+```bash
+test/functional/test_runner.py --cachedir=/Volumes/ramdisk/cache --tmpdir=/Volumes/ramdisk/tmp
+```
+
+To unmount:
+
+```bash
+umount /Volumes/ramdisk
+```
 
 #### Troubleshooting and debugging test failures
 
@@ -225,8 +295,8 @@ gdb /home/example/bitcoind <pid>
 Note: gdb attach step may require ptrace_scope to be modified, or `sudo` preceding the `gdb`.
 See this link for considerations: https://www.kernel.org/doc/Documentation/security/Yama.txt
 
-Often while debugging rpc calls from functional tests, the test might reach timeout before
-process can return a response. Use `--timeout-factor 0` to disable all rpc timeouts for that partcular
+Often while debugging RPC calls in functional tests, the test might time out before the
+process can return a response. Use `--timeout-factor 0` to disable all RPC timeouts for that particular
 functional test. Ex: `test/functional/wallet_hd.py --timeout-factor 0`.
 
 ##### Profiling
@@ -251,19 +321,24 @@ For ways to generate more granular profiles, see the README in
 
 ### Util tests
 
-Util tests can be run locally by running `test/util/bitcoin-util-test.py`.
+Util tests can be run locally by running `test/util/test_runner.py`.
 Use the `-v` option for verbose output.
 
 ### Lint tests
 
 #### Dependencies
 
-| Lint test | Dependency | Version [used by CI](../ci/lint/04_install.sh) | Installation
-|-----------|:----------:|:-------------------------------------------:|--------------
-| [`lint-python.sh`](lint/lint-python.sh) | [flake8](https://gitlab.com/pycqa/flake8) | [3.7.8](https://github.com/bitcoin/bitcoin/pull/15257) | `pip3 install flake8==3.7.8`
-| [`lint-shell.sh`](lint/lint-shell.sh) | [ShellCheck](https://github.com/koalaman/shellcheck) | [0.6.0](https://github.com/bitcoin/bitcoin/pull/15166) | [details...](https://github.com/koalaman/shellcheck#installing)
-| [`lint-shell.sh`](lint/lint-shell.sh) | [yq](https://github.com/kislyuk/yq) | default | `pip3 install yq`
-| [`lint-spelling.sh`](lint/lint-spelling.sh) | [codespell](https://github.com/codespell-project/codespell) | [1.15.0](https://github.com/bitcoin/bitcoin/pull/16186) | `pip3 install codespell==1.15.0`
+| Lint test | Dependency |
+|-----------|:----------:|
+| [`lint-python.py`](lint/lint-python.py) | [flake8](https://gitlab.com/pycqa/flake8)
+| [`lint-python.py`](lint/lint-python.py) | [lief](https://github.com/lief-project/LIEF)
+| [`lint-python.py`](lint/lint-python.py) | [mypy](https://github.com/python/mypy)
+| [`lint-python.py`](lint/lint-python.py) | [pyzmq](https://github.com/zeromq/pyzmq)
+| [`lint-python-dead-code.py`](lint/lint-python-dead-code.py) | [vulture](https://github.com/jendrikseipp/vulture)
+| [`lint-shell.py`](lint/lint-shell.py) | [ShellCheck](https://github.com/koalaman/shellcheck)
+| [`lint-spelling.py`](lint/lint-spelling.py) | [codespell](https://github.com/codespell-project/codespell)
+
+In use versions and install instructions are available in the [CI setup](../ci/lint/04_install.sh).
 
 Please be aware that on Linux distributions all dependencies are usually available as packages, but could be outdated.
 
@@ -272,13 +347,13 @@ Please be aware that on Linux distributions all dependencies are usually availab
 Individual tests can be run by directly calling the test script, e.g.:
 
 ```
-test/lint/lint-filenames.sh
+test/lint/lint-files.py
 ```
 
 You can run all the shell-based lint tests by running:
 
 ```
-test/lint/lint-all.sh
+test/lint/all-lint.py
 ```
 
 # Writing functional tests

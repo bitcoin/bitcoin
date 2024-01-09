@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet balance RPC methods."""
@@ -7,12 +7,12 @@ from decimal import Decimal
 import struct
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE as ADDRESS_WATCHONLY
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_is_hash_string,
     assert_raises_rpc_error,
-    connect_nodes,
-    sync_blocks,
 )
 
 
@@ -47,50 +47,74 @@ def create_transactions(node, address, amt, fees):
     return txs
 
 class WalletTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
         self.extra_args = [
-            ['-limitdescendantcount=3'],  # Limit mempool descendants as a hack to have wallet txs rejected from the mempool
+            # Limit mempool descendants as a hack to have wallet txs rejected from the mempool.
+            # Set walletrejectlongchains=0 so the wallet still creates the transactions.
+            ['-limitdescendantcount=3', '-walletrejectlongchains=0'],
             [],
         ]
+        # whitelist peers to speed up tx relay / mempool sync
+        for args in self.extra_args:
+            args.append("-whitelist=noban@127.0.0.1")
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.nodes[0].importaddress(ADDRESS_WATCHONLY)
-        # Check that nodes don't own any UTXOs
-        assert_equal(len(self.nodes[0].listunspent()), 0)
-        assert_equal(len(self.nodes[1].listunspent()), 0)
+        if not self.options.descriptors:
+            # Tests legacy watchonly behavior which is not present (and does not need to be tested) in descriptor wallets
+            self.nodes[0].importaddress(ADDRESS_WATCHONLY)
+            # Check that nodes don't own any UTXOs
+            assert_equal(len(self.nodes[0].listunspent()), 0)
+            assert_equal(len(self.nodes[1].listunspent()), 0)
 
-        self.log.info("Check that only node 0 is watching an address")
-        assert 'watchonly' in self.nodes[0].getbalances()
-        assert 'watchonly' not in self.nodes[1].getbalances()
+            self.log.info("Check that only node 0 is watching an address")
+            assert 'watchonly' in self.nodes[0].getbalances()
+            assert 'watchonly' not in self.nodes[1].getbalances()
 
         self.log.info("Mining blocks ...")
-        self.nodes[0].generate(1)
-        self.sync_all()
-        self.nodes[1].generate(1)
-        self.nodes[1].generatetoaddress(101, ADDRESS_WATCHONLY)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[1], 1)
 
-        assert_equal(self.nodes[0].getbalances()['mine']['trusted'], 50)
-        assert_equal(self.nodes[0].getwalletinfo()['balance'], 50)
-        assert_equal(self.nodes[1].getbalances()['mine']['trusted'], 50)
+        # Verify listunspent returns immature coinbase if 'include_immature_coinbase' is set
+        assert_equal(len(self.nodes[0].listunspent(query_options={'include_immature_coinbase': True})), 1)
+        assert_equal(len(self.nodes[0].listunspent(query_options={'include_immature_coinbase': False})), 0)
 
-        assert_equal(self.nodes[0].getbalances()['watchonly']['immature'], 5000)
-        assert 'watchonly' not in self.nodes[1].getbalances()
+        self.generatetoaddress(self.nodes[1], COINBASE_MATURITY + 1, ADDRESS_WATCHONLY)
 
-        assert_equal(self.nodes[0].getbalance(), 50)
-        assert_equal(self.nodes[1].getbalance(), 50)
+        # Verify listunspent returns all immature coinbases if 'include_immature_coinbase' is set
+        # For now, only the legacy wallet will see the coinbases going to the imported 'ADDRESS_WATCHONLY'
+        assert_equal(len(self.nodes[0].listunspent(query_options={'include_immature_coinbase': False})), 1 if self.options.descriptors else 2)
+        assert_equal(len(self.nodes[0].listunspent(query_options={'include_immature_coinbase': True})), 1 if self.options.descriptors else COINBASE_MATURITY + 2)
+
+        if not self.options.descriptors:
+            # Tests legacy watchonly behavior which is not present (and does not need to be tested) in descriptor wallets
+            assert_equal(self.nodes[0].getbalances()['mine']['trusted'], 50)
+            assert_equal(self.nodes[0].getwalletinfo()['balance'], 50)
+            assert_equal(self.nodes[1].getbalances()['mine']['trusted'], 50)
+
+            assert_equal(self.nodes[0].getbalances()['watchonly']['immature'], 5000)
+            assert 'watchonly' not in self.nodes[1].getbalances()
+
+            assert_equal(self.nodes[0].getbalance(), 50)
+            assert_equal(self.nodes[1].getbalance(), 50)
 
         self.log.info("Test getbalance with different arguments")
         assert_equal(self.nodes[0].getbalance("*"), 50)
         assert_equal(self.nodes[0].getbalance("*", 1), 50)
-        assert_equal(self.nodes[0].getbalance("*", 1, True), 100)
         assert_equal(self.nodes[0].getbalance(minconf=1), 50)
-        assert_equal(self.nodes[0].getbalance(minconf=0, include_watchonly=True), 100)
+        if not self.options.descriptors:
+            assert_equal(self.nodes[0].getbalance(minconf=0, include_watchonly=True), 100)
+            assert_equal(self.nodes[0].getbalance("*", 1, True), 100)
+        else:
+            assert_equal(self.nodes[0].getbalance(minconf=0, include_watchonly=True), 50)
+            assert_equal(self.nodes[0].getbalance("*", 1, True), 50)
         assert_equal(self.nodes[1].getbalance(minconf=0, include_watchonly=True), 50)
 
         # Send 40 BTC from 0 to 1 and 60 BTC from 1 to 0.
@@ -158,8 +182,15 @@ class WalletTest(BitcoinTestFramework):
             expected_balances_1 = {'mine':      {'immature':          Decimal('0E-8'),
                                                  'trusted':           Decimal('0E-8'),  # node 1's send had an unsafe input
                                                  'untrusted_pending': Decimal('30.0') - fee_node_1}}  # Doesn't include output of node 0's send since it was spent
-            assert_equal(self.nodes[0].getbalances(), expected_balances_0)
-            assert_equal(self.nodes[1].getbalances(), expected_balances_1)
+            if self.options.descriptors:
+                del expected_balances_0["watchonly"]
+            balances_0 = self.nodes[0].getbalances()
+            balances_1 = self.nodes[1].getbalances()
+            # remove lastprocessedblock keys (they will be tested later)
+            del balances_0['lastprocessedblock']
+            del balances_1['lastprocessedblock']
+            assert_equal(balances_0, expected_balances_0)
+            assert_equal(balances_1, expected_balances_1)
             # getbalance without any arguments includes unconfirmed transactions, but not untrusted transactions
             assert_equal(self.nodes[0].getbalance(), Decimal('9.99'))  # change from node 0's send
             assert_equal(self.nodes[1].getbalance(), Decimal('0'))  # node 1's send had an unsafe input
@@ -187,8 +218,7 @@ class WalletTest(BitcoinTestFramework):
         self.log.info("Test getbalance and getbalances.mine.untrusted_pending with conflicted unconfirmed inputs")
         test_balances(fee_node_1=Decimal('0.02'))
 
-        self.nodes[1].generatetoaddress(1, ADDRESS_WATCHONLY)
-        self.sync_all()
+        self.generatetoaddress(self.nodes[1], 1, ADDRESS_WATCHONLY)
 
         # balances are correct after the transactions are confirmed
         balance_node0 = Decimal('69.99')  # node 1's send plus change from node 0's send
@@ -201,8 +231,7 @@ class WalletTest(BitcoinTestFramework):
         # Send total balance away from node 1
         txs = create_transactions(self.nodes[1], self.nodes[0].getnewaddress(), Decimal('29.97'), [Decimal('0.01')])
         self.nodes[1].sendrawtransaction(txs[0]['hex'])
-        self.nodes[1].generatetoaddress(2, ADDRESS_WATCHONLY)
-        self.sync_all()
+        self.generatetoaddress(self.nodes[1], 2, ADDRESS_WATCHONLY)
 
         # getbalance with a minconf incorrectly excludes coins that have been spent more recently than the minconf blocks ago
         # TODO: fix getbalance tracking of coin spentness depth
@@ -216,10 +245,10 @@ class WalletTest(BitcoinTestFramework):
         # dynamically loading the wallet.
         before = self.nodes[1].getbalances()['mine']['untrusted_pending']
         dst = self.nodes[1].getnewaddress()
-        self.nodes[1].unloadwallet('')
+        self.nodes[1].unloadwallet(self.default_wallet_name)
         self.nodes[0].sendtoaddress(dst, 0.1)
         self.sync_all()
-        self.nodes[1].loadwallet('')
+        self.nodes[1].loadwallet(self.default_wallet_name)
         after = self.nodes[1].getbalances()['mine']['untrusted_pending']
         assert_equal(before + Decimal('0.1'), after)
 
@@ -248,28 +277,68 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[1].sendrawtransaction(hexstring=tx_replace, maxfeerate=0)
 
         # Now confirm tx_replace
-        block_reorg = self.nodes[1].generatetoaddress(1, ADDRESS_WATCHONLY)[0]
-        self.sync_all()
+        block_reorg = self.generatetoaddress(self.nodes[1], 1, ADDRESS_WATCHONLY)[0]
         assert_equal(self.nodes[0].getbalance(minconf=0), total_amount)
 
         self.log.info('Put txs back into mempool of node 1 (not node 0)')
         self.nodes[0].invalidateblock(block_reorg)
         self.nodes[1].invalidateblock(block_reorg)
-        self.sync_blocks()
-        self.nodes[0].syncwithvalidationinterfacequeue()
         assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
-        self.nodes[0].generatetoaddress(1, ADDRESS_WATCHONLY)
-        assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
+        self.generatetoaddress(self.nodes[0], 1, ADDRESS_WATCHONLY, sync_fun=self.no_op)
 
         # Now confirm tx_orig
         self.restart_node(1, ['-persistmempool=0'])
-        connect_nodes(self.nodes[0], 1)
-        sync_blocks(self.nodes)
+        self.connect_nodes(0, 1)
+        self.sync_blocks()
         self.nodes[1].sendrawtransaction(tx_orig)
-        self.nodes[1].generatetoaddress(1, ADDRESS_WATCHONLY)
-        self.sync_all()
+        self.generatetoaddress(self.nodes[1], 1, ADDRESS_WATCHONLY)
         assert_equal(self.nodes[0].getbalance(minconf=0), total_amount + 1)  # The reorg recovered our fee of 1 coin
 
+        if not self.options.descriptors:
+            self.log.info('Check if mempool is taken into account after import*')
+            address = self.nodes[0].getnewaddress()
+            privkey = self.nodes[0].dumpprivkey(address)
+            self.nodes[0].sendtoaddress(address, 0.1)
+            self.nodes[0].unloadwallet('')
+            # check importaddress on fresh wallet
+            self.nodes[0].createwallet('w1', False, True)
+            self.nodes[0].importaddress(address)
+            assert_equal(self.nodes[0].getbalances()['mine']['untrusted_pending'], 0)
+            assert_equal(self.nodes[0].getbalances()['watchonly']['untrusted_pending'], Decimal('0.1'))
+            self.nodes[0].importprivkey(privkey)
+            assert_equal(self.nodes[0].getbalances()['mine']['untrusted_pending'], Decimal('0.1'))
+            assert_equal(self.nodes[0].getbalances()['watchonly']['untrusted_pending'], 0)
+            self.nodes[0].unloadwallet('w1')
+            # check importprivkey on fresh wallet
+            self.nodes[0].createwallet('w2', False, True)
+            self.nodes[0].importprivkey(privkey)
+            assert_equal(self.nodes[0].getbalances()['mine']['untrusted_pending'], Decimal('0.1'))
+
+
+        # Tests the lastprocessedblock JSON object in getbalances, getwalletinfo
+        # and gettransaction by checking for valid hex strings and by comparing
+        # the hashes & heights between generated blocks.
+        self.log.info("Test getbalances returns expected lastprocessedblock json object")
+        prev_hash = self.nodes[0].getbestblockhash()
+        prev_height = self.nodes[0].getblock(prev_hash)['height']
+        self.generatetoaddress(self.nodes[0], 5, self.nodes[0].get_deterministic_priv_key().address)
+        lastblock = self.nodes[0].getbalances()['lastprocessedblock']
+        assert_is_hash_string(lastblock['hash'])
+        assert_equal((prev_hash == lastblock['hash']), False)
+        assert_equal(lastblock['height'], prev_height + 5)
+
+        prev_hash = self.nodes[0].getbestblockhash()
+        prev_height = self.nodes[0].getblock(prev_hash)['height']
+        self.log.info("Test getwalletinfo returns expected lastprocessedblock json object")
+        walletinfo = self.nodes[0].getwalletinfo()
+        assert_equal(walletinfo['lastprocessedblock']['height'], prev_height)
+        assert_equal(walletinfo['lastprocessedblock']['hash'], prev_hash)
+
+        self.log.info("Test gettransaction returns expected lastprocessedblock json object")
+        txid = self.nodes[1].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
+        tx_info = self.nodes[1].gettransaction(txid)
+        assert_equal(tx_info['lastprocessedblock']['height'], prev_height)
+        assert_equal(tx_info['lastprocessedblock']['hash'], prev_hash)
 
 if __name__ == '__main__':
     WalletTest().main()

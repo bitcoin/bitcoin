@@ -1,15 +1,18 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_INTERFACES_NODE_H
 #define BITCOIN_INTERFACES_NODE_H
 
-#include <amount.h>     // For CAmount
-#include <net.h>        // For CConnman::NumConnections
-#include <net_types.h>  // For banmap_t
-#include <netaddress.h> // For Network
+#include <common/settings.h>
+#include <consensus/amount.h>          // For CAmount
+#include <net.h>                       // For NodeId
+#include <net_types.h>                 // For banmap_t
+#include <netaddress.h>                // For Network
+#include <netbase.h>                   // For ConnectionDirection
 #include <support/allocators/secure.h> // For SecureString
+#include <util/translation.h>
 
 #include <functional>
 #include <memory>
@@ -20,59 +23,53 @@
 #include <vector>
 
 class BanMan;
-class CCoinControl;
 class CFeeRate;
 class CNodeStats;
 class Coin;
 class RPCTimerInterface;
 class UniValue;
-class proxyType;
+class Proxy;
 enum class SynchronizationState;
-enum class WalletCreationStatus;
+enum class TransactionError;
 struct CNodeStateStats;
-struct NodeContext;
 struct bilingual_str;
+namespace node {
+struct NodeContext;
+} // namespace node
+namespace wallet {
+class CCoinControl;
+} // namespace wallet
 
 namespace interfaces {
 class Handler;
-class Wallet;
+class WalletLoader;
 struct BlockTip;
+
+//! Block and header tip information
+struct BlockAndHeaderTipInfo
+{
+    int block_height;
+    int64_t block_time;
+    int header_height;
+    int64_t header_time;
+    double verification_progress;
+};
+
+//! External signer interface used by the GUI.
+class ExternalSigner
+{
+public:
+    virtual ~ExternalSigner() {};
+
+    //! Get signer display name
+    virtual std::string getName() = 0;
+};
 
 //! Top-level interface for a bitcoin node (bitcoind process).
 class Node
 {
 public:
     virtual ~Node() {}
-
-    //! Send init error.
-    virtual void initError(const std::string& message) = 0;
-
-    //! Set command line arguments.
-    virtual bool parseParameters(int argc, const char* const argv[], std::string& error) = 0;
-
-    //! Set a command line argument
-    virtual void forceSetArg(const std::string& arg, const std::string& value) = 0;
-
-    //! Set a command line argument if it doesn't already have a value
-    virtual bool softSetArg(const std::string& arg, const std::string& value) = 0;
-
-    //! Set a command line boolean argument if it doesn't already have a value
-    virtual bool softSetBoolArg(const std::string& arg, bool value) = 0;
-
-    //! Load settings from configuration file.
-    virtual bool readConfigFiles(std::string& error) = 0;
-
-    //! Choose network parameters.
-    virtual void selectParams(const std::string& network) = 0;
-
-    //! Get the (assumed) blockchain size.
-    virtual uint64_t getAssumedBlockchainSize() = 0;
-
-    //! Get the (assumed) chain state size.
-    virtual uint64_t getAssumedChainStateSize() = 0;
-
-    //! Get network name.
-    virtual std::string getNetwork() = 0;
 
     //! Init logging.
     virtual void initLogging() = 0;
@@ -81,7 +78,10 @@ public:
     virtual void initParameterInteraction() = 0;
 
     //! Get warnings.
-    virtual std::string getWarnings() = 0;
+    virtual bilingual_str getWarnings() = 0;
+
+    //! Get exit status.
+    virtual int getExitStatus() = 0;
 
     // Get log flags.
     virtual uint32_t getLogCategories() = 0;
@@ -90,7 +90,7 @@ public:
     virtual bool baseInitialize() = 0;
 
     //! Start node.
-    virtual bool appInitMain() = 0;
+    virtual bool appInitMain(interfaces::BlockAndHeaderTipInfo* tip_info = nullptr) = 0;
 
     //! Stop node.
     virtual void appShutdown() = 0;
@@ -101,17 +101,32 @@ public:
     //! Return whether shutdown was requested.
     virtual bool shutdownRequested() = 0;
 
-    //! Setup arguments
-    virtual void setupServerArgs() = 0;
+    //! Return whether a particular setting in <datadir>/settings.json is or
+    //! would be ignored because it is also specified in the command line.
+    virtual bool isSettingIgnored(const std::string& name) = 0;
+
+    //! Return setting value from <datadir>/settings.json or bitcoin.conf.
+    virtual common::SettingsValue getPersistentSetting(const std::string& name) = 0;
+
+    //! Update a setting in <datadir>/settings.json.
+    virtual void updateRwSetting(const std::string& name, const common::SettingsValue& value) = 0;
+
+    //! Force a setting value to be applied, overriding any other configuration
+    //! source, but not being persisted.
+    virtual void forceSetting(const std::string& name, const common::SettingsValue& value) = 0;
+
+    //! Clear all settings in <datadir>/settings.json and store a backup of
+    //! previous settings in <datadir>/settings.json.bak.
+    virtual void resetSettings() = 0;
 
     //! Map port.
-    virtual void mapPort(bool use_upnp) = 0;
+    virtual void mapPort(bool use_upnp, bool use_natpmp) = 0;
 
     //! Get proxy.
-    virtual bool getProxy(Network net, proxyType& proxy_info) = 0;
+    virtual bool getProxy(Network net, Proxy& proxy_info) = 0;
 
     //! Get number of connections.
-    virtual size_t getNodeCount(CConnman::NumConnections flags) = 0;
+    virtual size_t getNodeCount(ConnectionDirection flags) = 0;
 
     //! Get stats for connected nodes.
     using NodesStats = std::vector<std::tuple<CNodeStats, bool, CNodeStateStats>>;
@@ -121,7 +136,7 @@ public:
     virtual bool getBanned(banmap_t& banmap) = 0;
 
     //! Ban node.
-    virtual bool ban(const CNetAddr& net_addr, BanReason reason, int64_t ban_time_offset) = 0;
+    virtual bool ban(const CNetAddr& net_addr, int64_t ban_time_offset) = 0;
 
     //! Unban node.
     virtual bool unban(const CSubNet& ip) = 0;
@@ -131,6 +146,9 @@ public:
 
     //! Disconnect node by id.
     virtual bool disconnectById(NodeId id) = 0;
+
+    //! Return list of external signers (attached devices which can sign transactions).
+    virtual std::vector<std::unique_ptr<ExternalSigner>> listExternalSigners() = 0;
 
     //! Get total bytes recv.
     virtual int64_t getTotalBytesRecv() = 0;
@@ -162,20 +180,14 @@ public:
     //! Is initial block download.
     virtual bool isInitialBlockDownload() = 0;
 
-    //! Get reindex.
-    virtual bool getReindex() = 0;
-
-    //! Get importing.
-    virtual bool getImporting() = 0;
+    //! Is loading blocks.
+    virtual bool isLoadingBlocks() = 0;
 
     //! Set network active.
     virtual void setNetworkActive(bool active) = 0;
 
     //! Get network active.
     virtual bool getNetworkActive() = 0;
-
-    //! Estimate smart fee.
-    virtual CFeeRate estimateSmartFee(int num_blocks, bool conservative, int* returned_target = nullptr) = 0;
 
     //! Get dust relay fee.
     virtual CFeeRate getDustRelayFee() = 0;
@@ -192,25 +204,14 @@ public:
     //! Unset RPC timer interface.
     virtual void rpcUnsetTimerInterface(RPCTimerInterface* iface) = 0;
 
-    //! Get unspent outputs associated with a transaction.
-    virtual bool getUnspentOutput(const COutPoint& output, Coin& coin) = 0;
+    //! Get unspent output associated with a transaction.
+    virtual std::optional<Coin> getUnspentOutput(const COutPoint& output) = 0;
 
-    //! Return default wallet directory.
-    virtual std::string getWalletDir() = 0;
+    //! Broadcast transaction.
+    virtual TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) = 0;
 
-    //! Return available wallets in wallet directory.
-    virtual std::vector<std::string> listWalletDir() = 0;
-
-    //! Return interfaces for accessing wallets (if any).
-    virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
-
-    //! Attempts to load a wallet from file or directory.
-    //! The loaded wallet is also notified to handlers previously registered
-    //! with handleLoadWallet.
-    virtual std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
-
-    //! Create a wallet from file
-    virtual std::unique_ptr<Wallet> createWallet(const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings, WalletCreationStatus& status) = 0;
+    //! Get wallet loader.
+    virtual WalletLoader& walletLoader() = 0;
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;
@@ -232,9 +233,9 @@ public:
     using ShowProgressFn = std::function<void(const std::string& title, int progress, bool resume_possible)>;
     virtual std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) = 0;
 
-    //! Register handler for load wallet messages.
-    using LoadWalletFn = std::function<void(std::unique_ptr<Wallet> wallet)>;
-    virtual std::unique_ptr<Handler> handleLoadWallet(LoadWalletFn fn) = 0;
+    //! Register handler for wallet loader constructed messages.
+    using InitWalletFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) = 0;
 
     //! Register handler for number of connections changed messages.
     using NotifyNumConnectionsChangedFn = std::function<void(int new_num_connections)>;
@@ -259,15 +260,17 @@ public:
 
     //! Register handler for header tip messages.
     using NotifyHeaderTipFn =
-        std::function<void(SynchronizationState, interfaces::BlockTip tip, double verification_progress)>;
+        std::function<void(SynchronizationState, interfaces::BlockTip tip, bool presync)>;
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
 
-    //! Return pointer to internal chain interface, useful for testing.
-    virtual NodeContext* context() { return nullptr; }
+    //! Get and set internal node context. Useful for testing, but not
+    //! accessible across processes.
+    virtual node::NodeContext* context() { return nullptr; }
+    virtual void setContext(node::NodeContext* context) { }
 };
 
 //! Return implementation of Node interface.
-std::unique_ptr<Node> MakeNode();
+std::unique_ptr<Node> MakeNode(node::NodeContext& context);
 
 //! Block tip (could be a header or not, depends on the subscribed signal).
 struct BlockTip {

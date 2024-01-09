@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,7 @@
 
 #include <QDateTime>
 #include <QList>
+#include <QLocale>
 #include <QModelIndex>
 #include <QVariant>
 
@@ -22,15 +23,13 @@ bool BannedNodeLessThan::operator()(const CCombinedBan& left, const CCombinedBan
     if (order == Qt::DescendingOrder)
         std::swap(pLeft, pRight);
 
-    switch(column)
-    {
+    switch (static_cast<BanTableModel::ColumnIndex>(column)) {
     case BanTableModel::Address:
         return pLeft->subnet.ToString().compare(pRight->subnet.ToString()) < 0;
     case BanTableModel::Bantime:
         return pLeft->banEntry.nBanUntil < pRight->banEntry.nBanUntil;
-    }
-
-    return false;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 // private implementation
@@ -44,7 +43,7 @@ public:
     /** Order (ascending or descending) to sort nodes by */
     Qt::SortOrder sortOrder;
 
-    /** Pull a full list of banned nodes from CNode into our cache */
+    /** Pull a full list of banned nodes from interfaces::Node into our cache */
     void refreshBanlist(interfaces::Node& node)
     {
         banmap_t banMap;
@@ -90,20 +89,21 @@ BanTableModel::BanTableModel(interfaces::Node& node, QObject* parent) :
     refresh();
 }
 
-BanTableModel::~BanTableModel()
-{
-    // Intentionally left empty
-}
+BanTableModel::~BanTableModel() = default;
 
 int BanTableModel::rowCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent);
+    if (parent.isValid()) {
+        return 0;
+    }
     return priv->size();
 }
 
 int BanTableModel::columnCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent);
+    if (parent.isValid()) {
+        return 0;
+    }
     return columns.length();
 }
 
@@ -114,16 +114,17 @@ QVariant BanTableModel::data(const QModelIndex &index, int role) const
 
     CCombinedBan *rec = static_cast<CCombinedBan*>(index.internalPointer());
 
+    const auto column = static_cast<ColumnIndex>(index.column());
     if (role == Qt::DisplayRole) {
-        switch(index.column())
-        {
+        switch (column) {
         case Address:
             return QString::fromStdString(rec->subnet.ToString());
         case Bantime:
             QDateTime date = QDateTime::fromMSecsSinceEpoch(0);
             date = date.addSecs(rec->banEntry.nBanUntil);
-            return date.toString(Qt::SystemLocaleLongDate);
-        }
+            return QLocale::system().toString(date, QLocale::LongFormat);
+        } // no default case, so the compiler can warn about missing cases
+        assert(false);
     }
 
     return QVariant();
@@ -176,4 +177,10 @@ void BanTableModel::sort(int column, Qt::SortOrder order)
 bool BanTableModel::shouldShow()
 {
     return priv->size() > 0;
+}
+
+bool BanTableModel::unban(const QModelIndex& index)
+{
+    CCombinedBan* ban{static_cast<CCombinedBan*>(index.internalPointer())};
+    return ban != nullptr && m_node.unban(ban->subnet);
 }

@@ -7,6 +7,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/chaintype.h>
 #include <util/message.h>
 #include <util/strencodings.h>
 
@@ -16,21 +17,18 @@
 #include <string>
 #include <vector>
 
-void initialize()
+void initialize_message()
 {
-    static const ECCVerifyHandle ecc_verify_handle;
     ECC_Start();
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(ChainType::REGTEST);
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(message, .init = initialize_message)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const std::string random_message = fuzzed_data_provider.ConsumeRandomLengthString(1024);
     {
-        const std::vector<uint8_t> random_bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
-        CKey private_key;
-        private_key.Set(random_bytes.begin(), random_bytes.end(), fuzzed_data_provider.ConsumeBool());
+        CKey private_key = ConsumePrivateKey(fuzzed_data_provider);
         std::string signature;
         const bool message_signed = MessageSign(private_key, random_message, signature);
         if (private_key.IsValid()) {

@@ -1,11 +1,37 @@
+# Suppressions should use `sanitize-type:ClassName::MethodName`.
+
 # -fsanitize=undefined suppressions
 # =================================
-float-divide-by-zero:policy/fees.cpp
-float-divide-by-zero:validation.cpp
-float-divide-by-zero:wallet/wallet.cpp
 
 # -fsanitize=integer suppressions
 # ===============================
+# Dependencies
+# ------------
+# Suppressions in dependencies that are developed outside this repository.
+unsigned-integer-overflow:*/include/c++/
+unsigned-integer-overflow:FuzzedDataProvider::ConsumeIntegralInRange
+unsigned-integer-overflow:leveldb/
+unsigned-integer-overflow:minisketch/
+unsigned-integer-overflow:secp256k1/
+unsigned-integer-overflow:test/fuzz/crypto_diff_fuzz_chacha20.cpp
+implicit-integer-sign-change:*/include/boost/
+implicit-integer-sign-change:*/include/c++/
+implicit-integer-sign-change:*/new_allocator.h
+implicit-integer-sign-change:crc32c/
+implicit-integer-sign-change:minisketch/
+implicit-integer-sign-change:secp256k1/
+implicit-signed-integer-truncation:*/include/c++/
+implicit-signed-integer-truncation:leveldb/
+implicit-signed-integer-truncation:secp256k1/
+implicit-unsigned-integer-truncation:*/include/c++/
+implicit-unsigned-integer-truncation:leveldb/
+implicit-unsigned-integer-truncation:secp256k1/
+implicit-unsigned-integer-truncation:test/fuzz/crypto_diff_fuzz_chacha20.cpp
+shift-base:*/include/c++/
+shift-base:leveldb/
+shift-base:minisketch/
+shift-base:secp256k1/
+shift-base:test/fuzz/crypto_diff_fuzz_chacha20.cpp
 # Unsigned integer overflow occurs when the result of an unsigned integer
 # computation cannot be represented in its type. Unlike signed integer overflow,
 # this is not undefined behavior, but it is often unintentional. The list below
@@ -13,73 +39,37 @@ float-divide-by-zero:wallet/wallet.cpp
 # list is used to suppress -fsanitize=integer warnings when running our CI UBSan
 # job.
 unsigned-integer-overflow:arith_uint256.h
-unsigned-integer-overflow:basic_string.h
-unsigned-integer-overflow:bench/bench.h
-unsigned-integer-overflow:bitcoin-tx.cpp
-unsigned-integer-overflow:bloom.cpp
-unsigned-integer-overflow:chain.cpp
-unsigned-integer-overflow:chain.h
-unsigned-integer-overflow:coded_stream.h
-unsigned-integer-overflow:core_write.cpp
-unsigned-integer-overflow:crypto/chacha20.cpp
-unsigned-integer-overflow:crypto/ctaes/ctaes.c
-unsigned-integer-overflow:crypto/poly1305.cpp
-unsigned-integer-overflow:crypto/ripemd160.cpp
-unsigned-integer-overflow:crypto/sha1.cpp
-unsigned-integer-overflow:crypto/sha256.cpp
-unsigned-integer-overflow:crypto/sha512.cpp
-unsigned-integer-overflow:hash.cpp
-unsigned-integer-overflow:leveldb/db/log_reader.cc
-unsigned-integer-overflow:leveldb/util/bloom.cc
-unsigned-integer-overflow:leveldb/util/crc32c.h
-unsigned-integer-overflow:leveldb/util/hash.cc
-unsigned-integer-overflow:policy/fees.cpp
+unsigned-integer-overflow:CBloomFilter::Hash
+unsigned-integer-overflow:CRollingBloomFilter::insert
+unsigned-integer-overflow:RollingBloomHash
+unsigned-integer-overflow:CCoinsViewCache::AddCoin
+unsigned-integer-overflow:CCoinsViewCache::BatchWrite
+unsigned-integer-overflow:CCoinsViewCache::DynamicMemoryUsage
+unsigned-integer-overflow:CCoinsViewCache::SpendCoin
+unsigned-integer-overflow:CCoinsViewCache::Uncache
+unsigned-integer-overflow:CompressAmount
+unsigned-integer-overflow:DecompressAmount
+unsigned-integer-overflow:crypto/
+unsigned-integer-overflow:MurmurHash3
+unsigned-integer-overflow:CBlockPolicyEstimator::processBlockTx
+unsigned-integer-overflow:TxConfirmStats::EstimateMedianVal
 unsigned-integer-overflow:prevector.h
 unsigned-integer-overflow:script/interpreter.cpp
-unsigned-integer-overflow:stl_bvector.h
-unsigned-integer-overflow:txmempool.cpp
-unsigned-integer-overflow:util/strencodings.cpp
-unsigned-integer-overflow:validation.cpp
-
-implicit-integer-sign-change:*/include/c++/*/bits/*.h
-implicit-integer-sign-change:*/new_allocator.h
-implicit-integer-sign-change:/usr/include/boost/date_time/format_date_parser.hpp
-implicit-integer-sign-change:arith_uint256.cpp
-implicit-integer-sign-change:bech32.cpp
-implicit-integer-sign-change:bloom.cpp
-implicit-integer-sign-change:chain.*
-implicit-integer-sign-change:coins.h
-implicit-integer-sign-change:compat/stdin.cpp
+unsigned-integer-overflow:xoroshiro128plusplus.h
+implicit-integer-sign-change:CBlockPolicyEstimator::processBlockTx
+implicit-integer-sign-change:SetStdinEcho
 implicit-integer-sign-change:compressor.h
-implicit-integer-sign-change:crypto/*
-implicit-integer-sign-change:key.cpp
-implicit-integer-sign-change:noui.cpp
+implicit-integer-sign-change:crypto/
+implicit-integer-sign-change:TxConfirmStats::removeTx
 implicit-integer-sign-change:prevector.h
-implicit-integer-sign-change:protocol.cpp
-implicit-integer-sign-change:script/bitcoinconsensus.cpp
-implicit-integer-sign-change:script/interpreter.cpp
+implicit-integer-sign-change:verify_flags
+implicit-integer-sign-change:EvalScript
 implicit-integer-sign-change:serialize.h
-implicit-integer-sign-change:test/arith_uint256_tests.cpp
-implicit-integer-sign-change:test/coins_tests.cpp
-implicit-integer-sign-change:test/pow_tests.cpp
-implicit-integer-sign-change:test/prevector_tests.cpp
-implicit-integer-sign-change:test/sighash_tests.cpp
-implicit-integer-sign-change:test/streams_tests.cpp
-implicit-integer-sign-change:test/transaction_tests.cpp
-implicit-integer-sign-change:txmempool.cpp
-implicit-integer-sign-change:util/strencodings.*
-implicit-integer-sign-change:validation.cpp
-implicit-integer-sign-change:zmq/zmqpublishnotifier.cpp
-implicit-signed-integer-truncation,implicit-integer-sign-change:chain.h
-implicit-signed-integer-truncation,implicit-integer-sign-change:test/skiplist_tests.cpp
-implicit-signed-integer-truncation:chain.h
-implicit-signed-integer-truncation:crypto/*
-implicit-signed-integer-truncation:cuckoocache.h
-implicit-signed-integer-truncation:leveldb/*
-implicit-signed-integer-truncation:streams.h
-implicit-signed-integer-truncation:test/arith_uint256_tests.cpp
-implicit-signed-integer-truncation:test/skiplist_tests.cpp
-implicit-signed-integer-truncation:torcontrol.cpp
-implicit-unsigned-integer-truncation:crypto/*
-implicit-unsigned-integer-truncation:leveldb/*
-implicit-integer-sign-change:crc32c/*
+implicit-signed-integer-truncation:crypto/
+implicit-unsigned-integer-truncation:crypto/
+shift-base:arith_uint256.cpp
+shift-base:crypto/
+shift-base:ROTL32
+shift-base:streams.h
+shift-base:FormatHDKeypath
+shift-base:xoroshiro128plusplus.h

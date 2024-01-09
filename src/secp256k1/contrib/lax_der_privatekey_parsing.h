@@ -1,8 +1,8 @@
-/**********************************************************************
- * Copyright (c) 2014, 2015 Pieter Wuille                             *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2014, 2015 Pieter Wuille                              *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
 /****
  * Please do not link this file directly. It is not part of the libsecp256k1
@@ -28,7 +28,13 @@
 #ifndef SECP256K1_CONTRIB_BER_PRIVATEKEY_H
 #define SECP256K1_CONTRIB_BER_PRIVATEKEY_H
 
+/* #include secp256k1.h only when it hasn't been included yet.
+   This enables this file to be #included directly in other project
+   files (such as tests.c) without the need to set an explicit -I flag,
+   which would be necessary to locate secp256k1.h. */
+#ifndef SECP256K1_H
 #include <secp256k1.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,8 +43,7 @@ extern "C" {
 /** Export a private key in DER format.
  *
  *  Returns: 1 if the private key was valid.
- *  Args: ctx:        pointer to a context object, initialized for signing (cannot
- *                    be NULL)
+ *  Args: ctx:        pointer to a context object (not secp256k1_context_static).
  *  Out: privkey:     pointer to an array for storing the private key in BER.
  *                    Should have space for 279 bytes, and cannot be NULL.
  *       privkeylen:  Pointer to an int where the length of the private key in

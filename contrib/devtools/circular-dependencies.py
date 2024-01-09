@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2019 The Bitcoin Core developers
+# Copyright (c) 2018-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,7 +32,7 @@ def module_name(path):
     return None
 
 files = dict()
-deps = dict()
+deps: dict[str, set[str]] = dict()
 
 RE = re.compile("^#include <(.*)>")
 
@@ -59,12 +59,12 @@ for arg in sorted(files.keys()):
                     deps[module].add(included_module)
 
 # Loop to find the shortest (remaining) circular dependency
-have_cycle = False
+have_cycle: bool = False
 while True:
     shortest_cycle = None
     for module in sorted(deps.keys()):
         # Build the transitive closure of dependencies of module
-        closure = dict()
+        closure: dict[str, list[str]] = dict()
         for dep in deps[module]:
             closure[dep] = []
         while True:

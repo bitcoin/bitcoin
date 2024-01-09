@@ -1,27 +1,19 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Bitcoin
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
- irc://#bitcoin@freenode.net
+ irc://#bitcoin-core-dev@libera.chat
 Source: https://github.com/bitcoin/bitcoin
 
 Files: *
-Copyright: 2009-2020, Bitcoin Core Developers
+Copyright: 2009-2023, Bitcoin Core Developers
 License: Expat
-Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
-         as well as the numerous contributors to the project.
+Comment: The Bitcoin Core Developers encompasses all contributors to the
+         project, listed in the release notes or the git log.
 
 Files: debian/*
 Copyright: 2010-2011, Jonas Smedegaard <dr@jones.dk>
            2011, Matt Corallo <matt@bluematt.me>
 License: GPL-2+
-
-Files: src/secp256k1/build-aux/m4/ax_jni_include_dir.m4
-Copyright: 2008 Don Anderson <dda@sleepycat.com>
-License: GNU-All-permissive-License
-
-Files: src/secp256k1/build-aux/m4/ax_prog_cc_for_build.m4
-Copyright: 2008 Paolo Bonzini <bonzini@gnu.org>
-License: GNU-All-permissive-License
 
 Files: src/qt/res/icons/add.png
        src/qt/res/icons/address-book.png
@@ -87,6 +79,10 @@ Files: src/qt/res/icons/proxy.png
 Copyright: Cristian Mircea Messel
 License: public-domain
 
+Files: src/qt/res/fonts/RobotoMono-Bold.ttf
+License: Apache-2.0
+Comment: Site: https://fonts.google.com/specimen/Roboto+Mono
+
 
 License: Expat
  Permission is hereby granted, free of charge, to any person obtaining a
@@ -107,12 +103,6 @@ License: Expat
  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-License: GNU-All-permissive-License
- Copying and distribution of this file, with or without modification, are
- permitted in any medium without royalty provided the copyright notice
- and this notice are preserved. This file is offered as-is, without any
- warranty.
 
 License: GPL-2+
  This program is free software; you can redistribute it and/or modify it
@@ -144,3 +134,14 @@ Comment:
 
 License: public-domain
  This work is in the public domain.
+
+License: Apache-2.0
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.

@@ -8,9 +8,12 @@
 #include <scheduler.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
+#include <kernel/chain.h>
 #include <validationinterface.h>
 
-BOOST_FIXTURE_TEST_SUITE(validationinterface_tests, TestingSetup)
+#include <atomic>
+
+BOOST_FIXTURE_TEST_SUITE(validationinterface_tests, ChainTestingSetup)
 
 struct TestSubscriberNoop final : public CValidationInterface {
     void BlockChecked(const CBlock&, const BlockValidationState&) override {}

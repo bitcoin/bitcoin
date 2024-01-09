@@ -1,9 +1,9 @@
 @ vim: set tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab syntax=armasm:
-/**********************************************************************
- * Copyright (c) 2014 Wladimir J. van der Laan                        *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2014 Wladimir J. van der Laan                         *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 /*
 ARM implementation of field_10x26 inner loops.
 
@@ -16,15 +16,9 @@ Note:
 */
 
 	.syntax unified
-	.arch armv7-a
 	@ eabi attributes - see readelf -A
-	.eabi_attribute 8, 1  @ Tag_ARM_ISA_use = yes
-	.eabi_attribute 9, 0  @ Tag_Thumb_ISA_use = no
-	.eabi_attribute 10, 0 @ Tag_FP_arch = none
 	.eabi_attribute 24, 1 @ Tag_ABI_align_needed = 8-byte
 	.eabi_attribute 25, 1 @ Tag_ABI_align_preserved = 8-byte, except leaf SP
-	.eabi_attribute 30, 2 @ Tag_ABI_optimization_goals = Aggressive Speed
-	.eabi_attribute 34, 1 @ Tag_CPU_unaligned_access = v6
 	.text
 
 	@ Field constants
@@ -35,6 +29,7 @@ Note:
 	.align	2
 	.global secp256k1_fe_mul_inner
 	.type	secp256k1_fe_mul_inner, %function
+	.hidden secp256k1_fe_mul_inner
 	@ Arguments:
 	@  r0  r      Restrict: can overlap with a, not with b
 	@  r1  a
@@ -522,6 +517,7 @@ secp256k1_fe_mul_inner:
 	.align	2
 	.global secp256k1_fe_sqr_inner
 	.type	secp256k1_fe_sqr_inner, %function
+	.hidden secp256k1_fe_sqr_inner
 	@ Arguments:
 	@  r0  r	 Can overlap with a
 	@  r1  a
@@ -917,3 +913,4 @@ secp256k1_fe_sqr_inner:
 	ldmfd	sp!, {r4, r5, r6, r7, r8, r9, r10, r11, pc}
 	.size	secp256k1_fe_sqr_inner, .-secp256k1_fe_sqr_inner
 
+	.section .note.GNU-stack,"",%progbits

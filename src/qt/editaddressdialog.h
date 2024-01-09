@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,9 +49,9 @@ private:
     QString getDuplicateAddressWarning() const;
 
     Ui::EditAddressDialog *ui;
-    QDataWidgetMapper *mapper;
+    QDataWidgetMapper* mapper{nullptr};
     Mode mode;
-    AddressTableModel *model;
+    AddressTableModel* model{nullptr};
 
     QString address;
 };

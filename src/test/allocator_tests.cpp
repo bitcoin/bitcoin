@@ -1,17 +1,19 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/memory.h>
-#include <util/system.h>
+#include <common/system.h>
+#include <support/lockedpool.h>
 
-#include <test/util/setup_common.h>
-
+#include <limits>
 #include <memory>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(allocator_tests, BasicTestingSetup)
+BOOST_AUTO_TEST_SUITE(allocator_tests)
 
 BOOST_AUTO_TEST_CASE(arena_tests)
 {
@@ -75,6 +77,7 @@ BOOST_AUTO_TEST_CASE(arena_tests)
     b.walk();
 #endif
     // Sweeping allocate all memory
+    addr.reserve(2048);
     for (int x=0; x<1024; ++x)
         addr.push_back(b.alloc(1024));
     BOOST_CHECK(b.stats().free == 0);
@@ -163,7 +166,7 @@ private:
 BOOST_AUTO_TEST_CASE(lockedpool_tests_mock)
 {
     // Test over three virtual arenas, of which one will succeed being locked
-    std::unique_ptr<LockedPageAllocator> x = MakeUnique<TestLockedPageAllocator>(3, 1);
+    std::unique_ptr<LockedPageAllocator> x = std::make_unique<TestLockedPageAllocator>(3, 1);
     LockedPool pool(std::move(x));
     BOOST_CHECK(pool.stats().total == 0);
     BOOST_CHECK(pool.stats().locked == 0);

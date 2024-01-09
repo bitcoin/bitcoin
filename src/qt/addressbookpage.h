@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,14 +49,14 @@ public Q_SLOTS:
 
 private:
     Ui::AddressBookPage *ui;
-    AddressTableModel *model;
+    AddressTableModel* model{nullptr};
     Mode mode;
     Tabs tab;
     QString returnValue;
     AddressBookSortFilterProxyModel *proxyModel;
     QMenu *contextMenu;
-    QAction *deleteAction; // to be able to explicitly disable it
     QString newAddressToSelect;
+    void updateWindowsTitleWithWalletName();
 
 private Q_SLOTS:
     /** Delete currently selected address entry */

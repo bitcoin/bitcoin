@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,19 +7,21 @@
 #include <util/time.h>
 
 #include <boost/test/unit_test.hpp>
-#include <boost/thread.hpp>
 
+#include <functional>
 #include <mutex>
+#include <thread>
+#include <vector>
 
 BOOST_AUTO_TEST_SUITE(scheduler_tests)
 
-static void microTask(CScheduler& s, std::mutex& mutex, int& counter, int delta, std::chrono::system_clock::time_point rescheduleTime)
+static void microTask(CScheduler& s, std::mutex& mutex, int& counter, int delta, std::chrono::steady_clock::time_point rescheduleTime)
 {
     {
         std::lock_guard<std::mutex> lock(mutex);
         counter += delta;
     }
-    std::chrono::system_clock::time_point noTime = std::chrono::system_clock::time_point::min();
+    auto noTime = std::chrono::steady_clock::time_point::min();
     if (rescheduleTime != noTime) {
         CScheduler::Function f = std::bind(&microTask, std::ref(s), std::ref(mutex), std::ref(counter), -delta + 1, noTime);
         s.schedule(f, rescheduleTime);
@@ -42,20 +44,20 @@ BOOST_AUTO_TEST_CASE(manythreads)
 
     std::mutex counterMutex[10];
     int counter[10] = { 0 };
-    FastRandomContext rng{/* fDeterministic */ true};
+    FastRandomContext rng{/*fDeterministic=*/true};
     auto zeroToNine = [](FastRandomContext& rc) -> int { return rc.randrange(10); }; // [0, 9]
     auto randomMsec = [](FastRandomContext& rc) -> int { return -11 + (int)rc.randrange(1012); }; // [-11, 1000]
     auto randomDelta = [](FastRandomContext& rc) -> int { return -1000 + (int)rc.randrange(2001); }; // [-1000, 1000]
 
-    std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-    std::chrono::system_clock::time_point now = start;
-    std::chrono::system_clock::time_point first, last;
+    auto start = std::chrono::steady_clock::now();
+    auto now = start;
+    std::chrono::steady_clock::time_point first, last;
     size_t nTasks = microTasks.getQueueInfo(first, last);
     BOOST_CHECK(nTasks == 0);
 
     for (int i = 0; i < 100; ++i) {
-        std::chrono::system_clock::time_point t = now + std::chrono::microseconds(randomMsec(rng));
-        std::chrono::system_clock::time_point tReschedule = now + std::chrono::microseconds(500 + randomMsec(rng));
+        auto t = now + std::chrono::microseconds(randomMsec(rng));
+        auto tReschedule = now + std::chrono::microseconds(500 + randomMsec(rng));
         int whichCounter = zeroToNine(rng);
         CScheduler::Function f = std::bind(&microTask, std::ref(microTasks),
                                              std::ref(counterMutex[whichCounter]), std::ref(counter[whichCounter]),
@@ -68,19 +70,20 @@ BOOST_AUTO_TEST_CASE(manythreads)
     BOOST_CHECK(last > now);
 
     // As soon as these are created they will start running and servicing the queue
-    boost::thread_group microThreads;
+    std::vector<std::thread> microThreads;
+    microThreads.reserve(10);
     for (int i = 0; i < 5; i++)
-        microThreads.create_thread(std::bind(&CScheduler::serviceQueue, &microTasks));
+        microThreads.emplace_back(std::bind(&CScheduler::serviceQueue, &microTasks));
 
     UninterruptibleSleep(std::chrono::microseconds{600});
-    now = std::chrono::system_clock::now();
+    now = std::chrono::steady_clock::now();
 
     // More threads and more tasks:
     for (int i = 0; i < 5; i++)
-        microThreads.create_thread(std::bind(&CScheduler::serviceQueue, &microTasks));
+        microThreads.emplace_back(std::bind(&CScheduler::serviceQueue, &microTasks));
     for (int i = 0; i < 100; i++) {
-        std::chrono::system_clock::time_point t = now + std::chrono::microseconds(randomMsec(rng));
-        std::chrono::system_clock::time_point tReschedule = now + std::chrono::microseconds(500 + randomMsec(rng));
+        auto t = now + std::chrono::microseconds(randomMsec(rng));
+        auto tReschedule = now + std::chrono::microseconds(500 + randomMsec(rng));
         int whichCounter = zeroToNine(rng);
         CScheduler::Function f = std::bind(&microTask, std::ref(microTasks),
                                              std::ref(counterMutex[whichCounter]), std::ref(counter[whichCounter]),
@@ -89,8 +92,11 @@ BOOST_AUTO_TEST_CASE(manythreads)
     }
 
     // Drain the task queue then exit threads
-    microTasks.stop(true);
-    microThreads.join_all(); // ... wait until all the threads are done
+    microTasks.StopWhenDrained();
+    // wait until all the threads are done
+    for (auto& thread: microThreads) {
+        if (thread.joinable()) thread.join();
+    }
 
     int counterSum = 0;
     for (int i = 0; i < 10; i++) {
@@ -106,8 +112,8 @@ BOOST_AUTO_TEST_CASE(wait_until_past)
     Mutex mtx;
     WAIT_LOCK(mtx, lock);
 
-    const auto no_wait= [&](const std::chrono::seconds& d) {
-        return condvar.wait_until(lock, std::chrono::system_clock::now() - d);
+    const auto no_wait = [&](const std::chrono::seconds& d) {
+        return condvar.wait_until(lock, std::chrono::steady_clock::now() - d);
     };
 
     BOOST_CHECK(std::cv_status::timeout == no_wait(std::chrono::seconds{1}));
@@ -123,16 +129,17 @@ BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
     CScheduler scheduler;
 
     // each queue should be well ordered with respect to itself but not other queues
-    SingleThreadedSchedulerClient queue1(&scheduler);
-    SingleThreadedSchedulerClient queue2(&scheduler);
+    SingleThreadedSchedulerClient queue1(scheduler);
+    SingleThreadedSchedulerClient queue2(scheduler);
 
     // create more threads than queues
     // if the queues only permit execution of one task at once then
     // the extra threads should effectively be doing nothing
     // if they don't we'll get out of order behaviour
-    boost::thread_group threads;
+    std::vector<std::thread> threads;
+    threads.reserve(5);
     for (int i = 0; i < 5; ++i) {
-        threads.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
+        threads.emplace_back([&] { scheduler.serviceQueue(); });
     }
 
     // these are not atomic, if SinglethreadedSchedulerClient prevents
@@ -155,8 +162,10 @@ BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
     }
 
     // finish up
-    scheduler.stop(true);
-    threads.join_all();
+    scheduler.StopWhenDrained();
+    for (auto& thread: threads) {
+        if (thread.joinable()) thread.join();
+    }
 
     BOOST_CHECK_EQUAL(counter1, 100);
     BOOST_CHECK_EQUAL(counter2, 100);
@@ -176,7 +185,7 @@ BOOST_AUTO_TEST_CASE(mockforward)
     scheduler.scheduleFromNow(dummy, std::chrono::minutes{8});
 
     // check taskQueue
-    std::chrono::system_clock::time_point first, last;
+    std::chrono::steady_clock::time_point first, last;
     size_t num_tasks = scheduler.getQueueInfo(first, last);
     BOOST_CHECK_EQUAL(num_tasks, 3ul);
 
@@ -186,7 +195,7 @@ BOOST_AUTO_TEST_CASE(mockforward)
     scheduler.MockForward(std::chrono::minutes{5});
 
     // ensure scheduler has chance to process all tasks queued for before 1 ms from now.
-    scheduler.scheduleFromNow([&scheduler] { scheduler.stop(false); }, std::chrono::milliseconds{1});
+    scheduler.scheduleFromNow([&scheduler] { scheduler.stop(); }, std::chrono::milliseconds{1});
     scheduler_thread.join();
 
     // check that the queue only has one job remaining
@@ -197,7 +206,7 @@ BOOST_AUTO_TEST_CASE(mockforward)
     BOOST_CHECK_EQUAL(counter, 2);
 
     // check that the time of the remaining job has been updated
-    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    auto now = std::chrono::steady_clock::now();
     int delta = std::chrono::duration_cast<std::chrono::seconds>(first - now).count();
     // should be between 2 & 3 minutes from now
     BOOST_CHECK(delta > 2*60 && delta < 3*60);

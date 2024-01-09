@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,10 +32,10 @@ class DebugLogHelper
     void check_found();
 
 public:
-    DebugLogHelper(std::string message, MatchFn match = [](const std::string*){ return true; });
+    explicit DebugLogHelper(std::string message, MatchFn match = [](const std::string*){ return true; });
     ~DebugLogHelper() { check_found(); }
 };
 
-#define ASSERT_DEBUG_LOG(message) DebugLogHelper PASTE2(debugloghelper, __COUNTER__)(message)
+#define ASSERT_DEBUG_LOG(message) DebugLogHelper UNIQUE_NAME(debugloghelper)(message)
 
 #endif // BITCOIN_TEST_UTIL_LOGGING_H

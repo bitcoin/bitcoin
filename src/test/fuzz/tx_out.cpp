@@ -1,23 +1,20 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
 #include <core_memusage.h>
+#include <policy/feerate.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
-#include <version.h>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(tx_out)
 {
-    CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
+    DataStream ds{buffer};
     CTxOut tx_out;
     try {
-        int version;
-        ds >> version;
-        ds.SetVersion(version);
         ds >> tx_out;
     } catch (const std::ios_base::failure&) {
         return;

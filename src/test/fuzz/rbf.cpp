@@ -1,13 +1,17 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <node/mempool_args.h>
 #include <policy/rbf.h>
 #include <primitives/transaction.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/fuzz/util/mempool.h>
+#include <test/util/setup_common.h>
+#include <test/util/txmempool.h>
 #include <txmempool.h>
 
 #include <cstdint>
@@ -15,16 +19,30 @@
 #include <string>
 #include <vector>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+namespace {
+const BasicTestingSetup* g_setup;
+} // namespace
+
+void initialize_rbf()
+{
+    static const auto testing_setup = MakeNoLogFileContext<>();
+    g_setup = testing_setup.get();
+}
+
+FUZZ_TARGET(rbf, .init = initialize_rbf)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    std::optional<CMutableTransaction> mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    std::optional<CMutableTransaction> mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
     if (!mtx) {
         return;
     }
-    CTxMemPool pool;
-    while (fuzzed_data_provider.ConsumeBool()) {
-        const std::optional<CMutableTransaction> another_mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
+
+    CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node)};
+
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
+    {
+        const std::optional<CMutableTransaction> another_mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
         if (!another_mtx) {
             break;
         }

@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,8 +6,9 @@
 
 #include <span.h>
 
+#include <algorithm>
+#include <cstddef>
 #include <string>
-#include <vector>
 
 namespace spanparsing {
 
@@ -34,33 +35,17 @@ Span<const char> Expr(Span<const char>& sp)
     int level = 0;
     auto it = sp.begin();
     while (it != sp.end()) {
-        if (*it == '(') {
+        if (*it == '(' || *it == '{') {
             ++level;
-        } else if (level && *it == ')') {
+        } else if (level && (*it == ')' || *it == '}')) {
             --level;
-        } else if (level == 0 && (*it == ')' || *it == ',')) {
+        } else if (level == 0 && (*it == ')' || *it == '}' || *it == ',')) {
             break;
         }
         ++it;
     }
     Span<const char> ret = sp.first(it - sp.begin());
     sp = sp.subspan(it - sp.begin());
-    return ret;
-}
-
-std::vector<Span<const char>> Split(const Span<const char>& sp, char sep)
-{
-    std::vector<Span<const char>> ret;
-    auto it = sp.begin();
-    auto start = it;
-    while (it != sp.end()) {
-        if (*it == sep) {
-            ret.emplace_back(start, it);
-            start = it + 1;
-        }
-        ++it;
-    }
-    ret.emplace_back(start, it);
     return ret;
 }
 

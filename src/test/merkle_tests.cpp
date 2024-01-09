@@ -1,8 +1,9 @@
-// Copyright (c) 2015-2019 The Bitcoin Core developers
+// Copyright (c) 2015-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/merkle.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
@@ -13,9 +14,9 @@ static uint256 ComputeMerkleRootFromBranch(const uint256& leaf, const std::vecto
     uint256 hash = leaf;
     for (std::vector<uint256>::const_iterator it = vMerkleBranch.begin(); it != vMerkleBranch.end(); ++it) {
         if (nIndex & 1) {
-            hash = Hash(it->begin(), it->end(), hash.begin(), hash.end());
+            hash = Hash(*it, hash);
         } else {
-            hash = Hash(hash.begin(), hash.end(), it->begin(), it->end());
+            hash = Hash(hash, *it);
         }
         nIndex >>= 1;
     }
@@ -50,7 +51,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         // For each of the lower bits in count that are 0, do 1 step. Each
         // corresponds to an inner value that existed before processing the
         // current leaf, and each needs a hash to combine it.
-        for (level = 0; !(count & (((uint32_t)1) << level)); level++) {
+        for (level = 0; !(count & ((uint32_t{1}) << level)); level++) {
             if (pbranch) {
                 if (matchh) {
                     pbranch->push_back(inner[level]);
@@ -60,7 +61,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
                 }
             }
             mutated |= (inner[level] == h);
-            CHash256().Write(inner[level].begin(), 32).Write(h.begin(), 32).Finalize(h.begin());
+            h = Hash(inner[level], h);
         }
         // Store the resulting hash at inner position level.
         inner[level] = h;
@@ -74,25 +75,25 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
     int level = 0;
     // As long as bit number level in count is zero, skip it. It means there
     // is nothing left at this level.
-    while (!(count & (((uint32_t)1) << level))) {
+    while (!(count & ((uint32_t{1}) << level))) {
         level++;
     }
     uint256 h = inner[level];
     bool matchh = matchlevel == level;
-    while (count != (((uint32_t)1) << level)) {
+    while (count != ((uint32_t{1}) << level)) {
         // If we reach this point, h is an inner value that is not the top.
         // We combine it with itself (Bitcoin's special rule for odd levels in
         // the tree) to produce a higher level one.
         if (pbranch && matchh) {
             pbranch->push_back(h);
         }
-        CHash256().Write(h.begin(), 32).Write(h.begin(), 32).Finalize(h.begin());
+        h = Hash(h, h);
         // Increment count to the value it would have if two entries at this
         // level had existed.
-        count += (((uint32_t)1) << level);
+        count += ((uint32_t{1}) << level);
         level++;
         // And propagate the result upwards accordingly.
-        while (!(count & (((uint32_t)1) << level))) {
+        while (!(count & ((uint32_t{1}) << level))) {
             if (pbranch) {
                 if (matchh) {
                     pbranch->push_back(inner[level]);
@@ -101,7 +102,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
                     matchh = true;
                 }
             }
-            CHash256().Write(inner[level].begin(), 32).Write(h.begin(), 32).Finalize(h.begin());
+            h = Hash(inner[level], h);
             level++;
         }
     }
@@ -144,8 +145,7 @@ static uint256 BlockBuildMerkleTree(const CBlock& block, bool* fMutated, std::ve
                 // Two identical hashes at the end of the list at a particular level.
                 mutated = true;
             }
-            vMerkleTree.push_back(Hash(vMerkleTree[j+i].begin(), vMerkleTree[j+i].end(),
-                                       vMerkleTree[j+i2].begin(), vMerkleTree[j+i2].end()));
+            vMerkleTree.push_back(Hash(vMerkleTree[j+i], vMerkleTree[j+i2]));
         }
         j += nSize;
     }

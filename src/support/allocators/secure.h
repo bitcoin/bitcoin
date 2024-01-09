@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,7 @@
 #include <support/lockedpool.h>
 #include <support/cleanse.h>
 
+#include <memory>
 #include <string>
 
 //
@@ -16,29 +17,14 @@
 // out of memory and clears its contents before deletion.
 //
 template <typename T>
-struct secure_allocator : public std::allocator<T> {
-    // MSVC8 default copy constructor is broken
-    typedef std::allocator<T> base;
-    typedef typename base::size_type size_type;
-    typedef typename base::difference_type difference_type;
-    typedef typename base::pointer pointer;
-    typedef typename base::const_pointer const_pointer;
-    typedef typename base::reference reference;
-    typedef typename base::const_reference const_reference;
-    typedef typename base::value_type value_type;
-    secure_allocator() noexcept {}
-    secure_allocator(const secure_allocator& a) noexcept : base(a) {}
-    template <typename U>
-    secure_allocator(const secure_allocator<U>& a) noexcept : base(a)
-    {
-    }
-    ~secure_allocator() noexcept {}
-    template <typename _Other>
-    struct rebind {
-        typedef secure_allocator<_Other> other;
-    };
+struct secure_allocator {
+    using value_type = T;
 
-    T* allocate(std::size_t n, const void* hint = 0)
+    secure_allocator() = default;
+    template <typename U>
+    secure_allocator(const secure_allocator<U>&) noexcept {}
+
+    T* allocate(std::size_t n)
     {
         T* allocation = static_cast<T*>(LockedPoolManager::Instance().alloc(sizeof(T) * n));
         if (!allocation) {
@@ -54,9 +40,45 @@ struct secure_allocator : public std::allocator<T> {
         }
         LockedPoolManager::Instance().free(p);
     }
+
+    template <typename U>
+    friend bool operator==(const secure_allocator&, const secure_allocator<U>&) noexcept
+    {
+        return true;
+    }
+    template <typename U>
+    friend bool operator!=(const secure_allocator&, const secure_allocator<U>&) noexcept
+    {
+        return false;
+    }
 };
 
 // This is exactly like std::string, but with a custom allocator.
+// TODO: Consider finding a way to make incoming RPC request.params[i] mlock()ed as well
 typedef std::basic_string<char, std::char_traits<char>, secure_allocator<char> > SecureString;
+
+template<typename T>
+struct SecureUniqueDeleter {
+    void operator()(T* t) noexcept {
+        secure_allocator<T>().deallocate(t, 1);
+    }
+};
+
+template<typename T>
+using secure_unique_ptr = std::unique_ptr<T, SecureUniqueDeleter<T>>;
+
+template<typename T, typename... Args>
+secure_unique_ptr<T> make_secure_unique(Args&&... as)
+{
+    T* p = secure_allocator<T>().allocate(1);
+
+    // initialize in place, and return as secure_unique_ptr
+    try {
+        return secure_unique_ptr<T>(new (p) T(std::forward(as)...));
+    } catch (...) {
+        secure_allocator<T>().deallocate(p, 1);
+        throw;
+    }
+}
 
 #endif // BITCOIN_SUPPORT_ALLOCATORS_SECURE_H

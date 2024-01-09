@@ -1,28 +1,27 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <httprpc.h>
 
-#include <chainparams.h>
+#include <common/args.h>
 #include <crypto/hmac_sha256.h>
 #include <httpserver.h>
+#include <logging.h>
+#include <netaddress.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <util/strencodings.h>
-#include <util/system.h>
-#include <util/translation.h>
+#include <util/string.h>
 #include <walletinitinterface.h>
 
 #include <algorithm>
 #include <iterator>
 #include <map>
 #include <memory>
-#include <stdio.h>
 #include <set>
 #include <string>
-
-#include <boost/algorithm/string.hpp> // boost::trim
+#include <vector>
 
 /** WWW-Authenticate to present with 401 Unauthorized response */
 static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
@@ -68,6 +67,8 @@ private:
 static std::string strRPCUserColonPass;
 /* Stored RPC timer interface (for unregistration) */
 static std::unique_ptr<HTTPRPCTimerInterface> httpRPCTimerInterface;
+/* List of -rpcauth values */
+static std::vector<std::vector<std::string>> g_rpcauth;
 /* RPC Auth Whitelist */
 static std::map<std::string, std::set<std::string>> g_rpc_whitelist;
 static bool g_rpc_whitelist_default = false;
@@ -76,7 +77,7 @@ static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const Uni
 {
     // Send error reply from json-rpc error object
     int nStatus = HTTP_INTERNAL_SERVER_ERROR;
-    int code = find_value(objError, "code").get_int();
+    int code = objError.find_value("code").getInt<int>();
 
     if (code == RPC_INVALID_REQUEST)
         nStatus = HTTP_BAD_REQUEST;
@@ -99,15 +100,7 @@ static bool multiUserAuthorized(std::string strUserPass)
     std::string strUser = strUserPass.substr(0, strUserPass.find(':'));
     std::string strPass = strUserPass.substr(strUserPass.find(':') + 1);
 
-    for (const std::string& strRPCAuth : gArgs.GetArgs("-rpcauth")) {
-        //Search for multi-user login/pass "rpcauth" from config
-        std::vector<std::string> vFields;
-        boost::split(vFields, strRPCAuth, boost::is_any_of(":$"));
-        if (vFields.size() != 3) {
-            //Incorrect formatting in config file
-            continue;
-        }
-
+    for (const auto& vFields : g_rpcauth) {
         std::string strName = vFields[0];
         if (!TimingResistantEqual(strName, strUser)) {
             continue;
@@ -136,9 +129,11 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
         return false;
     if (strAuth.substr(0, 6) != "Basic ")
         return false;
-    std::string strUserPass64 = strAuth.substr(6);
-    boost::trim(strUserPass64);
-    std::string strUserPass = DecodeBase64(strUserPass64);
+    std::string_view strUserPass64 = TrimStringView(std::string_view{strAuth}.substr(6));
+    auto userpass_data = DecodeBase64(strUserPass64);
+    std::string strUserPass;
+    if (!userpass_data) return false;
+    strUserPass.assign(userpass_data->begin(), userpass_data->end());
 
     if (strUserPass.find(':') != std::string::npos)
         strAuthUsernameOut = strUserPass.substr(0, strUserPass.find(':'));
@@ -150,7 +145,7 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     return multiUserAuthorized(strUserPass);
 }
 
-static bool HTTPReq_JSONRPC(const util::Ref& context, HTTPRequest* req)
+static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
 {
     // JSONRPC handles only POST
     if (req->GetRequestMethod() != HTTPRequest::POST) {
@@ -165,8 +160,9 @@ static bool HTTPReq_JSONRPC(const util::Ref& context, HTTPRequest* req)
         return false;
     }
 
-    JSONRPCRequest jreq(context);
-    jreq.peerAddr = req->GetPeer().ToString();
+    JSONRPCRequest jreq;
+    jreq.context = context;
+    jreq.peerAddr = req->GetPeer().ToStringAddrPort();
     if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
         LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", jreq.peerAddr);
 
@@ -218,7 +214,7 @@ static bool HTTPReq_JSONRPC(const util::Ref& context, HTTPRequest* req)
                     } else {
                         const UniValue& request = valRequest[reqIdx].get_obj();
                         // Parse method
-                        std::string strMethod = find_value(request, "method").get_str();
+                        std::string strMethod = request.find_value("method").get_str();
                         if (!g_rpc_whitelist[jreq.authUser].count(strMethod)) {
                             LogPrintf("RPC User %s not allowed to call method %s\n", jreq.authUser, strMethod);
                             req->WriteReply(HTTP_FORBIDDEN);
@@ -256,9 +252,20 @@ static bool InitRPCAuthentication()
         LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.\n");
         strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
     }
-    if (gArgs.GetArg("-rpcauth","") != "")
-    {
+    if (gArgs.GetArg("-rpcauth", "") != "") {
         LogPrintf("Using rpcauth authentication.\n");
+        for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
+            std::vector<std::string> fields{SplitString(rpcauth, ':')};
+            const std::vector<std::string> salt_hmac{SplitString(fields.back(), '$')};
+            if (fields.size() == 2 && salt_hmac.size() == 2) {
+                fields.pop_back();
+                fields.insert(fields.end(), salt_hmac.begin(), salt_hmac.end());
+                g_rpcauth.push_back(fields);
+            } else {
+                LogPrintf("Invalid -rpcauth argument.\n");
+                return false;
+            }
+        }
     }
 
     g_rpc_whitelist_default = gArgs.GetBoolArg("-rpcwhitelistdefault", gArgs.IsArgSet("-rpcwhitelist"));
@@ -269,8 +276,10 @@ static bool InitRPCAuthentication()
         std::set<std::string>& whitelist = g_rpc_whitelist[strUser];
         if (pos != std::string::npos) {
             std::string strWhitelist = strRPCWhitelist.substr(pos + 1);
-            std::set<std::string> new_whitelist;
-            boost::split(new_whitelist, strWhitelist, boost::is_any_of(", "));
+            std::vector<std::string> whitelist_split = SplitString(strWhitelist, ", ");
+            std::set<std::string> new_whitelist{
+                std::make_move_iterator(whitelist_split.begin()),
+                std::make_move_iterator(whitelist_split.end())};
             if (intersect) {
                 std::set<std::string> tmp_whitelist;
                 std::set_intersection(new_whitelist.begin(), new_whitelist.end(),
@@ -284,20 +293,20 @@ static bool InitRPCAuthentication()
     return true;
 }
 
-bool StartHTTPRPC(const util::Ref& context)
+bool StartHTTPRPC(const std::any& context)
 {
     LogPrint(BCLog::RPC, "Starting HTTP RPC server\n");
     if (!InitRPCAuthentication())
         return false;
 
-    auto handle_rpc = [&context](HTTPRequest* req, const std::string&) { return HTTPReq_JSONRPC(context, req); };
+    auto handle_rpc = [context](HTTPRequest* req, const std::string&) { return HTTPReq_JSONRPC(context, req); };
     RegisterHTTPHandler("/", true, handle_rpc);
     if (g_wallet_init_interface.HasWalletSupport()) {
         RegisterHTTPHandler("/wallet/", false, handle_rpc);
     }
     struct event_base* eventBase = EventBase();
     assert(eventBase);
-    httpRPCTimerInterface = MakeUnique<HTTPRPCTimerInterface>(eventBase);
+    httpRPCTimerInterface = std::make_unique<HTTPRPCTimerInterface>(eventBase);
     RPCSetTimerInterface(httpRPCTimerInterface.get());
     return true;
 }

@@ -1,12 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compressor.h>
 
 #include <pubkey.h>
-#include <script/standard.h>
+#include <script/script.h>
 
 /*
  * These check for scripts for which a special case with a shorter encoding is defined.
@@ -52,7 +52,7 @@ static bool IsToPubKey(const CScript& script, CPubKey &pubkey)
     return false;
 }
 
-bool CompressScript(const CScript& script, std::vector<unsigned char> &out)
+bool CompressScript(const CScript& script, CompressedScript& out)
 {
     CKeyID keyID;
     if (IsToKeyID(script, keyID)) {
@@ -92,7 +92,7 @@ unsigned int GetSpecialScriptSize(unsigned int nSize)
     return 0;
 }
 
-bool DecompressScript(CScript& script, unsigned int nSize, const std::vector<unsigned char> &in)
+bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScript& in)
 {
     switch(nSize) {
     case 0x00:
@@ -124,7 +124,7 @@ bool DecompressScript(CScript& script, unsigned int nSize, const std::vector<uns
         unsigned char vch[33] = {};
         vch[0] = nSize - 2;
         memcpy(&vch[1], in.data(), 32);
-        CPubKey pubkey(&vch[0], &vch[33]);
+        CPubKey pubkey{vch};
         if (!pubkey.Decompress())
             return false;
         assert(pubkey.size() == 65);

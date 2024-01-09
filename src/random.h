@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,11 +8,14 @@
 
 #include <crypto/chacha20.h>
 #include <crypto/common.h>
+#include <span.h>
 #include <uint256.h>
 
-#include <chrono> // For std::chrono::microseconds
+#include <cassert>
+#include <chrono>
 #include <cstdint>
 #include <limits>
+#include <vector>
 
 /**
  * Overall design of the RNG and entropy sources.
@@ -66,9 +69,19 @@
  *
  * Thread-safe.
  */
-void GetRandBytes(unsigned char* buf, int num) noexcept;
+void GetRandBytes(Span<unsigned char> bytes) noexcept;
 /** Generate a uniform random integer in the range [0..range). Precondition: range > 0 */
-uint64_t GetRand(uint64_t nMax) noexcept;
+uint64_t GetRandInternal(uint64_t nMax) noexcept;
+/** Generate a uniform random integer of type T in the range [0..nMax)
+ *  nMax defaults to std::numeric_limits<T>::max()
+ *  Precondition: nMax > 0, T is an integral type, no larger than uint64_t
+ */
+template<typename T>
+T GetRand(T nMax=std::numeric_limits<T>::max()) noexcept {
+    static_assert(std::is_integral<T>(), "T must be integral");
+    static_assert(std::numeric_limits<T>::max() <= std::numeric_limits<uint64_t>::max(), "GetRand only supports up to uint64_t");
+    return T(GetRandInternal(nMax));
+}
 /** Generate a uniform random duration in the range [0..max). Precondition: max.count() > 0 */
 template <typename D>
 D GetRandomDuration(typename std::common_type<D>::type max) noexcept
@@ -82,7 +95,18 @@ D GetRandomDuration(typename std::common_type<D>::type max) noexcept
 };
 constexpr auto GetRandMicros = GetRandomDuration<std::chrono::microseconds>;
 constexpr auto GetRandMillis = GetRandomDuration<std::chrono::milliseconds>;
-int GetRandInt(int nMax) noexcept;
+
+/**
+ * Return a timestamp in the future sampled from an exponential distribution
+ * (https://en.wikipedia.org/wiki/Exponential_distribution). This distribution
+ * is memoryless and should be used for repeated network events (e.g. sending a
+ * certain type of message) to minimize leaking information to observers.
+ *
+ * The probability of an event occurring before time x is 1 - e^-(x/a) where a
+ * is the average interval between events.
+ * */
+std::chrono::microseconds GetExponentialRand(std::chrono::microseconds now, std::chrono::seconds average_interval);
+
 uint256 GetRandHash() noexcept;
 
 /**
@@ -93,7 +117,7 @@ uint256 GetRandHash() noexcept;
  *
  * Thread-safe.
  */
-void GetStrongRandBytes(unsigned char* buf, int num) noexcept;
+void GetStrongRandBytes(Span<unsigned char> bytes) noexcept;
 
 /**
  * Gather entropy from various expensive sources, and feed them to the PRNG state.
@@ -122,22 +146,10 @@ private:
     bool requires_seed;
     ChaCha20 rng;
 
-    unsigned char bytebuf[64];
-    int bytebuf_size;
-
     uint64_t bitbuf;
     int bitbuf_size;
 
     void RandomSeed();
-
-    void FillByteBuffer()
-    {
-        if (requires_seed) {
-            RandomSeed();
-        }
-        rng.Keystream(bytebuf, sizeof(bytebuf));
-        bytebuf_size = sizeof(bytebuf);
-    }
 
     void FillBitBuffer()
     {
@@ -162,10 +174,10 @@ public:
     /** Generate a random 64-bit integer. */
     uint64_t rand64() noexcept
     {
-        if (bytebuf_size < 8) FillByteBuffer();
-        uint64_t ret = ReadLE64(bytebuf + 64 - bytebuf_size);
-        bytebuf_size -= 8;
-        return ret;
+        if (requires_seed) RandomSeed();
+        std::array<std::byte, 8> buf;
+        rng.Keystream(buf);
+        return ReadLE64(UCharCast(buf.data()));
     }
 
     /** Generate a random (bits)-bit integer. */
@@ -177,7 +189,7 @@ public:
             return rand64() >> (64 - bits);
         } else {
             if (bitbuf_size < bits) FillBitBuffer();
-            uint64_t ret = bitbuf & (~(uint64_t)0 >> (64 - bits));
+            uint64_t ret = bitbuf & (~uint64_t{0} >> (64 - bits));
             bitbuf >>= bits;
             bitbuf_size -= bits;
             return ret;
@@ -199,7 +211,11 @@ public:
     }
 
     /** Generate random bytes. */
-    std::vector<unsigned char> randbytes(size_t len);
+    template <typename B = unsigned char>
+    std::vector<B> randbytes(size_t len);
+
+    /** Fill a byte Span with random bytes. */
+    void fillrand(Span<std::byte> output);
 
     /** Generate a random 32-bit integer. */
     uint32_t rand32() noexcept { return randbits(32); }
@@ -210,7 +226,24 @@ public:
     /** Generate a random boolean. */
     bool randbool() noexcept { return randbits(1); }
 
-    // Compatibility with the C++11 UniformRandomBitGenerator concept
+    /** Return the time point advanced by a uniform random duration. */
+    template <typename Tp>
+    Tp rand_uniform_delay(const Tp& time, typename Tp::duration range)
+    {
+        return time + rand_uniform_duration<Tp>(range);
+    }
+
+    /** Generate a uniform random duration in the range from 0 (inclusive) to range (exclusive). */
+    template <typename Chrono>
+    typename Chrono::duration rand_uniform_duration(typename Chrono::duration range) noexcept
+    {
+        using Dur = typename Chrono::duration;
+        return range.count() > 0 ? /* interval [0..range) */ Dur{randrange(range.count())} :
+               range.count() < 0 ? /* interval (range..0] */ -Dur{randrange(-range.count())} :
+                                   /* interval [0..0] */ Dur{0};
+    };
+
+    // Compatibility with the UniformRandomBitGenerator concept
     typedef uint64_t result_type;
     static constexpr uint64_t min() { return 0; }
     static constexpr uint64_t max() { return std::numeric_limits<uint64_t>::max(); }

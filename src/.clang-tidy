@@ -1,0 +1,27 @@
+Checks: '
+-*,
+bitcoin-*,
+bugprone-argument-comment,
+bugprone-string-constructor,
+bugprone-use-after-move,
+bugprone-lambda-function-name,
+misc-unused-using-decls,
+modernize-use-default-member-init,
+modernize-use-emplace,
+modernize-use-noexcept,
+modernize-use-nullptr,
+performance-*,
+-performance-avoid-endl,
+-performance-inefficient-string-concatenation,
+-performance-no-int-to-ptr,
+-performance-noexcept-move-constructor,
+-performance-unnecessary-value-param,
+readability-const-return-type,
+readability-redundant-declaration,
+readability-redundant-string-init,
+'
+WarningsAsErrors: '*'
+CheckOptions:
+ - key: performance-move-const-arg.CheckTriviallyCopyableMove
+   value: false
+HeaderFilterRegex: '.'

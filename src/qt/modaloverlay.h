@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2019 The Bitcoin Core developers
+// Copyright (c) 2016-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -25,15 +25,19 @@ public:
     explicit ModalOverlay(bool enable_wallet, QWidget *parent);
     ~ModalOverlay();
 
-public Q_SLOTS:
     void tipUpdate(int count, const QDateTime& blockDate, double nVerificationProgress);
-    void setKnownBestHeight(int count, const QDateTime& blockDate);
+    void setKnownBestHeight(int count, const QDateTime& blockDate, bool presync);
 
-    void toggleVisibility();
     // will show or hide the modal layer
     void showHide(bool hide = false, bool userRequested = false);
-    void closeClicked();
     bool isLayerVisible() const { return layerIsVisible; }
+
+public Q_SLOTS:
+    void toggleVisibility();
+    void closeClicked();
+
+Q_SIGNALS:
+    void triggered(bool hidden);
 
 protected:
     bool eventFilter(QObject * obj, QEvent * ev) override;
@@ -41,13 +45,14 @@ protected:
 
 private:
     Ui::ModalOverlay *ui;
-    int bestHeaderHeight; //best known height (based on the headers)
+    int bestHeaderHeight{0}; // best known height (based on the headers)
     QDateTime bestHeaderDate;
     QVector<QPair<qint64, double> > blockProcessTime;
-    bool layerIsVisible;
-    bool userClosed;
+    bool layerIsVisible{false};
+    bool userClosed{false};
     QPropertyAnimation m_animation;
     void UpdateHeaderSyncLabel();
+    void UpdateHeaderPresyncLabel(int height, const QDateTime& blockDate);
 };
 
 #endif // BITCOIN_QT_MODALOVERLAY_H

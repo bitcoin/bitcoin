@@ -1,16 +1,16 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_SCRIPT_DESCRIPTOR_H
 #define BITCOIN_SCRIPT_DESCRIPTOR_H
 
-#include <optional.h>
 #include <outputtype.h>
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 
+#include <optional>
 #include <vector>
 
 using ExtPubKeyMap = std::unordered_map<uint32_t, CExtPubKey>;
@@ -22,6 +22,8 @@ private:
     std::unordered_map<uint32_t, ExtPubKeyMap> m_derived_xpubs;
     /** Map key expression index -> parent xpub */
     ExtPubKeyMap m_parent_xpubs;
+    /** Map key expression index -> last hardened xpub */
+    ExtPubKeyMap m_last_hardened_xpubs;
 
 public:
     /** Cache a parent xpub
@@ -33,7 +35,7 @@ public:
     /** Retrieve a cached parent xpub
      *
      * @param[in] key_exp_pos Position of the key expression within the descriptor
-     * @param[in] xpub The CExtPubKey to get from cache
+     * @param[out] xpub The CExtPubKey to get from cache
      */
     bool GetCachedParentExtPubKey(uint32_t key_exp_pos, CExtPubKey& xpub) const;
     /** Cache an xpub derived at an index
@@ -47,14 +49,33 @@ public:
      *
      * @param[in] key_exp_pos Position of the key expression within the descriptor
      * @param[in] der_index Derivation index of the xpub
-     * @param[in] xpub The CExtPubKey to get from cache
+     * @param[out] xpub The CExtPubKey to get from cache
      */
     bool GetCachedDerivedExtPubKey(uint32_t key_exp_pos, uint32_t der_index, CExtPubKey& xpub) const;
+    /** Cache a last hardened xpub
+     *
+     * @param[in] key_exp_pos Position of the key expression within the descriptor
+     * @param[in] xpub The CExtPubKey to cache
+     */
+    void CacheLastHardenedExtPubKey(uint32_t key_exp_pos, const CExtPubKey& xpub);
+    /** Retrieve a cached last hardened xpub
+     *
+     * @param[in] key_exp_pos Position of the key expression within the descriptor
+     * @param[out] xpub The CExtPubKey to get from cache
+     */
+    bool GetCachedLastHardenedExtPubKey(uint32_t key_exp_pos, CExtPubKey& xpub) const;
 
     /** Retrieve all cached parent xpubs */
-    const ExtPubKeyMap GetCachedParentExtPubKeys() const;
+    ExtPubKeyMap GetCachedParentExtPubKeys() const;
     /** Retrieve all cached derived xpubs */
-    const std::unordered_map<uint32_t, ExtPubKeyMap> GetCachedDerivedExtPubKeys() const;
+    std::unordered_map<uint32_t, ExtPubKeyMap> GetCachedDerivedExtPubKeys() const;
+    /** Retrieve all cached last hardened xpubs */
+    ExtPubKeyMap GetCachedLastHardenedExtPubKeys() const;
+
+    /** Combine another DescriptorCache into this one.
+     * Returns a cache containing the items from the other cache unknown to current cache
+     */
+    DescriptorCache MergeAndDiff(const DescriptorCache& other);
 };
 
 /** \brief Interface for parsed descriptor objects.
@@ -85,13 +106,16 @@ struct Descriptor {
     virtual bool IsSolvable() const = 0;
 
     /** Convert the descriptor back to a string, undoing parsing. */
-    virtual std::string ToString() const = 0;
+    virtual std::string ToString(bool compat_format=false) const = 0;
 
     /** Whether this descriptor will return one scriptPubKey or multiple (aka is or is not combo) */
     virtual bool IsSingleType() const = 0;
 
     /** Convert the descriptor to a private string. This fails if the provided provider does not have the relevant private keys. */
     virtual bool ToPrivateString(const SigningProvider& provider, std::string& out) const = 0;
+
+    /** Convert the descriptor to a normalized string. Normalized descriptors have the xpub at the last hardened step. This fails if the provided provider does not have the private keys to derive that xpub. */
+    virtual bool ToNormalizedString(const SigningProvider& provider, std::string& out, const DescriptorCache* cache = nullptr) const = 0;
 
     /** Expand a descriptor at a specified position.
      *
@@ -121,7 +145,19 @@ struct Descriptor {
     virtual void ExpandPrivate(int pos, const SigningProvider& provider, FlatSigningProvider& out) const = 0;
 
     /** @return The OutputType of the scriptPubKey(s) produced by this descriptor. Or nullopt if indeterminate (multiple or none) */
-    virtual Optional<OutputType> GetOutputType() const = 0;
+    virtual std::optional<OutputType> GetOutputType() const = 0;
+
+    /** Get the size of the scriptPubKey for this descriptor. */
+    virtual std::optional<int64_t> ScriptSize() const = 0;
+
+    /** Get the maximum size of a satisfaction for this descriptor, in weight units.
+     *
+     * @param use_max_sig Whether to assume ECDSA signatures will have a high-r.
+     */
+    virtual std::optional<int64_t> MaxSatisfactionWeight(bool use_max_sig) const = 0;
+
+    /** Get the maximum size number of stack elements for satisfying this descriptor. */
+    virtual std::optional<int64_t> MaxSatisfactionElems() const = 0;
 };
 
 /** Parse a `descriptor` string. Included private keys are put in `out`.
@@ -157,5 +193,10 @@ std::string GetDescriptorChecksum(const std::string& descriptor);
  * - Failing that, a "raw()" descriptor is returned.
  */
 std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const SigningProvider& provider);
+
+/** Unique identifier that may not change over time, unless explicitly marked as not backwards compatible.
+*   This is not part of BIP 380, not guaranteed to be interoperable and should not be exposed to the user.
+*/
+uint256 DescriptorID(const Descriptor& desc);
 
 #endif // BITCOIN_SCRIPT_DESCRIPTOR_H

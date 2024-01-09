@@ -22,8 +22,8 @@ CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey, int n
 CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CScriptWitness& scriptWitness, const CTransaction& txCredit);
 
 // Helper: create two dummy transactions, each with two outputs.
-// The first has nValues[0] and nValues[1] outputs paid to a TX_PUBKEY,
-// the second nValues[2] and nValues[3] outputs paid to a TX_PUBKEYHASH.
+// The first has nValues[0] and nValues[1] outputs paid to a TxoutType::PUBKEY,
+// the second nValues[2] and nValues[3] outputs paid to a TxoutType::PUBKEYHASH.
 std::vector<CMutableTransaction> SetupDummyInputs(FillableSigningProvider& keystoreRet, CCoinsViewCache& coinsRet, const std::array<CAmount,4>& nValues);
 
 #endif // BITCOIN_TEST_UTIL_TRANSACTION_UTILS_H

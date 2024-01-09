@@ -1,21 +1,22 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#ifndef __cplusplus
-#error This header can only be compiled as C++.
-#endif
 
 #ifndef BITCOIN_PROTOCOL_H
 #define BITCOIN_PROTOCOL_H
 
+#include <kernel/messagestartchars.h> // IWYU pragma: export
 #include <netaddress.h>
+#include <primitives/transaction.h>
 #include <serialize.h>
+#include <streams.h>
 #include <uint256.h>
-#include <version.h>
+#include <util/time.h>
 
-#include <stdint.h>
+#include <array>
+#include <cstdint>
+#include <limits>
 #include <string>
 
 /** Message header.
@@ -27,16 +28,14 @@
 class CMessageHeader
 {
 public:
-    static constexpr size_t MESSAGE_START_SIZE = 4;
     static constexpr size_t COMMAND_SIZE = 12;
     static constexpr size_t MESSAGE_SIZE_SIZE = 4;
     static constexpr size_t CHECKSUM_SIZE = 4;
-    static constexpr size_t MESSAGE_SIZE_OFFSET = MESSAGE_START_SIZE + COMMAND_SIZE;
+    static constexpr size_t MESSAGE_SIZE_OFFSET = std::tuple_size_v<MessageStartChars> + COMMAND_SIZE;
     static constexpr size_t CHECKSUM_OFFSET = MESSAGE_SIZE_OFFSET + MESSAGE_SIZE_SIZE;
-    static constexpr size_t HEADER_SIZE = MESSAGE_START_SIZE + COMMAND_SIZE + MESSAGE_SIZE_SIZE + CHECKSUM_SIZE;
-    typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
+    static constexpr size_t HEADER_SIZE = std::tuple_size_v<MessageStartChars> + COMMAND_SIZE + MESSAGE_SIZE_SIZE + CHECKSUM_SIZE;
 
-    explicit CMessageHeader(const MessageStartChars& pchMessageStartIn);
+    explicit CMessageHeader() = default;
 
     /** Construct a P2P message header from message-start characters, a command and the size of the message.
      * @note Passing in a `pszCommand` longer than COMMAND_SIZE will result in a run-time assertion error.
@@ -44,14 +43,14 @@ public:
     CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn);
 
     std::string GetCommand() const;
-    bool IsValid(const MessageStartChars& messageStart) const;
+    bool IsCommandValid() const;
 
     SERIALIZE_METHODS(CMessageHeader, obj) { READWRITE(obj.pchMessageStart, obj.pchCommand, obj.nMessageSize, obj.pchChecksum); }
 
-    char pchMessageStart[MESSAGE_START_SIZE];
-    char pchCommand[COMMAND_SIZE];
-    uint32_t nMessageSize;
-    uint8_t pchChecksum[CHECKSUM_SIZE];
+    MessageStartChars pchMessageStart{};
+    char pchCommand[COMMAND_SIZE]{};
+    uint32_t nMessageSize{std::numeric_limits<uint32_t>::max()};
+    uint8_t pchChecksum[CHECKSUM_SIZE]{};
 };
 
 /**
@@ -63,100 +62,97 @@ namespace NetMsgType {
 /**
  * The version message provides information about the transmitting node to the
  * receiving node at the beginning of a connection.
- * @see https://bitcoin.org/en/developer-reference#version
  */
 extern const char* VERSION;
 /**
  * The verack message acknowledges a previously-received version message,
  * informing the connecting node that it can begin to send other messages.
- * @see https://bitcoin.org/en/developer-reference#verack
  */
 extern const char* VERACK;
 /**
  * The addr (IP address) message relays connection information for peers on the
  * network.
- * @see https://bitcoin.org/en/developer-reference#addr
  */
 extern const char* ADDR;
 /**
+ * The addrv2 message relays connection information for peers on the network just
+ * like the addr message, but is extended to allow gossiping of longer node
+ * addresses (see BIP155).
+ */
+extern const char *ADDRV2;
+/**
+ * The sendaddrv2 message signals support for receiving ADDRV2 messages (BIP155).
+ * It also implies that its sender can encode as ADDRV2 and would send ADDRV2
+ * instead of ADDR to a peer that has signaled ADDRV2 support by sending SENDADDRV2.
+ */
+extern const char *SENDADDRV2;
+/**
  * The inv message (inventory message) transmits one or more inventories of
  * objects known to the transmitting peer.
- * @see https://bitcoin.org/en/developer-reference#inv
  */
 extern const char* INV;
 /**
  * The getdata message requests one or more data objects from another node.
- * @see https://bitcoin.org/en/developer-reference#getdata
  */
 extern const char* GETDATA;
 /**
  * The merkleblock message is a reply to a getdata message which requested a
  * block using the inventory type MSG_MERKLEBLOCK.
  * @since protocol version 70001 as described by BIP37.
- * @see https://bitcoin.org/en/developer-reference#merkleblock
  */
 extern const char* MERKLEBLOCK;
 /**
  * The getblocks message requests an inv message that provides block header
  * hashes starting from a particular point in the block chain.
- * @see https://bitcoin.org/en/developer-reference#getblocks
  */
 extern const char* GETBLOCKS;
 /**
  * The getheaders message requests a headers message that provides block
  * headers starting from a particular point in the block chain.
  * @since protocol version 31800.
- * @see https://bitcoin.org/en/developer-reference#getheaders
  */
 extern const char* GETHEADERS;
 /**
  * The tx message transmits a single transaction.
- * @see https://bitcoin.org/en/developer-reference#tx
  */
 extern const char* TX;
 /**
  * The headers message sends one or more block headers to a node which
  * previously requested certain headers with a getheaders message.
  * @since protocol version 31800.
- * @see https://bitcoin.org/en/developer-reference#headers
  */
 extern const char* HEADERS;
 /**
  * The block message transmits a single serialized block.
- * @see https://bitcoin.org/en/developer-reference#block
  */
 extern const char* BLOCK;
 /**
  * The getaddr message requests an addr message from the receiving node,
  * preferably one with lots of IP addresses of other receiving nodes.
- * @see https://bitcoin.org/en/developer-reference#getaddr
  */
 extern const char* GETADDR;
 /**
  * The mempool message requests the TXIDs of transactions that the receiving
  * node has verified as valid but which have not yet appeared in a block.
- * @since protocol version 60002.
- * @see https://bitcoin.org/en/developer-reference#mempool
+ * @since protocol version 60002 as described by BIP35.
+ *   Only available with service bit NODE_BLOOM, see also BIP111.
  */
 extern const char* MEMPOOL;
 /**
  * The ping message is sent periodically to help confirm that the receiving
  * peer is still connected.
- * @see https://bitcoin.org/en/developer-reference#ping
  */
 extern const char* PING;
 /**
  * The pong message replies to a ping message, proving to the pinging node that
  * the ponging node is still alive.
  * @since protocol version 60001 as described by BIP31.
- * @see https://bitcoin.org/en/developer-reference#pong
  */
 extern const char* PONG;
 /**
  * The notfound message is a reply to a getdata message which requested an
  * object the receiving node does not have available for relay.
  * @since protocol version 70001.
- * @see https://bitcoin.org/en/developer-reference#notfound
  */
 extern const char* NOTFOUND;
 /**
@@ -165,7 +161,6 @@ extern const char* NOTFOUND;
  * @since protocol version 70001 as described by BIP37.
  *   Only available with service bit NODE_BLOOM since protocol version
  *   70011 as described by BIP111.
- * @see https://bitcoin.org/en/developer-reference#filterload
  */
 extern const char* FILTERLOAD;
 /**
@@ -174,7 +169,6 @@ extern const char* FILTERLOAD;
  * @since protocol version 70001 as described by BIP37.
  *   Only available with service bit NODE_BLOOM since protocol version
  *   70011 as described by BIP111.
- * @see https://bitcoin.org/en/developer-reference#filteradd
  */
 extern const char* FILTERADD;
 /**
@@ -183,14 +177,12 @@ extern const char* FILTERADD;
  * @since protocol version 70001 as described by BIP37.
  *   Only available with service bit NODE_BLOOM since protocol version
  *   70011 as described by BIP111.
- * @see https://bitcoin.org/en/developer-reference#filterclear
  */
 extern const char* FILTERCLEAR;
 /**
  * Indicates that a node prefers to receive new block announcements via a
  * "headers" message rather than an "inv".
  * @since protocol version 70012 as described by BIP130.
- * @see https://bitcoin.org/en/developer-reference#sendheaders
  */
 extern const char* SENDHEADERS;
 /**
@@ -261,6 +253,18 @@ extern const char* GETCFCHECKPT;
  * evenly spaced filter headers for blocks on the requested chain.
  */
 extern const char* CFCHECKPT;
+/**
+ * Indicates that a node prefers to relay transactions via wtxid, rather than
+ * txid.
+ * @since protocol version 70016 as described by BIP 339.
+ */
+extern const char* WTXIDRELAY;
+/**
+ * Contains a 4-byte version number and an 8-byte salt.
+ * The salt is used to compute short txids needed for efficient
+ * txreconciliation, as described by BIP 330.
+ */
+extern const char* SENDTXRCNCL;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
@@ -274,21 +278,21 @@ enum ServiceFlags : uint64_t {
     // NODE_NETWORK means that the node is capable of serving the complete block chain. It is currently
     // set by all Bitcoin Core non pruned nodes, and is unset by SPV clients or other light clients.
     NODE_NETWORK = (1 << 0),
-    // NODE_GETUTXO means the node is capable of responding to the getutxo protocol request.
-    // Bitcoin Core does not support this but a patch set called Bitcoin XT does.
-    // See BIP 64 for details on how this is implemented.
-    NODE_GETUTXO = (1 << 1),
     // NODE_BLOOM means the node is capable and willing to handle bloom-filtered connections.
-    // Bitcoin Core nodes used to support this by default, without advertising this bit,
-    // but no longer do as of protocol version 70011 (= NO_BLOOM_VERSION)
     NODE_BLOOM = (1 << 2),
     // NODE_WITNESS indicates that a node can be asked for blocks and transactions including
     // witness data.
     NODE_WITNESS = (1 << 3),
+    // NODE_COMPACT_FILTERS means the node will service basic block filter requests.
+    // See BIP157 and BIP158 for details on how this is implemented.
+    NODE_COMPACT_FILTERS = (1 << 6),
     // NODE_NETWORK_LIMITED means the same as NODE_NETWORK with the limitation of only
     // serving the last 288 (2 day) blocks
     // See BIP159 for details on how this is implemented.
     NODE_NETWORK_LIMITED = (1 << 10),
+
+    // NODE_P2P_V2 means the node supports BIP324 transport
+    NODE_P2P_V2 = (1 << 11),
 
     // Bits 24-31 are reserved for temporary experiments. Just pick a bit that
     // isn't getting used, or one not being used much, and notify the
@@ -357,30 +361,104 @@ static inline bool MayHaveUsefulAddressDB(ServiceFlags services)
 /** A CService with information about it as peer */
 class CAddress : public CService
 {
-    static constexpr uint32_t TIME_INIT{100000000};
+    static constexpr std::chrono::seconds TIME_INIT{100000000};
+
+    /** Historically, CAddress disk serialization stored the CLIENT_VERSION, optionally OR'ed with
+     *  the ADDRV2_FORMAT flag to indicate V2 serialization. The first field has since been
+     *  disentangled from client versioning, and now instead:
+     *  - The low bits (masked by DISK_VERSION_IGNORE_MASK) store the fixed value DISK_VERSION_INIT,
+     *    (in case any code exists that treats it as a client version) but are ignored on
+     *    deserialization.
+     *  - The high bits (masked by ~DISK_VERSION_IGNORE_MASK) store actual serialization information.
+     *    Only 0 or DISK_VERSION_ADDRV2 (equal to the historical ADDRV2_FORMAT) are valid now, and
+     *    any other value triggers a deserialization failure. Other values can be added later if
+     *    needed.
+     *
+     *  For disk deserialization, ADDRV2_FORMAT in the stream version signals that ADDRV2
+     *  deserialization is permitted, but the actual format is determined by the high bits in the
+     *  stored version field. For network serialization, the stream version having ADDRV2_FORMAT or
+     *  not determines the actual format used (as it has no embedded version number).
+     */
+    static constexpr uint32_t DISK_VERSION_INIT{220000};
+    static constexpr uint32_t DISK_VERSION_IGNORE_MASK{0b00000000'00000111'11111111'11111111};
+    /** The version number written in disk serialized addresses to indicate V2 serializations.
+     * It must be exactly 1<<29, as that is the value that historical versions used for this
+     * (they used their internal ADDRV2_FORMAT flag here). */
+    static constexpr uint32_t DISK_VERSION_ADDRV2{1 << 29};
+    static_assert((DISK_VERSION_INIT & ~DISK_VERSION_IGNORE_MASK) == 0, "DISK_VERSION_INIT must be covered by DISK_VERSION_IGNORE_MASK");
+    static_assert((DISK_VERSION_ADDRV2 & DISK_VERSION_IGNORE_MASK) == 0, "DISK_VERSION_ADDRV2 must not be covered by DISK_VERSION_IGNORE_MASK");
 
 public:
     CAddress() : CService{} {};
-    explicit CAddress(CService ipIn, ServiceFlags nServicesIn) : CService{ipIn}, nServices{nServicesIn} {};
+    CAddress(CService ipIn, ServiceFlags nServicesIn) : CService{ipIn}, nServices{nServicesIn} {};
+    CAddress(CService ipIn, ServiceFlags nServicesIn, NodeSeconds time) : CService{ipIn}, nTime{time}, nServices{nServicesIn} {};
 
-    SERIALIZE_METHODS(CAddress, obj)
+    enum class Format {
+        Disk,
+        Network,
+    };
+    struct SerParams : CNetAddr::SerParams {
+        const Format fmt;
+        SER_PARAMS_OPFUNC
+    };
+    static constexpr SerParams V1_NETWORK{{CNetAddr::Encoding::V1}, Format::Network};
+    static constexpr SerParams V2_NETWORK{{CNetAddr::Encoding::V2}, Format::Network};
+    static constexpr SerParams V1_DISK{{CNetAddr::Encoding::V1}, Format::Disk};
+    static constexpr SerParams V2_DISK{{CNetAddr::Encoding::V2}, Format::Disk};
+
+    SERIALIZE_METHODS_PARAMS(CAddress, obj, SerParams, params)
     {
-        SER_READ(obj, obj.nTime = TIME_INIT);
-        int nVersion = s.GetVersion();
-        if (s.GetType() & SER_DISK) {
-            READWRITE(nVersion);
+        bool use_v2;
+        if (params.fmt == Format::Disk) {
+            // In the disk serialization format, the encoding (v1 or v2) is determined by a flag version
+            // that's part of the serialization itself. ADDRV2_FORMAT in the stream version only determines
+            // whether V2 is chosen/permitted at all.
+            uint32_t stored_format_version = DISK_VERSION_INIT;
+            if (params.enc == Encoding::V2) stored_format_version |= DISK_VERSION_ADDRV2;
+            READWRITE(stored_format_version);
+            stored_format_version &= ~DISK_VERSION_IGNORE_MASK; // ignore low bits
+            if (stored_format_version == 0) {
+                use_v2 = false;
+            } else if (stored_format_version == DISK_VERSION_ADDRV2 && params.enc == Encoding::V2) {
+                // Only support v2 deserialization if V2 is set.
+                use_v2 = true;
+            } else {
+                throw std::ios_base::failure("Unsupported CAddress disk format version");
+            }
+        } else {
+            assert(params.fmt == Format::Network);
+            // In the network serialization format, the encoding (v1 or v2) is determined directly by
+            // the value of enc in the stream params, as no explicitly encoded version
+            // exists in the stream.
+            use_v2 = params.enc == Encoding::V2;
         }
-        if ((s.GetType() & SER_DISK) ||
-            (nVersion >= CADDR_TIME_VERSION && !(s.GetType() & SER_GETHASH))) {
-            READWRITE(obj.nTime);
+
+        READWRITE(Using<LossyChronoFormatter<uint32_t>>(obj.nTime));
+        // nServices is serialized as CompactSize in V2; as uint64_t in V1.
+        if (use_v2) {
+            uint64_t services_tmp;
+            SER_WRITE(obj, services_tmp = obj.nServices);
+            READWRITE(Using<CompactSizeFormatter<false>>(services_tmp));
+            SER_READ(obj, obj.nServices = static_cast<ServiceFlags>(services_tmp));
+        } else {
+            READWRITE(Using<CustomUintFormatter<8>>(obj.nServices));
         }
-        READWRITE(Using<CustomUintFormatter<8>>(obj.nServices));
-        READWRITEAS(CService, obj);
+        // Invoke V1/V2 serializer for CService parent object.
+        const auto ser_params{use_v2 ? CNetAddr::V2 : CNetAddr::V1};
+        READWRITE(ser_params(AsBase<CService>(obj)));
     }
 
+    //! Always included in serialization. The behavior is unspecified if the value is not representable as uint32_t.
+    NodeSeconds nTime{TIME_INIT};
+    //! Serialized as uint64_t in V1, and as CompactSize in V2.
     ServiceFlags nServices{NODE_NONE};
-    // disk and network only
-    uint32_t nTime{TIME_INIT};
+
+    friend bool operator==(const CAddress& a, const CAddress& b)
+    {
+        return a.nTime == b.nTime &&
+               a.nServices == b.nServices &&
+               static_cast<const CService&>(a) == static_cast<const CService&>(b);
+    }
 };
 
 /** getdata message type flags */
@@ -391,16 +469,19 @@ const uint32_t MSG_TYPE_MASK = 0xffffffff >> 2;
  * These numbers are defined by the protocol. When adding a new value, be sure
  * to mention it in the respective BIP.
  */
-enum GetDataMsg {
+enum GetDataMsg : uint32_t {
     UNDEFINED = 0,
     MSG_TX = 1,
     MSG_BLOCK = 2,
-    // The following can only occur in getdata. Invs always use TX or BLOCK.
+    MSG_WTX = 5,                                      //!< Defined in BIP 339
+    // The following can only occur in getdata. Invs always use TX/WTX or BLOCK.
     MSG_FILTERED_BLOCK = 3,                           //!< Defined in BIP37
     MSG_CMPCT_BLOCK = 4,                              //!< Defined in BIP152
     MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG, //!< Defined in BIP144
     MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG,       //!< Defined in BIP144
-    MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
+    // MSG_FILTERED_WITNESS_BLOCK is defined in BIP144 as reserved for future
+    // use and remains unused.
+    // MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
 };
 
 /** inv message data */
@@ -408,7 +489,7 @@ class CInv
 {
 public:
     CInv();
-    CInv(int typeIn, const uint256& hashIn);
+    CInv(uint32_t typeIn, const uint256& hashIn);
 
     SERIALIZE_METHODS(CInv, obj) { READWRITE(obj.type, obj.hash); }
 
@@ -417,8 +498,29 @@ public:
     std::string GetCommand() const;
     std::string ToString() const;
 
-    int type;
+    // Single-message helper methods
+    bool IsMsgTx() const { return type == MSG_TX; }
+    bool IsMsgBlk() const { return type == MSG_BLOCK; }
+    bool IsMsgWtx() const { return type == MSG_WTX; }
+    bool IsMsgFilteredBlk() const { return type == MSG_FILTERED_BLOCK; }
+    bool IsMsgCmpctBlk() const { return type == MSG_CMPCT_BLOCK; }
+    bool IsMsgWitnessBlk() const { return type == MSG_WITNESS_BLOCK; }
+
+    // Combined-message helper methods
+    bool IsGenTxMsg() const
+    {
+        return type == MSG_TX || type == MSG_WTX || type == MSG_WITNESS_TX;
+    }
+    bool IsGenBlkMsg() const
+    {
+        return type == MSG_BLOCK || type == MSG_FILTERED_BLOCK || type == MSG_CMPCT_BLOCK || type == MSG_WITNESS_BLOCK;
+    }
+
+    uint32_t type;
     uint256 hash;
 };
+
+/** Convert a TX/WITNESS_TX/WTX CInv to a GenTxid. */
+GenTxid ToGenTxid(const CInv& inv);
 
 #endif // BITCOIN_PROTOCOL_H

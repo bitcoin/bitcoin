@@ -1,26 +1,113 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/settings.h>
+#include <common/settings.h>
 
 #include <test/util/setup_common.h>
 #include <test/util/str.h>
 
-
 #include <boost/test/unit_test.hpp>
+#include <common/args.h>
 #include <univalue.h>
+#include <util/chaintype.h>
+#include <util/fs.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+
+#include <fstream>
+#include <map>
+#include <string>
+#include <system_error>
 #include <vector>
+
+inline bool operator==(const common::SettingsValue& a, const common::SettingsValue& b)
+{
+    return a.write() == b.write();
+}
+
+inline std::ostream& operator<<(std::ostream& os, const common::SettingsValue& value)
+{
+    os << value.write();
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const std::pair<std::string, common::SettingsValue>& kv)
+{
+    common::SettingsValue out(common::SettingsValue::VOBJ);
+    out.pushKVEnd(kv.first, kv.second);
+    os << out.write();
+    return os;
+}
+
+inline void WriteText(const fs::path& path, const std::string& text)
+{
+    std::ofstream file;
+    file.open(path);
+    file << text;
+}
 
 BOOST_FIXTURE_TEST_SUITE(settings_tests, BasicTestingSetup)
 
-//! Check settings struct contents against expected json strings.
-static void CheckValues(const util::Settings& settings, const std::string& single_val, const std::string& list_val)
+BOOST_AUTO_TEST_CASE(ReadWrite)
 {
-    util::SettingsValue single_value = GetSetting(settings, "section", "name", false, false);
-    util::SettingsValue list_value(util::SettingsValue::VARR);
+    fs::path path = m_args.GetDataDirBase() / "settings.json";
+
+    WriteText(path, R"({
+        "string": "string",
+        "num": 5,
+        "bool": true,
+        "null": null
+    })");
+
+    std::map<std::string, common::SettingsValue> expected{
+        {"string", "string"},
+        {"num", 5},
+        {"bool", true},
+        {"null", {}},
+    };
+
+    // Check file read.
+    std::map<std::string, common::SettingsValue> values;
+    std::vector<std::string> errors;
+    BOOST_CHECK(common::ReadSettings(path, values, errors));
+    BOOST_CHECK_EQUAL_COLLECTIONS(values.begin(), values.end(), expected.begin(), expected.end());
+    BOOST_CHECK(errors.empty());
+
+    // Check no errors if file doesn't exist.
+    fs::remove(path);
+    BOOST_CHECK(common::ReadSettings(path, values, errors));
+    BOOST_CHECK(values.empty());
+    BOOST_CHECK(errors.empty());
+
+    // Check duplicate keys not allowed and that values returns empty if a duplicate is found.
+    WriteText(path, R"({
+        "dupe": "string",
+        "dupe": "dupe"
+    })");
+    BOOST_CHECK(!common::ReadSettings(path, values, errors));
+    std::vector<std::string> dup_keys = {strprintf("Found duplicate key dupe in settings file %s", fs::PathToString(path))};
+    BOOST_CHECK_EQUAL_COLLECTIONS(errors.begin(), errors.end(), dup_keys.begin(), dup_keys.end());
+    BOOST_CHECK(values.empty());
+
+    // Check non-kv json files not allowed
+    WriteText(path, R"("non-kv")");
+    BOOST_CHECK(!common::ReadSettings(path, values, errors));
+    std::vector<std::string> non_kv = {strprintf("Found non-object value \"non-kv\" in settings file %s", fs::PathToString(path))};
+    BOOST_CHECK_EQUAL_COLLECTIONS(errors.begin(), errors.end(), non_kv.begin(), non_kv.end());
+
+    // Check invalid json not allowed
+    WriteText(path, R"(invalid json)");
+    BOOST_CHECK(!common::ReadSettings(path, values, errors));
+    std::vector<std::string> fail_parse = {strprintf("Unable to parse settings file %s", fs::PathToString(path))};
+    BOOST_CHECK_EQUAL_COLLECTIONS(errors.begin(), errors.end(), fail_parse.begin(), fail_parse.end());
+}
+
+//! Check settings struct contents against expected json strings.
+static void CheckValues(const common::Settings& settings, const std::string& single_val, const std::string& list_val)
+{
+    common::SettingsValue single_value = GetSetting(settings, "section", "name", false, false, false);
+    common::SettingsValue list_value(common::SettingsValue::VARR);
     for (const auto& item : GetSettingsList(settings, "section", "name", false)) {
         list_value.push_back(item);
     }
@@ -31,17 +118,17 @@ static void CheckValues(const util::Settings& settings, const std::string& singl
 // Simple settings merge test case.
 BOOST_AUTO_TEST_CASE(Simple)
 {
-    util::Settings settings;
-    settings.command_line_options["name"].push_back("val1");
-    settings.command_line_options["name"].push_back("val2");
-    settings.ro_config["section"]["name"].push_back(2);
+    common::Settings settings;
+    settings.command_line_options["name"].emplace_back("val1");
+    settings.command_line_options["name"].emplace_back("val2");
+    settings.ro_config["section"]["name"].emplace_back(2);
 
     // The last given arg takes precedence when specified via commandline.
     CheckValues(settings, R"("val2")", R"(["val1","val2",2])");
 
-    util::Settings settings2;
-    settings2.ro_config["section"]["name"].push_back("val2");
-    settings2.ro_config["section"]["name"].push_back("val3");
+    common::Settings settings2;
+    settings2.ro_config["section"]["name"].emplace_back("val2");
+    settings2.ro_config["section"]["name"].emplace_back("val3");
 
     // The first given arg takes precedence when specified via config file.
     CheckValues(settings2, R"("val2")", R"(["val2","val3"])");
@@ -53,11 +140,11 @@ BOOST_AUTO_TEST_CASE(Simple)
 // its default value.
 BOOST_AUTO_TEST_CASE(NullOverride)
 {
-    util::Settings settings;
-    settings.command_line_options["name"].push_back("value");
-    BOOST_CHECK_EQUAL(R"("value")", GetSetting(settings, "section", "name", false, false).write().c_str());
+    common::Settings settings;
+    settings.command_line_options["name"].emplace_back("value");
+    BOOST_CHECK_EQUAL(R"("value")", GetSetting(settings, "section", "name", false, false, false).write().c_str());
     settings.forced_settings["name"] = {};
-    BOOST_CHECK_EQUAL(R"(null)", GetSetting(settings, "section", "name", false, false).write().c_str());
+    BOOST_CHECK_EQUAL(R"(null)", GetSetting(settings, "section", "name", false, false, false).write().c_str());
 }
 
 // Test different ways settings can be merged, and verify results. This test can
@@ -103,23 +190,23 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
         if (!out_file) throw std::system_error(errno, std::generic_category(), "fopen failed");
     }
 
-    const std::string& network = CBaseChainParams::MAIN;
+    const std::string& network = ChainTypeToString(ChainType::MAIN);
     ForEachMergeSetup([&](const ActionList& arg_actions, const ActionList& conf_actions, bool force_set,
                           bool ignore_default_section_config) {
         std::string desc;
         int value_suffix = 0;
-        util::Settings settings;
+        common::Settings settings;
 
         const std::string& name = ignore_default_section_config ? "wallet" : "server";
         auto push_values = [&](Action action, const char* value_prefix, const std::string& name_prefix,
-                               std::vector<util::SettingsValue>& dest) {
+                               std::vector<common::SettingsValue>& dest) {
             if (action == SET || action == SECTION_SET) {
                 for (int i = 0; i < 2; ++i) {
-                    dest.push_back(value_prefix + ToString(++value_suffix));
+                    dest.emplace_back(value_prefix + ToString(++value_suffix));
                     desc += " " + name_prefix + name + "=" + dest.back().get_str();
                 }
             } else if (action == NEGATE || action == SECTION_NEGATE) {
-                dest.push_back(false);
+                dest.emplace_back(false);
                 desc += " " + name_prefix + "no" + name;
             }
         };
@@ -138,7 +225,7 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
         }
 
         desc += " || ";
-        desc += GetSetting(settings, network, name, ignore_default_section_config, /* get_chain_name= */ false).write();
+        desc += GetSetting(settings, network, name, ignore_default_section_config, /*ignore_nonpersistent=*/false, /*get_chain_type=*/false).write();
         desc += " |";
         for (const auto& s : GetSettingsList(settings, network, name, ignore_default_section_config)) {
             desc += " ";
@@ -148,7 +235,7 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
         if (OnlyHasDefaultSectionSetting(settings, network, name)) desc += " ignored";
         desc += "\n";
 
-        out_sha.Write((const unsigned char*)desc.data(), desc.size());
+        out_sha.Write(MakeUCharSpan(desc));
         if (out_file) {
             BOOST_REQUIRE(fwrite(desc.data(), 1, desc.size(), out_file) == desc.size());
         }
@@ -161,7 +248,7 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
 
     unsigned char out_sha_bytes[CSHA256::OUTPUT_SIZE];
     out_sha.Finalize(out_sha_bytes);
-    std::string out_sha_hex = HexStr(std::begin(out_sha_bytes), std::end(out_sha_bytes));
+    std::string out_sha_hex = HexStr(out_sha_bytes);
 
     // If check below fails, should manually dump the results with:
     //

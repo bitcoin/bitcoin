@@ -1,0 +1,289 @@
+# Copyright (c) 2023 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+name: CI
+on:
+  # See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request.
+  pull_request:
+  # See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push.
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+concurrency:
+  group: ${{ github.event_name != 'pull_request' && github.run_id || github.ref }}
+  cancel-in-progress: true
+
+env:
+  DANGER_RUN_CI_ON_HOST: 1
+  CI_FAILFAST_TEST_LEAVE_DANGLING: 1  # GHA does not care about dangling processes and setting this variable avoids killing the CI script itself on error
+  MAKEJOBS: '-j10'
+
+jobs:
+  test-each-commit:
+    name: 'test each commit'
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'pull_request' && github.event.pull_request.commits != 1
+    timeout-minutes: 360  # Use maximum time, see https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes. Assuming a worst case time of 1 hour per commit, this leads to a --max-count=6 below.
+    env:
+      MAX_COUNT: 6
+    steps:
+      - name: Determine fetch depth
+        run: echo "FETCH_DEPTH=$((${{ github.event.pull_request.commits }} + 2))" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: ${{ env.FETCH_DEPTH }}
+      - name: Determine commit range
+        run: |
+          # Checkout HEAD~ and find the test base commit
+          # Checkout HEAD~ because it would be wasteful to rerun tests on the PR
+          # head commit that are already run by other jobs.
+          git checkout HEAD~
+          # Figure out test base commit by listing ancestors of HEAD, excluding
+          # ancestors of the most recent merge commit, limiting the list to the
+          # newest MAX_COUNT ancestors, ordering it from oldest to newest, and
+          # taking the first one.
+          #
+          # If the branch contains up to MAX_COUNT ancestor commits after the
+          # most recent merge commit, all of those commits will be tested. If it
+          # contains more, only the most recent MAX_COUNT commits will be
+          # tested.
+          #
+          # In the command below, the ^@ suffix is used to refer to all parents
+          # of the merge commit as described in:
+          # https://git-scm.com/docs/git-rev-parse#_other_rev_parent_shorthand_notations
+          # and the ^ prefix is used to exclude these parents and all their
+          # ancestors from the rev-list output as described in:
+          # https://git-scm.com/docs/git-rev-list
+          echo "TEST_BASE=$(git rev-list -n$((${{ env.MAX_COUNT }} + 1)) --reverse HEAD ^$(git rev-list -n1 --merges HEAD)^@ | head -1)" >> "$GITHUB_ENV"
+      - run: |
+          sudo apt-get update
+          sudo apt-get install clang-15 ccache build-essential libtool autotools-dev automake pkg-config bsdmainutils python3-zmq libevent-dev libboost-dev libsqlite3-dev libdb++-dev systemtap-sdt-dev libminiupnpc-dev libnatpmp-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools qtwayland5 libqrencode-dev -y
+      - name: Compile and run tests
+        run: |
+          # Run tests on commits after the last merge commit and before the PR head commit
+          # Use clang++, because it is a bit faster and uses less memory than g++
+          git rebase --exec "echo Running test-one-commit on \$( git log -1 ) && ./autogen.sh && CC=clang-15 CXX=clang++-15 ./configure && make clean && make -j $(nproc) check && ./test/functional/test_runner.py -j $(( $(nproc) * 2 ))" ${{ env.TEST_BASE }}
+
+  macos-native-x86_64:
+    name: 'macOS 13 native, x86_64, no depends, sqlite only, gui'
+    # Use latest image, but hardcode version to avoid silent upgrades (and breaks).
+    # See: https://github.com/actions/runner-images#available-images.
+    runs-on: macos-13
+
+    # No need to run on the read-only mirror, unless it is a PR.
+    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+
+    timeout-minutes: 120
+
+    env:
+      FILE_ENV: './ci/test/00_setup_env_mac_native.sh'
+      BASE_ROOT_DIR: ${{ github.workspace }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clang version
+        run: clang --version
+
+      - name: Install Homebrew packages
+        env:
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+        run: brew install automake libtool pkg-config gnu-getopt ccache boost libevent miniupnpc libnatpmp zeromq qt@5 qrencode
+
+      - name: Set Ccache directory
+        run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
+
+      - name: Restore Ccache cache
+        id: ccache-cache
+        uses: actions/cache/restore@v3
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ github.job }}-ccache-
+
+      - name: CI script
+        run: ./ci/test_run_all.sh
+
+      - name: Save Ccache cache
+        uses: actions/cache/save@v3
+        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+          key: ${{ github.job }}-ccache-${{ github.run_id }}
+
+  win64-native:
+    name: 'Win64 native, VS 2022'
+    # Use latest image, but hardcode version to avoid silent upgrades (and breaks).
+    # See: https://github.com/actions/runner-images#available-images.
+    runs-on: windows-2022
+
+    # No need to run on the read-only mirror, unless it is a PR.
+    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+
+    env:
+      CCACHE_MAXSIZE: '200M'
+      CI_CCACHE_VERSION: '4.7.5'
+      CI_QT_CONF: '-release -silent -opensource -confirm-license -opengl desktop -static -static-runtime -mp -qt-zlib -qt-pcre -qt-libpng -nomake examples -nomake tests -nomake tools -no-angle -no-dbus -no-gif -no-gtk -no-ico -no-icu -no-libjpeg -no-libudev -no-sql-sqlite -no-sql-odbc -no-sqlite -no-vulkan -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdeclarative -skip doc -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtimageformats -skip qtlocation -skip qtlottie -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquick3d -skip qtquickcontrols -skip qtquickcontrols2 -skip qtquicktimeline -skip qtremoteobjects -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtsvg -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebglplugin -skip qtwebsockets -skip qtwebview -skip qtx11extras -skip qtxmlpatterns -no-openssl -no-feature-bearermanagement -no-feature-printdialog -no-feature-printer -no-feature-printpreviewdialog -no-feature-printpreviewwidget -no-feature-sql -no-feature-sqlmodel -no-feature-textbrowser -no-feature-textmarkdownwriter -no-feature-textodfwriter -no-feature-xml'
+      CI_QT_DIR: 'qt-everywhere-src-5.15.11'
+      CI_QT_URL: 'https://download.qt.io/official_releases/qt/5.15/5.15.11/single/qt-everywhere-opensource-src-5.15.11.zip'
+      PYTHONUTF8: 1
+      TEST_RUNNER_TIMEOUT_FACTOR: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Developer Command Prompt for Microsoft Visual C++
+        # Using microsoft/setup-msbuild is not enough.
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Check MSBuild and Qt
+        run: |
+          msbuild -version | Out-File -FilePath "$env:GITHUB_WORKSPACE\msbuild_version"
+          Get-Content -Path "$env:GITHUB_WORKSPACE\msbuild_version"
+          $env:VCToolsVersion | Out-File -FilePath "$env:GITHUB_WORKSPACE\toolset_version"
+          Get-Content -Path "$env:GITHUB_WORKSPACE\toolset_version"
+          $env:CI_QT_URL | Out-File -FilePath "$env:GITHUB_WORKSPACE\qt_url"
+          $env:CI_QT_CONF | Out-File -FilePath "$env:GITHUB_WORKSPACE\qt_conf"
+
+      - name: Restore static Qt cache
+        id: static-qt-cache
+        uses: actions/cache/restore@v3
+        with:
+          path: C:\Qt_static
+          key: ${{ github.job }}-static-qt-${{ hashFiles('msbuild_version', 'qt_url', 'qt_conf') }}
+
+      - name: Build static Qt. Download
+        if: steps.static-qt-cache.outputs.cache-hit != 'true'
+        shell: cmd
+        run: |
+          curl --location --output C:\qt-src.zip %CI_QT_URL%
+          choco install --yes --no-progress jom
+
+      - name: Build static Qt. Expand source archive
+        if: steps.static-qt-cache.outputs.cache-hit != 'true'
+        shell: cmd
+        run: tar -xf C:\qt-src.zip -C C:\
+
+      - name: Build static Qt. Create build directory
+        if: steps.static-qt-cache.outputs.cache-hit != 'true'
+        run: |
+          Rename-Item -Path "C:\$env:CI_QT_DIR" -NewName "C:\qt-src"
+          New-Item -ItemType Directory -Path "C:\qt-src\build"
+
+      - name: Build static Qt. Configure
+        if: steps.static-qt-cache.outputs.cache-hit != 'true'
+        working-directory: C:\qt-src\build
+        shell: cmd
+        run: ..\configure %CI_QT_CONF% -prefix C:\Qt_static
+
+      - name: Build static Qt. Build
+        if: steps.static-qt-cache.outputs.cache-hit != 'true'
+        working-directory: C:\qt-src\build
+        shell: cmd
+        run: jom
+
+      - name: Build static Qt. Install
+        if: steps.static-qt-cache.outputs.cache-hit != 'true'
+        working-directory: C:\qt-src\build
+        shell: cmd
+        run: jom install
+
+      - name: Save static Qt cache
+        if: steps.static-qt-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        with:
+          path: C:\Qt_static
+          key: ${{ github.job }}-static-qt-${{ hashFiles('msbuild_version', 'qt_url', 'qt_conf') }}
+
+      - name: Ccache installation cache
+        id: ccache-installation-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            C:\ProgramData\chocolatey\lib\ccache
+            C:\ProgramData\chocolatey\bin\ccache.exe
+            C:\ccache\cl.exe
+          key: ${{ github.job }}-ccache-installation-${{ env.CI_CCACHE_VERSION }}
+
+      - name: Install Ccache
+        if: steps.ccache-installation-cache.outputs.cache-hit != 'true'
+        run: |
+          choco install --yes --no-progress ccache --version=$env:CI_CCACHE_VERSION
+          New-Item -ItemType Directory -Path "C:\ccache"
+          Copy-Item -Path "$env:ChocolateyInstall\lib\ccache\tools\ccache-$env:CI_CCACHE_VERSION-windows-x86_64\ccache.exe" -Destination "C:\ccache\cl.exe"
+
+      - name: Restore Ccache cache
+        id: ccache-cache
+        uses: actions/cache/restore@v3
+        with:
+          path: ~/AppData/Local/ccache
+          key: ${{ github.job }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ github.job }}-ccache-
+
+      - name: Using vcpkg with MSBuild
+        run: |
+          Set-Location "$env:VCPKG_INSTALLATION_ROOT"
+          Add-Content -Path "triplets\x64-windows-static.cmake" -Value "set(VCPKG_BUILD_TYPE release)"
+          Add-Content -Path "triplets\x64-windows-static.cmake" -Value "set(VCPKG_PLATFORM_TOOLSET_VERSION $env:VCToolsVersion)"
+          .\vcpkg.exe --vcpkg-root "$env:VCPKG_INSTALLATION_ROOT" integrate install
+          git rev-parse HEAD | Out-File -FilePath "$env:GITHUB_WORKSPACE\vcpkg_commit"
+          Get-Content -Path "$env:GITHUB_WORKSPACE\vcpkg_commit"
+
+      - name: vcpkg tools cache
+        uses: actions/cache@v3
+        with:
+          path: C:/vcpkg/downloads/tools
+          key: ${{ github.job }}-vcpkg-tools
+
+      - name: vcpkg binary cache
+        uses: actions/cache@v3
+        with:
+          path: ~/AppData/Local/vcpkg/archives
+          key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('vcpkg_commit', 'msbuild_version', 'toolset_version', 'build_msvc/vcpkg.json') }}
+
+      - name: Generate project files
+        run: py -3 build_msvc\msvc-autogen.py
+
+      - name: Build
+        shell: cmd
+        run: |
+          ccache --zero-stats
+          msbuild build_msvc\bitcoin.sln -property:CLToolPath=C:\ccache;CLToolExe=cl.exe;UseMultiToolTask=true;Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
+
+      - name: Ccache stats
+        run: ccache --show-stats
+
+      - name: Save Ccache cache
+        uses: actions/cache/save@v3
+        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
+        with:
+          path: ~/AppData/Local/ccache
+          # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+          key: ${{ github.job }}-ccache-${{ github.run_id }}
+
+      - name: Run unit tests
+        run: src\test_bitcoin.exe -l test_suite
+
+      - name: Run benchmarks
+        run: src\bench_bitcoin.exe -sanity-check
+
+      - name: Run util tests
+        run: py -3 test\util\test_runner.py
+
+      - name: Run rpcauth test
+        run: py -3 test\util\rpcauth-test.py
+
+      - name: Run functional tests
+        env:
+          TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
+        run: py -3 test\functional\test_runner.py --jobs $env:NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix=$env:RUNNER_TEMP --combinedlogslen=99999999 --timeout-factor=$env:TEST_RUNNER_TIMEOUT_FACTOR $env:TEST_RUNNER_EXTRA

@@ -2,7 +2,7 @@
 #
 # linearize-data.py: Construct a linear, no-fork version of the chain.
 #
-# Copyright (c) 2013-2020 The Bitcoin Core developers
+# Copyright (c) 2013-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -17,53 +17,12 @@ import datetime
 import time
 import glob
 from collections import namedtuple
-from binascii import unhexlify
 
 settings = {}
 
-def hex_switchEndian(s):
-    """ Switches the endianness of a hex string (in pairs of hex chars) """
-    pairList = [s[i:i+2].encode() for i in range(0, len(s), 2)]
-    return b''.join(pairList[::-1]).decode()
-
-def uint32(x):
-    return x & 0xffffffff
-
-def bytereverse(x):
-    return uint32(( ((x) << 24) | (((x) << 8) & 0x00ff0000) |
-               (((x) >> 8) & 0x0000ff00) | ((x) >> 24) ))
-
-def bufreverse(in_buf):
-    out_words = []
-    for i in range(0, len(in_buf), 4):
-        word = struct.unpack('@I', in_buf[i:i+4])[0]
-        out_words.append(struct.pack('@I', bytereverse(word)))
-    return b''.join(out_words)
-
-def wordreverse(in_buf):
-    out_words = []
-    for i in range(0, len(in_buf), 4):
-        out_words.append(in_buf[i:i+4])
-    out_words.reverse()
-    return b''.join(out_words)
-
-def calc_hdr_hash(blk_hdr):
-    hash1 = hashlib.sha256()
-    hash1.update(blk_hdr)
-    hash1_o = hash1.digest()
-
-    hash2 = hashlib.sha256()
-    hash2.update(hash1_o)
-    hash2_o = hash2.digest()
-
-    return hash2_o
-
 def calc_hash_str(blk_hdr):
-    hash = calc_hdr_hash(blk_hdr)
-    hash = bufreverse(hash)
-    hash = wordreverse(hash)
-    hash_str = hash.hex()
-    return hash_str
+    blk_hdr_hash = hashlib.sha256(hashlib.sha256(blk_hdr).digest()).digest()
+    return blk_hdr_hash[::-1].hex()
 
 def get_blk_dt(blk_hdr):
     members = struct.unpack("<I", blk_hdr[68:68+4])
@@ -75,12 +34,12 @@ def get_blk_dt(blk_hdr):
 # When getting the list of block hashes, undo any byte reversals.
 def get_block_hashes(settings):
     blkindex = []
-    f = open(settings['hashlist'], "r", encoding="utf8")
-    for line in f:
-        line = line.rstrip()
-        if settings['rev_hash_bytes'] == 'true':
-            line = hex_switchEndian(line)
-        blkindex.append(line)
+    with open(settings['hashlist'], "r", encoding="utf8") as f:
+        for line in f:
+            line = line.rstrip()
+            if settings['rev_hash_bytes'] == 'true':
+                line = bytes.fromhex(line)[::-1].hex()
+            blkindex.append(line)
 
     print("Read " + str(len(blkindex)) + " hashes")
 
@@ -290,19 +249,18 @@ if __name__ == '__main__':
         print("Usage: linearize-data.py CONFIG-FILE")
         sys.exit(1)
 
-    f = open(sys.argv[1], encoding="utf8")
-    for line in f:
-        # skip comment lines
-        m = re.search(r'^\s*#', line)
-        if m:
-            continue
+    with open(sys.argv[1], encoding="utf8") as f:
+        for line in f:
+            # skip comment lines
+            m = re.search(r'^\s*#', line)
+            if m:
+                continue
 
-        # parse key=value lines
-        m = re.search(r'^(\w+)\s*=\s*(\S.*)$', line)
-        if m is None:
-            continue
-        settings[m.group(1)] = m.group(2)
-    f.close()
+            # parse key=value lines
+            m = re.search(r'^(\w+)\s*=\s*(\S.*)$', line)
+            if m is None:
+                continue
+            settings[m.group(1)] = m.group(2)
 
     # Force hash byte format setting to be lowercase to make comparisons easier.
     # Also place upfront in case any settings need to know about it.
@@ -332,7 +290,7 @@ if __name__ == '__main__':
     settings['max_out_sz'] = int(settings['max_out_sz'])
     settings['split_timestamp'] = int(settings['split_timestamp'])
     settings['file_timestamp'] = int(settings['file_timestamp'])
-    settings['netmagic'] = unhexlify(settings['netmagic'].encode('utf-8'))
+    settings['netmagic'] = bytes.fromhex(settings['netmagic'])
     settings['out_of_order_cache_sz'] = int(settings['out_of_order_cache_sz'])
     settings['debug_output'] = settings['debug_output'].lower()
 

@@ -8,6 +8,9 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\wallet\bdb.cpp" />
+    <ClCompile Include="..\..\src\wallet\salvage.cpp" />
+    <ClCompile Include="..\..\src\wallet\sqlite.cpp" />
 @SOURCE_FILES@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />

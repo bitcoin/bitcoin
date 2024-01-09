@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,8 +7,10 @@
 
 #include <blockfilter.h>
 #include <core_io.h>
+#include <primitives/block.h>
 #include <serialize.h>
 #include <streams.h>
+#include <undo.h>
 #include <univalue.h>
 #include <util/strencodings.h>
 
@@ -110,7 +112,7 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     // Test serialization/unserialization.
     BlockFilter block_filter2;
 
-    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    DataStream stream{};
     stream << block_filter;
     stream >> block_filter2;
 
@@ -128,16 +130,14 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
 BOOST_AUTO_TEST_CASE(blockfilters_json_test)
 {
     UniValue json;
-    std::string json_data(json_tests::blockfilters,
-                          json_tests::blockfilters + sizeof(json_tests::blockfilters));
-    if (!json.read(json_data) || !json.isArray()) {
+    if (!json.read(json_tests::blockfilters) || !json.isArray()) {
         BOOST_ERROR("Parse error.");
         return;
     }
 
     const UniValue& tests = json.get_array();
     for (unsigned int i = 0; i < tests.size(); i++) {
-        UniValue test = tests[i];
+        const UniValue& test = tests[i];
         std::string strTest = test.write();
 
         if (test.size() == 1) {
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(blockfilters_json_test)
         }
 
         unsigned int pos = 0;
-        /*int block_height =*/ test[pos++].get_int();
+        /*int block_height =*/ test[pos++].getInt<int>();
         uint256 block_hash;
         BOOST_CHECK(ParseHashStr(test[pos++].get_str(), block_hash));
 

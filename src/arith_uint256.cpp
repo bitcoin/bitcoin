@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,14 +8,7 @@
 #include <uint256.h>
 #include <crypto/common.h>
 
-
-template <unsigned int BITS>
-base_uint<BITS>::base_uint(const std::string& str)
-{
-    static_assert(BITS/32 > 0 && BITS%32 == 0, "Template parameter BITS must be a positive multiple of 32.");
-
-    SetHex(str);
-}
+#include <cassert>
 
 template <unsigned int BITS>
 base_uint<BITS>& base_uint<BITS>::operator<<=(unsigned int shift)
@@ -96,7 +89,7 @@ base_uint<BITS>& base_uint<BITS>::operator/=(const base_uint& b)
     while (shift >= 0) {
         if (num >= div) {
             num -= div;
-            pn[shift / 32] |= (1 << (shift & 31)); // set a bit of the result.
+            pn[shift / 32] |= (1U << (shift & 31)); // set a bit of the result.
         }
         div >>= 1; // shift back.
         shift--;
@@ -146,25 +139,17 @@ double base_uint<BITS>::getdouble() const
 template <unsigned int BITS>
 std::string base_uint<BITS>::GetHex() const
 {
-    return ArithToUint256(*this).GetHex();
-}
-
-template <unsigned int BITS>
-void base_uint<BITS>::SetHex(const char* psz)
-{
-    *this = UintToArith256(uint256S(psz));
-}
-
-template <unsigned int BITS>
-void base_uint<BITS>::SetHex(const std::string& str)
-{
-    SetHex(str.c_str());
+    base_blob<BITS> b;
+    for (int x = 0; x < this->WIDTH; ++x) {
+        WriteLE32(b.begin() + x*4, this->pn[x]);
+    }
+    return b.GetHex();
 }
 
 template <unsigned int BITS>
 std::string base_uint<BITS>::ToString() const
 {
-    return (GetHex());
+    return GetHex();
 }
 
 template <unsigned int BITS>
@@ -183,20 +168,7 @@ unsigned int base_uint<BITS>::bits() const
 }
 
 // Explicit instantiations for base_uint<256>
-template base_uint<256>::base_uint(const std::string&);
-template base_uint<256>& base_uint<256>::operator<<=(unsigned int);
-template base_uint<256>& base_uint<256>::operator>>=(unsigned int);
-template base_uint<256>& base_uint<256>::operator*=(uint32_t b32);
-template base_uint<256>& base_uint<256>::operator*=(const base_uint<256>& b);
-template base_uint<256>& base_uint<256>::operator/=(const base_uint<256>& b);
-template int base_uint<256>::CompareTo(const base_uint<256>&) const;
-template bool base_uint<256>::EqualTo(uint64_t) const;
-template double base_uint<256>::getdouble() const;
-template std::string base_uint<256>::GetHex() const;
-template std::string base_uint<256>::ToString() const;
-template void base_uint<256>::SetHex(const char*);
-template void base_uint<256>::SetHex(const std::string&);
-template unsigned int base_uint<256>::bits() const;
+template class base_uint<256>;
 
 // This implementation directly uses shifts instead of going
 // through an intermediate MPI representation.
@@ -236,7 +208,7 @@ uint32_t arith_uint256::GetCompact(bool fNegative) const
         nCompact >>= 8;
         nSize++;
     }
-    assert((nCompact & ~0x007fffff) == 0);
+    assert((nCompact & ~0x007fffffU) == 0);
     assert(nSize < 256);
     nCompact |= nSize << 24;
     nCompact |= (fNegative && (nCompact & 0x007fffff) ? 0x00800000 : 0);

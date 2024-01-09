@@ -8,8 +8,10 @@ thread queue, wallet balance.
 Running
 ---------------------
 
-For benchmarks purposes you only need to compile `bitcoin_bench`. Beware of configuring without `--enable-debug` as this would impact
-benchmarking by unlatching log printers and lock analysis.
+For benchmarking, you only need to compile `bitcoin_bench`.  The bench runner
+warns if you configure with `--enable-debug`, but consider if building without
+it will impact the benchmark(s) you are interested in by unlatching log printers
+and lock analysis.
 
     make -C src bitcoin_bench
 
@@ -19,17 +21,28 @@ After compiling bitcoin-core, the benchmarks can be run with:
 
 The output will look similar to:
 ```
-# Benchmark, evals, iterations, total, min, max, median
-AssembleBlock, 5, 700, 1.79954, 0.000510913, 0.000517018, 0.000514497
+|               ns/op |                op/s |    err% |     total | benchmark
+|--------------------:|--------------------:|--------:|----------:|:----------
+|       57,927,463.00 |               17.26 |    3.6% |      0.66 | `AddrManAdd`
+|          677,816.00 |            1,475.33 |    4.9% |      0.01 | `AddrManGetAddr`
+
+...
+
+|             ns/byte |              byte/s |    err% |     total | benchmark
+|--------------------:|--------------------:|--------:|----------:|:----------
+|              127.32 |        7,854,302.69 |    0.3% |      0.00 | `Base58CheckEncode`
+|               31.95 |       31,303,226.99 |    0.2% |      0.00 | `Base58Decode`
+
 ...
 ```
 
 Help
 ---------------------
 
-    src/bench/bench_bitcoin --help
+    src/bench/bench_bitcoin -?
 
-To print options like scaling factor or per-benchmark filter.
+To print the various options, like listing the benchmarks without running them
+or using a regex filter to only run certain benchmarks.
 
 Notes
 ---------------------

@@ -1,0 +1,17 @@
+Facilitate guix building with CROSS_LIBRARY_PATH
+
+See discussion in https://github.com/bitcoin/bitcoin/pull/15277.
+
+--- a/qtbase/mkspecs/features/toolchain.prf
++++ b/qtbase/mkspecs/features/toolchain.prf
+@@ -236,8 +236,8 @@ isEmpty($${target_prefix}.INCDIRS) {
+             add_libraries = false
+             for (line, output) {
+                 line ~= s/^[ \\t]*//  # remove leading spaces
+-                contains(line, "LIBRARY_PATH=.*") {
+-                    line ~= s/^LIBRARY_PATH=//  # remove leading LIBRARY_PATH=
++                contains(line, "(CROSS_)?LIBRARY_PATH=.*") {
++                    line ~= s/^(CROSS_)?LIBRARY_PATH=//  # remove leading (CROSS_)?LIBRARY_PATH=
+                     equals(QMAKE_HOST.os, Windows): \
+                         paths = $$split(line, ;)
+                     else: \

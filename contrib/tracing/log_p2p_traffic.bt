@@ -1,0 +1,28 @@
+#!/usr/bin/env bpftrace
+
+BEGIN
+{
+  printf("Logging P2P traffic\n")
+}
+
+usdt:./src/bitcoind:net:inbound_message
+{
+  $peer_id = (int64) arg0;
+  $peer_addr = str(arg1);
+  $peer_type = str(arg2);
+  $msg_type = str(arg3);
+  $msg_len = arg4;
+  printf("inbound '%s' msg from peer %d (%s, %s) with %d bytes\n", $msg_type, $peer_id, $peer_type, $peer_addr, $msg_len);
+}
+
+usdt:./src/bitcoind:net:outbound_message
+{
+  $peer_id = (int64) arg0;
+  $peer_addr = str(arg1);
+  $peer_type = str(arg2);
+  $msg_type = str(arg3);
+  $msg_len = arg4;
+
+  printf("outbound '%s' msg to peer %d (%s, %s) with %d bytes\n", $msg_type, $peer_id, $peer_type, $peer_addr, $msg_len);
+}
+

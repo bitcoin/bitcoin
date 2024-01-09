@@ -27,6 +27,10 @@ Note that the above isn't a good UI/UX yet, and needs significant improvements
 to make it more convenient and reduce the chance of errors; pull-reqs
 improving this process would be much appreciated.
 
+Unless `--clean-merge 0` is specified, `verify-commits.py` will attempt to verify that
+each merge commit applies cleanly (with some exceptions). This requires using at least
+git v2.38.0.
+
 Configuration files
 -------------------
 
@@ -40,7 +44,7 @@ Import trusted keys
 In order to check the commit signatures, you must add the trusted PGP keys to your machine. [GnuPG](https://gnupg.org/) may be used to import the trusted keys by running the following command:
 
 ```sh
-gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys $(<contrib/verify-commits/trusted-keys)
+gpg --keyserver hkps://keys.openpgp.org --recv-keys $(<contrib/verify-commits/trusted-keys)
 ```
 
 Key expiry/revocation

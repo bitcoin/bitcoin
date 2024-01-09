@@ -8,9 +8,10 @@ src/bitcoin-cli
 src/bitcoin-gui
 src/bitcoin-node
 src/bitcoin-tx
+src/bitcoin-util
+src/bitcoin-chainstate
 src/bitcoin-wallet
-src/test/fuzz
-!src/test/fuzz/*.*
+src/test/fuzz/fuzz
 src/test/test_bitcoin
 src/qt/test/test_bitcoin-qt
 
@@ -43,8 +44,6 @@ src/obj
 share/setup.nsi
 share/qt/Info.plist
 
-src/univalue/gen
-
 src/qt/*.moc
 src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
@@ -61,7 +60,7 @@ src/qt/bitcoin-qt.includes
 .dirstamp
 .libs
 .*.swp
-*.*~*
+*~
 *.bak
 *.rej
 *.orig
@@ -75,13 +74,14 @@ src/qt/bitcoin-qt.includes
 
 *.log
 *.trs
-*.dmg
+*.zip
 
 *.json.h
 *.raw.h
 
 # Only ignore unexpected patches
 *.patch
+!contrib/guix/patches/*.patch
 !depends/patches/**/*.patch
 
 #libtool object files
@@ -94,7 +94,6 @@ Makefile
 !depends/Makefile
 src/qt/bitcoin-qt
 Bitcoin-Qt.app
-background.tiff*
 
 # Qt Creator
 Makefile.am.user
@@ -119,7 +118,10 @@ releases
 /*.info
 test_bitcoin.coverage/
 total.coverage/
+fuzz.coverage/
 coverage_percent.txt
+/cov_tool_wrapper.sh
+qa-assets/
 
 #build tests
 linux-coverage-build
@@ -127,6 +129,7 @@ linux-build
 win32-build
 test/config.ini
 test/cache/*
+test/.mypy_cache/
 
 !src/leveldb*/Makefile
 
@@ -143,4 +146,7 @@ db4/
 
 osx_volname
 dist/
-*.background.tiff
+
+/guix-build-*
+
+/ci/scratch/

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid transactions.
@@ -13,11 +13,10 @@ from test_framework.messages import (
     CTxIn,
     CTxOut,
 )
-from test_framework.mininode import P2PDataStore
+from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    wait_until,
 )
 from data import invalid_txs
 
@@ -61,11 +60,10 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         block.solve()
         # Save the coinbase for later
         block1 = block
-        tip = block.sha256
-        node.p2p.send_blocks_and_test([block], node, success=True)
+        node.p2ps[0].send_blocks_and_test([block], node, success=True)
 
         self.log.info("Mature the block.")
-        self.nodes[0].generatetoaddress(100, self.nodes[0].get_deterministic_priv_key().address)
+        self.generatetoaddress(self.nodes[0], 100, self.nodes[0].get_deterministic_priv_key().address)
 
         # Iterate through a list of known invalid transaction types, ensuring each is
         # rejected. Some are consensus invalid and some just violate policy.
@@ -73,7 +71,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
             self.log.info("Testing invalid transaction: %s", BadTxTemplate.__name__)
             template = BadTxTemplate(spend_block=block1)
             tx = template.get_tx()
-            node.p2p.send_txs_and_test(
+            node.p2ps[0].send_txs_and_test(
                 [tx], node, success=False,
                 expect_disconnect=template.expect_disconnect,
                 reject_reason=template.reject_reason,
@@ -94,24 +92,24 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         SCRIPT_PUB_KEY_OP_TRUE = b'\x51\x75' * 15 + b'\x51'
         tx_withhold = CTransaction()
         tx_withhold.vin.append(CTxIn(outpoint=COutPoint(block1.vtx[0].sha256, 0)))
-        tx_withhold.vout.append(CTxOut(nValue=50 * COIN - 12000, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
+        tx_withhold.vout = [CTxOut(nValue=25 * COIN - 12000, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE)] * 2
         tx_withhold.calc_sha256()
 
         # Our first orphan tx with some outputs to create further orphan txs
         tx_orphan_1 = CTransaction()
         tx_orphan_1.vin.append(CTxIn(outpoint=COutPoint(tx_withhold.sha256, 0)))
-        tx_orphan_1.vout = [CTxOut(nValue=10 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE)] * 3
+        tx_orphan_1.vout = [CTxOut(nValue=8 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE)] * 3
         tx_orphan_1.calc_sha256()
 
         # A valid transaction with low fee
         tx_orphan_2_no_fee = CTransaction()
         tx_orphan_2_no_fee.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_1.sha256, 0)))
-        tx_orphan_2_no_fee.vout.append(CTxOut(nValue=10 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
+        tx_orphan_2_no_fee.vout.append(CTxOut(nValue=8 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
 
         # A valid transaction with sufficient fee
         tx_orphan_2_valid = CTransaction()
         tx_orphan_2_valid.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_1.sha256, 1)))
-        tx_orphan_2_valid.vout.append(CTxOut(nValue=10 * COIN - 12000, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
+        tx_orphan_2_valid.vout.append(CTxOut(nValue=8 * COIN - 12000, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
         tx_orphan_2_valid.calc_sha256()
 
         # An invalid transaction with negative fee
@@ -122,7 +120,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         self.log.info('Send the orphans ... ')
         # Send valid orphan txs from p2ps[0]
-        node.p2p.send_txs_and_test([tx_orphan_1, tx_orphan_2_no_fee, tx_orphan_2_valid], node, success=False)
+        node.p2ps[0].send_txs_and_test([tx_orphan_1, tx_orphan_2_no_fee, tx_orphan_2_valid], node, success=False)
         # Send invalid tx from p2ps[1]
         node.p2ps[1].send_txs_and_test([tx_orphan_2_invalid], node, success=False)
 
@@ -131,7 +129,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         self.log.info('Send the withhold tx ... ')
         with node.assert_debug_log(expected_msgs=["bad-txns-in-belowout"]):
-            node.p2p.send_txs_and_test([tx_withhold], node, success=True)
+            node.p2ps[0].send_txs_and_test([tx_withhold], node, success=True)
 
         # Transactions that should end up in the mempool
         expected_mempool = {
@@ -142,11 +140,11 @@ class InvalidTxRequestTest(BitcoinTestFramework):
                 tx_orphan_2_valid,  # The valid transaction (with sufficient fee)
             ]
         }
-        # Transactions that do not end up in the mempool
-        # tx_orphan_no_fee, because it has too low fee (p2ps[0] is not disconnected for relaying that tx)
-        # tx_orphan_invaid, because it has negative fee (p2ps[1] is disconnected for relaying that tx)
+        # Transactions that do not end up in the mempool:
+        # tx_orphan_2_no_fee, because it has too low fee (p2ps[0] is not disconnected for relaying that tx)
+        # tx_orphan_2_invalid, because it has negative fee (p2ps[1] is disconnected for relaying that tx)
 
-        wait_until(lambda: 1 == len(node.getpeerinfo()), timeout=12)  # p2ps[1] is no longer connected
+        self.wait_until(lambda: 1 == len(node.getpeerinfo()), timeout=12)  # p2ps[1] is no longer connected
         assert_equal(expected_mempool, set(node.getrawmempool()))
 
         self.log.info('Test orphan pool overflow')
@@ -155,15 +153,74 @@ class InvalidTxRequestTest(BitcoinTestFramework):
             orphan_tx_pool[i].vin.append(CTxIn(outpoint=COutPoint(i, 333)))
             orphan_tx_pool[i].vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
 
-        with node.assert_debug_log(['mapOrphan overflow, removed 1 tx']):
-            node.p2p.send_txs_and_test(orphan_tx_pool, node, success=False)
+        with node.assert_debug_log(['orphanage overflow, removed 1 tx']):
+            node.p2ps[0].send_txs_and_test(orphan_tx_pool, node, success=False)
 
+        self.log.info('Test orphan with rejected parents')
         rejected_parent = CTransaction()
         rejected_parent.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_2_invalid.sha256, 0)))
         rejected_parent.vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
         rejected_parent.rehash()
         with node.assert_debug_log(['not keeping orphan with rejected parents {}'.format(rejected_parent.hash)]):
-            node.p2p.send_txs_and_test([rejected_parent], node, success=False)
+            node.p2ps[0].send_txs_and_test([rejected_parent], node, success=False)
+
+        self.log.info('Test that a peer disconnection causes erase its transactions from the orphan pool')
+        with node.assert_debug_log(['Erased 100 orphan tx from peer=25']):
+            self.reconnect_p2p(num_connections=1)
+
+        self.log.info('Test that a transaction in the orphan pool is included in a new tip block causes erase this transaction from the orphan pool')
+        tx_withhold_until_block_A = CTransaction()
+        tx_withhold_until_block_A.vin.append(CTxIn(outpoint=COutPoint(tx_withhold.sha256, 1)))
+        tx_withhold_until_block_A.vout = [CTxOut(nValue=12 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE)] * 2
+        tx_withhold_until_block_A.calc_sha256()
+
+        tx_orphan_include_by_block_A = CTransaction()
+        tx_orphan_include_by_block_A.vin.append(CTxIn(outpoint=COutPoint(tx_withhold_until_block_A.sha256, 0)))
+        tx_orphan_include_by_block_A.vout.append(CTxOut(nValue=12 * COIN - 12000, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
+        tx_orphan_include_by_block_A.calc_sha256()
+
+        self.log.info('Send the orphan ... ')
+        node.p2ps[0].send_txs_and_test([tx_orphan_include_by_block_A], node, success=False)
+
+        tip = int(node.getbestblockhash(), 16)
+        height = node.getblockcount() + 1
+        block_A = create_block(tip, create_coinbase(height))
+        block_A.vtx.extend([tx_withhold, tx_withhold_until_block_A, tx_orphan_include_by_block_A])
+        block_A.hashMerkleRoot = block_A.calc_merkle_root()
+        block_A.solve()
+
+        self.log.info('Send the block that includes the previous orphan ... ')
+        with node.assert_debug_log(["Erased 1 orphan tx included or conflicted by block"]):
+            node.p2ps[0].send_blocks_and_test([block_A], node, success=True)
+
+        self.log.info('Test that a transaction in the orphan pool conflicts with a new tip block causes erase this transaction from the orphan pool')
+        tx_withhold_until_block_B = CTransaction()
+        tx_withhold_until_block_B.vin.append(CTxIn(outpoint=COutPoint(tx_withhold_until_block_A.sha256, 1)))
+        tx_withhold_until_block_B.vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
+        tx_withhold_until_block_B.calc_sha256()
+
+        tx_orphan_include_by_block_B = CTransaction()
+        tx_orphan_include_by_block_B.vin.append(CTxIn(outpoint=COutPoint(tx_withhold_until_block_B.sha256, 0)))
+        tx_orphan_include_by_block_B.vout.append(CTxOut(nValue=10 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
+        tx_orphan_include_by_block_B.calc_sha256()
+
+        tx_orphan_conflict_by_block_B = CTransaction()
+        tx_orphan_conflict_by_block_B.vin.append(CTxIn(outpoint=COutPoint(tx_withhold_until_block_B.sha256, 0)))
+        tx_orphan_conflict_by_block_B.vout.append(CTxOut(nValue=9 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
+        tx_orphan_conflict_by_block_B.calc_sha256()
+        self.log.info('Send the orphan ... ')
+        node.p2ps[0].send_txs_and_test([tx_orphan_conflict_by_block_B], node, success=False)
+
+        tip = int(node.getbestblockhash(), 16)
+        height = node.getblockcount() + 1
+        block_B = create_block(tip, create_coinbase(height))
+        block_B.vtx.extend([tx_withhold_until_block_B, tx_orphan_include_by_block_B])
+        block_B.hashMerkleRoot = block_B.calc_merkle_root()
+        block_B.solve()
+
+        self.log.info('Send the block that includes a transaction which conflicts with the previous orphan ... ')
+        with node.assert_debug_log(["Erased 1 orphan tx included or conflicted by block"]):
+            node.p2ps[0].send_blocks_and_test([block_B], node, success=True)
 
 
 if __name__ == '__main__':

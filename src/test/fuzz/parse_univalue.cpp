@@ -1,34 +1,29 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <core_io.h>
 #include <rpc/client.h>
 #include <rpc/util.h>
 #include <test/fuzz/fuzz.h>
-#include <util/memory.h>
+#include <util/chaintype.h>
 
 #include <limits>
 #include <string>
 
-void initialize()
+void initialize_parse_univalue()
 {
-    static const ECCVerifyHandle verify_handle;
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(ChainType::REGTEST);
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(parse_univalue, .init = initialize_parse_univalue)
 {
     const std::string random_string(buffer.begin(), buffer.end());
     bool valid = true;
     const UniValue univalue = [&] {
-        try {
-            return ParseNonRFCJSONValue(random_string);
-        } catch (const std::runtime_error&) {
-            valid = false;
-            return NullUniValue;
-        }
+        UniValue uv;
+        if (!uv.read(random_string)) valid = false;
+        return valid ? uv : UniValue{};
     }();
     if (!valid) {
         return;
@@ -62,12 +57,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     } catch (const UniValue&) {
     }
     try {
-        (void)ParseHexUV(univalue, "A");
-        (void)ParseHexUV(univalue, random_string);
-    } catch (const UniValue&) {
-    } catch (const std::runtime_error&) {
-    }
-    try {
         (void)ParseHexV(univalue, "A");
     } catch (const UniValue&) {
     } catch (const std::runtime_error&) {
@@ -78,8 +67,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     } catch (const std::runtime_error&) {
     }
     try {
-        (void)ParseSighashString(univalue);
-    } catch (const std::runtime_error&) {
+        if (univalue.isNull() || univalue.isStr()) (void)ParseSighashString(univalue);
+    } catch (const UniValue&) {
     }
     try {
         (void)AmountFromValue(univalue);

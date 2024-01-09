@@ -1,18 +1,136 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <test/fuzz/fuzz.h>
 
+#include <netaddress.h>
+#include <netbase.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
+#include <util/fs.h>
+#include <util/sock.h>
+#include <util/time.h>
 
+#include <csignal>
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <exception>
+#include <fstream>
+#include <functional>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <tuple>
 #include <unistd.h>
+#include <utility>
 #include <vector>
+
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && defined(__AFL_FUZZ_INIT)
+__AFL_FUZZ_INIT();
+#endif
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
-#if defined(__AFL_COMPILER)
+/**
+ * A copy of the command line arguments that start with `--`.
+ * First `LLVMFuzzerInitialize()` is called, which saves the arguments to `g_args`.
+ * Later, depending on the fuzz test, `G_TEST_COMMAND_LINE_ARGUMENTS()` may be
+ * called by `BasicTestingSetup` constructor to fetch those arguments and store
+ * them in `BasicTestingSetup::m_node::args`.
+ */
+static std::vector<const char*> g_args;
+
+static void SetArgs(int argc, char** argv) {
+    for (int i = 1; i < argc; ++i) {
+        // Only take into account arguments that start with `--`. The others are for the fuzz engine:
+        // `fuzz -runs=1 fuzz_seed_corpus/address_deserialize_v2 --checkaddrman=5`
+        if (strlen(argv[i]) > 2 && argv[i][0] == '-' && argv[i][1] == '-') {
+            g_args.push_back(argv[i]);
+        }
+    }
+}
+
+const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS = []() {
+    return g_args;
+};
+
+struct FuzzTarget {
+    const TypeTestOneInput test_one_input;
+    const FuzzTargetOptions opts;
+};
+
+auto& FuzzTargets()
+{
+    static std::map<std::string_view, FuzzTarget> g_fuzz_targets;
+    return g_fuzz_targets;
+}
+
+void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, FuzzTargetOptions opts)
+{
+    const auto it_ins{FuzzTargets().try_emplace(name, FuzzTarget /* temporary can be dropped after clang-16 */ {std::move(target), std::move(opts)})};
+    Assert(it_ins.second);
+}
+
+static std::string_view g_fuzz_target;
+static const TypeTestOneInput* g_test_one_input{nullptr};
+
+void initialize()
+{
+    // Terminate immediately if a fuzzing harness ever tries to create a TCP socket.
+    CreateSock = [](const CService&) -> std::unique_ptr<Sock> { std::terminate(); };
+
+    // Terminate immediately if a fuzzing harness ever tries to perform a DNS lookup.
+    g_dns_lookup = [](const std::string& name, bool allow_lookup) {
+        if (allow_lookup) {
+            std::terminate();
+        }
+        return WrappedGetAddrInfo(name, false);
+    };
+
+    bool should_exit{false};
+    if (std::getenv("PRINT_ALL_FUZZ_TARGETS_AND_ABORT")) {
+        for (const auto& [name, t] : FuzzTargets()) {
+            if (t.opts.hidden) continue;
+            std::cout << name << std::endl;
+        }
+        should_exit = true;
+    }
+    if (const char* out_path = std::getenv("WRITE_ALL_FUZZ_TARGETS_AND_ABORT")) {
+        std::cout << "Writing all fuzz target names to '" << out_path << "'." << std::endl;
+        std::ofstream out_stream{out_path, std::ios::binary};
+        for (const auto& [name, t] : FuzzTargets()) {
+            if (t.opts.hidden) continue;
+            out_stream << name << std::endl;
+        }
+        should_exit = true;
+    }
+    if (should_exit) {
+        std::exit(EXIT_SUCCESS);
+    }
+    if (const auto* env_fuzz{std::getenv("FUZZ")}) {
+        // To allow for easier fuzz executable binary modification,
+        static std::string g_copy{env_fuzz}; // create copy to avoid compiler optimizations, and
+        g_fuzz_target = g_copy.c_str();      // strip string after the first null-char.
+    } else {
+        std::cerr << "Must select fuzz target with the FUZZ env var." << std::endl;
+        std::cerr << "Hint: Set the PRINT_ALL_FUZZ_TARGETS_AND_ABORT=1 env var to see all compiled targets." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+    const auto it = FuzzTargets().find(g_fuzz_target);
+    if (it == FuzzTargets().end()) {
+        std::cerr << "No fuzz target compiled for " << g_fuzz_target << "." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+    Assert(!g_test_one_input);
+    g_test_one_input = &it->second.test_one_input;
+    it->second.opts.init();
+}
+
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION)
 static bool read_stdin(std::vector<uint8_t>& data)
 {
     uint8_t buffer[1024];
@@ -24,53 +142,97 @@ static bool read_stdin(std::vector<uint8_t>& data)
 }
 #endif
 
-// Default initialization: Override using a non-weak initialize().
-__attribute__((weak)) void initialize()
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && !defined(__AFL_LOOP)
+static bool read_file(fs::path p, std::vector<uint8_t>& data)
 {
+    uint8_t buffer[1024];
+    FILE* f = fsbridge::fopen(p, "rb");
+    if (f == nullptr) return false;
+    do {
+        const size_t length = fread(buffer, sizeof(uint8_t), sizeof(buffer), f);
+        if (ferror(f)) return false;
+        data.insert(data.end(), buffer, buffer + length);
+    } while (!feof(f));
+    fclose(f);
+    return true;
 }
+#endif
+
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && !defined(__AFL_LOOP)
+static fs::path g_input_path;
+void signal_handler(int signal)
+{
+    if (signal == SIGABRT) {
+        std::cerr << "Error processing input " << g_input_path << std::endl;
+    } else {
+        std::cerr << "Unexpected signal " << signal << " received\n";
+    }
+    std::_Exit(EXIT_FAILURE);
+}
+#endif
 
 // This function is used by libFuzzer
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    const std::vector<uint8_t> input(data, data + size);
-    test_one_input(input);
+    static const auto& test_one_input = *Assert(g_test_one_input);
+    test_one_input({data, size});
     return 0;
 }
 
 // This function is used by libFuzzer
 extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
 {
+    SetArgs(*argc, *argv);
     initialize();
     return 0;
 }
 
-// Generally, the fuzzer will provide main(), except for AFL
-#if defined(__AFL_COMPILER)
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION)
 int main(int argc, char** argv)
 {
     initialize();
-#ifdef __AFL_INIT
-    // Enable AFL deferred forkserver mode. Requires compilation using
-    // afl-clang-fast++. See fuzzing.md for details.
-    __AFL_INIT();
-#endif
-
+    static const auto& test_one_input = *Assert(g_test_one_input);
 #ifdef __AFL_LOOP
     // Enable AFL persistent mode. Requires compilation using afl-clang-fast++.
     // See fuzzing.md for details.
-    while (__AFL_LOOP(1000)) {
-        std::vector<uint8_t> buffer;
-        if (!read_stdin(buffer)) {
-            continue;
-        }
-        test_one_input(buffer);
+    const uint8_t* buffer = __AFL_FUZZ_TESTCASE_BUF;
+    while (__AFL_LOOP(100000)) {
+        size_t buffer_len = __AFL_FUZZ_TESTCASE_LEN;
+        test_one_input({buffer, buffer_len});
     }
 #else
     std::vector<uint8_t> buffer;
-    if (!read_stdin(buffer)) {
+    if (argc <= 1) {
+        if (!read_stdin(buffer)) {
+            return 0;
+        }
+        test_one_input(buffer);
         return 0;
     }
-    test_one_input(buffer);
+    std::signal(SIGABRT, signal_handler);
+    const auto start_time{Now<SteadySeconds>()};
+    int tested = 0;
+    for (int i = 1; i < argc; ++i) {
+        fs::path input_path(*(argv + i));
+        if (fs::is_directory(input_path)) {
+            for (fs::directory_iterator it(input_path); it != fs::directory_iterator(); ++it) {
+                if (!fs::is_regular_file(it->path())) continue;
+                g_input_path = it->path();
+                Assert(read_file(it->path(), buffer));
+                test_one_input(buffer);
+                ++tested;
+                buffer.clear();
+            }
+        } else {
+            g_input_path = input_path;
+            Assert(read_file(input_path, buffer));
+            test_one_input(buffer);
+            ++tested;
+            buffer.clear();
+        }
+    }
+    const auto end_time{Now<SteadySeconds>()};
+    std::cout << g_fuzz_target << ": succeeded against " << tested << " files in " << count_seconds(end_time - start_time) << "s." << std::endl;
 #endif
     return 0;
 }

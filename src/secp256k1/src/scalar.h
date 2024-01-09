@@ -1,26 +1,22 @@
-/**********************************************************************
- * Copyright (c) 2014 Pieter Wuille                                   *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2014 Pieter Wuille                                    *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
 #ifndef SECP256K1_SCALAR_H
 #define SECP256K1_SCALAR_H
 
-#include "num.h"
-
-#if defined HAVE_CONFIG_H
-#include "libsecp256k1-config.h"
-#endif
+#include "util.h"
 
 #if defined(EXHAUSTIVE_TEST_ORDER)
 #include "scalar_low.h"
-#elif defined(USE_SCALAR_4X64)
+#elif defined(SECP256K1_WIDEMUL_INT128)
 #include "scalar_4x64.h"
-#elif defined(USE_SCALAR_8X32)
+#elif defined(SECP256K1_WIDEMUL_INT64)
 #include "scalar_8x32.h"
 #else
-#error "Please select scalar implementation"
+#error "Please select wide multiplication implementation"
 #endif
 
 /** Clear a scalar to prevent the leak of sensitive data. */
@@ -29,11 +25,19 @@ static void secp256k1_scalar_clear(secp256k1_scalar *r);
 /** Access bits from a scalar. All requested bits must belong to the same 32-bit limb. */
 static unsigned int secp256k1_scalar_get_bits(const secp256k1_scalar *a, unsigned int offset, unsigned int count);
 
-/** Access bits from a scalar. Not constant time. */
+/** Access bits from a scalar. Not constant time in offset and count. */
 static unsigned int secp256k1_scalar_get_bits_var(const secp256k1_scalar *a, unsigned int offset, unsigned int count);
 
-/** Set a scalar from a big endian byte array. */
+/** Set a scalar from a big endian byte array. The scalar will be reduced modulo group order `n`.
+ * In:      bin:        pointer to a 32-byte array.
+ * Out:     r:          scalar to be set.
+ *          overflow:   non-zero if the scalar was bigger or equal to `n` before reduction, zero otherwise (can be NULL).
+ */
 static void secp256k1_scalar_set_b32(secp256k1_scalar *r, const unsigned char *bin, int *overflow);
+
+/** Set a scalar from a big endian byte array and returns 1 if it is a valid
+ *  seckey and 0 otherwise. */
+static int secp256k1_scalar_set_b32_seckey(secp256k1_scalar *r, const unsigned char *bin);
 
 /** Set a scalar to an unsigned integer. */
 static void secp256k1_scalar_set_int(secp256k1_scalar *r, unsigned int v);
@@ -50,13 +54,6 @@ static void secp256k1_scalar_cadd_bit(secp256k1_scalar *r, unsigned int bit, int
 /** Multiply two scalars (modulo the group order). */
 static void secp256k1_scalar_mul(secp256k1_scalar *r, const secp256k1_scalar *a, const secp256k1_scalar *b);
 
-/** Shift a scalar right by some amount strictly between 0 and 16, returning
- *  the low bits that were shifted off */
-static int secp256k1_scalar_shr_int(secp256k1_scalar *r, int n);
-
-/** Compute the square of a scalar (modulo the group order). */
-static void secp256k1_scalar_sqr(secp256k1_scalar *r, const secp256k1_scalar *a);
-
 /** Compute the inverse of a scalar (modulo the group order). */
 static void secp256k1_scalar_inverse(secp256k1_scalar *r, const secp256k1_scalar *a);
 
@@ -65,6 +62,9 @@ static void secp256k1_scalar_inverse_var(secp256k1_scalar *r, const secp256k1_sc
 
 /** Compute the complement of a scalar (modulo the group order). */
 static void secp256k1_scalar_negate(secp256k1_scalar *r, const secp256k1_scalar *a);
+
+/** Multiply a scalar with the multiplicative inverse of 2. */
+static void secp256k1_scalar_half(secp256k1_scalar *r, const secp256k1_scalar *a);
 
 /** Check whether a scalar equals zero. */
 static int secp256k1_scalar_is_zero(const secp256k1_scalar *a);
@@ -82,25 +82,24 @@ static int secp256k1_scalar_is_high(const secp256k1_scalar *a);
  * Returns -1 if the number was negated, 1 otherwise */
 static int secp256k1_scalar_cond_negate(secp256k1_scalar *a, int flag);
 
-#ifndef USE_NUM_NONE
-/** Convert a scalar to a number. */
-static void secp256k1_scalar_get_num(secp256k1_num *r, const secp256k1_scalar *a);
-
-/** Get the order of the group as a number. */
-static void secp256k1_scalar_order_get_num(secp256k1_num *r);
-#endif
-
 /** Compare two scalars. */
 static int secp256k1_scalar_eq(const secp256k1_scalar *a, const secp256k1_scalar *b);
 
-#ifdef USE_ENDOMORPHISM
-/** Find r1 and r2 such that r1+r2*2^128 = a. */
-static void secp256k1_scalar_split_128(secp256k1_scalar *r1, secp256k1_scalar *r2, const secp256k1_scalar *a);
-/** Find r1 and r2 such that r1+r2*lambda = a, and r1 and r2 are maximum 128 bits long (see secp256k1_gej_mul_lambda). */
-static void secp256k1_scalar_split_lambda(secp256k1_scalar *r1, secp256k1_scalar *r2, const secp256k1_scalar *a);
-#endif
+/** Find r1 and r2 such that r1+r2*2^128 = k. */
+static void secp256k1_scalar_split_128(secp256k1_scalar *r1, secp256k1_scalar *r2, const secp256k1_scalar *k);
+/** Find r1 and r2 such that r1+r2*lambda = k, where r1 and r2 or their
+ *  negations are maximum 128 bits long (see secp256k1_ge_mul_lambda). It is
+ *  required that r1, r2, and k all point to different objects. */
+static void secp256k1_scalar_split_lambda(secp256k1_scalar * SECP256K1_RESTRICT r1, secp256k1_scalar * SECP256K1_RESTRICT r2, const secp256k1_scalar * SECP256K1_RESTRICT k);
 
 /** Multiply a and b (without taking the modulus!), divide by 2**shift, and round to the nearest integer. Shift must be at least 256. */
 static void secp256k1_scalar_mul_shift_var(secp256k1_scalar *r, const secp256k1_scalar *a, const secp256k1_scalar *b, unsigned int shift);
+
+/** If flag is true, set *r equal to *a; otherwise leave it. Constant-time.  Both *r and *a must be initialized.*/
+static void secp256k1_scalar_cmov(secp256k1_scalar *r, const secp256k1_scalar *a, int flag);
+
+/** Check invariants on a scalar (no-op unless VERIFY is enabled). */
+static void secp256k1_scalar_verify(const secp256k1_scalar *r);
+#define SECP256K1_SCALAR_VERIFY(r) secp256k1_scalar_verify(r)
 
 #endif /* SECP256K1_SCALAR_H */

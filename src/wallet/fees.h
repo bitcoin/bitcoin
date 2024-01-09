@@ -1,17 +1,19 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_WALLET_FEES_H
 #define BITCOIN_WALLET_FEES_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 
-class CCoinControl;
 class CFeeRate;
-class CWallet;
 struct FeeCalculation;
+
+namespace wallet {
+class CCoinControl;
+class CWallet;
 
 /**
  * Return the minimum required absolute fee for this size
@@ -41,5 +43,6 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
  * Return the maximum feerate for discarding change.
  */
 CFeeRate GetDiscardRate(const CWallet& wallet);
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_FEES_H

@@ -1,68 +1,75 @@
-dnl libsecp25k1 helper checks
-AC_DEFUN([SECP_INT128_CHECK],[
-has_int128=$ac_cv_type___int128
-])
-
 dnl escape "$0x" below using the m4 quadrigaph @S|@, and escape it again with a \ for the shell.
-AC_DEFUN([SECP_64BIT_ASM_CHECK],[
+AC_DEFUN([SECP_X86_64_ASM_CHECK],[
 AC_MSG_CHECKING(for x86_64 assembly availability)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
   #include <stdint.h>]],[[
   uint64_t a = 11, tmp;
   __asm__ __volatile__("movq \@S|@0x100000000,%1; mulq %%rsi" : "+a"(a) : "S"(tmp) : "cc", "%rdx");
-  ]])],[has_64bit_asm=yes],[has_64bit_asm=no])
-AC_MSG_RESULT([$has_64bit_asm])
+  ]])], [has_x86_64_asm=yes], [has_x86_64_asm=no])
+AC_MSG_RESULT([$has_x86_64_asm])
 ])
 
-dnl
-AC_DEFUN([SECP_OPENSSL_CHECK],[
-  has_libcrypto=no
-  m4_ifdef([PKG_CHECK_MODULES],[
-    PKG_CHECK_MODULES([CRYPTO], [libcrypto], [has_libcrypto=yes],[has_libcrypto=no])
-    if test x"$has_libcrypto" = x"yes"; then
-      TEMP_LIBS="$LIBS"
-      LIBS="$LIBS $CRYPTO_LIBS"
-      AC_CHECK_LIB(crypto, main,[AC_DEFINE(HAVE_LIBCRYPTO,1,[Define this symbol if libcrypto is installed])],[has_libcrypto=no])
-      LIBS="$TEMP_LIBS"
-    fi
-  ])
-  if test x$has_libcrypto = xno; then
-    AC_CHECK_HEADER(openssl/crypto.h,[
-      AC_CHECK_LIB(crypto, main,[
-        has_libcrypto=yes
-        CRYPTO_LIBS=-lcrypto
-        AC_DEFINE(HAVE_LIBCRYPTO,1,[Define this symbol if libcrypto is installed])
-      ])
-    ])
-    LIBS=
-  fi
-if test x"$has_libcrypto" = x"yes" && test x"$has_openssl_ec" = x; then
-  AC_MSG_CHECKING(for EC functions in libcrypto)
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-    #include <openssl/ec.h>
-    #include <openssl/ecdsa.h>
-    #include <openssl/obj_mac.h>]],[[
-    EC_KEY *eckey = EC_KEY_new_by_curve_name(NID_secp256k1);
-    ECDSA_sign(0, NULL, 0, NULL, NULL, eckey);
-    ECDSA_verify(0, NULL, 0, NULL, 0, eckey);
-    EC_KEY_free(eckey);
-    ECDSA_SIG *sig_openssl;
-    sig_openssl = ECDSA_SIG_new();
-    ECDSA_SIG_free(sig_openssl);
-  ]])],[has_openssl_ec=yes],[has_openssl_ec=no])
-  AC_MSG_RESULT([$has_openssl_ec])
-fi
+AC_DEFUN([SECP_ARM32_ASM_CHECK], [
+  AC_MSG_CHECKING(for ARM32 assembly availability)
+  SECP_ARM32_ASM_CHECK_CFLAGS_saved_CFLAGS="$CFLAGS"
+  CFLAGS="-x assembler"
+  AC_LINK_IFELSE([AC_LANG_SOURCE([[
+    .syntax unified
+    .eabi_attribute 24, 1
+    .eabi_attribute 25, 1
+    .text
+    .global main
+    main:
+      ldr r0, =0x002A
+      mov r7, #1
+      swi 0   
+    ]])], [has_arm32_asm=yes], [has_arm32_asm=no])
+  AC_MSG_RESULT([$has_arm32_asm])
+  CFLAGS="$SECP_ARM32_ASM_CHECK_CFLAGS_saved_CFLAGS"
 ])
 
-dnl
-AC_DEFUN([SECP_GMP_CHECK],[
-if test x"$has_gmp" != x"yes"; then
+AC_DEFUN([SECP_VALGRIND_CHECK],[
+AC_MSG_CHECKING([for valgrind support])
+if test x"$has_valgrind" != x"yes"; then
   CPPFLAGS_TEMP="$CPPFLAGS"
-  CPPFLAGS="$GMP_CPPFLAGS $CPPFLAGS"
-  LIBS_TEMP="$LIBS"
-  LIBS="$GMP_LIBS $LIBS"
-  AC_CHECK_HEADER(gmp.h,[AC_CHECK_LIB(gmp, __gmpz_init,[has_gmp=yes; GMP_LIBS="$GMP_LIBS -lgmp"; AC_DEFINE(HAVE_LIBGMP,1,[Define this symbol if libgmp is installed])])])
+  CPPFLAGS="$VALGRIND_CPPFLAGS $CPPFLAGS"
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <valgrind/memcheck.h>
+  ]], [[
+    #if defined(NVALGRIND)
+    #  error "Valgrind does not support this platform."
+    #endif
+  ]])], [has_valgrind=yes])
   CPPFLAGS="$CPPFLAGS_TEMP"
-  LIBS="$LIBS_TEMP"
 fi
+AC_MSG_RESULT($has_valgrind)
+])
+
+dnl SECP_TRY_APPEND_CFLAGS(flags, VAR)
+dnl Append flags to VAR if CC accepts them.
+AC_DEFUN([SECP_TRY_APPEND_CFLAGS], [
+  AC_MSG_CHECKING([if ${CC} supports $1])
+  SECP_TRY_APPEND_CFLAGS_saved_CFLAGS="$CFLAGS"
+  CFLAGS="$1 $CFLAGS"
+  AC_COMPILE_IFELSE([AC_LANG_SOURCE([[char foo;]])], [flag_works=yes], [flag_works=no])
+  AC_MSG_RESULT($flag_works)
+  CFLAGS="$SECP_TRY_APPEND_CFLAGS_saved_CFLAGS"
+  if test x"$flag_works" = x"yes"; then
+    $2="$$2 $1"
+  fi
+  unset flag_works
+  AC_SUBST($2)
+])
+
+dnl SECP_SET_DEFAULT(VAR, default, default-dev-mode)
+dnl Set VAR to default or default-dev-mode, depending on whether dev mode is enabled
+AC_DEFUN([SECP_SET_DEFAULT], [
+  if test "${enable_dev_mode+set}" != set; then
+    AC_MSG_ERROR([[Set enable_dev_mode before calling SECP_SET_DEFAULT]])
+  fi
+  if test x"$enable_dev_mode" = x"yes"; then
+    $1="$3"
+  else
+    $1="$2"
+  fi
 ])

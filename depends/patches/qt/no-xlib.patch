@@ -4,12 +4,7 @@ Date: Thu, 18 Jul 2019 17:22:05 -0400
 Subject: [PATCH] Wrap xlib related code blocks in #if's
 
 They are not necessary to compile QT.
----
- qtbase/src/plugins/platforms/xcb/qxcbcursor.cpp | 8 ++++++++
- 1 file changed, 8 insertions(+)
 
-diff --git a/qtbase/src/plugins/platforms/xcb/qxcbcursor.cpp b/qtbase/src/plugins/platforms/xcb/qxcbcursor.cpp
-index 7c62c2e2b3..c05c6c0a07 100644
 --- a/qtbase/src/plugins/platforms/xcb/qxcbcursor.cpp
 +++ b/qtbase/src/plugins/platforms/xcb/qxcbcursor.cpp
 @@ -49,7 +49,9 @@
@@ -22,15 +17,15 @@ index 7c62c2e2b3..c05c6c0a07 100644
  #include <xcb/xfixes.h>
  #include <xcb/xcb_image.h>
  
-@@ -384,6 +386,7 @@ void QXcbCursor::changeCursor(QCursor *cursor, QWindow *widget)
-     w->setCursor(c, isBitmapCursor);
+@@ -391,6 +393,7 @@ void QXcbCursor::changeCursor(QCursor *cursor, QWindow *window)
+     xcb_flush(xcb_connection());
  }
  
 +#if QT_CONFIG(xcb_xlib) && QT_CONFIG(library)
  static int cursorIdForShape(int cshape)
  {
      int cursorId = 0;
-@@ -437,6 +440,7 @@ static int cursorIdForShape(int cshape)
+@@ -444,6 +447,7 @@ static int cursorIdForShape(int cshape)
      }
      return cursorId;
  }
@@ -47,8 +42,8 @@ index 7c62c2e2b3..c05c6c0a07 100644
 +#endif
      xcb_cursor_t cursor = XCB_NONE;
  
-     // Try Xcursor first
-@@ -589,6 +595,7 @@ xcb_cursor_t QXcbCursor::createFontCursor(int cshape)
+ #if QT_CONFIG(xcb_xlib) && QT_CONFIG(library)
+@@ -590,6 +596,7 @@ xcb_cursor_t QXcbCursor::createFontCursor(int cshape)
      // Non-standard X11 cursors are created from bitmaps
      cursor = createNonStandardCursor(cshape);
  
@@ -56,14 +51,11 @@ index 7c62c2e2b3..c05c6c0a07 100644
      // Create a glpyh cursor if everything else failed
      if (!cursor && cursorId) {
          cursor = xcb_generate_id(conn);
-@@ -596,6 +603,7 @@ xcb_cursor_t QXcbCursor::createFontCursor(int cshape)
+@@ -597,6 +604,7 @@ xcb_cursor_t QXcbCursor::createFontCursor(int cshape)
                                  cursorId, cursorId + 1,
                                  0xFFFF, 0xFFFF, 0xFFFF, 0, 0, 0);
      }
 +#endif
  
      if (cursor && cshape >= 0 && cshape < Qt::LastCursor && connection()->hasXFixes()) {
-         const char *name = cursorNames[cshape];
--- 
-2.22.0
-
+         const char *name = cursorNames[cshape].front();

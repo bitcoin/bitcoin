@@ -1,27 +1,30 @@
 package=zeromq
-$(package)_version=4.3.1
+$(package)_version=4.3.5
 $(package)_download_path=https://github.com/zeromq/libzmq/releases/download/v$($(package)_version)/
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=bcbabe1e2c7d0eec4ed612e10b94b112dd5f06fcefa994a0c79a45d835cd21eb
-$(package)_patches=0001-fix-build-with-older-mingw64.patch 0002-disable-pthread_set_name_np.patch
+$(package)_sha256_hash=6653ef5910f17954861fe72332e68b03ca6e4d9c7160eb3a8de5a5a913bfab43
+$(package)_patches=remove_libstd_link.patch
 
 define $(package)_set_vars
-  $(package)_config_opts=--without-docs --disable-shared --disable-curve --disable-curve-keygen --disable-perf
+  $(package)_config_opts = --without-docs --disable-shared --disable-valgrind
+  $(package)_config_opts += --disable-perf --disable-curve-keygen --disable-curve --disable-libbsd
   $(package)_config_opts += --without-libsodium --without-libgssapi_krb5 --without-pgm --without-norm --without-vmci
   $(package)_config_opts += --disable-libunwind --disable-radix-tree --without-gcov --disable-dependency-tracking
   $(package)_config_opts += --disable-Werror --disable-drafts --enable-option-checking
   $(package)_config_opts_linux=--with-pic
+  $(package)_config_opts_freebsd=--with-pic
+  $(package)_config_opts_netbsd=--with-pic
+  $(package)_config_opts_openbsd=--with-pic
   $(package)_config_opts_android=--with-pic
-  $(package)_cxxflags=-std=c++11
 endef
 
 define $(package)_preprocess_cmds
-   patch -p1 < $($(package)_patch_dir)/0001-fix-build-with-older-mingw64.patch && \
-   patch -p1 < $($(package)_patch_dir)/0002-disable-pthread_set_name_np.patch && \
-   cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub config
+  patch -p1 < $($(package)_patch_dir)/remove_libstd_link.patch
 endef
 
 define $(package)_config_cmds
+  ./autogen.sh && \
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub config && \
   $($(package)_autoconf)
 endef
 
@@ -34,6 +37,5 @@ define $(package)_stage_cmds
 endef
 
 define $(package)_postprocess_cmds
-  sed -i.old "s/ -lstdc++//" lib/pkgconfig/libzmq.pc && \
   rm -rf bin share lib/*.la
 endef

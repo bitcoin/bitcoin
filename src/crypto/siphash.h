@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2018 The Bitcoin Core developers
+// Copyright (c) 2016-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include <span.h>
 #include <uint256.h>
 
 /** SipHash-2-4 */
@@ -15,7 +16,7 @@ class CSipHasher
 private:
     uint64_t v[4];
     uint64_t tmp;
-    int count;
+    uint8_t count; // Only the low 8 bits of the input size matter.
 
 public:
     /** Construct a SipHash calculator initialized with 128-bit key (k0, k1) */
@@ -26,7 +27,7 @@ public:
      */
     CSipHasher& Write(uint64_t data);
     /** Hash arbitrary bytes. */
-    CSipHasher& Write(const unsigned char* data, size_t size);
+    CSipHasher& Write(Span<const unsigned char> data);
     /** Compute the 64-bit SipHash-2-4 of the data written so far. The object remains untouched. */
     uint64_t Finalize() const;
 };

@@ -73,10 +73,16 @@ std::string ScriptErrorString(const ScriptError serror)
             return "NOPx reserved for soft-fork upgrades";
         case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM:
             return "Witness version reserved for soft-fork upgrades";
+        case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION:
+            return "Taproot version reserved for soft-fork upgrades";
+        case SCRIPT_ERR_DISCOURAGE_OP_SUCCESS:
+            return "OP_SUCCESSx reserved for soft-fork upgrades";
+        case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_PUBKEYTYPE:
+            return "Public key version reserved for soft-fork upgrades";
         case SCRIPT_ERR_PUBKEYTYPE:
             return "Public key is neither compressed or uncompressed";
         case SCRIPT_ERR_CLEANSTACK:
-            return "Extra items left on stack after execution";
+            return "Stack size must be exactly one after execution";
         case SCRIPT_ERR_WITNESS_PROGRAM_WRONG_LENGTH:
             return "Witness program has incorrect length";
         case SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY:
@@ -91,6 +97,20 @@ std::string ScriptErrorString(const ScriptError serror)
             return "Witness provided for non-witness script";
         case SCRIPT_ERR_WITNESS_PUBKEYTYPE:
             return "Using non-compressed keys in segwit";
+        case SCRIPT_ERR_SCHNORR_SIG_SIZE:
+            return "Invalid Schnorr signature size";
+        case SCRIPT_ERR_SCHNORR_SIG_HASHTYPE:
+            return "Invalid Schnorr signature hash type";
+        case SCRIPT_ERR_SCHNORR_SIG:
+            return "Invalid Schnorr signature";
+        case SCRIPT_ERR_TAPROOT_WRONG_CONTROL_SIZE:
+            return "Invalid Taproot control block size";
+        case SCRIPT_ERR_TAPSCRIPT_VALIDATION_WEIGHT:
+            return "Too much signature validation relative to witness weight";
+        case SCRIPT_ERR_TAPSCRIPT_CHECKMULTISIG:
+            return "OP_CHECKMULTISIG(VERIFY) is not available in tapscript";
+        case SCRIPT_ERR_TAPSCRIPT_MINIMALIF:
+            return "OP_IF/NOTIF argument must be minimal in tapscript";
         case SCRIPT_ERR_OP_CODESEPARATOR:
             return "Using OP_CODESEPARATOR in non-witness script";
         case SCRIPT_ERR_SIG_FINDANDDELETE:

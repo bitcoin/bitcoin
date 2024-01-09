@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,44 +15,34 @@
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
 #include <univalue.h>
+#include <util/chaintype.h>
 #include <util/rbf.h>
 #include <validation.h>
-#include <version.h>
 
 #include <cassert>
 
-void initialize()
+void initialize_transaction()
 {
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(ChainType::REGTEST);
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(transaction, .init = initialize_transaction)
 {
-    CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
-    try {
-        int nVersion;
-        ds >> nVersion;
-        ds.SetVersion(nVersion);
-    } catch (const std::ios_base::failure&) {
-        return;
-    }
+    DataStream ds{buffer};
     bool valid_tx = true;
     const CTransaction tx = [&] {
         try {
-            return CTransaction(deserialize, ds);
+            return CTransaction(deserialize, TX_WITH_WITNESS, ds);
         } catch (const std::ios_base::failure&) {
             valid_tx = false;
-            return CTransaction();
+            return CTransaction{CMutableTransaction{}};
         }
     }();
     bool valid_mutable_tx = true;
-    CDataStream ds_mtx(buffer, SER_NETWORK, INIT_PROTO_VERSION);
+    DataStream ds_mtx{buffer};
     CMutableTransaction mutable_tx;
     try {
-        int nVersion;
-        ds_mtx >> nVersion;
-        ds_mtx.SetVersion(nVersion);
-        ds_mtx >> mutable_tx;
+        ds_mtx >> TX_WITH_WITNESS(mutable_tx);
     } catch (const std::ios_base::failure&) {
         valid_mutable_tx = false;
     }
@@ -61,13 +51,16 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         return;
     }
 
-    TxValidationState state_with_dupe_check;
-    (void)CheckTransaction(tx, state_with_dupe_check);
+    {
+        TxValidationState state_with_dupe_check;
+        const bool res{CheckTransaction(tx, state_with_dupe_check)};
+        Assert(res == state_with_dupe_check.IsValid());
+    }
 
     const CFeeRate dust_relay_fee{DUST_RELAY_TX_FEE};
     std::string reason;
-    const bool is_standard_with_permit_bare_multisig = IsStandardTx(tx, /* permit_bare_multisig= */ true, dust_relay_fee, reason);
-    const bool is_standard_without_permit_bare_multisig = IsStandardTx(tx, /* permit_bare_multisig= */ false, dust_relay_fee, reason);
+    const bool is_standard_with_permit_bare_multisig = IsStandardTx(tx, std::nullopt, /* permit_bare_multisig= */ true, dust_relay_fee, reason);
+    const bool is_standard_without_permit_bare_multisig = IsStandardTx(tx, std::nullopt, /* permit_bare_multisig= */ false, dust_relay_fee, reason);
     if (is_standard_without_permit_bare_multisig) {
         assert(is_standard_with_permit_bare_multisig);
     }
@@ -89,7 +82,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)GetTransactionWeight(tx);
     (void)GetVirtualTransactionSize(tx);
     (void)IsFinalTx(tx, /* nBlockHeight= */ 1024, /* nBlockTime= */ 1024);
-    (void)IsStandardTx(tx, reason);
     (void)RecursiveDynamicUsage(tx);
     (void)SignalsOptInRBF(tx);
 
@@ -98,17 +90,14 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)AreInputsStandard(tx, coins_view_cache);
     (void)IsWitnessStandard(tx, coins_view_cache);
 
-    UniValue u(UniValue::VOBJ);
-    // ValueFromAmount(i) not defined when i == std::numeric_limits<int64_t>::min()
-    bool skip_tx_to_univ = false;
-    for (const CTxOut& txout : tx.vout) {
-        if (txout.nValue == std::numeric_limits<int64_t>::min()) {
-            skip_tx_to_univ = true;
+    if (tx.GetTotalSize() < 250'000) { // Avoid high memory usage (with msan) due to json encoding
+        {
+            UniValue u{UniValue::VOBJ};
+            TxToUniv(tx, /*block_hash=*/uint256::ZERO, /*entry=*/u);
         }
-    }
-    if (!skip_tx_to_univ) {
-        TxToUniv(tx, /* hashBlock */ {}, u);
-        static const uint256 u256_max(uint256S("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
-        TxToUniv(tx, u256_max, u);
+        {
+            UniValue u{UniValue::VOBJ};
+            TxToUniv(tx, /*block_hash=*/uint256::ONE, /*entry=*/u);
+        }
     }
 }

@@ -1,9 +1,12 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_BENCH_BENCH_H
 #define BITCOIN_BENCH_BENCH_H
+
+#include <util/fs.h>
+#include <util/macros.h>
 
 #include <chrono>
 #include <functional>
@@ -11,131 +14,69 @@
 #include <string>
 #include <vector>
 
-#include <boost/preprocessor/cat.hpp>
-#include <boost/preprocessor/stringize.hpp>
-
-// Simple micro-benchmarking framework; API mostly matches a subset of the Google Benchmark
-// framework (see https://github.com/google/benchmark)
-// Why not use the Google Benchmark framework? Because adding Yet Another Dependency
-// (that uses cmake as its build system and has lots of features we don't need) isn't
-// worth it.
+#include <bench/nanobench.h> // IWYU pragma: export
 
 /*
  * Usage:
 
-static void CODE_TO_TIME(benchmark::State& state)
+static void NameOfYourBenchmarkFunction(benchmark::Bench& bench)
 {
-    ... do any setup needed...
-    while (state.KeepRunning()) {
-       ... do stuff you want to time...
-    }
-    ... do any cleanup needed...
+    ...do any setup needed...
+
+    bench.run([&] {
+         ...do stuff you want to time; refer to src/bench/nanobench.h
+            for more information and the options that can be passed here...
+    });
+
+    ...do any cleanup needed...
 }
 
-// default to running benchmark for 5000 iterations
-BENCHMARK(CODE_TO_TIME, 5000);
+BENCHMARK(NameOfYourBenchmarkFunction);
 
  */
 
 namespace benchmark {
-// In case high_resolution_clock is steady, prefer that, otherwise use steady_clock.
-struct best_clock {
-    using hi_res_clock = std::chrono::high_resolution_clock;
-    using steady_clock = std::chrono::steady_clock;
-    using type = std::conditional<hi_res_clock::is_steady, hi_res_clock, steady_clock>::type;
-};
-using clock = best_clock::type;
-using time_point = clock::time_point;
-using duration = clock::duration;
 
-class Printer;
+using ankerl::nanobench::Bench;
 
-class State
+typedef std::function<void(Bench&)> BenchFunction;
+
+enum PriorityLevel : uint8_t
 {
-public:
-    std::string m_name;
-    uint64_t m_num_iters_left;
-    const uint64_t m_num_iters;
-    const uint64_t m_num_evals;
-    std::vector<double> m_elapsed_results;
-    time_point m_start_time;
-
-    bool UpdateTimer(time_point finish_time);
-
-    State(std::string name, uint64_t num_evals, double num_iters, Printer& printer) : m_name(name), m_num_iters_left(0), m_num_iters(num_iters), m_num_evals(num_evals)
-    {
-    }
-
-    inline bool KeepRunning()
-    {
-        if (m_num_iters_left--) {
-            return true;
-        }
-
-        bool result = UpdateTimer(clock::now());
-        // measure again so runtime of UpdateTimer is not included
-        m_start_time = clock::now();
-        return result;
-    }
+    LOW = 1 << 0,
+    HIGH = 1 << 2,
 };
 
-typedef std::function<void(State&)> BenchFunction;
+// List priority labels, comma-separated and sorted by increasing priority
+std::string ListPriorities();
+uint8_t StringToPriority(const std::string& str);
+
+struct Args {
+    bool is_list_only;
+    bool sanity_check;
+    std::chrono::milliseconds min_time;
+    std::vector<double> asymptote;
+    fs::path output_csv;
+    fs::path output_json;
+    std::string regex_filter;
+    uint8_t priority;
+};
 
 class BenchRunner
 {
-    struct Bench {
-        BenchFunction func;
-        uint64_t num_iters_for_one_second;
-    };
-    typedef std::map<std::string, Bench> BenchmarkMap;
+    // maps from "name" -> (function, priority_level)
+    typedef std::map<std::string, std::pair<BenchFunction, PriorityLevel>> BenchmarkMap;
     static BenchmarkMap& benchmarks();
 
 public:
-    BenchRunner(std::string name, BenchFunction func, uint64_t num_iters_for_one_second);
+    BenchRunner(std::string name, BenchFunction func, PriorityLevel level);
 
-    static void RunAll(Printer& printer, uint64_t num_evals, double scaling, const std::string& filter, bool is_list_only);
+    static void RunAll(const Args& args);
 };
+} // namespace benchmark
 
-// interface to output benchmark results.
-class Printer
-{
-public:
-    virtual ~Printer() {}
-    virtual void header() = 0;
-    virtual void result(const State& state) = 0;
-    virtual void footer() = 0;
-};
-
-// default printer to console, shows min, max, median.
-class ConsolePrinter : public Printer
-{
-public:
-    void header() override;
-    void result(const State& state) override;
-    void footer() override;
-};
-
-// creates box plot with plotly.js
-class PlotlyPrinter : public Printer
-{
-public:
-    PlotlyPrinter(std::string plotly_url, int64_t width, int64_t height);
-    void header() override;
-    void result(const State& state) override;
-    void footer() override;
-
-private:
-    std::string m_plotly_url;
-    int64_t m_width;
-    int64_t m_height;
-};
-}
-
-
-// BENCHMARK(foo, num_iters_for_one_second) expands to:  benchmark::BenchRunner bench_11foo("foo", num_iterations);
-// Choose a num_iters_for_one_second that takes roughly 1 second. The goal is that all benchmarks should take approximately
-// the same time, and scaling factor can be used that the total time is appropriate for your system.
-#define BENCHMARK(n, num_iters_for_one_second) \
-    benchmark::BenchRunner BOOST_PP_CAT(bench_, BOOST_PP_CAT(__LINE__, n))(BOOST_PP_STRINGIZE(n), n, (num_iters_for_one_second));
+// BENCHMARK(foo) expands to:  benchmark::BenchRunner bench_11foo("foo", foo, priority_level);
+#define BENCHMARK(n, priority_level) \
+    benchmark::BenchRunner PASTE2(bench_, PASTE2(__LINE__, n))(STRINGIZE(n), n, priority_level);
 
 #endif // BITCOIN_BENCH_BENCH_H

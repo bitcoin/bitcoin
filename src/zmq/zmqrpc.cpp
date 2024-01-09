@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,11 +11,16 @@
 
 #include <univalue.h>
 
+#include <list>
+#include <string>
+
+class JSONRPCRequest;
+
 namespace {
 
-UniValue getzmqnotifications(const JSONRPCRequest& request)
+static RPCHelpMan getzmqnotifications()
 {
-            RPCHelpMan{"getzmqnotifications",
+    return RPCHelpMan{"getzmqnotifications",
                 "\nReturns information about the active ZeroMQ notifications.\n",
                 {},
                 RPCResult{
@@ -33,8 +38,8 @@ UniValue getzmqnotifications(const JSONRPCRequest& request)
                     HelpExampleCli("getzmqnotifications", "")
             + HelpExampleRpc("getzmqnotifications", "")
                 },
-            }.Check(request);
-
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     UniValue result(UniValue::VARR);
     if (g_zmq_notification_interface != nullptr) {
         for (const auto* n : g_zmq_notification_interface->GetActiveNotifiers()) {
@@ -47,12 +52,12 @@ UniValue getzmqnotifications(const JSONRPCRequest& request)
     }
 
     return result;
+},
+    };
 }
 
-const CRPCCommand commands[] =
-{ //  category              name                                actor (function)                argNames
-  //  -----------------     ------------------------            -----------------------         ----------
-    { "zmq",                "getzmqnotifications",              &getzmqnotifications,           {} },
+const CRPCCommand commands[]{
+    {"zmq", &getzmqnotifications},
 };
 
 } // anonymous namespace

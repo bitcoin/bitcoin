@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 The Bitcoin Core developers
+// Copyright (c) 2017-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,7 +15,7 @@ class Node;
 class WalletTests : public QObject
 {
  public:
-    WalletTests(interfaces::Node& node) : m_node(node) {}
+    explicit WalletTests(interfaces::Node& node) : m_node(node) {}
     interfaces::Node& m_node;
 
     Q_OBJECT

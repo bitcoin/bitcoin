@@ -1,26 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2018 The Bitcoin Core developers
+# Copyright (c) 2015-2021 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from argparse import ArgumentParser
-from base64 import urlsafe_b64encode
-from binascii import hexlify
 from getpass import getpass
-from os import urandom
-
+from secrets import token_hex, token_urlsafe
 import hmac
 
 def generate_salt(size):
     """Create size byte hex salt"""
-    return hexlify(urandom(size)).decode()
+    return token_hex(size)
 
 def generate_password():
     """Create 32 byte b64 password"""
-    return urlsafe_b64encode(urandom(32)).decode('utf-8')
+    return token_urlsafe(32)
 
 def password_to_hmac(salt, password):
-    m = hmac.new(bytearray(salt, 'utf-8'), bytearray(password, 'utf-8'), 'SHA256')
+    m = hmac.new(salt.encode('utf-8'), password.encode('utf-8'), 'SHA256')
     return m.hexdigest()
 
 def main():
@@ -39,8 +36,8 @@ def main():
     password_hmac = password_to_hmac(salt, args.password)
 
     print('String to be appended to bitcoin.conf:')
-    print('rpcauth={0}:{1}${2}'.format(args.username, salt, password_hmac))
-    print('Your password:\n{0}'.format(args.password))
+    print(f'rpcauth={args.username}:{salt}${password_hmac}')
+    print(f'Your password:\n{args.password}')
 
 if __name__ == '__main__':
     main()
