@@ -1387,8 +1387,6 @@ if test x$enable_fuzz_binary = xyes; then
      ]],[[
       */ int not_main() {
      ]])])
-
-  CHECK_RUNTIME_LIB
 fi
 
 if test x$enable_wallet != xno; then
