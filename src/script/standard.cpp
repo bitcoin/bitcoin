@@ -8,6 +8,8 @@
 #include <pubkey.h>
 #include <script/script.h>
 
+#include <string>
+
 typedef std::vector<unsigned char> valtype;
 
 bool fAcceptDatacarrier = DEFAULT_ACCEPT_DATACARRIER;
@@ -27,7 +29,7 @@ CKeyID ToKeyID(const PKHash& key_hash)
     return CKeyID{static_cast<uint160>(key_hash)};
 }
 
-const char* GetTxnOutputType(TxoutType t)
+std::string GetTxnOutputType(TxoutType t)
 {
     switch (t)
     {
@@ -38,7 +40,7 @@ const char* GetTxnOutputType(TxoutType t)
     case TxoutType::MULTISIG: return "multisig";
     case TxoutType::NULL_DATA: return "nulldata";
     } // no default case, so the compiler can warn about missing cases
-    return nullptr;
+    assert(false);
 }
 
 static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)

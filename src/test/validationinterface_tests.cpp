@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(unregister_validation_interface_race)
     // Start thread to generate notifications
     std::thread gen{[&] {
         const CBlock block_dummy;
-        const BlockValidationState state_dummy;
+        BlockValidationState state_dummy;
         while (generate) {
             GetMainSignals().BlockChecked(block_dummy, state_dummy);
         }

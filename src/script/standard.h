@@ -11,6 +11,8 @@
 #include <util/hash_type.h>
 
 #include <variant>
+#include <string>
+
 
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 
@@ -103,7 +105,7 @@ using CTxDestination = std::variant<CNoDestination, PKHash, ScriptHash>;
 bool IsValidDestination(const CTxDestination& dest);
 
 /** Get the name of a TxoutType as a C string, or nullptr if unknown. */
-const char* GetTxnOutputType(TxoutType t);
+std::string GetTxnOutputType(TxoutType t);
 
 /**
  * Parse a scriptPubKey and identify script type for standard scripts. If

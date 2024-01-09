@@ -8,7 +8,7 @@ To quickly get started fuzzing Dash Core using [libFuzzer](https://llvm.org/docs
 $ git clone https://github.com/dashpay/dash
 $ cd dash/
 $ ./autogen.sh
-$ CC=clang CXX=clang++ ./configure --enable-fuzz --with-sanitizers=address,fuzzer,undefined --enable-c++17
+$ CC=clang CXX=clang++ ./configure --enable-fuzz --with-sanitizers=address,fuzzer,undefined
 # macOS users: If you have problem with this step then make sure to read "macOS hints for
 # libFuzzer" on https://github.com/dashpay/dash/blob/develop/doc/fuzzing.md#macos-hints-for-libfuzzer
 $ make
@@ -123,7 +123,7 @@ You may also need to take care of giving the correct path for `clang` and
 Full configure that was tested on macOS Catalina with `brew` installed `llvm`:
 
 ```sh
-./configure --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ --disable-asm --enable-c++17
+./configure --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ --disable-asm
 ```
 
 Read the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for more information. This [libFuzzer tutorial](https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.md) might also be of interest.
@@ -142,7 +142,7 @@ $ make -C AFLplusplus/ source-only
 $ ./autogen.sh
 # If afl-clang-lto is not available, see
 # https://github.com/AFLplusplus/AFLplusplus#a-selecting-the-best-afl-compiler-for-instrumenting-the-target
-$ CC=$(pwd)/AFLplusplus/afl-clang-lto CXX=$(pwd)/AFLplusplus/afl-clang-lto++ ./configure --enable-fuzz --enable-c++17
+$ CC=$(pwd)/AFLplusplus/afl-clang-lto CXX=$(pwd)/AFLplusplus/afl-clang-lto++ ./configure --enable-fuzz
 $ make
 # For macOS you may need to ignore x86 compilation checks when running "make". If so,
 # try compiling using: AFL_NO_X86=1 make
@@ -169,7 +169,7 @@ $ git clone https://github.com/google/honggfuzz
 $ cd honggfuzz/
 $ make
 $ cd ..
-$ CC=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang CXX=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang++ ./configure --enable-fuzz --with-sanitizers=address,undefined --enable-c++17
+$ CC=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang CXX=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang++ ./configure --enable-fuzz --with-sanitizers=address,undefined
 $ make
 $ mkdir -p inputs/
 $ FUZZ=process_message honggfuzz/honggfuzz -i inputs/ -- src/test/fuzz/fuzz

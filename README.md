@@ -37,6 +37,9 @@ The `master` branch is meant to be stable. Development is normally done in separ
 [Tags](https://github.com/dashpay/dash/tags) are created to indicate new official,
 stable release versions of Dash Core.
 
+The `develop` branch is regularly built (see doc/build-*.md for instructions) and tested, but is not guaranteed to be
+completely stable.
+
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
 and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
 

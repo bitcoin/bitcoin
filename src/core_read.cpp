@@ -16,6 +16,7 @@
 #include <version.h>
 
 #include <algorithm>
+#include <string>
 
 namespace {
 
@@ -31,10 +32,9 @@ opcodetype ParseOpCode(const std::string& s)
             if (op < OP_NOP && op != OP_RESERVED)
                 continue;
 
-            const char* name = GetOpName(static_cast<opcodetype>(op));
-            if (strcmp(name, "OP_UNKNOWN") == 0)
+            std::string strName = GetOpName(static_cast<opcodetype>(op));
+            if (strName == "OP_UNKNOWN")
                 continue;
-            std::string strName(name);
             mapOpNames[strName] = static_cast<opcodetype>(op);
             // Convenience: OP_ADD and just ADD are both recognized:
             if (strName.compare(0, 3, "OP_") == 0) {  // strName starts with "OP_"
