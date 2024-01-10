@@ -474,5 +474,41 @@ BOOST_AUTO_TEST_CASE(srd_test)
     // TODO: Test eligibility filters
     // TODO: Test that self-sent coins are filtered differently than foreign-sent coins
 
+BOOST_FIXTURE_TEST_CASE(wallet_coinsresult_test, BasicTestingSetup)
+{
+    // Test case to verify CoinsResult object sanity.
+    CoinsResult available_coins;
+    {
+        std::unique_ptr<CWallet> dummyWallet = NewWallet(m_node, /*wallet_name=*/"dummy");
+
+        // Add some coins to 'available_coins'
+        for (int i=0; i<10; i++) {
+            AddCoinToWallet(available_coins, *dummyWallet, 1 * COIN);
+        }
+    }
+
+    {
+        // First test case, check that 'CoinsResult::Erase' function works as expected.
+        // By trying to erase two elements from the 'available_coins' object.
+        std::unordered_set<COutPoint, SaltedOutpointHasher> outs_to_remove;
+        const auto& coins = available_coins.All();
+        for (int i = 0; i < 2; i++) {
+            outs_to_remove.emplace(coins[i].outpoint);
+        }
+        available_coins.Erase(outs_to_remove);
+
+        // Check that the elements were actually removed.
+        const auto& updated_coins = available_coins.All();
+        for (const auto& out: outs_to_remove) {
+            auto it = std::find_if(updated_coins.begin(), updated_coins.end(), [&out](const COutput &coin) {
+                return coin.outpoint == out;
+            });
+            BOOST_CHECK(it == updated_coins.end());
+        }
+        // And verify that no extra element were removed
+        BOOST_CHECK_EQUAL(available_coins.Size(), 8);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
