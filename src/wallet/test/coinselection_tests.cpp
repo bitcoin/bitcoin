@@ -510,5 +510,37 @@ BOOST_FIXTURE_TEST_CASE(wallet_coinsresult_test, BasicTestingSetup)
     }
 }
 
+BOOST_AUTO_TEST_CASE(SelectCoins_effective_value_test)
+{
+    // Test that the effective value is used to check whether preset inputs provide sufficient funds when subtract_fee_outputs is not used.
+    // This test creates a coin whose value is higher than the target but whose effective value is lower than the target.
+    // The coin is selected using coin control, with m_allow_other_inputs = false. SelectCoins should fail due to insufficient funds.
+
+    std::unique_ptr<CWallet> wallet = NewWallet(m_node);
+
+    CoinsResult available_coins;
+    {
+        std::unique_ptr<CWallet> dummyWallet = NewWallet(m_node, /*wallet_name=*/"dummy");
+        AddCoinToWallet(available_coins, *dummyWallet, 100'000); // 0.001 BTC
+    }
+
+    CAmount target{99'900}; // 0.000999 BTC
+
+    CCoinControl cc;
+    cc.m_allow_other_inputs = false;
+    COutput output = available_coins.All().at(0);
+    cc.SetInputWeight(output.outpoint, 272);
+    cc.Select(output.outpoint).SetTxOut(output.txout);
+
+    LOCK(wallet->cs_wallet);
+    const auto preset_inputs = *Assert(FetchSelectedInputs(*wallet, cc, default_cs_params));
+    assert((*preset_inputs.coins.begin())->GetEffectiveValue() < target);
+    assert((*preset_inputs.coins.begin())->txout.nValue > target);
+    available_coins.Erase({available_coins.coins[OutputType::BECH32].begin()->outpoint});
+
+    const auto result = SelectCoins(*wallet, available_coins, preset_inputs, target, cc, default_cs_params);
+    BOOST_CHECK(!result);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
