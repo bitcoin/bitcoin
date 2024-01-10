@@ -63,7 +63,7 @@ if test -n "@debug@" && test -z "@no_qt@" && test "x$with_gui" != xno; then
   with_gui=qt5_debug
 fi
 
-if test "x@host_os@" = xdarwin; then
+if test "@host_os@" = darwin; then
   BREW=no
 fi
 
