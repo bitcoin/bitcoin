@@ -11,7 +11,7 @@
 #include <evo/deterministicmns.h>
 #include <masternode/meta.h>
 #include <masternode/sync.h>
-#include <net_processing.h>
+#include <net.h>
 #include <netmessagemaker.h>
 #include <shutdown.h>
 #include <util/check.h>
@@ -29,24 +29,24 @@
 #include <memory>
 #include <univalue.h>
 
-void CCoinJoinClientQueueManager::ProcessMessage(const CNode& peer, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv)
+PeerMsgRet CCoinJoinClientQueueManager::ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv)
 {
-    if (fMasternodeMode) return;
-    if (!m_mn_sync.IsBlockchainSynced()) return;
+    if (fMasternodeMode) return {};
+    if (!m_mn_sync.IsBlockchainSynced()) return {};
 
     if (msg_type == NetMsgType::DSQUEUE) {
-        CCoinJoinClientQueueManager::ProcessDSQueue(peer, peerman, vRecv);
+        return CCoinJoinClientQueueManager::ProcessDSQueue(peer, vRecv);
     }
+    return {};
 }
 
-void CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, PeerManager& peerman, CDataStream& vRecv)
+PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataStream& vRecv)
 {
     CCoinJoinQueue dsq;
     vRecv >> dsq;
 
     if (dsq.masternodeOutpoint.IsNull() && dsq.m_protxHash.IsNull()) {
-        peerman.Misbehaving(peer.GetId(), 100);
-        return;
+        return tl::unexpected{100};
     }
 
     if (dsq.masternodeOutpoint.IsNull()) {
@@ -54,8 +54,7 @@ void CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, PeerManager&
         if (auto dmn = mnList.GetValidMN(dsq.m_protxHash)) {
             dsq.masternodeOutpoint = dmn->collateralOutpoint;
         } else {
-            peerman.Misbehaving(peer.GetId(), 10);
-            return;
+            return tl::unexpected{10};
         }
     }
 
@@ -67,33 +66,32 @@ void CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, PeerManager&
             // process every dsq only once
             for (const auto &q: vecCoinJoinQueue) {
                 if (q == dsq) {
-                    return;
+                    return {};
                 }
                 if (q.fReady == dsq.fReady && q.masternodeOutpoint == dsq.masternodeOutpoint) {
                     // no way the same mn can send another dsq with the same readiness this soon
                     LogPrint(BCLog::COINJOIN, /* Continued */
                              "DSQUEUE -- Peer %s is sending WAY too many dsq messages for a masternode with collateral %s\n",
                              peer.GetLogString(), dsq.masternodeOutpoint.ToStringShort());
-                    return;
+                    return {};
                 }
             }
         } // cs_vecqueue
 
         LogPrint(BCLog::COINJOIN, "DSQUEUE -- %s new\n", dsq.ToString());
 
-        if (dsq.IsTimeOutOfBounds()) return;
+        if (dsq.IsTimeOutOfBounds()) return {};
 
         auto mnList = deterministicMNManager->GetListAtChainTip();
         auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
-        if (!dmn) return;
+        if (!dmn) return {};
 
         if (dsq.m_protxHash.IsNull()) {
             dsq.m_protxHash = dmn->proTxHash;
         }
 
         if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
-            peerman.Misbehaving(peer.GetId(), 10);
-            return;
+            return tl::unexpected{10};
         }
 
         // if the queue is ready, submit if we can
@@ -104,7 +102,7 @@ void CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, PeerManager&
                                          })) {
             LogPrint(BCLog::COINJOIN, "DSQUEUE -- CoinJoin queue (%s) is ready on masternode %s\n", dsq.ToString(),
                      dmn->pdmnState->addr.ToString());
-            return;
+            return {};
         } else {
             int64_t nLastDsq = mmetaman->GetMetaInfo(dmn->proTxHash)->GetLastDsq();
             int64_t nDsqThreshold = mmetaman->GetDsqThreshold(dmn->proTxHash, mnList.GetValidMNsCount());
@@ -114,7 +112,7 @@ void CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, PeerManager&
             if (nLastDsq != 0 && nDsqThreshold > mmetaman->GetDsqCount()) {
                 LogPrint(BCLog::COINJOIN, "DSQUEUE -- Masternode %s is sending too many dsq messages\n",
                          dmn->proTxHash.ToString());
-                return;
+                return {};
             }
 
             mmetaman->AllowMixing(dmn->proTxHash);
@@ -129,9 +127,10 @@ void CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, PeerManager&
         }
     } // cs_ProcessDSQueue
     dsq.Relay(connman);
+    return {};
 }
 
-void CCoinJoinClientManager::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
+void CCoinJoinClientManager::ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
@@ -150,7 +149,7 @@ void CCoinJoinClientManager::ProcessMessage(CNode& peer, PeerManager& peerman, C
         AssertLockNotHeld(cs_deqsessions);
         LOCK(cs_deqsessions);
         for (auto& session : deqSessions) {
-            session.ProcessMessage(peer, peerman, connman, mempool, msg_type, vRecv);
+            session.ProcessMessage(peer, connman, mempool, msg_type, vRecv);
         }
     }
 }
@@ -164,7 +163,7 @@ CCoinJoinClientSession::CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletMa
     m_queueman(queueman)
 {}
 
-void CCoinJoinClientSession::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
+void CCoinJoinClientSession::ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
 {
     if (fMasternodeMode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;

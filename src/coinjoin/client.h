@@ -7,6 +7,8 @@
 
 #include <coinjoin/util.h>
 #include <coinjoin/coinjoin.h>
+
+#include <net_types.h>
 #include <util/translation.h>
 
 #include <atomic>
@@ -23,7 +25,6 @@ class CoinJoinWalletManager;
 class CNode;
 class CMasternodeSync;
 class CTxMemPool;
-class PeerManager;
 
 class UniValue;
 
@@ -159,7 +160,7 @@ public:
     explicit CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletManager& walletman, const CMasternodeSync& mn_sync,
                                     const std::unique_ptr<CCoinJoinClientQueueManager>& queueman);
 
-    void ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv);
+    void ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv);
 
     void UnlockCoins();
 
@@ -196,8 +197,8 @@ public:
     explicit CCoinJoinClientQueueManager(CConnman& _connman, CoinJoinWalletManager& walletman, const CMasternodeSync& mn_sync) :
         connman(_connman), m_walletman(walletman), m_mn_sync(mn_sync) {};
 
-    void ProcessMessage(const CNode& peer, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
-    void ProcessDSQueue(const CNode& peer, PeerManager& peerman, CDataStream& vRecv);
+    PeerMsgRet ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
+    PeerMsgRet ProcessDSQueue(const CNode& peer, CDataStream& vRecv);
     void DoMaintenance();
 };
 
@@ -245,7 +246,7 @@ public:
                                     const std::unique_ptr<CCoinJoinClientQueueManager>& queueman) :
         m_wallet(wallet), m_walletman(walletman), m_mn_sync(mn_sync), m_queueman(queueman) {}
 
-    void ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_deqsessions);
+    void ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_deqsessions);
 
     bool StartMixing();
     void StopMixing();

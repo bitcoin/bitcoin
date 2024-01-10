@@ -14,7 +14,7 @@
 #include <masternode/node.h>
 #include <masternode/sync.h>
 #include <net.h>
-#include <net_processing.h>
+#include <net_types.h>
 #include <netmessagemaker.h>
 #include <util/time.h>
 #include <validation.h>
@@ -58,11 +58,11 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
     connman.PushMessage(&peer, CNetMsgMaker(peer.GetSendVersion()).Make(NetMsgType::MNAUTH, mnauth));
 }
 
-void CMNAuth::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
+PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
 {
     if (msg_type != NetMsgType::MNAUTH || !::masternodeSync->IsBlockchainSynced()) {
         // we can't verify MNAUTH messages when we don't have the latest MN list
-        return;
+        return {};
     }
 
     CMNAuth mnauth;
@@ -70,25 +70,21 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connma
 
     // only one MNAUTH allowed
     if (!peer.GetVerifiedProRegTxHash().IsNull()) {
-        peerman.Misbehaving(peer.GetId(), 100, "duplicate mnauth");
-        return;
+        return tl::unexpected{MisbehavingError{100, "duplicate mnauth"}};
     }
 
     if ((~peer.nServices) & (NODE_NETWORK | NODE_BLOOM)) {
         // either NODE_NETWORK or NODE_BLOOM bit is missing in node's services
-        peerman.Misbehaving(peer.GetId(), 100, "mnauth from a node with invalid services");
-        return;
+        return tl::unexpected{MisbehavingError{100, "mnauth from a node with invalid services"}};
     }
 
     if (mnauth.proRegTxHash.IsNull()) {
-        peerman.Misbehaving(peer.GetId(), 100, "empty mnauth proRegTxHash");
-        return;
+        return tl::unexpected{MisbehavingError{100, "empty mnauth proRegTxHash"}};
     }
 
     if (!mnauth.sig.IsValid()) {
-        peerman.Misbehaving(peer.GetId(), 100, "invalid mnauth signature");
         LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- invalid mnauth for protx=%s with sig=%s\n", mnauth.proRegTxHash.ToString(), mnauth.sig.ToString());
-        return;
+        return tl::unexpected{MisbehavingError{100, "invalid mnauth signature"}};
     }
 
     const auto mnList = deterministicMNManager->GetListAtChainTip();
@@ -97,8 +93,7 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connma
         // in case node was unlucky and not up to date, just let it be connected as a regular node, which gives it
         // a chance to get up-to-date and thus realize that it's not a MN anymore. We still give it a
         // low DoS score.
-        peerman.Misbehaving(peer.GetId(), 10, "missing mnauth masternode");
-        return;
+        return tl::unexpected{MisbehavingError{10, "missing mnauth masternode"}};
     }
 
     uint256 signHash;
@@ -120,8 +115,7 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connma
     if (!mnauth.sig.VerifyInsecure(dmn->pdmnState->pubKeyOperator.Get(), signHash)) {
         // Same as above, MN seems to not know its fate yet, so give it a chance to update. If this is a
         // malicious node (DoSing us), it'll get banned soon.
-        peerman.Misbehaving(peer.GetId(), 10, "mnauth signature verification failed");
-        return;
+        return tl::unexpected{MisbehavingError{10, "mnauth signature verification failed"}};
     }
 
     if (!peer.IsInboundConn()) {
@@ -130,7 +124,7 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connma
             LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- Masternode probe successful for %s, disconnecting. peer=%d\n",
                      mnauth.proRegTxHash.ToString(), peer.GetId());
             peer.fDisconnect = true;
-            return;
+            return {};
         }
     }
 
@@ -175,7 +169,7 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connma
     });
 
     if (peer.fDisconnect) {
-        return;
+        return {};
     }
 
     peer.SetVerifiedProRegTxHash(mnauth.proRegTxHash);
@@ -192,6 +186,7 @@ void CMNAuth::ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connma
     }
 
     LogPrint(BCLog::NET_NETCONN, "CMNAuth::%s -- Valid MNAUTH for %s, peer=%d\n", __func__, mnauth.proRegTxHash.ToString(), peer.GetId());
+    return {};
 }
 
 void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman)

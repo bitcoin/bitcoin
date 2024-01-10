@@ -10,6 +10,7 @@
 #include <crypto/common.h>
 #include <llmq/signing.h>
 #include <net.h>
+#include <net_types.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <saltedhasher.h>
@@ -29,7 +30,6 @@ class CMasternodeSync;
 class CScheduler;
 class CSporkManager;
 class CTxMemPool;
-class PeerManager;
 
 namespace llmq
 {
@@ -53,7 +53,6 @@ private:
     CSigSharesManager& shareman;
     CSporkManager& spork_manager;
     CTxMemPool& mempool;
-    const std::unique_ptr<PeerManager>& m_peerman;
 
     std::unique_ptr<CScheduler> scheduler;
     std::unique_ptr<std::thread> scheduler_thread;
@@ -89,7 +88,7 @@ private:
 public:
     explicit CChainLocksHandler(CChainState& chainstate, CConnman& _connman, CMasternodeSync& mn_sync, CQuorumManager& _qman,
                                 CSigningManager& _sigman, CSigSharesManager& _shareman, CSporkManager& sporkManager,
-                                CTxMemPool& _mempool, const std::unique_ptr<PeerManager>& peerman);
+                                CTxMemPool& _mempool);
     ~CChainLocksHandler();
 
     void Start();
@@ -99,8 +98,9 @@ public:
     bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) const LOCKS_EXCLUDED(cs);
     CChainLockSig GetBestChainLock() const LOCKS_EXCLUDED(cs);
 
-    void ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv);
-    void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash) LOCKS_EXCLUDED(cs);
+    PeerMsgRet ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv);
+    PeerMsgRet ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash) LOCKS_EXCLUDED(cs);
+
     void AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew) LOCKS_EXCLUDED(cs);
     void UpdatedBlockTip();
     void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) LOCKS_EXCLUDED(cs);

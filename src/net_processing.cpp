@@ -17,6 +17,7 @@
 #include <merkleblock.h>
 #include <netmessagemaker.h>
 #include <netbase.h>
+#include <net_types.h>
 #include <node/blockstorage.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
@@ -249,6 +250,9 @@ public:
     bool IsBanned(NodeId pnode) override EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 private:
+    /** Helper to process result of external handlers of message */
+    void ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom);
+
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
     void ConsiderEviction(CNode& pto, int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -2800,6 +2804,11 @@ void PeerManagerImpl::ProcessBlock(CNode& pfrom, const std::shared_ptr<const CBl
     }
 }
 
+void PeerManagerImpl::ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom)
+{
+    if (!ret) Misbehaving(pfrom.GetId(), ret.error().score, ret.error().message);
+}
+
 void PeerManagerImpl::ProcessMessage(
     CNode& pfrom,
     const std::string& msg_type,
@@ -4333,22 +4342,22 @@ void PeerManagerImpl::ProcessMessage(
     {
         //probably one the extensions
 #ifdef ENABLE_WALLET
-        m_cj_ctx->queueman->ProcessMessage(pfrom, *this, msg_type, vRecv);
+        ProcessPeerMsgRet(m_cj_ctx->queueman->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         for (auto& pair : m_cj_ctx->walletman->raw()) {
-            pair.second->ProcessMessage(pfrom, *this, m_connman, m_mempool, msg_type, vRecv);
+            pair.second->ProcessMessage(pfrom, m_connman, m_mempool, msg_type, vRecv);
         }
 #endif // ENABLE_WALLET
-        m_cj_ctx->server->ProcessMessage(pfrom, *this, msg_type, vRecv);
-        sporkManager->ProcessMessage(pfrom, *this, m_connman, msg_type, vRecv);
+        ProcessPeerMsgRet(m_cj_ctx->server->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
+        ProcessPeerMsgRet(sporkManager->ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom);
         ::masternodeSync->ProcessMessage(pfrom, msg_type, vRecv);
-        m_govman.ProcessMessage(pfrom, *this, m_connman, msg_type, vRecv);
-        CMNAuth::ProcessMessage(pfrom, *this, m_connman, msg_type, vRecv);
-        m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv);
+        ProcessPeerMsgRet(m_govman.ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom);
+        ProcessPeerMsgRet(CMNAuth::ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom);
+        ProcessPeerMsgRet(m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         m_llmq_ctx->qdkgsman->ProcessMessage(pfrom, *m_llmq_ctx->qman, msg_type, vRecv);
-        m_llmq_ctx->qman->ProcessMessage(pfrom, msg_type, vRecv);
+        ProcessPeerMsgRet(m_llmq_ctx->qman->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         m_llmq_ctx->shareman->ProcessMessage(pfrom, *sporkManager, msg_type, vRecv);
         m_llmq_ctx->sigman->ProcessMessage(pfrom, msg_type, vRecv);
-        m_llmq_ctx->clhandler->ProcessMessage(pfrom, msg_type, vRecv);
+        ProcessPeerMsgRet(m_llmq_ctx->clhandler->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         m_llmq_ctx->isman->ProcessMessage(pfrom, msg_type, vRecv);
         return;
     }

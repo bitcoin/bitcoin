@@ -6,6 +6,7 @@
 #define BITCOIN_EVO_MNAUTH_H
 
 #include <bls/bls.h>
+#include <net_types.h>
 #include <serialize.h>
 
 class CBlockIndex;
@@ -15,7 +16,6 @@ class CDeterministicMN;
 class CDeterministicMNList;
 class CDeterministicMNListDiff;
 class CNode;
-class PeerManager;
 
 class UniValue;
 
@@ -48,7 +48,7 @@ public:
     }
 
     static void PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip);
-    static void ProcessMessage(CNode& peer, PeerManager& peerman, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
+    static PeerMsgRet ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
     static void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman);
 };
 

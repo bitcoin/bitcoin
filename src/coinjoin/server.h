@@ -6,12 +6,14 @@
 #define BITCOIN_COINJOIN_SERVER_H
 
 #include <coinjoin/coinjoin.h>
-#include <net.h>
+
+#include <net_types.h>
 
 class CChainState;
 class CCoinJoinServer;
+class CDataStream;
+class CNode;
 class CTxMemPool;
-class PeerManager;
 
 class UniValue;
 
@@ -71,7 +73,7 @@ private:
     void RelayCompletedTransaction(PoolMessage nMessageID) LOCKS_EXCLUDED(cs_coinjoin);
 
     void ProcessDSACCEPT(CNode& peer, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
-    void ProcessDSQUEUE(const CNode& peer, PeerManager& peerman, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
+    PeerMsgRet ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
     void ProcessDSVIN(CNode& peer, CDataStream& vRecv) LOCKS_EXCLUDED(cs_coinjoin);
     void ProcessDSSIGNFINALTX(CDataStream& vRecv) LOCKS_EXCLUDED(cs_coinjoin);
 
@@ -87,7 +89,7 @@ public:
         fUnitTest(false)
     {}
 
-    void ProcessMessage(CNode& pfrom, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv);
+    PeerMsgRet ProcessMessage(CNode& pfrom, std::string_view msg_type, CDataStream& vRecv);
 
     bool HasTimedOut() const;
     void CheckTimeout();
