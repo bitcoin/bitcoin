@@ -221,7 +221,7 @@ void CQuorumManager::Stop()
 
 void CQuorumManager::TriggerQuorumDataRecoveryThreads(const CBlockIndex* pIndex) const
 {
-    if (!fMasternodeMode || !utils::QuorumDataRecoveryEnabled() || pIndex == nullptr) {
+    if ((!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) || !utils::QuorumDataRecoveryEnabled() || pIndex == nullptr) {
         return;
     }
 
@@ -272,15 +272,13 @@ void CQuorumManager::TriggerQuorumDataRecoveryThreads(const CBlockIndex* pIndex)
 
 void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload) const
 {
-    if (!m_mn_sync->IsBlockchainSynced()) {
-        return;
-    }
+    if (!m_mn_sync->IsBlockchainSynced()) return;
 
     for (const auto& params : Params().GetConsensus().llmqs) {
         CheckQuorumConnections(params, pindexNew);
     }
 
-    {
+    if (fMasternodeMode || utils::IsWatchQuorumsEnabled()) {
         // Cleanup expired data requests
         LOCK(cs_data_requests);
         auto it = mapQuorumDataRequests.begin();
@@ -299,6 +297,8 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
 
 void CQuorumManager::CheckQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindexNew) const
 {
+    if (!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) return;
+
     auto lastQuorums = ScanQuorums(llmqParams.type, pindexNew, (size_t)llmqParams.keepOldConnections);
 
     auto connmanQuorumsToDelete = connman.GetMasternodeQuorums(llmqParams.type);
@@ -450,8 +450,8 @@ bool CQuorumManager::RequestQuorumData(CNode* pfrom, Consensus::LLMQType llmqTyp
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Version must be %d or greater.\n", __func__, LLMQ_DATA_MESSAGES_VERSION);
         return false;
     }
-    if (pfrom->GetVerifiedProRegTxHash().IsNull() && !pfrom->qwatch) {
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- pfrom is neither a verified masternode nor a qwatch connection\n", __func__);
+    if (pfrom->GetVerifiedProRegTxHash().IsNull()) {
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- pfrom is not a verified masternode\n", __func__);
         return false;
     }
     if (!GetLLMQParams(llmqType).has_value()) {
@@ -470,8 +470,8 @@ bool CQuorumManager::RequestQuorumData(CNode* pfrom, Consensus::LLMQType llmqTyp
     LOCK(cs_data_requests);
     const CQuorumDataRequestKey key(pfrom->GetVerifiedProRegTxHash(), true, pQuorumBaseBlockIndex->GetBlockHash(), llmqType);
     const CQuorumDataRequest request(llmqType, pQuorumBaseBlockIndex->GetBlockHash(), nDataMask, proTxHash);
-    auto [old_pair, exists] = mapQuorumDataRequests.emplace(key, request);
-    if (!exists) {
+    auto [old_pair, inserted] = mapQuorumDataRequests.emplace(key, request);
+    if (!inserted) {
         if (old_pair->second.IsExpired(/*add_bias=*/true)) {
             old_pair->second = request;
         } else {
@@ -752,8 +752,8 @@ void CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, C
     }
 
     if (msg_type == NetMsgType::QDATA) {
-        if ((!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) || (pfrom.GetVerifiedProRegTxHash().IsNull() && !pfrom.qwatch)) {
-            errorHandler("Not a verified masternode or a qwatch connection");
+        if ((!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) || pfrom.GetVerifiedProRegTxHash().IsNull()) {
+            errorHandler("Not a verified masternode and -watchquorums is not enabled");
             return;
         }
 
@@ -1051,7 +1051,7 @@ void CQuorumManager::StartCleanupOldQuorumDataThread(const CBlockIndex* pIndex) 
     // window and it's better to have more room so we pick next cycle.
     // dkgMiningWindowStart for small quorums is 10 i.e. a safe block to start
     // these calculations is at height 576 + 24 * 2 + 10 = 576 + 58.
-    if (!fMasternodeMode || pIndex == nullptr || (pIndex->nHeight % 576 != 58)) {
+    if ((!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) || pIndex == nullptr || (pIndex->nHeight % 576 != 58)) {
         return;
     }
 

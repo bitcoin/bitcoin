@@ -154,6 +154,9 @@ class QuorumDataMessagesTest(DashTestFramework):
                           "and does bump our score")
             p2p_node0.test_qgetdata(qgetdata_all, response_expected=False)
             wait_for_banscore(node0, id_p2p_node0, 10)
+            self.log.info("Check that normal node bumps our score for qwatch")
+            p2p_node0.send_message(msg_qwatch())
+            wait_for_banscore(node0, id_p2p_node0, 20)
             # The masternode should not respond to qgetdata for non-masternode connections
             self.log.info("Check that masternode doesn't respond to "
                           "non-masternode connection and does bump our score")
@@ -383,6 +386,10 @@ class QuorumDataMessagesTest(DashTestFramework):
                 p2p_node0.wait_for_qmessage("qgetdata")
                 p2p_node0.send_message(p2p_mn2.get_qdata())
                 wait_for_banscore(node0, id_p2p_node0, (1 - len(extra_args)) * 10)
+                # Non-masternodes should bump peer's score for qwatch no matter
+                # whether they (non-masternodes) are watching or not.
+                p2p_node0.send_message(msg_qwatch())
+                wait_for_banscore(node0, id_p2p_node0, (1 - len(extra_args)) * 10 + 10)
                 node0.disconnect_p2ps()
                 mn2.node.disconnect_p2ps()
 
