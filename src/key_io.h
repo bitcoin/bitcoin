@@ -7,7 +7,7 @@
 #define BITCOIN_KEY_IO_H
 
 #include <addresstype.h>
-#include <bech32_mod.h>
+#include <blsct/bech32_mod.h>
 #include <blsct/double_public_key.h>
 #include <chainparams.h>
 #include <key.h>

@@ -4,8 +4,8 @@
 
 #include <base58.h>
 #include <bech32.h>
-#include <bech32_mod.h>
 #include <blsct/arith/mcl/mcl.h>
+#include <blsct/bech32_mod.h>
 #include <blsct/double_public_key.h>
 #include <key_io.h>
 #include <net.h>

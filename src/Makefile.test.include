@@ -78,7 +78,6 @@ BITCOIN_TESTS =\
   test/base58_tests.cpp \
   test/base64_tests.cpp \
   test/bech32_tests.cpp \
-  test/bech32_mod_tests.cpp \
   test/bip32_tests.cpp \
   test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
@@ -90,6 +89,7 @@ BITCOIN_TESTS =\
   test/blsct/arith/mcl/mcl_g1point_tests.cpp \
   test/blsct/arith/mcl/mcl_integration_tests.cpp \
   test/blsct/arith/mcl/mcl_scalar_tests.cpp \
+  test/blsct/bech32_mod_tests.cpp \
   test/blsct/building_block/generator_deriver_tests.cpp \
   test/blsct/building_block/imp_inner_prod_arg_tests.cpp \
   test/blsct/building_block/lazy_points_tests.cpp \
