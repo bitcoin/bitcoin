@@ -126,9 +126,9 @@ bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
 
 bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level level) const
 {
-    // Log messages at Warning and Error level unconditionally, so that
+    // Log messages at Info, Warning and Error level unconditionally, so that
     // important troubleshooting information doesn't get lost.
-    if (level >= BCLog::Level::Warning) return true;
+    if (level >= BCLog::Level::Info) return true;
 
     if (!WillLogCategory(category)) return false;
 
@@ -202,7 +202,7 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
     return false;
 }
 
-std::string BCLog::Logger::LogLevelToStr(BCLog::Level level) const
+std::string BCLog::Logger::LogLevelToStr(BCLog::Level level)
 {
     switch (level) {
     case BCLog::Level::Trace:
@@ -215,8 +215,6 @@ std::string BCLog::Logger::LogLevelToStr(BCLog::Level level) const
         return "warning";
     case BCLog::Level::Error:
         return "error";
-    case BCLog::Level::None:
-        return "";
     }
     assert(false);
 }
@@ -307,8 +305,6 @@ static std::optional<BCLog::Level> GetLogLevel(const std::string& level_str)
         return BCLog::Level::Warning;
     } else if (level_str == "error") {
         return BCLog::Level::Error;
-    } else if (level_str == "none") {
-        return BCLog::Level::None;
     } else {
         return std::nullopt;
     }
@@ -341,7 +337,7 @@ static constexpr std::array<BCLog::Level, 3> LogLevelsList()
 std::string BCLog::Logger::LogLevelsString() const
 {
     const auto& levels = LogLevelsList();
-    return Join(std::vector<BCLog::Level>{levels.begin(), levels.end()}, ", ", [this](BCLog::Level level) { return LogLevelToStr(level); });
+    return Join(std::vector<BCLog::Level>{levels.begin(), levels.end()}, ", ", [](BCLog::Level level) { return LogLevelToStr(level); });
 }
 
 std::string BCLog::Logger::LogTimestampStr(const std::string& str)
@@ -392,29 +388,39 @@ namespace BCLog {
     }
 } // namespace BCLog
 
+std::string BCLog::Logger::GetLogPrefix(BCLog::LogFlags category, BCLog::Level level) const
+{
+    if (category == LogFlags::NONE) category = LogFlags::ALL;
+
+    const bool has_category{m_always_print_category_level || category != LogFlags::ALL};
+
+    // If there is no category, Info is implied
+    if (!has_category && level == Level::Info) return {};
+
+    std::string s{"["};
+    if (has_category) {
+        s += LogCategoryToStr(category);
+    }
+
+    if (m_always_print_category_level || !has_category || level != Level::Debug) {
+        // If there is a category, Debug is implied, so don't add the level
+
+        // Only add separator if we have a category
+        if (has_category) s += ":";
+        s += Logger::LogLevelToStr(level);
+    }
+
+    s += "] ";
+    return s;
+}
+
 void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
 {
     StdLockGuard scoped_lock(m_cs);
     std::string str_prefixed = LogEscapeMessage(str);
 
-    if ((category != LogFlags::NONE || level != Level::None) && m_started_new_line) {
-        std::string s{"["};
-
-        if (category != LogFlags::NONE) {
-            s += LogCategoryToStr(category);
-        }
-
-        if (category != LogFlags::NONE && level != Level::None) {
-            // Only add separator if both flag and level are not NONE
-            s += ":";
-        }
-
-        if (level != Level::None) {
-            s += LogLevelToStr(level);
-        }
-
-        s += "] ";
-        str_prefixed.insert(0, s);
+    if (m_started_new_line) {
+        str_prefixed.insert(0, GetLogPrefix(category, level));
     }
 
     if (m_log_sourcelocations && m_started_new_line) {
