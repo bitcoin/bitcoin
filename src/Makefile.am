@@ -247,7 +247,6 @@ BITCOIN_CORE_H = \
   banman.h \
   base58.h \
   bech32.h \
-  bech32_mod.h \
   bip324.h \
   blockencodings.h \
   blockfilter.h \
