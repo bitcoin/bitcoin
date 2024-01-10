@@ -1,4 +1,4 @@
-Dash Core staging tree 18.0
+Dash Core staging tree
 ===========================
 
 |CI|master|develop|
