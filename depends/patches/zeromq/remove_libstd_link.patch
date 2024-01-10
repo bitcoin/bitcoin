@@ -1,0 +1,25 @@
+commit 47d4cd12a2c051815ddda78adebdb3923b260d8a
+Author: fanquake <fanquake@gmail.com>
+Date:   Tue Aug 18 14:45:40 2020 +0800
+
+    Remove needless linking against libstdc++
+
+    This is broken for a number of reasons, including:
+    - g++ understands "static-libstdc++ -lstdc++" to mean "link against
+      whatever libstdc++ exists, probably shared", which in itself is buggy.
+    - another stdlib (libc++ for example) may be in use
+
+    See #11981.
+
+diff --git a/src/libzmq.pc.in b/src/libzmq.pc.in
+index 233bc3a..3c2bf0d 100644
+--- a/src/libzmq.pc.in
++++ b/src/libzmq.pc.in
+@@ -7,6 +7,6 @@ Name: libzmq
+ Description: 0MQ c++ library
+ Version: @VERSION@
+ Libs: -L${libdir} -lzmq
+-Libs.private: -lstdc++ @pkg_config_libs_private@
++Libs.private: @pkg_config_libs_private@
+ Requires.private: @pkg_config_names_private@
+ Cflags: -I${includedir} @pkg_config_defines@
