@@ -322,7 +322,10 @@ FUZZ_TARGET(ellswift_roundtrip, .init = initialize_key)
     auto encoded_ellswift = key.EllSwiftCreate(ent32);
     auto decoded_pubkey = encoded_ellswift.Decode();
 
-    assert(key.VerifyPubKey(decoded_pubkey));
+    uint256 hash{ConsumeUInt256(fdp)};
+    std::vector<unsigned char> sig;
+    key.Sign(hash, sig);
+    assert(decoded_pubkey.Verify(hash, sig));
 }
 
 FUZZ_TARGET(bip324_ecdh, .init = initialize_key)
