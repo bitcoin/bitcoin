@@ -15,13 +15,15 @@ variants.
 - `test_address()` is called to call getaddressinfo for an address on node1
   and test the values returned."""
 
+import concurrent.futures
+
+from test_framework.authproxy import JSONRPCException
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    find_vout_for_address,
 )
 from test_framework.wallet_util import (
     get_generate_key,
@@ -329,15 +331,15 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'bech32')
             assert_equal(received_addr, expected_addr)
             bech32_addr_info = w1.getaddressinfo(received_addr)
-            assert_equal(bech32_addr_info['desc'][:23], 'wpkh([80002067/0\'/0\'/{}]'.format(i))
+            assert_equal(bech32_addr_info['desc'][:23], 'wpkh([80002067/0h/0h/{}]'.format(i))
 
             shwpkh_addr = w1.getnewaddress('', 'p2sh-segwit')
             shwpkh_addr_info = w1.getaddressinfo(shwpkh_addr)
-            assert_equal(shwpkh_addr_info['desc'][:26], 'sh(wpkh([abcdef12/0\'/0\'/{}]'.format(i))
+            assert_equal(shwpkh_addr_info['desc'][:26], 'sh(wpkh([abcdef12/0h/0h/{}]'.format(i))
 
             pkh_addr = w1.getnewaddress('', 'legacy')
             pkh_addr_info = w1.getaddressinfo(pkh_addr)
-            assert_equal(pkh_addr_info['desc'][:22], 'pkh([12345678/0\'/0\'/{}]'.format(i))
+            assert_equal(pkh_addr_info['desc'][:22], 'pkh([12345678/0h/0h/{}]'.format(i))
 
             assert_equal(w1.getwalletinfo()['keypoolsize'], 4 * 3) # After retrieving a key, we don't refill the keypool again, so it's one less for each address type
         w1.keypoolrefill()
@@ -448,14 +450,14 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                             wallet=wmulti_priv)
 
         assert_equal(wmulti_priv.getwalletinfo()['keypoolsize'], 1001) # Range end (1000) is inclusive, so 1001 addresses generated
-        addr = wmulti_priv.getnewaddress('', 'bech32')
+        addr = wmulti_priv.getnewaddress('', 'bech32') # uses receive 0
         assert_equal(addr, 'bcrt1qdt0qy5p7dzhxzmegnn4ulzhard33s2809arjqgjndx87rv5vd0fq2czhy8') # Derived at m/84'/0'/0'/0
-        change_addr = wmulti_priv.getrawchangeaddress('bech32')
-        assert_equal(change_addr, 'bcrt1qt9uhe3a9hnq7vajl7a094z4s3crm9ttf8zw3f5v9gr2nyd7e3lnsy44n8e')
+        change_addr = wmulti_priv.getrawchangeaddress('bech32') # uses change 0
+        assert_equal(change_addr, 'bcrt1qt9uhe3a9hnq7vajl7a094z4s3crm9ttf8zw3f5v9gr2nyd7e3lnsy44n8e') # Derived at m/84'/1'/0'/0
         assert_equal(wmulti_priv.getwalletinfo()['keypoolsize'], 1000)
         txid = w0.sendtoaddress(addr, 10)
         self.generate(self.nodes[0], 6)
-        send_txid = wmulti_priv.sendtoaddress(w0.getnewaddress(), 8)
+        send_txid = wmulti_priv.sendtoaddress(w0.getnewaddress(), 8) # uses change 1
         decoded = wmulti_priv.gettransaction(txid=send_txid, verbose=True)['decoded']
         assert_equal(len(decoded['vin'][0]['txinwitness']), 4)
         self.sync_all()
@@ -481,21 +483,19 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                             wallet=wmulti_pub)
 
         assert_equal(wmulti_pub.getwalletinfo()['keypoolsize'], 1000) # The first one was already consumed by previous import and is detected as used
-        addr = wmulti_pub.getnewaddress('', 'bech32')
+        addr = wmulti_pub.getnewaddress('', 'bech32') # uses receive 1
         assert_equal(addr, 'bcrt1qp8s25ckjl7gr6x2q3dx3tn2pytwp05upkjztk6ey857tt50r5aeqn6mvr9') # Derived at m/84'/0'/0'/1
-        change_addr = wmulti_pub.getrawchangeaddress('bech32')
-        assert_equal(change_addr, 'bcrt1qzxl0qz2t88kljdnkzg4n4gapr6kte26390gttrg79x66nt4p04fssj53nl')
+        change_addr = wmulti_pub.getrawchangeaddress('bech32') # uses change 2
+        assert_equal(change_addr, 'bcrt1qp6j3jw8yetefte7kw6v5pc89rkgakzy98p6gf7ayslaveaxqyjusnw580c') # Derived at m/84'/1'/0'/2
         assert send_txid in self.nodes[0].getrawmempool(True)
         assert send_txid in (x['txid'] for x in wmulti_pub.listunspent(0))
         assert_equal(wmulti_pub.getwalletinfo()['keypoolsize'], 999)
 
         # generate some utxos for next tests
-        txid = w0.sendtoaddress(addr, 10)
-        vout = find_vout_for_address(self.nodes[0], txid, addr)
+        utxo = self.create_outpoints(w0, outputs=[{addr: 10}])[0]
 
         addr2 = wmulti_pub.getnewaddress('', 'bech32')
-        txid2 = w0.sendtoaddress(addr2, 10)
-        vout2 = find_vout_for_address(self.nodes[0], txid2, addr2)
+        utxo2 = self.create_outpoints(w0, outputs=[{addr2: 10}])[0]
 
         self.generate(self.nodes[0], 6)
         assert_equal(wmulti_pub.getbalance(), wmulti_priv.getbalance())
@@ -551,7 +551,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(res[1]['success'], True)
         assert_equal(res[1]['warnings'][0], 'Not all private keys provided. Some wallet functionality may return unexpected errors')
 
-        rawtx = self.nodes[1].createrawtransaction([{'txid': txid, 'vout': vout}], {w0.getnewaddress(): 9.999})
+        rawtx = self.nodes[1].createrawtransaction([utxo], {w0.getnewaddress(): 9.999})
         tx_signed_1 = wmulti_priv1.signrawtransactionwithwallet(rawtx)
         assert_equal(tx_signed_1['complete'], False)
         tx_signed_2 = wmulti_priv2.signrawtransactionwithwallet(tx_signed_1['hex'])
@@ -645,7 +645,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             }])
         assert_equal(res[0]['success'], True)
 
-        rawtx = self.nodes[1].createrawtransaction([{'txid': txid2, 'vout': vout2}], {w0.getnewaddress(): 9.999})
+        rawtx = self.nodes[1].createrawtransaction([utxo2], {w0.getnewaddress(): 9.999})
         tx = wmulti_priv3.signrawtransactionwithwallet(rawtx)
         assert_equal(tx['complete'], True)
         self.nodes[1].sendrawtransaction(tx['hex'])
@@ -666,6 +666,48 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               "timestamp": "now"},
                               success=True,
                               warnings=["Unknown output type, cannot set descriptor to active."])
+
+        self.log.info("Test importing a descriptor to an encrypted wallet")
+
+        descriptor = {"desc": descsum_create("pkh(" + xpriv + "/1h/*h)"),
+                              "timestamp": "now",
+                              "active": True,
+                              "range": [0,4000],
+                              "next_index": 4000}
+
+        self.nodes[0].createwallet("temp_wallet", blank=True, descriptors=True)
+        temp_wallet = self.nodes[0].get_wallet_rpc("temp_wallet")
+        temp_wallet.importdescriptors([descriptor])
+        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, temp_wallet.getnewaddress())
+        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, temp_wallet.getnewaddress())
+
+        self.nodes[0].createwallet("encrypted_wallet", blank=True, descriptors=True, passphrase="passphrase")
+        encrypted_wallet = self.nodes[0].get_wallet_rpc("encrypted_wallet")
+
+        descriptor["timestamp"] = 0
+        descriptor["next_index"] = 0
+
+        encrypted_wallet.walletpassphrase("passphrase", 99999)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread:
+            with self.nodes[0].assert_debug_log(expected_msgs=["Rescan started from block 0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206... (slow variant inspecting all blocks)"], timeout=5):
+                importing = thread.submit(encrypted_wallet.importdescriptors, requests=[descriptor])
+
+            # Set the passphrase timeout to 1 to test that the wallet remains unlocked during the rescan
+            self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletpassphrase("passphrase", 1)
+
+            try:
+                self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletlock()
+            except JSONRPCException as e:
+                assert e.error["code"] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before locking the wallet." in e.error["message"]
+
+            try:
+                self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletpassphrasechange("passphrase", "newpassphrase")
+            except JSONRPCException as e:
+                assert e.error["code"] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase." in e.error["message"]
+
+            assert_equal(importing.result(), [{"success": True}])
+
+        assert_equal(temp_wallet.getbalance(), encrypted_wallet.getbalance())
 
 if __name__ == '__main__':
     ImportDescriptorsTest().main()

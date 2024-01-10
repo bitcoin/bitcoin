@@ -7,12 +7,6 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-/* Autotools creates libsecp256k1-config.h, of which ECMULT_WINDOW_SIZE is needed.
-   ifndef guard so downstream users can define their own if they do not use autotools. */
-#if !defined(ECMULT_WINDOW_SIZE)
-#include "libsecp256k1-config.h"
-#endif
-
 #include "../include/secp256k1.h"
 
 #include "assumptions.h"
@@ -62,11 +56,12 @@ static void print_two_tables(FILE *fp, int window_g) {
 int main(void) {
     /* Always compute all tables for window sizes up to 15. */
     int window_g = (ECMULT_WINDOW_SIZE < 15) ? 15 : ECMULT_WINDOW_SIZE;
+    const char outfile[] = "src/precomputed_ecmult.c";
     FILE* fp;
 
-    fp = fopen("src/precomputed_ecmult.c","w");
+    fp = fopen(outfile, "w");
     if (fp == NULL) {
-        fprintf(stderr, "Could not open src/precomputed_ecmult.h for writing!\n");
+        fprintf(stderr, "Could not open %s for writing!\n", outfile);
         return -1;
     }
 
@@ -74,10 +69,6 @@ int main(void) {
     fprintf(fp, "/* This file contains an array secp256k1_pre_g with odd multiples of the base point G and\n");
     fprintf(fp, " * an array secp256k1_pre_g_128 with odd multiples of 2^128*G for accelerating the computation of a*P + b*G.\n");
     fprintf(fp, " */\n");
-    fprintf(fp, "#if defined HAVE_CONFIG_H\n");
-    fprintf(fp, "#    include \"libsecp256k1-config.h\"\n");
-    fprintf(fp, "#endif\n");
-    fprintf(fp, "#include \"../include/secp256k1.h\"\n");
     fprintf(fp, "#include \"group.h\"\n");
     fprintf(fp, "#include \"ecmult.h\"\n");
     fprintf(fp, "#include \"precomputed_ecmult.h\"\n");

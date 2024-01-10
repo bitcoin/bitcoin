@@ -6,20 +6,20 @@
 
 #include <clientversion.h>
 #include <consensus/amount.h>
-#include <fs.h>
 #include <logging.h>
 #include <primitives/transaction.h>
+#include <random.h>
 #include <serialize.h>
-#include <shutdown.h>
 #include <streams.h>
 #include <sync.h>
 #include <txmempool.h>
 #include <uint256.h>
-#include <util/system.h>
+#include <util/fs.h>
+#include <util/fs_helpers.h>
+#include <util/signalinterrupt.h>
 #include <util/time.h>
 #include <validation.h>
 
-#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <exception>
@@ -35,14 +35,14 @@ using fsbridge::FopenFn;
 
 namespace kernel {
 
-static const uint64_t MEMPOOL_DUMP_VERSION = 1;
+static const uint64_t MEMPOOL_DUMP_VERSION_NO_XOR_KEY{1};
+static const uint64_t MEMPOOL_DUMP_VERSION{2};
 
-bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active_chainstate, FopenFn mockable_fopen_function)
+bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active_chainstate, ImportMempoolOptions&& opts)
 {
     if (load_path.empty()) return false;
 
-    FILE* filestr{mockable_fopen_function(load_path, "rb")};
-    CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
+    AutoFile file{opts.mockable_fopen_function(load_path, "rb")};
     if (file.IsNull()) {
         LogPrintf("Failed to open mempool file from disk. Continuing anyway.\n");
         return false;
@@ -53,14 +53,20 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
     int64_t failed = 0;
     int64_t already_there = 0;
     int64_t unbroadcast = 0;
-    auto now = NodeClock::now();
+    const auto now{NodeClock::now()};
 
     try {
         uint64_t version;
         file >> version;
-        if (version != MEMPOOL_DUMP_VERSION) {
+        std::vector<std::byte> xor_key;
+        if (version == MEMPOOL_DUMP_VERSION_NO_XOR_KEY) {
+            // Leave XOR-key empty
+        } else if (version == MEMPOOL_DUMP_VERSION) {
+            file >> xor_key;
+        } else {
             return false;
         }
+        file.SetXor(xor_key);
         uint64_t num;
         file >> num;
         while (num) {
@@ -68,12 +74,16 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             CTransactionRef tx;
             int64_t nTime;
             int64_t nFeeDelta;
-            file >> tx;
+            file >> TX_WITH_WITNESS(tx);
             file >> nTime;
             file >> nFeeDelta;
 
+            if (opts.use_current_time) {
+                nTime = TicksSinceEpoch<std::chrono::seconds>(now);
+            }
+
             CAmount amountdelta = nFeeDelta;
-            if (amountdelta) {
+            if (amountdelta && opts.apply_fee_delta_priority) {
                 pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
             }
             if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_expiry)) {
@@ -95,23 +105,27 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             } else {
                 ++expired;
             }
-            if (ShutdownRequested())
+            if (active_chainstate.m_chainman.m_interrupt)
                 return false;
         }
         std::map<uint256, CAmount> mapDeltas;
         file >> mapDeltas;
 
-        for (const auto& i : mapDeltas) {
-            pool.PrioritiseTransaction(i.first, i.second);
+        if (opts.apply_fee_delta_priority) {
+            for (const auto& i : mapDeltas) {
+                pool.PrioritiseTransaction(i.first, i.second);
+            }
         }
 
         std::set<uint256> unbroadcast_txids;
         file >> unbroadcast_txids;
-        unbroadcast = unbroadcast_txids.size();
-        for (const auto& txid : unbroadcast_txids) {
-            // Ensure transactions were accepted to mempool then add to
-            // unbroadcast set.
-            if (pool.get(txid) != nullptr) pool.AddUnbroadcastTx(txid);
+        if (opts.apply_unbroadcast_set) {
+            unbroadcast = unbroadcast_txids.size();
+            for (const auto& txid : unbroadcast_txids) {
+                // Ensure transactions were accepted to mempool then add to
+                // unbroadcast set.
+                if (pool.get(txid) != nullptr) pool.AddUnbroadcastTx(txid);
+            }
         }
     } catch (const std::exception& e) {
         LogPrintf("Failed to deserialize mempool data on disk: %s. Continuing anyway.\n", e.what());
@@ -144,20 +158,25 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
 
     auto mid = SteadyClock::now();
 
+    AutoFile file{mockable_fopen_function(dump_path + ".new", "wb")};
+    if (file.IsNull()) {
+        return false;
+    }
+
     try {
-        FILE* filestr{mockable_fopen_function(dump_path + ".new", "wb")};
-        if (!filestr) {
-            return false;
-        }
-
-        CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
-
-        uint64_t version = MEMPOOL_DUMP_VERSION;
+        const uint64_t version{pool.m_persist_v1_dat ? MEMPOOL_DUMP_VERSION_NO_XOR_KEY : MEMPOOL_DUMP_VERSION};
         file << version;
+
+        std::vector<std::byte> xor_key(8);
+        if (!pool.m_persist_v1_dat) {
+            FastRandomContext{}.fillrand(xor_key);
+            file << xor_key;
+        }
+        file.SetXor(xor_key);
 
         file << (uint64_t)vinfo.size();
         for (const auto& i : vinfo) {
-            file << *(i.tx);
+            file << TX_WITH_WITNESS(*(i.tx));
             file << int64_t{count_seconds(i.m_time)};
             file << int64_t{i.nFeeDelta};
             mapDeltas.erase(i.tx->GetHash());

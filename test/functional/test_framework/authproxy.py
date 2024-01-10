@@ -39,7 +39,7 @@ from http import HTTPStatus
 import http.client
 import json
 import logging
-import os
+import pathlib
 import socket
 import time
 import urllib.parse
@@ -60,8 +60,10 @@ class JSONRPCException(Exception):
         self.http_status = http_status
 
 
-def EncodeDecimal(o):
+def serialization_fallback(o):
     if isinstance(o, decimal.Decimal):
+        return str(o)
+    if isinstance(o, pathlib.Path):
         return str(o)
     raise TypeError(repr(o) + " is not JSON serializable")
 
@@ -78,7 +80,10 @@ class AuthServiceProxy():
         passwd = None if self.__url.password is None else self.__url.password.encode('utf8')
         authpair = user + b':' + passwd
         self.__auth_header = b'Basic ' + base64.b64encode(authpair)
-        self.timeout = timeout
+        # clamp the socket timeout, since larger values can cause an
+        # "Invalid argument" exception in Python's HTTP(S) client
+        # library on some operating systems (e.g. OpenBSD, FreeBSD)
+        self.timeout = min(timeout, 2147483)
         self._set_conn(connection)
 
     def __getattr__(self, name):
@@ -91,36 +96,14 @@ class AuthServiceProxy():
 
     def _request(self, method, path, postdata):
         '''
-        Do a HTTP request, with retry if we get disconnected (e.g. due to a timeout).
-        This is a workaround for https://bugs.python.org/issue3566 which is fixed in Python 3.5.
+        Do a HTTP request.
         '''
         headers = {'Host': self.__url.hostname,
                    'User-Agent': USER_AGENT,
                    'Authorization': self.__auth_header,
                    'Content-type': 'application/json'}
-        if os.name == 'nt':
-            # Windows somehow does not like to re-use connections
-            # TODO: Find out why the connection would disconnect occasionally and make it reusable on Windows
-            # Avoid "ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine"
-            self._set_conn()
-        try:
-            self.__conn.request(method, path, postdata, headers)
-            return self._get_response()
-        except (BrokenPipeError, ConnectionResetError):
-            # Python 3.5+ raises BrokenPipeError when the connection was reset
-            # ConnectionResetError happens on FreeBSD
-            self.__conn.close()
-            self.__conn.request(method, path, postdata, headers)
-            return self._get_response()
-        except OSError as e:
-            # Workaround for a bug on macOS. See https://bugs.python.org/issue33450
-            retry = '[Errno 41] Protocol wrong type for socket' in str(e)
-            if retry:
-                self.__conn.close()
-                self.__conn.request(method, path, postdata, headers)
-                return self._get_response()
-            else:
-                raise
+        self.__conn.request(method, path, postdata, headers)
+        return self._get_response()
 
     def get_request(self, *args, **argsn):
         AuthServiceProxy.__id_count += 1
@@ -128,7 +111,7 @@ class AuthServiceProxy():
         log.debug("-{}-> {} {}".format(
             AuthServiceProxy.__id_count,
             self._service_name,
-            json.dumps(args or argsn, default=EncodeDecimal, ensure_ascii=self.ensure_ascii),
+            json.dumps(args or argsn, default=serialization_fallback, ensure_ascii=self.ensure_ascii),
         ))
         if args and argsn:
             params = dict(args=args, **argsn)
@@ -140,7 +123,7 @@ class AuthServiceProxy():
                 'id': AuthServiceProxy.__id_count}
 
     def __call__(self, *args, **argsn):
-        postdata = json.dumps(self.get_request(*args, **argsn), default=EncodeDecimal, ensure_ascii=self.ensure_ascii)
+        postdata = json.dumps(self.get_request(*args, **argsn), default=serialization_fallback, ensure_ascii=self.ensure_ascii)
         response, status = self._request('POST', self.__url.path, postdata.encode('utf-8'))
         if response['error'] is not None:
             raise JSONRPCException(response['error'], status)
@@ -154,7 +137,7 @@ class AuthServiceProxy():
             return response['result']
 
     def batch(self, rpc_call_list):
-        postdata = json.dumps(list(rpc_call_list), default=EncodeDecimal, ensure_ascii=self.ensure_ascii)
+        postdata = json.dumps(list(rpc_call_list), default=serialization_fallback, ensure_ascii=self.ensure_ascii)
         log.debug("--> " + postdata)
         response, status = self._request('POST', self.__url.path, postdata.encode('utf-8'))
         if status != HTTPStatus.OK:
@@ -187,7 +170,7 @@ class AuthServiceProxy():
         response = json.loads(responsedata, parse_float=decimal.Decimal)
         elapsed = time.time() - req_start_time
         if "error" in response and response["error"] is None:
-            log.debug("<-%s- [%.6f] %s" % (response["id"], elapsed, json.dumps(response["result"], default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
+            log.debug("<-%s- [%.6f] %s" % (response["id"], elapsed, json.dumps(response["result"], default=serialization_fallback, ensure_ascii=self.ensure_ascii)))
         else:
             log.debug("<-- [%.6f] %s" % (elapsed, responsedata))
         return response, http_response.status

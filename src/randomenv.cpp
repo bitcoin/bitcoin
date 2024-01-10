@@ -10,6 +10,7 @@
 #include <randomenv.h>
 
 #include <clientversion.h>
+#include <compat/compat.h>
 #include <compat/cpuid.h>
 #include <crypto/sha512.h>
 #include <support/cleanse.h>
@@ -24,11 +25,12 @@
 #include <thread>
 #include <vector>
 
+#include <sys/types.h> // must go before a number of other headers
+
 #ifdef WIN32
 #include <windows.h>
 #include <winreg.h>
 #else
-#include <sys/types.h> // must go before a number of other headers
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/resource.h>

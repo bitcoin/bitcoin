@@ -4,19 +4,33 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compat/compat.h>
-#include <fs.h>
+#include <logging.h>
+#include <util/fs.h>
+#include <util/time.h>
 #include <wallet/bdb.h>
 #include <wallet/db.h>
 
+#include <sync.h>
 #include <util/check.h>
+#include <util/fs_helpers.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
 #include <stdint.h>
 
-#ifndef WIN32
+#include <db_cxx.h>
 #include <sys/stat.h>
+
+// Windows may not define S_IRUSR or S_IWUSR. We define both
+// here, with the same values as glibc (see stat.h).
+#ifdef WIN32
+#ifndef S_IRUSR
+#define S_IRUSR             0400
+#define S_IWUSR             0200
 #endif
+#endif
+
+static_assert(BDB_DB_FILE_ID_LEN == DB_FILE_ID_LEN, "DB_FILE_ID_LEN should be 20.");
 
 namespace wallet {
 namespace {
@@ -135,7 +149,7 @@ bool BerkeleyEnvironment::Open(bilingual_str& err)
 
     fs::path pathIn = fs::PathFromString(strPath);
     TryCreateDirectories(pathIn);
-    if (!LockDirectory(pathIn, ".walletlock")) {
+    if (util::LockDirectory(pathIn, ".walletlock") != util::LockResult::Success) {
         LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance may be using it.\n", strPath);
         err = strprintf(_("Error initializing wallet database environment %s!"), fs::quoted(fs::PathToString(Directory())));
         return false;
@@ -221,6 +235,26 @@ BerkeleyEnvironment::BerkeleyEnvironment() : m_use_shared_memory(false)
     fMockDb = true;
 }
 
+/** RAII class that automatically cleanses its data on destruction */
+class SafeDbt final
+{
+    Dbt m_dbt;
+
+public:
+    // construct Dbt with internally-managed data
+    SafeDbt();
+    // construct Dbt with provided data
+    SafeDbt(void* data, size_t size);
+    ~SafeDbt();
+
+    // delegate to Dbt
+    const void* get_data() const;
+    uint32_t get_size() const;
+
+    // conversion operator to access the underlying Dbt
+    operator Dbt*();
+};
+
 SafeDbt::SafeDbt()
 {
     m_dbt.set_flags(DB_DBT_MALLOC);
@@ -258,6 +292,18 @@ uint32_t SafeDbt::get_size() const
 SafeDbt::operator Dbt*()
 {
     return &m_dbt;
+}
+
+static Span<const std::byte> SpanFromDbt(const SafeDbt& dbt)
+{
+    return {reinterpret_cast<const std::byte*>(dbt.get_data()), dbt.get_size()};
+}
+
+BerkeleyDatabase::BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, fs::path filename, const DatabaseOptions& options) :
+    WalletDatabase(), env(std::move(env)), m_filename(std::move(filename)), m_max_log_mb(options.max_log_mb)
+{
+    auto inserted = this->env->m_databases.emplace(m_filename, std::ref(*this));
+    assert(inserted.second);
 }
 
 bool BerkeleyDatabase::Verify(bilingual_str& errorStr)
@@ -308,7 +354,7 @@ BerkeleyDatabase::~BerkeleyDatabase()
     }
 }
 
-BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const bool read_only, bool fFlushOnCloseIn) : pdb(nullptr), activeTxn(nullptr), m_database(database)
+BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const bool read_only, bool fFlushOnCloseIn) : m_database(database)
 {
     database.AddRef();
     database.Open();
@@ -432,6 +478,7 @@ void BerkeleyEnvironment::ReloadDbEnv()
     });
 
     std::vector<fs::path> filenames;
+    filenames.reserve(m_databases.size());
     for (const auto& it : m_databases) {
         filenames.push_back(it.first);
     }
@@ -444,6 +491,15 @@ void BerkeleyEnvironment::ReloadDbEnv()
     Reset();
     bilingual_str open_err;
     Open(open_err);
+}
+
+DbTxn* BerkeleyEnvironment::TxnBegin(int flags)
+{
+    DbTxn* ptxn = nullptr;
+    int ret = dbenv->txn_begin(nullptr, &ptxn, flags);
+    if (!ptxn || ret != 0)
+        return nullptr;
+    return ptxn;
 }
 
 bool BerkeleyDatabase::Rewrite(const char* pszSkip)
@@ -479,8 +535,8 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
                     std::unique_ptr<DatabaseCursor> cursor = db.GetNewCursor();
                     if (cursor) {
                         while (fSuccess) {
-                            CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-                            CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+                            DataStream ssKey{};
+                            DataStream ssValue{};
                             DatabaseCursor::Status ret1 = cursor->Next(ssKey, ssValue);
                             if (ret1 == DatabaseCursor::Status::DONE) {
                                 break;
@@ -656,38 +712,50 @@ void BerkeleyDatabase::ReloadDbEnv()
     env->ReloadDbEnv();
 }
 
-BerkeleyCursor::BerkeleyCursor(BerkeleyDatabase& database)
+BerkeleyCursor::BerkeleyCursor(BerkeleyDatabase& database, const BerkeleyBatch& batch, Span<const std::byte> prefix)
+    : m_key_prefix(prefix.begin(), prefix.end())
 {
     if (!database.m_db.get()) {
         throw std::runtime_error(STR_INTERNAL_BUG("BerkeleyDatabase does not exist"));
     }
-    int ret = database.m_db->cursor(nullptr, &m_cursor, 0);
+    // Transaction argument to cursor is only needed when using the cursor to
+    // write to the database. Read-only cursors do not need a txn pointer.
+    int ret = database.m_db->cursor(batch.txn(), &m_cursor, 0);
     if (ret != 0) {
-        throw std::runtime_error(STR_INTERNAL_BUG(strprintf("BDB Cursor could not be created. Returned %d", ret).c_str()));
+        throw std::runtime_error(STR_INTERNAL_BUG(strprintf("BDB Cursor could not be created. Returned %d", ret)));
     }
 }
 
-DatabaseCursor::Status BerkeleyCursor::Next(CDataStream& ssKey, CDataStream& ssValue)
+DatabaseCursor::Status BerkeleyCursor::Next(DataStream& ssKey, DataStream& ssValue)
 {
     if (m_cursor == nullptr) return Status::FAIL;
     // Read at cursor
-    SafeDbt datKey;
+    SafeDbt datKey(m_key_prefix.data(), m_key_prefix.size());
     SafeDbt datValue;
-    int ret = m_cursor->get(datKey, datValue, DB_NEXT);
+    int ret = -1;
+    if (m_first && !m_key_prefix.empty()) {
+        ret = m_cursor->get(datKey, datValue, DB_SET_RANGE);
+    } else {
+        ret = m_cursor->get(datKey, datValue, DB_NEXT);
+    }
+    m_first = false;
     if (ret == DB_NOTFOUND) {
         return Status::DONE;
     }
-    if (ret != 0 || datKey.get_data() == nullptr || datValue.get_data() == nullptr) {
+    if (ret != 0) {
         return Status::FAIL;
     }
 
+    Span<const std::byte> raw_key = SpanFromDbt(datKey);
+    if (!m_key_prefix.empty() && std::mismatch(raw_key.begin(), raw_key.end(), m_key_prefix.begin(), m_key_prefix.end()).second != m_key_prefix.end()) {
+        return Status::DONE;
+    }
+
     // Convert to streams
-    ssKey.SetType(SER_DISK);
     ssKey.clear();
-    ssKey.write({AsBytePtr(datKey.get_data()), datKey.get_size()});
-    ssValue.SetType(SER_DISK);
+    ssKey.write(raw_key);
     ssValue.clear();
-    ssValue.write({AsBytePtr(datValue.get_data()), datValue.get_size()});
+    ssValue.write(SpanFromDbt(datValue));
     return Status::MORE;
 }
 
@@ -701,14 +769,20 @@ BerkeleyCursor::~BerkeleyCursor()
 std::unique_ptr<DatabaseCursor> BerkeleyBatch::GetNewCursor()
 {
     if (!pdb) return nullptr;
-    return std::make_unique<BerkeleyCursor>(m_database);
+    return std::make_unique<BerkeleyCursor>(m_database, *this);
+}
+
+std::unique_ptr<DatabaseCursor> BerkeleyBatch::GetNewPrefixCursor(Span<const std::byte> prefix)
+{
+    if (!pdb) return nullptr;
+    return std::make_unique<BerkeleyCursor>(m_database, *this, prefix);
 }
 
 bool BerkeleyBatch::TxnBegin()
 {
     if (!pdb || activeTxn)
         return false;
-    DbTxn* ptxn = env->TxnBegin();
+    DbTxn* ptxn = env->TxnBegin(DB_TXN_WRITE_NOSYNC);
     if (!ptxn)
         return false;
     activeTxn = ptxn;
@@ -755,7 +829,7 @@ std::string BerkeleyDatabaseVersion()
     return DbEnv::version(nullptr, nullptr, nullptr);
 }
 
-bool BerkeleyBatch::ReadKey(CDataStream&& key, CDataStream& value)
+bool BerkeleyBatch::ReadKey(DataStream&& key, DataStream& value)
 {
     if (!pdb)
         return false;
@@ -765,13 +839,14 @@ bool BerkeleyBatch::ReadKey(CDataStream&& key, CDataStream& value)
     SafeDbt datValue;
     int ret = pdb->get(activeTxn, datKey, datValue, 0);
     if (ret == 0 && datValue.get_data() != nullptr) {
-        value.write({AsBytePtr(datValue.get_data()), datValue.get_size()});
+        value.clear();
+        value.write(SpanFromDbt(datValue));
         return true;
     }
     return false;
 }
 
-bool BerkeleyBatch::WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite)
+bool BerkeleyBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrite)
 {
     if (!pdb)
         return false;
@@ -786,7 +861,7 @@ bool BerkeleyBatch::WriteKey(CDataStream&& key, CDataStream&& value, bool overwr
     return (ret == 0);
 }
 
-bool BerkeleyBatch::EraseKey(CDataStream&& key)
+bool BerkeleyBatch::EraseKey(DataStream&& key)
 {
     if (!pdb)
         return false;
@@ -799,7 +874,7 @@ bool BerkeleyBatch::EraseKey(CDataStream&& key)
     return (ret == 0 || ret == DB_NOTFOUND);
 }
 
-bool BerkeleyBatch::HasKey(CDataStream&& key)
+bool BerkeleyBatch::HasKey(DataStream&& key)
 {
     if (!pdb)
         return false;
@@ -808,6 +883,25 @@ bool BerkeleyBatch::HasKey(CDataStream&& key)
 
     int ret = pdb->exists(activeTxn, datKey, 0);
     return ret == 0;
+}
+
+bool BerkeleyBatch::ErasePrefix(Span<const std::byte> prefix)
+{
+    if (!TxnBegin()) return false;
+    auto cursor{std::make_unique<BerkeleyCursor>(m_database, *this)};
+    // const_cast is safe below even though prefix_key is an in/out parameter,
+    // because we are not using the DB_DBT_USERMEM flag, so BDB will allocate
+    // and return a different output data pointer
+    Dbt prefix_key{const_cast<std::byte*>(prefix.data()), static_cast<uint32_t>(prefix.size())}, prefix_value{};
+    int ret{cursor->dbc()->get(&prefix_key, &prefix_value, DB_SET_RANGE)};
+    for (int flag{DB_CURRENT}; ret == 0; flag = DB_NEXT) {
+        SafeDbt key, value;
+        ret = cursor->dbc()->get(key, value, flag);
+        if (ret != 0 || key.get_size() < prefix.size() || memcmp(key.get_data(), prefix.data(), prefix.size()) != 0) break;
+        ret = cursor->dbc()->del(0);
+    }
+    cursor.reset();
+    return TxnCommit() && (ret == 0 || ret == DB_NOTFOUND);
 }
 
 void BerkeleyDatabase::AddRef()

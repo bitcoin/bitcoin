@@ -76,6 +76,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 پەقەت «ئەنئەنىۋى(legacy)» تىپتىكى ئادرېسلا ئىمزانى قوللايدۇ.</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation type="unfinished">ئادرېس كۆچۈر(&amp;C)</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation type="unfinished">بەلگىنى كۆچۈر(&amp;L)</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation type="unfinished">تەھرىر(&amp;E)</translation>
+    </message>
+    <message>
         <source>Export Address List</source>
         <translation type="unfinished">ئادرېس تىزىمىنى چىقار</translation>
     </message>
@@ -109,6 +121,61 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">(بەلگە يوق)</translation>
     </message>
 </context>
+<context>
+    <name>AskPassphraseDialog</name>
+    <message>
+        <source>Passphrase Dialog</source>
+        <translation type="unfinished">ئىم ئىبارە سۆزلەشكۈسى</translation>
+    </message>
+    <message>
+        <source>Enter passphrase</source>
+        <translation type="unfinished">ئىم ئىبارە كىرگۈزۈڭ</translation>
+    </message>
+    <message>
+        <source>New passphrase</source>
+        <translation type="unfinished">يېڭى ئىم ئىبارە</translation>
+    </message>
+    <message>
+        <source>Repeat new passphrase</source>
+        <translation type="unfinished">يېڭى ئىم ئىبارەنى تەكرارلاڭ</translation>
+    </message>
+    <message>
+        <source>Show passphrase</source>
+        <translation type="unfinished">ئىم ئىبارە كۆرسەت</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation type="unfinished">ھەمياننى شىفىرلا</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation type="unfinished">بۇ مەشغۇلات ئۈچۈن ھەمياننى ئېچىشتا ھەميان ئىم ئىبارىسى كېرەك بولىدۇ.</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation type="unfinished">ھەمياننى قۇلۇپىنى ئاچ</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation type="unfinished">ئىم ئىبارە ئۆزگەرت</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation type="unfinished">ھەميان شىفىرىنى جەزملە</translation>
+    </message>
+    <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation type="unfinished">ئاگاھلاندۇرۇش: ئەگەر ھەميانىڭىزنى شىفىرلاپ ھەمدە ئىم ئىبارىسىنى يوقىتىپ قويسىڭىز، سىز &lt;b&gt;ھەممە بىت تەڭگىڭىزنى يوقىتىپ قويىسىز&lt;/b&gt;!</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation type="unfinished">سىز راستىنلا ھەميانىڭىزنى شىفىرلامسىز؟</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation type="unfinished">ھەميان شىفىرلاندى</translation>
+    </message>
+    </context>
 <context>
     <name>QObject</name>
     <message numerus="yes">
@@ -192,6 +259,27 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>Intro</name>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>

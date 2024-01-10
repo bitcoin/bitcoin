@@ -2,12 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <chainparams.h>
 #include <index/txindex.h>
 #include <interfaces/chain.h>
-#include <script/standard.h>
+#include <test/util/index.h>
 #include <test/util/setup_common.h>
-#include <util/time.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -17,6 +17,7 @@ BOOST_AUTO_TEST_SUITE(txindex_tests)
 BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 {
     TxIndex txindex(interfaces::MakeChain(m_node), 1 << 20, true);
+    BOOST_REQUIRE(txindex.Init());
 
     CTransactionRef tx_disk;
     uint256 block_hash;
@@ -29,15 +30,10 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     // BlockUntilSyncedToCurrentChain should return false before txindex is started.
     BOOST_CHECK(!txindex.BlockUntilSyncedToCurrentChain());
 
-    BOOST_REQUIRE(txindex.Start());
+    BOOST_REQUIRE(txindex.StartBackgroundSync());
 
     // Allow tx index to catch up with the block index.
-    constexpr int64_t timeout_ms = 10 * 1000;
-    int64_t time_start = GetTimeMillis();
-    while (!txindex.BlockUntilSyncedToCurrentChain()) {
-        BOOST_REQUIRE(time_start + timeout_ms > GetTimeMillis());
-        UninterruptibleSleep(std::chrono::milliseconds{100});
-    }
+    IndexWaitSynced(txindex, *Assert(m_node.shutdown));
 
     // Check that txindex excludes genesis block transactions.
     const CBlock& genesis_block = Params().GenesisBlock();

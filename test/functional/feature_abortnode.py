@@ -9,17 +9,13 @@
 - Mine a fork that requires disconnecting the tip.
 - Verify that bitcoind AbortNode's.
 """
-
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import get_datadir_path
-import os
 
 
 class AbortNodeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.rpc_timeout = 240
 
     def setup_network(self):
         self.setup_nodes()
@@ -27,10 +23,9 @@ class AbortNodeTest(BitcoinTestFramework):
 
     def run_test(self):
         self.generate(self.nodes[0], 3, sync_fun=self.no_op)
-        datadir = get_datadir_path(self.options.tmpdir, 0)
 
         # Deleting the undo file will result in reorg failure
-        os.unlink(os.path.join(datadir, self.chain, 'blocks', 'rev00000.dat'))
+        (self.nodes[0].blocks_path / "rev00000.dat").unlink()
 
         # Connecting to a node with a more work chain will trigger a reorg
         # attempt.
@@ -41,7 +36,7 @@ class AbortNodeTest(BitcoinTestFramework):
 
             # Check that node0 aborted
             self.log.info("Waiting for crash")
-            self.nodes[0].wait_until_stopped(timeout=200)
+            self.nodes[0].wait_until_stopped(timeout=5, expect_error=True, expected_stderr="Error: A fatal internal error occurred, see debug.log for details")
         self.log.info("Node crashed - now verifying restart fails")
         self.nodes[0].assert_start_raises_init_error()
 

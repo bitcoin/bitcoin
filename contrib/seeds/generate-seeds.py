@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
-Script to generate list of seed nodes for chainparams.cpp.
+Script to generate list of seed nodes for kernel/chainparams.cpp.
 
 This script expects two text files in the directory that is passed as an
 argument:

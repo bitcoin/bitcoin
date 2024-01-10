@@ -11,26 +11,23 @@
 #include <pubkey.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
+#include <util/chaintype.h>
 #include <validation.h>
-#include <version.h>
 
 #include <cassert>
 #include <string>
 
 void initialize_block()
 {
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(ChainType::REGTEST);
 }
 
-FUZZ_TARGET_INIT(block, initialize_block)
+FUZZ_TARGET(block, .init = initialize_block)
 {
-    CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
+    DataStream ds{buffer};
     CBlock block;
     try {
-        int nVersion;
-        ds >> nVersion;
-        ds.SetVersion(nVersion);
-        ds >> block;
+        ds >> TX_WITH_WITNESS(block);
     } catch (const std::ios_base::failure&) {
         return;
     }

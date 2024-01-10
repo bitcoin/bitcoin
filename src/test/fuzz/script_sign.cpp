@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <chainparamsbase.h>
 #include <key.h>
 #include <psbt.h>
 #include <pubkey.h>
@@ -14,6 +13,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/chaintype.h>
 #include <util/translation.h>
 
 #include <cassert>
@@ -27,22 +27,22 @@
 void initialize_script_sign()
 {
     ECC_Start();
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(ChainType::REGTEST);
 }
 
-FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
+FUZZ_TARGET(script_sign, .init = initialize_script_sign)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const std::vector<uint8_t> key = ConsumeRandomLengthByteVector(fuzzed_data_provider, 128);
 
     {
-        CDataStream random_data_stream = ConsumeDataStream(fuzzed_data_provider);
+        DataStream random_data_stream{ConsumeDataStream(fuzzed_data_provider)};
         std::map<CPubKey, KeyOriginInfo> hd_keypaths;
         try {
             DeserializeHDKeypaths(random_data_stream, key, hd_keypaths);
         } catch (const std::ios_base::failure&) {
         }
-        CDataStream serialized{SER_NETWORK, PROTOCOL_VERSION};
+        DataStream serialized{};
         SerializeHDKeypaths(serialized, hd_keypaths, CompactSizeWriter(fuzzed_data_provider.ConsumeIntegral<uint8_t>()));
     }
 
@@ -59,7 +59,7 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
             }
             hd_keypaths[*pub_key] = *key_origin_info;
         }
-        CDataStream serialized{SER_NETWORK, PROTOCOL_VERSION};
+        DataStream serialized{};
         try {
             SerializeHDKeypaths(serialized, hd_keypaths, CompactSizeWriter(fuzzed_data_provider.ConsumeIntegral<uint8_t>()));
         } catch (const std::ios_base::failure&) {
@@ -79,15 +79,13 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
     }
 
     FillableSigningProvider provider;
-    CKey k;
-    const std::vector<uint8_t> key_data = ConsumeRandomLengthByteVector(fuzzed_data_provider);
-    k.Set(key_data.begin(), key_data.end(), fuzzed_data_provider.ConsumeBool());
+    CKey k = ConsumePrivateKey(fuzzed_data_provider);
     if (k.IsValid()) {
         provider.AddKey(k);
     }
 
     {
-        const std::optional<CMutableTransaction> mutable_transaction = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
+        const std::optional<CMutableTransaction> mutable_transaction = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
         const std::optional<CTxOut> tx_out = ConsumeDeserializable<CTxOut>(fuzzed_data_provider);
         const unsigned int n_in = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
         if (mutable_transaction && tx_out && mutable_transaction->vin.size() > n_in) {
@@ -101,17 +99,19 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
         if (mutable_transaction) {
             CTransaction tx_from{*mutable_transaction};
             CMutableTransaction tx_to;
-            const std::optional<CMutableTransaction> opt_tx_to = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
+            const std::optional<CMutableTransaction> opt_tx_to = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
             if (opt_tx_to) {
                 tx_to = *opt_tx_to;
             }
             CMutableTransaction script_tx_to = tx_to;
             CMutableTransaction sign_transaction_tx_to = tx_to;
             if (n_in < tx_to.vin.size() && tx_to.vin[n_in].prevout.n < tx_from.vout.size()) {
-                (void)SignSignature(provider, tx_from, tx_to, n_in, fuzzed_data_provider.ConsumeIntegral<int>());
+                SignatureData empty;
+                (void)SignSignature(provider, tx_from, tx_to, n_in, fuzzed_data_provider.ConsumeIntegral<int>(), empty);
             }
             if (n_in < script_tx_to.vin.size()) {
-                (void)SignSignature(provider, ConsumeScript(fuzzed_data_provider), script_tx_to, n_in, ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int>());
+                SignatureData empty;
+                (void)SignSignature(provider, ConsumeScript(fuzzed_data_provider), script_tx_to, n_in, ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int>(), empty);
                 MutableTransactionSignatureCreator signature_creator{tx_to, n_in, ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int>()};
                 std::vector<unsigned char> vch_sig;
                 CKeyID address;
@@ -124,18 +124,7 @@ FUZZ_TARGET_INIT(script_sign, initialize_script_sign)
                 }
                 (void)signature_creator.CreateSig(provider, vch_sig, address, ConsumeScript(fuzzed_data_provider), fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0}));
             }
-            std::map<COutPoint, Coin> coins;
-            LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
-                const std::optional<COutPoint> outpoint = ConsumeDeserializable<COutPoint>(fuzzed_data_provider);
-                if (!outpoint) {
-                    break;
-                }
-                const std::optional<Coin> coin = ConsumeDeserializable<Coin>(fuzzed_data_provider);
-                if (!coin) {
-                    break;
-                }
-                coins[*outpoint] = *coin;
-            }
+            std::map<COutPoint, Coin> coins{ConsumeCoins(fuzzed_data_provider)};
             std::map<int, bilingual_str> input_errors;
             (void)SignTransaction(sign_transaction_tx_to, &provider, coins, fuzzed_data_provider.ConsumeIntegral<int>(), input_errors);
         }

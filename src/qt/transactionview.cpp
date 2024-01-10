@@ -91,7 +91,6 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
                                         TransactionFilterProxy::TYPE(TransactionRecord::RecvFromOther));
     typeWidget->addItem(tr("Sent to"), TransactionFilterProxy::TYPE(TransactionRecord::SendToAddress) |
                                   TransactionFilterProxy::TYPE(TransactionRecord::SendToOther));
-    typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
 
@@ -531,6 +530,10 @@ void TransactionView::showDetails()
     {
         TransactionDescDialog *dlg = new TransactionDescDialog(selection.at(0));
         dlg->setAttribute(Qt::WA_DeleteOnClose);
+        m_opened_dialogs.append(dlg);
+        connect(dlg, &QObject::destroyed, [this, dlg] {
+            m_opened_dialogs.removeOne(dlg);
+        });
         dlg->show();
     }
 }
@@ -637,6 +640,11 @@ bool TransactionView::eventFilter(QObject *obj, QEvent *event)
              return true;
         }
     }
+    if (event->type() == QEvent::EnabledChange) {
+        if (!isEnabled()) {
+            closeOpenedDialogs();
+        }
+    }
     return QWidget::eventFilter(obj, event);
 }
 
@@ -645,4 +653,13 @@ void TransactionView::updateWatchOnlyColumn(bool fHaveWatchOnly)
 {
     watchOnlyWidget->setVisible(fHaveWatchOnly);
     transactionView->setColumnHidden(TransactionTableModel::Watchonly, !fHaveWatchOnly);
+}
+
+void TransactionView::closeOpenedDialogs()
+{
+    // close all dialogs opened from this view
+    for (QDialog* dlg : m_opened_dialogs) {
+        dlg->close();
+    }
+    m_opened_dialogs.clear();
 }

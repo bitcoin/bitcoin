@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Kliko me të djathtën për të ndryshuar adresën ose etiketen.</translation>
+        <translation type="unfinished">Kliko me të djathtën për të ndryshuar adresën ose etiketen</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">afer</translation>
+        <translation type="unfinished">afër</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -207,6 +207,21 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>BitcoinApplication</name>
+    <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">Skedari i cilësimeve %1 mund të jetë i korruptuar ose i pavlefshëm.</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation type="unfinished">Ndodhi një gabim fatal. %1 nuk mund të vazhdojë më i sigurt dhe do të heqë dorë.</translation>
+    </message>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">Ndodhi një gabim i brendshëm. %1 do të përpiqet të vazhdojë në mënyrë të sigurt. Ky është një gabim i papritur që mund të raportohet siç përshkruhet më poshtë.</translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
     <message>
         <source>unknown</source>
@@ -261,13 +276,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
             <numerusform />
         </translation>
-    </message>
-    </context>
-<context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Fonde te pamjaftueshme</translation>
     </message>
     </context>
 <context>
@@ -454,6 +462,27 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>Intro</name>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
@@ -652,10 +681,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Paste address from clipboard</source>
         <translation type="unfinished">Ngjit nga memorja e sistemit</translation>
     </message>
-    <message>
-        <source>Pay To:</source>
-        <translation type="unfinished">Paguaj drejt:</translation>
-    </message>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
@@ -668,10 +693,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>TransactionDesc</name>
     <message>
         <source>%1/unconfirmed</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in at least one block, but less than 6 blocks.</extracomment>
         <translation type="unfinished">%1/I pakonfirmuar</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in 6 or more blocks.</extracomment>
         <translation type="unfinished">%1 konfirmimet</translation>
     </message>
     <message>
@@ -810,6 +837,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">Eksporto të dhënat e skedës korrente në një skedar</translation>
+    </message>
+    </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Fonde te pamjaftueshme</translation>
     </message>
     </context>
 </TS>

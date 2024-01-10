@@ -32,6 +32,7 @@ class CreateTxWalletTest(BitcoinTestFramework):
 
         self.test_anti_fee_sniping()
         self.test_tx_size_too_large()
+        self.test_create_too_long_mempool_chain()
 
     def test_anti_fee_sniping(self):
         self.log.info('Check that we have some (old) blocks and that anti-fee-sniping is disabled')
@@ -79,6 +80,31 @@ class CreateTxWalletTest(BitcoinTestFramework):
             lambda: self.nodes[0].fundrawtransaction(hexstring=raw_tx),
         )
         self.nodes[0].settxfee(0)
+
+    def test_create_too_long_mempool_chain(self):
+        self.log.info('Check too-long mempool chain error')
+        df_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        self.nodes[0].createwallet("too_long")
+        test_wallet = self.nodes[0].get_wallet_rpc("too_long")
+
+        tx_data = df_wallet.send(outputs=[{test_wallet.getnewaddress(): 25}], options={"change_position": 0})
+        txid = tx_data['txid']
+        vout = 1
+
+        self.nodes[0].syncwithvalidationinterfacequeue()
+        options = {"change_position": 0, "add_inputs": False}
+        for i in range(1, 25):
+            options['inputs'] = [{'txid': txid, 'vout': vout}]
+            tx_data = test_wallet.send(outputs=[{test_wallet.getnewaddress(): 25 - i}], options=options)
+            txid = tx_data['txid']
+
+        # Sending one more chained transaction will fail
+        options = {"minconf": 0, "include_unsafe": True, 'add_inputs': True}
+        assert_raises_rpc_error(-4, "Unconfirmed UTXOs are available, but spending them creates a chain of transactions that will be rejected by the mempool",
+                                test_wallet.send, outputs=[{test_wallet.getnewaddress(): 0.3}], options=options)
+
+        test_wallet.unloadwallet()
 
 
 if __name__ == '__main__':

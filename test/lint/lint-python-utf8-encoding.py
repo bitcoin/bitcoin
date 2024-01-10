@@ -12,7 +12,7 @@ import re
 
 from subprocess import check_output, CalledProcessError
 
-EXCLUDED_DIRS = ["src/crc32c/"]
+EXCLUDED_DIRS = ["src/crc32c/", "src/secp256k1/"]
 
 
 def get_exclude_args():
@@ -28,7 +28,7 @@ def check_fileopens():
         if e.returncode > 1:
             raise e
 
-    filtered_fileopens = [fileopen for fileopen in fileopens if not re.search(r"encoding=.(ascii|utf8|utf-8).|open\([^,]*, ['\"][^'\"]*b[^'\"]*['\"]", fileopen)]
+    filtered_fileopens = [fileopen for fileopen in fileopens if not re.search(r"encoding=.(ascii|utf8|utf-8).|open\([^,]*, (\*\*kwargs|['\"][^'\"]*b[^'\"]*['\"])", fileopen)]
 
     return filtered_fileopens
 

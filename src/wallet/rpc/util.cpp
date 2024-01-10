@@ -6,6 +6,7 @@
 
 #include <common/url.h>
 #include <rpc/util.h>
+#include <util/any.h>
 #include <util/translation.h>
 #include <wallet/context.h>
 #include <wallet/wallet.h>
@@ -176,4 +177,14 @@ void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& st
         throw JSONRPCError(code, error.original);
     }
 }
+
+void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+{
+    AssertLockHeld(wallet.cs_wallet);
+    UniValue lastprocessedblock{UniValue::VOBJ};
+    lastprocessedblock.pushKV("hash", wallet.GetLastBlockHash().GetHex());
+    lastprocessedblock.pushKV("height", wallet.GetLastBlockHeight());
+    entry.pushKV("lastprocessedblock", lastprocessedblock);
+}
+
 } // namespace wallet

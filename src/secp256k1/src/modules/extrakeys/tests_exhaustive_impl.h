@@ -47,8 +47,8 @@ static void test_exhaustive_extrakeys(const secp256k1_context *ctx, const secp25
         CHECK(secp256k1_memcmp_var(xonly_pubkey_bytes[i - 1], buf, 32) == 0);
 
         /* Compare the xonly_pubkey bytes against the precomputed group. */
-        secp256k1_fe_set_b32(&fe, xonly_pubkey_bytes[i - 1]);
-        CHECK(secp256k1_fe_equal_var(&fe, &group[i].x));
+        secp256k1_fe_set_b32_mod(&fe, xonly_pubkey_bytes[i - 1]);
+        CHECK(secp256k1_fe_equal(&fe, &group[i].x));
 
         /* Check the parity against the precomputed group. */
         fe = group[i].y;

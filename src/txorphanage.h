@@ -27,16 +27,14 @@ public:
     bool HaveTx(const GenTxid& gtxid) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Extract a transaction from a peer's work set
-     *  Returns nullptr and sets more to false if there are no transactions
-     *  to work on. Otherwise returns the transaction reference, removes
-     *  the transaction from the work set, and populates its arguments with
-     *  the originating peer, and whether there are more orphans for this peer
-     *  to work on after this tx.
+     *  Returns nullptr if there are no transactions to work on.
+     *  Otherwise returns the transaction reference, and removes
+     *  it from the work set.
      */
-    CTransactionRef GetTxToReconsider(NodeId peer, NodeId& originator, bool& more) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    CTransactionRef GetTxToReconsider(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Erase an orphan by txid */
-    int EraseTx(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    int EraseTx(const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Erase all orphans announced by a peer (eg, after that peer disconnects) */
     void EraseForPeer(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -45,10 +43,13 @@ public:
     void EraseForBlock(const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Limit the orphanage to the given maximum */
-    void LimitOrphans(unsigned int max_orphans) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    void LimitOrphans(unsigned int max_orphans, FastRandomContext& rng) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    /** Add any orphans that list a particular tx as a parent into a peer's work set */
-    void AddChildrenToWorkSet(const CTransaction& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    /** Add any orphans that list a particular tx as a parent into the from peer's work set */
+    void AddChildrenToWorkSet(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);;
+
+    /** Does this peer have any work to do? */
+    bool HaveTxToReconsider(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);;
 
     /** Return how many entries exist in the orphange */
     size_t Size() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
@@ -70,10 +71,10 @@ protected:
 
     /** Map from txid to orphan transaction record. Limited by
      *  -maxorphantx/DEFAULT_MAX_ORPHAN_TRANSACTIONS */
-    std::map<uint256, OrphanTx> m_orphans GUARDED_BY(m_mutex);
+    std::map<Txid, OrphanTx> m_orphans GUARDED_BY(m_mutex);
 
-    /** Which peer provided a parent tx of orphans that need to be reconsidered */
-    std::map<NodeId, std::set<uint256>> m_peer_work_set GUARDED_BY(m_mutex);
+    /** Which peer provided the orphans that need to be reconsidered */
+    std::map<NodeId, std::set<Txid>> m_peer_work_set GUARDED_BY(m_mutex);
 
     using OrphanMap = decltype(m_orphans);
 
@@ -95,10 +96,10 @@ protected:
 
     /** Index from wtxid into the m_orphans to lookup orphan
      *  transactions using their witness ids. */
-    std::map<uint256, OrphanMap::iterator> m_wtxid_to_orphan_it GUARDED_BY(m_mutex);
+    std::map<Wtxid, OrphanMap::iterator> m_wtxid_to_orphan_it GUARDED_BY(m_mutex);
 
     /** Erase an orphan by txid */
-    int _EraseTx(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+    int EraseTxNoLock(const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 };
 
 #endif // BITCOIN_TXORPHANAGE_H

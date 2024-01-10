@@ -7,9 +7,9 @@
 #define BITCOIN_WALLET_DB_H
 
 #include <clientversion.h>
-#include <fs.h>
 #include <streams.h>
 #include <support/allocators/secure.h>
+#include <util/fs.h>
 
 #include <atomic>
 #include <memory>
@@ -38,17 +38,17 @@ public:
         DONE,
     };
 
-    virtual Status Next(CDataStream& key, CDataStream& value) { return Status::FAIL; }
+    virtual Status Next(DataStream& key, DataStream& value) { return Status::FAIL; }
 };
 
 /** RAII class that provides access to a WalletDatabase */
 class DatabaseBatch
 {
 private:
-    virtual bool ReadKey(CDataStream&& key, CDataStream& value) = 0;
-    virtual bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite=true) = 0;
-    virtual bool EraseKey(CDataStream&& key) = 0;
-    virtual bool HasKey(CDataStream&& key) = 0;
+    virtual bool ReadKey(DataStream&& key, DataStream& value) = 0;
+    virtual bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) = 0;
+    virtual bool EraseKey(DataStream&& key) = 0;
+    virtual bool HasKey(DataStream&& key) = 0;
 
 public:
     explicit DatabaseBatch() {}
@@ -63,11 +63,11 @@ public:
     template <typename K, typename T>
     bool Read(const K& key, T& value)
     {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        DataStream ssKey{};
         ssKey.reserve(1000);
         ssKey << key;
 
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        DataStream ssValue{};
         if (!ReadKey(std::move(ssKey), ssValue)) return false;
         try {
             ssValue >> value;
@@ -80,11 +80,11 @@ public:
     template <typename K, typename T>
     bool Write(const K& key, const T& value, bool fOverwrite = true)
     {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        DataStream ssKey{};
         ssKey.reserve(1000);
         ssKey << key;
 
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        DataStream ssValue{};
         ssValue.reserve(10000);
         ssValue << value;
 
@@ -94,7 +94,7 @@ public:
     template <typename K>
     bool Erase(const K& key)
     {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        DataStream ssKey{};
         ssKey.reserve(1000);
         ssKey << key;
 
@@ -104,14 +104,16 @@ public:
     template <typename K>
     bool Exists(const K& key)
     {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        DataStream ssKey{};
         ssKey.reserve(1000);
         ssKey << key;
 
         return HasKey(std::move(ssKey));
     }
+    virtual bool ErasePrefix(Span<const std::byte> prefix) = 0;
 
     virtual std::unique_ptr<DatabaseCursor> GetNewCursor() = 0;
+    virtual std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) = 0;
     virtual bool TxnBegin() = 0;
     virtual bool TxnCommit() = 0;
     virtual bool TxnAbort() = 0;
@@ -123,7 +125,7 @@ class WalletDatabase
 {
 public:
     /** Create dummy DB handle */
-    WalletDatabase() : nUpdateCounter(0), nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0) {}
+    WalletDatabase() : nUpdateCounter(0) {}
     virtual ~WalletDatabase() {};
 
     /** Open the database if it is not already opened. */
@@ -165,56 +167,12 @@ public:
     virtual std::string Format() = 0;
 
     std::atomic<unsigned int> nUpdateCounter;
-    unsigned int nLastSeen;
-    unsigned int nLastFlushed;
-    int64_t nLastWalletUpdate;
+    unsigned int nLastSeen{0};
+    unsigned int nLastFlushed{0};
+    int64_t nLastWalletUpdate{0};
 
     /** Make a DatabaseBatch connected to this database */
     virtual std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) = 0;
-};
-
-class DummyCursor : public DatabaseCursor
-{
-    Status Next(CDataStream& key, CDataStream& value) override { return Status::FAIL; }
-};
-
-/** RAII class that provides access to a DummyDatabase. Never fails. */
-class DummyBatch : public DatabaseBatch
-{
-private:
-    bool ReadKey(CDataStream&& key, CDataStream& value) override { return true; }
-    bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite=true) override { return true; }
-    bool EraseKey(CDataStream&& key) override { return true; }
-    bool HasKey(CDataStream&& key) override { return true; }
-
-public:
-    void Flush() override {}
-    void Close() override {}
-
-    std::unique_ptr<DatabaseCursor> GetNewCursor() override { return std::make_unique<DummyCursor>(); }
-    bool TxnBegin() override { return true; }
-    bool TxnCommit() override { return true; }
-    bool TxnAbort() override { return true; }
-};
-
-/** A dummy WalletDatabase that does nothing and never fails. Only used by unit tests.
- **/
-class DummyDatabase : public WalletDatabase
-{
-public:
-    void Open() override {};
-    void AddRef() override {}
-    void RemoveRef() override {}
-    bool Rewrite(const char* pszSkip=nullptr) override { return true; }
-    bool Backup(const std::string& strDest) const override { return true; }
-    void Close() override {}
-    void Flush() override {}
-    bool PeriodicFlush() override { return true; }
-    void IncrementUpdateCounter() override { ++nUpdateCounter; }
-    void ReloadDbEnv() override {}
-    std::string Filename() override { return "dummy"; }
-    std::string Format() override { return "dummy"; }
-    std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override { return std::make_unique<DummyBatch>(); }
 };
 
 enum class DatabaseFormat {

@@ -14,8 +14,7 @@
 #include <secp256k1.h>
 #include <secp256k1_ecdh.h>
 
-#include "random.h"
-
+#include "examples_util.h"
 
 int main(void) {
     unsigned char seckey1[32];
@@ -112,12 +111,12 @@ int main(void) {
      * example through "out of bounds" array access (see Heartbleed), Or the OS
      * swapping them to disk. Hence, we overwrite the secret key buffer with zeros.
      *
-     * TODO: Prevent these writes from being optimized out, as any good compiler
+     * Here we are preventing these writes from being optimized out, as any good compiler
      * will remove any writes that aren't used. */
-    memset(seckey1, 0, sizeof(seckey1));
-    memset(seckey2, 0, sizeof(seckey2));
-    memset(shared_secret1, 0, sizeof(shared_secret1));
-    memset(shared_secret2, 0, sizeof(shared_secret2));
+    secure_erase(seckey1, sizeof(seckey1));
+    secure_erase(seckey2, sizeof(seckey2));
+    secure_erase(shared_secret1, sizeof(shared_secret1));
+    secure_erase(shared_secret2, sizeof(shared_secret2));
 
     return 0;
 }

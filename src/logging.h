@@ -6,9 +6,9 @@
 #ifndef BITCOIN_LOGGING_H
 #define BITCOIN_LOGGING_H
 
-#include <fs.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
+#include <util/fs.h>
 #include <util/string.h>
 
 #include <atomic>
@@ -65,9 +65,10 @@ namespace BCLog {
         LOCK        = (1 << 24),
 #endif
         UTIL        = (1 << 25),
-        BLOCKSTORE  = (1 << 26),
+        BLOCKSTORAGE = (1 << 26),
         TXRECONCILIATION = (1 << 27),
         SCAN        = (1 << 28),
+        TXPACKAGES  = (1 << 29),
         ALL         = ~(uint32_t)0,
     };
     enum class Level {
@@ -256,5 +257,12 @@ static inline void LogPrintf_(const std::string& logging_function, const std::st
             LogPrintLevel_(category, level, __VA_ARGS__); \
         }                                                 \
     } while (0)
+
+template <typename... Args>
+bool error(const char* fmt, const Args&... args)
+{
+    LogPrintf("ERROR: %s\n", tfm::format(fmt, args...));
+    return false;
+}
 
 #endif // BITCOIN_LOGGING_H

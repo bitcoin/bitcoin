@@ -9,7 +9,6 @@
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
 #include <util/vector.h>
 
 #include <assert.h>
@@ -32,8 +31,6 @@ std::optional<OutputType> ParseOutputType(const std::string& type)
         return OutputType::BECH32;
     } else if (type == OUTPUT_TYPE_STRING_BECH32M) {
         return OutputType::BECH32M;
-    } else if (type == OUTPUT_TYPE_STRING_UNKNOWN) {
-        return OutputType::UNKNOWN;
     }
     return std::nullopt;
 }

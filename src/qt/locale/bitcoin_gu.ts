@@ -92,6 +92,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">સરનામાં ની સૂચિ નો નિકાસ કરો</translation>
     </message>
     <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">અલ્પવિરામથી વિભાજિત ફાઇલ</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">નિકાસ ની પ્ર્રાક્રિયા નિષ્ફળ ગયેલ છે</translation>
     </message>
@@ -165,9 +170,31 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Wallet encrypted</source>
         <translation type="unfinished">પાકીટ એન્ક્રિપ્ટ થયેલ</translation>
     </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation type="unfinished">તમારું વૉલેટ હવે એન્ક્રિપ્ટેડ છે.</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation type="unfinished">વૉલેટ એન્ક્રિપ્શન નિષ્ફળ થયું.</translation>
+    </message>
     </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Amount</source>
+        <translation type="unfinished">રકમ</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <extracomment>An inbound connection from a peer. An inbound connection is a connection initiated by a peer.</extracomment>
+        <translation type="unfinished">અંદરનું</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An outbound connection to a peer. An outbound connection is a connection initiated by us.</extracomment>
+        <translation type="unfinished">બહારનું </translation>
+    </message>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
@@ -213,6 +240,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">નવું વૉલેટ બનાવો</translation>
+    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
@@ -232,12 +263,37 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Amount</source>
+        <translation type="unfinished">રકમ</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation type="unfinished">લેબલ નથી</translation>
     </message>
     </context>
 <context>
     <name>Intro</name>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
@@ -246,13 +302,75 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
         </translation>
     </message>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">સ્વાગત છે</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">સ્વાગત છે %1.</translation>
+    </message>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Hide</source>
+        <translation type="unfinished">છુપાવો</translation>
+    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
     <message>
+        <source>Age</source>
+        <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
+        <translation type="unfinished">ઉંમર</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
+        <translation type="unfinished">મોકલેલ</translation>
+    </message>
+    <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
         <translation type="unfinished">સરનામુ</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
+        <translation type="unfinished">પ્રકાર</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <extracomment>An Inbound Connection from a Peer.</extracomment>
+        <translation type="unfinished">અંદરનું</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An Outbound Connection to a Peer.</extracomment>
+        <translation type="unfinished">બહારનું </translation>
+    </message>
+</context>
+<context>
+    <name>RPCConsole</name>
+    <message>
+        <source>Name</source>
+        <translation type="unfinished">નામ </translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation type="unfinished">મોકલેલ</translation>
+    </message>
+    </context>
+<context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>Show</source>
+        <translation type="unfinished">બતાવો</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation type="unfinished">દૂર કરો</translation>
     </message>
     </context>
 <context>
@@ -268,6 +386,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Hide</source>
+        <translation type="unfinished">છુપાવો</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
@@ -289,9 +411,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
         </translation>
     </message>
+    <message>
+        <source>Amount</source>
+        <translation type="unfinished">રકમ</translation>
+    </message>
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Type</source>
+        <translation type="unfinished">પ્રકાર</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation type="unfinished">ચિઠ્ઠી</translation>
@@ -304,6 +434,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>TransactionView</name>
     <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">અલ્પવિરામથી વિભાજિત ફાઇલ</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation type="unfinished">પ્રકાર</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation type="unfinished">ચિઠ્ઠી</translation>
     </message>
@@ -314,6 +453,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">નિકાસ ની પ્ર્રાક્રિયા નિષ્ફળ ગયેલ છે</translation>
+    </message>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished">નવું વૉલેટ બનાવો</translation>
     </message>
     </context>
 <context>

@@ -18,17 +18,19 @@ bench_bench_bitcoin_SOURCES = \
   bench/bench.cpp \
   bench/bench.h \
   bench/bench_bitcoin.cpp \
+  bench/bip324_ecdh.cpp \
   bench/block_assemble.cpp \
   bench/ccoins_caching.cpp \
   bench/chacha20.cpp \
-  bench/chacha_poly_aead.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
   bench/crypto_hash.cpp \
   bench/data.cpp \
   bench/data.h \
   bench/descriptors.cpp \
+  bench/disconnected_transactions.cpp \
   bench/duplicate_inputs.cpp \
+  bench/ellswift.cpp \
   bench/examples.cpp \
   bench/gcs_filter.cpp \
   bench/hashpadding.cpp \
@@ -42,13 +44,17 @@ bench_bench_bitcoin_SOURCES = \
   bench/nanobench.h \
   bench/peer_eviction.cpp \
   bench/poly1305.cpp \
+  bench/pool.cpp \
   bench/prevector.cpp \
+  bench/readblock.cpp \
   bench/rollingbloom.cpp \
   bench/rpc_blockchain.cpp \
   bench/rpc_mempool.cpp \
+  bench/streams_findbyte.cpp \
   bench/strencodings.cpp \
   bench/util_time.cpp \
-  bench/verify_script.cpp
+  bench/verify_script.cpp \
+  bench/xor.cpp
 
 nodist_bench_bench_bitcoin_SOURCES = $(GENERATED_BENCH_FILES)
 
@@ -79,6 +85,7 @@ endif
 if ENABLE_WALLET
 bench_bench_bitcoin_SOURCES += bench/coin_selection.cpp
 bench_bench_bitcoin_SOURCES += bench/wallet_balance.cpp
+bench_bench_bitcoin_SOURCES += bench/wallet_create.cpp
 bench_bench_bitcoin_SOURCES += bench/wallet_loading.cpp
 bench_bench_bitcoin_SOURCES += bench/wallet_create_tx.cpp
 bench_bench_bitcoin_LDADD += $(BDB_LIBS) $(SQLITE_LIBS)

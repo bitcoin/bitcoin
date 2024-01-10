@@ -6,7 +6,7 @@ The `macdeployqtplus` script should not be run manually. Instead, after building
 make deploy
 ```
 
-When complete, it will have produced `Bitcoin-Core.dmg`.
+When complete, it will have produced `Bitcoin-Core.zip`.
 
 ## SDK Extraction
 
@@ -14,56 +14,50 @@ When complete, it will have produced `Bitcoin-Core.dmg`.
 
 A free Apple Developer Account is required to proceed.
 
-Our current macOS SDK
-(`Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz`)
-can be extracted from
-[Xcode_12.2.xip](https://download.developer.apple.com/Developer_Tools/Xcode_12.2/Xcode_12.2.xip).
+Our macOS SDK can be extracted from
+[Xcode_15.xip](https://download.developer.apple.com/Developer_Tools/Xcode_15/Xcode_15.xip).
 
 Alternatively, after logging in to your account go to 'Downloads', then 'More'
-and search for [`Xcode 12.2`](https://developer.apple.com/download/all/?q=Xcode%2012.2).
+and search for [`Xcode 15`](https://developer.apple.com/download/all/?q=Xcode%2015).
 
 An Apple ID and cookies enabled for the hostname are needed to download this.
 
-The `sha256sum` of the downloaded XIP archive should be `28d352f8c14a43d9b8a082ac6338dc173cb153f964c6e8fb6ba389e5be528bd0`.
+The `sha256sum` of the downloaded XIP archive should be `4daaed2ef2253c9661779fa40bfff50655dc7ec45801aba5a39653e7bcdde48e`.
 
-After Xcode version 7.x, Apple started shipping the `Xcode.app` in a `.xip`
-archive. This makes the SDK less-trivial to extract on non-macOS machines. One
-approach (tested on Debian Buster) is outlined below:
+To extract the `.xip` on Linux:
 
 ```bash
 # Install/clone tools needed for extracting Xcode.app
 apt install cpio
 git clone https://github.com/bitcoin-core/apple-sdk-tools.git
 
-# Unpack Xcode_12.2.xip and place the resulting Xcode.app in your current
+# Unpack the .xip and place the resulting Xcode.app in your current
 # working directory
-python3 apple-sdk-tools/extract_xcode.py -f Xcode_12.2.xip | cpio -d -i
+python3 apple-sdk-tools/extract_xcode.py -f Xcode_15.xip | cpio -d -i
 ```
 
-On macOS the process is more straightforward:
+On macOS:
 
 ```bash
-xip -x Xcode_12.2.xip
+xip -x Xcode_15.xip
 ```
 
-### Step 2: Generating `Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz` from `Xcode.app`
+### Step 2: Generating the SDK tarball from `Xcode.app`
 
-To generate `Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz`, run
-the script [`gen-sdk`](./gen-sdk) with the path to `Xcode.app` (extracted in the
-previous stage) as the first argument.
+To generate the SDK, run the script [`gen-sdk`](./gen-sdk) with the
+path to `Xcode.app` (extracted in the previous stage) as the first argument.
 
 ```bash
-# Generate a Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz from
-# the supplied Xcode.app
 ./contrib/macdeploy/gen-sdk '/path/to/Xcode.app'
 ```
 
-The `sha256sum` of the generated TAR.GZ archive should be `df75d30ecafc429e905134333aeae56ac65fac67cb4182622398fd717df77619`.
+The generated archive should be: `Xcode-15.0-15A240d-extracted-SDK-with-libcxx-headers.tar.gz`.
+The `sha256sum` should be `c0c2e7bb92c1fee0c4e9f3a485e4530786732d6c6dd9e9f418c282aa6892f55d`.
 
-## Deterministic macOS DMG Notes
+## Deterministic macOS App Notes
 
-Working macOS DMGs are created in Linux by combining a recent `clang`, the Apple
-`binutils` (`ld`, `ar`, etc) and DMG authoring tools.
+macOS Applications are created in Linux by combining a recent `clang` and the Apple
+`binutils` (`ld`, `ar`, etc).
 
 Apple uses `clang` extensively for development and has upstreamed the necessary
 functionality so that a vanilla clang can take advantage. It supports the use of `-F`,
@@ -93,20 +87,15 @@ created using these tools. The build process has been designed to avoid includin
 SDK's files in Guix's outputs. All interim tarballs are fully deterministic and may be freely
 redistributed.
 
-[`xorrisofs`](https://www.gnu.org/software/xorriso/) is used to create the DMG.
-
-A background image is added to DMG files by inserting a `.DS_Store` during creation.
-
 As of OS X 10.9 Mavericks, using an Apple-blessed key to sign binaries is a requirement in
 order to satisfy the new Gatekeeper requirements. Because this private key cannot be
 shared, we'll have to be a bit creative in order for the build process to remain somewhat
 deterministic. Here's how it works:
 
-- Builders use Guix to create an unsigned release. This outputs an unsigned DMG which
+- Builders use Guix to create an unsigned release. This outputs an unsigned ZIP which
   users may choose to bless and run. It also outputs an unsigned app structure in the form
-  of a tarball, which also contains all of the tools that have been previously (deterministically)
-  built in order to create a final DMG.
+  of a tarball.
 - The Apple keyholder uses this unsigned app to create a detached signature, using the
   script that is also included there. Detached signatures are available from this [repository](https://github.com/bitcoin-core/bitcoin-detached-sigs).
 - Builders feed the unsigned app + detached signature back into Guix. It uses the
-  pre-built tools to recombine the pieces into a deterministic DMG.
+  pre-built tools to recombine the pieces into a deterministic ZIP.

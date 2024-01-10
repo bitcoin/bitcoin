@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/echo.h>
 #include <interfaces/init.h>
@@ -9,7 +10,6 @@
 #include <interfaces/wallet.h>
 #include <node/context.h>
 #include <util/check.h>
-#include <util/system.h>
 
 #include <memory>
 
@@ -22,7 +22,7 @@ class BitcoindInit : public interfaces::Init
 public:
     BitcoindInit(NodeContext& node) : m_node(node)
     {
-        m_node.args = &gArgs;
+        InitContext(m_node);
         m_node.init = this;
     }
     std::unique_ptr<interfaces::Node> makeNode() override { return interfaces::MakeNode(m_node); }

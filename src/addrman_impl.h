@@ -65,8 +65,7 @@ public:
 
     SERIALIZE_METHODS(AddrInfo, obj)
     {
-        READWRITEAS(CAddress, obj);
-        READWRITE(obj.source, Using<ChronoFormatter<int64_t>>(obj.m_last_success), obj.nAttempts);
+        READWRITE(AsBase<CAddress>(obj), obj.source, Using<ChronoFormatter<int64_t>>(obj.m_last_success), obj.nAttempts);
     }
 
     AddrInfo(const CAddress &addrIn, const CNetAddr &addrSource) : CAddress(addrIn), source(addrSource)
@@ -90,7 +89,7 @@ public:
     }
 
     //! Calculate in which position of a bucket to store this entry.
-    int GetBucketPosition(const uint256 &nKey, bool fNew, int nBucket) const;
+    int GetBucketPosition(const uint256 &nKey, bool fNew, int bucket) const;
 
     //! Determine whether the statistics about this entry are bad enough so that it can just be deleted
     bool IsTerrible(NodeSeconds now = Now<NodeSeconds>()) const;
@@ -112,7 +111,7 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s_) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    size_t size() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    size_t Size(std::optional<Network> net, std::optional<bool> in_new) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, std::chrono::seconds time_penalty)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
@@ -127,10 +126,13 @@ public:
 
     std::pair<CAddress, NodeSeconds> SelectTriedCollision() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    std::pair<CAddress, NodeSeconds> Select(bool newOnly) const
+    std::pair<CAddress, NodeSeconds> Select(bool new_only, std::optional<Network> network) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const
+    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    std::vector<std::pair<AddrInfo, AddressPosition>> GetEntries(bool from_tried) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void Connected(const CService& addr, NodeSeconds time)
@@ -215,6 +217,14 @@ private:
     /** Reference to the netgroup manager. netgroupman must be constructed before addrman and destructed after. */
     const NetGroupManager& m_netgroupman;
 
+    struct NewTriedCount {
+        size_t n_new;
+        size_t n_tried;
+    };
+
+    /** Number of entries in addrman per network and new/tried table. */
+    std::unordered_map<Network, NewTriedCount> m_network_counts GUARDED_BY(cs);
+
     //! Find an entry.
     AddrInfo* Find(const CService& addr, int* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
@@ -243,9 +253,17 @@ private:
 
     void Attempt_(const CService& addr, bool fCountFailure, NodeSeconds time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    std::pair<CAddress, NodeSeconds> Select_(bool newOnly) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::pair<CAddress, NodeSeconds> Select_(bool new_only, std::optional<Network> network) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    std::vector<CAddress> GetAddr_(size_t max_addresses, size_t max_pct, std::optional<Network> network) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    /** Helper to generalize looking up an addrman entry from either table.
+     *
+     *  @return  int The nid of the entry. If the addrman position is empty or not found, returns -1.
+     * */
+    int GetEntry(bool use_tried, size_t bucket, size_t position) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    std::vector<CAddress> GetAddr_(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    std::vector<std::pair<AddrInfo, AddressPosition>> GetEntries_(bool from_tried) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void Connected_(const CService& addr, NodeSeconds time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
@@ -256,6 +274,8 @@ private:
     std::pair<CAddress, NodeSeconds> SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     std::optional<AddressPosition> FindAddressEntry_(const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    size_t Size_(std::optional<Network> net, std::optional<bool> in_new) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Consistency check, taking into account m_consistency_check_ratio.
     //! Will std::abort if an inconsistency is detected.

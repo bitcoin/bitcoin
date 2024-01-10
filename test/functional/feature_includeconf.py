@@ -14,27 +14,25 @@ Verify that:
 4. multiple includeconf arguments can be specified in the main config
    file.
 """
-import os
-
 from test_framework.test_framework import BitcoinTestFramework
+
 
 class IncludeConfTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
-    def setup_chain(self):
-        super().setup_chain()
+    def run_test(self):
         # Create additional config files
         # - tmpdir/node0/relative.conf
-        with open(os.path.join(self.options.tmpdir, "node0", "relative.conf"), "w", encoding="utf8") as f:
+        with open(self.nodes[0].datadir_path / "relative.conf", "w", encoding="utf8") as f:
             f.write("uacomment=relative\n")
         # - tmpdir/node0/relative2.conf
-        with open(os.path.join(self.options.tmpdir, "node0", "relative2.conf"), "w", encoding="utf8") as f:
+        with open(self.nodes[0].datadir_path / "relative2.conf", "w", encoding="utf8") as f:
             f.write("uacomment=relative2\n")
-        with open(os.path.join(self.options.tmpdir, "node0", "bitcoin.conf"), "a", encoding='utf8') as f:
+        with open(self.nodes[0].datadir_path / "bitcoin.conf", "a", encoding="utf8") as f:
             f.write("uacomment=main\nincludeconf=relative.conf\n")
+        self.restart_node(0)
 
-    def run_test(self):
         self.log.info("-includeconf works from config file. subversion should end with 'main; relative)/'")
 
         subversion = self.nodes[0].getnetworkinfo()["subversion"]
@@ -52,7 +50,7 @@ class IncludeConfTest(BitcoinTestFramework):
         )
 
         self.log.info("-includeconf cannot be used recursively. subversion should end with 'main; relative)/'")
-        with open(os.path.join(self.options.tmpdir, "node0", "relative.conf"), "a", encoding="utf8") as f:
+        with open(self.nodes[0].datadir_path / "relative.conf", "a", encoding="utf8") as f:
             f.write("includeconf=relative2.conf\n")
         self.start_node(0)
 
@@ -63,20 +61,20 @@ class IncludeConfTest(BitcoinTestFramework):
         self.log.info("-includeconf cannot contain invalid arg")
 
         # Commented out as long as we ignore invalid arguments in configuration files
-        #with open(os.path.join(self.options.tmpdir, "node0", "relative.conf"), "w", encoding="utf8") as f:
+        #with open(self.nodes[0].datadir_path / "relative.conf", "w", encoding="utf8") as f:
         #    f.write("foo=bar\n")
         #self.nodes[0].assert_start_raises_init_error(expected_msg="Error: Error reading configuration file: Invalid configuration value foo")
 
         self.log.info("-includeconf cannot be invalid path")
-        os.remove(os.path.join(self.options.tmpdir, "node0", "relative.conf"))
+        (self.nodes[0].datadir_path / "relative.conf").unlink()
         self.nodes[0].assert_start_raises_init_error(expected_msg="Error: Error reading configuration file: Failed to include configuration file relative.conf")
 
         self.log.info("multiple -includeconf args can be used from the base config file. subversion should end with 'main; relative; relative2)/'")
-        with open(os.path.join(self.options.tmpdir, "node0", "relative.conf"), "w", encoding="utf8") as f:
+        with open(self.nodes[0].datadir_path / "relative.conf", "w", encoding="utf8") as f:
             # Restore initial file contents
             f.write("uacomment=relative\n")
 
-        with open(os.path.join(self.options.tmpdir, "node0", "bitcoin.conf"), "a", encoding='utf8') as f:
+        with open(self.nodes[0].datadir_path / "bitcoin.conf", "a", encoding="utf8") as f:
             f.write("includeconf=relative2.conf\n")
 
         self.start_node(0)

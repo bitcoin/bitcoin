@@ -6,8 +6,8 @@
 #define BITCOIN_WALLET_RECEIVE_H
 
 #include <consensus/amount.h>
-#include <wallet/ismine.h>
 #include <wallet/transaction.h>
+#include <wallet/types.h>
 #include <wallet/wallet.h>
 
 namespace wallet {

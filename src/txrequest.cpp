@@ -10,8 +10,12 @@
 #include <random.h>
 #include <uint256.h>
 
-#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/indexed_by.hpp>
 #include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/sequenced_index.hpp>
+#include <boost/multi_index/tag.hpp>
+#include <boost/multi_index_container.hpp>
+#include <boost/tuple/tuple.hpp>
 
 #include <chrono>
 #include <unordered_map>
@@ -68,16 +72,10 @@ struct Announcement {
     /** Whether this is a wtxid request. */
     const bool m_is_wtxid : 1;
 
-    /** What state this announcement is in.
-     *  This is a uint8_t instead of a State to silence a GCC warning in versions prior to 8.4 and 9.3.
-     *  See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61414 */
-    uint8_t m_state : 3;
-
-    /** Convert m_state to a State enum. */
-    State GetState() const { return static_cast<State>(m_state); }
-
-    /** Convert a State enum to a uint8_t and store it in m_state. */
-    void SetState(State state) { m_state = static_cast<uint8_t>(state); }
+    /** What state this announcement is in. */
+    State m_state : 3 {State::CANDIDATE_DELAYED};
+    State GetState() const { return m_state; }
+    void SetState(State state) { m_state = state; }
 
     /** Whether this announcement is selected. There can be at most 1 selected peer per txhash. */
     bool IsSelected() const
@@ -99,9 +97,9 @@ struct Announcement {
 
     /** Construct a new announcement from scratch, initially in CANDIDATE_DELAYED state. */
     Announcement(const GenTxid& gtxid, NodeId peer, bool preferred, std::chrono::microseconds reqtime,
-        SequenceNumber sequence) :
-        m_txhash(gtxid.GetHash()), m_time(reqtime), m_peer(peer), m_sequence(sequence), m_preferred(preferred),
-        m_is_wtxid(gtxid.IsWtxid()), m_state(static_cast<uint8_t>(State::CANDIDATE_DELAYED)) {}
+                 SequenceNumber sequence)
+        : m_txhash(gtxid.GetHash()), m_time(reqtime), m_peer(peer), m_sequence(sequence), m_preferred(preferred),
+          m_is_wtxid{gtxid.IsWtxid()} {}
 };
 
 //! Type alias for priorities.
@@ -120,7 +118,7 @@ public:
 
     Priority operator()(const uint256& txhash, NodeId peer, bool preferred) const
     {
-        uint64_t low_bits = CSipHasher(m_k0, m_k1).Write(txhash.begin(), txhash.size()).Write(peer).Finalize() >> 1;
+        uint64_t low_bits = CSipHasher(m_k0, m_k1).Write(txhash).Write(peer).Finalize() >> 1;
         return low_bits | uint64_t{preferred} << 63;
     }
 

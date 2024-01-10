@@ -2,7 +2,7 @@
 
 # Usage: env [ CC=... ] [ C_STANDARD=...] [ CXX=... ] [CXX_STANDARD=...] \
 #            [ AR=... ] [ RANLIB=... ] [ STRIP=... ] [ DEBUG=... ] \
-#            [ LTO=... ] ./build-id [ID_SALT]...
+#            [ LTO=... ] [ NO_HARDEN=... ] ./build-id [ID_SALT]...
 #
 # Prints to stdout a SHA256 hash representing the current toolset, used by
 # depends/Makefile as a build id for caching purposes (detecting when the
@@ -69,6 +69,10 @@
     echo "BEGIN LTO"
     echo "LTO=${LTO}"
     echo "END LTO"
+
+    echo "BEGIN NO_HARDEN"
+    echo "NO_HARDEN=${NO_HARDEN}"
+    echo "END NO_HARDEN"
 
     echo "END ALL"
 ) | if [ -n "$DEBUG" ] && command -v tee > /dev/null 2>&1; then

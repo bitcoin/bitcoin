@@ -25,29 +25,26 @@ class WalletSignerTest(BitcoinTestFramework):
     def mock_signer_path(self):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'mocks', 'signer.py')
         if platform.system() == "Windows":
-            return "py " + path
+            return "py -3 " + path
         else:
             return path
 
     def mock_invalid_signer_path(self):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'mocks', 'invalid_signer.py')
         if platform.system() == "Windows":
-            return "py " + path
+            return "py -3 " + path
         else:
             return path
 
     def mock_multi_signers_path(self):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'mocks', 'multi_signers.py')
         if platform.system() == "Windows":
-            return "py " + path
+            return "py -3 " + path
         else:
             return path
 
     def set_test_params(self):
         self.num_nodes = 2
-        # The experimental syscall sandbox feature (-sandbox) is not compatible with -signer (which
-        # invokes execve).
-        self.disable_syscall_sandbox = True
 
         self.extra_args = [
             [],
@@ -109,28 +106,28 @@ class WalletSignerTest(BitcoinTestFramework):
         address_info = hww.getaddressinfo(address1)
         assert_equal(address_info['solvable'], True)
         assert_equal(address_info['ismine'], True)
-        assert_equal(address_info['hdkeypath'], "m/84'/1'/0'/0/0")
+        assert_equal(address_info['hdkeypath'], "m/84h/1h/0h/0/0")
 
         address2 = hww.getnewaddress(address_type="p2sh-segwit")
         assert_equal(address2, "2N2gQKzjUe47gM8p1JZxaAkTcoHPXV6YyVp")
         address_info = hww.getaddressinfo(address2)
         assert_equal(address_info['solvable'], True)
         assert_equal(address_info['ismine'], True)
-        assert_equal(address_info['hdkeypath'], "m/49'/1'/0'/0/0")
+        assert_equal(address_info['hdkeypath'], "m/49h/1h/0h/0/0")
 
         address3 = hww.getnewaddress(address_type="legacy")
         assert_equal(address3, "n1LKejAadN6hg2FrBXoU1KrwX4uK16mco9")
         address_info = hww.getaddressinfo(address3)
         assert_equal(address_info['solvable'], True)
         assert_equal(address_info['ismine'], True)
-        assert_equal(address_info['hdkeypath'], "m/44'/1'/0'/0/0")
+        assert_equal(address_info['hdkeypath'], "m/44h/1h/0h/0/0")
 
         address4 = hww.getnewaddress(address_type="bech32m")
         assert_equal(address4, "bcrt1phw4cgpt6cd30kz9k4wkpwm872cdvhss29jga2xpmftelhqll62ms4e9sqj")
         address_info = hww.getaddressinfo(address4)
         assert_equal(address_info['solvable'], True)
         assert_equal(address_info['ismine'], True)
-        assert_equal(address_info['hdkeypath'], "m/86'/1'/0'/0/0")
+        assert_equal(address_info['hdkeypath'], "m/86h/1h/0h/0/0")
 
         self.log.info('Test walletdisplayaddress')
         result = hww.walletdisplayaddress(address1)
@@ -153,14 +150,14 @@ class WalletSignerTest(BitcoinTestFramework):
         assert mock_wallet.getwalletinfo()['private_keys_enabled']
 
         result = mock_wallet.importdescriptors([{
-            "desc": "tr([00000001/86'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0/*)#0jtt2jc9",
+            "desc": "tr([00000001/86h/1h/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0/*)#7ew68cn8",
             "timestamp": 0,
             "range": [0,1],
             "internal": False,
             "active": True
         },
         {
-            "desc": "tr([00000001/86'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/*)#7xw2h8ga",
+            "desc": "tr([00000001/86h/1h/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/*)#0dtm6drl",
             "timestamp": 0,
             "range": [0, 0],
             "internal": True,
@@ -172,8 +169,7 @@ class WalletSignerTest(BitcoinTestFramework):
         dest = self.nodes[0].getnewaddress(address_type='bech32')
         mock_psbt = mock_wallet.walletcreatefundedpsbt([], {dest:0.5}, 0, {'replaceable': True}, True)['psbt']
         mock_psbt_signed = mock_wallet.walletprocesspsbt(psbt=mock_psbt, sign=True, sighashtype="ALL", bip32derivs=True)
-        mock_psbt_final = mock_wallet.finalizepsbt(mock_psbt_signed["psbt"])
-        mock_tx = mock_psbt_final["hex"]
+        mock_tx = mock_psbt_signed["hex"]
         assert mock_wallet.testmempoolaccept([mock_tx])[0]["allowed"]
 
         # # Create a new wallet and populate with specific public keys, in order
@@ -182,7 +178,7 @@ class WalletSignerTest(BitcoinTestFramework):
         # hww4 = self.nodes[1].get_wallet_rpc("hww4")
         #
         # descriptors = [{
-        #     "desc": "wpkh([00000001/84'/1'/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/0/*)#x30uthjs",
+        #     "desc": "wpkh([00000001/84h/1h/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/0/*)#x30uthjs",
         #     "timestamp": "now",
         #     "range": [0, 1],
         #     "internal": False,
@@ -190,7 +186,7 @@ class WalletSignerTest(BitcoinTestFramework):
         #     "active": True
         # },
         # {
-        #     "desc": "wpkh([00000001/84'/1'/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/*)#h92akzzg",
+        #     "desc": "wpkh([00000001/84h/1h/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/*)#h92akzzg",
         #     "timestamp": "now",
         #     "range": [0, 0],
         #     "internal": True,
@@ -211,13 +207,13 @@ class WalletSignerTest(BitcoinTestFramework):
         self.log.info('Test send using hww1')
 
         # Don't broadcast transaction yet so the RPC returns the raw hex
-        res = hww.send(outputs={dest:0.5},options={"add_to_wallet": False})
+        res = hww.send(outputs={dest:0.5},add_to_wallet=False)
         assert res["complete"]
         assert_equal(res["hex"], mock_tx)
 
         self.log.info('Test sendall using hww1')
 
-        res = hww.sendall(recipients=[{dest:0.5}, hww.getrawchangeaddress()],options={"add_to_wallet": False})
+        res = hww.sendall(recipients=[{dest:0.5}, hww.getrawchangeaddress()], add_to_wallet=False)
         assert res["complete"]
         assert_equal(res["hex"], mock_tx)
         # Broadcast transaction so we can bump the fee

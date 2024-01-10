@@ -5,7 +5,7 @@
 #ifndef BITCOIN_BENCH_BENCH_H
 #define BITCOIN_BENCH_BENCH_H
 
-#include <fs.h>
+#include <util/fs.h>
 #include <util/macros.h>
 
 #include <chrono>
@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-#include <bench/nanobench.h>
+#include <bench/nanobench.h> // IWYU pragma: export
 
 /*
  * Usage:

@@ -78,24 +78,25 @@ bool IsHexNumber(std::string_view str)
 }
 
 template <typename Byte>
-std::vector<Byte> ParseHex(std::string_view str)
+std::optional<std::vector<Byte>> TryParseHex(std::string_view str)
 {
     std::vector<Byte> vch;
     auto it = str.begin();
-    while (it != str.end() && it + 1 != str.end()) {
+    while (it != str.end()) {
         if (IsSpace(*it)) {
             ++it;
             continue;
         }
         auto c1 = HexDigit(*(it++));
+        if (it == str.end()) return std::nullopt;
         auto c2 = HexDigit(*(it++));
-        if (c1 < 0 || c2 < 0) break;
+        if (c1 < 0 || c2 < 0) return std::nullopt;
         vch.push_back(Byte(c1 << 4) | Byte(c2));
     }
     return vch;
 }
-template std::vector<std::byte> ParseHex(std::string_view);
-template std::vector<uint8_t> ParseHex(std::string_view);
+template std::optional<std::vector<std::byte>> TryParseHex(std::string_view);
+template std::optional<std::vector<uint8_t>> TryParseHex(std::string_view);
 
 bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
 {

@@ -25,11 +25,12 @@ public:
 };
 
 class AddrManImpl;
+class AddrInfo;
 
 /** Default for -checkaddrman */
 static constexpr int32_t DEFAULT_ADDRMAN_CONSISTENCY_CHECKS{0};
 
-/** Test-only struct, capturing info about an address in AddrMan */
+/** Location information for an address in AddrMan */
 struct AddressPosition {
     // Whether the address is in the new or tried table
     const bool tried;
@@ -99,8 +100,14 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s_);
 
-    //! Return the number of (unique) addresses in all tables.
-    size_t size() const;
+    /**
+    * Return size information about addrman.
+    *
+    * @param[in] net              Select addresses only from specified network (nullopt = all)
+    * @param[in] in_new           Select addresses only from one table (true = new, false = tried, nullopt = both)
+    * @return                     Number of unique addresses that match specified options.
+    */
+    size_t Size(std::optional<Network> net = std::nullopt, std::optional<bool> in_new = std::nullopt) const;
 
     /**
      * Attempt to add one or more addresses to addrman's new table.
@@ -140,11 +147,16 @@ public:
     /**
      * Choose an address to connect to.
      *
-     * @param[in] newOnly  Whether to only select addresses from the new table.
+     * @param[in] new_only Whether to only select addresses from the new table. Passing `true` returns
+     *                     an address from the new table or an empty pair. Passing `false` will return an
+     *                     empty pair or an address from either the new or tried table (it does not
+     *                     guarantee a tried entry).
+     * @param[in] network  Select only addresses of this network (nullopt = all). Passing a network may
+     *                     slow down the search.
      * @return    CAddress The record for the selected peer.
      *            seconds  The last time we attempted to connect to that peer.
      */
-    std::pair<CAddress, NodeSeconds> Select(bool newOnly = false) const;
+    std::pair<CAddress, NodeSeconds> Select(bool new_only = false, std::optional<Network> network = std::nullopt) const;
 
     /**
      * Return all or many randomly selected addresses, optionally by network.
@@ -152,10 +164,22 @@ public:
      * @param[in] max_addresses  Maximum number of addresses to return (0 = all).
      * @param[in] max_pct        Maximum percentage of addresses to return (0 = all).
      * @param[in] network        Select only addresses of this network (nullopt = all).
+     * @param[in] filtered       Select only addresses that are considered good quality (false = all).
      *
      * @return                   A vector of randomly selected addresses from vRandom.
      */
-    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const;
+    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const;
+
+    /**
+     * Returns an information-location pair for all addresses in the selected addrman table.
+     * If an address appears multiple times in the new table, an information-location pair
+     * is returned for each occurrence. Addresses only ever appear once in the tried table.
+     *
+     * @param[in] from_tried     Selects which table to return entries from.
+     *
+     * @return                   A vector consisting of pairs of AddrInfo and AddressPosition.
+     */
+    std::vector<std::pair<AddrInfo, AddressPosition>> GetEntries(bool from_tried) const;
 
     /** We have successfully connected to this peer. Calling this function
      *  updates the CAddress's nTime, which is used in our IsTerrible()

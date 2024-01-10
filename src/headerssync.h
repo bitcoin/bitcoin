@@ -175,6 +175,13 @@ public:
      */
     CBlockLocator NextHeadersRequestLocator() const;
 
+protected:
+    /** The (secret) offset on the heights for which to create commitments.
+     *
+     * m_header_commitments entries are created at any height h for which
+     * (h % HEADER_COMMITMENT_PERIOD) == m_commit_offset. */
+    const unsigned m_commit_offset;
+
 private:
     /** Clear out all download state that might be in progress (freeing any used
      * memory), and mark this object as no longer usable.
@@ -221,12 +228,6 @@ private:
 
     /** A queue of commitment bits, created during the 1st phase, and verified during the 2nd. */
     bitdeque<> m_header_commitments;
-
-    /** The (secret) offset on the heights for which to create commitments.
-     *
-     * m_header_commitments entries are created at any height h for which
-     * (h % HEADER_COMMITMENT_PERIOD) == m_commit_offset. */
-    const unsigned m_commit_offset;
 
     /** m_max_commitments is a bound we calculate on how long an honest peer's chain could be,
      * given the MTP rule.

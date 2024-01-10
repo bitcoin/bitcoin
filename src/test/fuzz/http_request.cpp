@@ -7,6 +7,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 
 #include <event2/buffer.h>
@@ -47,7 +48,8 @@ FUZZ_TARGET(http_request)
         return;
     }
 
-    HTTPRequest http_request{evreq, true};
+    util::SignalInterrupt interrupt;
+    HTTPRequest http_request{evreq, interrupt, true};
     const HTTPRequest::RequestMethod request_method = http_request.GetRequestMethod();
     (void)RequestMethodString(request_method);
     (void)http_request.GetURI();
@@ -59,7 +61,7 @@ FUZZ_TARGET(http_request)
     const std::string body = http_request.ReadBody();
     assert(body.empty());
     const CService service = http_request.GetPeer();
-    assert(service.ToString() == "[::]:0");
+    assert(service.ToStringAddrPort() == "[::]:0");
 
     evbuffer_free(evbuf);
     evhttp_request_free(evreq);

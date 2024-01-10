@@ -8,6 +8,8 @@
 #include <rpc/blockchain.h>
 #include <sync.h>
 #include <test/util/chainstate.h>
+#include <test/util/coins.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <validation.h>
@@ -24,20 +26,6 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
 {
     ChainstateManager& manager = *Assert(m_node.chainman);
     CTxMemPool& mempool = *Assert(m_node.mempool);
-
-    //! Create and add a Coin with DynamicMemoryUsage of 80 bytes to the given view.
-    auto add_coin = [](CCoinsViewCache& coins_view) -> COutPoint {
-        Coin newcoin;
-        uint256 txid = InsecureRand256();
-        COutPoint outp{txid, 0};
-        newcoin.nHeight = 1;
-        newcoin.out.nValue = InsecureRand32();
-        newcoin.out.scriptPubKey.assign(uint32_t{56}, 1);
-        coins_view.AddCoin(outp, std::move(newcoin), false);
-
-        return outp;
-    };
-
     Chainstate& c1 = WITH_LOCK(cs_main, return manager.InitializeChainstate(&mempool));
     c1.InitCoinsDB(
         /*cache_size_bytes=*/1 << 23, /*in_memory=*/true, /*should_wipe=*/false);
@@ -47,7 +35,7 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
     // Add a coin to the in-memory cache, upsize once, then downsize.
     {
         LOCK(::cs_main);
-        auto outpoint = add_coin(c1.CoinsTip());
+        const auto outpoint = AddTestCoin(c1.CoinsTip());
 
         // Set a meaningless bestblock value in the coinsview cache - otherwise we won't
         // flush during ResizecoinsCaches() and will subsequently hit an assertion.
@@ -89,6 +77,13 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
     // After adding some blocks to the tip, best block should have changed.
     BOOST_CHECK(::g_best_block != curr_tip);
 
+    // Grab block 1 from disk; we'll add it to the background chain later.
+    std::shared_ptr<CBlock> pblockone = std::make_shared<CBlock>();
+    {
+        LOCK(::cs_main);
+        chainman.m_blockman.ReadBlockFromDisk(*pblockone, *chainman.ActiveChain()[1]);
+    }
+
     BOOST_REQUIRE(CreateAndActivateUTXOSnapshot(
         this, NoMalleation, /*reset_chainstate=*/ true));
 
@@ -116,11 +111,7 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
         assert(false);
     }()};
 
-    // Create a block to append to the validation chain.
-    std::vector<CMutableTransaction> noTxns;
-    CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    CBlock validation_block = this->CreateBlock(noTxns, scriptPubKey, background_cs);
-    auto pblock = std::make_shared<const CBlock>(validation_block);
+    // Append the first block to the background chain.
     BlockValidationState state;
     CBlockIndex* pindex = nullptr;
     const CChainParams& chainparams = Params();
@@ -130,17 +121,18 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
     // once it is changed to support multiple chainstates.
     {
         LOCK(::cs_main);
-        bool checked = CheckBlock(*pblock, state, chainparams.GetConsensus());
+        bool checked = CheckBlock(*pblockone, state, chainparams.GetConsensus());
         BOOST_CHECK(checked);
-        bool accepted = background_cs.AcceptBlock(
-            pblock, state, &pindex, true, nullptr, &newblock, true);
+        bool accepted = chainman.AcceptBlock(
+            pblockone, state, &pindex, true, nullptr, &newblock, true);
         BOOST_CHECK(accepted);
     }
+
     // UpdateTip is called here
-    bool block_added = background_cs.ActivateBestChain(state, pblock);
+    bool block_added = background_cs.ActivateBestChain(state, pblockone);
 
     // Ensure tip is as expected
-    BOOST_CHECK_EQUAL(background_cs.m_chain.Tip()->GetBlockHash(), validation_block.GetHash());
+    BOOST_CHECK_EQUAL(background_cs.m_chain.Tip()->GetBlockHash(), pblockone->GetHash());
 
     // g_best_block should be unchanged after adding a block to the background
     // validation chain.

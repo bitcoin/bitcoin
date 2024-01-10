@@ -5,7 +5,7 @@
 #include <qt/initexecutor.h>
 
 #include <interfaces/node.h>
-#include <util/system.h>
+#include <util/exception.h>
 #include <util/threadnames.h>
 
 #include <exception>

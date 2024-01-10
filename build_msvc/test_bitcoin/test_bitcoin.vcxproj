@@ -22,7 +22,7 @@
     <ProjectReference Include="..\libminisketch\libminisketch.vcxproj">
       <Project>{542007e3-be0d-4b0d-a6b0-aa8813e2558d}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">
+    <ProjectReference Include="..\libbitcoin_consensus\libbitcoin_consensus.vcxproj">
       <Project>{2b384fa8-9ee1-4544-93cb-0d733c25e8ce}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libbitcoin_cli\libbitcoin_cli.vcxproj">
@@ -59,6 +59,11 @@
       <Project>{18430fef-6b61-4c53-b396-718e02850f1b}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemDefinitionGroup>
+     <ClCompile>
+       <DisableSpecificWarnings>4018;4244;4267;4703;4715;4805</DisableSpecificWarnings>
+     </ClCompile>
+  </ItemDefinitionGroup>
   <Target Name="RawBenchHeaderGen" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>There was an error executing the JSON test header generation task.</ErrorText>
@@ -68,7 +73,7 @@
       <RawTestFile Include="..\..\src\test\data\*.raw" />
     </ItemGroup>
     <HeaderFromHexdump RawFilePath="%(RawTestFile.FullPath)" HeaderFilePath="%(RawTestFile.FullPath).h" SourceHeader="static unsigned const char %(RawTestFile.Filename)_raw[] = {" SourceFooter="};" />
-    <HeaderFromHexdump RawFilePath="%(JsonTestFile.FullPath)" HeaderFilePath="%(JsonTestFile.FullPath).h" SourceHeader="namespace json_tests{ static unsigned const char %(JsonTestFile.Filename)[] = {" SourceFooter="};}" />
+    <HeaderFromHexdump RawFilePath="%(JsonTestFile.FullPath)" HeaderFilePath="%(JsonTestFile.FullPath).h" SourceHeader="#include &lt;string&gt;&#x0D;&#x0A;namespace json_tests{ static const std::string %(JsonTestFile.Filename){" SourceFooter="};}" />
   </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

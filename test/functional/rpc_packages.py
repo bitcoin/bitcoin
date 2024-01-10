@@ -20,7 +20,6 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 from test_framework.wallet import (
-    COIN,
     DEFAULT_FEE,
     MiniWallet,
 )
@@ -213,8 +212,8 @@ class RPCPackagesTest(BitcoinTestFramework):
         coin = self.wallet.get_utxo()
 
         # tx1 and tx2 share the same inputs
-        tx1 = self.wallet.create_self_transfer(utxo_to_spend=coin)
-        tx2 = self.wallet.create_self_transfer(utxo_to_spend=coin)
+        tx1 = self.wallet.create_self_transfer(utxo_to_spend=coin, fee_rate=DEFAULT_FEE)
+        tx2 = self.wallet.create_self_transfer(utxo_to_spend=coin, fee_rate=2*DEFAULT_FEE)
 
         # Ensure tx1 and tx2 are valid by themselves
         assert node.testmempoolaccept([tx1["hex"]])[0]["allowed"]
@@ -223,8 +222,8 @@ class RPCPackagesTest(BitcoinTestFramework):
         self.log.info("Test duplicate transactions in the same package")
         testres = node.testmempoolaccept([tx1["hex"], tx1["hex"]])
         assert_equal(testres, [
-            {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "conflict-in-package"},
-            {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "conflict-in-package"}
+            {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "package-contains-duplicates"},
+            {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "package-contains-duplicates"}
         ])
 
         self.log.info("Test conflicting transactions in the same package")
@@ -305,6 +304,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         submitpackage_result = node.submitpackage(package=[tx["hex"] for tx in package_txns])
 
         # Check that each result is present, with the correct size and fees
+        assert_equal(submitpackage_result["package_msg"], "success")
         for package_txn in package_txns:
             tx = package_txn["tx"]
             assert tx.getwtxid() in submitpackage_result["tx-results"]
@@ -325,42 +325,6 @@ class RPCPackagesTest(BitcoinTestFramework):
         peer.wait_for_broadcast([tx["tx"].getwtxid() for tx in package_txns])
         self.generate(node, 1)
 
-    def test_submit_cpfp(self):
-        node = self.nodes[0]
-        peer = node.add_p2p_connection(P2PTxInvStore())
-
-        # Package with 2 parents and 1 child. One parent pays for itself using modified fees, and
-        # another has 0 fees but is bumped by child.
-        tx_poor = self.wallet.create_self_transfer(fee=0, fee_rate=0)
-        tx_rich = self.wallet.create_self_transfer(fee=0, fee_rate=0)
-        node.prioritisetransaction(tx_rich["txid"], 0, int(DEFAULT_FEE * COIN))
-        package_txns = [tx_rich, tx_poor]
-        coins = [tx["new_utxo"] for tx in package_txns]
-        tx_child = self.wallet.create_self_transfer_multi(utxos_to_spend=coins, fee_per_output=10000) #DEFAULT_FEE
-        package_txns.append(tx_child)
-
-        submitpackage_result = node.submitpackage([tx["hex"] for tx in package_txns])
-
-        rich_parent_result = submitpackage_result["tx-results"][tx_rich["wtxid"]]
-        poor_parent_result = submitpackage_result["tx-results"][tx_poor["wtxid"]]
-        child_result = submitpackage_result["tx-results"][tx_child["tx"].getwtxid()]
-        assert_equal(rich_parent_result["fees"]["base"], 0)
-        assert_equal(poor_parent_result["fees"]["base"], 0)
-        assert_equal(child_result["fees"]["base"], DEFAULT_FEE)
-        # The "rich" parent does not require CPFP so its effective feerate.
-        assert_fee_amount(DEFAULT_FEE, tx_rich["tx"].get_vsize(), rich_parent_result["fees"]["effective-feerate"])
-        assert_equal(rich_parent_result["fees"]["effective-includes"], [tx_rich["wtxid"]])
-        # The "poor" parent and child's effective feerates are the same, composed of the child's fee
-        # divided by their combined vsize.
-        assert_fee_amount(DEFAULT_FEE, tx_poor["tx"].get_vsize() + tx_child["tx"].get_vsize(), poor_parent_result["fees"]["effective-feerate"])
-        assert_fee_amount(DEFAULT_FEE, tx_poor["tx"].get_vsize() + tx_child["tx"].get_vsize(), child_result["fees"]["effective-feerate"])
-        assert_equal([tx_poor["wtxid"], tx_child["tx"].getwtxid()], poor_parent_result["fees"]["effective-includes"])
-        assert_equal([tx_poor["wtxid"], tx_child["tx"].getwtxid()], child_result["fees"]["effective-includes"])
-
-        # The node will broadcast each transaction, still abiding by its peer's fee filter
-        peer.wait_for_broadcast([tx["tx"].getwtxid() for tx in package_txns])
-        self.generate(node, 1)
-
     def test_submitpackage(self):
         node = self.nodes[0]
 
@@ -369,14 +333,28 @@ class RPCPackagesTest(BitcoinTestFramework):
             self.test_submit_child_with_parents(num_parents, False)
             self.test_submit_child_with_parents(num_parents, True)
 
-        self.log.info("Submitpackage valid packages with CPFP")
-        self.test_submit_cpfp()
-
         self.log.info("Submitpackage only allows packages of 1 child with its parents")
         # Chain of 3 transactions has too many generations
-        chain_hex = [t["hex"] for t in self.wallet.create_self_transfer_chain(chain_length=25)]
-        assert_raises_rpc_error(-25, "not-child-with-parents", node.submitpackage, chain_hex)
+        legacy_pool = node.getrawmempool()
+        chain_hex = [t["hex"] for t in self.wallet.create_self_transfer_chain(chain_length=3)]
+        assert_raises_rpc_error(-25, "package topology disallowed", node.submitpackage, chain_hex)
+        assert_equal(legacy_pool, node.getrawmempool())
 
+        # Create a transaction chain such as only the parent gets accepted (by making the child's
+        # version non-standard). Make sure the parent does get broadcast.
+        self.log.info("If a package is partially submitted, transactions included in mempool get broadcast")
+        peer = node.add_p2p_connection(P2PTxInvStore())
+        txs = self.wallet.create_self_transfer_chain(chain_length=2)
+        bad_child = tx_from_hex(txs[1]["hex"])
+        bad_child.nVersion = -1
+        hex_partial_acceptance = [txs[0]["hex"], bad_child.serialize().hex()]
+        res = node.submitpackage(hex_partial_acceptance)
+        assert_equal(res["package_msg"], "transaction failed")
+        first_wtxid = txs[0]["tx"].getwtxid()
+        assert "error" not in res["tx-results"][first_wtxid]
+        sec_wtxid = bad_child.getwtxid()
+        assert_equal(res["tx-results"][sec_wtxid]["error"], "version")
+        peer.wait_for_broadcast([first_wtxid])
 
 if __name__ == "__main__":
     RPCPackagesTest().main()

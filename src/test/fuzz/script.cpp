@@ -16,12 +16,13 @@
 #include <script/script_error.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
+#include <script/solver.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <univalue.h>
+#include <util/chaintype.h>
 
 #include <algorithm>
 #include <cassert>
@@ -32,10 +33,10 @@
 
 void initialize_script()
 {
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(ChainType::REGTEST);
 }
 
-FUZZ_TARGET_INIT(script, initialize_script)
+FUZZ_TARGET(script, .init = initialize_script)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const CScript script{ConsumeScript(fuzzed_data_provider)};
@@ -148,13 +149,16 @@ FUZZ_TARGET_INIT(script, initialize_script)
         const CTxDestination tx_destination_2{ConsumeTxDestination(fuzzed_data_provider)};
         const std::string encoded_dest{EncodeDestination(tx_destination_1)};
         const UniValue json_dest{DescribeAddress(tx_destination_1)};
-        Assert(tx_destination_1 == DecodeDestination(encoded_dest));
         (void)GetKeyForDestination(/*store=*/{}, tx_destination_1);
         const CScript dest{GetScriptForDestination(tx_destination_1)};
         const bool valid{IsValidDestination(tx_destination_1)};
-        Assert(dest.empty() != valid);
 
-        Assert(valid == IsValidDestinationString(encoded_dest));
+        if (!std::get_if<PubKeyDestination>(&tx_destination_1)) {
+            // Only try to round trip non-pubkey destinations since PubKeyDestination has no encoding
+            Assert(dest.empty() != valid);
+            Assert(tx_destination_1 == DecodeDestination(encoded_dest));
+            Assert(valid == IsValidDestinationString(encoded_dest));
+        }
 
         (void)(tx_destination_1 < tx_destination_2);
         if (tx_destination_1 == tx_destination_2) {

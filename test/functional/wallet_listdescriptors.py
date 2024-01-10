@@ -54,7 +54,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
         assert_equal(4, len([d for d in result['descriptors'] if d['internal']]))
         for item in result['descriptors']:
             assert item['desc'] != ''
-            assert item['next'] == 0
+            assert item['next_index'] == 0
             assert item['range'] == [0, 0]
             assert item['timestamp'] is not None
 
@@ -65,7 +65,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
         self.log.info('Test descriptors with hardened derivations are listed in importable form.')
         xprv = 'tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg'
         xpub_acc = 'tpubDCMVLhErorrAGfApiJSJzEKwqeaf2z3NrkVMxgYQjZLzMjXMBeRw2muGNYbvaekAE8rUFLftyEar4LdrG2wXyyTJQZ26zptmeTEjPTaATts'
-        hardened_path = '/84\'/1\'/0\''
+        hardened_path = '/84h/1h/0h'
         wallet = node.get_wallet_rpc('w2')
         wallet.importdescriptors([{
             'desc': descsum_create('wpkh(' + xprv + hardened_path + '/0/*)'),
@@ -78,7 +78,8 @@ class ListDescriptorsTest(BitcoinTestFramework):
                  'timestamp': TIME_GENESIS_BLOCK,
                  'active': False,
                  'range': [0, 0],
-                 'next': 0},
+                 'next': 0,
+                 'next_index': 0},
             ],
         }
         assert_equal(expected, wallet.listdescriptors())
@@ -92,7 +93,8 @@ class ListDescriptorsTest(BitcoinTestFramework):
                  'timestamp': TIME_GENESIS_BLOCK,
                  'active': False,
                  'range': [0, 0],
-                 'next': 0},
+                 'next': 0,
+                 'next_index': 0},
             ],
         }
         assert_equal(expected_private, wallet.listdescriptors(True))

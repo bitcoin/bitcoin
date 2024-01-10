@@ -6,26 +6,26 @@
 
 #include <chainparams.h>
 #include <node/blockstorage.h>
+#include <primitives/block.h>
+#include <undo.h>
 #include <validation.h>
 
-using node::ReadBlockFromDisk;
-using node::UndoReadFromDisk;
+using node::BlockManager;
 
-bool ComputeFilter(BlockFilterType filter_type, const CBlockIndex* block_index, BlockFilter& filter)
+bool ComputeFilter(BlockFilterType filter_type, const CBlockIndex& block_index, BlockFilter& filter, const BlockManager& blockman)
 {
     LOCK(::cs_main);
 
     CBlock block;
-    if (!ReadBlockFromDisk(block, block_index->GetBlockPos(), Params().GetConsensus())) {
+    if (!blockman.ReadBlockFromDisk(block, block_index.GetBlockPos())) {
         return false;
     }
 
     CBlockUndo block_undo;
-    if (block_index->nHeight > 0 && !UndoReadFromDisk(block_undo, block_index)) {
+    if (block_index.nHeight > 0 && !blockman.UndoReadFromDisk(block_undo, block_index)) {
         return false;
     }
 
     filter = BlockFilter(filter_type, block, block_undo);
     return true;
 }
-

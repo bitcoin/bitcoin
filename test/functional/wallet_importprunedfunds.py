@@ -7,7 +7,6 @@ from decimal import Decimal
 
 from test_framework.address import key_to_p2wpkh
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.key import ECKey
 from test_framework.messages import (
     CMerkleBlock,
     from_hex,
@@ -17,7 +16,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
-from test_framework.wallet_util import bytes_to_wif
+from test_framework.wallet_util import generate_keypair
 
 
 class ImportPrunedFundsTest(BitcoinTestFramework):
@@ -40,10 +39,8 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         # pubkey
         address2 = self.nodes[0].getnewaddress()
         # privkey
-        eckey = ECKey()
-        eckey.generate()
-        address3_privkey = bytes_to_wif(eckey.get_bytes())
-        address3 = key_to_p2wpkh(eckey.get_pubkey().get_bytes())
+        address3_privkey, address3_pubkey = generate_keypair(wif=True)
+        address3 = key_to_p2wpkh(address3_pubkey)
         self.nodes[0].importprivkey(address3_privkey)
 
         # Check only one address

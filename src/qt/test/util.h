@@ -7,6 +7,8 @@
 
 #include <chrono>
 
+#include <qglobal.h>
+
 QT_BEGIN_NAMESPACE
 class QString;
 QT_END_NAMESPACE

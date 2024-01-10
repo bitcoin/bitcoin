@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <key_io.h>
 #include <test/fuzz/fuzz.h>
+#include <util/chaintype.h>
 
 #include <cassert>
 #include <cstdint>
@@ -14,10 +15,10 @@
 void initialize_key_io()
 {
     ECC_Start();
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(ChainType::MAIN);
 }
 
-FUZZ_TARGET_INIT(key_io, initialize_key_io)
+FUZZ_TARGET(key_io, .init = initialize_key_io)
 {
     const std::string random_string(buffer.begin(), buffer.end());
 

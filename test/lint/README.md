@@ -7,16 +7,20 @@ To run linters locally with the same versions as the CI environment, use the inc
 Dockerfile:
 
 ```sh
-cd ./ci/lint
-docker build -t bitcoin-linter .
-
-cd /root/of/bitcoin/repo
-docker run --rm -v $(pwd):/bitcoin -it bitcoin-linter
+DOCKER_BUILDKIT=1 docker build -t bitcoin-linter --file "./ci/lint_imagefile" ./ && docker run --rm -v $(pwd):/bitcoin -it bitcoin-linter
 ```
 
-After building the container once, you can simply run the last command any time you
-want to lint.
+Building the container can be done every time, because it is fast when the
+result is cached and it prevents issues when the image changes.
 
+test runner
+===========
+
+To run the checks in the test runner outside the docker, use:
+
+```sh
+( cd ./test/lint/test_runner/ && cargo fmt && cargo clippy && cargo run )
+```
 
 check-doc.py
 ============

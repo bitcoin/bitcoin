@@ -17,27 +17,14 @@
 // out of memory and clears its contents before deletion.
 //
 template <typename T>
-struct secure_allocator : public std::allocator<T> {
-    using base = std::allocator<T>;
-    using traits = std::allocator_traits<base>;
-    using size_type = typename traits::size_type;
-    using difference_type = typename traits::difference_type;
-    using pointer = typename traits::pointer;
-    using const_pointer = typename traits::const_pointer;
-    using value_type = typename traits::value_type;
-    secure_allocator() noexcept {}
-    secure_allocator(const secure_allocator& a) noexcept : base(a) {}
-    template <typename U>
-    secure_allocator(const secure_allocator<U>& a) noexcept : base(a)
-    {
-    }
-    ~secure_allocator() noexcept {}
-    template <typename _Other>
-    struct rebind {
-        typedef secure_allocator<_Other> other;
-    };
+struct secure_allocator {
+    using value_type = T;
 
-    T* allocate(std::size_t n, const void* hint = nullptr)
+    secure_allocator() = default;
+    template <typename U>
+    secure_allocator(const secure_allocator<U>&) noexcept {}
+
+    T* allocate(std::size_t n)
     {
         T* allocation = static_cast<T*>(LockedPoolManager::Instance().alloc(sizeof(T) * n));
         if (!allocation) {
@@ -53,9 +40,45 @@ struct secure_allocator : public std::allocator<T> {
         }
         LockedPoolManager::Instance().free(p);
     }
+
+    template <typename U>
+    friend bool operator==(const secure_allocator&, const secure_allocator<U>&) noexcept
+    {
+        return true;
+    }
+    template <typename U>
+    friend bool operator!=(const secure_allocator&, const secure_allocator<U>&) noexcept
+    {
+        return false;
+    }
 };
 
 // This is exactly like std::string, but with a custom allocator.
+// TODO: Consider finding a way to make incoming RPC request.params[i] mlock()ed as well
 typedef std::basic_string<char, std::char_traits<char>, secure_allocator<char> > SecureString;
+
+template<typename T>
+struct SecureUniqueDeleter {
+    void operator()(T* t) noexcept {
+        secure_allocator<T>().deallocate(t, 1);
+    }
+};
+
+template<typename T>
+using secure_unique_ptr = std::unique_ptr<T, SecureUniqueDeleter<T>>;
+
+template<typename T, typename... Args>
+secure_unique_ptr<T> make_secure_unique(Args&&... as)
+{
+    T* p = secure_allocator<T>().allocate(1);
+
+    // initialize in place, and return as secure_unique_ptr
+    try {
+        return secure_unique_ptr<T>(new (p) T(std::forward(as)...));
+    } catch (...) {
+        secure_allocator<T>().deallocate(p, 1);
+        throw;
+    }
+}
 
 #endif // BITCOIN_SUPPORT_ALLOCATORS_SECURE_H

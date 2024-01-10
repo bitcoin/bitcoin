@@ -45,8 +45,8 @@ typedef struct {
  *  In: input32: pointer to a serialized xonly_pubkey.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_xonly_pubkey_parse(
-    const secp256k1_context* ctx,
-    secp256k1_xonly_pubkey* pubkey,
+    const secp256k1_context *ctx,
+    secp256k1_xonly_pubkey *pubkey,
     const unsigned char *input32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
@@ -59,9 +59,9 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_xonly_pubkey_parse(
  *  In:    pubkey: a pointer to a secp256k1_xonly_pubkey containing an initialized public key.
  */
 SECP256K1_API int secp256k1_xonly_pubkey_serialize(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     unsigned char *output32,
-    const secp256k1_xonly_pubkey* pubkey
+    const secp256k1_xonly_pubkey *pubkey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Compare two x-only public keys using lexicographic order
@@ -74,9 +74,9 @@ SECP256K1_API int secp256k1_xonly_pubkey_serialize(
  *        pubkey2:  second public key to compare
  */
 SECP256K1_API int secp256k1_xonly_pubkey_cmp(
-    const secp256k1_context* ctx,
-    const secp256k1_xonly_pubkey* pk1,
-    const secp256k1_xonly_pubkey* pk2
+    const secp256k1_context *ctx,
+    const secp256k1_xonly_pubkey *pk1,
+    const secp256k1_xonly_pubkey *pk2
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Converts a secp256k1_pubkey into a secp256k1_xonly_pubkey.
@@ -91,7 +91,7 @@ SECP256K1_API int secp256k1_xonly_pubkey_cmp(
  *  In:        pubkey: pointer to a public key that is converted.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_xonly_pubkey_from_pubkey(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     secp256k1_xonly_pubkey *xonly_pubkey,
     int *pk_parity,
     const secp256k1_pubkey *pubkey
@@ -112,13 +112,13 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_xonly_pubkey_from_pubke
  *  Out:  output_pubkey: pointer to a public key to store the result. Will be set
  *                       to an invalid value if this function returns 0.
  *  In: internal_pubkey: pointer to an x-only pubkey to apply the tweak to.
- *              tweak32: pointer to a 32-byte tweak. If the tweak is invalid
- *                       according to secp256k1_ec_seckey_verify, this function
- *                       returns 0. For uniformly random 32-byte arrays the
- *                       chance of being invalid is negligible (around 1 in 2^128).
+ *              tweak32: pointer to a 32-byte tweak, which must be valid
+ *                       according to secp256k1_ec_seckey_verify or 32 zero
+ *                       bytes. For uniformly random 32-byte tweaks, the chance of
+ *                       being invalid is negligible (around 1 in 2^128).
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_xonly_pubkey_tweak_add(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     secp256k1_pubkey *output_pubkey,
     const secp256k1_xonly_pubkey *internal_pubkey,
     const unsigned char *tweak32
@@ -148,7 +148,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_xonly_pubkey_tweak_add(
  *               tweak32: pointer to a 32-byte tweak.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_xonly_pubkey_tweak_add_check(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     const unsigned char *tweaked_pubkey32,
     int tweaked_pk_parity,
     const secp256k1_xonly_pubkey *internal_pubkey,
@@ -164,7 +164,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_xonly_pubkey_tweak_add_
  *  In:   seckey: pointer to a 32-byte secret key.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_create(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     secp256k1_keypair *keypair,
     const unsigned char *seckey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
@@ -177,7 +177,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_create(
  *  In: keypair: pointer to a keypair.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_sec(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     unsigned char *seckey,
     const secp256k1_keypair *keypair
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
@@ -185,13 +185,12 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_sec(
 /** Get the public key from a keypair.
  *
  *  Returns: 1 always.
- *  Args:    ctx: pointer to a context object.
- *  Out: pubkey: pointer to a pubkey object. If 1 is returned, it is set to
- *               the keypair public key. If not, it's set to an invalid value.
+ *  Args:   ctx: pointer to a context object.
+ *  Out: pubkey: pointer to a pubkey object, set to the keypair public key.
  *  In: keypair: pointer to a keypair.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_pub(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     secp256k1_pubkey *pubkey,
     const secp256k1_keypair *keypair
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
@@ -203,15 +202,14 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_pub(
  *
  *  Returns: 1 always.
  *  Args:   ctx: pointer to a context object.
- *  Out: pubkey: pointer to an xonly_pubkey object. If 1 is returned, it is set
- *               to the keypair public key after converting it to an
- *               xonly_pubkey. If not, it's set to an invalid value.
+ *  Out: pubkey: pointer to an xonly_pubkey object, set to the keypair
+ *               public key after converting it to an xonly_pubkey.
  *    pk_parity: Ignored if NULL. Otherwise, pointer to an integer that will be set to the
  *               pk_parity argument of secp256k1_xonly_pubkey_from_pubkey.
  *  In: keypair: pointer to a keypair.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_xonly_pub(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     secp256k1_xonly_pubkey *pubkey,
     int *pk_parity,
     const secp256k1_keypair *keypair
@@ -231,13 +229,13 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_xonly_pub(
  *  Args:       ctx: pointer to a context object.
  *  In/Out: keypair: pointer to a keypair to apply the tweak to. Will be set to
  *                   an invalid value if this function returns 0.
- *  In:     tweak32: pointer to a 32-byte tweak. If the tweak is invalid according
- *                   to secp256k1_ec_seckey_verify, this function returns 0. For
- *                   uniformly random 32-byte arrays the chance of being invalid
- *                   is negligible (around 1 in 2^128).
+ *  In:     tweak32: pointer to a 32-byte tweak, which must be valid according to
+ *                   secp256k1_ec_seckey_verify or 32 zero bytes. For uniformly
+ *                   random 32-byte tweaks, the chance of being invalid is
+ *                   negligible (around 1 in 2^128).
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_keypair_xonly_tweak_add(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     secp256k1_keypair *keypair,
     const unsigned char *tweak32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);

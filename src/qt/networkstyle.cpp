@@ -6,21 +6,21 @@
 
 #include <qt/guiconstants.h>
 
-#include <chainparamsbase.h>
 #include <tinyformat.h>
+#include <util/chaintype.h>
 
 #include <QApplication>
 
 static const struct {
-    const char *networkId;
+    const ChainType networkId;
     const char *appName;
     const int iconColorHueShift;
     const int iconColorSaturationReduction;
 } network_styles[] = {
-    {"main", QAPP_APP_NAME_DEFAULT, 0, 0},
-    {"test", QAPP_APP_NAME_TESTNET, 70, 30},
-    {"signet", QAPP_APP_NAME_SIGNET, 35, 15},
-    {"regtest", QAPP_APP_NAME_REGTEST, 160, 30},
+    {ChainType::MAIN, QAPP_APP_NAME_DEFAULT, 0, 0},
+    {ChainType::TESTNET, QAPP_APP_NAME_TESTNET, 70, 30},
+    {ChainType::SIGNET, QAPP_APP_NAME_SIGNET, 35, 15},
+    {ChainType::REGTEST, QAPP_APP_NAME_REGTEST, 160, 30},
 };
 
 // titleAddText needs to be const char* for tr()
@@ -77,9 +77,9 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
     trayAndWindowIcon   = QIcon(pixmap.scaled(QSize(256,256)));
 }
 
-const NetworkStyle* NetworkStyle::instantiate(const std::string& networkId)
+const NetworkStyle* NetworkStyle::instantiate(const ChainType networkId)
 {
-    std::string titleAddText = networkId == CBaseChainParams::MAIN ? "" : strprintf("[%s]", networkId);
+    std::string titleAddText = networkId == ChainType::MAIN ? "" : strprintf("[%s]", ChainTypeToString(networkId));
     for (const auto& network_style : network_styles) {
         if (networkId == network_style.networkId) {
             return new NetworkStyle(

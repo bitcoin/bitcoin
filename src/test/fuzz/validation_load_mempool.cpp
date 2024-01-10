@@ -4,7 +4,6 @@
 
 #include <kernel/mempool_persist.h>
 
-#include <chainparamsbase.h>
 #include <node/mempool_args.h>
 #include <node/mempool_persist_args.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -21,6 +20,7 @@
 #include <vector>
 
 using kernel::DumpMempool;
+using kernel::LoadMempool;
 
 using node::MempoolPath;
 
@@ -34,11 +34,11 @@ void initialize_validation_load_mempool()
     g_setup = testing_setup.get();
 }
 
-FUZZ_TARGET_INIT(validation_load_mempool, initialize_validation_load_mempool)
+FUZZ_TARGET(validation_load_mempool, .init = initialize_validation_load_mempool)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    FuzzedFileProvider fuzzed_file_provider = ConsumeFile(fuzzed_data_provider);
+    FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};
 
     CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node)};
 
@@ -48,6 +48,10 @@ FUZZ_TARGET_INIT(validation_load_mempool, initialize_validation_load_mempool)
     auto fuzzed_fopen = [&](const fs::path&, const char*) {
         return fuzzed_file_provider.open();
     };
-    (void)chainstate.LoadMempool(MempoolPath(g_setup->m_args), fuzzed_fopen);
+    (void)LoadMempool(pool, MempoolPath(g_setup->m_args), chainstate,
+                      {
+                          .mockable_fopen_function = fuzzed_fopen,
+                      });
+    pool.SetLoadTried(true);
     (void)DumpMempool(pool, MempoolPath(g_setup->m_args), fuzzed_fopen, true);
 }

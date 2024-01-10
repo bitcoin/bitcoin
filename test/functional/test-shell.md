@@ -37,13 +37,13 @@ importing the `TestShell` class from the `test_shell` sub-package.
 The following `TestShell` methods manage the lifetime of the underlying bitcoind
 processes and logging utilities.
 
-* `TestShell.setup()`
-* `TestShell.shutdown()`
+* `TestShell().setup()`
+* `TestShell().shutdown()`
 
 The `TestShell` inherits all `BitcoinTestFramework` members and methods, such
 as:
-* `TestShell.nodes[index].rpc_method()`
-* `TestShell.log.info("Custom log message")`
+* `TestShell().nodes[index].rpc_method()`
+* `TestShell().log.info("Custom log message")`
 
 The following sections demonstrate how to initialize, run, and shut down a
 `TestShell` object.
@@ -143,7 +143,7 @@ instances and remove all temporary data and logging directories.
 20XX-XX-XXTXX:XX:XX.XXXXXXX TestFramework (INFO): Tests successful
 ```
 To prevent the logs from being removed after a shutdown, simply set the
-`TestShell.options.nocleanup` member to `True`.
+`TestShell().options.nocleanup` member to `True`.
 ```
 >>> test.options.nocleanup = True
 >>> test.shutdown()
@@ -162,9 +162,9 @@ underlying `BitcoinTestFramework`:
 
 The `TestShell` object initializes with the default settings inherited from the
 `BitcoinTestFramework` class. The user can override these in
-`TestShell.setup(key=value)`.
+`TestShell().setup(key=value)`.
 
-**Note:** `TestShell.reset()` will reset test parameters to default values and
+**Note:** `TestShell().reset()` will reset test parameters to default values and
 can be called after the TestShell is shut down.
 
 | Test parameter key | Default Value | Description |
@@ -181,7 +181,7 @@ can be called after the TestShell is shut down.
 | `perf` | False | Profiles running nodes with `perf` for the duration of the test if set to `True`. |
 | `rpc_timeout` | `60` | Sets the RPC server timeout for the underlying bitcoind processes. |
 | `setup_clean_chain` | `False` | A 200-block-long chain is initialized from cache by default. Instead, `setup_clean_chain` initializes an empty blockchain if set to `True`. |
-| `randomseed` | Random Integer | `TestShell.options.randomseed` is a member of `TestShell` which can be accessed during a test to seed a random generator. User can override default with a constant value for reproducible test runs. |
+| `randomseed` | Random Integer | `TestShell().options.randomseed` is a member of `TestShell` which can be accessed during a test to seed a random generator. User can override default with a constant value for reproducible test runs. |
 | `supports_cli` | `False` | Whether the bitcoin-cli utility is compiled and available for the test. |
 | `tmpdir` | `"/var/folders/.../"` | Sets directory for test logs. Will be deleted upon a successful test run unless `nocleanup` is set to `True` |
 | `trace_rpc` | `False` | Logs all RPC calls if set to `True`. |

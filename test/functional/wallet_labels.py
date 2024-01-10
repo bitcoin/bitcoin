@@ -71,6 +71,10 @@ class WalletLabelsTest(BitcoinTestFramework):
         node = self.nodes[0]
         assert_equal(len(node.listunspent()), 0)
 
+        self.log.info("Checking listlabels' invalid parameters")
+        assert_raises_rpc_error(-8, "Invalid 'purpose' argument, must be a known purpose string, typically 'send', or 'receive'.", node.listlabels, "notavalidpurpose")
+        assert_raises_rpc_error(-8, "Invalid 'purpose' argument, must be a known purpose string, typically 'send', or 'receive'.", node.listlabels, "unknown")
+
         # Note each time we call generate, all generated coins go into
         # the same address, so we call twice to get two addresses w/50 each
         self.generatetoaddress(node, nblocks=1, address=node.getnewaddress(label='coinbase'))

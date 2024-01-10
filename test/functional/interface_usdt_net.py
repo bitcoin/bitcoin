@@ -114,21 +114,18 @@ class NetTracepointTest(BitcoinTestFramework):
                          fn_name="trace_inbound_message")
         ctx.enable_probe(probe="net:outbound_message",
                          fn_name="trace_outbound_message")
-        bpf = BPF(text=net_tracepoints_program, usdt_contexts=[ctx], debug=0)
+        bpf = BPF(text=net_tracepoints_program, usdt_contexts=[ctx], debug=0, cflags=["-Wno-error=implicit-function-declaration"])
 
-        # The handle_* function is a ctypes callback function called from C. When
-        # we assert in the handle_* function, the AssertError doesn't propagate
-        # back to Python. The exception is ignored. We manually count and assert
-        # that the handle_* functions succeeded.
         EXPECTED_INOUTBOUND_VERSION_MSG = 1
         checked_inbound_version_msg = 0
         checked_outbound_version_msg = 0
+        events = []
 
-        def check_p2p_message(event, inbound):
+        def check_p2p_message(event, is_inbound):
             nonlocal checked_inbound_version_msg, checked_outbound_version_msg
             if event.msg_type.decode("utf-8") == "version":
                 self.log.info(
-                    f"check_p2p_message(): {'inbound' if inbound else 'outbound'} {event}")
+                    f"check_p2p_message(): {'inbound' if is_inbound else 'outbound'} {event}")
                 peer = self.nodes[0].getpeerinfo()[0]
                 msg = msg_version()
                 msg.deserialize(BytesIO(bytes(event.msg[:event.msg_size])))
@@ -136,18 +133,18 @@ class NetTracepointTest(BitcoinTestFramework):
                 assert_equal(peer["addr"], event.peer_addr.decode("utf-8"))
                 assert_equal(peer["connection_type"],
                              event.peer_conn_type.decode("utf-8"))
-                if inbound:
+                if is_inbound:
                     checked_inbound_version_msg += 1
                 else:
                     checked_outbound_version_msg += 1
 
         def handle_inbound(_, data, __):
             event = ctypes.cast(data, ctypes.POINTER(P2PMessage)).contents
-            check_p2p_message(event, True)
+            events.append((event, True))
 
         def handle_outbound(_, data, __):
             event = ctypes.cast(data, ctypes.POINTER(P2PMessage)).contents
-            check_p2p_message(event, False)
+            events.append((event, False))
 
         bpf["inbound_messages"].open_perf_buffer(handle_inbound)
         bpf["outbound_messages"].open_perf_buffer(handle_outbound)
@@ -158,11 +155,14 @@ class NetTracepointTest(BitcoinTestFramework):
         bpf.perf_buffer_poll(timeout=200)
 
         self.log.info(
-            "check that we got both an inbound and outbound version message")
+            "check receipt and content of in- and outbound version messages")
+        for event, is_inbound in events:
+            check_p2p_message(event, is_inbound)
         assert_equal(EXPECTED_INOUTBOUND_VERSION_MSG,
                      checked_inbound_version_msg)
         assert_equal(EXPECTED_INOUTBOUND_VERSION_MSG,
                      checked_outbound_version_msg)
+
 
         bpf.cleanup()
 

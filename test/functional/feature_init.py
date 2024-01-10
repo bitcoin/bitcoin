@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021-2022 The Bitcoin Core developers
+# Copyright (c) 2021-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Stress tests related to node initialization."""
 import os
 from pathlib import Path
+import shutil
 
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.test_node import ErrorMatch
@@ -45,6 +46,13 @@ class InitStressTest(BitcoinTestFramework):
             node.process.terminate()
             node.process.wait()
 
+        def start_expecting_error(err_fragment):
+            node.assert_start_raises_init_error(
+                extra_args=['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1', '-checkblocks=200', '-checklevel=4'],
+                expected_msg=err_fragment,
+                match=ErrorMatch.PARTIAL_REGEX,
+            )
+
         def check_clean_start():
             """Ensure that node restarts successfully after various interrupts."""
             node.start()
@@ -64,7 +72,7 @@ class InitStressTest(BitcoinTestFramework):
             b'init message: Starting network threads',
             b'net thread start',
             b'addcon thread start',
-            b'loadblk thread start',
+            b'initload thread start',
             b'txindex thread start',
             b'block filter index thread start',
             b'coinstatsindex thread start',
@@ -87,36 +95,27 @@ class InitStressTest(BitcoinTestFramework):
 
         self.log.info("Test startup errors after removing certain essential files")
 
-        files_to_disturb = {
+        files_to_delete = {
             'blocks/index/*.ldb': 'Error opening block database.',
             'chainstate/*.ldb': 'Error opening block database.',
             'blocks/blk*.dat': 'Error loading block database.',
         }
 
-        for file_patt, err_fragment in files_to_disturb.items():
+        files_to_perturb = {
+            'blocks/index/*.ldb': 'Error loading block database.',
+            'chainstate/*.ldb': 'Error opening block database.',
+            'blocks/blk*.dat': 'Corrupted block database detected.',
+        }
+
+        for file_patt, err_fragment in files_to_delete.items():
             target_files = list(node.chain_path.glob(file_patt))
 
             for target_file in target_files:
-                self.log.info(f"Tweaking file to ensure failure {target_file}")
+                self.log.info(f"Deleting file to ensure failure {target_file}")
                 bak_path = str(target_file) + ".bak"
                 target_file.rename(bak_path)
 
-            # TODO: at some point, we should test perturbing the files instead of removing
-            # them, e.g.
-            #
-            # contents = target_file.read_bytes()
-            # tweaked_contents = bytearray(contents)
-            # tweaked_contents[50:250] = b'1' * 200
-            # target_file.write_bytes(bytes(tweaked_contents))
-            #
-            # At the moment I can't get this to work (bitcoind loads successfully?) so
-            # investigate doing this later.
-
-            node.assert_start_raises_init_error(
-                extra_args=['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1'],
-                expected_msg=err_fragment,
-                match=ErrorMatch.PARTIAL_REGEX,
-            )
+            start_expecting_error(err_fragment)
 
             for target_file in target_files:
                 bak_path = str(target_file) + ".bak"
@@ -125,6 +124,28 @@ class InitStressTest(BitcoinTestFramework):
 
             check_clean_start()
             self.stop_node(0)
+
+        self.log.info("Test startup errors after perturbing certain essential files")
+        for file_patt, err_fragment in files_to_perturb.items():
+            shutil.copytree(node.chain_path / "blocks", node.chain_path / "blocks_bak")
+            shutil.copytree(node.chain_path / "chainstate", node.chain_path / "chainstate_bak")
+            target_files = list(node.chain_path.glob(file_patt))
+
+            for target_file in target_files:
+                self.log.info(f"Perturbing file to ensure failure {target_file}")
+                with open(target_file, "r+b") as tf:
+                    # Since the genesis block is not checked by -checkblocks, the
+                    # perturbation window must be chosen such that a higher block
+                    # in blk*.dat is affected.
+                    tf.seek(150)
+                    tf.write(b"1" * 200)
+
+            start_expecting_error(err_fragment)
+
+            shutil.rmtree(node.chain_path / "blocks")
+            shutil.rmtree(node.chain_path / "chainstate")
+            shutil.move(node.chain_path / "blocks_bak", node.chain_path / "blocks")
+            shutil.move(node.chain_path / "chainstate_bak", node.chain_path / "chainstate")
 
 
 if __name__ == '__main__':

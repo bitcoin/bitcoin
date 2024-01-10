@@ -4,6 +4,7 @@
 
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
+#include <test/util/logging.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
@@ -19,7 +20,7 @@ public:
     explicit DummyDescriptor(const std::string& descriptor) : desc(descriptor) {};
     ~DummyDescriptor() = default;
 
-    std::string ToString() const override { return desc; }
+    std::string ToString(bool compat_format) const override { return desc; }
     std::optional<OutputType> GetOutputType() const override { return OutputType::UNKNOWN; }
 
     bool IsRange() const override { return false; }
@@ -30,11 +31,14 @@ public:
     bool Expand(int pos, const SigningProvider& provider, std::vector<CScript>& output_scripts, FlatSigningProvider& out, DescriptorCache* write_cache = nullptr) const override { return false; };
     bool ExpandFromCache(int pos, const DescriptorCache& read_cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override { return false; }
     void ExpandPrivate(int pos, const SigningProvider& provider, FlatSigningProvider& out) const override {}
+    std::optional<int64_t> ScriptSize() const override { return {}; }
+    std::optional<int64_t> MaxSatisfactionWeight(bool) const override { return {}; }
+    std::optional<int64_t> MaxSatisfactionElems() const override { return {}; }
 };
 
-BOOST_FIXTURE_TEST_CASE(wallet_load_unknown_descriptor, TestingSetup)
+BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
 {
-    std::unique_ptr<WalletDatabase> database = CreateMockWalletDatabase();
+    std::unique_ptr<WalletDatabase> database = CreateMockableWalletDatabase();
     {
         // Write unknown active descriptor
         WalletBatch batch(*database, false);
@@ -46,8 +50,35 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_unknown_descriptor, TestingSetup)
 
     {
         // Now try to load the wallet and verify the error.
-        const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", m_args, std::move(database)));
+        const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::UNKNOWN_DESCRIPTOR);
+    }
+
+    // Test 2
+    // Now write a valid descriptor with an invalid ID.
+    // As the software produces another ID for the descriptor, the loading process must be aborted.
+    database = CreateMockableWalletDatabase();
+
+    // Verify the error
+    bool found = false;
+    DebugLogHelper logHelper("The descriptor ID calculated by the wallet differs from the one in DB", [&](const std::string* s) {
+        found = true;
+        return false;
+    });
+
+    {
+        // Write valid descriptor with invalid ID
+        WalletBatch batch(*database, false);
+        std::string desc = "wpkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#cjjspncu";
+        WalletDescriptor wallet_descriptor(std::make_shared<DummyDescriptor>(desc), 0, 0, 0, 0);
+        BOOST_CHECK(batch.WriteDescriptor(uint256::ONE, wallet_descriptor));
+    }
+
+    {
+        // Now try to load the wallet and verify the error.
+        const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
+        BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::CORRUPT);
+        BOOST_CHECK(found); // The error must be logged
     }
 }
 
@@ -58,8 +89,8 @@ bool HasAnyRecordOfType(WalletDatabase& db, const std::string& key)
     std::unique_ptr<DatabaseCursor> cursor = batch->GetNewCursor();
     BOOST_CHECK(cursor);
     while (true) {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        DataStream ssKey{};
+        DataStream ssValue{};
         DatabaseCursor::Status status = cursor->Next(ssKey, ssValue);
         assert(status != DatabaseCursor::Status::FAIL);
         if (status == DatabaseCursor::Status::DONE) break;
@@ -70,38 +101,45 @@ bool HasAnyRecordOfType(WalletDatabase& db, const std::string& key)
     return false;
 }
 
-BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
+template<typename... Args>
+SerializeData MakeSerializeData(const Args&... args)
 {
-    // The test duplicates the db so each case has its own db instance.
-    int NUMBER_OF_TESTS = 4;
-    std::vector<std::unique_ptr<WalletDatabase>> dbs;
-    CKey first_key;
-    auto get_db = [](std::vector<std::unique_ptr<WalletDatabase>>& dbs) {
-        std::unique_ptr<WalletDatabase> db = std::move(dbs.back());
-        dbs.pop_back();
-        return db;
-    };
+    DataStream s{};
+    SerializeMany(s, args...);
+    return {s.begin(), s.end()};
+}
 
-    {   // Context setup.
+
+BOOST_FIXTURE_TEST_CASE(wallet_load_ckey, TestingSetup)
+{
+    SerializeData ckey_record_key;
+    SerializeData ckey_record_value;
+    MockableData records;
+
+    {
+        // Context setup.
         // Create and encrypt legacy wallet
-        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", m_args, CreateMockWalletDatabase()));
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", CreateMockableWalletDatabase()));
         LOCK(wallet->cs_wallet);
         auto legacy_spkm = wallet->GetOrCreateLegacyScriptPubKeyMan();
         BOOST_CHECK(legacy_spkm->SetupGeneration(true));
 
-        // Get the first key in the wallet
+        // Retrieve a key
         CTxDestination dest = *Assert(legacy_spkm->GetNewDestination(OutputType::LEGACY));
         CKeyID key_id = GetKeyForDestination(*legacy_spkm, dest);
+        CKey first_key;
         BOOST_CHECK(legacy_spkm->GetKey(key_id, first_key));
 
-        // Encrypt the wallet and duplicate database
+        // Encrypt the wallet
         BOOST_CHECK(wallet->EncryptWallet("encrypt"));
         wallet->Flush();
 
-        DatabaseOptions options;
-        for (int i=0; i < NUMBER_OF_TESTS; i++) {
-            dbs.emplace_back(DuplicateMockDatabase(wallet->GetDatabase(), options));
-        }
+        // Store a copy of all the records
+        records = GetMockableDatabase(*wallet).m_records;
+
+        // Get the record for the retrieved key
+        ckey_record_key = MakeSerializeData(DBKeys::CRYPTED_KEY, first_key.GetPubKey());
+        ckey_record_value = records.at(ckey_record_key);
     }
 
     {
@@ -112,7 +150,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
         // the records every time that 'CWallet::Unlock' gets called, which is not good.
 
         // Load the wallet and check that is encrypted
-        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", m_args, get_db(dbs)));
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", CreateMockableWalletDatabase(records)));
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::LOAD_OK);
         BOOST_CHECK(wallet->IsCrypted());
         BOOST_CHECK(HasAnyRecordOfType(wallet->GetDatabase(), DBKeys::CRYPTED_KEY));
@@ -127,18 +165,12 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
     {
         // Second test case:
         // Verify that loading up a 'ckey' with no checksum triggers a complete re-write of the crypted keys.
-        std::unique_ptr<WalletDatabase> db = get_db(dbs);
-        {
-            std::unique_ptr<DatabaseBatch> batch = db->MakeBatch(false);
-            std::pair<std::vector<unsigned char>, uint256> value;
-            BOOST_CHECK(batch->Read(std::make_pair(DBKeys::CRYPTED_KEY, first_key.GetPubKey()), value));
 
-            const auto key = std::make_pair(DBKeys::CRYPTED_KEY, first_key.GetPubKey());
-            BOOST_CHECK(batch->Write(key, value.first, /*fOverwrite=*/true));
-        }
+        // Cut off the 32 byte checksum from a ckey record
+        records[ckey_record_key].resize(ckey_record_value.size() - 32);
 
         // Load the wallet and check that is encrypted
-        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", m_args, std::move(db)));
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", CreateMockableWalletDatabase(records)));
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::LOAD_OK);
         BOOST_CHECK(wallet->IsCrypted());
         BOOST_CHECK(HasAnyRecordOfType(wallet->GetDatabase(), DBKeys::CRYPTED_KEY));
@@ -154,35 +186,25 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_key_checksum, TestingSetup)
     {
         // Third test case:
         // Verify that loading up a 'ckey' with an invalid checksum throws an error.
-        std::unique_ptr<WalletDatabase> db = get_db(dbs);
-        {
-            std::unique_ptr<DatabaseBatch> batch = db->MakeBatch(false);
-            std::vector<unsigned char> crypted_data;
-            BOOST_CHECK(batch->Read(std::make_pair(DBKeys::CRYPTED_KEY, first_key.GetPubKey()), crypted_data));
 
-            // Write an invalid checksum
-            std::pair<std::vector<unsigned char>, uint256> value = std::make_pair(crypted_data, uint256::ONE);
-            const auto key = std::make_pair(DBKeys::CRYPTED_KEY, first_key.GetPubKey());
-            BOOST_CHECK(batch->Write(key, value, /*fOverwrite=*/true));
-        }
+        // Cut off the 32 byte checksum from a ckey record
+        records[ckey_record_key].resize(ckey_record_value.size() - 32);
+        // Fill in the checksum space with 0s
+        records[ckey_record_key].resize(ckey_record_value.size());
 
-        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", m_args, std::move(db)));
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", CreateMockableWalletDatabase(records)));
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::CORRUPT);
     }
 
     {
         // Fourth test case:
         // Verify that loading up a 'ckey' with an invalid pubkey throws an error
-        std::unique_ptr<WalletDatabase> db = get_db(dbs);
-        {
-            CPubKey invalid_key;
-            BOOST_ASSERT(!invalid_key.IsValid());
-            const auto key = std::make_pair(DBKeys::CRYPTED_KEY, invalid_key);
-            std::pair<std::vector<unsigned char>, uint256> value;
-            BOOST_CHECK(db->MakeBatch(false)->Write(key, value, /*fOverwrite=*/true));
-        }
+        CPubKey invalid_key;
+        BOOST_CHECK(!invalid_key.IsValid());
+        SerializeData key = MakeSerializeData(DBKeys::CRYPTED_KEY, invalid_key);
+        records[key] = ckey_record_value;
 
-        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", m_args, std::move(db)));
+        std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", CreateMockableWalletDatabase(records)));
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::CORRUPT);
     }
 }

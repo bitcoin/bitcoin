@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the ZMQ notification interface."""
 import struct
+from time import sleep
 
 from test_framework.address import (
     ADDRESS_BCRT1_P2WSH_OP_TRUE,
@@ -16,8 +17,8 @@ from test_framework.blocktools import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
-    CTransaction,
     hash256,
+    tx_from_hex,
 )
 from test_framework.util import (
     assert_equal,
@@ -28,8 +29,7 @@ from test_framework.wallet import (
     MiniWallet,
 )
 from test_framework.netutil import test_ipv6_local
-from io import BytesIO
-from time import sleep
+
 
 # Test may be skipped and not have zmq installed
 try:
@@ -198,9 +198,7 @@ class ZMQTest (BitcoinTestFramework):
             txid = hashtx.receive()
 
             # Should receive the coinbase raw transaction.
-            hex = rawtx.receive()
-            tx = CTransaction()
-            tx.deserialize(BytesIO(hex))
+            tx = tx_from_hex(rawtx.receive().hex())
             tx.calc_sha256()
             assert_equal(tx.hash, txid.hex())
 

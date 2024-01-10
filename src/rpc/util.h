@@ -5,21 +5,38 @@
 #ifndef BITCOIN_RPC_UTIL_H
 #define BITCOIN_RPC_UTIL_H
 
+#include <addresstype.h>
+#include <consensus/amount.h>
 #include <node/transaction.h>
 #include <outputtype.h>
-#include <protocol.h>
 #include <pubkey.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <script/script.h>
 #include <script/sign.h>
-#include <script/standard.h>
+#include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <initializer_list>
+#include <map>
+#include <optional>
 #include <string>
+#include <string_view>
+#include <type_traits>
+#include <utility>
 #include <variant>
 #include <vector>
+
+class JSONRPCRequest;
+enum ServiceFlags : uint64_t;
+enum class OutputType;
+enum class TransactionError;
+struct FlatSigningProvider;
+struct bilingual_str;
 
 static constexpr bool DEFAULT_RPC_DOC_CHECK{
 #ifdef RPC_DOC_CHECK
@@ -42,7 +59,6 @@ extern const std::string UNIX_EPOCH_TIME;
 extern const std::string EXAMPLE_ADDRESS[2];
 
 class FillableSigningProvider;
-class CPubKey;
 class CScript;
 struct Sections;
 
@@ -62,11 +78,6 @@ struct UniValueType {
     UniValue::VType type;
 };
 
-/**
- * Type-check one argument; throws JSONRPCError if wrong type given.
- */
-void RPCTypeCheckArgument(const UniValue& value, const UniValueType& typeExpected);
-
 /*
   Check for expected keys/value types in an Object.
 */
@@ -79,10 +90,10 @@ void RPCTypeCheckObj(const UniValue& o,
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).
  */
-uint256 ParseHashV(const UniValue& v, std::string strName);
-uint256 ParseHashO(const UniValue& o, std::string strKey);
-std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName);
-std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey);
+uint256 ParseHashV(const UniValue& v, std::string_view name);
+uint256 ParseHashO(const UniValue& o, std::string_view strKey);
+std::vector<unsigned char> ParseHexV(const UniValue& v, std::string_view name);
+std::vector<unsigned char> ParseHexO(const UniValue& o, std::string_view strKey);
 
 /**
  * Validate and return a CAmount from a UniValue number or string.
@@ -105,6 +116,9 @@ CTxDestination AddAndGetMultisigDestination(const int required, const std::vecto
 
 UniValue DescribeAddress(const CTxDestination& dest);
 
+/** Parse a sighash string representation and raise an RPC error if it is invalid. */
+int ParseSighashString(const UniValue& sighash);
+
 //! Parse a confirm target option and raise an RPC error if it is invalid.
 unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target);
 
@@ -115,10 +129,7 @@ UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_s
 std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
 
 /** Evaluate a descriptor given as a string, or as a {"desc":...,"range":...} object, with default range of 1000. */
-std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider);
-
-/** Returns, given services flags, a list of humanly readable (known) network services */
-UniValue GetServicesNames(ServiceFlags services);
+std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider, const bool expand_priv = false);
 
 /**
  * Serializing JSON objects depends on the outer type. Only arrays and
@@ -135,6 +146,15 @@ struct RPCArgOptions {
     std::string oneline_description{};   //!< Should be empty unless it is supposed to override the auto-generated summary line
     std::vector<std::string> type_str{}; //!< Should be empty unless it is supposed to override the auto-generated type strings. Vector length is either 0 or 2, m_opts.type_str.at(0) will override the type of the value in a key-value pair, m_opts.type_str.at(1) will override the type in the argument description.
     bool hidden{false};                  //!< For testing only
+    bool also_positional{false};         //!< If set allows a named-parameter field in an OBJ_NAMED_PARAM options object
+                                         //!< to have the same name as a top-level parameter. By default the RPC
+                                         //!< framework disallows this, because if an RPC request passes the value by
+                                         //!< name, it is assigned to top-level parameter position, not to the options
+                                         //!< position, defeating the purpose of using OBJ_NAMED_PARAMS instead OBJ for
+                                         //!< that option. But sometimes it makes sense to allow less-commonly used
+                                         //!< options to be passed by name only, and more commonly used options to be
+                                         //!< passed by name or position, so the RPC framework allows this as long as
+                                         //!< methods set the also_positional flag and read values from both positions.
 };
 
 struct RPCArg {
@@ -144,6 +164,13 @@ struct RPCArg {
         STR,
         NUM,
         BOOL,
+        OBJ_NAMED_PARAMS, //!< Special type that behaves almost exactly like
+                          //!< OBJ, defining an options object with a list of
+                          //!< pre-defined keys. The only difference between OBJ
+                          //!< and OBJ_NAMED_PARAMS is that OBJ_NAMED_PARMS
+                          //!< also allows the keys to be passed as top-level
+                          //!< named parameters, as a more convenient way to pass
+                          //!< options to the RPC method without nesting them.
         OBJ_USER_KEYS, //!< Special type where the user must set the keys e.g. to define multiple addresses; as opposed to e.g. an options object where the keys are predefined
         AMOUNT,        //!< Special type representing a floating point amount (can be either NUM or STR)
         STR_HEX,       //!< Special type that is a STR with only hex chars
@@ -188,7 +215,7 @@ struct RPCArg {
           m_description{std::move(description)},
           m_opts{std::move(opts)}
     {
-        CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ && type != Type::OBJ_USER_KEYS);
+        CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ && type != Type::OBJ_NAMED_PARAMS && type != Type::OBJ_USER_KEYS);
     }
 
     RPCArg(
@@ -205,13 +232,16 @@ struct RPCArg {
           m_description{std::move(description)},
           m_opts{std::move(opts)}
     {
-        CHECK_NONFATAL(type == Type::ARR || type == Type::OBJ || type == Type::OBJ_USER_KEYS);
+        CHECK_NONFATAL(type == Type::ARR || type == Type::OBJ || type == Type::OBJ_NAMED_PARAMS || type == Type::OBJ_USER_KEYS);
     }
 
     bool IsOptional() const;
 
-    /** Check whether the request JSON type matches. */
-    void MatchesType(const UniValue& request) const;
+    /**
+     * Check whether the request JSON type matches.
+     * Returns true if type matches, or object describing error(s) if not.
+     */
+    UniValue MatchesType(const UniValue& request) const;
 
     /** Return the first of all aliases */
     std::string GetFirstName() const;
@@ -366,12 +396,51 @@ public:
     RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, RPCMethodImpl fun);
 
     UniValue HandleRequest(const JSONRPCRequest& request) const;
+    /**
+     * Helper to get a request argument.
+     * This function only works during m_fun(), i.e. it should only be used in
+     * RPC method implementations. The helper internally checks whether the
+     * user-passed argument isNull() and parses (from JSON) and returns the
+     * user-passed argument, or the default value derived from the RPCArg
+     * documentation, or a falsy value if no default was given.
+     *
+     * Use Arg<Type>(i) to get the argument or its default value. Otherwise,
+     * use MaybeArg<Type>(i) to get the optional argument or a falsy value.
+     *
+     * The Type passed to this helper must match the corresponding
+     * RPCArg::Type.
+     */
+    template <typename R>
+    auto Arg(size_t i) const
+    {
+        // Return argument (required or with default value).
+        if constexpr (std::is_integral_v<R> || std::is_floating_point_v<R>) {
+            // Return numbers by value.
+            return ArgValue<R>(i);
+        } else {
+            // Return everything else by reference.
+            return ArgValue<const R&>(i);
+        }
+    }
+    template <typename R>
+    auto MaybeArg(size_t i) const
+    {
+        // Return optional argument (without default).
+        if constexpr (std::is_integral_v<R> || std::is_floating_point_v<R>) {
+            // Return numbers by value, wrapped in optional.
+            return ArgValue<std::optional<R>>(i);
+        } else {
+            // Return other types by pointer.
+            return ArgValue<const R*>(i);
+        }
+    }
     std::string ToString() const;
     /** Return the named args that need to be converted from string to another JSON type */
     UniValue GetArgMap() const;
     /** If the supplied number of args is neither too small nor too high */
     bool IsValidNumArgs(size_t num_args) const;
-    std::vector<std::string> GetArgNames() const;
+    //! Return list of arguments and whether they are named-only.
+    std::vector<std::pair<std::string, bool>> GetArgNames() const;
 
     const std::string m_name;
 
@@ -381,6 +450,18 @@ private:
     const std::vector<RPCArg> m_args;
     const RPCResults m_results;
     const RPCExamples m_examples;
+    mutable const JSONRPCRequest* m_req{nullptr}; // A pointer to the request for the duration of m_fun()
+    template <typename R>
+    R ArgValue(size_t i) const;
 };
+
+/**
+ * Push warning messages to an RPC "warnings" field as a JSON array of strings.
+ *
+ * @param[in] warnings  Warning messages to push.
+ * @param[out] obj      UniValue object to push the warnings array object to.
+ */
+void PushWarnings(const UniValue& warnings, UniValue& obj);
+void PushWarnings(const std::vector<bilingual_str>& warnings, UniValue& obj);
 
 #endif // BITCOIN_RPC_UTIL_H

@@ -8,18 +8,14 @@
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
-#include <version.h>
 
 #include <cassert>
 
 FUZZ_TARGET(tx_in)
 {
-    CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
+    DataStream ds{buffer};
     CTxIn tx_in;
     try {
-        int version;
-        ds >> version;
-        ds.SetVersion(version);
         ds >> tx_in;
     } catch (const std::ios_base::failure&) {
         return;

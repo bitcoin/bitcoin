@@ -12,8 +12,8 @@
 #include <cstring>
 #include <locale>
 #include <sstream>
-#include <string>
-#include <string_view>
+#include <string>      // IWYU pragma: export
+#include <string_view> // IWYU pragma: export
 #include <vector>
 
 void ReplaceAll(std::string& in_out, const std::string& search, const std::string& substitute);

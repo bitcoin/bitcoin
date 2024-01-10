@@ -9,13 +9,24 @@ Check for specified flake8 and mypy warnings in python files.
 """
 
 import os
-import pkg_resources
+from pathlib import Path
 import subprocess
 import sys
 
-DEPS = ['flake8', 'mypy', 'pyzmq']
-MYPY_CACHE_DIR = f"{os.getenv('BASE_ROOT_DIR', '')}/test/.mypy_cache"
-FILES_ARGS = ['git', 'ls-files', 'test/functional/*.py', 'contrib/devtools/*.py']
+from importlib.metadata import metadata, PackageNotFoundError
+
+# Customize mypy cache dir via environment variable
+cache_dir = Path(__file__).parent.parent / ".mypy_cache"
+os.environ["MYPY_CACHE_DIR"] = str(cache_dir)
+
+DEPS = ['flake8', 'lief', 'mypy', 'pyzmq']
+
+# All .py files, except those in src/ (to exclude subtrees there)
+FLAKE_FILES_ARGS = ['git', 'ls-files', '*.py', ':!:src/*.py']
+
+# Only .py files in test/functional and contrib/devtools have type annotations
+# enforced.
+MYPY_FILES_ARGS = ['git', 'ls-files', 'test/functional/*.py', 'contrib/devtools/*.py']
 
 ENABLED = (
     'E101,'  # indentation contains mixed spaces and tabs
@@ -47,6 +58,7 @@ ENABLED = (
     'E711,'  # comparison to None should be 'if cond is None:'
     'E714,'  # test for object identity should be "is not"
     'E721,'  # do not compare types, use "isinstance()"
+    'E722,'  # do not use bare 'except'
     'E742,'  # do not define classes named "l", "O", or "I"
     'E743,'  # do not define functions named "l", "O", or "I"
     'E901,'  # SyntaxError: invalid syntax
@@ -92,10 +104,10 @@ ENABLED = (
 
 
 def check_dependencies():
-    working_set = {pkg.key for pkg in pkg_resources.working_set}
-
     for dep in DEPS:
-        if dep not in working_set:
+        try:
+            metadata(dep)
+        except PackageNotFoundError:
             print(f"Skipping Python linting since {dep} is not installed.")
             exit(0)
 
@@ -106,8 +118,7 @@ def main():
     if len(sys.argv) > 1:
         flake8_files = sys.argv[1:]
     else:
-        files_args = ['git', 'ls-files', '*.py']
-        flake8_files = subprocess.check_output(files_args).decode("utf-8").splitlines()
+        flake8_files = subprocess.check_output(FLAKE_FILES_ARGS).decode("utf-8").splitlines()
 
     flake8_args = ['flake8', '--ignore=B,C,E,F,I,N,W', f'--select={ENABLED}'] + flake8_files
     flake8_env = os.environ.copy()
@@ -118,7 +129,7 @@ def main():
     except subprocess.CalledProcessError:
         exit(1)
 
-    mypy_files = subprocess.check_output(FILES_ARGS).decode("utf-8").splitlines()
+    mypy_files = subprocess.check_output(MYPY_FILES_ARGS).decode("utf-8").splitlines()
     mypy_args = ['mypy', '--show-error-codes'] + mypy_files
 
     try:

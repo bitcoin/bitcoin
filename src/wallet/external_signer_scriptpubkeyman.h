@@ -13,17 +13,17 @@ namespace wallet {
 class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
 {
   public:
-  ExternalSignerScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor)
-      :   DescriptorScriptPubKeyMan(storage, descriptor)
+  ExternalSignerScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
+      :   DescriptorScriptPubKeyMan(storage, descriptor, keypool_size)
       {}
-  ExternalSignerScriptPubKeyMan(WalletStorage& storage)
-      :   DescriptorScriptPubKeyMan(storage)
+  ExternalSignerScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size)
+      :   DescriptorScriptPubKeyMan(storage, keypool_size)
       {}
 
   /** Provide a descriptor at setup time
   * Returns false if already setup or setup fails, true if setup is successful
   */
-  bool SetupDescriptor(std::unique_ptr<Descriptor>desc);
+  bool SetupDescriptor(WalletBatch& batch, std::unique_ptr<Descriptor>desc);
 
   static ExternalSigner GetExternalSigner();
 

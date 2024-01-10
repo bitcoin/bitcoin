@@ -26,7 +26,7 @@ class SymlinkTest(BitcoinTestFramework):
         self.stop_node(0)
 
         rename_and_link(
-            from_name=self.nodes[0].chain_path / "blocks",
+            from_name=self.nodes[0].blocks_path,
             to_name=dir_new_blocks,
         )
         rename_and_link(

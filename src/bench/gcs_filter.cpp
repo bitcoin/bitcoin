@@ -5,7 +5,7 @@
 #include <bench/bench.h>
 #include <blockfilter.h>
 
-static const GCSFilter::ElementSet GenerateGCSTestElements()
+static GCSFilter::ElementSet GenerateGCSTestElements()
 {
     GCSFilter::ElementSet elements;
 

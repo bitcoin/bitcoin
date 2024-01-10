@@ -5,24 +5,35 @@
 #ifndef BITCOIN_WALLET_SQLITE_H
 #define BITCOIN_WALLET_SQLITE_H
 
+#include <sync.h>
 #include <wallet/db.h>
 
-#include <sqlite3.h>
-
 struct bilingual_str;
+
+struct sqlite3_stmt;
+struct sqlite3;
 
 namespace wallet {
 class SQLiteDatabase;
 
+/** RAII class that provides a database cursor */
 class SQLiteCursor : public DatabaseCursor
 {
 public:
     sqlite3_stmt* m_cursor_stmt{nullptr};
+    // Copies of the prefix things for the prefix cursor.
+    // Prevents SQLite from accessing temp variables for the prefix things.
+    std::vector<std::byte> m_prefix_range_start;
+    std::vector<std::byte> m_prefix_range_end;
 
     explicit SQLiteCursor() {}
+    explicit SQLiteCursor(std::vector<std::byte> start_range, std::vector<std::byte> end_range)
+        : m_prefix_range_start(std::move(start_range)),
+        m_prefix_range_end(std::move(end_range))
+    {}
     ~SQLiteCursor() override;
 
-    Status Next(CDataStream& key, CDataStream& value) override;
+    Status Next(DataStream& key, DataStream& value) override;
 };
 
 /** RAII class that provides access to a WalletDatabase */
@@ -35,13 +46,16 @@ private:
     sqlite3_stmt* m_insert_stmt{nullptr};
     sqlite3_stmt* m_overwrite_stmt{nullptr};
     sqlite3_stmt* m_delete_stmt{nullptr};
+    sqlite3_stmt* m_delete_prefix_stmt{nullptr};
 
     void SetupSQLStatements();
+    bool ExecStatement(sqlite3_stmt* stmt, Span<const std::byte> blob);
 
-    bool ReadKey(CDataStream&& key, CDataStream& value) override;
-    bool WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite = true) override;
-    bool EraseKey(CDataStream&& key) override;
-    bool HasKey(CDataStream&& key) override;
+    bool ReadKey(DataStream&& key, DataStream& value) override;
+    bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override;
+    bool EraseKey(DataStream&& key) override;
+    bool HasKey(DataStream&& key) override;
+    bool ErasePrefix(Span<const std::byte> prefix) override;
 
 public:
     explicit SQLiteBatch(SQLiteDatabase& database);
@@ -53,6 +67,7 @@ public:
     void Close() override;
 
     std::unique_ptr<DatabaseCursor> GetNewCursor() override;
+    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) override;
     bool TxnBegin() override;
     bool TxnCommit() override;
     bool TxnAbort() override;
@@ -69,7 +84,16 @@ private:
 
     const std::string m_file_path;
 
-    void Cleanup() noexcept;
+    /**
+     * This mutex protects SQLite initialization and shutdown.
+     * sqlite3_config() and sqlite3_shutdown() are not thread-safe (sqlite3_initialize() is).
+     * Concurrent threads that execute SQLiteDatabase::SQLiteDatabase() should have just one
+     * of them do the init and the rest wait for it to complete before all can proceed.
+     */
+    static Mutex g_sqlite_mutex;
+    static int g_sqlite_count GUARDED_BY(g_sqlite_mutex);
+
+    void Cleanup() noexcept EXCLUSIVE_LOCKS_REQUIRED(!g_sqlite_mutex);
 
 public:
     SQLiteDatabase() = delete;

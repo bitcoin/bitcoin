@@ -66,6 +66,10 @@
         <translation type="unfinished">လိပ်စာလက်ခံရရှိသည်</translation>
     </message>
     <message>
+        <source>&amp;Edit</source>
+        <translation type="unfinished">&amp;ပြင်ဆင်</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">တင်ပို့မှုမအောင်မြင်ပါ</translation>
     </message>
@@ -83,6 +87,10 @@
     </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">အမှား-%1</translation>
+    </message>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
@@ -155,6 +163,10 @@
             <numerusform />
         </translation>
     </message>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">အမှား-%1</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -173,6 +185,24 @@
     </context>
 <context>
     <name>Intro</name>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
+    </message>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>

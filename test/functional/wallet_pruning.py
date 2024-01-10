@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 """Test wallet import on pruned node."""
-import os
 
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.blocktools import (
@@ -39,11 +38,15 @@ class WalletPruningTest(BitcoinTestFramework):
 
     def mine_large_blocks(self, node, n):
         # Get the block parameters for the first block
-        best_block = node.getblock(node.getbestblockhash())
+        best_block = node.getblockheader(node.getbestblockhash())
         height = int(best_block["height"]) + 1
         self.nTime = max(self.nTime, int(best_block["time"])) + 1
         previousblockhash = int(best_block["hash"], 16)
         big_script = CScript([OP_RETURN] + [OP_TRUE] * 950000)
+        # Set mocktime to accept all future blocks
+        for i in self.nodes:
+            if i.running:
+                i.setmocktime(self.nTime + 600 * n)
         for _ in range(n):
             block = create_block(hashprev=previousblockhash, ntime=self.nTime, coinbase=create_coinbase(height, script_pubkey=big_script))
             block.solve()
@@ -57,9 +60,6 @@ class WalletPruningTest(BitcoinTestFramework):
             # Simulate 10 minutes of work time per block
             # Important for matching a timestamp with a block +- some window
             self.nTime += 600
-            for n in self.nodes:
-                if n.running:
-                    n.setmocktime(self.nTime) # Update node's time to accept future blocks
         self.sync_all()
 
     def test_wallet_import_pruned(self, wallet_name):
@@ -73,7 +73,7 @@ class WalletPruningTest(BitcoinTestFramework):
 
         # Import wallet into pruned node
         self.nodes[1].createwallet(wallet_name="wallet_pruned", descriptors=False, load_on_startup=True)
-        self.nodes[1].importwallet(os.path.join(self.nodes[0].datadir, wallet_file))
+        self.nodes[1].importwallet(self.nodes[0].datadir_path / wallet_file)
 
         # Make sure that prune node's wallet correctly accounts for balances
         assert_equal(self.nodes[1].getbalance(), self.nodes[0].getbalance())
@@ -92,12 +92,12 @@ class WalletPruningTest(BitcoinTestFramework):
         # Make sure wallet cannot be imported because of missing blocks
         # This will try to rescan blocks `TIMESTAMP_WINDOW` (2h) before the wallet birthheight.
         # There are 6 blocks an hour, so 11 blocks (excluding birthheight).
-        assert_raises_rpc_error(-4, f"Pruned blocks from height {wallet_birthheight - 11} required to import keys. Use RPC call getblockchaininfo to determine your pruned height.", self.nodes[1].importwallet, os.path.join(self.nodes[0].datadir, wallet_file))
+        assert_raises_rpc_error(-4, f"Pruned blocks from height {wallet_birthheight - 11} required to import keys. Use RPC call getblockchaininfo to determine your pruned height.", self.nodes[1].importwallet, self.nodes[0].datadir_path / wallet_file)
         self.log.info("- Done")
 
     def get_birthheight(self, wallet_file):
         """Gets birthheight of a wallet on node0"""
-        with open(os.path.join(self.nodes[0].datadir, wallet_file), 'r', encoding="utf8") as f:
+        with open(self.nodes[0].datadir_path / wallet_file, 'r', encoding="utf8") as f:
             for line in f:
                 if line.startswith('# * Best block at time of backup'):
                     wallet_birthheight = int(line.split(' ')[9])
@@ -105,12 +105,12 @@ class WalletPruningTest(BitcoinTestFramework):
 
     def has_block(self, block_index):
         """Checks if the pruned node has the specific blk0000*.dat file"""
-        return os.path.isfile(os.path.join(self.nodes[1].datadir, self.chain, "blocks", f"blk{block_index:05}.dat"))
+        return (self.nodes[1].blocks_path / f"blk{block_index:05}.dat").is_file()
 
     def create_wallet(self, wallet_name, *, unload=False):
         """Creates and dumps a wallet on the non-pruned node0 to be later import by the pruned node"""
         self.nodes[0].createwallet(wallet_name=wallet_name, descriptors=False, load_on_startup=True)
-        self.nodes[0].dumpwallet(os.path.join(self.nodes[0].datadir, wallet_name + ".dat"))
+        self.nodes[0].dumpwallet(self.nodes[0].datadir_path / f"{wallet_name}.dat")
         if (unload):
             self.nodes[0].unloadwallet(wallet_name)
 
@@ -122,7 +122,7 @@ class WalletPruningTest(BitcoinTestFramework):
 
         # A blk*.dat file is 128MB
         # Generate 250 light blocks
-        self.generate(self.nodes[0], 250, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 250)
         # Generate 50MB worth of large blocks in the blk00000.dat file
         self.mine_large_blocks(self.nodes[0], 50)
 

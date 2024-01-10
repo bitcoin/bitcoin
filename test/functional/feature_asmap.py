@@ -111,9 +111,17 @@ class AsmapTest(BitcoinTestFramework):
         self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
         os.remove(self.default_asmap)
 
+    def test_asmap_health_check(self):
+        self.log.info('Test bitcoind -asmap logs ASMap Health Check with basic stats')
+        shutil.copyfile(self.asmap_raw, self.default_asmap)
+        msg = "ASMap Health Check: 2 clearnet peers are mapped to 1 ASNs with 0 peers being unmapped"
+        with self.node.assert_debug_log(expected_msgs=[msg]):
+            self.start_node(0, extra_args=['-asmap'])
+        os.remove(self.default_asmap)
+
     def run_test(self):
         self.node = self.nodes[0]
-        self.datadir = os.path.join(self.node.datadir, self.chain)
+        self.datadir = self.node.chain_path
         self.default_asmap = os.path.join(self.datadir, DEFAULT_ASMAP_FILENAME)
         self.asmap_raw = os.path.join(os.path.dirname(os.path.realpath(__file__)), ASMAP)
 
@@ -124,6 +132,7 @@ class AsmapTest(BitcoinTestFramework):
         self.test_asmap_interaction_with_addrman_containing_entries()
         self.test_default_asmap_with_missing_file()
         self.test_empty_asmap()
+        self.test_asmap_health_check()
 
 
 if __name__ == '__main__':

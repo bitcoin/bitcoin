@@ -15,6 +15,7 @@
 #include <chrono>
 #include <cstdint>
 #include <limits>
+#include <vector>
 
 /**
  * Overall design of the RNG and entropy sources.
@@ -145,22 +146,10 @@ private:
     bool requires_seed;
     ChaCha20 rng;
 
-    unsigned char bytebuf[64];
-    int bytebuf_size;
-
     uint64_t bitbuf;
     int bitbuf_size;
 
     void RandomSeed();
-
-    void FillByteBuffer()
-    {
-        if (requires_seed) {
-            RandomSeed();
-        }
-        rng.Keystream(bytebuf, sizeof(bytebuf));
-        bytebuf_size = sizeof(bytebuf);
-    }
 
     void FillBitBuffer()
     {
@@ -185,10 +174,10 @@ public:
     /** Generate a random 64-bit integer. */
     uint64_t rand64() noexcept
     {
-        if (bytebuf_size < 8) FillByteBuffer();
-        uint64_t ret = ReadLE64(bytebuf + 64 - bytebuf_size);
-        bytebuf_size -= 8;
-        return ret;
+        if (requires_seed) RandomSeed();
+        std::array<std::byte, 8> buf;
+        rng.Keystream(buf);
+        return ReadLE64(UCharCast(buf.data()));
     }
 
     /** Generate a random (bits)-bit integer. */
@@ -222,7 +211,11 @@ public:
     }
 
     /** Generate random bytes. */
-    std::vector<unsigned char> randbytes(size_t len);
+    template <typename B = unsigned char>
+    std::vector<B> randbytes(size_t len);
+
+    /** Fill a byte Span with random bytes. */
+    void fillrand(Span<std::byte> output);
 
     /** Generate a random 32-bit integer. */
     uint32_t rand32() noexcept { return randbits(32); }

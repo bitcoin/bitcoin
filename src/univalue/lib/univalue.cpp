@@ -115,7 +115,7 @@ void UniValue::push_backV(const std::vector<UniValue>& vec)
     values.insert(values.end(), vec.begin(), vec.end());
 }
 
-void UniValue::__pushKV(std::string key, UniValue val)
+void UniValue::pushKVEnd(std::string key, UniValue val)
 {
     checkType(VOBJ);
 
@@ -131,7 +131,7 @@ void UniValue::pushKV(std::string key, UniValue val)
     if (findKey(key, idx))
         values[idx] = std::move(val);
     else
-        __pushKV(std::move(key), std::move(val));
+        pushKVEnd(std::move(key), std::move(val));
 }
 
 void UniValue::pushKVs(UniValue obj)
@@ -140,7 +140,7 @@ void UniValue::pushKVs(UniValue obj)
     obj.checkType(VOBJ);
 
     for (size_t i = 0; i < obj.keys.size(); i++)
-        __pushKV(std::move(obj.keys.at(i)), std::move(obj.values.at(i)));
+        pushKVEnd(std::move(obj.keys.at(i)), std::move(obj.values.at(i)));
 }
 
 void UniValue::getObjMap(std::map<std::string,UniValue>& kv) const
@@ -230,12 +230,13 @@ const char *uvTypeName(UniValue::VType t)
     return nullptr;
 }
 
-const UniValue& find_value(const UniValue& obj, const std::string& name)
+const UniValue& UniValue::find_value(std::string_view key) const
 {
-    for (unsigned int i = 0; i < obj.keys.size(); i++)
-        if (obj.keys[i] == name)
-            return obj.values.at(i);
-
+    for (unsigned int i = 0; i < keys.size(); ++i) {
+        if (keys[i] == key) {
+            return values.at(i);
+        }
+    }
     return NullUniValue;
 }
 

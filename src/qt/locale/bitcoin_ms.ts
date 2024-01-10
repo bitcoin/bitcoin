@@ -27,11 +27,11 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Padam alamat semasa yang dipilih dari senaraiyang dipilih dari senarai</translation>
+        <translation type="unfinished">Padam alamat semasa yang dipilih dari senarai yang tersedia</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Masukkan alamat atau label untuk carian
+        <translation type="unfinished">Masukkan alamat atau label untuk memulakan pencarian
 </translation>
     </message>
     <message>
@@ -231,13 +231,6 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation type="unfinished">
             <numerusform />
         </translation>
-    </message>
-    </context>
-<context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Baca Selesai</translation>
     </message>
     </context>
 <context>
@@ -445,6 +438,24 @@ Alihkan fail data ke dalam tab semasa</translation>
 <context>
     <name>Intro</name>
     <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform>(of %n GB needed)</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform>(%n GB needed for full chain)</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
@@ -558,6 +569,13 @@ Alihkan fail data ke dalam tab semasa</translation>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">
 Alihkan fail data ke dalam tab semasa</translation>
+    </message>
+    </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Baca Selesai</translation>
     </message>
     </context>
 </TS>

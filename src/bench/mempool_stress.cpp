@@ -5,8 +5,10 @@
 #include <bench/bench.h>
 #include <kernel/mempool_entry.h>
 #include <policy/policy.h>
+#include <random.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
+#include <util/chaintype.h>
 #include <validation.h>
 
 #include <vector>
@@ -15,10 +17,11 @@ static void AddTx(const CTransactionRef& tx, CTxMemPool& pool) EXCLUSIVE_LOCKS_R
 {
     int64_t nTime = 0;
     unsigned int nHeight = 1;
+    uint64_t sequence = 0;
     bool spendsCoinbase = false;
     unsigned int sigOpCost = 4;
     LockPoints lp;
-    pool.addUnchecked(CTxMemPoolEntry(tx, 1000, nTime, nHeight, spendsCoinbase, sigOpCost, lp));
+    pool.addUnchecked(CTxMemPoolEntry(tx, 1000, nTime, nHeight, sequence, spendsCoinbase, sigOpCost, lp));
 }
 
 struct Available {
@@ -53,7 +56,7 @@ static std::vector<CTransactionRef> CreateOrderedCoins(FastRandomContext& det_ra
         for (size_t ancestor = 0; ancestor < n_ancestors && !available_coins.empty(); ++ancestor){
             size_t idx = det_rand.randrange(available_coins.size());
             Available coin = available_coins[idx];
-            uint256 hash = coin.ref->GetHash();
+            Txid hash = coin.ref->GetHash();
             // biased towards taking min_ancestors parents, but maybe more
             size_t n_to_take = det_rand.randrange(2) == 0 ?
                                min_ancestors :
@@ -88,7 +91,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
         childTxs = static_cast<int>(bench.complexityN());
     }
     std::vector<CTransactionRef> ordered_coins = CreateOrderedCoins(det_rand, childTxs, /*min_ancestors=*/1);
-    const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(CBaseChainParams::MAIN);
+    const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN);
     CTxMemPool& pool = *testing_setup.get()->m_node.mempool;
     LOCK2(cs_main, pool.cs);
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
@@ -103,7 +106,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
 static void MempoolCheck(benchmark::Bench& bench)
 {
     FastRandomContext det_rand{true};
-    auto testing_setup = MakeNoLogFileContext<TestChain100Setup>(CBaseChainParams::REGTEST, {"-checkmempool=1"});
+    auto testing_setup = MakeNoLogFileContext<TestChain100Setup>(ChainType::REGTEST, {"-checkmempool=1"});
     CTxMemPool& pool = *testing_setup.get()->m_node.mempool;
     LOCK2(cs_main, pool.cs);
     testing_setup->PopulateMempool(det_rand, 400, true);

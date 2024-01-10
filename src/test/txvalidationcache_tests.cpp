@@ -4,18 +4,19 @@
 
 #include <consensus/validation.h>
 #include <key.h>
+#include <random.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
+#include <util/chaintype.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
 struct Dersig100Setup : public TestChain100Setup {
     Dersig100Setup()
-        : TestChain100Setup{CBaseChainParams::REGTEST, {"-testactivationheight=dersig@102"}} {}
+        : TestChain100Setup{ChainType::REGTEST, {"-testactivationheight=dersig@102"}} {}
 };
 
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,

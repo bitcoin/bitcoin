@@ -43,7 +43,7 @@ public:
     /** Order (ascending or descending) to sort nodes by */
     Qt::SortOrder sortOrder;
 
-    /** Pull a full list of banned nodes from CNode into our cache */
+    /** Pull a full list of banned nodes from interfaces::Node into our cache */
     void refreshBanlist(interfaces::Node& node)
     {
         banmap_t banMap;
@@ -177,4 +177,10 @@ void BanTableModel::sort(int column, Qt::SortOrder order)
 bool BanTableModel::shouldShow()
 {
     return priv->size() > 0;
+}
+
+bool BanTableModel::unban(const QModelIndex& index)
+{
+    CCombinedBan* ban{static_cast<CCombinedBan*>(index.internalPointer())};
+    return ban != nullptr && m_node.unban(ban->subnet);
 }

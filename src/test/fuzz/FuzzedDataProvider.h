@@ -158,7 +158,7 @@ FuzzedDataProvider::ConsumeRandomLengthString(size_t max_length) {
   // picking its contents.
   std::string result;
 
-  // Reserve the anticipated capaticity to prevent several reallocations.
+  // Reserve the anticipated capacity to prevent several reallocations.
   result.reserve(std::min(max_length, remaining_bytes_));
   for (size_t i = 0; i < max_length && remaining_bytes_ != 0; ++i) {
     char next = ConvertUnsignedToSigned<char>(data_ptr_[0]);
@@ -209,7 +209,7 @@ T FuzzedDataProvider::ConsumeIntegralInRange(T min, T max) {
     abort();
 
   // Use the biggest type possible to hold the range and the result.
-  uint64_t range = static_cast<uint64_t>(max) - min;
+  uint64_t range = static_cast<uint64_t>(max) - static_cast<uint64_t>(min);
   uint64_t result = 0;
   size_t offset = 0;
 
@@ -230,7 +230,7 @@ T FuzzedDataProvider::ConsumeIntegralInRange(T min, T max) {
   if (range != std::numeric_limits<decltype(range)>::max())
     result = result % (range + 1);
 
-  return static_cast<T>(min + result);
+  return static_cast<T>(static_cast<uint64_t>(min) + result);
 }
 
 // Returns a floating point value in the range [Type's lowest, Type's max] by
@@ -390,7 +390,7 @@ TS FuzzedDataProvider::ConvertUnsignedToSigned(TU value) {
     return static_cast<TS>(value);
   } else {
     constexpr auto TS_min = std::numeric_limits<TS>::min();
-    return TS_min + static_cast<char>(value - TS_min);
+    return TS_min + static_cast<TS>(value - TS_min);
   }
 }
 

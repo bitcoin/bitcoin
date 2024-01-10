@@ -4,9 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that fast rescan using block filters for descriptor wallets detects
    top-ups correctly and finds the same transactions than the slow variant."""
-import os
-from typing import List
-
+from test_framework.address import address_to_scriptpubkey
 from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import TestNode
@@ -32,7 +30,7 @@ class WalletFastRescanTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
         self.skip_if_no_sqlite()
 
-    def get_wallet_txids(self, node: TestNode, wallet_name: str) -> List[str]:
+    def get_wallet_txids(self, node: TestNode, wallet_name: str) -> list[str]:
         w = node.get_wallet_rpc(wallet_name)
         txs = w.listtransactions('*', 1000000)
         return [tx['txid'] for tx in txs]
@@ -42,7 +40,7 @@ class WalletFastRescanTest(BitcoinTestFramework):
         wallet = MiniWallet(node)
 
         self.log.info("Create descriptor wallet with backup")
-        WALLET_BACKUP_FILENAME = os.path.join(node.datadir, 'wallet.bak')
+        WALLET_BACKUP_FILENAME = node.datadir_path / 'wallet.bak'
         node.createwallet(wallet_name='topup_test', descriptors=True)
         w = node.get_wallet_rpc('topup_test')
         fixed_key = get_generate_key()
@@ -58,7 +56,7 @@ class WalletFastRescanTest(BitcoinTestFramework):
                 if 'range' in desc_info:
                     start_range, end_range = desc_info['range']
                     addr = w.deriveaddresses(desc_info['desc'], [end_range, end_range])[0]
-                    spk = bytes.fromhex(w.getaddressinfo(addr)['scriptPubKey'])
+                    spk = address_to_scriptpubkey(addr)
                     self.log.info(f"-> range [{start_range},{end_range}], last address {addr}")
                 else:
                     spk = bytes.fromhex(fixed_key.p2wpkh_script)

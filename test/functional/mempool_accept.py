@@ -9,7 +9,6 @@ from decimal import Decimal
 import math
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.key import ECKey
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     COIN,
@@ -44,6 +43,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
+from test_framework.wallet_util import generate_keypair
 
 
 class MempoolAcceptanceTest(BitcoinTestFramework):
@@ -283,9 +283,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             rawtxs=[tx.serialize().hex()],
         )
         tx = tx_from_hex(raw_tx_reference)
-        key = ECKey()
-        key.generate()
-        pubkey = key.get_pubkey().get_bytes()
+        _, pubkey = generate_keypair()
         tx.vout[0].scriptPubKey = keys_to_multisig_script([pubkey] * 3, k=2)  # Some bare multisig script (2-of-3)
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bare-multisig'}],
@@ -350,7 +348,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
 
         self.log.info('A tiny transaction(in non-witness bytes) that is disallowed')
         tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(int(seed_tx[0], 16), seed_tx[1]), b"", SEQUENCE_FINAL))
+        tx.vin.append(CTxIn(COutPoint(int(seed_tx["txid"], 16), seed_tx["sent_vout"]), b"", SEQUENCE_FINAL))
         tx.wit.vtxinwit = [CTxInWitness()]
         tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
         tx.vout.append(CTxOut(0, CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 2)))))

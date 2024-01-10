@@ -13,7 +13,7 @@
 [[nodiscard]] bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath);
 
 /** Write HD keypaths as strings */
-std::string WriteHDKeypath(const std::vector<uint32_t>& keypath);
-std::string FormatHDKeypath(const std::vector<uint32_t>& path);
+std::string WriteHDKeypath(const std::vector<uint32_t>& keypath, bool apostrophe = false);
+std::string FormatHDKeypath(const std::vector<uint32_t>& path, bool apostrophe = false);
 
 #endif // BITCOIN_UTIL_BIP32_H

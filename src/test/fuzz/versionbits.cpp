@@ -4,9 +4,10 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <common/args.h>
 #include <consensus/params.h>
 #include <primitives/block.h>
-#include <util/system.h>
+#include <util/chaintype.h>
 #include <versionbits.h>
 
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -104,13 +105,13 @@ std::unique_ptr<const CChainParams> g_params;
 void initialize()
 {
     // this is actually comparatively slow, so only do it once
-    g_params = CreateChainParams(ArgsManager{}, CBaseChainParams::MAIN);
+    g_params = CreateChainParams(ArgsManager{}, ChainType::MAIN);
     assert(g_params != nullptr);
 }
 
 constexpr uint32_t MAX_START_TIME = 4102444800; // 2100-01-01
 
-FUZZ_TARGET_INIT(versionbits, initialize)
+FUZZ_TARGET(versionbits, .init = initialize)
 {
     const CChainParams& params = *g_params;
     const int64_t interval = params.GetConsensus().nPowTargetSpacing;

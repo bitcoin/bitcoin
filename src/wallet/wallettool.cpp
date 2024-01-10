@@ -8,8 +8,8 @@
 
 #include <wallet/wallettool.h>
 
-#include <fs.h>
-#include <util/system.h>
+#include <common/args.h>
+#include <util/fs.h>
 #include <util/translation.h>
 #include <wallet/dump.h>
 #include <wallet/salvage.h>
@@ -47,7 +47,7 @@ static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flag
     wallet_instance->TopUpKeyPool();
 }
 
-static const std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::path& path, const ArgsManager& args, DatabaseOptions options)
+static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::path& path, DatabaseOptions options)
 {
     DatabaseStatus status;
     bilingual_str error;
@@ -58,7 +58,7 @@ static const std::shared_ptr<CWallet> MakeWallet(const std::string& name, const 
     }
 
     // dummy chain interface
-    std::shared_ptr<CWallet> wallet_instance{new CWallet(/*chain=*/nullptr, name, args, std::move(database)), WalletToolReleaseWallet};
+    std::shared_ptr<CWallet> wallet_instance{new CWallet(/*chain=*/nullptr, name, std::move(database)), WalletToolReleaseWallet};
     DBErrors load_wallet_ret;
     try {
         load_wallet_ret = wallet_instance->LoadWallet();
@@ -68,7 +68,6 @@ static const std::shared_ptr<CWallet> MakeWallet(const std::string& name, const 
     }
 
     if (load_wallet_ret != DBErrors::LOAD_OK) {
-        wallet_instance = nullptr;
         if (load_wallet_ret == DBErrors::CORRUPT) {
             tfm::format(std::cerr, "Error loading %s: Wallet corrupted", name);
             return nullptr;
@@ -159,7 +158,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
             options.require_format = DatabaseFormat::SQLITE;
         }
 
-        const std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, args, options);
+        const std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
         if (wallet_instance) {
             WalletShowInfo(wallet_instance.get());
             wallet_instance->Close();
@@ -168,7 +167,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         DatabaseOptions options;
         ReadDatabaseArgs(args, options);
         options.require_existing = true;
-        const std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, args, options);
+        const std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
         if (!wallet_instance) return false;
         WalletShowInfo(wallet_instance.get());
         wallet_instance->Close();
@@ -194,10 +193,15 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         DatabaseOptions options;
         ReadDatabaseArgs(args, options);
         options.require_existing = true;
-        const std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, args, options);
-        if (!wallet_instance) return false;
+        DatabaseStatus status;
         bilingual_str error;
-        bool ret = DumpWallet(args, *wallet_instance, error);
+        std::unique_ptr<WalletDatabase> database = MakeDatabase(path, options, status, error);
+        if (!database) {
+            tfm::format(std::cerr, "%s\n", error.original);
+            return false;
+        }
+
+        bool ret = DumpWallet(args, *database, error);
         if (!ret && !error.empty()) {
             tfm::format(std::cerr, "%s\n", error.original);
             return ret;

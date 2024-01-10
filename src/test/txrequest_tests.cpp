@@ -6,6 +6,7 @@
 #include <txrequest.h>
 #include <uint256.h>
 
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 
 #include <algorithm>
@@ -385,6 +386,7 @@ void BuildBigPriorityTest(Scenario& scenario, int peers)
     }
     // Make a list of all peers, in order of intended request order (concatenation of pref_peers and npref_peers).
     std::vector<NodeId> request_order;
+    request_order.reserve(num_pref + num_npref);
     for (int i = 0; i < num_pref; ++i) request_order.push_back(pref_peers[i]);
     for (int i = 0; i < num_npref; ++i) request_order.push_back(npref_peers[i]);
 

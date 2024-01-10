@@ -1,0 +1,49 @@
+name: 'Run in Docker with environment'
+description: 'Run a command in a Docker container, while passing explicitly set environment variables into the container.'
+inputs:
+  dockerfile:
+    description: 'A Dockerfile that defines an image'
+    required: true
+  tag:
+    description: 'A tag of an image'
+    required: true
+  command:
+    description: 'A command to run in a container'
+    required: false
+    default: ./ci/ci.sh
+runs:
+  using: "composite"
+  steps:
+    - uses: docker/setup-buildx-action@v3
+
+    - uses: docker/build-push-action@v5
+      id: main_builder
+      continue-on-error: true
+      with:
+        context: .
+        file: ${{ inputs.dockerfile }}
+        tags: ${{ inputs.tag }}
+        load: true
+        cache-from: type=gha
+
+    - uses: docker/build-push-action@v5
+      id: retry_builder
+      if: steps.main_builder.outcome == 'failure'
+      with:
+        context: .
+        file: ${{ inputs.dockerfile }}
+        tags: ${{ inputs.tag }}
+        load: true
+        cache-from: type=gha
+
+    - # Tell Docker to pass environment variables in `env` into the container.
+      run: >
+        docker run \
+          $(echo '${{ toJSON(env) }}' | jq -r 'keys[] | "--env \(.) "') \
+          --volume ${{ github.workspace }}:${{ github.workspace }} \
+          --workdir ${{ github.workspace }} \
+          ${{ inputs.tag }} bash -c "
+            git config --global --add safe.directory ${{ github.workspace }}
+            ${{ inputs.command }}
+          "
+      shell: bash

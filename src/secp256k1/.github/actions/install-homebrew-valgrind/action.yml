@@ -1,0 +1,33 @@
+name: "Install Valgrind"
+description: "Install Homebrew's Valgrind package and cache it."
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        brew tap LouisBrunner/valgrind
+        brew fetch --HEAD LouisBrunner/valgrind/valgrind
+        echo "CI_HOMEBREW_CELLAR_VALGRIND=$(brew --cellar valgrind)" >> "$GITHUB_ENV"
+      shell: bash
+
+    - run: |
+        sw_vers > valgrind_fingerprint
+        brew --version >> valgrind_fingerprint
+        git -C "$(brew --cache)/valgrind--git" rev-parse HEAD >> valgrind_fingerprint
+        cat valgrind_fingerprint
+      shell: bash
+
+    - uses: actions/cache@v3
+      id: cache
+      with:
+        path: ${{ env.CI_HOMEBREW_CELLAR_VALGRIND }}
+        key: ${{ github.job }}-valgrind-${{ hashFiles('valgrind_fingerprint') }}
+
+    - if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        brew install --HEAD LouisBrunner/valgrind/valgrind
+      shell: bash
+
+    - if: steps.cache.outputs.cache-hit == 'true'
+      run: |
+        brew link valgrind
+      shell: bash

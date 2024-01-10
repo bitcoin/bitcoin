@@ -29,8 +29,13 @@ class RPCGenerateTest(BitcoinTestFramework):
         node = self.nodes[0]
         miniwallet = MiniWallet(node)
 
-        self.log.info('Generate an empty block to address')
+        self.log.info('Mine an empty block to address and return the hex')
         address = miniwallet.get_address()
+        generated_block = self.generateblock(node, output=address, transactions=[], submit=False)
+        node.submitblock(hexdata=generated_block['hex'])
+        assert_equal(generated_block['hash'], node.getbestblockhash())
+
+        self.log.info('Generate an empty block to address')
         hash = self.generateblock(node, output=address, transactions=[])['hash']
         block = node.getblock(blockhash=hash, verbose=2)
         assert_equal(len(block['tx']), 1)

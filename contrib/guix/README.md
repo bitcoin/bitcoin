@@ -11,7 +11,7 @@ We achieve bootstrappability by using Guix as a functional package manager.
 
 # Requirements
 
-Conservatively, you will need an x86_64 machine with:
+Conservatively, you will need:
 
 - 16GB of free disk space on the partition that /gnu/store will reside in
 - 8GB of free disk space **per platform triple** you're planning on building
@@ -259,7 +259,7 @@ details.
   Override the number of jobs to run simultaneously, you might want to do so on
   a memory-limited machine. This may be passed to:
 
-  - `guix` build commands as in `guix environment --cores="$JOBS"`
+  - `guix` build commands as in `guix shell --cores="$JOBS"`
   - `make` as in `make --jobs="$JOBS"`
   - `xargs` as in `xargs -P"$JOBS"`
 
@@ -301,7 +301,7 @@ details.
 
 * _**ADDITIONAL_GUIX_ENVIRONMENT_FLAGS**_
 
-  Additional flags to be passed to the invocation of `guix environment` inside
+  Additional flags to be passed to the invocation of `guix shell` inside
   `guix time-machine`.
 
 # Choosing your security model

@@ -191,7 +191,7 @@ WalletControllerActivity::WalletControllerActivity(WalletController* wallet_cont
     connect(this, &WalletControllerActivity::finished, this, &QObject::deleteLater);
 }
 
-void WalletControllerActivity::showProgressDialog(const QString& title_text, const QString& label_text)
+void WalletControllerActivity::showProgressDialog(const QString& title_text, const QString& label_text, bool show_minimized)
 {
     auto progress_dialog = new QProgressDialog(m_parent_widget);
     progress_dialog->setAttribute(Qt::WA_DeleteOnClose);
@@ -206,6 +206,8 @@ void WalletControllerActivity::showProgressDialog(const QString& title_text, con
     // The setValue call forces QProgressDialog to start the internal duration estimation.
     // See details in https://bugreports.qt.io/browse/QTBUG-47042.
     progress_dialog->setValue(0);
+    // When requested, launch dialog minimized
+    if (show_minimized) progress_dialog->showMinimized();
 }
 
 CreateWalletActivity::CreateWalletActivity(WalletController* wallet_controller, QWidget* parent_widget)
@@ -248,14 +250,13 @@ void CreateWalletActivity::createWallet()
 
     std::string name = m_create_wallet_dialog->walletName().toStdString();
     uint64_t flags = 0;
+    // Enable descriptors by default.
+    flags |= WALLET_FLAG_DESCRIPTORS;
     if (m_create_wallet_dialog->isDisablePrivateKeysChecked()) {
         flags |= WALLET_FLAG_DISABLE_PRIVATE_KEYS;
     }
     if (m_create_wallet_dialog->isMakeBlankWalletChecked()) {
         flags |= WALLET_FLAG_BLANK_WALLET;
-    }
-    if (m_create_wallet_dialog->isDescriptorWalletChecked()) {
-        flags |= WALLET_FLAG_DESCRIPTORS;
     }
     if (m_create_wallet_dialog->isExternalSignerChecked()) {
         flags |= WALLET_FLAG_EXTERNAL_SIGNER;
@@ -368,14 +369,15 @@ LoadWalletsActivity::LoadWalletsActivity(WalletController* wallet_controller, QW
 {
 }
 
-void LoadWalletsActivity::load()
+void LoadWalletsActivity::load(bool show_loading_minimized)
 {
     showProgressDialog(
         //: Title of progress window which is displayed when wallets are being loaded.
         tr("Load Wallets"),
         /*: Descriptive text of the load wallets progress window which indicates to
             the user that wallets are currently being loaded.*/
-        tr("Loading wallets…"));
+        tr("Loading wallets…"),
+        /*show_minimized=*/show_loading_minimized);
 
     QTimer::singleShot(0, worker(), [this] {
         for (auto& wallet : node().walletLoader().getWallets()) {
@@ -429,6 +431,70 @@ void RestoreWalletActivity::finish()
     }
 
     if (m_wallet_model) Q_EMIT restored(m_wallet_model);
+
+    Q_EMIT finished();
+}
+
+void MigrateWalletActivity::migrate(WalletModel* wallet_model)
+{
+    // Warn the user about migration
+    QMessageBox box(m_parent_widget);
+    box.setWindowTitle(tr("Migrate wallet"));
+    box.setText(tr("Are you sure you wish to migrate the wallet <i>%1</i>?").arg(GUIUtil::HtmlEscape(wallet_model->getDisplayName())));
+    box.setInformativeText(tr("Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.\n"
+                "If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.\n"
+                "If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.\n\n"
+                "The migration process will create a backup of the wallet before migrating. This backup file will be named "
+                "<wallet name>-<timestamp>.legacy.bak and can be found in the directory for this wallet. In the event of "
+                "an incorrect migration, the backup can be restored with the \"Restore Wallet\" functionality."));
+    box.setStandardButtons(QMessageBox::Yes|QMessageBox::Cancel);
+    box.setDefaultButton(QMessageBox::Yes);
+    if (box.exec() != QMessageBox::Yes) return;
+
+    // Get the passphrase if it is encrypted regardless of it is locked or unlocked. We need the passphrase itself.
+    SecureString passphrase;
+    WalletModel::EncryptionStatus enc_status = wallet_model->getEncryptionStatus();
+    if (enc_status == WalletModel::EncryptionStatus::Locked || enc_status == WalletModel::EncryptionStatus::Unlocked) {
+        AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, m_parent_widget, &passphrase);
+        dlg.setModel(wallet_model);
+        dlg.exec();
+    }
+
+    // GUI needs to remove the wallet so that it can actually be unloaded by migration
+    const std::string name = wallet_model->wallet().getWalletName();
+    m_wallet_controller->removeAndDeleteWallet(wallet_model);
+
+    showProgressDialog(tr("Migrate Wallet"), tr("Migrating Wallet <b>%1</b>…").arg(GUIUtil::HtmlEscape(name)));
+
+    QTimer::singleShot(0, worker(), [this, name, passphrase] {
+        auto res{node().walletLoader().migrateWallet(name, passphrase)};
+
+        if (res) {
+            m_success_message = tr("The wallet '%1' was migrated successfully.").arg(GUIUtil::HtmlEscape(res->wallet->getWalletName()));
+            if (res->watchonly_wallet_name) {
+                m_success_message += QChar(' ') + tr("Watchonly scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(res->watchonly_wallet_name.value()));
+            }
+            if (res->solvables_wallet_name) {
+                m_success_message += QChar(' ') + tr("Solvable but not watched scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(res->solvables_wallet_name.value()));
+            }
+            m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(res->wallet));
+        } else {
+            m_error_message = util::ErrorString(res);
+        }
+
+        QTimer::singleShot(0, this, &MigrateWalletActivity::finish);
+    });
+}
+
+void MigrateWalletActivity::finish()
+{
+    if (!m_error_message.empty()) {
+        QMessageBox::critical(m_parent_widget, tr("Migration failed"), QString::fromStdString(m_error_message.translated));
+    } else {
+        QMessageBox::information(m_parent_widget, tr("Migration Successful"), m_success_message);
+    }
+
+    if (m_wallet_model) Q_EMIT migrated(m_wallet_model);
 
     Q_EMIT finished();
 }

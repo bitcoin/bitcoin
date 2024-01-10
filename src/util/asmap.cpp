@@ -6,10 +6,10 @@
 
 #include <clientversion.h>
 #include <crypto/common.h>
-#include <fs.h>
 #include <logging.h>
 #include <serialize.h>
 #include <streams.h>
+#include <util/fs.h>
 
 #include <algorithm>
 #include <cassert>
