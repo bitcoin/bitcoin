@@ -429,6 +429,32 @@ BOOST_AUTO_TEST_CASE(tx_creation_bnb_sffo_restriction)
     BOOST_CHECK(result->GetAlgo() == SelectionAlgorithm::SRD || result->GetAlgo() == SelectionAlgorithm::KNAPSACK);
 }
 
+static void TestSRDFail(std::string test_title, std::vector<COutput>& utxo_pool, const CAmount& selection_target, const int max_weight = MAX_STANDARD_TX_WEIGHT, const std::string& expected_error = "")
+{
+    const auto& no_res = SelectCoinsSRD(GroupCoins(utxo_pool), selection_target, default_cs_params.m_change_fee, default_cs_params.rng_fast, max_weight);
+    BOOST_CHECK_MESSAGE(!no_res, "SRD-Fail: " + test_title);
+    if (expected_error != "") {
+        BOOST_CHECK_MESSAGE(util::ErrorString(no_res).original.find(expected_error) != std::string::npos, "Found expected error message: " + expected_error);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(srd_test)
+{
+    std::vector<COutput> utxo_pool;
+
+    // Fail for empty UTXO pool
+    TestSRDFail("Empty UTXO pool", utxo_pool, /*selection_target=*/ 1 * CENT);
+
+    AddCoins(utxo_pool, {1 * CENT, 3 * CENT, 5 * CENT});
+
+    // Fail because target exceeds available funds
+    TestSRDFail("Insufficient Funds", utxo_pool, /*selection_target=*/ 10 * CENT);
+
+    // Fail because max weight allows only 10 inputs and target requires 25
+    AddDuplicateCoins(utxo_pool, 1000, 0.5 * CENT);
+    TestSRDFail("Max Weight Exceeded", utxo_pool, /*selection_target=*/ 20 * CENT, /*max_weight=*/4 * 680, "The inputs size exceeds the maximum weight");
+}
+
 //TODO: SelectCoins Test
     // TODO: Test at `SelectCoins`/spend.cpp level that changeless solutions can be achieved by combining preset inputs with BnB solutions
     // TODO: Test that immature coins are not considered

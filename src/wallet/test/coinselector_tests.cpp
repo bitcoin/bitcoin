@@ -376,41 +376,6 @@ BOOST_AUTO_TEST_CASE(srd_tests)
             /*avoid_partial=*/false,
     };
 
-    {
-        // #########################################################
-        // 1) Insufficient funds, select all provided coins and fail
-        // #########################################################
-        CAmount target = 49.5L * COIN;
-        int max_weight = 10000; // high enough to not fail for this reason.
-        const auto& res = SelectCoinsSRD(target, dummy_params, m_node, max_weight, [&](CWallet& wallet) {
-            CoinsResult available_coins;
-            for (int j = 0; j < 10; ++j) {
-                add_coin(available_coins, wallet, CAmount(1 * COIN));
-                add_coin(available_coins, wallet, CAmount(2 * COIN));
-            }
-            return available_coins;
-        });
-        BOOST_CHECK(!res);
-        BOOST_CHECK(util::ErrorString(res).empty()); // empty means "insufficient funds"
-    }
-
-    {
-        // ###########################
-        // 2) Test max weight exceeded
-        // ###########################
-        CAmount target = 49.5L * COIN;
-        int max_weight = 3000;
-        const auto& res = SelectCoinsSRD(target, dummy_params, m_node, max_weight, [&](CWallet& wallet) {
-            CoinsResult available_coins;
-            for (int j = 0; j < 10; ++j) {
-                add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(0), 144, false, 0, true);
-                add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(0), 144, false, 0, true);
-            }
-            return available_coins;
-        });
-        BOOST_CHECK(!res);
-        BOOST_CHECK(util::ErrorString(res).original.find("The inputs size exceeds the maximum weight") != std::string::npos);
-    }
 
     {
         // ################################################################################################################
