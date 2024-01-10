@@ -192,3 +192,12 @@ task:
       type: small
   env:
     FILE_ENV: "./ci/test/00_setup_env_mac.sh"
+
+task:
+  name: 'no wallet, libblsct'
+  << : *GLOBAL_TASK_TEMPLATE
+  persistent_worker:
+    labels:
+      type: small
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_native_libblsct_only.sh"
