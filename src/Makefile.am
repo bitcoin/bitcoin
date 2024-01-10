@@ -141,6 +141,7 @@ BITCOIN_CORE_H = \
   cachemap.h \
   cachemultimap.h \
   blockfilter.h \
+  bloom.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
@@ -149,6 +150,7 @@ BITCOIN_CORE_H = \
   clientversion.h \
   coinjoin/coinjoin.h \
   coinjoin/client.h \
+  coinjoin/common.h \
   coinjoin/context.h \
   coinjoin/options.h \
   coinjoin/server.h \
@@ -169,6 +171,7 @@ BITCOIN_CORE_H = \
   cuckoocache.h \
   ctpl_stl.h \
   cxxtimer.hpp \
+  dbwrapper.h \
   deploymentinfo.h \
   deploymentstatus.h \
   evo/assetlocktx.h \
@@ -210,12 +213,12 @@ BITCOIN_CORE_H = \
   indirectmap.h \
   init.h \
   interfaces/chain.h \
+  interfaces/coinjoin.h \
   interfaces/handler.h \
   interfaces/node.h \
   interfaces/wallet.h \
   key.h \
   key_io.h \
-  dbwrapper.h \
   limitedmap.h \
   llmq/blockprocessor.h \
   llmq/chainlocks.h \
@@ -259,7 +262,9 @@ BITCOIN_CORE_H = \
   node/coin.h \
   node/coinstats.h \
   node/context.h \
+  node/psbt.h \
   node/transaction.h \
+  node/ui_interface.h \
   node/utxo_snapshot.h \
   noui.h \
   outputtype.h \
@@ -305,13 +310,12 @@ BITCOIN_CORE_H = \
   support/lockedpool.h \
   sync.h \
   timestampindex.h \
-  threadsafety.h \
   threadinterrupt.h \
+  threadsafety.h \
   timedata.h \
   torcontrol.h \
   txdb.h \
   txmempool.h \
-  ui_interface.h \
   undo.h \
   unordered_lru_cache.h \
   util/bip32.h \
@@ -326,8 +330,6 @@ BITCOIN_CORE_H = \
   util/hasher.h \
   util/hash_type.h \
   util/irange.h \
-  util/spanparsing.h \
-  util/system.h \
   util/asmap.h \
   util/getuniquepath.h \
   util/macros.h \
@@ -342,20 +344,22 @@ BITCOIN_CORE_H = \
   util/ranges_set.h \
   util/sock.h \
   util/string.h \
+  util/spanparsing.h \
+  util/system.h \
   util/time.h \
   util/thread.h \
   util/threadnames.h \
   util/trace.h \
   util/translation.h \
-  util/vector.h \
+  util/ui_change_type.h \
   util/url.h \
   util/vector.h \
   validation.h \
   validationinterface.h \
   versionbits.h \
-  walletinitinterface.h \
   wallet/bdb.h \
   wallet/coincontrol.h \
+  wallet/coinselection.h \
   wallet/context.h \
   wallet/crypter.h \
   wallet/db.h \
@@ -370,7 +374,7 @@ BITCOIN_CORE_H = \
   wallet/walletdb.h \
   wallet/wallettool.h \
   wallet/walletutil.h \
-  wallet/coinselection.h \
+  walletinitinterface.h \
   warnings.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqnotificationinterface.h \
@@ -402,7 +406,6 @@ libbitcoin_server_a_SOURCES = \
   chain.cpp \
   coinjoin/coinjoin.cpp \
   coinjoin/context.cpp \
-  coinjoin/options.cpp \
   coinjoin/server.cpp \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
@@ -421,6 +424,14 @@ libbitcoin_server_a_SOURCES = \
   evo/specialtx.cpp \
   evo/specialtxman.cpp \
   flatfile.cpp \
+  governance/classes.cpp \
+  governance/exceptions.cpp \
+  governance/governance.cpp \
+  governance/object.cpp \
+  governance/validators.cpp \
+  governance/vote.cpp \
+  governance/votedb.cpp \
+  gsl/assert.cpp \
   httprpc.cpp \
   httpserver.cpp \
   i2p.cpp \
@@ -429,14 +440,6 @@ libbitcoin_server_a_SOURCES = \
   index/coinstatsindex.cpp \
   index/txindex.cpp \
   init.cpp \
-  governance/governance.cpp \
-  governance/classes.cpp \
-  governance/exceptions.cpp \
-  governance/object.cpp \
-  governance/validators.cpp \
-  governance/vote.cpp \
-  governance/votedb.cpp \
-  gsl/assert.cpp \
   llmq/quorums.cpp \
   llmq/blockprocessor.cpp \
   llmq/commitment.cpp \
@@ -468,7 +471,9 @@ libbitcoin_server_a_SOURCES = \
   node/coinstats.cpp \
   node/context.cpp \
   node/interfaces.cpp \
+  node/psbt.cpp \
   node/transaction.cpp \
+  node/ui_interface.cpp \
   noui.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
@@ -494,7 +499,6 @@ libbitcoin_server_a_SOURCES = \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
-  ui_interface.cpp \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
@@ -525,7 +529,7 @@ libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(SQLITE_CFLAG
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
   coinjoin/client.cpp \
-  coinjoin/options.cpp \
+  coinjoin/interfaces.cpp \
   coinjoin/util.cpp \
   hdchain.cpp \
   wallet/coincontrol.cpp \
@@ -735,6 +739,8 @@ libbitcoin_util_a_SOURCES = \
   bls/bls_ies.h \
   bls/bls_worker.cpp \
   bls/bls_worker.h \
+  coinjoin/common.cpp \
+  coinjoin/options.cpp \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
@@ -870,9 +876,7 @@ endif
 # https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking#circular-dependency)
 dash_wallet_LDADD = \
   $(LIBBITCOIN_WALLET_TOOL) \
-  $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
-  $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_UTIL) \

@@ -17,11 +17,12 @@
 #include <qt/recentrequeststablemodel.h>
 #include <qt/transactiontablemodel.h>
 
+#include <interfaces/coinjoin.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <key_io.h>
+#include <node/ui_interface.h>
 #include <psbt.h>
-#include <ui_interface.h>
 #include <util/system.h> // for GetBoolArg
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
@@ -75,6 +76,11 @@ void WalletModel::setClientModel(ClientModel* client_model)
 {
     m_client_model = client_model;
     if (!m_client_model) timer->stop();
+}
+
+std::unique_ptr<interfaces::CoinJoin::Client> WalletModel::coinJoin() const
+{
+    return m_node.coinJoinLoader()->GetClient(m_wallet->getWalletName());
 }
 
 void WalletModel::updateStatus()

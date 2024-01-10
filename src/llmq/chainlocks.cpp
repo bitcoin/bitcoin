@@ -14,10 +14,10 @@
 #include <masternode/sync.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
+#include <node/ui_interface.h>
 #include <scheduler.h>
 #include <spork.h>
 #include <txmempool.h>
-#include <ui_interface.h>
 #include <util/thread.h>
 #include <util/time.h>
 #include <validation.h>

@@ -11,8 +11,8 @@
 #include <pubkey.h>                    // For CKeyID and CScriptID (definitions needed in CTxDestination instantiation)
 #include <script/standard.h>           // For CTxDestination
 #include <support/allocators/secure.h> // For SecureString
-#include <ui_interface.h>              // For ChangeType
 #include <util/message.h>
+#include <util/ui_change_type.h>
 
 #include <functional>
 #include <map>
@@ -26,7 +26,6 @@
 
 class CCoinControl;
 class CFeeRate;
-class CJClientManager;
 class CKey;
 class CWallet;
 class UniValue;
@@ -48,27 +47,12 @@ struct WalletBalances;
 struct WalletTx;
 struct WalletTxOut;
 struct WalletTxStatus;
+namespace CoinJoin {
+class Loader;
+}
 
 using WalletOrderForm = std::vector<std::pair<std::string, std::string>>;
 using WalletValueMap = std::map<std::string, std::string>;
-
-namespace CoinJoin {
-//! Interface for the wallet constrained src/coinjoin part of a dash node (dashd process).
-class Client
-{
-public:
-    virtual ~Client() {}
-    virtual void resetCachedBlocks() = 0;
-    virtual void resetPool() = 0;
-    virtual int getCachedBlocks() = 0;
-    virtual std::string getSessionDenoms() = 0;
-    virtual void setCachedBlocks(int nCachedBlocks) = 0;
-    virtual void disableAutobackups() = 0;
-    virtual bool isMixing() = 0;
-    virtual bool startMixing() = 0;
-    virtual void stopMixing() = 0;
-};
-}
 
 //! Interface for accessing a wallet.
 class Wallet
@@ -296,8 +280,6 @@ public:
     // Return whether private keys enabled.
     virtual bool privateKeysDisabled() = 0;
 
-    virtual CoinJoin::Client& coinJoin() = 0;
-
     //! Get max tx fee.
     virtual CAmount getDefaultMaxTxFee() = 0;
 
@@ -355,10 +337,10 @@ class WalletLoader : public ChainClient
 {
 public:
     //! Create new wallet.
-    virtual std::unique_ptr<Wallet> createWallet(const CJClientManager& client_man, const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
+    virtual std::unique_ptr<Wallet> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
 
    //! Load existing wallet.
-   virtual std::unique_ptr<Wallet> loadWallet(const CJClientManager& client_man, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
+   virtual std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
 
    //! Return default wallet directory.
    virtual std::string getWalletDir() = 0;
@@ -456,11 +438,11 @@ struct WalletTxOut
 
 //! Return implementation of Wallet interface. This function is defined in
 //! dummywallet.cpp and throws if the wallet component is not compiled.
-std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet, const CJClientManager& clientman);
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet);
 
 //! Return implementation of ChainClient interface for a wallet loader. This
 //! function will be undefined in builds where ENABLE_WALLET is false.
-std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args);
+std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, const std::unique_ptr<CoinJoin::Loader>& coinjoin_loader, ArgsManager& args);
 
 } // namespace interfaces
 

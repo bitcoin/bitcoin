@@ -38,6 +38,9 @@ class uint256;
 
 namespace interfaces {
 class Node;
+namespace CoinJoin {
+class Client;
+} // namespace CoinJoin
 } // namespace interfaces
 
 QT_BEGIN_NAMESPACE
@@ -151,7 +154,7 @@ public:
     interfaces::Node& node() const { return m_node; }
     interfaces::Wallet& wallet() const { return *m_wallet; }
     void setClientModel(ClientModel* client_model);
-    interfaces::CoinJoin::Client& coinJoin() const { return m_wallet->coinJoin(); }
+    std::unique_ptr<interfaces::CoinJoin::Client> coinJoin() const;
 
     QString getWalletName() const;
     QString getDisplayName() const;

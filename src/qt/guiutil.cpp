@@ -22,7 +22,6 @@
 #include <protocol.h>
 #include <script/script.h>
 #include <script/standard.h>
-#include <ui_interface.h>
 #include <util/system.h>
 
 #include <cmath>

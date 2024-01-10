@@ -24,7 +24,7 @@ public:
 
     // Dash Specific WalletInitInterface InitCoinJoinSettings
     void AutoLockMasternodeCollaterals() const override {}
-    void InitCoinJoinSettings(const CJClientManager& clientman) const override {}
+    void InitCoinJoinSettings(const CoinJoinWalletManager& cjwalletman) const override {}
     bool InitAutoBackup() const override {return true;}
 };
 
@@ -74,7 +74,7 @@ const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();
 
 namespace interfaces {
 
-std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet, const CJClientManager& clientman)
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet, const CoinJoinWalletManager& cjwalletman)
 {
     throw std::logic_error("Wallet function called in non-wallet build.");
 }

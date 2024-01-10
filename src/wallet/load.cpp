@@ -90,7 +90,7 @@ bool VerifyWallets(interfaces::Chain& chain)
     return true;
 }
 
-bool LoadWallets(interfaces::Chain& chain)
+bool LoadWallets(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader)
 {
     try {
         std::set<fs::path> wallet_paths;
@@ -108,7 +108,7 @@ bool LoadWallets(interfaces::Chain& chain)
             if (!database && status == DatabaseStatus::FAILED_NOT_FOUND) {
                 continue;
             }
-            std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(chain, name, std::move(database), options.create_flags, error_string, warnings) : nullptr;
+            std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(chain, coinjoin_loader, name, std::move(database), options.create_flags, error_string, warnings) : nullptr;
             if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
             if (!pwallet) {
                 chain.initError(error_string);
@@ -141,10 +141,7 @@ void FlushWallets()
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         if (CCoinJoinClientOptions::IsEnabled()) {
             // Stop CoinJoin, release keys
-            auto cj_clientman = ::coinJoinClientManagers->Get(*pwallet);
-            assert(cj_clientman != nullptr);
-            cj_clientman->ResetPool();
-            cj_clientman->StopMixing();
+            pwallet->coinjoin_loader().FlushWallet(pwallet->GetName());
         }
         pwallet->Flush();
     }

@@ -6,7 +6,7 @@
 #define BITCOIN_WALLETINITINTERFACE_H
 
 class ArgsManager;
-class CJClientManager;
+class CoinJoinWalletManager;
 
 struct NodeContext;
 
@@ -23,7 +23,7 @@ public:
 
     // Dash Specific WalletInitInterface
     virtual void AutoLockMasternodeCollaterals() const = 0;
-    virtual void InitCoinJoinSettings(const CJClientManager& clientman) const = 0;
+    virtual void InitCoinJoinSettings(const CoinJoinWalletManager& cjwalletman) const = 0;
     virtual bool InitAutoBackup() const = 0;
 
     virtual ~WalletInitInterface() {}

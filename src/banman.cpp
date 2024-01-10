@@ -6,7 +6,7 @@
 #include <banman.h>
 
 #include <netaddress.h>
-#include <ui_interface.h>
+#include <node/ui_interface.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>

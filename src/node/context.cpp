@@ -9,6 +9,7 @@
 #include <coinjoin/context.h>
 #include <evo/creditpool.h>
 #include <interfaces/chain.h>
+#include <interfaces/coinjoin.h>
 #include <llmq/context.h>
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>

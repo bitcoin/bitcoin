@@ -141,14 +141,14 @@ bool CCoinJoinBroadcastTx::IsValidStructure() const
     if (tx->vin.size() != tx->vout.size()) {
         return false;
     }
-    if (tx->vin.size() < size_t(CCoinJoin::GetMinPoolParticipants())) {
+    if (tx->vin.size() < size_t(CoinJoin::GetMinPoolParticipants())) {
         return false;
     }
-    if (tx->vin.size() > CCoinJoin::GetMaxPoolParticipants() * COINJOIN_ENTRY_MAX_SIZE) {
+    if (tx->vin.size() > CoinJoin::GetMaxPoolParticipants() * COINJOIN_ENTRY_MAX_SIZE) {
         return false;
     }
     return ranges::all_of(tx->vout, [] (const auto& txOut){
-        return CCoinJoin::IsDenominatedAmount(txOut.nValue) && txOut.scriptPubKey.IsPayToPublicKeyHash();
+        return CoinJoin::IsDenominatedAmount(txOut.nValue) && txOut.scriptPubKey.IsPayToPublicKeyHash();
     });
 }
 
@@ -236,9 +236,9 @@ bool CCoinJoinBaseSession::IsValidInOuts(const CTxMemPool& mempool, const std::v
     }
 
     auto checkTxOut = [&](const CTxOut& txout) {
-        if (int nDenom = CCoinJoin::AmountToDenomination(txout.nValue); nDenom != nSessionDenom) {
+        if (int nDenom = CoinJoin::AmountToDenomination(txout.nValue); nDenom != nSessionDenom) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinBaseSession::IsValidInOuts -- ERROR: incompatible denom %d (%s) != nSessionDenom %d (%s)\n",
-                    nDenom, CCoinJoin::DenominationToString(nDenom), nSessionDenom, CCoinJoin::DenominationToString(nSessionDenom));
+                    nDenom, CoinJoin::DenominationToString(nDenom), nSessionDenom, CoinJoin::DenominationToString(nSessionDenom));
             nMessageIDRet = ERR_DENOM;
             if (fConsumeCollateralRet) *fConsumeCollateralRet = true;
             return false;
@@ -307,12 +307,8 @@ bool CCoinJoinBaseSession::IsValidInOuts(const CTxMemPool& mempool, const std::v
     return true;
 }
 
-// Definitions for static data members
-Mutex CCoinJoin::cs_mapdstx;
-std::map<uint256, CCoinJoinBroadcastTx> CCoinJoin::mapDSTX GUARDED_BY(CCoinJoin::cs_mapdstx);
-
 // check to make sure the collateral provided by the client is valid
-bool CCoinJoin::IsCollateralValid(CTxMemPool& mempool, const CTransaction& txCollateral)
+bool CoinJoin::IsCollateralValid(CTxMemPool& mempool, const CTransaction& txCollateral)
 {
     if (txCollateral.vout.empty()) return false;
     if (txCollateral.nLockTime != 0) return false;
@@ -324,7 +320,7 @@ bool CCoinJoin::IsCollateralValid(CTxMemPool& mempool, const CTransaction& txCol
         nValueOut += txout.nValue;
 
         if (!txout.scriptPubKey.IsPayToPublicKeyHash() && !txout.scriptPubKey.IsUnspendable()) {
-            LogPrint(BCLog::COINJOIN, "CCoinJoin::IsCollateralValid -- Invalid Script, txCollateral=%s", txCollateral.ToString()); /* Continued */
+            LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- Invalid Script, txCollateral=%s", txCollateral.ToString()); /* Continued */
             return false;
         }
     }
@@ -334,31 +330,31 @@ bool CCoinJoin::IsCollateralValid(CTxMemPool& mempool, const CTransaction& txCol
         auto mempoolTx = mempool.get(txin.prevout.hash);
         if (mempoolTx != nullptr) {
             if (mempool.isSpent(txin.prevout) || !llmq::quorumInstantSendManager->IsLocked(txin.prevout.hash)) {
-                LogPrint(BCLog::COINJOIN, "CCoinJoin::IsCollateralValid -- spent or non-locked mempool input! txin=%s\n", txin.ToString());
+                LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- spent or non-locked mempool input! txin=%s\n", txin.ToString());
                 return false;
             }
             nValueIn += mempoolTx->vout[txin.prevout.n].nValue;
         } else if (GetUTXOCoin(txin.prevout, coin)) {
             nValueIn += coin.out.nValue;
         } else {
-            LogPrint(BCLog::COINJOIN, "CCoinJoin::IsCollateralValid -- Unknown inputs in collateral transaction, txCollateral=%s", txCollateral.ToString()); /* Continued */
+            LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- Unknown inputs in collateral transaction, txCollateral=%s", txCollateral.ToString()); /* Continued */
             return false;
         }
     }
 
     //collateral transactions are required to pay out a small fee to the miners
     if (nValueIn - nValueOut < GetCollateralAmount()) {
-        LogPrint(BCLog::COINJOIN, "CCoinJoin::IsCollateralValid -- did not include enough fees in transaction: fees: %d, txCollateral=%s", nValueOut - nValueIn, txCollateral.ToString()); /* Continued */
+        LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- did not include enough fees in transaction: fees: %d, txCollateral=%s", nValueOut - nValueIn, txCollateral.ToString()); /* Continued */
         return false;
     }
 
-    LogPrint(BCLog::COINJOIN, "CCoinJoin::IsCollateralValid -- %s", txCollateral.ToString()); /* Continued */
+    LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- %s", txCollateral.ToString()); /* Continued */
 
     {
         LOCK(cs_main);
         TxValidationState validationState;
         if (!AcceptToMemoryPool(::ChainstateActive(), mempool, validationState, MakeTransactionRef(txCollateral), /*bypass_limits=*/false, /*nAbsurdFee=*/DEFAULT_MAX_RAW_TX_FEE, /*test_accept=*/true)) {
-            LogPrint(BCLog::COINJOIN, "CCoinJoin::IsCollateralValid -- didn't pass AcceptToMemoryPool()\n");
+            LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- didn't pass AcceptToMemoryPool()\n");
             return false;
         }
     }
@@ -366,21 +362,7 @@ bool CCoinJoin::IsCollateralValid(CTxMemPool& mempool, const CTransaction& txCol
     return true;
 }
 
-std::string CCoinJoin::DenominationToString(int nDenom)
-{
-    switch (CAmount nDenomAmount = DenominationToAmount(nDenom)) {
-        case  0: return "N/A";
-        case -1: return "out-of-bounds";
-        case -2: return "non-denom";
-        case -3: return "to-amount-error";
-        default: return ValueFromAmount(nDenomAmount).getValStr();
-    }
-
-    // shouldn't happen
-    return "to-string-error";
-}
-
-bilingual_str CCoinJoin::GetMessageByID(PoolMessage nMessageID)
+bilingual_str CoinJoin::GetMessageByID(PoolMessage nMessageID)
 {
     switch (nMessageID) {
     case ERR_ALREADY_HAVE:
@@ -432,14 +414,17 @@ bilingual_str CCoinJoin::GetMessageByID(PoolMessage nMessageID)
     }
 }
 
-void CCoinJoin::AddDSTX(const CCoinJoinBroadcastTx& dstx)
+// Definitions for static data members
+std::unique_ptr<CDSTXManager> dstxManager;
+
+void CDSTXManager::AddDSTX(const CCoinJoinBroadcastTx& dstx)
 {
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     mapDSTX.insert(std::make_pair(dstx.tx->GetHash(), dstx));
 }
 
-CCoinJoinBroadcastTx CCoinJoin::GetDSTX(const uint256& hash)
+CCoinJoinBroadcastTx CDSTXManager::GetDSTX(const uint256& hash)
 {
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
@@ -447,7 +432,7 @@ CCoinJoinBroadcastTx CCoinJoin::GetDSTX(const uint256& hash)
     return (it == mapDSTX.end()) ? CCoinJoinBroadcastTx() : it->second;
 }
 
-void CCoinJoin::CheckDSTXes(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler)
+void CDSTXManager::CheckDSTXes(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler)
 {
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
@@ -459,24 +444,24 @@ void CCoinJoin::CheckDSTXes(const CBlockIndex* pindex, const llmq::CChainLocksHa
             ++it;
         }
     }
-    LogPrint(BCLog::COINJOIN, "CCoinJoin::CheckDSTXes -- mapDSTX.size()=%llu\n", mapDSTX.size());
+    LogPrint(BCLog::COINJOIN, "CoinJoin::CheckDSTXes -- mapDSTX.size()=%llu\n", mapDSTX.size());
 }
 
-void CCoinJoin::UpdatedBlockTip(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const CMasternodeSync& mn_sync)
+void CDSTXManager::UpdatedBlockTip(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const CMasternodeSync& mn_sync)
 {
     if (pindex && mn_sync.IsBlockchainSynced()) {
         CheckDSTXes(pindex, clhandler);
     }
 }
 
-void CCoinJoin::NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const CMasternodeSync& mn_sync)
+void CDSTXManager::NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const CMasternodeSync& mn_sync)
 {
     if (pindex && mn_sync.IsBlockchainSynced()) {
         CheckDSTXes(pindex, clhandler);
     }
 }
 
-void CCoinJoin::UpdateDSTXConfirmedHeight(const CTransactionRef& tx, std::optional<int> nHeight)
+void CDSTXManager::UpdateDSTXConfirmedHeight(const CTransactionRef& tx, std::optional<int> nHeight)
 {
     AssertLockHeld(cs_mapdstx);
 
@@ -486,17 +471,17 @@ void CCoinJoin::UpdateDSTXConfirmedHeight(const CTransactionRef& tx, std::option
     }
 
     it->second.SetConfirmedHeight(nHeight);
-    LogPrint(BCLog::COINJOIN, "CCoinJoin::%s -- txid=%s, nHeight=%d\n", __func__, tx->GetHash().ToString(), nHeight.value_or(-1));
+    LogPrint(BCLog::COINJOIN, "CDSTXManager::%s -- txid=%s, nHeight=%d\n", __func__, tx->GetHash().ToString(), nHeight.value_or(-1));
 }
 
-void CCoinJoin::TransactionAddedToMempool(const CTransactionRef& tx)
+void CDSTXManager::TransactionAddedToMempool(const CTransactionRef& tx)
 {
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     UpdateDSTXConfirmedHeight(tx, std::nullopt);
 }
 
-void CCoinJoin::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
+void CDSTXManager::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
@@ -506,7 +491,7 @@ void CCoinJoin::BlockConnected(const std::shared_ptr<const CBlock>& pblock, cons
     }
 }
 
-void CCoinJoin::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex*)
+void CDSTXManager::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex*)
 {
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
@@ -515,5 +500,5 @@ void CCoinJoin::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, c
     }
 }
 
-int CCoinJoin::GetMinPoolParticipants() { return Params().PoolMinParticipants(); }
-int CCoinJoin::GetMaxPoolParticipants() { return Params().PoolMaxParticipants(); }
+int CoinJoin::GetMinPoolParticipants() { return Params().PoolMinParticipants(); }
+int CoinJoin::GetMaxPoolParticipants() { return Params().PoolMaxParticipants(); }

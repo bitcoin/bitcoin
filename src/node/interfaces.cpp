@@ -8,12 +8,14 @@
 #include <banman.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <coinjoin/common.h>
 #include <deploymentstatus.h>
 #include <evo/deterministicmns.h>
 #include <governance/governance.h>
 #include <governance/object.h>
 #include <init.h>
 #include <interfaces/chain.h>
+#include <interfaces/coinjoin.h>
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
 #include <llmq/chainlocks.h>
@@ -28,6 +30,7 @@
 #include <node/blockstorage.h>
 #include <node/coin.h>
 #include <node/context.h>
+#include <node/ui_interface.h>
 #include <node/transaction.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -42,7 +45,6 @@
 #include <sync.h>
 #include <timedata.h>
 #include <txmempool.h>
-#include <ui_interface.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/system.h>
@@ -192,27 +194,27 @@ public:
     }
     bool isCollateralAmount(CAmount nAmount) override
     {
-        return CCoinJoin::IsCollateralAmount(nAmount);
+        return ::CoinJoin::IsCollateralAmount(nAmount);
     }
     CAmount getMinCollateralAmount() override
     {
-        return CCoinJoin::GetCollateralAmount();
+        return ::CoinJoin::GetCollateralAmount();
     }
     CAmount getMaxCollateralAmount() override
     {
-        return CCoinJoin::GetMaxCollateralAmount();
+        return ::CoinJoin::GetMaxCollateralAmount();
     }
     CAmount getSmallestDenomination() override
     {
-        return CCoinJoin::GetSmallestDenomination();
+        return ::CoinJoin::GetSmallestDenomination();
     }
     bool isDenominated(CAmount nAmount) override
     {
-        return CCoinJoin::IsDenominatedAmount(nAmount);
+        return ::CoinJoin::IsDenominatedAmount(nAmount);
     }
     std::array<CAmount, 5> getStandardDenominations() override
     {
-        return CCoinJoin::GetStandardDenominations();
+        return ::CoinJoin::GetStandardDenominations();
     }
 };
 
@@ -450,6 +452,7 @@ public:
     LLMQ& llmq() override { return m_llmq; }
     Masternode::Sync& masternodeSync() override { return m_masternodeSync; }
     CoinJoin::Options& coinJoinOptions() override { return m_coinjoin; }
+    std::unique_ptr<interfaces::CoinJoin::Loader>& coinJoinLoader() override { return m_context->coinjoin_loader; }
 
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {

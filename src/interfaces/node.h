@@ -39,6 +39,9 @@ struct NodeContext;
 namespace interfaces {
 class Handler;
 class WalletLoader;
+namespace CoinJoin {
+class Loader;
+} //namespsace CoinJoin
 struct BlockTip;
 
 //! Interface for the src/evo part of a dash node (dashd process).
@@ -300,8 +303,11 @@ public:
     //! Return interface for accessing masternode related handler.
     virtual Masternode::Sync& masternodeSync() = 0;
 
-    //! Return interface for accessing coinjoin related handler.
+    //! Return interface for accessing coinjoin options related handler.
     virtual CoinJoin::Options& coinJoinOptions() = 0;
+
+    //! Return interface for accessing coinjoin loader handler.
+    virtual std::unique_ptr<interfaces::CoinJoin::Loader>& coinJoinLoader() = 0;
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;

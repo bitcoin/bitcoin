@@ -34,7 +34,6 @@
 #include <node/context.h>
 #include <noui.h>
 #include <stacktraces.h>
-#include <ui_interface.h>
 #include <uint256.h>
 #include <util/system.h>
 #include <util/threadnames.h>

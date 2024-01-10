@@ -14,6 +14,7 @@
 #ifdef ENABLE_WALLET
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
+#include <interfaces/coinjoin.h>
 #include <wallet/rpcwallet.h>
 #endif // ENABLE_WALLET
 
@@ -51,7 +52,8 @@ static UniValue coinjoin(const JSONRPCRequest& request)
         }
     }
 
-    auto cj_clientman = ::coinJoinClientManagers->Get(*wallet);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    auto cj_clientman = node.coinjoin_loader->walletman().Get(wallet->GetName());
     CHECK_NONFATAL(cj_clientman != nullptr);
 
     if (request.params[0].get_str() == "start") {
@@ -65,7 +67,6 @@ static UniValue coinjoin(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing has been started already.");
         }
 
-        const NodeContext& node = EnsureAnyNodeContext(request.context);
         CTxMemPool& mempool = EnsureMemPool(node);
         CBlockPolicyEstimator& fee_estimator = EnsureFeeEstimator(node);
         bool result = cj_clientman->DoAutomaticDenominating(*node.connman, fee_estimator, mempool);
@@ -163,7 +164,7 @@ static UniValue getcoinjoininfo(const JSONRPCRequest& request)
         return obj;
     }
 
-    auto manager = ::coinJoinClientManagers->Get(*wallet);
+    auto manager = node.coinjoin_loader->walletman().Get(wallet->GetName());
     CHECK_NONFATAL(manager != nullptr);
     manager->GetJsonInfo(obj);
 

@@ -18,7 +18,6 @@
 #include <qt/guiutil.h>
 #include <qt/networkstyle.h>
 #include <qt/walletmodel.h>
-#include <ui_interface.h>
 #include <util/system.h>
 #include <util/translation.h>
 

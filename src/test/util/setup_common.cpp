@@ -109,6 +109,9 @@ void DashTestSetup(NodeContext& node)
     CChainState& chainstate = Assert(node.chainman)->ActiveChainstate();
 
     node.cj_ctx = std::make_unique<CJContext>(chainstate, *node.connman, *node.mempool, *::masternodeSync, /* relay_txes */ true);
+#ifdef ENABLE_WALLET
+    node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
+#endif // ENABLE_WALLET
     ::deterministicMNManager = std::make_unique<CDeterministicMNManager>(chainstate, *node.connman, *node.evodb);
     node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.evodb, *sporkManager, *node.mempool, node.peerman, true, false);
 }
@@ -162,6 +165,9 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     InitScriptExecutionCache();
     m_node.addrman = std::make_unique<CAddrMan>();
     m_node.chain = interfaces::MakeChain(m_node);
+    // while g_wallet_init_interface is init here at very early stage
+    // we can't get rid of unique_ptr from wallet/contex.h
+    // TODO: remove unique_ptr from wallet/context.h after bitcoin/bitcoin#22219
     g_wallet_init_interface.Construct(m_node);
     fCheckBlockIndex = true;
     m_node.evodb = std::make_unique<CEvoDB>(1 << 20, true, true);
@@ -214,6 +220,7 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     ::sporkManager = std::make_unique<CSporkManager>();
     ::governance = std::make_unique<CGovernanceManager>();
     ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman, *::governance);
+    ::dstxManager = std::make_unique<CDSTXManager>();
     ::mmetaman = std::make_unique<CMasternodeMetaMan>(/* load_cache */ false);
     ::netfulfilledman = std::make_unique<CNetFulfilledRequestManager>(/* load_cache */ false);
 
@@ -237,6 +244,7 @@ ChainTestingSetup::~ChainTestingSetup()
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     ::netfulfilledman.reset();
     ::mmetaman.reset();
+    ::dstxManager.reset();
     ::masternodeSync.reset();
     ::governance.reset();
     ::sporkManager.reset();

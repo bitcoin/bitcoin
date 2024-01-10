@@ -9,8 +9,8 @@
 #include <interfaces/wallet.h>
 #include <net.h>
 #include <node/context.h>
+#include <node/ui_interface.h>
 #include <univalue.h>
-#include <ui_interface.h>
 #include <util/check.h>
 #include <util/error.h>
 #include <util/system.h>
@@ -46,7 +46,7 @@ public:
 
     // Dash Specific Wallet Init
     void AutoLockMasternodeCollaterals() const override;
-    void InitCoinJoinSettings(const CJClientManager& clientman) const override;
+    void InitCoinJoinSettings(const CoinJoinWalletManager& cjwalletman) const override;
     bool InitAutoBackup() const override;
 };
 
@@ -185,7 +185,7 @@ void WalletInit::Construct(NodeContext& node) const
         LogPrintf("Wallet disabled!\n");
         return;
     }
-    auto wallet_loader = interfaces::MakeWalletLoader(*node.chain, args);
+    auto wallet_loader = interfaces::MakeWalletLoader(*node.chain, node.coinjoin_loader, args);
     node.wallet_loader = wallet_loader.get();
     node.chain_clients.emplace_back(std::move(wallet_loader));
 }
@@ -199,7 +199,7 @@ void WalletInit::AutoLockMasternodeCollaterals() const
     }
 }
 
-void WalletInit::InitCoinJoinSettings(const CJClientManager& clientman) const
+void WalletInit::InitCoinJoinSettings(const CoinJoinWalletManager& cjwalletman) const
 {
     CCoinJoinClientOptions::SetEnabled(!GetWallets().empty() ? gArgs.GetBoolArg("-enablecoinjoin", true) : false);
     if (!CCoinJoinClientOptions::IsEnabled()) {
@@ -207,7 +207,7 @@ void WalletInit::InitCoinJoinSettings(const CJClientManager& clientman) const
     }
     bool fAutoStart = gArgs.GetBoolArg("-coinjoinautostart", DEFAULT_COINJOIN_AUTOSTART);
     for (auto& pwallet : GetWallets()) {
-        auto manager = clientman.Get(*pwallet);
+        auto manager = cjwalletman.Get(pwallet->GetName());
         assert(manager != nullptr);
         if (pwallet->IsLocked()) {
             manager->StopMixing();

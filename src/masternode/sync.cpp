@@ -8,8 +8,8 @@
 #include <governance/governance.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
+#include <node/ui_interface.h>
 #include <shutdown.h>
-#include <ui_interface.h>
 #include <validation.h>
 #include <util/time.h>
 #include <util/translation.h>

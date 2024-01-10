@@ -4,6 +4,7 @@
 
 #include <test/fuzz/fuzz.h>
 
+#include <node/psbt.h>
 #include <psbt.h>
 #include <pubkey.h>
 #include <script/script.h>

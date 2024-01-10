@@ -5,7 +5,6 @@
 #include <qt/test/wallettests.h>
 #include <qt/test/util.h>
 
-#include <coinjoin/client.h>
 #include <interfaces/chain.h>
 #include <interfaces/node.h>
 #include <qt/bitcoinamountfield.h>
@@ -109,7 +108,7 @@ void TestGUI(interfaces::Node& node)
         test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     }
     node.setContext(&test.m_node);
-    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), "", CreateMockWalletDatabase());
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), node.context()->coinjoin_loader.get(), "", CreateMockWalletDatabase());
     AddWallet(wallet);
     bool firstRun;
     wallet->LoadWallet(firstRun);
@@ -135,8 +134,7 @@ void TestGUI(interfaces::Node& node)
     TransactionView transactionView;
     OptionsModel optionsModel(node);
     ClientModel clientModel(node, &optionsModel);
-    // TODO: replace access of CoinJoin objects with access through interface
-    WalletModel walletModel(interfaces::MakeWallet(wallet, *::coinJoinClientManagers), clientModel);;
+    WalletModel walletModel(interfaces::MakeWallet(wallet), clientModel);
     sendCoinsDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);
 

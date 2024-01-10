@@ -7,6 +7,7 @@
 #include <amount.h>
 #include <coinjoin/client.h>
 #include <coinjoin/coinjoin.h>
+#include <coinjoin/context.h>
 #include <coinjoin/options.h>
 #include <coinjoin/util.h>
 #include <node/context.h>
@@ -49,16 +50,16 @@ BOOST_AUTO_TEST_CASE(coinjoin_options_tests)
 BOOST_AUTO_TEST_CASE(coinjoin_collateral_tests)
 {
     // Good collateral values
-    static_assert(CCoinJoin::IsCollateralAmount(0.00010000 * COIN));
-    static_assert(CCoinJoin::IsCollateralAmount(0.00012345 * COIN));
-    static_assert(CCoinJoin::IsCollateralAmount(0.00032123 * COIN));
-    static_assert(CCoinJoin::IsCollateralAmount(0.00019000 * COIN));
+    static_assert(CoinJoin::IsCollateralAmount(0.00010000 * COIN));
+    static_assert(CoinJoin::IsCollateralAmount(0.00012345 * COIN));
+    static_assert(CoinJoin::IsCollateralAmount(0.00032123 * COIN));
+    static_assert(CoinJoin::IsCollateralAmount(0.00019000 * COIN));
 
     // Bad collateral values
-    static_assert(!CCoinJoin::IsCollateralAmount(0.00009999 * COIN));
-    static_assert(!CCoinJoin::IsCollateralAmount(0.00040001 * COIN));
-    static_assert(!CCoinJoin::IsCollateralAmount(0.00100000 * COIN));
-    static_assert(!CCoinJoin::IsCollateralAmount(0.00100001 * COIN));
+    static_assert(!CoinJoin::IsCollateralAmount(0.00009999 * COIN));
+    static_assert(!CoinJoin::IsCollateralAmount(0.00040001 * COIN));
+    static_assert(!CoinJoin::IsCollateralAmount(0.00100000 * COIN));
+    static_assert(!CoinJoin::IsCollateralAmount(0.00100001 * COIN));
 }
 
 BOOST_AUTO_TEST_CASE(coinjoin_pending_dsa_request_tests)
@@ -129,7 +130,7 @@ public:
     CTransactionBuilderTestSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        wallet = std::make_unique<CWallet>(m_node.chain.get(), "", CreateMockWalletDatabase());
+        wallet = std::make_unique<CWallet>(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateMockWalletDatabase());
         wallet->SetupLegacyScriptPubKeyMan();
         bool firstRun;
         wallet->LoadWallet(firstRun);
@@ -207,8 +208,8 @@ public:
 
 BOOST_FIXTURE_TEST_CASE(coinjoin_manager_start_stop_tests, CTransactionBuilderTestSetup)
 {
-    BOOST_CHECK_EQUAL(::coinJoinClientManagers->raw().size(), 1);
-    auto& cj_man = ::coinJoinClientManagers->raw().begin()->second;
+    BOOST_CHECK_EQUAL(m_node.cj_ctx->walletman->raw().size(), 1);
+    auto& cj_man = m_node.cj_ctx->walletman->raw().begin()->second;
     BOOST_CHECK_EQUAL(cj_man->IsMixing(), false);
     BOOST_CHECK_EQUAL(cj_man->StartMixing(), true);
     BOOST_CHECK_EQUAL(cj_man->IsMixing(), true);

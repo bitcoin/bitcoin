@@ -6,7 +6,7 @@
 #include <shutdown.h>
 
 #include <logging.h>
-#include <ui_interface.h>
+#include <node/ui_interface.h>
 #include <warnings.h>
 
 #include <config/bitcoin-config.h>

@@ -39,13 +39,11 @@
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
 #include <wallet/fees.h>
-#include <walletinitinterface.h>
 #include <warnings.h>
 
-#include <coinjoin/client.h>
+#include <coinjoin/common.h>
 #include <coinjoin/options.h>
 #include <evo/providertx.h>
-#include <masternode/sync.h>
 
 #include <univalue.h>
 
@@ -115,9 +113,7 @@ bool AddWallet(const std::shared_ptr<CWallet>& wallet)
     }
     wallet->ConnectScriptPubKeyManNotifiers();
     wallet->AutoLockMasternodeCollaterals();
-    assert(::masternodeSync != nullptr && ::coinJoinClientManagers != nullptr);
-    ::coinJoinClientManagers->Add(*wallet);
-    g_wallet_init_interface.InitCoinJoinSettings(*::coinJoinClientManagers);
+    wallet->coinjoin_loader().AddWallet(*wallet);
     wallet->NotifyCanGetAddressesChanged();
     return true;
 }
@@ -138,9 +134,7 @@ bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, std::optional<bool> lo
         vpwallets.erase(i);
     }
 
-    assert(::coinJoinClientManagers != nullptr);
-    ::coinJoinClientManagers->Remove(name);
-    g_wallet_init_interface.InitCoinJoinSettings(*::coinJoinClientManagers);
+    wallet->coinjoin_loader().RemoveWallet(name);
 
     // Write the wallet setting
     UpdateWalletSetting(chain, name, load_on_start, warnings);
@@ -225,7 +219,7 @@ void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
 }
 
 namespace {
-std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     try {
         std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(name, options, status, error);
@@ -234,7 +228,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, const std:
             return nullptr;
         }
 
-        std::shared_ptr<CWallet> wallet = CWallet::Create(chain, name, std::move(database), options.create_flags, error, warnings);
+        std::shared_ptr<CWallet> wallet = CWallet::Create(chain, coinjoin_loader, name, std::move(database), options.create_flags, error, warnings);
         if (!wallet) {
             error = Untranslated("Wallet loading failed.") + Untranslated(" ") + error;
             status = DatabaseStatus::FAILED_LOAD;
@@ -255,7 +249,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, const std:
 }
 } // namespace
 
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     auto result = WITH_LOCK(g_loading_wallet_mutex, return g_loading_wallet_set.insert(name));
     if (!result.second) {
@@ -263,12 +257,12 @@ std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string&
         status = DatabaseStatus::FAILED_LOAD;
         return nullptr;
     }
-    auto wallet = LoadWalletInternal(chain, name, load_on_start, options, status, error, warnings);
+    auto wallet = LoadWalletInternal(chain, coinjoin_loader, name, load_on_start, options, status, error, warnings);
     WITH_LOCK(g_loading_wallet_mutex, g_loading_wallet_set.erase(result.first));
     return wallet;
 }
 
-std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     uint64_t wallet_creation_flags = options.create_flags;
     const SecureString& passphrase = options.create_passphrase;
@@ -297,7 +291,7 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::strin
     }
 
     // Make the wallet
-    std::shared_ptr<CWallet> wallet = CWallet::Create(chain, name, std::move(database), wallet_creation_flags, error, warnings);
+    std::shared_ptr<CWallet> wallet = CWallet::Create(chain, coinjoin_loader, name, std::move(database), wallet_creation_flags, error, warnings);
     if (!wallet) {
         error = Untranslated("Wallet creation failed.") + Untranslated(" ") + error;
         status = DatabaseStatus::FAILED_CREATE;
@@ -1366,21 +1360,21 @@ int CWallet::GetRealOutpointCoinJoinRounds(const COutPoint& outpoint, int nRound
 
     auto txOutRef = &wtx->tx->vout[outpoint.n];
 
-    if (CCoinJoin::IsCollateralAmount(txOutRef->nValue)) {
+    if (CoinJoin::IsCollateralAmount(txOutRef->nValue)) {
         *nRoundsRef = -3;
         WalletCJLogPrint((*this), "%s UPDATED   %-70s %3d\n", __func__, outpoint.ToStringShort(), *nRoundsRef);
         return *nRoundsRef;
     }
 
     // make sure the final output is non-denominate
-    if (!CCoinJoin::IsDenominatedAmount(txOutRef->nValue)) { //NOT DENOM
+    if (!CoinJoin::IsDenominatedAmount(txOutRef->nValue)) { //NOT DENOM
         *nRoundsRef = -2;
         WalletCJLogPrint((*this), "%s UPDATED   %-70s %3d\n", __func__, outpoint.ToStringShort(), *nRoundsRef);
         return *nRoundsRef;
     }
 
     for (const auto& out : wtx->tx->vout) {
-        if (!CCoinJoin::IsDenominatedAmount(out.nValue)) {
+        if (!CoinJoin::IsDenominatedAmount(out.nValue)) {
             // this one is denominated but there is another non-denominated output found in the same tx
             *nRoundsRef = 0;
             WalletCJLogPrint((*this), "%s UPDATED   %-70s %3d\n", __func__, outpoint.ToStringShort(), *nRoundsRef);
@@ -1429,7 +1423,7 @@ bool CWallet::IsDenominated(const COutPoint& outpoint) const
         return false;
     }
 
-    return CCoinJoin::IsDenominatedAmount(it->second.tx->vout[outpoint.n].nValue);
+    return CoinJoin::IsDenominatedAmount(it->second.tx->vout[outpoint.n].nValue);
 }
 
 bool CWallet::IsFullyMixed(const COutPoint& outpoint) const
@@ -1636,9 +1630,11 @@ void CWallet::UnsetBlankWalletFlag(WalletBatch& batch)
 
 void CWallet::NewKeyPoolCallback()
 {
-    assert(::coinJoinClientManagers != nullptr);
-    auto cj_clientman = ::coinJoinClientManagers->Get(*this);
-    if (cj_clientman != nullptr) cj_clientman->StopMixing();
+    // Note: GetClient(*this) can return nullptr when this wallet is in the middle of its creation.
+    // Skipping stopMixing() is fine in this case.
+    if (std::unique_ptr<interfaces::CoinJoin::Client> coinjoin_client = coinjoin_loader().GetClient(GetName())) {
+        coinjoin_client->stopMixing();
+    }
     nKeysLeftSinceAutoBackup = 0;
 }
 
@@ -2209,7 +2205,7 @@ CAmount CWalletTx::GetAnonymizedCredit(const CCoinControl* coinControl) const
             continue;
         }
 
-        if (pwallet->IsSpent(hashTx, i) || !CCoinJoin::IsDenominatedAmount(txout.nValue)) continue;
+        if (pwallet->IsSpent(hashTx, i) || !CoinJoin::IsDenominatedAmount(txout.nValue)) continue;
 
         if (pwallet->IsFullyMixed(outpoint)) {
             nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
@@ -2256,7 +2252,7 @@ CAmount CWalletTx::GetDenominatedCredit(bool unconfirmed, bool fUseCache) const
     {
         const CTxOut &txout = tx->vout[i];
 
-        if (pwallet->IsSpent(hashTx, i) || !CCoinJoin::IsDenominatedAmount(txout.nValue)) continue;
+        if (pwallet->IsSpent(hashTx, i) || !CoinJoin::IsDenominatedAmount(txout.nValue)) continue;
 
         nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
         if (!MoneyRange(nCredit))
@@ -2455,10 +2451,10 @@ CAmount CWallet::GetAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfi
 
     CAmount nTotal = 0;
 
-    const CAmount nSmallestDenom = CCoinJoin::GetSmallestDenomination();
-    const CAmount nMixingCollateral = CCoinJoin::GetCollateralAmount();
+    const CAmount nSmallestDenom = CoinJoin::GetSmallestDenomination();
+    const CAmount nMixingCollateral = CoinJoin::GetCollateralAmount();
     for (const auto& item : vecTally) {
-        bool fIsDenominated = CCoinJoin::IsDenominatedAmount(item.nAmount);
+        bool fIsDenominated = CoinJoin::IsDenominatedAmount(item.nAmount);
         if(fSkipDenominated && fIsDenominated) continue;
         // assume that the fee to create denoms should be mixing collateral at max
         if(item.nAmount >= nSmallestDenom + (fIsDenominated ? 0 : nMixingCollateral))
@@ -2504,7 +2500,7 @@ CAmount CWallet::GetNormalizedAnonymizedBalance() const
         if (it == mapWallet.end()) continue;
 
         CAmount nValue = it->second.tx->vout[outpoint.n].nValue;
-        if (!CCoinJoin::IsDenominatedAmount(nValue)) continue;
+        if (!CoinJoin::IsDenominatedAmount(nValue)) continue;
         if (it->second.GetDepthInMainChain() < 0) continue;
 
         int nRounds = GetCappedOutpointCoinJoinRounds(outpoint);
@@ -2573,18 +2569,18 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
         for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
             bool found = false;
             if (nCoinType == CoinType::ONLY_FULLY_MIXED) {
-                if (!CCoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
+                if (!CoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
                 found = IsFullyMixed(COutPoint(wtxid, i));
             } else if(nCoinType == CoinType::ONLY_READY_TO_MIX) {
-                if (!CCoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
+                if (!CoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
                 found = !IsFullyMixed(COutPoint(wtxid, i));
             } else if(nCoinType == CoinType::ONLY_NONDENOMINATED) {
-                if (CCoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue)) continue; // do not use collateral amounts
-                found = !CCoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
+                if (CoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue)) continue; // do not use collateral amounts
+                found = !CoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
             } else if(nCoinType == CoinType::ONLY_MASTERNODE_COLLATERAL) {
                 found = dmn_types::IsCollateralAmount(pcoin->tx->vout[i].nValue);
             } else if(nCoinType == CoinType::ONLY_COINJOIN_COLLATERAL) {
-                found = CCoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue);
+                found = CoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue);
             } else {
                 found = true;
             }
@@ -2716,7 +2712,7 @@ struct CompareByPriority
     bool operator()(const COutput& t1,
                     const COutput& t2) const
     {
-        return CCoinJoin::CalculateAmountPriority(t1.GetInputCoin().effective_value) > CCoinJoin::CalculateAmountPriority(t2.GetInputCoin().effective_value);
+        return CoinJoin::CalculateAmountPriority(t1.GetInputCoin().effective_value) > CoinJoin::CalculateAmountPriority(t2.GetInputCoin().effective_value);
     }
 };
 
@@ -3127,10 +3123,10 @@ bool CWallet::SelectTxDSInsByDenomination(int nDenom, CAmount nValueMax, std::ve
 
     vecTxDSInRet.clear();
 
-    if (!CCoinJoin::IsValidDenomination(nDenom)) {
+    if (!CoinJoin::IsValidDenomination(nDenom)) {
         return false;
     }
-    CAmount nDenomAmount = CCoinJoin::DenominationToAmount(nDenom);
+    CAmount nDenomAmount = CoinJoin::DenominationToAmount(nDenom);
 
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_READY_TO_MIX;
@@ -3241,7 +3237,7 @@ std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipD
         }
     }
 
-    CAmount nSmallestDenom = CCoinJoin::GetSmallestDenomination();
+    CAmount nSmallestDenom = CoinJoin::GetSmallestDenomination();
 
     // Tally
     std::map<CTxDestination, CompactTallyItem> mapTally;
@@ -3271,11 +3267,11 @@ std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipD
 
             if(IsSpent(outpoint.hash, i) || IsLockedCoin(outpoint.hash, i)) continue;
 
-            if(fSkipDenominated && CCoinJoin::IsDenominatedAmount(wtx.tx->vout[i].nValue)) continue;
+            if(fSkipDenominated && CoinJoin::IsDenominatedAmount(wtx.tx->vout[i].nValue)) continue;
 
             if(fAnonymizable) {
                 // ignore collaterals
-                if(CCoinJoin::IsCollateralAmount(wtx.tx->vout[i].nValue)) continue;
+                if(CoinJoin::IsCollateralAmount(wtx.tx->vout[i].nValue)) continue;
                 if (fMasternodeMode && dmn_types::IsCollateralAmount(wtx.tx->vout[i].nValue)) continue;
                 // ignore outputs that are 10 times smaller then the smallest denomination
                 // otherwise they will just lead to higher fee / lower priority
@@ -3346,7 +3342,7 @@ bool CWallet::SelectDenominatedAmounts(CAmount nValueMax, std::set<CAmount>& set
         }
     }
 
-    return nValueTotal >= CCoinJoin::GetSmallestDenomination();
+    return nValueTotal >= CoinJoin::GetSmallestDenomination();
 }
 
 int CWallet::CountInputsWithAmount(CAmount nInputAmount) const
@@ -4512,7 +4508,7 @@ std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, cons
     return MakeDatabase(wallet_path, options, status, error_string);
 }
 
-std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::string& name, std::unique_ptr<WalletDatabase> database, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const std::string& name, std::unique_ptr<WalletDatabase> database, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     const std::string& walletFile = database->Filename();
 
@@ -4522,7 +4518,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
     bool fFirstRun = true;
     // TODO: Can't use std::make_shared because we need a custom deleter but
     // should be possible to use std::allocate_shared.
-    std::shared_ptr<CWallet> walletInstance(new CWallet(&chain, name, std::move(database)), ReleaseWallet);
+    std::shared_ptr<CWallet> walletInstance(new CWallet(&chain, &coinjoin_loader, name, std::move(database)), ReleaseWallet);
     if (!walletInstance->AutoBackupWallet(walletFile, error, warnings) && !error.original.empty()) {
         return nullptr;
     }
@@ -4822,13 +4818,12 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
         walletInstance->GetDatabase().IncrementUpdateCounter();
     }
 
-    assert(::masternodeSync != nullptr && ::coinJoinClientManagers != nullptr);
-    ::coinJoinClientManagers->Add(*walletInstance);
+    coinjoin_loader.AddWallet(*walletInstance);
 
     {
         LOCK(cs_wallets);
         for (auto& load_wallet : g_load_wallet_fns) {
-            load_wallet(interfaces::MakeWallet(walletInstance, *::coinJoinClientManagers));
+            load_wallet(interfaces::MakeWallet(walletInstance));
         }
     }
 

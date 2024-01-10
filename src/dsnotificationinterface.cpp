@@ -67,9 +67,9 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     if (fInitialDownload)
         return;
 
-    CCoinJoin::UpdatedBlockTip(pindexNew, *llmq_ctx->clhandler, m_mn_sync);
+    ::dstxManager->UpdatedBlockTip(pindexNew, *llmq_ctx->clhandler, m_mn_sync);
 #ifdef ENABLE_WALLET
-    for (auto& pair : cj_ctx->clientman->raw()) {
+    for (auto& pair : cj_ctx->walletman->raw()) {
         pair.second->UpdatedBlockTip(pindexNew);
     }
 #endif // ENABLE_WALLET
@@ -88,7 +88,7 @@ void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& 
 {
     llmq_ctx->isman->TransactionAddedToMempool(ptx);
     llmq_ctx->clhandler->TransactionAddedToMempool(ptx, nAcceptTime);
-    CCoinJoin::TransactionAddedToMempool(ptx);
+    ::dstxManager->TransactionAddedToMempool(ptx);
 }
 
 void CDSNotificationInterface::TransactionRemovedFromMempool(const CTransactionRef& ptx, MemPoolRemovalReason reason)
@@ -100,14 +100,14 @@ void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock
 {
     llmq_ctx->isman->BlockConnected(pblock, pindex);
     llmq_ctx->clhandler->BlockConnected(pblock, pindex);
-    CCoinJoin::BlockConnected(pblock, pindex);
+    ::dstxManager->BlockConnected(pblock, pindex);
 }
 
 void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
 {
     llmq_ctx->isman->BlockDisconnected(pblock, pindexDisconnected);
     llmq_ctx->clhandler->BlockDisconnected(pblock, pindexDisconnected);
-    CCoinJoin::BlockDisconnected(pblock, pindexDisconnected);
+    ::dstxManager->BlockDisconnected(pblock, pindexDisconnected);
 }
 
 void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
@@ -119,5 +119,5 @@ void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDet
 void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig)
 {
     llmq_ctx->isman->NotifyChainLock(pindex);
-    CCoinJoin::NotifyChainLock(pindex, *llmq_ctx->clhandler, m_mn_sync);
+    ::dstxManager->NotifyChainLock(pindex, *llmq_ctx->clhandler, m_mn_sync);
 }

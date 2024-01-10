@@ -38,6 +38,7 @@
 #include <netbase.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <node/ui_interface.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -54,7 +55,6 @@
 #include <torcontrol.h>
 #include <txdb.h>
 #include <txmempool.h>
-#include <ui_interface.h>
 #include <util/asmap.h>
 #include <util/error.h>
 #include <util/moneystr.h>
@@ -68,6 +68,7 @@
 #include <validationinterface.h>
 
 #include <masternode/node.h>
+#include <coinjoin/coinjoin.h>
 #include <coinjoin/context.h>
 #ifdef ENABLE_WALLET
 #include <coinjoin/client.h>
@@ -306,6 +307,7 @@ void PrepareShutdown(NodeContext& node)
     ::masternodeSync.reset();
     ::netfulfilledman.reset();
     ::mmetaman.reset();
+    ::dstxManager.reset();
 
     // Stop and delete all indexes only after flushing background callbacks.
     if (g_txindex) {
@@ -2199,7 +2201,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.cj_ctx = std::make_unique<CJContext>(chainman.ActiveChainstate(), *node.connman, *node.mempool, *::masternodeSync, !ignores_incoming_txs);
 
 #ifdef ENABLE_WALLET
-    g_wallet_init_interface.InitCoinJoinSettings(*node.cj_ctx->clientman);
+    node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
+    g_wallet_init_interface.InitCoinJoinSettings(*node.cj_ctx->walletman);
 #endif // ENABLE_WALLET
 
     // ********************************************************* Step 7d: Setup other Dash services
@@ -2215,6 +2218,9 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
             return InitError(strprintf(_("Failed to clear governance cache at %s"), file_path));
         }
     }
+
+    assert(!::dstxManager);
+    ::dstxManager = std::make_unique<CDSTXManager>();
 
     assert(!::mmetaman);
     ::mmetaman = std::make_unique<CMasternodeMetaMan>(fLoadCacheFiles);
@@ -2314,7 +2320,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 #ifdef ENABLE_WALLET
     } else if (!ignores_incoming_txs) {
         node.scheduler->scheduleEvery(std::bind(&CCoinJoinClientQueueManager::DoMaintenance, std::ref(*node.cj_ctx->queueman)), std::chrono::seconds{1});
-        node.scheduler->scheduleEvery(std::bind(&CJClientManager::DoMaintenance, std::ref(*node.cj_ctx->clientman), std::ref(*node.fee_estimator)), std::chrono::seconds{1});
+        node.scheduler->scheduleEvery(std::bind(&CoinJoinWalletManager::DoMaintenance, std::ref(*node.cj_ctx->walletman), std::ref(*node.fee_estimator)), std::chrono::seconds{1});
 #endif // ENABLE_WALLET
     }
 

@@ -15,7 +15,6 @@
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <script/standard.h>
-#include <ui_interface.h>
 #include <validation.h>
 #include <validationinterface.h>
 #include <univalue.h>

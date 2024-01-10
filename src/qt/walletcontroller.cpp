@@ -250,7 +250,7 @@ void CreateWalletActivity::createWallet()
     }
 
     QTimer::singleShot(500, worker(), [this, name, flags] {
-        std::unique_ptr<interfaces::Wallet> wallet = node().walletLoader().createWallet(*::coinJoinClientManagers, name, m_passphrase, flags, m_error_message, m_warning_message);
+        std::unique_ptr<interfaces::Wallet> wallet = node().walletLoader().createWallet(name, m_passphrase, flags, m_error_message, m_warning_message);
 
         if (wallet) m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet));
 
@@ -321,7 +321,7 @@ void OpenWalletActivity::open(const std::string& path)
     showProgressDialog(tr("Opening Wallet <b>%1</b>...").arg(name.toHtmlEscaped()));
 
     QTimer::singleShot(0, worker(), [this, path] {
-        std::unique_ptr<interfaces::Wallet> wallet = node().walletLoader().loadWallet(*::coinJoinClientManagers, path, m_error_message, m_warning_message);
+        std::unique_ptr<interfaces::Wallet> wallet = node().walletLoader().loadWallet(path, m_error_message, m_warning_message);
 
         if (wallet) m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet));
 

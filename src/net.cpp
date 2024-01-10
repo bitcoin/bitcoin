@@ -20,10 +20,10 @@
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <node/ui_interface.h>
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
-#include <ui_interface.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
 #include <util/thread.h>
@@ -3758,7 +3758,7 @@ void CConnman::RelayTransaction(const CTransaction& tx)
 {
     uint256 hash = tx.GetHash();
     int nInv = MSG_TX;
-    if (CCoinJoin::GetDSTX(hash)) {
+    if (::dstxManager->GetDSTX(hash)) {
         nInv = MSG_DSTX;
     }
     CInv inv(nInv, hash);
