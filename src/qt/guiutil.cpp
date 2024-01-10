@@ -59,14 +59,15 @@
 #include <QLineEdit>
 #include <QList>
 #include <QLocale>
+#include <QMenu>
 #include <QMouseEvent>
 #include <QPointer>
 #include <QProgressDialog>
 #include <QScreen>
 #include <QSettings>
+#include <QShortcut>
 #include <QSize>
 #include <QString>
-#include <QShortcut>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
 #include <QTimer>
@@ -454,7 +455,7 @@ QString HtmlEscape(const std::string& str, bool fMultiLine)
     return HtmlEscape(QString::fromStdString(str), fMultiLine);
 }
 
-void copyEntryData(QAbstractItemView *view, int column, int role)
+void copyEntryData(const QAbstractItemView *view, int column, int role)
 {
     if(!view || !view->selectionModel())
         return;
@@ -467,11 +468,18 @@ void copyEntryData(QAbstractItemView *view, int column, int role)
     }
 }
 
-QList<QModelIndex> getEntryData(QAbstractItemView *view, int column)
+QList<QModelIndex> getEntryData(const QAbstractItemView *view, int column)
 {
     if(!view || !view->selectionModel())
         return QList<QModelIndex>();
     return view->selectionModel()->selectedRows(column);
+}
+
+bool hasEntryData(const QAbstractItemView *view, int column, int role)
+{
+    QModelIndexList selection = getEntryData(view, column);
+    if (selection.isEmpty()) return false;
+    return !selection.at(0).data(role).toString().isEmpty();
 }
 
 QString getDefaultDataDirectory()
@@ -1924,6 +1932,13 @@ void LogQtInfo()
     for (const QScreen* s : QGuiApplication::screens()) {
         LogPrintf("Screen: %s %dx%d, pixel ratio=%.1f\n", s->name().toStdString(), s->size().width(), s->size().height(), s->devicePixelRatio());
     }
+}
+
+void PopupMenu(QMenu* menu, const QPoint& point, QAction* at_action)
+{
+    // The qminimal plugin does not provide window system integration.
+    if (QApplication::platformName() == "minimal") return;
+    menu->popup(point, at_action);
 }
 
 QDateTime StartOfDay(const QDate& date)

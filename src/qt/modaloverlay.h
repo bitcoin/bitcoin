@@ -6,6 +6,7 @@
 #define BITCOIN_QT_MODALOVERLAY_H
 
 #include <QDateTime>
+#include <QPropertyAnimation>
 #include <QWidget>
 
 //! The required delta of headers to the estimated number of available headers until we show the IBD progress
@@ -47,6 +48,7 @@ private:
     bool layerIsVisible;
     bool userClosed;
     bool foreverHidden;
+    QPropertyAnimation m_animation;
     void UpdateHeaderSyncLabel();
 };
 

@@ -7,6 +7,7 @@
 # Check for specified flake8 warnings in python files.
 
 export LC_ALL=C
+export MYPY_CACHE_DIR="${BASE_ROOT_DIR}/test/.mypy_cache"
 
 enabled=(
     E101 # indentation contains mixed spaces and tabs
@@ -96,10 +97,20 @@ else
     echo "Consider install flake8-cached for cached flake8 results."
 fi
 
-PYTHONWARNINGS="ignore" $FLAKECMD --ignore=B,C,E,F,I,N,W --select=$(IFS=","; echo "${enabled[*]}")$(
+EXIT_CODE=0
+
+if ! PYTHONWARNINGS="ignore" $FLAKECMD --ignore=B,C,E,F,I,N,W --select=$(IFS=","; echo "${enabled[*]}") $(
     if [[ $# == 0 ]]; then
         git ls-files "*.py" | grep -vE "src/(immer)/"
     else
         echo "$@"
     fi
-)
+); then
+    EXIT_CODE=1
+fi
+
+if ! mypy --ignore-missing-imports $(git ls-files "test/functional/*.py"); then
+    EXIT_CODE=1
+fi
+
+exit $EXIT_CODE

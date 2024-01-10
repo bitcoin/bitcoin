@@ -8,6 +8,7 @@
 #include <qt/bitcoinunits.h>
 #include <qt/csvmodelwriter.h>
 #include <qt/editaddressdialog.h>
+#include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/qrdialog.h>
 #include <qt/transactiondescdialog.h>
@@ -43,8 +44,7 @@
 static const char* PERSISTENCE_DATE_FORMAT = "yyyy-MM-dd";
 
 TransactionView::TransactionView(QWidget* parent) :
-QWidget(parent), model(nullptr), transactionProxyModel(nullptr),
-transactionView(nullptr), abandonAction(nullptr), columnResizingFixer(nullptr)
+    QWidget(parent)
 {
     QSettings settings;
     // Build filter row
@@ -149,8 +149,8 @@ transactionView(nullptr), abandonAction(nullptr), columnResizingFixer(nullptr)
     // Actions
     abandonAction = new QAction(tr("Abandon transaction"), this);
     resendAction = new QAction(tr("Resend transaction"), this);
-    QAction *copyAddressAction = new QAction(tr("Copy address"), this);
-    QAction *copyLabelAction = new QAction(tr("Copy label"), this);
+    copyAddressAction = new QAction(tr("Copy address"), this);
+    copyLabelAction = new QAction(tr("Copy label"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
     QAction *copyTxIDAction = new QAction(tr("Copy transaction ID"), this);
     QAction *copyTxHexAction = new QAction(tr("Copy raw transaction"), this);
@@ -425,10 +425,11 @@ void TransactionView::contextualMenu(const QPoint &point)
     hash.SetHex(selection.at(0).data(TransactionTableModel::TxHashRole).toString().toStdString());
     abandonAction->setEnabled(model->wallet().transactionCanBeAbandoned(hash));
     resendAction->setEnabled(selection.size() == 1 && model->wallet().transactionCanBeResent(hash));
+    copyAddressAction->setEnabled(GUIUtil::hasEntryData(transactionView, 0, TransactionTableModel::AddressRole));
+    copyLabelAction->setEnabled(GUIUtil::hasEntryData(transactionView, 0, TransactionTableModel::LabelRole));
 
-    if(index.isValid())
-    {
-        contextMenu->popup(transactionView->viewport()->mapToGlobal(point));
+    if (index.isValid()) {
+        GUIUtil::PopupMenu(contextMenu, transactionView->viewport()->mapToGlobal(point));
     }
 }
 

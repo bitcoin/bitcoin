@@ -27,6 +27,7 @@ class CFeeRate;
 class CBlockIndex;
 class Coin;
 class uint256;
+enum class MemPoolRemovalReason;
 struct bilingual_str;
 struct CBlockLocator;
 struct FeeCalculation;
@@ -258,7 +259,7 @@ public:
     public:
         virtual ~Notifications() {}
         virtual void transactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) {}
-        virtual void transactionRemovedFromMempool(const CTransactionRef& ptx, MemPoolRemovalReason reason) {}
+        virtual void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {}
         virtual void blockConnected(const CBlock& block, int height) {}
         virtual void blockDisconnected(const CBlock& block, int height) {}
         virtual void updatedBlockTip() {}

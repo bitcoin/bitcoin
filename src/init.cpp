@@ -51,6 +51,7 @@
 #include <script/sigcache.h>
 #include <script/standard.h>
 #include <shutdown.h>
+#include <sync.h>
 #include <timedata.h>
 #include <torcontrol.h>
 #include <txdb.h>
@@ -65,6 +66,7 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 #include <validation.h>
+
 #include <validationinterface.h>
 
 #include <masternode/node.h>
@@ -217,11 +219,10 @@ void Interrupt(NodeContext& node)
 /** Preparing steps before shutting down or restarting the wallet */
 void PrepareShutdown(NodeContext& node)
 {
+    static Mutex g_shutdown_mutex;
+    TRY_LOCK(g_shutdown_mutex, lock_shutdown);
+    if (!lock_shutdown) return;
     LogPrintf("%s: In progress...\n", __func__);
-    static RecursiveMutex cs_Shutdown;
-    TRY_LOCK(cs_Shutdown, lockShutdown);
-    if (!lockShutdown)
-        return;
     Assert(node.args);
 
     /// Note: Shutdown() must be able to handle cases in which initialization failed part of the way,

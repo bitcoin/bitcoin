@@ -32,10 +32,13 @@ class Node;
 QT_BEGIN_NAMESPACE
 class QAbstractButton;
 class QAbstractItemView;
+class QAction;
 class QButtonGroup;
 class QDateTime;
 class QFont;
 class QLineEdit;
+class QMenu;
+class QPoint;
 class QProgressDialog;
 class QUrl;
 class QWidget;
@@ -137,14 +140,21 @@ namespace GUIUtil
        @param[in] role    Data role to extract from the model
        @see  TransactionView::copyLabel, TransactionView::copyAmount, TransactionView::copyAddress
      */
-    void copyEntryData(QAbstractItemView *view, int column, int role=Qt::EditRole);
+    void copyEntryData(const QAbstractItemView *view, int column, int role=Qt::EditRole);
 
     /** Return a field of the currently selected entry as a QString. Does nothing if nothing
         is selected.
        @param[in] column  Data column to extract from the model
        @see  TransactionView::copyLabel, TransactionView::copyAmount, TransactionView::copyAddress
      */
-    QList<QModelIndex> getEntryData(QAbstractItemView *view, int column);
+    QList<QModelIndex> getEntryData(const QAbstractItemView *view, int column);
+
+    /** Returns true if the specified field of the currently selected view entry is not empty.
+       @param[in] column  Data column to extract from the model
+       @param[in] role    Data role to extract from the model
+       @see  TransactionView::contextualMenu
+     */
+    bool hasEntryData(const QAbstractItemView *view, int column, int role);
 
     void setClipboard(const QString& str);
 
@@ -491,6 +501,11 @@ namespace GUIUtil
     void LogQtInfo();
 
     /**
+     * Call QMenu::popup() only on supported QT_QPA_PLATFORM.
+     */
+    void PopupMenu(QMenu* menu, const QPoint& point, QAction* at_action = nullptr);
+
+    /**
      * Returns the start-moment of the day in local time.
      *
      * QDateTime::QDateTime(const QDate& date) is deprecated since Qt 5.15.
@@ -525,8 +540,6 @@ namespace GUIUtil
         return string.split(separator, QString::SkipEmptyParts);
     #endif
     }
-
-
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H

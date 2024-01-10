@@ -28,12 +28,14 @@ logger = logging.getLogger("TestFramework.utils")
 # Assert functions
 ##################
 
+
 def assert_approx(v, vexp, vspan=0.00001):
     """Assert that `v` is within `vspan` of `vexp`"""
     if v < vexp - vspan:
         raise AssertionError("%s < [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
     if v > vexp + vspan:
         raise AssertionError("%s > [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
+
 
 def assert_fee_amount(fee, tx_size, fee_per_kB):
     """Assert the fee was in range"""
@@ -44,20 +46,25 @@ def assert_fee_amount(fee, tx_size, fee_per_kB):
     if fee > (tx_size + 2) * fee_per_kB / 1000:
         raise AssertionError("Fee of %s DASH too high! (Should be %s DASH)" % (str(fee), str(target_fee)))
 
+
 def assert_equal(thing1, thing2, *args):
     if thing1 != thing2 or any(thing1 != arg for arg in args):
         raise AssertionError("not(%s)" % " == ".join(str(arg) for arg in (thing1, thing2) + args))
+
 
 def assert_greater_than(thing1, thing2):
     if thing1 <= thing2:
         raise AssertionError("%s <= %s" % (str(thing1), str(thing2)))
 
+
 def assert_greater_than_or_equal(thing1, thing2):
     if thing1 < thing2:
         raise AssertionError("%s < %s" % (str(thing1), str(thing2)))
 
+
 def assert_raises(exc, fun, *args, **kwds):
     assert_raises_message(exc, None, fun, *args, **kwds)
+
 
 def assert_raises_message(exc, message, fun, *args, **kwds):
     try:
@@ -73,6 +80,7 @@ def assert_raises_message(exc, message, fun, *args, **kwds):
         raise AssertionError("Unexpected exception raised: " + type(e).__name__)
     else:
         raise AssertionError("No exception raised")
+
 
 def assert_raises_process_error(returncode, output, fun, *args, **kwds):
     """Execute a process and asserts the process return code and output.
@@ -98,6 +106,7 @@ def assert_raises_process_error(returncode, output, fun, *args, **kwds):
     else:
         raise AssertionError("No exception raised")
 
+
 def assert_raises_rpc_error(code, message, fun, *args, **kwds):
     """Run an RPC and verify that a specific JSONRPC exception code and message is raised.
 
@@ -115,6 +124,7 @@ def assert_raises_rpc_error(code, message, fun, *args, **kwds):
         kwds**: named arguments for the function.
     """
     assert try_rpc(code, message, fun, *args, **kwds), "No exception raised"
+
 
 def try_rpc(code, message, fun, *args, **kwds):
     """Tries to run an rpc command.
@@ -137,22 +147,22 @@ def try_rpc(code, message, fun, *args, **kwds):
     else:
         return False
 
+
 def assert_is_hex_string(string):
     try:
         int(string, 16)
     except Exception as e:
-        raise AssertionError(
-            "Couldn't interpret %r as hexadecimal; raised: %s" % (string, e))
+        raise AssertionError("Couldn't interpret %r as hexadecimal; raised: %s" % (string, e))
+
 
 def assert_is_hash_string(string, length=64):
     if not isinstance(string, str):
         raise AssertionError("Expected a string, got type %r" % type(string))
     elif length and len(string) != length:
-        raise AssertionError(
-            "String of length %d expected; got %d" % (length, len(string)))
+        raise AssertionError("String of length %d expected; got %d" % (length, len(string)))
     elif not re.match('[abcdef0-9]+$', string):
-        raise AssertionError(
-            "String %r contains invalid characters for a hash." % string)
+        raise AssertionError("String %r contains invalid characters for a hash." % string)
+
 
 def assert_array_result(object_array, to_match, expected, should_not_find=False):
     """
@@ -183,8 +193,10 @@ def assert_array_result(object_array, to_match, expected, should_not_find=False)
     if num_matched > 0 and should_not_find:
         raise AssertionError("Objects were found %s" % (str(to_match)))
 
+
 # Utility functions
 ###################
+
 
 def check_json_precision():
     """Make sure json library being used does not lose precision converting BTC values"""
@@ -193,10 +205,12 @@ def check_json_precision():
     if satoshis != 2000000000000003:
         raise RuntimeError("JSON encode/decode loses precision")
 
+
 def EncodeDecimal(o):
     if isinstance(o, Decimal):
         return str(o)
     raise TypeError(repr(o) + " is not JSON serializable")
+
 
 def count_bytes(hex_string):
     return len(bytearray.fromhex(hex_string))
@@ -205,11 +219,14 @@ def count_bytes(hex_string):
 def hex_str_to_bytes(hex_str):
     return unhexlify(hex_str.encode('ascii'))
 
+
 def str_to_b64str(string):
     return b64encode(string.encode('utf-8')).decode('ascii')
 
+
 def satoshi_round(amount):
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
+
 
 def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), sleep=0.5, timeout_factor=1.0, lock=None, do_assert=True, allow_exception=False):
     if attempts == float('inf') and timeout == float('inf'):
@@ -244,6 +261,7 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), sleep=
         raise RuntimeError('Unreachable')
     else:
         return False
+
 
 # RPC/P2P connection constants and functions
 ############################################
@@ -281,17 +299,19 @@ def get_rpc_proxy(url: str, node_number: int, *, timeout: int=None, coveragedir:
 
     proxy = AuthServiceProxy(url, **proxy_kwargs)
 
-    coverage_logfile = coverage.get_filename(
-        coveragedir, node_number) if coveragedir else None
+    coverage_logfile = coverage.get_filename(coveragedir, node_number) if coveragedir else None
 
     return coverage.AuthServiceProxyWrapper(proxy, url, coverage_logfile)
+
 
 def p2p_port(n):
     assert n <= MAX_NODES
     return PORT_MIN + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
 
+
 def rpc_port(n):
     return PORT_MIN + PORT_RANGE + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
+
 
 def rpc_url(datadir, i, chain, rpchost=None):
     rpc_u, rpc_p = get_auth_cookie(datadir, chain)
@@ -305,8 +325,10 @@ def rpc_url(datadir, i, chain, rpchost=None):
             host = rpchost
     return "http://%s:%s@%s:%d" % (rpc_u, rpc_p, host, int(port))
 
+
 # Node functions
 ################
+
 
 def initialize_datadir(dirname, n, chain):
     datadir = get_datadir_path(dirname, n)
@@ -352,20 +374,16 @@ def write_config(config_path, *, n, chain, extra_config=""):
         f.write("unsafesqlitesync=1\n")
         f.write(extra_config)
 
-def adjust_bitcoin_conf_for_pre_16(conf_file):
-    with open(conf_file,'r', encoding='utf8') as conf:
-        conf_data = conf.read()
-    with open(conf_file, 'w', encoding='utf8') as conf:
-        conf_data_changed = conf_data.replace('[regtest]', '')
-        conf.write(conf_data_changed)
 
 def get_datadir_path(dirname, n):
     return os.path.join(dirname, "node" + str(n))
+
 
 def append_config(datadir, options):
     with open(os.path.join(datadir, "dash.conf"), 'a', encoding='utf8') as f:
         for option in options:
             f.write(option + "\n")
+
 
 def get_auth_cookie(datadir, chain):
     user = None
@@ -392,6 +410,7 @@ def get_auth_cookie(datadir, chain):
         raise ValueError("No RPC credentials")
     return user, password
 
+
 def copy_datadir(from_node, to_node, dirname, chain):
     from_datadir = os.path.join(dirname, "node"+str(from_node), chain)
     to_datadir = os.path.join(dirname, "node"+str(to_node), chain)
@@ -412,6 +431,7 @@ def delete_cookie_file(datadir, chain):
         logger.debug("Deleting leftover cookie file")
         os.remove(os.path.join(datadir, chain, ".cookie"))
 
+
 """
 since devnets can be named we won't always know what the folders name is unless we would pass it through all functions,
 which shouldn't be needed as if we are to test multiple different devnets we would just override setup_chain and make our own configs files.
@@ -431,14 +451,17 @@ def get_bip9_details(node, key):
     """Return extra info about bip9 softfork"""
     return node.getblockchaininfo()['softforks'][key]['bip9']
 
+
 def softfork_active(node, key):
     """Return whether a softfork is active."""
     return node.getblockchaininfo()['softforks'][key]['active']
+
 
 def set_node_times(nodes, t):
     for node in nodes:
         node.mocktime = t
         node.setmocktime(t)
+
 
 def force_finish_mnsync(node):
     """
@@ -465,6 +488,7 @@ def find_output(node, txid, amount, *, blockhash=None):
             return i
     raise RuntimeError("find_output txid %s : %s not found" % (txid, str(amount)))
 
+
 def gather_inputs(from_node, amount_needed, confirmations_required=1):
     """
     Return a random set of unspent txouts that are enough to pay amount_needed
@@ -482,6 +506,7 @@ def gather_inputs(from_node, amount_needed, confirmations_required=1):
         raise RuntimeError("Insufficient funds: need %d, have %d" % (amount_needed, total_in))
     return (total_in, inputs)
 
+
 def make_change(from_node, amount_in, amount_out, fee):
     """
     Create change output(s), return them
@@ -498,6 +523,7 @@ def make_change(from_node, amount_in, amount_out, fee):
     if change > 0:
         outputs[from_node.getnewaddress()] = change
     return outputs
+
 
 def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
     """
@@ -517,6 +543,7 @@ def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
     txid = from_node.sendrawtransaction(signresult["hex"], 0)
 
     return (txid, signresult["hex"], fee)
+
 
 # Helper to create at least "count" utxos
 # Pass in a fee that is sufficient for relay and mining new transactions.
@@ -550,6 +577,7 @@ def create_confirmed_utxos(fee, node, count):
     assert len(utxos) >= count
     return utxos
 
+
 # Create large OP_RETURN txouts that can be appended to a transaction
 # to make it large (helper for constructing large transactions).
 def gen_return_txouts():
@@ -568,6 +596,7 @@ def gen_return_txouts():
     for k in range(128):
         txouts.append(txout)
     return txouts
+
 
 # Create a spend of each passed-in utxo, splicing in "txouts" to each raw
 # transaction to make it large.  See gen_return_txouts() above.
@@ -592,6 +621,7 @@ def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
         txids.append(txid)
     return txids
 
+
 def mine_large_block(node, utxos=None):
     # generate a 66k transaction,
     # and 14 of them is close to the 1MB block limit
@@ -604,6 +634,7 @@ def mine_large_block(node, utxos=None):
     fee = 100 * node.getnetworkinfo()["relayfee"]
     create_lots_of_big_transactions(node, txouts, utxos, num, fee=fee)
     node.generate(1)
+
 
 def find_vout_for_address(node, txid, addr):
     """

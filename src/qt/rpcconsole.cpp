@@ -36,6 +36,7 @@
 
 #include <QButtonGroup>
 #include <QDir>
+#include <QFont>
 #include <QFontDatabase>
 #include <QDateTime>
 #include <QKeyEvent>
