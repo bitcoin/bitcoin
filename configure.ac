@@ -862,7 +862,7 @@ if test "$use_lcov" = "yes"; then
     [AC_MSG_ERROR([lcov testing requested but --coverage linker flag does not work])])
   AX_CHECK_COMPILE_FLAG([--coverage],[CORE_CXXFLAGS="$CORE_CXXFLAGS --coverage"],
     [AC_MSG_ERROR([lcov testing requested but --coverage flag does not work])])
-  CORE_CXXFLAGS="$CORE_CXXFLAGS -Og -O0"
+  CORE_CXXFLAGS="$CORE_CXXFLAGS -Og"
 fi
 
 if test "$use_lcov_branch" != "no"; then
