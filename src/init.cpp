@@ -187,7 +187,7 @@ static void RemovePidFile(const ArgsManager& args)
     const auto pid_path{GetPidFile(args)};
     if (std::error_code error; !fs::remove(pid_path, error)) {
         std::string msg{error ? error.message() : "File does not exist"};
-        LogPrintf("Unable to remove PID file (%s): %s\n", fs::PathToString(pid_path), msg);
+        LogWarning("Unable to remove PID file (%s): %s\n", fs::PathToString(pid_path), msg);
     }
 }
 
@@ -1138,7 +1138,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // Warn about relative -datadir path.
     if (args.IsArgSet("-datadir") && !args.GetPathArg("-datadir").is_absolute()) {
-        LogPrintf("Warning: relative datadir option '%s' specified, which will be interpreted relative to the "
+        LogWarning("Relative datadir option '%s' specified, which will be interpreted relative to the "
                   "current working directory '%s'. This is fragile, because if bitcoin is started in the future "
                   "from a different location, it will be unable to locate the current data files. There could "
                   "also be data loss if bitcoin is started while in a temporary directory.\n",
@@ -1554,7 +1554,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 index->Interrupt();
                 index->Stop();
                 if (!(index->Init() && index->StartBackgroundSync())) {
-                    LogPrintf("[snapshot] WARNING failed to restart index %s on snapshot chain\n", index->GetName());
+                    LogWarning("[snapshot] failed to restart index %s on snapshot chain\n", index->GetName());
                 }
             }
         };
