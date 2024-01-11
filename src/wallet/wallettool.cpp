@@ -201,7 +201,8 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
             return false;
         }
 
-        bool ret = DumpWallet(args, *database, error);
+        const std::string dump_filename = args.GetArg("-dumpfile", "");
+        bool ret = DumpWallet(dump_filename, *database, error);
         if (!ret && !error.empty()) {
             tfm::format(std::cerr, "%s\n", error.original);
             return ret;
