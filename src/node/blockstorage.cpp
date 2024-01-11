@@ -131,12 +131,14 @@ bool BlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, s
                 pindexNew->nTx            = diskindex.nTx;
 
                 if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams)) {
-                    return error("%s: CheckProofOfWork failed: %s", __func__, pindexNew->ToString());
+                    error("%s: CheckProofOfWork failed: %s", __func__, pindexNew->ToString());
+                    return false;
                 }
 
                 pcursor->Next();
             } else {
-                return error("%s: failed to read value", __func__);
+                error("%s: failed to read value", __func__);
+                return false;
             }
         } else {
             break;
@@ -432,7 +434,8 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
     for (CBlockIndex* pindex : vSortedByHeight) {
         if (m_interrupt) return false;
         if (previous_index && pindex->nHeight > previous_index->nHeight + 1) {
-            return error("%s: block index is non-contiguous, index of height %d missing", __func__, previous_index->nHeight + 1);
+            error("%s: block index is non-contiguous, index of height %d missing", __func__, previous_index->nHeight + 1);
+            return false;
         }
         previous_index = pindex;
         pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + GetBlockProof(*pindex);
@@ -671,7 +674,8 @@ bool BlockManager::UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos
     // Open history file to append
     AutoFile fileout{OpenUndoFile(pos)};
     if (fileout.IsNull()) {
-        return error("%s: OpenUndoFile failed", __func__);
+        error("%s: OpenUndoFile failed", __func__);
+        return false;
     }
 
     // Write index header
@@ -681,7 +685,8 @@ bool BlockManager::UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos
     // Write undo data
     long fileOutPos = ftell(fileout.Get());
     if (fileOutPos < 0) {
-        return error("%s: ftell failed", __func__);
+        error("%s: ftell failed", __func__);
+        return false;
     }
     pos.nPos = (unsigned int)fileOutPos;
     fileout << blockundo;
@@ -700,13 +705,15 @@ bool BlockManager::UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& in
     const FlatFilePos pos{WITH_LOCK(::cs_main, return index.GetUndoPos())};
 
     if (pos.IsNull()) {
-        return error("%s: no undo data available", __func__);
+        error("%s: no undo data available", __func__);
+        return false;
     }
 
     // Open history file to read
     AutoFile filein{OpenUndoFile(pos, true)};
     if (filein.IsNull()) {
-        return error("%s: OpenUndoFile failed", __func__);
+        error("%s: OpenUndoFile failed", __func__);
+        return false;
     }
 
     // Read block
@@ -717,12 +724,14 @@ bool BlockManager::UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& in
         verifier >> blockundo;
         filein >> hashChecksum;
     } catch (const std::exception& e) {
-        return error("%s: Deserialize or I/O error - %s", __func__, e.what());
+        error("%s: Deserialize or I/O error - %s", __func__, e.what());
+        return false;
     }
 
     // Verify checksum
     if (hashChecksum != verifier.GetHash()) {
-        return error("%s: Checksum mismatch", __func__);
+        error("%s: Checksum mismatch", __func__);
+        return false;
     }
 
     return true;
@@ -965,7 +974,8 @@ bool BlockManager::WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const
     // Open history file to append
     AutoFile fileout{OpenBlockFile(pos)};
     if (fileout.IsNull()) {
-        return error("WriteBlockToDisk: OpenBlockFile failed");
+        error("WriteBlockToDisk: OpenBlockFile failed");
+        return false;
     }
 
     // Write index header
@@ -975,7 +985,8 @@ bool BlockManager::WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const
     // Write block
     long fileOutPos = ftell(fileout.Get());
     if (fileOutPos < 0) {
-        return error("WriteBlockToDisk: ftell failed");
+        error("WriteBlockToDisk: ftell failed");
+        return false;
     }
     pos.nPos = (unsigned int)fileOutPos;
     fileout << TX_WITH_WITNESS(block);
@@ -993,7 +1004,8 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
     if (block.GetUndoPos().IsNull()) {
         FlatFilePos _pos;
         if (!FindUndoPos(state, block.nFile, _pos, ::GetSerializeSize(blockundo) + 40)) {
-            return error("ConnectBlock(): FindUndoPos failed");
+            error("ConnectBlock(): FindUndoPos failed");
+            return false;
         }
         if (!UndoWriteToDisk(blockundo, _pos, block.pprev->GetBlockHash())) {
             return FatalError(m_opts.notifications, state, "Failed to write undo data");
@@ -1031,24 +1043,28 @@ bool BlockManager::ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos) cons
     // Open history file to read
     AutoFile filein{OpenBlockFile(pos, true)};
     if (filein.IsNull()) {
-        return error("ReadBlockFromDisk: OpenBlockFile failed for %s", pos.ToString());
+        error("ReadBlockFromDisk: OpenBlockFile failed for %s", pos.ToString());
+        return false;
     }
 
     // Read block
     try {
         filein >> TX_WITH_WITNESS(block);
     } catch (const std::exception& e) {
-        return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
+        error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
+        return false;
     }
 
     // Check the header
     if (!CheckProofOfWork(block.GetHash(), block.nBits, GetConsensus())) {
-        return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
+        error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
+        return false;
     }
 
     // Signet only: check block solution
     if (GetConsensus().signet_blocks && !CheckSignetBlockSolution(block, GetConsensus())) {
-        return error("ReadBlockFromDisk: Errors in block solution at %s", pos.ToString());
+        error("ReadBlockFromDisk: Errors in block solution at %s", pos.ToString());
+        return false;
     }
 
     return true;
@@ -1062,8 +1078,9 @@ bool BlockManager::ReadBlockFromDisk(CBlock& block, const CBlockIndex& index) co
         return false;
     }
     if (block.GetHash() != index.GetBlockHash()) {
-        return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
+        error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
                      index.ToString(), block_pos.ToString());
+        return false;
     }
     return true;
 }
@@ -1074,7 +1091,8 @@ bool BlockManager::ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatF
     hpos.nPos -= 8; // Seek back 8 bytes for meta header
     AutoFile filein{OpenBlockFile(hpos, true)};
     if (filein.IsNull()) {
-        return error("%s: OpenBlockFile failed for %s", __func__, pos.ToString());
+        error("%s: OpenBlockFile failed for %s", __func__, pos.ToString());
+        return false;
     }
 
     try {
@@ -1090,14 +1108,16 @@ bool BlockManager::ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatF
         }
 
         if (blk_size > MAX_SIZE) {
-            return error("%s: Block data is larger than maximum deserialization size for %s: %s versus %s", __func__, pos.ToString(),
+            error("%s: Block data is larger than maximum deserialization size for %s: %s versus %s", __func__, pos.ToString(),
                          blk_size, MAX_SIZE);
+            return false;
         }
 
         block.resize(blk_size); // Zeroing of memory is intentional here
         filein.read(MakeWritableByteSpan(block));
     } catch (const std::exception& e) {
-        return error("%s: Read from block file failed: %s for %s", __func__, e.what(), pos.ToString());
+        error("%s: Read from block file failed: %s for %s", __func__, e.what(), pos.ToString());
+        return false;
     }
 
     return true;

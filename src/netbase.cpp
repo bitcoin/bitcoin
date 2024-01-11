@@ -338,7 +338,8 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
         IntrRecvError recvr;
         LogPrint(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
         if (strDest.size() > 255) {
-            return error("Hostname too long");
+            error("Hostname too long");
+            return false;
         }
         // Construct the version identifier/method selection message
         std::vector<uint8_t> vSocks5Init;
@@ -358,14 +359,16 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
             return false;
         }
         if (pchRet1[0] != SOCKSVersion::SOCKS5) {
-            return error("Proxy failed to initialize");
+            error("Proxy failed to initialize");
+            return false;
         }
         if (pchRet1[1] == SOCKS5Method::USER_PASS && auth) {
             // Perform username/password authentication (as described in RFC1929)
             std::vector<uint8_t> vAuth;
             vAuth.push_back(0x01); // Current (and only) version of user/pass subnegotiation
             if (auth->username.size() > 255 || auth->password.size() > 255) {
-                return error("Proxy username or password too long");
+                error("Proxy username or password too long");
+                return false;
             }
             vAuth.push_back(auth->username.size());
             vAuth.insert(vAuth.end(), auth->username.begin(), auth->username.end());
@@ -375,15 +378,18 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
             LogPrint(BCLog::PROXY, "SOCKS5 sending proxy authentication %s:%s\n", auth->username, auth->password);
             uint8_t pchRetA[2];
             if (InterruptibleRecv(pchRetA, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
-                return error("Error reading proxy authentication response");
+                error("Error reading proxy authentication response");
+                return false;
             }
             if (pchRetA[0] != 0x01 || pchRetA[1] != 0x00) {
-                return error("Proxy authentication unsuccessful");
+                error("Proxy authentication unsuccessful");
+                return false;
             }
         } else if (pchRet1[1] == SOCKS5Method::NOAUTH) {
             // Perform no authentication
         } else {
-            return error("Proxy requested wrong authentication method %02x", pchRet1[1]);
+            error("Proxy requested wrong authentication method %02x", pchRet1[1]);
+            return false;
         }
         std::vector<uint8_t> vSocks5;
         vSocks5.push_back(SOCKSVersion::SOCKS5);   // VER protocol version
@@ -403,11 +409,13 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
                  * error message. */
                 return false;
             } else {
-                return error("Error while reading proxy response");
+                error("Error while reading proxy response");
+                return false;
             }
         }
         if (pchRet2[0] != SOCKSVersion::SOCKS5) {
-            return error("Proxy failed to accept request");
+            error("Proxy failed to accept request");
+            return false;
         }
         if (pchRet2[1] != SOCKS5Reply::SUCCEEDED) {
             // Failures to connect to a peer that are not proxy errors
@@ -415,7 +423,8 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
             return false;
         }
         if (pchRet2[2] != 0x00) { // Reserved field must be 0
-            return error("Error: malformed proxy response");
+            error("Error: malformed proxy response");
+            return false;
         }
         uint8_t pchRet3[256];
         switch (pchRet2[3]) {
@@ -424,26 +433,31 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
         case SOCKS5Atyp::DOMAINNAME: {
             recvr = InterruptibleRecv(pchRet3, 1, g_socks5_recv_timeout, sock);
             if (recvr != IntrRecvError::OK) {
-                return error("Error reading from proxy");
+                error("Error reading from proxy");
+                return false;
             }
             int nRecv = pchRet3[0];
             recvr = InterruptibleRecv(pchRet3, nRecv, g_socks5_recv_timeout, sock);
             break;
         }
         default: {
-            return error("Error: malformed proxy response");
+            error("Error: malformed proxy response");
+            return false;
         }
         }
         if (recvr != IntrRecvError::OK) {
-            return error("Error reading from proxy");
+            error("Error reading from proxy");
+            return false;
         }
         if (InterruptibleRecv(pchRet3, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
-            return error("Error reading from proxy");
+            error("Error reading from proxy");
+            return false;
         }
         LogPrint(BCLog::NET, "SOCKS5 connected %s\n", strDest);
         return true;
     } catch (const std::runtime_error& e) {
-        return error("Error during SOCKS5 proxy handshake: %s", e.what());
+        error("Error during SOCKS5 proxy handshake: %s", e.what());
+        return false;
     }
 }
 

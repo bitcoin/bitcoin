@@ -229,7 +229,8 @@ bool BaseIndex::Commit()
         }
     }
     if (!ok) {
-        return error("%s: Failed to commit latest %s state", __func__, GetName());
+        error("%s: Failed to commit latest %s state", __func__, GetName());
+        return false;
     }
     return true;
 }
