@@ -12,6 +12,7 @@ import http.client
 import json
 import logging
 import os
+import platform
 import re
 import subprocess
 import tempfile
@@ -19,7 +20,6 @@ import time
 import urllib.parse
 import collections
 import shlex
-import sys
 from pathlib import Path
 
 from .authproxy import (
@@ -566,7 +566,7 @@ class TestNode():
                 cmd, shell=True,
                 stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL) == 0
 
-        if not sys.platform.startswith('linux'):
+        if platform.system() != 'Linux':
             self.log.warning("Can't profile with perf; only available on Linux platforms")
             return None
 

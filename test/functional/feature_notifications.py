@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the -alertnotify, -blocknotify and -walletnotify options."""
 import os
+import platform
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 from test_framework.descriptors import descsum_create
@@ -14,13 +15,13 @@ from test_framework.util import (
 
 # Linux allow all characters other than \x00
 # Windows disallow control characters (0-31) and /\?%:|"<>
-FILE_CHAR_START = 32 if os.name == 'nt' else 1
+FILE_CHAR_START = 32 if platform.system() == 'Windows' else 1
 FILE_CHAR_END = 128
-FILE_CHARS_DISALLOWED = '/\\?%*:|"<>' if os.name == 'nt' else '/'
+FILE_CHARS_DISALLOWED = '/\\?%*:|"<>' if platform.system() == 'Windows' else '/'
 UNCONFIRMED_HASH_STRING = 'unconfirmed'
 
 def notify_outputname(walletname, txid):
-    return txid if os.name == 'nt' else f'{walletname}_{txid}'
+    return txid if platform.system() == 'Windows' else f'{walletname}_{txid}'
 
 
 class NotificationsTest(BitcoinTestFramework):
@@ -181,7 +182,7 @@ class NotificationsTest(BitcoinTestFramework):
                 # Universal newline ensures '\n' on 'nt'
                 assert_equal(text[-1], '\n')
                 text = text[:-1]
-                if os.name == 'nt':
+                if platform.system() == 'Windows':
                     # On Windows, echo as above will append a whitespace
                     assert_equal(text[-1], ' ')
                     text = text[:-1]
