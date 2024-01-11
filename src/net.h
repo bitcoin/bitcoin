@@ -99,6 +99,8 @@ static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
 static constexpr bool DEFAULT_V2_TRANSPORT{false};
 
+static constexpr bool DEFAULT_CLEANUP_ADDRMAN{false};
+
 typedef int64_t NodeId;
 
 struct AddedNodeParams {
