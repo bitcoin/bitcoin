@@ -4206,7 +4206,7 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
         "Saw new header hash=%s height=%d", hash.ToString(), pindex->nHeight);
 
     if (IsInitialBlockDownload()) {
-        LogPrintLevel(BCLog::VALIDATION, BCLog::Level::Debug, "%s\n", msg);
+        LogDebug(BCLog::VALIDATION, "%s\n", msg);
     } else {
         LogPrintf("%s\n", msg);
     }
