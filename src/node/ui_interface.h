@@ -11,6 +11,7 @@
 #include <string>
 
 class CBlockIndex;
+enum class SynchronizationState;
 struct bilingual_str;
 
 class CDeterministicMNList;
@@ -101,13 +102,13 @@ public:
     ADD_SIGNALS_DECL_WRAPPER(ShowProgress, void, const std::string& title, int nProgress, bool resume_possible);
 
     /** New block has been accepted */
-    ADD_SIGNALS_DECL_WRAPPER(NotifyBlockTip, void, bool, const CBlockIndex*);
+    ADD_SIGNALS_DECL_WRAPPER(NotifyBlockTip, void, SynchronizationState, const CBlockIndex*);
 
     /** New chainlock block has been accepted */
     ADD_SIGNALS_DECL_WRAPPER(NotifyChainLock, void, const std::string& bestChainLockHash, int bestChainLockHeight);
 
     /** Best header has changed */
-    ADD_SIGNALS_DECL_WRAPPER(NotifyHeaderTip, void, bool, const CBlockIndex*);
+    ADD_SIGNALS_DECL_WRAPPER(NotifyHeaderTip, void, SynchronizationState, const CBlockIndex*);
 
     /** Masternode list has changed */
     ADD_SIGNALS_DECL_WRAPPER(NotifyMasternodeListChanged, void, const CDeterministicMNList&, const CBlockIndex*);
