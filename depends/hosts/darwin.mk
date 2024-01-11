@@ -80,7 +80,7 @@ darwin_CC=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
               -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
               -u LIBRARY_PATH \
               $(clang_prog) --target=$(host) \
-              -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
+              -B$(build_prefix)/bin \
               -isysroot$(OSX_SDK) -nostdlibinc \
               -iwithsysroot/usr/include -iframeworkwithsysroot/System/Library/Frameworks
 
@@ -88,7 +88,7 @@ darwin_CXX=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
                -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
                -u LIBRARY_PATH \
                $(clangxx_prog) --target=$(host) \
-               -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
+               -B$(build_prefix)/bin \
                -isysroot$(OSX_SDK) -nostdlibinc \
                -iwithsysroot/usr/include/c++/v1 \
                -iwithsysroot/usr/include -iframeworkwithsysroot/System/Library/Frameworks
@@ -96,6 +96,11 @@ darwin_CXX=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
 darwin_CFLAGS=-pipe -std=$(C_STANDARD) -mmacosx-version-min=$(OSX_MIN_VERSION)
 darwin_CXXFLAGS=-pipe -std=$(CXX_STANDARD) -mmacosx-version-min=$(OSX_MIN_VERSION)
 darwin_LDFLAGS=-Wl,-platform_version,macos,$(OSX_MIN_VERSION),$(OSX_SDK_VERSION)
+
+ifneq ($(build_os),darwin)
+darwin_CFLAGS += -mlinker-version=$(LD64_VERSION)
+darwin_CXXFLAGS += -mlinker-version=$(LD64_VERSION)
+endif
 
 darwin_release_CFLAGS=-O2
 darwin_release_CXXFLAGS=$(darwin_release_CFLAGS)
