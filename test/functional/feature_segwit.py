@@ -88,14 +88,11 @@ class SegWitTest(BitcoinTestFramework):
         self.extra_args = [
             [
                 "-acceptnonstdtxn=1",
-                "-rpcserialversion=0",
-                "-deprecatedrpc=serialversion",
                 "-testactivationheight=segwit@165",
                 "-addresstype=legacy",
             ],
             [
                 "-acceptnonstdtxn=1",
-                "-rpcserialversion=1",
                 "-testactivationheight=segwit@165",
                 "-addresstype=legacy",
             ],
@@ -224,18 +221,6 @@ class SegWitTest(BitcoinTestFramework):
         self.fail_accept(self.nodes[0], "mandatory-script-verify-flag-failed (Witness program hash mismatch)", p2sh_ids[NODE_0][P2WPKH][0], sign=False, redeem_script=witness_script(False, self.pubkey[0]))
         self.fail_accept(self.nodes[0], "mandatory-script-verify-flag-failed (Witness program was passed an empty witness)", p2sh_ids[NODE_0][P2WSH][0], sign=False, redeem_script=witness_script(True, self.pubkey[0]))
 
-        self.log.info("Verify block and transaction serialization rpcs return differing serializations depending on rpc serialization flag")
-        assert self.nodes[2].getblock(blockhash, False) != self.nodes[0].getblock(blockhash, False)
-        assert self.nodes[1].getblock(blockhash, False) == self.nodes[2].getblock(blockhash, False)
-
-        for tx_id in segwit_tx_list:
-            tx = tx_from_hex(self.nodes[2].gettransaction(tx_id)["hex"])
-            assert self.nodes[2].getrawtransaction(tx_id, False, blockhash) != self.nodes[0].getrawtransaction(tx_id, False, blockhash)
-            assert self.nodes[1].getrawtransaction(tx_id, False, blockhash) == self.nodes[2].getrawtransaction(tx_id, False, blockhash)
-            assert self.nodes[0].getrawtransaction(tx_id, False, blockhash) != self.nodes[2].gettransaction(tx_id)["hex"]
-            assert self.nodes[1].getrawtransaction(tx_id, False, blockhash) == self.nodes[2].gettransaction(tx_id)["hex"]
-            assert self.nodes[0].getrawtransaction(tx_id, False, blockhash) == tx.serialize_without_witness().hex()
-
         # Coinbase contains the witness commitment nonce, check that RPC shows us
         coinbase_txid = self.nodes[2].getblock(blockhash)['tx'][0]
         coinbase_tx = self.nodes[2].gettransaction(txid=coinbase_txid, verbose=True)
@@ -276,9 +261,6 @@ class SegWitTest(BitcoinTestFramework):
         #                      tx3 (non-segwit input, paying to a non-segwit output).
         # tx1 is allowed to appear in the block, but no others.
         txid1 = send_to_witness(1, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.996"))
-        hex_tx = self.nodes[0].gettransaction(txid)['hex']
-        tx = tx_from_hex(hex_tx)
-        assert tx.wit.is_null()  # This should not be a segwit input
         assert txid1 in self.nodes[0].getrawmempool()
 
         tx1_hex = self.nodes[0].gettransaction(txid1)['hex']
@@ -612,11 +594,6 @@ class SegWitTest(BitcoinTestFramework):
                 self.restart_node(1)
                 assert_equal(self.nodes[1].gettransaction(txid, True)["txid"], txid)
                 assert_equal(self.nodes[1].listtransactions("*", 1, 0, True)[0]["txid"], txid)
-
-        self.log.info('Test negative and unknown rpcserialversion throw an init error')
-        self.stop_node(0)
-        self.nodes[0].assert_start_raises_init_error(["-rpcserialversion=-1"], "Error: rpcserialversion must be non-negative.")
-        self.nodes[0].assert_start_raises_init_error(["-rpcserialversion=100"], "Error: Unknown rpcserialversion requested.")
 
     def mine_and_test_listunspent(self, script_list, ismine):
         utxo = find_spendable_utxo(self.nodes[0], 50)

@@ -84,27 +84,32 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintf_, LogSetup)
 {
     LogInstance().m_log_sourcelocations = true;
     LogPrintf_("fn1", "src1", 1, BCLog::LogFlags::NET, BCLog::Level::Debug, "foo1: %s\n", "bar1");
-    LogPrintf_("fn2", "src2", 2, BCLog::LogFlags::NET, BCLog::Level::None, "foo2: %s\n", "bar2");
-    LogPrintf_("fn3", "src3", 3, BCLog::LogFlags::NONE, BCLog::Level::Debug, "foo3: %s\n", "bar3");
-    LogPrintf_("fn4", "src4", 4, BCLog::LogFlags::NONE, BCLog::Level::None, "foo4: %s\n", "bar4");
+    LogPrintf_("fn2", "src2", 2, BCLog::LogFlags::NET, BCLog::Level::Info, "foo2: %s\n", "bar2");
+    LogPrintf_("fn3", "src3", 3, BCLog::LogFlags::ALL, BCLog::Level::Debug, "foo3: %s\n", "bar3");
+    LogPrintf_("fn4", "src4", 4, BCLog::LogFlags::ALL, BCLog::Level::Info, "foo4: %s\n", "bar4");
+    LogPrintf_("fn5", "src5", 5, BCLog::LogFlags::NONE, BCLog::Level::Debug, "foo5: %s\n", "bar5");
+    LogPrintf_("fn6", "src6", 6, BCLog::LogFlags::NONE, BCLog::Level::Info, "foo6: %s\n", "bar6");
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
     for (std::string log; std::getline(file, log);) {
         log_lines.push_back(log);
     }
     std::vector<std::string> expected = {
-        "[src1:1] [fn1] [net:debug] foo1: bar1",
-        "[src2:2] [fn2] [net] foo2: bar2",
+        "[src1:1] [fn1] [net] foo1: bar1",
+        "[src2:2] [fn2] [net:info] foo2: bar2",
         "[src3:3] [fn3] [debug] foo3: bar3",
         "[src4:4] [fn4] foo4: bar4",
+        "[src5:5] [fn5] [debug] foo5: bar5",
+        "[src6:6] [fn6] foo6: bar6",
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
 
-BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
+BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacrosDeprecated, LogSetup)
 {
     LogPrintf("foo5: %s\n", "bar5");
     LogPrint(BCLog::NET, "foo6: %s\n", "bar6");
+    LogPrintLevel(BCLog::NET, BCLog::Level::Trace, "foo4: %s\n", "bar4"); // not logged
     LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "foo7: %s\n", "bar7");
     LogPrintLevel(BCLog::NET, BCLog::Level::Info, "foo8: %s\n", "bar8");
     LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "foo9: %s\n", "bar9");
@@ -118,11 +123,32 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
     std::vector<std::string> expected = {
         "foo5: bar5",
         "[net] foo6: bar6",
-        "[net:debug] foo7: bar7",
+        "[net] foo7: bar7",
         "[net:info] foo8: bar8",
         "[net:warning] foo9: bar9",
         "[net:error] foo10: bar10",
-        "[validation] foo11: bar11",
+        "[validation:info] foo11: bar11",
+    };
+    BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
+{
+    LogTrace(BCLog::NET, "foo6: %s\n", "bar6"); // not logged
+    LogDebug(BCLog::NET, "foo7: %s\n", "bar7");
+    LogInfo("foo8: %s\n", "bar8");
+    LogWarning("foo9: %s\n", "bar9");
+    LogError("foo10: %s\n", "bar10");
+    std::ifstream file{tmp_log_path};
+    std::vector<std::string> log_lines;
+    for (std::string log; std::getline(file, log);) {
+        log_lines.push_back(log);
+    }
+    std::vector<std::string> expected = {
+        "[net] foo7: bar7",
+        "foo8: bar8",
+        "[warning] foo9: bar9",
+        "[error] foo10: bar10",
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }

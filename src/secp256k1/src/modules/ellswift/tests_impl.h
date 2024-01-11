@@ -237,7 +237,7 @@ void run_ellswift_tests(void) {
         secp256k1_ellswift_decode(CTX, &pubkey2, ell64);
         secp256k1_pubkey_load(CTX, &g2, &pubkey2);
         /* Compare with original. */
-        ge_equals_ge(&g, &g2);
+        CHECK(secp256k1_ge_eq_var(&g, &g2));
     }
     /* Verify the behavior of secp256k1_ellswift_create */
     for (i = 0; i < 400 * COUNT; i++) {
@@ -259,7 +259,7 @@ void run_ellswift_tests(void) {
         secp256k1_ellswift_decode(CTX, &pub, ell64);
         secp256k1_pubkey_load(CTX, &dec, &pub);
         secp256k1_ecmult(&res, NULL, &secp256k1_scalar_zero, &sec);
-        ge_equals_gej(&dec, &res);
+        CHECK(secp256k1_gej_eq_ge_var(&res, &dec));
     }
     /* Verify that secp256k1_ellswift_xdh computes the right shared X coordinate. */
     for (i = 0; i < 800 * COUNT; i++) {
@@ -285,7 +285,7 @@ void run_ellswift_tests(void) {
         ret = secp256k1_ellswift_xdh(CTX, share32, ell64, ell64, sec32, i & 1, &ellswift_xdh_hash_x32, NULL);
         CHECK(ret);
         (void)secp256k1_fe_set_b32_limit(&share_x, share32); /* no overflow is possible */
-        secp256k1_fe_verify(&share_x);
+        SECP256K1_FE_VERIFY(&share_x);
         /* Compute seckey*pubkey directly. */
         secp256k1_ecmult(&resj, &decj, &sec, NULL);
         secp256k1_ge_set_gej(&res, &resj);

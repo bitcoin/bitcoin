@@ -877,6 +877,95 @@ class WalletMigrationTest(BitcoinTestFramework):
             assert_equal(magic, BTREE_MAGIC)
 
 
+    def test_avoidreuse(self):
+        self.log.info("Test that avoidreuse persists after migration")
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        wallet = self.create_legacy_wallet("avoidreuse")
+        wallet.setwalletflag("avoid_reuse", True)
+
+        # Import a pubkey to the test wallet and send some funds to it
+        reused_imported_addr = def_wallet.getnewaddress()
+        wallet.importpubkey(def_wallet.getaddressinfo(reused_imported_addr)["pubkey"])
+        imported_utxos = self.create_outpoints(def_wallet, outputs=[{reused_imported_addr: 2}])
+        def_wallet.lockunspent(False, imported_utxos)
+
+        # Send funds to the test wallet
+        reused_addr = wallet.getnewaddress()
+        def_wallet.sendtoaddress(reused_addr, 2)
+
+        self.generate(self.nodes[0], 1)
+
+        # Send funds from the test wallet with both its own and the imported
+        wallet.sendall([def_wallet.getnewaddress()])
+        def_wallet.sendall(recipients=[def_wallet.getnewaddress()], inputs=imported_utxos)
+        self.generate(self.nodes[0], 1)
+        balances = wallet.getbalances()
+        assert_equal(balances["mine"]["trusted"], 0)
+        assert_equal(balances["watchonly"]["trusted"], 0)
+
+        # Reuse the addresses
+        def_wallet.sendtoaddress(reused_addr, 1)
+        def_wallet.sendtoaddress(reused_imported_addr, 1)
+        self.generate(self.nodes[0], 1)
+        balances = wallet.getbalances()
+        assert_equal(balances["mine"]["used"], 1)
+        # Reused watchonly will not show up in balances
+        assert_equal(balances["watchonly"]["trusted"], 0)
+        assert_equal(balances["watchonly"]["untrusted_pending"], 0)
+        assert_equal(balances["watchonly"]["immature"], 0)
+
+        utxos = wallet.listunspent()
+        assert_equal(len(utxos), 2)
+        for utxo in utxos:
+            assert_equal(utxo["reused"], True)
+
+        # Migrate
+        migrate_res = wallet.migratewallet()
+        watchonly_wallet = self.nodes[0].get_wallet_rpc(migrate_res["watchonly_name"])
+
+        # One utxo in each wallet, marked used
+        utxos = wallet.listunspent()
+        assert_equal(len(utxos), 1)
+        assert_equal(utxos[0]["reused"], True)
+        watchonly_utxos = watchonly_wallet.listunspent()
+        assert_equal(len(watchonly_utxos), 1)
+        assert_equal(watchonly_utxos[0]["reused"], True)
+
+    def test_preserve_tx_extra_info(self):
+        self.log.info("Test that tx extra data is preserved after migration")
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        # Create and fund wallet
+        wallet = self.create_legacy_wallet("persist_comments")
+        def_wallet.sendtoaddress(wallet.getnewaddress(), 2)
+
+        self.generate(self.nodes[0], 6)
+
+        # Create tx and bump it to store 'replaced_by_txid' and 'replaces_txid' data within the transactions.
+        # Additionally, store an extra comment within the original tx.
+        extra_comment = "don't discard me"
+        original_tx_id = wallet.sendtoaddress(address=wallet.getnewaddress(), amount=1, comment=extra_comment)
+        bumped_tx = wallet.bumpfee(txid=original_tx_id)
+
+        def check_comments():
+            for record in wallet.listtransactions():
+                if record["txid"] == original_tx_id:
+                    assert_equal(record["replaced_by_txid"], bumped_tx["txid"])
+                    assert_equal(record['comment'], extra_comment)
+                elif record["txid"] == bumped_tx["txid"]:
+                    assert_equal(record["replaces_txid"], original_tx_id)
+
+        # Pre-migration verification
+        check_comments()
+        # Migrate
+        wallet.migratewallet()
+        # Post-migration verification
+        check_comments()
+
+        wallet.unloadwallet()
+
+
     def run_test(self):
         self.generate(self.nodes[0], 101)
 
@@ -896,6 +985,8 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_conflict_txs()
         self.test_hybrid_pubkey()
         self.test_failed_migration_cleanup()
+        self.test_avoidreuse()
+        self.test_preserve_tx_extra_info()
 
 if __name__ == '__main__':
     WalletMigrationTest().main()

@@ -403,11 +403,7 @@ void secp256k1_fe_sqr_inner(uint32_t *r, const uint32_t *a);
 
 #else
 
-#ifdef VERIFY
 #define VERIFY_BITS(x, n) VERIFY_CHECK(((x) >> (n)) == 0)
-#else
-#define VERIFY_BITS(x, n) do { } while(0)
-#endif
 
 SECP256K1_INLINE static void secp256k1_fe_mul_inner(uint32_t *r, const uint32_t *a, const uint32_t * SECP256K1_RESTRICT b) {
     uint64_t c, d;

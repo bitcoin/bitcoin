@@ -140,14 +140,10 @@ std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDeco
     return str;
 }
 
-std::string EncodeHexTx(const CTransaction& tx, const bool without_witness)
+std::string EncodeHexTx(const CTransaction& tx)
 {
     DataStream ssTx;
-    if (without_witness) {
-        ssTx << TX_NO_WITNESS(tx);
-    } else {
-        ssTx << TX_WITH_WITNESS(tx);
-    }
+    ssTx << TX_WITH_WITNESS(tx);
     return HexStr(ssTx);
 }
 
@@ -204,7 +200,7 @@ void RangeProofToUniv(const bulletproofs::RangeProof<Mcl>& rp, UniValue& entry, 
     }
 }
 
-void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex, bool without_witness, const CTxUndo* txundo, TxVerbosity verbosity, bool extendedRangeProof)
+void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex, const CTxUndo* txundo, TxVerbosity verbosity, bool extendedRangeProof)
 {
     CHECK_NONFATAL(verbosity >= TxVerbosity::SHOW_DETAILS);
 
@@ -314,6 +310,6 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
     }
 
     if (include_hex) {
-        entry.pushKV("hex", EncodeHexTx(tx, without_witness)); // The hex-encoded transaction. Used the name "hex" to be consistent with the verbose output of "getrawtransaction".
+        entry.pushKV("hex", EncodeHexTx(tx)); // The hex-encoded transaction. Used the name "hex" to be consistent with the verbose output of "getrawtransaction".
     }
 }

@@ -8,6 +8,7 @@
 #include <key_io.h>
 #include <util/strencodings.h>
 #include <script/descriptor.h>
+#include <test/fuzz/fuzz.h>
 
 #include <functional>
 
@@ -44,5 +45,14 @@ public:
     //! Get an actual descriptor string from a descriptor string whose keys were mocked.
     std::optional<std::string> GetDescriptor(std::string_view mocked_desc) const;
 };
+
+//! Default maximum number of derivation indexes in a single derivation path when limiting its depth.
+constexpr int MAX_DEPTH{2};
+
+/**
+ * Whether the buffer, if it represents a valid descriptor, contains a derivation path deeper than
+ * a given maximum depth. Note this may also be hit for deriv paths in origins.
+ */
+bool HasDeepDerivPath(const FuzzBufferType& buff, const int max_depth = MAX_DEPTH);
 
 #endif // BITCOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H

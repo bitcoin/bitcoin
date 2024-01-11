@@ -89,7 +89,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Clang version
-        run: clang --version
+        run: |
+          sudo xcode-select --switch /Applications/Xcode_15.0.app
+          clang --version
 
       - name: Install Homebrew packages
         env:

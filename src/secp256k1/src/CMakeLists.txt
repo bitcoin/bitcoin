@@ -161,5 +161,13 @@ if(SECP256K1_INSTALL)
       ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
       ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
-)
+  )
+
+  include(GeneratePkgConfigFile)
+  generate_pkg_config_file(${PROJECT_SOURCE_DIR}/libsecp256k1.pc.in)
+  install(
+    FILES
+      ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+  )
 endif()

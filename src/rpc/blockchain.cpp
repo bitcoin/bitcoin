@@ -187,7 +187,7 @@ UniValue blockToJSON(BlockManager& blockman, const CBlock& block, const CBlockIn
                 // coinbase transaction (i.e. i == 0) doesn't have undo data
                 const CTxUndo* txundo = (have_undo && i > 0) ? &blockUndo.vtxundo.at(i - 1) : nullptr;
                 UniValue objTx(UniValue::VOBJ);
-                TxToUniv(*tx, /*block_hash=*/uint256(), /*entry=*/objTx, /*include_hex=*/true, /*without_witness=*/RPCSerializationWithoutWitness(), txundo, verbosity);
+                TxToUniv(*tx, /*block_hash=*/uint256(), /*entry=*/objTx, /*include_hex=*/true, txundo, verbosity);
                 txs.push_back(objTx);
             }
             break;
@@ -736,10 +736,9 @@ static RPCHelpMan getblock()
 
     const CBlock block{GetBlockChecked(chainman.m_blockman, *pblockindex)};
 
-    if (verbosity <= 0)
-    {
+    if (verbosity <= 0) {
         DataStream ssBlock;
-        ssBlock << RPCTxSerParams(block);
+        ssBlock << TX_WITH_WITNESS(block);
         std::string strHex = HexStr(ssBlock);
         return strHex;
     }
@@ -2307,7 +2306,7 @@ static RPCHelpMan scanblocks()
             RPCArg{"start_height", RPCArg::Type::NUM, RPCArg::Default{0}, "Height to start to scan from"},
             RPCArg{"stop_height", RPCArg::Type::NUM, RPCArg::DefaultHint{"chain tip"}, "Height to stop to scan"},
             RPCArg{"filtertype", RPCArg::Type::STR, RPCArg::Default{BlockFilterTypeName(BlockFilterType::BASIC)}, "The type name of the filter"},
-            RPCArg{"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+            RPCArg{"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                 {
                     {"filter_false_positives", RPCArg::Type::BOOL, RPCArg::Default{false}, "Filter false positives (slower and may fail on pruned nodes). Otherwise they may occur at a rate of 1/M"},
                 },

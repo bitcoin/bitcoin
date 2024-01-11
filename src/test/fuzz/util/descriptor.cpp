@@ -70,3 +70,17 @@ std::optional<std::string> MockedDescriptorConverter::GetDescriptor(std::string_
 
     return desc;
 }
+
+bool HasDeepDerivPath(const FuzzBufferType& buff, const int max_depth)
+{
+    auto depth{0};
+    for (const auto& ch: buff) {
+        if (ch == ',') {
+            // A comma is always present between two key expressions, so we use that as a delimiter.
+            depth = 0;
+        } else if (ch == '/') {
+            if (++depth > max_depth) return true;
+        }
+    }
+    return false;
+}
