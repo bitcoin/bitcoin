@@ -569,7 +569,9 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 CXXFLAGS="$TEMP_CXXFLAGS"
 
 # ARM
-AX_CHECK_COMPILE_FLAG([-march=armv8-a+crc+crypto], [ARM_CRC_CXXFLAGS="-march=armv8-a+crc+crypto"], [], [$CXXFLAG_WERROR])
+# crc32 instrinsics are disabled (part of the crypto extensions) as they break
+# under UBSan (misaligned-pointer-use, https://github.com/bitcoin/bitcoin/issues/29178)
+AX_CHECK_COMPILE_FLAG([-march=armv8-a+crc], [ARM_CRC_CXXFLAGS="-march=armv8-a+crc"], [], [$CXXFLAG_WERROR])
 AX_CHECK_COMPILE_FLAG([-march=armv8-a+crypto], [ARM_SHANI_CXXFLAGS="-march=armv8-a+crypto"], [], [$CXXFLAG_WERROR])
 
 TEMP_CXXFLAGS="$CXXFLAGS"
