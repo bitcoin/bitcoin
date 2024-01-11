@@ -60,10 +60,20 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
         if (version != MEMPOOL_DUMP_VERSION) {
             return false;
         }
-        uint64_t num;
-        file >> num;
-        while (num) {
-            --num;
+        uint64_t total_txns_to_load;
+        file >> total_txns_to_load;
+        uint64_t txns_tried = 0;
+        LogPrintf("Loading %u mempool transactions from disk...\n", total_txns_to_load);
+        int next_tenth_to_report = 0;
+        while (txns_tried < total_txns_to_load) {
+            const int percentage_done(100.0 * txns_tried / total_txns_to_load);
+            if (next_tenth_to_report < percentage_done / 10) {
+                LogPrintf("Progress loading mempool transactions from disk: %d%% (tried %u, %u remaining)\n",
+                        percentage_done, txns_tried, total_txns_to_load - txns_tried);
+                next_tenth_to_report = percentage_done / 10;
+            }
+            ++txns_tried;
+
             CTransactionRef tx;
             int64_t nTime;
             int64_t nFeeDelta;
