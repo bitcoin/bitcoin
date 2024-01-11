@@ -82,17 +82,17 @@ bool FlatFileSeq::Flush(const FlatFilePos& pos, bool finalize)
 {
     FILE* file = Open(FlatFilePos(pos.nFile, 0)); // Avoid fseek to nPos
     if (!file) {
-        error("%s: failed to open file %d", __func__, pos.nFile);
+        LogError("%s: failed to open file %d\n", __func__, pos.nFile);
         return false;
     }
     if (finalize && !TruncateFile(file, pos.nPos)) {
         fclose(file);
-        error("%s: failed to truncate file %d", __func__, pos.nFile);
+        LogError("%s: failed to truncate file %d\n", __func__, pos.nFile);
         return false;
     }
     if (!FileCommit(file)) {
         fclose(file);
-        error("%s: failed to commit file %d", __func__, pos.nFile);
+        LogError("%s: failed to commit file %d\n", __func__, pos.nFile);
         return false;
     }
     DirectoryCommit(m_dir);

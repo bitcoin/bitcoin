@@ -158,7 +158,7 @@ bool FillableSigningProvider::GetKey(const CKeyID &address, CKey &keyOut) const
 bool FillableSigningProvider::AddCScript(const CScript& redeemScript)
 {
     if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE) {
-        error("FillableSigningProvider::AddCScript(): redeemScripts > %i bytes are invalid", MAX_SCRIPT_ELEMENT_SIZE);
+        LogError("FillableSigningProvider::AddCScript(): redeemScripts > %i bytes are invalid\n", MAX_SCRIPT_ELEMENT_SIZE);
         return false;
     }
 

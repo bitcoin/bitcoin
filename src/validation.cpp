@@ -2045,12 +2045,12 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
 
     CBlockUndo blockUndo;
     if (!m_blockman.UndoReadFromDisk(blockUndo, *pindex)) {
-        error("DisconnectBlock(): failure reading undo data");
+        LogError("DisconnectBlock(): failure reading undo data\n");
         return DISCONNECT_FAILED;
     }
 
     if (blockUndo.vtxundo.size() + 1 != block.vtx.size()) {
-        error("DisconnectBlock(): block and undo data inconsistent");
+        LogError("DisconnectBlock(): block and undo data inconsistent\n");
         return DISCONNECT_FAILED;
     }
 
@@ -2089,7 +2089,7 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
         if (i > 0) { // not coinbases
             CTxUndo &txundo = blockUndo.vtxundo[i-1];
             if (txundo.vprevout.size() != tx.vin.size()) {
-                error("DisconnectBlock(): transaction and undo data inconsistent");
+                LogError("DisconnectBlock(): transaction and undo data inconsistent\n");
                 return DISCONNECT_FAILED;
             }
             for (unsigned int j = tx.vin.size(); j > 0;) {
@@ -2222,7 +2222,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             // problems.
             return FatalError(m_chainman.GetNotifications(), state, "Corrupt block found indicating potential hardware failure; shutting down");
         }
-        error("%s: Consensus::CheckBlock: %s", __func__, state.ToString());
+        LogError("%s: Consensus::CheckBlock: %s\n", __func__, state.ToString());
         return false;
     }
 
@@ -2409,7 +2409,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                             tx_state.GetRejectReason(), tx_state.GetDebugMessage());
-                error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), state.ToString());
+                LogError("%s: Consensus::CheckTxInputs: %s, %s\n", __func__, tx.GetHash().ToString(), state.ToString());
                 return false;
             }
             nFees += txfee;
@@ -2451,7 +2451,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                               tx_state.GetRejectReason(), tx_state.GetDebugMessage());
-                error("ConnectBlock(): CheckInputScripts on %s failed with %s",
+                LogError("ConnectBlock(): CheckInputScripts on %s failed with %s\n",
                     tx.GetHash().ToString(), state.ToString());
                 return false;
             }
@@ -2826,7 +2826,7 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
     std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
     CBlock& block = *pblock;
     if (!m_blockman.ReadBlockFromDisk(block, *pindexDelete)) {
-        error("DisconnectTip(): Failed to read block");
+        LogError("DisconnectTip(): Failed to read block\n");
         return false;
     }
     // Apply the block atomically to the chain state.
@@ -2835,7 +2835,7 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
         CCoinsViewCache view(&CoinsTip());
         assert(view.GetBestBlock() == pindexDelete->GetBlockHash());
         if (DisconnectBlock(block, pindexDelete, view) != DISCONNECT_OK) {
-            error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
+            LogError("DisconnectTip(): DisconnectBlock %s failed\n", pindexDelete->GetBlockHash().ToString());
             return false;
         }
         bool flushed = view.Flush();
@@ -2966,7 +2966,7 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
         if (!rv) {
             if (state.IsInvalid())
                 InvalidBlockFound(pindexNew, state);
-            error("%s: ConnectBlock %s failed, %s", __func__, pindexNew->GetBlockHash().ToString(), state.ToString());
+            LogError("%s: ConnectBlock %s failed, %s\n", __func__, pindexNew->GetBlockHash().ToString(), state.ToString());
             return false;
         }
         time_3 = SteadyClock::now();
@@ -4250,7 +4250,7 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
             pindex->nStatus |= BLOCK_FAILED_VALID;
             m_blockman.m_dirty_blockindex.insert(pindex);
         }
-        error("%s: %s", __func__, state.ToString());
+        LogError("%s: %s\n", __func__, state.ToString());
         return false;
     }
 
@@ -4314,7 +4314,7 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
             if (m_options.signals) {
                 m_options.signals->BlockChecked(*block, state);
             }
-            error("%s: AcceptBlock FAILED (%s)", __func__, state.ToString());
+            LogError("%s: AcceptBlock FAILED (%s)\n", __func__, state.ToString());
             return false;
         }
     }
@@ -4323,14 +4323,14 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
 
     BlockValidationState state; // Only used to report errors, not invalidity - ignore it
     if (!ActiveChainstate().ActivateBestChain(state, block)) {
-        error("%s: ActivateBestChain failed (%s)", __func__, state.ToString());
+        LogError("%s: ActivateBestChain failed (%s)\n", __func__, state.ToString());
         return false;
     }
 
     Chainstate* bg_chain{WITH_LOCK(cs_main, return BackgroundSyncInProgress() ? m_ibd_chainstate.get() : nullptr)};
     BlockValidationState bg_state;
     if (bg_chain && !bg_chain->ActivateBestChain(bg_state, block)) {
-        error("%s: [background] ActivateBestChain failed (%s)", __func__, bg_state.ToString());
+        LogError("%s: [background] ActivateBestChain failed (%s)\n", __func__, bg_state.ToString());
         return false;
      }
 
@@ -4370,15 +4370,15 @@ bool TestBlockValidity(BlockValidationState& state,
 
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, chainstate.m_blockman, chainstate.m_chainman, pindexPrev)) {
-        error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, state.ToString());
+        LogError("%s: Consensus::ContextualCheckBlockHeader: %s\n", __func__, state.ToString());
         return false;
     }
     if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot)) {
-        error("%s: Consensus::CheckBlock: %s", __func__, state.ToString());
+        LogError("%s: Consensus::CheckBlock: %s\n", __func__, state.ToString());
         return false;
     }
     if (!ContextualCheckBlock(block, state, chainstate.m_chainman, pindexPrev)) {
-        error("%s: Consensus::ContextualCheckBlock: %s", __func__, state.ToString());
+        LogError("%s: Consensus::ContextualCheckBlock: %s\n", __func__, state.ToString());
         return false;
     }
     if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, true)) {
@@ -4584,7 +4584,7 @@ bool Chainstate::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& in
     // TODO: merge with ConnectBlock
     CBlock block;
     if (!m_blockman.ReadBlockFromDisk(block, *pindex)) {
-        error("ReplayBlock(): ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
+        LogError("ReplayBlock(): ReadBlockFromDisk failed at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
         return false;
     }
 
@@ -4610,7 +4610,7 @@ bool Chainstate::ReplayBlocks()
     std::vector<uint256> hashHeads = db.GetHeadBlocks();
     if (hashHeads.empty()) return true; // We're already in a consistent state.
     if (hashHeads.size() != 2) {
-        error("ReplayBlocks(): unknown inconsistent state");
+        LogError("ReplayBlocks(): unknown inconsistent state\n");
         return false;
     }
 
@@ -4622,14 +4622,14 @@ bool Chainstate::ReplayBlocks()
     const CBlockIndex* pindexFork = nullptr; // Latest block common to both the old and the new tip.
 
     if (m_blockman.m_block_index.count(hashHeads[0]) == 0) {
-        error("ReplayBlocks(): reorganization to unknown block requested");
+        LogError("ReplayBlocks(): reorganization to unknown block requested\n");
         return false;
     }
     pindexNew = &(m_blockman.m_block_index[hashHeads[0]]);
 
     if (!hashHeads[1].IsNull()) { // The old tip is allowed to be 0, indicating it's the first flush.
         if (m_blockman.m_block_index.count(hashHeads[1]) == 0) {
-            error("ReplayBlocks(): reorganization from unknown block requested");
+            LogError("ReplayBlocks(): reorganization from unknown block requested\n");
             return false;
         }
         pindexOld = &(m_blockman.m_block_index[hashHeads[1]]);
@@ -4642,13 +4642,13 @@ bool Chainstate::ReplayBlocks()
         if (pindexOld->nHeight > 0) { // Never disconnect the genesis block.
             CBlock block;
             if (!m_blockman.ReadBlockFromDisk(block, *pindexOld)) {
-                error("RollbackBlock(): ReadBlockFromDisk() failed at %d, hash=%s", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
+                LogError("RollbackBlock(): ReadBlockFromDisk() failed at %d, hash=%s\n", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
                 return false;
             }
             LogPrintf("Rolling back %s (%i)\n", pindexOld->GetBlockHash().ToString(), pindexOld->nHeight);
             DisconnectResult res = DisconnectBlock(block, pindexOld, cache);
             if (res == DISCONNECT_FAILED) {
-                error("RollbackBlock(): DisconnectBlock failed at %d, hash=%s", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
+                LogError("RollbackBlock(): DisconnectBlock failed at %d, hash=%s\n", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
                 return false;
             }
             // If DISCONNECT_UNCLEAN is returned, it means a non-existing UTXO was deleted, or an existing UTXO was
@@ -4768,13 +4768,13 @@ bool Chainstate::LoadGenesisBlock()
         const CBlock& block = params.GenesisBlock();
         FlatFilePos blockPos{m_blockman.SaveBlockToDisk(block, 0, nullptr)};
         if (blockPos.IsNull()) {
-            error("%s: writing genesis block to disk failed", __func__);
+            LogError("%s: writing genesis block to disk failed\n", __func__);
             return false;
         }
         CBlockIndex* pindex = m_blockman.AddToBlockIndex(block, m_chainman.m_best_header);
         m_chainman.ReceivedBlockTransactions(block, pindex, blockPos);
     } catch (const std::runtime_error& e) {
-        error("%s: failed to write genesis block: %s", __func__, e.what());
+        LogError("%s: failed to write genesis block: %s\n", __func__, e.what());
         return false;
     }
 
