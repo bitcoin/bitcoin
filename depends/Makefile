@@ -183,7 +183,7 @@ endif
 
 all_packages = $(packages) $(native_packages)
 
-meta_depends = Makefile funcs.mk builders/default.mk hosts/default.mk hosts/$(host_os).mk builders/$(build_os).mk
+meta_depends = Makefile config.guess config.sub funcs.mk builders/default.mk hosts/default.mk hosts/$(host_os).mk builders/$(build_os).mk
 
 $(host_arch)_$(host_os)_native_binutils?=$($(host_os)_native_binutils)
 $(host_arch)_$(host_os)_native_toolchain?=$($(host_os)_native_toolchain)
