@@ -1,6 +1,9 @@
 #include <node/sv2_template_provider.h>
 
+#include <base58.h>
+#include <common/args.h>
 #include <common/sv2_noise.h>
+#include <util/readwritefile.h>
 #include <util/thread.h>
 #include <validation.h>
 
@@ -19,10 +22,52 @@ using node::Sv2SubmitSolutionMsg;
 
 Sv2TemplateProvider::Sv2TemplateProvider(ChainstateManager& chainman) : m_chainman{chainman}
 {
-    // TODO: persist static key
-    m_static_key.MakeNewKey(true);
+    // Read static key if cached
+    auto data{ReadBinaryFile<std::vector<unsigned char>>(GetStaticKeyFile())};
+    if (data) {
+        if (data->size() != 32) {
+            LogPrintLevel(BCLog::SV2, BCLog::Level::Error,
+                          "Failed to load static key from %s: size %d != 32\n",
+                          fs::PathToString(GetStaticKeyFile()), data->size());
+        }
+        LogPrintLevel(BCLog::SV2, BCLog::Level::Debug, "Reading cached static key from %s\n", fs::PathToString(GetStaticKeyFile()));
+        m_static_key.Set(data->begin(), data->end(), /*fCompressedIn=*/true);
+    } else {
+        m_static_key = GenerateRandomKey();
+        std::vector<unsigned char> data(m_static_key.begin(), m_static_key.end());
+        if (WriteBinaryFile(GetStaticKeyFile(), data)) {
+            LogPrintLevel(BCLog::SV2, BCLog::Level::Debug, "Generated static key, saved to %s\n", fs::PathToString(GetStaticKeyFile()));
+        } else {
+            LogPrintLevel(BCLog::SV2, BCLog::Level::Error, "Error writing static key to %s\n", fs::PathToString(GetStaticKeyFile()));
+        }
+    }
+    LogPrintLevel(BCLog::SV2, BCLog::Level::Info, "Static key: %s\n", HexStr(m_static_key.GetPubKey()));
 
-    auto authority_key{GenerateRandomKey()};
+   // Generate self signed certificate using (cached) authority key
+    // TODO: skip loading authoritity key if -sv2cert is used
+
+    // Load authority key if cached
+    CKey authority_key;
+    auto auth_key_data{ReadBinaryFile<std::vector<unsigned char>>(GetAuthorityKeyFile())};
+    if (auth_key_data) {
+        if (auth_key_data->size() != 32) {
+            LogPrintLevel(BCLog::SV2, BCLog::Level::Error,
+                          "Failed to load authority key from %s: size %d != 32\n",
+                          fs::PathToString(GetAuthorityKeyFile()), auth_key_data->size());
+        }
+        LogPrintLevel(BCLog::SV2, BCLog::Level::Debug, "Reading cached authority key from %s\n", fs::PathToString(GetAuthorityKeyFile()));
+        authority_key.Set(auth_key_data->begin(), auth_key_data->end(), /*fCompressedIn=*/true);
+    } else {
+        authority_key = GenerateRandomKey();
+        std::vector<unsigned char> data(m_static_key.begin(), m_static_key.end());
+        if (WriteBinaryFile(GetStaticKeyFile(), data)) {
+            LogPrintLevel(BCLog::SV2, BCLog::Level::Debug, "Generated authority key, saved to %s\n", fs::PathToString(GetAuthorityKeyFile()));
+        } else {
+            LogPrintLevel(BCLog::SV2, BCLog::Level::Error, "Error writing authority key to %s\n", fs::PathToString(GetAuthorityKeyFile()));
+        }
+    }
+    // SRI uses base58 encoded x-only pubkeys in its configuration files
+    LogPrintLevel(BCLog::SV2, BCLog::Level::Info, "Authority key: %s\n", EncodeBase58(XOnlyPubKey(m_static_key.GetPubKey())));
 
     // Generate and sign certificate
     auto epoch_now = std::chrono::system_clock::now().time_since_epoch();
@@ -35,10 +80,18 @@ Sv2TemplateProvider::Sv2TemplateProvider(ChainstateManager& chainman) : m_chainm
     authority_key = m_static_key;
     m_certificate = Sv2SignatureNoiseMessage(version, valid_from, valid_to, XOnlyPubKey(m_static_key.GetPubKey()), authority_key);
 
-    // TODO: persist certificate
-
     // TODO: get rid of Init() ???
     Init({});
+}
+
+fs::path Sv2TemplateProvider::GetStaticKeyFile()
+{
+    return gArgs.GetDataDirNet() / "sv2_static_key";
+}
+
+fs::path Sv2TemplateProvider::GetAuthorityKeyFile()
+{
+    return gArgs.GetDataDirNet() / "sv2_authority_key";
 }
 
 bool Sv2TemplateProvider::Start(const Sv2TemplateProviderOptions& options)
