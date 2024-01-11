@@ -364,8 +364,9 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
             // Perform username/password authentication (as described in RFC1929)
             std::vector<uint8_t> vAuth;
             vAuth.push_back(0x01); // Current (and only) version of user/pass subnegotiation
-            if (auth->username.size() > 255 || auth->password.size() > 255)
+            if (auth->username.size() > 255 || auth->password.size() > 255) {
                 return error("Proxy username or password too long");
+            }
             vAuth.push_back(auth->username.size());
             vAuth.insert(vAuth.end(), auth->username.begin(), auth->username.end());
             vAuth.push_back(auth->password.size());
@@ -429,7 +430,9 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
             recvr = InterruptibleRecv(pchRet3, nRecv, g_socks5_recv_timeout, sock);
             break;
         }
-        default: return error("Error: malformed proxy response");
+        default: {
+            return error("Error: malformed proxy response");
+        }
         }
         if (recvr != IntrRecvError::OK) {
             return error("Error reading from proxy");
