@@ -25,6 +25,9 @@ FINAL_HEIGHT = 399
 class AssumeutxoTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        # Disable this test for Windows currently because it doesn't allow two
+        # bitcoind processes simultaneously trying to read the same wallet file.
+        self.skip_if_platform_not_posix()
 
     def add_options(self, parser):
         self.add_wallet_options(parser, legacy=False)
