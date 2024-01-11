@@ -13,7 +13,7 @@ LIBCXX_FLAGS="-nostdinc++ -nostdlib++ -isystem ${LIBCXX_DIR}include/c++/v1 -L${L
 export MSAN_AND_LIBCXX_FLAGS="${MSAN_FLAGS} ${LIBCXX_FLAGS}"
 
 export CONTAINER_NAME="ci_native_msan"
-export PACKAGES="cmake ninja-build"
+export PACKAGES="ninja-build"
 # BDB generates false-positives and will be removed in future
 export DEP_OPTS="NO_BDB=1 NO_QT=1 CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}'"
 export GOAL="install"
