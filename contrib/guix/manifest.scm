@@ -505,6 +505,7 @@ inspecting signatures in Mach-O binaries.")
         automake
         pkg-config
         bison
+        cmake-minimal
         ;; Native GCC 10 toolchain
         gcc-toolchain-10
         (list gcc-toolchain-10 "static")
@@ -525,5 +526,5 @@ inspecting signatures in Mach-O binaries.")
           ((string-contains target "-linux-")
            (list (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
-           (list clang-toolchain-17 binutils cmake-minimal python-signapple zip))
+           (list clang-toolchain-17 binutils python-signapple zip))
           (else '())))))
