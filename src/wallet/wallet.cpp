@@ -495,6 +495,13 @@ std::set<uint256> CWallet::GetConflicts(const uint256& txid) const
     return result;
 }
 
+bool CWallet::HasWalletSpend(const uint256& txid) const
+{
+    AssertLockHeld(cs_wallet);
+    auto iter = mapTxSpends.lower_bound(COutPoint(txid, 0));
+    return (iter != mapTxSpends.end() && iter->first.hash == txid);
+}
+
 void CWallet::Flush()
 {
     GetDatabase().Flush();
@@ -3912,9 +3919,11 @@ DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256
     WalletLogPrintf("ZapSelectTx started for %d transactions...\n", vHashIn.size());
 
     DBErrors nZapSelectTxRet = WalletBatch(GetDatabase()).ZapSelectTx(vHashIn, vHashOut);
-    for (uint256 hash : vHashOut) {
+    for (const uint256& hash : vHashOut) {
         const auto& it = mapWallet.find(hash);
         wtxOrdered.erase(it->second.m_it_wtxOrdered);
+        for (const auto& txin : it->second.tx->vin)
+            mapTxSpends.erase(txin.prevout);
         mapWallet.erase(it);
         NotifyTransactionChanged(this, hash, CT_DELETED);
     }
