@@ -7,6 +7,7 @@
 #include <base58.h>
 #include <common/args.h>
 #include <common/sv2_noise.h>
+#include <util/readwritefile.h>
 #include <util/thread.h>
 #include <validation.h>
 
@@ -25,11 +26,47 @@ using node::Sv2SubmitSolutionMsg;
 
 Sv2TemplateProvider::Sv2TemplateProvider(ChainstateManager& chainman) : m_chainman{chainman}
 {
-    // TODO: persist static key
-    m_static_key.MakeNewKey(true);
+    // Read static key if cached
+    try {
+        AutoFile{fsbridge::fopen(GetStaticKeyFile(), "rb")} >> m_static_key;
+        LogPrintLevel(BCLog::SV2, BCLog::Level::Debug, "Reading cached static key from %s\n", fs::PathToString(GetStaticKeyFile()));
+    } catch (const std::ios_base::failure&) {
+        // File is not expected to exist the first time.
+        // In the unlikely event that loading an existing key fails, create a new one.
+    }
+    if (!m_static_key.IsValid()) {
+        m_static_key = GenerateRandomKey();
+        try {
+            AutoFile{fsbridge::fopen(GetStaticKeyFile(), "wb")} << m_static_key;
+        } catch (const std::ios_base::failure&) {
+            LogPrintLevel(BCLog::SV2, BCLog::Level::Error, "Error writing static key to %s\n", fs::PathToString(GetStaticKeyFile()));
+            // Continue, because this is not a critical failure.
+        }
+        LogPrintLevel(BCLog::SV2, BCLog::Level::Debug, "Generated static key, saved to %s\n", fs::PathToString(GetStaticKeyFile()));
+    }
+    LogPrintLevel(BCLog::SV2, BCLog::Level::Info, "Static key: %s\n", HexStr(m_static_key.GetPubKey()));
 
-    auto authority_key{GenerateRandomKey()};
+   // Generate self signed certificate using (cached) authority key
+    // TODO: skip loading authoritity key if -sv2cert is used
 
+    // Load authority key if cached
+    CKey authority_key;
+    try {
+        AutoFile{fsbridge::fopen(GetAuthorityKeyFile(), "rb")} >> authority_key;
+    } catch (const std::ios_base::failure&) {
+        // File is not expected to exist the first time.
+        // In the unlikely event that loading an existing key fails, create a new one.
+    }
+    if (!authority_key.IsValid()) {
+        authority_key = GenerateRandomKey();
+        try {
+            AutoFile{fsbridge::fopen(GetAuthorityKeyFile(), "wb")} << authority_key;
+        } catch (const std::ios_base::failure&) {
+            LogPrintLevel(BCLog::SV2, BCLog::Level::Error, "Error writing authority key to %s\n", fs::PathToString(GetAuthorityKeyFile()));
+            // Continue, because this is not a critical failure.
+        }
+        LogPrintLevel(BCLog::SV2, BCLog::Level::Debug, "Generated authority key, saved to %s\n", fs::PathToString(GetAuthorityKeyFile()));
+    }
     // SRI uses base58 encoded x-only pubkeys in its configuration files
     std::array<unsigned char, 34> version_pubkey_bytes;
     version_pubkey_bytes[0] = 1;
@@ -47,10 +84,18 @@ Sv2TemplateProvider::Sv2TemplateProvider(ChainstateManager& chainman) : m_chainm
     uint32_t valid_to =  std::numeric_limits<unsigned int>::max(); // 2106
     m_certificate = Sv2SignatureNoiseMessage(version, valid_from, valid_to, XOnlyPubKey(m_static_key.GetPubKey()), authority_key);
 
-    // TODO: persist certificate
-
     // TODO: get rid of Init() ???
     Init({});
+}
+
+fs::path Sv2TemplateProvider::GetStaticKeyFile()
+{
+    return gArgs.GetDataDirNet() / "sv2_static_key";
+}
+
+fs::path Sv2TemplateProvider::GetAuthorityKeyFile()
+{
+    return gArgs.GetDataDirNet() / "sv2_authority_key";
 }
 
 bool Sv2TemplateProvider::Start(const Sv2TemplateProviderOptions& options)

@@ -96,6 +96,12 @@ private:
 
     std::optional<Sv2SignatureNoiseMessage> m_certificate;
 
+    /** Get name of file to store static key */
+    fs::path GetStaticKeyFile();
+
+    /** Get name of file to store authority key */
+    fs::path GetAuthorityKeyFile();
+
     /**
      * The main listening socket for new stratum v2 connections.
      */
