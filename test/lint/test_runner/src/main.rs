@@ -3,6 +3,7 @@
 // file COPYING or https://opensource.org/license/mit/.
 
 use std::env;
+use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 use std::process::ExitCode;
@@ -29,8 +30,8 @@ fn check_output(cmd: &mut std::process::Command) -> Result<String, LintError> {
 }
 
 /// Return the git root as utf8, or panic
-fn get_git_root() -> String {
-    check_output(git().args(["rev-parse", "--show-toplevel"])).unwrap()
+fn get_git_root() -> PathBuf {
+    PathBuf::from(check_output(git().args(["rev-parse", "--show-toplevel"])).unwrap())
 }
 
 fn lint_subtree() -> LintResult {
@@ -94,11 +95,24 @@ fn lint_doc() -> LintResult {
 }
 
 fn lint_all() -> LintResult {
-    if Command::new("test/lint/all-lint.py")
-        .status()
-        .expect("command error")
-        .success()
-    {
+    let mut good = true;
+    let lint_dir = get_git_root().join("test/lint");
+    for entry in fs::read_dir(lint_dir).unwrap() {
+        let entry = entry.unwrap();
+        let entry_fn = entry.file_name().into_string().unwrap();
+        if entry_fn.starts_with("lint-")
+            && entry_fn.ends_with(".py")
+            && !Command::new("python3")
+                .arg(entry.path())
+                .status()
+                .expect("command error")
+                .success()
+        {
+            good = false;
+            println!("^---- failure generated from {}", entry_fn);
+        }
+    }
+    if good {
         Ok(())
     } else {
         Err("".to_string())
@@ -110,10 +124,10 @@ fn main() -> ExitCode {
         ("subtree check", lint_subtree),
         ("std::filesystem check", lint_std_filesystem),
         ("-help=1 documentation check", lint_doc),
-        ("all-lint.py script", lint_all),
+        ("lint-*.py scripts", lint_all),
     ];
 
-    let git_root = PathBuf::from(get_git_root());
+    let git_root = get_git_root();
 
     let mut test_failed = false;
     for (lint_name, lint_fn) in test_list {

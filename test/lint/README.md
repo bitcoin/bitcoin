@@ -16,7 +16,7 @@ result is cached and it prevents issues when the image changes.
 test runner
 ===========
 
-To run the checks in the test runner outside the docker, use:
+To run all the lint checks in the test runner outside the docker, use:
 
 ```sh
 ( cd ./test/lint/test_runner/ && cargo fmt && cargo clippy && cargo run )
@@ -44,12 +44,6 @@ Individual tests can be run by directly calling the test script, e.g.:
 
 ```
 test/lint/lint-files.py
-```
-
-You can run all the shell-based lint tests by running:
-
-```
-test/lint/all-lint.py
 ```
 
 check-doc.py
@@ -89,7 +83,3 @@ To do so, add the upstream repository as remote:
 ```
 git remote add --fetch secp256k1 https://github.com/bitcoin-core/secp256k1.git
 ```
-
-all-lint.py
-===========
-Calls other scripts with the `lint-` prefix.
