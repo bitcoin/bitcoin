@@ -616,14 +616,14 @@ bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::stri
     return true;
 }
 
-bool util::log::hooks::ShouldLog(Category category, Level level)
+bool util::log::hooks::ShouldLog(Logger* log, Category category, Level level)
 {
-    BCLog::Logger& logger{LogInstance()};
+    auto& logger{log ? *static_cast<BCLog::Logger*>(log) : LogInstance()};
     return logger.Enabled() && logger.WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), level);
 }
 
-void util::log::hooks::Log(const Options& options, Entry entry)
+void util::log::hooks::Log(Logger* log, const Options& options, Entry entry)
 {
-    BCLog::Logger& logger{LogInstance()};
+    auto& logger{log ? *static_cast<BCLog::Logger*>(log) : LogInstance()};
     logger.LogPrint(options, std::move(entry));
 }
