@@ -93,6 +93,7 @@ BITCOIN_TESTS =\
   test/denialofservice_tests.cpp \
   test/descriptor_tests.cpp \
   test/disconnected_transactions.cpp \
+  test/feefrac_tests.cpp \
   test/flatfile_tests.cpp \
   test/fs_tests.cpp \
   test/getarg_tests.cpp \
