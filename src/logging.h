@@ -124,7 +124,7 @@ namespace BCLog {
         bool SuppressionsActive() const { return m_suppression_active; }
     };
 
-    class Logger
+    class Logger : public util::log::Logger
     {
     public:
         struct BufferedLog {
