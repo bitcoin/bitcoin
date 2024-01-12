@@ -107,11 +107,11 @@ bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValida
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-type");
     }
 
-    MNHFTxPayload mnhfTx;
-    if (!GetTxPayload(tx, mnhfTx)) {
+    const auto opt_mnhfTx = GetTxPayload<MNHFTxPayload>(tx);
+    if (!opt_mnhfTx) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-payload");
     }
-
+    auto& mnhfTx = *opt_mnhfTx;
     if (mnhfTx.nVersion == 0 || mnhfTx.nVersion > MNHFTxPayload::CURRENT_VERSION) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-version");
     }
@@ -153,11 +153,11 @@ std::optional<uint8_t> extractEHFSignal(const CTransaction& tx)
         return std::nullopt;
     }
 
-    MNHFTxPayload mnhfTx;
-    if (!GetTxPayload(tx, mnhfTx)) {
+    const auto opt_mnhfTx = GetTxPayload<MNHFTxPayload>(tx);
+    if (!opt_mnhfTx) {
         return std::nullopt;
     }
-    return mnhfTx.signal.versionBit;
+    return opt_mnhfTx->signal.versionBit;
 }
 
 static bool extractSignals(const CBlock& block, const CBlockIndex* const pindex, std::vector<uint8_t>& new_signals, BlockValidationState& state)
@@ -176,11 +176,11 @@ static bool extractSignals(const CBlock& block, const CBlockIndex* const pindex,
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(), tx_state.GetDebugMessage());
         }
 
-        MNHFTxPayload mnhfTx;
-        if (!GetTxPayload(tx, mnhfTx)) {
+        const auto opt_mnhfTx = GetTxPayload<MNHFTxPayload>(tx);
+        if (!opt_mnhfTx) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-mnhf-tx-payload");
         }
-        const uint8_t bit = mnhfTx.signal.versionBit;
+        const uint8_t bit = opt_mnhfTx->signal.versionBit;
         if (std::find(new_signals.begin(), new_signals.end(), bit) != new_signals.end()) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-mnhf-duplicates-in-block");
         }

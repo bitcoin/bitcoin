@@ -359,12 +359,13 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, gsl::no
 
     for (const auto& tx : block.vtx) {
         if (tx->nType == TRANSACTION_QUORUM_COMMITMENT) {
-            CFinalCommitmentTxPayload qc;
-            if (!GetTxPayload(*tx, qc)) {
+            const auto opt_qc = GetTxPayload<CFinalCommitmentTxPayload>(*tx);
+            if (!opt_qc) {
                 // should not happen as it was verified before processing the block
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s height=%d GetTxPayload fails\n", __func__, pindex->nHeight);
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload");
             }
+            auto& qc = *opt_qc;
 
             const auto& llmq_params_opt = GetLLMQParams(qc.commitment.llmqType);
             if (!llmq_params_opt.has_value()) {

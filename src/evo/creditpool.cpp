@@ -32,13 +32,13 @@ std::unique_ptr<CCreditPoolManager> creditPoolManager;
 
 static bool GetDataFromUnlockTx(const CTransaction& tx, CAmount& toUnlock, uint64_t& index, TxValidationState& state)
 {
-    CAssetUnlockPayload assetUnlockTx;
-    if (!GetTxPayload(tx, assetUnlockTx)) {
+    const auto opt_assetUnlockTx = GetTxPayload<CAssetUnlockPayload>(tx);
+    if (!opt_assetUnlockTx.has_value()) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "failed-creditpool-unlock-payload");
     }
 
-    index = assetUnlockTx.getIndex();
-    toUnlock = assetUnlockTx.getFee();
+    index = opt_assetUnlockTx->getIndex();
+    toUnlock = opt_assetUnlockTx->getFee();
     for (const CTxOut& txout : tx.vout) {
         if (!MoneyRange(txout.nValue)) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "failed-creditpool-unlock-txout-outofrange");
@@ -143,14 +143,13 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const CBlockIndex* const blo
         AddToCache(block_index->GetBlockHash(), block_index->nHeight, emptyPool);
         return emptyPool;
     }
-    CAmount locked{0};
-    {
-        CCbTx cbTx;
-        if (!GetTxPayload(block->vtx[0]->vExtraPayload, cbTx)) {
-            throw std::runtime_error(strprintf("%s: failed-getcreditpool-cbtx-payload", __func__));
+    CAmount locked = [&, func=__func__]() {
+        const auto opt_cbTx = GetTxPayload<CCbTx>(block->vtx[0]->vExtraPayload);
+        if (!opt_cbTx) {
+            throw std::runtime_error(strprintf("%s: failed-getcreditpool-cbtx-payload", func));
         }
-        locked = cbTx.creditPoolBalance;
-    }
+        return opt_cbTx->creditPoolBalance;
+    }();
 
     // We use here sliding window with LimitBlocksToTrace to determine
     // current limits for asset unlock transactions.
@@ -235,7 +234,7 @@ CCreditPoolDiff::CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindexP
 
 bool CCreditPoolDiff::Lock(const CTransaction& tx, TxValidationState& state)
 {
-    if (CAssetLockPayload assetLockTx; !GetTxPayload(tx, assetLockTx)) {
+    if (const auto opt_assetLockTx = GetTxPayload<CAssetLockPayload>(tx); !opt_assetLockTx) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "failed-creditpool-lock-payload");
     }
 

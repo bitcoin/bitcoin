@@ -13,6 +13,7 @@
 #include <policy/fees.h>
 #include <policy/settings.h>
 #include <reverse_iterator.h>
+#include <util/check.h>
 #include <util/system.h>
 #include <util/moneystr.h>
 #include <util/time.h>
@@ -408,9 +409,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     // fully checked by AcceptToMemoryPool() at this point, so we just assume that
     // everything is fine here.
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
-        CProRegTx proTx;
-        bool ok = GetTxPayload(tx, proTx);
-        assert(ok);
+        auto proTx = *Assert(GetTxPayload<CProRegTx>(tx));
         if (!proTx.collateralOutpoint.hash.IsNull()) {
             mapProTxRefs.emplace(tx.GetHash(), proTx.collateralOutpoint.hash);
         }
@@ -423,27 +422,20 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
             mapProTxCollaterals.emplace(COutPoint(tx.GetHash(), proTx.collateralOutpoint.n), tx.GetHash());
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
-        CProUpServTx proTx;
-        bool ok = GetTxPayload(tx, proTx);
-        assert(ok);
+        auto proTx = *Assert(GetTxPayload<CProUpServTx>(tx));
         mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
         mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
-        CProUpRegTx proTx;
-        bool ok = GetTxPayload(tx, proTx);
-        assert(ok);
+        auto proTx = *Assert(GetTxPayload<CProUpRegTx>(tx));
         mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
         mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
-        auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
-        assert(dmn);
+        auto dmn = Assert(deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash));
         newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
         if (dmn->pdmnState->pubKeyOperator != proTx.pubKeyOperator) {
             newit->isKeyChangeProTx = true;
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
-        CProUpRevTx proTx;
-        bool ok = GetTxPayload(tx, proTx);
-        assert(ok);
+        auto proTx = *Assert(GetTxPayload<CProUpRevTx>(tx));
         mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
         auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
         assert(dmn);
@@ -452,9 +444,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
             newit->isKeyChangeProTx = true;
         }
     } else if (tx.nType == TRANSACTION_ASSET_UNLOCK) {
-        CAssetUnlockPayload assetUnlockTx;
-        bool ok = GetTxPayload(tx, assetUnlockTx);
-        assert(ok);
+        auto assetUnlockTx = *Assert(GetTxPayload<CAssetUnlockPayload>(tx));
         mapAssetUnlockExpiry.insert({tx.GetHash(), assetUnlockTx.getHeightToExpiry()});
     } else if (tx.nType == TRANSACTION_MNHF_SIGNAL) {
         PrioritiseTransaction(tx.GetHash(), 0.1 * COIN);
@@ -630,10 +620,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     };
 
     if (it->GetTx().nType == TRANSACTION_PROVIDER_REGISTER) {
-        CProRegTx proTx;
-        if (!GetTxPayload(it->GetTx(), proTx)) {
-            assert(false);
-        }
+        auto proTx = *Assert(GetTxPayload<CProRegTx>(it->GetTx()));
         if (!proTx.collateralOutpoint.IsNull()) {
             eraseProTxRef(it->GetTx().GetHash(), proTx.collateralOutpoint.hash);
         }
@@ -643,24 +630,15 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
         mapProTxCollaterals.erase(proTx.collateralOutpoint);
         mapProTxCollaterals.erase(COutPoint(it->GetTx().GetHash(), proTx.collateralOutpoint.n));
     } else if (it->GetTx().nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
-        CProUpServTx proTx;
-        if (!GetTxPayload(it->GetTx(), proTx)) {
-            assert(false);
-        }
+        auto proTx = *Assert(GetTxPayload<CProUpServTx>(it->GetTx()));
         eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
         mapProTxAddresses.erase(proTx.addr);
     } else if (it->GetTx().nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
-        CProUpRegTx proTx;
-        if (!GetTxPayload(it->GetTx(), proTx)) {
-            assert(false);
-        }
+        auto proTx = *Assert(GetTxPayload<CProUpRegTx>(it->GetTx()));
         eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
         mapProTxBlsPubKeyHashes.erase(proTx.pubKeyOperator.GetHash());
     } else if (it->GetTx().nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
-        CProUpRevTx proTx;
-        if (!GetTxPayload(it->GetTx(), proTx)) {
-            assert(false);
-        }
+        auto proTx = *Assert(GetTxPayload<CProUpRevTx>(it->GetTx()));
         eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
     } else if (it->GetTx().nType == TRANSACTION_ASSET_UNLOCK) {
         mapAssetUnlockExpiry.erase(it->GetTx().GetHash());
@@ -899,11 +877,12 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
     removeProTxSpentCollateralConflicts(tx);
 
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
-        CProRegTx proTx;
-        if (!GetTxPayload(tx, proTx)) {
+        const auto opt_proTx = GetTxPayload<CProRegTx>(tx);
+        if (!opt_proTx) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s\n", __func__, tx.GetHash().ToString());
             return;
         }
+        auto& proTx = *opt_proTx;
 
         if (mapProTxAddresses.count(proTx.addr)) {
             uint256 conflictHash = mapProTxAddresses[proTx.addr];
@@ -919,35 +898,35 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
             removeProTxCollateralConflicts(tx, COutPoint(tx.GetHash(), proTx.collateralOutpoint.n));
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
-        CProUpServTx proTx;
-        if (!GetTxPayload(tx, proTx)) {
+        const auto opt_proTx = GetTxPayload<CProUpServTx>(tx);
+        if (!opt_proTx) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s\n", __func__, tx.GetHash().ToString());
             return;
         }
 
-        if (mapProTxAddresses.count(proTx.addr)) {
-            uint256 conflictHash = mapProTxAddresses[proTx.addr];
+        if (mapProTxAddresses.count(opt_proTx->addr)) {
+            uint256 conflictHash = mapProTxAddresses[opt_proTx->addr];
             if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
                 removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
             }
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
-        CProUpRegTx proTx;
-        if (!GetTxPayload(tx, proTx)) {
+        const auto opt_proTx = GetTxPayload<CProUpRegTx>(tx);
+        if (!opt_proTx) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s\n", __func__, tx.GetHash().ToString());
             return;
         }
 
-        removeProTxPubKeyConflicts(tx, proTx.pubKeyOperator);
-        removeProTxKeyChangedConflicts(tx, proTx.proTxHash, ::SerializeHash(proTx.pubKeyOperator));
+        removeProTxPubKeyConflicts(tx, opt_proTx->pubKeyOperator);
+        removeProTxKeyChangedConflicts(tx, opt_proTx->proTxHash, ::SerializeHash(opt_proTx->pubKeyOperator));
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
-        CProUpRevTx proTx;
-        if (!GetTxPayload(tx, proTx)) {
+        const auto opt_proTx = GetTxPayload<CProUpRevTx>(tx);
+        if (!opt_proTx) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s\n", __func__, tx.GetHash().ToString());
             return;
         }
 
-        removeProTxKeyChangedConflicts(tx, proTx.proTxHash, ::SerializeHash(CBLSPublicKey()));
+        removeProTxKeyChangedConflicts(tx, opt_proTx->proTxHash, ::SerializeHash(CBLSPublicKey()));
     }
 }
 
@@ -1263,11 +1242,12 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
     };
 
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
-        CProRegTx proTx;
-        if (!GetTxPayload(tx, proTx)) {
+        const auto opt_proTx = GetTxPayload<CProRegTx>(tx);
+        if (!opt_proTx) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s\n", __func__, tx.GetHash().ToString());
             return true; // i.e. can't decode payload == conflict
         }
+        auto& proTx = *opt_proTx;
         if (mapProTxAddresses.count(proTx.addr) || mapProTxPubKeyIDs.count(proTx.keyIDOwner) || mapProTxBlsPubKeyHashes.count(proTx.pubKeyOperator.GetHash()))
             return true;
         if (!proTx.collateralOutpoint.hash.IsNull()) {
@@ -1282,19 +1262,20 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         }
         return false;
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
-        CProUpServTx proTx;
-        if (!GetTxPayload(tx, proTx)) {
+        const auto opt_proTx = GetTxPayload<CProUpServTx>(tx);
+        if (!opt_proTx) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s\n", __func__, tx.GetHash().ToString());
             return true; // i.e. can't decode payload == conflict
         }
-        auto it = mapProTxAddresses.find(proTx.addr);
-        return it != mapProTxAddresses.end() && it->second != proTx.proTxHash;
+        auto it = mapProTxAddresses.find(opt_proTx->addr);
+        return it != mapProTxAddresses.end() && it->second != opt_proTx->proTxHash;
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
-        CProUpRegTx proTx;
-        if (!GetTxPayload(tx, proTx)) {
+        const auto opt_proTx = GetTxPayload<CProUpRegTx>(tx);
+        if (!opt_proTx) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s\n", __func__, tx.GetHash().ToString());
             return true; // i.e. can't decode payload == conflict
         }
+        auto& proTx = *opt_proTx;
 
         // this method should only be called with validated ProTxs
         auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
@@ -1312,12 +1293,12 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         auto it = mapProTxBlsPubKeyHashes.find(proTx.pubKeyOperator.GetHash());
         return it != mapProTxBlsPubKeyHashes.end() && it->second != proTx.proTxHash;
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
-        CProUpRevTx proTx;
-        if (!GetTxPayload(tx, proTx)) {
+        const auto opt_proTx = GetTxPayload<CProUpRevTx>(tx);
+        if (!opt_proTx) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s\n", __func__, tx.GetHash().ToString());
             return true; // i.e. can't decode payload == conflict
         }
-
+        auto& proTx = *opt_proTx;
         // this method should only be called with validated ProTxs
         auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
         if (!dmn) {

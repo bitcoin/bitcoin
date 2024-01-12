@@ -444,8 +444,8 @@ static UniValue getassetunlockstatuses(const JSONRPCRequest& request)
                 LOCK(mempool.cs);
                 return std::any_of(mempool.mapTx.begin(), mempool.mapTx.end(), [index](const CTxMemPoolEntry &e) {
                     if (e.GetTx().nType == CAssetUnlockPayload::SPECIALTX_TYPE) {
-                        if (CAssetUnlockPayload assetUnlockTx; GetTxPayload(e.GetTx(), assetUnlockTx)) {
-                            return index == assetUnlockTx.getIndex();
+                        if (auto opt_assetUnlockTx = GetTxPayload<CAssetUnlockPayload>(e.GetTx())) {
+                            return index == opt_assetUnlockTx->getIndex();
                         } else {
                             throw JSONRPCError(RPC_TRANSACTION_ERROR, "bad-assetunlocktx-payload");
                         }

@@ -20,12 +20,10 @@
 
 bool VerifyMNHFTx(const CTransaction& tx, TxValidationState& state)
 {
-    MNHFTxPayload mnhfTx;
-    if (!GetTxPayload(tx, mnhfTx)) {
+    if (const auto opt_mnhfTx_payload = GetTxPayload<MNHFTxPayload>(tx); !opt_mnhfTx_payload) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-payload");
-    }
-
-    if (mnhfTx.nVersion == 0 || mnhfTx.nVersion > MNHFTxPayload::CURRENT_VERSION) {
+    } else if (opt_mnhfTx_payload->nVersion == 0 ||
+               opt_mnhfTx_payload->nVersion > MNHFTxPayload::CURRENT_VERSION) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-version");
     }
 

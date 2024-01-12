@@ -174,11 +174,12 @@ bool CFinalCommitment::VerifySizes(const Consensus::LLMQParams& params) const
 
 bool CheckLLMQCommitment(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state)
 {
-    CFinalCommitmentTxPayload qcTx;
-    if (!GetTxPayload(tx, qcTx)) {
+    const auto opt_qcTx = GetTxPayload<CFinalCommitmentTxPayload>(tx);
+    if (!opt_qcTx) {
         LogPrintfFinalCommitment("h[%d] GetTxPayload failed\n", pindexPrev->nHeight);
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-qc-payload");
     }
+    auto& qcTx = *opt_qcTx;
 
     const auto& llmq_params_opt = GetLLMQParams(qcTx.commitment.llmqType);
     if (!llmq_params_opt.has_value()) {

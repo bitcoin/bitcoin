@@ -266,11 +266,10 @@ UniValue CSimplifiedMNListDiff::ToJson(bool extended) const
     }
     obj.pushKV("newQuorums", newQuorumsArr);
 
-    CCbTx cbTxPayload;
-    if (GetTxPayload(*cbTx, cbTxPayload)) {
-        obj.pushKV("merkleRootMNList", cbTxPayload.merkleRootMNList.ToString());
-        if (cbTxPayload.nVersion >= CCbTx::Version::MERKLE_ROOT_QUORUMS) {
-            obj.pushKV("merkleRootQuorums", cbTxPayload.merkleRootQuorums.ToString());
+    if (const auto opt_cbTxPayload = GetTxPayload<CCbTx>(*cbTx)) {
+        obj.pushKV("merkleRootMNList", opt_cbTxPayload->merkleRootMNList.ToString());
+        if (opt_cbTxPayload->nVersion >= CCbTx::Version::MERKLE_ROOT_QUORUMS) {
+            obj.pushKV("merkleRootQuorums", opt_cbTxPayload->merkleRootQuorums.ToString());
         }
     }
 

@@ -288,11 +288,11 @@ bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex,
         assert(tx.nVersion == 3);
         assert(tx.nType == TRANSACTION_COINBASE);
 
-        CCbTx cbTx;
-        if (!GetTxPayload(tx, cbTx)) {
+        const auto opt_cbTx = GetTxPayload<CCbTx>(tx);
+        if (!opt_cbTx) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-payload");
         }
-        CAmount target_balance{cbTx.creditPoolBalance};
+        CAmount target_balance{opt_cbTx->creditPoolBalance};
         // But it maybe not included yet in previous block yet; in this case value must be 0
         CAmount locked_calculated{creditPoolDiff->GetTotalLocked()};
         if (target_balance != locked_calculated) {

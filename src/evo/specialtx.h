@@ -12,30 +12,27 @@
 #include <version.h>
 
 #include <string_view>
+#include <optional>
 #include <vector>
 
 template <typename T>
-inline bool GetTxPayload(const std::vector<unsigned char>& payload, T& obj)
+std::optional<T> GetTxPayload(const std::vector<unsigned char>& payload)
 {
     CDataStream ds(payload, SER_NETWORK, PROTOCOL_VERSION);
     try {
+        T obj;
         ds >> obj;
+        return ds.empty() ? std::make_optional(std::move(obj)) : std::nullopt;
     } catch (const std::exception& e) {
-        return false;
+        return std::nullopt;
     }
-    return ds.empty();
 }
-template <typename T>
-inline bool GetTxPayload(const CMutableTransaction& tx, T& obj, bool assert_type = true)
+template <typename T, typename TxType>
+std::optional<T> GetTxPayload(const TxType& tx, bool assert_type = true)
 {
-    if (assert_type) { ASSERT_IF_DEBUG(tx.nType == obj.SPECIALTX_TYPE); }
-    return tx.nType == obj.SPECIALTX_TYPE && GetTxPayload(tx.vExtraPayload, obj);
-}
-template <typename T>
-inline bool GetTxPayload(const CTransaction& tx, T& obj, bool assert_type = true)
-{
-    if (assert_type) { ASSERT_IF_DEBUG(tx.nType == obj.SPECIALTX_TYPE); }
-    return tx.nType == obj.SPECIALTX_TYPE && GetTxPayload(tx.vExtraPayload, obj);
+    if (assert_type) { ASSERT_IF_DEBUG(tx.nType == T::SPECIALTX_TYPE); }
+    if (tx.nType != T::SPECIALTX_TYPE) return std::nullopt;
+    return GetTxPayload<T>(tx.vExtraPayload);
 }
 
 template <typename T>

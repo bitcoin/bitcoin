@@ -126,12 +126,11 @@ bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &t
     }
     switch(tx.nType) {
     case(TRANSACTION_PROVIDER_REGISTER): {
-        CProRegTx proTx;
-        if (GetTxPayload(tx, proTx)) {
-            if(contains(proTx.collateralOutpoint) ||
-                    contains(proTx.keyIDOwner) ||
-                    contains(proTx.keyIDVoting) ||
-                    CheckScript(proTx.scriptPayout)) {
+        if (const auto opt_proTx = GetTxPayload<CProRegTx>(tx)) {
+            if(contains(opt_proTx->collateralOutpoint) ||
+                    contains(opt_proTx->keyIDOwner) ||
+                    contains(opt_proTx->keyIDVoting) ||
+                    CheckScript(opt_proTx->scriptPayout)) {
                 if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
                     insert(tx.GetHash());
                 return true;
@@ -140,47 +139,43 @@ bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &t
         return false;
     }
     case(TRANSACTION_PROVIDER_UPDATE_SERVICE): {
-        CProUpServTx proTx;
-        if (GetTxPayload(tx, proTx)) {
-            if(contains(proTx.proTxHash)) {
+        if (const auto opt_proTx = GetTxPayload<CProUpServTx>(tx)) {
+            if(contains(opt_proTx->proTxHash)) {
                 return true;
             }
-            if(CheckScript(proTx.scriptOperatorPayout)) {
+            if(CheckScript(opt_proTx->scriptOperatorPayout)) {
                 if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
-                    insert(proTx.proTxHash);
+                    insert(opt_proTx->proTxHash);
                 return true;
             }
         }
         return false;
     }
     case(TRANSACTION_PROVIDER_UPDATE_REGISTRAR): {
-        CProUpRegTx proTx;
-        if (GetTxPayload(tx, proTx)) {
-            if(contains(proTx.proTxHash))
+        if (const auto opt_proTx = GetTxPayload<CProUpRegTx>(tx)) {
+            if(contains(opt_proTx->proTxHash))
                 return true;
-            if(contains(proTx.keyIDVoting) ||
-                    CheckScript(proTx.scriptPayout)) {
+            if(contains(opt_proTx->keyIDVoting) ||
+                    CheckScript(opt_proTx->scriptPayout)) {
                 if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
-                    insert(proTx.proTxHash);
+                    insert(opt_proTx->proTxHash);
                 return true;
             }
         }
         return false;
     }
     case(TRANSACTION_PROVIDER_UPDATE_REVOKE): {
-        CProUpRevTx proTx;
-        if (GetTxPayload(tx, proTx)) {
-            if(contains(proTx.proTxHash))
+        if (const auto opt_proTx = GetTxPayload<CProUpRevTx>(tx)) {
+            if(contains(opt_proTx->proTxHash))
                 return true;
         }
         return false;
     }
     case(TRANSACTION_ASSET_LOCK): {
         // inputs of Asset Lock transactions are standard. But some outputs are special
-        CAssetLockPayload assetLockTx;
-        if (GetTxPayload(tx, assetLockTx)) {
+        if (const auto opt_assetlockTx = GetTxPayload<CAssetLockPayload>(tx)) {
             bool fFound = false;
-            const auto& extraOuts = assetLockTx.getCreditOutputs();
+            const auto& extraOuts = opt_assetlockTx->getCreditOutputs();
             for (unsigned int i = 0; i < extraOuts.size(); ++i)
             {
                 fFound = ProcessTxOut(extraOuts[i], tx.GetHash(), i) || fFound;

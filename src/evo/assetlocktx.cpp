@@ -60,21 +60,21 @@ bool CheckAssetLockTx(const CTransaction& tx, TxValidationState& state)
 
     if (returnAmount == 0) return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-assetlocktx-no-return");
 
-    CAssetLockPayload assetLockTx;
-    if (!GetTxPayload(tx, assetLockTx)) {
+    const auto opt_assetLockTx = GetTxPayload<CAssetLockPayload>(tx);
+    if (!opt_assetLockTx.has_value()) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-assetlocktx-payload");
     }
 
-    if (assetLockTx.getVersion() == 0 || assetLockTx.getVersion() > CAssetLockPayload::CURRENT_VERSION) {
+    if (opt_assetLockTx->getVersion() == 0 || opt_assetLockTx->getVersion() > CAssetLockPayload::CURRENT_VERSION) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-assetlocktx-version");
     }
 
-    if (assetLockTx.getCreditOutputs().empty()) {
+    if (opt_assetLockTx->getCreditOutputs().empty()) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-assetlocktx-emptycreditoutputs");
     }
 
     CAmount creditOutputsAmount = 0;
-    for (const CTxOut& out : assetLockTx.getCreditOutputs()) {
+    for (const CTxOut& out : opt_assetLockTx->getCreditOutputs()) {
         if (out.nValue == 0 || !MoneyRange(out.nValue) || !MoneyRange(creditOutputsAmount + out.nValue)) {
             return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-assetlocktx-credit-outofrange");
         }
@@ -158,10 +158,11 @@ bool CheckAssetUnlockTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-assetunlocktx-too-many-outs");
     }
 
-    CAssetUnlockPayload assetUnlockTx;
-    if (!GetTxPayload(tx, assetUnlockTx)) {
+    const auto opt_assetUnlockTx = GetTxPayload<CAssetUnlockPayload>(tx);
+    if (!opt_assetUnlockTx) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-assetunlocktx-payload");
     }
+    auto& assetUnlockTx = *opt_assetUnlockTx;
 
     if (assetUnlockTx.getVersion() == 0 || assetUnlockTx.getVersion() > CAssetUnlockPayload::CURRENT_VERSION) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-assetunlocktx-version");
@@ -187,11 +188,11 @@ bool CheckAssetUnlockTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*
 
 bool GetAssetUnlockFee(const CTransaction& tx, CAmount& txfee, TxValidationState& state)
 {
-    CAssetUnlockPayload assetUnlockTx;
-    if (!GetTxPayload(tx, assetUnlockTx)) {
+    const auto opt_assetUnlockTx = GetTxPayload<CAssetUnlockPayload>(tx);
+    if (!opt_assetUnlockTx) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-assetunlocktx-payload");
     }
-    const CAmount txfee_aux = assetUnlockTx.getFee();
+    const CAmount txfee_aux = opt_assetUnlockTx->getFee();
     if (txfee_aux == 0 || !MoneyRange(txfee_aux)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-assetunlock-fee-outofrange");
     }

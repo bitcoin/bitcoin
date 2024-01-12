@@ -151,10 +151,10 @@ BOOST_FIXTURE_TEST_CASE(evo_assetlock, TestChain100Setup)
     {
         BOOST_CHECK(tx.nVersion == 3);
 
-        CAssetLockPayload lockPayload;
-        GetTxPayload(tx, lockPayload);
+        const auto opt_payload = GetTxPayload<CAssetLockPayload>(tx);
 
-        BOOST_CHECK(lockPayload.getVersion() == 1);
+        BOOST_CHECK(opt_payload.has_value());
+        BOOST_CHECK(opt_payload->getVersion() == 1);
     }
 
     {
@@ -186,12 +186,8 @@ BOOST_FIXTURE_TEST_CASE(evo_assetlock, TestChain100Setup)
         BOOST_CHECK(CheckAssetLockTx(CTransaction(txSmallOutput), tx_state));
     }
 
-    const CAssetLockPayload assetLockPayload = [tx]() -> CAssetLockPayload {
-        CAssetLockPayload payload;
-        GetTxPayload(tx, payload);
-        return payload;
-    }();
-    const std::vector<CTxOut> creditOutputs = assetLockPayload.getCreditOutputs();
+    const auto assetLockPayload = GetTxPayload<CAssetLockPayload>(tx);
+    const std::vector<CTxOut> creditOutputs = assetLockPayload->getCreditOutputs();
 
     {
         // Sum of credit output greater than OP_RETURN
@@ -340,12 +336,12 @@ BOOST_FIXTURE_TEST_CASE(evo_assetunlock, TestChain100Setup)
     }
 
     {
-        CAssetUnlockPayload unlockPayload;
-        GetTxPayload(tx, unlockPayload);
-        BOOST_CHECK(unlockPayload.getVersion() == 1);
-        BOOST_CHECK(unlockPayload.getRequestedHeight() == 1000'000);
-        BOOST_CHECK(unlockPayload.getFee() == 2000'000'000u);
-        BOOST_CHECK(unlockPayload.getIndex() == 0x001122334455667788L);
+        const auto unlockPayload = GetTxPayload<CAssetUnlockPayload>(tx);
+        BOOST_CHECK(unlockPayload.has_value());
+        BOOST_CHECK(unlockPayload->getVersion() == 1);
+        BOOST_CHECK(unlockPayload->getRequestedHeight() == 1000'000);
+        BOOST_CHECK(unlockPayload->getFee() == 2000'000'000u);
+        BOOST_CHECK(unlockPayload->getIndex() == 0x001122334455667788L);
 
         // Wrong type "Asset Lock TX" instead "Asset Unlock TX"
         CMutableTransaction txWrongType = tx;
@@ -357,11 +353,11 @@ BOOST_FIXTURE_TEST_CASE(evo_assetunlock, TestChain100Setup)
         BOOST_CHECK(tx.nVersion == 3);
         for (uint8_t payload_version : {0, 1, 2, 255}) {
             CAssetUnlockPayload unlockPayload_tmp{payload_version,
-                unlockPayload.getIndex(),
-                unlockPayload.getFee(),
-                unlockPayload.getRequestedHeight(),
-                unlockPayload.getQuorumHash(),
-                unlockPayload.getQuorumSig()};
+                unlockPayload->getIndex(),
+                unlockPayload->getFee(),
+                unlockPayload->getRequestedHeight(),
+                unlockPayload->getQuorumHash(),
+                unlockPayload->getQuorumSig()};
             CMutableTransaction txWrongVersion = tx;
             SetTxPayload(txWrongVersion, unlockPayload_tmp);
             if (payload_version != 1) {

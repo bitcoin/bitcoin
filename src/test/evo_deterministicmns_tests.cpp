@@ -181,15 +181,16 @@ static CMutableTransaction CreateProUpRevTx(const CTxMemPool& mempool, SimpleUTX
 template<typename ProTx>
 static CMutableTransaction MalleateProTxPayout(const CMutableTransaction& tx)
 {
-    ProTx proTx;
-    GetTxPayload(tx, proTx);
+    auto opt_protx = GetTxPayload<ProTx>(tx);
+    BOOST_ASSERT(opt_protx.has_value());
+    auto& protx = *opt_protx;
 
     CKey key;
     key.MakeNewKey(false);
-    proTx.scriptPayout = GetScriptForDestination(PKHash(key.GetPubKey()));
+    protx.scriptPayout = GetScriptForDestination(PKHash(key.GetPubKey()));
 
     CMutableTransaction tx2 = tx;
-    SetTxPayload(tx2, proTx);
+    SetTxPayload(tx2, protx);
 
     return tx2;
 }
