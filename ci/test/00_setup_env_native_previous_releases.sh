@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-export CONTAINER_NAME=ci_native_qt5
+export CONTAINER_NAME=ci_native_previous_releases
 export CI_IMAGE_NAME_TAG="docker.io/debian:bullseye"
 # Use minimum supported python3.9 and gcc-10, see doc/dependencies.md
 export PACKAGES="gcc-10 g++-10 python3-zmq"
