@@ -739,25 +739,25 @@ logging messages. They should be used as follows:
   Note that `LogPrint(BCLog::CATEGORY, fmt, params...)` is a deprecated
   alias for `LogDebug`.
 
-- `LogInfo(fmt, params...)` should only be used rarely, eg for startup
+- `LogInfo(fmt, params...)` should only be used rarely, e.g. for startup
   messages or for infrequent and important events such as a new block tip
   being found or a new outbound connection being made. These log messages
-  are unconditional so care must be taken that they can't be used by an
+  are unconditional, so care must be taken that they can't be used by an
   attacker to fill up storage. Note that `LogPrintf(fmt, params...)` is
   a deprecated alias for `LogInfo`.
 
 - `LogError(fmt, params...)` should be used in place of `LogInfo` for
   severe problems that require the node (or a subsystem) to shut down
-  entirely (eg, insufficient storage space).
+  entirely (e.g., insufficient storage space).
 
 - `LogWarning(fmt, params...)` should be used in place of `LogInfo` for
   severe problems that the node admin should address, but are not
-  severe enough to warrant shutting down the node (eg, system time
+  severe enough to warrant shutting down the node (e.g., system time
   appears to be wrong, unknown soft fork appears to have activated).
 
-- `LogTrace(BCLog::CATEGORY, fmt, params...) should be used in place of
+- `LogTrace(BCLog::CATEGORY, fmt, params...)` should be used in place of
   `LogDebug` for log messages that would be unusable on a production
-  system, eg due to being too noisy in normal use, or too resource
+  system, e.g. due to being too noisy in normal use, or too resource
   intensive to process. These will be logged if the startup
   options `-debug=category -loglevel=category:trace` or `-debug=1
   -loglevel=trace` are selected.
