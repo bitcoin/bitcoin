@@ -45,6 +45,10 @@ using Category = uint64_t;
 /** Base class inherited by log consumers. Opaque like category, used for basic type-checking. */
 class Logger{};
 
+//! Log level constants. Most code will not need to use these directly and can
+//! use LogTrace, LogDebug, LogInfo, LogWarning, and LogError macros defined
+//! below. See macro definitions below or "Logging" section in
+//! developer-notes.md for more detailed information.
 enum class Level {
     Trace = 0, // High-volume or detailed logging for development/debugging
     Debug,     // Reasonably noisy logging, but still usable in production
@@ -193,7 +197,38 @@ using Level = util::log::Level;
 //! printf-style format string and arguments. For Debug and Trace macros,
 //! if a context parameter is not provided, a BCLog::LogFlags category argument
 //! must be provided instead.
-//! See the "Logging" section of /doc/developer-notes.md for more details.
+//!
+//! - LogError(), LogWarning(), and LogInfo() are all enabled by default, so
+//!   they should be called infrequently, in cases where they will not spam the
+//!   log and take up disk space.
+//!
+//! - LogDebug() is enabled when debug logging is enabled, and should be used to
+//!   show messages that can help users troubleshoot issues.
+//!
+//! - LogTrace() is enabled when both debug logging AND tracing are enabled, and
+//!   should be used for fine-grained traces that will be helpful to developers.
+//!
+//! For more information about log levels, see the -debug and -loglevel
+//! documentation, or the "Logging" section of /doc/developer-notes.md.
+//!
+//! `LogDebug` and `LogTrace` macros require an initial category argument unless
+//! given a log source (which provides it). That enables Debug and Trace
+//! messages to be filtered by category. Higher levels do not take a category
+//! (but may be passed a log source):
+//!
+//!   LogDebug(BCLog::TXRECONCILIATION, "Forget txreconciliation state of peer=%d", peer_id);
+//!   LogInfo("Important information, no category.");
+//!
+//! Context arguments can also be passed to control log output (see class definition).
+//!
+//!   const util::log::Context m_log{BCLog::TXRECONCILIATION};
+//!   ...
+//!   LogDebug(m_log, "Forget txreconciliation state of peer=%d", peer_id);
+//!
+//! If severity level is Info or higher, rate limiting is applied to mitigate
+//! disk filling attacks. Users enabling logging at Debug and lower levels are
+//! assumed to be developers or power users who are aware that -debug may cause
+//! excessive disk usage due to logging.
 #define LogError(...) LOG_EMIT((.level = util::log::Level::Error), __VA_ARGS__)
 #define LogWarning(...) LOG_EMIT((.level = util::log::Level::Warning), __VA_ARGS__)
 #define LogInfo(...) LOG_EMIT((.level = util::log::Level::Info), __VA_ARGS__)
