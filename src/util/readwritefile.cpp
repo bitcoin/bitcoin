@@ -12,29 +12,34 @@
 #include <limits>
 #include <string>
 #include <utility>
+#include <vector>
 
-std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxsize)
+template <typename T>
+std::optional<T> ReadBinaryFile(const fs::path& filename, size_t maxsize)
 {
     FILE *f = fsbridge::fopen(filename, "rb");
-    if (f == nullptr)
-        return std::make_pair(false,"");
-    std::string retval;
+    if (f == nullptr) return {};
+    T output{};
     char buffer[128];
     do {
-        const size_t n = fread(buffer, 1, std::min(sizeof(buffer), maxsize - retval.size()), f);
+        const size_t n = fread(buffer, 1, std::min(sizeof(buffer), maxsize - output.size()), f);
         // Check for reading errors so we don't return any data if we couldn't
         // read the entire file (or up to maxsize)
         if (ferror(f)) {
             fclose(f);
-            return std::make_pair(false,"");
+            return {};
         }
-        retval.append(buffer, buffer+n);
-    } while (!feof(f) && retval.size() < maxsize);
+        output.insert(output.end(), buffer, buffer + n);
+    } while (!feof(f) && output.size() < maxsize);
     fclose(f);
-    return std::make_pair(true,retval);
+    return output;
 }
 
-bool WriteBinaryFile(const fs::path &filename, const std::string &data)
+template std::optional<std::string> ReadBinaryFile(const fs::path &filename, size_t maxsize);
+template std::optional<std::vector<unsigned char>> ReadBinaryFile(const fs::path &filename, size_t maxsize);
+
+template <typename T>
+bool WriteBinaryFile(const fs::path& filename, const T& data)
 {
     FILE *f = fsbridge::fopen(filename, "wb");
     if (f == nullptr)
@@ -48,3 +53,6 @@ bool WriteBinaryFile(const fs::path &filename, const std::string &data)
     }
     return true;
 }
+
+template bool WriteBinaryFile(const fs::path& filename, const std::string& data);
+template bool WriteBinaryFile(const fs::path& filename, const std::vector<unsigned char>& data);

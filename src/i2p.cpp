@@ -434,9 +434,9 @@ void Session::CreateIfNotCreatedAlready()
     } else {
         // Read our persistent destination (private key) from disk or generate
         // one and save it to disk. Then use it when creating the session.
-        const auto& [read_ok, data] = ReadBinaryFile(m_private_key_file);
-        if (read_ok) {
-            m_private_key.assign(data.begin(), data.end());
+        std::optional<std::string> data{ReadBinaryFile<std::string>(m_private_key_file)};
+        if (data) {
+            m_private_key.assign(data->begin(), data->end());
         } else {
             GenerateAndSavePrivateKey(*sock);
         }
