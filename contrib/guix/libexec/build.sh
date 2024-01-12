@@ -237,6 +237,7 @@ mkdir -p "$OUTDIR"
 CONFIGFLAGS+=" --enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
 case "$HOST" in
     *linux*) CONFIGFLAGS+=" --disable-threadlocal" ;;
+    *mingw*) CONFIGFLAGS+=" --disable-miner" ;;
 esac
 
 # CFLAGS
