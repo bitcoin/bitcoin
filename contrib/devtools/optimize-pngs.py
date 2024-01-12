@@ -27,7 +27,7 @@ def content_hash(filename):
 pngcrush = 'pngcrush'
 git = 'git'
 folders = [
-    "src/qt/res/movies",
+    "src/qt/res/animation",
     "src/qt/res/icons",
     "src/qt/res/images",
     "share/pixmaps"
