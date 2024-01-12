@@ -669,7 +669,7 @@ UniValue RPCHelpMan::HandleRequest(const JSONRPCRequest& request) const
     UniValue arg_mismatch{UniValue::VOBJ};
     for (size_t i{0}; i < m_args.size(); ++i) {
         const auto& arg{m_args.at(i)};
-        UniValue match{arg.MatchesType(request.params[i])};
+        UniValue match{arg.MatchesType(request.params[i], i < request.param_names.size() ? request.param_names[i] : std::nullopt)};
         if (!match.isTrue()) {
             arg_mismatch.pushKV(strprintf("Position %s (%s)", i + 1, arg.m_names), std::move(match));
         }
@@ -923,18 +923,24 @@ static std::optional<UniValue::VType> ExpectedType(RPCArg::Type type)
     NONFATAL_UNREACHABLE();
 }
 
-UniValue RPCArg::MatchesType(const UniValue& request) const
+UniValue RPCArg::MatchesType(const UniValue& request, const std::optional<std::string>& param_name) const
 {
     if (m_opts.skip_type_check) return true;
     if (IsOptional() && request.isNull()) return true;
-    for (auto type : m_type_per_name.empty() ? std::vector<RPCArg::Type>{m_type} : m_type_per_name) {
-        const auto exp_type{ExpectedType(type)};
+    const auto names = SplitString(m_names, '|');
+    size_t i = 0;
+    do {
+        // If parameter was passed by name, only allow the specified type for
+        // that name. Otherwise allow any of the specified types.
+        if (param_name && i < names.size() && *param_name != names[i]) {
+            continue;
+        }
+        const auto exp_type{ExpectedType(i < m_type_per_name.size() ? m_type_per_name[i] : m_type)};
         if (!exp_type) return true; // nothing to check
-
         if (*exp_type == request.getType()) {
             return true;
         }
-    }
+    } while (++i < names.size());
     return strprintf("JSON value of type %s is not of expected type %s", uvTypeName(request.getType()), uvTypeName(*ExpectedType(m_type)));
 }
 

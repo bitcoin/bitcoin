@@ -397,9 +397,11 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     for (const auto& [argNamePattern, named_only]: argNames) {
         std::vector<std::string> vargNames = SplitString(argNamePattern, '|');
         auto fr = argsIn.end();
+        std::string fr_name;
         for (const std::string & argName : vargNames) {
             fr = argsIn.find(argName);
             if (fr != argsIn.end()) {
+                fr_name = argName;
                 break;
             }
         }
@@ -424,6 +426,7 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
                 // but not at the end (for backwards compatibility with calls
                 // that act based on number of specified parameters).
                 out.params.push_back(UniValue());
+                out.param_names.emplace_back(std::nullopt);
             }
             hole = 0;
             if (!initial_param) initial_param = &argNamePattern;
@@ -440,6 +443,7 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + fr->first + " conflicts with parameter " + options.getKeys().front());
             }
             out.params.push_back(*fr->second);
+            out.param_names.emplace_back(fr_name);
             argsIn.erase(fr);
         }
         if (!options.empty()) {

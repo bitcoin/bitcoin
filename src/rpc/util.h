@@ -284,7 +284,7 @@ struct RPCArg {
      * Check whether the request JSON type matches.
      * Returns true if type matches, or object describing error(s) if not.
      */
-    UniValue MatchesType(const UniValue& request) const;
+    UniValue MatchesType(const UniValue& request, const std::optional<std::string>& param_name) const;
 
     /** Return the first of all aliases */
     std::string GetFirstName() const;
