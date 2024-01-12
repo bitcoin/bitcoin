@@ -3,13 +3,12 @@ Release Process
 
 * [ ] Update translations, see [translation_process.md](https://github.com/dashpay/dash/blob/master/doc/translation_process.md#synchronising-translations).
 * [ ] Update manpages, see [gen-manpages.sh](https://github.com/dashpay/dash/blob/master/contrib/devtools/README.md#gen-manpagessh).
-* [ ] Update release candidate version in `configure.ac` (`CLIENT_VERSION_RC`)
 
 Before every minor and major release:
 
 * [ ] Update [bips.md](bips.md) to account for changes since the last release.
 * [ ] Update DIPs with any changes introduced by this release (see [this pull request](https://github.com/dashpay/dips/pull/142) for an example)
-* [ ] Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_IS_RELEASE` to `true`) (don't forget to set `CLIENT_VERSION_RC` to `0`)
+* [ ] Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_IS_RELEASE` to `true`)
 * [ ] Write release notes (see below)
 * [ ] Update `src/chainparams.cpp` `nMinimumChainWork` with information from the `getblockchaininfo` rpc.
 * [ ] Update `src/chainparams.cpp` `defaultAssumeValid` with information from the `getblockhash` rpc.

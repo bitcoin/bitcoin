@@ -14,15 +14,16 @@ if [[ ! -d "$WORKSPACE_PATH" ]]; then
 fi
 
 cd "$WORKSPACE_PATH"
-COMMIT_ID="$(git rev-parse --short=12 HEAD)"
+
+source "contrib/guix/libexec/prelude.bash"
 
 printf "\nBinaries:\n\n"
 ( \
-SRC_PATH_PREFIX="guix-build-${COMMIT_ID}/distsrc-" && \
+SRC_PATH_PREFIX="${VERSION_BASE}/distsrc-" && \
 sha256sum ${SRC_PATH_PREFIX}*/src/dash{d,-cli,-tx,-wallet}{,.exe} && \
 sha256sum ${SRC_PATH_PREFIX}*/src/qt/dash-qt{,.exe} && \
 sha256sum ${SRC_PATH_PREFIX}*/src/test/test_dash{,.exe} \
 ) | sort -k 2
 
 printf "\nArchives:\n\n"
-find "guix-build-${COMMIT_ID}/output" -type f | grep -v SHA256 | xargs sha256sum | sort -k 2
+find "${OUTDIR_BASE}" -type f | grep -v SHA256 | xargs sha256sum | sort -k 2
