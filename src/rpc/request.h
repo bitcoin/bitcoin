@@ -57,6 +57,9 @@ public:
     std::optional<UniValue> id = UniValue::VNULL;
     std::string strMethod;
     UniValue params;
+    //! List of original parameter names after transformNamedArguments is
+    //! called and params is changed from an object to an array.
+    std::vector<std::optional<std::string>> param_names;
     enum Mode { EXECUTE, GET_HELP, GET_ARGS } mode = EXECUTE;
     std::string URI;
     std::string authUser;

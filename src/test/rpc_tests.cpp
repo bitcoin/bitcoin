@@ -653,6 +653,20 @@ static void CheckRpc(const std::vector<RPCArg>& params, const UniValue& args, RP
     rpc.HandleRequest(req);
 }
 
+//! Call an RPC method the way the server does, including the transformation of
+//! named parameters.
+static UniValue CallRPCMethod(const RPCMethod& rpc, const UniValue& params)
+{
+    CRPCTable table;
+    CRPCCommand command{"test", rpc.m_name, [&](const JSONRPCRequest& request, UniValue& result, bool) { result = rpc.HandleRequest(request); return true; }, rpc.GetArgNames(), /*unique_id=*/0};
+    table.appendCommand(rpc.m_name, &command);
+    JSONRPCRequest request;
+    request.strMethod = rpc.m_name;
+    request.params = params;
+    if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
+    return table.execute(request);
+}
+
 BOOST_AUTO_TEST_CASE(rpc_arg_helper)
 {
     constexpr bool DEFAULT_BOOL = true;
@@ -757,6 +771,48 @@ BOOST_AUTO_TEST_CASE(rpc_openrpc_type_per_name)
     const auto method{std::ranges::find_if(methods, [](const UniValue& m) { return m["name"].get_str() == "typepername"; })};
     BOOST_REQUIRE(method != methods.end());
     BOOST_CHECK_EQUAL((*method)["params"][0].write(), R"({"name":"options","required":false,"schema":{"oneOf":[{"type":"object","properties":{"flag":{"type":"boolean","default":true,"x-bitcoin-also-positional":true}},"additionalProperties":false},{"type":"boolean"}]},"x-bitcoin-aliases":["flag"]})");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_arg_type_by_name)
+{
+    const RPCMethod rpc{
+        "dummy",
+        "description",
+        {
+            {"options|flag", {RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Type::BOOL}, RPCArg::Optional::OMITTED, "",
+                {
+                    {"flag", RPCArg::Type::BOOL, RPCArg::Default{true}, "", RPCArgOptions{.also_positional = true}},
+                }},
+            {"after", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, ""},
+            {"count|n", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, ""},
+            {"amount|enable", {RPCArg::Type::AMOUNT, RPCArg::Type::BOOL}, RPCArg::Optional::OMITTED, ""},
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{""},
+        [](const RPCMethod&, const JSONRPCRequest&) -> UniValue { return UniValue{}; },
+    };
+
+    // Passed by name, a parameter must have the type declared for that name.
+    CallRPCMethod(rpc, JSON(R"({"options": {"flag": false}})"));
+    BOOST_CHECK_EXCEPTION(CallRPCMethod(rpc, JSON(R"({"options": false})")), UniValue,
+                          HasJSON(R"({"code":-3,"message":"Wrong type passed:\n{\n    \"Position 1 (options|flag)\": \"JSON value of type bool is not of expected type object\"\n}"})"));
+
+    // Passed by position, it can have any of the declared types.
+    CallRPCMethod(rpc, JSON(R"([false, 1])"));
+    CallRPCMethod(rpc, JSON(R"({"args": [false], "after": 1})"));
+
+    // An options object built from named options is not checked against the
+    // name of a parameter passed after it.
+    CallRPCMethod(rpc, JSON(R"({"flag": false, "after": 1})"));
+
+    // An alias of a parameter with a single type has that type.
+    CallRPCMethod(rpc, JSON(R"({"n": 1})"));
+    BOOST_CHECK_EXCEPTION(CallRPCMethod(rpc, JSON(R"({"n": "1"})")), UniValue,
+                          HasJSON(R"({"code":-3,"message":"Wrong type passed:\n{\n    \"Position 3 (count|n)\": \"JSON value of type string is not of expected type number\"\n}"})"));
+
+    // The error names the type of the name passed, not the first type.
+    BOOST_CHECK_EXCEPTION(CallRPCMethod(rpc, JSON(R"({"enable": "1"})")), UniValue,
+                          HasJSON(R"({"code":-3,"message":"Wrong type passed:\n{\n    \"Position 4 (amount|enable)\": \"JSON value of type string is not of expected type bool\"\n}"})"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
