@@ -315,6 +315,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/deserialize.cpp \
  test/fuzz/eval_script.cpp \
  test/fuzz/fee_rate.cpp \
+ test/fuzz/feeratediagram.cpp \
  test/fuzz/fees.cpp \
  test/fuzz/flatfile.cpp \
  test/fuzz/float.cpp \
