@@ -973,13 +973,14 @@ KernelLogger& GetKernelLogger()
 
 namespace util::log::hooks {
 // Kernel filters on level only. The category is delivered as part of the entry, so consumers can
-// filter on it in their callback.
-bool ShouldLog(Category /*category*/, Level level)
+// filter on it in their callback. All kernel log output goes to the same KernelLogger, so the
+// logger argument is ignored.
+bool ShouldLog(Logger* /*logger*/, Category /*category*/, Level level)
 {
     return GetKernelLogger().ShouldLog(level);
 }
 
-void Log(const Options& /*options*/, Entry entry)
+void Log(Logger* /*logger*/, const Options& /*options*/, Entry entry)
 {
     GetKernelLogger().MaybeLog(entry);
 }
