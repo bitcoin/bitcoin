@@ -14,6 +14,7 @@
 #include <util/fs_helpers.h>
 #include <util/string.h>
 
+#include <array>
 #include <chrono>
 #include <fstream>
 #include <future>
@@ -103,6 +104,60 @@ struct LogSetup : public BasicTestingSetup {
     }
 };
 
+//! Test calls to log macros with all possible types of arguments: with and
+//! without categories and with and without format arguments to make sure
+//! varargs are handled correctly.
+//! Include commented out calls for combinations of macro arguments which are
+//! prohibited, for easy manual testing to confirm these calls produce readable
+//! compile errors.
+BOOST_FIXTURE_TEST_CASE(logging_macro_args, LogSetup)
+{
+    LogInstance().EnableCategory(BCLog::LogFlags::ALL);
+    LogInstance().SetLogLevel(BCLog::Level::Trace);
+
+    // Test logging with no context.
+    LogError("error");
+    LogWarning("warning");
+    LogInfo("info");
+    // LogDebug("debug"); // Not allowed because category is required!
+    // LogTrace("trace"); // Not allowed because category is required!
+    LogError("error %s", "arg");
+    LogWarning("warning %s", "arg");
+    LogInfo("info %s", "arg");
+    // LogDebug("debug %s", "arg"); // Not allowed because category is required!
+    // LogTrace("trace %s", "arg"); // Not allowed because category is required!
+
+    // Test logging with category constant arguments.
+    // LogError(BCLog::NET, "error"); // Not allowed because category is forbidden!
+    // LogWarning(BCLog::NET, "warning"); // Not allowed because category is forbidden!
+    // LogInfo(BCLog::NET, "info"); // Not allowed because category is forbidden!
+    LogDebug(BCLog::NET, "debug");
+    LogTrace(BCLog::NET, "trace");
+    // LogError(BCLog::NET, "error %s", "arg"); // Not allowed because category is forbidden!
+    // LogWarning(BCLog::NET, "warning %s", "arg"); // Not allowed because category is forbidden!
+    // LogInfo(BCLog::NET, "info %s", "arg"); // Not allowed because category is forbidden!
+    LogDebug(BCLog::NET, "debug %s", "arg");
+    LogTrace(BCLog::NET, "trace %s", "arg");
+
+    const auto log_lines{ReadDebugLogLines()};
+    constexpr auto expected{std::to_array({
+        "[error] error",
+        "[warning] warning",
+        "info",
+
+        "[error] error arg",
+        "[warning] warning arg",
+        "info arg",
+
+        "[net] debug",
+        "[net:trace] trace",
+
+        "[net] debug arg",
+        "[net:trace] trace arg",
+    })};
+    BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
+}
+
 BOOST_AUTO_TEST_CASE(logging_timer)
 {
     auto micro_timer = BCLog::Timer<std::chrono::microseconds>("tests", "end_msg");
@@ -137,24 +192,6 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
         LogInstance().LogPrintStr(msg, std::move(loc), category, level, /*should_ratelimit=*/false);
     }
     std::vector<std::string> log_lines{ReadDebugLogLines()};
-    BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
-}
-
-BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
-{
-    LogInstance().EnableCategory(BCLog::NET);
-    LogTrace(BCLog::NET, "foo6: %s", "bar6"); // not logged
-    LogDebug(BCLog::NET, "foo7: %s", "bar7");
-    LogInfo("foo8: %s", "bar8");
-    LogWarning("foo9: %s", "bar9");
-    LogError("foo10: %s", "bar10");
-    std::vector<std::string> log_lines{ReadDebugLogLines()};
-    std::vector<std::string> expected = {
-        "[net] foo7: bar7",
-        "foo8: bar8",
-        "[warning] foo9: bar9",
-        "[error] foo10: bar10",
-    };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
 
