@@ -102,6 +102,35 @@ struct LogSetup : public BasicTestingSetup {
     }
 };
 
+//! Test logging to local logger.
+BOOST_AUTO_TEST_CASE(logging_local_logger)
+{
+    BCLog::Logger logger;
+    logger.m_log_timestamps = false;
+    logger.EnableCategory(BCLog::LogFlags::ALL);
+    logger.SetLogLevel(BCLog::Level::Trace);
+    logger.StartLogging();
+
+    std::vector<std::string> messages;
+    logger.PushBackCallback([&](const std::string& s) { messages.push_back(s); });
+
+    BCLog::Context log{logger, BCLog::NET};
+    LogError(log, "error %s", "arg");
+    LogWarning(log, "warning %s", "arg");
+    LogInfo(log, "info %s", "arg");
+    LogDebug(log, "debug %s", "arg");
+    LogTrace(log, "trace %s", "arg");
+
+    constexpr auto expected{std::to_array({
+        "[net:error] error arg\n",
+        "[net:warning] warning arg\n",
+        "[net:info] info arg\n",
+        "[net] debug arg\n",
+        "[net:trace] trace arg\n",
+    })};
+    BOOST_CHECK_EQUAL_COLLECTIONS(messages.begin(), messages.end(), expected.begin(), expected.end());
+}
+
 //! Test logging to global logger with different types of context arguments.
 BOOST_FIXTURE_TEST_CASE(logging_context_args, LogSetup)
 {
@@ -122,6 +151,19 @@ BOOST_FIXTURE_TEST_CASE(logging_context_args, LogSetup)
     LogDebug(BCLog::NET, "debug %s", "arg");
     LogTrace(BCLog::NET, "trace %s", "arg");
 
+    // Test logging with context object.
+    BCLog::Context log{LogInstance(), BCLog::TOR};
+    LogError(log, "error");
+    LogWarning(log, "warning");
+    LogInfo(log, "info");
+    LogDebug(log, "debug");
+    LogTrace(log, "trace");
+    LogError(log, "error %s", "arg");
+    LogWarning(log, "warning %s", "arg");
+    LogInfo(log, "info %s", "arg");
+    LogDebug(log, "debug %s", "arg");
+    LogTrace(log, "trace %s", "arg");
+
     constexpr auto expected{std::to_array({
         "[error] error",
         "[warning] warning",
@@ -136,6 +178,18 @@ BOOST_FIXTURE_TEST_CASE(logging_context_args, LogSetup)
 
         "[net] debug arg",
         "[net:trace] trace arg",
+
+        "[tor:error] error",
+        "[tor:warning] warning",
+        "[tor:info] info",
+        "[tor] debug",
+        "[tor:trace] trace",
+
+        "[tor:error] error arg",
+        "[tor:warning] warning arg",
+        "[tor:info] info arg",
+        "[tor] debug arg",
+        "[tor:trace] trace arg",
     })};
     std::ifstream file{tmp_log_path.std_path()};
     std::vector<std::string> log_lines;
