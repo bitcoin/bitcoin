@@ -564,8 +564,7 @@ void BCLog::LogRateLimiter::Reset()
     }
     for (const auto& [source_loc, stats] : source_locations) {
         if (stats.m_dropped_bytes == 0) continue;
-        LogPrintLevel_(
-            LogFlags::ALL, Level::Warning, /*should_ratelimit=*/false,
+        LOG_EMIT((.level = Level::Warning, .ratelimit = false),
             "Restarting logging from %s:%d (%s): %d bytes were dropped during the last %ss.",
             source_loc.file_name(), source_loc.line(), source_loc.function_name_short(),
             stats.m_dropped_bytes, Ticks<std::chrono::seconds>(m_reset_window));
@@ -607,13 +606,12 @@ bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::stri
 
 bool util::log::ShouldLog(Category category, Level level)
 {
-    return LogInstance().WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), level);
+    BCLog::Logger& logger{LogInstance()};
+    return logger.Enabled() && logger.WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), level);
 }
 
 void util::log::Log(util::log::Entry entry)
 {
     BCLog::Logger& logger{LogInstance()};
-    if (logger.Enabled()) {
-        logger.LogPrintStr(std::move(entry.message), std::move(entry.source_loc), static_cast<BCLog::LogFlags>(entry.category), entry.level, entry.should_ratelimit);
-    }
+    logger.LogPrintStr(std::move(entry.message), std::move(entry.source_loc), static_cast<BCLog::LogFlags>(entry.category), entry.level, entry.should_ratelimit);
 }
