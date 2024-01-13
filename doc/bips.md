@@ -1,4 +1,5 @@
-BIPs that are implemented by Dash Core:
+BIPs that are implemented by Bitcoin Core, some of them are relevant for Dash Core, some are just mentioned as a reference.
+Specified versions, PRs are relevant to Bitcoin's core.
 
 * [`BIP 9`](https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki): The changes allowing multiple soft-forks to be deployed in parallel have been implemented since **v0.12.1**  ([PR #7575](https://github.com/bitcoin/bitcoin/pull/7575))
 * [`BIP 11`](https://github.com/bitcoin/bips/blob/master/bip-0011.mediawiki): Multisig outputs are standard since **v0.6.0** ([PR #669](https://github.com/bitcoin/bitcoin/pull/669)).
