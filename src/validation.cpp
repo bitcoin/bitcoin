@@ -5533,17 +5533,19 @@ bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mocka
         }
 
         // TODO: remove this try except in v0.22
+        std::set<uint256> unbroadcast_txids;
         try {
-          std::set<uint256> unbroadcast_txids;
           file >> unbroadcast_txids;
           unbroadcast = unbroadcast_txids.size();
-
-          for (const auto& txid : unbroadcast_txids) {
-            pool.AddUnbroadcastTx(txid);
-          }
         } catch (const std::exception&) {
           // mempool.dat files created prior to v0.21 will not have an
           // unbroadcast set. No need to log a failure if parsing fails here.
+        }
+        for (const auto& txid : unbroadcast_txids) {
+            const CTransactionRef& added_tx = pool.get(txid);
+            if (added_tx != nullptr) {
+                pool.AddUnbroadcastTx(txid);
+            }
         }
 
     } catch (const std::exception& e) {

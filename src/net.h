@@ -1482,12 +1482,7 @@ public:
     }
 
 
-    void AddInventoryKnown(const CInv& inv)
-    {
-        AddInventoryKnown(inv.hash);
-    }
-
-    void AddInventoryKnown(const uint256& hash)
+    void AddKnownInventory(const uint256& hash)
     {
         LOCK(m_tx_relay->cs_tx_inventory);
         m_tx_relay->filterInventoryKnown.insert(hash);

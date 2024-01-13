@@ -344,6 +344,9 @@ class CInv:
         return "CInv(type=%s hash=%064x)" \
                % (self.typemap.get(self.type, "%d" % self.type), self.hash)
 
+    def __eq__(self, other):
+        return isinstance(other, CInv) and self.hash == other.hash and self.type == other.type
+
 
 class CBlockLocator:
     __slots__ = ("nVersion", "vHave")

@@ -2162,7 +2162,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 } else {
                     m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::TX, *tx));
                 }
-                m_mempool.RemoveUnbroadcastTx(inv.hash);
+                m_mempool.RemoveUnbroadcastTx(tx->GetHash());
                 push = true;
             }
         }
@@ -3289,7 +3289,7 @@ void PeerManagerImpl::ProcessMessage(
                         MSG_SPORK
                 };
 
-                pfrom.AddInventoryKnown(inv);
+                pfrom.AddKnownInventory(inv.hash);
                 if (fBlocksOnly && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
                     LogPrint(BCLog::NET, "%s (%s) inv sent in violation of protocol, disconnecting peer=%d\n", inv.GetCommand(), inv.hash.ToString(), pfrom.GetId());
                     pfrom.fDisconnect = true;
@@ -3564,9 +3564,10 @@ void PeerManagerImpl::ProcessMessage(
         }
         const CTransaction& tx = *ptx;
 
-        CInv inv(nInvType, tx.GetHash());
-        pfrom.AddInventoryKnown(inv);
+        const uint256& txid = ptx->GetHash();
+        pfrom.AddKnownInventory(txid);
 
+        CInv inv(nInvType, tx.GetHash());
         {
             LOCK(cs_main);
             EraseObjectRequest(pfrom.GetId(), inv);
@@ -3599,7 +3600,7 @@ void PeerManagerImpl::ProcessMessage(
             RelayTransaction(tx.GetHash());
 
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
-                auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(inv.hash, i));
+                auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(txid, i));
                 if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
                     for (const auto& elem : it_by_prev->second) {
                         peer->m_orphan_work_set.insert(elem->first);
@@ -3631,11 +3632,11 @@ void PeerManagerImpl::ProcessMessage(
 
                 for (const CTxIn& txin : tx.vin) {
                     CInv _inv(MSG_TX, txin.prevout.hash);
-                    pfrom.AddInventoryKnown(_inv);
+                    pfrom.AddKnownInventory(_inv.hash);
                     if (!AlreadyHave(_inv)) RequestObject(State(pfrom.GetId()), _inv, current_time);
                     // We don't know if the previous tx was a regular or a mixing one, try both
                     CInv _inv2(MSG_DSTX, txin.prevout.hash);
-                    pfrom.AddInventoryKnown(_inv2);
+                    pfrom.AddKnownInventory(_inv2.hash);
                     if (!AlreadyHave(_inv2)) RequestObject(State(pfrom.GetId()), _inv2, current_time);
                 }
                 AddOrphanTx(ptx, pfrom.GetId());
@@ -5069,9 +5070,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                                 vRelayExpiration.pop_front();
                             }
 
-                            auto ret = mapRelay.insert(std::make_pair(hash, std::move(txinfo.tx)));
+                            auto ret = mapRelay.emplace(hash, std::move(txinfo.tx));
                             if (ret.second) {
-                                vRelayExpiration.push_back(std::make_pair(nNow + std::chrono::microseconds{RELAY_TX_CACHE_TIME}.count(), ret.first));
+                                vRelayExpiration.emplace_back(nNow + std::chrono::microseconds{RELAY_TX_CACHE_TIME}.count(), ret.first);
                             }
                         }
                         int nInvType = ::dstxManager->GetDSTX(hash) ? MSG_DSTX : MSG_TX;
