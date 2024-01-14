@@ -213,6 +213,51 @@ RPCHelpMan walletlock()
 }
 
 
+std::string walletpassphrase_doc() {
+    return "The pass phrase to encrypt the wallet with. It must be at least 1 character, but should be long.\n"
+        "*********************\n"
+        "## WALLET PASSPHRASE\n"
+        "Understanding the nuances of wallet security is essential to storing your Bitcoin \n"
+        "safely. One crucial aspect of safeguarding funds is the utilization of a wallet \n"
+        "passphrase or password, implemented through wallet encryption. Let's explore key \n"
+        "points to demystify the nature of a wallet passphrase and the encryption process, \n"
+        "emphasizing what they do and what they don't do:\n"
+        "- **Not the Seed:**\n"
+        "The wallet passphrase is distinct from the seed. The seed, also known as the HD seed, \n"
+        "functions as a master key for deriving key pairs in a hierarchical deterministic (HD) \n"
+        "wallet. The passphrase on the other hand, serves as an additional layer of security \n"
+        "specifically designed to secure the private keys within the wallet. While the HD seed \n"
+        "is essential for deriving private and public keys in the wallet, the passphrase serves \n"
+        "as a safeguard, demanding an additional layer of authentication to access funds on the \n"
+        "wallet. This dual-layered approach enhances overall wallet security, effectively mitigating \n"
+        "risks associated with unauthorized access and potential theft.\n"
+        "- **Limited Protection Against Physical Threats:**\n"
+        "While the wallet passphrase provides security in the digital realm, it doesn't safeguard \n"
+        "against physical threats (like someone using a $5 wrench to force you to reveal your passphrase). \n"
+        "Physical security measures are also equally important, and users should be cautious about \n"
+        "where and how they access their wallets.\n"
+        "- **Protection Against Unauthorized Access:**\n"
+        "The passphrase serves as a protective measure, securing your funds in situations where an \n"
+        "unauthorized user gains access to your unlocked computer or device while your wallet application \n"
+        "is active. Without the passphrase, they would be unable to access your wallet's funds or execute \n"
+        "transactions. However, it's essential to be aware that someone with access can potentially \n"
+        "compromise the security of your passphrase by installing a keylogger. To enhance security, \n"
+        "prioritize good practices such as running up-to-date antivirus software, and inputting your \n"
+        "wallet passphrase exclusively into the Bitcoin client\n"
+        "- **Doesn't Encrypt Metadata or Public Keys:**\n"
+        "It's important to note that the passphrase primarily secures the private keys and access to \n"
+        "funds within the wallet. It does not encrypt metadata associated with transactions or public keys. \n"
+        "Information about your transaction history and the public keys involved may still be visible.\n"
+        "- **Risk of Fund Loss if Forgotten or Lost:**\n"
+        "If the wallet passphrase is too complex and is subsequently forgotten or lost, there is a \n"
+        "risk of losing access to the funds permanently. A forgotten passphrase will result in the \n"
+        "inability to unlock the wallet and access the funds.\n"
+        "- **More Info\n"
+        "> Further details about securing your wallet using wallet passphrase  can be found in \n"
+        " [Managing the Wallet](https://github.com/bitcoin/bitcoin/blob/master/doc/managing-wallets.md#12-encrypting-the-wallet)";
+}
+
+
 RPCHelpMan encryptwallet()
 {
     return RPCHelpMan{"encryptwallet",
@@ -226,7 +271,7 @@ RPCHelpMan encryptwallet()
                 "in the creation of a fresh set of active descriptors. Therefore, it is crucial to\n"
                 "securely back up the newly generated wallet file using the backupwallet RPC.\n",
                 {
-                    {"passphrase", RPCArg::Type::STR, RPCArg::Optional::NO, "The pass phrase to encrypt the wallet with. It must be at least 1 character, but should be long."},
+                    {"passphrase", RPCArg::Type::STR, RPCArg::Optional::NO, walletpassphrase_doc()},
                 },
                 RPCResult{RPCResult::Type::STR, "", "A string with further instructions"},
                 RPCExamples{
