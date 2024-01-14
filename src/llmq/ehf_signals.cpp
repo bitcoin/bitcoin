@@ -54,8 +54,15 @@ void CEHFSignalsHandler::UpdatedBlockTip(const CBlockIndex* const pindexNew)
         // TODO: v20 will never attempt to create EHF messages on main net; if this is needed it will be done by v20.1 or v21 nodes
         return;
     }
-    // TODO: should do this for all not-yet-signied bits
-    trySignEHFSignal(Params().GetConsensus().vDeployments[Consensus::DEPLOYMENT_MN_RR].bit, pindexNew);
+    const auto ehfSignals = chainstate.GetMNHFSignalsStage(pindexNew);
+    for (const auto& deployment : Params().GetConsensus().vDeployments) {
+        // Skip deployments that do not use dip0023
+        if (!deployment.useEHF) continue;
+        // Try to sign only activable deployments that haven't been mined yet
+        if (ehfSignals.find(deployment.bit) == ehfSignals.end() && Params().IsValidMNActivation(deployment.bit, pindexNew->GetMedianTimePast())) {
+            trySignEHFSignal(deployment.bit, pindexNew);
+        }
+    }
 }
 
 void CEHFSignalsHandler::trySignEHFSignal(int bit, const CBlockIndex* const pindex)
@@ -110,33 +117,37 @@ void CEHFSignalsHandler::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig
         return;
     }
 
+    const auto ehfSignals = chainstate.GetMNHFSignalsStage(WITH_LOCK(cs_main, return chainstate.m_chain.Tip()));
     MNHFTxPayload mnhfPayload;
-    // TODO: should do this for all not-yet-signied bits
-    mnhfPayload.signal.versionBit = Params().GetConsensus().vDeployments[Consensus::DEPLOYMENT_MN_RR].bit;
+    for (const auto& deployment : Params().GetConsensus().vDeployments) {
+        // skip deployments that do not use dip0023 or that have already been mined
+        if (!deployment.useEHF || ehfSignals.find(deployment.bit) != ehfSignals.end()) continue;
 
-    const uint256 expectedId = mnhfPayload.GetRequestId();
-    LogPrint(BCLog::EHF, "CEHFSignalsHandler::HandleNewRecoveredSig expecting ID=%s received=%s\n", expectedId.ToString(), recoveredSig.getId().ToString());
-    if (recoveredSig.getId() != mnhfPayload.GetRequestId()) {
-        // there's nothing interesting for CEHFSignalsHandler
-        LogPrint(BCLog::EHF, "CEHFSignalsHandler::HandleNewRecoveredSig id is known but it's not MN_RR, expected: %s\n", mnhfPayload.GetRequestId().ToString());
-        return;
-    }
-
-    mnhfPayload.signal.quorumHash = recoveredSig.getQuorumHash();
-    mnhfPayload.signal.sig = recoveredSig.sig.Get();
-
-    CMutableTransaction tx = mnhfPayload.PrepareTx();
-
-    {
-        CTransactionRef tx_to_sent = MakeTransactionRef(std::move(tx));
-        LogPrintf("CEHFSignalsHandler::HandleNewRecoveredSig Special EHF TX is created hash=%s\n", tx_to_sent->GetHash().ToString());
-        LOCK(cs_main);
-        const MempoolAcceptResult result = AcceptToMemoryPool(chainstate, mempool, tx_to_sent, /* bypass_limits */ false);
-        if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-            connman.RelayTransaction(*tx_to_sent);
-        } else {
-            LogPrintf("CEHFSignalsHandler::HandleNewRecoveredSig -- AcceptToMemoryPool failed: %s\n", result.m_state.ToString());
+        mnhfPayload.signal.versionBit = deployment.bit;
+        const uint256 expectedId = mnhfPayload.GetRequestId();
+        LogPrint(BCLog::EHF, "CEHFSignalsHandler::HandleNewRecoveredSig expecting ID=%s received=%s\n", expectedId.ToString(), recoveredSig.getId().ToString());
+        if (recoveredSig.getId() != expectedId) {
+            // wrong deployment! Check the next one
+            continue;
         }
+
+        mnhfPayload.signal.quorumHash = recoveredSig.getQuorumHash();
+        mnhfPayload.signal.sig = recoveredSig.sig.Get();
+
+        CMutableTransaction tx = mnhfPayload.PrepareTx();
+
+        {
+            CTransactionRef tx_to_sent = MakeTransactionRef(std::move(tx));
+            LogPrintf("CEHFSignalsHandler::HandleNewRecoveredSig Special EHF TX is created hash=%s\n", tx_to_sent->GetHash().ToString());
+            LOCK(cs_main);
+            const MempoolAcceptResult result = AcceptToMemoryPool(chainstate, mempool, tx_to_sent, /* bypass_limits */ false);
+            if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+                connman.RelayTransaction(*tx_to_sent);
+            } else {
+                LogPrintf("CEHFSignalsHandler::HandleNewRecoveredSig -- AcceptToMemoryPool failed: %s\n", result.m_state.ToString());
+            }
+        }
+        break;
     }
 }
 } // namespace llmq
