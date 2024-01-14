@@ -1,0 +1,57 @@
+commit 129137d5182967dbfcfec66bad843df2a992a78f
+Author: fanquake <fanquake@gmail.com>
+Date:   Mon Jan 3 20:13:33 2022 +0800
+
+    problem: kevent udata is now void* on NetBSD Current (10)
+    
+    solution: check for the intptr_t variant in configure.
+
+diff --git a/configure.ac b/configure.ac
+index 1a571291..402f8b86 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -307,6 +307,27 @@ case "${host_os}" in
+         if test "x$libzmq_netbsd_has_atomic" = "xno"; then
+             AC_DEFINE(ZMQ_FORCE_MUTEXES, 1, [Force to use mutexes])
+         fi
++        # NetBSD Current (to become 10) has changed the type of udata in it's
++        # kevent struct from intptr_t to void * to align with darwin and other
++        # BSDs, see upstream commit:
++        # https://github.com/NetBSD/src/commit/e5ead823eb916b56589d2c6c560dbcfe4a2d0afc
++        AC_MSG_CHECKING([whether kevent udata type is intptr_t])
++        AC_LANG_PUSH([C++])
++        AC_LINK_IFELSE([AC_LANG_PROGRAM(
++            [[#include <sys/types.h>
++              #include <sys/event.h>
++              #include <sys/time.h>]],
++            [[struct kevent ev;
++              intptr_t udata;
++              EV_SET(&ev, 0, 0, EV_ADD, 0, 0, udata);
++              return 0;]])],
++            [libzmq_netbsd_kevent_udata_intptr_t=yes],
++            [libzmq_netbsd_kevent_udata_intptr_t=no])
++        AC_LANG_POP([C++])
++        AC_MSG_RESULT([$libzmq_netbsd_kevent_udata_intptr_t])
++        if test "x$libzmq_netbsd_kevent_udata_intptr_t" = "xyes"; then
++            AC_DEFINE(ZMQ_NETBSD_KEVENT_UDATA_INTPTR_T, 1, [kevent udata type is intptr_t])
++        fi
+         ;;
+     *openbsd*|*bitrig*)
+         # Define on OpenBSD to enable all library features
+diff --git a/src/kqueue.cpp b/src/kqueue.cpp
+index 53d82ac4..a6a7a7f2 100644
+--- a/src/kqueue.cpp
++++ b/src/kqueue.cpp
+@@ -46,9 +46,9 @@
+ #include "i_poll_events.hpp"
+ #include "likely.hpp"
+ 
+-//  NetBSD defines (struct kevent).udata as intptr_t, everyone else
+-//  as void *.
+-#if defined ZMQ_HAVE_NETBSD
++// NetBSD up to version 9 defines (struct kevent).udata as intptr_t,
++// everyone else as void *.
++#if defined ZMQ_HAVE_NETBSD && defined(ZMQ_NETBSD_KEVENT_UDATA_INTPTR_T)
+ #define kevent_udata_t intptr_t
+ #else
+ #define kevent_udata_t void *

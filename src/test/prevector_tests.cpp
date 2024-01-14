@@ -165,7 +165,8 @@ public:
         test();
     }
 
-    void swap() {
+    void swap() noexcept
+    {
         real_vector.swap(real_vector_alt);
         pre_vector.swap(pre_vector_alt);
         test();
