@@ -1612,9 +1612,10 @@ enum class ParseScriptContext {
     P2WPKH,  //!< Inside wpkh() (no script, pubkey only)
     P2WSH,   //!< Inside wsh() (script becomes v0 witness script)
     P2TR,    //!< Inside tr() (either internal key, or BIP342 script leaf)
+    MUSIG,   //!< Inside musig() (implies P2TR, cannot have nested musig())
 };
 
-std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostrophe, std::string& error)
+std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostrophe, std::string& error, bool& has_hardened)
 {
     bool hardened = false;
     if (elem.size() > 0) {
@@ -1633,6 +1634,7 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
         error = strprintf("Key path value %u is out of range", *p);
         return std::nullopt;
     }
+    has_hardened = has_hardened || hardened;
 
     return std::make_optional<uint32_t>(*p | (((uint32_t)hardened) << 31));
 }
@@ -1647,7 +1649,7 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
  * @param[in] allow_multipath Allows the parsed path to use the multipath specifier
  * @returns false if parsing failed
  **/
-[[nodiscard]] bool ParseKeyPath(const std::vector<std::span<const char>>& split, std::vector<KeyPath>& out, bool& apostrophe, std::string& error, bool allow_multipath)
+[[nodiscard]] bool ParseKeyPath(const std::vector<std::span<const char>>& split, std::vector<KeyPath>& out, bool& apostrophe, std::string& error, bool allow_multipath, bool& has_hardened)
 {
     KeyPath path;
     struct MultipathSubstitutes {
@@ -1655,6 +1657,7 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
         std::vector<uint32_t> values;
     };
     std::optional<MultipathSubstitutes> substitutes;
+    has_hardened = false;
 
     for (size_t i = 1; i < split.size(); ++i) {
         const std::span<const char>& elem = split[i];
@@ -1680,7 +1683,7 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
             substitutes.emplace();
             std::unordered_set<uint32_t> seen_substitutes;
             for (const auto& num : nums) {
-                const auto& op_num = ParseKeyPathNum(num, apostrophe, error);
+                const auto& op_num = ParseKeyPathNum(num, apostrophe, error, has_hardened);
                 if (!op_num) return false;
                 auto [_, inserted] = seen_substitutes.insert(*op_num);
                 if (!inserted) {
@@ -1693,7 +1696,7 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
             path.emplace_back(); // Placeholder for multipath segment
             substitutes->placeholder_index = path.size() - 1;
         } else {
-            const auto& op_num = ParseKeyPathNum(elem, apostrophe, error);
+            const auto& op_num = ParseKeyPathNum(elem, apostrophe, error, has_hardened);
             if (!op_num) return false;
             path.emplace_back(*op_num);
         }
@@ -1710,6 +1713,12 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
         }
     }
     return true;
+}
+
+[[nodiscard]] bool ParseKeyPath(const std::vector<std::span<const char>>& split, std::vector<KeyPath>& out, bool& apostrophe, std::string& error, bool allow_multipath)
+{
+    bool dummy;
+    return ParseKeyPath(split, out, apostrophe, error, allow_multipath, /*has_hardened=*/dummy);
 }
 
 static DeriveType ParseDeriveType(std::vector<std::span<const char>>& split, bool& apostrophe)
@@ -1802,9 +1811,154 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_i
 }
 
 /** Parse a public key including origin information (if enabled). */
-std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t key_exp_index, const std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
+// NOLINTNEXTLINE(misc-no-recursion)
+std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index, const std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
 {
     std::vector<std::unique_ptr<PubkeyProvider>> ret;
+
+    using namespace script;
+
+    // musig cannot be nested inside of an origin
+    std::span<const char> span = sp;
+    if (Const("musig(", span, /*skip=*/false)) {
+        if (ctx != ParseScriptContext::P2TR) {
+            error = "musig() is only allowed in tr() and rawtr()";
+            return {};
+        }
+
+        // Split the span on the end parentheses. The end parentheses must
+        // be included in the resulting span so that Expr is happy.
+        auto split = Split(sp, ')', /*include_sep=*/true);
+        if (split.size() > 2) {
+            error = "Too many ')' in musig() expression";
+            return {};
+        }
+        std::span<const char> expr(split.at(0).begin(), split.at(0).end());
+        if (!Func("musig", expr)) {
+            error = "Invalid musig() expression";
+            return {};
+        }
+
+        // Parse the participant pubkeys
+        bool any_ranged = false;
+        bool all_bip32 = true;
+        std::vector<std::vector<std::unique_ptr<PubkeyProvider>>> providers;
+        bool any_key_parsed = true;
+        size_t max_multipath_len = 0;
+        while (expr.size()) {
+            if (!any_key_parsed && !Const(",", expr)) {
+                error = strprintf("musig(): expected ',', got '%c'", expr[0]);
+                return {};
+            }
+            any_key_parsed = false;
+            auto arg = Expr(expr);
+            auto pk = ParsePubkey(key_exp_index, arg, ParseScriptContext::MUSIG, out, error);
+            if (pk.empty()) {
+                error = strprintf("musig(): %s", error);
+                return {};
+            }
+
+            any_ranged = any_ranged || pk.at(0)->IsRange();
+            all_bip32 = all_bip32 &&  pk.at(0)->IsBIP32();
+
+            max_multipath_len = std::max(max_multipath_len, pk.size());
+
+            providers.emplace_back(std::move(pk));
+            key_exp_index++;
+        }
+        if (any_key_parsed) {
+            error = "musig(): Must contain key expressions";
+            return {};
+        }
+
+        // Parse any derivation
+        DeriveType deriv_type = DeriveType::NO;
+        std::vector<KeyPath> derivation_multipaths;
+        if (split.size() == 2 && Const("/", split.at(1), /*skip=*/false)) {
+            if (!all_bip32) {
+                error = "musig(): derivation requires all participants to be xpubs or xprvs";
+                return {};
+            }
+            if (any_ranged) {
+                error = "musig(): Cannot have ranged participant keys if musig() also has derivation";
+                return {};
+            }
+            bool dummy = false;
+            auto deriv_split = Split(split.at(1), '/');
+            deriv_type = ParseDeriveType(deriv_split, dummy);
+            if (deriv_type == DeriveType::HARDENED) {
+                error = "musig(): Cannot have hardened child derivation";
+                return {};
+            }
+            bool has_hardened = false;
+            if (!ParseKeyPath(deriv_split, derivation_multipaths, dummy, error, /*allow_multipath=*/true, has_hardened)) {
+                error = "musig(): " + error;
+                return {};
+            }
+            if (has_hardened) {
+                error = "musig(): cannot have hardened derivation steps";
+                return {};
+            }
+        } else {
+            derivation_multipaths.emplace_back();
+        }
+
+        // Makes sure that all providers vectors in providers are the given length, or exactly length 1
+        // Length 1 vectors have the single provider cloned until it matches the given length.
+        const auto& clone_providers = [&providers](size_t length) -> bool {
+            for (auto& multipath_providers : providers) {
+                if (multipath_providers.size() == 1) {
+                    for (size_t i = 1; i < length; ++i) {
+                        multipath_providers.emplace_back(multipath_providers.at(0)->Clone());
+                    }
+                } else if (multipath_providers.size() != length) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        // Emplace the final MuSigPubkeyProvider into ret with the pubkey providers from the specified provider vectors index
+        // and the path from the specified path index
+        const auto& emplace_final_provider = [&ret, &key_exp_index, &deriv_type, &derivation_multipaths, &providers](size_t vec_idx, size_t path_idx) -> void {
+            KeyPath& path = derivation_multipaths.at(path_idx);
+            std::vector<std::unique_ptr<PubkeyProvider>> pubs;
+            pubs.reserve(providers.size());
+            for (auto& vec : providers) {
+                pubs.emplace_back(std::move(vec.at(vec_idx)));
+            }
+            ret.emplace_back(std::make_unique<MuSigPubkeyProvider>(key_exp_index, std::move(pubs), path, deriv_type));
+        };
+
+        if (max_multipath_len > 1 && derivation_multipaths.size() > 1) {
+            error = "musig(): Cannot have multipath participant keys if musig() is also multipath";
+            return {};
+        } else if (max_multipath_len > 1) {
+            if (!clone_providers(max_multipath_len)) {
+                error = strprintf("musig(): Multipath derivation paths have mismatched lengths");
+                return {};
+            }
+            for (size_t i = 0; i < max_multipath_len; ++i) {
+                // Final MuSigPubkeyProvider uses participant pubkey providers at each multipath position, and the first (and only) path
+                emplace_final_provider(i, 0);
+            }
+        } else if (derivation_multipaths.size() > 1) {
+            // All key provider vectors should be length 1. Clone them until they have the same length as paths
+            if (!Assume(clone_providers(derivation_multipaths.size()))) {
+                error = "musig(): Multipath derivation path with multipath participants is disallowed"; // This error is unreachable due to earlier check
+                return {};
+            }
+            for (size_t i = 0; i < derivation_multipaths.size(); ++i) {
+                // Final MuSigPubkeyProvider uses cloned participant pubkey providers, and the multipath derivation paths
+                emplace_final_provider(i, i);
+            }
+        } else {
+            // No multipath derivation, MuSigPubkeyProvider uses the first (and only) participant pubkey providers, and the first (and only) path
+            emplace_final_provider(0, 0);
+        }
+        return ret;
+    }
+
     auto origin_split = Split(sp, ']');
     if (origin_split.size() > 2) {
         error = "Multiple ']' characters found for a single pubkey";
@@ -1915,7 +2069,8 @@ struct KeyParser {
     {
         assert(m_out);
         Key key = m_keys.size();
-        auto pk = ParsePubkey(m_offset + key, {&*begin, &*end}, ParseContext(), *m_out, m_key_parsing_error);
+        uint32_t exp_index = m_offset + key;
+        auto pk = ParsePubkey(exp_index, {&*begin, &*end}, ParseContext(), *m_out, m_key_parsing_error);
         if (pk.empty()) return {};
         m_keys.emplace_back(std::move(pk));
         return key;
