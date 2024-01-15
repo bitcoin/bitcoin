@@ -7,6 +7,7 @@
 #include <hash.h>
 #include <key_io.h>
 #include <pubkey.h>
+#include <musig.h>
 #include <script/miniscript.h>
 #include <script/parsing.h>
 #include <script/script.h>
@@ -577,6 +578,220 @@ public:
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
         return std::make_unique<BIP32PubkeyProvider>(m_expr_index, m_root_extkey, m_path, m_derive, m_apostrophe);
+    }
+};
+
+/** PubkeyProvider for a musig() expression */
+class MuSigPubkeyProvider final : public PubkeyProvider
+{
+private:
+    //! PubkeyProvider for the participants
+    const std::vector<std::unique_ptr<PubkeyProvider>> m_participants;
+    //! Derivation path if this is ranged
+    const KeyPath m_path;
+    //! PubkeyProvider for the aggregate pubkey if it can be cached (i.e. participants are not ranged)
+    mutable std::unique_ptr<PubkeyProvider> m_aggregate_provider;
+    mutable std::optional<CPubKey> m_aggregate_pubkey;
+    const DeriveType m_derive;
+
+    bool IsRangedDerivation() const { return m_derive != DeriveType::NO; }
+    bool IsRangedParticipants() const
+    {
+        return std::any_of(m_participants.begin(), m_participants.end(), [](const auto& pubkey) { return pubkey->IsRange(); });
+    }
+
+public:
+    MuSigPubkeyProvider(
+        uint32_t exp_index,
+        std::vector<std::unique_ptr<PubkeyProvider>> providers,
+        KeyPath path,
+        DeriveType derive
+    )
+        : PubkeyProvider(exp_index),
+        m_participants(std::move(providers)),
+        m_path(std::move(path)),
+        m_derive(derive)
+    {}
+
+    std::optional<CPubKey> GetPubKey(int pos, const SigningProvider& arg, FlatSigningProvider& out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const override
+    {
+        // If the participants are not ranged, we can compute and cache the aggregate pubkey by creating a PubkeyProvider for it
+        if (!m_aggregate_provider && !IsRangedParticipants()) {
+            // Retrieve the pubkeys from the providers
+            std::vector<CPubKey> pubkeys;
+            for (const auto& prov : m_participants) {
+                FlatSigningProvider dummy;
+                std::optional<CPubKey> pubkey = prov->GetPubKey(0, arg, dummy, read_cache, write_cache);
+                if (!pubkey.has_value()) {
+                    return std::nullopt;
+                }
+                pubkeys.push_back(pubkey.value());
+            }
+            std::sort(pubkeys.begin(), pubkeys.end());
+
+            // Aggregate the pubkey
+            m_aggregate_pubkey = MuSig2AggregatePubkeys(pubkeys);
+            if (!Assume(m_aggregate_pubkey.has_value())) return std::nullopt;
+
+            // Make our pubkey provider
+            if (IsRangedDerivation() || !m_path.empty()) {
+                // Make the synthetic xpub and construct the BIP32PubkeyProvider
+                CExtPubKey extpub;
+                extpub.nDepth = 0;
+                std::memset(extpub.vchFingerprint, 0, 4);
+                extpub.nChild = 0;
+                extpub.chaincode = MUSIG_CHAINCODE;
+                extpub.pubkey = m_aggregate_pubkey.value();
+
+                m_aggregate_provider = std::make_unique<BIP32PubkeyProvider>(m_expr_index, extpub, m_path, m_derive, /*apostrophe=*/false);
+            } else {
+                m_aggregate_provider = std::make_unique<ConstPubkeyProvider>(m_expr_index, m_aggregate_pubkey.value(), /*xonly=*/false);
+            }
+        }
+
+        // Retrieve all participant pubkeys
+        std::vector<CPubKey> pubkeys;
+        for (const auto& prov : m_participants) {
+            std::optional<CPubKey> pub = prov->GetPubKey(pos, arg, out, read_cache, write_cache);
+            if (!pub) return std::nullopt;
+            pubkeys.emplace_back(*pub);
+        }
+        std::sort(pubkeys.begin(), pubkeys.end());
+
+        CPubKey pubout;
+        if (m_aggregate_provider) {
+            // When we have a cached aggregate key, we are either returning it or deriving from it
+            // Either way, we can passthrough to it's GetPubKey
+            std::optional<CPubKey> pub = m_aggregate_provider->GetPubKey(pos, arg, out, read_cache, write_cache);
+            if (!pub) return std::nullopt;
+            pubout = *pub;
+            out.aggregate_pubkeys.emplace(m_aggregate_pubkey.value(), pubkeys);
+        } else {
+            if (!Assume(IsRangedParticipants())) return std::nullopt;
+            // Derive participants and compute new aggregate key
+            std::optional<CPubKey> aggregate_pubkey = MuSig2AggregatePubkeys(pubkeys);
+            if (!aggregate_pubkey) return std::nullopt;
+            pubout = *aggregate_pubkey;
+
+            KeyOriginInfo info;
+            CKeyID keyid = aggregate_pubkey->GetID();
+            std::copy(keyid.begin(), keyid.begin() + sizeof(info.fingerprint), info.fingerprint);
+            out.origins.emplace(keyid, std::make_pair(*aggregate_pubkey, info));
+            out.pubkeys.emplace(aggregate_pubkey->GetID(), *aggregate_pubkey);
+            out.aggregate_pubkeys.emplace(pubout, pubkeys);
+        }
+
+        if (!Assume(pubout.IsValid())) return std::nullopt;
+        return pubout;
+    }
+    bool IsRange() const override { return IsRangedDerivation() || IsRangedParticipants(); }
+    // musig() expressions can only be used in tr() contexts which have 32 byte xonly pubkeys
+    size_t GetSize() const override { return 32; }
+
+    std::string ToString(StringType type=StringType::PUBLIC) const override
+    {
+        std::string out = "musig(";
+        for (size_t i = 0; i < m_participants.size(); ++i) {
+            const auto& pubkey = m_participants.at(i);
+            if (i) out += ",";
+            std::string tmp;
+            switch (type) {
+                case StringType::PUBLIC:
+                    tmp = pubkey->ToString();
+                    break;
+                case StringType::COMPAT:
+                    tmp = pubkey->ToString(PubkeyProvider::StringType::COMPAT);
+                    break;
+            }
+            out += tmp;
+        }
+        out += ")";
+        out += FormatHDKeypath(m_path);
+        if (IsRangedDerivation()) {
+            out += "/*";
+        }
+        return out;
+    }
+    bool ToPrivateString(const SigningProvider& arg, std::string& out) const override
+    {
+        bool any_privkeys = false;
+        out = "musig(";
+        for (size_t i = 0; i < m_participants.size(); ++i) {
+            const auto& pubkey = m_participants.at(i);
+            if (i) out += ",";
+            std::string tmp;
+            if (pubkey->ToPrivateString(arg, tmp)) {
+                any_privkeys = true;
+                out += tmp;
+            } else {
+                out += pubkey->ToString();
+            }
+        }
+        out += ")";
+        out += FormatHDKeypath(m_path);
+        if (IsRangedDerivation()) {
+            out += "/*";
+        }
+        if (!any_privkeys) out.clear();
+        return any_privkeys;
+    }
+    bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache = nullptr) const override
+    {
+        out = "musig(";
+        for (size_t i = 0; i < m_participants.size(); ++i) {
+            const auto& pubkey = m_participants.at(i);
+            if (i) out += ",";
+            std::string tmp;
+            if (!pubkey->ToNormalizedString(arg, tmp)) {
+                return false;
+            }
+            out += tmp;
+        }
+        out += ")";
+        out += FormatHDKeypath(m_path);
+        if (IsRangedDerivation()) {
+            out += "/*";
+        }
+        return true;
+    }
+
+    void GetPrivKey(int pos, const SigningProvider& arg, FlatSigningProvider& out) const override
+    {
+        // Get the private keys for any participants that we have
+        // If there is participant derivation, it will be done.
+        // If there is not, then the participant privkeys will be included directly
+        for (const auto& prov : m_participants) {
+            prov->GetPrivKey(pos, arg, out);
+        }
+    }
+
+    // Get RootPubKey and GetRootExtPubKey are used to return the single pubkey underlying the pubkey provider
+    // to be presented to the user in gethdkeys. As this is a multisig construction, there is no single underlying
+    // pubkey hence nothing should be returned.
+    // While the aggregate pubkey could be returned as the root (ext)pubkey, it is not a pubkey that anyone should
+    // be using by itself in a descriptor as it is unspendable without knowing its participants.
+    std::optional<CPubKey> GetRootPubKey() const override
+    {
+        return std::nullopt;
+    }
+    std::optional<CExtPubKey> GetRootExtPubKey() const override
+    {
+        return std::nullopt;
+    }
+
+    std::unique_ptr<PubkeyProvider> Clone() const override
+    {
+        std::vector<std::unique_ptr<PubkeyProvider>> providers;
+        providers.reserve(m_participants.size());
+        for (const std::unique_ptr<PubkeyProvider>& p : m_participants) {
+            providers.emplace_back(p->Clone());
+        }
+        return std::make_unique<MuSigPubkeyProvider>(m_expr_index, std::move(providers), m_path, m_derive);
+    }
+    bool IsBIP32() const override
+    {
+        // musig() can only be a BIP 32 key if all participants are bip32 too
+        return std::all_of(m_participants.begin(), m_participants.end(), [](const auto& pubkey) { return pubkey->IsBIP32(); });
     }
 };
 
