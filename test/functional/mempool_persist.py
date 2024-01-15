@@ -38,8 +38,8 @@ Test is as follows:
 from decimal import Decimal
 import os
 
+# from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
-# from test_framework.mininode import P2PTxInvStore
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal, assert_raises_rpc_error,

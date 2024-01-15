@@ -13,7 +13,7 @@ if uploadtarget has been reached.
 from collections import defaultdict
 
 from test_framework.messages import CInv, MAX_BLOCK_SIZE, MSG_BLOCK, msg_getdata
-from test_framework.mininode import P2PInterface
+from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, mine_large_block, set_node_times
 

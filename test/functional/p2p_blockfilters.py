@@ -18,7 +18,7 @@ from test_framework.messages import (
     ser_uint256,
     uint256_from_str,
 )
-from test_framework.mininode import P2PInterface
+from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,

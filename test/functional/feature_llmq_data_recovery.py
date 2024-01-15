@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import time
-from test_framework.mininode import logger
+from test_framework.p2p import logger
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import force_finish_mnsync, wait_until
 

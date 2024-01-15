@@ -5,9 +5,9 @@
 """Test addr response caching"""
 
 from test_framework.messages import msg_getaddr
-from test_framework.mininode import (
+from test_framework.p2p import (
     P2PInterface,
-    mininode_lock
+    p2p_lock
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -27,7 +27,7 @@ class AddrReceiver(P2PInterface):
         self.received_addrs = None
 
     def get_received_addrs(self):
-        with mininode_lock:
+        with p2p_lock:
             return self.received_addrs
 
     def on_addr(self, message):

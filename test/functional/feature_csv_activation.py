@@ -43,7 +43,7 @@ from io import BytesIO
 
 from test_framework.blocktools import create_coinbase, create_block, create_transaction, TIME_GENESIS_BLOCK
 from test_framework.messages import ToHex, CTransaction
-from test_framework.mininode import P2PDataStore
+from test_framework.p2p import P2PDataStore
 from test_framework.script import (
     CScript,
     OP_CHECKSEQUENCEVERIFY,

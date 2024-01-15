@@ -15,7 +15,7 @@ from test_framework.messages import (
     msg_inv,
     MSG_TX,
 )
-from test_framework.mininode import (
+from test_framework.p2p import (
     P2PDataStore, P2PInterface
 )
 from test_framework.test_framework import BitcoinTestFramework

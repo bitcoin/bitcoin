@@ -7,6 +7,11 @@
 Tests correspond to code in rpc/net.cpp.
 """
 
+from test_framework.p2p import P2PInterface
+import test_framework.messages
+from test_framework.messages import (
+    NODE_NETWORK,
+)
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
     assert_equal,
@@ -15,11 +20,6 @@ from test_framework.util import (
     assert_raises_rpc_error,
     p2p_port,
     wait_until,
-)
-from test_framework.mininode import P2PInterface
-import test_framework.messages
-from test_framework.messages import (
-    NODE_NETWORK,
 )
 
 

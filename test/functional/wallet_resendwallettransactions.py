@@ -7,7 +7,7 @@ import time
 
 from test_framework.blocktools import create_block, create_coinbase
 from test_framework.messages import ToHex
-from test_framework.mininode import P2PTxInvStore, mininode_lock
+from test_framework.p2p import P2PTxInvStore, p2p_lock
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, wait_until
 
@@ -36,7 +36,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         def wait_p2p():
             self.bump_mocktime(1)
             return node.p2p.tx_invs_received[txid] >= 1
-        wait_until(wait_p2p, lock=mininode_lock)
+        wait_until(wait_p2p, lock=p2p_lock)
 
         # Add a second peer since txs aren't rebroadcast to the same peer (see filterInventoryKnown)
         node.add_p2p_connection(P2PTxInvStore())
@@ -74,7 +74,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         def wait_p2p_1():
             self.bump_mocktime(1)
             return node.p2ps[1].tx_invs_received[txid] >= 1
-        wait_until(wait_p2p_1, lock=mininode_lock)
+        wait_until(wait_p2p_1, lock=p2p_lock)
 
 
 if __name__ == '__main__':

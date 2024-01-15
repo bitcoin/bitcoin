@@ -6,8 +6,8 @@
 import time
 
 from test_framework.messages import msg_qgetdata, msg_qwatch
-from test_framework.mininode import (
-    mininode_lock,
+from test_framework.p2p import (
+    p2p_lock,
     P2PInterface,
 )
 from test_framework.test_framework import DashTestFramework
@@ -106,7 +106,7 @@ class QuorumDataInterface(P2PInterface):
             assert_qdata(self.get_qdata(), qgetdata, expected_error, len_vvec, len_contributions)
 
     def wait_for_qmessage(self, message=None, timeout=3, message_expected=True):
-        wait_until(lambda: self.message_count[message] > 0, timeout=timeout, lock=mininode_lock, do_assert=message_expected)
+        wait_until(lambda: self.message_count[message] > 0, timeout=timeout, lock=p2p_lock, do_assert=message_expected)
         if not message_expected:
             assert self.message_count[message] == 0
         self.message_count[message] = 0

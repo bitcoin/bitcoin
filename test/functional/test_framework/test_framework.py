@@ -35,8 +35,8 @@ from .messages import (
     ser_string,
 )
 from .script import hash160
+from .p2p import NetworkThread
 from .test_node import TestNode
-from .mininode import NetworkThread
 from .util import (
     PortSeed,
     MAX_NODES,

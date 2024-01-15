@@ -11,7 +11,7 @@ Checks DIP3 for v19
 '''
 from io import BytesIO
 
-from test_framework.mininode import P2PInterface
+from test_framework.p2p import P2PInterface
 from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, FromHex, hash256, msg_getmnlistd, \
     QuorumId, ser_uint256
 from test_framework.test_framework import DashTestFramework
