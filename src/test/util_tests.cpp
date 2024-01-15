@@ -1137,12 +1137,23 @@ BOOST_AUTO_TEST_CASE(test_script_parsing)
     BOOST_CHECK(success);
     BOOST_CHECK_EQUAL(SpanToStr(sp), "MilkToastHoney");
 
+    success = Const("Milk", sp, /*skip=*/false);
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "MilkToastHoney");
+
     success = Const("Milk", sp);
     BOOST_CHECK(success);
     BOOST_CHECK_EQUAL(SpanToStr(sp), "ToastHoney");
 
+    success = Const("Bread", sp, /*skip=*/false);
+    BOOST_CHECK(!success);
+
     success = Const("Bread", sp);
     BOOST_CHECK(!success);
+
+    success = Const("Toast", sp, /*skip=*/false);
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "ToastHoney");
 
     success = Const("Toast", sp);
     BOOST_CHECK(success);
@@ -1151,10 +1162,13 @@ BOOST_AUTO_TEST_CASE(test_script_parsing)
     success = Const("Honeybadger", sp);
     BOOST_CHECK(!success);
 
+    success = Const("Honey", sp, /*skip=*/false);
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "Honey");
+
     success = Const("Honey", sp);
     BOOST_CHECK(success);
     BOOST_CHECK_EQUAL(SpanToStr(sp), "");
-
     // Func(...): parse a function call, update span to argument if successful
     input = "Foo(Bar(xy,z()))";
     sp = input;
