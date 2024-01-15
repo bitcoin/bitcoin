@@ -102,7 +102,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     updateWindowTitle();
 
     rpcConsole = new RPCConsole(node, this, enableWallet ? Qt::Window : Qt::Widget);
-    helpMessageDialog = new HelpMessageDialog(node, this, HelpMessageDialog::cmdline);
+    helpMessageDialog = new HelpMessageDialog(this, HelpMessageDialog::cmdline);
 #ifdef ENABLE_WALLET
     if(enableWallet)
     {
@@ -1074,7 +1074,7 @@ void BitcoinGUI::aboutClicked()
     if(!clientModel)
         return;
 
-    HelpMessageDialog dlg(m_node, this, HelpMessageDialog::about);
+    HelpMessageDialog dlg(this, HelpMessageDialog::about);
     dlg.exec();
 }
 
@@ -1134,7 +1134,7 @@ void BitcoinGUI::showCoinJoinHelpClicked()
     if(!clientModel)
         return;
 
-    HelpMessageDialog dlg(m_node, this, HelpMessageDialog::pshelp);
+    HelpMessageDialog dlg(this, HelpMessageDialog::pshelp);
     dlg.exec();
 }
 

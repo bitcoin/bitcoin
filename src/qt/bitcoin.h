@@ -10,6 +10,7 @@
 #endif
 
 #include <QApplication>
+#include <assert.h>
 #include <memory>
 
 #include <interfaces/node.h>
@@ -19,6 +20,7 @@ class ClientModel;
 class NetworkStyle;
 class OptionsModel;
 class PaymentServer;
+class SplashScreen;
 class WalletController;
 class WalletModel;
 
@@ -54,7 +56,7 @@ class BitcoinApplication: public QApplication
 {
     Q_OBJECT
 public:
-    explicit BitcoinApplication(interfaces::Node& node);
+    explicit BitcoinApplication();
     ~BitcoinApplication();
 
 #ifdef ENABLE_WALLET
@@ -85,6 +87,9 @@ public:
     /// Get window identifier of QMainWindow (BitcoinGUI)
     WId getMainWinId() const;
 
+    interfaces::Node& node() const { assert(m_node); return *m_node; }
+    void setNode(interfaces::Node& node);
+
 public Q_SLOTS:
     void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
     void shutdownResult();
@@ -103,7 +108,6 @@ protected:
 
 private:
     QThread *coreThread;
-    interfaces::Node& m_node;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
     BitcoinGUI *window;
@@ -114,6 +118,8 @@ private:
 #endif
     int returnValue;
     std::unique_ptr<QWidget> shutdownWindow;
+    SplashScreen* m_splash = nullptr;
+    interfaces::Node* m_node = nullptr;
 
     void startThread();
 };

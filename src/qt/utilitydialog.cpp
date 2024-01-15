@@ -29,7 +29,7 @@
 #include <QVBoxLayout>
 
 /** "Help message" or "About" dialog box */
-HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, HelpMode helpMode) :
+HelpMessageDialog::HelpMessageDialog(QWidget *parent, HelpMode helpMode) :
     QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::HelpMessageDialog)
 {
@@ -179,7 +179,7 @@ void HelpMessageDialog::on_okButton_accepted()
 
 
 /** "Shutdown" window */
-ShutdownWindow::ShutdownWindow(interfaces::Node& node, QWidget *parent, Qt::WindowFlags f):
+ShutdownWindow::ShutdownWindow(QWidget *parent, Qt::WindowFlags f):
     QWidget(parent, f)
 {
     setObjectName("ShutdownWindow");
@@ -195,12 +195,12 @@ ShutdownWindow::ShutdownWindow(interfaces::Node& node, QWidget *parent, Qt::Wind
     GUIUtil::handleCloseWindowShortcut(this);
 }
 
-QWidget* ShutdownWindow::showShutdownWindow(interfaces::Node& node, QMainWindow* window)
+QWidget* ShutdownWindow::showShutdownWindow(QMainWindow* window)
 {
     assert(window != nullptr);
 
     // Show a simple window indicating shutdown status
-    QWidget *shutdownWindow = new ShutdownWindow(node);
+    QWidget *shutdownWindow = new ShutdownWindow();
     shutdownWindow->setWindowTitle(window->windowTitle());
 
     // Center shutdown window at where main window was

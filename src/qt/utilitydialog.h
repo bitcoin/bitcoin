@@ -12,10 +12,6 @@ QT_BEGIN_NAMESPACE
 class QMainWindow;
 QT_END_NAMESPACE
 
-namespace interfaces {
-    class Node;
-}
-
 namespace Ui {
     class HelpMessageDialog;
 }
@@ -32,7 +28,7 @@ public:
         pshelp
     };
 
-    explicit HelpMessageDialog(interfaces::Node& node, QWidget *parent, HelpMode helpMode);
+    explicit HelpMessageDialog(QWidget *parent, HelpMode helpMode);
     ~HelpMessageDialog();
 
     void printToConsole();
@@ -53,8 +49,8 @@ class ShutdownWindow : public QWidget
     Q_OBJECT
 
 public:
-    explicit ShutdownWindow(interfaces::Node& node, QWidget *parent=nullptr, Qt::WindowFlags f=Qt::Widget);
-    static QWidget* showShutdownWindow(interfaces::Node& node, QMainWindow* window);
+    explicit ShutdownWindow(QWidget *parent=nullptr, Qt::WindowFlags f=Qt::Widget);
+    static QWidget* showShutdownWindow(QMainWindow* window);
 
 protected:
     void closeEvent(QCloseEvent *event) override;

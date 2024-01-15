@@ -61,7 +61,7 @@ class PaymentServer : public QObject
 public:
     // Parse URIs on command line
     // Returns false on error
-    static void ipcParseCommandLine(interfaces::Node& node, int argc, char *argv[]);
+    static void ipcParseCommandLine(int argc, char *argv[]);
 
     // Returns true if there were URIs on the command line
     // which were successfully sent to an already-running

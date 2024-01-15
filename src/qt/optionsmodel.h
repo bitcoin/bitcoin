@@ -12,6 +12,8 @@
 
 #include <QAbstractListModel>
 
+#include <assert.h>
+
 namespace interfaces {
 class Node;
 }
@@ -40,7 +42,7 @@ class OptionsModel : public QAbstractListModel
     Q_OBJECT
 
 public:
-    explicit OptionsModel(interfaces::Node& node, QObject *parent = nullptr, bool resetSettings = false);
+    explicit OptionsModel(QObject *parent = nullptr, bool resetSettings = false);
 
     enum OptionID {
         StartAtStartup,       // bool
@@ -117,10 +119,11 @@ public:
     bool isRestartRequired() const;
     bool resetSettingsOnShutdown{false};
 
-    interfaces::Node& node() const { return m_node; }
+    interfaces::Node& node() const { assert(m_node); return *m_node; }
+    void setNode(interfaces::Node& node) { assert(!m_node); m_node = &node; }
 
 private:
-    interfaces::Node& m_node;
+    interfaces::Node* m_node = nullptr;
     /* Qt-only settings */
     bool fHideTrayIcon;
     bool fMinimizeToTray;
