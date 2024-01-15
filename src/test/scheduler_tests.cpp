@@ -128,8 +128,8 @@ BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
     CScheduler scheduler;
 
     // each queue should be well ordered with respect to itself but not other queues
-    SingleThreadedSchedulerClient queue1(&scheduler);
-    SingleThreadedSchedulerClient queue2(&scheduler);
+    SingleThreadedSchedulerClient queue1(scheduler);
+    SingleThreadedSchedulerClient queue2(scheduler);
 
     // create more threads than queues
     // if the queues only permit execution of one task at once then
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
     // if they don't we'll get out of order behaviour
     std::vector<std::thread> threads;
     for (int i = 0; i < 5; ++i) {
-        threads.emplace_back(std::bind(&CScheduler::serviceQueue, &scheduler));
+        threads.emplace_back([&] { scheduler.serviceQueue(); });
     }
 
     // these are not atomic, if SinglethreadedSchedulerClient prevents
