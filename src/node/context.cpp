@@ -8,6 +8,7 @@
 #include <banman.h>
 #include <interfaces/chain.h>
 #include <kernel/context.h>
+#include <key.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netgroup.h>
@@ -16,6 +17,7 @@
 #include <scheduler.h>
 #include <txmempool.h>
 #include <validation.h>
+#include <validationinterface.h>
 
 namespace node {
 NodeContext::NodeContext() = default;

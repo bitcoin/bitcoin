@@ -26,6 +26,7 @@
 #include <script/sigcache.h>
 #include <util/chaintype.h>
 #include <util/fs.h>
+#include <util/signalinterrupt.h>
 #include <util/task_runner.h>
 #include <validation.h>
 #include <validationinterface.h>
