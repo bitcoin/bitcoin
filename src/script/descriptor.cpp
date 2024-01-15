@@ -1648,7 +1648,10 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(uint32_t& key_exp_index, const Span<
                 return nullptr;
             }
             bool dummy = false;
-            if (!ParseKeyPath(deriv_split, path, dummy, error, /*allow_hardened=*/false)) return nullptr;
+            if (!ParseKeyPath(deriv_split, path, dummy, error, /*allow_hardened=*/false)) {
+                error = "musig(): " + error;
+                return nullptr;
+            }
         }
 
         return std::make_unique<MuSigPubkeyProvider>(key_exp_index, std::move(providers), std::move(path), deriv_type);
