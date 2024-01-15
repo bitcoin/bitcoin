@@ -154,6 +154,9 @@ public:
     /** Make a SQLiteBatch connected to this database */
     std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override;
 
+    /** Return true if there is an on-going txn in this connection */
+    bool HasActiveTxn();
+
     sqlite3* m_db{nullptr};
     bool m_use_unsafe_sync;
 };

@@ -377,6 +377,12 @@ void SQLiteDatabase::Close()
     m_db = nullptr;
 }
 
+bool SQLiteDatabase::HasActiveTxn()
+{
+    // 'sqlite3_get_autocommit' returns true by default, and false if a transaction has begun and not been committed or rolled back.
+    return m_db && sqlite3_get_autocommit(m_db) == 0;
+}
+
 int SQliteExecHandler::Exec(SQLiteDatabase& database, const std::string& statement)
 {
     return sqlite3_exec(database.m_db, statement.data(), nullptr, nullptr, nullptr);
@@ -399,8 +405,8 @@ SQLiteBatch::SQLiteBatch(SQLiteDatabase& database)
 
 void SQLiteBatch::Close()
 {
-    // If m_db is in a transaction (i.e. not in autocommit mode), then abort the transaction in progress
-    if (m_database.m_db && sqlite3_get_autocommit(m_database.m_db) == 0) {
+    // If we began a transaction, and it wasn't committed, abort the transaction in progress
+    if (m_database.HasActiveTxn()) {
         if (TxnAbort()) {
             LogPrintf("SQLiteBatch: Batch closed unexpectedly without the transaction being explicitly committed or aborted\n");
         } else {
@@ -611,7 +617,7 @@ std::unique_ptr<DatabaseCursor> SQLiteBatch::GetNewPrefixCursor(Span<const std::
 
 bool SQLiteBatch::TxnBegin()
 {
-    if (!m_database.m_db || sqlite3_get_autocommit(m_database.m_db) == 0) return false;
+    if (!m_database.m_db || m_database.HasActiveTxn()) return false;
     int res = Assert(m_exec_handler)->Exec(m_database, "BEGIN TRANSACTION");
     if (res != SQLITE_OK) {
         LogPrintf("SQLiteBatch: Failed to begin the transaction\n");
@@ -621,7 +627,7 @@ bool SQLiteBatch::TxnBegin()
 
 bool SQLiteBatch::TxnCommit()
 {
-    if (!m_database.m_db || sqlite3_get_autocommit(m_database.m_db) != 0) return false;
+    if (!m_database.HasActiveTxn()) return false;
     int res = Assert(m_exec_handler)->Exec(m_database, "COMMIT TRANSACTION");
     if (res != SQLITE_OK) {
         LogPrintf("SQLiteBatch: Failed to commit the transaction\n");
@@ -631,7 +637,7 @@ bool SQLiteBatch::TxnCommit()
 
 bool SQLiteBatch::TxnAbort()
 {
-    if (!m_database.m_db || sqlite3_get_autocommit(m_database.m_db) != 0) return false;
+    if (!m_database.HasActiveTxn()) return false;
     int res = Assert(m_exec_handler)->Exec(m_database, "ROLLBACK TRANSACTION");
     if (res != SQLITE_OK) {
         LogPrintf("SQLiteBatch: Failed to abort the transaction\n");
