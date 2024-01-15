@@ -2119,7 +2119,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
     // mempool entries added before this time have likely expired from mapRelay
     const std::chrono::seconds longlived_mempool_time = GetTime<std::chrono::seconds>() - RELAY_TX_CACHE_TIME;
     // Get last mempool request time
-    const std::chrono::seconds mempool_req = !pfrom.RelayAddrsWithConn() ? pfrom.m_tx_relay->m_last_mempool_req.load()
+    const std::chrono::seconds mempool_req = pfrom.RelayAddrsWithConn() ? pfrom.m_tx_relay->m_last_mempool_req.load()
                                                                           : std::chrono::seconds::min();
 
     // Process as many TX items from the front of the getdata queue as
