@@ -309,12 +309,12 @@ class WalletSendTest(BitcoinTestFramework):
         self.log.info("Testing case insensitive fee estimation mode parse")
         for mode in ["ecoNOMICAL", "economical", "ECONOMICAL"]:
             res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1,
-                estimate_mode=mode, add_to_wallet=False
+                estimate_mode=mode, conf_target=1, add_to_wallet=False
             )
             assert_equal(res["complete"], True)
 
             res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1,
-                arg_estimate_mode=mode, add_to_wallet=False
+                arg_estimate_mode=mode, arg_conf_target=1, add_to_wallet=False
             )
             assert_equal(res["complete"], True)
 
@@ -327,6 +327,16 @@ class WalletSendTest(BitcoinTestFramework):
 
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1,
                 estimate_mode=mode, conf_target=1, add_to_wallet=False,  expect_error = (-8, 'Specify estimate_mode')
+            )
+
+        # Verify that 'estimate_mode' requires a confirmation target
+        for mode in ["ecoNOMICAL", "economical", "ECONOMICAL"]:
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1,
+                estimate_mode=mode, conf_target=None, add_to_wallet=False,  expect_error = (-8, 'estimate_mode should be passed with conf_target')
+            )
+
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1,
+                arg_estimate_mode=mode, arg_conf_target=None, add_to_wallet=False,  expect_error = (-8, 'estimate_mode should be passed with conf_target')
             )
 
         if not self.options.descriptors:

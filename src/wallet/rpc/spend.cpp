@@ -53,8 +53,12 @@ static void InterpretFeeEstimationInstructions(const UniValue& conf_target, cons
     } else {
         options.pushKV("fee_rate", fee_rate);
     }
-    if (!options["conf_target"].isNull() && (options["estimate_mode"].isNull() || (ToLower(options["estimate_mode"].get_str()) == "unset"))) {
+    auto estimate_mode_set = !options["estimate_mode"].isNull() && (ToLower(options["estimate_mode"].get_str()) != "unset");
+    if (!options["conf_target"].isNull() && !estimate_mode_set) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Specify estimate_mode");
+    }
+    if (options["conf_target"].isNull() && estimate_mode_set) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "estimate_mode should be passed with conf_target");
     }
 }
 
