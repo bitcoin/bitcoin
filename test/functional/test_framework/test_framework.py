@@ -602,10 +602,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if peer_advertises_v2 is None:
             peer_advertises_v2 = from_connection.use_v2transport
 
-        if peer_advertises_v2:
-            from_connection.addnode(node=ip_port, command="onetry", v2transport=True)
+        if peer_advertises_v2 != from_connection.use_v2transport:
+            from_connection.addnode(node=ip_port, command="onetry", v2transport=peer_advertises_v2)
         else:
-            # skip the optional third argument (default false) for
+            # skip the optional third argument if it matches the default, for
             # compatibility with older clients
             from_connection.addnode(ip_port, "onetry")
 
