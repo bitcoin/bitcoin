@@ -9,6 +9,8 @@ reset-files.bash
 src/dash
 src/dashd
 src/dash-cli
+src/dash-gui
+src/dash-node
 src/dash-tx
 src/dash-wallet
 src/test/fuzz/*
