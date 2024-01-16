@@ -23,7 +23,7 @@
 
 bool AbortNode(const std::string& strMessage, bilingual_str user_message)
 {
-    SetMiscWarning(strMessage);
+    SetMiscWarning(Untranslated(strMessage));
     LogPrintf("*** %s\n", strMessage);
     if (user_message.empty()) {
         user_message = _("A fatal internal error occurred, see debug.log for details");
