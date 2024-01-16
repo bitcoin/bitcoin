@@ -67,7 +67,8 @@ class MaxUploadTest(BitcoinTestFramework):
         p2p_conns = []
 
         for _ in range(3):
-            p2p_conns.append(self.nodes[0].add_p2p_connection(TestP2PConn()))
+            # Don't use v2transport in this test (too slow with the unoptimized python ChaCha20 implementation)
+            p2p_conns.append(self.nodes[0].add_p2p_connection(TestP2PConn(), supports_v2_p2p=False))
 
         # Now mine a big block
         mine_large_block(self, self.wallet, self.nodes[0])
@@ -148,7 +149,7 @@ class MaxUploadTest(BitcoinTestFramework):
         self.restart_node(0, ["-whitelist=download@127.0.0.1", "-maxuploadtarget=1"])
 
         # Reconnect to self.nodes[0]
-        peer = self.nodes[0].add_p2p_connection(TestP2PConn())
+        peer = self.nodes[0].add_p2p_connection(TestP2PConn(), supports_v2_p2p=False)
 
         #retrieve 20 blocks which should be enough to break the 1MB limit
         getdata_request.inv = [CInv(MSG_BLOCK, big_new_block)]

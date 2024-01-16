@@ -327,8 +327,10 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
     def test_resource_exhaustion(self):
         self.log.info("Test node stays up despite many large junk messages")
-        conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        conn2 = self.nodes[0].add_p2p_connection(P2PDataStore())
+        # Don't use v2 here - the non-optimised encryption would take too long to encrypt
+        # the large messages
+        conn = self.nodes[0].add_p2p_connection(P2PDataStore(), supports_v2_p2p=False)
+        conn2 = self.nodes[0].add_p2p_connection(P2PDataStore(), supports_v2_p2p=False)
         msg_at_size = msg_unrecognized(str_data="b" * VALID_DATA_LIMIT)
         assert len(msg_at_size.serialize()) == MAX_PROTOCOL_MESSAGE_LENGTH
 
