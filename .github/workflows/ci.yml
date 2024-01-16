@@ -17,18 +17,20 @@ concurrency:
   group: ${{ github.event_name != 'pull_request' && github.run_id || github.ref }}
   cancel-in-progress: true
 
-env:
-  DANGER_RUN_CI_ON_HOST: 1
-  CI_FAILFAST_TEST_LEAVE_DANGLING: 1  # GHA does not care about dangling processes and setting this variable avoids killing the CI script itself on error
-  MAKEJOBS: '-j10'
-
 jobs:
+  # Jobs for GitHub-hosted runners.
+  # May use sudo and run outside of Docker container
+  # Disabled for forks due to high minute multipliers for Windows and macOS.
+
   test-each-commit:
     name: 'test each commit'
     runs-on: ubuntu-22.04
     if: github.repository_owner == 'bitcoin' && github.event_name == 'pull_request' && github.event.pull_request.commits != 1
     timeout-minutes: 360  # Use maximum time, see https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes. Assuming a worst case time of 1 hour per commit, this leads to a --max-count=6 below.
     env:
+      DANGER_RUN_CI_ON_HOST: 1
+      CI_FAILFAST_TEST_LEAVE_DANGLING: 1  # GHA does not care about dangling processes and setting this variable avoids killing the CI script itself on error
+      MAKEJOBS: '-j10'
       MAX_COUNT: 6
     steps:
       - name: Determine fetch depth
@@ -80,6 +82,9 @@ jobs:
     timeout-minutes: 120
 
     env:
+      DANGER_RUN_CI_ON_HOST: 1
+      CI_FAILFAST_TEST_LEAVE_DANGLING: 1  # GHA does not care about dangling processes and setting this variable avoids killing the CI script itself on error
+      MAKEJOBS: '-j10'
       FILE_ENV: './ci/test/00_setup_env_mac_native.sh'
       BASE_ROOT_DIR: ${{ github.workspace }}
 
@@ -129,6 +134,9 @@ jobs:
     if: github.repository_owner == 'bitcoin' && (github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request')
 
     env:
+      DANGER_RUN_CI_ON_HOST: 1
+      CI_FAILFAST_TEST_LEAVE_DANGLING: 1  # GHA does not care about dangling processes and setting this variable avoids killing the CI script itself on error
+      MAKEJOBS: '-j10'
       CCACHE_MAXSIZE: '200M'
       CI_CCACHE_VERSION: '4.7.5'
       CI_QT_CONF: '-release -silent -opensource -confirm-license -opengl desktop -static -static-runtime -mp -qt-zlib -qt-pcre -qt-libpng -nomake examples -nomake tests -nomake tools -no-angle -no-dbus -no-gif -no-gtk -no-ico -no-icu -no-libjpeg -no-libudev -no-sql-sqlite -no-sql-odbc -no-sqlite -no-vulkan -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdeclarative -skip doc -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtimageformats -skip qtlocation -skip qtlottie -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquick3d -skip qtquickcontrols -skip qtquickcontrols2 -skip qtquicktimeline -skip qtremoteobjects -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtsvg -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebglplugin -skip qtwebsockets -skip qtwebview -skip qtx11extras -skip qtxmlpatterns -no-openssl -no-feature-bearermanagement -no-feature-printdialog -no-feature-printer -no-feature-printpreviewdialog -no-feature-printpreviewwidget -no-feature-sql -no-feature-sqlmodel -no-feature-textbrowser -no-feature-textmarkdownwriter -no-feature-textodfwriter -no-feature-xml'
@@ -288,3 +296,191 @@ jobs:
         env:
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
         run: py -3 test\functional\test_runner.py --jobs $env:NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix=$env:RUNNER_TEMP --combinedlogslen=99999999 --timeout-factor=$env:TEST_RUNNER_TIMEOUT_FACTOR $env:TEST_RUNNER_EXTRA
+
+  # Jobs for self-hosted runners
+  # https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/about-self-hosted-runners
+  # May not use sudo and must run inside Docker container
+  linter:
+    name: 'Linter'
+    runs-on: [self-hosted, Linux, X64]
+    if: github.repository_owner != 'bitcoin' && github.event_name == 'pull_request'
+    env:
+      DOCKER_BUILDKIT: 1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Docker image
+        run: |
+          docker build -t bitcoin-linter --file "./ci/lint_imagefile" ./
+
+      - name: Run linter
+        run: |
+          docker run --rm -v $GITHUB_WORKSPACE:/bitcoin -t bitcoin-linter
+
+  centos:
+    name: '32-bit CentOS, dash, gui'
+    runs-on: [self-hosted, Linux, X64]
+    if: github.repository_owner != 'bitcoin' && github.event_name == 'pull_request'
+    env:
+      FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
+      MAKEJOBS: '-j4'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run in Docker
+        run: |
+          docker stop $(docker ps -a -q) || true
+          env -i FILE_ENV="$FILE_ENV" MAKEJOBS="$MAKEJOBS" DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" DOCKER_HOST="$DOCKER_HOST" HOME="$HOME" PATH="$PATH" USER="$USER" bash -c './ci/test_run_all.sh'
+
+  multiprocess:
+    name: 'multiprocess, i686, DEBUG'
+    runs-on: [self-hosted, Linux, X64]
+    if: github.repository_owner != 'bitcoin' && github.event_name == 'pull_request'
+    env:
+      FILE_ENV: "./ci/test/00_setup_env_i686_multiprocess.sh"
+      MAKEJOBS: '-j4'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run in Docker
+        run: |
+          docker stop $(docker ps -a -q) || true
+          env -i FILE_ENV="$FILE_ENV" MAKEJOBS="$MAKEJOBS" DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" DOCKER_HOST="$DOCKER_HOST" HOME="$HOME" PATH="$PATH" USER="$USER" bash -c './ci/test_run_all.sh'
+
+  mac_cross:
+    name: 'macOS-cross, gui, no tests'
+    runs-on: [self-hosted, Linux, X64]
+    if: github.repository_owner != 'bitcoin' && github.event_name == 'pull_request'
+    env:
+      FILE_ENV: "./ci/test/00_setup_env_mac_cross.sh"
+      MAKEJOBS: '-j4'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run in Docker
+        run: |
+          docker stop $(docker ps -a -q) || true
+          env -i FILE_ENV="$FILE_ENV" MAKEJOBS="$MAKEJOBS" DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" DOCKER_HOST="$DOCKER_HOST" HOME="$HOME" PATH="$PATH" USER="$USER" bash -c './ci/test_run_all.sh'
+
+  native_asan:
+    name: 'ASan + LSan + UBSan + integer, no depends, USDT'
+    runs-on: [self-hosted, Linux, X64]
+    if: github.repository_owner != 'bitcoin' && github.event_name == 'pull_request'
+    env:
+      FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
+      MAKEJOBS: '-j4'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run in Docker
+        run: |
+          docker stop $(docker ps -a -q) || true
+          env -i FILE_ENV="$FILE_ENV" MAKEJOBS="$MAKEJOBS" DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" DOCKER_HOST="$DOCKER_HOST" HOME="$HOME" PATH="$PATH" USER="$USER" bash -c './ci/test_run_all.sh'
+
+  native_fuzz:
+    name: 'fuzzer,address,undefined,integer, no depends'
+    runs-on: [self-hosted, Linux, X64]
+    if: github.repository_owner != 'bitcoin' && github.event_name == 'pull_request'
+    env:
+      FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
+      MAKEJOBS: '-j32'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run in Docker
+        run: |
+          docker stop $(docker ps -a -q) || true
+          env -i FILE_ENV="$FILE_ENV" MAKEJOBS="$MAKEJOBS" DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" DOCKER_HOST="$DOCKER_HOST" HOME="$HOME" PATH="$PATH" USER="$USER" bash -c './ci/test_run_all.sh'
+
+  native_msan:
+    name: 'MSan, depends'
+    runs-on: [self-hosted, Linux, X64]
+    if: github.repository_owner != 'bitcoin' && github.event_name == 'pull_request'
+    env:
+      FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
+      MAKEJOBS: '-j4'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run in Docker
+        run: |
+          docker stop $(docker ps -a -q) || true
+          env -i FILE_ENV="$FILE_ENV" MAKEJOBS="$MAKEJOBS" DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" DOCKER_HOST="$DOCKER_HOST" HOME="$HOME" PATH="$PATH" USER="$USER" bash -c './ci/test_run_all.sh'
+
+  kernel:
+    name: 'no wallet, libbitcoinkernel'
+    runs-on: [self-hosted, Linux, X64]
+    if: github.repository_owner != 'bitcoin' && github.event_name == 'pull_request'
+    env:
+      FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libbitcoinkernel.sh"
+      MAKEJOBS: '-j4'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run in Docker
+        run: |
+          docker stop $(docker ps -a -q) || true
+          env -i FILE_ENV="$FILE_ENV" MAKEJOBS="$MAKEJOBS" DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" DOCKER_HOST="$DOCKER_HOST" HOME="$HOME" PATH="$PATH" USER="$USER" bash -c './ci/test_run_all.sh'
+
+  previous:
+    name: 'previous releases, depends DEBUG'
+    runs-on: [self-hosted, Linux, X64]
+    if: github.repository_owner != 'bitcoin' && github.event_name == 'pull_request'
+    env:
+      FILE_ENV: "./ci/test/00_setup_env_native_previous_releases.sh"
+      MAKEJOBS: '-j4'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run in Docker
+        run: |
+          docker stop $(docker ps -a -q) || true
+          env -i FILE_ENV="$FILE_ENV" MAKEJOBS="$MAKEJOBS" DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" DOCKER_HOST="$DOCKER_HOST" HOME="$HOME" PATH="$PATH" USER="$USER" bash -c './ci/test_run_all.sh'
+
+  tidy:
+    name: 'tidy'
+    runs-on: [self-hosted, Linux, X64]
+    if: github.repository_owner != 'bitcoin' && github.event_name == 'pull_request'
+    env:
+      FILE_ENV: "./ci/test/00_setup_env_native_tidy.sh"
+      MAKEJOBS: '-j4'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run in Docker
+        run: |
+          docker stop $(docker ps -a -q) || true
+          env -i FILE_ENV="$FILE_ENV" MAKEJOBS="$MAKEJOBS" DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" DOCKER_HOST="$DOCKER_HOST" HOME="$HOME" PATH="$PATH" USER="$USER" bash -c './ci/test_run_all.sh'
+
+  tsan:
+    name: 'TSan, depends, gui'
+    runs-on: [self-hosted, Linux, X64]
+    if: github.repository_owner != 'bitcoin' && github.event_name == 'pull_request'
+    env:
+      FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
+      MAKEJOBS: '-j4'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run in Docker
+        run: |
+          docker stop $(docker ps -a -q) || true
+          env -i FILE_ENV="$FILE_ENV" MAKEJOBS="$MAKEJOBS" DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" DOCKER_HOST="$DOCKER_HOST" HOME="$HOME" PATH="$PATH" USER="$USER" bash -c './ci/test_run_all.sh'
+
+  win64:
+    name: 'Win64, unit tests, no gui tests, no functional tests'
+    runs-on: [self-hosted, Linux, X64]
+    if: github.repository_owner != 'bitcoin' && github.event_name == 'pull_request'
+    env:
+      FILE_ENV: "./ci/test/00_setup_env_win64.sh"
+      MAKEJOBS: '-j4'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run in Docker
+        run: |
+          docker stop $(docker ps -a -q) || true
+          env -i FILE_ENV="$FILE_ENV" MAKEJOBS="$MAKEJOBS" DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" DOCKER_HOST="$DOCKER_HOST" HOME="$HOME" PATH="$PATH" USER="$USER" bash -c './ci/test_run_all.sh'
