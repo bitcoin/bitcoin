@@ -1068,7 +1068,7 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
 
 BOOST_AUTO_TEST_CASE(addrman_update_address)
 {
-    // Tests updating nTime via Connected() and nServices via SetServices()
+    // Tests updating nTime via Connected() and nServices via SetServices() and Add()
     auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
     CNetAddr source{ResolveIP("252.2.2.2")};
     CAddress addr{CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE)};
@@ -1095,6 +1095,32 @@ BOOST_AUTO_TEST_CASE(addrman_update_address)
     BOOST_CHECK_EQUAL(vAddr2.size(), 1U);
     BOOST_CHECK(vAddr2.at(0).nTime >= start_time + 10000s);
     BOOST_CHECK_EQUAL(vAddr2.at(0).nServices, NODE_NETWORK_LIMITED);
+
+    // Updating an existing addr through Add() (used in gossip relay) can add additional services but can't remove existing ones.
+    CAddress addr_v2{CAddress(ResolveService("250.1.1.1", 8333), NODE_P2P_V2)};
+    addr_v2.nTime = start_time;
+    BOOST_CHECK(!addrman->Add({addr_v2}, source));
+    std::vector<CAddress> vAddr3{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+    BOOST_CHECK_EQUAL(vAddr3.size(), 1U);
+    BOOST_CHECK_EQUAL(vAddr3.at(0).nServices, NODE_P2P_V2 | NODE_NETWORK_LIMITED);
+
+    // SetServices() (used when we connected to them) overwrites existing service flags
+    addrman->SetServices(addr, NODE_NETWORK);
+    std::vector<CAddress> vAddr4{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+    BOOST_CHECK_EQUAL(vAddr4.size(), 1U);
+    BOOST_CHECK_EQUAL(vAddr4.at(0).nServices, NODE_NETWORK);
+
+    // Promoting to Tried does not affect the service flags
+    BOOST_CHECK(addrman->Good(addr)); // addr has NODE_NONE
+    std::vector<CAddress> vAddr5{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+    BOOST_CHECK_EQUAL(vAddr5.size(), 1U);
+    BOOST_CHECK_EQUAL(vAddr5.at(0).nServices, NODE_NETWORK);
+
+    // Adding service flags even works when the addr is in Tried
+    BOOST_CHECK(!addrman->Add({addr_v2}, source));
+    std::vector<CAddress> vAddr6{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+    BOOST_CHECK_EQUAL(vAddr6.size(), 1U);
+    BOOST_CHECK_EQUAL(vAddr6.at(0).nServices, NODE_NETWORK | NODE_P2P_V2);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_size)

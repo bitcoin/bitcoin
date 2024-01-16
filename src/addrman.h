@@ -111,13 +111,16 @@ public:
 
     /**
      * Attempt to add one or more addresses to addrman's new table.
+     * If an address already exists in addrman, the existing entry may be updated
+     * (e.g. adding additional service flags). If the existing entry is in the new table,
+     * it may be added to more buckets, improving the probability of selection.
      *
      * @param[in] vAddr           Address records to attempt to add.
      * @param[in] source          The address of the node that sent us these addr records.
      * @param[in] time_penalty    A "time penalty" to apply to the address record's nTime. If a peer
      *                            sends us an address record with nTime=n, then we'll add it to our
      *                            addrman with nTime=(n - time_penalty).
-     * @return    true if at least one address is successfully added. */
+     * @return    true if at least one address is successfully added, or added to an additional bucket. Unaffected by updates. */
     bool Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, std::chrono::seconds time_penalty = 0s);
 
     /**
