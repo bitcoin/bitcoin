@@ -82,9 +82,6 @@ private:
     QWidget *createDateRangeWidget();
     void updateCalendarWidgets();
 
-    GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer{nullptr};
-
-    virtual void resizeEvent(QResizeEvent* event) override;
     void changeEvent(QEvent* e) override;
 
     bool eventFilter(QObject *obj, QEvent *event) override;

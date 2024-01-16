@@ -112,12 +112,7 @@ $ curl localhost:19998/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
 
 Returns various information about the TX mempool.
 Only supports JSON as output format.
-* loaded : (boolean) if the mempool is fully loaded
-* size : (numeric) the number of transactions in the TX mempool
-* bytes : (numeric) size of the TX mempool in bytes
-* usage : (numeric) total TX mempool memory usage
-* maxmempool : (numeric) maximum memory usage for the mempool in bytes
-* mempoolminfee : (numeric) minimum feerate (DASH per KB) for tx to be accepted
+Refer to the `getmempoolinfo` RPC for documentation of the fields.
 
 `GET /rest/mempool/contents.json`
 
