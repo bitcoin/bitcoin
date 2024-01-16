@@ -1960,12 +1960,12 @@ if test x$bitcoin_enable_qt != xno; then
 fi
 echo "  with zmq            = $use_zmq"
 if test x$enable_fuzz == xno; then
-    echo "  with test     = $use_tests"
+    echo "  with test           = $use_tests"
 else
-    echo "  with test     = not building test_dash because fuzzing is enabled"
-    echo "    with fuzz   = $enable_fuzz"
+    echo "  with test           = not building test_dash because fuzzing is enabled"
+    echo "    with fuzz           = $enable_fuzz"
 fi
-echo "  with bench    = $use_bench"
+echo "  with bench          = $use_bench"
 echo "  with upnp           = $use_upnp"
 echo "  with natpmp         = $use_natpmp"
 echo "  use asm             = $use_asm"
