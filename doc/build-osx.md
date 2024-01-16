@@ -39,6 +39,12 @@ brew install sqlite
 
 In that case the Homebrew package will prevail.
 
+If you want to build the disk image with `make deploy` (.dmg / optional), you need:
+[`macdeployqtplus`](../contrib/macdeploy/README.md) dependencies:
+```shell
+pip3 install ds_store mac_alias
+```
+
 #### Berkeley DB
 
 It is recommended to use Berkeley DB 4.8. If you have to build it yourself,
