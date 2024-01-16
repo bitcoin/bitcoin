@@ -26,7 +26,7 @@ jobs:
   test-each-commit:
     name: 'test each commit'
     runs-on: ubuntu-22.04
-    if: github.event_name == 'pull_request' && github.event.pull_request.commits != 1
+    if: github.repository_owner == 'bitcoin' && github.event_name == 'pull_request' && github.event.pull_request.commits != 1
     timeout-minutes: 360  # Use maximum time, see https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes. Assuming a worst case time of 1 hour per commit, this leads to a --max-count=6 below.
     env:
       MAX_COUNT: 6
@@ -76,8 +76,7 @@ jobs:
     runs-on: macos-13
 
     # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
-
+    if: github.repository_owner == 'bitcoin' && (github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request')
     timeout-minutes: 120
 
     env:
@@ -127,7 +126,7 @@ jobs:
     runs-on: windows-2022
 
     # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    if: github.repository_owner == 'bitcoin' && (github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request')
 
     env:
       CCACHE_MAXSIZE: '200M'
