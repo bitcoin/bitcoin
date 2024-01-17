@@ -8,6 +8,7 @@
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
+#include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/keyorigin.h>
 #include <script/signingprovider.h>
@@ -115,6 +116,8 @@ public:
     std::optional<uint32_t> m_locktime;
     //! Version
     std::optional<uint32_t> m_version;
+    //! Caps weight of resulting tx
+    int m_max_tx_weight{MAX_STANDARD_TX_WEIGHT};
 
     CCoinControl();
 

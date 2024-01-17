@@ -112,14 +112,17 @@ FUZZ_TARGET(coinselection)
     std::vector<OutputGroup> group_all;
     GroupCoins(fuzzed_data_provider, utxo_pool, coin_params, /*positive_only=*/false, group_all);
 
+    // Calculate upperbound of given input weight, allow all to be selected
+    int total_input_weight{0};
     for (const OutputGroup& group : group_all) {
         const CoinEligibilityFilter filter(fuzzed_data_provider.ConsumeIntegral<int>(), fuzzed_data_provider.ConsumeIntegral<int>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>());
         (void)group.EligibleForSpending(filter);
+        total_input_weight += group.m_weight;
     }
 
     // Run coinselection algorithms
     auto result_bnb = coin_params.m_subtract_fee_outputs ? util::Error{Untranslated("BnB disabled when SFFO is enabled")} :
-                      SelectCoinsBnB(group_pos, target, coin_params.m_cost_of_change, MAX_STANDARD_TX_WEIGHT);
+                      SelectCoinsBnB(group_pos, target, coin_params.m_cost_of_change, total_input_weight);
     if (result_bnb) {
         assert(result_bnb->GetChange(coin_params.min_viable_change, coin_params.m_change_fee) == 0);
         assert(result_bnb->GetSelectedValue() >= target);
@@ -127,7 +130,7 @@ FUZZ_TARGET(coinselection)
         (void)result_bnb->GetInputSet();
     }
 
-    auto result_srd = SelectCoinsSRD(group_pos, target, coin_params.m_change_fee, fast_random_context, MAX_STANDARD_TX_WEIGHT);
+    auto result_srd = SelectCoinsSRD(group_pos, target, coin_params.m_change_fee, fast_random_context, total_input_weight);
     if (result_srd) {
         assert(result_srd->GetSelectedValue() >= target);
         assert(result_srd->GetChange(CHANGE_LOWER, coin_params.m_change_fee) > 0); // Demonstrate that SRD creates change of at least CHANGE_LOWER
@@ -137,7 +140,7 @@ FUZZ_TARGET(coinselection)
     }
 
     CAmount change_target{GenerateChangeTarget(target, coin_params.m_change_fee, fast_random_context)};
-    auto result_knapsack = KnapsackSolver(group_all, target, change_target, fast_random_context, MAX_STANDARD_TX_WEIGHT);
+    auto result_knapsack = KnapsackSolver(group_all, target, change_target, fast_random_context, total_input_weight);
     if (result_knapsack) {
         assert(result_knapsack->GetSelectedValue() >= target);
         result_knapsack->ComputeAndSetWaste(coin_params.min_viable_change, coin_params.m_cost_of_change, coin_params.m_change_fee);

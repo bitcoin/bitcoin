@@ -533,6 +533,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 {"minconf", UniValueType(UniValue::VNUM)},
                 {"maxconf", UniValueType(UniValue::VNUM)},
                 {"input_weights", UniValueType(UniValue::VARR)},
+                {"max_tx_weight", UniValueType(UniValue::VNUM)},
             },
             true, true);
 
@@ -703,6 +704,14 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
         }
     }
 
+    if (options.exists("max_tx_weight")) {
+        coinControl.m_max_tx_weight = options["max_tx_weight"].getInt<int>();
+
+        if (coinControl.m_max_tx_weight < 0 || coinControl.m_max_tx_weight > MAX_STANDARD_TX_WEIGHT) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, max tx weight must be between 0 and %d", MAX_STANDARD_TX_WEIGHT));
+        }
+    }
+
     if (tx.vout.size() == 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
@@ -799,6 +808,8 @@ RPCHelpMan fundrawtransaction()
                                     },
                                 },
                              },
+                            {"max_tx_weight", RPCArg::Type::NUM, RPCArg::Default{MAX_STANDARD_TX_WEIGHT}, "The maximum acceptable transaction weight.\n"
+                                                          "Transaction selection will fail if this can not be satisfied."},
                         },
                         FundTxDoc()),
                         RPCArgOptions{
@@ -1239,6 +1250,8 @@ RPCHelpMan send()
                             {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
                         },
                     },
+                    {"max_tx_weight", RPCArg::Type::NUM, RPCArg::Default{MAX_STANDARD_TX_WEIGHT}, "The maximum acceptable transaction weight.\n"
+                                                  "Transaction selection will fail if this can not be satisfied."},
                 },
                 FundTxDoc()),
                 RPCArgOptions{.oneline_description="options"}},
@@ -1280,6 +1293,9 @@ RPCHelpMan send()
             // Automatically select coins, unless at least one is manually selected. Can
             // be overridden by options.add_inputs.
             coin_control.m_allow_other_inputs = rawTx.vin.size() == 0;
+            if (options.exists("max_tx_weight")) {
+                coin_control.m_max_tx_weight = options["max_tx_weight"].getInt<int>();
+            }
             SetOptionsInputWeights(options["inputs"], options);
             auto txr = FundTransaction(*pwallet, rawTx, options, coin_control, /*override_min_fee=*/false);
 
@@ -1337,6 +1353,8 @@ RPCHelpMan sendall()
                         {"send_max", RPCArg::Type::BOOL, RPCArg::Default{false}, "When true, only use UTXOs that can pay for their own fees to maximize the output amount. When 'false' (default), no UTXO is left behind. send_max is incompatible with providing specific inputs."},
                         {"minconf", RPCArg::Type::NUM, RPCArg::Default{0}, "Require inputs with at least this many confirmations."},
                         {"maxconf", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Require inputs with at most this many confirmations."},
+                        {"max_tx_weight", RPCArg::Type::NUM, RPCArg::Default{MAX_STANDARD_TX_WEIGHT}, "The maximum acceptable transaction weight.\n"
+                                                      "Transaction selection will fail if this can not be satisfied."},
                     },
                     FundTxDoc()
                 ),
@@ -1471,6 +1489,17 @@ RPCHelpMan sendall()
             const TxSize tx_size{CalculateMaximumSignedTxSize(CTransaction(rawTx), pwallet.get())};
             const CAmount fee_from_size{fee_rate.GetFee(tx_size.vsize)};
             const CAmount effective_value{total_input_value - fee_from_size};
+
+            // Cap tx weight based on estimated size if requested
+            if (options.exists("max_tx_weight")) {
+                const auto max_tx_weight =  options["max_tx_weight"].getInt<int>();
+                if (max_tx_weight < 0 || max_tx_weight > MAX_STANDARD_TX_WEIGHT) {
+                    throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Invalid parameter, max tx weight must be between 0 %d", MAX_STANDARD_TX_WEIGHT));
+                }
+                if (max_tx_weight < tx_size.weight) {
+                    throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Requested max tx weight exceeded: %d vs %s", options["max_tx_weight"].getInt<int>(), tx_size.weight));
+                }
+            }
 
             if (fee_from_size > pwallet->m_default_max_tx_fee) {
                 throw JSONRPCError(RPC_WALLET_ERROR, TransactionErrorString(TransactionError::MAX_FEE_EXCEEDED).original);
@@ -1679,6 +1708,8 @@ RPCHelpMan walletcreatefundedpsbt()
                                     {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
                                 },
                             },
+                            {"max_tx_weight", RPCArg::Type::NUM, RPCArg::Default{MAX_STANDARD_TX_WEIGHT}, "The maximum acceptable transaction weight.\n"
+                                                          "Transaction selection will fail if this can not be satisfied."},
                         },
                         FundTxDoc()),
                         RPCArgOptions{.oneline_description="options"}},

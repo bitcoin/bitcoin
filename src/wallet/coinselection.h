@@ -9,6 +9,7 @@
 #include <consensus/consensus.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
+#include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <util/check.h>
@@ -174,10 +175,15 @@ struct CoinSelectionParams {
      * 1) Received from other wallets, 2) replacing other txs, 3) that have been replaced.
      */
     bool m_include_unsafe_inputs = false;
+    /**
+     * The maximally sized transaction we are willing to make.
+     */
+    int32_t m_max_tx_weight{MAX_STANDARD_TX_WEIGHT};
 
     CoinSelectionParams(FastRandomContext& rng_fast, size_t change_output_size, size_t change_spend_size,
                         CAmount min_change_target, CFeeRate effective_feerate,
-                        CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial)
+                        CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial,
+                        int32_t max_tx_weight=MAX_STANDARD_TX_WEIGHT)
         : rng_fast{rng_fast},
           change_output_size(change_output_size),
           change_spend_size(change_spend_size),
@@ -186,7 +192,8 @@ struct CoinSelectionParams {
           m_long_term_feerate(long_term_feerate),
           m_discard_feerate(discard_feerate),
           tx_noinputs_size(tx_noinputs_size),
-          m_avoid_partial_spends(avoid_partial)
+          m_avoid_partial_spends(avoid_partial),
+          m_max_tx_weight(max_tx_weight)
     {
     }
     CoinSelectionParams(FastRandomContext& rng_fast)

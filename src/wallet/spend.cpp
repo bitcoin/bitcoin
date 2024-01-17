@@ -692,7 +692,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
     };
 
     // Maximum allowed weight
-    int max_inputs_weight = MAX_STANDARD_TX_WEIGHT - (coin_selection_params.tx_noinputs_size * WITNESS_SCALE_FACTOR);
+    int max_inputs_weight = coin_selection_params.m_max_tx_weight - (coin_selection_params.tx_noinputs_size * WITNESS_SCALE_FACTOR);
 
     // SFFO frequently causes issues in the context of changeless input sets: skip BnB when SFFO is active
     if (!coin_selection_params.m_subtract_fee_outputs) {
@@ -984,6 +984,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     CoinSelectionParams coin_selection_params{rng_fast}; // Parameters for coin selection, init with dummy
     coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
     coin_selection_params.m_include_unsafe_inputs = coin_control.m_include_unsafe_inputs;
+    coin_selection_params.m_max_tx_weight = coin_control.m_max_tx_weight;
 
     // Set the long term feerate estimate to the wallet's consolidate feerate
     coin_selection_params.m_long_term_feerate = wallet.m_consolidate_feerate;

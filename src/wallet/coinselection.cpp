@@ -74,7 +74,7 @@ struct {
 static const size_t TOTAL_TRIES = 100000;
 
 util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
-                                             int max_weight)
+                                             int max_input_weight)
 {
     SelectionResult result(selection_target, SelectionAlgorithm::BNB);
     CAmount curr_value = 0;
@@ -111,7 +111,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
             curr_value > selection_target + cost_of_change || // Selected value is out of range, go back and try other branch
             (curr_waste > best_waste && is_feerate_high)) { // Don't select things which we know will be more wasteful if the waste is increasing
             backtrack = true;
-        } else if (curr_selection_weight > max_weight) { // Exceeding weight for standard tx, cannot find more solutions by adding more inputs
+        } else if (curr_selection_weight > max_input_weight) { // Exceeding weight for standard tx, cannot find more solutions by adding more inputs
             max_tx_weight_exceeded = true; // at least one selection attempt exceeded the max weight
             backtrack = true;
         } else if (curr_value >= selection_target) {       // Selected value is within range
@@ -193,7 +193,7 @@ public:
 };
 
 util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, CAmount change_fee, FastRandomContext& rng,
-                                             int max_weight)
+                                             int max_input_weight)
 {
     SelectionResult result(target_value, SelectionAlgorithm::SRD);
     std::priority_queue<OutputGroup, std::vector<OutputGroup>, MinOutputGroupComparator> heap;
@@ -223,14 +223,14 @@ util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utx
 
         // If the selection weight exceeds the maximum allowed size, remove the least valuable inputs until we
         // are below max weight.
-        if (weight > max_weight) {
+        if (weight > max_input_weight) {
             max_tx_weight_exceeded = true; // mark it in case we don't find any useful result.
             do {
                 const OutputGroup& to_remove_group = heap.top();
                 selected_eff_value -= to_remove_group.GetSelectionAmount();
                 weight -= to_remove_group.m_weight;
                 heap.pop();
-            } while (!heap.empty() && weight > max_weight);
+            } while (!heap.empty() && weight > max_input_weight);
         }
 
         // Now check if we are above the target
@@ -259,9 +259,10 @@ util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utx
  */
 static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::vector<OutputGroup>& groups,
                                   const CAmount& nTotalLower, const CAmount& nTargetValue,
-                                  std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000)
+                                  std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000, size_t max_input_weight = MAX_STANDARD_TX_WEIGHT)
 {
     std::vector<char> vfIncluded;
+    size_t total_input_weight{0};
 
     // Worst case "best" approximation is just all of the groups.
     vfBest.assign(groups.size(), true);
@@ -286,17 +287,19 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
                 {
                     nTotal += groups[i].GetSelectionAmount();
                     vfIncluded[i] = true;
+                    total_input_weight += groups[i].m_weight;
                     if (nTotal >= nTargetValue)
                     {
                         fReachedTarget = true;
                         // If the total is between nTargetValue and nBest, it's our new best
                         // approximation.
-                        if (nTotal < nBest)
+                        if (nTotal < nBest && total_input_weight <= max_input_weight)
                         {
                             nBest = nTotal;
                             vfBest = vfIncluded;
                         }
                         nTotal -= groups[i].GetSelectionAmount();
+                        total_input_weight -= groups[i].m_weight;
                         vfIncluded[i] = false;
                     }
                 }
@@ -306,7 +309,7 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
 }
 
 util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
-                                             CAmount change_target, FastRandomContext& rng, int max_weight)
+                                             CAmount change_target, FastRandomContext& rng, int max_input_weight)
 {
     SelectionResult result(nTargetValue, SelectionAlgorithm::KNAPSACK);
 
@@ -320,13 +323,13 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
     Shuffle(groups.begin(), groups.end(), rng);
 
     for (const OutputGroup& group : groups) {
-        if (group.GetSelectionAmount() == nTargetValue) {
+        if (group.GetSelectionAmount() == nTargetValue && group.m_weight <= max_input_weight) {
             result.AddInput(group);
             return result;
         } else if (group.GetSelectionAmount() < nTargetValue + change_target) {
             applicable_groups.push_back(group);
             nTotalLower += group.GetSelectionAmount();
-        } else if (!lowest_larger || group.GetSelectionAmount() < lowest_larger->GetSelectionAmount()) {
+        } else if (group.m_weight <= max_input_weight && (!lowest_larger || group.GetSelectionAmount() < lowest_larger->GetSelectionAmount())) {
             lowest_larger = group;
         }
     }
@@ -335,13 +338,19 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
         for (const auto& group : applicable_groups) {
             result.AddInput(group);
         }
-        return result;
+        if (result.GetWeight() <= max_input_weight) return result;
+
+        // Try something else
+        result.Clear();
     }
 
     if (nTotalLower < nTargetValue) {
-        if (!lowest_larger) return util::Error();
+        if (!lowest_larger) return util::Error{Untranslated(strprintf("Only %d coins to cover target value of %d", nTotalLower, nTargetValue))};
         result.AddInput(*lowest_larger);
-        return result;
+        if (result.GetWeight() <= max_input_weight) return result;
+
+        // Try something else
+        result.Clear();
     }
 
     // Solve subset sum by stochastic approximation
@@ -349,9 +358,9 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
     std::vector<char> vfBest;
     CAmount nBest;
 
-    ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue, vfBest, nBest);
+    ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue, vfBest, nBest, max_input_weight);
     if (nBest != nTargetValue && nTotalLower >= nTargetValue + change_target) {
-        ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue + change_target, vfBest, nBest);
+        ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue + change_target, vfBest, nBest, max_input_weight);
     }
 
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
@@ -367,7 +376,7 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
         }
 
         // If the result exceeds the maximum allowed size, return closest UTXO above the target
-        if (result.GetWeight() > max_weight) {
+        if (result.GetWeight() > max_input_weight) {
             // No coin above target, nothing to do.
             if (!lowest_larger) return ErrorMaxWeightExceeded();
 
@@ -386,7 +395,7 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
             LogPrint(BCLog::SELECTCOINS, "%stotal %s\n", log_message, FormatMoney(nBest));
         }
     }
-
+    Assume(result.GetWeight() <= max_input_weight);
     return result;
 }
 
