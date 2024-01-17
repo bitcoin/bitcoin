@@ -79,6 +79,12 @@ private:
      */
     std::unordered_map<NodeId, std::variant<uint64_t, TxReconciliationState>> m_states GUARDED_BY(m_txreconciliation_mutex);
 
+    /*
+     * Keeps track of how many of the registered peers are inbound. Updated on registering or
+     * forgetting peers.
+     */
+    size_t m_inbounds_count GUARDED_BY(m_txreconciliation_mutex){0};
+
     TxReconciliationState* GetRegisteredPeerState(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(m_txreconciliation_mutex)
     {
         AssertLockHeld(m_txreconciliation_mutex);
@@ -139,6 +145,9 @@ public:
         bool emplaced = m_states.emplace(peer_id, std::move(new_state)).second;
         Assume(emplaced);
 
+        if (is_peer_inbound && m_inbounds_count < std::numeric_limits<size_t>::max()) {
+            ++m_inbounds_count;
+        }
         return ReconciliationRegisterResult::SUCCESS;
     }
 
@@ -191,6 +200,15 @@ public:
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
         LOCK(m_txreconciliation_mutex);
+        const auto peer = m_states.find(peer_id);
+        if (peer == m_states.end()) return;
+
+        const auto registered = std::get_if<TxReconciliationState>(&peer->second);
+        if (registered && !registered->m_we_initiate) {
+            Assert(m_inbounds_count > 0);
+            --m_inbounds_count;
+        }
+
         if (m_states.erase(peer_id)) {
             LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Forget txreconciliation state of peer=%d\n", peer_id);
         }
