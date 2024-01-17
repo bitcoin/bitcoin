@@ -7,6 +7,7 @@
 
 #include <crypto/common.h>
 #include <hash.h>
+#include <script/sigversion.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 #include <util/strencodings.h>
@@ -338,12 +339,23 @@ bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator en
     return true;
 }
 
-bool IsOpSuccess(const opcodetype& opcode)
+bool IsOpSuccess(const opcodetype& opcode, SigVersion sigversion)
 {
-    return opcode == 80 || opcode == 98 || (opcode >= 126 && opcode <= 129) ||
+    switch (sigversion)
+    {
+    case SigVersion::TAPSCRIPT:
+        return opcode == 80 || opcode == 98 || (opcode >= 126 && opcode <= 129) ||
            (opcode >= 131 && opcode <= 134) || (opcode >= 137 && opcode <= 138) ||
            (opcode >= 141 && opcode <= 142) || (opcode >= 149 && opcode <= 153) ||
            (opcode >= 187 && opcode <= 254);
+        break;
+    case SigVersion::BASE:
+    case SigVersion::WITNESS_V0:
+    case SigVersion::TAPROOT:
+        //impossible to have OP_SUCCESSx in old sig versions
+        break;
+    }
+    assert(false);
 }
 
 bool CheckMinimalPush(const std::vector<unsigned char>& data, opcodetype opcode) {

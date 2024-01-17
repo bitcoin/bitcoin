@@ -9,6 +9,7 @@
 #include <script/keyorigin.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
+#include <script/sigversion.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>

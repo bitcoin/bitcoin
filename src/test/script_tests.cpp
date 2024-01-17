@@ -14,6 +14,7 @@
 #include <script/sigcache.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
+#include <script/sigversion.h>
 #include <script/solver.h>
 #include <streams.h>
 #include <test/util/json.h>

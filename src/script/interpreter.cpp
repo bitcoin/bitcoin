@@ -10,6 +10,7 @@
 #include <crypto/sha256.h>
 #include <pubkey.h>
 #include <script/script.h>
+#include <script/sigversion.h>
 #include <uint256.h>
 
 typedef std::vector<unsigned char> valtype;
@@ -1799,7 +1800,7 @@ static bool ExecuteWitnessScript(const Span<const valtype>& stack_span, const CS
                 return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
             }
             // New opcodes will be listed here. May use a different sigversion to modify existing opcodes.
-            if (IsOpSuccess(opcode)) {
+            if (IsOpSuccess(opcode, sigversion)) {
                 if (flags & SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS) {
                     return set_error(serror, SCRIPT_ERR_DISCOURAGE_OP_SUCCESS);
                 }
