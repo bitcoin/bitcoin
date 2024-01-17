@@ -1337,7 +1337,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(
 
     auto res = CreateTransactionInternal(wallet, vecSend, change_pos, coin_control, sign);
     TRACE4(coin_selection, normal_create_tx_internal, wallet.GetName().c_str(), bool(res),
-           res ? res->fee : 0, res && res->change_pos.has_value() ? *res->change_pos : 0);
+           res ? res->fee : 0, res && res->change_pos.has_value() ? int32_t(*res->change_pos) : -1);
     if (!res) return res;
     const auto& txr_ungrouped = *res;
     // try with avoidpartialspends unless it's enabled already
@@ -1355,7 +1355,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(
         // if fee of this alternative one is within the range of the max fee, we use this one
         const bool use_aps{txr_grouped.has_value() ? (txr_grouped->fee <= txr_ungrouped.fee + wallet.m_max_aps_fee) : false};
         TRACE5(coin_selection, aps_create_tx_internal, wallet.GetName().c_str(), use_aps, txr_grouped.has_value(),
-               txr_grouped.has_value() ? txr_grouped->fee : 0, txr_grouped.has_value() && txr_grouped->change_pos.has_value() ? *txr_grouped->change_pos : 0);
+               txr_grouped.has_value() ? txr_grouped->fee : 0, txr_grouped.has_value() && txr_grouped->change_pos.has_value() ? int32_t(*txr_grouped->change_pos) : -1);
         if (txr_grouped) {
             wallet.WalletLogPrintf("Fee non-grouped = %lld, grouped = %lld, using %s\n",
                 txr_ungrouped.fee, txr_grouped->fee, use_aps ? "grouped" : "non-grouped");
