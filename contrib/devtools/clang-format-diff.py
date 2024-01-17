@@ -29,10 +29,7 @@ import re
 import subprocess
 import sys
 
-if sys.version_info.major >= 3:
-    from io import StringIO
-else:
-    from io import BytesIO as StringIO
+from io import StringIO
 
 
 def main():
@@ -172,7 +169,7 @@ def main():
             sys.exit(p.returncode)
 
         if not args.i:
-            with open(filename) as f:
+            with open(filename, encoding="utf8") as f:
                 code = f.readlines()
             formatted_code = StringIO(stdout).readlines()
             diff = difflib.unified_diff(
