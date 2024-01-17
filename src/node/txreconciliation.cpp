@@ -96,6 +96,12 @@ private:
     std::unordered_map<NodeId, std::variant<uint64_t, TxReconciliationState>> m_states GUARDED_BY(m_txreconciliation_mutex);
 
     /*
+     * Keeps track of how many of the registered peers are inbound. Updated on registering or
+     * forgetting peers.
+     */
+    size_t m_inbounds_count GUARDED_BY(m_txreconciliation_mutex){0};
+
+    /*
      * A least-recently-added cache tracking which peers we should fanout a transaction to.
      *
      * Since the time between cache accesses is on the order of seconds, returning an outdated
@@ -170,6 +176,9 @@ public:
         m_states.erase(recon_state);
         m_states.emplace(peer_id, std::move(new_state));
 
+        if (is_peer_inbound && m_inbounds_count < std::numeric_limits<size_t>::max()) {
+            ++m_inbounds_count;
+        }
         return ReconciliationRegisterResult::SUCCESS;
     }
 
@@ -214,13 +223,20 @@ public:
         return peer_state->m_local_set.erase(wtxid_to_remove) > 0;
     }
 
-    void ForgetPeer(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    void ForgetPeer(NodeId peer_id, bool is_peer_inbound) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
         LOCK(m_txreconciliation_mutex);
-        if (m_states.erase(peer_id)) {
-            LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Forget txreconciliation state of peer=%d\n", peer_id);
+        const auto peer = m_states.find(peer_id);
+        if (peer == m_states.end()) return;
+        const bool registered = std::holds_alternative<TxReconciliationState>(peer->second);
+        m_states.erase(peer);
+
+        if (registered && is_peer_inbound) {
+            Assert(m_inbounds_count > 0);
+            --m_inbounds_count;
         }
+        LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Forget txreconciliation state of peer=%d\n", peer_id);
     }
 
     /**
@@ -315,16 +331,9 @@ public:
         if (peer_state->m_we_initiate) {
             destinations = OUTBOUND_FANOUT_DESTINATIONS - outbounds_fanout_tx_relay;
         } else {
-            const size_t inbound_rcncl_peers = std::count_if(m_states.begin(), m_states.end(),
-                                                             [](const auto& indexed_state) {
-                                                                 const auto* cur_state = std::get_if<TxReconciliationState>(&indexed_state.second);
-                                                                 if (cur_state) return !cur_state->m_we_initiate;
-                                                                 return false;
-                                                             });
-
             // Since we use the fraction for inbound peers, we first need to compute the total
             // number of inbound targets.
-            const double inbound_targets = (inbounds_fanout_tx_relay + inbound_rcncl_peers) * INBOUND_FANOUT_DESTINATIONS_FRACTION;
+            const double inbound_targets = (inbounds_fanout_tx_relay + m_inbounds_count) * INBOUND_FANOUT_DESTINATIONS_FRACTION;
             destinations = inbound_targets - inbounds_fanout_tx_relay;
         }
 
@@ -363,9 +372,9 @@ bool TxReconciliationTracker::TryRemovingFromSet(NodeId peer_id, const Wtxid& wt
     return m_impl->TryRemovingFromSet(peer_id, wtxid_to_remove);
 }
 
-void TxReconciliationTracker::ForgetPeer(NodeId peer_id)
+void TxReconciliationTracker::ForgetPeer(NodeId peer_id, bool is_peer_inbound)
 {
-    m_impl->ForgetPeer(peer_id);
+    m_impl->ForgetPeer(peer_id, is_peer_inbound);
 }
 
 bool TxReconciliationTracker::IsPeerRegistered(NodeId peer_id) const

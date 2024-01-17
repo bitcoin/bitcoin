@@ -92,7 +92,7 @@ public:
      * Attempts to forget txreconciliation-related state of the peer (if we previously stored any).
      * After this, we won't be able to reconcile transactions with the peer.
      */
-    void ForgetPeer(NodeId peer_id);
+    void ForgetPeer(NodeId peer_id, bool is_peer_inbound);
 
     /**
      * Check if a peer is registered to reconcile transactions with us.

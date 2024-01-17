@@ -32,7 +32,7 @@ static void ShouldFanoutTo(benchmark::Bench& bench)
 
     bench.run([&] {
         for (NodeId peer = 0; peer < num_peers; ++peer) {
-            tracker.ShouldFanoutTo(txs[rand() % txs.size()], peer, /*inbounds_nonrcncl_tx_relay=*/0, /*outbounds_nonrcncl_tx_relay=*/0);
+            tracker.ShouldFanoutTo(txs[rand() % txs.size()], peer, /*inbounds_fanout_tx_relay=*/0, /*outbounds_fanout_tx_relay=*/0);
         }
     });
 }

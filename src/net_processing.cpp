@@ -1610,7 +1610,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
     }
     m_orphanage.EraseForPeer(nodeid);
     m_txrequest.DisconnectedPeer(nodeid);
-    if (m_txreconciliation) m_txreconciliation->ForgetPeer(nodeid);
+    if (m_txreconciliation) m_txreconciliation->ForgetPeer(nodeid, node.IsInboundConn());
     m_num_preferred_download_peers -= state->fPreferredDownload;
     m_peers_downloading_from -= (!state->vBlocksInFlight.empty());
     assert(m_peers_downloading_from >= 0);
@@ -3623,7 +3623,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // We could have optimistically pre-registered/registered the peer. In that case,
                 // we should forget about the reconciliation state here if this wasn't followed
                 // by WTXIDRELAY (since WTXIDRELAY can't be announced later).
-                m_txreconciliation->ForgetPeer(pfrom.GetId());
+                m_txreconciliation->ForgetPeer(pfrom.GetId(), pfrom.IsInboundConn());
             }
         }
 
