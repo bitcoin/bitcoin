@@ -510,6 +510,41 @@ BOOST_FIXTURE_TEST_CASE(wallet_coinsresult_test, BasicTestingSetup)
     }
 }
 
+BOOST_AUTO_TEST_CASE(effective_value_test)
+{
+    const int input_bytes = 148;
+    const CFeeRate feerate(1000);
+    const CAmount nValue = 10000;
+    const int nInput = 0;
+
+    CMutableTransaction tx;
+    tx.vout.resize(1);
+    tx.vout[nInput].nValue = nValue;
+
+    // standard case, pass feerate in constructor
+    COutput output1(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, feerate);
+    const CAmount expected_ev1 = 9852; // 10000 - 148
+    BOOST_CHECK_EQUAL(output1.GetEffectiveValue(), expected_ev1);
+
+    // input bytes unknown (input_bytes = -1), pass feerate in constructor
+    COutput output2(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, feerate);
+    BOOST_CHECK_EQUAL(output2.GetEffectiveValue(), nValue); // The effective value should be equal to the absolute value if input_bytes is -1
+
+    // negative effective value, pass feerate in constructor
+    COutput output3(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, CFeeRate(100000));
+    const CAmount expected_ev3 = -4800; // 10000 - 14800
+    BOOST_CHECK_EQUAL(output3.GetEffectiveValue(), expected_ev3);
+
+    // standard case, pass fees in constructor
+    const CAmount fees = 148;
+    COutput output4(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, fees);
+    BOOST_CHECK_EQUAL(output4.GetEffectiveValue(), expected_ev1);
+
+    // input bytes unknown (input_bytes = -1), pass fees in constructor
+    COutput output5(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, /*fees=*/ 0);
+    BOOST_CHECK_EQUAL(output5.GetEffectiveValue(), nValue); // The effective value should be equal to the absolute value if input_bytes is -1
+}
+
 BOOST_AUTO_TEST_CASE(SelectCoins_effective_value_test)
 {
     // Test that the effective value is used to check whether preset inputs provide sufficient funds when subtract_fee_outputs is not used.
