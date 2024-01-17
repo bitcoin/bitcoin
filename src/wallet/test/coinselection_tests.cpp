@@ -776,5 +776,59 @@ BOOST_AUTO_TEST_CASE(bump_fee_test)
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////  SelectCoins Test  ///////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Tests that with the ideal conditions, the coin selector will always be able to find a solution that can pay the target value
+BOOST_AUTO_TEST_CASE(SelectCoins_test)
+{
+    std::unique_ptr<CWallet> wallet = NewWallet(m_node);
+    LOCK(wallet->cs_wallet); // Every 'SelectCoins' call requires it
+
+    // Random generator stuff
+    std::default_random_engine generator;
+    std::exponential_distribution<double> distribution (100);
+    FastRandomContext rand;
+
+    // Run this test 100 times
+    for (int i = 0; i < 100; ++i)
+    {
+        CoinsResult available_coins;
+        CAmount balance{0};
+
+        // Make a wallet with 1000 exponentially distributed random inputs
+        for (int j = 0; j < 1000; ++j)
+        {
+            CAmount val = distribution(generator)*10000000;
+            AddCoinToWallet(available_coins, *wallet, val);
+            balance += val;
+        }
+
+        // Generate a random fee rate in the range of 100 - 400
+        CFeeRate rate(rand.randrange(300) + 100);
+
+        // Generate a random target value between 1000 and wallet balance
+        CAmount target = rand.randrange(balance - 1000) + 1000;
+
+        // Perform selection
+        CoinSelectionParams cs_params{
+            rand,
+            /*change_output_size=*/ 34,
+            /*change_spend_size=*/ 148,
+            /*min_change_target=*/ CENT,
+            /*effective_feerate=*/ CFeeRate(0),
+            /*long_term_feerate=*/ CFeeRate(0),
+            /*discard_feerate=*/ CFeeRate(0),
+            /*tx_noinputs_size=*/ 0,
+            /*avoid_partial=*/ false,
+        };
+        cs_params.m_cost_of_change = 1;
+        cs_params.min_viable_change = 1;
+        CCoinControl cc;
+        const auto result = SelectCoins(*wallet, available_coins, /*pre_set_inputs=*/{}, target, cc, cs_params);
+        BOOST_CHECK(result);
+        BOOST_CHECK_GE(result->GetSelectedValue(), target);
+    }
+}
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
