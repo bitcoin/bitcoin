@@ -109,6 +109,13 @@ class AssumeutxoTest(BitcoinTestFramework):
                 f.write(valid_snapshot_contents[(32 + 8 + offset + len(content)):])
             expected_error(log_msg=f"[snapshot] bad snapshot content hash: expected 61d9c2b29a2571a5fe285fe2d8554f91f93309666fc9b8223ee96338de25ff53, got {wrong_hash}")
 
+        self.log.info("  - snapshot file with invalid size, too small")
+        with open(bad_snapshot_path, "wb") as f:
+            f.write(b'z' * 1)
+        expected_error_msg = (f", couldn't read snapshot metadata from file {bad_snapshot_path}.\n"
+            "The file may be corrupted or it was crafted in an incompatible format.")
+        expected_error(rpc_details=expected_error_msg)
+
     def test_invalid_chainstate_scenarios(self):
         self.log.info("Test different scenarios of invalid snapshot chainstate in datadir")
 
