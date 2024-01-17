@@ -1113,7 +1113,7 @@
                <item row="3" column="0">
                 <widget class="QLabel" name="peerSessionIdLabel">
                  <property name="toolTip">
-                  <string>The BIP324 session ID string in hex, if any.</string>
+                  <string>The BIP324 session ID string in hex.</string>
                  </property>
                  <property name="text">
                   <string>Session ID</string>
