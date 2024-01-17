@@ -7,6 +7,7 @@
 
 #include <consensus/consensus.h>
 #include <script/interpreter.h>
+#include <script/sigversion.h>
 #include <primitives/transaction.h>
 
 class uint256;

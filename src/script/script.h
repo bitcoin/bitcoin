@@ -23,6 +23,8 @@
 #include <utility>
 #include <vector>
 
+enum class SigVersion;
+
 // Maximum number of bytes pushable to the stack
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520;
 
@@ -588,7 +590,7 @@ public:
 };
 
 /** Test for OP_SUCCESSx opcodes as defined by BIP342. */
-bool IsOpSuccess(const opcodetype& opcode);
+bool IsOpSuccess(const opcodetype& opcode, SigVersion sigVersion);
 
 bool CheckMinimalPush(const std::vector<unsigned char>& data, opcodetype opcode);
 
