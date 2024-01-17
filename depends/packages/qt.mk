@@ -273,5 +273,5 @@ endef
 
 define $(package)_postprocess_cmds
   rm -rf native/mkspecs/ native/lib/ lib/cmake/ && \
-  rm -f lib/lib*.la
+  rm -f lib/lib*.la lib/*.prl plugins/*/*.prl
 endef
