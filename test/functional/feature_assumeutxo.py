@@ -71,9 +71,9 @@ class AssumeutxoTest(BitcoinTestFramework):
             valid_snapshot_contents = f.read()
         bad_snapshot_path = valid_snapshot_path + '.mod'
 
-        def expected_error(log_msg="", rpc_details=""):
+        def expected_error(log_msg="", rpc_details="", rpc_error_code=-32603):
             with self.nodes[1].assert_debug_log([log_msg]):
-                assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot{rpc_details}", self.nodes[1].loadtxoutset, bad_snapshot_path)
+                assert_raises_rpc_error(rpc_error_code, f"Unable to load UTXO snapshot{rpc_details}", self.nodes[1].loadtxoutset, bad_snapshot_path)
 
         self.log.info("  - snapshot file referring to a block that is not in the assumeutxo parameters")
         prev_block_hash = self.nodes[0].getblockhash(SNAPSHOT_BASE_HEIGHT - 1)
@@ -113,6 +113,13 @@ class AssumeutxoTest(BitcoinTestFramework):
 
             log_msg = custom_message if custom_message is not None else f"[snapshot] bad snapshot content hash: expected a4bf3407ccb2cc0145c49ebba8fa91199f8a3903daf0883875941497d2493c27, got {wrong_hash}"
             expected_error(log_msg=log_msg)
+
+        self.log.info("  - inability to parse metadata fails early")
+        with open(bad_snapshot_path, "wb") as f:
+            f.write(b'z' * 1)
+        expected_error_msg = (f", couldn't read snapshot metadata from file {bad_snapshot_path}.\n"
+            "The file may be corrupted or it was crafted in an incompatible format.")
+        expected_error(rpc_details=expected_error_msg, rpc_error_code=-22)
 
     def test_headers_not_synced(self, valid_snapshot_path):
         for node in self.nodes[1:]:
