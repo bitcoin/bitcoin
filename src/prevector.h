@@ -65,6 +65,7 @@ public:
         iterator operator--(int) { iterator copy(*this); --(*this); return copy; }
         difference_type friend operator-(iterator a, iterator b) { return (&(*a) - &(*b)); }
         iterator operator+(size_type n) const { return iterator(ptr + n); }
+        iterator friend operator+(size_type n, iterator x) { return x + n; }
         iterator& operator+=(size_type n) { ptr += n; return *this; }
         iterator operator-(size_type n) const { return iterator(ptr - n); }
         iterator& operator-=(size_type n) { ptr -= n; return *this; }
@@ -116,6 +117,7 @@ public:
         const_iterator operator--(int) { const_iterator copy(*this); --(*this); return copy; }
         difference_type friend operator-(const_iterator a, const_iterator b) { return (&(*a) - &(*b)); }
         const_iterator operator+(size_type n) const { return const_iterator(ptr + n); }
+        const_iterator friend operator+(size_type n, const_iterator x) { return x + n; }
         const_iterator& operator+=(size_type n) { ptr += n; return *this; }
         const_iterator operator-(size_type n) const { return const_iterator(ptr - n); }
         const_iterator& operator-=(size_type n) { ptr -= n; return *this; }
