@@ -6,13 +6,16 @@
 #ifndef BITCOIN_VALIDATIONINTERFACE_H
 #define BITCOIN_VALIDATIONINTERFACE_H
 
-#include <kernel/cs_main.h>
 #include <kernel/chain.h>
+#include <kernel/cs_main.h>
 #include <primitives/transaction.h> // CTransaction(Ref)
 #include <sync.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <memory>
+#include <vector>
 
 class BlockValidationState;
 class CBlock;
@@ -24,41 +27,14 @@ enum class MemPoolRemovalReason;
 struct RemovedMempoolTransactionInfo;
 struct NewMempoolTransactionInfo;
 
-/** Register subscriber */
 void RegisterValidationInterface(CValidationInterface* callbacks);
-/** Unregister subscriber. DEPRECATED. This is not safe to use when the RPC server or main message handler thread is running. */
 void UnregisterValidationInterface(CValidationInterface* callbacks);
-/** Unregister all subscribers */
 void UnregisterAllValidationInterfaces();
 
-// Alternate registration functions that release a shared_ptr after the last
-// notification is sent. These are useful for race-free cleanup, since
-// unregistration is nonblocking and can return before the last notification is
-// processed.
-/** Register subscriber */
 void RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks);
-/** Unregister subscriber */
 void UnregisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks);
 
-/**
- * Pushes a function to callback onto the notification queue, guaranteeing any
- * callbacks generated prior to now are finished when the function is called.
- *
- * Be very careful blocking on func to be called if any locks are held -
- * validation interface clients may not be able to make progress as they often
- * wait for things like cs_main, so blocking until func is called with cs_main
- * will result in a deadlock (that DEBUG_LOCKORDER will miss).
- */
 void CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
-/**
- * This is a synonym for the following, which asserts certain locks are not
- * held:
- *     std::promise<void> promise;
- *     CallFunctionInValidationInterfaceQueue([&promise] {
- *         promise.set_value();
- *     });
- *     promise.get_future().wait();
- */
 void SyncWithValidationInterfaceQueue() LOCKS_EXCLUDED(cs_main);
 
 /**
@@ -194,12 +170,10 @@ class CMainSignals {
 private:
     std::unique_ptr<MainSignalsImpl> m_internals;
 
-    friend void ::RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface>);
-    friend void ::UnregisterValidationInterface(CValidationInterface*);
-    friend void ::UnregisterAllValidationInterfaces();
-    friend void ::CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
-
 public:
+    CMainSignals();
+    ~CMainSignals();
+
     /** Register a CScheduler to give callbacks which should run in the background (may only be called once) */
     void RegisterBackgroundSignalScheduler(CScheduler& scheduler);
     /** Unregister a CScheduler to give callbacks which should run in the background - these callbacks will now be dropped! */
@@ -209,6 +183,43 @@ public:
 
     size_t CallbacksPending();
 
+    /** Register subscriber */
+    void RegisterValidationInterface(CValidationInterface* callbacks);
+    /** Unregister subscriber. DEPRECATED. This is not safe to use when the RPC server or main message handler thread is running. */
+    void UnregisterValidationInterface(CValidationInterface* callbacks);
+    /** Unregister all subscribers */
+    void UnregisterAllValidationInterfaces();
+
+    // Alternate registration functions that release a shared_ptr after the last
+    // notification is sent. These are useful for race-free cleanup, since
+    // unregistration is nonblocking and can return before the last notification is
+    // processed.
+    /** Register subscriber */
+    void RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks);
+    /** Unregister subscriber */
+    void UnregisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks);
+
+    /**
+     * Pushes a function to callback onto the notification queue, guaranteeing any
+     * callbacks generated prior to now are finished when the function is called.
+     *
+     * Be very careful blocking on func to be called if any locks are held -
+     * validation interface clients may not be able to make progress as they often
+     * wait for things like cs_main, so blocking until func is called with cs_main
+     * will result in a deadlock (that DEBUG_LOCKORDER will miss).
+     */
+    void CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
+
+    /**
+     * This is a synonym for the following, which asserts certain locks are not
+     * held:
+     *     std::promise<void> promise;
+     *     CallFunctionInValidationInterfaceQueue([&promise] {
+     *         promise.set_value();
+     *     });
+     *     promise.get_future().wait();
+     */
+    void SyncWithValidationInterfaceQueue() LOCKS_EXCLUDED(cs_main);
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     void TransactionAddedToMempool(const NewMempoolTransactionInfo&, uint64_t mempool_sequence);
