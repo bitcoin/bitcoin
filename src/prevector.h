@@ -53,7 +53,8 @@ public:
         typedef T value_type;
         typedef T* pointer;
         typedef T& reference;
-        typedef std::random_access_iterator_tag iterator_category;
+        using element_type = T;
+        using iterator_category = std::contiguous_iterator_tag;
         iterator() = default;
         iterator(T* ptr_) : ptr(ptr_) {}
         T& operator*() const { return *ptr; }
@@ -104,7 +105,8 @@ public:
         typedef const T value_type;
         typedef const T* pointer;
         typedef const T& reference;
-        typedef std::random_access_iterator_tag iterator_category;
+        using element_type = const T;
+        using iterator_category = std::contiguous_iterator_tag;
         const_iterator() = default;
         const_iterator(const T* ptr_) : ptr(ptr_) {}
         const_iterator(iterator x) : ptr(&(*x)) {}
