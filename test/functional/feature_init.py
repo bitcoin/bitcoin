@@ -3,8 +3,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Stress tests related to node initialization."""
-import os
 from pathlib import Path
+import platform
 import shutil
 
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
@@ -36,7 +36,7 @@ class InitStressTest(BitcoinTestFramework):
         # and other approaches (like below) don't work:
         #
         #   os.kill(node.process.pid, signal.CTRL_C_EVENT)
-        if os.name == 'nt':
+        if platform.system() == 'Windows':
             raise SkipTest("can't SIGTERM on Windows")
 
         self.stop_node(0)

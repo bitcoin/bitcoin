@@ -126,6 +126,15 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
 
 task:
+  name: 'previous releases, depends DEBUG'
+  << : *GLOBAL_TASK_TEMPLATE
+  persistent_worker:
+    labels:
+      type: small
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_native_previous_releases.sh"
+
+task:
   name: 'TSan, depends'
   << : *GLOBAL_TASK_TEMPLATE
   persistent_worker:
@@ -194,10 +203,10 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libbitcoinkernel.sh"
 
 task:
-  name: 'macOS-cross 11.0, no tests'
+  name: 'macOS-cross, no tests'
   << : *GLOBAL_TASK_TEMPLATE
   persistent_worker:
     labels:
       type: small
   env:
-    FILE_ENV: "./ci/test/00_setup_env_mac.sh"
+    FILE_ENV: "./ci/test/00_setup_env_mac_cross.sh"

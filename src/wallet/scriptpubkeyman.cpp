@@ -270,7 +270,7 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
     for (const KeyMap::value_type& mKey : keys_to_encrypt) {
         const CKey& key = mKey.second;
         CPubKey vchPubKey = key.GetPubKey();
-        CKeyingMaterial vchSecret(key.begin(), key.end());
+        CKeyingMaterial vchSecret{UCharCast(key.begin()), UCharCast(key.end())};
         std::vector<unsigned char> vchCryptedSecret;
         if (!EncryptSecret(master_key, vchSecret, vchPubKey.GetHash(), vchCryptedSecret)) {
             encrypted_batch = nullptr;
@@ -800,7 +800,7 @@ bool LegacyScriptPubKeyMan::AddKeyPubKeyInner(const CKey& key, const CPubKey& pu
     }
 
     std::vector<unsigned char> vchCryptedSecret;
-    CKeyingMaterial vchSecret(key.begin(), key.end());
+    CKeyingMaterial vchSecret{UCharCast(key.begin()), UCharCast(key.end())};
     if (!EncryptSecret(m_storage.GetEncryptionKey(), vchSecret, pubkey.GetHash(), vchCryptedSecret)) {
         return false;
     }
@@ -2075,7 +2075,7 @@ bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, Walle
     for (const KeyMap::value_type& key_in : m_map_keys) {
         const CKey& key = key_in.second;
         CPubKey pubkey = key.GetPubKey();
-        CKeyingMaterial secret(key.begin(), key.end());
+        CKeyingMaterial secret{UCharCast(key.begin()), UCharCast(key.end())};
         std::vector<unsigned char> crypted_secret;
         if (!EncryptSecret(master_key, secret, pubkey.GetHash(), crypted_secret)) {
             return false;
@@ -2248,7 +2248,7 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
         }
 
         std::vector<unsigned char> crypted_secret;
-        CKeyingMaterial secret(key.begin(), key.end());
+        CKeyingMaterial secret{UCharCast(key.begin()), UCharCast(key.end())};
         if (!EncryptSecret(m_storage.GetEncryptionKey(), secret, pubkey.GetHash(), crypted_secret)) {
             return false;
         }
