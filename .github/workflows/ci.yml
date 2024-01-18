@@ -29,7 +29,10 @@ jobs:
   test-each-commit:
     name: 'test each commit'
     runs-on: ubuntu-22.04
-    if: github.event_name == 'pull_request' && github.event.pull_request.commits != 1
+    # Only run on pull requests, skip if there's only commit.
+    # Do not run on forks.
+    if: github.event_name == 'pull_request' && github.event.pull_request.commits != 1 &&
+        (github.repository == 'bitcoin-core/gui' || github.repository == 'bitcoin/bitcoin')
     timeout-minutes: 360  # Use maximum time, see https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes. Assuming a worst case time of 1 hour per commit, this leads to a --max-count=6 below.
     env:
       MAX_COUNT: 6
