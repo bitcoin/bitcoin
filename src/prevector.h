@@ -58,16 +58,15 @@ public:
         iterator(T* ptr_) : ptr(ptr_) {}
         T& operator*() const { return *ptr; }
         T* operator->() const { return ptr; }
-        T& operator[](size_type pos) { return ptr[pos]; }
-        const T& operator[](size_type pos) const { return ptr[pos]; }
+        T& operator[](size_type pos) const { return ptr[pos]; }
         iterator& operator++() { ptr++; return *this; }
         iterator& operator--() { ptr--; return *this; }
         iterator operator++(int) { iterator copy(*this); ++(*this); return copy; }
         iterator operator--(int) { iterator copy(*this); --(*this); return copy; }
         difference_type friend operator-(iterator a, iterator b) { return (&(*a) - &(*b)); }
-        iterator operator+(size_type n) { return iterator(ptr + n); }
+        iterator operator+(size_type n) const { return iterator(ptr + n); }
         iterator& operator+=(size_type n) { ptr += n; return *this; }
-        iterator operator-(size_type n) { return iterator(ptr - n); }
+        iterator operator-(size_type n) const { return iterator(ptr - n); }
         iterator& operator-=(size_type n) { ptr -= n; return *this; }
         bool operator==(iterator x) const { return ptr == x.ptr; }
         bool operator!=(iterator x) const { return ptr != x.ptr; }
@@ -87,10 +86,8 @@ public:
         typedef std::bidirectional_iterator_tag iterator_category;
         reverse_iterator() = default;
         reverse_iterator(T* ptr_) : ptr(ptr_) {}
-        T& operator*() { return *ptr; }
-        const T& operator*() const { return *ptr; }
-        T* operator->() { return ptr; }
-        const T* operator->() const { return ptr; }
+        T& operator*() const { return *ptr; }
+        T* operator->() const { return ptr; }
         reverse_iterator& operator--() { ptr++; return *this; }
         reverse_iterator& operator++() { ptr--; return *this; }
         reverse_iterator operator++(int) { reverse_iterator copy(*this); ++(*this); return copy; }
@@ -118,9 +115,9 @@ public:
         const_iterator operator++(int) { const_iterator copy(*this); ++(*this); return copy; }
         const_iterator operator--(int) { const_iterator copy(*this); --(*this); return copy; }
         difference_type friend operator-(const_iterator a, const_iterator b) { return (&(*a) - &(*b)); }
-        const_iterator operator+(size_type n) { return const_iterator(ptr + n); }
+        const_iterator operator+(size_type n) const { return const_iterator(ptr + n); }
         const_iterator& operator+=(size_type n) { ptr += n; return *this; }
-        const_iterator operator-(size_type n) { return const_iterator(ptr - n); }
+        const_iterator operator-(size_type n) const { return const_iterator(ptr - n); }
         const_iterator& operator-=(size_type n) { ptr -= n; return *this; }
         bool operator==(const_iterator x) const { return ptr == x.ptr; }
         bool operator!=(const_iterator x) const { return ptr != x.ptr; }
