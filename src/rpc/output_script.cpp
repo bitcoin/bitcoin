@@ -13,7 +13,6 @@
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/check.h>
@@ -281,6 +280,11 @@ static RPCHelpMan deriveaddresses()
                 for (const CScript& script : scripts) {
                     CTxDestination dest;
                     if (!ExtractDestination(script, dest)) {
+                        // ExtractDestination no longer returns true for P2PK since it doesn't have a corresponding address
+                        // However combo will output P2PK and should just ignore that script
+                        if (scripts.size() > 1 && std::get_if<PubKeyDestination>(&dest)) {
+                            continue;
+                        }
                         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Descriptor does not have a corresponding address");
                     }
 

@@ -59,9 +59,9 @@ struct TransactionsDelta final : public CValidationInterface {
     explicit TransactionsDelta(std::set<CTransactionRef>& r, std::set<CTransactionRef>& a)
         : m_removed{r}, m_added{a} {}
 
-    void TransactionAddedToMempool(const CTransactionRef& tx, uint64_t /* mempool_sequence */) override
+    void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t /* mempool_sequence */) override
     {
-        Assert(m_added.insert(tx).second);
+        Assert(m_added.insert(tx.info.m_tx).second);
     }
 
     void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t /* mempool_sequence */) override
@@ -123,12 +123,61 @@ CTxMemPool MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeConte
     CTxMemPool::Options mempool_opts{MemPoolOptionsForTest(node)};
 
     // ...override specific options for this specific fuzz suite
-    mempool_opts.estimator = nullptr;
     mempool_opts.check_ratio = 1;
     mempool_opts.require_standard = fuzzed_data_provider.ConsumeBool();
 
     // ...and construct a CTxMemPool from it
     return CTxMemPool{mempool_opts};
+}
+
+void CheckATMPInvariants(const MempoolAcceptResult& res, bool txid_in_mempool, bool wtxid_in_mempool)
+{
+
+    switch (res.m_result_type) {
+    case MempoolAcceptResult::ResultType::VALID:
+    {
+        Assert(txid_in_mempool);
+        Assert(wtxid_in_mempool);
+        Assert(res.m_state.IsValid());
+        Assert(!res.m_state.IsInvalid());
+        Assert(res.m_replaced_transactions);
+        Assert(res.m_vsize);
+        Assert(res.m_base_fees);
+        Assert(res.m_effective_feerate);
+        Assert(res.m_wtxids_fee_calculations);
+        Assert(!res.m_other_wtxid);
+        break;
+    }
+    case MempoolAcceptResult::ResultType::INVALID:
+    {
+        // It may be already in the mempool since in ATMP cases we don't set MEMPOOL_ENTRY or DIFFERENT_WITNESS
+        Assert(!res.m_state.IsValid());
+        Assert(res.m_state.IsInvalid());
+
+        const bool is_reconsiderable{res.m_state.GetResult() == TxValidationResult::TX_RECONSIDERABLE};
+        Assert(!res.m_replaced_transactions);
+        Assert(!res.m_vsize);
+        Assert(!res.m_base_fees);
+        // Fee information is provided if the failure is TX_RECONSIDERABLE.
+        // In other cases, validation may be unable or unwilling to calculate the fees.
+        Assert(res.m_effective_feerate.has_value() == is_reconsiderable);
+        Assert(res.m_wtxids_fee_calculations.has_value() == is_reconsiderable);
+        Assert(!res.m_other_wtxid);
+        break;
+    }
+    case MempoolAcceptResult::ResultType::MEMPOOL_ENTRY:
+    {
+        // ATMP never sets this; only set in package settings
+        Assert(false);
+        break;
+    }
+    case MempoolAcceptResult::ResultType::DIFFERENT_WITNESS:
+    {
+        // ATMP never sets this; only set in package settings
+        Assert(false);
+        break;
+    }
+    }
 }
 
 FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
@@ -230,7 +279,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
                                    tx->GetHash() :
                                    PickValue(fuzzed_data_provider, outpoints_rbf).hash;
             const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
-            tx_pool.PrioritiseTransaction(txid, delta);
+            tx_pool.PrioritiseTransaction(txid.ToUint256(), delta);
         }
 
         // Remember all removed and added transactions
@@ -258,9 +307,11 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         SyncWithValidationInterfaceQueue();
         UnregisterSharedValidationInterface(txr);
 
+        bool txid_in_mempool = tx_pool.exists(GenTxid::Txid(tx->GetHash()));
+        bool wtxid_in_mempool = tx_pool.exists(GenTxid::Wtxid(tx->GetWitnessHash()));
+        CheckATMPInvariants(res, txid_in_mempool, wtxid_in_mempool);
+
         Assert(accepted != added.empty());
-        Assert(accepted == res.m_state.IsValid());
-        Assert(accepted != res.m_state.IsInvalid());
         if (accepted) {
             Assert(added.size() == 1); // For now, no package acceptance
             Assert(tx == *added.begin());
@@ -315,7 +366,7 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
 
     MockTime(fuzzed_data_provider, chainstate);
 
-    std::vector<uint256> txids;
+    std::vector<Txid> txids;
     txids.reserve(g_outpoints_coinbase_init_mature.size());
     for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
         txids.push_back(outpoint.hash);
@@ -323,7 +374,7 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
     for (int i{0}; i <= 3; ++i) {
         // Add some immature and non-existent outpoints
         txids.push_back(g_outpoints_coinbase_init_immature.at(i).hash);
-        txids.push_back(ConsumeUInt256(fuzzed_data_provider));
+        txids.push_back(Txid::FromUint256(ConsumeUInt256(fuzzed_data_provider)));
     }
 
     SetMempoolConstraints(*node.args, fuzzed_data_provider);
@@ -343,11 +394,11 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
             tx_pool.RollingFeeUpdate();
         }
         if (fuzzed_data_provider.ConsumeBool()) {
-            const auto& txid = fuzzed_data_provider.ConsumeBool() ?
+            const auto txid = fuzzed_data_provider.ConsumeBool() ?
                                    mut_tx.GetHash() :
                                    PickValue(fuzzed_data_provider, txids);
             const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
-            tx_pool.PrioritiseTransaction(txid, delta);
+            tx_pool.PrioritiseTransaction(txid.ToUint256(), delta);
         }
 
         const auto tx = MakeTransactionRef(mut_tx);

@@ -50,6 +50,8 @@ struct NodeContext {
     std::unique_ptr<kernel::Context> kernel;
     //! Init interface for initializing current process and connecting to other processes.
     interfaces::Init* init{nullptr};
+    //! Interrupt object used to track whether node shutdown was requested.
+    util::SignalInterrupt* shutdown{nullptr};
     std::unique_ptr<AddrMan> addrman;
     std::unique_ptr<CConnman> connman;
     std::unique_ptr<CTxMemPool> mempool;

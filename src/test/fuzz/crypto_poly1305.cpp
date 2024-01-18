@@ -14,13 +14,12 @@ FUZZ_TARGET(crypto_poly1305)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
-    const std::vector<uint8_t> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, Poly1305::KEYLEN);
-    const std::vector<uint8_t> in = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+    const auto key = ConsumeFixedLengthByteVector<std::byte>(fuzzed_data_provider, Poly1305::KEYLEN);
+    const auto in = ConsumeRandomLengthByteVector<std::byte>(fuzzed_data_provider);
 
     std::vector<std::byte> tag_out(Poly1305::TAGLEN);
-    Poly1305{MakeByteSpan(key)}.Update(MakeByteSpan(in)).Finalize(tag_out);
+    Poly1305{key}.Update(in).Finalize(tag_out);
 }
-
 
 FUZZ_TARGET(crypto_poly1305_split)
 {
@@ -36,10 +35,10 @@ FUZZ_TARGET(crypto_poly1305_split)
 
     // Process input in pieces.
     LIMITED_WHILE(provider.remaining_bytes(), 100) {
-        auto in = provider.ConsumeRandomLengthString();
-        poly_split.Update(MakeByteSpan(in));
+        auto in = ConsumeRandomLengthByteVector<std::byte>(provider);
+        poly_split.Update(in);
         // Update total_input to match what was processed.
-        total_input.insert(total_input.end(), MakeByteSpan(in).begin(), MakeByteSpan(in).end());
+        total_input.insert(total_input.end(), in.begin(), in.end());
     }
 
     // Process entire input at once.

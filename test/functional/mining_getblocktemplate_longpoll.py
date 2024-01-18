@@ -41,7 +41,8 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
 
         self.log.info("Test that longpoll waits if we do nothing")
         thr = LongpollThread(self.nodes[0])
-        thr.start()
+        with self.nodes[0].assert_debug_log(["ThreadRPCServer method=getblocktemplate"], timeout=3):
+            thr.start()
         # check that thread still lives
         thr.join(5)  # wait 5 seconds or until thread exits
         assert thr.is_alive()
@@ -55,14 +56,16 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
 
         self.log.info("Test that longpoll will terminate if we generate a block ourselves")
         thr = LongpollThread(self.nodes[0])
-        thr.start()
+        with self.nodes[0].assert_debug_log(["ThreadRPCServer method=getblocktemplate"], timeout=3):
+            thr.start()
         self.generate(self.nodes[0], 1)  # generate a block on own node
         thr.join(5)  # wait 5 seconds or until thread exits
         assert not thr.is_alive()
 
         self.log.info("Test that introducing a new transaction into the mempool will terminate the longpoll")
         thr = LongpollThread(self.nodes[0])
-        thr.start()
+        with self.nodes[0].assert_debug_log(["ThreadRPCServer method=getblocktemplate"], timeout=3):
+            thr.start()
         # generate a transaction and submit it
         self.miniwallet.send_self_transfer(from_node=random.choice(self.nodes))
         # after one minute, every 10 seconds the mempool is probed, so in 80 seconds it should have returned

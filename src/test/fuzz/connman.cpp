@@ -36,7 +36,14 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                      fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
                      *g_setup->m_node.addrman,
                      *g_setup->m_node.netgroupman,
+                     Params(),
                      fuzzed_data_provider.ConsumeBool()};
+
+    const uint64_t max_outbound_limit{fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
+    CConnman::Options options;
+    options.nMaxOutboundLimit = max_outbound_limit;
+    connman.Init(options);
+
     CNetAddr random_netaddr;
     CNode random_node = ConsumeNode(fuzzed_data_provider);
     CSubNet random_subnet;
@@ -60,7 +67,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 random_string = fuzzed_data_provider.ConsumeRandomLengthString(64);
             },
             [&] {
-                connman.AddNode(random_string);
+                connman.AddNode({random_string, fuzzed_data_provider.ConsumeBool()});
             },
             [&] {
                 connman.CheckIncomingNonce(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
@@ -87,7 +94,8 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 (void)connman.GetAddresses(
                     /*max_addresses=*/fuzzed_data_provider.ConsumeIntegral<size_t>(),
                     /*max_pct=*/fuzzed_data_provider.ConsumeIntegral<size_t>(),
-                    /*network=*/std::nullopt);
+                    /*network=*/std::nullopt,
+                    /*filtered=*/fuzzed_data_provider.ConsumeBool());
             },
             [&] {
                 (void)connman.GetAddresses(
@@ -120,10 +128,10 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 connman.SetTryNewOutboundPeer(fuzzed_data_provider.ConsumeBool());
             });
     }
-    (void)connman.GetAddedNodeInfo();
+    (void)connman.GetAddedNodeInfo(fuzzed_data_provider.ConsumeBool());
     (void)connman.GetExtraFullOutboundCount();
     (void)connman.GetLocalServices();
-    (void)connman.GetMaxOutboundTarget();
+    assert(connman.GetMaxOutboundTarget() == max_outbound_limit);
     (void)connman.GetMaxOutboundTimeframe();
     (void)connman.GetMaxOutboundTimeLeftInCycle();
     (void)connman.GetNetworkActive();

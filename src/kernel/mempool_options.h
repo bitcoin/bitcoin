@@ -8,13 +8,10 @@
 
 #include <policy/feerate.h>
 #include <policy/policy.h>
-#include <script/standard.h>
 
 #include <chrono>
 #include <cstdint>
 #include <optional>
-
-class CBlockPolicyEstimator;
 
 /** Default for -maxmempool, maximum megabytes of mempool memory usage */
 static constexpr unsigned int DEFAULT_MAX_MEMPOOL_SIZE_MB{300};
@@ -24,6 +21,10 @@ static constexpr unsigned int DEFAULT_BLOCKSONLY_MAX_MEMPOOL_SIZE_MB{5};
 static constexpr unsigned int DEFAULT_MEMPOOL_EXPIRY_HOURS{336};
 /** Default for -mempoolfullrbf, if the transaction replaceability signaling is ignored */
 static constexpr bool DEFAULT_MEMPOOL_FULL_RBF{false};
+/** Whether to fall back to legacy V1 serialization when writing mempool.dat */
+static constexpr bool DEFAULT_PERSIST_V1_DAT{false};
+/** Default for -acceptnonstdtxn */
+static constexpr bool DEFAULT_ACCEPT_NON_STD_TXN{false};
 
 namespace kernel {
 /**
@@ -34,8 +35,6 @@ namespace kernel {
  * Most of the time, this struct should be referenced as CTxMemPool::Options.
  */
 struct MemPoolOptions {
-    /* Used to estimate appropriate transaction fees. */
-    CBlockPolicyEstimator* estimator{nullptr};
     /* The ratio used to determine how often sanity checks will run.  */
     int check_ratio{0};
     int64_t max_size_bytes{DEFAULT_MAX_MEMPOOL_SIZE_MB * 1'000'000};
@@ -55,6 +54,7 @@ struct MemPoolOptions {
     bool permit_bare_multisig{DEFAULT_PERMIT_BAREMULTISIG};
     bool require_standard{true};
     bool full_rbf{DEFAULT_MEMPOOL_FULL_RBF};
+    bool persist_v1_dat{DEFAULT_PERSIST_V1_DAT};
     MemPoolLimits limits{};
 };
 } // namespace kernel

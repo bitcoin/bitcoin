@@ -29,7 +29,7 @@ import struct
 import time
 import unittest
 
-from test_framework.siphash import siphash256
+from test_framework.crypto.siphash import siphash256
 from test_framework.util import assert_equal
 
 MAX_LOCATOR_SZ = 101
@@ -52,6 +52,7 @@ NODE_BLOOM = (1 << 2)
 NODE_WITNESS = (1 << 3)
 NODE_COMPACT_FILTERS = (1 << 6)
 NODE_NETWORK_LIMITED = (1 << 10)
+NODE_P2P_V2 = (1 << 11)
 
 MSG_TX = 1
 MSG_BLOCK = 2

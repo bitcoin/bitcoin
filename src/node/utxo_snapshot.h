@@ -35,8 +35,7 @@ public:
     SnapshotMetadata() { }
     SnapshotMetadata(
         const uint256& base_blockhash,
-        uint64_t coins_count,
-        unsigned int nchaintx) :
+        uint64_t coins_count) :
             m_base_blockhash(base_blockhash),
             m_coins_count(coins_count) { }
 

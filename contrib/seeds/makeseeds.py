@@ -11,7 +11,7 @@ import collections
 import ipaddress
 import re
 import sys
-from typing import List, Dict, Union
+from typing import Union
 
 from asmap import ASMap, net_to_prefix
 
@@ -117,14 +117,14 @@ def parseline(line: str) -> Union[dict, None]:
         'sortkey': sortkey,
     }
 
-def dedup(ips: List[Dict]) -> List[Dict]:
+def dedup(ips: list[dict]) -> list[dict]:
     """ Remove duplicates from `ips` where multiple ips share address and port. """
     d = {}
     for ip in ips:
         d[ip['ip'],ip['port']] = ip
     return list(d.values())
 
-def filtermultiport(ips: List[Dict]) -> List[Dict]:
+def filtermultiport(ips: list[dict]) -> list[dict]:
     """ Filter out hosts with more nodes per IP"""
     hist = collections.defaultdict(list)
     for ip in ips:
@@ -132,7 +132,7 @@ def filtermultiport(ips: List[Dict]) -> List[Dict]:
     return [value[0] for (key,value) in list(hist.items()) if len(value)==1]
 
 # Based on Greg Maxwell's seed_filter.py
-def filterbyasn(asmap: ASMap, ips: List[Dict], max_per_asn: Dict, max_per_net: int) -> List[Dict]:
+def filterbyasn(asmap: ASMap, ips: list[dict], max_per_asn: dict, max_per_net: int) -> list[dict]:
     """ Prunes `ips` by
     (a) trimming ips to have at most `max_per_net` ips from each net (e.g. ipv4, ipv6); and
     (b) trimming ips to have at most `max_per_asn` ips from each asn in each net.
@@ -143,8 +143,8 @@ def filterbyasn(asmap: ASMap, ips: List[Dict], max_per_asn: Dict, max_per_net: i
 
     # Filter IPv46 by ASN, and limit to max_per_net per network
     result = []
-    net_count: Dict[str, int] = collections.defaultdict(int)
-    asn_count: Dict[int, int] = collections.defaultdict(int)
+    net_count: dict[str, int] = collections.defaultdict(int)
+    asn_count: dict[int, int] = collections.defaultdict(int)
 
     for i, ip in enumerate(ips_ipv46):
         if net_count[ip['net']] == max_per_net:
@@ -165,9 +165,9 @@ def filterbyasn(asmap: ASMap, ips: List[Dict], max_per_asn: Dict, max_per_net: i
     result.extend(ips_onion[0:max_per_net])
     return result
 
-def ip_stats(ips: List[Dict]) -> str:
+def ip_stats(ips: list[dict]) -> str:
     """ Format and return pretty string from `ips`. """
-    hist: Dict[str, int] = collections.defaultdict(int)
+    hist: dict[str, int] = collections.defaultdict(int)
     for ip in ips:
         if ip is not None:
             hist[ip['net']] += 1

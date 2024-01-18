@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the dumpwallet RPC."""
 import datetime
-import os
 import time
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -12,6 +11,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
+from test_framework.wallet_util import WalletUnlock
 
 
 def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
@@ -111,8 +111,8 @@ class WalletDumpTest(BitcoinTestFramework):
     def run_test(self):
         self.nodes[0].createwallet("dump")
 
-        wallet_unenc_dump = os.path.join(self.nodes[0].datadir, "wallet.unencrypted.dump")
-        wallet_enc_dump = os.path.join(self.nodes[0].datadir, "wallet.encrypted.dump")
+        wallet_unenc_dump = self.nodes[0].datadir_path / "wallet.unencrypted.dump"
+        wallet_enc_dump = self.nodes[0].datadir_path / "wallet.encrypted.dump"
 
         # generate 30 addresses to compare against the dump
         # - 10 legacy P2PKH
@@ -156,7 +156,7 @@ class WalletDumpTest(BitcoinTestFramework):
 
         self.log.info('Dump unencrypted wallet')
         result = self.nodes[0].dumpwallet(wallet_unenc_dump)
-        assert_equal(result['filename'], wallet_unenc_dump)
+        assert_equal(result['filename'], str(wallet_unenc_dump))
 
         found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
             read_dump(wallet_unenc_dump, addrs, [multisig_addr], None)
@@ -173,26 +173,26 @@ class WalletDumpTest(BitcoinTestFramework):
 
         # encrypt wallet, restart, unlock and dump
         self.nodes[0].encryptwallet('test')
-        self.nodes[0].walletpassphrase('test', 100)
-        # Should be a no-op:
-        self.nodes[0].keypoolrefill()
-        self.nodes[0].dumpwallet(wallet_enc_dump)
+        with WalletUnlock(self.nodes[0], "test"):
+            # Should be a no-op:
+            self.nodes[0].keypoolrefill()
+            self.nodes[0].dumpwallet(wallet_enc_dump)
 
-        found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, _ = \
-            read_dump(wallet_enc_dump, addrs, [multisig_addr], hd_master_addr_unenc)
-        assert '# End of dump' in found_comments  # Check that file is not corrupt
-        assert_equal(dump_time_str, next(c for c in found_comments if c.startswith('# * Created on')))
-        assert_equal(dump_best_block_1, next(c for c in found_comments if c.startswith('# * Best block')))
-        assert_equal(dump_best_block_2, next(c for c in found_comments if c.startswith('#   mined on')))
-        assert_equal(found_legacy_addr, test_addr_count)  # all keys must be in the dump
-        assert_equal(found_p2sh_segwit_addr, test_addr_count)  # all keys must be in the dump
-        assert_equal(found_bech32_addr, test_addr_count)  # all keys must be in the dump
-        assert_equal(found_script_addr, 1)
-        assert_equal(found_addr_chg, 90 * 2)  # old reserve keys are marked as change now
-        assert_equal(found_addr_rsv, 90 * 2)
+            found_comments, found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, _ = \
+                read_dump(wallet_enc_dump, addrs, [multisig_addr], hd_master_addr_unenc)
+            assert '# End of dump' in found_comments  # Check that file is not corrupt
+            assert_equal(dump_time_str, next(c for c in found_comments if c.startswith('# * Created on')))
+            assert_equal(dump_best_block_1, next(c for c in found_comments if c.startswith('# * Best block')))
+            assert_equal(dump_best_block_2, next(c for c in found_comments if c.startswith('#   mined on')))
+            assert_equal(found_legacy_addr, test_addr_count)  # all keys must be in the dump
+            assert_equal(found_p2sh_segwit_addr, test_addr_count)  # all keys must be in the dump
+            assert_equal(found_bech32_addr, test_addr_count)  # all keys must be in the dump
+            assert_equal(found_script_addr, 1)
+            assert_equal(found_addr_chg, 90 * 2)  # old reserve keys are marked as change now
+            assert_equal(found_addr_rsv, 90 * 2)
 
-        # Overwriting should fail
-        assert_raises_rpc_error(-8, "already exists", lambda: self.nodes[0].dumpwallet(wallet_enc_dump))
+            # Overwriting should fail
+            assert_raises_rpc_error(-8, "already exists", lambda: self.nodes[0].dumpwallet(wallet_enc_dump))
 
         # Restart node with new wallet, and test importwallet
         self.restart_node(0)
@@ -220,7 +220,7 @@ class WalletDumpTest(BitcoinTestFramework):
         w3.sendtoaddress(w3.getnewaddress(), 10)
         w3.unloadwallet()
         self.nodes[0].loadwallet("w3")
-        w3.dumpwallet(os.path.join(self.nodes[0].datadir, "w3.dump"))
+        w3.dumpwallet(self.nodes[0].datadir_path / "w3.dump")
 
 if __name__ == '__main__':
     WalletDumpTest().main()

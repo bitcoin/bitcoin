@@ -257,7 +257,7 @@ class AvoidReuseTest(BitcoinTestFramework):
 
         if not self.options.descriptors:
             # For the second send, we transmute it to a related single-key address
-            # to make sure it's also detected as re-use
+            # to make sure it's also detected as reuse
             fund_spk = address_to_scriptpubkey(fundaddr).hex()
             fund_decoded = self.nodes[0].decodescript(fund_spk)
             if second_addr_type == "p2sh-segwit":

@@ -193,7 +193,7 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
     auto read_result = ReadPragmaInteger(m_db, "application_id", "the application id", error);
     if (!read_result.has_value()) return false;
     uint32_t app_id = static_cast<uint32_t>(read_result.value());
-    uint32_t net_magic = ReadBE32(Params().MessageStart());
+    uint32_t net_magic = ReadBE32(Params().MessageStart().data());
     if (app_id != net_magic) {
         error = strprintf(_("SQLiteDatabase: Unexpected application id. Expected %u, got %u"), net_magic, app_id);
         return false;
@@ -324,7 +324,7 @@ void SQLiteDatabase::Open()
         }
 
         // Set the application id
-        uint32_t app_id = ReadBE32(Params().MessageStart());
+        uint32_t app_id = ReadBE32(Params().MessageStart().data());
         SetPragma(m_db, "application_id", strprintf("%d", static_cast<int32_t>(app_id)),
                   "Failed to set the application id");
 

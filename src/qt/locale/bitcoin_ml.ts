@@ -303,101 +303,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation type="unfinished">-maxtxfee യുടെ മൂല്യം വളരെ വലുതാണ്! ഇത്രയും ഉയര്ന്ന പ്രതിഫലം ഒരൊറ്റ ഇടപാടിൽ നൽകാൻ സാധ്യതയുണ്ട്.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation type="unfinished">പ്രതിഫലം മൂല്യനിർണയം ലഭ്യമാകാത്ത പക്ഷം നിങ്ങൾ നല്കേണ്ടിവരുന്ന ഇടപാട് പ്രതിഫലം ഇതാണ്.</translation>
-    </message>
-    <message>
-        <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished">ഡാറ്റാബേസിൽ നിന്നും വായിച്ചെടുക്കുന്നതിനു തടസം നേരിട്ടു, പ്രവർത്തനം അവസാനിപ്പിക്കുന്നു.</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low for %s</source>
-        <translation type="unfinished">Error: %s ൽ ഡിസ്ക് സ്പേസ് വളരെ കുറവാണ്</translation>
-    </message>
-    <message>
-        <source>Invalid -onion address or hostname: '%s'</source>
-        <translation type="unfinished">തെറ്റായ ഒണിയൻ അഡ്രസ് അല്ലെങ്കിൽ ഹോസ്റ്റ്നെയിം: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address or hostname: '%s'</source>
-        <translation type="unfinished">തെറ്റായ -പ്രോക്സി അഡ്രസ് അല്ലെങ്കിൽ ഹോസ്റ്റ് നെയിം : '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">തെറ്റായ തുക  -paytxfee=&lt;amount&gt; :'%s' (ഏറ്റവും കുറഞ്ഞത് %s എങ്കിലും ആയിരിക്കണം )</translation>
-    </message>
-    <message>
-        <source>Invalid netmask specified in -whitelist: '%s'</source>
-        <translation type="unfinished">-whitelist: '%s' ൽ രേഖപ്പെടുത്തിയിരിക്കുന്ന netmask തെറ്റാണ് </translation>
-    </message>
-    <message>
-        <source>Need to specify a port with -whitebind: '%s'</source>
-        <translation type="unfinished">-whitebind: '%s' നൊടൊപ്പം ഒരു പോർട്ട് കൂടി നിർദ്ദേശിക്കേണ്ടതുണ്ട് </translation>
-    </message>
-    <message>
-        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
-        <translation type="unfinished">സിസ്റ്റത്തിന്റെ പരിമിധികളാൽ -maxconnections ന്റെ മൂല്യം %d ൽ  നിന്നും %d യിലേക്ക് കുറക്കുന്നു.</translation>
-    </message>
-    <message>
-        <source>Section [%s] is not recognized.</source>
-        <translation type="unfinished">Section [%s]  തിരിച്ചറിഞ്ഞില്ല.</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation type="unfinished">ഇടപാട് സൈൻ ചെയ്യുന്നത് പരാജയപ്പെട്ടു.</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" does not exist</source>
-        <translation type="unfinished">നിർദേശിച്ച -walletdir "%s" നിലവിൽ ഇല്ല</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" is a relative path</source>
-        <translation type="unfinished">നിർദേശിച്ച -walletdir "%s" ഒരു റിലേറ്റീവ് പാത്ത് ആണ്</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" is not a directory</source>
-        <translation type="unfinished">നിർദേശിച്ച  -walletdir "%s" ഒരു ഡയറക്ടറി അല്ല </translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation type="unfinished">ഇടപാട് മൂല്യം തീരെ കുറവായതിനാൽ പ്രതിഫലം നൽകാൻ കഴിയില്ല.</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation type="unfinished">ഇത് പരീക്ഷിച്ചുകൊണ്ടിരിക്കുന്ന ഒരു സോഫ്റ്റ്‌വെയർ ആണ്.</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation type="unfinished">ഇടപാട് മൂല്യം വളരെ കുറവാണ്</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation type="unfinished">ഇടപാട് വളരെ വലുതാണ് </translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished">ഈ കംപ്യൂട്ടറിലെ %s ൽ ബൈൻഡ് ചെയ്യാൻ സാധിക്കുന്നില്ല ( ബൈൻഡ് തിരികെ തന്ന പിശക് %s )</translation>
-    </message>
-    <message>
-        <source>Unable to create the PID file '%s': %s</source>
-        <translation type="unfinished">PID ഫയൽ '%s': %s നിർമിക്കാൻ സാധിക്കുന്നില്ല </translation>
-    </message>
-    <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">പ്രാഥമിക കീ നിർമ്മിക്കാൻ സാധിക്കുന്നില്ല</translation>
-    </message>
-    <message>
-        <source>Unknown -blockfilterindex value %s.</source>
-        <translation type="unfinished">-blockfilterindex ന്റെ മൂല്യം %s മനസിലാക്കാൻ കഴിയുന്നില്ല.</translation>
-    </message>
-    </context>
-<context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
@@ -1036,6 +941,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1 നിർത്തുകയാണ്...</translation>
+    </message>
+    </context>
+<context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
@@ -1374,6 +1286,93 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">നിലവിലുള്ള  ടാബിലെ  വിവരങ്ങൾ ഒരു ഫയലിലേക്ക് എക്സ്പോർട്ട് ചെയ്യുക</translation>
+    </message>
+    </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation type="unfinished">പ്രതിഫലം മൂല്യനിർണയം ലഭ്യമാകാത്ത പക്ഷം നിങ്ങൾ നല്കേണ്ടിവരുന്ന ഇടപാട് പ്രതിഫലം ഇതാണ്.</translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation type="unfinished">ഡാറ്റാബേസിൽ നിന്നും വായിച്ചെടുക്കുന്നതിനു തടസം നേരിട്ടു, പ്രവർത്തനം അവസാനിപ്പിക്കുന്നു.</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation type="unfinished">Error: %s ൽ ഡിസ്ക് സ്പേസ് വളരെ കുറവാണ്</translation>
+    </message>
+    <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation type="unfinished">തെറ്റായ ഒണിയൻ അഡ്രസ് അല്ലെങ്കിൽ ഹോസ്റ്റ്നെയിം: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation type="unfinished">തെറ്റായ -പ്രോക്സി അഡ്രസ് അല്ലെങ്കിൽ ഹോസ്റ്റ് നെയിം : '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid netmask specified in -whitelist: '%s'</source>
+        <translation type="unfinished">-whitelist: '%s' ൽ രേഖപ്പെടുത്തിയിരിക്കുന്ന netmask തെറ്റാണ് </translation>
+    </message>
+    <message>
+        <source>Need to specify a port with -whitebind: '%s'</source>
+        <translation type="unfinished">-whitebind: '%s' നൊടൊപ്പം ഒരു പോർട്ട് കൂടി നിർദ്ദേശിക്കേണ്ടതുണ്ട് </translation>
+    </message>
+    <message>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation type="unfinished">സിസ്റ്റത്തിന്റെ പരിമിധികളാൽ -maxconnections ന്റെ മൂല്യം %d ൽ  നിന്നും %d യിലേക്ക് കുറക്കുന്നു.</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation type="unfinished">Section [%s]  തിരിച്ചറിഞ്ഞില്ല.</translation>
+    </message>
+    <message>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished">ഇടപാട് സൈൻ ചെയ്യുന്നത് പരാജയപ്പെട്ടു.</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation type="unfinished">നിർദേശിച്ച -walletdir "%s" നിലവിൽ ഇല്ല</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation type="unfinished">നിർദേശിച്ച -walletdir "%s" ഒരു റിലേറ്റീവ് പാത്ത് ആണ്</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation type="unfinished">നിർദേശിച്ച  -walletdir "%s" ഒരു ഡയറക്ടറി അല്ല </translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation type="unfinished">ഇടപാട് മൂല്യം തീരെ കുറവായതിനാൽ പ്രതിഫലം നൽകാൻ കഴിയില്ല.</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation type="unfinished">ഇത് പരീക്ഷിച്ചുകൊണ്ടിരിക്കുന്ന ഒരു സോഫ്റ്റ്‌വെയർ ആണ്.</translation>
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished">ഇടപാട് മൂല്യം വളരെ കുറവാണ്</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation type="unfinished">ഇടപാട് വളരെ വലുതാണ് </translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
+        <translation type="unfinished">ഈ കംപ്യൂട്ടറിലെ %s ൽ ബൈൻഡ് ചെയ്യാൻ സാധിക്കുന്നില്ല ( ബൈൻഡ് തിരികെ തന്ന പിശക് %s )</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation type="unfinished">PID ഫയൽ '%s': %s നിർമിക്കാൻ സാധിക്കുന്നില്ല </translation>
+    </message>
+    <message>
+        <source>Unable to generate initial keys</source>
+        <translation type="unfinished">പ്രാഥമിക കീ നിർമ്മിക്കാൻ സാധിക്കുന്നില്ല</translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation type="unfinished">-blockfilterindex ന്റെ മൂല്യം %s മനസിലാക്കാൻ കഴിയുന്നില്ല.</translation>
     </message>
     </context>
 </TS>

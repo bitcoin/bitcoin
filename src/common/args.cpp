@@ -28,7 +28,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include <filesystem>
 #include <map>
 #include <optional>
 #include <stdexcept>
@@ -216,7 +215,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
             m_command.push_back(key);
             while (++i < argc) {
                 // The remaining args are command args
-                m_command.push_back(argv[i]);
+                m_command.emplace_back(argv[i]);
             }
             break;
         }
@@ -278,7 +277,7 @@ fs::path ArgsManager::GetPathArg(std::string arg, const fs::path& default_value)
     return result.has_filename() ? result : result.parent_path();
 }
 
-const fs::path& ArgsManager::GetBlocksDirPath() const
+fs::path ArgsManager::GetBlocksDirPath() const
 {
     LOCK(cs_args);
     fs::path& path = m_cached_blocks_path;
@@ -303,7 +302,7 @@ const fs::path& ArgsManager::GetBlocksDirPath() const
     return path;
 }
 
-const fs::path& ArgsManager::GetDataDir(bool net_specific) const
+fs::path ArgsManager::GetDataDir(bool net_specific) const
 {
     LOCK(cs_args);
     fs::path& path = net_specific ? m_cached_network_datadir_path : m_cached_datadir_path;
@@ -718,6 +717,13 @@ fs::path ArgsManager::GetConfigFilePath() const
 {
     LOCK(cs_args);
     return *Assert(m_config_path);
+}
+
+void ArgsManager::SetConfigFilePath(fs::path path)
+{
+    LOCK(cs_args);
+    assert(!m_config_path);
+    m_config_path = path;
 }
 
 ChainType ArgsManager::GetChainType() const

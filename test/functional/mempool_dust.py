@@ -40,6 +40,7 @@ DUST_RELAY_TX_FEE = 3000  # default setting [sat/kvB]
 class DustRelayFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        self.extra_args = [['-permitbaremultisig']]
 
     def test_dust_output(self, node: TestNode, dust_relay_fee: Decimal,
                          output_script: CScript, type_desc: str) -> None:
@@ -101,7 +102,7 @@ class DustRelayFeeTest(BitcoinTestFramework):
             else:
                 dust_parameter = f"-dustrelayfee={dustfee_btc_kvb:.8f}"
                 self.log.info(f"Test dust limit setting {dust_parameter} ({dustfee_sat_kvb} sat/kvB)...")
-                self.restart_node(0, extra_args=[dust_parameter])
+                self.restart_node(0, extra_args=[dust_parameter, "-permitbaremultisig"])
 
             for output_script, description in output_scripts:
                 self.test_dust_output(self.nodes[0], dustfee_btc_kvb, output_script, description)

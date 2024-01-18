@@ -8,6 +8,7 @@
 #include <util/fs.h>
 #include <util/translation.h>
 #include <wallet/wallet.h>
+#include <wallet/walletdb.h>
 
 #include <algorithm>
 #include <fstream>
@@ -20,7 +21,7 @@ namespace wallet {
 static const std::string DUMP_MAGIC = "BITCOIN_CORE_WALLET_DUMP";
 uint32_t DUMP_VERSION = 1;
 
-bool DumpWallet(const ArgsManager& args, CWallet& wallet, bilingual_str& error)
+bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& error)
 {
     // Get the dumpfile
     std::string dump_filename = args.GetArg("-dumpfile", "");
@@ -44,7 +45,6 @@ bool DumpWallet(const ArgsManager& args, CWallet& wallet, bilingual_str& error)
 
     HashWriter hasher{};
 
-    WalletDatabase& db = wallet.GetDatabase();
     std::unique_ptr<DatabaseBatch> batch = db.MakeBatch();
 
     bool ret = true;
@@ -89,9 +89,6 @@ bool DumpWallet(const ArgsManager& args, CWallet& wallet, bilingual_str& error)
 
     cursor.reset();
     batch.reset();
-
-    // Close the wallet after we're done with it. The caller won't be doing this
-    wallet.Close();
 
     if (ret) {
         // Write the hash

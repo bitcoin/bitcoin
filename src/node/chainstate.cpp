@@ -17,6 +17,7 @@
 #include <txdb.h>
 #include <uint256.h>
 #include <util/fs.h>
+#include <util/signalinterrupt.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -37,10 +38,10 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     const ChainstateLoadOptions& options) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     auto& pblocktree{chainman.m_blockman.m_block_tree_db};
-    // new CBlockTreeDB tries to delete the existing file, which
+    // new BlockTreeDB tries to delete the existing file, which
     // fails if it's still open from the previous loop. Close it first:
     pblocktree.reset();
-    pblocktree = std::make_unique<CBlockTreeDB>(DBParams{
+    pblocktree = std::make_unique<BlockTreeDB>(DBParams{
         .path = chainman.m_options.datadir / "blocks" / "index",
         .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
         .memory_only = options.block_tree_db_in_memory,
@@ -55,14 +56,14 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         }
     }
 
-    if (options.check_interrupt && options.check_interrupt()) return {ChainstateLoadStatus::INTERRUPTED, {}};
+    if (chainman.m_interrupt) return {ChainstateLoadStatus::INTERRUPTED, {}};
 
     // LoadBlockIndex will load m_have_pruned if we've ever removed a
     // block file from disk.
     // Note that it also sets fReindex global based on the disk flag!
     // From here on, fReindex and options.reindex values may be different!
     if (!chainman.LoadBlockIndex()) {
-        if (options.check_interrupt && options.check_interrupt()) return {ChainstateLoadStatus::INTERRUPTED, {}};
+        if (chainman.m_interrupt) return {ChainstateLoadStatus::INTERRUPTED, {}};
         return {ChainstateLoadStatus::FAILURE, _("Error loading block database")};
     }
 
@@ -185,7 +186,14 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     chainman.InitializeChainstate(options.mempool);
 
     // Load a chain created from a UTXO snapshot, if any exist.
-    chainman.DetectSnapshotChainstate(options.mempool);
+    bool has_snapshot = chainman.DetectSnapshotChainstate();
+
+    if (has_snapshot && (options.reindex || options.reindex_chainstate)) {
+        LogPrintf("[snapshot] deleting snapshot chainstate due to reindexing\n");
+        if (!chainman.DeleteSnapshotChainstate()) {
+            return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated("Couldn't remove snapshot chainstate.")};
+        }
+    }
 
     auto [init_status, init_error] = CompleteChainstateInitialization(chainman, cache_sizes, options);
     if (init_status != ChainstateLoadStatus::SUCCESS) {

@@ -15,7 +15,6 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
-#include <version.h>
 
 #include <iostream>
 
@@ -78,8 +77,8 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
     }
 
     // Serialize and hash
-    CHashWriter ss(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
-    ss << txTmp << nHashType;
+    HashWriter ss{};
+    ss << TX_NO_WITNESS(txTmp) << nHashType;
     return ss.GetHash();
 }
 
@@ -100,15 +99,15 @@ void static RandomTransaction(CMutableTransaction& tx, bool fSingle)
     int ins = (InsecureRandBits(2)) + 1;
     int outs = fSingle ? ins : (InsecureRandBits(2)) + 1;
     for (int in = 0; in < ins; in++) {
-        tx.vin.push_back(CTxIn());
+        tx.vin.emplace_back();
         CTxIn &txin = tx.vin.back();
-        txin.prevout.hash = InsecureRand256();
+        txin.prevout.hash = Txid::FromUint256(InsecureRand256());
         txin.prevout.n = InsecureRandBits(2);
         RandomScript(txin.scriptSig);
         txin.nSequence = (InsecureRandBool()) ? InsecureRand32() : std::numeric_limits<uint32_t>::max();
     }
     for (int out = 0; out < outs; out++) {
-        tx.vout.push_back(CTxOut());
+        tx.vout.emplace_back();
         CTxOut &txout = tx.vout.back();
         txout.nValue = InsecureRandMoneyAmount();
         RandomScript(txout.scriptPubKey);
@@ -138,8 +137,8 @@ BOOST_AUTO_TEST_CASE(sighash_test)
         sho = SignatureHashOld(scriptCode, CTransaction(txTo), nIn, nHashType);
         sh = SignatureHash(scriptCode, txTo, nIn, nHashType, 0, SigVersion::BASE);
         #if defined(PRINT_SIGHASH_JSON)
-        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-        ss << txTo;
+        DataStream ss;
+        ss << TX_WITH_WITNESS(txTo);
 
         std::cout << "\t[\"" ;
         std::cout << HexStr(ss) << "\", \"";
@@ -188,8 +187,8 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           nHashType = test[3].getInt<int>();
           sigHashHex = test[4].get_str();
 
-          CDataStream stream(ParseHex(raw_tx), SER_NETWORK, PROTOCOL_VERSION);
-          stream >> tx;
+          DataStream stream(ParseHex(raw_tx));
+          stream >> TX_WITH_WITNESS(tx);
 
           TxValidationState state;
           BOOST_CHECK_MESSAGE(CheckTransaction(*tx, state), strTest);

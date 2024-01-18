@@ -12,7 +12,6 @@
 #include <streams.h>
 #include <util/result.h>
 #include <util/strencodings.h>
-#include <version.h>
 
 #include <algorithm>
 #include <string>
@@ -142,9 +141,9 @@ static bool DecodeTx(CMutableTransaction& tx, const std::vector<unsigned char>& 
     // Try decoding with extended serialization support, and remember if the result successfully
     // consumes the entire input.
     if (try_witness) {
-        CDataStream ssData(tx_data, SER_NETWORK, PROTOCOL_VERSION);
+        DataStream ssData(tx_data);
         try {
-            ssData >> tx_extended;
+            ssData >> TX_WITH_WITNESS(tx_extended);
             if (ssData.empty()) ok_extended = true;
         } catch (const std::exception&) {
             // Fall through.
@@ -160,9 +159,9 @@ static bool DecodeTx(CMutableTransaction& tx, const std::vector<unsigned char>& 
 
     // Try decoding with legacy serialization, and remember if the result successfully consumes the entire input.
     if (try_no_witness) {
-        CDataStream ssData(tx_data, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
+        DataStream ssData(tx_data);
         try {
-            ssData >> tx_legacy;
+            ssData >> TX_NO_WITNESS(tx_legacy);
             if (ssData.empty()) ok_legacy = true;
         } catch (const std::exception&) {
             // Fall through.
@@ -222,9 +221,9 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
         return false;
 
     std::vector<unsigned char> blockData(ParseHex(strHexBlk));
-    CDataStream ssBlock(blockData, SER_NETWORK, PROTOCOL_VERSION);
+    DataStream ssBlock(blockData);
     try {
-        ssBlock >> block;
+        ssBlock >> TX_WITH_WITNESS(block);
     }
     catch (const std::exception&) {
         return false;

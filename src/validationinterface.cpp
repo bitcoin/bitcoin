@@ -8,6 +8,8 @@
 #include <attributes.h>
 #include <chain.h>
 #include <consensus/validation.h>
+#include <kernel/chain.h>
+#include <kernel/mempool_entry.h>
 #include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -204,13 +206,14 @@ void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockInd
                           fInitialDownload);
 }
 
-void CMainSignals::TransactionAddedToMempool(const CTransactionRef& tx, uint64_t mempool_sequence) {
+void CMainSignals::TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t mempool_sequence)
+{
     auto event = [tx, mempool_sequence, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionAddedToMempool(tx, mempool_sequence); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: txid=%s wtxid=%s", __func__,
-                          tx->GetHash().ToString(),
-                          tx->GetWitnessHash().ToString());
+                          tx.info.m_tx->GetHash().ToString(),
+                          tx.info.m_tx->GetWitnessHash().ToString());
 }
 
 void CMainSignals::TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) {
@@ -223,13 +226,23 @@ void CMainSignals::TransactionRemovedFromMempool(const CTransactionRef& tx, MemP
                           RemovalReasonToString(reason));
 }
 
-void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex) {
-    auto event = [pblock, pindex, this] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockConnected(pblock, pindex); });
+void CMainSignals::BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex) {
+    auto event = [role, pblock, pindex, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockConnected(role, pblock, pindex); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: block hash=%s block height=%d", __func__,
                           pblock->GetHash().ToString(),
                           pindex->nHeight);
+}
+
+void CMainSignals::MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
+{
+    auto event = [txs_removed_for_block, nBlockHeight, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.MempoolTransactionsRemovedForBlock(txs_removed_for_block, nBlockHeight); });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: block height=%s txs removed=%s", __func__,
+                          nBlockHeight,
+                          txs_removed_for_block.size());
 }
 
 void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
@@ -242,9 +255,9 @@ void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock
                           pindex->nHeight);
 }
 
-void CMainSignals::ChainStateFlushed(const CBlockLocator &locator) {
-    auto event = [locator, this] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.ChainStateFlushed(locator); });
+void CMainSignals::ChainStateFlushed(ChainstateRole role, const CBlockLocator &locator) {
+    auto event = [role, locator, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.ChainStateFlushed(role, locator); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: block hash=%s", __func__,
                           locator.IsNull() ? "null" : locator.vHave.front().ToString());

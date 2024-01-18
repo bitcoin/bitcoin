@@ -12,7 +12,6 @@
 #include <pubkey.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
 #include <serialize.h>
 #include <test/util/net.h>
 #include <test/util/random.h>
@@ -87,9 +86,10 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 
     {
         LOCK(dummyNode1.cs_vSend);
-        BOOST_CHECK(dummyNode1.vSendMsg.size() > 0);
-        dummyNode1.vSendMsg.clear();
+        const auto& [to_send, _more, _msg_type] = dummyNode1.m_transport->GetBytesToSend(false);
+        BOOST_CHECK(!to_send.empty());
     }
+    connman.FlushSendBuffer(dummyNode1);
 
     int64_t nStartTime = GetTime();
     // Wait 21 minutes
@@ -97,7 +97,8 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in getheaders
     {
         LOCK(dummyNode1.cs_vSend);
-        BOOST_CHECK(dummyNode1.vSendMsg.size() > 0);
+        const auto& [to_send, _more, _msg_type] = dummyNode1.m_transport->GetBytesToSend(false);
+        BOOST_CHECK(!to_send.empty());
     }
     // Wait 3 more minutes
     SetMockTime(nStartTime+24*60);
@@ -141,14 +142,12 @@ static void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerM
 BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 {
     NodeId id{0};
-    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());
     auto peerLogic = PeerManager::make(*connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, {});
 
     constexpr int max_outbound_full_relay = MAX_OUTBOUND_FULL_RELAY_CONNECTIONS;
     CConnman::Options options;
-    options.nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
-    options.m_max_outbound_full_relay = max_outbound_full_relay;
-    options.nMaxFeeler = MAX_FEELER_CONNECTIONS;
+    options.m_max_automatic_connections = DEFAULT_MAX_PEER_CONNECTIONS;
 
     const auto time_init{GetTime<std::chrono::seconds>()};
     SetMockTime(time_init);
@@ -241,15 +240,13 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 BOOST_AUTO_TEST_CASE(block_relay_only_eviction)
 {
     NodeId id{0};
-    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());
     auto peerLogic = PeerManager::make(*connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, {});
 
     constexpr int max_outbound_block_relay{MAX_BLOCK_RELAY_ONLY_CONNECTIONS};
     constexpr int64_t MINIMUM_CONNECT_TIME{30};
     CConnman::Options options;
-    options.nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
-    options.m_max_outbound_full_relay = MAX_OUTBOUND_FULL_RELAY_CONNECTIONS;
-    options.m_max_outbound_block_relay = max_outbound_block_relay;
+    options.m_max_automatic_connections = DEFAULT_MAX_PEER_CONNECTIONS;
 
     connman->Init(options);
     std::vector<CNode*> vNodes;
@@ -304,7 +301,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     LOCK(NetEventsInterface::g_msgproc_mutex);
 
     auto banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());
     auto peerLogic = PeerManager::make(*connman, *m_node.addrman, banman.get(), *m_node.chainman, *m_node.mempool, {});
 
     CNetAddr tor_netaddr;
@@ -406,7 +403,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     LOCK(NetEventsInterface::g_msgproc_mutex);
 
     auto banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
+    auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());
     auto peerLogic = PeerManager::make(*connman, *m_node.addrman, banman.get(), *m_node.chainman, *m_node.mempool, {});
 
     banman->ClearBanned();

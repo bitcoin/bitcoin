@@ -8,6 +8,8 @@
         "src/crypto/ctaes",
         "src/leveldb",
         "src/minisketch",
+        "src/bench/nanobench.cpp",
+        "src/bench/nanobench.h",
         "src/secp256k1"
       ]
     },

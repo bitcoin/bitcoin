@@ -8,7 +8,7 @@ export TZ=UTC
 
 # Although Guix _does_ set umask when building its own packages (in our case,
 # this is all packages in manifest.scm), it does not set it for `guix
-# environment`. It does make sense for at least `guix environment --container`
+# shell`. It does make sense for at least `guix shell --container`
 # to set umask, so if that change gets merged upstream and we bump the
 # time-machine to a commit which includes the aforementioned change, we can
 # remove this line.
@@ -85,11 +85,12 @@ mkdir -p "$DISTSRC"
             # Apply detached codesignatures to dist/ (in-place)
             signapple apply dist/Bitcoin-Qt.app codesignatures/osx/dist
 
-            # Make a DMG from dist/
-            xorrisofs -D -l -V "$(< osx_volname)" -no-pad -r -dir-mode 0755 \
-                      -o "${OUTDIR}/${DISTNAME}-${HOST}.dmg" \
-                      dist \
-                      -- -volume_date all_file_dates ="$SOURCE_DATE_EPOCH"
+            # Make a .zip from dist/
+            cd dist/
+            find . -print0 \
+                | xargs -0r touch --no-dereference --date="@${SOURCE_DATE_EPOCH}"
+            find . | sort \
+                | zip -X@ "${OUTDIR}/${DISTNAME}-${HOST}.zip"
             ;;
         *)
             exit 1

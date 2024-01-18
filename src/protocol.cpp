@@ -91,9 +91,8 @@ const static std::vector<std::string> g_all_net_message_types{
 };
 
 CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
+    : pchMessageStart{pchMessageStartIn}
 {
-    memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
-
     // Copy the command name
     size_t i = 0;
     for (; i < COMMAND_SIZE && pszCommand[i] != 0; ++i) pchCommand[i] = pszCommand[i];
@@ -199,6 +198,7 @@ static std::string serviceFlagToStr(size_t bit)
     case NODE_WITNESS:         return "WITNESS";
     case NODE_COMPACT_FILTERS: return "COMPACT_FILTERS";
     case NODE_NETWORK_LIMITED: return "NETWORK_LIMITED";
+    case NODE_P2P_V2:          return "P2P_V2";
     // Not using default, so we get warned when a case is missing
     }
 

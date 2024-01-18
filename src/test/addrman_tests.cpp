@@ -98,8 +98,8 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     // Test: reset addrman and test AddrMan::Add multiple addresses works as expected
     addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
     std::vector<CAddress> vAddr;
-    vAddr.push_back(CAddress(ResolveService("250.1.1.3", 8333), NODE_NONE));
-    vAddr.push_back(CAddress(ResolveService("250.1.1.4", 8333), NODE_NONE));
+    vAddr.emplace_back(ResolveService("250.1.1.3", 8333), NODE_NONE);
+    vAddr.emplace_back(ResolveService("250.1.1.4", 8333), NODE_NONE);
     BOOST_CHECK(addrman->Add(vAddr, source));
     BOOST_CHECK(addrman->Size() >= 1);
 }
@@ -429,6 +429,24 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
     BOOST_CHECK_EQUAL(addrman->Size(), 2006U);
 }
 
+BOOST_AUTO_TEST_CASE(getaddr_unfiltered)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+
+    // Set time on this addr so isTerrible = false
+    CAddress addr1 = CAddress(ResolveService("250.250.2.1", 8333), NODE_NONE);
+    addr1.nTime = Now<NodeSeconds>();
+    // Not setting time so this addr should be isTerrible = true
+    CAddress addr2 = CAddress(ResolveService("250.251.2.2", 9999), NODE_NONE);
+
+    CNetAddr source = ResolveIP("250.1.2.1");
+    BOOST_CHECK(addrman->Add({addr1, addr2}, source));
+
+    // Filtered GetAddr should only return addr1
+    BOOST_CHECK_EQUAL(addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt).size(), 1U);
+    // Unfiltered GetAddr should return addr1 and addr2
+    BOOST_CHECK_EQUAL(addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt, /*filtered=*/false).size(), 2U);
+}
 
 BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
 {
@@ -440,8 +458,8 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
 
     AddrInfo info1 = AddrInfo(addr1, source1);
 
-    uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
-    uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
+    uint256 nKey1 = (HashWriter{} << 1).GetHash();
+    uint256 nKey2 = (HashWriter{} << 2).GetHash();
 
     BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, EMPTY_NETGROUPMAN), 40);
 
@@ -490,8 +508,8 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
 
     AddrInfo info1 = AddrInfo(addr1, source1);
 
-    uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
-    uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
+    uint256 nKey1 = (HashWriter{} << 1).GetHash();
+    uint256 nKey2 = (HashWriter{} << 2).GetHash();
 
     // Test: Make sure the buckets are what we expect
     BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, EMPTY_NETGROUPMAN), 786);
@@ -568,8 +586,8 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 
     AddrInfo info1 = AddrInfo(addr1, source1);
 
-    uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
-    uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
+    uint256 nKey1 = (HashWriter{} << 1).GetHash();
+    uint256 nKey2 = (HashWriter{} << 2).GetHash();
 
     BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, ngm_asmap), 236);
 
@@ -621,8 +639,8 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
 
     AddrInfo info1 = AddrInfo(addr1, source1);
 
-    uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
-    uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
+    uint256 nKey1 = (HashWriter{} << 1).GetHash();
+    uint256 nKey2 = (HashWriter{} << 2).GetHash();
 
     // Test: Make sure the buckets are what we expect
     BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, ngm_asmap), 795);
@@ -697,7 +715,7 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     auto addrman_asmap1_dup = std::make_unique<AddrMan>(netgroupman, DETERMINISTIC, ratio);
     auto addrman_noasmap = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, ratio);
 
-    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    DataStream stream{};
 
     CAddress addr = CAddress(ResolveService("250.1.1.1"), NODE_NONE);
     CNetAddr default_source;
@@ -757,7 +775,7 @@ BOOST_AUTO_TEST_CASE(remove_invalid)
     // Confirm that invalid addresses are ignored in unserialization.
 
     auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
-    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    DataStream stream{};
 
     const CAddress new1{ResolveService("5.5.5.5"), NODE_NONE};
     const CAddress new2{ResolveService("6.6.6.6"), NODE_NONE};
@@ -940,9 +958,9 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     BOOST_CHECK(!addr_pos36.tried);
 }
 
-static CDataStream AddrmanToStream(const AddrMan& addrman)
+static auto AddrmanToStream(const AddrMan& addrman)
 {
-    CDataStream ssPeersIn(SER_DISK, CLIENT_VERSION);
+    DataStream ssPeersIn{};
     ssPeersIn << Params().MessageStart();
     ssPeersIn << addrman;
     return ssPeersIn;
@@ -972,7 +990,7 @@ BOOST_AUTO_TEST_CASE(load_addrman)
     BOOST_CHECK(addrman.Size() == 3);
 
     // Test that the de-serialization does not throw an exception.
-    CDataStream ssPeers1 = AddrmanToStream(addrman);
+    auto ssPeers1{AddrmanToStream(addrman)};
     bool exceptionThrown = false;
     AddrMan addrman1{EMPTY_NETGROUPMAN, !DETERMINISTIC, GetCheckRatio(m_node)};
 
@@ -989,7 +1007,7 @@ BOOST_AUTO_TEST_CASE(load_addrman)
     BOOST_CHECK(exceptionThrown == false);
 
     // Test that ReadFromStream creates an addrman with the correct number of addrs.
-    CDataStream ssPeers2 = AddrmanToStream(addrman);
+    DataStream ssPeers2 = AddrmanToStream(addrman);
 
     AddrMan addrman2{EMPTY_NETGROUPMAN, !DETERMINISTIC, GetCheckRatio(m_node)};
     BOOST_CHECK(addrman2.Size() == 0);
@@ -998,9 +1016,9 @@ BOOST_AUTO_TEST_CASE(load_addrman)
 }
 
 // Produce a corrupt peers.dat that claims 20 addrs when it only has one addr.
-static CDataStream MakeCorruptPeersDat()
+static auto MakeCorruptPeersDat()
 {
-    CDataStream s(SER_DISK, CLIENT_VERSION);
+    DataStream s{};
     s << ::Params().MessageStart();
 
     unsigned char nVersion = 1;
@@ -1019,7 +1037,7 @@ static CDataStream MakeCorruptPeersDat()
     std::optional<CNetAddr> resolved{LookupHost("252.2.2.2", false)};
     BOOST_REQUIRE(resolved.has_value());
     AddrInfo info = AddrInfo(addr, resolved.value());
-    s << info;
+    s << CAddress::V1_DISK(info);
 
     return s;
 }
@@ -1027,7 +1045,7 @@ static CDataStream MakeCorruptPeersDat()
 BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
 {
     // Test that the de-serialization of corrupted peers.dat throws an exception.
-    CDataStream ssPeers1 = MakeCorruptPeersDat();
+    auto ssPeers1{MakeCorruptPeersDat()};
     bool exceptionThrown = false;
     AddrMan addrman1{EMPTY_NETGROUPMAN, !DETERMINISTIC, GetCheckRatio(m_node)};
     BOOST_CHECK(addrman1.Size() == 0);
@@ -1041,7 +1059,7 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
     BOOST_CHECK(exceptionThrown);
 
     // Test that ReadFromStream fails if peers.dat is corrupt
-    CDataStream ssPeers2 = MakeCorruptPeersDat();
+    auto ssPeers2{MakeCorruptPeersDat()};
 
     AddrMan addrman2{EMPTY_NETGROUPMAN, !DETERMINISTIC, GetCheckRatio(m_node)};
     BOOST_CHECK(addrman2.Size() == 0);
@@ -1050,7 +1068,7 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
 
 BOOST_AUTO_TEST_CASE(addrman_update_address)
 {
-    // Tests updating nTime via Connected() and nServices via SetServices()
+    // Tests updating nTime via Connected() and nServices via SetServices() and Add()
     auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
     CNetAddr source{ResolveIP("252.2.2.2")};
     CAddress addr{CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE)};
@@ -1077,6 +1095,32 @@ BOOST_AUTO_TEST_CASE(addrman_update_address)
     BOOST_CHECK_EQUAL(vAddr2.size(), 1U);
     BOOST_CHECK(vAddr2.at(0).nTime >= start_time + 10000s);
     BOOST_CHECK_EQUAL(vAddr2.at(0).nServices, NODE_NETWORK_LIMITED);
+
+    // Updating an existing addr through Add() (used in gossip relay) can add additional services but can't remove existing ones.
+    CAddress addr_v2{CAddress(ResolveService("250.1.1.1", 8333), NODE_P2P_V2)};
+    addr_v2.nTime = start_time;
+    BOOST_CHECK(!addrman->Add({addr_v2}, source));
+    std::vector<CAddress> vAddr3{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+    BOOST_CHECK_EQUAL(vAddr3.size(), 1U);
+    BOOST_CHECK_EQUAL(vAddr3.at(0).nServices, NODE_P2P_V2 | NODE_NETWORK_LIMITED);
+
+    // SetServices() (used when we connected to them) overwrites existing service flags
+    addrman->SetServices(addr, NODE_NETWORK);
+    std::vector<CAddress> vAddr4{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+    BOOST_CHECK_EQUAL(vAddr4.size(), 1U);
+    BOOST_CHECK_EQUAL(vAddr4.at(0).nServices, NODE_NETWORK);
+
+    // Promoting to Tried does not affect the service flags
+    BOOST_CHECK(addrman->Good(addr)); // addr has NODE_NONE
+    std::vector<CAddress> vAddr5{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+    BOOST_CHECK_EQUAL(vAddr5.size(), 1U);
+    BOOST_CHECK_EQUAL(vAddr5.at(0).nServices, NODE_NETWORK);
+
+    // Adding service flags even works when the addr is in Tried
+    BOOST_CHECK(!addrman->Add({addr_v2}, source));
+    std::vector<CAddress> vAddr6{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+    BOOST_CHECK_EQUAL(vAddr6.size(), 1U);
+    BOOST_CHECK_EQUAL(vAddr6.at(0).nServices, NODE_NETWORK | NODE_P2P_V2);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_size)

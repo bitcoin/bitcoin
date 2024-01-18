@@ -40,7 +40,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     assert(node.peerman);
 
     std::promise<void> promise;
-    uint256 txid = tx->GetHash();
+    Txid txid = tx->GetHash();
     uint256 wtxid = tx->GetWitnessHash();
     bool callback_set = false;
 

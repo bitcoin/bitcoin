@@ -11,7 +11,6 @@ Example usage:
     find ../path/to/binaries -type f -executable | xargs python3 contrib/devtools/symbol-check.py
 '''
 import sys
-from typing import List, Dict
 
 import lief
 
@@ -33,7 +32,7 @@ import lief
 # See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html for more info.
 
 MAX_VERSIONS = {
-'GCC':       (4,8,0),
+'GCC':       (4,3,0),
 'GLIBC': {
     lief.ELF.ARCH.x86_64: (2,27),
     lief.ELF.ARCH.ARM:    (2,27),
@@ -53,7 +52,7 @@ IGNORE_EXPORTS = {
 
 # Expected linker-loader names can be found here:
 # https://sourceware.org/glibc/wiki/ABIList?action=recall&rev=16
-ELF_INTERPRETER_NAMES: Dict[lief.ELF.ARCH, Dict[lief.ENDIANNESS, str]] = {
+ELF_INTERPRETER_NAMES: dict[lief.ELF.ARCH, dict[lief.ENDIANNESS, str]] = {
     lief.ELF.ARCH.x86_64:  {
         lief.ENDIANNESS.LITTLE: "/lib64/ld-linux-x86-64.so.2",
     },
@@ -72,7 +71,7 @@ ELF_INTERPRETER_NAMES: Dict[lief.ELF.ARCH, Dict[lief.ENDIANNESS, str]] = {
     },
 }
 
-ELF_ABIS: Dict[lief.ELF.ARCH, Dict[lief.ENDIANNESS, List[int]]] = {
+ELF_ABIS: dict[lief.ELF.ARCH, dict[lief.ENDIANNESS, list[int]]] = {
     lief.ELF.ARCH.x86_64: {
         lief.ENDIANNESS.LITTLE: [3,2,0],
     },
@@ -236,7 +235,12 @@ def check_MACHO_min_os(binary) -> bool:
     return False
 
 def check_MACHO_sdk(binary) -> bool:
-    if binary.build_version.sdk == [11, 0, 0]:
+    if binary.build_version.sdk == [14, 0, 0]:
+        return True
+    return False
+
+def check_MACHO_ld64(binary) -> bool:
+    if binary.build_version.tools[0].version == [711, 0, 0]:
         return True
     return False
 
@@ -278,6 +282,7 @@ lief.EXE_FORMATS.MACHO: [
     ('DYNAMIC_LIBRARIES', check_MACHO_libraries),
     ('MIN_OS', check_MACHO_min_os),
     ('SDK', check_MACHO_sdk),
+    ('LD64', check_MACHO_ld64),
 ],
 lief.EXE_FORMATS.PE: [
     ('DYNAMIC_LIBRARIES', check_PE_libraries),
@@ -296,7 +301,7 @@ if __name__ == '__main__':
                 retval = 1
                 continue
 
-            failed: List[str] = []
+            failed: list[str] = []
             for (name, func) in CHECKS[etype]:
                 if not func(binary):
                     failed.append(name)

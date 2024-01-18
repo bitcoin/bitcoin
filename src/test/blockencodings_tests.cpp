@@ -32,13 +32,13 @@ static CBlock BuildBlockTestCase() {
     block.hashPrevBlock = InsecureRand256();
     block.nBits = 0x207fffff;
 
-    tx.vin[0].prevout.hash = InsecureRand256();
+    tx.vin[0].prevout.hash = Txid::FromUint256(InsecureRand256());
     tx.vin[0].prevout.n = 0;
     block.vtx[1] = MakeTransactionRef(tx);
 
     tx.vin.resize(10);
     for (size_t i = 0; i < tx.vin.size(); i++) {
-        tx.vin[i].prevout.hash = InsecureRand256();
+        tx.vin[i].prevout.hash = Txid::FromUint256(InsecureRand256());
         tx.vin[i].prevout.n = 0;
     }
     block.vtx[2] = MakeTransactionRef(tx);
@@ -51,8 +51,8 @@ static CBlock BuildBlockTestCase() {
 }
 
 // Number of shared use_counts we expect for a tx we haven't touched
-// (block + mempool + our copy from the GetSharedTx call)
-constexpr long SHARED_TX_OFFSET{3};
+// (block + mempool entry + mempool txns_randomized + our copy from the GetSharedTx call)
+constexpr long SHARED_TX_OFFSET{4};
 
 BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
 {
@@ -62,13 +62,13 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
 
     LOCK2(cs_main, pool.cs);
     pool.addUnchecked(entry.FromTx(block.vtx[2]));
-    BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2]->GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 0);
+    BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
 
     // Do a simple ShortTxIDs RT
     {
         CBlockHeaderAndShortTxIDs shortIDs{block};
 
-        CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+        DataStream stream{};
         stream << shortIDs;
 
         CBlockHeaderAndShortTxIDs shortIDs2;
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
         BOOST_CHECK(!partialBlock.IsTxAvailable(1));
         BOOST_CHECK( partialBlock.IsTxAvailable(2));
 
-        BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2]->GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
+        BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 1);
 
         size_t poolSize = pool.size();
         pool.removeRecursive(*block.vtx[2], MemPoolRemovalReason::REPLACED);
@@ -119,7 +119,7 @@ public:
     std::vector<PrefilledTransaction> prefilledtxn;
 
     explicit TestHeaderAndShortIDs(const CBlockHeaderAndShortTxIDs& orig) {
-        CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+        DataStream stream{};
         stream << orig;
         stream >> *this;
     }
@@ -127,7 +127,7 @@ public:
         TestHeaderAndShortIDs(CBlockHeaderAndShortTxIDs{block}) {}
 
     uint64_t GetShortID(const uint256& txhash) const {
-        CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+        DataStream stream{};
         stream << *this;
         CBlockHeaderAndShortTxIDs base;
         stream >> base;
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
 
     LOCK2(cs_main, pool.cs);
     pool.addUnchecked(entry.FromTx(block.vtx[2]));
-    BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2]->GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 0);
+    BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
 
     uint256 txhash;
 
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
         shortIDs.shorttxids[0] = shortIDs.GetShortID(block.vtx[0]->GetHash());
         shortIDs.shorttxids[1] = shortIDs.GetShortID(block.vtx[2]->GetHash());
 
-        CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+        DataStream stream{};
         stream << shortIDs;
 
         CBlockHeaderAndShortTxIDs shortIDs2;
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
         BOOST_CHECK( partialBlock.IsTxAvailable(1));
         BOOST_CHECK( partialBlock.IsTxAvailable(2));
 
-        BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2]->GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1); // +1 because of partialBlock
+        BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 1); // +1 because of partialBlock
 
         CBlock block2;
         {
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
             partialBlock.FillBlock(block2, {block.vtx[1]}); // Current implementation doesn't check txn here, but don't require that
             partialBlock = tmp;
         }
-        BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2]->GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 2); // +2 because of partialBlock and block2
+        BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 2); // +2 because of partialBlock and block2
         bool mutated;
         BOOST_CHECK(block.hashMerkleRoot != BlockMerkleRoot(block2, &mutated));
 
@@ -196,15 +196,15 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
         BOOST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block3, &mutated).ToString());
         BOOST_CHECK(!mutated);
 
-        BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2]->GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 3); // +2 because of partialBlock and block2 and block3
+        BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 3); // +2 because of partialBlock and block2 and block3
 
         txhash = block.vtx[2]->GetHash();
         block.vtx.clear();
         block2.vtx.clear();
         block3.vtx.clear();
-        BOOST_CHECK_EQUAL(pool.mapTx.find(txhash)->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1 - 1); // + 1 because of partialBlock; -1 because of block.
+        BOOST_CHECK_EQUAL(pool.get(txhash).use_count(), SHARED_TX_OFFSET + 1 - 1); // + 1 because of partialBlock; -1 because of block.
     }
-    BOOST_CHECK_EQUAL(pool.mapTx.find(txhash)->GetSharedTx().use_count(), SHARED_TX_OFFSET - 1); // -1 because of block
+    BOOST_CHECK_EQUAL(pool.get(txhash).use_count(), SHARED_TX_OFFSET - 1); // -1 because of block
 }
 
 BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
 
     LOCK2(cs_main, pool.cs);
     pool.addUnchecked(entry.FromTx(block.vtx[1]));
-    BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[1]->GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 0);
+    BOOST_CHECK_EQUAL(pool.get(block.vtx[1]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
 
     uint256 txhash;
 
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
         shortIDs.shorttxids.resize(1);
         shortIDs.shorttxids[0] = shortIDs.GetShortID(block.vtx[1]->GetHash());
 
-        CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+        DataStream stream{};
         stream << shortIDs;
 
         CBlockHeaderAndShortTxIDs shortIDs2;
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
         BOOST_CHECK( partialBlock.IsTxAvailable(1));
         BOOST_CHECK( partialBlock.IsTxAvailable(2));
 
-        BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[1]->GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
+        BOOST_CHECK_EQUAL(pool.get(block.vtx[1]->GetHash()).use_count(), SHARED_TX_OFFSET + 1);
 
         CBlock block2;
         PartiallyDownloadedBlock partialBlockCopy = partialBlock;
@@ -253,9 +253,9 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
         txhash = block.vtx[1]->GetHash();
         block.vtx.clear();
         block2.vtx.clear();
-        BOOST_CHECK_EQUAL(pool.mapTx.find(txhash)->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1 - 1); // + 1 because of partialBlock; -1 because of block.
+        BOOST_CHECK_EQUAL(pool.get(txhash).use_count(), SHARED_TX_OFFSET + 1 - 1); // + 1 because of partialBlock; -1 because of block.
     }
-    BOOST_CHECK_EQUAL(pool.mapTx.find(txhash)->GetSharedTx().use_count(), SHARED_TX_OFFSET - 1); // -1 because of block
+    BOOST_CHECK_EQUAL(pool.get(txhash).use_count(), SHARED_TX_OFFSET - 1); // -1 because of block
 }
 
 BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
     {
         CBlockHeaderAndShortTxIDs shortIDs{block};
 
-        CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+        DataStream stream{};
         stream << shortIDs;
 
         CBlockHeaderAndShortTxIDs shortIDs2;

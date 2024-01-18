@@ -13,7 +13,6 @@
 #include <logging.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
-#include <script/standard.h>
 #include <tinyformat.h>
 #include <util/error.h>
 #include <util/moneystr.h>
@@ -87,12 +86,14 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
         mempool_opts.max_datacarrier_bytes = std::nullopt;
     }
 
-    mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
+    mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", DEFAULT_ACCEPT_NON_STD_TXN);
     if (!chainparams.IsTestChain() && !mempool_opts.require_standard) {
         return util::Error{strprintf(Untranslated("acceptnonstdtxn is not currently supported for %s chain"), chainparams.GetChainTypeString())};
     }
 
     mempool_opts.full_rbf = argsman.GetBoolArg("-mempoolfullrbf", mempool_opts.full_rbf);
+
+    mempool_opts.persist_v1_dat = argsman.GetBoolArg("-persistmempoolv1", mempool_opts.persist_v1_dat);
 
     ApplyArgsManOptions(argsman, mempool_opts.limits);
 

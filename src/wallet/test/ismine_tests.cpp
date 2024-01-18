@@ -6,7 +6,8 @@
 #include <key_io.h>
 #include <node/context.h>
 #include <script/script.h>
-#include <script/standard.h>
+#include <script/solver.h>
+#include <script/signingprovider.h>
 #include <test/util/setup_common.h>
 #include <wallet/types.h>
 #include <wallet/wallet.h>
@@ -46,8 +47,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         pubkeys[i] = keys[i].GetPubKey();
     }
 
-    CKey uncompressedKey;
-    uncompressedKey.MakeNewKey(false);
+    CKey uncompressedKey = GenerateRandomKey(/*compressed=*/false);
     CPubKey uncompressedPubkey = uncompressedKey.GetPubKey();
     std::unique_ptr<interfaces::Chain>& chain = m_node.chain;
 

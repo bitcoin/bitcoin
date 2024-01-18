@@ -1,11 +1,10 @@
 libsecp256k1
 ============
 
-[![Build Status](https://api.cirrus-ci.com/github/bitcoin-core/secp256k1.svg?branch=master)](https://cirrus-ci.com/github/bitcoin-core/secp256k1)
 ![Dependencies: None](https://img.shields.io/badge/dependencies-none-success)
 [![irc.libera.chat #secp256k1](https://img.shields.io/badge/irc.libera.chat-%23secp256k1-success)](https://web.libera.chat/#secp256k1)
 
-Optimized C library for ECDSA signatures and secret/public key operations on curve secp256k1.
+High-performance high-assurance C library for digital signatures and other cryptographic primitives on the secp256k1 elliptic curve.
 
 This library is intended to be the highest quality publicly available library for cryptography on the secp256k1 curve. However, the primary focus of its development has been for usage in the Bitcoin system and usage unlike Bitcoin's may be less well tested, verified, or suffer from a less well thought out interface. Correct usage requires some care and consideration that the library is fit for your application's purpose.
 
@@ -34,7 +33,7 @@ Implementation details
   * Expose only higher level interfaces to minimize the API surface and improve application security. ("Be difficult to use insecurely.")
 * Field operations
   * Optimized implementation of arithmetic modulo the curve's field size (2^256 - 0x1000003D1).
-    * Using 5 52-bit limbs (including hand-optimized assembly for x86_64, by Diederik Huys).
+    * Using 5 52-bit limbs
     * Using 10 26-bit limbs (including hand-optimized assembly for 32-bit ARM, by Wladimir J. van der Laan).
       * This is an experimental feature that has not received enough scrutiny to satisfy the standard of quality of this library but is made available for testing and review by the community.
 * Scalar operations
@@ -117,28 +116,6 @@ Usage examples can be found in the [examples](examples) directory. To compile th
 
 To compile the Schnorr signature and ECDH examples, you also need to configure with `--enable-module-schnorrsig` and `--enable-module-ecdh`.
 
-Test coverage
------------
-
-This library aims to have full coverage of the reachable lines and branches.
-
-To create a test coverage report, configure with `--enable-coverage` (use of GCC is necessary):
-
-    $ ./configure --enable-coverage
-
-Run the tests:
-
-    $ make check
-
-To create a report, `gcovr` is recommended, as it includes branch coverage reporting:
-
-    $ gcovr --exclude 'src/bench*' --print-summary
-
-To create a HTML report with coloured and annotated source code:
-
-    $ mkdir -p coverage
-    $ gcovr --exclude 'src/bench*' --html --html-details -o coverage/coverage.html
-
 Benchmark
 ------------
 If configured with `--enable-benchmark` (which is the default), binaries for benchmarking the libsecp256k1 functions will be present in the root directory after the build.
@@ -155,3 +132,8 @@ Reporting a vulnerability
 ------------
 
 See [SECURITY.md](SECURITY.md)
+
+Contributing to libsecp256k1
+------------
+
+See [CONTRIBUTING.md](CONTRIBUTING.md)

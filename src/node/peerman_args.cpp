@@ -3,6 +3,9 @@
 #include <common/args.h>
 #include <net_processing.h>
 
+#include <algorithm>
+#include <limits>
+
 namespace node {
 
 void ApplyArgsManOptions(const ArgsManager& argsman, PeerManager::Options& options)
@@ -10,11 +13,11 @@ void ApplyArgsManOptions(const ArgsManager& argsman, PeerManager::Options& optio
     if (auto value{argsman.GetBoolArg("-txreconciliation")}) options.reconcile_txs = *value;
 
     if (auto value{argsman.GetIntArg("-maxorphantx")}) {
-        options.max_orphan_txs = uint32_t(std::max(int64_t{0}, *value));
+        options.max_orphan_txs = uint32_t((std::clamp<int64_t>(*value, 0, std::numeric_limits<uint32_t>::max())));
     }
 
     if (auto value{argsman.GetIntArg("-blockreconstructionextratxn")}) {
-        options.max_extra_txs = size_t(std::max(int64_t{0}, *value));
+        options.max_extra_txs = uint32_t((std::clamp<int64_t>(*value, 0, std::numeric_limits<uint32_t>::max())));
     }
 
     if (auto value{argsman.GetBoolArg("-capturemessages")}) options.capture_messages = *value;

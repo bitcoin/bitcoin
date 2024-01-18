@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,6 +28,10 @@
 #include <unistd.h>
 #include <utility>
 #include <vector>
+
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && defined(__AFL_FUZZ_INIT)
+__AFL_FUZZ_INIT();
+#endif
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
@@ -67,7 +71,7 @@ auto& FuzzTargets()
 
 void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, FuzzTargetOptions opts)
 {
-    const auto it_ins{FuzzTargets().try_emplace(name, FuzzTarget /* temporary can be dropped in C++20 */ {std::move(target), std::move(opts)})};
+    const auto it_ins{FuzzTargets().try_emplace(name, FuzzTarget /* temporary can be dropped after clang-16 */ {std::move(target), std::move(opts)})};
     Assert(it_ins.second);
 }
 
@@ -188,21 +192,13 @@ int main(int argc, char** argv)
 {
     initialize();
     static const auto& test_one_input = *Assert(g_test_one_input);
-#ifdef __AFL_INIT
-    // Enable AFL deferred forkserver mode. Requires compilation using
-    // afl-clang-fast++. See fuzzing.md for details.
-    __AFL_INIT();
-#endif
-
 #ifdef __AFL_LOOP
     // Enable AFL persistent mode. Requires compilation using afl-clang-fast++.
     // See fuzzing.md for details.
-    while (__AFL_LOOP(1000)) {
-        std::vector<uint8_t> buffer;
-        if (!read_stdin(buffer)) {
-            continue;
-        }
-        test_one_input(buffer);
+    const uint8_t* buffer = __AFL_FUZZ_TESTCASE_BUF;
+    while (__AFL_LOOP(100000)) {
+        size_t buffer_len = __AFL_FUZZ_TESTCASE_LEN;
+        test_one_input({buffer, buffer_len});
     }
 #else
     std::vector<uint8_t> buffer;

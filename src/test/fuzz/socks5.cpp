@@ -32,7 +32,9 @@ FUZZ_TARGET(socks5, .init = initialize_socks5)
     ProxyCredentials proxy_credentials;
     proxy_credentials.username = fuzzed_data_provider.ConsumeRandomLengthString(512);
     proxy_credentials.password = fuzzed_data_provider.ConsumeRandomLengthString(512);
-    InterruptSocks5(fuzzed_data_provider.ConsumeBool());
+    if (fuzzed_data_provider.ConsumeBool()) {
+        g_socks5_interrupt();
+    }
     // Set FUZZED_SOCKET_FAKE_LATENCY=1 to exercise recv timeout code paths. This
     // will slow down fuzzing.
     g_socks5_recv_timeout = (fuzzed_data_provider.ConsumeBool() && std::getenv("FUZZED_SOCKET_FAKE_LATENCY") != nullptr) ? 1ms : default_socks5_recv_timeout;

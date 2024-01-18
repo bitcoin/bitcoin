@@ -5,13 +5,14 @@
 #include <netgroup.h>
 
 #include <hash.h>
+#include <logging.h>
 #include <util/asmap.h>
 
 uint256 NetGroupManager::GetAsmapChecksum() const
 {
     if (!m_asmap.size()) return {};
 
-    return SerializeHash(m_asmap);
+    return (HashWriter{} << m_asmap).GetHash();
 }
 
 std::vector<unsigned char> NetGroupManager::GetGroup(const CNetAddr& address) const
@@ -52,8 +53,8 @@ std::vector<unsigned char> NetGroupManager::GetGroup(const CNetAddr& address) co
     } else if (address.IsCJDNS()) {
         // Treat in the same way as Tor and I2P because the address in all of
         // them is "random" bytes (derived from a public key). However in CJDNS
-        // the first byte is a constant 0xfc, so the random bytes come after it.
-        // Thus skip the constant 8 bits at the start.
+        // the first byte is a constant (see CJDNS_PREFIX), so the random bytes
+        // come after it. Thus skip the constant 8 bits at the start.
         nBits = 12;
     } else if (address.IsHeNet()) {
         // for he.net, use /36 groups
@@ -108,4 +109,24 @@ uint32_t NetGroupManager::GetMappedAS(const CNetAddr& address) const
     }
     uint32_t mapped_as = Interpret(m_asmap, ip_bits);
     return mapped_as;
+}
+
+void NetGroupManager::ASMapHealthCheck(const std::vector<CNetAddr>& clearnet_addrs) const {
+    std::set<uint32_t> clearnet_asns{};
+    int unmapped_count{0};
+
+    for (const auto& addr : clearnet_addrs) {
+        uint32_t asn = GetMappedAS(addr);
+        if (asn == 0) {
+            ++unmapped_count;
+            continue;
+        }
+        clearnet_asns.insert(asn);
+    }
+
+    LogPrintf("ASMap Health Check: %i clearnet peers are mapped to %i ASNs with %i peers being unmapped\n", clearnet_addrs.size(), clearnet_asns.size(), unmapped_count);
+}
+
+bool NetGroupManager::UsingASMap() const {
+    return m_asmap.size() > 0;
 }

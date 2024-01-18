@@ -5,7 +5,9 @@
 #ifndef BITCOIN_UTIL_VECTOR_H
 #define BITCOIN_UTIL_VECTOR_H
 
+#include <functional>
 #include <initializer_list>
+#include <optional>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -47,6 +49,35 @@ inline V Cat(V v1, const V& v2)
         v1.push_back(arg);
     }
     return v1;
+}
+
+/** Clear a vector (or std::deque) and release its allocated memory. */
+template<typename V>
+inline void ClearShrink(V& v) noexcept
+{
+    // There are various ways to clear a vector and release its memory:
+    //
+    // 1. V{}.swap(v)
+    // 2. v = V{}
+    // 3. v = {}; v.shrink_to_fit();
+    // 4. v.clear(); v.shrink_to_fit();
+    //
+    // (2) does not appear to release memory in glibc debug mode, even if v.shrink_to_fit()
+    // follows. (3) and (4) rely on std::vector::shrink_to_fit, which is only a non-binding
+    // request. Therefore, we use method (1).
+
+    V{}.swap(v);
+}
+
+template<typename V, typename L>
+inline std::optional<V> FindFirst(const std::vector<V>& vec, const L fnc)
+{
+    for (const auto& el : vec) {
+        if (fnc(el)) {
+            return el;
+        }
+    }
+    return std::nullopt;
 }
 
 #endif // BITCOIN_UTIL_VECTOR_H

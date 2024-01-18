@@ -56,6 +56,7 @@ private:
     AddressBookSortFilterProxyModel *proxyModel;
     QMenu *contextMenu;
     QString newAddressToSelect;
+    void updateWindowsTitleWithWalletName();
 
 private Q_SLOTS:
     /** Delete currently selected address entry */

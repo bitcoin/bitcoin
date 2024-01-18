@@ -109,7 +109,23 @@ CreateAndActivateUTXOSnapshot(
             0 == WITH_LOCK(node.chainman->GetMutex(), return node.chainman->ActiveHeight()));
     }
 
-    return node.chainman->ActivateSnapshot(auto_infile, metadata, in_memory_chainstate);
+    auto& new_active = node.chainman->ActiveChainstate();
+    auto* tip = new_active.m_chain.Tip();
+
+    // Disconnect a block so that the snapshot chainstate will be ahead, otherwise
+    // it will refuse to activate.
+    //
+    // TODO this is a unittest-specific hack, and we should probably rethink how to
+    // better generate/activate snapshots in unittests.
+    if (tip->pprev) {
+        new_active.m_chain.SetTip(*(tip->pprev));
+    }
+
+    bool res = node.chainman->ActivateSnapshot(auto_infile, metadata, in_memory_chainstate);
+
+    // Restore the old tip.
+    new_active.m_chain.SetTip(*tip);
+    return res;
 }
 
 

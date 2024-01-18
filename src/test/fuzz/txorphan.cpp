@@ -33,13 +33,14 @@ void initialize_orphanage()
 FUZZ_TARGET(txorphan, .init = initialize_orphanage)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    FastRandomContext limit_orphans_rng{/*fDeterministic=*/true};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     TxOrphanage orphanage;
     std::vector<COutPoint> outpoints;
     // initial outpoints used to construct transactions later
     for (uint8_t i = 0; i < 4; i++) {
-        outpoints.emplace_back(uint256{i}, 0);
+        outpoints.emplace_back(Txid::FromUint256(uint256{i}), 0);
     }
     // if true, allow duplicate input when constructing tx
     const bool duplicate_input = fuzzed_data_provider.ConsumeBool();
@@ -91,13 +92,13 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                     {
                         CTransactionRef ref = orphanage.GetTxToReconsider(peer_id);
                         if (ref) {
-                            bool have_tx = orphanage.HaveTx(GenTxid::Txid(ref->GetHash())) || orphanage.HaveTx(GenTxid::Wtxid(ref->GetHash()));
+                            bool have_tx = orphanage.HaveTx(GenTxid::Txid(ref->GetHash())) || orphanage.HaveTx(GenTxid::Wtxid(ref->GetWitnessHash()));
                             Assert(have_tx);
                         }
                     }
                 },
                 [&] {
-                    bool have_tx = orphanage.HaveTx(GenTxid::Txid(tx->GetHash())) || orphanage.HaveTx(GenTxid::Wtxid(tx->GetHash()));
+                    bool have_tx = orphanage.HaveTx(GenTxid::Txid(tx->GetHash())) || orphanage.HaveTx(GenTxid::Wtxid(tx->GetWitnessHash()));
                     // AddTx should return false if tx is too big or already have it
                     // tx weight is unknown, we only check when tx is already in orphanage
                     {
@@ -105,7 +106,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                         // have_tx == true -> add_tx == false
                         Assert(!have_tx || !add_tx);
                     }
-                    have_tx = orphanage.HaveTx(GenTxid::Txid(tx->GetHash())) || orphanage.HaveTx(GenTxid::Wtxid(tx->GetHash()));
+                    have_tx = orphanage.HaveTx(GenTxid::Txid(tx->GetHash())) || orphanage.HaveTx(GenTxid::Wtxid(tx->GetWitnessHash()));
                     {
                         bool add_tx = orphanage.AddTx(tx, peer_id);
                         // if have_tx is still false, it must be too big
@@ -114,12 +115,12 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                     }
                 },
                 [&] {
-                    bool have_tx = orphanage.HaveTx(GenTxid::Txid(tx->GetHash())) || orphanage.HaveTx(GenTxid::Wtxid(tx->GetHash()));
+                    bool have_tx = orphanage.HaveTx(GenTxid::Txid(tx->GetHash())) || orphanage.HaveTx(GenTxid::Wtxid(tx->GetWitnessHash()));
                     // EraseTx should return 0 if m_orphans doesn't have the tx
                     {
                         Assert(have_tx == orphanage.EraseTx(tx->GetHash()));
                     }
-                    have_tx = orphanage.HaveTx(GenTxid::Txid(tx->GetHash())) || orphanage.HaveTx(GenTxid::Wtxid(tx->GetHash()));
+                    have_tx = orphanage.HaveTx(GenTxid::Txid(tx->GetHash())) || orphanage.HaveTx(GenTxid::Wtxid(tx->GetWitnessHash()));
                     // have_tx should be false and EraseTx should fail
                     {
                         Assert(!have_tx && !orphanage.EraseTx(tx->GetHash()));
@@ -132,7 +133,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                     // test mocktime and expiry
                     SetMockTime(ConsumeTime(fuzzed_data_provider));
                     auto limit = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
-                    orphanage.LimitOrphans(limit);
+                    orphanage.LimitOrphans(limit, limit_orphans_rng);
                     Assert(orphanage.Size() <= limit);
                 });
         }

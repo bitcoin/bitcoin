@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Нажмите правой кнопкой мыши, чтобы изменить адрес или метку</translation>
+        <translation type="unfinished">Нажмите правую кнопку мыши, чтобы изменить адрес или метку</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Создать новый адрес</translation>
+        <translation type="unfinished">создать новый адрес</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Скопировать выбранные адреса в буфер обмена</translation>
+        <translation type="unfinished">Copia la dirección seleccionada al portapapeles</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -189,11 +189,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
-        <translation type="unfinished">Кошелек должен быть зашифрован</translation>
+        <translation type="unfinished">Кошелёк должен быть зашифрован</translation>
     </message>
     <message>
         <source>Your wallet is about to be encrypted. </source>
-        <translation type="unfinished">Ваш кошелек будет зашифрован.</translation>
+        <translation type="unfinished">Ваш кошелёк будет зашифрован.</translation>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
@@ -224,8 +224,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Парольная фраза, введённая для расшифровки кошелька, неверна.</translation>
     </message>
     <message>
+        <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <translation type="unfinished">Парольная фраза, введенная для расшифрования кошелька, не подходит. Она содержит нулевой байт. Если парольная фраза была задана в программе версии ниже 25.0, пожалуйста, попробуйте ввести только символы до первого нулевого байта, не включая его. Если это сработает, смените парольную фразу, чтобы избежать этого в будущем.</translation>
+    </message>
+    <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation type="unfinished">Парольная фраза кошелька успешно изменена.</translation>
+    </message>
+    <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">Не удалось сменить парольную фразу</translation>
+    </message>
+    <message>
+        <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
+        <translation type="unfinished">Текущая парольная фраза, введенная для расшифрования кошелька, не подходит. Она содержит нулевой байт. Если парольная фраза была задана в программе версии ниже 25.0, пожалуйста, попробуйте ввести только символы до первого нулевого байта, не включая его.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -280,14 +292,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Произошла фатальная ошибка. Проверьте, доступна ли запись в файл настроек, или повторите запуск с параметром -nosettings.</translation>
     </message>
     <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation type="unfinished">Ошибка: указанный каталог данных "%1" не существует.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1.</source>
-        <translation type="unfinished">Ошибка: не удается проанализировать файл конфигурации: %1.</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">Ошибка: %1</translation>
     </message>
@@ -310,10 +314,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Unroutable</source>
         <translation type="unfinished">Немаршрутизируемый</translation>
-    </message>
-    <message>
-        <source>Internal</source>
-        <translation type="unfinished">Внутренний</translation>
     </message>
     <message>
         <source>Inbound</source>
@@ -448,805 +448,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
-    <message>
-        <source>Settings file could not be read</source>
-        <translation type="unfinished">Файл настроек не может быть прочитан</translation>
-    </message>
-    <message>
-        <source>Settings file could not be written</source>
-        <translation type="unfinished">Файл настроек не может быть записан</translation>
-    </message>
-    <message>
-        <source>The %s developers</source>
-        <translation type="unfinished">Разработчики %s</translation>
-    </message>
-    <message>
-        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
-        <translation type="unfinished">%s испорчен. Попробуйте восстановить его с помощью инструмента bitcoin-wallet или из резервной копии.</translation>
-    </message>
-    <message>
-        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation type="unfinished">Установлено очень большое значение -maxtxfee! Такие большие комиссии могут быть уплачены в отдельной транзакции.</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet from version %i to version %i. Wallet version unchanged.</source>
-        <translation type="unfinished">Невозможно понизить версию кошелька с %i до %i. Версия кошелька не была изменена.</translation>
-    </message>
-    <message>
-        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished">Невозможно заблокировать каталог данных %s. Вероятно, %s уже запущен.</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified.</source>
-        <translation type="unfinished">Невозможно обновить разделённый кошелёк без HD с версии %i до версии %i, не обновившись для поддержки предварительно разделённого пула ключей. Пожалуйста, используйте версию %i или повторите без указания версии.</translation>
-    </message>
-    <message>
-        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
-        <translation type="unfinished">Распространяется по лицензии MIT. Её текст находится в файле %s и по адресу %s</translation>
-    </message>
-    <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">Ошибка чтения %s! Все ключи прочитаны верно, но данные транзакций или записи адресной книги могут отсутствовать или быть неправильными.</translation>
-    </message>
-    <message>
-        <source>Error reading %s! Transaction data may be missing or incorrect. Rescanning wallet.</source>
-        <translation type="unfinished">Ошибка чтения %s! Данные транзакций отсутствуют или неправильны. Кошелёк сканируется заново.</translation>
-    </message>
-    <message>
-        <source>Error: Dumpfile format record is incorrect. Got "%s", expected "format".</source>
-        <translation type="unfinished">Ошибка: запись формата дамп-файла неверна. Обнаружено "%s", ожидалось "format".</translation>
-    </message>
-    <message>
-        <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
-        <translation type="unfinished">Ошибка: запись идентификатора дамп-файла неверна. Обнаружено "%s", ожидалось "%s".</translation>
-    </message>
-    <message>
-        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
-        <translation type="unfinished">Ошибка: версия дамп-файла не поддерживается. Эта версия биткоин-кошелька поддерживает только дамп-файлы версии 1. Обнаружен дамп-файл версии %s</translation>
-    </message>
-    <message>
-        <source>Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types</source>
-        <translation type="unfinished">Ошибка: устаревшие кошельки поддерживают только следующие типы адресов: "legacy", "p2sh-segwit", и "bech32".</translation>
-    </message>
-    <message>
-        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
-        <translation type="unfinished">Не удалось оценить комиссию. Резервная комиссия отключена. Подождите несколько блоков или включите -fallbackfee.</translation>
-    </message>
-    <message>
-        <source>File %s already exists. If you are sure this is what you want, move it out of the way first.</source>
-        <translation type="unfinished">Файл %s уже существует. Если вы уверены, что так и должно быть, сначала уберите оттуда этот файл.</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
-        <translation type="unfinished">Неверное значение для -maxtxfee=&lt;amount&gt;: "%s" (должно быть не ниже минимально ретранслируемой комиссии %s для предотвращения зависания транзакций)</translation>
-    </message>
-    <message>
-        <source>Invalid or corrupt peers.dat (%s). If you believe this is a bug, please report it to %s. As a workaround, you can move the file (%s) out of the way (rename, move, or delete) to have a new one created on the next start.</source>
-        <translation type="unfinished">Неверный или поврежденный peers.dat (%s). Если вы считаете что это ошибка, сообщите о ней %s. В качестве временной меры вы можете переместить, переименовать или удалить файл (%s). Новый файл будет создан при следующем запуске программы.</translation>
-    </message>
-    <message>
-        <source>More than one onion bind address is provided. Using %s for the automatically created Tor onion service.</source>
-        <translation type="unfinished">Предоставлен более чем один onion-адрес для привязки. Для автоматически созданного onion-сервиса Tor будет использован %s.</translation>
-    </message>
-    <message>
-        <source>No dump file provided. To use createfromdump, -dumpfile=&lt;filename&gt; must be provided.</source>
-        <translation type="unfinished">Не указан дамп-файл. Чтобы использовать createfromdump, необходимо указать -dumpfile=&lt;filename&gt;</translation>
-    </message>
-    <message>
-        <source>No dump file provided. To use dump, -dumpfile=&lt;filename&gt; must be provided.</source>
-        <translation type="unfinished">Не указан дамп-файл. Чтобы использовать dump, необходимо указать -dumpfile=&lt;filename&gt;</translation>
-    </message>
-    <message>
-        <source>No wallet file format provided. To use createfromdump, -format=&lt;format&gt; must be provided.</source>
-        <translation type="unfinished">Не указан формат файла кошелька. Чтобы использовать createfromdump, необходимо указать -format=&lt;format&gt;</translation>
-    </message>
-    <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation type="unfinished">Пожалуйста, убедитесь, что на вашем компьютере верно установлены дата и время. Если ваши часы сбились, %s будет работать неправильно.</translation>
-    </message>
-    <message>
-        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
-        <translation type="unfinished">Пожалуйста, внесите свой вклад, если вы считаете %s полезным. Посетите %s для получения дополнительной информации о программном обеспечении.</translation>
-    </message>
-    <message>
-        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation type="unfinished">Обрезка блоков выставлена меньше, чем минимум в %d МиБ. Пожалуйста, используйте большее значение.</translation>
-    </message>
-    <message>
-        <source>Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead.</source>
-        <translation type="unfinished">Режим обрезки несовместим с -reindex-chainstate. Используйте вместо этого полный -reindex.</translation>
-    </message>
-    <message>
-        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation type="unfinished">Обрезка: последняя синхронизация кошелька вышла за рамки обрезанных данных. Необходимо сделать -reindex (снова скачать всю цепочку блоков, если у вас узел с обрезкой)</translation>
-    </message>
-    <message>
-        <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
-        <translation type="unfinished">SQLiteDatabase: неизвестная версия схемы SQLite кошелька: %d. Поддерживается только версия %d</translation>
-    </message>
-    <message>
-        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
-        <translation type="unfinished">В базе данных блоков найден блок из будущего. Это может произойти из-за неверно установленных даты и времени на вашем компьютере. Перестраивайте базу данных блоков только если вы уверены, что дата и время установлены верно.</translation>
-    </message>
-    <message>
-        <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
-        <translation type="unfinished">База данных индексации блоков содержит устаревший "txindex". Чтобы освободить место на диске, выполните полный -reindex, или игнорируйте эту ошибку. Это сообщение об ошибке больше показано не будет.</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation type="unfinished">Сумма транзакции за вычетом комиссии слишком мала для отправки</translation>
-    </message>
-    <message>
-        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
-        <translation type="unfinished">Это могло произойти, если кошелёк был некорректно закрыт, а затем загружен сборкой с более новой версией Berkley DB. Если это так, воспользуйтесь сборкой, в которой этот кошелёк открывался в последний раз</translation>
-    </message>
-    <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished">Это тестовая сборка. Используйте её на свой страх и риск. Не используйте её для добычи или в торговых приложениях</translation>
-    </message>
-    <message>
-        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
-        <translation type="unfinished">Это максимальная комиссия за транзакцию, которую вы заплатите (в добавок к обычной комиссии), чтобы отдать приоритет избежанию частичной траты перед обычным управлением монетами.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
-        <translation type="unfinished">Это комиссия за транзакцию, которую вы можете отбросить, если сдача меньше, чем пыль на этом уровне</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation type="unfinished">Это комиссия за транзакцию, которую вы можете заплатить, когда расчёт комиссии недоступен.</translation>
-    </message>
-    <message>
-        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
-        <translation type="unfinished">Текущая длина строки версии сети (%i) превышает максимальную длину (%i). Уменьшите количество или размер uacomments.</translation>
-    </message>
-    <message>
-        <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
-        <translation type="unfinished">Невозможно воспроизвести блоки. Вам необходимо перестроить базу данных, используя -reindex-chainstate.</translation>
-    </message>
-    <message>
-        <source>Unknown wallet file format "%s" provided. Please provide one of "bdb" or "sqlite".</source>
-        <translation type="unfinished">Указан неизвестный формат файла кошелька "%s". Укажите "bdb" либо "sqlite".</translation>
-    </message>
-    <message>
-        <source>Unsupported chainstate database format found. Please restart with -reindex-chainstate. This will rebuild the chainstate database.</source>
-        <translation type="unfinished">Обнаружен неподдерживаемый формат базы данных состояния цепочки блоков. Пожалуйста, перезапустите программу с ключом -reindex-chainstate. Это перестроит базу данных состояния цепочки блоков.</translation>
-    </message>
-    <message>
-        <source>Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future.</source>
-        <translation type="unfinished">Кошелёк успешно создан. Старый формат кошелька признан устаревшим. Поддержка создания кошелька в этом формате и его открытие в будущем будут удалены.</translation>
-    </message>
-    <message>
-        <source>Warning: Dumpfile wallet format "%s" does not match command line specified format "%s".</source>
-        <translation type="unfinished">Внимание: формат дамп-файла кошелька "%s" не соответствует указанному в командной строке формату "%s".</translation>
-    </message>
-    <message>
-        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
-        <translation type="unfinished">Предупреждение: приватные ключи обнаружены в кошельке {%s} с отключенными приватными ключами</translation>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Внимание: мы не полностью согласны с другими узлами! Вам или другим участникам, возможно, следует обновиться.</translation>
-    </message>
-    <message>
-        <source>Witness data for blocks after height %d requires validation. Please restart with -reindex.</source>
-        <translation type="unfinished">Для свидетельских данных в блоках после %d необходима проверка. Пожалуйста, перезапустите клиент с параметром -reindex.</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation type="unfinished">Вам необходимо пересобрать базу данных с помощью -reindex, чтобы вернуться к полному режиму. Это приведёт к повторному скачиванию всей цепочки блоков</translation>
-    </message>
-    <message>
-        <source>%s is set very high!</source>
-        <translation type="unfinished">%s задан слишком высоким!</translation>
-    </message>
-    <message>
-        <source>-maxmempool must be at least %d MB</source>
-        <translation type="unfinished">-maxmempool должен быть минимум %d МБ</translation>
-    </message>
-    <message>
-        <source>A fatal internal error occurred, see debug.log for details</source>
-        <translation type="unfinished">Произошла критическая внутренняя ошибка, подробности в файле debug.log</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -%s address: '%s'</source>
-        <translation type="unfinished">Не удается разрешить -%s адрес: "%s"</translation>
-    </message>
-    <message>
-        <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
-        <translation type="unfinished">Нельзя установить -forcednsseed в true, если -dnsseed установлен в false.</translation>
-    </message>
-    <message>
-        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
-        <translation type="unfinished">Нельзя указывать -peerblockfilters без указания -blockfilterindex.</translation>
-    </message>
-    <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">Не удается выполнить запись в каталог данных "%s"; проверьте разрешения.</translation>
-    </message>
-    <message>
-        <source>The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.</source>
-        <translation type="unfinished">Обновление -txindex, запущенное при предыдущей версии не может быть завершено. Перезапустите с предыдущей версией или запустите весь процесс заново с ключом -reindex.</translation>
-    </message>
-    <message>
-        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any Bitcoin Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
-        <translation type="unfinished">%s попытался открыть на прослушивание порт %u. Этот порт считается "плохим". Вероятность, что узлы Bitcoin Core к нему подключатся, крайне мала. Подробности и полный список плохих портов в документации: doc/p2p-bad-ports.md. </translation>
-    </message>
-    <message>
-        <source>-reindex-chainstate option is not compatible with -blockfilterindex. Please temporarily disable blockfilterindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
-        <translation type="unfinished">Опция -reindex-chainstate не совместима с -blockfilterindex. Пожалуйста, выключите на время blockfilterindex, пока используется -reindex-chainstate, либо замените -reindex-chainstate на -reindex для полной перестройки всех индексов.</translation>
-    </message>
-    <message>
-        <source>-reindex-chainstate option is not compatible with -coinstatsindex. Please temporarily disable coinstatsindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
-        <translation type="unfinished">Опция -reindex-chainstate не совместима с -coinstatsindex. Пожалуйста, выключите на время coinstatsindex, пока используется -reindex-chainstate, либо замените -reindex-chainstate на -reindex для полной перестройки всех индексов.</translation>
-    </message>
-    <message>
-        <source>-reindex-chainstate option is not compatible with -txindex. Please temporarily disable txindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
-        <translation type="unfinished">Опция -reindex-chainstate не совместима с -txindex. Пожалуйста, выключите на время txindex, пока используется -reindex-chainstate, либо замените -reindex-chainstate на -reindex для полной перестройки всех индексов.</translation>
-    </message>
-    <message>
-        <source>Assumed-valid: last wallet synchronisation goes beyond available block data. You need to wait for the background validation chain to download more blocks.</source>
-        <translation type="unfinished">Предположительно действительный: последняя синхронизация кошелька была с более новым блоком данных, чем имеется у нас. Подождите, пока фоновый процесс проверки цепочки блоков загрузит новые данные.</translation>
-    </message>
-    <message>
-        <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
-        <translation type="unfinished">Не удаётся предоставить определённые соединения, чтобы при этом addrman нашёл в них исходящие соединения.</translation>
-    </message>
-    <message>
-        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
-        <translation type="unfinished">Ошибка загрузки %s: не удалось загрузить кошелёк с внешней подписью, так как эта версия программы собрана без поддержки внешней подписи</translation>
-    </message>
-    <message>
-        <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
-        <translation type="unfinished">Ошибка: адресная книга в кошельке не принадлежит к мигрируемым кошелькам</translation>
-    </message>
-    <message>
-        <source>Error: Duplicate descriptors created during migration. Your wallet may be corrupted.</source>
-        <translation type="unfinished">Ошибка: при миграции были созданы дублирующиеся дескрипторы. Возможно, ваш кошелёк повреждён.</translation>
-    </message>
-    <message>
-        <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
-        <translation type="unfinished">Ошибка: транзакция %s не принадлежит к мигрируемым кошелькам</translation>
-    </message>
-    <message>
-        <source>Error: Unable to produce descriptors for this legacy wallet. Make sure the wallet is unlocked first</source>
-        <translation type="unfinished">Ошибка: не удалось создать дескрипторы для этого кошелька старого формата. Для начала убедитесь, что кошелёк разблокирован</translation>
-    </message>
-    <message>
-        <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
-        <translation type="unfinished">Не удалось переименовать файл peers.dat. Пожалуйста, переместите или удалите его и попробуйте снова.</translation>
-    </message>
-    <message>
-        <source>Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6</source>
-        <translation type="unfinished">Несовместимые ключи: был явно указан -dnsseed=1, но -onlynet не разрешены соединения через IPv4/IPv6</translation>
-    </message>
-    <message>
-        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is explicitly forbidden: -onion=0</source>
-        <translation type="unfinished">Исходящие соединения разрешены только через сеть Tor (-onlynet=onion), однако прокси для подключения к сети Tor явно запрещен: -onion=0</translation>
-    </message>
-    <message>
-        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is not provided: none of -proxy, -onion or -listenonion is given</source>
-        <translation type="unfinished">Исходящие соединения разрешены только через сеть Tor (-onlynet=onion), однако прокси для подключения к сети Tor не указан: не заданы ни -proxy, ни -onion, ни -listenonion</translation>
-    </message>
-    <message>
-        <source>Unrecognized descriptor found. Loading wallet %s
-
-The wallet might had been created on a newer version.
-Please try running the latest software version.
-</source>
-        <translation type="unfinished">При загрузке кошелька %s найден нераспознаваемый дескриптор
-
-Кошелёк мог быть создан на более новой версии программы.
-Пожалуйста, попробуйте обновить программу до последней версии.
-</translation>
-    </message>
-    <message>
-        <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
-        <translation type="unfinished">Неподдерживаемый уровень подробности журнала для категории -loglevel=%s. Ожидалось -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Доступные категории: %s. Доступные уровни подробности журнала: %s.</translation>
-    </message>
-    <message>
-        <source>
-Unable to cleanup failed migration</source>
-        <translation type="unfinished">
-Не удалось очистить следы после неуспешной миграции</translation>
-    </message>
-    <message>
-        <source>
-Unable to restore backup of wallet.</source>
-        <translation type="unfinished">
-Не удалось восстановить кошелёк из резервной копии.</translation>
-    </message>
-    <message>
-        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
-        <translation type="unfinished">Настройка конфигурации %s применяется для сети %s только если находится в разделе [%s].</translation>
-    </message>
-    <message>
-        <source>Copyright (C) %i-%i</source>
-        <translation type="unfinished">Авторское право (C) %i-%i</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation type="unfinished">Обнаружена повреждённая база данных блоков</translation>
-    </message>
-    <message>
-        <source>Could not find asmap file %s</source>
-        <translation type="unfinished">Невозможно найти файл asmap %s</translation>
-    </message>
-    <message>
-        <source>Could not parse asmap file %s</source>
-        <translation type="unfinished">Не удалось разобрать файл asmap %s</translation>
-    </message>
-    <message>
-        <source>Disk space is too low!</source>
-        <translation type="unfinished">Место на диске заканчивается!</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Пересобрать базу данных блоков прямо сейчас?</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Загрузка завершена</translation>
-    </message>
-    <message>
-        <source>Dump file %s does not exist.</source>
-        <translation type="unfinished">Дамп-файл %s не существует.</translation>
-    </message>
-    <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">Ошибка при создании %s</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation type="unfinished">Ошибка при инициализации базы данных блоков</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">Ошибка при инициализации окружения базы данных кошелька %s!</translation>
-    </message>
-    <message>
-        <source>Error loading %s</source>
-        <translation type="unfinished">Ошибка при загрузке %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Ошибка загрузки %s: приватные ключи можно отключить только при создании</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Wallet corrupted</source>
-        <translation type="unfinished">Ошибка загрузки %s: кошелёк поврежден</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation type="unfinished">Ошибка загрузки %s: кошелёк требует более новой версии %s</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation type="unfinished">Ошибка чтения базы данных блоков</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation type="unfinished">Не удалось открыть базу данных блоков</translation>
-    </message>
-    <message>
-        <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished">Ошибка чтения из базы данных, программа закрывается.</translation>
-    </message>
-    <message>
-        <source>Error reading next record from wallet database</source>
-        <translation type="unfinished">Ошибка чтения следующей записи из базы данных кошелька</translation>
-    </message>
-    <message>
-        <source>Error: Could not add watchonly tx to watchonly wallet</source>
-        <translation type="unfinished">Ошибка: не удалось добавить транзакцию для наблюдения в кошелек для наблюдения</translation>
-    </message>
-    <message>
-        <source>Error: Could not delete watchonly transactions</source>
-        <translation type="unfinished">Ошибка: транзакции только для наблюдения не удаляются</translation>
-    </message>
-    <message>
-        <source>Error: Couldn't create cursor into database</source>
-        <translation type="unfinished">Ошибка: не удалось создать курсор в базе данных</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low for %s</source>
-        <translation type="unfinished">Ошибка: на диске недостаточно места для %s</translation>
-    </message>
-    <message>
-        <source>Error: Dumpfile checksum does not match. Computed %s, expected %s</source>
-        <translation type="unfinished">Ошибка: контрольные суммы дамп-файла не совпадают. Вычислено %s, ожидалось %s.</translation>
-    </message>
-    <message>
-        <source>Error: Failed to create new watchonly wallet</source>
-        <translation type="unfinished">Ошибка: не удалось создать кошелёк только на просмотр</translation>
-    </message>
-    <message>
-        <source>Error: Got key that was not hex: %s</source>
-        <translation type="unfinished">Ошибка: получен ключ, не являющийся шестнадцатеричным: %s</translation>
-    </message>
-    <message>
-        <source>Error: Got value that was not hex: %s</source>
-        <translation type="unfinished">Ошибка: получено значение, оказавшееся не шестнадцатеричным: %s</translation>
-    </message>
-    <message>
-        <source>Error: Keypool ran out, please call keypoolrefill first</source>
-        <translation type="unfinished">Ошибка: пул ключей опустел. Пожалуйста, выполните keypoolrefill</translation>
-    </message>
-    <message>
-        <source>Error: Missing checksum</source>
-        <translation type="unfinished">Ошибка: отсутствует контрольная сумма</translation>
-    </message>
-    <message>
-        <source>Error: No %s addresses available.</source>
-        <translation type="unfinished">Ошибка: нет %s доступных адресов.</translation>
-    </message>
-    <message>
-        <source>Error: Not all watchonly txs could be deleted</source>
-        <translation type="unfinished">Ошибка: не все наблюдаемые транзакции могут быть удалены</translation>
-    </message>
-    <message>
-        <source>Error: This wallet already uses SQLite</source>
-        <translation type="unfinished">Ошибка: этот кошелёк уже использует SQLite</translation>
-    </message>
-    <message>
-        <source>Error: This wallet is already a descriptor wallet</source>
-        <translation type="unfinished">Ошибка: этот кошелёк уже является дескрипторным</translation>
-    </message>
-    <message>
-        <source>Error: Unable to begin reading all records in the database</source>
-        <translation type="unfinished">Ошибка: не удалось начать читать все записи из базе данных</translation>
-    </message>
-    <message>
-        <source>Error: Unable to make a backup of your wallet</source>
-        <translation type="unfinished">Ошибка: не удалось создать резервную копию кошелька</translation>
-    </message>
-    <message>
-        <source>Error: Unable to parse version %u as a uint32_t</source>
-        <translation type="unfinished">Ошибка: невозможно разобрать версию %u как uint32_t</translation>
-    </message>
-    <message>
-        <source>Error: Unable to read all records in the database</source>
-        <translation type="unfinished">Ошибка: не удалось прочитать все записи из базе данных</translation>
-    </message>
-    <message>
-        <source>Error: Unable to remove watchonly address book data</source>
-        <translation type="unfinished">Ошибка: не удалось удалить данные из адресной книги только для наблюдения</translation>
-    </message>
-    <message>
-        <source>Error: Unable to write record to new wallet</source>
-        <translation type="unfinished">Ошибка: невозможно произвести запись в новый кошелек</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished">Не удалось открыть никакой порт на прослушивание. Используйте -listen=0, если вас это устроит.</translation>
-    </message>
-    <message>
-        <source>Failed to rescan the wallet during initialization</source>
-        <translation type="unfinished">Не удалось пересканировать кошелёк во время инициализации</translation>
-    </message>
-    <message>
-        <source>Failed to verify database</source>
-        <translation type="unfinished">Не удалось проверить базу данных</translation>
-    </message>
-    <message>
-        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
-        <translation type="unfinished">Уровень комиссии (%s) меньше, чем значение настройки минимального уровня комиссии (%s).</translation>
-    </message>
-    <message>
-        <source>Ignoring duplicate -wallet %s.</source>
-        <translation type="unfinished">Игнорируются повторные параметры -wallet %s.</translation>
-    </message>
-    <message>
-        <source>Importing…</source>
-        <translation type="unfinished">Импорт…</translation>
-    </message>
-    <message>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished">Неверный или отсутствующий начальный блок. Неверно указана директория данных для этой сети?</translation>
-    </message>
-    <message>
-        <source>Initialization sanity check failed. %s is shutting down.</source>
-        <translation type="unfinished">Начальная проверка исправности не удалась. %s завершает работу.</translation>
-    </message>
-    <message>
-        <source>Input not found or already spent</source>
-        <translation type="unfinished">Вход для тразакции не найден или уже использован</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Недостаточно средств</translation>
-    </message>
-    <message>
-        <source>Invalid -i2psam address or hostname: '%s'</source>
-        <translation type="unfinished">Неверный адрес или имя хоста в -i2psam: "%s"</translation>
-    </message>
-    <message>
-        <source>Invalid -onion address or hostname: '%s'</source>
-        <translation type="unfinished">Неверный -onion адрес или имя хоста: "%s"</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address or hostname: '%s'</source>
-        <translation type="unfinished">Неверный адрес -proxy или имя хоста: "%s"</translation>
-    </message>
-    <message>
-        <source>Invalid P2P permission: '%s'</source>
-        <translation type="unfinished">Неверные разрешения для P2P: "%s"</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">Неверная сумма для -%s=&lt;amount&gt;: "%s"</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">Неверная сумма для -discardfee=&lt;amount&gt;: "%s"</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">Неверная сумма для -fallbackfee=&lt;amount&gt;: "%s"</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">Неверная сумма для -paytxfee=&lt;amount&gt;: "%s" (должно быть как минимум %s)</translation>
-    </message>
-    <message>
-        <source>Invalid netmask specified in -whitelist: '%s'</source>
-        <translation type="unfinished">Указана неверная сетевая маска в -whitelist: "%s"</translation>
-    </message>
-    <message>
-        <source>Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished">Ошибка при прослушивании входящих подключений (%s)</translation>
-    </message>
-    <message>
-        <source>Loading P2P addresses…</source>
-        <translation type="unfinished">Загрузка P2P адресов…</translation>
-    </message>
-    <message>
-        <source>Loading banlist…</source>
-        <translation type="unfinished">Загрузка черного списка…</translation>
-    </message>
-    <message>
-        <source>Loading block index…</source>
-        <translation type="unfinished">Загрузка индекса блоков…</translation>
-    </message>
-    <message>
-        <source>Loading wallet…</source>
-        <translation type="unfinished">Загрузка кошелька…</translation>
-    </message>
-    <message>
-        <source>Missing amount</source>
-        <translation type="unfinished">Отсутствует сумма</translation>
-    </message>
-    <message>
-        <source>Missing solving data for estimating transaction size</source>
-        <translation type="unfinished">Недостаточно данных для оценки размера транзакции</translation>
-    </message>
-    <message>
-        <source>Need to specify a port with -whitebind: '%s'</source>
-        <translation type="unfinished">Необходимо указать порт с -whitebind: "%s"</translation>
-    </message>
-    <message>
-        <source>No addresses available</source>
-        <translation type="unfinished">Нет доступных адресов</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">Недостаточно доступных файловых дескрипторов.</translation>
-    </message>
-    <message>
-        <source>Prune cannot be configured with a negative value.</source>
-        <translation type="unfinished">Обрезка блоков не может использовать отрицательное значение.</translation>
-    </message>
-    <message>
-        <source>Prune mode is incompatible with -txindex.</source>
-        <translation type="unfinished">Режим обрезки несовместим с -txindex.</translation>
-    </message>
-    <message>
-        <source>Pruning blockstore…</source>
-        <translation type="unfinished">Сокращение хранилища блоков…</translation>
-    </message>
-    <message>
-        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
-        <translation type="unfinished">Уменьшение -maxconnections с %d до %d из-за ограничений системы.</translation>
-    </message>
-    <message>
-        <source>Replaying blocks…</source>
-        <translation type="unfinished">Пересборка блоков…</translation>
-    </message>
-    <message>
-        <source>Rescanning…</source>
-        <translation type="unfinished">Повторное сканирование…</translation>
-    </message>
-    <message>
-        <source>SQLiteDatabase: Failed to execute statement to verify database: %s</source>
-        <translation type="unfinished">SQLiteDatabase: не удалось выполнить запрос для проверки базы данных: %s</translation>
-    </message>
-    <message>
-        <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
-        <translation type="unfinished">SQLiteDatabase: не удалось подготовить запрос для проверки базы данных: %s</translation>
-    </message>
-    <message>
-        <source>SQLiteDatabase: Failed to read database verification error: %s</source>
-        <translation type="unfinished">SQLiteDatabase: ошибка при проверке базы данных: %s</translation>
-    </message>
-    <message>
-        <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
-        <translation type="unfinished">SQLiteDatabase: неожиданный id приложения. Ожидалось %u, но получено %u</translation>
-    </message>
-    <message>
-        <source>Section [%s] is not recognized.</source>
-        <translation type="unfinished">Секция [%s] не распознана.</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation type="unfinished">Подписание транзакции не удалось</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" does not exist</source>
-        <translation type="unfinished">Указанный -walletdir "%s" не существует</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" is a relative path</source>
-        <translation type="unfinished">Указанный -walletdir "%s" является относительным путем</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" is not a directory</source>
-        <translation type="unfinished">Указанный -walletdir "%s" не является каталогом</translation>
-    </message>
-    <message>
-        <source>Specified blocks directory "%s" does not exist.</source>
-        <translation type="unfinished">Указанный каталог блоков "%s" не существует.</translation>
-    </message>
-    <message>
-        <source>Starting network threads…</source>
-        <translation type="unfinished">Запуск сетевых потоков…</translation>
-    </message>
-    <message>
-        <source>The source code is available from %s.</source>
-        <translation type="unfinished">Исходный код доступен по адресу %s.</translation>
-    </message>
-    <message>
-        <source>The specified config file %s does not exist</source>
-        <translation type="unfinished">Указанный конфигурационный файл %s не существует</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation type="unfinished">Сумма транзакции слишком мала для уплаты комиссии</translation>
-    </message>
-    <message>
-        <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation type="unfinished">Кошелёк будет стараться платить не меньше минимальной комиссии для ретрансляции.</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation type="unfinished">Это экспериментальное программное обеспечение.</translation>
-    </message>
-    <message>
-        <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation type="unfinished">Это минимальная комиссия, которую вы платите для любой транзакции</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Это размер комиссии, которую вы заплатите при отправке транзакции</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation type="unfinished">Размер транзакции слишком мал</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must not be negative</source>
-        <translation type="unfinished">Сумма транзакции не должна быть отрицательной</translation>
-    </message>
-    <message>
-        <source>Transaction change output index out of range</source>
-        <translation type="unfinished">Индекс получателя адреса сдачи вне диапазона</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">У транзакции слишком длинная цепочка в пуле в памяти</translation>
-    </message>
-    <message>
-        <source>Transaction must have at least one recipient</source>
-        <translation type="unfinished">Транзакция должна иметь хотя бы одного получателя</translation>
-    </message>
-    <message>
-        <source>Transaction needs a change address, but we can't generate it.</source>
-        <translation type="unfinished">Для транзакции требуется адрес сдачи, но сгенерировать его не удалось.</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation type="unfinished">Транзакция слишком большая</translation>
-    </message>
-    <message>
-        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
-        <translation type="unfinished">Не удалось выделить память для -maxsigcachesize: "%s" МиБ</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished">Невозможно привязаться (bind) к %s на этом компьютере (ошибка %s)</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
-        <translation type="unfinished">Невозможно привязаться (bind) к %s на этом компьютере. Возможно, %s уже запущен.</translation>
-    </message>
-    <message>
-        <source>Unable to create the PID file '%s': %s</source>
-        <translation type="unfinished">Не удалось создать PID-файл "%s": %s</translation>
-    </message>
-    <message>
-        <source>Unable to find UTXO for external input</source>
-        <translation type="unfinished">Не удалось найти UTXO для внешнего входа</translation>
-    </message>
-    <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">Невозможно сгенерировать начальные ключи</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">Невозможно сгенерировать ключи</translation>
-    </message>
-    <message>
-        <source>Unable to open %s for writing</source>
-        <translation type="unfinished">Не удается открыть %s для записи</translation>
-    </message>
-    <message>
-        <source>Unable to parse -maxuploadtarget: '%s'</source>
-        <translation type="unfinished">Ошибка при разборе параметра -maxuploadtarget: "%s"</translation>
-    </message>
-    <message>
-        <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation type="unfinished">Невозможно запустить HTTP-сервер. Подробности в файле debug.log.</translation>
-    </message>
-    <message>
-        <source>Unable to unload the wallet before migrating</source>
-        <translation type="unfinished">Не удалось выгрузить кошелёк перед миграцией</translation>
-    </message>
-    <message>
-        <source>Unknown -blockfilterindex value %s.</source>
-        <translation type="unfinished">Неизвестное значение -blockfilterindex %s.</translation>
-    </message>
-    <message>
-        <source>Unknown address type '%s'</source>
-        <translation type="unfinished">Неизвестный тип адреса "%s"</translation>
-    </message>
-    <message>
-        <source>Unknown change type '%s'</source>
-        <translation type="unfinished">Неизвестный тип сдачи "%s"</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation type="unfinished">В -onlynet указана неизвестная сеть: "%s"</translation>
-    </message>
-    <message>
-        <source>Unknown new rules activated (versionbit %i)</source>
-        <translation type="unfinished">В силу вступили неизвестные правила (versionbit %i)</translation>
-    </message>
-    <message>
-        <source>Unsupported global logging level -loglevel=%s. Valid values: %s.</source>
-        <translation type="unfinished">Неподдерживаемый уровень подробности ведения журнала -loglevel=%s. Доступные значения: %s.</translation>
-    </message>
-    <message>
-        <source>Unsupported logging category %s=%s.</source>
-        <translation type="unfinished">Неподдерживаемый уровень ведения журнала %s=%s.</translation>
-    </message>
-    <message>
-        <source>User Agent comment (%s) contains unsafe characters.</source>
-        <translation type="unfinished">Комментарий User Agent (%s) содержит небезопасные символы.</translation>
-    </message>
-    <message>
-        <source>Verifying blocks…</source>
-        <translation type="unfinished">Проверка блоков…</translation>
-    </message>
-    <message>
-        <source>Verifying wallet(s)…</source>
-        <translation type="unfinished">Проверка кошелька(ов)…</translation>
-    </message>
-    <message>
-        <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation type="unfinished">Необходимо перезаписать кошелёк. Перезапустите %s для завершения операции</translation>
-    </message>
-</context>
-<context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
@@ -1254,7 +455,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation type="unfinished">Показать текущее состояние кошелька</translation>
+        <translation type="unfinished">Отобразить основное окно кошелька</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -1298,7 +499,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>&amp;Minimize</source>
-        <translation type="unfinished">&amp;Свернуть</translation>
+        <translation type="unfinished">&amp;Уменьшить</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -1315,7 +516,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Отправить средства на биткоин-адрес</translation>
+        <translation type="unfinished">Отправить средства на Биткоин адрес</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -1323,7 +524,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished">Изменить парольную фразу, используемую для шифрования кошелька</translation>
+        <translation type="unfinished">Изменить пароль используемый для шифрования кошелька</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -1335,11 +536,11 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>&amp;Options…</source>
-        <translation type="unfinished">&amp;Параметры…</translation>
+        <translation type="unfinished">&amp;Параметры...</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet…</source>
-        <translation type="unfinished">&amp;Зашифровать кошелёк…</translation>
+        <translation type="unfinished">&amp;Зашифровать Кошелёк...</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -1347,47 +548,47 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>&amp;Backup Wallet…</source>
-        <translation type="unfinished">&amp;Сделать резервную копию кошелька…</translation>
+        <translation type="unfinished">&amp;Создать резервную копию кошелька...</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase…</source>
-        <translation type="unfinished">&amp;Изменить парольную фразу…</translation>
+        <translation type="unfinished">&amp;Изменить пароль...</translation>
     </message>
     <message>
         <source>Sign &amp;message…</source>
-        <translation type="unfinished">Подписать &amp;сообщение…</translation>
+        <translation type="unfinished">Подписать &amp;сообщение...</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Подписать сообщение биткоин-адресом, чтобы доказать, что вы им владеете</translation>
+        <translation type="unfinished">Подписать сообщения своими Биткоин кошельками, что-бы доказать, что вы ими владеете</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
-        <translation type="unfinished">&amp;Проверить сообщение…</translation>
+        <translation type="unfinished">&amp;Проверить сообщение</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Проверить подпись сообщения, чтобы убедиться, что оно подписано конкретным биткоин-адресом</translation>
+        <translation type="unfinished">Проверяйте сообщения, чтобы убедиться, что они подписаны конкретными биткоин-адресами</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
-        <translation type="unfinished">&amp;Загрузить PSBT из файла…</translation>
+        <translation type="unfinished">&amp;Загрузить PSBT из файла...</translation>
     </message>
     <message>
         <source>Open &amp;URI…</source>
-        <translation type="unfinished">Открыть &amp;URI…</translation>
+        <translation type="unfinished">О&amp;ткрыть URI...</translation>
     </message>
     <message>
         <source>Close Wallet…</source>
-        <translation type="unfinished">Закрыть кошелёк…</translation>
+        <translation type="unfinished">Закрыть кошелёк...</translation>
     </message>
     <message>
         <source>Create Wallet…</source>
-        <translation type="unfinished">Создать кошелёк…</translation>
+        <translation type="unfinished">Создать кошелёк...</translation>
     </message>
     <message>
         <source>Close All Wallets…</source>
-        <translation type="unfinished">Закрыть все кошельки…</translation>
+        <translation type="unfinished">Закрыть все кошельки...</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -1407,27 +608,23 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>
-        <translation type="unfinished">Синхронизация заголовков (%1%)…</translation>
+        <translation type="unfinished">Синхронизация заголовков (%1%)...</translation>
     </message>
     <message>
         <source>Synchronizing with network…</source>
-        <translation type="unfinished">Синхронизация с сетью…</translation>
+        <translation type="unfinished">Синхронизация с сетью...</translation>
     </message>
     <message>
         <source>Indexing blocks on disk…</source>
-        <translation type="unfinished">Индексация блоков на диске…</translation>
+        <translation type="unfinished">Индексация блоков на диске...</translation>
     </message>
     <message>
         <source>Processing blocks on disk…</source>
-        <translation type="unfinished">Обработка блоков на диске…</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk…</source>
-        <translation type="unfinished">Переиндексация блоков на диске…</translation>
+        <translation type="unfinished">Обработка блоков на диске...</translation>
     </message>
     <message>
         <source>Connecting to peers…</source>
-        <translation type="unfinished">Подключение к узлам…</translation>
+        <translation type="unfinished">Подключение к узлам...</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -1435,15 +632,15 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished">Показать список использованных адресов отправки и меток</translation>
+        <translation type="unfinished">Показать список использованных адресов и меток отправки</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished">Показать список использованных адресов получения и меток</translation>
+        <translation type="unfinished">Показать список использованных адресов и меток получателей</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished">&amp;Параметры командной строки</translation>
+        <translation type="unfinished">Параметры командной строки</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
@@ -1459,7 +656,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Catching up…</source>
-        <translation type="unfinished">Синхронизация…</translation>
+        <translation type="unfinished">Синхронизация...</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -1483,7 +680,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Up to date</source>
-        <translation type="unfinished">Синхронизированно</translation>
+        <translation type="unfinished">До настоящего времени </translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
@@ -1491,7 +688,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
-        <translation type="unfinished">Загрузить PSBT из &amp;буфера обмена…</translation>
+        <translation type="unfinished">Загрузить PSBT из &amp;буфера обмена...</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
@@ -1537,7 +734,7 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Restore a wallet from a backup file</source>
         <extracomment>Status tip for Restore Wallet menu item</extracomment>
-        <translation type="unfinished">Восстановить кошелек из резервной копии</translation>
+        <translation type="unfinished">Восстановить кошелёк из резервной копии</translation>
     </message>
     <message>
         <source>Close all wallets</source>
@@ -1545,7 +742,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Показать справку %1 со списком доступных параметров командной строки</translation>
+        <translation type="unfinished">Показать помощь по %1, чтобы получить список доступных параметров командной строки</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
@@ -1893,7 +1090,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Create wallet failed</source>
-        <translation type="unfinished">Не удалось создать кошелек</translation>
+        <translation type="unfinished">Не удалось создать кошелёк</translation>
     </message>
     <message>
         <source>Create wallet warning</source>
@@ -1918,7 +1115,7 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Loading wallets…</source>
         <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
-        <translation type="unfinished">Загрузка кошельков…</translation>
+        <translation type="unfinished">Загрузка кошельков...</translation>
     </message>
 </context>
 <context>
@@ -1943,7 +1140,7 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
         <extracomment>Descriptive text of the open wallet progress window which indicates to the user which wallet is currently being opened.</extracomment>
-        <translation type="unfinished">Открывается кошелёк &lt;b&gt;%1&lt;/b&gt;…</translation>
+        <translation type="unfinished">Открывается кошелёк &lt;b&gt;%1&lt;/b&gt;...</translation>
     </message>
 </context>
 <context>
@@ -1956,7 +1153,7 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
         <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
-        <translation type="unfinished">Восстановление кошелька &lt;b&gt;%1&lt;/b&gt;…</translation>
+        <translation type="unfinished">Восстановление кошелька &lt;b&gt;%1&lt;/b&gt;...</translation>
     </message>
     <message>
         <source>Restore wallet failed</source>
@@ -2025,7 +1222,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
-        <translation type="unfinished">Отключить приватные ключи для этого кошелька. В кошельках с отключёнными приватными ключами не сохраняются приватные ключи, в них нельзя создать HD мастер-ключ или импортировать приватные ключи. Это отличный вариант для кошельков для наблюдения за балансом.</translation>
+        <translation type="unfinished">Отключить приватные ключи для этого кошелька. В кошельках с отключёнными приватными ключами не сохраняются приватные ключи, в них нельзя создать HD мастер-ключ или импортировать приватные ключи. Это удобно для наблюдающих кошельков.</translation>
     </message>
     <message>
         <source>Disable Private Keys</source>
@@ -2049,7 +1246,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
-        <translation type="unfinished">Использовать внешнее устройство для подписи. Например, аппаратный кошелек. Сначала настройте сценарий внешней подписи в настройках кошелька.</translation>
+        <translation type="unfinished">Использовать внешнее устройство для подписи, например аппаратный кошелек. Сначала настройте сценарий внешней подписи в настройках кошелька.</translation>
     </message>
     <message>
         <source>External signer</source>
@@ -2085,7 +1282,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished">Адрес, связанный с этой записью адресной книги. Если это адрес для отправки, его можно изменить.</translation>
+        <translation type="unfinished">Адрес, связанный с этой записью адресной книги. Он может быть изменён только если это адрес для отправки.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -2105,15 +1302,15 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation type="unfinished">Введенный адрес "%1" не является действительным биткоин-адресом.</translation>
+        <translation type="unfinished">Введенный адрес "%1" недействителен в сети Биткоин.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
-        <translation type="unfinished">Адрес "%1" уже существует в качестве адреса для получения с меткой "%2" и поэтому не может быть добавлен в качестве адреса для отправки.</translation>
+        <translation type="unfinished">Адрес "%1" уже существует как адрес получателя с  именем "%2", и поэтому не может быть добавлен как адрес отправителя.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book with label "%2".</source>
-        <translation type="unfinished">Введённый адрес "%1" уже существует в адресной книге с меткой "%2".</translation>
+        <translation type="unfinished">Введенный адрес "%1" уже существует в адресной книге под именем "%2".</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -2174,6 +1371,10 @@ Unable to restore backup of wallet.</source>
         </translation>
     </message>
     <message>
+        <source>Choose data directory</source>
+        <translation type="unfinished">Выберите каталог для данных</translation>
+    </message>
+    <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">В этот каталог будет сохранено не менее %1 ГБ данных, и со временем их объём будет увеличиваться.</translation>
     </message>
@@ -2192,7 +1393,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation type="unfinished">%1 скачает и сохранит копию цепочки блоков Bitcoin.</translation>
+        <translation type="unfinished">%1будет скачано и сохранит копию цепи блоков Bitcoin</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -2200,7 +1401,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
-        <translation type="unfinished">Ошибка: не удалось создать указанный каталог данных "%1".</translation>
+        <translation type="unfinished">Ошибка: невозможно создать указанный каталог данных "%1".</translation>
     </message>
     <message>
         <source>Error</source>
@@ -2216,7 +1417,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">Поскольку программа запущена впервые, вы можете выбрать, где %1 будет хранить свои данные.</translation>
+        <translation type="unfinished">Так как это первый запуск программы, вы можете выбрать, где %1будет хранить данные.</translation>
     </message>
     <message>
         <source>Limit block chain storage to</source>
@@ -2240,11 +1441,11 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">Если вы решили ограничить (обрезать) объём хранимой цепи блоков, все ранние данные всё равно должны быть скачаны и обработаны. После обработки они будут удалены с целью экономии места на диске.</translation>
+        <translation type="unfinished">Если вы решили ограничить (обрезать) объём хранимой цепи блоков, все ранние данные должны быть скачаны и обработаны. После обработки они будут удалены с целью экономии места на диске.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation type="unfinished">Использовать каталог данных по умолчанию</translation>
+        <translation type="unfinished">Использовать стандартный каталог данных</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
@@ -2274,7 +1475,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Не выключайте компьютер, пока это окно не исчезнет.</translation>
+        <translation type="unfinished">Не выключайте компьютер, пока это окно не пропадёт.</translation>
     </message>
 </context>
 <context>
@@ -2285,11 +1486,11 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation type="unfinished">Недавние транзакции могут быть пока не видны, и поэтому отображаемый баланс вашего кошелька может быть неверным. Информация станет верной после завершения синхронизации с сетью Bitcoin. Прогресс синхронизации вы можете видеть снизу.</translation>
+        <translation type="unfinished">Недавние транзакции могут быть пока не видны, и поэтому отображаемый баланс вашего кошелька может быть неточной. Информация станет точной после завершения синхронизации с сетью биткоина. Прогресс синхронизации вы можете видеть снизу.</translation>
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation type="unfinished">Попытка потратить средства, использованные в транзакциях, которые ещё не синхронизированы, будет отклонена сетью.</translation>
+        <translation type="unfinished">Попытка потратить средства, затронутые не видными пока транзакциями, будет отклонена сетью.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -2297,11 +1498,11 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Unknown…</source>
-        <translation type="unfinished">Неизвестно…</translation>
+        <translation type="unfinished">Неизвестно...</translation>
     </message>
     <message>
         <source>calculating…</source>
-        <translation type="unfinished">вычисляется…</translation>
+        <translation type="unfinished">вычисляется...</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -2333,7 +1534,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
-        <translation type="unfinished">Неизвестно. Синхронизация заголовков (%1, %2%)…</translation>
+        <translation type="unfinished">Неизвестно. Синхронизируются заголовки (%1, %2%)...</translation>
     </message>
     <message>
         <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
@@ -2381,6 +1582,10 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Number of script &amp;verification threads</source>
         <translation type="unfinished">Количество потоков для &amp;проверки скриптов</translation>
+    </message>
+    <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation type="unfinished">Полный путь до скрипта, совместимого с %1 (к примеру, C:\Downloads\hwi.exe или же /Users/you/Downloads/hwi.py). Будь бдителен: мошенники могут украсть твои деньги!</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -2505,10 +1710,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>&amp;External signer script path</source>
         <translation type="unfinished">&amp;Внешний скрипт для подписи</translation>
-    </message>
-    <message>
-        <source>Full path to a Bitcoin Core compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
-        <translation type="unfinished">Путь к скрипту, совместимому с Bitcoin Core (напр. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Внимание: остерегайтесь вредоносных скриптов!</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -2799,8 +2000,8 @@ Unable to restore backup of wallet.</source>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
-        <source>Dialog</source>
-        <translation type="unfinished">Диалог</translation>
+        <source>PSBT Operations</source>
+        <translation type="unfinished">Операции с PSBT</translation>
     </message>
     <message>
         <source>Sign Tx</source>
@@ -2909,7 +2110,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>(But no wallet is loaded.)</source>
-        <translation type="unfinished">(Но ни один кошелек не загружен.)</translation>
+        <translation type="unfinished">(Но ни один кошелёк не загружен.)</translation>
     </message>
     <message>
         <source>(But this wallet cannot sign transactions.)</source>
@@ -3161,6 +2362,14 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">Версия</translation>
     </message>
     <message>
+        <source>Whether we relay transactions to this peer.</source>
+        <translation type="unfinished">Предаем ли мы транзакции этому узлу.</translation>
+    </message>
+    <message>
+        <source>Transaction Relay</source>
+        <translation type="unfinished">Ретранслятор транзакций</translation>
+    </message>
+    <message>
         <source>Starting Block</source>
         <translation type="unfinished">Начальный блок</translation>
     </message>
@@ -3257,14 +2466,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Services</source>
         <translation type="unfinished">Службы</translation>
-    </message>
-    <message>
-        <source>Whether the peer requested us to relay transactions.</source>
-        <translation type="unfinished">Попросил ли нас узел передавать транзакции дальше.</translation>
-    </message>
-    <message>
-        <source>Wants Tx Relay</source>
-        <translation type="unfinished">Желает передавать транзакции</translation>
     </message>
     <message>
         <source>High bandwidth BIP152 compact block relay: %1</source>
@@ -3483,11 +2684,11 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>To</source>
-        <translation type="unfinished">От нас</translation>
+        <translation type="unfinished">Кому</translation>
     </message>
     <message>
         <source>From</source>
-        <translation type="unfinished">К нам</translation>
+        <translation type="unfinished">От кого</translation>
     </message>
     <message>
         <source>Ban for</source>
@@ -3591,6 +2792,26 @@ For more information on using this console, type %6.
     <message>
         <source>Copy &amp;amount</source>
         <translation type="unfinished">Копировать с&amp;умму</translation>
+    </message>
+    <message>
+        <source>Base58 (Legacy)</source>
+        <translation type="unfinished">Base58 (Устаревший)</translation>
+    </message>
+    <message>
+        <source>Not recommended due to higher fees and less protection against typos.</source>
+        <translation type="unfinished">Не рекомендуется из-за высоких комиссий и меньшей устойчивости к опечаткам.</translation>
+    </message>
+    <message>
+        <source>Generates an address compatible with older wallets.</source>
+        <translation type="unfinished">Создать адрес, совместимый со старыми кошельками.</translation>
+    </message>
+    <message>
+        <source>Generates a native segwit address (BIP-173). Some old wallets don't support it.</source>
+        <translation type="unfinished">Создать segwit адрес по BIP-173, Некоторые старые кошельки не поддерживают такие адреса.</translation>
+    </message>
+    <message>
+        <source>Bech32m (BIP-350) is an upgrade to Bech32, wallet support is still limited.</source>
+        <translation type="unfinished">Bech32m (BIP-350) — это более новая версия Bech32, поддержка таких кошельков по-прежнему ограничена.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -3885,7 +3106,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Set external signer script path in Options -&gt; Wallet</source>
         <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Укажите внешний скрипт подписи в Настройки -&gt; Кошелек</translation>
+        <translation type="unfinished">Укажите внешний скрипт подписи в Настройки -&gt; Кошелёк</translation>
     </message>
     <message>
         <source>Cr&amp;eate Unsigned</source>
@@ -3936,6 +3157,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>PSBT saved</source>
+        <extracomment>Popup message when a PSBT has been saved to a file</extracomment>
         <translation type="unfinished">PSBT сохранена</translation>
     </message>
     <message>
@@ -3981,6 +3203,20 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Total Amount</source>
         <translation type="unfinished">Итоговая сумма</translation>
+    </message>
+    <message>
+        <source>Unsigned Transaction</source>
+        <comment>PSBT copied</comment>
+        <extracomment>Caption of "PSBT has been copied" messagebox</extracomment>
+        <translation type="unfinished">Неподписанная транзакция</translation>
+    </message>
+    <message>
+        <source>The PSBT has been copied to the clipboard. You can also save it.</source>
+        <translation type="unfinished">PSBT скопирована в буфер обмена. Вы можете её сохранить.</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk</source>
+        <translation type="unfinished">PSBT сохранена на диск</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -4699,7 +3935,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Ошибка экспорта</translation>
+        <translation type="unfinished">Ошибка при экспорте</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
@@ -4809,6 +4045,11 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">PSBT скопирована</translation>
     </message>
     <message>
+        <source>Copied to clipboard</source>
+        <comment>Fee-bump PSBT saved</comment>
+        <translation type="unfinished">Скопировано в буфер обмена</translation>
+    </message>
+    <message>
         <source>Can't sign transaction.</source>
         <translation type="unfinished">Невозможно подписать транзакцию</translation>
     </message>
@@ -4829,7 +4070,7 @@ Go to File &gt; Open Wallet to load a wallet.
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;Экспорт</translation>
+        <translation type="unfinished">&amp;Экспортировать</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -4863,6 +4104,843 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Cancel</source>
         <translation type="unfinished">Отмена</translation>
+    </message>
+</context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>The %s developers</source>
+        <translation type="unfinished">Разработчики %s</translation>
+    </message>
+    <message>
+        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
+        <translation type="unfinished">%s испорчен. Попробуйте восстановить его с помощью инструмента bitcoin-wallet или из резервной копии.</translation>
+    </message>
+    <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation type="unfinished">%s хочет открыть порт %u на прослушивание. Этот порт считается "плохим", и другие узлы, скорее всего, не захотят общаться через этот порт. Список портов и подробности можно узнать в документе doc/p2p-bad-ports.md.</translation>
+    </message>
+    <message>
+        <source>Cannot downgrade wallet from version %i to version %i. Wallet version unchanged.</source>
+        <translation type="unfinished">Невозможно понизить версию кошелька с %i до %i. Версия кошелька не была изменена.</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation type="unfinished">Невозможно заблокировать каталог данных %s. Вероятно, %s уже запущен.</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified.</source>
+        <translation type="unfinished">Невозможно обновить разделённый кошелёк без HD с версии %i до версии %i, не обновившись для поддержки предварительно разделённого пула ключей. Пожалуйста, используйте версию %i или повторите без указания версии.</translation>
+    </message>
+    <message>
+        <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
+        <translation type="unfinished">Свободного места для %s может не хватить для размещения файлов цепочки блоков. В этом каталоге будет храниться около %u ГБ данных.</translation>
+    </message>
+    <message>
+        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
+        <translation type="unfinished">Распространяется по лицензии MIT. Её текст находится в файле %s и по адресу %s</translation>
+    </message>
+    <message>
+        <source>Error loading wallet. Wallet requires blocks to be downloaded, and software does not currently support loading wallets while blocks are being downloaded out of order when using assumeutxo snapshots. Wallet should be able to load successfully after node sync reaches height %s</source>
+        <translation type="unfinished">Не удалось загрузить кошелёк. Для кошелька требуется, чтобы блоки были загружены. Но в данный момент программа не поддерживает загрузку кошелька с одновременной загрузкой блоков не по порядку с использованием снимков assumeutxo. Кошелёк должен успешно загрузиться после того, как узел синхронизирует блок %s</translation>
+    </message>
+    <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation type="unfinished">Ошибка чтения %s! Все ключи прочитаны верно, но данные транзакций или записи адресной книги могут отсутствовать или быть неправильными.</translation>
+    </message>
+    <message>
+        <source>Error reading %s! Transaction data may be missing or incorrect. Rescanning wallet.</source>
+        <translation type="unfinished">Ошибка чтения %s! Данные транзакций отсутствуют или неправильны. Кошелёк сканируется заново.</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile format record is incorrect. Got "%s", expected "format".</source>
+        <translation type="unfinished">Ошибка: запись формата дамп-файла неверна. Обнаружено "%s", ожидалось "format".</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
+        <translation type="unfinished">Ошибка: запись идентификатора дамп-файла неверна. Обнаружено "%s", ожидалось "%s".</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation type="unfinished">Ошибка: версия дамп-файла не поддерживается. Эта версия биткоин-кошелька поддерживает только дамп-файлы версии 1. Обнаружен дамп-файл версии %s</translation>
+    </message>
+    <message>
+        <source>Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types</source>
+        <translation type="unfinished">Ошибка: устаревшие кошельки поддерживают только следующие типы адресов: "legacy", "p2sh-segwit", и "bech32".</translation>
+    </message>
+    <message>
+        <source>Error: Unable to produce descriptors for this legacy wallet. Make sure to provide the wallet's passphrase if it is encrypted.</source>
+        <translation type="unfinished">Ошибка: не удалось создать дескрипторы для этого кошелька старого формата. Не забудьте указать парольную фразу, если кошелёк был зашифрован.</translation>
+    </message>
+    <message>
+        <source>File %s already exists. If you are sure this is what you want, move it out of the way first.</source>
+        <translation type="unfinished">Файл %s уже существует. Если вы уверены, что так и должно быть, сначала уберите оттуда этот файл.</translation>
+    </message>
+    <message>
+        <source>Invalid or corrupt peers.dat (%s). If you believe this is a bug, please report it to %s. As a workaround, you can move the file (%s) out of the way (rename, move, or delete) to have a new one created on the next start.</source>
+        <translation type="unfinished">Неверный или поврежденный peers.dat (%s). Если вы считаете что это ошибка, сообщите о ней %s. В качестве временной меры вы можете переместить, переименовать или удалить файл (%s). Новый файл будет создан при следующем запуске программы.</translation>
+    </message>
+    <message>
+        <source>More than one onion bind address is provided. Using %s for the automatically created Tor onion service.</source>
+        <translation type="unfinished">Предоставлен более чем один onion-адрес для привязки. Для автоматически созданного onion-сервиса Tor будет использован %s.</translation>
+    </message>
+    <message>
+        <source>No dump file provided. To use createfromdump, -dumpfile=&lt;filename&gt; must be provided.</source>
+        <translation type="unfinished">Не указан дамп-файл. Чтобы использовать createfromdump, необходимо указать -dumpfile=&lt;filename&gt;</translation>
+    </message>
+    <message>
+        <source>No dump file provided. To use dump, -dumpfile=&lt;filename&gt; must be provided.</source>
+        <translation type="unfinished">Не указан дамп-файл. Чтобы использовать dump, необходимо указать -dumpfile=&lt;filename&gt;</translation>
+    </message>
+    <message>
+        <source>No wallet file format provided. To use createfromdump, -format=&lt;format&gt; must be provided.</source>
+        <translation type="unfinished">Не указан формат файла кошелька. Чтобы использовать createfromdump, необходимо указать -format=&lt;format&gt;</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation type="unfinished">Пожалуйста, убедитесь, что на вашем компьютере верно установлены дата и время. Если ваши часы сбились, %s будет работать неправильно.</translation>
+    </message>
+    <message>
+        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
+        <translation type="unfinished">Пожалуйста, внесите свой вклад, если вы считаете %s полезным. Посетите %s для получения дополнительной информации о программном обеспечении.</translation>
+    </message>
+    <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation type="unfinished">Обрезка блоков выставлена меньше, чем минимум в %d МиБ. Пожалуйста, используйте большее значение.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead.</source>
+        <translation type="unfinished">Режим обрезки несовместим с -reindex-chainstate. Используйте вместо этого полный -reindex.</translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation type="unfinished">Обрезка: последняя синхронизация кошелька вышла за рамки обрезанных данных. Необходимо сделать -reindex (снова скачать всю цепочку блоков, если у вас узел с обрезкой)</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
+        <translation type="unfinished">SQLiteDatabase: неизвестная версия схемы SQLite кошелька: %d. Поддерживается только версия %d</translation>
+    </message>
+    <message>
+        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
+        <translation type="unfinished">В базе данных блоков найден блок из будущего. Это может произойти из-за неверно установленных даты и времени на вашем компьютере. Перестраивайте базу данных блоков только если вы уверены, что дата и время установлены верно.</translation>
+    </message>
+    <message>
+        <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
+        <translation type="unfinished">База данных индексации блоков содержит устаревший "txindex". Чтобы освободить место на диске, выполните полный -reindex, или игнорируйте эту ошибку. Это сообщение об ошибке больше показано не будет.</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation type="unfinished">Сумма транзакции за вычетом комиссии слишком мала для отправки</translation>
+    </message>
+    <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation type="unfinished">Это могло произойти, если кошелёк был некорректно закрыт, а затем загружен сборкой с более новой версией Berkley DB. Если это так, воспользуйтесь сборкой, в которой этот кошелёк открывался в последний раз</translation>
+    </message>
+    <message>
+        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
+        <translation type="unfinished">Это тестовая сборка. Используйте её на свой страх и риск. Не используйте её для добычи или в торговых приложениях</translation>
+    </message>
+    <message>
+        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
+        <translation type="unfinished">Это максимальная транзакция, которую вы заплатите (в добавок к обычной плате) для избежания затрат по причине отбора монет.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
+        <translation type="unfinished">Это комиссия за транзакцию, которую вы можете отбросить, если сдача меньше, чем пыль на этом уровне</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation type="unfinished">Это комиссия за транзакцию, которую вы можете заплатить, когда расчёт комиссии недоступен.</translation>
+    </message>
+    <message>
+        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
+        <translation type="unfinished">Текущая длина строки версии сети (%i) превышает максимальную длину (%i). Уменьшите количество или размер uacomments.</translation>
+    </message>
+    <message>
+        <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
+        <translation type="unfinished">Невозможно воспроизвести блоки. Вам необходимо перестроить базу данных, используя -reindex-chainstate.</translation>
+    </message>
+    <message>
+        <source>Unknown wallet file format "%s" provided. Please provide one of "bdb" or "sqlite".</source>
+        <translation type="unfinished">Указан неизвестный формат файла кошелька "%s". Укажите "bdb" либо "sqlite".</translation>
+    </message>
+    <message>
+        <source>Unsupported chainstate database format found. Please restart with -reindex-chainstate. This will rebuild the chainstate database.</source>
+        <translation type="unfinished">Обнаружен неподдерживаемый формат базы данных состояния цепочки блоков. Пожалуйста, перезапустите программу с ключом -reindex-chainstate. Это перестроит базу данных состояния цепочки блоков.</translation>
+    </message>
+    <message>
+        <source>Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future.</source>
+        <translation type="unfinished">Кошелёк успешно создан. Старый формат кошелька признан устаревшим. Поддержка создания кошелька в этом формате и его открытие в будущем будут удалены.</translation>
+    </message>
+    <message>
+        <source>Warning: Dumpfile wallet format "%s" does not match command line specified format "%s".</source>
+        <translation type="unfinished">Внимание: формат дамп-файла кошелька "%s" не соответствует указанному в командной строке формату "%s".</translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation type="unfinished">Предупреждение: приватные ключи обнаружены в кошельке {%s} с отключенными приватными ключами</translation>
+    </message>
+    <message>
+        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
+        <translation type="unfinished">Внимание: мы не полностью согласны с другими узлами! Вам или другим участникам, возможно, следует обновиться.</translation>
+    </message>
+    <message>
+        <source>Witness data for blocks after height %d requires validation. Please restart with -reindex.</source>
+        <translation type="unfinished">Для свидетельских данных в блоках после %d необходима проверка. Пожалуйста, перезапустите клиент с параметром -reindex.</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
+        <translation type="unfinished">Вам необходимо пересобрать базу данных с помощью -reindex, чтобы вернуться к полному режиму. Это приведёт к повторному скачиванию всей цепочки блоков</translation>
+    </message>
+    <message>
+        <source>%s is set very high!</source>
+        <translation type="unfinished">%s задан слишком высоким!</translation>
+    </message>
+    <message>
+        <source>-maxmempool must be at least %d MB</source>
+        <translation type="unfinished">-maxmempool должен быть минимум %d МБ</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation type="unfinished">Произошла критическая внутренняя ошибка, подробности в файле debug.log</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -%s address: '%s'</source>
+        <translation type="unfinished">Не удается разрешить -%s адрес: "%s"</translation>
+    </message>
+    <message>
+        <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
+        <translation type="unfinished">Нельзя установить -forcednsseed в true, если -dnsseed установлен в false.</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation type="unfinished">Нельзя указывать -peerblockfilters без указания -blockfilterindex.</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation type="unfinished">Не удается выполнить запись в каталог данных "%s"; проверьте разрешения.</translation>
+    </message>
+    <message>
+        <source>The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.</source>
+        <translation type="unfinished">Обновление -txindex, запущенное при предыдущей версии не может быть завершено. Перезапустите с предыдущей версией или запустите весь процесс заново с ключом -reindex.</translation>
+    </message>
+    <message>
+        <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation type="unfinished">%s слишком много! Комиссии такого объёма могут быть оплачены за одну транзакцию.</translation>
+    </message>
+    <message>
+        <source>-reindex-chainstate option is not compatible with -blockfilterindex. Please temporarily disable blockfilterindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
+        <translation type="unfinished">Опция -reindex-chainstate не совместима с -blockfilterindex. Пожалуйста, выключите на время blockfilterindex, пока используется -reindex-chainstate, либо замените -reindex-chainstate на -reindex для полной перестройки всех индексов.</translation>
+    </message>
+    <message>
+        <source>-reindex-chainstate option is not compatible with -coinstatsindex. Please temporarily disable coinstatsindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
+        <translation type="unfinished">Опция -reindex-chainstate не совместима с -coinstatsindex. Пожалуйста, выключите на время coinstatsindex, пока используется -reindex-chainstate, либо замените -reindex-chainstate на -reindex для полной перестройки всех индексов.</translation>
+    </message>
+    <message>
+        <source>-reindex-chainstate option is not compatible with -txindex. Please temporarily disable txindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
+        <translation type="unfinished">Опция -reindex-chainstate не совместима с -txindex. Пожалуйста, выключите на время txindex, пока используется -reindex-chainstate, либо замените -reindex-chainstate на -reindex для полной перестройки всех индексов.</translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
+        <translation type="unfinished">Не удаётся предоставить определённые соединения, чтобы при этом addrman нашёл в них исходящие соединения.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
+        <translation type="unfinished">Ошибка загрузки %s: не удалось загрузить кошелёк с внешней подписью, так как эта версия программы собрана без поддержки внешней подписи</translation>
+    </message>
+    <message>
+        <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
+        <translation type="unfinished">Ошибка: адресная книга в кошельке не принадлежит к мигрируемым кошелькам</translation>
+    </message>
+    <message>
+        <source>Error: Duplicate descriptors created during migration. Your wallet may be corrupted.</source>
+        <translation type="unfinished">Ошибка: при миграции были созданы дублирующиеся дескрипторы. Возможно, ваш кошелёк повреждён.</translation>
+    </message>
+    <message>
+        <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
+        <translation type="unfinished">Ошибка: транзакция %s не принадлежит к мигрируемым кошелькам</translation>
+    </message>
+    <message>
+        <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
+        <translation type="unfinished">Не удалось переименовать файл peers.dat. Пожалуйста, переместите или удалите его и попробуйте снова.</translation>
+    </message>
+    <message>
+        <source>Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6</source>
+        <translation type="unfinished">Несовместимые ключи: был явно указан -dnsseed=1, но -onlynet не разрешены соединения через IPv4/IPv6</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to CJDNS (-onlynet=cjdns) but -cjdnsreachable is not provided</source>
+        <translation type="unfinished">Исходящие соединения ограничены сетью CJDNS (-onlynet=cjdns), но -cjdnsreachable не задан</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is explicitly forbidden: -onion=0</source>
+        <translation type="unfinished">Исходящие соединения разрешены только через сеть Tor (-onlynet=onion), однако прокси для подключения к сети Tor явно запрещен: -onion=0</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is not provided: none of -proxy, -onion or -listenonion is given</source>
+        <translation type="unfinished">Исходящие соединения разрешены только через сеть Tor (-onlynet=onion), однако прокси для подключения к сети Tor не указан: не заданы ни -proxy, ни -onion, ни -listenonion</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to i2p (-onlynet=i2p) but -i2psam is not provided</source>
+        <translation type="unfinished">Исходящие соединения ограничены сетью i2p (-onlynet=i2p), но -i2psam не задан</translation>
+    </message>
+    <message>
+        <source>The inputs size exceeds the maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs</source>
+        <translation type="unfinished">Размер входов превысил максимальный вес. Пожалуйста, попробуйте отправить меньшую сумму или объедините UTXO в вашем кошельке вручную.</translation>
+    </message>
+    <message>
+        <source>Unexpected legacy entry in descriptor wallet found. Loading wallet %s
+
+The wallet might have been tampered with or created with malicious intent.
+</source>
+        <translation type="unfinished">В дескрипторном кошельке %s обнаружено поле устаревшего формата.
+
+Этот кошелёк мог быть подменён или создан со злым умыслом.
+</translation>
+    </message>
+    <message>
+        <source>Unrecognized descriptor found. Loading wallet %s
+
+The wallet might had been created on a newer version.
+Please try running the latest software version.
+</source>
+        <translation type="unfinished">При загрузке кошелька %s найден нераспознаваемый дескриптор
+
+Кошелёк мог быть создан на более новой версии программы.
+Пожалуйста, попробуйте обновить программу до последней версии.
+</translation>
+    </message>
+    <message>
+        <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
+        <translation type="unfinished">Неподдерживаемый уровень подробности журнала для категории -loglevel=%s. Ожидалось -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Доступные категории: %s. Доступные уровни подробности журнала: %s.</translation>
+    </message>
+    <message>
+        <source>
+Unable to cleanup failed migration</source>
+        <translation type="unfinished">
+Не удалось очистить следы после неуспешной миграции</translation>
+    </message>
+    <message>
+        <source>
+Unable to restore backup of wallet.</source>
+        <translation type="unfinished">
+Не удалось восстановить кошелёк из резервной копии.</translation>
+    </message>
+    <message>
+        <source>Block verification was interrupted</source>
+        <translation type="unfinished">Проверка блоков прервана</translation>
+    </message>
+    <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation type="unfinished">Настройка конфигурации %s применяется для сети %s только если находится в разделе [%s].</translation>
+    </message>
+    <message>
+        <source>Copyright (C) %i-%i</source>
+        <translation type="unfinished">Авторское право (C) %i-%i</translation>
+    </message>
+    <message>
+        <source>Corrupted block database detected</source>
+        <translation type="unfinished">Обнаружена повреждённая база данных блоков</translation>
+    </message>
+    <message>
+        <source>Could not find asmap file %s</source>
+        <translation type="unfinished">Невозможно найти файл asmap %s</translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation type="unfinished">Не удалось разобрать файл asmap %s</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation type="unfinished">Место на диске заканчивается!</translation>
+    </message>
+    <message>
+        <source>Do you want to rebuild the block database now?</source>
+        <translation type="unfinished">Пересобрать базу данных блоков прямо сейчас?</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Загрузка завершена</translation>
+    </message>
+    <message>
+        <source>Dump file %s does not exist.</source>
+        <translation type="unfinished">Дамп-файл %s не существует.</translation>
+    </message>
+    <message>
+        <source>Error creating %s</source>
+        <translation type="unfinished">Ошибка при создании %s</translation>
+    </message>
+    <message>
+        <source>Error initializing block database</source>
+        <translation type="unfinished">Ошибка при инициализации базы данных блоков</translation>
+    </message>
+    <message>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation type="unfinished">Ошибка при инициализации окружения базы данных кошелька %s!</translation>
+    </message>
+    <message>
+        <source>Error loading %s</source>
+        <translation type="unfinished">Ошибка при загрузке %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation type="unfinished">Ошибка загрузки %s: приватные ключи можно отключить только при создании</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation type="unfinished">Ошибка загрузки %s: кошелёк поврежден</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation type="unfinished">Ошибка загрузки %s: кошелёк требует более новой версии %s</translation>
+    </message>
+    <message>
+        <source>Error loading block database</source>
+        <translation type="unfinished">Ошибка чтения базы данных блоков</translation>
+    </message>
+    <message>
+        <source>Error opening block database</source>
+        <translation type="unfinished">Не удалось открыть базу данных блоков</translation>
+    </message>
+    <message>
+        <source>Error reading configuration file: %s</source>
+        <translation type="unfinished">Ошибка при чтении файла настроек: %s</translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation type="unfinished">Ошибка чтения из базы данных, программа закрывается.</translation>
+    </message>
+    <message>
+        <source>Error reading next record from wallet database</source>
+        <translation type="unfinished">Ошибка чтения следующей записи из базы данных кошелька</translation>
+    </message>
+    <message>
+        <source>Error: Cannot extract destination from the generated scriptpubkey</source>
+        <translation type="unfinished">Ошибка: не удалось извлечь получателя из сгенерированного scriptpubkey</translation>
+    </message>
+    <message>
+        <source>Error: Could not add watchonly tx to watchonly wallet</source>
+        <translation type="unfinished">Ошибка: не удалось добавить транзакцию для наблюдения в кошелёк для наблюдения</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions</source>
+        <translation type="unfinished">Ошибка: транзакции только для наблюдения не удаляются</translation>
+    </message>
+    <message>
+        <source>Error: Couldn't create cursor into database</source>
+        <translation type="unfinished">Ошибка: не удалось создать курсор в базе данных</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation type="unfinished">Ошибка: на диске недостаточно места для %s</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile checksum does not match. Computed %s, expected %s</source>
+        <translation type="unfinished">Ошибка: контрольные суммы дамп-файла не совпадают. Вычислено %s, ожидалось %s.</translation>
+    </message>
+    <message>
+        <source>Error: Failed to create new watchonly wallet</source>
+        <translation type="unfinished">Ошибка: не удалось создать кошелёк только на просмотр</translation>
+    </message>
+    <message>
+        <source>Error: Got key that was not hex: %s</source>
+        <translation type="unfinished">Ошибка: получен ключ, не являющийся шестнадцатеричным: %s</translation>
+    </message>
+    <message>
+        <source>Error: Got value that was not hex: %s</source>
+        <translation type="unfinished">Ошибка: получено значение, оказавшееся не шестнадцатеричным: %s</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation type="unfinished">Ошибка: пул ключей опустел. Пожалуйста, выполните keypoolrefill</translation>
+    </message>
+    <message>
+        <source>Error: Missing checksum</source>
+        <translation type="unfinished">Ошибка: отсутствует контрольная сумма</translation>
+    </message>
+    <message>
+        <source>Error: No %s addresses available.</source>
+        <translation type="unfinished">Ошибка: нет %s доступных адресов.</translation>
+    </message>
+    <message>
+        <source>Error: Not all watchonly txs could be deleted</source>
+        <translation type="unfinished">Ошибка: не все наблюдаемые транзакции могут быть удалены</translation>
+    </message>
+    <message>
+        <source>Error: This wallet already uses SQLite</source>
+        <translation type="unfinished">Ошибка: этот кошелёк уже использует SQLite</translation>
+    </message>
+    <message>
+        <source>Error: This wallet is already a descriptor wallet</source>
+        <translation type="unfinished">Ошибка: этот кошелёк уже является дескрипторным</translation>
+    </message>
+    <message>
+        <source>Error: Unable to begin reading all records in the database</source>
+        <translation type="unfinished">Ошибка: не удалось начать читать все записи из базе данных</translation>
+    </message>
+    <message>
+        <source>Error: Unable to make a backup of your wallet</source>
+        <translation type="unfinished">Ошибка: не удалось создать резервную копию кошелька</translation>
+    </message>
+    <message>
+        <source>Error: Unable to parse version %u as a uint32_t</source>
+        <translation type="unfinished">Ошибка: невозможно разобрать версию %u как uint32_t</translation>
+    </message>
+    <message>
+        <source>Error: Unable to read all records in the database</source>
+        <translation type="unfinished">Ошибка: не удалось прочитать все записи из базе данных</translation>
+    </message>
+    <message>
+        <source>Error: Unable to remove watchonly address book data</source>
+        <translation type="unfinished">Ошибка: не удалось удалить данные из адресной книги только для наблюдения</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write record to new wallet</source>
+        <translation type="unfinished">Ошибка: невозможно произвести запись в новый кошелёк</translation>
+    </message>
+    <message>
+        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
+        <translation type="unfinished">Не удалось открыть никакой порт на прослушивание. Используйте -listen=0, если вас это устроит.</translation>
+    </message>
+    <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation type="unfinished">Не удалось пересканировать кошелёк во время инициализации</translation>
+    </message>
+    <message>
+        <source>Failed to verify database</source>
+        <translation type="unfinished">Не удалось проверить базу данных</translation>
+    </message>
+    <message>
+        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
+        <translation type="unfinished">Уровень комиссии (%s) меньше, чем значение настройки минимального уровня комиссии (%s).</translation>
+    </message>
+    <message>
+        <source>Ignoring duplicate -wallet %s.</source>
+        <translation type="unfinished">Игнорируются повторные параметры -wallet %s.</translation>
+    </message>
+    <message>
+        <source>Importing…</source>
+        <translation type="unfinished">Импорт…</translation>
+    </message>
+    <message>
+        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
+        <translation type="unfinished">Неверный или отсутствующий начальный блок. Неверно указана директория данных для этой сети?</translation>
+    </message>
+    <message>
+        <source>Initialization sanity check failed. %s is shutting down.</source>
+        <translation type="unfinished">Начальная проверка исправности не удалась. %s завершает работу.</translation>
+    </message>
+    <message>
+        <source>Input not found or already spent</source>
+        <translation type="unfinished">Вход для тразакции не найден или уже использован</translation>
+    </message>
+    <message>
+        <source>Insufficient dbcache for block verification</source>
+        <translation type="unfinished">Недостаточное значение dbcache для проверки блока</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Недостаточно средств</translation>
+    </message>
+    <message>
+        <source>Invalid -i2psam address or hostname: '%s'</source>
+        <translation type="unfinished">Неверный адрес или имя хоста в -i2psam: "%s"</translation>
+    </message>
+    <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation type="unfinished">Неверный -onion адрес или имя хоста: "%s"</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation type="unfinished">Неверный адрес -proxy или имя хоста: "%s"</translation>
+    </message>
+    <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation type="unfinished">Неверные разрешения для P2P: "%s"</translation>
+    </message>
+    <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
+        <translation type="unfinished">Неверное количество для %s=&lt;amount&gt;: '%s' (должно быть минимум %s)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
+        <translation type="unfinished">Неверное количество для %s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
+        <translation type="unfinished">Неверная сумма для -%s=&lt;amount&gt;: "%s"</translation>
+    </message>
+    <message>
+        <source>Invalid netmask specified in -whitelist: '%s'</source>
+        <translation type="unfinished">Указана неверная сетевая маска в -whitelist: "%s"</translation>
+    </message>
+    <message>
+        <source>Invalid port specified in %s: '%s'</source>
+        <translation type="unfinished">Неверный порт указан в %s: '%s'</translation>
+    </message>
+    <message>
+        <source>Listening for incoming connections failed (listen returned error %s)</source>
+        <translation type="unfinished">Ошибка при прослушивании входящих подключений (%s)</translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses…</source>
+        <translation type="unfinished">Загрузка P2P адресов…</translation>
+    </message>
+    <message>
+        <source>Loading banlist…</source>
+        <translation type="unfinished">Загрузка черного списка…</translation>
+    </message>
+    <message>
+        <source>Loading block index…</source>
+        <translation type="unfinished">Загрузка индекса блоков…</translation>
+    </message>
+    <message>
+        <source>Loading wallet…</source>
+        <translation type="unfinished">Загрузка кошелька…</translation>
+    </message>
+    <message>
+        <source>Missing amount</source>
+        <translation type="unfinished">Отсутствует сумма</translation>
+    </message>
+    <message>
+        <source>Missing solving data for estimating transaction size</source>
+        <translation type="unfinished">Недостаточно данных для оценки размера транзакции</translation>
+    </message>
+    <message>
+        <source>Need to specify a port with -whitebind: '%s'</source>
+        <translation type="unfinished">Необходимо указать порт с -whitebind: "%s"</translation>
+    </message>
+    <message>
+        <source>No addresses available</source>
+        <translation type="unfinished">Нет доступных адресов</translation>
+    </message>
+    <message>
+        <source>Not enough file descriptors available.</source>
+        <translation type="unfinished">Недостаточно доступных файловых дескрипторов.</translation>
+    </message>
+    <message>
+        <source>Prune cannot be configured with a negative value.</source>
+        <translation type="unfinished">Обрезка блоков не может использовать отрицательное значение.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation type="unfinished">Режим обрезки несовместим с -txindex.</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore…</source>
+        <translation type="unfinished">Сокращение хранилища блоков…</translation>
+    </message>
+    <message>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation type="unfinished">Уменьшение -maxconnections с %d до %d из-за ограничений системы.</translation>
+    </message>
+    <message>
+        <source>Replaying blocks…</source>
+        <translation type="unfinished">Пересборка блоков…</translation>
+    </message>
+    <message>
+        <source>Rescanning…</source>
+        <translation type="unfinished">Повторное сканирование…</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to execute statement to verify database: %s</source>
+        <translation type="unfinished">SQLiteDatabase: не удалось выполнить запрос для проверки базы данных: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
+        <translation type="unfinished">SQLiteDatabase: не удалось подготовить запрос для проверки базы данных: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to read database verification error: %s</source>
+        <translation type="unfinished">SQLiteDatabase: ошибка при проверке базы данных: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
+        <translation type="unfinished">SQLiteDatabase: неожиданный id приложения. Ожидалось %u, но получено %u</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation type="unfinished">Секция [%s] не распознана.</translation>
+    </message>
+    <message>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished">Подписание транзакции не удалось</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation type="unfinished">Указанный -walletdir "%s" не существует</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation type="unfinished">Указанный -walletdir "%s" является относительным путем</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation type="unfinished">Указанный -walletdir "%s" не является каталогом</translation>
+    </message>
+    <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation type="unfinished">Указанный каталог блоков "%s" не существует.</translation>
+    </message>
+    <message>
+        <source>Specified data directory "%s" does not exist.</source>
+        <translation type="unfinished">Указанный каталог данных "%s" не существует.</translation>
+    </message>
+    <message>
+        <source>Starting network threads…</source>
+        <translation type="unfinished">Запуск сетевых потоков…</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation type="unfinished">Исходный код доступен по адресу %s.</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist</source>
+        <translation type="unfinished">Указанный конфигурационный файл %s не существует</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation type="unfinished">Сумма транзакции слишком мала для уплаты комиссии</translation>
+    </message>
+    <message>
+        <source>The wallet will avoid paying less than the minimum relay fee.</source>
+        <translation type="unfinished">Кошелёк будет стараться платить не меньше минимальной комиссии для ретрансляции.</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation type="unfinished">Это экспериментальное программное обеспечение.</translation>
+    </message>
+    <message>
+        <source>This is the minimum transaction fee you pay on every transaction.</source>
+        <translation type="unfinished">Это минимальная комиссия, которую вы платите для любой транзакции</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you will pay if you send a transaction.</source>
+        <translation type="unfinished">Это размер комиссии, которую вы заплатите при отправке транзакции</translation>
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished">Размер транзакции слишком мал</translation>
+    </message>
+    <message>
+        <source>Transaction amounts must not be negative</source>
+        <translation type="unfinished">Сумма транзакции не должна быть отрицательной</translation>
+    </message>
+    <message>
+        <source>Transaction change output index out of range</source>
+        <translation type="unfinished">Индекс получателя адреса сдачи вне диапазона</translation>
+    </message>
+    <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation type="unfinished">У транзакции слишком длинная цепочка в пуле в памяти</translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation type="unfinished">Транзакция должна иметь хотя бы одного получателя</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it.</source>
+        <translation type="unfinished">Для транзакции требуется адрес сдачи, но сгенерировать его не удалось.</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation type="unfinished">Транзакция слишком большая</translation>
+    </message>
+    <message>
+        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
+        <translation type="unfinished">Не удалось выделить память для -maxsigcachesize: "%s" МиБ</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
+        <translation type="unfinished">Невозможно привязаться (bind) к %s на этом компьютере (ошибка %s)</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
+        <translation type="unfinished">Невозможно привязаться (bind) к %s на этом компьютере. Возможно, %s уже запущен.</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation type="unfinished">Не удалось создать PID-файл "%s": %s</translation>
+    </message>
+    <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation type="unfinished">Не удалось найти UTXO для внешнего входа</translation>
+    </message>
+    <message>
+        <source>Unable to generate initial keys</source>
+        <translation type="unfinished">Невозможно сгенерировать начальные ключи</translation>
+    </message>
+    <message>
+        <source>Unable to generate keys</source>
+        <translation type="unfinished">Невозможно сгенерировать ключи</translation>
+    </message>
+    <message>
+        <source>Unable to open %s for writing</source>
+        <translation type="unfinished">Не удается открыть %s для записи</translation>
+    </message>
+    <message>
+        <source>Unable to parse -maxuploadtarget: '%s'</source>
+        <translation type="unfinished">Ошибка при разборе параметра -maxuploadtarget: "%s"</translation>
+    </message>
+    <message>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation type="unfinished">Невозможно запустить HTTP-сервер. Подробности в файле debug.log.</translation>
+    </message>
+    <message>
+        <source>Unable to unload the wallet before migrating</source>
+        <translation type="unfinished">Не удалось выгрузить кошелёк перед миграцией</translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation type="unfinished">Неизвестное значение -blockfilterindex %s.</translation>
+    </message>
+    <message>
+        <source>Unknown address type '%s'</source>
+        <translation type="unfinished">Неизвестный тип адреса "%s"</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation type="unfinished">Неизвестный тип сдачи "%s"</translation>
+    </message>
+    <message>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation type="unfinished">В -onlynet указана неизвестная сеть: "%s"</translation>
+    </message>
+    <message>
+        <source>Unknown new rules activated (versionbit %i)</source>
+        <translation type="unfinished">В силу вступили неизвестные правила (versionbit %i)</translation>
+    </message>
+    <message>
+        <source>Unsupported global logging level -loglevel=%s. Valid values: %s.</source>
+        <translation type="unfinished">Неподдерживаемый уровень подробности ведения журнала -loglevel=%s. Доступные значения: %s.</translation>
+    </message>
+    <message>
+        <source>Unsupported logging category %s=%s.</source>
+        <translation type="unfinished">Неподдерживаемый уровень ведения журнала %s=%s.</translation>
+    </message>
+    <message>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation type="unfinished">Комментарий User Agent (%s) содержит небезопасные символы.</translation>
+    </message>
+    <message>
+        <source>Verifying blocks…</source>
+        <translation type="unfinished">Проверка блоков…</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)…</source>
+        <translation type="unfinished">Проверка кошелька(ов)…</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation type="unfinished">Необходимо перезаписать кошелёк. Перезапустите %s для завершения операции</translation>
+    </message>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">Файл настроек не может быть прочитан</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">Файл настроек не может быть записан</translation>
     </message>
 </context>
 </TS>

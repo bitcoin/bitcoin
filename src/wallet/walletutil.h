@@ -85,6 +85,7 @@ class WalletDescriptor
 {
 public:
     std::shared_ptr<Descriptor> descriptor;
+    uint256 id; // Descriptor ID (calculated once at descriptor initialization/deserialization)
     uint64_t creation_time = 0;
     int32_t range_start = 0; // First item in range; start of range, inclusive, i.e. [range_start, range_end). This never changes.
     int32_t range_end = 0; // Item after the last; end of range, exclusive, i.e. [range_start, range_end). This will increment with each TopUp()
@@ -99,6 +100,7 @@ public:
         if (!descriptor) {
             throw std::ios_base::failure("Invalid descriptor: " + error);
         }
+        id = DescriptorID(*descriptor);
     }
 
     SERIALIZE_METHODS(WalletDescriptor, obj)
@@ -110,7 +112,7 @@ public:
     }
 
     WalletDescriptor() {}
-    WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index) : descriptor(descriptor), creation_time(creation_time), range_start(range_start), range_end(range_end), next_index(next_index) {}
+    WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index) : descriptor(descriptor), id(DescriptorID(*descriptor)), creation_time(creation_time), range_start(range_start), range_end(range_end), next_index(next_index) { }
 };
 } // namespace wallet
 

@@ -2,16 +2,12 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Danna dama don gyara adireshi ko labil</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation type="unfinished">Ƙirƙiri sabon adireshi</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">Sabontawa</translation>
+        <translation type="unfinished">&amp;Sabontawa</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -23,7 +19,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">C&amp;Rasa</translation>
+        <translation type="unfinished">C&amp;Rufe</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -52,6 +48,10 @@
     <message>
         <source>Choose the address to receive coins with</source>
         <translation type="unfinished">Zaɓi adireshin don karɓar kuɗi internet da shi</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation type="unfinished">c&amp;zaɓi</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -85,7 +85,7 @@ zaka iya shiga ne kawai da adiresoshin 'na musamman' kawai.</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">Fitarwar Jerin Adreshi</translation>
+        <translation type="unfinished">Fitarwar Jerin Adireshi</translation>
     </message>
     <message>
         <source>Comma separated file</source>
@@ -95,7 +95,7 @@ zaka iya shiga ne kawai da adiresoshin 'na musamman' kawai.</translation>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">An sami kuskure wajen ƙoƙarin ajiye jerin adireshi zuwa 1 %1. Da fatan za a sake gwadawa.</translation>
+        <translation type="unfinished">An sami kuskure wajen ƙoƙarin ajiye jerin adireshi zuwa %1. Da fatan za a sake gwadawa. </translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -105,15 +105,87 @@ zaka iya shiga ne kawai da adiresoshin 'na musamman' kawai.</translation>
 <context>
     <name>AddressTableModel</name>
     <message>
+        <source>Label</source>
+        <translation type="unfinished">Laƙabi</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation type="unfinished">Adireshi</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">(ba laƙabi)</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
+        <source>Enter passphrase</source>
+        <translation type="unfinished">shigar da kalmar sirri</translation>
+    </message>
+    <message>
+        <source>New passphrase</source>
+        <translation type="unfinished">sabuwar kalmar sirri</translation>
+    </message>
+    <message>
+        <source>Repeat new passphrase</source>
+        <translation type="unfinished">maimaita sabuwar kalmar sirri</translation>
+    </message>
+    <message>
+        <source>Show passphrase</source>
+        <translation type="unfinished">nuna kalmar sirri</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation type="unfinished">sakaye walet</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation type="unfinished">abunda ake son yi na buƙatan laƙabin sirri domin buɗe walet</translation>
+    </message>
+    <message>
         <source>Unlock wallet</source>
         <translation type="unfinished">Bude Walet</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation type="unfinished">canza laƙabin sirri</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation type="unfinished">tabbar da an sakaye walet</translation>
+    </message>
+    <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation type="unfinished">Jan kunne: idan aka sakaye walet kuma aka manta laƙabin sirri, za a Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt; RASA DUKKAN BITCOINS&lt;/b&gt;!</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation type="unfinished">ka tabbata kana son sakaye walet?</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation type="unfinished">an yi nasarar sakaye walet</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation type="unfinished">shigar da tsoho da sabon laƙabin sirrin walet din</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">walet din da ake buƙatan sakayewa</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation type="unfinished">ana daf da sakaye walet</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation type="unfinished">ka yi nasarar sakaye walet dinka</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation type="unfinished">ba ayi nasarar sakaye walet ba</translation>
     </message>
     </context>
 <context>
@@ -180,6 +252,13 @@ zaka iya shiga ne kawai da adiresoshin 'na musamman' kawai.</translation>
     </message>
     </context>
 <context>
+    <name>CoinControlDialog</name>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">(ba laƙabi)</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
     <message>
         <source>Bitcoin</source>
@@ -224,6 +303,17 @@ zaka iya shiga ne kawai da adiresoshin 'na musamman' kawai.</translation>
     </message>
     </context>
 <context>
+    <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation type="unfinished">Laƙabi</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">(ba laƙabi)</translation>
+    </message>
+    </context>
+<context>
     <name>SendCoinsDialog</name>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -232,7 +322,11 @@ zaka iya shiga ne kawai da adiresoshin 'na musamman' kawai.</translation>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">(ba laƙabi)</translation>
+    </message>
+</context>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
@@ -244,11 +338,26 @@ zaka iya shiga ne kawai da adiresoshin 'na musamman' kawai.</translation>
     </message>
     </context>
 <context>
+    <name>TransactionTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation type="unfinished">Laƙabi</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">(ba laƙabi)</translation>
+    </message>
+    </context>
+<context>
     <name>TransactionView</name>
     <message>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
         <translation type="unfinished">waƙafin rabuwar fayil</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation type="unfinished">Laƙabi</translation>
     </message>
     <message>
         <source>Address</source>

@@ -14,6 +14,11 @@
 /**
  * Can be used to limit a theoretically unbounded loop. This caps the runtime
  * to avoid timeouts or OOMs.
+ *
+ * This can be used in combination with a check in the condition to confirm
+ * whether the fuzz engine provided "good" data. If the fuzz input contains
+ * invalid data, the loop aborts early. This will teach the fuzz engine to look
+ * for useful data and avoids bloating the fuzz input folder with useless data.
  */
 #define LIMITED_WHILE(condition, limit) \
     for (unsigned _count{limit}; (condition) && _count; --_count)
@@ -28,11 +33,7 @@ struct FuzzTargetOptions {
 
 void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, FuzzTargetOptions opts);
 
-#if defined(__clang__)
-#define FUZZ_TARGET(...) _Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wgnu-zero-variadic-macro-arguments\"") DETAIL_FUZZ(__VA_ARGS__) _Pragma("clang diagnostic pop")
-#else
 #define FUZZ_TARGET(...) DETAIL_FUZZ(__VA_ARGS__)
-#endif
 
 #define DETAIL_FUZZ(name, ...)                                                        \
     void name##_fuzz_target(FuzzBufferType);                                          \

@@ -5,21 +5,38 @@
 #ifndef BITCOIN_RPC_UTIL_H
 #define BITCOIN_RPC_UTIL_H
 
+#include <addresstype.h>
+#include <consensus/amount.h>
 #include <node/transaction.h>
 #include <outputtype.h>
-#include <protocol.h>
 #include <pubkey.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <script/script.h>
 #include <script/sign.h>
-#include <script/standard.h>
+#include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <initializer_list>
+#include <map>
+#include <optional>
 #include <string>
+#include <string_view>
+#include <type_traits>
+#include <utility>
 #include <variant>
 #include <vector>
+
+class JSONRPCRequest;
+enum ServiceFlags : uint64_t;
+enum class OutputType;
+enum class TransactionError;
+struct FlatSigningProvider;
+struct bilingual_str;
 
 static constexpr bool DEFAULT_RPC_DOC_CHECK{
 #ifdef RPC_DOC_CHECK
@@ -42,7 +59,6 @@ extern const std::string UNIX_EPOCH_TIME;
 extern const std::string EXAMPLE_ADDRESS[2];
 
 class FillableSigningProvider;
-class CPubKey;
 class CScript;
 struct Sections;
 
@@ -74,10 +90,10 @@ void RPCTypeCheckObj(const UniValue& o,
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).
  */
-uint256 ParseHashV(const UniValue& v, std::string strName);
-uint256 ParseHashO(const UniValue& o, std::string strKey);
-std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName);
-std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey);
+uint256 ParseHashV(const UniValue& v, std::string_view name);
+uint256 ParseHashO(const UniValue& o, std::string_view strKey);
+std::vector<unsigned char> ParseHexV(const UniValue& v, std::string_view name);
+std::vector<unsigned char> ParseHexO(const UniValue& o, std::string_view strKey);
 
 /**
  * Validate and return a CAmount from a UniValue number or string.
@@ -114,9 +130,6 @@ std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
 
 /** Evaluate a descriptor given as a string, or as a {"desc":...,"range":...} object, with default range of 1000. */
 std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider, const bool expand_priv = false);
-
-/** Returns, given services flags, a list of humanly readable (known) network services */
-UniValue GetServicesNames(ServiceFlags services);
 
 /**
  * Serializing JSON objects depends on the outer type. Only arrays and
@@ -383,6 +396,44 @@ public:
     RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, RPCMethodImpl fun);
 
     UniValue HandleRequest(const JSONRPCRequest& request) const;
+    /**
+     * Helper to get a request argument.
+     * This function only works during m_fun(), i.e. it should only be used in
+     * RPC method implementations. The helper internally checks whether the
+     * user-passed argument isNull() and parses (from JSON) and returns the
+     * user-passed argument, or the default value derived from the RPCArg
+     * documentation, or a falsy value if no default was given.
+     *
+     * Use Arg<Type>(i) to get the argument or its default value. Otherwise,
+     * use MaybeArg<Type>(i) to get the optional argument or a falsy value.
+     *
+     * The Type passed to this helper must match the corresponding
+     * RPCArg::Type.
+     */
+    template <typename R>
+    auto Arg(size_t i) const
+    {
+        // Return argument (required or with default value).
+        if constexpr (std::is_integral_v<R> || std::is_floating_point_v<R>) {
+            // Return numbers by value.
+            return ArgValue<R>(i);
+        } else {
+            // Return everything else by reference.
+            return ArgValue<const R&>(i);
+        }
+    }
+    template <typename R>
+    auto MaybeArg(size_t i) const
+    {
+        // Return optional argument (without default).
+        if constexpr (std::is_integral_v<R> || std::is_floating_point_v<R>) {
+            // Return numbers by value, wrapped in optional.
+            return ArgValue<std::optional<R>>(i);
+        } else {
+            // Return other types by pointer.
+            return ArgValue<const R*>(i);
+        }
+    }
     std::string ToString() const;
     /** Return the named args that need to be converted from string to another JSON type */
     UniValue GetArgMap() const;
@@ -399,6 +450,9 @@ private:
     const std::vector<RPCArg> m_args;
     const RPCResults m_results;
     const RPCExamples m_examples;
+    mutable const JSONRPCRequest* m_req{nullptr}; // A pointer to the request for the duration of m_fun()
+    template <typename R>
+    R ArgValue(size_t i) const;
 };
 
 /**

@@ -13,12 +13,14 @@
 #include <netaddress.h>
 #include <serialize.h>
 #include <util/sock.h>
+#include <util/threadinterrupt.h>
 
 #include <functional>
 #include <memory>
 #include <stdint.h>
 #include <string>
 #include <type_traits>
+#include <unordered_set>
 #include <vector>
 
 extern int nConnectTimeout;
@@ -63,6 +65,61 @@ struct ProxyCredentials
     std::string username;
     std::string password;
 };
+
+/**
+ * List of reachable networks. Everything is reachable by default.
+ */
+class ReachableNets {
+public:
+    void Add(Network net) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        AssertLockNotHeld(m_mutex);
+        LOCK(m_mutex);
+        m_reachable.insert(net);
+    }
+
+    void Remove(Network net) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        AssertLockNotHeld(m_mutex);
+        LOCK(m_mutex);
+        m_reachable.erase(net);
+    }
+
+    void RemoveAll() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        AssertLockNotHeld(m_mutex);
+        LOCK(m_mutex);
+        m_reachable.clear();
+    }
+
+    [[nodiscard]] bool Contains(Network net) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        AssertLockNotHeld(m_mutex);
+        LOCK(m_mutex);
+        return m_reachable.count(net) > 0;
+    }
+
+    [[nodiscard]] bool Contains(const CNetAddr& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        AssertLockNotHeld(m_mutex);
+        return Contains(addr.GetNetwork());
+    }
+
+private:
+    mutable Mutex m_mutex;
+
+    std::unordered_set<Network> m_reachable GUARDED_BY(m_mutex){
+        NET_UNROUTABLE,
+        NET_IPV4,
+        NET_IPV6,
+        NET_ONION,
+        NET_I2P,
+        NET_CJDNS,
+        NET_INTERNAL
+    };
+};
+
+extern ReachableNets g_reachable_nets;
 
 /**
  * Wrapper for getaddrinfo(3). Do not use directly: call Lookup/LookupHost/LookupNumeric/LookupSubNet.
@@ -171,11 +228,9 @@ CService LookupNumeric(const std::string& name, uint16_t portDefault = 0, DNSLoo
  * @param[in]  subnet_str  A string representation of a subnet of the form
  *                         `network address [ "/", ( CIDR-style suffix | netmask ) ]`
  *                         e.g. "2001:db8::/32", "192.0.2.0/255.255.255.0" or "8.8.8.8".
- * @param[out] subnet_out  Internal subnet representation, if parsable/resolvable
- *                         from `subnet_str`.
- * @returns whether the operation succeeded or not.
+ * @returns a CSubNet object (that may or may not be valid).
  */
-bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out);
+CSubNet LookupSubNet(const std::string& subnet_str);
 
 /**
  * Create a TCP socket in the given address family.
@@ -220,7 +275,10 @@ bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nT
  */
 bool ConnectThroughProxy(const Proxy& proxy, const std::string& strDest, uint16_t port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed);
 
-void InterruptSocks5(bool interrupt);
+/**
+ * Interrupt SOCKS5 reads or writes.
+ */
+extern CThreadInterrupt g_socks5_interrupt;
 
 /**
  * Connect to a specified destination service through an already connected
@@ -250,5 +308,14 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
  * @returns whether the port is bad
  */
 bool IsBadPort(uint16_t port);
+
+/**
+ * If an IPv6 address belongs to the address range used by the CJDNS network and
+ * the CJDNS network is reachable (-cjdnsreachable config is set), then change
+ * the type from NET_IPV6 to NET_CJDNS.
+ * @param[in] service Address to potentially convert.
+ * @return a copy of `service` either unmodified or changed to CJDNS.
+ */
+CService MaybeFlipIPv6toCJDNS(const CService& service);
 
 #endif // BITCOIN_NETBASE_H

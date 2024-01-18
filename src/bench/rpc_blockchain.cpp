@@ -23,11 +23,11 @@ struct TestBlockAndIndex {
 
     TestBlockAndIndex()
     {
-        CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
+        DataStream stream{benchmark::data::block413567};
         std::byte a{0};
         stream.write({&a, 1}); // Prevent compaction
 
-        stream >> block;
+        stream >> TX_WITH_WITNESS(block);
 
         blockHash = block.GetHash();
         blockindex.phashBlock = &blockHash;
@@ -41,7 +41,7 @@ static void BlockToJsonVerbose(benchmark::Bench& bench)
 {
     TestBlockAndIndex data;
     bench.run([&] {
-        auto univalue = blockToJSON(data.testing_setup->m_node.chainman->m_blockman, data.block, &data.blockindex, &data.blockindex, TxVerbosity::SHOW_DETAILS_AND_PREVOUT);
+        auto univalue = blockToJSON(data.testing_setup->m_node.chainman->m_blockman, data.block, data.blockindex, data.blockindex, TxVerbosity::SHOW_DETAILS_AND_PREVOUT);
         ankerl::nanobench::doNotOptimizeAway(univalue);
     });
 }
@@ -51,7 +51,7 @@ BENCHMARK(BlockToJsonVerbose, benchmark::PriorityLevel::HIGH);
 static void BlockToJsonVerboseWrite(benchmark::Bench& bench)
 {
     TestBlockAndIndex data;
-    auto univalue = blockToJSON(data.testing_setup->m_node.chainman->m_blockman, data.block, &data.blockindex, &data.blockindex, TxVerbosity::SHOW_DETAILS_AND_PREVOUT);
+    auto univalue = blockToJSON(data.testing_setup->m_node.chainman->m_blockman, data.block, data.blockindex, data.blockindex, TxVerbosity::SHOW_DETAILS_AND_PREVOUT);
     bench.run([&] {
         auto str = univalue.write();
         ankerl::nanobench::doNotOptimizeAway(str);

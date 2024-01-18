@@ -14,7 +14,6 @@ disconnected.
 """
 
 from decimal import Decimal
-import os
 import shutil
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -88,8 +87,8 @@ class ReorgsRestoreTest(BitcoinTestFramework):
 
         # Node0 wallet file is loaded on longest sync'ed node1
         self.stop_node(1)
-        self.nodes[0].backupwallet(os.path.join(self.nodes[0].datadir, 'wallet.bak'))
-        shutil.copyfile(os.path.join(self.nodes[0].datadir, 'wallet.bak'), os.path.join(self.nodes[1].chain_path, self.default_wallet_name, self.wallet_data_filename))
+        self.nodes[0].backupwallet(self.nodes[0].datadir_path / 'wallet.bak')
+        shutil.copyfile(self.nodes[0].datadir_path / 'wallet.bak', self.nodes[1].chain_path / self.default_wallet_name / self.wallet_data_filename)
         self.start_node(1)
         tx_after_reorg = self.nodes[1].gettransaction(txid)
         # Check that normal confirmed tx is confirmed again but with different blockhash

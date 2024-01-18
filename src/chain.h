@@ -42,13 +42,13 @@ static constexpr int64_t MAX_BLOCK_TIME_GAP = 90 * 60;
 class CBlockFileInfo
 {
 public:
-    unsigned int nBlocks;      //!< number of blocks stored in file
-    unsigned int nSize;        //!< number of used bytes of block file
-    unsigned int nUndoSize;    //!< number of used bytes in the undo file
-    unsigned int nHeightFirst; //!< lowest height of block in file
-    unsigned int nHeightLast;  //!< highest height of block in file
-    uint64_t nTimeFirst;       //!< earliest time of block in file
-    uint64_t nTimeLast;        //!< latest time of block in file
+    unsigned int nBlocks{};      //!< number of blocks stored in file
+    unsigned int nSize{};        //!< number of used bytes of block file
+    unsigned int nUndoSize{};    //!< number of used bytes in the undo file
+    unsigned int nHeightFirst{}; //!< lowest height of block in file
+    unsigned int nHeightLast{};  //!< highest height of block in file
+    uint64_t nTimeFirst{};       //!< earliest time of block in file
+    uint64_t nTimeLast{};        //!< latest time of block in file
 
     SERIALIZE_METHODS(CBlockFileInfo, obj)
     {
@@ -61,21 +61,7 @@ public:
         READWRITE(VARINT(obj.nTimeLast));
     }
 
-    void SetNull()
-    {
-        nBlocks = 0;
-        nSize = 0;
-        nUndoSize = 0;
-        nHeightFirst = 0;
-        nHeightLast = 0;
-        nTimeFirst = 0;
-        nTimeLast = 0;
-    }
-
-    CBlockFileInfo()
-    {
-        SetNull();
-    }
+    CBlockFileInfo() {}
 
     std::string ToString() const;
 
@@ -276,8 +262,12 @@ public:
      *
      * Does not imply the transactions are consensus-valid (ConnectTip might fail)
      * Does not imply the transactions are still stored on disk. (IsBlockPruned might return true)
+     *
+     * Note that this will be true for the snapshot base block, if one is loaded (and
+     * all subsequent assumed-valid blocks) since its nChainTx value will have been set
+     * manually based on the related AssumeutxoData entry.
      */
-    bool HaveTxsDownloaded() const { return nChainTx != 0; }
+    bool HaveNumChainTxs() const { return nChainTx != 0; }
 
     NodeSeconds Time() const
     {
@@ -388,6 +378,14 @@ const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* 
 /** Used to marshal pointers into hashes for db storage. */
 class CDiskBlockIndex : public CBlockIndex
 {
+    /** Historically CBlockLocator's version field has been written to disk
+     * streams as the client version, but the value has never been used.
+     *
+     * Hard-code to the highest client version ever written.
+     * SerParams can be used if the field requires any meaning in the future.
+     **/
+    static constexpr int DUMMY_VERSION = 259900;
+
 public:
     uint256 hashPrev;
 
@@ -404,8 +402,8 @@ public:
     SERIALIZE_METHODS(CDiskBlockIndex, obj)
     {
         LOCK(::cs_main);
-        int _nVersion = s.GetVersion();
-        if (!(s.GetType() & SER_GETHASH)) READWRITE(VARINT_MODE(_nVersion, VarIntMode::NONNEGATIVE_SIGNED));
+        int _nVersion = DUMMY_VERSION;
+        READWRITE(VARINT_MODE(_nVersion, VarIntMode::NONNEGATIVE_SIGNED));
 
         READWRITE(VARINT_MODE(obj.nHeight, VarIntMode::NONNEGATIVE_SIGNED));
         READWRITE(VARINT(obj.nStatus));

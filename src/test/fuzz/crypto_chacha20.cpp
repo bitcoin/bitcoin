@@ -8,6 +8,8 @@
 #include <test/fuzz/util.h>
 #include <test/util/xoroshiro128plusplus.h>
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -15,20 +17,18 @@ FUZZ_TARGET(crypto_chacha20)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
-    ChaCha20 chacha20;
-    if (fuzzed_data_provider.ConsumeBool()) {
-        const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
-        chacha20 = ChaCha20{key.data()};
-    }
+    const auto key = ConsumeFixedLengthByteVector<std::byte>(fuzzed_data_provider, ChaCha20::KEYLEN);
+    ChaCha20 chacha20{key};
+
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
-                chacha20.SetKey32(key.data());
+                auto key = ConsumeFixedLengthByteVector<std::byte>(fuzzed_data_provider, ChaCha20::KEYLEN);
+                chacha20.SetKey(key);
             },
             [&] {
-                chacha20.Seek64(
+                chacha20.Seek(
                     {
                         fuzzed_data_provider.ConsumeIntegral<uint32_t>(),
                         fuzzed_data_provider.ConsumeIntegral<uint64_t>()
@@ -36,12 +36,12 @@ FUZZ_TARGET(crypto_chacha20)
             },
             [&] {
                 std::vector<uint8_t> output(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
-                chacha20.Keystream(output.data(), output.size());
+                chacha20.Keystream(MakeWritableByteSpan(output));
             },
             [&] {
-                std::vector<uint8_t> output(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
-                const std::vector<uint8_t> input = ConsumeFixedLengthByteVector(fuzzed_data_provider, output.size());
-                chacha20.Crypt(input.data(), output.data(), input.size());
+                std::vector<std::byte> output(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
+                const auto input = ConsumeFixedLengthByteVector<std::byte>(fuzzed_data_provider, output.size());
+                chacha20.Crypt(input, output);
             });
     }
 }
@@ -60,9 +60,7 @@ template<bool UseCrypt>
 void ChaCha20SplitFuzz(FuzzedDataProvider& provider)
 {
     // Determine key, iv, start position, length.
-    unsigned char key[32] = {0};
-    auto key_bytes = provider.ConsumeBytes<unsigned char>(32);
-    std::copy(key_bytes.begin(), key_bytes.end(), key);
+    auto key_bytes = ConsumeFixedLengthByteVector<std::byte>(provider, ChaCha20::KEYLEN);
     uint64_t iv = provider.ConsumeIntegral<uint64_t>();
     uint32_t iv_prefix = provider.ConsumeIntegral<uint32_t>();
     uint64_t total_bytes = provider.ConsumeIntegralInRange<uint64_t>(0, 1000000);
@@ -70,13 +68,13 @@ void ChaCha20SplitFuzz(FuzzedDataProvider& provider)
     uint32_t seek = provider.ConsumeIntegralInRange<uint32_t>(0, ~(uint32_t)(total_bytes >> 6));
 
     // Initialize two ChaCha20 ciphers, with the same key/iv/position.
-    ChaCha20 crypt1(key);
-    ChaCha20 crypt2(key);
-    crypt1.Seek64({iv_prefix, iv}, seek);
-    crypt2.Seek64({iv_prefix, iv}, seek);
+    ChaCha20 crypt1(key_bytes);
+    ChaCha20 crypt2(key_bytes);
+    crypt1.Seek({iv_prefix, iv}, seek);
+    crypt2.Seek({iv_prefix, iv}, seek);
 
     // Construct vectors with data.
-    std::vector<unsigned char> data1, data2;
+    std::vector<std::byte> data1, data2;
     data1.resize(total_bytes);
     data2.resize(total_bytes);
 
@@ -88,14 +86,14 @@ void ChaCha20SplitFuzz(FuzzedDataProvider& provider)
         uint64_t bytes = 0;
         while (bytes < (total_bytes & ~uint64_t{7})) {
             uint64_t val = rng();
-            WriteLE64(data1.data() + bytes, val);
-            WriteLE64(data2.data() + bytes, val);
+            WriteLE64(UCharCast(data1.data() + bytes), val);
+            WriteLE64(UCharCast(data2.data() + bytes), val);
             bytes += 8;
         }
         if (bytes < total_bytes) {
-            unsigned char valbytes[8];
+            std::byte valbytes[8];
             uint64_t val = rng();
-            WriteLE64(valbytes, val);
+            WriteLE64(UCharCast(valbytes), val);
             std::copy(valbytes, valbytes + (total_bytes - bytes), data1.data() + bytes);
             std::copy(valbytes, valbytes + (total_bytes - bytes), data2.data() + bytes);
         }
@@ -106,9 +104,9 @@ void ChaCha20SplitFuzz(FuzzedDataProvider& provider)
 
     // Encrypt data1, the whole array at once.
     if constexpr (UseCrypt) {
-        crypt1.Crypt(data1.data(), data1.data(), total_bytes);
+        crypt1.Crypt(data1, data1);
     } else {
-        crypt1.Keystream(data1.data(), total_bytes);
+        crypt1.Keystream(data1);
     }
 
     // Encrypt data2, in at most 256 chunks.
@@ -125,9 +123,9 @@ void ChaCha20SplitFuzz(FuzzedDataProvider& provider)
         // This tests that Keystream() has the same behavior as Crypt() applied
         // to 0x00 input bytes.
         if (UseCrypt || provider.ConsumeBool()) {
-            crypt2.Crypt(data2.data() + bytes2, data2.data() + bytes2, now);
+            crypt2.Crypt(Span{data2}.subspan(bytes2, now), Span{data2}.subspan(bytes2, now));
         } else {
-            crypt2.Keystream(data2.data() + bytes2, now);
+            crypt2.Keystream(Span{data2}.subspan(bytes2, now));
         }
         bytes2 += now;
         if (is_last) break;
@@ -150,4 +148,22 @@ FUZZ_TARGET(chacha20_split_keystream)
 {
     FuzzedDataProvider provider{buffer.data(), buffer.size()};
     ChaCha20SplitFuzz<false>(provider);
+}
+
+FUZZ_TARGET(crypto_fschacha20)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+
+    auto key = fuzzed_data_provider.ConsumeBytes<std::byte>(FSChaCha20::KEYLEN);
+    key.resize(FSChaCha20::KEYLEN);
+
+    auto fsc20 = FSChaCha20{key, fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(1, 1024)};
+
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
+    {
+        auto input = fuzzed_data_provider.ConsumeBytes<std::byte>(fuzzed_data_provider.ConsumeIntegralInRange(0, 4096));
+        std::vector<std::byte> output;
+        output.resize(input.size());
+        fsc20.Crypt(input, output);
+    }
 }

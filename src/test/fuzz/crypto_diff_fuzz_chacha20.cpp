@@ -267,22 +267,15 @@ void ECRYPT_keystream_bytes(ECRYPT_ctx* x, u8* stream, u32 bytes)
 
 FUZZ_TARGET(crypto_diff_fuzz_chacha20)
 {
-    static const unsigned char ZEROKEY[32] = {0};
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
-    ChaCha20 chacha20;
     ECRYPT_ctx ctx;
 
-    if (fuzzed_data_provider.ConsumeBool()) {
-        const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
-        chacha20 = ChaCha20{key.data()};
-        ECRYPT_keysetup(&ctx, key.data(), key.size() * 8, 0);
-    } else {
-        // The default ChaCha20 constructor is equivalent to using the all-0 key.
-        ECRYPT_keysetup(&ctx, ZEROKEY, 256, 0);
-    }
+    const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
+    ChaCha20 chacha20{MakeByteSpan(key)};
+    ECRYPT_keysetup(&ctx, key.data(), key.size() * 8, 0);
 
-    // ECRYPT_keysetup() doesn't set the counter and nonce to 0 while SetKey32() does
+    // ECRYPT_keysetup() doesn't set the counter and nonce to 0 while SetKey() does
     static const uint8_t iv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
     ChaCha20::Nonce96 nonce{0, 0};
     uint32_t counter{0};
@@ -293,11 +286,11 @@ FUZZ_TARGET(crypto_diff_fuzz_chacha20)
             fuzzed_data_provider,
             [&] {
                 const std::vector<unsigned char> key = ConsumeFixedLengthByteVector(fuzzed_data_provider, 32);
-                chacha20.SetKey32(key.data());
+                chacha20.SetKey(MakeByteSpan(key));
                 nonce = {0, 0};
                 counter = 0;
                 ECRYPT_keysetup(&ctx, key.data(), key.size() * 8, 0);
-                // ECRYPT_keysetup() doesn't set the counter and nonce to 0 while SetKey32() does
+                // ECRYPT_keysetup() doesn't set the counter and nonce to 0 while SetKey() does
                 uint8_t iv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
                 ECRYPT_ivsetup(&ctx, iv);
             },
@@ -306,7 +299,7 @@ FUZZ_TARGET(crypto_diff_fuzz_chacha20)
                 uint64_t iv = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
                 nonce = {iv_prefix, iv};
                 counter = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
-                chacha20.Seek64(nonce, counter);
+                chacha20.Seek(nonce, counter);
                 ctx.input[12] = counter;
                 ctx.input[13] = iv_prefix;
                 ctx.input[14] = iv;
@@ -315,7 +308,7 @@ FUZZ_TARGET(crypto_diff_fuzz_chacha20)
             [&] {
                 uint32_t integralInRange = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
                 std::vector<uint8_t> output(integralInRange);
-                chacha20.Keystream(output.data(), output.size());
+                chacha20.Keystream(MakeWritableByteSpan(output));
                 std::vector<uint8_t> djb_output(integralInRange);
                 ECRYPT_keystream_bytes(&ctx, djb_output.data(), djb_output.size());
                 assert(output == djb_output);
@@ -324,7 +317,7 @@ FUZZ_TARGET(crypto_diff_fuzz_chacha20)
                 counter += (integralInRange + 63) >> 6;
                 if (counter < old_counter) ++nonce.first;
                 if (integralInRange & 63) {
-                    chacha20.Seek64(nonce, counter);
+                    chacha20.Seek(nonce, counter);
                 }
                 assert(counter == ctx.input[12]);
             },
@@ -332,7 +325,7 @@ FUZZ_TARGET(crypto_diff_fuzz_chacha20)
                 uint32_t integralInRange = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
                 std::vector<uint8_t> output(integralInRange);
                 const std::vector<uint8_t> input = ConsumeFixedLengthByteVector(fuzzed_data_provider, output.size());
-                chacha20.Crypt(input.data(), output.data(), input.size());
+                chacha20.Crypt(MakeByteSpan(input), MakeWritableByteSpan(output));
                 std::vector<uint8_t> djb_output(integralInRange);
                 ECRYPT_encrypt_bytes(&ctx, input.data(), djb_output.data(), input.size());
                 assert(output == djb_output);
@@ -341,7 +334,7 @@ FUZZ_TARGET(crypto_diff_fuzz_chacha20)
                 counter += (integralInRange + 63) >> 6;
                 if (counter < old_counter) ++nonce.first;
                 if (integralInRange & 63) {
-                    chacha20.Seek64(nonce, counter);
+                    chacha20.Seek(nonce, counter);
                 }
                 assert(counter == ctx.input[12]);
             });

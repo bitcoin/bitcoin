@@ -178,12 +178,12 @@ class BumpFeeTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Invalid parameter, duplicate key: data",
                 rbf_node.bumpfee, rbfid, {"outputs": [{"data": "deadbeef"}, {"data": "deadbeef"}]})
 
-        self.log.info("Test reduce_output option")
-        assert_raises_rpc_error(-1, "JSON integer out of range", rbf_node.bumpfee, rbfid, {"reduce_output": -1})
-        assert_raises_rpc_error(-8, "Change position is out of range", rbf_node.bumpfee, rbfid, {"reduce_output": 2})
+        self.log.info("Test original_change_index option")
+        assert_raises_rpc_error(-1, "JSON integer out of range", rbf_node.bumpfee, rbfid, {"original_change_index": -1})
+        assert_raises_rpc_error(-8, "Change position is out of range", rbf_node.bumpfee, rbfid, {"original_change_index": 2})
 
-        self.log.info("Test outputs and reduce_output cannot both be provided")
-        assert_raises_rpc_error(-8, "Cannot specify both new outputs to use and an output index to reduce", rbf_node.bumpfee, rbfid, {"reduce_output": 2, "outputs": [{dest_address: 0.1}]})
+        self.log.info("Test outputs and original_change_index cannot both be provided")
+        assert_raises_rpc_error(-8, "The options 'outputs' and 'original_change_index' are incompatible. You can only either specify a new set of outputs, or designate a change output to be recycled.", rbf_node.bumpfee, rbfid, {"original_change_index": 2, "outputs": [{dest_address: 0.1}]})
 
         self.clear_mempool()
 
@@ -237,7 +237,7 @@ class BumpFeeTest(BitcoinTestFramework):
         node.unloadwallet("back_to_yourself")
 
     def test_provided_change_pos(self, rbf_node):
-        self.log.info("Test the reduce_output option")
+        self.log.info("Test the original_change_index option")
 
         change_addr = rbf_node.getnewaddress()
         dest_addr = rbf_node.getnewaddress()
@@ -254,7 +254,7 @@ class BumpFeeTest(BitcoinTestFramework):
         change_pos = find_vout_for_address(rbf_node, txid, change_addr)
         change_value = tx["decoded"]["vout"][change_pos]["value"]
 
-        bumped = rbf_node.bumpfee(txid, {"reduce_output": change_pos})
+        bumped = rbf_node.bumpfee(txid, {"original_change_index": change_pos})
         new_txid = bumped["txid"]
 
         new_tx = rbf_node.gettransaction(txid=new_txid, verbose=True)
@@ -282,18 +282,18 @@ class BumpFeeTest(BitcoinTestFramework):
 
         tx = wallet.sendall(recipients=[wallet.getnewaddress()], fee_rate=2, options={"inputs": [utxos[0]]})
 
-        # Reduce the only output with a crazy high feerate, should fail as the output would be dust
-        assert_raises_rpc_error(-4, "The transaction amount is too small to pay the fee", wallet.bumpfee, txid=tx["txid"], options={"fee_rate": 1100, "reduce_output": 0})
+        # Set the only output with a crazy high feerate as change, should fail as the output would be dust
+        assert_raises_rpc_error(-4, "The transaction amount is too small to pay the fee", wallet.bumpfee, txid=tx["txid"], options={"fee_rate": 1100, "original_change_index": 0})
 
-        # Reduce the only output successfully
-        bumped = wallet.bumpfee(txid=tx["txid"], options={"fee_rate": 10, "reduce_output": 0})
+        # Specify single output as change successfully
+        bumped = wallet.bumpfee(txid=tx["txid"], options={"fee_rate": 10, "original_change_index": 0})
         bumped_tx = wallet.gettransaction(txid=bumped["txid"], verbose=True)
         assert_equal(len(bumped_tx["decoded"]["vout"]), 1)
         assert_equal(len(bumped_tx["decoded"]["vin"]), 1)
         assert_equal(bumped_tx["decoded"]["vout"][0]["value"] + bumped["fee"], amount)
         assert_fee_amount(bumped["fee"], bumped_tx["decoded"]["vsize"], Decimal(10) / Decimal(1e8) * 1000)
 
-        # Bumping without reducing adds a new input and output
+        # Bumping without specifying change adds a new input and output
         bumped = wallet.bumpfee(txid=bumped["txid"], options={"fee_rate": 20})
         bumped_tx = wallet.gettransaction(txid=bumped["txid"], verbose=True)
         assert_equal(len(bumped_tx["decoded"]["vout"]), 2)
@@ -403,8 +403,7 @@ def test_notmine_bumpfee(self, rbf_node, peer_node, dest_address):
     def finish_psbtbumpfee(psbt):
         psbt = rbf_node.walletprocesspsbt(psbt)
         psbt = peer_node.walletprocesspsbt(psbt["psbt"])
-        final = rbf_node.finalizepsbt(psbt["psbt"])
-        res = rbf_node.testmempoolaccept([final["hex"]])
+        res = rbf_node.testmempoolaccept([psbt["hex"]])
         assert res[0]["allowed"]
         assert_greater_than(res[0]["fees"]["base"], old_fee)
 
@@ -638,8 +637,7 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
     psbt = watcher.walletcreatefundedpsbt([watcher.listunspent()[0]], {dest_address: 0.0005}, 0,
             {"fee_rate": 1, "add_inputs": False}, True)['psbt']
     psbt_signed = signer.walletprocesspsbt(psbt=psbt, sign=True, sighashtype="ALL", bip32derivs=True)
-    psbt_final = watcher.finalizepsbt(psbt_signed["psbt"])
-    original_txid = watcher.sendrawtransaction(psbt_final["hex"])
+    original_txid = watcher.sendrawtransaction(psbt_signed["hex"])
     assert_equal(len(watcher.decodepsbt(psbt)["tx"]["vin"]), 1)
 
     # bumpfee can't be used on watchonly wallets
@@ -654,11 +652,10 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
 
     # Sign bumped transaction
     bumped_psbt_signed = signer.walletprocesspsbt(psbt=bumped_psbt["psbt"], sign=True, sighashtype="ALL", bip32derivs=True)
-    bumped_psbt_final = watcher.finalizepsbt(bumped_psbt_signed["psbt"])
-    assert bumped_psbt_final["complete"]
+    assert bumped_psbt_signed["complete"]
 
     # Broadcast bumped transaction
-    bumped_txid = watcher.sendrawtransaction(bumped_psbt_final["hex"])
+    bumped_txid = watcher.sendrawtransaction(bumped_psbt_signed["hex"])
     assert bumped_txid in rbf_node.getrawmempool()
     assert original_txid not in rbf_node.getrawmempool()
 

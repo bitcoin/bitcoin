@@ -13,11 +13,10 @@ from test_framework.script import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import TestNode
-from test_framework.util import (
-    assert_raises_rpc_error,
-    random_bytes,
-)
+from test_framework.util import assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
+
+from random import randbytes
 
 
 class DataCarrierTest(BitcoinTestFramework):
@@ -48,11 +47,11 @@ class DataCarrierTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
 
         # By default, only 80 bytes are used for data (+1 for OP_RETURN, +2 for the pushdata opcodes).
-        default_size_data = random_bytes(MAX_OP_RETURN_RELAY - 3)
-        too_long_data = random_bytes(MAX_OP_RETURN_RELAY - 2)
-        small_data = random_bytes(MAX_OP_RETURN_RELAY - 4)
-        one_byte = random_bytes(1)
-        zero_bytes = random_bytes(0)
+        default_size_data = randbytes(MAX_OP_RETURN_RELAY - 3)
+        too_long_data = randbytes(MAX_OP_RETURN_RELAY - 2)
+        small_data = randbytes(MAX_OP_RETURN_RELAY - 4)
+        one_byte = randbytes(1)
+        zero_bytes = randbytes(0)
 
         self.log.info("Testing null data transaction with default -datacarrier and -datacarriersize values.")
         self.test_null_data_transaction(node=self.nodes[0], data=default_size_data, success=True)

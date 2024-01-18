@@ -14,14 +14,26 @@
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <random.h>
+#include <tinyformat.h>
+#include <util/check.h>
+#include <util/fs.h>
 #include <util/readwritefile.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/thread.h>
 #include <util/time.h>
 
+#include <algorithm>
+#include <cassert>
+#include <cstdlib>
 #include <deque>
 #include <functional>
+#include <map>
+#include <optional>
 #include <set>
+#include <thread>
+#include <utility>
 #include <vector>
 
 #include <event2/buffer.h>
@@ -30,8 +42,8 @@
 #include <event2/thread.h>
 #include <event2/util.h>
 
-/** Default control port */
-const std::string DEFAULT_TOR_CONTROL = "127.0.0.1:9051";
+/** Default control ip and port */
+const std::string DEFAULT_TOR_CONTROL = "127.0.0.1:" + ToString(DEFAULT_TOR_CONTROL_PORT);
 /** Tor cookie size (from control-spec.txt) */
 static const int TOR_COOKIE_SIZE = 32;
 /** Size of client/server nonce for SAFECOOKIE */
@@ -79,15 +91,15 @@ void TorControlConnection::readcb(struct bufferevent *bev, void *ctx)
         if (s.size() < 4) // Short line
             continue;
         // <status>(-|+| )<data><CRLF>
-        self->message.code = LocaleIndependentAtoi<int>(s.substr(0,3));
+        self->message.code = ToIntegral<int>(s.substr(0, 3)).value_or(0);
         self->message.lines.push_back(s.substr(4));
         char ch = s[3]; // '-','+' or ' '
         if (ch == ' ') {
             // Final line, dispatch reply and clean up
             if (self->message.code >= 600) {
+                // (currently unused)
                 // Dispatch async notifications to async handler
                 // Synchronous and asynchronous messages are never interleaved
-                self->async_handler(*self, self->message);
             } else {
                 if (!self->reply_handlers.empty()) {
                     // Invoke reply handler with message
@@ -132,7 +144,7 @@ bool TorControlConnection::Connect(const std::string& tor_control_center, const 
         Disconnect();
     }
 
-    const std::optional<CService> control_service{Lookup(tor_control_center, 9051, fNameLookup)};
+    const std::optional<CService> control_service{Lookup(tor_control_center, DEFAULT_TOR_CONTROL_PORT, fNameLookup)};
     if (!control_service.has_value()) {
         LogPrintf("tor: Failed to look up control center %s\n", tor_control_center);
         return false;
@@ -239,7 +251,7 @@ std::map<std::string,std::string> ParseTorReplyMapping(const std::string &s)
             /**
              * Unescape value. Per https://spec.torproject.org/control-spec section 2.1.1:
              *
-             *   For future-proofing, controller implementors MAY use the following
+             *   For future-proofing, controller implementers MAY use the following
              *   rules to be compatible with buggy Tor implementations and with
              *   future ones that implement the spec as intended:
              *
@@ -397,7 +409,7 @@ void TorController::get_socks_cb(TorControlConnection& _conn, const TorControlRe
         //
         // If NET_ONION is not reachable, then none of -proxy or -onion was given.
         // Since we are here, then -torcontrol and -torpassword were given.
-        SetReachable(NET_ONION, true);
+        g_reachable_nets.Add(NET_ONION);
     }
 }
 
@@ -421,7 +433,7 @@ void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlRe
             return;
         }
         service = LookupNumeric(std::string(service_id+".onion"), Params().GetDefaultPort());
-        LogPrintfCategory(BCLog::TOR, "Got service ID %s, advertising service %s\n", service_id, service.ToStringAddrPort());
+        LogInfo("Got tor service ID %s, advertising service %s\n", service_id, service.ToStringAddrPort());
         if (WriteBinaryFile(GetPrivateKeyFile(), private_key)) {
             LogPrint(BCLog::TOR, "Cached service private key to %s\n", fs::PathToString(GetPrivateKeyFile()));
         } else {

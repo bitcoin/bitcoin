@@ -15,9 +15,10 @@
 #include <undo.h>
 #include <validation.h>
 
+using kernel::ApplyCoinHash;
 using kernel::CCoinsStats;
 using kernel::GetBogoSize;
-using kernel::TxOutSer;
+using kernel::RemoveCoinHash;
 
 static constexpr uint8_t DB_BLOCK_HASH{'s'};
 static constexpr uint8_t DB_BLOCK_HEIGHT{'t'};
@@ -166,7 +167,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
                     continue;
                 }
 
-                m_muhash.Insert(MakeUCharSpan(TxOutSer(outpoint, coin)));
+                ApplyCoinHash(m_muhash, outpoint, coin);
 
                 if (tx->IsCoinBase()) {
                     m_total_coinbase_amount += coin.out.nValue;
@@ -187,7 +188,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
                     Coin coin{tx_undo.vprevout[j]};
                     COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
 
-                    m_muhash.Remove(MakeUCharSpan(TxOutSer(outpoint, coin)));
+                    RemoveCoinHash(m_muhash, outpoint, coin);
 
                     m_total_prevout_spent_amount += coin.out.nValue;
 
@@ -235,7 +236,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
     return m_db->Write(DBHeightKey(block.height), value);
 }
 
-static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
+[[nodiscard]] static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
                                        const std::string& index_name,
                                        int start_height, int stop_height)
 {
@@ -288,7 +289,9 @@ bool CoinStatsIndex::CustomRewind(const interfaces::BlockKey& current_tip, const
                              __func__, iter_tip->GetBlockHash().ToString());
             }
 
-            ReverseBlock(block, iter_tip);
+            if (!ReverseBlock(block, iter_tip)) {
+                return false; // failure cause logged internally
+            }
 
             iter_tip = iter_tip->GetAncestor(iter_tip->nHeight - 1);
         } while (new_tip_index != iter_tip);
@@ -441,7 +444,7 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
                 continue;
             }
 
-            m_muhash.Remove(MakeUCharSpan(TxOutSer(outpoint, coin)));
+            RemoveCoinHash(m_muhash, outpoint, coin);
 
             if (tx->IsCoinBase()) {
                 m_total_coinbase_amount -= coin.out.nValue;
@@ -462,7 +465,7 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
                 Coin coin{tx_undo.vprevout[j]};
                 COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
 
-                m_muhash.Insert(MakeUCharSpan(TxOutSer(outpoint, coin)));
+                ApplyCoinHash(m_muhash, outpoint, coin);
 
                 m_total_prevout_spent_amount -= coin.out.nValue;
 

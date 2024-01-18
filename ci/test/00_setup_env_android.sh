@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2019-2022 The Bitcoin Core developers
+# Copyright (c) 2019-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,7 @@ export LC_ALL=C.UTF-8
 export HOST=aarch64-linux-android
 export PACKAGES="unzip openjdk-8-jdk gradle"
 export CONTAINER_NAME=ci_android
-export CI_IMAGE_NAME_TAG="ubuntu:jammy"
+export CI_IMAGE_NAME_TAG="docker.io/amd64/ubuntu:22.04"
 
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false

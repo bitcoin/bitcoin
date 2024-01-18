@@ -428,11 +428,11 @@ BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_weight)
     CAmount result[NUM_GETBLOCKSTATS_PERCENTILES] = { 0 };
 
     for (int64_t i = 0; i < 100; i++) {
-        feerates.emplace_back(std::make_pair(1 ,1));
+        feerates.emplace_back(1 ,1);
     }
 
     for (int64_t i = 0; i < 100; i++) {
-        feerates.emplace_back(std::make_pair(2 ,1));
+        feerates.emplace_back(2 ,1);
     }
 
     CalculatePercentilesByWeight(result, feerates, total_weight);
@@ -447,11 +447,11 @@ BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_weight)
     CAmount result2[NUM_GETBLOCKSTATS_PERCENTILES] = { 0 };
     feerates.clear();
 
-    feerates.emplace_back(std::make_pair(1, 9));
-    feerates.emplace_back(std::make_pair(2 , 16)); //10th + 25th percentile
-    feerates.emplace_back(std::make_pair(4 ,50)); //50th + 75th percentile
-    feerates.emplace_back(std::make_pair(5 ,10));
-    feerates.emplace_back(std::make_pair(9 ,15));  // 90th percentile
+    feerates.emplace_back(1, 9);
+    feerates.emplace_back(2 , 16); //10th + 25th percentile
+    feerates.emplace_back(4 ,50); //50th + 75th percentile
+    feerates.emplace_back(5 ,10);
+    feerates.emplace_back(9 ,15);  // 90th percentile
 
     CalculatePercentilesByWeight(result2, feerates, total_weight);
 
@@ -466,12 +466,12 @@ BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_weight)
     CAmount result3[NUM_GETBLOCKSTATS_PERCENTILES] = { 0 };
     feerates.clear();
 
-    feerates.emplace_back(std::make_pair(1, 9));
-    feerates.emplace_back(std::make_pair(2 , 11)); // 10th percentile
-    feerates.emplace_back(std::make_pair(2 , 5)); // 25th percentile
-    feerates.emplace_back(std::make_pair(4 ,50)); //50th + 75th percentile
-    feerates.emplace_back(std::make_pair(5 ,10));
-    feerates.emplace_back(std::make_pair(9 ,15)); // 90th percentile
+    feerates.emplace_back(1, 9);
+    feerates.emplace_back(2 , 11); // 10th percentile
+    feerates.emplace_back(2 , 5); // 25th percentile
+    feerates.emplace_back(4 ,50); //50th + 75th percentile
+    feerates.emplace_back(5 ,10);
+    feerates.emplace_back(9 ,15); // 90th percentile
 
     CalculatePercentilesByWeight(result3, feerates, total_weight);
 
@@ -486,11 +486,11 @@ BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_weight)
     CAmount result4[NUM_GETBLOCKSTATS_PERCENTILES] = { 0 };
     feerates.clear();
 
-    feerates.emplace_back(std::make_pair(1, 100));
-    feerates.emplace_back(std::make_pair(2, 1));
-    feerates.emplace_back(std::make_pair(3, 1));
-    feerates.emplace_back(std::make_pair(3, 1));
-    feerates.emplace_back(std::make_pair(999999, 1));
+    feerates.emplace_back(1, 100);
+    feerates.emplace_back(2, 1);
+    feerates.emplace_back(3, 1);
+    feerates.emplace_back(3, 1);
+    feerates.emplace_back(999999, 1);
 
     CalculatePercentilesByWeight(result4, feerates, total_weight);
 
@@ -506,7 +506,7 @@ BOOST_AUTO_TEST_CASE(check_dup_param_names)
     auto make_rpc = [](std::vector<std::tuple<std::string, ParamType>> param_names) {
         std::vector<RPCArg> params;
         std::vector<RPCArg> options;
-        auto push_options = [&] { if (!options.empty()) params.emplace_back(RPCArg{strprintf("options%i", params.size()), RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "", std::move(options)}); };
+        auto push_options = [&] { if (!options.empty()) params.emplace_back(strprintf("options%i", params.size()), RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "", std::move(options)); };
         for (auto& [param_name, param_type] : param_names) {
             if (param_type == POSITIONAL) {
                 push_options();

@@ -25,6 +25,12 @@ else()
     target_compile_options(bitcoin-tidy PRIVATE -fno-exceptions)
 endif()
 
+if(CMAKE_HOST_APPLE)
+    # ld64 expects no undefined symbols by default
+    target_link_options(bitcoin-tidy PRIVATE -Wl,-flat_namespace)
+    target_link_options(bitcoin-tidy PRIVATE -Wl,-undefined -Wl,suppress)
+endif()
+
 # Add warnings
 if (MSVC)
     target_compile_options(bitcoin-tidy PRIVATE /W4)
@@ -33,7 +39,12 @@ else()
     target_compile_options(bitcoin-tidy PRIVATE -Wextra)
 endif()
 
-set(CLANG_TIDY_COMMAND "${CLANG_TIDY_EXE}" "--load=${CMAKE_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}bitcoin-tidy${CMAKE_SHARED_LIBRARY_SUFFIX}" "-checks=-*,bitcoin-*")
+if(CMAKE_VERSION VERSION_LESS 3.27)
+    set(CLANG_TIDY_COMMAND "${CLANG_TIDY_EXE}" "--load=${CMAKE_BINARY_DIR}/${CMAKE_SHARED_MODULE_PREFIX}bitcoin-tidy${CMAKE_SHARED_MODULE_SUFFIX}" "-checks=-*,bitcoin-*")
+else()
+    # CLANG_TIDY_COMMAND supports generator expressions as of 3.27
+    set(CLANG_TIDY_COMMAND "${CLANG_TIDY_EXE}" "--load=$<TARGET_FILE:bitcoin-tidy>" "-checks=-*,bitcoin-*")
+endif()
 
 # Create a dummy library that runs clang-tidy tests as a side-effect of building
 add_library(bitcoin-tidy-tests OBJECT EXCLUDE_FROM_ALL example_logprintf.cpp)
