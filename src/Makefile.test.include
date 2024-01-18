@@ -314,6 +314,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/descriptor_parse.cpp \
  test/fuzz/deserialize.cpp \
  test/fuzz/eval_script.cpp \
+ test/fuzz/feefrac.cpp \
  test/fuzz/fee_rate.cpp \
  test/fuzz/feeratediagram.cpp \
  test/fuzz/fees.cpp \
