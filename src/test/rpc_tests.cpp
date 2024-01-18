@@ -633,6 +633,20 @@ BOOST_AUTO_TEST_CASE(rpc_arg_helper)
         };
     CheckRpc(params, UniValue{JSON(R"([5, "hello", null, null, null, null, null])")}, check_positional);
     CheckRpc(params, UniValue{JSON(R"([5, "hello", 4, "test", true, 1.23, "world"])")}, check_positional);
+
+    //! Check that `self.Arg` returns the same value when using index and key
+    RPCHelpMan::RPCMethodImpl check_named = [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            BOOST_CHECK_EQUAL(self.Arg<int>(0), self.Arg<int>("req_int"));
+            BOOST_CHECK_EQUAL(self.Arg<std::string>(1), self.Arg<std::string>("req_str"));
+            BOOST_CHECK_EQUAL(self.Arg<uint64_t>(2), self.Arg<uint64_t>("def_uint64_t"));
+            BOOST_CHECK_EQUAL(self.Arg<std::string>(3), self.Arg<std::string>("def_string"));
+            BOOST_CHECK_EQUAL(self.Arg<bool>(4), self.Arg<bool>("def_bool"));
+            BOOST_CHECK(self.MaybeArg<double>(5) == self.MaybeArg<double>("opt_double"));
+            BOOST_CHECK(self.MaybeArg<std::string>(6) == self.MaybeArg<std::string>("opt_string"));
+            return UniValue{};
+        };
+    CheckRpc(params, UniValue{JSON(R"([5, "hello", null, null, null, null, null])")}, check_named);
+    CheckRpc(params, UniValue{JSON(R"([5, "hello", 4, "test", true, 1.23, "world"])")}, check_named);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
