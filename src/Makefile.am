@@ -484,6 +484,7 @@ libbitcoin_server_a_SOURCES = \
   node/ui_interface.cpp \
   noui.cpp \
   policy/fees.cpp \
+  policy/packages.cpp \
   policy/policy.cpp \
   policy/settings.cpp \
   pow.cpp \
