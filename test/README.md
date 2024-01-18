@@ -326,35 +326,7 @@ Use the `-v` option for verbose output.
 
 ### Lint tests
 
-#### Dependencies
-
-| Lint test | Dependency |
-|-----------|:----------:|
-| [`lint-python.py`](lint/lint-python.py) | [flake8](https://gitlab.com/pycqa/flake8)
-| [`lint-python.py`](lint/lint-python.py) | [lief](https://github.com/lief-project/LIEF)
-| [`lint-python.py`](lint/lint-python.py) | [mypy](https://github.com/python/mypy)
-| [`lint-python.py`](lint/lint-python.py) | [pyzmq](https://github.com/zeromq/pyzmq)
-| [`lint-python-dead-code.py`](lint/lint-python-dead-code.py) | [vulture](https://github.com/jendrikseipp/vulture)
-| [`lint-shell.py`](lint/lint-shell.py) | [ShellCheck](https://github.com/koalaman/shellcheck)
-| [`lint-spelling.py`](lint/lint-spelling.py) | [codespell](https://github.com/codespell-project/codespell)
-
-In use versions and install instructions are available in the [CI setup](../ci/lint/04_install.sh).
-
-Please be aware that on Linux distributions all dependencies are usually available as packages, but could be outdated.
-
-#### Running the tests
-
-Individual tests can be run by directly calling the test script, e.g.:
-
-```
-test/lint/lint-files.py
-```
-
-You can run all the shell-based lint tests by running:
-
-```
-test/lint/all-lint.py
-```
+See the README in [test/lint](/test/lint).
 
 # Writing functional tests
 
