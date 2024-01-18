@@ -48,7 +48,13 @@ env:  # Global defaults
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
 filter_template: &FILTER_TEMPLATE
-  skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == ""  # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
+  # No need to run on the read-only mirror, unless it is a PR.
+  # https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
+  skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == ""
+  # Allow forks to skip CI runs when a branch is pushed.
+  # Use only_if rather than skip, because otherwise all jobs are marked as
+  # skipped when a pull request is first opened.
+  only_if: $NO_BRANCH != "true" || $CIRRUS_PR != ""
   stateful: false  # https://cirrus-ci.org/guide/writing-tasks/#stateful-tasks
 
 base_template: &BASE_TEMPLATE
