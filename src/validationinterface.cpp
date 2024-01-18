@@ -94,8 +94,6 @@ public:
     }
 };
 
-static CMainSignals g_signals;
-
 CMainSignals::CMainSignals() {}
 
 CMainSignals::~CMainSignals() {}
@@ -122,11 +120,6 @@ size_t CMainSignals::CallbacksPending()
 {
     if (!m_internals) return 0;
     return m_internals->m_schedulerClient.CallbacksPending();
-}
-
-CMainSignals& GetMainSignals()
-{
-    return g_signals;
 }
 
 void CMainSignals::RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks)
@@ -276,34 +269,4 @@ void CMainSignals::BlockChecked(const CBlock& block, const BlockValidationState&
 void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock> &block) {
     LOG_EVENT("%s: block hash=%s", __func__, block->GetHash().ToString());
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NewPoWValidBlock(pindex, block); });
-}
-
-// These functions are temporary and will be removed in the following commit
-void RegisterValidationInterface(CValidationInterface* callbacks)
-{
-    GetMainSignals().RegisterValidationInterface(callbacks);
-}
-void UnregisterValidationInterface(CValidationInterface* callbacks)
-{
-    GetMainSignals().UnregisterValidationInterface(callbacks);
-}
-void UnregisterAllValidationInterfaces()
-{
-    GetMainSignals().UnregisterAllValidationInterfaces();
-}
-void RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks)
-{
-    GetMainSignals().RegisterSharedValidationInterface(callbacks);
-}
-void UnregisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks)
-{
-    GetMainSignals().UnregisterSharedValidationInterface(callbacks);
-}
-void CallFunctionInValidationInterfaceQueue(std::function<void ()> func)
-{
-    GetMainSignals().CallFunctionInValidationInterfaceQueue(func);
-}
-void SyncWithValidationInterfaceQueue()
-{
-    GetMainSignals().SyncWithValidationInterfaceQueue();
 }

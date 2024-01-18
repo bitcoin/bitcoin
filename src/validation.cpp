@@ -3217,7 +3217,7 @@ static void LimitValidationInterfaceQueue(CMainSignals& signals) LOCKS_EXCLUDED(
     AssertLockNotHeld(cs_main);
 
     if (signals.CallbacksPending() > 10) {
-        SyncWithValidationInterfaceQueue();
+        signals.SyncWithValidationInterfaceQueue();
     }
 }
 

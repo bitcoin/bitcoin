@@ -37,7 +37,7 @@ void initialize_process_messages()
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
         MineBlock(g_setup->m_node, CScript() << OP_TRUE);
     }
-    SyncWithValidationInterfaceQueue();
+    g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }
 
 FUZZ_TARGET(process_messages, .init = initialize_process_messages)
@@ -89,6 +89,6 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
             g_setup->m_node.peerman->SendMessages(&random_node);
         }
     }
-    SyncWithValidationInterfaceQueue();
+    g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
     g_setup->m_node.connman->StopNodes();
 }

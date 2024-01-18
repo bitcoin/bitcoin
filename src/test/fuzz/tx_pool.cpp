@@ -50,7 +50,7 @@ void initialize_tx_pool()
                               g_outpoints_coinbase_init_immature;
         outpoints.push_back(prevout);
     }
-    SyncWithValidationInterfaceQueue();
+    g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }
 
 struct TransactionsDelta final : public CValidationInterface {
@@ -105,7 +105,7 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
         assert(tx_pool.size() < info_all.size());
         WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
     }
-    SyncWithValidationInterfaceQueue();
+    g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }
 
 void MockTime(FuzzedDataProvider& fuzzed_data_provider, const Chainstate& chainstate)
@@ -285,7 +285,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         std::set<CTransactionRef> removed;
         std::set<CTransactionRef> added;
         auto txr = std::make_shared<TransactionsDelta>(removed, added);
-        RegisterSharedValidationInterface(txr);
+        node.validation_signals->RegisterSharedValidationInterface(txr);
         const bool bypass_limits = fuzzed_data_provider.ConsumeBool();
 
         // Make sure ProcessNewPackage on one transaction works.
@@ -303,8 +303,8 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
 
         const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false));
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
-        SyncWithValidationInterfaceQueue();
-        UnregisterSharedValidationInterface(txr);
+        node.validation_signals->SyncWithValidationInterfaceQueue();
+        node.validation_signals->UnregisterSharedValidationInterface(txr);
 
         bool txid_in_mempool = tx_pool.exists(GenTxid::Txid(tx->GetHash()));
         bool wtxid_in_mempool = tx_pool.exists(GenTxid::Wtxid(tx->GetWitnessHash()));
