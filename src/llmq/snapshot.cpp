@@ -9,7 +9,6 @@
 
 #include <llmq/blockprocessor.h>
 #include <llmq/commitment.h>
-#include <llmq/utils.h>
 
 #include <base58.h>
 #include <chainparams.h>
@@ -137,7 +136,7 @@ bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotat
     Consensus::LLMQType llmqType = Params().GetConsensus().llmqTypeDIP0024InstantSend;
 
     // Since the returned quorums are in reversed order, the most recent one is at index 0
-    const auto& llmq_params_opt = GetLLMQParams(llmqType);
+    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     assert(llmq_params_opt.has_value());
 
     const int cycleLength = llmq_params_opt->dkgInterval;

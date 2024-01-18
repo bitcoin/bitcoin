@@ -232,6 +232,41 @@ public:
     // Verifies a recovered sig that was signed while the chain tip was at signedAtTip
     static bool VerifyRecoveredSig(Consensus::LLMQType llmqType, const CQuorumManager& quorum_manager, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig, int signOffset = SIGN_HEIGHT_OFFSET);
 };
+
+template<typename NodesContainer, typename Continue, typename Callback>
+void IterateNodesRandom(NodesContainer& nodeStates, Continue&& cont, Callback&& callback, FastRandomContext& rnd)
+{
+    std::vector<typename NodesContainer::iterator> rndNodes;
+    rndNodes.reserve(nodeStates.size());
+    for (auto it = nodeStates.begin(); it != nodeStates.end(); ++it) {
+        rndNodes.emplace_back(it);
+    }
+    if (rndNodes.empty()) {
+        return;
+    }
+    Shuffle(rndNodes.begin(), rndNodes.end(), rnd);
+
+    size_t idx = 0;
+    while (!rndNodes.empty() && cont()) {
+        auto nodeId = rndNodes[idx]->first;
+        auto& ns = rndNodes[idx]->second;
+
+        if (callback(nodeId, ns)) {
+            idx = (idx + 1) % rndNodes.size();
+        } else {
+            rndNodes.erase(rndNodes.begin() + idx);
+            if (rndNodes.empty()) {
+                break;
+            }
+            idx %= rndNodes.size();
+        }
+    }
+}
+
+uint256 BuildSignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash);
+
+bool IsQuorumActive(Consensus::LLMQType llmqType, const CQuorumManager& qman, const uint256& quorumHash);
+
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_SIGNING_H

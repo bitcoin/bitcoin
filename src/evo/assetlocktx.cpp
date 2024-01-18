@@ -7,7 +7,6 @@
 
 #include <llmq/commitment.h>
 #include <llmq/signing.h>
-#include <llmq/utils.h>
 #include <llmq/quorums.h>
 
 #include <chainparams.h>
@@ -134,7 +133,7 @@ bool CAssetUnlockPayload::VerifySig(const uint256& msgHash, gsl::not_null<const 
 
     const uint256 requestId = ::SerializeHash(std::make_pair(ASSETUNLOCK_REQUESTID_PREFIX, index));
 
-    if (const uint256 signHash = llmq::utils::BuildSignHash(llmqType, quorum->qc->quorumHash, requestId, msgHash);
+    if (const uint256 signHash = llmq::BuildSignHash(llmqType, quorum->qc->quorumHash, requestId, msgHash);
             quorumSig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash)) {
         return true;
     }

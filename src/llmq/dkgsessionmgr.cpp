@@ -4,7 +4,8 @@
 
 #include <llmq/debug.h>
 #include <llmq/dkgsessionmgr.h>
-#include <llmq/quorums.h>
+#include <llmq/options.h>
+#include <llmq/params.h>
 #include <llmq/utils.h>
 
 #include <chainparams.h>
@@ -13,6 +14,7 @@
 #include <evo/deterministicmns.h>
 #include <net_processing.h>
 #include <spork.h>
+#include <unordered_lru_cache.h>
 #include <util/irange.h>
 #include <util/underlying.h>
 #include <validation.h>
@@ -35,7 +37,7 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chai
     spork_manager(sporkManager),
     m_peerman(peerman)
 {
-    if (!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) {
+    if (!fMasternodeMode && !IsWatchQuorumsEnabled()) {
         // Regular nodes do not care about any DKG internals, bail out
         return;
     }
@@ -172,7 +174,7 @@ void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
     }
 }
 
-void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quorum_manager, const std::string& msg_type, CDataStream& vRecv)
+void CDKGSessionManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
     static Mutex cs_indexedQuorumsCache;
     static std::map<Consensus::LLMQType, unordered_lru_cache<uint256, int, StaticSaltedHasher>> indexedQuorumsCache GUARDED_BY(cs_indexedQuorumsCache);
@@ -198,7 +200,7 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
         return;
     }
 
-    if ((!fMasternodeMode && !utils::IsWatchQuorumsEnabled())) {
+    if ((!fMasternodeMode && !IsWatchQuorumsEnabled())) {
         // regular non-watching nodes should never receive any of these
         m_peerman->Misbehaving(pfrom.GetId(), 10);
         return;
@@ -216,7 +218,7 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
     vRecv.Rewind(sizeof(uint256));
     vRecv.Rewind(sizeof(uint8_t));
 
-    const auto& llmq_params_opt = GetLLMQParams(llmqType);
+    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     if (!llmq_params_opt.has_value()) {
         LogPrintf("CDKGSessionManager -- invalid llmqType [%d]\n", ToUnderlying(llmqType));
         m_peerman->Misbehaving(pfrom.GetId(), 100);
@@ -245,14 +247,14 @@ void CDKGSessionManager::ProcessMessage(CNode& pfrom, const CQuorumManager& quor
             return;
         }
 
-        if (!utils::IsQuorumTypeEnabled(llmqType, quorum_manager, pQuorumBaseBlockIndex->pprev)) {
+        if (!IsQuorumTypeEnabled(llmqType, pQuorumBaseBlockIndex->pprev)) {
             LogPrintf("CDKGSessionManager -- llmqType [%d] quorums aren't active\n", ToUnderlying(llmqType));
             m_peerman->Misbehaving(pfrom.GetId(), 100);
             return;
         }
 
         quorumIndex = pQuorumBaseBlockIndex->nHeight % llmq_params.dkgInterval;
-        int quorumIndexMax = utils::IsQuorumRotationEnabled(llmq_params, pQuorumBaseBlockIndex) ?
+        int quorumIndexMax = IsQuorumRotationEnabled(llmq_params, pQuorumBaseBlockIndex) ?
                 llmq_params.signingActiveQuorumCount - 1 : 0;
 
         if (quorumIndex > quorumIndexMax) {
@@ -496,7 +498,7 @@ void CDKGSessionManager::CleanupOldContributions() const
                 }
                 cnt_all++;
                 const CBlockIndex* pindexQuorum = m_chainstate.m_blockman.LookupBlockIndex(std::get<2>(k));
-                if (pindexQuorum == nullptr || m_chainstate.m_chain.Tip()->nHeight - pindexQuorum->nHeight > utils::max_store_depth(params)) {
+                if (pindexQuorum == nullptr || m_chainstate.m_chain.Tip()->nHeight - pindexQuorum->nHeight > params.max_store_depth()) {
                     // not found or too old
                     batch.Erase(k);
                     cnt_old++;

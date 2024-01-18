@@ -5,7 +5,6 @@
 #include <llmq/chainlocks.h>
 #include <llmq/quorums.h>
 #include <llmq/instantsend.h>
-#include <llmq/utils.h>
 #include <llmq/signing_shares.h>
 
 #include <chain.h>

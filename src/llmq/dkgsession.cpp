@@ -7,6 +7,8 @@
 #include <llmq/commitment.h>
 #include <llmq/debug.h>
 #include <llmq/dkgsessionmgr.h>
+#include <llmq/options.h>
+#include <llmq/utils.h>
 
 #include <evo/deterministicmns.h>
 #include <evo/specialtx.h>
@@ -100,7 +102,7 @@ bool CDKGSession::Init(gsl::not_null<const CBlockIndex*> _pQuorumBaseBlockIndex,
 
     CDKGLogger logger(*this, __func__);
 
-    if (LogAcceptCategory(BCLog::LLMQ) && utils::IsQuorumRotationEnabled(params, m_quorum_base_block_index)) {
+    if (LogAcceptCategory(BCLog::LLMQ) && IsQuorumRotationEnabled(params, m_quorum_base_block_index)) {
         int cycleQuorumBaseHeight = m_quorum_base_block_index->nHeight - quorumIndex;
         const CBlockIndex* pCycleQuorumBaseBlockIndex = m_quorum_base_block_index->GetAncestor(cycleQuorumBaseHeight);
         std::stringstream ss;
@@ -448,7 +450,7 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
 
 void CDKGSession::VerifyConnectionAndMinProtoVersions() const
 {
-    if (!utils::IsQuorumPoseEnabled(params.type)) {
+    if (!IsQuorumPoseEnabled(params.type)) {
         return;
     }
 
@@ -463,7 +465,7 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions() const
         protoMap.emplace(verifiedProRegTxHash, pnode->nVersion);
     });
 
-    bool fShouldAllMembersBeConnected = utils::IsAllMembersConnectedEnabled(params.type);
+    bool fShouldAllMembersBeConnected = IsAllMembersConnectedEnabled(params.type);
     for (const auto& m : members) {
         if (m->dmn->proTxHash == myProTxHash) {
             continue;
@@ -995,7 +997,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
         (*qc.quorumVvecHash.begin())++;
     }
 
-    uint256 commitmentHash = utils::BuildCommitmentHash(qc.llmqType, qc.quorumHash, qc.validMembers, qc.quorumPublicKey, qc.quorumVvecHash);
+    uint256 commitmentHash = BuildCommitmentHash(qc.llmqType, qc.quorumHash, qc.validMembers, qc.quorumPublicKey, qc.quorumVvecHash);
 
     if (lieType == 2) {
         (*commitmentHash.begin())++;
@@ -1224,11 +1226,11 @@ std::vector<CFinalCommitment> CDKGSession::FinalizeCommitments()
         fqc.quorumPublicKey = first.quorumPublicKey;
         fqc.quorumVvecHash = first.quorumVvecHash;
 
-        const bool isQuorumRotationEnabled{utils::IsQuorumRotationEnabled(params, m_quorum_base_block_index)};
+        const bool isQuorumRotationEnabled{IsQuorumRotationEnabled(params, m_quorum_base_block_index)};
         fqc.nVersion = CFinalCommitment::GetVersion(isQuorumRotationEnabled, DeploymentActiveAfter(m_quorum_base_block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
         fqc.quorumIndex = isQuorumRotationEnabled ? quorumIndex : 0;
 
-        uint256 commitmentHash = utils::BuildCommitmentHash(fqc.llmqType, fqc.quorumHash, fqc.validMembers, fqc.quorumPublicKey, fqc.quorumVvecHash);
+        uint256 commitmentHash = BuildCommitmentHash(fqc.llmqType, fqc.quorumHash, fqc.validMembers, fqc.quorumPublicKey, fqc.quorumVvecHash);
 
         std::vector<CBLSSignature> aggSigs;
         std::vector<CBLSPublicKey> aggPks;

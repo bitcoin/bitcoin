@@ -8,7 +8,6 @@
 #include <evo/specialtx.h>
 #include <llmq/commitment.h>
 #include <llmq/signing.h>
-#include <llmq/utils.h>
 #include <llmq/quorums.h>
 #include <node/blockstorage.h>
 
@@ -93,7 +92,7 @@ bool MNHFTx::Verify(const uint256& quorumHash, const uint256& requestId, const u
     const Consensus::LLMQType& llmqType = Params().GetConsensus().llmqTypeMnhf;
     const auto quorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
 
-    const uint256 signHash = llmq::utils::BuildSignHash(llmqType, quorum->qc->quorumHash, requestId, msgHash);
+    const uint256 signHash = llmq::BuildSignHash(llmqType, quorum->qc->quorumHash, requestId, msgHash);
     if (!sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-invalid");
     }

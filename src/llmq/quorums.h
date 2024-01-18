@@ -35,9 +35,6 @@ namespace llmq
 class CDKGSessionManager;
 class CQuorumBlockProcessor;
 
-// If true, we will connect to all new quorums and watch their communication
-static constexpr bool DEFAULT_WATCH_QUORUMS{false};
-
 /**
  * Object used as a key to store CQuorumDataRequest
  */

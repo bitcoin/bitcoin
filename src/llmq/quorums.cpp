@@ -7,6 +7,8 @@
 #include <llmq/blockprocessor.h>
 #include <llmq/dkgsession.h>
 #include <llmq/dkgsessionmgr.h>
+#include <llmq/options.h>
+#include <llmq/params.h>
 #include <llmq/utils.h>
 
 #include <evo/specialtx.h>
@@ -218,11 +220,11 @@ void CQuorumManager::Stop()
 
 void CQuorumManager::TriggerQuorumDataRecoveryThreads(const CBlockIndex* pIndex) const
 {
-    if ((!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) || !utils::QuorumDataRecoveryEnabled() || pIndex == nullptr) {
+    if ((!fMasternodeMode && !IsWatchQuorumsEnabled()) || !QuorumDataRecoveryEnabled() || pIndex == nullptr) {
         return;
     }
 
-    const std::map<Consensus::LLMQType, QvvecSyncMode> mapQuorumVvecSync = utils::GetEnabledQuorumVvecSyncEntries();
+    const std::map<Consensus::LLMQType, QvvecSyncMode> mapQuorumVvecSync = GetEnabledQuorumVvecSyncEntries();
 
     LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Process block %s\n", __func__, pIndex->GetBlockHash().ToString());
 
@@ -275,7 +277,7 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
         CheckQuorumConnections(params, pindexNew);
     }
 
-    if (fMasternodeMode || utils::IsWatchQuorumsEnabled()) {
+    if (fMasternodeMode || IsWatchQuorumsEnabled()) {
         // Cleanup expired data requests
         LOCK(cs_data_requests);
         auto it = mapQuorumDataRequests.begin();
@@ -294,14 +296,14 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
 
 void CQuorumManager::CheckQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindexNew) const
 {
-    if (!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) return;
+    if (!fMasternodeMode && !IsWatchQuorumsEnabled()) return;
 
     auto lastQuorums = ScanQuorums(llmqParams.type, pindexNew, (size_t)llmqParams.keepOldConnections);
 
     auto connmanQuorumsToDelete = connman.GetMasternodeQuorums(llmqParams.type);
 
     // don't remove connections for the currently in-progress DKG round
-    if (utils::IsQuorumRotationEnabled(llmqParams, pindexNew)) {
+    if (IsQuorumRotationEnabled(llmqParams, pindexNew)) {
         int cycleIndexTipHeight = pindexNew->nHeight % llmqParams.dkgInterval;
         int cycleQuorumBaseHeight = pindexNew->nHeight - cycleIndexTipHeight;
         std::stringstream ss;
@@ -369,7 +371,7 @@ CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const Consensus::LLMQType l
     }
     assert(qc->quorumHash == pQuorumBaseBlockIndex->GetBlockHash());
 
-    const auto& llmq_params_opt = GetLLMQParams(llmqType);
+    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     assert(llmq_params_opt.has_value());
     auto quorum = std::make_shared<CQuorum>(llmq_params_opt.value(), blsWorker);
     auto members = utils::GetAllQuorumMembers(qc->llmqType, pQuorumBaseBlockIndex);
@@ -451,7 +453,7 @@ bool CQuorumManager::RequestQuorumData(CNode* pfrom, Consensus::LLMQType llmqTyp
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- pfrom is not a verified masternode\n", __func__);
         return false;
     }
-    if (!GetLLMQParams(llmqType).has_value()) {
+    if (!Params().GetLLMQ(llmqType).has_value()) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Invalid llmqType: %d\n", __func__, ToUnderlying(llmqType));
         return false;
     }
@@ -493,12 +495,12 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
 
 std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqType, const CBlockIndex* pindexStart, size_t nCountRequested) const
 {
-    if (pindexStart == nullptr || nCountRequested == 0 || !utils::IsQuorumTypeEnabled(llmqType, *this, pindexStart)) {
+    if (pindexStart == nullptr || nCountRequested == 0 || !IsQuorumTypeEnabled(llmqType, pindexStart)) {
         return {};
     }
 
     gsl::not_null<const CBlockIndex*> pindexStore{pindexStart};
-    const auto& llmq_params_opt = GetLLMQParams(llmqType);
+    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     assert(llmq_params_opt.has_value());
 
     // Quorum sets can only change during the mining phase of DKG.
@@ -531,7 +533,7 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
                 // And we only do this for max_cycles() of the most recent quorums
                 // because signing by old quorums requires the exact quorum hash to be specified
                 // and quorum scanning isn't needed there.
-                scanQuorumsCache.try_emplace(llmq.type, utils::max_cycles(llmq, llmq.keepOldConnections) * (llmq.dkgMiningWindowEnd - llmq.dkgMiningWindowStart));
+                scanQuorumsCache.try_emplace(llmq.type, llmq.max_cycles(llmq.keepOldConnections) * (llmq.dkgMiningWindowEnd - llmq.dkgMiningWindowStart));
             }
         }
         auto& cache = scanQuorumsCache[llmqType];
@@ -699,7 +701,7 @@ PeerMsgRet CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_t
             }
         }
 
-        if (!GetLLMQParams(request.GetLLMQType()).has_value()) {
+        if (!Params().GetLLMQ(request.GetLLMQType()).has_value()) {
             return sendQDATA(CQuorumDataRequest::Errors::QUORUM_TYPE_INVALID, request_limit_exceeded);
         }
 
@@ -744,7 +746,7 @@ PeerMsgRet CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_t
     }
 
     if (msg_type == NetMsgType::QDATA) {
-        if ((!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) || pfrom.GetVerifiedProRegTxHash().IsNull()) {
+        if ((!fMasternodeMode && !IsWatchQuorumsEnabled()) || pfrom.GetVerifiedProRegTxHash().IsNull()) {
             return errorHandler("Not a verified masternode and -watchquorums is not enabled");
         }
 
@@ -1033,7 +1035,7 @@ void CQuorumManager::StartCleanupOldQuorumDataThread(const CBlockIndex* pIndex) 
     // window and it's better to have more room so we pick next cycle.
     // dkgMiningWindowStart for small quorums is 10 i.e. a safe block to start
     // these calculations is at height 576 + 24 * 2 + 10 = 576 + 58.
-    if ((!fMasternodeMode && !utils::IsWatchQuorumsEnabled()) || pIndex == nullptr || (pIndex->nHeight % 576 != 58)) {
+    if ((!fMasternodeMode && !IsWatchQuorumsEnabled()) || pIndex == nullptr || (pIndex->nHeight % 576 != 58)) {
         return;
     }
 
@@ -1055,7 +1057,7 @@ void CQuorumManager::StartCleanupOldQuorumDataThread(const CBlockIndex* pIndex) 
             auto& cache = cleanupQuorumsCache[params.type];
             const CBlockIndex* pindex_loop{pIndex};
             std::set<uint256> quorum_keys;
-            while (pindex_loop != nullptr && pIndex->nHeight - pindex_loop->nHeight < utils::max_store_depth(params)) {
+            while (pindex_loop != nullptr && pIndex->nHeight - pindex_loop->nHeight < params.max_store_depth()) {
                 uint256 quorum_key;
                 if (cache.get(pindex_loop->GetBlockHash(), quorum_key)) {
                     quorum_keys.insert(quorum_key);

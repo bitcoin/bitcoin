@@ -20,10 +20,12 @@
 #include <llmq/context.h>
 #include <llmq/debug.h>
 #include <llmq/dkgsession.h>
+#include <llmq/options.h>
 #include <llmq/quorums.h>
 #include <llmq/signing.h>
 #include <llmq/signing_shares.h>
 #include <llmq/snapshot.h>
+#include <llmq/utils.h>
 
 #include <iomanip>
 #include <optional>
@@ -74,8 +76,8 @@ static UniValue quorum_list(const JSONRPCRequest& request, const ChainstateManag
 
     CBlockIndex* pindexTip = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
 
-    for (const auto& type : llmq::utils::GetEnabledQuorumTypes(pindexTip)) {
-        const auto& llmq_params_opt = llmq::GetLLMQParams(type);
+    for (const auto& type : llmq::GetEnabledQuorumTypes(pindexTip)) {
+        const auto& llmq_params_opt = Params().GetLLMQ(type);
         CHECK_NONFATAL(llmq_params_opt.has_value());
         UniValue v(UniValue::VARR);
 
@@ -139,8 +141,8 @@ static UniValue quorum_list_extended(const JSONRPCRequest& request, const Chains
 
     CBlockIndex* pblockindex = nHeight != -1 ? WITH_LOCK(cs_main, return chainman.ActiveChain()[nHeight]) : WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
 
-    for (const auto& type : llmq::utils::GetEnabledQuorumTypes(pblockindex)) {
-        const auto& llmq_params_opt = llmq::GetLLMQParams(type);
+    for (const auto& type : llmq::GetEnabledQuorumTypes(pblockindex)) {
+        const auto& llmq_params_opt = Params().GetLLMQ(type);
         CHECK_NONFATAL(llmq_params_opt.has_value());
         const auto& llmq_params = llmq_params_opt.value();
         UniValue v(UniValue::VARR);
@@ -240,7 +242,7 @@ static UniValue quorum_info(const JSONRPCRequest& request, const LLMQContext& ll
     quorum_info_help(request);
 
     Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[0], "llmqType");
-    if (!llmq::GetLLMQParams(llmqType).has_value()) {
+    if (!Params().GetLLMQ(llmqType).has_value()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
@@ -297,11 +299,11 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request, const Chainstate
 
     UniValue minableCommitments(UniValue::VARR);
     UniValue quorumArrConnections(UniValue::VARR);
-    for (const auto& type : llmq::utils::GetEnabledQuorumTypes(pindexTip)) {
-        const auto& llmq_params_opt = llmq::GetLLMQParams(type);
+    for (const auto& type : llmq::GetEnabledQuorumTypes(pindexTip)) {
+        const auto& llmq_params_opt = Params().GetLLMQ(type);
         CHECK_NONFATAL(llmq_params_opt.has_value());
         const auto& llmq_params = llmq_params_opt.value();
-        bool rotation_enabled = llmq::utils::IsQuorumRotationEnabled(llmq_params, pindexTip);
+        bool rotation_enabled = llmq::IsQuorumRotationEnabled(llmq_params, pindexTip);
         int quorums_num = rotation_enabled ? llmq_params.signingActiveQuorumCount : 1;
 
         for (const int quorumIndex : irange::range(quorums_num)) {
@@ -401,8 +403,8 @@ static UniValue quorum_memberof(const JSONRPCRequest& request, const ChainstateM
     }
 
     UniValue result(UniValue::VARR);
-    for (const auto& type : llmq::utils::GetEnabledQuorumTypes(pindexTip)) {
-        const auto& llmq_params_opt = llmq::GetLLMQParams(type);
+    for (const auto& type : llmq::GetEnabledQuorumTypes(pindexTip)) {
+        const auto& llmq_params_opt = Params().GetLLMQ(type);
         CHECK_NONFATAL(llmq_params_opt.has_value());
         size_t count = llmq_params_opt->signingActiveQuorumCount;
         if (scanQuorumsCount != -1) {
@@ -524,7 +526,7 @@ static UniValue quorum_sigs_cmd(const JSONRPCRequest& request, const LLMQContext
 
     Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[0], "llmqType");
 
-    const auto& llmq_params_opt = llmq::GetLLMQParams(llmqType);
+    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     if (!llmq_params_opt.has_value()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
@@ -597,7 +599,7 @@ static UniValue quorum_sigs_cmd(const JSONRPCRequest& request, const LLMQContext
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
             }
 
-            uint256 signHash = llmq::utils::BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
+            uint256 signHash = llmq::BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
             return sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
         }
     } else if (cmd == "quorumhasrecsig") {
@@ -637,7 +639,7 @@ static UniValue quorum_selectquorum(const JSONRPCRequest& request, const LLMQCon
     quorum_selectquorum_help(request);
 
     Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[0], "llmqType");
-    const auto& llmq_params_opt = llmq::GetLLMQParams(llmqType);
+    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     if (!llmq_params_opt.has_value()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
@@ -986,7 +988,7 @@ static UniValue verifyislock(const JSONRPCRequest& request)
 
     auto llmqType = Params().GetConsensus().llmqTypeDIP0024InstantSend;
     // First check against the current active set, if it fails check against the last active set
-    const auto& llmq_params_opt = llmq::GetLLMQParams(llmqType);
+    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     CHECK_NONFATAL(llmq_params_opt.has_value());
     int signOffset{llmq_params_opt->dkgInterval};
     return llmq_ctx.sigman->VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, txid, sig, 0) ||

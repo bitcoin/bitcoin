@@ -11,7 +11,6 @@
 #include <governance/common.h>
 #include <llmq/chainlocks.h>
 #include <llmq/instantsend.h>
-#include <llmq/utils.h>
 #include <masternode/node.h>
 #include <masternode/sync.h>
 #include <messagesigner.h>

@@ -8,7 +8,6 @@
 #include <bls/bls.h>
 #include <chainparams.h>
 #include <key.h>
-#include <llmq/utils.h>
 #include <masternode/sync.h>
 #include <messagesigner.h>
 #include <net.h>

@@ -17,7 +17,6 @@
 #include <llmq/quorums.h>
 #include <llmq/signing.h>
 #include <llmq/signing_shares.h>
-#include <llmq/utils.h>
 #include <masternode/sync.h>
 
 LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CEvoDB& evo_db, CSporkManager& sporkman, CTxMemPool& mempool,

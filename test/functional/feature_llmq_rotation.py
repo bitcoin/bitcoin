@@ -158,13 +158,12 @@ class LLMQQuorumRotationTest(DashTestFramework):
 
         q_100_0 = QuorumId(100, int(quorum_info_0_0["quorumHash"], 16))
         q_102_0 = QuorumId(102, int(quorum_info_0_0["quorumHash"], 16))
-        q_104_0 = QuorumId(104, int(quorum_info_0_0["quorumHash"], 16))
         q_103_0_0 = QuorumId(103, int(quorum_info_0_0["quorumHash"], 16))
         q_103_0_1 = QuorumId(103, int(quorum_info_0_1["quorumHash"], 16))
 
         b_1 = self.nodes[0].getbestblockhash()
-        expectedDeleted = [h_100_0, h_104_0]
-        expectedNew = [q_100_0, q_102_0, q_104_0, q_103_0_0, q_103_0_1]
+        expectedDeleted = [h_100_0]
+        expectedNew = [q_100_0, q_102_0, q_103_0_0, q_103_0_1]
         quorumList = self.test_getmnlistdiff_quorums(b_0, b_1, quorumList, expectedDeleted, expectedNew)
 
         self.log.info("Wait for chainlock")

@@ -32,7 +32,7 @@
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/instantsend.h>
-#include <llmq/utils.h>
+#include <llmq/options.h>
 #include <masternode/payments.h>
 #include <spork.h>
 #include <validation.h>
@@ -156,7 +156,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                        : pblock->GetBlockTime();
 
     if (fDIP0003Active_context) {
-        for (const Consensus::LLMQParams& params : llmq::utils::GetEnabledQuorumParams(pindexPrev)) {
+        for (const Consensus::LLMQParams& params : llmq::GetEnabledQuorumParams(pindexPrev)) {
             std::vector<CTransactionRef> vqcTx;
             if (quorum_block_processor.GetMineableCommitmentsTx(params,
                                                                 nHeight,

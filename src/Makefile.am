@@ -236,6 +236,7 @@ BITCOIN_CORE_H = \
   llmq/ehf_signals.cpp \
   llmq/ehf_signals.h \
   llmq/instantsend.h \
+  llmq/options.h \
   llmq/params.h \
   llmq/quorums.h \
   llmq/signing.h \
@@ -456,6 +457,7 @@ libbitcoin_server_a_SOURCES = \
   llmq/dkgsession.cpp \
   llmq/context.cpp \
   llmq/instantsend.cpp \
+  llmq/options.cpp \
   llmq/snapshot.cpp \
   llmq/signing.cpp \
   llmq/signing_shares.cpp \

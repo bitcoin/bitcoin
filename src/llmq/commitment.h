@@ -173,6 +173,8 @@ public:
 
 bool CheckLLMQCommitment(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state);
 
+uint256 BuildCommitmentHash(Consensus::LLMQType llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash);
+
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_COMMITMENT_H

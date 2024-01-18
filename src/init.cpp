@@ -97,9 +97,9 @@
 #include <llmq/instantsend.h>
 #include <llmq/quorums.h>
 #include <llmq/dkgsessionmgr.h>
+#include <llmq/options.h>
 #include <llmq/signing.h>
 #include <llmq/snapshot.h>
-#include <llmq/utils.h>
 #include <llmq/signing_shares.h>
 
 #include <statsd_client.h>
@@ -1428,8 +1428,8 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     try {
-        const bool fRecoveryEnabled{llmq::utils::QuorumDataRecoveryEnabled()};
-        const bool fQuorumVvecRequestsEnabled{llmq::utils::GetEnabledQuorumVvecSyncEntries().size() > 0};
+        const bool fRecoveryEnabled{llmq::QuorumDataRecoveryEnabled()};
+        const bool fQuorumVvecRequestsEnabled{llmq::GetEnabledQuorumVvecSyncEntries().size() > 0};
         if (!fRecoveryEnabled && fQuorumVvecRequestsEnabled) {
             InitWarning(Untranslated("-llmq-qvvec-sync set but recovery is disabled due to -llmq-data-recovery=0"));
         }

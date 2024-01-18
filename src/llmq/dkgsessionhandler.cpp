@@ -8,6 +8,7 @@
 #include <llmq/dkgsession.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/debug.h>
+#include <llmq/options.h>
 #include <llmq/utils.h>
 
 #include <evo/deterministicmns.h>
@@ -110,7 +111,7 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
 {
     //AssertLockNotHeld(cs_main);
     //Indexed quorums (greater than 0) are enabled with Quorum Rotation
-    if (quorumIndex > 0 && !utils::IsQuorumRotationEnabled(params, pindexNew)) {
+    if (quorumIndex > 0 && !IsQuorumRotationEnabled(params, pindexNew)) {
         return;
     }
     LOCK(cs);

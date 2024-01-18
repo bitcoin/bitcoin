@@ -48,7 +48,6 @@
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/instantsend.h>
-#include <llmq/utils.h>
 
 #include <numeric>
 #include <stdint.h>

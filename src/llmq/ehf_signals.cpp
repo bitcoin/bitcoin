@@ -6,11 +6,11 @@
 #include <llmq/quorums.h>
 #include <llmq/signing_shares.h>
 #include <llmq/commitment.h>
-#include <llmq/utils.h>
 
 #include <evo/mnhftx.h>
 #include <evo/specialtx.h>
 
+#include <chainparams.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <index/txindex.h> // g_txindex
@@ -65,7 +65,7 @@ void CEHFSignalsHandler::trySignEHFSignal(int bit, const CBlockIndex* const pind
     const uint256 requestId = mnhfPayload.GetRequestId();
 
     const Consensus::LLMQType& llmqType = Params().GetConsensus().llmqTypeMnhf;
-    const auto& llmq_params_opt = llmq::GetLLMQParams(llmqType);
+    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     if (!llmq_params_opt.has_value()) {
         return;
     }
