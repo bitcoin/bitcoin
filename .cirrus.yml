@@ -112,7 +112,9 @@ task:
 
 task:
   name: 'ARM, unit tests, no functional tests'
+  # Skip if no ARM worker exists (for a fork)
   << : *GLOBAL_TASK_TEMPLATE
+  skip: $NO_ARM == "true"
   persistent_worker:
     labels:
       type: arm64  # Use arm64 worker to sidestep qemu and avoid a slow CI: https://github.com/bitcoin/bitcoin/pull/28087#issuecomment-1649399453
@@ -167,11 +169,13 @@ task:
 
 task:
   name: 'ASan + LSan + UBSan + integer, no depends, USDT'
+  # Skip if no Noble worker exists (for a fork)
   enable_bpfcc_script:
     # In the image build step, no external environment variables are available,
     # so any settings will need to be written to the settings env file:
     - sed -i "s|\${CIRRUS_CI}|true|g" ./ci/test/00_setup_env_native_asan.sh
   << : *GLOBAL_TASK_TEMPLATE
+  skip: $NO_NOBLE == "true"
   persistent_worker:
     labels:
       type: noble  # Must use this specific worker (needed for USDT functional tests)
