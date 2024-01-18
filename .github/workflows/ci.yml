@@ -9,7 +9,10 @@ on:
   # See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push.
   push:
     branches:
-      - '**'
+      # Do not run branch pushes on forks, because they are typically redundant with
+      # pull requests to the main repo.
+      - 'bitcoin/**'
+      - 'bitcoin-core/**'
     tags-ignore:
       - '**'
 
