@@ -388,7 +388,8 @@ if test "$use_sanitizers" != ""; then
   dnl fail if a bad argument is passed, e.g. -fsanitize=undfeined
   AX_CHECK_COMPILE_FLAG(
     [-fsanitize=$use_sanitizers],
-    [SANITIZER_CXXFLAGS="-fsanitize=$use_sanitizers"],
+    [SANITIZER_CXXFLAGS="-fsanitize=$use_sanitizers"
+     SANITIZER_CFLAGS="-fsanitize=$use_sanitizers"],
     [AC_MSG_ERROR([compiler did not accept requested flags])])
 
   dnl Some compilers (e.g. GCC) require additional libraries like libasan,
@@ -1946,6 +1947,9 @@ CPPFLAGS_TEMP="$CPPFLAGS"
 unset CPPFLAGS
 CPPFLAGS="$CPPFLAGS_TEMP"
 
+if test -n "$use_sanitizers"; then
+  export SECP_CFLAGS="$SECP_CFLAGS $SANITIZER_CFLAGS"
+fi
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --disable-module-ecdh"
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
@@ -2006,7 +2010,7 @@ echo "  target os       = $host_os"
 echo "  build os        = $build_os"
 echo
 echo "  CC              = $CC"
-echo "  CFLAGS          = $PTHREAD_CFLAGS $CFLAGS"
+echo "  CFLAGS          = $PTHREAD_CFLAGS $SANITIZER_CFLAGS $CFLAGS"
 echo "  CPPFLAGS        = $DEBUG_CPPFLAGS $HARDENED_CPPFLAGS $CORE_CPPFLAGS $CPPFLAGS"
 echo "  CXX             = $CXX"
 echo "  CXXFLAGS        = $LTO_CXXFLAGS $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CORE_CXXFLAGS $CXXFLAGS"
