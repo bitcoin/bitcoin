@@ -101,9 +101,7 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
     if (!info_all.empty()) {
         const auto& tx_to_remove = *PickValue(fuzzed_data_provider, info_all).tx;
         WITH_LOCK(tx_pool.cs, tx_pool.removeRecursive(tx_to_remove, MemPoolRemovalReason::BLOCK /* dummy */));
-        std::vector<uint256> all_txids;
-        tx_pool.queryHashes(all_txids);
-        assert(all_txids.size() < info_all.size());
+        assert(tx_pool.size() < info_all.size());
         WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
     }
     SyncWithValidationInterfaceQueue();
