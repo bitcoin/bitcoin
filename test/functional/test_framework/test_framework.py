@@ -1021,5 +1021,4 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         return self.config["components"].getboolean("USE_BDB")
 
     def has_blockfile(self, node, filenum: str):
-        blocksdir = node.datadir_path / self.chain / 'blocks'
-        return (blocksdir / f"blk{filenum}.dat").is_file()
+        return (node.blocks_path/ f"blk{filenum}.dat").is_file()
