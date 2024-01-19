@@ -24,6 +24,7 @@ from test_framework.address import (
     AddressType,
     ADDRESS_BCRT1_UNSPENDABLE,
 )
+from test_framework.messages import COIN
 from test_framework.util import (
     assert_equal,
     set_node_times,
@@ -270,7 +271,9 @@ class ImportRescanTest(BitcoinTestFramework):
                 address_type=variant.address_type.value,
             ))
             variant.key = self.nodes[1].dumpprivkey(variant.address["address"])
-            variant.initial_amount = get_rand_amount() * 2
+            # Ensure output is large enough to pay for fees: conservatively assuming txsize of
+            # 500 vbytes and feerate of 20 sats/vbytes
+            variant.initial_amount = max(get_rand_amount(), (500 * 20 / COIN) + AMOUNT_DUST)
             variant.initial_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.initial_amount)
             variant.confirmation_height = 0
             variant.timestamp = timestamp
