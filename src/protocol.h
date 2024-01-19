@@ -543,6 +543,13 @@ public:
     std::string GetCommand() const;
     std::string ToString() const;
 
+    // Single-message helper methods
+    bool IsMsgTx()        const { return type == MSG_TX; }
+    bool IsMsgDstx()       const { return type == MSG_DSTX; }
+
+    // Combined-message helper methods
+    bool IsGenTxMsg()     const { return type == MSG_TX || type == MSG_DSTX; }
+
 private:
     const char* GetCommandInternal() const;
 

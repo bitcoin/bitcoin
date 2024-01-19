@@ -1108,7 +1108,7 @@ std::chrono::microseconds CalculateObjectGetDataTime(const CInv& inv, std::chron
     }
 
     // We delay processing announcements from inbound peers
-    if (inv.type == MSG_TX && !fMasternodeMode && use_inbound_delay) process_time += INBOUND_PEER_TX_DELAY;
+    if (inv.IsMsgTx() && !fMasternodeMode && use_inbound_delay) process_time += INBOUND_PEER_TX_DELAY;
 
     return process_time;
 }
@@ -1532,6 +1532,7 @@ bool PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationStat
         }
     // Conflicting (but not necessarily invalid) data or different policy:
     case TxValidationResult::TX_RECENT_CONSENSUS_CHANGE:
+    case TxValidationResult::TX_INPUTS_NOT_STANDARD:
     case TxValidationResult::TX_NOT_STANDARD:
     case TxValidationResult::TX_MISSING_INPUTS:
     case TxValidationResult::TX_PREMATURE_SPEND:
@@ -1834,12 +1835,12 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
             // masternode would not be able to exploit this to spam the network with specially
             // crafted invalid DSTX-es and potentially cause high load cheaply, because
             // corresponding checks in ProcessMessage won't let it to send DSTX-es too often.
-            bool fIgnoreRecentRejects = inv.type == MSG_DSTX ||
+            bool fIgnoreRecentRejects = inv.IsMsgDstx() ||
                                         m_llmq_ctx->isman->IsWaitingForTx(inv.hash) ||
                                         m_llmq_ctx->isman->IsLocked(inv.hash);
 
             return (!fIgnoreRecentRejects && m_recent_rejects.contains(inv.hash)) ||
-                   (inv.type == MSG_DSTX && static_cast<bool>(::dstxManager->GetDSTX(inv.hash))) ||
+                   (inv.IsMsgDstx() && static_cast<bool>(::dstxManager->GetDSTX(inv.hash))) ||
                    m_mempool.exists(inv.hash) ||
                    (g_txindex != nullptr && g_txindex->HasTx(inv.hash));
         }
@@ -2149,11 +2150,11 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         }
 
         bool push = false;
-        if (inv.type == MSG_TX || inv.type == MSG_DSTX) {
+        if (inv.IsGenTxMsg()) {
             CTransactionRef tx = FindTxForGetData(&pfrom, inv.hash, mempool_req, longlived_mempool_time);
             if (tx) {
                 CCoinJoinBroadcastTx dstx;
-                if (inv.type == MSG_DSTX) {
+                if (inv.IsMsgDstx()) {
                     dstx = ::dstxManager->GetDSTX(inv.hash);
                 }
                 if (dstx) {

@@ -26,8 +26,6 @@ static const bool DEFAULT_SPLASHSCREEN = true;
 #define RGB_HALF 0x7f7f7f
 /** Path to the icon resource folder */
 #define ICONS_PATH ":icons/"
-/** Path to the movies resource folder */
-#define MOVIES_PATH ":movies/"
 
 /* Tooltips longer than this (in characters) are converted into rich text,
    so that they can be word-wrapped.

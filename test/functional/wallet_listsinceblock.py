@@ -36,6 +36,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         self.test_double_spend()
         self.test_double_send()
         self.double_spends_filtered()
+        self.test_targetconfirmations()
 
     def test_no_blockhash(self):
         self.log.info("Test no blockhash")
@@ -73,6 +74,27 @@ class ListSinceBlockTest(BitcoinTestFramework):
                                 "invalid-hex")
         assert_raises_rpc_error(-8, "blockhash must be hexadecimal string (not 'Z000000000000000000000000000000000000000000000000000000000000000')", self.nodes[0].listsinceblock,
                                 "Z000000000000000000000000000000000000000000000000000000000000000")
+
+    def test_targetconfirmations(self):
+        '''
+        This tests when the value of target_confirmations exceeds the number of
+        blocks in the main chain. In this case, the genesis block hash should be
+        given for the `lastblock` property. If target_confirmations is < 1, then
+        a -8 invalid parameter error is thrown.
+        '''
+        self.log.info("Test target_confirmations")
+        blockhash, = self.nodes[2].generate(1)
+        blockheight = self.nodes[2].getblockheader(blockhash)['height']
+        self.sync_all()
+
+        assert_equal(
+            self.nodes[0].getblockhash(0),
+            self.nodes[0].listsinceblock(blockhash, blockheight + 1)['lastblock'])
+        assert_equal(
+            self.nodes[0].getblockhash(0),
+            self.nodes[0].listsinceblock(blockhash, blockheight + 1000)['lastblock'])
+        assert_raises_rpc_error(-8, "Invalid parameter",
+            self.nodes[0].listsinceblock, blockhash, 0)
 
     def test_reorg(self):
         '''
