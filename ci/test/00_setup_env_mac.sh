@@ -12,6 +12,6 @@ export PACKAGES="cmake libcap-dev libz-dev libbz2-dev python3-setuptools"
 export XCODE_VERSION=12.2
 export XCODE_BUILD_ID=12B45b
 export RUN_UNIT_TESTS=false
-export RUN_INTEGRATION_TESTS=false
+export RUN_FUNCTIONAL_TESTS=false
 export GOAL="all deploy"
 export BITCOIN_CONFIG="--with-gui --enable-reduce-exports --disable-miner --enable-werror --with-boost-process"

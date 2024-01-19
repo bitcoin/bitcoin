@@ -11,7 +11,7 @@ export PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools libdbus-1-dev libhar
 export DEP_OPTS="NO_UPNP=1 DEBUG=1"
 export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
 export PYZMQ=true
-export RUN_INTEGRATION_TESTS=false
+export RUN_FUNCTIONAL_TESTS=false
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --enable-crash-hooks --enable-c++20 --enable-werror"
 

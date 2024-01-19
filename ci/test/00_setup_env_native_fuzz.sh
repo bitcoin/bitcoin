@@ -13,7 +13,7 @@ export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
 export CXXFLAGS="-Werror -Wno-unused-command-line-argument -Wno-unused-value -Wno-deprecated-builtins"
 export PYZMQ=true
 export RUN_UNIT_TESTS=false
-export RUN_INTEGRATION_TESTS=false
+export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=true
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-zmq --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined --enable-suppress-external-warnings CC=clang-15 CXX=clang++-15 --with-boost-process"
