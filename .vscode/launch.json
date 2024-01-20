@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Launch Edge",
+            "request": "launch",
+            "type": "msedge",
+            "url": "http://localhost:8080",
+            "webRoot": "
+            "
+        },
+
+        {
+            "name": "PlatformIO Debugger",
+            "request": "launch",
+            "type": "platformio-debug",
+            "toolchainBinDir": "/usr/local/bin"
+        },
+        {
+            "type": "node-terminal",
+   
+   
+         "name": "JavaScript Debug Terminal",
+            "request": "launch",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
