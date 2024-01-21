@@ -4007,6 +4007,30 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         }
     }
 
+    // Pair external wallets with their corresponding db handler
+    std::vector<std::pair<std::shared_ptr<CWallet>, std::unique_ptr<WalletBatch>>> wallets_vec;
+    for (const auto& ext_wallet : {data.watchonly_wallet, data.solvable_wallet}) {
+        if (!ext_wallet) continue;
+
+        std::unique_ptr<WalletBatch> batch = std::make_unique<WalletBatch>(ext_wallet->GetDatabase());
+        if (!batch->TxnBegin()) {
+            error = strprintf(_("Error: database transaction cannot be executed for wallet %s"), ext_wallet->GetName());
+            return false;
+        }
+        wallets_vec.emplace_back(ext_wallet, std::move(batch));
+    }
+
+    // Write address book entry to disk
+    auto func_store_addr = [](WalletBatch& batch, const CTxDestination& dest, const CAddressBookData& entry) {
+        auto address{EncodeDestination(dest)};
+        if (entry.purpose) batch.WritePurpose(address, PurposeToString(*entry.purpose));
+        if (entry.label) batch.WriteName(address, *entry.label);
+        for (const auto& [id, request] : entry.receive_requests) {
+            batch.WriteAddressReceiveRequest(dest, id, request);
+        }
+        if (entry.previously_spent) batch.WriteAddressPreviouslySpent(dest, true);
+    };
+
     // Check the address book data in the same way we did for transactions
     std::vector<CTxDestination> dests_to_delete;
     for (const auto& [dest, record] : m_address_book) {
@@ -4014,14 +4038,13 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         // Entries for everything else ("send") will be cloned to all wallets.
         bool require_transfer = record.purpose == AddressPurpose::RECEIVE && !IsMine(dest);
         bool copied = false;
-        for (auto& wallet : {data.watchonly_wallet, data.solvable_wallet}) {
-            if (!wallet) continue;
-
+        for (auto& [wallet, batch] : wallets_vec) {
             LOCK(wallet->cs_wallet);
             if (require_transfer && !wallet->IsMine(dest)) continue;
 
             // Copy the entire address book entry
             wallet->m_address_book[dest] = record;
+            func_store_addr(*batch, dest, record);
 
             copied = true;
             // Only delete 'receive' records that are no longer part of the original wallet
@@ -4047,24 +4070,15 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         }
     }
 
-    // Persist added address book entries (labels, purpose) for watchonly and solvable wallets
-    auto persist_address_book = [](const CWallet& wallet) {
-        LOCK(wallet.cs_wallet);
-        WalletBatch batch{wallet.GetDatabase()};
-        for (const auto& [destination, addr_book_data] : wallet.m_address_book) {
-            auto address{EncodeDestination(destination)};
-            if (addr_book_data.purpose) batch.WritePurpose(address, PurposeToString(*addr_book_data.purpose));
-            if (addr_book_data.label) batch.WriteName(address, *addr_book_data.label);
-            for (const auto& [id, request] : addr_book_data.receive_requests) {
-                batch.WriteAddressReceiveRequest(destination, id, request);
-            }
-            if (addr_book_data.previously_spent) batch.WriteAddressPreviouslySpent(destination, true);
+    // Persist external wallets address book entries
+    for (auto& [wallet, batch] : wallets_vec) {
+        if (!batch->TxnCommit()) {
+            error = strprintf(_("Error: address book copy failed for wallet %s"), wallet->GetName());
+            return false;
         }
-    };
-    if (data.watchonly_wallet) persist_address_book(*data.watchonly_wallet);
-    if (data.solvable_wallet) persist_address_book(*data.solvable_wallet);
+    }
 
-    // Remove the things to delete
+    // Remove the things to delete in this wallet
     if (dests_to_delete.size() > 0) {
         for (const auto& dest : dests_to_delete) {
             if (!DelAddressBook(dest)) {
