@@ -4041,7 +4041,7 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
         if (IsInitialBlockDownload() && ppindex && *ppindex) {
             const CBlockIndex& last_accepted{**ppindex};
             const int64_t blocks_left{(GetTime() - last_accepted.GetBlockTime()) / GetConsensus().nPowTargetSpacing};
-            const double progress{100.0 * last_accepted.nHeight / (last_accepted.nHeight + blocks_left)};
+            const double progress{100.0 * (last_accepted.nHeight + 1) / (last_accepted.nHeight + 1 + blocks_left)};
             LogPrintf("Synchronizing blockheaders, height: %d (~%.2f%%)\n", last_accepted.nHeight, progress);
         }
     }
