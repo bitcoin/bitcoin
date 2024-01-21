@@ -69,7 +69,7 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
 
     // Create the image with respect to the device pixel ratio
     int qr_addr_image_width = QR_IMAGE_SIZE;
-    int qr_addr_image_height = QR_IMAGE_SIZE + 20;
+    int qr_addr_image_height = QR_IMAGE_SIZE + QR_IMAGE_MARGIN;
     qreal scale = qApp->devicePixelRatio();
     QImage qrAddrImage = QImage(qr_addr_image_width * scale, qr_addr_image_height * scale, QImage::Format_RGB32);
     qrAddrImage.setDevicePixelRatio(scale);
@@ -84,16 +84,21 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
         painter.fillRect(paddedRect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
         painter.drawImage(2, 2, qrImage.scaled(QR_IMAGE_SIZE - 4, QR_IMAGE_SIZE - 4));
 
-        // calculate ideal font size
-        QFont font = GUIUtil::getFontNormal();
-        qreal font_size = GUIUtil::calculateIdealFontSize((paddedRect.width() - 20), text, font);
-        font.setPointSizeF(font_size);
+        if (!text.isEmpty()) {
 
-        // paint the address
-        painter.setFont(font);
-        painter.setPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::QR_PIXEL));
-        paddedRect.setHeight(QR_IMAGE_SIZE + 3);
-        painter.drawText(paddedRect, Qt::AlignBottom|Qt::AlignCenter, text);
+            // calculate ideal font size
+            QFont font = GUIUtil::getFontNormal();
+            font.setStretch(QFont::SemiCondensed);
+            font.setLetterSpacing(QFont::AbsoluteSpacing, 1);
+            qreal font_size = GUIUtil::calculateIdealFontSize((paddedRect.width() - QR_IMAGE_MARGIN), text, font);
+            font.setPointSizeF(font_size);
+
+            // paint the address
+            painter.setFont(font);
+            painter.setPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::QR_PIXEL));
+            paddedRect.setHeight(QR_IMAGE_SIZE + 3);
+            painter.drawText(paddedRect, Qt::AlignBottom|Qt::AlignCenter, text);
+        }
         painter.end();
     }
     setPixmap(QPixmap::fromImage(qrAddrImage));
