@@ -131,6 +131,25 @@ static void AddrManSelectByNetwork(benchmark::Bench& bench)
     });
 }
 
+static void AddrManDeleteAddresses(benchmark::Bench& bench)
+{
+    AddrMan addrman{EMPTY_NETGROUPMAN, /*deterministic=*/false, ADDRMAN_CONSISTENCY_CHECK_RATIO};
+
+    // add single I2P address to new table
+    CService i2p_service;
+    i2p_service.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p");
+    CAddress i2p_address(i2p_service, NODE_NONE);
+    i2p_address.nTime = Now<NodeSeconds>();
+    const CNetAddr source{LookupHost("252.2.2.2", false).value()};
+    addrman.Add({i2p_address}, source);
+
+    FillAddrMan(addrman);
+    const std::set<Network> network = {NET_I2P};
+    bench.run([&] {
+        (void)addrman.DeleteAddresses(network);
+    });
+}
+
 static void AddrManGetAddr(benchmark::Bench& bench)
 {
     AddrMan addrman{EMPTY_NETGROUPMAN, /*deterministic=*/false, ADDRMAN_CONSISTENCY_CHECK_RATIO};
@@ -170,6 +189,7 @@ static void AddrManAddThenGood(benchmark::Bench& bench)
 }
 
 BENCHMARK(AddrManAdd, benchmark::PriorityLevel::HIGH);
+BENCHMARK(AddrManDeleteAddresses, benchmark::PriorityLevel::HIGH);
 BENCHMARK(AddrManSelect, benchmark::PriorityLevel::HIGH);
 BENCHMARK(AddrManSelectFromAlmostEmpty, benchmark::PriorityLevel::HIGH);
 BENCHMARK(AddrManSelectByNetwork, benchmark::PriorityLevel::HIGH);
