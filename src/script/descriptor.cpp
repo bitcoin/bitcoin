@@ -242,6 +242,7 @@ public:
     {
         std::optional<CPubKey> pub = m_provider->GetPubKey(pos, arg, out, read_cache, write_cache);
         if (!pub) return std::nullopt;
+        Assert(out.pubkeys.contains(pub->GetID()));
         auto& [pubkey, suborigin] = out.origins[pub->GetID()];
         Assert(pubkey == *pub); // All subproviders must be inserting a valid origin already
         std::copy(std::begin(m_origin.fingerprint), std::end(m_origin.fingerprint), suborigin.fingerprint);
@@ -305,6 +306,7 @@ public:
         CKeyID keyid = m_pubkey.GetID();
         std::copy(keyid.begin(), keyid.begin() + sizeof(info.fingerprint), info.fingerprint);
         out.origins.emplace(keyid, std::make_pair(m_pubkey, info));
+        out.pubkeys.emplace(keyid, m_pubkey);
         return m_pubkey;
     }
     bool IsRange() const override { return false; }
@@ -449,6 +451,7 @@ public:
         if (!der) return std::nullopt;
 
         out.origins.emplace(final_extkey.pubkey.GetID(), std::make_pair(final_extkey.pubkey, info));
+        out.pubkeys.emplace(final_extkey.pubkey.GetID(), final_extkey.pubkey);
 
         if (write_cache) {
             // Only cache parent if there is any unhardened derivation
@@ -887,7 +890,6 @@ protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript>, FlatSigningProvider& out) const override
     {
         CKeyID id = keys[0].GetID();
-        out.pubkeys.emplace(id, keys[0]);
         return Vector(GetScriptForDestination(PKHash(id)));
     }
 public:
@@ -922,7 +924,6 @@ protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript>, FlatSigningProvider& out) const override
     {
         CKeyID id = keys[0].GetID();
-        out.pubkeys.emplace(id, keys[0]);
         return Vector(GetScriptForDestination(WitnessV0KeyHash(id)));
     }
 public:
@@ -958,7 +959,6 @@ protected:
     {
         std::vector<CScript> ret;
         CKeyID id = keys[0].GetID();
-        out.pubkeys.emplace(id, keys[0]);
         ret.emplace_back(GetScriptForRawPubKey(keys[0])); // P2PK
         ret.emplace_back(GetScriptForDestination(PKHash(id))); // P2PKH
         if (keys[0].IsCompressed()) {
@@ -1185,7 +1185,6 @@ protected:
         builder.Finalize(xpk);
         WitnessV1Taproot output = builder.GetOutput();
         out.tr_trees[output] = builder;
-        out.pubkeys.emplace(keys[0].GetID(), keys[0]);
         return Vector(GetScriptForDestination(output));
     }
     bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type, const DescriptorCache* cache = nullptr) const override
