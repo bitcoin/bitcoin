@@ -861,9 +861,9 @@ static RPCHelpMan submitpackage()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
             const UniValue raw_transactions = request.params[0].get_array();
-            if (raw_transactions.size() < 1 || raw_transactions.size() > MAX_PACKAGE_COUNT) {
+            if (raw_transactions.size() < 2 || raw_transactions.size() > MAX_PACKAGE_COUNT) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER,
-                                   "Array must contain between 1 and " + ToString(MAX_PACKAGE_COUNT) + " transactions.");
+                                   "Array must contain between 2 and " + ToString(MAX_PACKAGE_COUNT) + " transactions.");
             }
 
             std::vector<CTransactionRef> txns;
