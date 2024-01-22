@@ -58,6 +58,7 @@ unsigned-integer-overflow:TxConfirmStats::EstimateMedianVal
 unsigned-integer-overflow:prevector.h
 unsigned-integer-overflow:EvalScript
 unsigned-integer-overflow:xoroshiro128plusplus.h
+unsigned-integer-overflow:bitset_detail::PopCount
 implicit-integer-sign-change:CBlockPolicyEstimator::processBlockTx
 implicit-integer-sign-change:SetStdinEcho
 implicit-integer-sign-change:compressor.h
