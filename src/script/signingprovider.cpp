@@ -52,6 +52,11 @@ bool HidingSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, Tap
 {
     return m_provider->GetTaprootBuilder(output_key, builder);
 }
+std::vector<CPubKey> HidingSigningProvider::GetAggregateParticipantPubkeys(const CPubKey& pubkey) const
+{
+    if (m_hide_origin) return {};
+    return m_provider->GetAggregateParticipantPubkeys(pubkey);
+}
 
 bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
 bool FlatSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const { return LookupHelper(pubkeys, keyid, pubkey); }
@@ -82,6 +87,13 @@ bool FlatSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, Tapro
     return LookupHelper(tr_trees, output_key, builder);
 }
 
+std::vector<CPubKey> FlatSigningProvider::GetAggregateParticipantPubkeys(const CPubKey& pubkey) const
+{
+    const auto& it = aggregate_pubkeys.find(pubkey);
+    if (it == aggregate_pubkeys.end()) return {};
+    return it->second;
+}
+
 FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
 {
     scripts.merge(b.scripts);
@@ -89,6 +101,7 @@ FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
     keys.merge(b.keys);
     origins.merge(b.origins);
     tr_trees.merge(b.tr_trees);
+    aggregate_pubkeys.merge(b.aggregate_pubkeys);
     return *this;
 }
 
