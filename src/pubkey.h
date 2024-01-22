@@ -8,6 +8,7 @@
 #define BITCOIN_PUBKEY_H
 
 #include <hash.h>
+#include <secp256k1_musig.h>
 #include <serialize.h>
 #include <span.h>
 #include <uint256.h>
@@ -373,5 +374,9 @@ struct CExtPubKey {
     void DecodeWithVersion(const unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE]);
     [[nodiscard]] bool Derive(CExtPubKey& out, unsigned int nChild) const;
 };
+
+bool GetMuSig2KeyAggCache(const std::vector<CPubKey>& pubkeys, secp256k1_musig_keyagg_cache& keyagg_cache);
+std::optional<CPubKey> GetCPubKeyFromMuSig2KeyAggCache(secp256k1_musig_keyagg_cache& cache);
+std::optional<CPubKey> MuSig2AggregatePubkeys(const std::vector<CPubKey>& pubkeys);
 
 #endif // BITCOIN_PUBKEY_H
