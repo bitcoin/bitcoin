@@ -12,12 +12,12 @@ Checks EvoNodes
 from _decimal import Decimal
 from io import BytesIO
 
-from test_framework.mininode import P2PInterface
+from test_framework.p2p import P2PInterface
 from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, FromHex, hash256, msg_getmnlistd, \
     QuorumId, ser_uint256
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
-    assert_equal, p2p_port, wait_until
+    assert_equal, p2p_port
 )
 
 
@@ -35,7 +35,7 @@ class TestP2PConn(P2PInterface):
     def wait_for_mnlistdiff(self, timeout=30):
         def received_mnlistdiff():
             return self.last_mnlistdiff is not None
-        return wait_until(received_mnlistdiff, timeout=timeout)
+        return self.wait_until(received_mnlistdiff, timeout=timeout)
 
     def getmnlistdiff(self, baseBlockHash, blockHash):
         msg = msg_getmnlistd(baseBlockHash, blockHash)
@@ -106,7 +106,7 @@ class LLMQEvoNodesTest(DashTestFramework):
             self.dynamically_evo_update_service(evo_info)
 
         self.log.info("Test llmq_platform are formed only with EvoNodes")
-        for i in range(3):
+        for _ in range(3):
             quorum_i_hash = self.mine_quorum(llmq_type_name='llmq_test_platform', llmq_type=106, expected_connections=2, expected_members=3, expected_contributions=3, expected_complaints=0, expected_justifications=0, expected_commitments=3 )
             self.test_quorum_members_are_evo_nodes(quorum_i_hash, llmq_type=106)
 

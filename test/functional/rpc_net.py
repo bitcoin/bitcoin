@@ -7,6 +7,11 @@
 Tests correspond to code in rpc/net.cpp.
 """
 
+from test_framework.p2p import P2PInterface
+import test_framework.messages
+from test_framework.messages import (
+    NODE_NETWORK,
+)
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
     assert_equal,
@@ -14,12 +19,6 @@ from test_framework.util import (
     assert_greater_than,
     assert_raises_rpc_error,
     p2p_port,
-    wait_until,
-)
-from test_framework.mininode import P2PInterface
-import test_framework.messages
-from test_framework.messages import (
-    NODE_NETWORK,
 )
 
 
@@ -45,7 +44,7 @@ class NetTest(DashTestFramework):
         # Wait for one ping/pong to finish so that we can be sure that there is no chatter between nodes for some time
         # Especially the exchange of messages like getheaders and friends causes test failures here
         self.nodes[0].ping()
-        wait_until(lambda: all(['pingtime' in n for n in self.nodes[0].getpeerinfo()]))
+        self.wait_until(lambda: all(['pingtime' in n for n in self.nodes[0].getpeerinfo()]))
         self.log.info('Connect nodes both way')
         self.connect_nodes(0, 1)
         self.connect_nodes(1, 0)
@@ -87,8 +86,8 @@ class NetTest(DashTestFramework):
         # the bytes sent/received should change
         # note ping and pong are 32 bytes each
         self.nodes[0].ping()
-        wait_until(lambda: (self.nodes[0].getnettotals()['totalbytessent'] >= net_totals_after['totalbytessent'] + 32 * 2), timeout=1)
-        wait_until(lambda: (self.nodes[0].getnettotals()['totalbytesrecv'] >= net_totals_after['totalbytesrecv'] + 32 * 2), timeout=1)
+        self.wait_until(lambda: (self.nodes[0].getnettotals()['totalbytessent'] >= net_totals_after['totalbytessent'] + 32 * 2), timeout=1)
+        self.wait_until(lambda: (self.nodes[0].getnettotals()['totalbytesrecv'] >= net_totals_after['totalbytesrecv'] + 32 * 2), timeout=1)
 
         peer_info_after_ping = self.nodes[0].getpeerinfo()
         for before, after in zip(peer_info, peer_info_after_ping):
@@ -102,8 +101,8 @@ class NetTest(DashTestFramework):
         self.nodes[0].setnetworkactive(state=False)
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], False)
         # Wait a bit for all sockets to close
-        wait_until(lambda: self.nodes[0].getnetworkinfo()['connections'] == 0, timeout=3)
-        wait_until(lambda: self.nodes[1].getnetworkinfo()['connections'] == 0, timeout=3)
+        self.wait_until(lambda: self.nodes[0].getnetworkinfo()['connections'] == 0, timeout=3)
+        self.wait_until(lambda: self.nodes[1].getnetworkinfo()['connections'] == 0, timeout=3)
 
         self.nodes[0].setnetworkactive(state=True)
         self.log.info('Connect nodes both way')
@@ -124,7 +123,7 @@ class NetTest(DashTestFramework):
         self.log.info('Test extended connections info')
         self.connect_nodes(1, 2)
         self.nodes[1].ping()
-        wait_until(lambda: all(['pingtime' in n for n in self.nodes[1].getpeerinfo()]))
+        self.wait_until(lambda: all(['pingtime' in n for n in self.nodes[1].getpeerinfo()]))
         assert_equal(self.nodes[1].getnetworkinfo()['connections'], 3)
         assert_equal(self.nodes[1].getnetworkinfo()['inboundconnections'], 1)
         assert_equal(self.nodes[1].getnetworkinfo()['outboundconnections'], 2)

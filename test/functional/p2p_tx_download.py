@@ -15,14 +15,13 @@ from test_framework.messages import (
     msg_inv,
     msg_notfound,
 )
-from test_framework.mininode import (
+from test_framework.p2p import (
     P2PInterface,
-    mininode_lock,
+    p2p_lock,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    wait_until,
 )
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 
@@ -68,12 +67,12 @@ class TxDownloadTest(BitcoinTestFramework):
 
         def getdata_found(peer_index):
             p = self.nodes[0].p2ps[peer_index]
-            with mininode_lock:
+            with p2p_lock:
                 return p.last_message.get("getdata") and p.last_message["getdata"].inv[-1].hash == txid
 
         while outstanding_peer_index:
             self.bump_mocktime(MAX_GETDATA_INBOUND_WAIT)
-            wait_until(lambda: any(getdata_found(i) for i in outstanding_peer_index))
+            self.wait_until(lambda: any(getdata_found(i) for i in outstanding_peer_index))
             for i in outstanding_peer_index:
                 if getdata_found(i):
                     outstanding_peer_index.remove(i)
@@ -127,7 +126,7 @@ class TxDownloadTest(BitcoinTestFramework):
 
         p = self.nodes[0].p2ps[0]
 
-        with mininode_lock:
+        with p2p_lock:
             p.tx_getdata_count = 0
 
         p.send_message(msg_inv([CInv(t=1, h=i) for i in txids]))
@@ -136,21 +135,21 @@ class TxDownloadTest(BitcoinTestFramework):
             self.bump_mocktime(1)
             return p.tx_getdata_count >= target
 
-        wait_until(lambda: wait_for_tx_getdata(MAX_GETDATA_IN_FLIGHT), lock=mininode_lock)
+        p.wait_until(lambda: wait_for_tx_getdata(MAX_GETDATA_IN_FLIGHT))
 
-        with mininode_lock:
+        with p2p_lock:
             assert_equal(p.tx_getdata_count, MAX_GETDATA_IN_FLIGHT)
 
         self.log.info("Now check that if we send a NOTFOUND for a transaction, we'll get one more request")
         p.send_message(msg_notfound(vec=[CInv(t=1, h=txids[0])]))
-        wait_until(lambda: wait_for_tx_getdata(MAX_GETDATA_IN_FLIGHT + 1), timeout=10, lock=mininode_lock)
-        with mininode_lock:
+        p.wait_until(lambda: wait_for_tx_getdata(MAX_GETDATA_IN_FLIGHT + 1), timeout=10)
+        with p2p_lock:
             assert_equal(p.tx_getdata_count, MAX_GETDATA_IN_FLIGHT + 1)
 
         WAIT_TIME = TX_EXPIRY_INTERVAL // 2 + TX_EXPIRY_INTERVAL
         self.log.info("if we wait about {} minutes, we should eventually get more requests".format(WAIT_TIME / 60))
         self.bump_mocktime(WAIT_TIME)
-        wait_until(lambda: wait_for_tx_getdata(MAX_GETDATA_IN_FLIGHT + 2))
+        p.wait_until(lambda: wait_for_tx_getdata(MAX_GETDATA_IN_FLIGHT + 2))
 
     def test_spurious_notfound(self):
         self.log.info('Check that spurious notfound is ignored')
@@ -160,7 +159,7 @@ class TxDownloadTest(BitcoinTestFramework):
         # Setup the p2p connections
         self.peers = []
         for node in self.nodes:
-            for i in range(NUM_INBOUND):
+            for _ in range(NUM_INBOUND):
                 self.peers.append(node.add_p2p_connection(TestP2PConn()))
 
         self.log.info("Nodes are setup with {} incoming connections each".format(NUM_INBOUND))

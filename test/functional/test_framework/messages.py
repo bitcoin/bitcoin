@@ -33,7 +33,7 @@ import dash_hash
 
 MIN_VERSION_SUPPORTED = 60001
 MY_VERSION = 70230  # MNLISTDIFF_CHAINLOCKS_PROTO_VERSION
-MY_SUBVERSION = b"/python-mininode-tester:0.0.3%s/"
+MY_SUBVERSION = b"/python-p2p-tester:0.0.3%s/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
 MAX_LOCATOR_SZ = 101
@@ -110,7 +110,7 @@ def deser_uint256(f):
 
 def ser_uint256(u):
     rs = b""
-    for i in range(8):
+    for _ in range(8):
         rs += struct.pack("<I", u & 0xFFFFFFFF)
         u >>= 32
     return rs
@@ -139,7 +139,7 @@ def uint256_from_compact(c):
 def deser_vector(f, c, deser_function_name=None):
     nit = deser_compact_size(f)
     r = []
-    for i in range(nit):
+    for _ in range(nit):
         t = c()
         if deser_function_name:
             getattr(t, deser_function_name)(f)
@@ -164,7 +164,7 @@ def ser_vector(l, ser_function_name=None):
 def deser_uint256_vector(f):
     nit = deser_compact_size(f)
     r = []
-    for i in range(nit):
+    for _ in range(nit):
         t = deser_uint256(f)
         r.append(t)
     return r
@@ -852,7 +852,7 @@ class P2PHeaderAndShortIDs:
         self.header.deserialize(f)
         self.nonce = struct.unpack("<Q", f.read(8))[0]
         self.shortids_length = deser_compact_size(f)
-        for i in range(self.shortids_length):
+        for _ in range(self.shortids_length):
             # shortids are defined to be 6 bytes in the spec, so append
             # two zero bytes and read it in as an 8-byte number
             self.shortids.append(struct.unpack("<Q", f.read(6) + b'\x00\x00')[0])
@@ -949,7 +949,7 @@ class BlockTransactionsRequest:
     def deserialize(self, f):
         self.blockhash = deser_uint256(f)
         indexes_length = deser_compact_size(f)
-        for i in range(indexes_length):
+        for _ in range(indexes_length):
             self.indexes.append(deser_compact_size(f))
 
     def serialize(self):
@@ -2171,26 +2171,26 @@ class msg_mnlistdiff:
         self.cbTx.rehash()
         self.deletedMNs = deser_uint256_vector(f)
         self.mnList = []
-        for i in range(deser_compact_size(f)):
+        for _ in range(deser_compact_size(f)):
             e = CSimplifiedMNListEntry()
             e.deserialize(f)
             self.mnList.append(e)
 
         self.deletedQuorums = []
-        for i in range(deser_compact_size(f)):
+        for _ in range(deser_compact_size(f)):
             llmqType = struct.unpack("<B", f.read(1))[0]
             quorumHash = deser_uint256(f)
             self.deletedQuorums.append(QuorumId(llmqType, quorumHash))
         self.newQuorums = []
-        for i in range(deser_compact_size(f)):
+        for _ in range(deser_compact_size(f)):
             qc = CFinalCommitment()
             qc.deserialize(f)
             self.newQuorums.append(qc)
         self.quorumsCLSigs = {}
-        for i in range(deser_compact_size(f)):
+        for _ in range(deser_compact_size(f)):
             signature = f.read(96)
             idx_set = set()
-            for j in range(deser_compact_size(f)):
+            for _ in range(deser_compact_size(f)):
                 set_element = struct.unpack('H', f.read(2))[0]
                 idx_set.add(set_element)
             self.quorumsCLSigs[signature] = idx_set

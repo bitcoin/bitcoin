@@ -14,11 +14,10 @@ from test_framework.messages import (
     CTxIn,
     CTxOut,
 )
-from test_framework.mininode import P2PDataStore
+from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    wait_until,
 )
 from data import invalid_txs
 
@@ -182,7 +181,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
             # This TX has appeared in a block instead of being broadcasted via the mempool
             expected_mempool.remove(tx_withhold.hash)
 
-        wait_until(lambda: 1 == len(node.getpeerinfo()), timeout=12)  # p2ps[1] is no longer connected
+        self.wait_until(lambda: 1 == len(node.getpeerinfo()), timeout=12)  # p2ps[1] is no longer connected
         assert_equal(expected_mempool, set(node.getrawmempool()))
 
         self.log.info('Test orphan pool overflow')

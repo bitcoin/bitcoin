@@ -11,12 +11,12 @@ Checks DIP3 for v19
 '''
 from io import BytesIO
 
-from test_framework.mininode import P2PInterface
+from test_framework.p2p import P2PInterface
 from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, FromHex, hash256, msg_getmnlistd, \
     QuorumId, ser_uint256
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
-    assert_equal, wait_until
+    assert_equal
 )
 
 
@@ -31,7 +31,7 @@ class TestP2PConn(P2PInterface):
     def wait_for_mnlistdiff(self, timeout=30):
         def received_mnlistdiff():
             return self.last_mnlistdiff is not None
-        return wait_until(received_mnlistdiff, timeout=timeout)
+        return self.wait_until(received_mnlistdiff, timeout=timeout)
 
     def getmnlistdiff(self, base_block_hash, block_hash):
         msg = msg_getmnlistd(base_block_hash, block_hash)

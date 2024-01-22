@@ -35,8 +35,8 @@ from .messages import (
     ser_string,
 )
 from .script import hash160
+from .p2p import NetworkThread
 from .test_node import TestNode
-from .mininode import NetworkThread
 from .util import (
     PortSeed,
     MAX_NODES,
@@ -813,6 +813,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.mocktime = TIME_GENESIS_BLOCK
         for node in self.nodes:
             node.mocktime = self.mocktime
+
+    def wait_until(self, test_function, timeout=60, lock=None):
+        return wait_until(test_function, timeout=timeout, lock=lock, timeout_factor=self.options.timeout_factor)
 
     # Private helper methods. These should not be accessed by the subclass test scripts.
 

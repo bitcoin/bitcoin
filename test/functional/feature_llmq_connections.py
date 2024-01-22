@@ -13,7 +13,7 @@ Checks intra quorum connections
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_greater_than_or_equal, wait_until
+from test_framework.util import assert_greater_than_or_equal
 
 class LLMQConnections(DashTestFramework):
     def set_test_params(self):
@@ -53,17 +53,17 @@ class LLMQConnections(DashTestFramework):
 
         self.log.info("checking that all MNs got probed")
         for mn in self.get_quorum_masternodes(q):
-            wait_until(lambda: self.get_mn_probe_count(mn.node, q, False) == 4)
+            self.wait_until(lambda: self.get_mn_probe_count(mn.node, q, False) == 4)
 
         self.log.info("checking that probes age")
         self.bump_mocktime(self.MAX_AGE)
         for mn in self.get_quorum_masternodes(q):
-            wait_until(lambda: self.get_mn_probe_count(mn.node, q, False) == 0)
+            self.wait_until(lambda: self.get_mn_probe_count(mn.node, q, False) == 0)
 
         self.log.info("mine a new quorum and re-check probes")
         q = self.mine_quorum()
         for mn in self.get_quorum_masternodes(q):
-            wait_until(lambda: self.get_mn_probe_count(mn.node, q, True) == 4)
+            self.wait_until(lambda: self.get_mn_probe_count(mn.node, q, True) == 4)
 
         self.log.info("Activating SPORK_21_QUORUM_ALL_CONNECTED")
         self.nodes[0].sporkupdate("SPORK_21_QUORUM_ALL_CONNECTED", 0)
@@ -121,7 +121,7 @@ class LLMQConnections(DashTestFramework):
         for mn in self.mninfo:
             mn.node.setnetworkactive(False)
         for mn in self.mninfo:
-            wait_until(lambda: len(mn.node.getpeerinfo()) == 0)
+            self.wait_until(lambda: len(mn.node.getpeerinfo()) == 0)
         for mn in self.mninfo:
             mn.node.setnetworkactive(True)
         self.bump_mocktime(60)
@@ -138,7 +138,7 @@ class LLMQConnections(DashTestFramework):
         # wait for ping/pong so that we can be sure that spork propagation works
         time.sleep(1) # needed to make sure we don't check before the ping is actually sent (fPingQueued might be true but SendMessages still not called)
         for i in range(1, len(self.nodes)):
-            wait_until(lambda: all('pingwait' not in peer for peer in self.nodes[i].getpeerinfo()))
+            self.wait_until(lambda: all('pingwait' not in peer for peer in self.nodes[i].getpeerinfo()))
 
     def get_mn_connection_count(self, node):
         peers = node.getpeerinfo()

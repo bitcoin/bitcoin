@@ -19,7 +19,7 @@ from test_framework.messages import (
     CBlockHeader,
     BLOCK_HEADER_SIZE,
 )
-from test_framework.mininode import P2PDataStore
+from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -45,7 +45,7 @@ class MiningTest(BitcoinTestFramework):
 
     def mine_chain(self):
         self.log.info('Create some old blocks')
-        for _ in range(0, 200):
+        for _ in range(200):
             self.bump_mocktime(156)
             self.nodes[0].generate(1)
         mining_info = self.nodes[0].getmininginfo()

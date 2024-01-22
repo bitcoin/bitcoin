@@ -11,7 +11,6 @@ from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
     assert_equal,
     force_finish_mnsync,
-    wait_until,
 )
 
 # Linux allow all characters other than \x00
@@ -70,7 +69,7 @@ class NotificationsTest(DashTestFramework):
         blocks = self.nodes[1].generatetoaddress(block_count, self.nodes[1].getnewaddress() if self.is_wallet_compiled() else ADDRESS_BCRT1_UNSPENDABLE)
 
         # wait at most 10 seconds for expected number of files before reading the content
-        wait_until(lambda: len(os.listdir(self.blocknotify_dir)) == block_count, timeout=10)
+        self.wait_until(lambda: len(os.listdir(self.blocknotify_dir)) == block_count, timeout=10)
 
         # directory content should equal the generated blocks hashes
         assert_equal(sorted(blocks), sorted(os.listdir(self.blocknotify_dir)))
@@ -78,7 +77,7 @@ class NotificationsTest(DashTestFramework):
         if self.is_wallet_compiled():
             self.log.info("test -walletnotify")
             # wait at most 10 seconds for expected number of files before reading the content
-            wait_until(lambda: len(os.listdir(self.walletnotify_dir)) == block_count, timeout=10)
+            self.wait_until(lambda: len(os.listdir(self.walletnotify_dir)) == block_count, timeout=10)
 
             # directory content should equal the generated transaction hashes
             txids_rpc = list(map(lambda t: notify_outputname(self.wallet, t['txid']), self.nodes[1].listtransactions("*", block_count)))
@@ -94,7 +93,7 @@ class NotificationsTest(DashTestFramework):
             force_finish_mnsync(self.nodes[1])
             self.connect_nodes(0, 1)
 
-            wait_until(lambda: len(os.listdir(self.walletnotify_dir)) == block_count, timeout=10)
+            self.wait_until(lambda: len(os.listdir(self.walletnotify_dir)) == block_count, timeout=10)
 
             # directory content should equal the generated transaction hashes
             txids_rpc = list(map(lambda t: notify_outputname(self.wallet, t['txid']), self.nodes[1].listtransactions("*", block_count)))
@@ -137,7 +136,7 @@ class NotificationsTest(DashTestFramework):
                 self.wait_for_instantlock(txid, self.nodes[1])
 
             # wait at most 10 seconds for expected number of files before reading the content
-            wait_until(lambda: len(os.listdir(self.instantsendnotify_dir)) == tx_count, timeout=10)
+            self.wait_until(lambda: len(os.listdir(self.instantsendnotify_dir)) == tx_count, timeout=10)
 
             # directory content should equal the generated transaction hashes
             txids_rpc = list(map(lambda t: notify_outputname(self.wallet, t['txid']), self.nodes[1].listtransactions("*", tx_count)))

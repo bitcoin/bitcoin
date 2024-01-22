@@ -11,9 +11,9 @@ from test_framework.messages import (
     msg_addrv2,
     NODE_NETWORK,
 )
-from test_framework.mininode import P2PInterface
+from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, wait_until
+from test_framework.util import assert_equal
 
 
 class AddrReceiver(P2PInterface):
@@ -30,7 +30,7 @@ class AddrReceiver(P2PInterface):
         self.addrv2_received_and_checked = True
 
     def wait_for_addrv2(self):
-        wait_until(lambda: "addrv2" in self.last_message)
+        self.wait_until(lambda: "addrv2" in self.last_message)
 
 
 class AddrTest(BitcoinTestFramework):

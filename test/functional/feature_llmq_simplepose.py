@@ -13,7 +13,7 @@ Checks simple PoSe system based on LLMQ commitments
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, force_finish_mnsync, p2p_port, wait_until
+from test_framework.util import assert_equal, force_finish_mnsync, p2p_port
 
 
 class LLMQSimplePoSeTest(DashTestFramework):
@@ -65,7 +65,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def isolate_mn(self, mn):
         mn.node.setnetworkactive(False)
-        wait_until(lambda: mn.node.getconnectioncount() == 0)
+        self.wait_until(lambda: mn.node.getconnectioncount() == 0)
         return True, True
 
     def close_mn_port(self, mn):
@@ -87,7 +87,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         return False, True
 
     def test_no_banning(self, expected_connections=None):
-        for i in range(3):
+        for _ in range(3):
             self.mine_quorum(expected_connections=expected_connections)
         for mn in self.mninfo:
             assert not self.check_punished(mn) and not self.check_banned(mn)
@@ -157,7 +157,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         mninfos_online = self.mninfo.copy()
         mninfos_valid = self.mninfo.copy()
         expected_contributors = len(mninfos_online)
-        for i in range(2):
+        for _ in range(2):
             mn = mninfos_valid.pop()
             went_offline, instant_ban = invalidate_proc(mn)
             if went_offline:
@@ -172,7 +172,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             else:
                 # It's ok to miss probes/quorum connections up to 5 times.
                 # 6th time is when it should be banned for sure.
-                for i in range(6):
+                for _ in range(6):
                     self.reset_probe_timeouts()
                     self.mine_quorum_no_check(expected_contributors - 1, mninfos_online)
 
@@ -205,7 +205,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Isolate and re-connect all MNs (otherwise there might be open connections with no MNAUTH for MNs which were banned before)
         for mn in self.mninfo:
             mn.node.setnetworkactive(False)
-            wait_until(lambda: mn.node.getconnectioncount() == 0)
+            self.wait_until(lambda: mn.node.getconnectioncount() == 0)
             mn.node.setnetworkactive(True)
             force_finish_mnsync(mn.node)
             self.connect_nodes(mn.node.index, 0)

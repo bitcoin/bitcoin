@@ -11,7 +11,7 @@ Checks LLMQs signing sessions
 '''
 
 from test_framework.messages import CSigShare, msg_qsigshare, uint256_to_string
-from test_framework.mininode import P2PInterface
+from test_framework.p2p import P2PInterface
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync, hex_str_to_bytes, wait_until
 
@@ -52,7 +52,7 @@ class LLMQSigningTest(DashTestFramework):
             return True
 
         def wait_for_sigs(hasrecsigs, isconflicting1, isconflicting2, timeout):
-            wait_until(lambda: check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout)
+            self.wait_until(lambda: check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout)
 
         def assert_sigs_nochange(hasrecsigs, isconflicting1, isconflicting2, timeout):
             assert not wait_until(lambda: not check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout, do_assert = False)
@@ -178,7 +178,7 @@ class LLMQSigningTest(DashTestFramework):
             q = self.nodes[0].quorum('selectquorum', 104, id)
             mn = self.get_mninfo(q['recoveryMembers'][0])
             mn.node.setnetworkactive(False)
-            wait_until(lambda: mn.node.getconnectioncount() == 0)
+            self.wait_until(lambda: mn.node.getconnectioncount() == 0)
             for i in range(4):
                 self.mninfo[i].node.quorum("sign", 104, id, msgHash)
             assert_sigs_nochange(False, False, False, 3)
@@ -190,7 +190,7 @@ class LLMQSigningTest(DashTestFramework):
             self.bump_mocktime(1)  # need this to bypass quorum connection retry timeout
             wait_until(lambda: mn.node.getconnectioncount() == self.llmq_size, timeout=10, sleep=2)
             mn.node.ping()
-            wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
+            self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
             # Let 2 seconds pass so that the next node is used for recovery, which should succeed
             self.bump_mocktime(2)
             wait_for_sigs(True, False, True, 2)

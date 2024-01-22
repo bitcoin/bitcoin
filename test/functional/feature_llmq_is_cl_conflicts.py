@@ -14,7 +14,7 @@ import struct
 
 from test_framework.blocktools import create_block_with_mnpayments
 from test_framework.messages import CInv, CTransaction, FromHex, hash256, msg_clsig, msg_inv, ser_string, ToHex, uint256_from_str
-from test_framework.mininode import P2PInterface
+from test_framework.p2p import P2PInterface
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes, wait_until
 

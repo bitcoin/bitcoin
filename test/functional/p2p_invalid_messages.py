@@ -15,13 +15,12 @@ from test_framework.messages import (
     msg_inv,
     MSG_TX,
 )
-from test_framework.mininode import (
+from test_framework.p2p import (
     P2PDataStore, P2PInterface
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    wait_until,
 )
 
 MSG_LIMIT = 3 * 1024 * 1024  # 3MB, per MAX_PROTOCOL_MESSAGE_LENGTH
@@ -66,7 +65,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         before = int(self.nodes[0].getnettotals()['totalbytesrecv'])
         conn.send_raw_message(msg[:cut_pos])
         # Wait until node has processed the first half of the message
-        wait_until(lambda: int(self.nodes[0].getnettotals()['totalbytesrecv']) != before)
+        self.wait_until(lambda: int(self.nodes[0].getnettotals()['totalbytesrecv']) != before)
         middle = int(self.nodes[0].getnettotals()['totalbytesrecv'])
         # If this assert fails, we've hit an unlikely race
         # where the test framework sent a message in between the two halves

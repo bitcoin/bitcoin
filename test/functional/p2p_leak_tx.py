@@ -5,7 +5,7 @@
 """Test that we don't leak txs to inbound peers that we haven't yet announced to"""
 
 from test_framework.messages import msg_getdata, CInv, MSG_TX
-from test_framework.mininode import P2PDataStore
+from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,

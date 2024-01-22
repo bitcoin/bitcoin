@@ -214,9 +214,9 @@ class DashGovernanceTest (DashTestFramework):
         isolated.generate(1)
         self.bump_mocktime(1)
         # The isolated "winner" should submit new trigger and vote for it
-        wait_until(lambda: len(isolated.gobject("list", "valid", "triggers")) == 1, timeout=5)
+        self.wait_until(lambda: len(isolated.gobject("list", "valid", "triggers")) == 1, timeout=5)
         isolated_trigger_hash = list(isolated.gobject("list", "valid", "triggers").keys())[0]
-        wait_until(lambda: list(isolated.gobject("list", "valid", "triggers").values())[0]['YesCount'] == 1, timeout=5)
+        self.wait_until(lambda: list(isolated.gobject("list", "valid", "triggers").values())[0]['YesCount'] == 1, timeout=5)
         more_votes = wait_until(lambda: list(isolated.gobject("list", "valid", "triggers").values())[0]['YesCount'] > 1, timeout=5, do_assert=False)
         assert_equal(more_votes, False)
 
@@ -236,9 +236,9 @@ class DashGovernanceTest (DashTestFramework):
         self.bump_mocktime(1)
 
         # There is now new "winner" who should submit new trigger and vote for it
-        wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) == 1, timeout=5)
+        self.wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) == 1, timeout=5)
         winning_trigger_hash = list(self.nodes[0].gobject("list", "valid", "triggers").keys())[0]
-        wait_until(lambda: list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]['YesCount'] == 1, timeout=5)
+        self.wait_until(lambda: list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]['YesCount'] == 1, timeout=5)
         more_votes = wait_until(lambda: list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]['YesCount'] > 1, timeout=5, do_assert=False)
         assert_equal(more_votes, False)
 
@@ -254,7 +254,7 @@ class DashGovernanceTest (DashTestFramework):
         self.bump_mocktime(1)
 
         # Every non-isolated MN should vote for the same trigger now, no new triggers should be created
-        wait_until(lambda: list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]['YesCount'] == self.mn_count - 1, timeout=5)
+        self.wait_until(lambda: list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]['YesCount'] == self.mn_count - 1, timeout=5)
         more_triggers = wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) > 1, timeout=5, do_assert=False)
         assert_equal(more_triggers, False)
 
@@ -272,11 +272,11 @@ class DashGovernanceTest (DashTestFramework):
             node.mnsync("reset")
             # fast-forward to governance sync
             node.mnsync("next")
-            wait_until(lambda: sync_gov(node))
+            self.wait_until(lambda: sync_gov(node))
 
         # Should see two triggers now
-        wait_until(lambda: len(isolated.gobject("list", "valid", "triggers")) == 2, timeout=5)
-        wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) == 2, timeout=5)
+        self.wait_until(lambda: len(isolated.gobject("list", "valid", "triggers")) == 2, timeout=5)
+        self.wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) == 2, timeout=5)
         more_triggers = wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) > 2, timeout=5, do_assert=False)
         assert_equal(more_triggers, False)
 
@@ -286,8 +286,8 @@ class DashGovernanceTest (DashTestFramework):
         self.sync_blocks()
 
         # Should see NO votes on both triggers now
-        wait_until(lambda: self.nodes[0].gobject("list", "valid", "triggers")[winning_trigger_hash]['NoCount'] == 1, timeout=5)
-        wait_until(lambda: self.nodes[0].gobject("list", "valid", "triggers")[isolated_trigger_hash]['NoCount'] == self.mn_count - 1, timeout=5)
+        self.wait_until(lambda: self.nodes[0].gobject("list", "valid", "triggers")[winning_trigger_hash]['NoCount'] == 1, timeout=5)
+        self.wait_until(lambda: self.nodes[0].gobject("list", "valid", "triggers")[isolated_trigger_hash]['NoCount'] == self.mn_count - 1, timeout=5)
 
         block_count = self.nodes[0].getblockcount()
         n = sb_cycle - block_count % sb_cycle
@@ -317,7 +317,7 @@ class DashGovernanceTest (DashTestFramework):
         n = sb_cycle - block_count % sb_cycle
 
         # Move remaining n blocks until the next Superblock
-        for i in range(n):
+        for _ in range(n):
             self.nodes[0].generate(1)
             self.bump_mocktime(1)
             self.sync_blocks()

@@ -12,7 +12,7 @@ from test_framework.messages import (
     CTransaction,
     FromHex,
 )
-from test_framework.mininode import P2PDataStore
+from test_framework.p2p import P2PDataStore
 from test_framework.script import (
     CScript,
     OP_TRUE,
@@ -22,7 +22,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     p2p_port,
-    wait_until,
 )
 
 
@@ -107,7 +106,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.sync_all()
 
         self.log.debug("Create a connection from a forcerelay peer that rebroadcasts raw txs")
-        # A python mininode is needed to send the raw transaction directly. If a full node was used, it could only
+        # A test framework p2p connection is needed to send the raw transaction directly. If a full node was used, it could only
         # rebroadcast via the inv-getdata mechanism. However, even for forcerelay connections, a full node would
         # currently not request a txid that is already in the mempool.
         self.restart_node(1, extra_args=["-whitelist=forcerelay@127.0.0.1"])
@@ -139,7 +138,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
 
         with self.nodes[1].assert_debug_log(["Force relaying tx {} from peer=0".format(txid)]):
             p2p_rebroadcast_wallet.send_txs_and_test([tx], self.nodes[1])
-            wait_until(in_mempool)
+            self.wait_until(in_mempool)
 
         self.log.debug("Check that node[1] will not send an invalid tx to node[0]")
         tx.vout[0].nValue += 1

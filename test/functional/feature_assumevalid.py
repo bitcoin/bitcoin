@@ -45,10 +45,10 @@ from test_framework.messages import (
     msg_block,
     msg_headers,
 )
-from test_framework.mininode import P2PInterface
+from test_framework.p2p import P2PInterface
 from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (assert_equal, set_node_times, wait_until)
+from test_framework.util import (assert_equal, set_node_times)
 
 
 class BaseNode(P2PInterface):
@@ -109,7 +109,7 @@ class AssumeValidTest(BitcoinTestFramework):
         height += 1
 
         # Bury the block 100 deep so the coinbase output is spendable
-        for i in range(100):
+        for _ in range(100):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.solve()
             self.blocks.append(block)
@@ -135,7 +135,7 @@ class AssumeValidTest(BitcoinTestFramework):
         height += 1
 
         # Bury the assumed valid block 8400 deep (Dash needs 4x as much blocks to allow -assumevalid to work)
-        for i in range(8400):
+        for _ in range(8400):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.nVersion = 4
             block.solve()
@@ -172,7 +172,7 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Send blocks to node0. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p0)
-        wait_until(lambda: self.nodes[0].getblockcount() >= COINBASE_MATURITY + 1)
+        self.wait_until(lambda: self.nodes[0].getblockcount() >= COINBASE_MATURITY + 1)
         assert_equal(self.nodes[0].getblockcount(), COINBASE_MATURITY + 1)
 
         # Send 200 blocks to node1. All blocks, including block 102, will be accepted.
@@ -184,7 +184,7 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Send blocks to node2. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p2)
-        wait_until(lambda: self.nodes[2].getblockcount() >= COINBASE_MATURITY + 1)
+        self.wait_until(lambda: self.nodes[2].getblockcount() >= COINBASE_MATURITY + 1)
         assert_equal(self.nodes[2].getblockcount(), COINBASE_MATURITY + 1)
 
 

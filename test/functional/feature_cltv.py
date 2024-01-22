@@ -10,7 +10,7 @@ Test that the CHECKLOCKTIMEVERIFY soft-fork activates at (regtest) block height
 
 from test_framework.blocktools import create_coinbase, create_block, create_transaction
 from test_framework.messages import CTransaction, msg_block, ToHex
-from test_framework.mininode import P2PInterface
+from test_framework.p2p import P2PInterface
 from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP, CScriptNum
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
