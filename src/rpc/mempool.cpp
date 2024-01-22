@@ -855,8 +855,8 @@ static RPCHelpMan submitpackage()
             },
         },
         RPCExamples{
-            HelpExampleCli("testmempoolaccept", "[rawtx1, rawtx2]") +
-            HelpExampleCli("submitpackage", "[rawtx1, rawtx2]")
+            HelpExampleRpc("submitpackage", R"(["rawtx1", "rawtx2"])") +
+            HelpExampleCli("submitpackage", R"('["rawtx1", "rawtx2"]')")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
