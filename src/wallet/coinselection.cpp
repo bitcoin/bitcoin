@@ -262,7 +262,6 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
                                   std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000, size_t max_input_weight = MAX_STANDARD_TX_WEIGHT)
 {
     std::vector<char> vfIncluded;
-    size_t total_input_weight{0};
 
     // Worst case "best" approximation is just all of the groups.
     vfBest.assign(groups.size(), true);
@@ -273,6 +272,7 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
         vfIncluded.assign(groups.size(), false);
         CAmount nTotal = 0;
         bool fReachedTarget = false;
+        size_t total_input_weight{0};
         for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
         {
             for (unsigned int i = 0; i < groups.size(); i++)
