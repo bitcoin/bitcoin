@@ -73,7 +73,7 @@ static std::vector<std::vector<std::string>> g_rpcauth;
 static std::map<std::string, std::set<std::string>> g_rpc_whitelist;
 static bool g_rpc_whitelist_default = false;
 
-static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const UniValue& id)
+static void JSONErrorReply(HTTPRequest* req, UniValue objError, UniValue id)
 {
     // Send error reply from json-rpc error object
     int nStatus = HTTP_INTERNAL_SERVER_ERROR;
@@ -84,7 +84,7 @@ static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const Uni
     else if (code == RPC_METHOD_NOT_FOUND)
         nStatus = HTTP_NOT_FOUND;
 
-    std::string strReply = JSONRPCReply(NullUniValue, objError, id);
+    std::string strReply = JSONRPCReplyObj(NullUniValue, std::move(objError), std::move(id)).write() + "\n";
 
     req->WriteHeader("Content-Type", "application/json");
     req->WriteReply(nStatus, strReply);
@@ -203,7 +203,7 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
             UniValue result = tableRPC.execute(jreq);
 
             // Send reply
-            strReply = JSONRPCReply(result, NullUniValue, jreq.id);
+            strReply = JSONRPCReplyObj(std::move(result), NullUniValue, jreq.id).write() + "\n";
 
         // array of requests
         } else if (valRequest.isArray()) {
@@ -230,8 +230,8 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
 
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strReply);
-    } catch (const UniValue& objError) {
-        JSONErrorReply(req, objError, jreq.id);
+    } catch (UniValue& e) {
+        JSONErrorReply(req, std::move(e), jreq.id);
         return false;
     } catch (const std::exception& e) {
         JSONErrorReply(req, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id);

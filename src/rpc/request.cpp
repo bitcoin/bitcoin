@@ -37,22 +37,16 @@ UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params,
     return request;
 }
 
-UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id)
+UniValue JSONRPCReplyObj(UniValue result, UniValue error, UniValue id)
 {
     UniValue reply(UniValue::VOBJ);
     if (!error.isNull())
         reply.pushKV("result", NullUniValue);
     else
-        reply.pushKV("result", result);
-    reply.pushKV("error", error);
-    reply.pushKV("id", id);
+        reply.pushKV("result", std::move(result));
+    reply.pushKV("error", std::move(error));
+    reply.pushKV("id", std::move(id));
     return reply;
-}
-
-std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id)
-{
-    UniValue reply = JSONRPCReplyObj(result, error, id);
-    return reply.write() + "\n";
 }
 
 UniValue JSONRPCError(int code, const std::string& message)

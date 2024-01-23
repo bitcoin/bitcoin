@@ -302,7 +302,7 @@ public:
         }
         addresses.pushKV("total", total);
         result.pushKV("addresses_known", addresses);
-        return JSONRPCReplyObj(result, NullUniValue, 1);
+        return JSONRPCReplyObj(std::move(result), NullUniValue, 1);
     }
 };
 
@@ -371,7 +371,7 @@ public:
         }
         result.pushKV("relayfee", batch[ID_NETWORKINFO]["result"]["relayfee"]);
         result.pushKV("warnings", batch[ID_NETWORKINFO]["result"]["warnings"]);
-        return JSONRPCReplyObj(result, NullUniValue, 1);
+        return JSONRPCReplyObj(std::move(result), NullUniValue, 1);
     }
 };
 
@@ -709,7 +709,7 @@ public:
         UniValue result(UniValue::VOBJ);
         result.pushKV("address", address_str);
         result.pushKV("blocks", reply.get_obj()["result"]);
-        return JSONRPCReplyObj(result, NullUniValue, 1);
+        return JSONRPCReplyObj(std::move(result), NullUniValue, 1);
     }
 protected:
     std::string address_str;

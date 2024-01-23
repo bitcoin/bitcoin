@@ -366,11 +366,11 @@ static UniValue JSONRPCExecOne(JSONRPCRequest jreq, const UniValue& req)
         jreq.parse(req);
 
         UniValue result = tableRPC.execute(jreq);
-        rpc_result = JSONRPCReplyObj(result, NullUniValue, jreq.id);
+        rpc_result = JSONRPCReplyObj(std::move(result), NullUniValue, jreq.id);
     }
-    catch (const UniValue& objError)
+    catch (UniValue& e)
     {
-        rpc_result = JSONRPCReplyObj(NullUniValue, objError, jreq.id);
+        rpc_result = JSONRPCReplyObj(NullUniValue, std::move(e), jreq.id);
     }
     catch (const std::exception& e)
     {
