@@ -4865,9 +4865,9 @@ void ChainstateManager::CheckBlockIndex()
         // Make sure nChainTx sum is correctly computed.
         unsigned int prev_chain_tx = pindex->pprev ? pindex->pprev->nChainTx : 0;
         assert((pindex->nChainTx == pindex->nTx + prev_chain_tx)
-               // For testing, allow transaction counts to be completely unset.
+               // Transaction may be completely unset - happens if only the header was accepted but the block hasn't been processed.
                || (pindex->nChainTx == 0 && pindex->nTx == 0)
-               // For testing, allow this nChainTx to be unset if previous is also unset.
+               // nChainTx may be unset, but nTx set (if a block has been accepted, but one of its predecessors hasn't been processed yet)
                || (pindex->nChainTx == 0 && prev_chain_tx == 0 && pindex->pprev)
                // Transaction counts prior to snapshot are unknown.
                || pindex->IsAssumedValid());
