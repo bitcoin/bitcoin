@@ -2260,8 +2260,13 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         }
     }
 
+    const CBlockIndex* pindex{nullptr};
+    const CBlockIndex* tip{nullptr};
+    bool can_direct_fetch{false};
+    FlatFilePos block_pos{};
+    {
         LOCK(cs_main);
-        const CBlockIndex* pindex = m_chainman.m_blockman.LookupBlockIndex(inv.hash);
+        pindex = m_chainman.m_blockman.LookupBlockIndex(inv.hash);
         if (!pindex) {
             return;
         }
@@ -2278,9 +2283,10 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             pfrom.fDisconnect = true;
             return;
         }
+        tip = m_chainman.ActiveChain().Tip();
         // Avoid leaking prune-height by never sending blocks below the NODE_NETWORK_LIMITED threshold
         if (!pfrom.HasPermission(NetPermissionFlags::NoBan) && (
-                (((peer.m_our_services & NODE_NETWORK_LIMITED) == NODE_NETWORK_LIMITED) && ((peer.m_our_services & NODE_NETWORK) != NODE_NETWORK) && (m_chainman.ActiveChain().Tip()->nHeight - pindex->nHeight > (int)NODE_NETWORK_LIMITED_MIN_BLOCKS + 2 /* add two blocks buffer extension for possible races */) )
+                (((peer.m_our_services & NODE_NETWORK_LIMITED) == NODE_NETWORK_LIMITED) && ((peer.m_our_services & NODE_NETWORK) != NODE_NETWORK) && (tip->nHeight - pindex->nHeight > (int)NODE_NETWORK_LIMITED_MIN_BLOCKS + 2 /* add two blocks buffer extension for possible races */) )
            )) {
             LogPrint(BCLog::NET, "Ignore block request below NODE_NETWORK_LIMITED threshold, disconnect peer=%d\n", pfrom.GetId());
             //disconnect node and prevent it from stalling (would otherwise wait for the missing block)
@@ -2292,6 +2298,10 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         if (!(pindex->nStatus & BLOCK_HAVE_DATA)) {
             return;
         }
+        can_direct_fetch = CanDirectFetch();
+        block_pos = pindex->GetBlockPos();
+    }
+
     std::shared_ptr<const CBlock> pblock;
     if (a_recent_block && a_recent_block->GetHash() == pindex->GetBlockHash()) {
         pblock = a_recent_block;
@@ -2299,16 +2309,18 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         // Fast-path: in this case it is possible to serve the block directly from disk,
         // as the network format matches the format on disk
         std::vector<uint8_t> block_data;
-        if (!m_chainman.m_blockman.ReadRawBlockFromDisk(block_data, pindex->GetBlockPos())) {
-            assert(!"cannot load block from disk");
+        if (!m_chainman.m_blockman.ReadRawBlockFromDisk(block_data, block_pos)) {
+            LogPrint(BCLog::NET, "Cannot load block from disk. It was likely pruned before we could read it.\n");
+            return;
         }
         MakeAndPushMessage(pfrom, NetMsgType::BLOCK, Span{block_data});
         // Don't set pblock as we've sent the block
     } else {
         // Send block from disk
         std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
-        if (!m_chainman.m_blockman.ReadBlockFromDisk(*pblockRead, *pindex)) {
-            assert(!"cannot load block from disk");
+        if (!m_chainman.m_blockman.ReadBlockFromDisk(*pblockRead, block_pos)) {
+            LogPrint(BCLog::NET, "Cannot load block from disk. It was likely pruned before we could read it.\n");
+            return;
         }
         pblock = pblockRead;
     }
@@ -2346,7 +2358,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             // they won't have a useful mempool to match against a compact block,
             // and we don't feel like constructing the object for them, so
             // instead we respond with the full, non-compact block.
-            if (CanDirectFetch() && pindex->nHeight >= m_chainman.ActiveChain().Height() - MAX_CMPCTBLOCK_DEPTH) {
+            if (can_direct_fetch && pindex->nHeight >= tip->nHeight - MAX_CMPCTBLOCK_DEPTH) {
                 if (a_recent_compact_block && a_recent_compact_block->header.GetHash() == pindex->GetBlockHash()) {
                     MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, *a_recent_compact_block);
                 } else {
@@ -2367,7 +2379,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             // and we want it right after the last block so they don't
             // wait for other stuff first.
             std::vector<CInv> vInv;
-            vInv.emplace_back(MSG_BLOCK, m_chainman.ActiveChain().Tip()->GetBlockHash());
+            vInv.emplace_back(MSG_BLOCK, tip->GetBlockHash());
             MakeAndPushMessage(pfrom, NetMsgType::INV, vInv);
             peer.m_continuation_block.SetNull();
         }
