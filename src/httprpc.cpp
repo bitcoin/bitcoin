@@ -224,19 +224,18 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
             }
 
             // Execute each request
-            UniValue ret(UniValue::VARR);
+            reply = UniValue{UniValue::VARR};
             for (unsigned int reqIdx = 0; reqIdx < valRequest.size(); reqIdx++) {
                 // Batches include errors in the batch response, they do not throw
                 try {
                     jreq.parse(valRequest[reqIdx]);
-                    ret.push_back(JSONRPCExec(jreq));
+                    reply.push_back(JSONRPCExec(jreq));
                 } catch (const UniValue& objError) {
-                    ret.push_back(JSONRPCReplyObj(NullUniValue, objError, jreq.id));
+                    reply.push_back(JSONRPCReplyObj(NullUniValue, std::move(objError), jreq.id));
                 } catch (const std::exception& e) {
-                    ret.push_back(JSONRPCReplyObj(NullUniValue, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id));
+                    reply.push_back(JSONRPCReplyObj(NullUniValue, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id));
                 }
             }
-            reply = ret;
         }
         else
             throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");

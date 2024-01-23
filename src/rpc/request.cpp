@@ -37,7 +37,7 @@ UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params,
     return request;
 }
 
-UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id)
+UniValue JSONRPCReplyObj(UniValue result, UniValue error, const UniValue& id)
 {
     UniValue reply(UniValue::VOBJ);
     if (!error.isNull())
