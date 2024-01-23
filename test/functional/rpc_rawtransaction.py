@@ -306,19 +306,24 @@ class RawTransactionsTest(BitcoinTestFramework):
         # 1. valid parameters - only supply txid
         txId = rawTx["txid"]
         assert_equal(self.nodes[0].getrawtransaction(txId), rawTxSigned['hex'])
+        assert_equal(self.nodes[0].getrawtransactionmulti({"0":[txId]})[txId], rawTxSigned['hex'])
 
         # 2. valid parameters - supply txid and 0 for non-verbose
         assert_equal(self.nodes[0].getrawtransaction(txId, 0), rawTxSigned['hex'])
+        assert_equal(self.nodes[0].getrawtransactionmulti({"0":[txId]}, 0)[txId], rawTxSigned['hex'])
 
         # 3. valid parameters - supply txid and False for non-verbose
         assert_equal(self.nodes[0].getrawtransaction(txId, False), rawTxSigned['hex'])
+        assert_equal(self.nodes[0].getrawtransactionmulti({"0":[txId]}, False)[txId], rawTxSigned['hex'])
 
         # 4. valid parameters - supply txid and 1 for verbose.
         # We only check the "hex" field of the output so we don't need to update this test every time the output format changes.
         assert_equal(self.nodes[0].getrawtransaction(txId, 1)["hex"], rawTxSigned['hex'])
+        assert_equal(self.nodes[0].getrawtransactionmulti({"0":[txId]}, 1)[txId]['hex'], rawTxSigned['hex'])
 
         # 5. valid parameters - supply txid and True for non-verbose
         assert_equal(self.nodes[0].getrawtransaction(txId, True)["hex"], rawTxSigned['hex'])
+        assert_equal(self.nodes[0].getrawtransactionmulti({"0":[txId]}, True)[txId]['hex'], rawTxSigned['hex'])
 
         # 6. invalid parameters - supply txid and string "Flase"
         assert_raises_rpc_error(-1, "not a boolean", self.nodes[0].getrawtransaction, txId, "Flase")
