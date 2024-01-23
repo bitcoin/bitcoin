@@ -2785,12 +2785,11 @@ static RPCHelpMan loadtxoutset()
     if (!chainman.ActivateSnapshot(afile, metadata, false)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to load UTXO snapshot " + fs::PathToString(path));
     }
-    CBlockIndex* new_tip{WITH_LOCK(::cs_main, return chainman.ActiveTip())};
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("coins_loaded", metadata.m_coins_count);
-    result.pushKV("tip_hash", new_tip->GetBlockHash().ToString());
-    result.pushKV("base_height", new_tip->nHeight);
+    result.pushKV("tip_hash", snapshot_start_block->GetBlockHash().ToString());
+    result.pushKV("base_height", snapshot_start_block->nHeight);
     result.pushKV("path", fs::PathToString(path));
     return result;
 },

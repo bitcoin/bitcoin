@@ -803,19 +803,6 @@ std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::Get
     return iters;
 }
 
-void CTxMemPool::queryHashes(std::vector<uint256>& vtxid) const
-{
-    LOCK(cs);
-    auto iters = GetSortedDepthAndScore();
-
-    vtxid.clear();
-    vtxid.reserve(mapTx.size());
-
-    for (auto it : iters) {
-        vtxid.push_back(it->GetTx().GetHash());
-    }
-}
-
 static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator it) {
     return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), it->GetFee(), it->GetTxSize(), it->GetModifiedFee() - it->GetFee()};
 }
