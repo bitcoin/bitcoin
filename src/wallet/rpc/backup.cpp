@@ -1095,6 +1095,8 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
         std::tie(range_start, range_end) = ParseDescriptorRange(data["range"]);
     }
 
+    bool can_keypool = parsed_desc->IsSingleKey();
+
     const UniValue& priv_keys = data.exists("keys") ? data["keys"].get_array() : UniValue();
 
     // Expand all descriptors to get public keys and scripts, and private keys if available.
@@ -1103,8 +1105,10 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
         std::vector<CScript> scripts_temp;
         parsed_desc->Expand(i, keys, scripts_temp, out_keys);
         std::copy(scripts_temp.begin(), scripts_temp.end(), std::inserter(script_pub_keys, script_pub_keys.end()));
-        for (const auto& key_pair : out_keys.pubkeys) {
-            ordered_pubkeys.push_back(key_pair.first);
+        if (can_keypool) {
+            for (const auto& key_pair : out_keys.pubkeys) {
+                ordered_pubkeys.push_back(key_pair.first);
+            }
         }
 
         for (const auto& x : out_keys.scripts) {
