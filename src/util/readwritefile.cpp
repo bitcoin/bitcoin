@@ -5,6 +5,7 @@
 
 #include <util/readwritefile.h>
 
+#include <streams.h>
 #include <util/fs.h>
 
 #include <algorithm>
@@ -12,39 +13,37 @@
 #include <limits>
 #include <string>
 #include <utility>
+#include <vector>
 
-std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxsize)
+template <typename T>
+std::optional<T> ReadBinaryFile(const fs::path& filename, size_t maxsize)
 {
-    FILE *f = fsbridge::fopen(filename, "rb");
-    if (f == nullptr)
-        return std::make_pair(false,"");
-    std::string retval;
-    char buffer[128];
-    do {
-        const size_t n = fread(buffer, 1, std::min(sizeof(buffer), maxsize - retval.size()), f);
-        // Check for reading errors so we don't return any data if we couldn't
-        // read the entire file (or up to maxsize)
-        if (ferror(f)) {
-            fclose(f);
-            return std::make_pair(false,"");
-        }
-        retval.append(buffer, buffer+n);
-    } while (!feof(f) && retval.size() < maxsize);
-    fclose(f);
-    return std::make_pair(true,retval);
+    std::FILE *f = fsbridge::fopen(filename, "rb");
+    if (f == nullptr) return {};
+    T output{};
+    size_t file_size = fs::file_size(filename);
+    output.resize(std::min(file_size, maxsize));
+    try {
+        AutoFile{f} >> Span{output};
+    } catch (const std::ios_base::failure&) {
+        return {};
+    }
+    return output;
 }
 
-bool WriteBinaryFile(const fs::path &filename, const std::string &data)
+template std::optional<std::string> ReadBinaryFile(const fs::path &filename, size_t maxsize);
+template std::optional<std::vector<unsigned char>> ReadBinaryFile(const fs::path &filename, size_t maxsize);
+
+template <typename T>
+bool WriteBinaryFile(const fs::path& filename, const T& data)
 {
-    FILE *f = fsbridge::fopen(filename, "wb");
-    if (f == nullptr)
-        return false;
-    if (fwrite(data.data(), 1, data.size(), f) != data.size()) {
-        fclose(f);
-        return false;
-    }
-    if (fclose(f) != 0) {
+    try {
+        AutoFile{fsbridge::fopen(filename, "wb")} << Span{data};
+    } catch (const std::ios_base::failure&) {
         return false;
     }
     return true;
 }
+
+template bool WriteBinaryFile(const fs::path& filename, const std::string& data);
+template bool WriteBinaryFile(const fs::path& filename, const std::vector<unsigned char>& data);
