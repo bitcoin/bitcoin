@@ -8,10 +8,13 @@
 from decimal import Decimal
 from itertools import product
 from math import ceil
+from test_framework.address import address_to_scriptpubkey
 
 from test_framework.descriptors import descsum_create
 from test_framework.messages import (
     COIN,
+    CTransaction,
+    CTxOut,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -147,6 +150,34 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_22670()
         self.test_feerate_rounding()
         self.test_input_confs_control()
+        self.test_duplicate_outputs()
+
+    def test_duplicate_outputs(self):
+        self.log.info("Test deserializing and funding a transaction with duplicate outputs")
+        self.nodes[1].createwallet("fundtx_duplicate_outputs")
+        w = self.nodes[1].get_wallet_rpc("fundtx_duplicate_outputs")
+
+        addr = w.getnewaddress(address_type="bech32")
+        self.nodes[0].sendtoaddress(addr, 5)
+        self.generate(self.nodes[0], 1)
+
+        address = self.nodes[0].getnewaddress("bech32")
+        tx = CTransaction()
+        tx.vin = []
+        tx.vout = [CTxOut(1 * COIN, bytearray(address_to_scriptpubkey(address)))] * 2
+        tx.nLockTime = 0
+        tx_hex = tx.serialize().hex()
+        res = w.fundrawtransaction(tx_hex, add_inputs=True)
+        signed_res = w.signrawtransactionwithwallet(res["hex"])
+        txid = w.sendrawtransaction(signed_res["hex"])
+        assert self.nodes[1].getrawtransaction(txid)
+
+        self.log.info("Test SFFO with duplicate outputs")
+
+        res_sffo = w.fundrawtransaction(tx_hex, add_inputs=True, subtractFeeFromOutputs=[0,1])
+        signed_res_sffo = w.signrawtransactionwithwallet(res_sffo["hex"])
+        txid_sffo = w.sendrawtransaction(signed_res_sffo["hex"])
+        assert self.nodes[1].getrawtransaction(txid_sffo)
 
     def test_change_position(self):
         """Ensure setting changePosition in fundraw with an exact match is handled properly."""

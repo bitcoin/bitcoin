@@ -1377,18 +1377,11 @@ util::Result<CreatedTransactionResult> CreateTransaction(
     return res;
 }
 
-util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CMutableTransaction& tx, std::optional<unsigned int> change_pos, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
+util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CMutableTransaction& tx, const std::vector<CRecipient>& vecSend, std::optional<unsigned int> change_pos, bool lockUnspents, CCoinControl coinControl)
 {
-    std::vector<CRecipient> vecSend;
-
-    // Turn the txout set into a CRecipient vector.
-    for (size_t idx = 0; idx < tx.vout.size(); idx++) {
-        const CTxOut& txOut = tx.vout[idx];
-        CTxDestination dest;
-        ExtractDestination(txOut.scriptPubKey, dest);
-        CRecipient recipient = {dest, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
-        vecSend.push_back(recipient);
-    }
+    // We want to make sure tx.vout is not used now that we are passing outputs as a vector of recipients.
+    // This sets us up to remove tx completely in a future PR in favor of passing the inputs directly.
+    assert(tx.vout.empty());
 
     // Set the user desired locktime
     coinControl.m_locktime = tx.nLockTime;

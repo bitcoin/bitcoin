@@ -132,6 +132,14 @@ struct FuzzedWallet {
                 }
             }
         }
+        std::vector<CRecipient> recipients;
+        for (size_t idx = 0; idx < tx.vout.size(); idx++) {
+            const CTxOut& tx_out = tx.vout[idx];
+            CTxDestination dest;
+            ExtractDestination(tx_out.scriptPubKey, dest);
+            CRecipient recipient = {dest, tx_out.nValue, subtract_fee_from_outputs.count(idx) == 1};
+            recipients.push_back(recipient);
+        }
         CCoinControl coin_control;
         coin_control.m_allow_other_inputs = fuzzed_data_provider.ConsumeBool();
         CallOneOf(
@@ -158,7 +166,10 @@ struct FuzzedWallet {
 
         int change_position{fuzzed_data_provider.ConsumeIntegralInRange<int>(-1, tx.vout.size() - 1)};
         bilingual_str error;
-        (void)FundTransaction(*wallet, tx, change_position, /*lockUnspents=*/false, subtract_fee_from_outputs, coin_control);
+        // Clear tx.vout since it is not meant to be used now that we are passing outputs directly.
+        // This sets us up for a future PR to completely remove tx from the function signature in favor of passing inputs directly
+        tx.vout.clear();
+        (void)FundTransaction(*wallet, tx, recipients, change_position, /*lockUnspents=*/false, coin_control);
     }
 };
 
