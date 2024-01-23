@@ -21,6 +21,7 @@
 
 #include <boost/signals2/signal.hpp>
 
+#include <functional>
 #include <optional>
 
 // Wallet storage things that ScriptPubKeyMans need in order to be able to store things to the wallet database.
@@ -38,7 +39,8 @@ public:
     virtual void UnsetBlankWalletFlag(WalletBatch&) = 0;
     virtual bool CanSupportFeature(enum WalletFeature) const = 0;
     virtual void SetMinVersion(enum WalletFeature, WalletBatch* = nullptr) = 0;
-    virtual const CKeyingMaterial& GetEncryptionKey() const = 0;
+    //! Pass the encryption key to cb().
+    virtual bool WithEncryptionKey(std::function<bool (const CKeyingMaterial&)> cb) const = 0;
     virtual bool HasEncryptionKeys() const = 0;
     virtual bool IsLocked(bool fForMixing) const = 0;
 
