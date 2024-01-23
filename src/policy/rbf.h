@@ -63,7 +63,8 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx, CTxMem
     EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 
 /** The replacement transaction may only include an unconfirmed input if that input was included in
- * one of the original transactions.
+ * one of the original transactions, and only one of the original transactions
+ * may have unconfirmed inputs.
  * @returns error message if tx spends unconfirmed inputs not also spent by iters_conflicting,
  * otherwise std::nullopt. */
 std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx, const CTxMemPool& pool,

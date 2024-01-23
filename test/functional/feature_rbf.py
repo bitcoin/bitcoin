@@ -61,8 +61,11 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.log.info("Running test new unconfirmed inputs...")
         self.test_new_unconfirmed_inputs()
 
-        self.log.info("Running test too many replacements...")
-        self.test_too_many_replacements()
+        self.log.info("Running test new unconfirmed inputs...")
+        self.test_new_unconfirmed_inputs()
+
+        self.log.info("Running test unconfirmed inputs from multiple replacements...")
+        self.test_unconfirmed_inputs_from_multiple_replacements()
 
         self.log.info("Running test too many replacements using default mempool params...")
         self.test_too_many_replacements_with_default_mempool_params()
@@ -336,6 +339,41 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # This will raise an exception
         assert_raises_rpc_error(-26, "replacement-adds-unconfirmed", self.nodes[0].sendrawtransaction, tx2_hex, 0)
 
+    def test_unconfirmed_inputs_from_multiple_replacements(self):
+        """Replacements that with unconfirmed inputs from multiple replacements are rejected"""
+
+        # Start by creating a single transaction with 2 outputs
+        initial_nValue = 10 * COIN
+        utxo = self.make_utxo(self.nodes[0], initial_nValue)
+
+        splitting_tx_utxos = self.wallet.send_self_transfer_multi(
+            from_node=self.nodes[0],
+            utxos_to_spend=[utxo],
+            sequence=0,
+            num_outputs=2,
+            amount_per_output=1 * COIN,
+        )["new_utxos"]
+
+        # Now spend each of those outputs individually
+        for utxo in splitting_tx_utxos:
+            self.wallet.send_self_transfer(
+                from_node=self.nodes[0],
+                utxo_to_spend=utxo,
+                sequence=0,
+                fee=Decimal("0.1"),
+            )
+
+        # Now create doublespend of the whole lot; should fail.
+        double_tx = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=splitting_tx_utxos,
+            sequence=0,
+            amount_per_output=1 * COIN,
+        )["tx"]
+        double_tx_hex = double_tx.serialize().hex()
+
+        # This will raise an exception
+        assert_raises_rpc_error(-26, "replacement-adds-unconfirmed", self.nodes[0].sendrawtransaction, double_tx_hex, 0)
+
     def test_too_many_replacements(self):
         """Replacements that evict too many transactions are rejected"""
         # Try directly replacing more than MAX_REPLACEMENT_LIMIT
@@ -354,6 +392,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             num_outputs=MAX_REPLACEMENT_LIMIT + 1,
             amount_per_output=split_value,
         )["new_utxos"]
+
+        # Mine the split transaction so that we're spending confirmed inputs in
+        # the next step.
+        self.generate(self.nodes[0], 1)
 
         # Now spend each of those outputs individually
         for utxo in splitting_tx_utxos:
