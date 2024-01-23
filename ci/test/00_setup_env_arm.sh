@@ -18,7 +18,6 @@ if [ -n "$QEMU_USER_CMD" ]; then
 fi
 export CONTAINER_NAME=ci_arm_linux
 # Use debian to avoid 404 apt errors when cross compiling
-export DOCKER_NAME_TAG="debian:focal"
 export CHECK_DOC=1
 export USE_BUSY_BOX=true
 export RUN_UNIT_TESTS=false

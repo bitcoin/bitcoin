@@ -18,7 +18,6 @@ if [ -n "$QEMU_USER_CMD" ]; then
 fi
 # Use debian to avoid 404 apt errors
 export CONTAINER_NAME=ci_s390x
-export DOCKER_NAME_TAG="debian:focal"
 export RUN_UNIT_TESTS=true
 export RUN_FUNCTIONAL_TESTS=true
 export GOAL="install"
