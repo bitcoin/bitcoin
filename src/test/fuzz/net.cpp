@@ -91,7 +91,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
                 if (!inv_opt) {
                     return;
                 }
-                // node.AddKnownTx(inv_opt->hash);
+                node.AddKnownInventory(inv_opt->hash);
             },
             [&] {
                 const std::optional<CInv> inv_opt = ConsumeDeserializable<CInv>(fuzzed_data_provider);

@@ -501,7 +501,7 @@ private:
 
     void ProcessBlock(CNode& pfrom, const std::shared_ptr<const CBlock>& pblock, bool fForceProcessing);
 
-    /** Relay map */
+    /** Relay map (txid -> CTransactionRef) */
     typedef std::map<uint256, CTransactionRef> MapRelay;
     MapRelay mapRelay GUARDED_BY(cs_main);
     /** Expiration-time ordered list of (expire time, relay map entry) pairs. */
@@ -1043,22 +1043,22 @@ void EraseObjectRequest(NodeId nodeId, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED
     EraseObjectRequest(state, inv);
 }
 
-std::chrono::microseconds GetObjectRequestTime(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+std::chrono::microseconds GetObjectRequestTime(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    auto it = g_already_asked_for.find(hash);
+    auto it = g_already_asked_for.find(inv.hash);
     if (it != g_already_asked_for.end()) {
         return it->second;
     }
     return {};
 }
 
-void UpdateObjectRequestTime(const uint256& hash, std::chrono::microseconds request_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void UpdateObjectRequestTime(const CInv& inv, std::chrono::microseconds request_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    auto it = g_already_asked_for.find(hash);
+    auto it = g_already_asked_for.find(inv.hash);
     if (it == g_already_asked_for.end()) {
-        g_already_asked_for.insert(std::make_pair(hash, request_time));
+        g_already_asked_for.insert(std::make_pair(inv.hash, request_time));
     } else {
         g_already_asked_for.update(it, request_time);
     }
@@ -1097,7 +1097,7 @@ std::chrono::microseconds CalculateObjectGetDataTime(const CInv& inv, std::chron
 {
     AssertLockHeld(cs_main);
     std::chrono::microseconds process_time;
-    const auto last_request_time = GetObjectRequestTime(inv.hash);
+    const auto last_request_time = GetObjectRequestTime(inv);
     // First time requesting this tx
     if (last_request_time.count() == 0) {
         process_time = current_time;
@@ -2162,7 +2162,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 } else {
                     m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::TX, *tx));
                 }
-                m_mempool.RemoveUnbroadcastTx(inv.hash);
+                m_mempool.RemoveUnbroadcastTx(tx->GetHash());
                 push = true;
             }
         }
@@ -3289,7 +3289,7 @@ void PeerManagerImpl::ProcessMessage(
                         MSG_SPORK
                 };
 
-                pfrom.AddInventoryKnown(inv);
+                pfrom.AddKnownInventory(inv.hash);
                 if (fBlocksOnly && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
                     LogPrint(BCLog::NET, "%s (%s) inv sent in violation of protocol, disconnecting peer=%d\n", inv.GetCommand(), inv.hash.ToString(), pfrom.GetId());
                     pfrom.fDisconnect = true;
@@ -3564,9 +3564,10 @@ void PeerManagerImpl::ProcessMessage(
         }
         const CTransaction& tx = *ptx;
 
-        CInv inv(nInvType, tx.GetHash());
-        pfrom.AddInventoryKnown(inv);
+        const uint256& txid = ptx->GetHash();
+        pfrom.AddKnownInventory(txid);
 
+        CInv inv(nInvType, tx.GetHash());
         {
             LOCK(cs_main);
             EraseObjectRequest(pfrom.GetId(), inv);
@@ -3599,7 +3600,7 @@ void PeerManagerImpl::ProcessMessage(
             RelayTransaction(tx.GetHash());
 
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
-                auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(inv.hash, i));
+                auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(txid, i));
                 if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
                     for (const auto& elem : it_by_prev->second) {
                         peer->m_orphan_work_set.insert(elem->first);
@@ -3631,11 +3632,11 @@ void PeerManagerImpl::ProcessMessage(
 
                 for (const CTxIn& txin : tx.vin) {
                     CInv _inv(MSG_TX, txin.prevout.hash);
-                    pfrom.AddInventoryKnown(_inv);
+                    pfrom.AddKnownInventory(_inv.hash);
                     if (!AlreadyHave(_inv)) RequestObject(State(pfrom.GetId()), _inv, current_time);
                     // We don't know if the previous tx was a regular or a mixing one, try both
                     CInv _inv2(MSG_DSTX, txin.prevout.hash);
-                    pfrom.AddInventoryKnown(_inv2);
+                    pfrom.AddKnownInventory(_inv2.hash);
                     if (!AlreadyHave(_inv2)) RequestObject(State(pfrom.GetId()), _inv2, current_time);
                 }
                 AddOrphanTx(ptx, pfrom.GetId());
@@ -5069,9 +5070,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                                 vRelayExpiration.pop_front();
                             }
 
-                            auto ret = mapRelay.insert(std::make_pair(hash, std::move(txinfo.tx)));
+                            auto ret = mapRelay.emplace(hash, std::move(txinfo.tx));
                             if (ret.second) {
-                                vRelayExpiration.push_back(std::make_pair(nNow + std::chrono::microseconds{RELAY_TX_CACHE_TIME}.count(), ret.first));
+                                vRelayExpiration.emplace_back(nNow + std::chrono::microseconds{RELAY_TX_CACHE_TIME}.count(), ret.first);
                             }
                         }
                         int nInvType = ::dstxManager->GetDSTX(hash) ? MSG_DSTX : MSG_TX;
@@ -5230,7 +5231,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             if (!AlreadyHave(inv)) {
                 // If this object was last requested more than GetObjectInterval ago,
                 // then request.
-                const auto last_request_time = GetObjectRequestTime(inv.hash);
+                const auto last_request_time = GetObjectRequestTime(inv);
                 if (last_request_time <= current_time - GetObjectInterval(inv.type)) {
                     LogPrint(BCLog::NET, "Requesting %s peer=%d\n", inv.ToString(), pto->GetId());
                     vGetData.push_back(inv);
@@ -5238,7 +5239,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
                         vGetData.clear();
                     }
-                    UpdateObjectRequestTime(inv.hash, current_time);
+                    UpdateObjectRequestTime(inv, current_time);
                     state.m_object_download.m_object_in_flight.emplace(inv, current_time);
                 } else {
                     // This object is in flight from someone else; queue

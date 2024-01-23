@@ -13,7 +13,6 @@ from test_framework.util import (
     assert_fee_amount,
     assert_raises_rpc_error,
     count_bytes,
-    wait_until,
 )
 from test_framework.wallet_util import test_address
 
@@ -136,11 +135,19 @@ class WalletTest(BitcoinTestFramework):
                                 self.nodes[2].lockunspent, False,
                                 [{"txid": unspent_0["txid"], "vout": 999}])
 
-        # An output should be unlocked when spent
+        # The lock on a manually selected output is ignored
         unspent_0 = self.nodes[1].listunspent()[0]
         self.nodes[1].lockunspent(False, [unspent_0])
         tx = self.nodes[1].createrawtransaction([unspent_0], { self.nodes[1].getnewaddress() : 1 })
-        tx = self.nodes[1].fundrawtransaction(tx)['hex']
+        self.nodes[1].fundrawtransaction(tx,{"lockUnspents": True})
+
+        # fundrawtransaction can lock an input
+        self.nodes[1].lockunspent(True, [unspent_0])
+        assert_equal(len(self.nodes[1].listlockunspent()), 0)
+        tx = self.nodes[1].fundrawtransaction(tx,{"lockUnspents": True})['hex']
+        assert_equal(len(self.nodes[1].listlockunspent()), 1)
+
+        # Send transaction
         tx = self.nodes[1].signrawtransactionwithwallet(tx)["hex"]
         self.nodes[1].sendrawtransaction(tx)
         assert_equal(len(self.nodes[1].listlockunspent()), 0)
@@ -535,7 +542,7 @@ class WalletTest(BitcoinTestFramework):
             self.start_node(2, [m, "-limitancestorcount=" + str(chainlimit)])
             if m == '-reindex':
                 # reindex will leave rpc warm up "early"; Wait for it to finish
-                wait_until(lambda: [block_count] * 3 == [self.nodes[i].getblockcount() for i in range(3)])
+                self.wait_until(lambda: [block_count] * 3 == [self.nodes[i].getblockcount() for i in range(3)])
             assert_equal(balance_nodes, [self.nodes[i].getbalance() for i in range(3)])
 
         # Exercise listsinceblock with the last two blocks
@@ -582,7 +589,7 @@ class WalletTest(BitcoinTestFramework):
         self.restart_node(0, extra_args=["-walletrejectlongchains", "-limitancestorcount=" + str(2 * chainlimit)])
 
         # wait until the wallet has submitted all transactions to the mempool
-        wait_until(lambda: len(self.nodes[0].getrawmempool()) == chainlimit * 2)
+        self.wait_until(lambda: len(self.nodes[0].getrawmempool()) == chainlimit * 2)
 
         # Prevent potential race condition when calling wallet RPCs right after restart
         self.nodes[0].syncwithvalidationinterfacequeue()

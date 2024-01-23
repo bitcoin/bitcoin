@@ -11,6 +11,7 @@
 #define BITCOIN_PROTOCOL_H
 
 #include <netaddress.h>
+#include <primitives/transaction.h>
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
@@ -496,7 +497,7 @@ public:
  * These numbers are defined by the protocol. When adding a new value, be sure
  * to mention it in the respective BIP.
  */
-enum GetDataMsg {
+enum GetDataMsg : uint32_t {
     UNDEFINED = 0,
     MSG_TX = 1,
     MSG_BLOCK = 2,
@@ -533,7 +534,7 @@ class CInv
 {
 public:
     CInv();
-    CInv(int typeIn, const uint256& hashIn);
+    CInv(uint32_t typeIn, const uint256& hashIn);
 
     SERIALIZE_METHODS(CInv, obj) { READWRITE(obj.type, obj.hash); }
 
@@ -554,7 +555,7 @@ private:
     const char* GetCommandInternal() const;
 
 public:
-    int type;
+    uint32_t type;
     uint256 hash;
 };
 
