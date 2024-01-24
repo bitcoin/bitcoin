@@ -3626,10 +3626,25 @@ void PeerManagerImpl::ProcessMessage(
 
         LOCK2(cs_main, g_cs_orphans);
 
+        if (AlreadyHave(inv)) {
+            if (pfrom.HasPermission(PF_FORCERELAY)) {
+                // Always relay transactions received from peers with forcerelay permission, even
+                // if they were already in the mempool,
+                // allowing the node to function as a gateway for
+                // nodes hidden behind it.
+                if (!m_mempool.exists(tx.GetHash())) {
+                    LogPrintf("Not relaying non-mempool transaction %s from forcerelay peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
+                } else {
+                    LogPrintf("Force relaying tx %s from peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
+                    RelayTransaction(tx.GetHash());
+                }
+            }
+            return;
+        }
+
         TxValidationState state;
 
-        if (!AlreadyHave(inv) && AcceptToMemoryPool(m_chainman.ActiveChainstate(), m_mempool, state, ptx,
-                false /* bypass_limits */)) {
+        if (AcceptToMemoryPool(m_chainman.ActiveChainstate(), m_mempool, state, ptx, false /* bypass_limits */)) {
             // Process custom txes, this changes AlreadyHave to "true"
             if (nInvType == MSG_DSTX) {
                 LogPrint(BCLog::COINJOIN, "DSTX -- Masternode transaction accepted, txid=%s, peer=%d\n",
@@ -3699,19 +3714,6 @@ void PeerManagerImpl::ProcessMessage(
             m_recent_rejects.insert(tx.GetHash());
             if (RecursiveDynamicUsage(*ptx) < 100000) {
                 AddToCompactExtraTransactions(ptx);
-            }
-
-            if (pfrom.HasPermission(PF_FORCERELAY)) {
-                // Always relay transactions received from peers with forcerelay permission, even
-                // if they were already in the mempool,
-                // allowing the node to function as a gateway for
-                // nodes hidden behind it.
-                if (!m_mempool.exists(tx.GetHash())) {
-                    LogPrintf("Not relaying non-mempool transaction %s from forcerelay peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
-                } else {
-                    LogPrintf("Force relaying tx %s from peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
-                    RelayTransaction(tx.GetHash());
-                }
             }
         }
 
