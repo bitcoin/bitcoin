@@ -77,6 +77,9 @@ class PSBTTest(BitcoinTestFramework):
         # spend single key from node 1
         rawtx = self.nodes[1].walletcreatefundedpsbt([{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():9.99})['psbt']
         walletprocesspsbt_out = self.nodes[1].walletprocesspsbt(rawtx)
+        # Make sure it has both types of UTXOs
+        decoded = self.nodes[1].decodepsbt(walletprocesspsbt_out['psbt'])
+        assert 'non_witness_utxo' in decoded['inputs'][0]
         assert_equal(walletprocesspsbt_out['complete'], True)
         self.nodes[1].sendrawtransaction(self.nodes[1].finalizepsbt(walletprocesspsbt_out['psbt'])['hex'])
 

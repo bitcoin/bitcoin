@@ -755,6 +755,7 @@ private:
     bool m_use_addrman_outgoing;
     CClientUIInterface* clientInterface;
     NetEventsInterface* m_msgproc;
+    /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
     BanMan* m_banman;
 
     /**
@@ -1283,7 +1284,7 @@ public:
     // There is no final sorting before sending, as they are always sent immediately
     // and in the order requested.
     std::vector<uint256> vInventoryBlockToSend GUARDED_BY(cs_inventory);
-    RecursiveMutex cs_inventory;
+    Mutex cs_inventory;
     /** UNIX epoch time of the last block received from this peer that we had
      * not yet seen (e.g. not already received from another peer), that passed
      * preliminary validity checks and was saved to disk, even if we don't
@@ -1490,12 +1491,12 @@ public:
 
     void PushInventory(const CInv& inv)
     {
+        ASSERT_IF_DEBUG(inv.type != MSG_BLOCK);
         if (inv.type == MSG_BLOCK) {
-            LogPrint(BCLog::NET, "%s -- adding new inv: %s peer=%d\n", __func__, inv.ToString(), id);
-            LOCK(cs_inventory);
-            vInventoryBlockToSend.push_back(inv.hash);
+            LogPrintf("%s -- WARNING: using PushInventory for BLOCK inv, peer=%d\n", __func__, id);
             return;
         }
+
         LOCK(m_tx_relay->cs_tx_inventory);
         if (m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
             LogPrint(BCLog::NET, "%s -- skipping known inv: %s peer=%d\n", __func__, inv.ToString(), id);
@@ -1507,12 +1508,6 @@ public:
             return;
         }
         m_tx_relay->vInventoryOtherToSend.push_back(inv);
-    }
-
-    void PushBlockHash(const uint256 &hash)
-    {
-        LOCK(cs_inventory);
-        vBlockHashesToAnnounce.push_back(hash);
     }
 
     void CloseSocketDisconnect(CConnman* connman);

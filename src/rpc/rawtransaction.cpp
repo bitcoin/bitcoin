@@ -1348,13 +1348,20 @@ UniValue decodepsbt(const JSONRPCRequest& request)
         const PSBTInput& input = psbtx.inputs[i];
         UniValue in(UniValue::VOBJ);
         // UTXOs
+        bool have_a_utxo = false;
+        CTxOut txout;
         if (input.non_witness_utxo) {
+            txout = input.non_witness_utxo->vout[psbtx.tx->vin[i].prevout.n];
+
             UniValue non_wit(UniValue::VOBJ);
             TxToUniv(*input.non_witness_utxo, uint256(), non_wit, false);
             in.pushKV("non_witness_utxo", non_wit);
-            CAmount utxo_val = input.non_witness_utxo->vout[psbtx.tx->vin[i].prevout.n].nValue;
-            if (MoneyRange(utxo_val) && MoneyRange(total_in + utxo_val)) {
-                total_in += utxo_val;
+
+            have_a_utxo = true;
+        }
+        if (have_a_utxo) {
+            if (MoneyRange(txout.nValue) && MoneyRange(total_in + txout.nValue)) {
+                total_in += txout.nValue;
             } else {
                 // Hack to just not show fee later
                 have_all_utxos = false;

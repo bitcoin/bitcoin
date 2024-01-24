@@ -19,7 +19,7 @@ Then install [Homebrew](https://brew.sh).
 
 ## Dependencies
 ```shell
-brew install automake libtool boost gmp miniupnpc pkg-config python qt libevent libnatpmp qrencode
+brew install automake libtool boost gmp miniupnpc pkg-config python qt@5 libevent libnatpmp qrencode
 ```
 
 If you run into issues, check [Homebrew's troubleshooting page](https://docs.brew.sh/Troubleshooting).

@@ -33,7 +33,6 @@ FUZZ_TARGET(psbt)
     }
 
     (void)psbt.IsNull();
-    (void)psbt.IsSane();
 
     std::optional<CMutableTransaction> tx = psbt.tx;
     if (tx) {
@@ -44,7 +43,6 @@ FUZZ_TARGET(psbt)
     for (const PSBTInput& input : psbt.inputs) {
         (void)PSBTInputSigned(input);
         (void)input.IsNull();
-        (void)input.IsSane();
     }
 
     for (const PSBTOutput& output : psbt.outputs) {

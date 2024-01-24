@@ -56,7 +56,6 @@ struct PSBTInput
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
     void Merge(const PSBTInput& input);
-    bool IsSane() const;
     PSBTInput() {}
 
     template <typename Stream>
@@ -229,7 +228,6 @@ struct PSBTOutput
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
     void Merge(const PSBTOutput& output);
-    bool IsSane() const;
     PSBTOutput() {}
 
     template <typename Stream>
@@ -330,7 +328,6 @@ struct PartiallySignedTransaction
     /** Merge psbt into this. The two psbts must have the same underlying CTransaction (i.e. the
       * same actual Bitcoin transaction.) Returns true if the merge succeeded, false otherwise. */
     [[nodiscard]] bool Merge(const PartiallySignedTransaction& psbt);
-    bool IsSane() const;
     bool AddInput(const CTxIn& txin, PSBTInput& psbtin);
     bool AddOutput(const CTxOut& txout, const PSBTOutput& psbtout);
     PartiallySignedTransaction() {}
@@ -477,10 +474,6 @@ struct PartiallySignedTransaction
         // Make sure that the number of outputs matches the number of outputs in the transaction
         if (outputs.size() != tx->vout.size()) {
             throw std::ios_base::failure("Outputs provided does not match the number of outputs in transaction.");
-        }
-        // Sanity check
-        if (!IsSane()) {
-            throw std::ios_base::failure("PSBT is not sane.");
         }
     }
 
