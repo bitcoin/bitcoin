@@ -134,6 +134,13 @@ public:
     bool HasEffectiveValue() const { return effective_value.has_value(); }
 };
 
+struct UtxoTarget {
+    CAmount start_satoshis;
+    CAmount end_satoshis;
+    uint32_t target_utxo_count;
+    uint32_t current_utxo_count = 0;
+};
+
 /** Parameters for one iteration of Coin Selection. */
 struct CoinSelectionParams {
     /** Randomness to use in the context of coin selection. */
