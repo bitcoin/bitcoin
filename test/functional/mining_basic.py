@@ -13,6 +13,7 @@ from decimal import Decimal
 
 from test_framework.blocktools import (
     create_coinbase,
+    TIME_GENESIS_BLOCK,
 )
 from test_framework.messages import (
     CBlock,
@@ -45,7 +46,7 @@ class MiningTest(BitcoinTestFramework):
 
     def mine_chain(self):
         self.log.info('Create some old blocks')
-        for _ in range(200):
+        for t in range(TIME_GENESIS_BLOCK, TIME_GENESIS_BLOCK + 200 * 156, 156):
             self.bump_mocktime(156)
             self.nodes[0].generate(1)
         mining_info = self.nodes[0].getmininginfo()
