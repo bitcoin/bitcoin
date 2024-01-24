@@ -95,6 +95,7 @@ void AutoFile::write(std::span<const std::byte> src)
             src = src.subspan(buf_now.size());
         }
     }
+    m_was_written = true;
 }
 
 void AutoFile::write_buffer(std::span<std::byte> src)
