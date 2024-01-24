@@ -18,7 +18,7 @@
 #include <optional>
 
 class CChainParams;
-class CMainSignals;
+class ValidationSignals;
 
 static constexpr bool DEFAULT_CHECKPOINTS_ENABLED{true};
 static constexpr auto DEFAULT_MAX_TIP_AGE{24h};
@@ -45,7 +45,7 @@ struct ChainstateManagerOpts {
     DBOptions coins_db{};
     CoinsViewOptions coins_view{};
     Notifications& notifications;
-    CMainSignals* signals{nullptr};
+    ValidationSignals* signals{nullptr};
     //! Number of script check worker threads. Zero means no parallel verification.
     int worker_threads_num{0};
 };

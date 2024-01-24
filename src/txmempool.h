@@ -40,7 +40,7 @@
 #include <vector>
 
 class CChain;
-class CMainSignals;
+class ValidationSignals;
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
@@ -448,7 +448,7 @@ public:
 
     const Limits m_limits;
 
-    CMainSignals* const m_signals;
+    ValidationSignals* const m_signals;
 
     /** Create a new CTxMemPool.
      * Sanity checks will be off by default for performance, because otherwise

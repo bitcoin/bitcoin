@@ -460,7 +460,7 @@ public:
 class NotificationsHandlerImpl : public Handler
 {
 public:
-    explicit NotificationsHandlerImpl(CMainSignals& signals, std::shared_ptr<Chain::Notifications> notifications)
+    explicit NotificationsHandlerImpl(ValidationSignals& signals, std::shared_ptr<Chain::Notifications> notifications)
         : m_signals{signals}, m_proxy{std::make_shared<NotificationsProxy>(std::move(notifications))}
     {
         m_signals.RegisterSharedValidationInterface(m_proxy);
@@ -473,7 +473,7 @@ public:
             m_proxy.reset();
         }
     }
-    CMainSignals& m_signals;
+    ValidationSignals& m_signals;
     std::shared_ptr<NotificationsProxy> m_proxy;
 };
 
@@ -823,7 +823,7 @@ public:
     NodeContext* context() override { return &m_node; }
     ArgsManager& args() { return *Assert(m_node.args); }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
-    CMainSignals& validation_signals() { return *Assert(m_node.validation_signals); }
+    ValidationSignals& validation_signals() { return *Assert(m_node.validation_signals); }
     NodeContext& m_node;
 };
 } // namespace

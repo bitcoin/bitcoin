@@ -150,19 +150,19 @@ protected:
      * has been received and connected to the headers tree, though not validated yet.
      */
     virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
-    friend class CMainSignals;
+    friend class ValidationSignals;
     friend class ValidationInterfaceTest;
 };
 
-class MainSignalsImpl;
-class CMainSignals {
+class ValidationSignalsImpl;
+class ValidationSignals {
 private:
-    std::unique_ptr<MainSignalsImpl> m_internals;
+    std::unique_ptr<ValidationSignalsImpl> m_internals;
 
 public:
-    CMainSignals(CScheduler& scheduler LIFETIMEBOUND);
+    ValidationSignals(CScheduler& scheduler LIFETIMEBOUND);
 
-    ~CMainSignals();
+    ~ValidationSignals();
 
     /** Call any remaining callbacks on the calling thread */
     void FlushBackgroundCallbacks();

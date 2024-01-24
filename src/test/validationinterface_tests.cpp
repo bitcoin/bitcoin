@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(unregister_validation_interface_race)
 class TestInterface : public CValidationInterface
 {
 public:
-    TestInterface(CMainSignals& signals, std::function<void()> on_call = nullptr, std::function<void()> on_destroy = nullptr)
+    TestInterface(ValidationSignals& signals, std::function<void()> on_call = nullptr, std::function<void()> on_destroy = nullptr)
         : m_on_call(std::move(on_call)), m_on_destroy(std::move(on_destroy)), m_signals{signals}
     {
     }
@@ -72,7 +72,7 @@ public:
     }
     std::function<void()> m_on_call;
     std::function<void()> m_on_destroy;
-    CMainSignals& m_signals;
+    ValidationSignals& m_signals;
 };
 
 // Regression test to ensure UnregisterAllValidationInterfaces calls don't
