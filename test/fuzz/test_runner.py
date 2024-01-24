@@ -372,8 +372,8 @@ def parse_test_list(*, fuzz_bin):
             'PRINT_ALL_FUZZ_TARGETS_AND_ABORT': ''
         },
         stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
         text=True,
+        check=True,
     ).stdout.splitlines()
     return test_list_all
 
