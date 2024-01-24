@@ -13,6 +13,7 @@
 #include <node/blockstorage.h>
 #include <undo.h>
 #include <util/fs_helpers.h>
+#include <util/syserror.h>
 
 /* The index database stores three items for each block: the disk location of the encoded filter,
  * its dSHA256 hash, and the header. Those belonging to blocks on the active chain are indexed by
@@ -159,6 +160,11 @@ bool BlockFilterIndex::CustomCommit(CDBBatch& batch)
     }
     if (!file.Commit()) {
         LogError("%s: Failed to commit filter file %d\n", __func__, pos.nFile);
+        (void)file.fclose();
+        return false;
+    }
+    if (file.fclose() != 0) {
+        LogError("Failed to close filter file %d after commit: %s", pos.nFile, SysErrorString(errno));
         return false;
     }
 
@@ -213,6 +219,11 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
         }
         if (!last_file.Commit()) {
             LogPrintf("%s: Failed to commit filter file %d\n", __func__, pos.nFile);
+            (void)last_file.fclose();
+            return 0;
+        }
+        if (last_file.fclose() != 0) {
+            LogError("Failed to close filter file %d after commit: %s", pos.nFile, SysErrorString(errno));
             return 0;
         }
 
@@ -235,6 +246,12 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
     }
 
     fileout << filter.GetBlockHash() << filter.GetEncodedFilter();
+
+    if (fileout.fclose() != 0) {
+        LogError("Failed to close filter file %d: %s", pos.nFile, SysErrorString(errno));
+        return 0;
+    }
+
     return data_size;
 }
 
