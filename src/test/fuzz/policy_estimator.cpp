@@ -111,5 +111,6 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
         AutoFile fuzzed_auto_file{fuzzed_file_provider.open()};
         block_policy_estimator.Write(fuzzed_auto_file);
         block_policy_estimator.Read(fuzzed_auto_file);
+        (void)fuzzed_auto_file.fclose();
     }
 }
