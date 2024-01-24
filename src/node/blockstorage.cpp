@@ -130,7 +130,11 @@ bool BlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, s
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+                if ((pindexNew->nNonce & 1) == 0) {
+#else
                 if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams)) {
+#endif
                     return error("%s: CheckProofOfWork failed: %s", __func__, pindexNew->ToString());
                 }
 
@@ -1038,7 +1042,11 @@ bool BlockManager::ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos) cons
     }
 
     // Check the header
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    if ((block.nNonce & 1) == 0) {
+#else
     if (!CheckProofOfWork(block.GetHash(), block.nBits, GetConsensus())) {
+#endif
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
     }
 

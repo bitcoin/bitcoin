@@ -128,7 +128,13 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
     block_out.reset();
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
-    while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetHash(), block.nBits, chainman.GetConsensus()) && !chainman.m_interrupt) {
+    while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() &&
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+           (block.nNonce & 1) == 0 &&
+#else
+           !CheckProofOfWork(block.GetHash(), block.nBits, chainman.GetConsensus()) &&
+#endif
+           !chainman.m_interrupt) {
         ++block.nNonce;
         --max_tries;
     }
