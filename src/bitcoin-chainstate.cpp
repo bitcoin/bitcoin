@@ -118,6 +118,7 @@ int main(int argc, char* argv[])
         .chainparams = *chainparams,
         .datadir = abs_datadir,
         .notifications = *notifications,
+        .signals = &GetMainSignals(),
     };
     const node::BlockManager::Options blockman_opts{
         .chainparams = chainman_opts.chainparams,

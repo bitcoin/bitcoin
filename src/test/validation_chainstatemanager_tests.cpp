@@ -383,6 +383,7 @@ struct SnapshotTestSetup : TestChain100Setup {
                 .chainparams = ::Params(),
                 .datadir = chainman.m_options.datadir,
                 .notifications = *m_node.notifications,
+                .signals = &GetMainSignals(),
             };
             const BlockManager::Options blockman_opts{
                 .chainparams = chainman_opts.chainparams,

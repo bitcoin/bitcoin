@@ -40,6 +40,7 @@
 #include <vector>
 
 class CChain;
+class CMainSignals;
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
@@ -446,6 +447,8 @@ public:
     const bool m_persist_v1_dat;
 
     const Limits m_limits;
+
+    CMainSignals* const m_signals;
 
     /** Create a new CTxMemPool.
      * Sanity checks will be off by default for performance, because otherwise
