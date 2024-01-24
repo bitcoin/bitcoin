@@ -165,6 +165,24 @@ class AddrmanTest(BitcoinTestFramework):
             self.start_node(0)
         assert_equal(self.nodes[0].getnodeaddresses(), [])
 
+        self.log.info("Check -cleanupaddrman cleans up undesired addresses")
+        addresses = [
+            "1.65.195.98",
+            "2001:41f0::62:6974:636f:696e",
+            "2bqghnldu6mcug4pikzprwhtjjnsyederctvci6klcwzepnjd46ikjyd.onion",
+            "255fhcp6ajvftnyo7bwz3an3t4a4brhopm3bamyh2iu5r3gnr2rq.b32.i2p"
+        ]
+
+        for addr in addresses:
+            assert_equal(self.nodes[0].addpeeraddress(address=addr, port=8333), {"success": True})
+
+        self.restart_node(0, ["-cleanupaddrman", "-onlynet=ipv6"])
+        addrman_info = self.nodes[0].getaddrmaninfo()
+        for network, values in addrman_info.items():
+            if network not in ["ipv6", "all_networks"]:
+                assert_equal(values['total'], 0)
+            else:
+                assert_equal(values['total'], 1)
 
 if __name__ == "__main__":
     AddrmanTest().main()
