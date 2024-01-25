@@ -1527,6 +1527,9 @@ RPCMethod sendall()
             if (fee_from_size > pwallet->m_max_tx_fee) {
                 throw JSONRPCError(RPC_WALLET_ERROR, TransactionErrorString(TransactionError::MAX_FEE_EXCEEDED).original);
             }
+            if (fee_from_size > pwallet->m_max_tx_fee_rate.GetFee(tx_size.vsize)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, TransactionErrorString(TransactionError::MAX_FEE_RATE_EXCEEDED).original);
+            }
 
             if (effective_value <= 0) {
                 if (send_max) {

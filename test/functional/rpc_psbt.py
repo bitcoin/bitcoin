@@ -70,10 +70,12 @@ import os
 class PSBTTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
+        # Set a high -maxfeerate value for nodes' wallets; some tests require
+        # creating and broadcasting transactions with a high fee rate that exceeds the default.
         self.extra_args = [
             [],
-            ["-changetype=legacy"],
-            []
+            ["-changetype=legacy", "-maxfeerate=1"],
+            ["-maxfeerate=1"]
         ]
         # whitelist peers to speed up tx relay / mempool sync
         for args in self.extra_args:
