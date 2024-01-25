@@ -95,6 +95,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         wallet.lockunspent(True)
         wallet.lockunspent(False, to_keep)
 
+    def reconnect_nodes(self):
+        self.connect_nodes(0, 1)
+        self.connect_nodes(0, 2)
+        self.connect_nodes(0, 3)
+
     def run_test(self):
         self.watchonly_utxo = None
         self.log.info("Connect nodes, set fees, generate blocks, and sync")
@@ -830,6 +835,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         # With no arguments passed, expect fee of 141 satoshis.
         assert_approx(node.fundrawtransaction(rawtx, fee_rate=self.fee_rate_sats_per_vb)["fee"], vexp=0.00000141, vspan=0.00000001)
         # Expect fee to be 10,000x higher when an explicit fee rate 10,000x greater is specified.
+        # Restart node with a high -maxfeerate to allow the wallet to create high fee rate transactions
+        self.restart_node(3, extra_args=["-maxfeerate=1"])
         result = node.fundrawtransaction(rawtx, fee_rate=10000)
         assert_approx(result["fee"], vexp=0.0141, vspan=0.0001)
 
@@ -888,6 +895,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.log.info("- raises RPC error if both fee_rate and estimate_mode are passed")
         assert_raises_rpc_error(-8, "Cannot specify both estimate_mode and fee_rate",
             node.fundrawtransaction, rawtx, fee_rate=1, estimate_mode="economical", add_inputs=True)
+        self.connect_nodes(0, 3)
 
     def test_address_reuse(self):
         """Test no address reuse occurs."""
@@ -1392,7 +1400,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         feerate = Decimal("0.1")
         # Set a high -minrelaytxfee and set -discardfee to 0 for easier calculation.
         # Set -maxfeerate higher than minrelaytxfee to allow high fee rate txs to be
-        # broadcasted.
+        # created and broadcasted.
         self.restart_node(0, [f"-minrelaytxfee={feerate}", "-discardfee=0", "-maxfeerate=1"])
         self.nodes[0].loadwallet(self.default_wallet_name, True)
         funds = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
@@ -1436,9 +1444,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         do_fund_send(upper_bound)
 
         self.restart_node(0)
-        self.connect_nodes(0, 1)
-        self.connect_nodes(0, 2)
-        self.connect_nodes(0, 3)
+        self.reconnect_nodes()
 
     def test_feerate_rounding(self):
         self.log.info("Test that rounding of GetFee does not result in an assertion")
