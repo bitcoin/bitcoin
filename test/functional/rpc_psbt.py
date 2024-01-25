@@ -64,10 +64,12 @@ import os
 class PSBTTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
+        # Set a high -maxfeerate value for nodes' wallets; some tests require
+        # creating and broadcasting transactions with a high fee rate that exceeds the default.
         self.extra_args = [
-            ["-walletrbf=1", "-addresstype=bech32", "-changetype=bech32"], #TODO: Remove address type restrictions once taproot has psbt extensions
-            ["-walletrbf=0", "-changetype=legacy"],
-            []
+            ["-walletrbf=1", "-addresstype=bech32", "-changetype=bech32", "-maxfeerate=1"], #TODO: Remove address type restrictions once taproot has psbt extensions
+            ["-walletrbf=0", "-changetype=legacy", "-maxfeerate=1"],
+            ["-maxfeerate=1"]
         ]
         # whitelist peers to speed up tx relay / mempool sync
         for args in self.extra_args:
