@@ -51,6 +51,7 @@ namespace {
 //! Construct wallet tx struct.
 WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
 {
+    LOCK(wallet.cs_wallet);
     WalletTx result;
     bool fInputDenomFound{false}, fOutputDenomFound{false};
     result.tx = wtx.tx;
@@ -172,8 +173,16 @@ public:
     {
         return m_wallet->SignMessage(message, pkhash, str_sig);
     }
-    bool isSpendable(const CScript& script) override { return m_wallet->IsMine(script) & ISMINE_SPENDABLE; }
-    bool isSpendable(const CTxDestination& dest) override { return m_wallet->IsMine(dest) & ISMINE_SPENDABLE; }
+    bool isSpendable(const CScript& script) override
+    {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->IsMine(script) & ISMINE_SPENDABLE;
+    }
+    bool isSpendable(const CTxDestination& dest) override
+    {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->IsMine(dest) & ISMINE_SPENDABLE;
+    }
     bool haveWatchOnly() override
     {
         auto spk_man = m_wallet->GetLegacyScriptPubKeyMan();
