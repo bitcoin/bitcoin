@@ -184,6 +184,30 @@ class WalletSendTest(BitcoinTestFramework):
 
         return res
 
+    def test_maxfeerate(self):
+        self.log.info("test -maxfeerate enforcement on wallet transactions.")
+        # Default maxfeerate is 10,000 sat/vB
+        # Wallet will reject all transactions with fee rate above 10,000 sat/vB.
+        assert_raises_rpc_error(-6, "Fee rate exceeds maximum configured by user (maxfeerate)",
+                                    self.nodes[0].sendtoaddress, address=self.nodes[0].getnewaddress(), amount=1, fee_rate=10001)
+
+        # All transaction with fee rate <= 10,000 sat/vB can be created.
+        self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), amount=1, fee_rate=9900)
+
+        # Configure a lower -maxfeerate of 10 sat/vB.
+        self.restart_node(0, extra_args=['-maxfeerate=0.00010'])
+
+        # Wallet will reject all transactions with fee rate above 10 sat/vB.
+        assert_raises_rpc_error(-6, "Fee rate exceeds maximum configured by user (maxfeerate)",
+                                    self.nodes[0].sendtoaddress, address=self.nodes[0].getnewaddress(), amount=1, fee_rate=11)
+
+        # Fee rates <= 10 sat/vB will be accepted by the wallet.
+        self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), amount=1, fee_rate=9)
+
+        # Restart the node with the default -maxfeerate option
+        self.restart_node(0)
+
+
     def run_test(self):
         self.log.info("Setup wallets...")
         # w0 is a wallet with coinbase rewards
@@ -576,6 +600,7 @@ class WalletSendTest(BitcoinTestFramework):
         # Due to ECDSA signatures not always being the same length, the actual fee rate may be slightly different
         # but rounded to nearest integer, it should be the same as the target fee rate
         assert_equal(round(actual_fee_rate_sat_vb), target_fee_rate_sat_vb)
+        self.test_maxfeerate()
 
 if __name__ == '__main__':
     WalletSendTest().main()
