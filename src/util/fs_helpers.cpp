@@ -306,8 +306,7 @@ static std::optional<unsigned> StringToOctal(const std::string& str)
 
 static auto ConvertPermsToOctal(const std::string& str) noexcept -> std::optional<unsigned>
 {
-    // Don't permit setting special bits as they're not relevant to cookie files
-    if (str.length() == 3) return StringToOctal(str);
+    if ((str.length() == 3) || (str.length() == 4)) return StringToOctal(str);
     return std::nullopt;
 }
 
