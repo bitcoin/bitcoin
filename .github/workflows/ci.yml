@@ -103,7 +103,7 @@ jobs:
 
       - name: Restore Ccache cache
         id: ccache-cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ github.job }}-ccache-${{ github.run_id }}
@@ -113,7 +113,7 @@ jobs:
         run: ./ci/test_run_all.sh
 
       - name: Save Ccache cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -159,7 +159,7 @@ jobs:
 
       - name: Restore static Qt cache
         id: static-qt-cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: C:\Qt_static
           key: ${{ github.job }}-static-qt-${{ hashFiles('msbuild_version', 'qt_url', 'qt_conf') }}
@@ -202,14 +202,14 @@ jobs:
 
       - name: Save static Qt cache
         if: steps.static-qt-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           path: C:\Qt_static
           key: ${{ github.job }}-static-qt-${{ hashFiles('msbuild_version', 'qt_url', 'qt_conf') }}
 
       - name: Ccache installation cache
         id: ccache-installation-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             C:\ProgramData\chocolatey\lib\ccache
@@ -226,7 +226,7 @@ jobs:
 
       - name: Restore Ccache cache
         id: ccache-cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ~/AppData/Local/ccache
           key: ${{ github.job }}-ccache-${{ github.run_id }}
@@ -242,13 +242,13 @@ jobs:
           Get-Content -Path "$env:GITHUB_WORKSPACE\vcpkg_commit"
 
       - name: vcpkg tools cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: C:/vcpkg/downloads/tools
           key: ${{ github.job }}-vcpkg-tools
 
       - name: vcpkg binary cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/AppData/Local/vcpkg/archives
           key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('vcpkg_commit', 'msbuild_version', 'toolset_version', 'build_msvc/vcpkg.json') }}
@@ -266,7 +266,7 @@ jobs:
         run: ccache --show-stats
 
       - name: Save Ccache cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
         with:
           path: ~/AppData/Local/ccache
