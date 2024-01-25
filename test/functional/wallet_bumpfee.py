@@ -111,6 +111,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_small_output_with_feerate_succeeds(self, rbf_node, dest_address)
         test_no_more_inputs_fails(self, rbf_node, dest_address)
         self.test_bump_back_to_yourself()
+        self.test_bumpfee_maxfeerate_includes_bump_fee()
         self.test_provided_change_pos(rbf_node)
         self.test_single_output()
 
@@ -132,8 +133,11 @@ class BumpFeeTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Insufficient total fee 0.00000141", rbf_node.bumpfee, rbfid, fee_rate=INSUFFICIENT)
 
         self.log.info("Test invalid fee rate settings")
-        assert_raises_rpc_error(-4, "Specified or calculated fee 0.141 is too high (cannot be higher than -maxtxfee 0.10",
+
+        # Bumping to a very high fee rate above the default -maxfeerate should fail
+        assert_raises_rpc_error(-4, "New fee rate 1.00 BTC/kvB is too high (cannot be higher than -maxfeerate 0.10 BTC/kvB)",
             rbf_node.bumpfee, rbfid, fee_rate=TOO_HIGH)
+
         # Test fee_rate with zero values.
         msg = "Insufficient total fee 0.00"
         for zero_value in [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]:
@@ -239,6 +243,29 @@ class BumpFeeTest(BitcoinTestFramework):
         assert_equal(bumped_tx["decoded"]["vout"][0]["value"] + bumped_tx["decoded"]["vout"][1]["value"] + bumped["fee"], 15)
 
         node.unloadwallet("back_to_yourself")
+
+    def test_bumpfee_maxfeerate_includes_bump_fee(self):
+        self.log.info("Test that bumpfee enforces -maxfeerate against the total fee including ancestor bump fees")
+        node = self.nodes[1]
+        node.createwallet("bumpfee_maxfeerate")
+        wallet = node.get_wallet_rpc("bumpfee_maxfeerate")
+
+        # One confirmed UTXO to fund from.
+        self.nodes[0].sendtoaddress(wallet.getnewaddress(), 5)
+        self.generate(self.nodes[0], 1)
+
+        # Low-feerate unconfirmed parent, so spending its outputs requires a positive bump fee.
+        wallet.sendtoaddress(wallet.getnewaddress(), 4, fee_rate=2)
+        # Spend the unconfirmed parent output in an RBF tx.
+        child = wallet.send(outputs={self.nodes[0].getnewaddress(): 3}, fee_rate=5)["txid"]
+        assert_equal(wallet.gettransaction(child)["confirmations"], 0)
+
+        # fee_rate equals the default -maxfeerate (10000 sat/vB); the ancestor bump fee pushes the
+        # bumped tx's actual fee rate above the limit, so bumpfee must fail instead of silently
+        # creating a tx that the broadcast-time -maxfeerate check rejects.
+        assert_raises_rpc_error(-4, "is too high (cannot be higher than -maxfeerate", wallet.bumpfee, child, fee_rate=10000)
+
+        node.unloadwallet("bumpfee_maxfeerate")
 
     def test_provided_change_pos(self, rbf_node):
         self.log.info("Test the original_change_index option")
@@ -542,7 +569,8 @@ def test_maxtxfee_fails(self, rbf_node, dest_address):
     self.restart_node(1, ['-maxtxfee=0.000025'] + self.extra_args[1])
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     rbfid = spend_one_input(rbf_node, dest_address)
-    assert_raises_rpc_error(-4, "Unable to create transaction. Fee exceeds maximum configured by user (maxtxfee)", rbf_node.bumpfee, rbfid)
+    # When user passed fee rate causes base fee to be above maxtxfee we fail early
+    assert_raises_rpc_error(-4, "Specified or calculated fee 0.0000282 is too high (cannot be higher than -maxtxfee 0.000025)", rbf_node.bumpfee, rbfid, fee_rate=20)
     self.restart_node(1, self.extra_args[1])
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     self.connect_nodes(1, 0)

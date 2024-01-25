@@ -209,6 +209,21 @@ class WalletSendTest(BitcoinTestFramework):
         self.restart_node(0)
         self.nodes[0].loadwallet(self.default_wallet_name, load_on_startup=True)
 
+        self.log.info("test -maxfeerate enforcement on wallet transactions.")
+        # Default maxfeerate is 10,000 sat/vB
+        # Wallet will reject all transactions with fee rate above 10,000 sat/vB.
+        assert_raises_rpc_error(-6, "Fee rate exceeds maximum configured by user (maxfeerate)",
+                                    self.nodes[0].sendtoaddress, address=self.nodes[0].getnewaddress(), amount=1, fee_rate=10001)
+
+        self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), amount=1, fee_rate=9900)
+        self.restart_node(0, extra_args=['-maxfeerate=0.00010'])
+        assert_raises_rpc_error(-6, "Fee rate exceeds maximum configured by user (maxfeerate)",
+                                    self.nodes[0].sendtoaddress, address=self.nodes[0].getnewaddress(), amount=1, fee_rate=11)
+        self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), amount=1, fee_rate=9)
+
+        self.restart_node(0, extra_args=['-maxfeerate=0.00001009'])
+        self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), amount=1, fee_rate=Decimal("1.009"))
+
     def run_test(self):
         self.log.info("Setup wallets...")
         # w0 is a wallet with coinbase rewards

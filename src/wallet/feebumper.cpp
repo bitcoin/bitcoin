@@ -106,6 +106,13 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CMutableTrans
         return feebumper::Result::INVALID_PARAMETER;
     }
 
+    const CFeeRate new_feerate{new_total_fee, static_cast<int32_t>(maxTxSize)};
+    if (new_feerate > wallet.m_max_tx_fee_rate) {
+        errors.push_back(Untranslated(strprintf("New fee rate %s %s/kvB is too high (cannot be higher than -maxfeerate %s %s/kvB)",
+                                                FormatMoney(new_feerate.GetFeePerK()), CURRENCY_UNIT, FormatMoney(wallet.m_max_tx_fee_rate.GetFeePerK()), CURRENCY_UNIT)));
+        return feebumper::Result::WALLET_ERROR;
+    }
+
     // Check that in all cases the new fee doesn't violate maxTxFee
     const CAmount max_tx_fee = wallet.m_max_tx_fee;
     if (new_total_fee > max_tx_fee) {
