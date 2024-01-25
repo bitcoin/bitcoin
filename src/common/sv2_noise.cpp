@@ -64,8 +64,8 @@ Sv2CipherState::Sv2CipherState(uint8_t key[KEY_SIZE])
 
 bool Sv2CipherState::DecryptWithAd(Span<const std::byte> associated_data, Span<std::byte> msg)
 {
-    AEADChaCha20Poly1305::Nonce96 nonce = {0, ++m_nonce};
-
+    AEADChaCha20Poly1305::Nonce96 nonce = {0, m_nonce};
+    m_nonce++;
     auto key = MakeByteSpan(Span(m_key));
     AEADChaCha20Poly1305 aead{key};
     return aead.Decrypt(msg, associated_data, nonce, Span(msg.begin(), msg.end() - POLY1305_TAGLEN));
@@ -74,8 +74,8 @@ bool Sv2CipherState::DecryptWithAd(Span<const std::byte> associated_data, Span<s
 // The encryption assumes that the msg variable has sufficient space for a 16 byte MAC.
 void Sv2CipherState::EncryptWithAd(Span<const std::byte> associated_data, Span<std::byte> msg)
 {
-    AEADChaCha20Poly1305::Nonce96 nonce = {0, ++m_nonce};
-
+    AEADChaCha20Poly1305::Nonce96 nonce = {0, m_nonce};
+    m_nonce++;
     auto key = MakeByteSpan(Span(m_key));
     AEADChaCha20Poly1305 aead{key};
     aead.Encrypt(Span(msg.begin(), msg.end() - POLY1305_TAGLEN), associated_data, nonce, msg);
