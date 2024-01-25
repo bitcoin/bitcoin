@@ -235,7 +235,7 @@ public:
         ss_header_plain << msg.m_sv2_header;
         LogPrintLevel(BCLog::SV2, BCLog::Level::Trace, "Header: %s\n", HexStr(ss_header_plain));
         Span<std::byte> header_encrypted{buffer_span.subspan(0, SV2_HEADER_ENCRYPTED_SIZE)};
-        m_peer_cipher->EncryptMessage(ss_header_plain, header_encrypted);
+        BOOST_REQUIRE(m_peer_cipher->EncryptMessage(ss_header_plain, header_encrypted));
 
         // Payload
         Span<std::byte> payload_plain = MakeWritableByteSpan(msg.m_msg);
@@ -243,7 +243,7 @@ public:
         //       is probably enough for most debugging.
         LogPrintLevel(BCLog::SV2, BCLog::Level::Trace, "Payload: %s\n", HexStr(payload_plain));
         Span<std::byte> payload_encrypted{buffer_span.subspan(SV2_HEADER_ENCRYPTED_SIZE, encrypted_payload_size)};
-        m_peer_cipher->EncryptMessage(payload_plain, payload_encrypted);
+        BOOST_REQUIRE(m_peer_cipher->EncryptMessage(payload_plain, payload_encrypted));
 
         // Schedule it for sending.
         Send(ciphertext);

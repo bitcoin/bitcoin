@@ -103,16 +103,17 @@ public:
      *
      * @returns whether decryption succeeded
      */
-     [[nodiscard]] bool DecryptWithAd(Span<const std::byte> associated_data, Span<std::byte> msg);
-    void EncryptWithAd(Span<const std::byte> associated_data, Span<std::byte> msg);
+    [[nodiscard]] bool DecryptWithAd(Span<const std::byte> associated_data, Span<std::byte> msg);
+    [[nodiscard]] bool EncryptWithAd(Span<const std::byte> associated_data, Span<std::byte> msg);
 
     /** The message will be chunked in NOISE_MAX_CHUNK_SIZE parts and expanded
      *  by 16 bytes per chunk for its MAC.
      *
      * @param[in] input     message
      * @param[out] output   message with encrypted and authenticated chunks
+     * @return whether encryption succeeded. Only fails if nonce is uint64_max.
      */
-    void EncryptMessage(Span<const std::byte> input, Span<std::byte> output);
+    [[nodiscard]] bool EncryptMessage(Span<const std::byte> input, Span<std::byte> output);
 
     /** Decrypt message.
      *
@@ -142,7 +143,7 @@ public:
 
     void MixHash(const Span<const std::byte> input);
     void MixKey(const Span<const uint8_t> input_key_material);
-    void EncryptAndHash(Span<std::byte> data);
+    [[ nodiscard ]] bool EncryptAndHash(Span<std::byte> data);
     [[ nodiscard ]] bool DecryptAndHash(Span<std::byte> data);
     std::array<Sv2CipherState, 2> Split();
 
@@ -247,7 +248,7 @@ public:
     /** Decrypts a message. May only be called after FinishHandshake() */
     bool DecryptMessage(Span<std::byte> message);
     /** Encrypts a message. May only be called after FinishHandshake() */
-    void EncryptMessage(Span<const std::byte> input, Span<std::byte> output);
+    [[nodiscard]] bool EncryptMessage(Span<const std::byte> input, Span<std::byte> output);
 
     /* Expected size after chunking and with MAC */
     static size_t EncryptedMessageSize(size_t msg_len);

@@ -64,24 +64,39 @@ Sv2CipherState::Sv2CipherState(uint8_t key[KEY_SIZE])
 
 bool Sv2CipherState::DecryptWithAd(Span<const std::byte> associated_data, Span<std::byte> msg)
 {
+    if (m_nonce == UINT64_MAX) {
+        // This nonce value is reserved, see chapter 5.1 of the Noise paper.
+        LogPrintLevel(BCLog::SV2, BCLog::Level::Trace, "Nonce exceeds maximum value");
+        return false;
+    }
     AEADChaCha20Poly1305::Nonce96 nonce = {0, m_nonce};
-    m_nonce++;
     auto key = MakeByteSpan(Span(m_key));
     AEADChaCha20Poly1305 aead{key};
-    return aead.Decrypt(msg, associated_data, nonce, Span(msg.begin(), msg.end() - POLY1305_TAGLEN));
+    if (!aead.Decrypt(msg, associated_data, nonce, Span(msg.begin(), msg.end() - POLY1305_TAGLEN))) {
+        LogPrintLevel(BCLog::SV2, BCLog::Level::Trace, "Message decryption failed");
+        return false;
+    }
+    // Only increase nonce if decryption succeeded
+    m_nonce++;
+    return true;
 }
 
 // The encryption assumes that the msg variable has sufficient space for a 16 byte MAC.
-void Sv2CipherState::EncryptWithAd(Span<const std::byte> associated_data, Span<std::byte> msg)
+bool Sv2CipherState::EncryptWithAd(Span<const std::byte> associated_data, Span<std::byte> msg)
 {
-    AEADChaCha20Poly1305::Nonce96 nonce = {0, m_nonce};
-    m_nonce++;
+    if (m_nonce == UINT64_MAX) {
+        // This nonce value is reserved, see chapter 5.1 of the Noise paper.
+        LogPrintLevel(BCLog::SV2, BCLog::Level::Trace, "Nonce exceeds maximum value");
+        return false;
+    }
+    AEADChaCha20Poly1305::Nonce96 nonce = {0, m_nonce++};
     auto key = MakeByteSpan(Span(m_key));
     AEADChaCha20Poly1305 aead{key};
     aead.Encrypt(Span(msg.begin(), msg.end() - POLY1305_TAGLEN), associated_data, nonce, msg);
+    return true;
 }
 
-void Sv2CipherState::EncryptMessage(Span<const std::byte> input, Span<std::byte> output) {
+bool Sv2CipherState::EncryptMessage(Span<const std::byte> input, Span<std::byte> output) {
     Assume(output.size() == Sv2Cipher::EncryptedMessageSize(input.size()));
     Assume(output.begin() != input.begin());
 
@@ -114,11 +129,14 @@ void Sv2CipherState::EncryptMessage(Span<const std::byte> input, Span<std::byte>
     for (size_t i = 0; i < num_chunks; ++i) {
         size_t chunk_size = std::min(output.size() - bytes_written, NOISE_MAX_CHUNK_SIZE);
         Span<std::byte> chunk = output.subspan(bytes_written, chunk_size);
-        EncryptWithAd(ad, chunk);
+        if (!EncryptWithAd(ad, chunk)) {
+            return false;
+        }
         bytes_written += chunk.size();
     }
 
     Assume(bytes_written == output.size());
+    return true;
 }
 
 bool Sv2CipherState::DecryptMessage(Span<std::byte> message) {
@@ -183,10 +201,13 @@ void Sv2SymmetricState::HKDF2(const Span<const uint8_t> input_key_material, uint
     out1_mac.Finalize(out1);
 }
 
-void Sv2SymmetricState::EncryptAndHash(Span<std::byte> data)
+bool Sv2SymmetricState::EncryptAndHash(Span<std::byte> data)
 {
-    m_cipher_state.EncryptWithAd(MakeByteSpan(m_hash_output), data);
+    if (!m_cipher_state.EncryptWithAd(MakeByteSpan(m_hash_output), data)) {
+        return false;
+    }
     MixHash(data);
+    return true;
 }
 
 bool Sv2SymmetricState::DecryptAndHash(Span<std::byte> data)
@@ -297,7 +318,11 @@ void Sv2HandshakeState::WriteMsgES(Span<std::byte> msg)
     Assume(static_pk.IsFullyValid());
     std::transform(static_pk.begin(), static_pk.end(), msg.begin() + KEY_SIZE,
                [](unsigned char b) { return static_cast<std::byte>(b); });
-    m_symmetric_state.EncryptAndHash(Span(msg.begin() + KEY_SIZE, KEY_SIZE + POLY1305_TAGLEN));
+    if (!m_symmetric_state.EncryptAndHash(Span(msg.begin() + KEY_SIZE, KEY_SIZE + POLY1305_TAGLEN))) {
+        // This should never happen
+        Assume(false);
+        throw std::runtime_error("Failed to encrypt our ephemeral key");
+    }
     bytes_written += KEY_SIZE + POLY1305_TAGLEN;
 
     LogPrintLevel(BCLog::SV2, BCLog::Level::Trace, "Mix hash: %s\n", HexStr(m_symmetric_state.GetHashOutput()));
@@ -321,7 +346,11 @@ void Sv2HandshakeState::WriteMsgES(Span<std::byte> msg)
     LogPrintLevel(BCLog::SV2, BCLog::Level::Debug, "Our certificate: %s\n", HexStr(Span(msg.begin() + bytes_written, SIGNATURE_NOISE_MESSAGE_SIZE)));
 
     LogPrintLevel(BCLog::SV2, BCLog::Level::Trace, "Encrypt certificate\n");
-    m_symmetric_state.EncryptAndHash(Span(msg.begin() + bytes_written, SIGNATURE_NOISE_MESSAGE_SIZE + POLY1305_TAGLEN));
+    if (!m_symmetric_state.EncryptAndHash(Span(msg.begin() + bytes_written, SIGNATURE_NOISE_MESSAGE_SIZE + POLY1305_TAGLEN))) {
+        // This should never happen
+        Assume(false);
+        throw std::runtime_error("Failed to encrypt our certificate");
+    }
 
     LogPrintLevel(BCLog::SV2, BCLog::Level::Trace, "Mix hash: %s\n", HexStr(m_symmetric_state.GetHashOutput()));
 
@@ -466,15 +495,16 @@ bool Sv2Cipher::DecryptMessage(Span<std::byte> message)
     }
 }
 
-void Sv2Cipher::EncryptMessage(Span<const std::byte> input, Span<std::byte> output)
+bool Sv2Cipher::EncryptMessage(Span<const std::byte> input, Span<std::byte> output)
 {
     Assume(output.size() == Sv2Cipher::EncryptedMessageSize(input.size()));
 
     if (m_initiator) {
-        m_cs1.EncryptMessage(input, output);
+        if (!m_cs1.EncryptMessage(input, output)) return false;
     } else {
-        m_cs2.EncryptMessage(input, output);
+        if (!m_cs2.EncryptMessage(input, output)) return false;
     }
+    return true;
 }
 
 uint256 Sv2Cipher::GetHash() const
