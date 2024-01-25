@@ -4,7 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Utilities for manipulating blocks and transactions."""
 
+from binascii import a2b_hex
 from decimal import Decimal
+import io
+import struct
+import time
 import unittest
 
 from .messages import (
@@ -30,18 +34,30 @@ TIME_GENESIS_BLOCK = 1417713337
 # Coinbase transaction outputs can only be spent after this number of new blocks (network rule)
 COINBASE_MATURITY = 100
 
-def create_block(hashprev, coinbase, ntime=None, *, version=1):
+NORMAL_GBT_REQUEST_PARAMS = {"rules": []} # type: ignore[var-annotated]
+
+def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl=None, txlist=None, dip4_activated=False, v20_activated=False):
     """Create a block (with regtest difficulty)."""
     block = CBlock()
-    block.nVersion = version
-    if ntime is None:
-        import time
-        block.nTime = int(time.time() + 600)
+    if tmpl is None:
+        tmpl = {}
+    block.nVersion = version or tmpl.get('version') or 1
+    block.nTime = ntime or tmpl.get('curtime') or int(time.time() + 600)
+    block.hashPrevBlock = hashprev or int(tmpl['previousblockhash'], 0x10)
+    if tmpl and not tmpl.get('bits') is None:
+        block.nBits = struct.unpack('>I', a2b_hex(tmpl['bits']))[0]
     else:
-        block.nTime = ntime
-    block.hashPrevBlock = hashprev
-    block.nBits = 0x207fffff  # difficulty retargeting is disabled in REGTEST chainparams
+        block.nBits = 0x207fffff  # difficulty retargeting is disabled in REGTEST chainparams
+    if coinbase is None:
+        coinbase = create_coinbase(height=tmpl['height'], dip4_activated=dip4_activated, v20_activated=v20_activated)
     block.vtx.append(coinbase)
+    if txlist:
+        for tx in txlist:
+            if not hasattr(tx, 'calc_sha256'):
+                txo = CTransaction()
+                txo.deserialize(io.BytesIO(tx))
+                tx = txo
+            block.vtx.append(tx)
     block.hashMerkleRoot = block.calc_merkle_root()
     block.calc_sha256()
     return block

@@ -13,7 +13,7 @@ Generate 427 more blocks.
 [Policy/Consensus] Check that the new NULLDUMMY rules are enforced on the 432nd block.
 """
 
-from test_framework.blocktools import create_coinbase, create_block, create_transaction
+from test_framework.blocktools import NORMAL_GBT_REQUEST_PARAMS, create_block, create_transaction
 from test_framework.messages import CTransaction
 from test_framework.script import CScript
 from test_framework.test_framework import BitcoinTestFramework
@@ -37,9 +37,10 @@ def trueDummy(tx):
 class NULLDUMMYTest(BitcoinTestFramework):
 
     def set_test_params(self):
-        self.num_nodes = 1
+        # Need two nodes only so GBT doesn't complain that it's not connected
+        self.num_nodes = 2
         self.setup_clean_chain = True
-        self.extra_args = [['-whitelist=127.0.0.1']]
+        self.extra_args = [['-whitelist=127.0.0.1']] * 2
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -54,7 +55,6 @@ class NULLDUMMYTest(BitcoinTestFramework):
             coinbase_txid.append(self.nodes[0].getblock(i)['tx'][0])
         self.nodes[0].generate(427) # Block 429
         self.lastblockhash = self.nodes[0].getbestblockhash()
-        self.tip = int("0x" + self.lastblockhash, 0)
         self.lastblockheight = 429
         self.lastblocktime = self.mocktime + 429
 
@@ -88,8 +88,10 @@ class NULLDUMMYTest(BitcoinTestFramework):
 
     def block_submit(self, node, txs, accept = False):
         dip4_activated = self.lastblockheight + 1 >= 432
-        block = create_block(self.tip, create_coinbase(self.lastblockheight + 1, dip4_activated=dip4_activated), self.lastblocktime + 1)
-        block.nVersion = 4
+        tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
+        assert_equal(tmpl['previousblockhash'], self.lastblockhash)
+        assert_equal(tmpl['height'], self.lastblockheight + 1)
+        block = create_block(tmpl=tmpl, ntime=self.lastblocktime + 1, dip4_activated=dip4_activated)
         for tx in txs:
             tx.rehash()
             block.vtx.append(tx)
@@ -99,7 +101,6 @@ class NULLDUMMYTest(BitcoinTestFramework):
         assert_equal(None if accept else 'block-validation-failed', node.submitblock(block.serialize().hex()))
         if (accept):
             assert_equal(node.getbestblockhash(), block.hash)
-            self.tip = block.sha256
             self.lastblockhash = block.hash
             self.lastblocktime += 1
             self.lastblockheight += 1
