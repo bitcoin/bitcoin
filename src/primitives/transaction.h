@@ -439,4 +439,18 @@ public:
     friend bool operator<(const GenTxid& a, const GenTxid& b) { return std::tie(a.m_is_wtxid, a.m_hash) < std::tie(b.m_is_wtxid, b.m_hash); }
 };
 
+/**
+ * Methods to broadcast a local transaction.
+ * Used to influence BroadcastTransaction() and its callers.
+ */
+enum TxBroadcastMethod : uint8_t {
+    /// Add the transaction to the mempool and broadcast to all currently connected peers.
+    ADD_TO_MEMPOOL_AND_BROADCAST_TO_ALL,
+    /// Add the transaction to the mempool, but don't broadcast to anybody.
+    ADD_TO_MEMPOOL_NO_BROADCAST,
+    /// Omit the mempool and directly send the transaction via a few dedicated connections to
+    /// peers on privacy networks.
+    NO_MEMPOOL_PRIVATE_BROADCAST,
+};
+
 #endif // BITCOIN_PRIMITIVES_TRANSACTION_H
