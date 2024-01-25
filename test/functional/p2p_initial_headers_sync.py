@@ -40,7 +40,7 @@ class HeadersSyncTest(BitcoinTestFramework):
         peer1 = self.nodes[0].add_p2p_connection(P2PInterface())
 
         # Wait for peer1 to receive a getheaders
-        peer1.wait_for_getheaders()
+        peer1.wait_for_getheaders(hash_stop=0)
         # An empty reply will clear the outstanding getheaders request,
         # allowing additional getheaders requests to be sent to this peer in
         # the future.
@@ -67,7 +67,7 @@ class HeadersSyncTest(BitcoinTestFramework):
         self.announce_random_block(all_peers)
 
         self.log.info("Check that peer1 receives a getheaders in response")
-        peer1.wait_for_getheaders()
+        peer1.wait_for_getheaders(hash_stop=0)
         peer1.send_message(msg_headers()) # Send empty response, see above
         with p2p_lock:
             peer1.last_message.pop("getheaders", None)
@@ -89,14 +89,14 @@ class HeadersSyncTest(BitcoinTestFramework):
         self.announce_random_block(all_peers)
 
         self.log.info("Check that peer1 receives a getheaders in response")
-        peer1.wait_for_getheaders()
+        peer1.wait_for_getheaders(hash_stop=0)
 
         self.log.info("Check that the remaining peer received a getheaders as well")
         expected_peer = peer2
         if peer2 == peer_receiving_getheaders:
             expected_peer = peer3
 
-        expected_peer.wait_for_getheaders()
+        expected_peer.wait_for_getheaders(hash_stop=0)
 
         self.log.info("Success!")
 

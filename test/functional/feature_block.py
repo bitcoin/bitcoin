@@ -1410,7 +1410,7 @@ class FullBlockTest(BitcoinTestFramework):
         # an INV for the next block and receive two getheaders - one for the
         # IBD and one for the INV. We'd respond to both and could get
         # unexpectedly disconnected if the DoS score for that error is 50.
-        self.helper_peer.wait_for_getheaders(timeout=timeout)
+        self.helper_peer.wait_for_getheaders(hash_stop=0, timeout=timeout)
 
     def reconnect_p2p(self, timeout=60):
         """Tear down and bootstrap the P2P connection to the node.

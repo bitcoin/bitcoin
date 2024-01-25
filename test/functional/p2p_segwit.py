@@ -198,7 +198,7 @@ class TestP2PConn(P2PInterface):
             self.send_message(msg)
         else:
             self.send_message(msg_inv(inv=[CInv(MSG_BLOCK, block.sha256)]))
-            self.wait_for_getheaders()
+            self.wait_for_getheaders(hash_stop=0)
             self.send_message(msg)
         self.wait_for_getdata([block.sha256])
 
