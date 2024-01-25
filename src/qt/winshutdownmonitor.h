@@ -10,7 +10,7 @@
 #include <QString>
 #include <functional>
 
-#include <windef.h> // for HWND
+#include <windows.h>
 
 #include <QAbstractNativeEventFilter>
 
