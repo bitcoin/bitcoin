@@ -460,7 +460,7 @@ void CChainState::MaybeUpdateMempoolForReorg(
         TxValidationState stateDummy;
         if (!fAddToMempool || (*it)->IsCoinBase() ||
             !AcceptToMemoryPool(*this, *m_mempool, stateDummy, *it,
-                                true /* bypass_limits */, 0 /* nAbsurdFee */)) {
+                                true /* bypass_limits */)) {
             // If the transaction doesn't make it in to the mempool, remove any
             // transactions that depend on it (which would now be orphans).
             m_mempool->removeRecursive(**it, MemPoolRemovalReason::REORG);
@@ -548,7 +548,6 @@ public:
         TxValidationState &m_state;
         const int64_t m_accept_time;
         const bool m_bypass_limits;
-        const CAmount& m_absurd_fee;
         /*
          * Return any outpoints which were not previously present in the coins
          * cache, but were added as a result of validating the tx for mempool
@@ -640,7 +639,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     TxValidationState &state = args.m_state;
     const int64_t nAcceptTime = args.m_accept_time;
     const bool bypass_limits = args.m_bypass_limits;
-    const CAmount& nAbsurdFee = args.m_absurd_fee;
     std::vector<COutPoint>& coins_to_uncache = args.m_coins_to_uncache;
 
     // Alias what we need out of ws
@@ -808,10 +806,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (tx.nVersion != 3 || tx.nType != TRANSACTION_MNHF_SIGNAL) {
         if (!bypass_limits && !CheckFeeRate(nSize, nModifiedFees, state)) return false;
     }
-
-    if (nAbsurdFee && nFees > nAbsurdFee)
-        return state.Invalid(TxValidationResult::TX_NOT_STANDARD,
-                "absurdly-high-fee", strprintf("%d > %d", nFees, nAbsurdFee));
 
     // Calculate in-mempool ancestors, up to a limit.
     std::string errString;
@@ -992,10 +986,10 @@ bool MemPoolAccept::AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs
 /** (try to) add transaction to memory pool with a specified acceptance time **/
 static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPool& pool, CChainState& active_chainstate, TxValidationState &state, const CTransactionRef &tx,
                         int64_t nAcceptTime, bool bypass_limits,
-                        const CAmount nAbsurdFee, bool test_accept, CAmount* fee_out=nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+                        bool test_accept, CAmount* fee_out=nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     std::vector<COutPoint> coins_to_uncache;
-    MemPoolAccept::ATMPArgs args { chainparams, state, nAcceptTime, bypass_limits, nAbsurdFee, coins_to_uncache, test_accept, fee_out };
+    MemPoolAccept::ATMPArgs args { chainparams, state, nAcceptTime, bypass_limits, coins_to_uncache, test_accept, fee_out };
 
     assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
     bool res = MemPoolAccept(pool, active_chainstate).AcceptSingleTransaction(tx, args);
@@ -1017,11 +1011,11 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
 }
 
 bool AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPool& pool, TxValidationState &state, const CTransactionRef &tx,
-                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept, CAmount* fee_out)
+                        bool bypass_limits, bool test_accept, CAmount* fee_out)
 {
     const CChainParams& chainparams = Params();
     assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
-    return AcceptToMemoryPoolWithTime(chainparams, pool, active_chainstate, state, tx, GetTime(), bypass_limits, nAbsurdFee, test_accept, fee_out);
+    return AcceptToMemoryPoolWithTime(chainparams, pool, active_chainstate, state, tx, GetTime(), bypass_limits, test_accept, fee_out);
 }
 
 bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector<uint256> &hashes)
@@ -5511,7 +5505,7 @@ bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mocka
                 LOCK(cs_main);
                 assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
                 AcceptToMemoryPoolWithTime(chainparams, pool, active_chainstate, state, tx, nTime,
-                                           false /* bypass_limits */, 0 /* nAbsurdFee */, false /* test_accept */);
+                                           false /* bypass_limits */, false /* test_accept */);
                 if (state.IsValid()) {
                     ++count;
                 } else {

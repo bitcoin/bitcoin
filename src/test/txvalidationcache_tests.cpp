@@ -29,7 +29,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
 
         TxValidationState validationState;
         return AcceptToMemoryPool(::ChainstateActive(), *m_node.mempool, validationState, MakeTransactionRef(tx),
-                                true /* bypass_limits */, 0 /* nAbsurdFee */);
+                                true /* bypass_limits */);
     };
 
     // Create a double-spend of mature coinbase txn:

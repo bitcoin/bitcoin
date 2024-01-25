@@ -333,7 +333,7 @@ class AssetLocksTest(DashTestFramework):
 
         self.check_mempool_result(tx=asset_unlock_tx, result_expected={'allowed': True, 'vsize': asset_unlock_tx.get_vsize(), 'fees': {'base': Decimal(str(tiny_amount / COIN))}})
         self.check_mempool_result(tx=asset_unlock_tx_too_big_fee,
-                result_expected={'allowed': False, 'reject-reason' : 'absurdly-high-fee'})
+                result_expected={'allowed': False, 'reject-reason' : 'max-fee-exceeded'})
         self.check_mempool_result(tx=asset_unlock_tx_zero_fee,
                 result_expected={'allowed': False, 'reject-reason' : 'bad-txns-assetunlock-fee-outofrange'})
         # not-verified is a correct faiure from mempool. Mempool knows nothing about CreditPool indexes and he just report that signature is not validated

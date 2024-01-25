@@ -226,7 +226,7 @@ void PruneBlockFilesManual(CChainState& active_chainstate, int nManualPruneHeigh
  * @param[out] fee_out optional argument to return tx fee to the caller **/
 bool AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPool& pool, TxValidationState &state, const CTransactionRef &tx,
                         bool bypass_limits,
-                        const CAmount nAbsurdFee, bool test_accept=false, CAmount* fee_out=nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                        bool test_accept=false, CAmount* fee_out=nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin);
 int GetUTXOHeight(const COutPoint& outpoint);

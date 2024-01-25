@@ -132,7 +132,7 @@ void CEHFSignalsHandler::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig
         LogPrintf("CEHFSignalsHandler::HandleNewRecoveredSig Special EHF TX is created hash=%s\n", tx_to_sent->GetHash().ToString());
         LOCK(cs_main);
         TxValidationState state;
-        if (AcceptToMemoryPool(chainstate, mempool, state, tx_to_sent, /* bypass_limits=*/ false, /* nAbsurdFee=*/ 0)) {
+        if (AcceptToMemoryPool(chainstate, mempool, state, tx_to_sent, /* bypass_limits=*/ false)) {
             connman.RelayTransaction(*tx_to_sent);
         } else {
             LogPrintf("CEHFSignalsHandler::HandleNewRecoveredSig -- AcceptToMemoryPool failed: %s\n", state.ToString());

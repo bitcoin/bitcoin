@@ -30,7 +30,7 @@ bilingual_str TransactionErrorString(const TransactionError err)
         case TransactionError::SIGHASH_MISMATCH:
             return Untranslated("Specified sighash value does not match value stored in PSBT");
         case TransactionError::MAX_FEE_EXCEEDED:
-            return Untranslated("Fee exceeds maximum configured by -maxtxfee");
+            return Untranslated("Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)");
         // no default case, so the compiler can warn about missing cases
     }
     assert(false);

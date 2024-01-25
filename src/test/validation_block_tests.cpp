@@ -301,8 +301,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
                     *m_node.mempool,
                     state,
                     tx,
-                    /* bypass_limits */ false,
-                    /* nAbsurdFee */ 0));
+                    /* bypass_limits */ false));
             }
         }
 
