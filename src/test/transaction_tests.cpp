@@ -780,7 +780,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CheckIsStandard(t);
 
     // Disallowed nVersion
-    t.nVersion = -1;
+    t.nVersion = std::numeric_limits<uint32_t>::max();
     CheckIsNotStandard(t, "version");
 
     t.nVersion = 0;

@@ -1164,7 +1164,7 @@ class SegWitTest(BitcoinTestFramework):
                 if not self.wit.is_null():
                     flags |= 1
                 r = b""
-                r += self.nVersion.to_bytes(4, "little", signed=True)
+                r += self.nVersion.to_bytes(4, "little")
                 if flags:
                     dummy = []
                     r += ser_vector(dummy)
@@ -1975,7 +1975,7 @@ class SegWitTest(BitcoinTestFramework):
         def serialize_with_bogus_witness(tx):
             flags = 3
             r = b""
-            r += tx.nVersion.to_bytes(4, "little", signed=True)
+            r += tx.nVersion.to_bytes(4, "little")
             if flags:
                 dummy = []
                 r += ser_vector(dummy)
