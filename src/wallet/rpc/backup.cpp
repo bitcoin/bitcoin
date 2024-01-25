@@ -9,6 +9,7 @@
 #include <interfaces/chain.h>
 #include <key_io.h>
 #include <merkleblock.h>
+#include <node/types.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/script.h>
@@ -400,7 +401,7 @@ RPCHelpMan importdescriptors()
     // Rescan the blockchain using the lowest timestamp
     if (rescan) {
         int64_t scanned_time = pwallet->RescanFromTime(lowest_timestamp, reserver, /*update=*/true);
-        pwallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
+        pwallet->ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_NO_BROADCAST, /*force=*/true);
 
         if (pwallet->IsAbortingRescan()) {
             throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
