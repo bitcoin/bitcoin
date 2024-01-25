@@ -131,8 +131,11 @@ class BumpFeeTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Insufficient total fee 0.00000141", rbf_node.bumpfee, rbfid, fee_rate=INSUFFICIENT)
 
         self.log.info("Test invalid fee rate settings")
-        assert_raises_rpc_error(-4, "Specified or calculated fee 0.141 is too high (cannot be higher than -maxtxfee 0.10",
+
+        # Bumping to a very high fee rate above the default -maxfeerate should fail
+        assert_raises_rpc_error(-4, "New fee rate 1.00 BTC/kvB is too high (cannot be higher than -maxfeerate 0.10 BTC/kvB)",
             rbf_node.bumpfee, rbfid, fee_rate=TOO_HIGH)
+
         # Test fee_rate with zero values.
         msg = "Insufficient total fee 0.00"
         for zero_value in [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]:
@@ -566,6 +569,9 @@ def test_maxtxfee_fails(self, rbf_node, dest_address):
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     rbfid = spend_one_input(rbf_node, dest_address)
     assert_raises_rpc_error(-4, "Unable to create transaction. Fee exceeds maximum configured by user (maxtxfee)", rbf_node.bumpfee, rbfid)
+
+    # When user passed fee rate causes base fee to be above maxtxfee we fail early
+    assert_raises_rpc_error(-4, "Specified or calculated fee 0.0000282 is too high (cannot be higher than -maxtxfee 0.000025)", rbf_node.bumpfee, rbfid, fee_rate=20)
     self.restart_node(1, self.extra_args[1])
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     self.connect_nodes(1, 0)

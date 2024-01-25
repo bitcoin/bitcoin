@@ -1552,6 +1552,9 @@ RPCHelpMan sendall()
             if (fee_from_size > pwallet->m_max_tx_fee) {
                 throw JSONRPCError(RPC_WALLET_ERROR, TransactionErrorString(TransactionError::MAX_FEE_EXCEEDED).original);
             }
+            if (CFeeRate(fee_from_size, tx_size.vsize) > pwallet->m_max_tx_fee_rate) {
+                throw JSONRPCError(RPC_WALLET_ERROR, TransactionErrorString(TransactionError::MAX_FEE_RATE_EXCEEDED).original);
+            }
 
             if (effective_value <= 0) {
                 if (send_max) {

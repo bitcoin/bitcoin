@@ -74,6 +74,13 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CMutableTrans
         return feebumper::Result::WALLET_ERROR;
     }
 
+    // check that new fee rate does not exceed maxfeerate
+    if (newFeerate > wallet.m_max_tx_fee_rate) {
+        errors.push_back(Untranslated(strprintf("New fee rate %s %s/kvB is too high (cannot be higher than -maxfeerate %s %s/kvB)",
+                                                FormatMoney(newFeerate.GetFeePerK()), CURRENCY_UNIT, FormatMoney(wallet.m_max_tx_fee_rate.GetFeePerK()), CURRENCY_UNIT)));
+        return feebumper::Result::WALLET_ERROR;
+    }
+
     std::vector<COutPoint> reused_inputs;
     reused_inputs.reserve(mtx.vin.size());
     for (const CTxIn& txin : mtx.vin) {

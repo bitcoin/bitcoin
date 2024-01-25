@@ -1383,6 +1383,11 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         return util::Error{TransactionErrorString(TransactionError::MAX_FEE_EXCEEDED)};
     }
 
+    CFeeRate tx_fee_rate = CFeeRate(current_fee, nBytes);
+    if (tx_fee_rate > wallet.m_max_tx_fee_rate) {
+        return util::Error{TransactionErrorString(TransactionError::MAX_FEE_RATE_EXCEEDED)};
+    }
+
     if (gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS)) {
         // Lastly, ensure this tx will pass the mempool's chain limits
         auto result = wallet.chain().checkChainLimits(tx);
