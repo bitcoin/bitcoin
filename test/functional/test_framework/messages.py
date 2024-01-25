@@ -581,7 +581,7 @@ class CTransaction:
             self.wit = copy.deepcopy(tx.wit)
 
     def deserialize(self, f):
-        self.nVersion = int.from_bytes(f.read(4), "little", signed=True)
+        self.nVersion = int.from_bytes(f.read(4), "little")
         self.vin = deser_vector(f, CTxIn)
         flags = 0
         if len(self.vin) == 0:
@@ -604,7 +604,7 @@ class CTransaction:
 
     def serialize_without_witness(self):
         r = b""
-        r += self.nVersion.to_bytes(4, "little", signed=True)
+        r += self.nVersion.to_bytes(4, "little")
         r += ser_vector(self.vin)
         r += ser_vector(self.vout)
         r += self.nLockTime.to_bytes(4, "little")
@@ -616,7 +616,7 @@ class CTransaction:
         if not self.wit.is_null():
             flags |= 1
         r = b""
-        r += self.nVersion.to_bytes(4, "little", signed=True)
+        r += self.nVersion.to_bytes(4, "little")
         if flags:
             dummy = []
             r += ser_vector(dummy)
