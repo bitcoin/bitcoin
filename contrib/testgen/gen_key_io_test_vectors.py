@@ -15,7 +15,6 @@ import os
 from itertools import islice
 from base58 import b58encode_chk, b58decode_chk, b58chars
 import random
-from binascii import b2a_hex
 
 # key types
 PUBKEY_ADDRESS = 76
@@ -96,9 +95,7 @@ def gen_valid_vectors():
             rv, payload = valid_vector_generator(template)
             assert is_valid(rv)
             metadata = {x: y for x, y in zip(metadata_keys,template[3]) if y is not None}
-            hexrepr = b2a_hex(payload)
-            if isinstance(hexrepr, bytes):
-                hexrepr = hexrepr.decode('utf8')
+            hexrepr = payload.hex()
             yield (rv, hexrepr, metadata)
 
 def gen_invalid_base58_vector(template):
