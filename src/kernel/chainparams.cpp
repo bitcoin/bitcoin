@@ -29,7 +29,7 @@
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     CMutableTransaction txNew;
-    txNew.nVersion = 1;
+    txNew.version = 1;
     txNew.vin.resize(1);
     txNew.vout.resize(1);
     txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));

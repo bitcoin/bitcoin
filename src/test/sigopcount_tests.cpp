@@ -86,7 +86,7 @@ static ScriptError VerifyWithFlag(const CTransaction& output, const CMutableTran
  */
 static void BuildTxs(CMutableTransaction& spendingTx, CCoinsViewCache& coins, CMutableTransaction& creationTx, const CScript& scriptPubKey, const CScript& scriptSig, const CScriptWitness& witness)
 {
-    creationTx.nVersion = 1;
+    creationTx.version = 1;
     creationTx.vin.resize(1);
     creationTx.vin[0].prevout.SetNull();
     creationTx.vin[0].scriptSig = CScript();
@@ -94,7 +94,7 @@ static void BuildTxs(CMutableTransaction& spendingTx, CCoinsViewCache& coins, CM
     creationTx.vout[0].nValue = 1;
     creationTx.vout[0].scriptPubKey = scriptPubKey;
 
-    spendingTx.nVersion = 1;
+    spendingTx.version = 1;
     spendingTx.vin.resize(1);
     spendingTx.vin[0].prevout.hash = creationTx.GetHash();
     spendingTx.vin[0].prevout.n = 0;
