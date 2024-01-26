@@ -43,13 +43,13 @@ struct ParentInfo {
     const Txid& m_txid;
     /** Wtxid used for debug string */
     const Wtxid& m_wtxid;
-    /** nVersion used to check inheritance of v3 and non-v3 */
-    decltype(CTransaction::nVersion) m_version;
+    /** version used to check inheritance of v3 and non-v3 */
+    decltype(CTransaction::version) m_version;
     /** If parent is in mempool, whether it has any descendants in mempool. */
     bool m_has_mempool_descendant;
 
     ParentInfo() = delete;
-    ParentInfo(const Txid& txid, const Wtxid& wtxid, decltype(CTransaction::nVersion) version, bool has_mempool_descendant) :
+    ParentInfo(const Txid& txid, const Wtxid& wtxid, decltype(CTransaction::version) version, bool has_mempool_descendant) :
         m_txid{txid}, m_wtxid{wtxid}, m_version{version},
         m_has_mempool_descendant{has_mempool_descendant}
     {}
@@ -66,7 +66,7 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
     const auto in_package_parents{FindInPackageParents(package, ptx)};
 
     // Now we have all ancestors, so we can start checking v3 rules.
-    if (ptx->nVersion == TRUC_VERSION) {
+    if (ptx->version == TRUC_VERSION) {
         // SingleV3Checks should have checked this already.
         if (!Assume(vsize <= V3_MAX_VSIZE)) {
             return strprintf("v3 tx %s (wtxid=%s) is too big: %u > %u virtual bytes",
@@ -94,14 +94,14 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
                     Assume(mempool_parent->GetCountWithDescendants() == 1);
                     return ParentInfo{mempool_parent->GetTx().GetHash(),
                                       mempool_parent->GetTx().GetWitnessHash(),
-                                      mempool_parent->GetTx().nVersion,
+                                      mempool_parent->GetTx().version,
                                       /*has_mempool_descendant=*/mempool_parent->GetCountWithDescendants() > 1};
                 } else {
                     auto& parent_index = in_package_parents.front();
                     auto& package_parent = package.at(parent_index);
                     return ParentInfo{package_parent->GetHash(),
                                       package_parent->GetWitnessHash(),
-                                      package_parent->nVersion,
+                                      package_parent->version,
                                       /*has_mempool_descendant=*/false};
                 }
             }();
@@ -146,14 +146,14 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
     } else {
         // Non-v3 transactions cannot have v3 parents.
         for (auto it : mempool_ancestors) {
-            if (it->GetTx().nVersion == TRUC_VERSION) {
+            if (it->GetTx().version == TRUC_VERSION) {
                 return strprintf("non-v3 tx %s (wtxid=%s) cannot spend from v3 tx %s (wtxid=%s)",
                                  ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(),
                                  it->GetSharedTx()->GetHash().ToString(), it->GetSharedTx()->GetWitnessHash().ToString());
             }
         }
         for (const auto& index: in_package_parents) {
-            if (package.at(index)->nVersion == TRUC_VERSION) {
+            if (package.at(index)->version == TRUC_VERSION) {
                 return strprintf("non-v3 tx %s (wtxid=%s) cannot spend from v3 tx %s (wtxid=%s)",
                                  ptx->GetHash().ToString(),
                                  ptx->GetWitnessHash().ToString(),
@@ -172,12 +172,12 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTra
 {
     // Check v3 and non-v3 inheritance.
     for (const auto& entry : mempool_ancestors) {
-        if (ptx->nVersion != TRUC_VERSION && entry->GetTx().nVersion == TRUC_VERSION) {
+        if (ptx->version != TRUC_VERSION && entry->GetTx().version == TRUC_VERSION) {
             return std::make_pair(strprintf("non-v3 tx %s (wtxid=%s) cannot spend from v3 tx %s (wtxid=%s)",
                              ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(),
                              entry->GetSharedTx()->GetHash().ToString(), entry->GetSharedTx()->GetWitnessHash().ToString()),
                 nullptr);
-        } else if (ptx->nVersion == TRUC_VERSION && entry->GetTx().nVersion != TRUC_VERSION) {
+        } else if (ptx->version == TRUC_VERSION && entry->GetTx().version != TRUC_VERSION) {
             return std::make_pair(strprintf("v3 tx %s (wtxid=%s) cannot spend from non-v3 tx %s (wtxid=%s)",
                              ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(),
                              entry->GetSharedTx()->GetHash().ToString(), entry->GetSharedTx()->GetWitnessHash().ToString()),
@@ -189,8 +189,8 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTra
     static_assert(V3_ANCESTOR_LIMIT == 2);
     static_assert(V3_DESCENDANT_LIMIT == 2);
 
-    // The rest of the rules only apply to transactions with nVersion=3.
-    if (ptx->nVersion != TRUC_VERSION) return std::nullopt;
+    // The rest of the rules only apply to transactions with version=3.
+    if (ptx->version != TRUC_VERSION) return std::nullopt;
 
     if (vsize > V3_MAX_VSIZE) {
         return std::make_pair(strprintf("v3 tx %s (wtxid=%s) is too big: %u > %u virtual bytes",

@@ -523,7 +523,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     CKey child_key = GenerateRandomKey();
     CScript child_locking_script = GetScriptForDestination(WitnessV0KeyHash(child_key.GetPubKey()));
     CMutableTransaction mtx_child1;
-    mtx_child1.nVersion = 1;
+    mtx_child1.version = 1;
     mtx_child1.vin.resize(1);
     mtx_child1.vin[0].prevout.hash = ptx_parent->GetHash();
     mtx_child1.vin[0].prevout.n = 0;
@@ -651,7 +651,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     CTransactionRef ptx_grandparent2 = MakeTransactionRef(mtx_grandparent2);
 
     CMutableTransaction mtx_parent2_v1;
-    mtx_parent2_v1.nVersion = 1;
+    mtx_parent2_v1.version = 1;
     mtx_parent2_v1.vin.resize(1);
     mtx_parent2_v1.vin[0].prevout.hash = ptx_grandparent2->GetHash();
     mtx_parent2_v1.vin[0].prevout.n = 0;

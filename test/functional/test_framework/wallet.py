@@ -321,7 +321,7 @@ class MiniWallet:
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=seq) for utxo_to_spend, seq in zip(utxos_to_spend, sequence)]
         tx.vout = [CTxOut(amount_per_output, bytearray(self._scriptPubKey)) for _ in range(num_outputs)]
-        tx.nVersion = version
+        tx.version = version
         tx.nLockTime = locktime
 
         self.sign_tx(tx)

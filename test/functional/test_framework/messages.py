@@ -560,12 +560,12 @@ class CTxWitness:
 
 
 class CTransaction:
-    __slots__ = ("hash", "nLockTime", "nVersion", "sha256", "vin", "vout",
+    __slots__ = ("hash", "nLockTime", "version", "sha256", "vin", "vout",
                  "wit")
 
     def __init__(self, tx=None):
         if tx is None:
-            self.nVersion = 2
+            self.version = 2
             self.vin = []
             self.vout = []
             self.wit = CTxWitness()
@@ -573,7 +573,7 @@ class CTransaction:
             self.sha256 = None
             self.hash = None
         else:
-            self.nVersion = tx.nVersion
+            self.version = tx.version
             self.vin = copy.deepcopy(tx.vin)
             self.vout = copy.deepcopy(tx.vout)
             self.nLockTime = tx.nLockTime
@@ -582,7 +582,7 @@ class CTransaction:
             self.wit = copy.deepcopy(tx.wit)
 
     def deserialize(self, f):
-        self.nVersion = int.from_bytes(f.read(4), "little")
+        self.version = int.from_bytes(f.read(4), "little")
         self.vin = deser_vector(f, CTxIn)
         flags = 0
         if len(self.vin) == 0:
@@ -605,7 +605,7 @@ class CTransaction:
 
     def serialize_without_witness(self):
         r = b""
-        r += self.nVersion.to_bytes(4, "little")
+        r += self.version.to_bytes(4, "little")
         r += ser_vector(self.vin)
         r += ser_vector(self.vout)
         r += self.nLockTime.to_bytes(4, "little")
@@ -617,7 +617,7 @@ class CTransaction:
         if not self.wit.is_null():
             flags |= 1
         r = b""
-        r += self.nVersion.to_bytes(4, "little")
+        r += self.version.to_bytes(4, "little")
         if flags:
             dummy = []
             r += ser_vector(dummy)
@@ -677,8 +677,8 @@ class CTransaction:
         return math.ceil(self.get_weight() / WITNESS_SCALE_FACTOR)
 
     def __repr__(self):
-        return "CTransaction(nVersion=%i vin=%s vout=%s wit=%s nLockTime=%i)" \
-            % (self.nVersion, repr(self.vin), repr(self.vout), repr(self.wit), self.nLockTime)
+        return "CTransaction(version=%i vin=%s vout=%s wit=%s nLockTime=%i)" \
+            % (self.version, repr(self.vin), repr(self.vout), repr(self.wit), self.nLockTime)
 
 
 class CBlockHeader:

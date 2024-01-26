@@ -58,14 +58,14 @@ def signet_txs(block, challenge):
     sd += block.nTime.to_bytes(4, "little")
 
     to_spend = CTransaction()
-    to_spend.nVersion = 0
+    to_spend.version = 0
     to_spend.nLockTime = 0
     to_spend.vin = [CTxIn(COutPoint(0, 0xFFFFFFFF), b"\x00" + CScriptOp.encode_op_pushdata(sd), 0)]
     to_spend.vout = [CTxOut(0, challenge)]
     to_spend.rehash()
 
     spend = CTransaction()
-    spend.nVersion = 0
+    spend.version = 0
     spend.nLockTime = 0
     spend.vin = [CTxIn(COutPoint(to_spend.sha256, 0), b"", 0)]
     spend.vout = [CTxOut(0, b"\x6a")]

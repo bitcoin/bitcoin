@@ -12,7 +12,7 @@ other consensus and policy rules, each of the following conditions are met:
 
 1. The directly conflicting transactions all signal replaceability explicitly. A transaction is
    signaling BIP125 replaceability if any of its inputs have an nSequence number less than (0xffffffff - 1).
-   A transaction also signals replaceability if its nVersion field is set to 3.
+   A transaction also signals replaceability if its version field is set to 3.
 
    *Rationale*: See [BIP125
    explanation](https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki#motivation).

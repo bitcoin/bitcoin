@@ -197,13 +197,13 @@ static constexpr TransactionSerParams TX_NO_WITNESS{.allow_witness = false};
 
 /**
  * Basic transaction serialization format:
- * - uint32_t nVersion
+ * - uint32_t version
  * - std::vector<CTxIn> vin
  * - std::vector<CTxOut> vout
  * - uint32_t nLockTime
  *
  * Extended transaction serialization format:
- * - uint32_t nVersion
+ * - uint32_t version
  * - unsigned char dummy = 0x00
  * - unsigned char flags (!= 0)
  * - std::vector<CTxIn> vin
@@ -217,7 +217,7 @@ void UnserializeTransaction(TxType& tx, Stream& s, const TransactionSerParams& p
 {
     const bool fAllowWitness = params.allow_witness;
 
-    s >> tx.nVersion;
+    s >> tx.version;
     unsigned char flags = 0;
     tx.vin.clear();
     tx.vout.clear();
@@ -257,7 +257,7 @@ void SerializeTransaction(const TxType& tx, Stream& s, const TransactionSerParam
 {
     const bool fAllowWitness = params.allow_witness;
 
-    s << tx.nVersion;
+    s << tx.version;
     unsigned char flags = 0;
     // Consistency check
     if (fAllowWitness) {
@@ -305,7 +305,7 @@ public:
     // structure, including the hash.
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
-    const uint32_t nVersion;
+    const uint32_t version;
     const uint32_t nLockTime;
 
 private:
@@ -378,7 +378,7 @@ struct CMutableTransaction
 {
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
-    uint32_t nVersion;
+    uint32_t version;
     uint32_t nLockTime;
 
     explicit CMutableTransaction();
