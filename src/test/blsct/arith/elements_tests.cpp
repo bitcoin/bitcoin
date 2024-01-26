@@ -17,6 +17,7 @@ BOOST_FIXTURE_TEST_SUITE(elements_tests, BasicTestingSetup)
 using Point = MclG1Point;
 using Scalar = MclScalar;
 using Points = Elements<Point>;
+using OrderedPoints = OrderedElements<Point>;
 using Scalars = Elements<Scalar>;
 
 BOOST_AUTO_TEST_CASE(test_constructors)
@@ -592,6 +593,21 @@ BOOST_AUTO_TEST_CASE(test_serialize)
         BOOST_CHECK(ys.Size() == 2);
         BOOST_CHECK(ys[0] == g);
         BOOST_CHECK(ys[1] == gg);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(test_ordered_elements)
+{
+    OrderedPoints points;
+
+    for (size_t i = 0; i <= 10; i++) {
+        points.Add(Point::Rand());
+    }
+
+    auto elements = points.GetElements();
+
+    for (size_t i = 0; i <= 9; i++) {
+        BOOST_CHECK(elements[i] < elements[i + 1]);
     }
 }
 

@@ -6,7 +6,7 @@
 #include <util/strencodings.h>
 
 namespace blsct {
-bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount& blockReward)
+bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount& blockReward, const CAmount& minStake)
 {
     if (!view.HaveInputs(tx)) {
         return false;
@@ -40,6 +40,7 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
     }
 
     CAmount nFee = 0;
+    bulletproofs::RangeProof<Mcl> stakedCommitmentRangeProof;
 
     for (auto& out : tx.vout) {
         if (out.IsBLSCT()) {
@@ -48,6 +49,10 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
             vMessages.push_back(Message(out_hash.begin(), out_hash.end()));
             vProofs.push_back(out.blsctData.rangeProof);
             balanceKey = balanceKey - out.blsctData.rangeProof.Vs[0];
+
+            if (out.GetStakedCommitmentRangeProof(stakedCommitmentRangeProof, minStake)) {
+                vProofs.push_back(stakedCommitmentRangeProof);
+            }
         } else {
             if (!out.scriptPubKey.IsUnspendable() && out.nValue > 0) {
                 return false;

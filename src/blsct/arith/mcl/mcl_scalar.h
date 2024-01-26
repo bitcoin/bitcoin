@@ -61,6 +61,8 @@ public:
     bool operator!=(const MclScalar& b) const;
     bool operator!=(const int32_t& b) const;
 
+    bool operator<(const MclScalar& b) const;
+
     const Underlying& GetUnderlying() const;
     bool IsValid() const;
     bool IsZero() const;

@@ -212,6 +212,11 @@ bool MclScalar::operator!=(const MclScalar& b) const
     return !operator==(b);
 }
 
+bool MclScalar::operator<(const MclScalar& b) const
+{
+    return GetVch() < b.GetVch();
+}
+
 const MclScalar::Underlying& MclScalar::GetUnderlying() const
 {
     return m_scalar;

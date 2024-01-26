@@ -42,16 +42,13 @@ Signature UnsignedOutput::GetSignature() const
     return Signature::Aggregate(txSigs);
 }
 
-UnsignedOutput CreateOutput(const blsct::DoublePublicKey& destKeys, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId, const Scalar& blindingKey, const std::vector<uint8_t>& outputNonce)
+UnsignedOutput CreateOutput(const blsct::DoublePublicKey& destKeys, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId, const Scalar& blindingKey, const CreateOutputType& type, const CAmount& minStake)
 {
+    bulletproofs::RangeProofLogic<T> rp;
     auto ret = UnsignedOutput();
 
     ret.out.nValue = 0;
     ret.out.tokenId = tokenId;
-    ret.out.scriptPubKey = CScript(OP_TRUE);
-
-    if (outputNonce.size() > 0)
-        ret.out.scriptPubKey << outputNonce;
 
     Scalars vs;
     vs.Add(nAmount);
@@ -73,9 +70,20 @@ UnsignedOutput CreateOutput(const blsct::DoublePublicKey& destKeys, const CAmoun
 
     std::vector<unsigned char> memo{sMemo.begin(), sMemo.end()};
 
-    bulletproofs::RangeProofLogic<T> rp;
-    auto p = rp.Prove(vs, nonce, memo, tokenId);
+    if (type == NORMAL) {
+        ret.out.scriptPubKey = CScript(OP_TRUE);
+    } else if (type == STAKED_COMMITMENT && tokenId.IsNull()) {
+        auto stakeRp = rp.Prove(vs, nonce, {}, tokenId, minStake);
 
+        stakeRp.Vs.Clear();
+
+        CDataStream ss(0, 0);
+        ss << stakeRp;
+
+        ret.out.scriptPubKey << OP_TRUE << OP_STAKED_COMMITMENT << blsct::Common::CDataStreamToVector(ss) << OP_DROP;
+    }
+
+    auto p = rp.Prove(vs, nonce, memo, tokenId);
     ret.out.blsctData.rangeProof = p;
 
     CHashWriter hash(SER_GETHASH, PROTOCOL_VERSION);

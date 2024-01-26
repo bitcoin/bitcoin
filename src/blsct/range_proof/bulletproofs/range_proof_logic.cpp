@@ -20,11 +20,12 @@ namespace bulletproofs {
 
 template <typename T>
 RangeProof<T> RangeProofLogic<T>::Prove(
-    Elements<typename T::Scalar>& vs,
+    Elements<typename T::Scalar> vs,
     typename T::Point& nonce,
     const std::vector<uint8_t>& message,
-    const TokenId& token_id
-) const {
+    const TokenId& token_id,
+    const typename T::Scalar& minValue) const
+{
     using Scalar = typename T::Scalar;
     using Scalars = Elements<Scalar>;
 
@@ -41,11 +42,20 @@ RangeProof<T> RangeProofLogic<T>::Prove(
     RangeProof<T> proof;
     proof.token_id = token_id;
 
+    // apply minValue
+    if (!minValue.IsZero()) {
+        for (size_t i = 0; i < vs.Size(); ++i) {
+            if (vs[i] < minValue)
+                throw std::runtime_error(strprintf("%s: value at index %i does not satisfy minValue", __func__, i));
+            vs[i] = vs[i] - minValue;
+        }
+    }
+
     // generate gammas
     Scalars gammas;
     for (size_t i = 0; i < num_input_values_power_of_2; ++i) {
         auto hash = nonce.GetHashWithSalt(100 + i);
-        gammas.Add(hash);
+        gammas.Add(hash - minValue);
     }
 
     // make the number of input values a power of 2 w/ 0s if needed
@@ -213,11 +223,11 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
     return proof;
 }
 template RangeProof<Mcl> RangeProofLogic<Mcl>::Prove(
-    Elements<Mcl::Scalar>&,
+    Elements<Mcl::Scalar>,
     Mcl::Point&,
     const std::vector<uint8_t>&,
-    const TokenId&
-) const;
+    const TokenId&,
+    const Mcl::Scalar& minValue) const;
 
 template <typename T>
 bool RangeProofLogic<T>::VerifyProofs(

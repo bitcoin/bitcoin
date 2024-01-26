@@ -9,6 +9,7 @@
 #include <kernel/mempool_persist.h>
 
 #include <arith_uint256.h>
+#include <blsct/pos/pos.h>
 #include <chain.h>
 #include <checkqueue.h>
 #include <common/args.h>
@@ -1074,7 +1075,7 @@ bool MemPoolAccept::ConsensusScriptChecks(const ATMPArgs& args, Workspace& ws)
     }
 
     if (args.m_chainparams.GetConsensus().fBLSCT) {
-        if (!blsct::VerifyTx(tx, m_view)) {
+        if (!blsct::VerifyTx(tx, m_view, 0, args.m_chainparams.GetConsensus().nPePoSMinStakeAmount)) {
             return Assume(false);
         }
     }
@@ -2357,7 +2358,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
             if (tx.IsBLSCT()) {
                 if (params.GetConsensus().fBLSCT) {
-                    if (!blsct::VerifyTx(tx, view, 0)) {
+                    if (!blsct::VerifyTx(tx, view, 0, params.GetConsensus().nPePoSMinStakeAmount)) {
                         return error("ConnectBlock(): VerifyTx on transaction %s failed",
                                      tx.GetHash().ToString());
                     }
@@ -2426,6 +2427,15 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         pindex->RaiseValidity(BLOCK_VALID_SCRIPTS);
         m_blockman.m_dirty_blockindex.insert(pindex);
     }
+
+    pindex->SetStakeEntropyBit(block.GetStakeEntropyBit());
+
+    uint64_t nStakeModifier = 0;
+    bool fGeneratedStakeModifier = false;
+    if (!blsct::ComputeNextStakeModifier(pindex->pprev, nStakeModifier, fGeneratedStakeModifier, params.GetConsensus(), m_blockman))
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-stake-modifier");
+
+    pindex->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
 
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());

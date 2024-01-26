@@ -10,6 +10,111 @@
 #include <sstream>
 
 template <typename T>
+OrderedElements<T>::OrderedElements(){};
+template OrderedElements<MclG1Point>::OrderedElements();
+
+template <typename T>
+OrderedElements<T>::OrderedElements(const std::set<T>& set)
+{
+    m_set = set;
+};
+template OrderedElements<MclG1Point>::OrderedElements(const std::set<MclG1Point>& set);
+
+template <typename T>
+OrderedElements<T>::OrderedElements(const OrderedElements& other)
+{
+    m_set = other.m_set;
+};
+template OrderedElements<MclG1Point>::OrderedElements(const OrderedElements& other);
+
+template <typename T>
+Elements<T> OrderedElements<T>::GetElements() const
+{
+    std::vector<T> ret;
+    std::copy(m_set.begin(), m_set.end(), std::back_inserter(ret));
+
+    return ret;
+};
+template Elements<MclG1Point> OrderedElements<MclG1Point>::GetElements() const;
+
+template <typename T>
+size_t OrderedElements<T>::Size() const
+{
+    return m_set.size();
+}
+template size_t OrderedElements<MclG1Point>::Size() const;
+
+template <typename T>
+void OrderedElements<T>::Add(const T& x)
+{
+    if (m_set.count(x) > 0)
+        return;
+    m_set.insert(x);
+}
+template void OrderedElements<MclG1Point>::Add(const MclG1Point&);
+
+template <typename T>
+bool OrderedElements<T>::Exists(const T& x) const
+{
+    return m_set.count(x) > 0;
+}
+template bool OrderedElements<MclG1Point>::Exists(const MclG1Point&) const;
+
+template <typename T>
+void OrderedElements<T>::Clear()
+{
+    m_set.clear();
+}
+template void OrderedElements<MclG1Point>::Clear();
+
+template <typename T>
+bool OrderedElements<T>::Empty() const
+{
+    return m_set.empty();
+}
+template bool OrderedElements<MclG1Point>::Empty() const;
+
+template <typename T>
+bool OrderedElements<T>::Remove(const T& x)
+{
+    return m_set.erase(x) > 0;
+}
+template bool OrderedElements<MclG1Point>::Remove(const MclG1Point& x);
+
+template <typename T>
+std::vector<uint8_t> OrderedElements<T>::GetVch() const
+{
+    std::vector<uint8_t> aggr_vec;
+    for (T x : m_set) {
+        auto vec = x.GetVch();
+        aggr_vec.insert(aggr_vec.end(), vec.begin(), vec.end());
+    }
+    return aggr_vec;
+}
+template std::vector<uint8_t> OrderedElements<MclG1Point>::GetVch() const;
+
+template <typename T>
+std::string OrderedElements<T>::GetString(const uint8_t& radix) const
+{
+    std::stringstream ss;
+    ss << "[";
+    auto it = m_set.begin();
+
+    while (it != m_set.end()) {
+        ss << it->GetString(radix);
+        ++it;
+        if (it != m_set.end()) ss << ", ";
+    }
+    ss << "]";
+
+    return ss.str();
+}
+template std::string OrderedElements<MclG1Point>::GetString(const uint8_t& radix) const;
+
+
+// Elements
+
+template <typename T>
 Elements<T>::Elements()
 {
 }

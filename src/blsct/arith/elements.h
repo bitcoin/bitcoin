@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include <vector>
 
+
 template <typename T>
 class Elements
 {
@@ -133,5 +134,53 @@ public:
 
     std::vector<T> m_vec;
 };
+
+template <typename T>
+class OrderedElements
+{
+public:
+    using value_type = T;
+
+    OrderedElements();
+    OrderedElements(const std::set<T>& vec);
+    OrderedElements(const OrderedElements& other);
+
+    Elements<T> GetElements() const;
+
+    size_t Size() const;
+    void Add(const T& x);
+    bool Remove(const T& x);
+    void Clear();
+    bool Empty() const;
+    bool Exists(const T& x) const;
+    std::vector<uint8_t> GetVch() const;
+
+    std::string GetString(const uint8_t& radix = 16) const;
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        ::WriteCompactSize(s, m_set.size());
+        for (auto& it : m_set) {
+            ::Serialize(s, it);
+        }
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        size_t v_size;
+        v_size = ::ReadCompactSize(s);
+        Clear();
+        for (size_t i = 0; i < v_size; i++) {
+            T n;
+            ::Unserialize(s, n);
+            Add(n);
+        }
+    }
+
+    std::set<T> m_set;
+};
+
 
 #endif // NAVCOIN_BLSCT_ARITH_ELEMENTS_H

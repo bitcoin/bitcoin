@@ -66,8 +66,7 @@ std::vector<unsigned char> ToByteVector(const T& in)
 }
 
 /** Script opcodes */
-enum opcodetype
-{
+enum opcodetype {
     // push value
     OP_0 = 0x00,
     OP_FALSE = OP_0,
@@ -77,7 +76,7 @@ enum opcodetype
     OP_1NEGATE = 0x4f,
     OP_RESERVED = 0x50,
     OP_1 = 0x51,
-    OP_TRUE=OP_1,
+    OP_TRUE = OP_1,
     OP_2 = 0x52,
     OP_3 = 0x53,
     OP_4 = 0x54,
@@ -204,6 +203,9 @@ enum opcodetype
 
     // Opcode added by BIP 342 (Tapscript)
     OP_CHECKSIGADD = 0xba,
+
+    // Opcode added by Nav
+    OP_STAKED_COMMITMENT = 0xc1,
 
     OP_INVALIDOPCODE = 0xff,
 };
@@ -555,7 +557,7 @@ public:
     {
         return (size() == 1 && *begin() == OP_RETURN);
     }
-
+    
     void clear()
     {
         // The default prevector::clear() does not release memory

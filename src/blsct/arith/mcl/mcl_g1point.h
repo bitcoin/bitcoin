@@ -39,6 +39,11 @@ public:
     bool operator==(const MclG1Point& rhs) const;
     bool operator!=(const MclG1Point& rhs) const;
 
+    bool operator<(const MclG1Point& b) const
+    {
+        return this->GetVch() < b.GetVch();
+    };
+
     MclG1Point Double() const;
     const Underlying& GetUnderlying() const;
 

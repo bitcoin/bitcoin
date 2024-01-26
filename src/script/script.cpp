@@ -145,6 +145,8 @@ std::string GetOpName(opcodetype opcode)
 
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
 
+    case OP_STAKED_COMMITMENT      : return "OP_STAKED_COMMITMENT";
+
     default:
         return "OP_UNKNOWN";
     }

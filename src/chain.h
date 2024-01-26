@@ -96,42 +96,42 @@ public:
 
 enum BlockStatus : uint32_t {
     //! Unused.
-    BLOCK_VALID_UNKNOWN      =    0,
+    BLOCK_VALID_UNKNOWN = 0,
 
     //! Reserved (was BLOCK_VALID_HEADER).
-    BLOCK_VALID_RESERVED     =    1,
+    BLOCK_VALID_RESERVED = 1,
 
     //! All parent headers found, difficulty matches, timestamp >= median previous, checkpoint. Implies all parents
     //! are also at least TREE.
-    BLOCK_VALID_TREE         =    2,
+    BLOCK_VALID_TREE = 2,
 
     /**
      * Only first tx is coinbase, 2 <= coinbase input script length <= 100, transactions valid, no duplicate txids,
      * sigops, size, merkle root. Implies all parents are at least TREE but not necessarily TRANSACTIONS. When all
      * parent blocks also have TRANSACTIONS, CBlockIndex::nChainTx will be set.
      */
-    BLOCK_VALID_TRANSACTIONS =    3,
+    BLOCK_VALID_TRANSACTIONS = 3,
 
     //! Outputs do not overspend inputs, no double spends, coinbase output ok, no immature coinbase spends, BIP30.
     //! Implies all parents are also at least CHAIN.
-    BLOCK_VALID_CHAIN        =    4,
+    BLOCK_VALID_CHAIN = 4,
 
     //! Scripts & signatures ok. Implies all parents are also at least SCRIPTS.
-    BLOCK_VALID_SCRIPTS      =    5,
+    BLOCK_VALID_SCRIPTS = 5,
 
     //! All validity bits.
-    BLOCK_VALID_MASK         =   BLOCK_VALID_RESERVED | BLOCK_VALID_TREE | BLOCK_VALID_TRANSACTIONS |
-                                 BLOCK_VALID_CHAIN | BLOCK_VALID_SCRIPTS,
+    BLOCK_VALID_MASK = BLOCK_VALID_RESERVED | BLOCK_VALID_TREE | BLOCK_VALID_TRANSACTIONS |
+                       BLOCK_VALID_CHAIN | BLOCK_VALID_SCRIPTS,
 
-    BLOCK_HAVE_DATA          =    8, //!< full block available in blk*.dat
-    BLOCK_HAVE_UNDO          =   16, //!< undo data available in rev*.dat
-    BLOCK_HAVE_MASK          =   BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO,
+    BLOCK_HAVE_DATA = 8,  //!< full block available in blk*.dat
+    BLOCK_HAVE_UNDO = 16, //!< undo data available in rev*.dat
+    BLOCK_HAVE_MASK = BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO,
 
-    BLOCK_FAILED_VALID       =   32, //!< stage after last reached validness failed
-    BLOCK_FAILED_CHILD       =   64, //!< descends from failed block
-    BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
+    BLOCK_FAILED_VALID = 32, //!< stage after last reached validness failed
+    BLOCK_FAILED_CHILD = 64, //!< descends from failed block
+    BLOCK_FAILED_MASK = BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
 
-    BLOCK_OPT_WITNESS        =   128, //!< block data in blk*.dat was received with a witness-enforcing client
+    BLOCK_OPT_WITNESS = 128, //!< block data in blk*.dat was received with a witness-enforcing client
 
     /**
      * If set, this indicates that the block index entry is assumed-valid.
@@ -139,7 +139,10 @@ enum BlockStatus : uint32_t {
      * It almost certainly means that the block's full validation is pending
      * on a background chainstate. See `doc/design/assumeutxo.md`.
      */
-    BLOCK_ASSUMED_VALID      =   256,
+    BLOCK_ASSUMED_VALID = 256,
+    BLOCK_POS_ENTROPY = 512,
+    BLOCK_STAKE_MODIFIER = 1024,
+    BLOCK_KERNEL_HASH = 2048,
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -205,6 +208,9 @@ public:
     uint32_t nTime{0};
     uint32_t nBits{0};
     uint32_t nNonce{0};
+
+    uint64_t nStakeModifier{0}; // hash modifier for proof-of-stake
+    uint256 kernelHash;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId{0};
@@ -284,6 +290,44 @@ public:
     int64_t GetBlockTimeMax() const
     {
         return (int64_t)nTimeMax;
+    }
+
+    bool IsProofOfStake() const
+    {
+        return nVersion & CBlockHeader::VERSION_BIT_POS;
+    }
+
+    bool GetStakeEntropyBit() const
+    {
+        return (nStatus & BLOCK_POS_ENTROPY);
+    }
+
+    void SetStakeEntropyBit(const bool& bit)
+    {
+        if (bit) nStatus |= BLOCK_POS_ENTROPY;
+    }
+
+    void SetStakeModifier(const uint64_t& nModifier, const bool& fGeneratedStakeModifier)
+    {
+        nStakeModifier = nModifier;
+        if (fGeneratedStakeModifier)
+            nStatus |= BLOCK_STAKE_MODIFIER;
+    }
+
+    bool GeneratedStakeModifier() const
+    {
+        return (nStatus & BLOCK_STAKE_MODIFIER);
+    }
+
+    void SetKernelHash(const uint256& kernelHashIn)
+    {
+        nStatus |= BLOCK_KERNEL_HASH;
+        kernelHash = kernelHashIn;
+    }
+
+    bool HasKernelHash() const
+    {
+        return (nStatus & BLOCK_KERNEL_HASH);
     }
 
     static constexpr int nMedianTimeSpan = 11;
@@ -413,6 +457,8 @@ public:
         READWRITE(obj.nTime);
         READWRITE(obj.nBits);
         READWRITE(obj.nNonce);
+        if (obj.nStatus & BLOCK_STAKE_MODIFIER) READWRITE(obj.nStakeModifier);
+        if (obj.nStatus & BLOCK_KERNEL_HASH) READWRITE(obj.kernelHash);
     }
 
     uint256 ConstructBlockHash() const

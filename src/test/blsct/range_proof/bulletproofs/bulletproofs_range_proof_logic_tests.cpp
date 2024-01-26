@@ -29,6 +29,7 @@ struct TestCase
     size_t num_amounts;
     bool verify_result;
     MsgPair msg;
+    Scalar min_value;
 };
 
 static MclG1Point GenNonce()
@@ -98,159 +99,169 @@ BOOST_AUTO_TEST_CASE(test_range_proof_recovery_one_value)
 static std::vector<TestCase> BuildTestCases()
 {
     bulletproofs::RangeProofLogic<T> rp;
-
-    Scalar one(1);
-    Scalar two(2);
-    Scalar lower_bound(0);
-    Scalar upper_bound = (one << 64) - one;  // int64_t max
-    // [LB, LB+1, UB-1, UB]
-    Scalars valid_inputs;
-    valid_inputs.Add(lower_bound);
-    valid_inputs.Add(lower_bound + one);
-    valid_inputs.Add(upper_bound - one);
-    valid_inputs.Add(upper_bound);
-
-    // [-1, UB+1, UB+2, UB*2]
-    Scalars invalid_inputs;
-    invalid_inputs.Add(one.Negate());
-    invalid_inputs.Add(upper_bound + one);
-    invalid_inputs.Add(upper_bound + one + one);
-    invalid_inputs.Add(upper_bound << 1);
-
     std::vector<TestCase> test_cases;
 
-    // test single valid value
-    for (auto value: valid_inputs.m_vec) {
-        Scalars values;
-        values.Add(value);
+    for (auto& lower_bound : {Scalar(0), Scalar(100)}) {
+        Scalar one(1);
+        Scalar two(2);
+        Scalar upper_bound = (one << 64) - one; // int64_t max
+        // [LB, LB+1, UB-1, UB]
+        Scalars valid_inputs;
+        valid_inputs.Add(lower_bound);
+        valid_inputs.Add(lower_bound + one);
+        valid_inputs.Add(upper_bound - one);
+        valid_inputs.Add(upper_bound);
 
-        TestCase x;
-        x.name = strprintf("valid input value %s", value.GetString()).c_str();
-        x.values = values;
-        x.is_batched = false;
-        x.should_complete_recovery = true;
-        x.num_amounts = 1;
-        x.msg = GenMsgPair();
-        x.verify_result = true;
-        test_cases.push_back(x);
-    }
+        // [-1, UB+1, UB+2, UB*2]
+        Scalars invalid_inputs;
+        invalid_inputs.Add(one.Negate());
+        invalid_inputs.Add(upper_bound + one);
+        invalid_inputs.Add(upper_bound + one + one);
+        invalid_inputs.Add(upper_bound << 1);
 
-    // test single invalid value
-    for (auto value: invalid_inputs.m_vec) {
-        Scalars values;
-        values.Add(value);
-
-        TestCase x;
-        x.name = strprintf("invalid input value %s", value.GetString()).c_str();
-        x.values = values;
-        x.is_batched = false;
-        x.should_complete_recovery = true;
-        x.num_amounts = 0;
-        x.msg = GenMsgPair();
-        x.verify_result = false;
-        test_cases.push_back(x);
-    }
-
-    // test batched valid values
-    {
-        TestCase x;
-        x.name = "batched valid values";
-        x.values = valid_inputs;
-        x.is_batched = true;
-        x.should_complete_recovery = true;
-        x.num_amounts = 0;
-        x.msg = GenMsgPair();
-        x.verify_result = true;
-        test_cases.push_back(x);
-    }
-
-    // test batched invalid values
-    {
-        TestCase x;
-        x.name = "batched invalid values";
-        x.values = invalid_inputs;
-        x.is_batched = true;
-        x.should_complete_recovery = true;
-        x.num_amounts = 0;
-        x.msg = GenMsgPair();
-        x.verify_result = false;
-        test_cases.push_back(x);
-    }
-
-    // test with messages of various length
-    {
-        Scalars values;
-        values.Add(Scalar(1));
-
-        std::vector<size_t> msg_sizes { 1ul, 23ul, 24ul, range_proof::Setup::max_message_size };
-        for (auto msg_size: msg_sizes) {
-            TestCase x;
-            x.name = strprintf("with message of length %d", msg_size).c_str();
-            x.values = values;
-            x.is_batched = true;
-            x.should_complete_recovery = true;
-            x.num_amounts = 1;
-            x.msg = GenMsgPair(std::string(msg_size, 'x'));
-            x.verify_result = true;
-            test_cases.push_back(x);
-        }
-    }
-
-    // test # of input values from 1 to max
-    {
-        for (size_t n=1; n<=range_proof::Setup::max_input_values; ++n) {
+        // test single valid value
+        for (auto value : valid_inputs.m_vec) {
             Scalars values;
-            for (size_t i=0; i<n; ++i) {
-                values.Add(Scalar(i + 1));
-            }
-            TestCase x;
-            x.name = strprintf("%d valid input values", n).c_str();
-            x.values = values;
-            x.is_batched = true;
-            x.should_complete_recovery = true;
-            x.num_amounts = n == 1 ? 1 : 0;  // recovery should be performed only when n=1
-            x.msg = GenMsgPair();
-            x.verify_result = true;
-            test_cases.push_back(x);
-        }
-    }
-
-    // test valid and invalid values mixed
-    {
-        Scalars values;
-        for (auto& s: valid_inputs.m_vec) values.Add(s);
-        for (auto& s: invalid_inputs.m_vec) values.Add(s);
-
-        TestCase x;
-        x.name = "mix of valid and invalid values";
-        x.values = values;
-        x.is_batched = true;
-        x.should_complete_recovery = true;
-        x.num_amounts = 0;
-        x.msg = GenMsgPair();
-        x.verify_result = false;
-        test_cases.push_back(x);
-    }
-
-    {
-        // string of maximum message size 54
-        const std::string s("Pneumonoultramicroscopicsilicovolcanoconiosis123456789");
-        assert(s.size() == range_proof::Setup::max_message_size);
-        Scalars values;
-        values.Add(one);
-
-        for (size_t i=0; i<=s.size(); ++i) {  // try message of size 0 to 54
-            auto msg = s.substr(0, i);
+            values.Add(value);
 
             TestCase x;
-            x.name = strprintf("message size %ld", i).c_str();
+            x.name = strprintf("valid input value %s min_value=%s", value.GetString(), lower_bound.GetString()).c_str();
             x.values = values;
             x.is_batched = false;
             x.should_complete_recovery = true;
             x.num_amounts = 1;
-            x.msg = GenMsgPair(msg);
+            x.msg = GenMsgPair();
             x.verify_result = true;
+            x.min_value = lower_bound;
             test_cases.push_back(x);
+        }
+
+        // test single invalid value
+        for (auto value : invalid_inputs.m_vec) {
+            Scalars values;
+            values.Add(value);
+
+            TestCase x;
+            x.name = strprintf("invalid input value %s min_value=%s", value.GetString(), lower_bound.GetString()).c_str();
+            x.values = values;
+            x.is_batched = false;
+            x.should_complete_recovery = true;
+            x.num_amounts = 0;
+            x.msg = GenMsgPair();
+            x.verify_result = false;
+            x.min_value = lower_bound;
+            test_cases.push_back(x);
+        }
+
+        // test batched valid values
+        {
+            TestCase x;
+            x.name = "batched valid values";
+            x.values = valid_inputs;
+            x.is_batched = true;
+            x.should_complete_recovery = true;
+            x.num_amounts = 0;
+            x.msg = GenMsgPair();
+            x.verify_result = true;
+            x.min_value = lower_bound;
+            test_cases.push_back(x);
+        }
+
+        // test batched invalid values
+        {
+            TestCase x;
+            x.name = "batched invalid values";
+            x.values = invalid_inputs;
+            x.is_batched = true;
+            x.should_complete_recovery = true;
+            x.num_amounts = 0;
+            x.msg = GenMsgPair();
+            x.verify_result = false;
+            x.min_value = lower_bound;
+            test_cases.push_back(x);
+        }
+
+        // test with messages of various length
+        {
+            Scalars values;
+            values.Add(Scalar(1));
+
+            std::vector<size_t> msg_sizes{1ul, 23ul, 24ul, range_proof::Setup::max_message_size};
+            for (auto msg_size : msg_sizes) {
+                TestCase x;
+                x.name = strprintf("with message of length %d min_value=%s", msg_size, lower_bound.GetString()).c_str();
+                x.values = values;
+                x.is_batched = true;
+                x.should_complete_recovery = true;
+                x.num_amounts = 1;
+                x.msg = GenMsgPair(std::string(msg_size, 'x'));
+                x.verify_result = true;
+                x.min_value = lower_bound;
+                test_cases.push_back(x);
+            }
+        }
+
+        // test # of input values from 1 to max
+        {
+            for (size_t n = 1; n <= range_proof::Setup::max_input_values; ++n) {
+                Scalars values;
+                for (size_t i = 0; i < n; ++i) {
+                    values.Add(Scalar(i + 1));
+                }
+                TestCase x;
+                x.name = strprintf("%d valid input values min_value=%s", n, lower_bound.GetString()).c_str();
+                x.values = values;
+                x.is_batched = true;
+                x.should_complete_recovery = true;
+                x.num_amounts = n == 1 ? 1 : 0; // recovery should be performed only when n=1
+                x.msg = GenMsgPair();
+                x.verify_result = true;
+                x.min_value = lower_bound;
+                test_cases.push_back(x);
+            }
+        }
+
+        // test valid and invalid values mixed
+        {
+            Scalars values;
+            for (auto& s : valid_inputs.m_vec)
+                values.Add(s);
+            for (auto& s : invalid_inputs.m_vec)
+                values.Add(s);
+
+            TestCase x;
+            x.name = "mix of valid and invalid values";
+            x.values = values;
+            x.is_batched = true;
+            x.should_complete_recovery = true;
+            x.num_amounts = 0;
+            x.msg = GenMsgPair();
+            x.verify_result = false;
+            x.min_value = lower_bound;
+            test_cases.push_back(x);
+        }
+
+        {
+            // string of maximum message size 54
+            const std::string s("Pneumonoultramicroscopicsilicovolcanoconiosis123456789");
+            assert(s.size() == range_proof::Setup::max_message_size);
+            Scalars values;
+            values.Add(one);
+
+            for (size_t i = 0; i <= s.size(); ++i) { // try message of size 0 to 54
+                auto msg = s.substr(0, i);
+
+                TestCase x;
+                x.name = strprintf("message size %ld min_value=%s", i, lower_bound.GetString()).c_str();
+                x.values = values;
+                x.is_batched = false;
+                x.should_complete_recovery = true;
+                x.num_amounts = 1;
+                x.msg = GenMsgPair(msg);
+                x.verify_result = true;
+                x.min_value = lower_bound;
+                test_cases.push_back(x);
+            }
         }
     }
 

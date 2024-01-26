@@ -32,10 +32,11 @@ public:
     using Points = Elements<Point>;
 
     RangeProof<T> Prove(
-        Scalars& vs,
+        Scalars vs,
         Point& nonce,
         const std::vector<uint8_t>& message,
-        const TokenId& token_id) const;
+        const TokenId& token_id,
+        const Scalar& minValue = 0) const;
 
     bool Verify(
         const std::vector<RangeProof<T>>& proofs

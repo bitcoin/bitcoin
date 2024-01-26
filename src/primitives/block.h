@@ -6,6 +6,8 @@
 #ifndef BITCOIN_PRIMITIVES_BLOCK_H
 #define BITCOIN_PRIMITIVES_BLOCK_H
 
+#include <arith_uint256.h>
+#include <blsct/pos/proof.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <uint256.h>
@@ -21,6 +23,8 @@
 class CBlockHeader
 {
 public:
+    static const int32_t VERSION_BIT_POS = 0x01000000UL;
+    static const int32_t VERSION_BIT_BLSCT = 0x40000000UL;
     // header
     int32_t nVersion;
     uint256 hashPrevBlock;
@@ -28,13 +32,20 @@ public:
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
+    blsct::ProofOfStake posProof;
 
     CBlockHeader()
     {
         SetNull();
     }
 
-    SERIALIZE_METHODS(CBlockHeader, obj) { READWRITE(obj.nVersion, obj.hashPrevBlock, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.nNonce); }
+    SERIALIZE_METHODS(CBlockHeader, obj)
+    {
+        READWRITE(obj.nVersion, obj.hashPrevBlock, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.nNonce);
+        if (obj.IsProofOfStake()) {
+            READWRITE(obj.posProof);
+        }
+    }
 
     void SetNull()
     {
@@ -53,7 +64,12 @@ public:
 
     bool IsBLSCT() const
     {
-        return (nVersion & 0x40000000UL);
+        return (nVersion & VERSION_BIT_BLSCT);
+    }
+
+    bool IsProofOfStake() const
+    {
+        return (nVersion & VERSION_BIT_POS);
     }
 
     uint256 GetHash() const;
@@ -66,6 +82,13 @@ public:
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
+    }
+
+    unsigned int GetStakeEntropyBit() const
+    {
+        // Take last bit of block hash as entropy bit
+        unsigned int nEntropyBit = ((UintToArith256(GetHash()).GetLow64()) & 1llu);
+        return nEntropyBit;
     }
 };
 

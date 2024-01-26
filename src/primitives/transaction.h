@@ -9,6 +9,7 @@
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/private_key.h>
 #include <blsct/range_proof/bulletproofs/range_proof.h>
+#include <blsct/range_proof/generators.h>
 #include <blsct/signature.h>
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
@@ -297,7 +298,48 @@ public:
         return blsctData.rangeProof.Vs.Size() > 0;
     }
 
-    friend bool operator==(const CTxOut& a, const CTxOut& b)
+    bool IsStakedCommitment() const
+    {
+        bulletproofs::RangeProof<Mcl> dummy;
+
+        return GetStakedCommitmentRangeProof(dummy, -1);
+    }
+
+    bool GetStakedCommitmentRangeProof(bulletproofs::RangeProof<Mcl>& rangeProof, const CAmount& minStake) const
+    {
+        if (!IsBLSCT())
+            return false;
+        if (scriptPubKey.size() <= 7) return false;
+        if (blsctData.rangeProof.Vs.Size() == 0)
+            return false;
+        if (!tokenId.IsNull())
+            return false;
+        if (!(*scriptPubKey.begin() == OP_TRUE && *(scriptPubKey.begin() + 1) == OP_STAKED_COMMITMENT && *(scriptPubKey.begin() + 2) == OP_PUSHDATA2 && *(scriptPubKey.end() - 1) == OP_DROP))
+            return false;
+        try {
+            auto commitment = std::vector<unsigned char>(scriptPubKey.begin() + 5, scriptPubKey.end());
+
+            CDataStream s(MakeByteSpan(commitment), 0, 0);
+            s >> rangeProof;
+
+            range_proof::GeneratorsFactory<Mcl> gf;
+            range_proof::Generators<Mcl> gen = gf.GetInstance(tokenId);
+
+            rangeProof.Vs.Clear();
+
+            if (minStake <= 0) {
+                rangeProof.Vs.Add(blsctData.rangeProof.Vs[0]);
+            } else {
+                rangeProof.Vs.Add(blsctData.rangeProof.Vs[0] - (gen.G * MclScalar(minStake)));
+            }
+        } catch (...) {
+            return false;
+        }
+        return true;
+    }
+
+    friend bool
+    operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue == b.nValue &&
                 a.scriptPubKey == b.scriptPubKey &&

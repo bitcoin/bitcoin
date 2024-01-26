@@ -75,10 +75,34 @@ struct SetMemProof {
     bool operator!=(const SetMemProof& other) const;
 
     template <typename Stream>
-    void Serialize(Stream& st) const;
+    void Serialize(Stream& st) const
+    {
+        st << phi
+           << A1
+           << A2
+           << S1
+           << S2
+           << S3
+           << T1
+           << T2
+           << tau_x
+           << mu
+           << z_alpha
+           << z_tau
+           << z_beta
+           << t
+           << Ls
+           << Rs
+           << a
+           << b
+           << omega;
+    };
 
     template <typename Stream>
-    void Unserialize(Stream& st);
+    void Unserialize(Stream& st)
+    {
+        st >> phi >> A1 >> A2 >> S1 >> S2 >> S3 >> T1 >> T2 >> tau_x >> mu >> z_alpha >> z_tau >> z_beta >> t >> Ls >> Rs >> a >> b >> omega;
+    };
 };
 
 #endif // NAVCOIN_BLSCT_SET_MEM_PROOF_SET_MEM_PROOF_H

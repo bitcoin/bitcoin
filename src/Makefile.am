@@ -178,6 +178,9 @@ BITCOIN_CORE_H = \
   blsct/private_key.h \
   blsct/public_key.h \
   blsct/public_keys.h \
+  blsct/pos/pos.h \
+  blsct/pos/proof.h \
+  blsct/pos/proof_logic.h \
   blsct/range_proof/bulletproofs/amount_recovery_request.h \
   blsct/range_proof/bulletproofs/amount_recovery_result.h \
   blsct/range_proof/bulletproofs/range_proof_logic.h \
@@ -464,6 +467,9 @@ libbitcoin_node_a_SOURCES = \
   blsct/common.cpp \
   blsct/double_public_key.cpp \
   blsct/eip_2333/bls12_381_keygen.cpp \
+  blsct/pos/pos.cpp \
+  blsct/pos/proof.cpp \
+  blsct/pos/proof_logic.cpp \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \
@@ -773,12 +779,21 @@ libbitcoin_consensus_a_SOURCES = \
   blsct/arith/mcl/mcl_g1point.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
   blsct/building_block/generator_deriver.cpp \
+  blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
+  blsct/building_block/imp_inner_prod_arg.cpp \
+  blsct/building_block/lazy_point.cpp \
+  blsct/building_block/lazy_points.cpp \
+  blsct/building_block/weighted_inner_prod_arg.cpp \
   blsct/common.cpp \
   blsct/range_proof/common.cpp \
   blsct/range_proof/generators.cpp \
   blsct/range_proof/proof_base.cpp \
   blsct/range_proof/bulletproofs/range_proof.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof.cpp \
+  blsct/range_proof/bulletproofs_plus/util.cpp \
+  blsct/set_mem_proof/set_mem_proof.cpp \
+  blsct/set_mem_proof/set_mem_proof_setup.cpp \
+  blsct/set_mem_proof/set_mem_proof_prover.cpp \
   blsct/signature.cpp \
   consensus/amount.h \
   consensus/merkle.cpp \
