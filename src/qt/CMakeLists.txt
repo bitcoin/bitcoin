@@ -231,6 +231,8 @@ add_executable(bitcoin-qt
   ../init/bitcoin-qt.cpp
 )
 
+add_windows_resources(bitcoin-qt res/bitcoin-qt-res.rc)
+
 target_link_libraries(bitcoin-qt
   core_interface
   bitcoinqt
