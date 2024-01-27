@@ -5,6 +5,10 @@
 
 #include <wallet/walletdb.h>
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #include <common/system.h>
 #include <key_io.h>
 #include <protocol.h>
