@@ -23,6 +23,7 @@ implicit-integer-sign-change:secp256k1/
 implicit-signed-integer-truncation:*/include/c++/
 implicit-signed-integer-truncation:leveldb/
 implicit-signed-integer-truncation:secp256k1/
+implicit-signed-integer-truncation,implicit-integer-sign-change:secp256k1_modinv64_posdivsteps_62_var
 implicit-unsigned-integer-truncation:*/include/c++/
 implicit-unsigned-integer-truncation:leveldb/
 implicit-unsigned-integer-truncation:secp256k1/

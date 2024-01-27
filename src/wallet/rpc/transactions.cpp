@@ -415,8 +415,8 @@ static std::vector<RPCResult> TransactionDescriptionString()
            {
                {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
            }},
-           {RPCResult::Type::STR_HEX, "replaced_by_txid", /*optional=*/true, "The txid if this tx was replaced."},
-           {RPCResult::Type::STR_HEX, "replaces_txid", /*optional=*/true, "The txid if the tx replaces one."},
+           {RPCResult::Type::STR_HEX, "replaced_by_txid", /*optional=*/true, "Only if 'category' is 'send'. The txid if this tx was replaced."},
+           {RPCResult::Type::STR_HEX, "replaces_txid", /*optional=*/true, "Only if 'category' is 'send'. The txid if this tx replaces another."},
            {RPCResult::Type::STR, "to", /*optional=*/true, "If a comment to is associated with the transaction."},
            {RPCResult::Type::NUM_TIME, "time", "The transaction time expressed in " + UNIX_EPOCH_TIME + "."},
            {RPCResult::Type::NUM_TIME, "timereceived", "The time received expressed in " + UNIX_EPOCH_TIME + "."},

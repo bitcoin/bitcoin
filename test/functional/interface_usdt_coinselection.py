@@ -204,6 +204,29 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         assert_equal(success, True)
         assert_equal(use_aps, None)
 
+        self.log.info("Change position is -1 if no change is created with APS when APS was initially not used")
+        # We should have 2 tracepoints in the order:
+        # 1. selected_coins (type 1)
+        # 2. normal_create_tx_internal (type 2)
+        # 3. attempting_aps_create_tx (type 3)
+        # 4. selected_coins (type 1)
+        # 5. aps_create_tx_internal (type 4)
+        wallet.sendtoaddress(address=wallet.getnewaddress(), amount=wallet.getbalance(), subtractfeefromamount=True, avoid_reuse=False)
+        events = self.get_tracepoints([1, 2, 3, 1, 4])
+        success, use_aps, algo, waste, change_pos = self.determine_selection_from_usdt(events)
+        assert_equal(success, True)
+        assert_equal(change_pos, -1)
+
+        self.log.info("Change position is -1 if no change is created normally and APS is not used")
+        # We should have 2 tracepoints in the order:
+        # 1. selected_coins (type 1)
+        # 2. normal_create_tx_internal (type 2)
+        wallet.sendtoaddress(address=wallet.getnewaddress(), amount=wallet.getbalance(), subtractfeefromamount=True)
+        events = self.get_tracepoints([1, 2])
+        success, use_aps, algo, waste, change_pos = self.determine_selection_from_usdt(events)
+        assert_equal(success, True)
+        assert_equal(change_pos, -1)
+
         self.bpf.cleanup()
 
 

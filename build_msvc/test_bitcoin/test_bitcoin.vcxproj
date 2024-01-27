@@ -10,7 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\test\*_properties.cpp" />
-    <ClCompile Include="..\..\src\test\*_tests.cpp" />
+    <ClCompile Include="..\..\src\test\*_tests.cpp" Exclude="..\..\src\test\ipc_tests.cpp" />
     <ClCompile Include="..\..\src\test\gen\*_gen.cpp" />
     <ClCompile Include="..\..\src\test\main.cpp" />
     <ClCompile Include="..\..\src\test\util\*.cpp" />

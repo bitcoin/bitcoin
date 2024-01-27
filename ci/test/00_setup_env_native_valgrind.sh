@@ -14,4 +14,4 @@ export NO_DEPENDS=1
 export TEST_RUNNER_EXTRA="--exclude feature_init,rpc_bind,feature_bind_extra"  # Excluded for now, see https://github.com/bitcoin/bitcoin/issues/17765#issuecomment-602068547
 export GOAL="install"
 # Temporarily pin dwarf 4, until using Valgrind 3.20 or later
-export BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=no CC='clang -gdwarf-4' CXX='clang++ -gdwarf-4'"  # TODO enable GUI
+export BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=no CC=clang CXX=clang++ CFLAGS=-gdwarf-4 CXXFLAGS=-gdwarf-4"  # TODO enable GUI

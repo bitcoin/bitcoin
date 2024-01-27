@@ -24,6 +24,7 @@ def get_fuzz_env(*, target, source_dir):
         'UBSAN_SYMBOLIZER_PATH':symbolizer,
         "ASAN_OPTIONS": "detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1",
         'ASAN_SYMBOLIZER_PATH':symbolizer,
+        'MSAN_SYMBOLIZER_PATH':symbolizer,
     }
 
 
@@ -372,8 +373,8 @@ def parse_test_list(*, fuzz_bin):
             'PRINT_ALL_FUZZ_TARGETS_AND_ABORT': ''
         },
         stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
         text=True,
+        check=True,
     ).stdout.splitlines()
     return test_list_all
 
