@@ -1444,7 +1444,6 @@ class DashTestFramework(BitcoinTestFramework):
         # create masternodes
         self.prepare_masternodes()
         self.prepare_datadirs()
-        self.start_masternodes()
 
     def setup_network(self):
         self.setup_nodes()
@@ -1454,6 +1453,8 @@ class DashTestFramework(BitcoinTestFramework):
         num_simple_nodes = self.num_nodes - self.mn_count - 1
         for i in range(0, num_simple_nodes):
             self.connect_nodes(i+1, 0)
+
+        self.start_masternodes()
 
         self.bump_mocktime(1)
         self.nodes[0].generate(1)

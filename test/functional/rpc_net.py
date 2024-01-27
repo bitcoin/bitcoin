@@ -164,14 +164,14 @@ class NetTest(DashTestFramework):
         assert "(ipv4, ipv6, onion, i2p, not_publicly_routable)" in self.nodes[0].help("getpeerinfo")
         # This part is slightly different comparing to the Bitcoin implementation. This is expected because we create connections on network setup a bit differently too.
         # We also create more connection during the test itself to test mn specific stats
-        assert_equal(peer_info[0][0]['connection_type'], 'manual')
+        assert_equal(peer_info[0][0]['connection_type'], 'inbound')
         assert_equal(peer_info[0][1]['connection_type'], 'inbound')
+        assert_equal(peer_info[0][2]['connection_type'], 'manual')
 
-        assert_equal(peer_info[1][0]['connection_type'], 'inbound')
-        assert_equal(peer_info[1][1]['connection_type'], 'manual')
-        assert_equal(peer_info[1][2]['connection_type'], 'manual')
+        assert_equal(peer_info[1][0]['connection_type'], 'manual')
+        assert_equal(peer_info[1][1]['connection_type'], 'inbound')
 
-        assert_equal(peer_info[2][0]['connection_type'], 'inbound')
+        assert_equal(peer_info[2][0]['connection_type'], 'manual')
 
     def test_service_flags(self):
         self.nodes[0].add_p2p_connection(P2PInterface(), services=(1 << 4) | (1 << 63))
