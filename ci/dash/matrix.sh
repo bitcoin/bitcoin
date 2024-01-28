@@ -13,7 +13,7 @@ source ./ci/test/00_setup_env.sh
 # Configure sanitizers options
 export ASAN_OPTIONS=""
 export LSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/lsan"
-export TSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/tsan"
+export TSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/tsan:halt_on_error=1"
 export UBSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/ubsan"
 
 if [ "$BUILD_TARGET" = "arm-linux" ]; then

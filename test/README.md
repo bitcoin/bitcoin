@@ -307,8 +307,9 @@ Use the `-v` option for verbose output.
 | Lint test | Dependency | Version [used by CI](../ci/lint/04_install.sh) | Installation
 |-----------|:----------:|:-------------------------------------------:|--------------
 | [`lint-python.sh`](lint/lint-python.sh) | [flake8](https://gitlab.com/pycqa/flake8) | [3.8.3](https://github.com/bitcoin/bitcoin/pull/19348) | `pip3 install flake8==3.8.3`
-| [`lint-python.sh`](lint/lint-python.sh) | [mypy](https://github.com/python/mypy) | [0.700](https://github.com/bitcoin/bitcoin/pull/18210) | `pip3 install mypy==0.700`
+| [`lint-python.sh`](lint/lint-python.sh) | [mypy](https://github.com/python/mypy) | [0.781](https://github.com/bitcoin/bitcoin/pull/19348) | `pip3 install mypy==0.781`
 | [`lint-shell.sh`](lint/lint-shell.sh) | [ShellCheck](https://github.com/koalaman/shellcheck) | [0.7.1](https://github.com/bitcoin/bitcoin/pull/19348) | [details...](https://github.com/koalaman/shellcheck#installing)
+| [`lint-shell.sh`](lint/lint-shell.sh) | [yq](https://github.com/kislyuk/yq) | default | `pip3 install yq`
 | [`lint-spelling.sh`](lint/lint-spelling.sh) | [codespell](https://github.com/codespell-project/codespell) | [1.17.1](https://github.com/bitcoin/bitcoin/pull/19348) | `pip3 install codespell==1.17.1`
 
 Please be aware that on Linux distributions all dependencies are usually available as packages, but could be outdated.
