@@ -116,28 +116,26 @@ std::map<Consensus::LLMQType, QvvecSyncMode> GetEnabledQuorumVvecSyncEntries()
 
 bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindexPrev)
 {
-    return IsQuorumTypeEnabledInternal(llmqType, pindexPrev, std::nullopt);
+    return IsQuorumTypeEnabledInternal(llmqType, pindexPrev, std::nullopt, std::nullopt);
 }
 
 bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindexPrev,
-                                std::optional<bool> optDIP0024IsActive)
+                                std::optional<bool> optDIP0024IsActive, std::optional<bool> optHaveDIP0024Quorums)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
 
     const bool fDIP0024IsActive{optDIP0024IsActive.value_or(DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0024))};
+    const bool fHaveDIP0024Quorums{optHaveDIP0024Quorums.value_or(pindexPrev->nHeight >= consensusParams.DIP0024QuorumsHeight)};
     switch (llmqType)
     {
         case Consensus::LLMQType::LLMQ_DEVNET:
             return true;
         case Consensus::LLMQType::LLMQ_50_60:
-            if (Params().NetworkIDString() == CBaseChainParams::TESTNET) return true;
-            return !fDIP0024IsActive;
-
+            return !fDIP0024IsActive || !fHaveDIP0024Quorums ||
+                    Params().NetworkIDString() == CBaseChainParams::TESTNET;
         case Consensus::LLMQType::LLMQ_TEST_INSTANTSEND:
-            if (!fDIP0024IsActive) return true;
-
-            return consensusParams.llmqTypeDIP0024InstantSend == Consensus::LLMQType::LLMQ_TEST_INSTANTSEND;
-
+            return !fDIP0024IsActive || !fHaveDIP0024Quorums ||
+                    consensusParams.llmqTypeDIP0024InstantSend == Consensus::LLMQType::LLMQ_TEST_INSTANTSEND;
         case Consensus::LLMQType::LLMQ_TEST:
         case Consensus::LLMQType::LLMQ_TEST_PLATFORM:
         case Consensus::LLMQType::LLMQ_400_60:
