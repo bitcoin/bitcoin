@@ -5542,10 +5542,9 @@ bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mocka
           // unbroadcast set. No need to log a failure if parsing fails here.
         }
         for (const auto& txid : unbroadcast_txids) {
-            const CTransactionRef& added_tx = pool.get(txid);
-            if (added_tx != nullptr) {
-                pool.AddUnbroadcastTx(txid);
-            }
+            // Ensure transactions were accepted to mempool then add to
+            // unbroadcast set.
+            if (pool.get(txid) != nullptr) pool.AddUnbroadcastTx(txid);
         }
 
     } catch (const std::exception& e) {

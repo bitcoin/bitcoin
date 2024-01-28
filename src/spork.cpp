@@ -204,7 +204,7 @@ void CSporkManager::ProcessGetSporks(CNode& peer, CConnman& connman)
     LOCK(cs); // make sure to not lock this together with cs_main
     for (const auto& pair : mapSporksActive) {
         for (const auto& signerSporkPair : pair.second) {
-            connman.PushMessage(&peer, CNetMsgMaker(peer.GetSendVersion()).Make(NetMsgType::SPORK, signerSporkPair.second));
+            connman.PushMessage(&peer, CNetMsgMaker(peer.GetCommonVersion()).Make(NetMsgType::SPORK, signerSporkPair.second));
         }
     }
 }

@@ -73,7 +73,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         # Save the coinbase for later
         block2 = block
         tip = block.sha256
-        node.p2p.send_blocks_and_test([block1, block2], node, success=True)
+        node.p2ps[0].send_blocks_and_test([block1, block2], node, success=True)
 
         self.log.info("Mature the block.")
         self.nodes[0].generatetoaddress(100, self.nodes[0].get_deterministic_priv_key().address)
@@ -84,7 +84,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
             self.log.info("Testing invalid transaction: %s", BadTxTemplate.__name__)
             template = BadTxTemplate(spend_block=block1)
             tx = template.get_tx()
-            node.p2p.send_txs_and_test(
+            node.p2ps[0].send_txs_and_test(
                 [tx], node, success=False,
                 expect_disconnect=template.expect_disconnect,
                 reject_reason=template.reject_reason,
@@ -144,7 +144,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         self.log.info('Send the orphans ... ')
         # Send valid orphan txs from p2ps[0]
-        node.p2p.send_txs_and_test([tx_orphan_1, tx_orphan_2_no_fee, tx_orphan_2_valid], node, success=False)
+        node.p2ps[0].send_txs_and_test([tx_orphan_1, tx_orphan_2_no_fee, tx_orphan_2_valid], node, success=False)
         # Send invalid tx from p2ps[1]
         node.p2ps[1].send_txs_and_test([tx_orphan_2_invalid], node, success=False)
 
@@ -159,11 +159,11 @@ class InvalidTxRequestTest(BitcoinTestFramework):
             block.vtx.append(tx_withhold)
             block.hashMerkleRoot = block.calc_merkle_root()
             block.solve()
-            node.p2p.send_blocks_and_test([block], node, success=True)
+            node.p2ps[0].send_blocks_and_test([block], node, success=True)
         else:
             with node.assert_debug_log(expected_msgs=["bad-txns-in-belowout"]):
                 # Test orphan handling/resolution by publishing the withhold TX via the mempool
-                node.p2p.send_txs_and_test([tx_withhold], node, success=True)
+                node.p2ps[0].send_txs_and_test([tx_withhold], node, success=True)
 
         # Transactions that should end up in the mempool
         expected_mempool = {
@@ -195,7 +195,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
                 orphan_tx_pool[i].vout.append(CTxOut(nValue=COIN // 10, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
 
         with node.assert_debug_log(['mapOrphan overflow, removed 1 tx']):
-            node.p2p.send_txs_and_test(orphan_tx_pool, node, success=False)
+            node.p2ps[0].send_txs_and_test(orphan_tx_pool, node, success=False)
 
         rejected_parent = CTransaction()
         rejected_parent.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_2_invalid.sha256, 0)))
@@ -203,7 +203,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         rejected_parent.rehash()
         # TODO: somehow it fails on `block` stage without 'not keeping orphan'
         #with node.assert_debug_log(['not keeping orphan with rejected parents {}'.format(rejected_parent.hash)]):
-        node.p2p.send_txs_and_test([rejected_parent], node, success=False)
+        node.p2ps[0].send_txs_and_test([rejected_parent], node, success=False)
 
 
 if __name__ == '__main__':

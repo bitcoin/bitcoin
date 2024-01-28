@@ -92,7 +92,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
             cut_len = 4 + 12 + 4
             # modify checksum
             msg = msg[:cut_len] + b'\xff' * 4 + msg[cut_len + 4:]
-            self.nodes[0].p2p.send_raw_message(msg)
+            conn.send_raw_message(msg)
             conn.sync_with_ping(timeout=1)
             self.nodes[0].disconnect_p2ps()
 
@@ -102,7 +102,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
             # Create a message with oversized payload
             msg = msg_unrecognized(str_data="d"*(VALID_DATA_LIMIT + 1))
             msg = conn.build_message(msg)
-            self.nodes[0].p2p.send_raw_message(msg)
+            conn.send_raw_message(msg)
             conn.wait_for_disconnect(timeout=5)
             self.nodes[0].disconnect_p2ps()
 
@@ -113,7 +113,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
             msg = conn.build_message(msg)
             # Modify msgtype
             msg = msg[:7] + b'\x00' + msg[7 + 1:]
-            self.nodes[0].p2p.send_raw_message(msg)
+            conn.send_raw_message(msg)
             conn.sync_with_ping(timeout=1)
             self.nodes[0].disconnect_p2ps()
 

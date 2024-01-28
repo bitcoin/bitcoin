@@ -16,7 +16,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         self.extra_args = [["-blocksonly"]]
 
     def run_test(self):
-        self.nodes[0].add_p2p_connection(P2PInterface())
+        block_relay_peer = self.nodes[0].add_p2p_connection(P2PInterface())
 
         self.log.info('Check that txs from p2p are rejected and result in disconnect')
         prevtx = self.nodes[0].getblock(self.nodes[0].getblockhash(1), 2)['tx'][0]
@@ -40,13 +40,13 @@ class P2PBlocksOnly(BitcoinTestFramework):
         )['hex']
         assert_equal(self.nodes[0].getnetworkinfo()['localrelay'], False)
         with self.nodes[0].assert_debug_log(['tx sent in violation of protocol peer=0']):
-            self.nodes[0].p2p.send_message(msg_tx(FromHex(CTransaction(), sigtx)))
-            self.nodes[0].p2p.wait_for_disconnect()
+            block_relay_peer.send_message(msg_tx(FromHex(CTransaction(), sigtx)))
+            block_relay_peer.wait_for_disconnect()
             assert_equal(self.nodes[0].getmempoolinfo()['size'], 0)
 
         # Remove the disconnected peer and add a new one.
         del self.nodes[0].p2ps[0]
-        self.nodes[0].add_p2p_connection(P2PInterface())
+        tx_relay_peer = self.nodes[0].add_p2p_connection(P2PInterface())
 
         self.log.info('Check that txs from rpc are not rejected and relayed to other peers')
         assert_equal(self.nodes[0].getpeerinfo()[0]['relaytxes'], True)
@@ -54,7 +54,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(['received getdata for: tx {} peer=1'.format(txid)]):
             self.nodes[0].sendrawtransaction(sigtx)
             self.bump_mocktime(60)
-            self.nodes[0].p2p.wait_for_tx(txid)
+            tx_relay_peer.wait_for_tx(txid)
             assert_equal(self.nodes[0].getmempoolinfo()['size'], 1)
 
         self.log.info('Check that txs from peers with relay-permission are not rejected and relayed to others')

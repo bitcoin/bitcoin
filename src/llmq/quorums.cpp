@@ -481,7 +481,7 @@ bool CQuorumManager::RequestQuorumData(CNode* pfrom, Consensus::LLMQType llmqTyp
     LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- sending QGETDATA quorumHash[%s] llmqType[%d] proRegTx[%s]\n", __func__, key.quorumHash.ToString(),
              ToUnderlying(key.llmqType), key.proRegTx.ToString());
 
-    CNetMsgMaker msgMaker(pfrom->GetSendVersion());
+    CNetMsgMaker msgMaker(pfrom->GetCommonVersion());
     connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::QGETDATA, request));
 
     return true;
@@ -682,8 +682,8 @@ PeerMsgRet CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_t
                     break;
             }
             request.SetError(nError);
-            CDataStream ssResponse(SER_NETWORK, pfrom.GetSendVersion(), request, body);
-            connman.PushMessage(&pfrom, CNetMsgMaker(pfrom.GetSendVersion()).Make(NetMsgType::QDATA, ssResponse));
+            CDataStream ssResponse(SER_NETWORK, pfrom.GetCommonVersion(), request, body);
+            connman.PushMessage(&pfrom, CNetMsgMaker(pfrom.GetCommonVersion()).Make(NetMsgType::QDATA, ssResponse));
             return ret;
         };
 
@@ -715,7 +715,7 @@ PeerMsgRet CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_t
             return sendQDATA(CQuorumDataRequest::Errors::QUORUM_NOT_FOUND, request_limit_exceeded);
         }
 
-        CDataStream ssResponseData(SER_NETWORK, pfrom.GetSendVersion());
+        CDataStream ssResponseData(SER_NETWORK, pfrom.GetCommonVersion());
 
         // Check if request wants QUORUM_VERIFICATION_VECTOR data
         if (request.GetDataMask() & CQuorumDataRequest::QUORUM_VERIFICATION_VECTOR) {

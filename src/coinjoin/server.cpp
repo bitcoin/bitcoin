@@ -794,7 +794,7 @@ void CCoinJoinServer::RelayFinalTransaction(const CTransaction& txFinal)
     // final mixing tx with empty signatures should be relayed to mixing participants only
     for (const auto& entry : vecEntries) {
         bool fOk = connman.ForNode(entry.addr, [&txFinal, this](CNode* pnode) {
-            CNetMsgMaker msgMaker(pnode->GetSendVersion());
+            CNetMsgMaker msgMaker(pnode->GetCommonVersion());
             connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSFINALTX, nSessionID.load(), txFinal));
             return true;
         });
@@ -809,7 +809,7 @@ void CCoinJoinServer::RelayFinalTransaction(const CTransaction& txFinal)
 void CCoinJoinServer::PushStatus(CNode& peer, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID) const
 {
     CCoinJoinStatusUpdate psssup(nSessionID, nState, 0, nStatusUpdate, nMessageID);
-    connman.PushMessage(&peer, CNetMsgMaker(peer.GetSendVersion()).Make(NetMsgType::DSSTATUSUPDATE, psssup));
+    connman.PushMessage(&peer, CNetMsgMaker(peer.GetCommonVersion()).Make(NetMsgType::DSSTATUSUPDATE, psssup));
 }
 
 void CCoinJoinServer::RelayStatus(PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID)
@@ -859,7 +859,7 @@ void CCoinJoinServer::RelayCompletedTransaction(PoolMessage nMessageID)
     LOCK(cs_coinjoin);
     for (const auto& entry : vecEntries) {
         bool fOk = connman.ForNode(entry.addr, [&nMessageID, this](CNode* pnode) {
-            CNetMsgMaker msgMaker(pnode->GetSendVersion());
+            CNetMsgMaker msgMaker(pnode->GetCommonVersion());
             connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSCOMPLETE, nSessionID.load(), nMessageID));
             return true;
         });
