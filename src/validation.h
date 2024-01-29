@@ -19,6 +19,7 @@
 #include <fs.h>
 #include <node/utxo_snapshot.h>
 #include <policy/feerate.h>
+#include <policy/packages.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
 #include <script/script_error.h>
 #include <sync.h>
@@ -227,9 +228,7 @@ void PruneBlockFilesManual(CChainState& active_chainstate, int nManualPruneHeigh
 * Validation result for a single transaction mempool acceptance.
 */
 struct MempoolAcceptResult {
-    /** Used to indicate the results of mempool validation,
-    * including the possibility of unfinished validation.
-    */
+    /** Used to indicate the results of mempool validation. */
     enum class ResultType {
         VALID, //!> Fully validated, valid.
         INVALID, //!> Invalid.
@@ -240,7 +239,16 @@ struct MempoolAcceptResult {
     // The following fields are only present when m_result_type = ResultType::VALID
     /** Raw base fees in satoshis. */
     const std::optional<CAmount> m_base_fees;
+    static MempoolAcceptResult Failure(TxValidationState state) {
+        return MempoolAcceptResult(state);
+    }
 
+    static MempoolAcceptResult Success(CAmount fees) {
+        return MempoolAcceptResult(fees);
+    }
+
+// Private constructors. Use static methods MempoolAcceptResult::Success, etc. to construct.
+private:
     /** Constructor for failure case */
     explicit MempoolAcceptResult(TxValidationState state)
         : m_result_type(ResultType::INVALID), m_state(state), m_base_fees(std::nullopt) {
@@ -253,12 +261,46 @@ struct MempoolAcceptResult {
 };
 
 /**
+* Validation result for package mempool acceptance.
+*/
+struct PackageMempoolAcceptResult
+{
+    const PackageValidationState m_state;
+    /**
+    * Map from txid to finished MempoolAcceptResults. The client is responsible
+    * for keeping track of the transaction objects themselves. If a result is not
+    * present, it means validation was unfinished for that transaction.
+    */
+    std::map<const uint256, const MempoolAcceptResult> m_tx_results;
+
+    explicit PackageMempoolAcceptResult(PackageValidationState state,
+                                        std::map<const uint256, const MempoolAcceptResult>&& results)
+        : m_state{state}, m_tx_results(std::move(results)) {}
+
+    /** Constructor to create a PackageMempoolAcceptResult from a single MempoolAcceptResult */
+    explicit PackageMempoolAcceptResult(const uint256 &txid, const MempoolAcceptResult& result)
+        : m_tx_results{ {txid, result} } {}
+};
+
+/**
  * (Try to) add a transaction to the memory pool.
  * @param[in]  bypass_limits   When true, don't enforce mempool fee limits.
  * @param[in]  test_accept     When true, run validation checks but don't submit to mempool.
  */
 MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPool& pool, const CTransactionRef& tx,
                                        bool bypass_limits, bool test_accept=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+/**
+* Atomically test acceptance of a package. If the package only contains one tx, package rules still apply.
+* @param[in]    txns                Group of transactions which may be independent or contain
+*                                   parent-child dependencies. The transactions must not conflict, i.e.
+*                                   must not spend the same inputs. Parents must appear before children.
+* @returns a PackageMempoolAcceptResult which includes a MempoolAcceptResult for each transaction.
+* If a transaction fails, validation will exit early and some results may be missing.
+*/
+PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTxMemPool& pool,
+                                             const Package& txns, bool test_accept)
+                                             EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin);
 int GetUTXOHeight(const COutPoint& outpoint);
@@ -284,9 +326,13 @@ bool CheckFinalTx(const CBlockIndex* active_chain_tip, const CTransaction &tx, i
 bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
- * Check if transaction will be BIP 68 final in the next block to be created.
- *
- * Simulates calling SequenceLocks() with data from the tip of the current active chain.
+ * Check if transaction will be BIP68 final in the next block to be created on top of tip.
+ * @param[in]   tip             Chain tip to check tx sequence locks against. For example,
+ *                              the tip of the current active chain.
+ * @param[in]   coins_view      Any CCoinsView that provides access to the relevant coins
+ *                              for checking sequence locks. Any CCoinsView can be passed in;
+ *                              it is assumed to be consistent with the tip.
+ * Simulates calling SequenceLocks() with data from the tip passed in.
  * Optionally stores in LockPoints the resulting height and time calculated and the hash
  * of the block needed for calculation or skips the calculation and uses the LockPoints
  * passed in for evaluation.
@@ -294,12 +340,12 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp) EXCLUSIVE
  *
  * See consensus/consensus.h for flag definitions.
  */
-bool CheckSequenceLocks(CChainState& active_chainstate,
-                        const CTxMemPool& pool,
+bool CheckSequenceLocks(CBlockIndex* tip,
+                        const CCoinsView& coins_view,
                         const CTransaction& tx,
                         int flags,
                         LockPoints* lp = nullptr,
-                        bool useExistingLockPoints = false) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, pool.cs);
+                        bool useExistingLockPoints = false);
 
 /**
  * Closure representing one script verification
