@@ -187,20 +187,29 @@ XOnlyPubKey::XOnlyPubKey(Span<const unsigned char> bytes)
     std::copy(bytes.begin(), bytes.end(), m_keydata.begin());
 }
 
+std::vector<CPubKey> XOnlyPubKey::GetCPubKeys() const
+{
+    std::vector<CPubKey> out;
+    unsigned char b[33] = {0x02};
+    std::copy(m_keydata.begin(), m_keydata.end(), b + 1);
+    CPubKey fullpubkey;
+    fullpubkey.Set(b, b + 33);
+    out.push_back(fullpubkey);
+    b[0] = 0x03;
+    fullpubkey.Set(b, b + 33);
+    out.push_back(fullpubkey);
+    return out;
+}
+
 std::vector<CKeyID> XOnlyPubKey::GetKeyIDs() const
 {
     std::vector<CKeyID> out;
     // For now, use the old full pubkey-based key derivation logic. As it is indexed by
     // Hash160(full pubkey), we need to return both a version prefixed with 0x02, and one
     // with 0x03.
-    unsigned char b[33] = {0x02};
-    std::copy(m_keydata.begin(), m_keydata.end(), b + 1);
-    CPubKey fullpubkey;
-    fullpubkey.Set(b, b + 33);
-    out.push_back(fullpubkey.GetID());
-    b[0] = 0x03;
-    fullpubkey.Set(b, b + 33);
-    out.push_back(fullpubkey.GetID());
+    for (const CPubKey& pk : GetCPubKeys()) {
+        out.push_back(pk.GetID());
+    }
     return out;
 }
 
