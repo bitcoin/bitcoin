@@ -303,6 +303,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendmsgtopeer", 0, "peer_id" },
     { "stop", 0, "wait" },
     { "addnode", 2, "v2transport" },
+    { "addconnection", 2, "v2transport" },
 };
 // clang-format on
 
