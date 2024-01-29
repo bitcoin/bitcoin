@@ -32,8 +32,7 @@ std::optional<CPubKey> MuSig2AggregatePubkeys(const std::vector<CPubKey>& pubkey
 class MuSig2SecNonce
 {
 private:
-    //! The actual secnonce itself
-    secure_unique_ptr<secp256k1_musig_secnonce> m_nonce;
+    std::unique_ptr<MuSig2SecNonceImpl> m_impl;
 
 public:
     MuSig2SecNonce();
@@ -49,5 +48,7 @@ public:
     void Invalidate();
     bool IsValid();
 };
+
+std::optional<std::vector<uint8_t>> CreateMuSig2AggregateSig(const std::vector<CPubKey>& participants, const CPubKey& aggregate_pubkey, const std::vector<std::pair<uint256, bool>>& tweaks, const uint256& sighash, const std::map<CPubKey, std::vector<uint8_t>>& pubnonces, const std::map<CPubKey, uint256>& partial_sigs);
 
 #endif // BITCOIN_MUSIG_H
