@@ -52,6 +52,7 @@ class NotificationsTest(DashTestFramework):
         self.extra_args[0].append("-chainlocknotify=echo > {}".format(os.path.join(self.chainlocknotify_dir, '%s')))
         self.extra_args[1].append("-instantsendnotify=echo > {}".format(os.path.join(self.instantsendnotify_dir, notify_outputname('%w', '%s'))))
 
+        self.wallet_names = [self.default_wallet_name, self.wallet]
         super().setup_network()
 
     def run_test(self):
@@ -60,9 +61,6 @@ class NotificationsTest(DashTestFramework):
             os.remove(os.path.join(self.blocknotify_dir, block_file))
         for tx_file in os.listdir(self.walletnotify_dir):
             os.remove(os.path.join(self.walletnotify_dir, tx_file))
-
-        if self.is_wallet_compiled():
-            self.nodes[1].createwallet(wallet_name=self.wallet, load_on_startup=True)
 
         self.log.info("test -blocknotify")
         block_count = 10

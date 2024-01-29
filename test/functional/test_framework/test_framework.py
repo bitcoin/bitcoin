@@ -422,6 +422,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def setup_nodes(self):
         """Override this method to customize test node setup"""
+
+        """If this method is updated - backport changes to  DashTestFramework.setup_nodes"""
         extra_args = None
         if hasattr(self, "extra_args"):
             extra_args = self.extra_args
@@ -1158,9 +1160,9 @@ class DashTestFramework(BitcoinTestFramework):
             self.extra_args[i].append("-llmqtestparams=%d:%d" % (self.llmq_size, self.llmq_threshold))
             self.extra_args[i].append("-llmqtestinstantsendparams=%d:%d" % (self.llmq_size, self.llmq_threshold))
 
-    def create_simple_node(self):
+    def create_simple_node(self, extra_args=None):
         idx = len(self.nodes)
-        self.add_nodes(1, extra_args=[self.extra_args[idx]])
+        self.add_nodes(1, extra_args=[extra_args[idx]])
         self.start_node(idx)
         for i in range(0, idx):
             self.connect_nodes(i, idx)
@@ -1415,21 +1417,23 @@ class DashTestFramework(BitcoinTestFramework):
         self.start_node(mnidx, extra_args=args)
         force_finish_mnsync(self.nodes[mnidx])
 
-    def setup_network(self):
+    def setup_nodes(self):
+        extra_args = None
+        if hasattr(self, "extra_args"):
+            extra_args = self.extra_args
         self.log.info("Creating and starting controller node")
-        self.add_nodes(1, extra_args=[self.extra_args[0]])
-        self.start_node(0)
-        self.import_deterministic_coinbase_privkeys()
+        num_simple_nodes = self.num_nodes - self.mn_count
+        self.log.info("Creating and starting %s simple nodes", num_simple_nodes)
+        for i in range(0, num_simple_nodes):
+            self.create_simple_node(extra_args)
+        if self.requires_wallet:
+            self.import_deterministic_coinbase_privkeys()
         required_balance = EVONODE_COLLATERAL * self.evo_count
         required_balance += MASTERNODE_COLLATERAL * (self.mn_count - self.evo_count) + 100
         self.log.info("Generating %d coins" % required_balance)
         while self.nodes[0].getbalance() < required_balance:
             self.bump_mocktime(1)
             self.nodes[0].generate(10)
-        num_simple_nodes = self.num_nodes - self.mn_count - 1
-        self.log.info("Creating and starting %s simple nodes", num_simple_nodes)
-        for i in range(0, num_simple_nodes):
-            self.create_simple_node()
 
         self.log.info("Activating DIP3")
         if not self.fast_dip3_enforcement:
@@ -1440,12 +1444,17 @@ class DashTestFramework(BitcoinTestFramework):
         # create masternodes
         self.prepare_masternodes()
         self.prepare_datadirs()
-        self.start_masternodes()
+
+    def setup_network(self):
+        self.setup_nodes()
 
         # non-masternodes where disconnected from the control node during prepare_datadirs,
         # let's reconnect them back to make sure they receive updates
+        num_simple_nodes = self.num_nodes - self.mn_count - 1
         for i in range(0, num_simple_nodes):
             self.connect_nodes(i+1, 0)
+
+        self.start_masternodes()
 
         self.bump_mocktime(1)
         self.nodes[0].generate(1)

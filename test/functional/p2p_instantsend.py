@@ -32,9 +32,6 @@ class InstantSendTest(DashTestFramework):
         self.move_to_next_cycle()
         self.log.info("Cycle H+2C height:" + str(self.nodes[0].getblockcount()))
         (quorum_info_i_0, quorum_info_i_1) = self.mine_cycle_quorum(llmq_type_name='llmq_test_dip0024', llmq_type=103)
-        self.nodes[self.isolated_idx].createwallet(self.default_wallet_name)
-        self.nodes[self.receiver_idx].createwallet(self.default_wallet_name)
-        self.nodes[self.sender_idx].createwallet(self.default_wallet_name)
 
         self.test_mempool_doublespend()
         self.test_block_doublespend()
