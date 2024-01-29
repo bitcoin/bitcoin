@@ -286,6 +286,7 @@ public:
      * This is needed for key lookups since keys are indexed by CKeyID.
      */
     std::vector<CKeyID> GetKeyIDs() const;
+    std::vector<CPubKey> GetCPubKeys() const;
 
     CPubKey GetEvenCorrespondingCPubKey() const;
 
