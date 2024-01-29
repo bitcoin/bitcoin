@@ -100,6 +100,35 @@ bool MutableTransactionSignatureCreator::CreateSchnorrSig(const SigningProvider&
     return true;
 }
 
+bool MutableTransactionSignatureCreator::CreateMuSig2AggregateSig(const std::vector<CPubKey>& participants, std::vector<uint8_t>& sig, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const uint256* leaf_hash, const std::vector<std::pair<uint256, bool>>& tweaks, SigVersion sigversion, const SignatureData& sigdata) const
+{
+    assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
+    if (!participants.size()) return false;
+
+    // Retrieve pubnonces and partial sigs
+    auto this_leaf_aggkey = std::make_pair(script_pubkey, leaf_hash ? *leaf_hash : uint256());
+    auto pubnonce_it = sigdata.musig2_pubnonces.find(this_leaf_aggkey);
+    if (pubnonce_it == sigdata.musig2_pubnonces.end()) return false;
+    const std::map<CPubKey, std::vector<uint8_t>>& pubnonces = pubnonce_it->second;
+    auto partial_sigs_it = sigdata.musig2_partial_sigs.find(this_leaf_aggkey);
+    if (partial_sigs_it == sigdata.musig2_partial_sigs.end()) return false;
+    const std::map<CPubKey, uint256>& partial_sigs = partial_sigs_it->second;
+
+    // Check if enough pubnonces and partial sigs
+    if (pubnonces.size() != participants.size()) return false;
+    if (partial_sigs.size() != participants.size()) return false;
+
+    // Compute sighash
+    std::optional<uint256> sighash = ComputeSchnorrSignatureHash(leaf_hash, sigversion);
+    if (!sighash.has_value()) return false;
+
+    std::optional<std::vector<uint8_t>> res = ::CreateMuSig2AggregateSig(participants, aggregate_pubkey, tweaks, *sighash, pubnonces, partial_sigs);
+    if (!res) return false;
+    sig = res.value();
+
+    return true;
+}
+
 static bool GetCScript(const SigningProvider& provider, const SignatureData& sigdata, const CScriptID& scriptid, CScript& script)
 {
     if (provider.GetCScript(scriptid, script)) {
@@ -751,6 +780,11 @@ public:
         return true;
     }
     bool CreateSchnorrSig(const SigningProvider& provider, std::vector<unsigned char>& sig, const XOnlyPubKey& pubkey, const uint256* leaf_hash, const uint256* tweak, SigVersion sigversion) const override
+    {
+        sig.assign(64, '\000');
+        return true;
+    }
+    bool CreateMuSig2AggregateSig(const std::vector<CPubKey>& participants, std::vector<uint8_t>& sig, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const uint256* leaf_hash, const std::vector<std::pair<uint256, bool>>& tweaks, SigVersion sigversion, const SignatureData& sigdata) const override
     {
         sig.assign(64, '\000');
         return true;
