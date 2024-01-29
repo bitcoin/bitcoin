@@ -145,8 +145,10 @@ TIMESTAMP_WINDOW = 2 * 60 * 60
 AMOUNT_DUST = 0.00000546
 
 
-def get_rand_amount():
-    r = random.uniform(AMOUNT_DUST, 1)
+def get_rand_amount(min_amount=AMOUNT_DUST):
+    assert min_amount <= 1
+    r = random.uniform(min_amount, 1)
+    # note: min_amount can get rounded down here
     return Decimal(str(round(r, 8)))
 
 
@@ -273,7 +275,7 @@ class ImportRescanTest(BitcoinTestFramework):
             variant.key = self.nodes[1].dumpprivkey(variant.address["address"])
             # Ensure output is large enough to pay for fees: conservatively assuming txsize of
             # 500 vbytes and feerate of 20 sats/vbytes
-            variant.initial_amount = max(get_rand_amount(), (500 * 20 / COIN) + AMOUNT_DUST)
+            variant.initial_amount = get_rand_amount(min_amount=((500 * 20 / COIN) + AMOUNT_DUST))
             variant.initial_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.initial_amount)
             variant.confirmation_height = 0
             variant.timestamp = timestamp
