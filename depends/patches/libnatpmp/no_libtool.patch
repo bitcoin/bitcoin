@@ -1,0 +1,15 @@
+diff -ruN libnatpmp-07004b97cf691774efebe70404cf22201e4d330d/Makefile libnatpmp-07004b97cf691774efebe70404cf22201e4d330d.new/Makefile
+--- libnatpmp-07004b97cf691774efebe70404cf22201e4d330d/Makefile	2022-07-05 07:49:50.000000000 +0000
++++ libnatpmp-07004b97cf691774efebe70404cf22201e4d330d.new/Makefile	2024-01-23 20:59:35.674821779 +0000
+@@ -197,11 +197,7 @@
+ 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+ 
+ $(STATICLIB):	$(LIBOBJS)
+-ifneq (, $(findstring darwin, $(OS)))
+-	$(LIBTOOL) -static -o $@ $?
+-else
+ 	$(AR) crs $@ $?
+-endif
+ 
+ $(SHAREDLIB):	$(LIBOBJS)
+ ifneq (, $(findstring darwin, $(OS)))
