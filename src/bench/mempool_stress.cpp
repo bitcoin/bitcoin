@@ -200,9 +200,11 @@ static void MempoolCheck(benchmark::Bench& bench)
     testing_setup->PopulateMempool(det_rand, 400, true);
     const CCoinsViewCache& coins_tip = testing_setup.get()->m_node.chainman->ActiveChainstate().CoinsTip();
 
+    CTxMemPool::Limits limits(kernel::MemPoolLimits::NoLimits());
+
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
         // Bump up the spendheight so we don't hit premature coinbase spend errors.
-        pool.check(coins_tip, /*spendheight=*/300);
+        pool.check(coins_tip, /*spendheight=*/300, &limits);
     });
 }
 
