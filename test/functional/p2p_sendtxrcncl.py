@@ -25,7 +25,7 @@ class PeerNoVerack(P2PInterface):
 
     def on_version(self, message):
         # Avoid sending verack in response to version.
-        pass
+        self.send_version()
 
 class SendTxrcnclReceiver(P2PInterface):
     def __init__(self):
@@ -38,7 +38,8 @@ class SendTxrcnclReceiver(P2PInterface):
 
 class P2PFeelerReceiver(SendTxrcnclReceiver):
     def on_version(self, message):
-        pass  # feeler connections can not send any message other than their own version
+        # feeler connections can not send any message other than their own version
+        self.send_version()
 
 
 class PeerTrackMsgOrder(P2PInterface):
