@@ -3015,6 +3015,7 @@ CBlockIndex* Chainstate::FindMostWorkChain()
         bool fInvalidAncestor = false;
         while (pindexTest && !m_chain.Contains(pindexTest)) {
             assert(pindexTest->HaveNumChainTxs() || pindexTest->nHeight == 0);
+            assert(pindexTest->IsAssumedValid() || (pindexTest->nStatus & BLOCK_TRANSACTIONS_TREE_VALID_FLAG));
 
             // Pruned nodes may have entries in setBlockIndexCandidates for
             // which block files have been deleted.  Remove those as candidates
@@ -3369,7 +3370,7 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
             // call preciousblock 2**31-1 times on the same set of tips...
             m_chainman.nBlockReverseSequenceId--;
         }
-        if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) && pindex->HaveNumChainTxs()) {
+        if (pindex->IsValidTransactionsTree()) {
             setBlockIndexCandidates.insert(pindex);
             PruneBlockIndexCandidates();
         }
@@ -3416,8 +3417,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
             // least as much work as where we expect the new tip to end up.
             if (!m_chain.Contains(candidate) &&
                     !CBlockIndexWorkComparator()(candidate, pindex->pprev) &&
-                    candidate->IsValid(BLOCK_VALID_TRANSACTIONS) &&
-                    candidate->HaveNumChainTxs()) {
+                    candidate->IsValidTransactionsTree()) {
                 candidate_blocks_by_work.insert(std::make_pair(candidate->nChainWork, candidate));
             }
         }
@@ -3506,7 +3506,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         // Loop back over all block index entries and add any missing entries
         // to setBlockIndexCandidates.
         for (auto& [_, block_index] : m_blockman.m_block_index) {
-            if (block_index.IsValid(BLOCK_VALID_TRANSACTIONS) && block_index.HaveNumChainTxs() && !setBlockIndexCandidates.value_comp()(&block_index, m_chain.Tip())) {
+            if (block_index.IsValidTransactionsTree() && !setBlockIndexCandidates.value_comp()(&block_index, m_chain.Tip())) {
                 setBlockIndexCandidates.insert(&block_index);
             }
         }
@@ -3538,7 +3538,7 @@ void Chainstate::ResetBlockFailureFlags(CBlockIndex *pindex) {
         if (!block_index.IsValid(BLOCK_VALID_TRANSACTIONS) && block_index.GetAncestor(nHeight) == pindex) {
             block_index.nStatus &= ~BLOCK_FAILED_MASK;
             m_blockman.m_dirty_blockindex.insert(&block_index);
-            if (block_index.IsValid(BLOCK_VALID_TRANSACTIONS) && block_index.HaveNumChainTxs() && setBlockIndexCandidates.value_comp()(m_chain.Tip(), &block_index)) {
+            if (block_index.IsValidTransactionsTree() && setBlockIndexCandidates.value_comp()(m_chain.Tip(), &block_index)) {
                 setBlockIndexCandidates.insert(&block_index);
             }
             if (&block_index == m_chainman.m_best_invalid) {
@@ -3591,6 +3591,7 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
     AssertLockHeld(cs_main);
     pindexNew->nTx = block.vtx.size();
     pindexNew->nChainTx = 0;
+    pindexNew->nStatus &= ~BLOCK_TRANSACTIONS_TREE_VALID_FLAG;
     pindexNew->nFile = pos.nFile;
     pindexNew->nDataPos = pos.nPos;
     pindexNew->nUndoPos = 0;
@@ -3601,7 +3602,10 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
     m_blockman.m_dirty_blockindex.insert(pindexNew);
 
-    if (pindexNew->pprev == nullptr || pindexNew->pprev->HaveNumChainTxs()) {
+    // Set BLOCK_TRANSACTIONS_TREE_VALID_FLAG, even if the snapshot block does not have it set.
+    const bool is_after_snapshot{pindexNew->pprev && pindexNew->pprev->IsAssumedValid() && !pindexNew->IsAssumedValid()};
+
+    if (pindexNew->pprev == nullptr || (pindexNew->pprev->nStatus & BLOCK_TRANSACTIONS_TREE_VALID_FLAG) || is_after_snapshot) {
         // If pindexNew is the genesis block or all parents are BLOCK_VALID_TRANSACTIONS.
         std::deque<CBlockIndex*> queue;
         queue.push_back(pindexNew);
@@ -3611,6 +3615,7 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
             CBlockIndex *pindex = queue.front();
             queue.pop_front();
             pindex->nChainTx = (pindex->pprev ? pindex->pprev->nChainTx : 0) + pindex->nTx;
+            pindex->nStatus |= BLOCK_TRANSACTIONS_TREE_VALID_FLAG;
             pindex->nSequenceId = nBlockSequenceId++;
             for (Chainstate *c : GetAll()) {
                 c->TryAddBlockIndexCandidate(pindex);
@@ -4582,8 +4587,7 @@ bool ChainstateManager::LoadBlockIndex()
             // so we special-case the snapshot block as a potential candidate
             // here.
             if (pindex == GetSnapshotBaseBlock() ||
-                    (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
-                     (pindex->HaveNumChainTxs() || pindex->pprev == nullptr))) {
+                    pindex->IsValidTransactionsTree()) {
 
                 for (Chainstate* chainstate : GetAll()) {
                     chainstate->TryAddBlockIndexCandidate(pindex);
@@ -4856,6 +4860,7 @@ void ChainstateManager::CheckBlockIndex()
     CBlockIndex* pindexFirstNeverProcessed = nullptr; // Oldest ancestor of pindex for which nTx == 0.
     CBlockIndex* pindexFirstNotTreeValid = nullptr; // Oldest ancestor of pindex which does not have BLOCK_VALID_TREE (regardless of being valid or not).
     CBlockIndex* pindexFirstNotTransactionsValid = nullptr; // Oldest ancestor of pindex which does not have BLOCK_VALID_TRANSACTIONS (regardless of being valid or not).
+    CBlockIndex* pindexFirstNotTransactionsTreeValid = nullptr; // Oldest ancestor of pindex which does not have BLOCK_TRANSACTIONS_TREE_VALID_FLAG (regardless of being valid or not).
     CBlockIndex* pindexFirstNotChainValid = nullptr; // Oldest ancestor of pindex which does not have BLOCK_VALID_CHAIN (regardless of being valid or not).
     CBlockIndex* pindexFirstNotScriptsValid = nullptr; // Oldest ancestor of pindex which does not have BLOCK_VALID_SCRIPTS (regardless of being valid or not).
     CBlockIndex* pindexFirstAssumeValid = nullptr; // Oldest ancestor of pindex which has BLOCK_ASSUMED_VALID
@@ -4876,6 +4881,11 @@ void ChainstateManager::CheckBlockIndex()
             if (pindexFirstNotTransactionsValid == nullptr &&
                     (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_TRANSACTIONS) {
                 pindexFirstNotTransactionsValid = pindex;
+            }
+
+            if (pindexFirstNotTransactionsTreeValid == nullptr &&
+                    !(pindex->nStatus & BLOCK_TRANSACTIONS_TREE_VALID_FLAG)) {
+                pindexFirstNotTransactionsTreeValid = pindex;
             }
 
             if (pindexFirstNotChainValid == nullptr &&
@@ -4900,6 +4910,7 @@ void ChainstateManager::CheckBlockIndex()
             }
         }
         if (!pindex->HaveNumChainTxs()) assert(pindex->nSequenceId <= 0); // nSequenceId can't be set positive for blocks that aren't linked (negative is used for preciousblock)
+        if (!(pindex->nStatus & BLOCK_TRANSACTIONS_TREE_VALID_FLAG)) assert(pindex->nSequenceId <= 0); // nSequenceId can't be set positive for blocks that aren't linked, or are assumed valid. (negative is used for preciousblock)
         // VALID_TRANSACTIONS is equivalent to nTx > 0 for all nodes (whether or not pruning has occurred).
         // HAVE_DATA is only equivalent to nTx > 0 (or VALID_TRANSACTIONS) if no pruning has occurred.
         // Unless these indexes are assumed valid and pending block download on a
@@ -4924,14 +4935,19 @@ void ChainstateManager::CheckBlockIndex()
             assert(pindex->nTx > 0);
             // Assumed-valid blocks should connect to the main chain.
             assert((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TREE);
+            // Assumed-valid blocks should have some nChainTx value.
+            assert(pindex->HaveNumChainTxs());
         } else {
             // Otherwise there should only be an nTx value if we have
             // actually seen a block's transactions.
             assert(((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS) == (pindex->nTx > 0)); // This is pruning-independent.
+            // nChainTx implies BLOCK_TRANSACTIONS_TREE_VALID_FLAG (and vice versa)
+            assert(pindex->HaveNumChainTxs() == bool(pindex->nStatus & BLOCK_TRANSACTIONS_TREE_VALID_FLAG));
         }
         // All parents having had data (at some point) is equivalent to all parents being VALID_TRANSACTIONS, which is equivalent to HaveNumChainTxs().
         assert((pindexFirstNeverProcessed == nullptr) == pindex->HaveNumChainTxs());
         assert((pindexFirstNotTransactionsValid == nullptr) == pindex->HaveNumChainTxs());
+        assert((pindexFirstNotTransactionsTreeValid == nullptr) == pindex->HaveNumChainTxs());
         assert(pindex->nHeight == nHeight); // nHeight must be consistent.
         assert(pindex->pprev == nullptr || pindex->nChainWork >= pindex->pprev->nChainWork); // For every block except the genesis block, the chainwork must be larger than the parent's.
         assert(nHeight < 2 || (pindex->pskip && (pindex->pskip->nHeight < nHeight))); // The pskip pointer must point back for all but the first 2 blocks.
@@ -5039,6 +5055,7 @@ void ChainstateManager::CheckBlockIndex()
             if (pindex == pindexFirstNeverProcessed) pindexFirstNeverProcessed = nullptr;
             if (pindex == pindexFirstNotTreeValid) pindexFirstNotTreeValid = nullptr;
             if (pindex == pindexFirstNotTransactionsValid) pindexFirstNotTransactionsValid = nullptr;
+            if (pindex == pindexFirstNotTransactionsTreeValid) pindexFirstNotTransactionsTreeValid = nullptr;
             if (pindex == pindexFirstNotChainValid) pindexFirstNotChainValid = nullptr;
             if (pindex == pindexFirstNotScriptsValid) pindexFirstNotScriptsValid = nullptr;
             if (pindex == pindexFirstAssumeValid) pindexFirstAssumeValid = nullptr;
@@ -5537,6 +5554,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         }
         // Fake nChainTx so that GuessVerificationProgress reports accurately
         index->nChainTx = index->pprev->nChainTx + index->nTx;
+        index->nStatus |= BLOCK_TRANSACTIONS_TREE_VALID_FLAG;
 
         // Mark unvalidated block index entries beneath the snapshot base block as assumed-valid.
         if (!index->IsValid(BLOCK_VALID_SCRIPTS)) {
@@ -5561,6 +5579,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
     assert(index);
     index->nChainTx = au_data.nChainTx;
+    index->nStatus |= BLOCK_TRANSACTIONS_TREE_VALID_FLAG;
     snapshot_chainstate.setBlockIndexCandidates.insert(snapshot_start_block);
 
     LogPrintf("[snapshot] validated snapshot (%.2f MB)\n",

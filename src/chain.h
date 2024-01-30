@@ -94,7 +94,7 @@ enum BlockStatus : uint32_t {
     /**
      * Only first tx is coinbase, 2 <= coinbase input script length <= 100, transactions valid, no duplicate txids,
      * sigops, size, merkle root. Implies all parents are at least TREE but not necessarily TRANSACTIONS. When all
-     * parent blocks also have TRANSACTIONS, CBlockIndex::nChainTx will be set.
+     * parent blocks also have TRANSACTIONS, BLOCK_TRANSACTIONS_TREE_VALID_FLAG will be set.
      */
     BLOCK_VALID_TRANSACTIONS =    3,
 
@@ -134,6 +134,21 @@ enum BlockStatus : uint32_t {
      * should not be used elsewhere.
      */
     BLOCK_ASSUMED_VALID      =   256,
+
+    /**
+     * (memory only)
+     *
+     * This flag applies when this block and all parent blocks have
+     * TRANSACTIONS.
+     *
+     * Implies all parents are at least BLOCK_TRANSACTIONS_TREE_VALID_FLAG.
+     *
+     * This would have been a new validity level between TRANSACTIONS and
+     * BLOCK_VALID_CHAIN. However, the nStatus is persisted in the chainstate
+     * database. To allow downgrades to previous releases, this memory-only
+     * flag is *not* persisted.
+     */
+    BLOCK_TRANSACTIONS_TREE_VALID_FLAG = 512,
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -313,6 +328,15 @@ public:
         return ((nStatus & BLOCK_VALID_MASK) >= nUpTo);
     }
 
+    /**
+     * Check whether this block index entry is valid up to TRANSACTIONS, and
+     * has the TRANSACTIONS_TREE_VALID_FLAG set as well.
+     */
+    bool IsValidTransactionsTree() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        return IsValid(BLOCK_VALID_TRANSACTIONS) && (nStatus & BLOCK_TRANSACTIONS_TREE_VALID_FLAG);
+    }
+
     //! @returns true if the block is assumed-valid; this means it is queued to be
     //!   validated by a background chainstate.
     bool IsAssumedValid() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
@@ -406,7 +430,13 @@ public:
         READWRITE(VARINT_MODE(_nVersion, VarIntMode::NONNEGATIVE_SIGNED));
 
         READWRITE(VARINT_MODE(obj.nHeight, VarIntMode::NONNEGATIVE_SIGNED));
-        READWRITE(VARINT(obj.nStatus));
+
+        if constexpr (ser_action.ForRead()) {
+            s >> VARINT(obj.nStatus);
+        } else {
+            s << VARINT(obj.nStatus & ~BLOCK_TRANSACTIONS_TREE_VALID_FLAG);
+        }
+
         READWRITE(VARINT(obj.nTx));
         if (obj.nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO)) READWRITE(VARINT_MODE(obj.nFile, VarIntMode::NONNEGATIVE_SIGNED));
         if (obj.nStatus & BLOCK_HAVE_DATA) READWRITE(VARINT(obj.nDataPos));

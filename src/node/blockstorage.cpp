@@ -413,6 +413,7 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
         // to disk, we must bootstrap the value for assumedvalid chainstates
         // from the hardcoded assumeutxo chainparams.
         base->nChainTx = au_data.nChainTx;
+        base->nStatus |= BLOCK_TRANSACTIONS_TREE_VALID_FLAG; // Violates the doxygen comment of BLOCK_TRANSACTIONS_TREE_VALID_FLAG?
         LogPrintf("[snapshot] set nChainTx=%d for %s\n", au_data.nChainTx, snapshot_blockhash->ToString());
     } else {
         // If this isn't called with a snapshot blockhash, make sure the cached snapshot height
@@ -450,14 +451,18 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
                     Assert(pindex->nChainTx > 0);
                 } else if (pindex->pprev->nChainTx > 0) {
                     pindex->nChainTx = pindex->pprev->nChainTx + pindex->nTx;
+                    pindex->nStatus |= BLOCK_TRANSACTIONS_TREE_VALID_FLAG;
                 } else {
                     pindex->nChainTx = 0;
+                    pindex->nStatus &= ~BLOCK_TRANSACTIONS_TREE_VALID_FLAG;
                     m_blocks_unlinked.insert(std::make_pair(pindex->pprev, pindex));
                 }
             } else {
                 pindex->nChainTx = pindex->nTx;
+                pindex->nStatus |= BLOCK_TRANSACTIONS_TREE_VALID_FLAG;
             }
         }
+        Assert(pindex->HaveNumChainTxs() == (pindex->IsAssumedValid() || (pindex->nStatus & BLOCK_TRANSACTIONS_TREE_VALID_FLAG)));
         if (!(pindex->nStatus & BLOCK_FAILED_MASK) && pindex->pprev && (pindex->pprev->nStatus & BLOCK_FAILED_MASK)) {
             pindex->nStatus |= BLOCK_FAILED_CHILD;
             m_dirty_blockindex.insert(pindex);
