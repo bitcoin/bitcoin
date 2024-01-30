@@ -272,7 +272,7 @@ class AssetLocksTest(DashTestFramework):
         asset_lock_tx = self.create_assetlock(coin, locked_1, pubkey)
 
 
-        self.check_mempool_result(tx=asset_lock_tx, result_expected={'allowed': True})
+        self.check_mempool_result(tx=asset_lock_tx, result_expected={'allowed': True, 'vsize': asset_lock_tx.get_vsize(), 'fees': {'base': Decimal(str(tiny_amount / COIN))}})
         self.validate_credit_pool_balance(0)
         txid_in_block = self.send_tx(asset_lock_tx)
         assert "assetLockTx" in node.getrawtransaction(txid_in_block, 1)
@@ -331,7 +331,7 @@ class AssetLocksTest(DashTestFramework):
         asset_unlock_tx_duplicate_index.vout[0].nValue += COIN
         too_late_height = node.getblockcount() + 48
 
-        self.check_mempool_result(tx=asset_unlock_tx, result_expected={'allowed': True})
+        self.check_mempool_result(tx=asset_unlock_tx, result_expected={'allowed': True, 'vsize': asset_unlock_tx.get_vsize(), 'fees': {'base': Decimal(str(tiny_amount / COIN))}})
         self.check_mempool_result(tx=asset_unlock_tx_too_big_fee,
                 result_expected={'allowed': False, 'reject-reason' : 'absurdly-high-fee'})
         self.check_mempool_result(tx=asset_unlock_tx_zero_fee,
@@ -374,7 +374,7 @@ class AssetLocksTest(DashTestFramework):
         self.mine_quorum(llmq_type_name="llmq_test_platform", llmq_type=106)
         self.log.info("Checking credit pool amount is same...")
         self.validate_credit_pool_balance(locked_1 - 1 * COIN)
-        self.check_mempool_result(tx=asset_unlock_tx_late, result_expected={'allowed': True})
+        self.check_mempool_result(tx=asset_unlock_tx_late, result_expected={'allowed': True, 'vsize': asset_unlock_tx_late.get_vsize(), 'fees': {'base': Decimal(str(tiny_amount / COIN))}})
         self.log.info("Checking credit pool amount still is same...")
         self.validate_credit_pool_balance(locked_1 - 1 * COIN)
         self.send_tx(asset_unlock_tx_late)
@@ -384,7 +384,7 @@ class AssetLocksTest(DashTestFramework):
 
         self.log.info("Generating many blocks to make quorum far behind (even still active)...")
         self.slowly_generate_batch(too_late_height - node.getblockcount() - 1)
-        self.check_mempool_result(tx=asset_unlock_tx_too_late, result_expected={'allowed': True})
+        self.check_mempool_result(tx=asset_unlock_tx_too_late, result_expected={'allowed': True, 'vsize': asset_unlock_tx_too_late.get_vsize(), 'fees': {'base': Decimal(str(tiny_amount / COIN))}})
         node.generate(1)
         self.sync_all()
         self.check_mempool_result(tx=asset_unlock_tx_too_late,
@@ -421,7 +421,7 @@ class AssetLocksTest(DashTestFramework):
 
         self.log.info("Checking that transaction with exceeding amount accepted by mempool...")
         # Mempool doesn't know about the size of the credit pool
-        self.check_mempool_result(tx=asset_unlock_tx_full, result_expected={'allowed': True })
+        self.check_mempool_result(tx=asset_unlock_tx_full, result_expected={'allowed': True, 'vsize': asset_unlock_tx_full.get_vsize(), 'fees': {'base': Decimal(str(tiny_amount / COIN))}})
 
         txid_in_block = self.send_tx(asset_unlock_tx_full)
         node.generate(1)
@@ -434,7 +434,7 @@ class AssetLocksTest(DashTestFramework):
 
         self.mempool_size += 1
         asset_unlock_tx_full = self.create_assetunlock(301, self.get_credit_pool_balance(), pubkey)
-        self.check_mempool_result(tx=asset_unlock_tx_full, result_expected={'allowed': True })
+        self.check_mempool_result(tx=asset_unlock_tx_full, result_expected={'allowed': True, 'vsize': asset_unlock_tx_full.get_vsize(), 'fees': {'base': Decimal(str(tiny_amount / COIN))}})
 
         txid_in_block = self.send_tx(asset_unlock_tx_full)
         node.generate(1)
