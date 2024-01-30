@@ -137,6 +137,7 @@ TransactionError BroadcastTransaction(NodeContext& node,
         node.peerman->ScheduleTxForBroadcastToAll(txid, wtxid);
         break;
     case NO_MEMPOOL_PRIVATE_BROADCAST:
+        node.peerman->ScheduleTxForPrivateBroadcast(tx);
         break;
     }
 
