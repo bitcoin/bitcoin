@@ -15,6 +15,18 @@ bool PrivateBroadcast::Add(const CTransactionRef& tx)
     return inserted;
 }
 
+std::optional<size_t> PrivateBroadcast::Remove(const CTransactionRef& tx)
+    EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+{
+    LOCK(m_mutex);
+    const auto handle{m_transactions.extract(tx)};
+    if (handle) {
+        const auto p{DerivePriority(handle.mapped())};
+        return p.num_confirmed;
+    }
+    return std::nullopt;
+}
+
 std::optional<CTransactionRef> PrivateBroadcast::PickTxForSend(const NodeId& will_send_to_nodeid)
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
