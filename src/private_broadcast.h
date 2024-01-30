@@ -16,6 +16,7 @@
 #include <map>
 #include <optional>
 #include <unordered_map>
+#include <vector>
 
 /**
  * Store a list of transactions to be broadcast privately. Supports the following operations:
@@ -61,6 +62,11 @@ public:
      * @return true if the reference by the given node id was removed
      */
     bool FinishBroadcast(const NodeId& nodeid, bool confirmed_by_node) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
+     * Get the transactions that have not been broadcast recently.
+     */
+    std::vector<CTransactionRef> GetStale() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
 private:
     struct Priority {
