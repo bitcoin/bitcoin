@@ -16,7 +16,6 @@ darwin_CXX:=$(shell xcrun -f clang++) -stdlib=libc++ -isysroot$(shell xcrun --sh
 darwin_AR:=$(shell xcrun -f ar)
 darwin_RANLIB:=$(shell xcrun -f ranlib)
 darwin_STRIP:=$(shell xcrun -f strip)
-darwin_LIBTOOL:=$(shell xcrun -f libtool)
 darwin_OTOOL:=$(shell xcrun -f otool)
 darwin_NM:=$(shell xcrun -f nm)
 darwin_INSTALL_NAME_TOOL:=$(shell xcrun -f install_name_tool)
