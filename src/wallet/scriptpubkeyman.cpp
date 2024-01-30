@@ -391,8 +391,8 @@ void LegacyScriptPubKeyMan::GenerateNewCryptedHDChain(const SecureString& secure
 
     hdChainCrypted.Debug(__func__);
 
-    if (!SetCryptedHDChainSingle(hdChainCrypted, false)) {
-        throw std::runtime_error(std::string(__func__) + ": SetCryptedHDChainSingle failed");
+    if (!SetHDChainSingle(hdChainCrypted, false)) {
+        throw std::runtime_error(std::string(__func__) + ": SetHDChainSingle failed");
     }
 }
 
@@ -444,12 +444,6 @@ bool LegacyScriptPubKeyMan::SetHDChain(WalletBatch &batch, const CHDChain& chain
 }
 
 bool LegacyScriptPubKeyMan::SetHDChainSingle(const CHDChain& chain, bool memonly)
-{
-    WalletBatch batch(m_storage.GetDatabase());
-    return SetHDChain(batch, chain, memonly);
-}
-
-bool LegacyScriptPubKeyMan::SetCryptedHDChainSingle(const CHDChain& chain, bool memonly)
 {
     WalletBatch batch(m_storage.GetDatabase());
     return SetHDChain(batch, chain, memonly);

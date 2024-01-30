@@ -457,20 +457,13 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssKey >> strKey;
             ssValue >> strValue;
             pwallet->LoadDestData(DecodeDestination(strAddress), strKey, strValue);
-        } else if (strType == DBKeys::HDCHAIN) {
+        } else if (strType == DBKeys::HDCHAIN || strType == DBKeys::CRYPTED_HDCHAIN) {
             CHDChain chain;
             ssValue >> chain;
+            assert ((strType == DBKeys::CRYPTED_HDCHAIN) == chain.IsCrypted());
             if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->SetHDChainSingle(chain, true))
             {
                 strErr = "Error reading wallet database: SetHDChain failed";
-                return false;
-            }
-        } else if (strType == DBKeys::CRYPTED_HDCHAIN) {
-            CHDChain chain;
-            ssValue >> chain;
-            if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->SetCryptedHDChainSingle(chain, true))
-            {
-                strErr = "Error reading wallet database: SetHDCryptedChain failed";
                 return false;
             }
         } else if (strType == DBKeys::HDPUBKEY) {

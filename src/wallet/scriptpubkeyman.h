@@ -394,7 +394,6 @@ public:
      * which causes db flush every time these methods are used
      */
     bool SetHDChainSingle(const CHDChain& chain, bool memonly);
-    bool SetCryptedHDChainSingle(const CHDChain& chain, bool memonly);
 
     //! Adds a watch-only address to the store, without saving it to disk (used by LoadWallet)
     bool LoadWatchOnly(const CScript &dest);
