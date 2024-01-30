@@ -15,6 +15,7 @@ export MAC_CROSS_LLVM_V="17"
 export DEP_OPTS="CC=clang-${MAC_CROSS_LLVM_V} CXX=clang++-${MAC_CROSS_LLVM_V}"
 export PACKAGES="clang-${MAC_CROSS_LLVM_V} lld-${MAC_CROSS_LLVM_V} llvm-${MAC_CROSS_LLVM_V} zip"
 export AR=llvm-ar-${MAC_CROSS_LLVM_V}
+export OBJDUMP=llvm-objdump-${MAC_CROSS_LLVM_V}
 export RANLIB=llvm-ranlib-${MAC_CROSS_LLVM_V}
 export STRIP=llvm-strip-${MAC_CROSS_LLVM_V}
 export XCODE_VERSION=15.0

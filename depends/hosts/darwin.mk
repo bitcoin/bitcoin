@@ -11,6 +11,7 @@ CXX = clang++
 
 darwin_AR=llvm-ar
 darwin_NM=llvm-nm
+darwin_OBJDUMP=llvm-objdump
 darwin_RANLIB=llvm-ranlib
 darwin_STRIP=llvm-strip
 
