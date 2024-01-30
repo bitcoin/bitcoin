@@ -179,6 +179,9 @@ static constexpr size_t MAX_ADDR_PROCESSING_TOKEN_BUCKET{MAX_ADDR_TO_SEND};
 /** The compactblocks version we support. See BIP 152. */
 static constexpr uint64_t CMPCTBLOCKS_VERSION{2};
 
+/** For private broadcast, send a transaction to this many peers per one broadcast attempt. */
+static constexpr size_t NUM_PRIVATE_BROADCAST_PER_TX{5};
+
 // Internal stuff
 namespace {
 /** Blocks that are in flight, and that are in the queue to be downloaded. */
@@ -516,6 +519,7 @@ public:
     bool IgnoresIncomingTxs() override { return m_opts.ignore_incoming_txs; }
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void ScheduleTxForBroadcastToAll(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void ScheduleTxForPrivateBroadcast(const CTransactionRef& tx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestBlock(int height, std::chrono::seconds time) override
     {
         m_best_height = height;
@@ -1097,6 +1101,58 @@ private:
 
     void AddAddressKnown(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
     void PushAddress(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+
+    /**
+     * Store a list of transactions to be broadcast privately. Supports the following operations:
+     * - Add a new transaction
+     * - Remove a transaction, after it has been seen by the network
+     * - Mark a broadcast of a transaction (remember when and how many times)
+     * - Get a transaction for broadcast, the one that has been broadcast less times and least recently
+     */
+    class PrivateBroadcast
+    {
+    public:
+        void Add(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+        {
+            const Txid& txid = tx->GetHash();
+            LOCK(m_mutex);
+            auto [pos, inserted] = m_by_txid.emplace(txid, TxWithPriority{.tx = tx, .priority = Priority{}});
+            if (inserted) {
+                m_by_priority.emplace(Priority{}, txid);
+            }
+        }
+
+    private:
+        struct Priority {
+            size_t num_broadcasted{0};
+            std::chrono::microseconds last_broadcasted{0};
+
+            bool operator<(const Priority& other) const
+            {
+                if (num_broadcasted < other.num_broadcasted) {
+                    return true;
+                }
+                return last_broadcasted < other.last_broadcasted;
+            }
+        };
+
+        struct TxWithPriority {
+            CTransactionRef tx;
+            Priority priority;
+        };
+
+        using ByTxid = std::unordered_map<Txid, TxWithPriority, SaltedTxidHasher>;
+        using ByPriority = std::multimap<Priority, Txid>;
+
+        struct Iterators {
+            ByTxid::iterator by_txid;
+            ByPriority::iterator by_priority;
+        };
+
+        mutable Mutex m_mutex;
+        ByTxid m_by_txid GUARDED_BY(m_mutex);
+        ByPriority m_by_priority GUARDED_BY(m_mutex);
+    } m_tx_for_private_broadcast;
 };
 
 const CNodeState* PeerManagerImpl::State(NodeId pnode) const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -2249,6 +2305,19 @@ void PeerManagerImpl::ScheduleTxForBroadcastToAll(const uint256& txid, const uin
             tx_relay->m_tx_inventory_to_send.insert(hash);
         }
     };
+}
+
+void PeerManagerImpl::ScheduleTxForPrivateBroadcast(const CTransactionRef& tx)
+{
+    m_tx_for_private_broadcast.Add(tx);
+
+    LogPrintLevel(BCLog::PRIVATE_BROADCAST,
+                  BCLog::Level::Debug,
+                  "Requesting %d new connections due to txid=%s, wtxid=%s\n",
+                  NUM_PRIVATE_BROADCAST_PER_TX,
+                  tx->GetHash().ToString(), tx->GetWitnessHash().ToString());
+
+    m_connman.PrivateBroadcastAdd(NUM_PRIVATE_BROADCAST_PER_TX);
 }
 
 void PeerManagerImpl::RelayAddress(NodeId originator,
