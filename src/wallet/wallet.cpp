@@ -5597,6 +5597,9 @@ bool CWallet::GenerateNewHDChainEncrypted(const SecureString& secureMnemonic, co
             }
             Lock();
             return true;
+        } else {
+            // this should never happen
+            throw std::runtime_error(std::string(__func__) + ": SetCryptedHDChainSingle failed");
         }
     }
 
