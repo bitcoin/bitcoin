@@ -264,7 +264,7 @@ BASE_SCRIPTS = [
     'p2p_invalid_tx.py --v2transport',
     'p2p_v2_transport.py',
     'p2p_v2_encrypted.py',
-    'p2p_v2_earlykeyresponse.py',
+    'p2p_v2_misbehaving.py',
     'example_test.py',
     'mempool_accept_v3.py',
     'wallet_txn_doublespend.py --legacy-wallet',
