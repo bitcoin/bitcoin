@@ -460,6 +460,7 @@ public:
     bool GetDecryptedHDChain(CHDChain& hdChainRet);
 
     /* Generates a new HD chain */
+    void GenerateNewCryptedHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, CKeyingMaterial vMasterKey);
     void GenerateNewHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase);
 
     /**

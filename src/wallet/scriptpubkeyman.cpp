@@ -355,6 +355,47 @@ void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
     }
 }
 
+void LegacyScriptPubKeyMan::GenerateNewCryptedHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, CKeyingMaterial vMasterKey)
+{
+    assert(!m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
+
+
+    CHDChain hdChainTmp;
+
+    // NOTE: an empty mnemonic means "generate a new one for me"
+    // NOTE: default mnemonic passphrase is an empty string
+    if (!hdChainTmp.SetMnemonic(secureMnemonic, secureMnemonicPassphrase, true)) {
+        throw std::runtime_error(std::string(__func__) + ": SetMnemonic failed");
+    }
+
+    // add default account
+    hdChainTmp.AddAccount();
+    hdChainTmp.Debug(__func__);
+
+    bool res = EncryptHDChain(vMasterKey, hdChainTmp);
+    assert(res);
+
+    CHDChain hdChainCrypted;
+    res = GetHDChain(hdChainCrypted);
+    assert(res);
+
+    DBG(
+        tfm::format(std::cout, "GenerateNewCryptedHDChain -- current seed: '%s'\n", HexStr(hdChainTmp.GetSeed()));
+        tfm::format(std::cout, "GenerateNewCryptedHDChain -- crypted seed: '%s'\n", HexStr(hdChainCrypted.GetSeed()));
+    );
+
+
+    // ids should match, seed hashes should not
+    assert(hdChainTmp.GetID() == hdChainCrypted.GetID());
+    assert(hdChainTmp.GetSeedHash() != hdChainCrypted.GetSeedHash());
+
+    hdChainCrypted.Debug(__func__);
+
+    if (!SetCryptedHDChainSingle(hdChainCrypted, false)) {
+        throw std::runtime_error(std::string(__func__) + ": SetCryptedHDChainSingle failed");
+    }
+}
+
 void LegacyScriptPubKeyMan::GenerateNewHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase)
 {
     assert(!m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));

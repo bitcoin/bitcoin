@@ -5538,25 +5538,12 @@ bool CWallet::GenerateNewHDChainEncrypted(const SecureString& secureMnemonic, co
         throw std::runtime_error(strprintf("%s: spk_man is not available", __func__));
     }
 
-    assert(!IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
-
     if (!HasEncryptionKeys()) {
         return false;
     }
 
     CCrypter crypter;
     CKeyingMaterial vMasterKey;
-    CHDChain hdChainTmp;
-
-    // NOTE: an empty mnemonic means "generate a new one for me"
-    // NOTE: default mnemonic passphrase is an empty string
-    if (!hdChainTmp.SetMnemonic(secureMnemonic, secureMnemonicPassphrase, true)) {
-        throw std::runtime_error(std::string(__func__) + ": SetMnemonic failed");
-    }
-
-    // add default account
-    hdChainTmp.AddAccount();
-    hdChainTmp.Debug(__func__);
 
     LOCK(cs_wallet);
     for (const CWallet::MasterKeyMap::value_type& pMasterKey : mapMasterKeys) {
@@ -5564,46 +5551,24 @@ bool CWallet::GenerateNewHDChainEncrypted(const SecureString& secureMnemonic, co
             return false;
         }
         // get vMasterKey to encrypt new hdChain
-        if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey)) {
-            continue; // try another master key
+        if (crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey)) {
+            break;
         }
 
-        bool res = spk_man->EncryptHDChain(vMasterKey, hdChainTmp);
-        assert(res);
-
-        CHDChain hdChainCrypted;
-        res = spk_man->GetHDChain(hdChainCrypted);
-        assert(res);
-
-        DBG(
-            tfm::format(std::cout, "GenerateNewHDChainEncrypted -- current seed: '%s'\n", HexStr(hdChainTmp.GetSeed()));
-            tfm::format(std::cout, "GenerateNewHDChainEncrypted -- crypted seed: '%s'\n", HexStr(hdChainCrypted.GetSeed()));
-        );
-
-        // ids should match, seed hashes should not
-        assert(hdChainTmp.GetID() == hdChainCrypted.GetID());
-        assert(hdChainTmp.GetSeedHash() != hdChainCrypted.GetSeedHash());
-
-        hdChainCrypted.Debug(__func__);
-
-        if (spk_man->SetCryptedHDChainSingle(hdChainCrypted, false)) {
-            Lock();
-            if (!Unlock(secureWalletPassphrase)) {
-                // this should never happen
-                throw std::runtime_error(std::string(__func__) + ": Unlock failed");
-            }
-            if (!spk_man->NewKeyPool()) {
-                throw std::runtime_error(std::string(__func__) + ": NewKeyPool failed");
-            }
-            Lock();
-            return true;
-        } else {
-            // this should never happen
-            throw std::runtime_error(std::string(__func__) + ": SetCryptedHDChainSingle failed");
-        }
     }
 
-    return false;
+    spk_man->GenerateNewCryptedHDChain(secureMnemonic, secureMnemonicPassphrase, vMasterKey);
+
+    Lock();
+    if (!Unlock(secureWalletPassphrase)) {
+        // this should never happen
+        throw std::runtime_error(std::string(__func__) + ": Unlock failed");
+    }
+    if (!spk_man->NewKeyPool()) {
+        throw std::runtime_error(std::string(__func__) + ": NewKeyPool failed");
+    }
+    Lock();
+    return true;
 }
 
 void CWallet::UpdateProgress(const std::string& title, int nProgress)
