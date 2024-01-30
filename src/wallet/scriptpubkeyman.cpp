@@ -267,7 +267,7 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
     }
 
     if (!hdChainCurrent.IsNull()) {
-        assert(EncryptHDChain(master_key));
+        assert(EncryptAndSetHDChain(master_key));
 
         CHDChain hdChainCrypted;
         assert(GetHDChain(hdChainCrypted));
@@ -396,7 +396,7 @@ void LegacyScriptPubKeyMan::GenerateNewCryptedHDChain(const SecureString& secure
     hdChainTmp.AddAccount();
     hdChainTmp.Debug(__func__);
 
-    bool res = EncryptHDChain(vMasterKey, hdChainTmp);
+    bool res = EncryptAndSetHDChain(vMasterKey, hdChainTmp);
     assert(res);
 
     CHDChain hdChainCrypted;
@@ -494,7 +494,7 @@ bool LegacyScriptPubKeyMan::GetDecryptedHDChain(CHDChain& hdChainRet)
     return true;
 }
 
-bool LegacyScriptPubKeyMan::EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, const CHDChain& chain)
+bool LegacyScriptPubKeyMan::EncryptAndSetHDChain(const CKeyingMaterial& vMasterKeyIn, const CHDChain& chain)
 {
     LOCK(cs_KeyStore);
     // should call EncryptKeys first
