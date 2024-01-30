@@ -82,6 +82,12 @@ public:
     bool DidNodeConfirmReception(const NodeId& nodeid)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
+    /**
+     * Get the transactions that have not been broadcast recently.
+     */
+    std::vector<CTransactionRef> GetStale() const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
 private:
     /// Status of a transaction sent to a given node.
     struct SendStatus {
