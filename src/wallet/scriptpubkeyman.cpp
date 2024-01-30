@@ -237,11 +237,16 @@ bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key
 bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch)
 {
     LOCK(cs_KeyStore);
+
     encrypted_batch = batch;
     if (!mapCryptedKeys.empty()) {
         encrypted_batch = nullptr;
         return false;
     }
+
+    // must get current HD chain before EncryptKeys
+    CHDChain hdChainCurrent;
+    GetHDChain(hdChainCurrent);
 
     KeyMap keys_to_encrypt;
     keys_to_encrypt.swap(mapKeys); // Clear mapKeys so AddCryptedKeyInner will succeed.
@@ -260,6 +265,25 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
             return false;
         }
     }
+
+    if (!hdChainCurrent.IsNull()) {
+        assert(EncryptHDChain(master_key));
+
+        CHDChain hdChainCrypted;
+        assert(GetHDChain(hdChainCrypted));
+
+        DBG(
+            tfm::format(std::cout, "EncryptWallet -- current seed: '%s'\n", HexStr(hdChainCurrent.GetSeed()));
+            tfm::format(std::cout, "EncryptWallet -- crypted seed: '%s'\n", HexStr(hdChainCrypted.GetSeed()));
+        );
+
+        // ids should match, seed hashes should not
+        assert(hdChainCurrent.GetID() == hdChainCrypted.GetID());
+        assert(hdChainCurrent.GetSeedHash() != hdChainCrypted.GetSeedHash());
+
+        assert(SetHDChain(*encrypted_batch, hdChainCrypted, false));
+    }
+
     encrypted_batch = nullptr;
     return true;
 }

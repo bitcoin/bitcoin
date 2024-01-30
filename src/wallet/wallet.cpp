@@ -644,13 +644,8 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         }
         encrypted_batch->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
 
-        // must get current HD chain before EncryptKeys
-        CHDChain hdChainCurrent;
-
         for (const auto& spk_man_pair : m_spk_managers) {
             auto spk_man = spk_man_pair.second.get();
-            LegacyScriptPubKeyMan *spk_man_legacy = dynamic_cast<LegacyScriptPubKeyMan*>(spk_man);
-            if (spk_man_legacy != nullptr) spk_man_legacy->GetHDChain(hdChainCurrent);
 
             if (!spk_man->Encrypt(_vMasterKey, encrypted_batch)) {
                 encrypted_batch->TxnAbort();
@@ -659,23 +654,6 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
                 // We now probably have half of our keys encrypted in memory, and half not...
                 // die and let the user reload the unencrypted wallet.
                 assert(false);
-            }
-            if (!hdChainCurrent.IsNull()) {
-                assert(spk_man_legacy->EncryptHDChain(_vMasterKey));
-
-                CHDChain hdChainCrypted;
-                assert(spk_man_legacy->GetHDChain(hdChainCrypted));
-
-                DBG(
-                    tfm::format(std::cout, "EncryptWallet -- current seed: '%s'\n", HexStr(hdChainCurrent.GetSeed()));
-                    tfm::format(std::cout, "EncryptWallet -- crypted seed: '%s'\n", HexStr(hdChainCrypted.GetSeed()));
-                );
-
-                // ids should match, seed hashes should not
-                assert(hdChainCurrent.GetID() == hdChainCrypted.GetID());
-                assert(hdChainCurrent.GetSeedHash() != hdChainCrypted.GetSeedHash());
-
-                assert(spk_man_legacy->SetHDChain(*encrypted_batch, hdChainCrypted, false));
             }
         }
 
