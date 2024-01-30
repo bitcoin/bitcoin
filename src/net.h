@@ -1144,6 +1144,11 @@ public:
      */
     void PrivateBroadcastSub(size_t n);
 
+    /**
+     * Get the number of `ConnectionType::PRIVATE_BROADCAST` that are to be opened.
+     */
+    size_t NumPrivateBroadcastToOpen() const;
+
     bool CheckIncomingNonce(uint64_t nonce);
     void ASMapHealthCheck();
 

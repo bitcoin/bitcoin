@@ -542,6 +542,9 @@ private:
     /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
     void ReattemptInitialBroadcast(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
+    /** Rebroadcast stale private transactions (already broadcast but not received back from the network). */
+    void ReattemptPrivateBroadcast(CScheduler& scheduler);
+
     /** Get a shared pointer to the Peer object.
      *  May return an empty shared_ptr if the Peer object can't be found. */
     PeerRef GetPeerRef(NodeId id) const EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -1214,6 +1217,19 @@ private:
             return true;
         }
 
+        std::vector<CTransactionRef> GetStale() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+        {
+            LOCK(m_mutex);
+            const auto stale_time = GetTime<std::chrono::microseconds>() - 1min;
+            std::vector<CTransactionRef> stale;
+            for (const auto& [txid, tx_with_priority] : m_by_txid) {
+                if (tx_with_priority.priority.last_broadcasted < stale_time) {
+                    stale.push_back(tx_with_priority.tx);
+                }
+            }
+            return stale;
+        }
+
     private:
         struct Priority {
             size_t num_broadcasted{0};
@@ -1818,6 +1834,13 @@ void PeerManagerImpl::InitializeNode(CNode& node, ServiceFlags our_services)
     }
 }
 
+/** Calculate the delta time after which to run the next transactions broadcast. */
+static std::chrono::milliseconds NextTxBroadcast()
+{
+    // We add randomness on every cycle to avoid the possibility of P2P fingerprinting.
+    return 10min + GetRandMillis(5min);
+}
+
 void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
 {
     std::set<uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
@@ -1832,10 +1855,56 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
         }
     }
 
-    // Schedule next run for 10-15 minutes in the future.
-    // We add randomness on every cycle to avoid the possibility of P2P fingerprinting.
-    const std::chrono::milliseconds delta = 10min + GetRandMillis(5min);
-    scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
+    scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, NextTxBroadcast());
+}
+
+void PeerManagerImpl::ReattemptPrivateBroadcast(CScheduler& scheduler)
+{
+    // The following heuristic is subject to races, but that is ok: if it overshoots,
+    // we will open some private connections in vain, if it undershoots, the stale
+    // transactions will be picked on the next run.
+
+    size_t active_connections{0};
+    m_connman.ForEachNode([&active_connections](const CNode* node) {
+        if (node->IsPrivateBroadcastConn()) {
+            ++active_connections;
+        }
+    });
+
+    const size_t to_open_connections{m_connman.NumPrivateBroadcastToOpen()};
+
+    // Remove stale transactions that are no longer relevant (e.g. already in
+    // the mempool or mined) and count the remaining ones.
+    size_t num_stale_transactions{0};
+    const auto stale_txs = m_tx_for_private_broadcast.GetStale();
+    {
+        LOCK(cs_main);
+        for (const auto& stale_tx : stale_txs) {
+            auto mempool_acceptable = m_chainman.ProcessTransaction(stale_tx, /*test_accept=*/true);
+            if (mempool_acceptable.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+                LogPrintLevel(BCLog::PRIVATE_BROADCAST,
+                              BCLog::Level::Debug,
+                              "Reattempting broadcast of stale txid=%s wtxid=%s\n",
+                              stale_tx->GetHash().ToString(),
+                              stale_tx->GetWitnessHash().ToString());
+                ++num_stale_transactions;
+            } else {
+                LogPrintLevel(BCLog::PRIVATE_BROADCAST,
+                              BCLog::Level::Info,
+                              "Giving up broadcast attempts for txid=%s wtxid=%s: %s\n",
+                              stale_tx->GetHash().ToString(),
+                              stale_tx->GetWitnessHash().ToString(),
+                              mempool_acceptable.m_state.ToString());
+                m_tx_for_private_broadcast.Remove(stale_tx);
+            }
+        }
+    }
+
+    if (num_stale_transactions > active_connections + to_open_connections) {
+        m_connman.PrivateBroadcastAdd(num_stale_transactions - active_connections - to_open_connections);
+    }
+
+    scheduler.scheduleFromNow([&] { ReattemptPrivateBroadcast(scheduler); }, NextTxBroadcast());
 }
 
 void PeerManagerImpl::FinalizeNode(const CNode& node)
@@ -2203,9 +2272,9 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
     static_assert(EXTRA_PEER_CHECK_INTERVAL < STALE_CHECK_INTERVAL, "peer eviction timer should be less than stale tip check timer");
     scheduler.scheduleEvery([this] { this->CheckForStaleTipAndEvictPeers(); }, std::chrono::seconds{EXTRA_PEER_CHECK_INTERVAL});
 
-    // schedule next run for 10-15 minutes in the future
-    const std::chrono::milliseconds delta = 10min + GetRandMillis(5min);
-    scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
+    scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, NextTxBroadcast());
+
+    scheduler.scheduleFromNow([&] { ReattemptPrivateBroadcast(scheduler); }, NextTxBroadcast());
 }
 
 /**
