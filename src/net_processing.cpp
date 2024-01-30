@@ -1131,6 +1131,24 @@ private:
         }
 
         /**
+         * Forget a transaction.
+         * @return the number of times the transaction was broadcast if the transaction existed and was removed,
+         * otherwise empty optional (the transaction was not in the storage).
+         */
+        std::optional<size_t> Remove(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+        {
+            LOCK(m_mutex);
+            auto iters = Find(tx->GetHash());
+            if (!iters) {
+                return std::nullopt;
+            }
+            const size_t num_broadcasted{iters->by_priority->first.num_broadcasted};
+            m_by_priority.erase(iters->by_priority);
+            m_by_txid.erase(iters->by_txid);
+            return num_broadcasted;
+        }
+
+        /**
          * Get the transaction that has been broadcast less times and least recently.
          */
         std::optional<CTransactionRef> GetTxForBroadcast() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
@@ -4575,6 +4593,21 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         const uint256& hash = peer->m_wtxid_relay ? wtxid : txid;
         AddKnownTx(*peer, hash);
+
+        if (auto num_broadcasted = m_tx_for_private_broadcast.Remove(ptx)) {
+            LogPrintLevel(BCLog::PRIVATE_BROADCAST,
+                          BCLog::Level::Info,
+                          "Received our privately broadcast transaction (txid=%s) from the "
+                          "network from peer=%d%s; stopping private broadcast attempts\n",
+                          txid.ToString(),
+                          pfrom.GetId(),
+                          fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : "");
+            if (NUM_PRIVATE_BROADCAST_PER_TX > num_broadcasted.value()) {
+                // Not all of the initial NUM_PRIVATE_BROADCAST_PER_TX connections were needed.
+                // Tell CConnman it does not need to start the remaining ones.
+                m_connman.PrivateBroadcastSub(NUM_PRIVATE_BROADCAST_PER_TX - num_broadcasted.value());
+            }
+        }
 
         LOCK(cs_main);
 
