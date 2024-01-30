@@ -5,6 +5,10 @@
 #include <private_broadcast.h>
 #include <util/check.h>
 
+/// If a transaction is not received back from the network for this duration
+/// after it is broadcast, then we  consider it stale / for rebroadcasting.
+static constexpr auto STALE_DURATION{1min};
+
 bool PrivateBroadcast::Add(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     const Txid& txid = tx->GetHash();
@@ -99,6 +103,19 @@ bool PrivateBroadcast::FinishBroadcast(const NodeId& nodeid, bool confirmed_by_n
     m_by_priority.emplace(priority, txid);
 
     return true;
+}
+
+std::vector<CTransactionRef> PrivateBroadcast::GetStale() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+{
+    LOCK(m_mutex);
+    const auto stale_time = NodeClock::now() - STALE_DURATION;
+    std::vector<CTransactionRef> stale;
+    for (const auto& [txid, tx_with_priority] : m_by_txid) {
+        if (tx_with_priority.priority.last_broadcasted < stale_time) {
+            stale.push_back(tx_with_priority.tx);
+        }
+    }
+    return stale;
 }
 
 bool PrivateBroadcast::Priority::operator<(const Priority& other) const
