@@ -32,7 +32,7 @@ static TransactionError HandleATMPError(const TxValidationState& state, std::str
 
 TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback)
 {
-    // BroadcastTransaction can be called by either sendrawtransaction RPC or the wallet.
+    // BroadcastTransaction can be called by RPC or by the wallet.
     // chainman, mempool and peerman are initialized before the RPC server and wallet are started
     // and reset after the RPC sever and wallet are stopped.
     assert(node.chainman);
