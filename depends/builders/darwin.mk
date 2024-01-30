@@ -3,7 +3,7 @@ build_darwin_CXX:=$(shell xcrun -f clang++) -isysroot$(shell xcrun --show-sdk-pa
 build_darwin_AR:=$(shell xcrun -f ar)
 build_darwin_RANLIB:=$(shell xcrun -f ranlib)
 build_darwin_STRIP:=$(shell xcrun -f strip)
-build_darwin_OTOOL:=$(shell xcrun -f otool)
+build_darwin_OBJDUMP:=$(shell xcrun -f objdump)
 build_darwin_NM:=$(shell xcrun -f nm)
 build_darwin_DSYMUTIL:=$(shell xcrun -f dsymutil)
 build_darwin_SHA256SUM=shasum -a 256
@@ -15,7 +15,7 @@ darwin_CXX:=$(shell xcrun -f clang++) -stdlib=libc++ -isysroot$(shell xcrun --sh
 darwin_AR:=$(shell xcrun -f ar)
 darwin_RANLIB:=$(shell xcrun -f ranlib)
 darwin_STRIP:=$(shell xcrun -f strip)
-darwin_OTOOL:=$(shell xcrun -f otool)
+darwin_OBJDUMP:=$(shell xcrun -f objdump)
 darwin_NM:=$(shell xcrun -f nm)
 darwin_DSYMUTIL:=$(shell xcrun -f dsymutil)
 darwin_native_binutils=

@@ -125,6 +125,7 @@ AC_PATH_PROG([GIT], [git])
 AC_PATH_PROG([CCACHE], [ccache])
 AC_PATH_PROG([XGETTEXT], [xgettext])
 AC_PATH_PROG([HEXDUMP], [hexdump])
+AC_PATH_TOOL([OBJDUMP], [objdump])
 AC_PATH_TOOL([OBJCOPY], [objcopy])
 AC_PATH_PROG([DOXYGEN], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
@@ -760,7 +761,6 @@ case $host in
            ;;
          *)
            AC_PATH_TOOL([DSYMUTIL], [dsymutil], [dsymutil])
-           AC_PATH_TOOL([OTOOL], [otool], [otool])
            AC_PATH_PROG([ZIP], [zip], [zip])
 
            dnl libtool will try to strip the static lib, which is a problem for
