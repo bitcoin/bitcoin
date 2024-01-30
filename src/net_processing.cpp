@@ -4425,6 +4425,17 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const uint256& hash = peer->m_wtxid_relay ? wtxid.ToUint256() : txid.ToUint256();
         AddKnownTx(*peer, hash);
 
+        if (const auto num_broadcasted{m_tx_for_private_broadcast.Remove(ptx)}) {
+            LogInfo("[privatebroadcast] Received our privately broadcast transaction (txid=%s) from the "
+                    "network from peer=%d%s; stopping private broadcast attempts",
+                    txid.ToString(), pfrom.GetId(), pfrom.LogIP(fLogIPs));
+            if (NUM_PRIVATE_BROADCAST_PER_TX > num_broadcasted.value()) {
+                // Not all of the initial NUM_PRIVATE_BROADCAST_PER_TX connections were needed.
+                // Tell CConnman it does not need to start the remaining ones.
+                m_connman.m_private_broadcast.NumToOpenSub(NUM_PRIVATE_BROADCAST_PER_TX - num_broadcasted.value());
+            }
+        }
+
         LOCK2(cs_main, m_tx_download_mutex);
 
         const auto& [should_validate, package_to_validate] = m_txdownloadman.ReceivedTx(pfrom.GetId(), ptx);
