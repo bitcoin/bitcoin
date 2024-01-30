@@ -274,6 +274,13 @@ private:
     /** Add a KeyOriginInfo to the wallet */
     bool AddKeyOriginWithDB(WalletBatch& batch, const CPubKey& pubkey, const KeyOriginInfo& info);
 
+    /* Set the HD chain model (chain child index counters) */
+    bool SetHDChain(WalletBatch &batch, const CHDChain& chain, bool memonly);
+
+    bool EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, const CHDChain& chain = CHDChain());
+    bool DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, CHDChain& hdChainRet) const;
+    bool SetHDChain(const CHDChain& chain);
+
     /* the HD chain data model (external chain counters) */
     CHDChain hdChain GUARDED_BY(cs_KeyStore);
     CHDChain cryptedHDChain GUARDED_BY(cs_KeyStore);
@@ -387,10 +394,6 @@ public:
     //! Generate a new key
     CPubKey GenerateNewKey(WalletBatch& batch, uint32_t nAccountIndex, bool fInternal /*= false*/) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
-    /* Set the HD chain model (chain child index counters) */
-private:
-    bool SetHDChain(WalletBatch &batch, const CHDChain& chain, bool memonly);
-public:
     /**
      * Set the HD chain model (chain child index counters) using temporary wallet db object
      * which causes db flush every time these methods are used
@@ -452,11 +455,6 @@ public:
      * HD Wallet Functions
      */
 
-private:
-    bool EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, const CHDChain& chain = CHDChain());
-    bool DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, CHDChain& hdChainRet) const;
-    bool SetHDChain(const CHDChain& chain);
-public:
     bool GetHDChain(CHDChain& hdChainRet) const;
     bool GetDecryptedHDChain(CHDChain& hdChainRet);
 
