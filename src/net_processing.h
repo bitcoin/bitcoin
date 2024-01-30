@@ -124,6 +124,12 @@ public:
      */
     virtual void InitiateTxBroadcastToAll(const Txid& txid, const Wtxid& wtxid) = 0;
 
+    /**
+     * Initiate a private transaction broadcast. This is done
+     * asynchronously via short-lived connections to peers on privacy networks.
+     */
+    virtual void InitiateTxBroadcastPrivate(const CTransactionRef& tx) = 0;
+
     /** Send ping message to all peers */
     virtual void SendPings() = 0;
 
