@@ -447,11 +447,11 @@ bool LegacyScriptPubKeyMan::SetCryptedHDChain(WalletBatch &batch, const CHDChain
 
     if (!memonly) {
         if (encrypted_batch) {
-            if (!encrypted_batch->WriteCryptedHDChain(chain))
-                throw std::runtime_error(std::string(__func__) + ": WriteCryptedHDChain failed");
+            if (!encrypted_batch->WriteHDChain(chain))
+                throw std::runtime_error(std::string(__func__) + ": WriteHDChain failed");
         } else {
-            if (!batch.WriteCryptedHDChain(chain))
-                throw std::runtime_error(std::string(__func__) + ": WriteCryptedHDChain failed");
+            if (!batch.WriteHDChain(chain))
+                throw std::runtime_error(std::string(__func__) + ": WriteHDChain failed");
         }
         m_storage.UnsetBlankWalletFlag(batch);
     }

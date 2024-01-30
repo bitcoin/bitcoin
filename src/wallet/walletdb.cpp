@@ -800,17 +800,15 @@ bool WalletBatch::EraseDestData(const std::string &address, const std::string &k
 
 bool WalletBatch::WriteHDChain(const CHDChain& chain)
 {
+    if (chain.IsCrypted()) {
+        if (!WriteIC(DBKeys::CRYPTED_HDCHAIN, chain))
+            return false;
+
+        EraseIC(DBKeys::HDCHAIN);
+
+        return true;
+    }
     return WriteIC(DBKeys::HDCHAIN, chain);
-}
-
-bool WalletBatch::WriteCryptedHDChain(const CHDChain& chain)
-{
-    if (!WriteIC(DBKeys::CRYPTED_HDCHAIN, chain))
-        return false;
-
-    EraseIC(DBKeys::HDCHAIN);
-
-    return true;
 }
 
 bool WalletBatch::WriteHDPubKey(const CHDPubKey& hdPubKey, const CKeyMetadata& keyMeta)
