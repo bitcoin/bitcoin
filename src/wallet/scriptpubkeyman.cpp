@@ -442,7 +442,7 @@ bool LegacyScriptPubKeyMan::SetCryptedHDChain(WalletBatch &batch, const CHDChain
 {
     LOCK(cs_KeyStore);
 
-    if (!SetCryptedHDChain(chain))
+    if (!SetHDChain(chain))
         return false;
 
     if (!memonly) {
@@ -1118,26 +1118,14 @@ bool LegacyScriptPubKeyMan::AddWatchOnly(const CScript& dest, int64_t nCreateTim
 bool LegacyScriptPubKeyMan::SetHDChain(const CHDChain& chain)
 {
     LOCK(cs_KeyStore);
-    if (m_storage.HasEncryptionKeys())
-        return false;
 
-    if (chain.IsCrypted())
-        return false;
+    if (m_storage.HasEncryptionKeys() != chain.IsCrypted()) return false;
 
-    hdChain = chain;
-    return true;
-}
-
-bool LegacyScriptPubKeyMan::SetCryptedHDChain(const CHDChain& chain)
-{
-    LOCK(cs_KeyStore);
-    if (!m_storage.HasEncryptionKeys())
-        return false;
-
-    if (!chain.IsCrypted())
-        return false;
-
-    cryptedHDChain = chain;
+    if (chain.IsCrypted()) {
+        cryptedHDChain = chain;
+    } else {
+        hdChain = chain;
+    }
     return true;
 }
 
