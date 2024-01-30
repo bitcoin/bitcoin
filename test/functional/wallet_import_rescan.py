@@ -147,6 +147,7 @@ AMOUNT_DUST = 0.00000546
 
 def get_rand_amount():
     r = random.uniform(AMOUNT_DUST, 1)
+    r = AMOUNT_DUST
     return Decimal(str(round(r, 8)))
 
 
@@ -273,7 +274,7 @@ class ImportRescanTest(BitcoinTestFramework):
             variant.key = self.nodes[1].dumpprivkey(variant.address["address"])
             # Ensure output is large enough to pay for fees: conservatively assuming txsize of
             # 500 vbytes and feerate of 20 sats/vbytes
-            variant.initial_amount = max(get_rand_amount(), (500 * 20 / COIN) + AMOUNT_DUST)
+            variant.initial_amount = max(get_rand_amount(), round((500 * 20 / COIN) + AMOUNT_DUST), 8)
             variant.initial_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.initial_amount)
             variant.confirmation_height = 0
             variant.timestamp = timestamp
