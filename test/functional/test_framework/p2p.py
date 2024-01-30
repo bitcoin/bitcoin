@@ -226,9 +226,8 @@ class P2PConnection(asyncio.Protocol):
             self.send_raw_message(send_handshake_bytes)
         # if v2 connection, send `on_connection_send_msg` after initial v2 handshake.
         # if reconnection situation, send `on_connection_send_msg` after version message is received in `on_version()`.
-        if self.on_connection_send_msg and not self.supports_v2_p2p and not self.reconnect:
-            self.send_message(self.on_connection_send_msg)
-            self.on_connection_send_msg = None  # Never used again
+        if not self.supports_v2_p2p and not self.reconnect:
+            self.send_version()
         self.on_open()
 
     def connection_lost(self, exc):
@@ -284,9 +283,8 @@ class P2PConnection(asyncio.Protocol):
         if not is_mac_auth:
             raise ValueError("invalid v2 mac tag in handshake authentication")
         self.recvbuf = self.recvbuf[length:]
-        if self.v2_state.tried_v2_handshake and self.on_connection_send_msg:
-            self.send_message(self.on_connection_send_msg)
-            self.on_connection_send_msg = None
+        if self.v2_state.tried_v2_handshake:
+            self.send_version()
 
     # Socket read methods
 
@@ -559,9 +557,7 @@ class P2PInterface(P2PConnection):
         assert message.nVersion >= MIN_P2P_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_P2P_VERSION_SUPPORTED)
         # reconnection using v1 P2P has happened since version message can be processed, previously unsent version message is sent using v1 P2P here
         if self.reconnect:
-            if self.on_connection_send_msg:
-                self.send_message(self.on_connection_send_msg)
-                self.on_connection_send_msg = None
+            self.send_version()
             self.reconnect = False
         if message.nVersion >= 70016 and self.wtxidrelay:
             self.send_message(msg_wtxidrelay())
@@ -675,6 +671,11 @@ class P2PInterface(P2PConnection):
         self.wait_until(test_function, timeout=timeout)
 
     # Message sending helper functions
+
+    def send_version(self):
+        if self.on_connection_send_msg:
+            self.send_message(self.on_connection_send_msg)
+            self.on_connection_send_msg = None  # Never used again
 
     def send_and_ping(self, message, timeout=60):
         self.send_message(message)
