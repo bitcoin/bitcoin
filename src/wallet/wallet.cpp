@@ -675,7 +675,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
                 assert(hdChainCurrent.GetID() == hdChainCrypted.GetID());
                 assert(hdChainCurrent.GetSeedHash() != hdChainCrypted.GetSeedHash());
 
-                assert(spk_man_legacy->SetCryptedHDChain(*encrypted_batch, hdChainCrypted, false));
+                assert(spk_man_legacy->SetHDChain(*encrypted_batch, hdChainCrypted, false));
             }
         }
 

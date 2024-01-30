@@ -428,31 +428,15 @@ bool LegacyScriptPubKeyMan::SetHDChain(WalletBatch &batch, const CHDChain& chain
         return false;
 
     if (!memonly) {
-        if (!batch.WriteHDChain(chain)) {
-            throw std::runtime_error(std::string(__func__) + ": WriteHDChain failed");
-        }
-
-        m_storage.UnsetBlankWalletFlag(batch);
-    }
-
-    return true;
-}
-
-bool LegacyScriptPubKeyMan::SetCryptedHDChain(WalletBatch &batch, const CHDChain& chain, bool memonly)
-{
-    LOCK(cs_KeyStore);
-
-    if (!SetHDChain(chain))
-        return false;
-
-    if (!memonly) {
-        if (encrypted_batch) {
+        if (chain.IsCrypted() && encrypted_batch) {
             if (!encrypted_batch->WriteHDChain(chain))
                 throw std::runtime_error(std::string(__func__) + ": WriteHDChain failed");
         } else {
-            if (!batch.WriteHDChain(chain))
+            if (!batch.WriteHDChain(chain)) {
                 throw std::runtime_error(std::string(__func__) + ": WriteHDChain failed");
+            }
         }
+
         m_storage.UnsetBlankWalletFlag(batch);
     }
 
@@ -468,7 +452,7 @@ bool LegacyScriptPubKeyMan::SetHDChainSingle(const CHDChain& chain, bool memonly
 bool LegacyScriptPubKeyMan::SetCryptedHDChainSingle(const CHDChain& chain, bool memonly)
 {
     WalletBatch batch(m_storage.GetDatabase());
-    return SetCryptedHDChain(batch, chain, memonly);
+    return SetHDChain(batch, chain, memonly);
 }
 
 bool LegacyScriptPubKeyMan::GetDecryptedHDChain(CHDChain& hdChainRet)
@@ -1351,13 +1335,8 @@ void LegacyScriptPubKeyMan::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& 
     if (!hdChainCurrent.SetAccount(nAccountIndex, acc))
         throw std::runtime_error(std::string(__func__) + ": SetAccount failed");
 
-    if (m_storage.HasEncryptionKeys()) {
-        if (!SetCryptedHDChain(batch, hdChainCurrent, false))
-            throw std::runtime_error(std::string(__func__) + ": SetCryptedHDChain failed");
-    }
-    else {
-        if (!SetHDChain(batch, hdChainCurrent, false))
-            throw std::runtime_error(std::string(__func__) + ": SetHDChain failed");
+    if (!SetHDChain(batch, hdChainCurrent, false)) {
+        throw std::runtime_error(std::string(__func__) + ": SetHDChain failed");
     }
 
     if (!AddHDPubKey(batch, childKey.Neuter(), fInternal))

@@ -389,7 +389,6 @@ public:
 
     /* Set the HD chain model (chain child index counters) */
     bool SetHDChain(WalletBatch &batch, const CHDChain& chain, bool memonly);
-    bool SetCryptedHDChain(WalletBatch &batch, const CHDChain& chain, bool memonly);
     /**
      * Set the HD chain model (chain child index counters) using temporary wallet db object
      * which causes db flush every time these methods are used
