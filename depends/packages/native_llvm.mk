@@ -18,6 +18,7 @@ define $(package)_stage_cmds
   cp -P bin/clang++ $($(package)_staging_prefix_dir)/bin/ && \
   cp bin/dsymutil $($(package)_staging_prefix_dir)/bin/$(host)-dsymutil && \
   cp bin/llvm-config $($(package)_staging_prefix_dir)/bin/ && \
+  cp bin/llvm-objdump $($(package)_staging_prefix_dir)/bin/$(host)-objdump && \
   cp include/llvm-c/ExternC.h $($(package)_staging_prefix_dir)/include/llvm-c && \
   cp include/llvm-c/lto.h $($(package)_staging_prefix_dir)/include/llvm-c && \
   cp lib/libLTO.so $($(package)_staging_prefix_dir)/lib/ && \
