@@ -451,8 +451,8 @@ public:
      */
 
     bool EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, const CHDChain& chain = CHDChain());
-    bool DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, CHDChain& hdChainRet) const;
 private:
+    bool DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, CHDChain& hdChainRet) const;
     bool SetHDChain(const CHDChain& chain);
 public:
     bool GetHDChain(CHDChain& hdChainRet) const;
