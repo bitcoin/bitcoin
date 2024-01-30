@@ -20,6 +20,7 @@
 /**
  * Store a list of transactions to be broadcast privately. Supports the following operations:
  * - Add a new transaction
+ * - Remove a transaction, after it has been seen by the network
  * - Mark a broadcast of a transaction (remember when and how many times)
  * - Get a transaction for broadcast, the one that has been broadcast fewer times and least recently
  */
@@ -33,6 +34,13 @@ public:
      * @retval false The transaction was already present.
      */
     bool Add(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
+     * Forget a transaction.
+     * @return the number of times the transaction was broadcast if the transaction existed and was removed,
+     * otherwise empty optional (the transaction was not in the storage).
+     */
+    std::optional<size_t> Remove(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
      * Get the transaction that has been broadcast fewest times and least recently.
