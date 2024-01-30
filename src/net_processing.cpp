@@ -43,6 +43,7 @@
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <private_broadcast.h>
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
@@ -195,6 +196,8 @@ static constexpr double MAX_ADDR_RATE_PER_SECOND{0.1};
 static constexpr size_t MAX_ADDR_PROCESSING_TOKEN_BUCKET{MAX_ADDR_TO_SEND};
 /** The compactblocks version we support. See BIP 152. */
 static constexpr uint64_t CMPCTBLOCKS_VERSION{2};
+/** For private broadcast, send a transaction to this many peers. */
+static constexpr size_t NUM_PRIVATE_BROADCAST_PER_TX{3};
 
 // Internal stuff
 namespace {
@@ -537,6 +540,7 @@ public:
     PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void ScheduleTxForBroadcastToAll(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void ScheduleTxForPrivateBroadcast(const CTransactionRef& tx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestBlock(int height, std::chrono::seconds time) override
     {
         m_best_height = height;
@@ -1073,6 +1077,9 @@ private:
     void PushAddress(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     void LogBlockHeader(const CBlockIndex& index, const CNode& peer, bool via_compact_block);
+
+    /// A list of transactions to be broadcast privately.
+    PrivateBroadcast m_tx_for_private_broadcast;
 };
 
 const CNodeState* PeerManagerImpl::State(NodeId pnode) const
@@ -2171,6 +2178,25 @@ void PeerManagerImpl::ScheduleTxForBroadcastToAll(const uint256& txid, const uin
             tx_relay->m_tx_inventory_to_send.insert(hash);
         }
     };
+}
+
+void PeerManagerImpl::ScheduleTxForPrivateBroadcast(const CTransactionRef& tx)
+{
+    if (m_tx_for_private_broadcast.Add(tx)) {
+        LogDebug(BCLog::PRIVATE_BROADCAST,
+                 "Requesting %d new connections due to txid=%s, wtxid=%s",
+                 NUM_PRIVATE_BROADCAST_PER_TX,
+                 tx->GetHash().ToString(),
+                 tx->GetWitnessHash().ToString());
+
+        m_connman.m_private_broadcast.NumToOpenAdd(NUM_PRIVATE_BROADCAST_PER_TX);
+    } else {
+        LogDebug(
+            BCLog::PRIVATE_BROADCAST,
+            "Ignoring unnecessary request to schedule an already scheduled transaction: txid=%s, wtxid=%s",
+            tx->GetHash().ToString(),
+            tx->GetWitnessHash().ToString());
+    }
 }
 
 void PeerManagerImpl::RelayAddress(NodeId originator,
