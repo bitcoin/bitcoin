@@ -90,6 +90,8 @@ public:
         //! Number of headers sent in one getheaders message result (this is
         //! a test-only option).
         uint32_t max_headers_result{MAX_HEADERS_RESULTS};
+        //! Whether private broadcast is used for sending transactions.
+        bool private_broadcast{DEFAULT_PRIVATE_BROADCAST};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,

@@ -566,6 +566,9 @@ private:
     /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
     void ReattemptInitialBroadcast(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
+    /** Rebroadcast stale private transactions (already broadcast but not received back from the network). */
+    void ReattemptPrivateBroadcast(CScheduler& scheduler);
+
     /** Get a shared pointer to the Peer object.
      *  May return an empty shared_ptr if the Peer object can't be found. */
     PeerRef GetPeerRef(NodeId id) const EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -1633,6 +1636,37 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
     scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
 }
 
+void PeerManagerImpl::ReattemptPrivateBroadcast(CScheduler& scheduler)
+{
+    // Remove stale transactions that are no longer relevant (e.g. already in
+    // the mempool or mined) and count the remaining ones.
+    size_t num_for_rebroadcast{0};
+    const auto stale_txs = m_tx_for_private_broadcast.GetStale();
+    if (!stale_txs.empty()) {
+        LOCK(cs_main);
+        for (const auto& stale_tx : stale_txs) {
+            auto mempool_acceptable = m_chainman.ProcessTransaction(stale_tx, /*test_accept=*/true);
+            if (mempool_acceptable.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+                LogDebug(BCLog::PRIVBROADCAST,
+                         "Reattempting broadcast of stale txid=%s wtxid=%s",
+                         stale_tx->GetHash().ToString(), stale_tx->GetWitnessHash().ToString());
+                ++num_for_rebroadcast;
+            } else {
+                LogInfo("[privatebroadcast] Giving up broadcast attempts for txid=%s wtxid=%s: %s",
+                        stale_tx->GetHash().ToString(), stale_tx->GetWitnessHash().ToString(),
+                        mempool_acceptable.m_state.ToString());
+                m_tx_for_private_broadcast.Remove(stale_tx);
+            }
+        }
+
+        // This could overshoot, but that is ok - we will open some private connections in vain.
+        m_connman.m_private_broadcast.NumToOpenAdd(num_for_rebroadcast);
+    }
+
+    const auto delta{2min + FastRandomContext().randrange<std::chrono::milliseconds>(1min)};
+    scheduler.scheduleFromNow([&] { ReattemptPrivateBroadcast(scheduler); }, delta);
+}
+
 void PeerManagerImpl::FinalizeNode(const CNode& node)
 {
     NodeId nodeid = node.GetId();
@@ -1971,6 +2005,10 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
     // schedule next run for 10-15 minutes in the future
     const auto delta = 10min + FastRandomContext().randrange<std::chrono::milliseconds>(5min);
     scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
+
+    if (m_opts.private_broadcast) {
+        scheduler.scheduleFromNow([&] { ReattemptPrivateBroadcast(scheduler); }, 0min);
+    }
 }
 
 void PeerManagerImpl::ActiveTipChange(const CBlockIndex& new_tip, bool is_ibd)
