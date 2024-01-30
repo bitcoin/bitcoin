@@ -303,7 +303,7 @@ public:
     std::string ToString() const;
 
     //! Check whether this block index entry is valid up to the passed validity level.
-    bool IsValid(enum BlockStatus nUpTo = BLOCK_VALID_TRANSACTIONS) const
+    bool IsValid(BlockStatus nUpTo) const
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
@@ -323,7 +323,7 @@ public:
 
     //! Raise the validity level of this block index entry.
     //! Returns true if the validity was changed.
-    bool RaiseValidity(enum BlockStatus nUpTo) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    bool RaiseValidity(BlockStatus nUpTo) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
         assert(!(nUpTo & ~BLOCK_VALID_MASK)); // Only validity flags allowed.
