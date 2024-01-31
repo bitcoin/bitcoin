@@ -1458,10 +1458,11 @@ bool LegacyScriptPubKeyMan::TopUpInner(unsigned int kpSize)
 
             if (GetTime() >= progress_report_time + PROGRESS_REPORT_INTERVAL) {
                 const double dProgress = 100.f * current_index / total_missing;
+                const int iProgress = static_cast<int>(dProgress);
                 progress_report_time = GetTime();
                 WalletLogPrintf("Still topping up. At key %lld. Progress=%f\n", current_index, dProgress);
-                if (should_show_progress) {
-                    m_storage.UpdateProgress(strMsg, static_cast<int>(dProgress));
+                if (should_show_progress && iProgress > 0) {
+                    m_storage.UpdateProgress(strMsg, iProgress);
                 }
             }
         }
