@@ -130,8 +130,15 @@ class TestNode():
         # Default behavior from global -v2transport flag is added to args to persist it over restarts.
         # May be overwritten in individual tests, using extra_args.
         self.default_to_v2 = v2transport
-        if self.default_to_v2:
-            self.args.append("-v2transport=1")
+        if self.version_is_at_least(260000):
+            # 26.0 and later support v2transport
+            if v2transport:
+                self.args.append("-v2transport=1")
+            else:
+                self.args.append("-v2transport=0")
+        else:
+            # v2transport requested but not supported for node
+            assert not v2transport
 
         self.cli = TestNodeCLI(bitcoin_cli, self.datadir_path)
         self.use_cli = use_cli
