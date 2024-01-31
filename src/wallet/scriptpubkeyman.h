@@ -277,13 +277,12 @@ private:
     /* Set the HD chain model (chain child index counters) */
     bool SetHDChain(WalletBatch &batch, const CHDChain& chain, bool memonly);
 
-    bool EncryptAndSetHDChain(const CKeyingMaterial& vMasterKeyIn, const CHDChain& chain = CHDChain());
+    bool EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, CHDChain& chain);
     bool DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, CHDChain& hdChainRet) const;
     bool SetHDChain(const CHDChain& chain);
 
     /* the HD chain data model (external chain counters) */
     CHDChain hdChain GUARDED_BY(cs_KeyStore);
-    CHDChain cryptedHDChain GUARDED_BY(cs_KeyStore);
 
     /* HD derive new child key (on internal or external chain) */
     void DeriveNewChildKey(WalletBatch& batch, CKeyMetadata& metadata, CKey& secretRet, uint32_t nAccountIndex, bool fInternal /*= false*/) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
