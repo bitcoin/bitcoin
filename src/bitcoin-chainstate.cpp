@@ -117,7 +117,6 @@ int main(int argc, char* argv[])
     const ChainstateManager::Options chainman_opts{
         .chainparams = *chainparams,
         .datadir = abs_datadir,
-        .adjusted_time_callback = NodeClock::now,
         .notifications = *notifications,
     };
     const node::BlockManager::Options blockman_opts{

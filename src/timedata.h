@@ -75,11 +75,10 @@ public:
 
 /** Functions to keep track of adjusted P2P time */
 int64_t GetTimeOffset();
-NodeClock::time_point GetAdjustedTime();
 void AddTimeData(const CNetAddr& ip, int64_t nTime);
 
 /**
- * Reset the internal state of GetTimeOffset(), GetAdjustedTime() and AddTimeData().
+ * Reset the internal state of GetTimeOffset() and AddTimeData().
  */
 void TestOnlyResetTimeData();
 

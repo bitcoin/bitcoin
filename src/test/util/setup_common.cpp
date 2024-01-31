@@ -184,7 +184,6 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, const std::vecto
     const ChainstateManager::Options chainman_opts{
         .chainparams = chainparams,
         .datadir = m_args.GetDataDirNet(),
-        .adjusted_time_callback = GetAdjustedTime,
         .check_block_index = true,
         .notifications = *m_node.notifications,
         .worker_threads_num = 2,
