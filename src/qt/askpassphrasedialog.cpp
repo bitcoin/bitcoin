@@ -86,9 +86,6 @@ void AskPassphraseDialog::accept()
     SecureString oldpass, newpass1, newpass2;
     if (!model && mode != Encrypt)
         return;
-    oldpass.reserve(MAX_PASSPHRASE_SIZE);
-    newpass1.reserve(MAX_PASSPHRASE_SIZE);
-    newpass2.reserve(MAX_PASSPHRASE_SIZE);
 
     oldpass.assign(std::string_view{ui->passEdit1->text().toStdString()});
     newpass1.assign(std::string_view{ui->passEdit2->text().toStdString()});

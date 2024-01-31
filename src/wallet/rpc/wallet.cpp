@@ -380,7 +380,6 @@ static RPCHelpMan createwallet()
         flags |= WALLET_FLAG_BLANK_WALLET;
     }
     SecureString passphrase;
-    passphrase.reserve(100);
     std::vector<bilingual_str> warnings;
     if (!request.params[3].isNull()) {
         passphrase = std::string_view{request.params[3].get_str()};
@@ -787,7 +786,6 @@ static RPCHelpMan migratewallet()
             }
 
             SecureString wallet_pass;
-            wallet_pass.reserve(100);
             if (!request.params[1].isNull()) {
                 wallet_pass = std::string_view{request.params[1].get_str()};
             }
