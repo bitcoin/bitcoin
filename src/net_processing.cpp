@@ -133,6 +133,8 @@ static const unsigned int MAX_BLOCKS_TO_ANNOUNCE = 8;
 static const int MAX_NUM_UNCONNECTING_HEADERS_MSGS = 10;
 /** Minimum blocks required to signal NODE_NETWORK_LIMITED */
 static const unsigned int NODE_NETWORK_LIMITED_MIN_BLOCKS = 288;
+/** Window, in blocks, for connecting to NODE_NETWORK_LIMITED peers */
+static const unsigned int NODE_NETWORK_LIMITED_ALLOW_CONN_BLOCKS = 144;
 /** Average delay between local address broadcasts */
 static constexpr auto AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL{24h};
 /** Average delay between peer address broadcasts */
@@ -499,6 +501,7 @@ public:
     /** Implement NetEventsInterface */
     void InitializeNode(CNode& node, ServiceFlags our_services) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void FinalizeNode(const CNode& node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_headers_presync_mutex);
+    bool HasAllDesirableServiceFlags(ServiceFlags services) const override;
     bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex);
     bool SendMessages(CNode* pto) override
@@ -513,12 +516,17 @@ public:
     bool IgnoresIncomingTxs() override { return m_opts.ignore_incoming_txs; }
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void SetBestHeight(int height) override { m_best_height = height; };
+    void SetBestBlock(int height, std::chrono::seconds time) override
+    {
+        m_best_height = height;
+        m_best_block_time = time;
+    };
     void UnitTestMisbehaving(NodeId peer_id, int howmuch) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex) { Misbehaving(*Assert(GetPeerRef(peer_id)), howmuch, ""); };
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, DataStream& vRecv,
                         const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex);
     void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) override;
+    ServiceFlags GetDesirableServiceFlags(ServiceFlags services) const override;
 
 private:
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
@@ -721,6 +729,8 @@ private:
 
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
+    /** The time of the best chain tip block */
+    std::atomic<std::chrono::seconds> m_best_block_time{0s};
 
     /** Next time to check for stale tip */
     std::chrono::seconds m_stale_tip_check_time GUARDED_BY(cs_main){0s};
@@ -991,6 +1001,12 @@ private:
     /** Update tracking information about which blocks a peer is assumed to have. */
     void UpdateBlockAvailability(NodeId nodeid, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool CanDirectFetch() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * Estimates the distance, in blocks, between the best-known block and the network chain tip.
+     * Utilizes the best-block time and the chainparams blocks spacing to approximate it.
+     */
+    int64_t ApproximateBestBlockDepth() const;
 
     /**
      * To prevent fingerprinting attacks, only send blocks/headers outside of
@@ -1309,6 +1325,11 @@ bool PeerManagerImpl::TipMayBeStale()
         m_last_tip_update = GetTime<std::chrono::seconds>();
     }
     return m_last_tip_update.load() < GetTime<std::chrono::seconds>() - std::chrono::seconds{consensusParams.nPowTargetSpacing * 3} && mapBlocksInFlight.empty();
+}
+
+int64_t PeerManagerImpl::ApproximateBestBlockDepth() const
+{
+    return (GetTime<std::chrono::seconds>() - m_best_block_time.load()).count() / m_chainparams.GetConsensus().nPowTargetSpacing;
 }
 
 bool PeerManagerImpl::CanDirectFetch()
@@ -1649,6 +1670,23 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         m_headers_presync_stats.erase(nodeid);
     }
     LogPrint(BCLog::NET, "Cleared nodestate for peer=%d\n", nodeid);
+}
+
+bool PeerManagerImpl::HasAllDesirableServiceFlags(ServiceFlags services) const
+{
+    // Shortcut for (services & GetDesirableServiceFlags(services)) == GetDesirableServiceFlags(services)
+    return !(GetDesirableServiceFlags(services) & (~services));
+}
+
+ServiceFlags PeerManagerImpl::GetDesirableServiceFlags(ServiceFlags services) const
+{
+    if (services & NODE_NETWORK_LIMITED) {
+        // Limited peers are desirable when we are close to the tip.
+        if (ApproximateBestBlockDepth() < NODE_NETWORK_LIMITED_ALLOW_CONN_BLOCKS) {
+            return ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS);
+        }
+    }
+    return ServiceFlags(NODE_NETWORK | NODE_WITNESS);
 }
 
 PeerRef PeerManagerImpl::GetPeerRef(NodeId id) const
@@ -2047,8 +2085,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
  */
 void PeerManagerImpl::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
-    SetBestHeight(pindexNew->nHeight);
-    SetServiceFlagsIBDCache(!fInitialDownload);
+    SetBestBlock(pindexNew->nHeight, std::chrono::seconds{pindexNew->GetBlockTime()});
 
     // Don't relay inventory during initial block download.
     if (fInitialDownload) return;
