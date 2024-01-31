@@ -99,7 +99,7 @@ class AnchorsTest(BitcoinTestFramework):
         self.restart_node(0, extra_args=[f"-onion={onion_conf.addr[0]}:{onion_conf.addr[1]}"])
 
         self.log.info("Add 256-bit-address block-relay-only connections to node")
-        self.nodes[0].addconnection(ONION_ADDR, 'block-relay-only')
+        self.nodes[0].addconnection(ONION_ADDR, 'block-relay-only', v2transport=False)
 
         self.log.debug("Stop node")
         with self.nodes[0].assert_debug_log([f"DumpAnchors: Flush 1 outbound block-relay-only peer addresses to anchors.dat"]):
