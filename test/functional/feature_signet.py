@@ -25,7 +25,7 @@ signet_blocks = [
 ]
 
 class SignetParams:
-    def __init__(self, challenge=None):
+    def __init__(self, challenge=None, internal_challenge=None):
         # Prune to prevent disk space warning on CI systems with limited space,
         # when using networks other than regtest.
         if challenge is None:
@@ -35,22 +35,28 @@ class SignetParams:
             self.challenge = challenge
             self.shared_args = ["-prune=550", f"-signetchallenge={challenge}"]
 
+        if internal_challenge is None:
+            internal_challenge = self.challenge
+        self.internal_challenge = internal_challenge
+
 class SignetBasicTest(BitcoinTestFramework):
     def set_test_params(self):
         self.chain = "signet"
-        self.num_nodes = 6
+        self.num_nodes = 8
         self.setup_clean_chain = True
         self.signets = [
             SignetParams(challenge='51'), # OP_TRUE
             SignetParams(), # default challenge
             # default challenge as a 2-of-2, which means it should fail
-            SignetParams(challenge='522103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae')
+            SignetParams(challenge='522103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae'),
+            SignetParams(challenge='6a4c09011e000000000000004c0151', internal_challenge='51'), # OP_TRUE, target_spacing=30
         ]
 
         self.extra_args = [
             self.signets[0].shared_args, self.signets[0].shared_args,
             self.signets[1].shared_args, self.signets[1].shared_args,
             self.signets[2].shared_args, self.signets[2].shared_args,
+            self.signets[3].shared_args, self.signets[3].shared_args,
         ]
 
     def setup_network(self):
@@ -60,6 +66,7 @@ class SignetBasicTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
         self.connect_nodes(2, 3)
         self.connect_nodes(4, 5)
+        self.connect_nodes(6, 7)
 
     def run_test(self):
         self.log.info("basic tests using OP_TRUE challenge")
@@ -68,10 +75,11 @@ class SignetBasicTest(BitcoinTestFramework):
         def check_getblockchaininfo(node_idx, signet_idx):
             blockchain_info = self.nodes[node_idx].getblockchaininfo()
             assert_equal(blockchain_info['chain'], 'signet')
-            assert_equal(blockchain_info['signet_challenge'], self.signets[signet_idx].challenge)
+            assert_equal(blockchain_info['signet_challenge'], self.signets[signet_idx].internal_challenge)
         check_getblockchaininfo(node_idx=1, signet_idx=0)
         check_getblockchaininfo(node_idx=2, signet_idx=1)
         check_getblockchaininfo(node_idx=5, signet_idx=2)
+        check_getblockchaininfo(node_idx=6, signet_idx=3)
 
         self.log.info('getmininginfo')
         def check_getmininginfo(node_idx, signet_idx):
@@ -82,20 +90,26 @@ class SignetBasicTest(BitcoinTestFramework):
             assert 'currentblockweight' not in mining_info
             assert_equal(mining_info['networkhashps'], Decimal('0'))
             assert_equal(mining_info['pooledtx'], 0)
-            assert_equal(mining_info['signet_challenge'], self.signets[signet_idx].challenge)
+            assert_equal(mining_info['signet_challenge'], self.signets[signet_idx].internal_challenge)
         check_getmininginfo(node_idx=0, signet_idx=0)
         check_getmininginfo(node_idx=3, signet_idx=1)
         check_getmininginfo(node_idx=4, signet_idx=2)
+        check_getmininginfo(node_idx=7, signet_idx=3)
 
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         self.log.info("pregenerated signet blocks check")
 
-        height = 0
-        for block in signet_blocks:
-            assert_equal(self.nodes[2].submitblock(block), None)
-            height += 1
-            assert_equal(self.nodes[2].getblockcount(), height)
+        # Verify that nodes accept blocks mined using the default signet challenge.
+        # This test includes one default signet node (2) and another node (6)
+        # configured with an extended signet challenge that uses the actual script
+        # OP_TRUE (accepts all blocks).
+        for node_idx in [2, 6]:
+            height = 0
+            for block in signet_blocks:
+                assert_equal(self.nodes[node_idx].submitblock(block), None)
+                height += 1
+                assert_equal(self.nodes[node_idx].getblockcount(), height)
 
         self.log.info("pregenerated signet blocks check (incompatible solution)")
 
