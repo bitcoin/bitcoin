@@ -9,7 +9,6 @@
 #include <key_io.h>
 #include <fs.h>
 #include <governance/common.h>
-#include <hdchain.h>
 #include <protocol.h>
 #include <serialize.h>
 #include <sync.h>
@@ -22,6 +21,7 @@
 #ifdef USE_SQLITE
 #include <wallet/sqlite.h>
 #endif
+#include <wallet/hdchain.h>
 #include <wallet/wallet.h>
 #include <validation.h>
 

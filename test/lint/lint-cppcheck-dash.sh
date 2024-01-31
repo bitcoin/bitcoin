@@ -63,7 +63,6 @@ FILES=$(git ls-files -- "src/batchedlogger.*" \
                         "src/evo/*.h" \
                         "src/governance/*.cpp" \
                         "src/governance/*.h" \
-                        "src/hdchain.*" \
                         "src/keepass.*" \
                         "src/llmq/*.cpp" \
                         "src/llmq/*.h" \
@@ -88,6 +87,7 @@ FILES=$(git ls-files -- "src/batchedlogger.*" \
                         "src/test/dynamic_activation*.cpp" \
                         "src/test/evo*.cpp" \
                         "src/test/governance*.cpp" \
+                        "src/wallet/hdchain.*" \
                         "src/unordered_lru_cache.h")
 
 

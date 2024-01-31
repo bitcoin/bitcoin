@@ -203,7 +203,6 @@ BITCOIN_CORE_H = \
   gsl/assert.h \
   gsl/pointers.h \
   flat-database.h \
-  hdchain.h \
   flatfile.h \
   fs.h \
   httprpc.h \
@@ -371,6 +370,7 @@ BITCOIN_CORE_H = \
   wallet/crypter.h \
   wallet/db.h \
   wallet/fees.h \
+  wallet/hdchain.h \
   wallet/ismine.h \
   wallet/load.h \
   wallet/rpcwallet.h \
@@ -540,12 +540,12 @@ libbitcoin_wallet_a_SOURCES = \
   coinjoin/client.cpp \
   coinjoin/interfaces.cpp \
   coinjoin/util.cpp \
-  hdchain.cpp \
   wallet/coincontrol.cpp \
   wallet/context.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/fees.cpp \
+  wallet/hdchain.cpp \
   wallet/interfaces.cpp \
   wallet/load.cpp \
   wallet/rpcdump.cpp \

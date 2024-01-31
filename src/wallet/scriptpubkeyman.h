@@ -12,6 +12,7 @@
 #include <util/message.h>
 #include <util/time.h>
 #include <wallet/crypter.h>
+#include <wallet/hdchain.h>
 #include <wallet/ismine.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
