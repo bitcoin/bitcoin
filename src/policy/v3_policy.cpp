@@ -9,6 +9,7 @@
 #include <logging.h>
 #include <tinyformat.h>
 #include <util/check.h>
+#include <script/solver.h>
 
 #include <algorithm>
 #include <numeric>
@@ -159,6 +160,60 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
     return std::nullopt;
 }
 
+// Given the parent of a transaction that is being considered for the mempool,
+// check whether we should imbue the parent with v3-semantics. If it is so
+// imbued, then the child will be required to comply with the v3-child
+// semantics.
+bool ImbueV3Parent(const CTxMemPool::txiter it)
+{
+    const CTransaction& tx = it->GetTx();
+
+    // If it's labeled v3, then it's obviously v3.
+    if (tx.nVersion == 3) return true;
+
+    // We imbue v3-ness for a transaction if:
+    // 1) no in-mempool ancestors
+    if (it->GetCountWithAncestors() > 1) return false;
+
+    // 2) must be version 2
+    if (tx.nVersion != 2) return false;
+
+    // 3) must have 1 input
+    if (tx.vin.size() != 1) return false;
+
+    // 4) must have upper 8 bits of locktime == 0x20
+    if (tx.nLockTime >> 8*3 != 0x20) return false;
+
+    // 5) must have upper 8 bits of sequence == 0x80
+    if (tx.vin[0].nSequence >> 8*3 != 0x80) return false;
+
+    // 6) must have exactly 2 330-satoshi outputs (only case where carveout
+    // matters), and all outputs should be p2wsh, and outputs are sorted in
+    // increasing value order.
+    int num_330_sat_outputs{0};
+    for (size_t index=0; index<tx.vout.size(); ++index) {
+        const auto& output = tx.vout[index];
+
+        // Outputs are sorted in increasing nValue order.
+        if (index > 0 && output.nValue < tx.vout[index-1].nValue) return false;
+
+        // Check that the output is P2WSH.
+        int witnessversion;
+        std::vector<unsigned char> witnessprogram;
+        if (!output.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram) ||
+                witnessversion != 0 ||
+                witnessprogram.size() != WITNESS_V0_SCRIPTHASH_SIZE) {
+            return false;
+        }
+
+        // Track the number of 330-sat outputs.
+        if (output.nValue == 330) ++num_330_sat_outputs;
+    }
+    if (num_330_sat_outputs != 2) return false;
+
+    return true;
+}
+
 std::optional<std::string> SingleV3Checks(const CTransactionRef& ptx,
                                           const CTxMemPool::setEntries& mempool_ancestors,
                                           const std::set<Txid>& direct_conflicts,
@@ -177,12 +232,21 @@ std::optional<std::string> SingleV3Checks(const CTransactionRef& ptx,
         }
     }
 
+    bool imbue_v3_semantics{false};
+    for (const auto& entry : mempool_ancestors) {
+        imbue_v3_semantics |= ImbueV3Parent(entry);
+    }
+
+    if (!imbue_v3_semantics && ptx->nVersion != 3) {
+        // If this tx is not v3, and no ancestor matches the v3 template, then we are done.
+        return std::nullopt;
+    }
+
     // This function is specialized for these limits, and must be reimplemented if they ever change.
     static_assert(V3_ANCESTOR_LIMIT == 2);
     static_assert(V3_DESCENDANT_LIMIT == 2);
 
-    // The rest of the rules only apply to transactions with nVersion=3.
-    if (ptx->nVersion != 3) return std::nullopt;
+    // The rest of the rules only apply to transactions with nVersion=3, or that have imbued v3 semantics.
 
     // Check that V3_ANCESTOR_LIMIT would not be violated, including both in-package and in-mempool.
     if (mempool_ancestors.size() + 1 > V3_ANCESTOR_LIMIT) {
