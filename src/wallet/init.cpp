@@ -20,12 +20,12 @@
 #ifdef USE_BDB
 #include <wallet/bdb.h>
 #endif
+#include <wallet/bip39.h>
 #include <wallet/coincontrol.h>
 #include <wallet/hdchain.h>
 #include <wallet/wallet.h>
 #include <walletinitinterface.h>
 
-#include <bip39.h>
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
 
