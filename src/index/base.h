@@ -97,6 +97,7 @@ protected:
     std::unique_ptr<interfaces::Chain> m_chain;
     Chainstate* m_chainstate{nullptr};
     const std::string m_name;
+    const int m_start_height{0};
 
     void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
 
@@ -125,7 +126,7 @@ protected:
     void FatalErrorf(const char* fmt, const Args&... args);
 
 public:
-    BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name);
+    BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name, int start_height = 0);
     /// Destructor interrupts sync thread if running and blocks until it exits.
     virtual ~BaseIndex();
 
