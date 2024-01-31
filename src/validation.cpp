@@ -4925,6 +4925,8 @@ void ChainstateManager::CheckBlockIndex()
             assert(pindex->nTx > 0);
             // Assumed-valid blocks should connect to the main chain.
             assert((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TREE);
+            // Assumed-valid blocks should not be fully valid.
+            assert((pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_SCRIPTS);
         } else {
             // Otherwise there should only be an nTx value if we have
             // actually seen a block's transactions.

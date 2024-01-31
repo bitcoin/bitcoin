@@ -93,11 +93,15 @@ CreateAndActivateUTXOSnapshot(
             while (pindex && pindex != chain.m_chain.Tip()) {
                 pindex->nStatus &= ~BLOCK_HAVE_DATA;
                 pindex->nStatus &= ~BLOCK_HAVE_UNDO;
-                // We have to set the ASSUMED_VALID flag, because otherwise it
+                // Set the ASSUMED_VALID flag, because otherwise it
                 // would not be possible to have a block index entry without HAVE_DATA
                 // and with nTx > 0 (since we aren't setting the pruned flag);
+                // Also, downgrade from BLOCK_VALID_SCRIPTS, because
+                // assumed-valid can not be set for fully-valid blocks.
                 // see CheckBlockIndex().
                 pindex->nStatus |= BLOCK_ASSUMED_VALID;
+                pindex->nStatus &= ~BLOCK_VALID_SCRIPTS;
+                pindex->RaiseValidity(BLOCK_VALID_TREE);
                 pindex = pindex->pprev;
             }
         }
