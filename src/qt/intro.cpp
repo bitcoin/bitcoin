@@ -7,6 +7,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
+#include <chainparams.h>
 #include <fs.h>
 #include <qt/intro.h>
 #include <qt/forms/ui_intro.h>
@@ -119,7 +120,7 @@ int GetPruneTargetGB()
 } // namespace
 
 Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_size_gb) :
-    QDialog(parent),
+    QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::Intro),
     thread(nullptr),
     signalled(false),
@@ -182,7 +183,7 @@ void Intro::setDataDirectory(const QString &dataDir)
     }
 }
 
-bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& prune)
+bool Intro::showIfNeeded(bool& did_show_intro, bool& prune)
 {
     did_show_intro = false;
 
@@ -202,13 +203,13 @@ bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& pru
     {
         /* Use selectParams here to guarantee Params() can be used by node interface */
         try {
-            node.selectParams(gArgs.GetChainName());
+            SelectParams(gArgs.GetChainName());
         } catch (const std::exception&) {
             return false;
         }
 
         /* Let the user choose one */
-        Intro intro(0, node.getAssumedBlockchainSize(), node.getAssumedChainStateSize());
+        Intro intro(0, Params().AssumedBlockchainSize(), Params().AssumedChainStateSize());
         GUIUtil::disableMacFocusRect(&intro);
         GUIUtil::loadStyleSheet(true);
         intro.setDataDirectory(dataDirDefaultCurrent);
@@ -248,7 +249,7 @@ bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& pru
      * (to be consistent with dashd behavior)
      */
     if(dataDir != GUIUtil::getDefaultDataDirectory()) {
-        node.softSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
+        gArgs.SoftSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
     }
     return true;
 }

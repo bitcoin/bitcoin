@@ -132,7 +132,7 @@ void TestGUI(interfaces::Node& node)
     // Create widgets for sending coins and listing transactions.
     SendCoinsDialog sendCoinsDialog;
     TransactionView transactionView;
-    OptionsModel optionsModel(node);
+    OptionsModel optionsModel;
     ClientModel clientModel(node, &optionsModel);
     WalletModel walletModel(interfaces::MakeWallet(wallet), clientModel);
     sendCoinsDialog.setModel(&walletModel);

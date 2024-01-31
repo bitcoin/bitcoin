@@ -28,8 +28,9 @@ class SplashScreen : public QWidget
     Q_OBJECT
 
 public:
-    explicit SplashScreen(interfaces::Node& node, const NetworkStyle *networkStyle);
+    explicit SplashScreen(const NetworkStyle *networkStyle);
     ~SplashScreen();
+    void setNode(interfaces::Node& node);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -53,13 +54,16 @@ private:
     void subscribeToCoreSignals();
     /** Disconnect core signals to splash screen */
     void unsubscribeFromCoreSignals();
+    /** Initiate shutdown */
+    void shutdown();
 
     QPixmap pixmap;
     QString curMessage;
     QColor curColor;
     int curAlignment;
 
-    interfaces::Node& m_node;
+    interfaces::Node* m_node = nullptr;
+    bool m_shutdown = false;
     std::unique_ptr<interfaces::Handler> m_handler_init_message;
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
     std::unique_ptr<interfaces::Handler> m_handler_load_wallet;

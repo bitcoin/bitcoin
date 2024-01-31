@@ -21,7 +21,7 @@
 #include <QClipboard>
 
 SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget* parent) :
-    QDialog(parent),
+    QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::SignVerifyMessageDialog),
     model(nullptr),
     pageButtons(nullptr)

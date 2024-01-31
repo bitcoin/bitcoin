@@ -167,6 +167,17 @@ void PSBTOutput::Merge(const PSBTOutput& output)
     if (redeem_script.empty() && !output.redeem_script.empty()) redeem_script = output.redeem_script;
 }
 
+size_t CountPSBTUnsignedInputs(const PartiallySignedTransaction& psbt) {
+    size_t count = 0;
+    for (const auto& input : psbt.inputs) {
+        if (!PSBTInputSigned(input)) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
 void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index)
 {
     CMutableTransaction& tx = *Assert(psbt.tx);

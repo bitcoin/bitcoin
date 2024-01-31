@@ -105,7 +105,7 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
     check_addbook_size(2);
 
     // Initialize relevant QT models.
-    OptionsModel optionsModel(node);
+    OptionsModel optionsModel;
     ClientModel clientModel(node, &optionsModel);
     AddWallet(wallet);
     WalletModel walletModel(interfaces::MakeWallet(wallet), clientModel);

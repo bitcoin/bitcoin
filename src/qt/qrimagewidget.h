@@ -12,7 +12,8 @@
 static const int MAX_URI_LENGTH = 255;
 
 /* Size of exported QR Code image */
-static const int QR_IMAGE_SIZE = 300;
+static constexpr int QR_IMAGE_SIZE = 300;
+static constexpr int QR_IMAGE_MARGIN = 20;
 
 QT_BEGIN_NAMESPACE
 class QMenu;

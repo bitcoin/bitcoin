@@ -58,7 +58,7 @@ protected:
 };
 
 AddressBookPage::AddressBookPage(Mode _mode, Tabs _tab, QWidget* parent) :
-    QDialog(parent),
+    QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::AddressBookPage),
     model(nullptr),
     mode(_mode),
@@ -319,7 +319,7 @@ void AddressBookPage::on_exportButton_clicked()
     // CSV is currently the only supported format
     QString filename = GUIUtil::getSaveFileName(this,
         tr("Export Address List"), QString(),
-        tr("Comma separated file (*.csv)"), nullptr);
+        tr("Comma separated file", "Name of CSV file format") + QLatin1String(" (*.csv)"), nullptr);
 
     if (filename.isNull())
         return;
