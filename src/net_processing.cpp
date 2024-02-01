@@ -2565,10 +2565,10 @@ void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
         if (orphan_it == mapOrphanTransactions.end()) continue;
 
         const CTransactionRef porphanTx = orphan_it->second.tx;
-        TxValidationState state;
+        const MempoolAcceptResult result = AcceptToMemoryPool(m_chainman.ActiveChainstate(), m_mempool, porphanTx, false /* bypass_limits */);
+        const TxValidationState& state = result.m_state;
 
-        if (AcceptToMemoryPool(m_chainman.ActiveChainstate(), m_mempool, state, porphanTx,
-                false /* bypass_limits */)) {
+        if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             RelayTransaction(porphanTx->GetHash());
             for (unsigned int i = 0; i < porphanTx->vout.size(); i++) {
@@ -3642,9 +3642,10 @@ void PeerManagerImpl::ProcessMessage(
             return;
         }
 
-        TxValidationState state;
+        const MempoolAcceptResult result = AcceptToMemoryPool(m_chainman.ActiveChainstate(), m_mempool, ptx, false /* bypass_limits */);
+        const TxValidationState& state = result.m_state;
 
-        if (AcceptToMemoryPool(m_chainman.ActiveChainstate(), m_mempool, state, ptx, false /* bypass_limits */)) {
+        if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             // Process custom txes, this changes AlreadyHave to "true"
             if (nInvType == MSG_DSTX) {
                 LogPrint(BCLog::COINJOIN, "DSTX -- Masternode transaction accepted, txid=%s, peer=%d\n",

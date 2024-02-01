@@ -381,7 +381,7 @@ private:
 
 };
 
-bool ATMPIfSaneFee(CChainState& active_chainstate, CTxMemPool& pool, TxValidationState &state,
+bool ATMPIfSaneFee(CChainState& active_chainstate, CTxMemPool& pool,
                    const CTransactionRef &tx, bool test_accept = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 extern std::unique_ptr<CDSTXManager> dstxManager;

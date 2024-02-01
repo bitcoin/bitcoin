@@ -317,9 +317,8 @@ void CCoinJoinServer::CommitFinalTransaction()
     {
         // See if the transaction is valid
         TRY_LOCK(cs_main, lockMain);
-        TxValidationState validationState;
         mempool.PrioritiseTransaction(hashTx, 0.1 * COIN);
-        if (!lockMain || !ATMPIfSaneFee(m_chainstate, mempool, validationState, finalTransaction)) {
+        if (!lockMain || !ATMPIfSaneFee(m_chainstate, mempool, finalTransaction)) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CommitFinalTransaction -- AcceptToMemoryPool() error: Transaction not valid\n");
             WITH_LOCK(cs_coinjoin, SetNull());
             // not much we can do in this case, just notify clients
@@ -451,8 +450,7 @@ void CCoinJoinServer::ChargeRandomFees() const
 void CCoinJoinServer::ConsumeCollateral(const CTransactionRef& txref) const
 {
     LOCK(cs_main);
-    TxValidationState validationState;
-    if (!ATMPIfSaneFee(m_chainstate, mempool, validationState, txref, false /* bypass_limits */)) {
+    if (!ATMPIfSaneFee(m_chainstate, mempool, txref, false /* bypass_limits */)) {
         LogPrint(BCLog::COINJOIN, "%s -- AcceptToMemoryPool failed\n", __func__);
     } else {
         connman.RelayTransaction(*txref);
