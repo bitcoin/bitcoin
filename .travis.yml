@@ -186,7 +186,7 @@ after_success:
         - set -o errexit; source ./ci/lint/06_script.sh
 
     - stage: test
-      name: 'ARM  [GOAL: install]  [focal]  [unit tests, functional tests]'
+      name: 'ARM  [GOAL: install]  [focal]  [unit tests, no functional tests]'
       arch: arm64  # Can disable QEMU_USER_CMD and run the tests natively without qemu
       env: >-
         FILE_ENV="./ci/test/00_setup_env_arm.sh"
@@ -200,7 +200,7 @@ after_success:
         QEMU_USER_CMD=""
 
     - stage: test
-      name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no functional tests]'
+      name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no boost::process, no functional tests]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_win64.sh"
 
@@ -209,28 +209,11 @@ after_success:
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
 # x86_64 Linux (xenial, no depends, only system libs, sanitizers: thread (TSan))
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [depends, sanitizers: thread (TSan), no gui]'
-      # Not enough memory on travis machines, so feature_block is excluded for now
-      env: >-
-        TEST_RUNNER_EXTRA="--exclude feature_block"
-        FILE_ENV="./ci/test/00_setup_env_native_tsan.sh"
-
-# x86_64 Linux (no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer)
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_asan.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no wallet]'
+      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_fuzz.sh"
-
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, fuzzers under valgrind]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_fuzz_with_valgrind.sh"
 
     - stage: test
       name: 'x86_64 Linux [GOAL: install]  [focal]  [multiprocess]'
