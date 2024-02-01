@@ -8,8 +8,10 @@
 #include <kernel/mempool_persist.h>
 
 #include <chainparams.h>
+#include <common/args.h>
 #include <core_io.h>
 #include <kernel/mempool_entry.h>
+#include <net_processing.h> // for DEFAULT_PRIVATE_BROADCAST
 #include <node/mempool_persist_args.h>
 #include <policy/rbf.h>
 #include <policy/settings.h>
@@ -89,11 +91,14 @@ static RPCHelpMan sendrawtransaction()
             std::string err_string;
             AssertLockNotHeld(cs_main);
             NodeContext& node = EnsureAnyNodeContext(request.context);
+            const auto method = gArgs.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST) ?
+                                    NO_MEMPOOL_PRIVATE_BROADCAST :
+                                    ADD_TO_MEMPOOL_AND_BROADCAST_TO_ALL;
             const TransactionError err = BroadcastTransaction(node,
                                                               tx,
                                                               err_string,
                                                               max_raw_tx_fee,
-                                                              ADD_TO_MEMPOOL_AND_BROADCAST_TO_ALL,
+                                                              method,
                                                               /*wait_callback=*/true);
             if (TransactionError::OK != err) {
                 throw JSONRPCTransactionError(err, err_string);
