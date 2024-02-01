@@ -881,7 +881,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(wallet.getwalletinfo()["blank"], True)
         wallet.migratewallet()
         assert_equal(wallet.getwalletinfo()["blank"], True)
-
+        assert_equal(wallet.getwalletinfo()["descriptors"], True)
 
     def test_avoidreuse(self):
         self.log.info("Test that avoidreuse persists after migration")
