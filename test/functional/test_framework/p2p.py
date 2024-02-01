@@ -285,6 +285,9 @@ class P2PConnection(asyncio.Protocol):
         self.recvbuf = self.recvbuf[length:]
         if self.v2_state.tried_v2_handshake:
             self.send_version()
+            # process post-v2-handshake data immediately, if available
+            if len(self.recvbuf) > 0:
+                self._on_data()
 
     # Socket read methods
 
