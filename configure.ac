@@ -851,7 +851,10 @@ case $host in
      fi
 
      CORE_CPPFLAGS="$CORE_CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
-     OBJCXXFLAGS="$CXXFLAGS"
+
+     dnl ignore deprecated-declarations warnings coming from objcxx code
+     dnl "'NSUserNotificationCenter' is deprecated: first deprecated in macOS 11.0".
+     OBJCXXFLAGS="$CXXFLAGS -Wno-deprecated-declarations"
      ;;
    *android*)
      dnl make sure android stays above linux for hosts like *linux-android*
