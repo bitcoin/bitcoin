@@ -349,8 +349,12 @@ class AssetLocksTest(DashTestFramework):
         txid = self.send_tx(asset_unlock_tx)
         assert "assetUnlockTx" in node.getrawtransaction(txid, 1)
 
-        indexes_statuses = self.nodes[0].getassetunlockstatuses(["101", "102", "300"])
-        assert_equal([{'index': 101, 'status': 'mempooled'}, {'index': 102, 'status': 'unknown'}, {'index': 300, 'status': 'unknown'}], indexes_statuses)
+        tip = self.nodes[0].getblockcount()
+        indexes_statuses_no_height = self.nodes[0].getassetunlockstatuses(["101", "102", "300"])
+        assert_equal([{'index': 101, 'status': 'mempooled'}, {'index': 102, 'status': 'unknown'}, {'index': 300, 'status': 'unknown'}], indexes_statuses_no_height)
+        indexes_statuses_height = self.nodes[0].getassetunlockstatuses(["101", "102", "300"], tip)
+        assert_equal([{'index': 101, 'status': 'unknown'}, {'index': 102, 'status': 'unknown'}, {'index': 300, 'status': 'unknown'}], indexes_statuses_height)
+
 
         self.mempool_size += 1
         self.check_mempool_size()
@@ -524,8 +528,12 @@ class AssetLocksTest(DashTestFramework):
         node.generate(1)
         self.sync_all()
 
-        indexes_statuses = self.nodes[0].getassetunlockstatuses(["101", "102", "103"])
-        assert_equal([{'index': 101, 'status': 'mined'}, {'index': 102, 'status': 'mined'}, {'index': 103, 'status': 'unknown'}], indexes_statuses)
+        tip = self.nodes[0].getblockcount()
+        indexes_statuses_no_height = self.nodes[0].getassetunlockstatuses(["101", "102", "103"])
+        assert_equal([{'index': 101, 'status': 'mined'}, {'index': 102, 'status': 'mined'}, {'index': 103, 'status': 'unknown'}], indexes_statuses_no_height)
+        indexes_statuses_height = self.nodes[0].getassetunlockstatuses(["101", "102", "103"], tip)
+        assert_equal([{'index': 101, 'status': 'chainlocked'}, {'index': 102, 'status': 'chainlocked'}, {'index': 103, 'status': 'unknown'}], indexes_statuses_height)
+
 
         self.log.info("generate many blocks to be sure that mempool is empty after expiring txes...")
         self.slowly_generate_batch(60)

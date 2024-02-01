@@ -438,13 +438,14 @@ static void getassetunlockstatuses_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{
             "getassetunlockstatuses",
-            "\nReturns the status of given Asset Unlock indexes.\n",
+            "\nReturns the status of given Asset Unlock indexes at the tip of the chain or at a specific block height if specified.\n",
             {
                     {"indexes", RPCArg::Type::ARR, RPCArg::Optional::NO, "The Asset Unlock indexes (no more than 100)",
                      {
                              {"index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "An Asset Unlock index"},
                      },
                     },
+                    {"height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The maximum block height to check"},
             },
             RPCResult{
                     RPCResult::Type::ARR, "", "Response is an array with the same size as the input txids",
@@ -488,27 +489,43 @@ static UniValue getassetunlockstatuses(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No blocks in chain");
     }
 
-    const auto pBlockIndexBestCL = [&]() -> const CBlockIndex* {
-        if (llmq_ctx.clhandler->GetBestChainLock().IsNull()) {
+    std::optional<CCreditPool> poolCL{std::nullopt};
+    std::optional<CCreditPool> poolOnTip{std::nullopt};
+    std::optional<int> nSpecificCoreHeight{std::nullopt};
+
+    if (!request.params[1].isNull()) {
+        nSpecificCoreHeight = request.params[1].get_int();
+        if (nSpecificCoreHeight.value() < 0 || nSpecificCoreHeight.value() > chainman.ActiveChain().Height()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
+        }
+        poolCL = std::make_optional(node.creditPoolManager->GetCreditPool(chainman.ActiveChain()[nSpecificCoreHeight.value()], Params().GetConsensus()));
+    }
+    else {
+        const auto pBlockIndexBestCL = [&]() -> const CBlockIndex* {
+            if (!llmq_ctx.clhandler->GetBestChainLock().IsNull()) {
+                return pTipBlockIndex->GetAncestor(llmq_ctx.clhandler->GetBestChainLock().getHeight());
+            }
             // If no CL info is available, try to use CbTx CL information
             if (const auto cbtx_best_cl = GetNonNullCoinbaseChainlock(pTipBlockIndex)) {
                 return pTipBlockIndex->GetAncestor(pTipBlockIndex->nHeight - cbtx_best_cl->second - 1);
             }
-        }
-        return nullptr;
-    }();
+            // no CL info, no CbTx CL
+            return nullptr;
+        }();
 
-    // We need in 2 credit pools: at tip of chain and on best CL to know if tx is mined or chainlocked
-    // Sometimes that's two different blocks, sometimes not and we need to initialize 2nd creditPoolManager
-    std::optional<CCreditPool> poolCL = pBlockIndexBestCL ?
-                                        std::make_optional(node.creditPoolManager->GetCreditPool(pBlockIndexBestCL, Params().GetConsensus())) :
-                                        std::nullopt;
-    auto poolOnTip = [&]() -> std::optional<CCreditPool> {
-        if (pTipBlockIndex != pBlockIndexBestCL) {
-            return std::make_optional(node.creditPoolManager->GetCreditPool(pTipBlockIndex, Params().GetConsensus()));
-        }
-        return std::nullopt;
-    }();
+        // We need in 2 credit pools: at tip of chain and on best CL to know if tx is mined or chainlocked
+        // Sometimes that's two different blocks, sometimes not and we need to initialize 2nd creditPoolManager
+        poolCL = pBlockIndexBestCL ?
+                 std::make_optional(node.creditPoolManager->GetCreditPool(pBlockIndexBestCL, Params().GetConsensus())) :
+                 std::nullopt;
+
+        poolOnTip = [&]() -> std::optional<CCreditPool> {
+            if (pTipBlockIndex != pBlockIndexBestCL) {
+                return std::make_optional(node.creditPoolManager->GetCreditPool(pTipBlockIndex, Params().GetConsensus()));
+            }
+            return std::nullopt;
+        }();
+    }
 
     for (const auto i : irange::range(str_indexes.size())) {
         UniValue obj(UniValue::VOBJ);
@@ -537,7 +554,7 @@ static UniValue getassetunlockstatuses(const JSONRPCRequest& request)
                     return false;
                 });
             }();
-            return is_mempooled ? "mempooled" : "unknown";
+            return is_mempooled && !nSpecificCoreHeight.has_value() ? "mempooled" : "unknown";
         };
         obj.pushKV("status", status_to_push());
         result_arr.push_back(obj);
@@ -1975,7 +1992,7 @@ void RegisterRawTransactionRPCCommands(CRPCTable &t)
 static const CRPCCommand commands[] =
 { //  category              name                            actor (function)            argNames
   //  --------------------- ------------------------        -----------------------     ----------
-    { "rawtransactions",    "getassetunlockstatuses",       &getassetunlockstatuses,    {"indexes"} },
+    { "rawtransactions",    "getassetunlockstatuses",       &getassetunlockstatuses,    {"indexes","height"} },
     { "rawtransactions",    "getrawtransaction",            &getrawtransaction,         {"txid","verbose","blockhash"} },
     { "rawtransactions",    "getrawtransactionmulti",       &getrawtransactionmulti,    {"txid_map","verbose"} },
     { "rawtransactions",    "gettxchainlocks",              &gettxchainlocks,           {"txids"} },
