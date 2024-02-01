@@ -889,19 +889,20 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, CSigShares
         return false;
     }
 
-    CQuorumCPtr quorum;
-    if (quorumHash.IsNull()) {
-        // This might end up giving different results on different members
-        // This might happen when we are on the brink of confirming a new quorum
-        // This gives a slight risk of not getting enough shares to recover a signature
-        // But at least it shouldn't be possible to get conflicting recovered signatures
-        // TODO fix this by re-signing when the next block arrives, but only when that block results in a change of the quorum list and no recovered signature has been created in the mean time
-        const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
-        assert(llmq_params_opt.has_value());
-        quorum = SelectQuorumForSigning(llmq_params_opt.value(), qman, id);
-    } else {
-        quorum = qman.GetQuorum(llmqType, quorumHash);
-    }
+    const CQuorumCPtr quorum = [&]() {
+        if (quorumHash.IsNull()) {
+            // This might end up giving different results on different members
+            // This might happen when we are on the brink of confirming a new quorum
+            // This gives a slight risk of not getting enough shares to recover a signature
+            // But at least it shouldn't be possible to get conflicting recovered signatures
+            // TODO fix this by re-signing when the next block arrives, but only when that block results in a change of the quorum list and no recovered signature has been created in the mean time
+            const auto &llmq_params_opt = Params().GetLLMQ(llmqType);
+            assert(llmq_params_opt.has_value());
+            return SelectQuorumForSigning(llmq_params_opt.value(), qman, id);
+        } else {
+            return qman.GetQuorum(llmqType, quorumHash);
+        }
+    }();
 
     if (!quorum) {
         LogPrint(BCLog::LLMQ, "CSigningManager::%s -- failed to select quorum. id=%s, msgHash=%s\n", __func__, id.ToString(), msgHash.ToString());
