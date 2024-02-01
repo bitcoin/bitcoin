@@ -17,4 +17,6 @@ export XCODE_BUILD_ID=15A240d
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export GOAL="deploy"
-export BITCOIN_CONFIG="--with-gui --enable-reduce-exports"
+# -Wno-error=deprecated-declarations is to disable errors for deprecation warnings:
+# "'NSUserNotificationCenter' is deprecated: first deprecated in macOS 11.0".
+export BITCOIN_CONFIG="--with-gui --enable-reduce-exports CXXFLAGS=-Wno-error=deprecated-declarations"

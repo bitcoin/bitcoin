@@ -9,7 +9,9 @@ export LC_ALL=C.UTF-8
 export HOST=x86_64-apple-darwin
 export PIP_PACKAGES="zmq"
 export GOAL="install"
-export BITCOIN_CONFIG="--with-gui --with-miniupnpc --with-natpmp --enable-reduce-exports"
+# -Wno-error=deprecated-declarations is to disable errors for deprecation warnings:
+# "'NSUserNotificationCenter' is deprecated: first deprecated in macOS 11.0".
+export BITCOIN_CONFIG="--with-gui --with-miniupnpc --with-natpmp --enable-reduce-exports CXXFLAGS=-Wno-error=deprecated-declarations"
 export CI_OS_NAME="macos"
 export NO_DEPENDS=1
 export OSX_SDK=""
