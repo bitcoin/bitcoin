@@ -1050,7 +1050,8 @@ static void submitchainlock_help(const JSONRPCRequest& request)
                        {"signature", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The signature of the ChainLock."},
                        {"blockHeight", RPCArg::Type::NUM, RPCArg::Optional::NO, "The height of the ChainLock."},
                },
-               RPCResults{},
+               RPCResult{
+                    RPCResult::Type::NUM, "", "The height of the current best ChainLock"},
                RPCExamples{""},
     }.Check(request);
 }
@@ -1065,6 +1066,9 @@ static UniValue submitchainlock(const JSONRPCRequest& request)
     if (nBlockHeight <= 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid block height");
     }
+    const LLMQContext& llmq_ctx = EnsureLLMQContext(EnsureAnyNodeContext(request.context));
+    const int32_t bestCLHeight = llmq_ctx.clhandler->GetBestChainLock().getHeight();
+    if (nBlockHeight <= bestCLHeight) return bestCLHeight;
 
     CBLSSignature sig;
     if (!sig.SetHexStr(request.params[1].get_str(), false) && !sig.SetHexStr(request.params[1].get_str(), true)) {
@@ -1072,14 +1076,13 @@ static UniValue submitchainlock(const JSONRPCRequest& request)
     }
 
 
-    const LLMQContext& llmq_ctx = EnsureLLMQContext(EnsureAnyNodeContext(request.context));
     auto clsig = llmq::CChainLockSig(nBlockHeight, nBlockHash, sig);
     if (!llmq_ctx.clhandler->VerifyChainLock(clsig)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature");
     }
 
     llmq_ctx.clhandler->ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig));
-    return true;
+    return llmq_ctx.clhandler->GetBestChainLock().getHeight();
 }
 
 
