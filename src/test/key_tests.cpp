@@ -345,4 +345,27 @@ BOOST_AUTO_TEST_CASE(bip341_test_h)
     BOOST_CHECK(XOnlyPubKey::NUMS_H == H);
 }
 
+BOOST_AUTO_TEST_CASE(key_serialization)
+{
+    {
+        DataStream s{};
+        CKey key;
+        BOOST_CHECK_EXCEPTION(s << key, std::ios_base::failure,
+                              HasReason{"invalid key"});
+
+        s << MakeByteSpan(std::vector<std::byte>(33, std::byte(0)));
+        BOOST_CHECK_EXCEPTION(s >> key, std::ios_base::failure,
+                              HasReason{"invalid key"});
+    }
+
+    for (bool compressed : {true, false}) {
+        CKey key{GenerateRandomKey(/*compressed=*/compressed)};
+        DataStream s{};
+        s << key;
+        CKey key_copy;
+        s >> key_copy;
+        BOOST_CHECK(key == key_copy);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
