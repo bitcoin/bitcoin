@@ -41,12 +41,12 @@
 #include <txrequest.h>
 #include <util/check.h>
 #include <util/strencodings.h>
+#include <util/time.h>
 #include <util/trace.h>
 #include <validation.h>
 
 #include <algorithm>
 #include <atomic>
-#include <chrono>
 #include <future>
 #include <memory>
 #include <optional>

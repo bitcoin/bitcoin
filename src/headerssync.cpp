@@ -5,8 +5,8 @@
 #include <headerssync.h>
 #include <logging.h>
 #include <pow.h>
-#include <timedata.h>
 #include <util/check.h>
+#include <util/time.h>
 #include <util/vector.h>
 
 // The two constants below are computed using the simulation script in
