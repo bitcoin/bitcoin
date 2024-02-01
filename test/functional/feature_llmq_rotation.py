@@ -76,6 +76,13 @@ class LLMQQuorumRotationTest(DashTestFramework):
 
         b_h_0 = self.nodes[0].getbestblockhash()
 
+        tip = self.nodes[0].getblockcount()
+        next_dkg = 24 - (tip % 24)
+        for node in self.nodes:
+            dkg_info = node.quorum("dkginfo")
+            assert_equal(dkg_info['active_dkgs'], 0)
+            assert_equal(dkg_info['next_dkg'], next_dkg)
+
         #Mine 2 quorums so that Chainlocks can be available: Need them to include CL in CbTx as soon as v20 activates
         self.log.info("Mining 2 quorums")
         h_0 = self.mine_quorum()
@@ -92,6 +99,18 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
         b_h_1 = self.nodes[0].getbestblockhash()
+
+        tip = self.nodes[0].getblockcount()
+        next_dkg = 24 - (tip % 24)
+        assert next_dkg < 24
+        nonzero_dkgs = 0
+        for i in range(len(self.nodes)):
+            dkg_info = self.nodes[i].quorum("dkginfo")
+            if i == 0:
+                assert_equal(dkg_info['active_dkgs'], 0)
+            nonzero_dkgs += dkg_info['active_dkgs']
+            assert_equal(dkg_info['next_dkg'], next_dkg)
+        assert_equal(nonzero_dkgs, 11) # 2 quorums 4 nodes each and 1 quorum of 3 nodes
 
         expectedDeleted = []
         expectedNew = [h_100_0, h_106_0, h_104_0, h_100_1, h_106_1, h_104_1]

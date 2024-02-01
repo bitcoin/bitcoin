@@ -789,6 +789,49 @@ static UniValue quorum_rotationinfo(const JSONRPCRequest& request, const LLMQCon
     return quorumRotationInfoRet.ToJson();
 }
 
+static void quorum_dkginfo_help(const JSONRPCRequest& request)
+{
+    RPCHelpMan{
+        "quorum dkginfo",
+        "Return information regarding DKGs.\n",
+        {
+            {},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::NUM, "active_dkgs", "Total number of active DKG sessions this node is participating in right now"},
+                {RPCResult::Type::NUM, "next_dkg", "The number of blocks until the next potential DKG session"},
+            }
+        },
+        RPCExamples{""},
+    }.Check(request);
+}
+
+static UniValue quorum_dkginfo(const JSONRPCRequest& request, const LLMQContext& llmq_ctx, const ChainstateManager& chainman)
+{
+    quorum_dkginfo_help(request);
+
+    llmq::CDKGDebugStatus status;
+    llmq_ctx.dkg_debugman->GetLocalDebugStatus(status);
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKV("active_dkgs", int(status.sessions.size()));
+
+    const int nTipHeight{WITH_LOCK(cs_main, return chainman.ActiveChain().Height())};
+    auto minNextDKG = [](const Consensus::Params& consensusParams, int nTipHeight) {
+        int minDkgWindow{std::numeric_limits<int>::max()};
+        for (const auto& params: consensusParams.llmqs) {
+            if (params.useRotation && (nTipHeight % params.dkgInterval <= params.signingActiveQuorumCount)) {
+                return 1;
+            }
+            minDkgWindow = std::min(minDkgWindow, params.dkgInterval - (nTipHeight % params.dkgInterval));
+        }
+        return minDkgWindow;
+    };
+    ret.pushKV("next_dkg", minNextDKG(Params().GetConsensus(), nTipHeight));
+
+    return ret;
+}
 
 [[ noreturn ]] static void quorum_help()
 {
@@ -801,6 +844,7 @@ static UniValue quorum_rotationinfo(const JSONRPCRequest& request, const LLMQCon
             "  list              - List of on-chain quorums\n"
             "  listextended      - Extended list of on-chain quorums\n"
             "  info              - Return information about a quorum\n"
+            "  dkginfo           - Return information about DKGs\n"
             "  dkgsimerror       - Simulates DKG errors and malicious behavior\n"
             "  dkgstatus         - Return the status of the current DKG process\n"
             "  memberof          - Checks which quorums the given masternode is a member of\n"
@@ -836,6 +880,8 @@ static UniValue _quorum(const JSONRPCRequest& request)
         return quorum_list_extended(new_request, chainman, llmq_ctx);
     } else if (command == "quoruminfo") {
         return quorum_info(new_request, llmq_ctx);
+    } else if (command == "quorumdkginfo") {
+        return quorum_dkginfo(new_request, llmq_ctx, chainman);
     } else if (command == "quorumdkgstatus") {
         return quorum_dkgstatus(new_request, chainman, llmq_ctx);
     } else if (command == "quorummemberof") {
