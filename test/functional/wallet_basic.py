@@ -602,7 +602,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(total_txs, len(self.nodes[0].listtransactions("*", 99999)))
 
         # Test getaddressinfo on external address. Note that these addresses are taken from disablewallet.py
-        assert_raises_rpc_error(-5, "Invalid address", self.nodes[0].getaddressinfo, "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy")
+        assert_raises_rpc_error(-5, "Invalid prefix for Base58-encoded address", self.nodes[0].getaddressinfo, "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy")
         address_info = self.nodes[0].getaddressinfo("yjQ5gLvGRtmq1cwc4kePLCrzQ8GVCh9Gaz")
         assert_equal(address_info['address'], "yjQ5gLvGRtmq1cwc4kePLCrzQ8GVCh9Gaz")
         assert_equal(address_info["scriptPubKey"], "76a914fd2b4d101724a76374fccbc5b6df7670a75d7cd088ac")

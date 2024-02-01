@@ -38,10 +38,11 @@ public:
     std::string operator()(const CNoDestination& no) const { return {}; }
 };
 
-CTxDestination DecodeDestination(const std::string& str, const CChainParams& params)
+CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str)
 {
     std::vector<unsigned char> data;
     uint160 hash;
+    error_str = "";
     if (DecodeBase58Check(str, data, 21)) {
         // base58-encoded Dash addresses.
         // Public-key-hash-addresses have version 76 (or 140 testnet).
@@ -58,7 +59,13 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             std::copy(data.begin() + script_prefix.size(), data.end(), hash.begin());
             return ScriptHash(hash);
         }
+
+        // Set potential error message.
+        error_str = "Invalid prefix for Base58-encoded address";
     }
+    // Set error message if address can't be interpreted as Base58.
+    if (error_str.empty()) error_str = "Invalid address format";
+
     return CNoDestination();
 }
 } // namespace
@@ -148,14 +155,21 @@ std::string EncodeDestination(const CTxDestination& dest)
     return std::visit(DestinationEncoder(Params()), dest);
 }
 
+CTxDestination DecodeDestination(const std::string& str, std::string& error_msg)
+{
+    return DecodeDestination(str, Params(), error_msg);
+}
+
 CTxDestination DecodeDestination(const std::string& str)
 {
-    return DecodeDestination(str, Params());
+    std::string error_msg;
+    return DecodeDestination(str, error_msg);
 }
 
 bool IsValidDestinationString(const std::string& str, const CChainParams& params)
 {
-    return IsValidDestination(DecodeDestination(str, params));
+    std::string error_msg;
+    return IsValidDestination(DecodeDestination(str, params, error_msg));
 }
 
 bool IsValidDestinationString(const std::string& str)
