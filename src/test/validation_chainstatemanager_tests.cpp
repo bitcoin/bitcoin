@@ -15,7 +15,6 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
-#include <timedata.h>
 #include <uint256.h>
 #include <validation.h>
 #include <validationinterface.h>
