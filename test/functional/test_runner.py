@@ -235,6 +235,7 @@ BASE_SCRIPTS = [
     'p2p_filter.py',
     'p2p_blocksonly.py',
     'rpc_setban.py',
+    'rpc_setban.py --v2transport',
     'mining_prioritisetransaction.py',
     'p2p_invalid_locator.py',
     'p2p_invalid_block.py',
