@@ -50,7 +50,6 @@ public:
         T* ptr{};
     public:
         typedef Diff difference_type;
-        typedef T value_type;
         typedef T* pointer;
         typedef T& reference;
         using element_type = T;
@@ -102,7 +101,6 @@ public:
         const T* ptr{};
     public:
         typedef Diff difference_type;
-        typedef const T value_type;
         typedef const T* pointer;
         typedef const T& reference;
         using element_type = const T;
