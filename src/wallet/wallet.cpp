@@ -2034,7 +2034,7 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, std::string& err_string
     // If broadcast fails for any reason, trying to set wtx.m_state here would be incorrect.
     // If transaction was previously in the mempool, it should be updated when
     // TransactionRemovedFromMempool fires.
-    bool ret = chain().broadcastTransaction(wtx.tx, m_max_tx_fee, relay, err_string);
+    bool ret = chain().broadcastTransaction(wtx.tx, m_max_tx_fee, m_max_tx_fee_rate, relay, err_string);
     if (ret) wtx.m_state = TxStateInMempool{};
     return ret;
 }
