@@ -244,20 +244,19 @@ class AssumeutxoTest(BitcoinTestFramework):
                 tx = n1.getblockheader(block.hash)["nTx"]
                 chain_tx = n1.getchaintxstats(nblocks=1, blockhash=block.hash)["txcount"]
 
-                # Intermediate nTx of the starting block should be real, but nTx of
-                # later blocks should be fake 1 values set by snapshot loading code.
+                # Intermediate nTx of the starting block should be set, but nTx of
+                # later blocks should be 0 before they are downloaded.
                 if final or height == START_HEIGHT:
                     assert_equal(tx, block.tx)
                 else:
-                    assert_equal(tx, 1)
+                    assert_equal(tx, 0)
 
                 # Intermediate nChainTx of the starting block and snapshot block
-                # should be real, but others will be fake values set by snapshot
-                # loading code.
+                # should be set, but others should be 0 until they are downloaded.
                 if final or height in (START_HEIGHT, SNAPSHOT_BASE_HEIGHT):
                     assert_equal(chain_tx, block.chain_tx)
                 else:
-                    assert_equal(chain_tx, height + 1)
+                    assert_equal(chain_tx, 0)
 
         check_tx_counts(final=False)
 
