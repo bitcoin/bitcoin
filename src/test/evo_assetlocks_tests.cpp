@@ -149,7 +149,7 @@ BOOST_FIXTURE_TEST_CASE(evo_assetlock, TestChain100Setup)
 
     // Check version
     {
-        BOOST_CHECK(tx.nVersion == 3);
+        BOOST_CHECK(tx.IsSpecialTxVersion());
 
         const auto opt_payload = GetTxPayload<CAssetLockPayload>(tx);
 
@@ -350,7 +350,7 @@ BOOST_FIXTURE_TEST_CASE(evo_assetunlock, TestChain100Setup)
         BOOST_CHECK(tx_state.GetRejectReason() == "bad-assetunlocktx-type");
 
         // Check version of tx and payload
-        BOOST_CHECK(tx.nVersion == 3);
+        BOOST_CHECK(tx.IsSpecialTxVersion());
         for (uint8_t payload_version : {0, 1, 2, 255}) {
             CAssetUnlockPayload unlockPayload_tmp{payload_version,
                 unlockPayload->getIndex(),

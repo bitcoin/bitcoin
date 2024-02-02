@@ -161,8 +161,7 @@ unsigned int GetTransactionSigOpCount(const CTransaction& tx, const CCoinsViewCa
 
 bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee)
 {
-
-    if (bool isAssetUnlockTx = (tx.nVersion == 3 && tx.nType ==  TRANSACTION_ASSET_UNLOCK); isAssetUnlockTx) {
+    if (bool isAssetUnlockTx = (tx.IsSpecialTxVersion() && tx.nType == TRANSACTION_ASSET_UNLOCK); isAssetUnlockTx) {
         return GetAssetUnlockFee(tx, txfee, state);
     }
 

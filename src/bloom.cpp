@@ -121,7 +121,7 @@ bool CBloomFilter::CheckScript(const CScript &script) const
 // wallets, etc.)
 bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &tx)
 {
-    if(tx.nVersion != 3 || tx.nType == TRANSACTION_NORMAL) {
+    if (!tx.IsSpecialTxVersion() || tx.nType == TRANSACTION_NORMAL) {
         return false; // it is not a special transaction
     }
     switch(tx.nType) {

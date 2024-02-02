@@ -376,7 +376,7 @@ static bool ContextualCheckTransaction(const CTransaction& tx, TxValidationState
 
     if (fDIP0003Active_context) {
         // check version 3 transaction types
-        if (tx.nVersion >= 3) {
+        if (tx.IsSpecialTxVersion()) {
             if (tx.nType != TRANSACTION_NORMAL &&
                 tx.nType != TRANSACTION_PROVIDER_REGISTER &&
                 tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE &&
@@ -657,7 +657,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (!ContextualCheckTransaction(tx, state, chainparams.GetConsensus(), m_active_chainstate.m_chain.Tip()))
         return error("%s: ContextualCheckTransaction: %s, %s", __func__, hash.ToString(), state.ToString());
 
-    if (tx.nVersion == 3 && tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
+    if (tx.IsSpecialTxVersion() && tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
         // quorum commitment is not allowed outside of blocks
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "qc-not-allowed");
     }
@@ -800,7 +800,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // blocks
     // Checking of fee for MNHF_SIGNAL should be skipped: mnhf does not have
     // inputs, outputs, or fee
-    if (tx.nVersion != 3 || tx.nType != TRANSACTION_MNHF_SIGNAL) {
+    if (!tx.IsSpecialTxVersion() || tx.nType != TRANSACTION_MNHF_SIGNAL) {
         if (!bypass_limits && !CheckFeeRate(nSize, nModifiedFees, state)) return false;
     }
 

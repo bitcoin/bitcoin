@@ -224,7 +224,7 @@ public:
         s << vin;
         s << vout;
         s << nLockTime;
-        if (this->nVersion == 3 && this->nType != TRANSACTION_NORMAL)
+        if (this->IsSpecialTxVersion() && this->nType != TRANSACTION_NORMAL)
             s << vExtraPayload;
     }
 
@@ -265,6 +265,11 @@ public:
     }
 
     std::string ToString() const;
+
+    bool IsSpecialTxVersion() const noexcept
+    {
+        return nVersion >= 3;
+    }
 };
 
 /** A mutable version of CTransaction. */
@@ -288,7 +293,7 @@ struct CMutableTransaction
         SER_READ(obj, obj.nVersion = (int16_t) (n32bitVersion & 0xffff));
         SER_READ(obj, obj.nType = (uint16_t) ((n32bitVersion >> 16) & 0xffff));
         READWRITE(obj.vin, obj.vout, obj.nLockTime);
-        if (obj.nVersion == 3 && obj.nType != TRANSACTION_NORMAL) {
+        if (obj.IsSpecialTxVersion() && obj.nType != TRANSACTION_NORMAL) {
             READWRITE(obj.vExtraPayload);
         }
     }
@@ -304,6 +309,11 @@ struct CMutableTransaction
     uint256 GetHash() const;
 
     std::string ToString() const;
+
+    bool IsSpecialTxVersion() const
+    {
+        return nVersion >= 3;
+    }
 };
 
 typedef std::shared_ptr<const CTransaction> CTransactionRef;
