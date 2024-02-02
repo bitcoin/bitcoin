@@ -5126,19 +5126,42 @@ void ChainstateManager::CheckBlockIndex()
         // Chainstate-specific checks on setBlockIndexCandidates
         for (auto c : GetAll()) {
             if (c->m_chain.Tip() == nullptr) continue;
+            // Two main factors determine whether pindex is a candidate in
+            // setBlockIndexCandidates:
+            //
+            // - If pindex has less work than the chain tip, it should not be a
+            //   candidate, and this will be asserted below. Otherwise it is a
+            //   potential candidate.
+            //
+            // - If pindex or one of its parent blocks never downloaded
+            //   transactions (pindexFirstNeverProcessed is non-null), it should
+            //   not be a candidate, and this will be asserted below. Otherwise
+            //   it is a potential candidate.
             if (!CBlockIndexWorkComparator()(pindex, c->m_chain.Tip()) && pindexFirstNeverProcessed == nullptr) {
+                // If pindex was detected as invalid (pindexFirstInvalid is
+                // non-null), it is not required to be in
+                // setBlockIndexCandidates.
                 if (pindexFirstInvalid == nullptr) {
-                    const bool is_active = c == &ActiveChainstate();
-                    // If this block sorts at least as good as the current tip and
-                    // is valid and we have all data for its parents, it must be in
-                    // setBlockIndexCandidates.  m_chain.Tip() must also be there
-                    // even if some data has been pruned.
+                    // If pindex and all its parents downloaded transactions,
+                    // and the transactions were not pruned (pindexFirstMissing
+                    // is null), it is a potential candidate. The check
+                    // excludes pruned blocks, because if any blocks were
+                    // pruned between pindex the current chain tip, pindex will
+                    // only temporarily be added to setBlockIndexCandidates,
+                    // before being moved to m_blocks_unlinked. This check
+                    // could be improved to verify that if all blocks between
+                    // the chain tip and pindex have data, pindex must be a
+                    // candidate.
                     //
+                    // If pindex is the chain tip, it also is a potential
+                    // candidate.
                     if ((pindexFirstMissing == nullptr || pindex == c->m_chain.Tip())) {
-                        // The active chainstate should always have this block
-                        // as a candidate, but a background chainstate should
-                        // only have it if it is an ancestor of the snapshot base.
-                        if (is_active || GetSnapshotBaseBlock()->GetAncestor(pindex->nHeight) == pindex) {
+                        // If this chainstate is the active chainstate, pindex
+                        // must be in setBlockIndexCandidates. Otherwise, this
+                        // chainstate is a background validation chainstate, and
+                        // pindex only needs to be added if it is an ancestor of
+                        // the snapshot that is being validated.
+                        if (c == &ActiveChainstate() || GetSnapshotBaseBlock()->GetAncestor(pindex->nHeight) == pindex) {
                             assert(c->setBlockIndexCandidates.count(pindex));
                         }
                     }
