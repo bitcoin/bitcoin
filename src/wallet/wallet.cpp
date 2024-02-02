@@ -4334,4 +4334,14 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     }
     return res;
 }
+
+void CWallet::CacheNewScriptPubKeys(const std::set<CScript>& spks, ScriptPubKeyMan* spkm)
+{
+}
+
+void CWallet::TopUpCallback(const std::set<CScript>& spks, ScriptPubKeyMan* spkm)
+{
+    // Update scriptPubKey cache
+    CacheNewScriptPubKeys(spks, spkm);
+}
 } // namespace wallet

@@ -31,6 +31,7 @@ struct bilingual_str;
 
 namespace wallet {
 struct MigrationData;
+class ScriptPubKeyMan;
 
 // Wallet storage things that ScriptPubKeyMans need in order to be able to store things to the wallet database.
 // It provides access to things that are part of the entire wallet and not specific to a ScriptPubKeyMan such as
@@ -51,6 +52,8 @@ public:
     virtual bool WithEncryptionKey(std::function<bool (const CKeyingMaterial&)> cb) const = 0;
     virtual bool HasEncryptionKeys() const = 0;
     virtual bool IsLocked() const = 0;
+    //! Callback function for after TopUp completes containining any scripts that were added by a SPKMan
+    virtual void TopUpCallback(const std::set<CScript>&, ScriptPubKeyMan*) = 0;
 };
 
 //! Constant representing an unknown spkm creation time
