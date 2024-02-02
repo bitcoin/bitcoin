@@ -324,6 +324,16 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info("Restarted node before snapshot validation completed, reloading...")
         self.restart_node(1, extra_args=self.extra_args[1])
+
+        # Send snapshot block to n1 out of order. This makes the test less
+        # realistic because normally the snapshot block is one of the last
+        # blocks downloaded, but its useful to test because it triggers more
+        # corner cases in ReceivedBlockTransactions() and CheckBlockIndex()
+        # setting and testing nChainTx values, and it exposed previous bugs.
+        snapshot_hash = n0.getblockhash(SNAPSHOT_BASE_HEIGHT)
+        snapshot_block = n0.getblock(snapshot_hash, 0)
+        n1.submitblock(snapshot_block)
+
         self.connect_nodes(0, 1)
 
         self.log.info(f"Ensuring snapshot chain syncs to tip. ({FINAL_HEIGHT})")
