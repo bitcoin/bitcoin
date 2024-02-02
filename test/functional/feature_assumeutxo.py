@@ -186,6 +186,14 @@ class AssumeutxoTest(BitcoinTestFramework):
             height = n0.getblockcount()
             hash = n0.getbestblockhash()
             blocks[height] = Block(hash, block_tx, blocks[height-1].chain_tx + block_tx)
+            if i == 4:
+                # Create a stale block that forks off the main chain before the snapshot.
+                temp_invalid = n0.getbestblockhash()
+                n0.invalidateblock(temp_invalid)
+                stale_hash = self.generateblock(n0, output="raw(aaaa)", transactions=[], sync_fun=self.no_op)["hash"]
+                n0.invalidateblock(stale_hash)
+                n0.reconsiderblock(temp_invalid)
+                stale_block = n0.getblock(stale_hash, 0)
 
 
         self.log.info("-- Testing assumeutxo + some indexes + pruning")
@@ -269,6 +277,15 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(snapshot['validated'], False)
 
         assert_equal(n1.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
+
+        self.log.info("Submit a stale block that forked off the chain before the snapshot")
+        # Normally a block like this would not be downloaded, but if it is
+        # submitted early before the background chain catches up to the fork
+        # point, it winds up in m_blocks_unlinked and triggers a corner case
+        # that previously crashed CheckBlockIndex.
+        n1.submitblock(stale_block)
+        n1.getchaintips()
+        n1.getblock(stale_hash)
 
         self.log.info("Submit a spending transaction for a snapshot chainstate coin to the mempool")
         # spend the coinbase output of the first block that is not available on node1
