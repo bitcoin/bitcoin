@@ -275,6 +275,7 @@ BASE_SCRIPTS = [
     'wallet_crosschain.py',
     'mining_basic.py',
     'feature_signet.py',
+    'p2p_mutated_blocks.py',
     'wallet_implicitsegwit.py --legacy-wallet',
     'rpc_named_arguments.py',
     'feature_startupnotify.py',
