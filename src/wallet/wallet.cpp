@@ -3891,6 +3891,8 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         if (ExtractDestination(script, dest)) not_migrated_dests.emplace(dest);
     }
 
+    Assume(!m_cached_spks.empty());
+
     for (auto& desc_spkm : data.desc_spkms) {
         if (m_spk_managers.count(desc_spkm->GetID()) > 0) {
             error = _("Error: Duplicate descriptors created during migration. Your wallet may be corrupted.");
@@ -4337,6 +4339,9 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
 
 void CWallet::CacheNewScriptPubKeys(const std::set<CScript>& spks, ScriptPubKeyMan* spkm)
 {
+    for (const auto& script : spks) {
+        m_cached_spks[script].push_back(spkm);
+    }
 }
 
 void CWallet::TopUpCallback(const std::set<CScript>& spks, ScriptPubKeyMan* spkm)
