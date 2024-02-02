@@ -225,7 +225,7 @@ isminetype LegacyScriptPubKeyMan::IsMine(const CScript& script) const
     assert(false);
 }
 
-bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys)
+bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key)
 {
     {
         LOCK(cs_KeyStore);
@@ -258,7 +258,7 @@ bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key
             LogPrintf("The wallet is probably corrupted: Some keys decrypt but not all.\n");
             throw std::runtime_error("Error unlocking wallet: some keys decrypt but not all. Your wallet file may be corrupt.");
         }
-        if (keyFail || (!keyPass && !accept_no_keys))
+        if (keyFail || !keyPass)
             return false;
         fDecryptionThoroughlyChecked = true;
     }
@@ -2049,7 +2049,7 @@ isminetype DescriptorScriptPubKeyMan::IsMine(const CScript& script) const
     return ISMINE_NO;
 }
 
-bool DescriptorScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys)
+bool DescriptorScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key)
 {
     LOCK(cs_desc_man);
     if (!m_map_keys.empty()) {
@@ -2074,7 +2074,7 @@ bool DescriptorScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master
         LogPrintf("The wallet is probably corrupted: Some keys decrypt but not all.\n");
         throw std::runtime_error("Error unlocking wallet: some keys decrypt but not all. Your wallet file may be corrupt.");
     }
-    if (keyFail || (!keyPass && !accept_no_keys)) {
+    if (keyFail || !keyPass) {
         return false;
     }
     m_decryption_thoroughly_checked = true;
