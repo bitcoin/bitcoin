@@ -419,7 +419,9 @@ bitcoin_test_check: $(TEST_BINARY) FORCE
 bitcoin_test_clean : FORCE
 	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_bitcoin_OBJECTS) $(TEST_BINARY)
 
-check-local: $(BITCOIN_TESTS:.cpp=.cpp.test)
+check-unit: $(BITCOIN_TESTS:.cpp=.cpp.test)
+
+check-local: check-unit
 if BUILD_BITCOIN_TX
 	@echo "Running test/util/test_runner.py..."
 	$(PYTHON) $(top_builddir)/test/util/test_runner.py
