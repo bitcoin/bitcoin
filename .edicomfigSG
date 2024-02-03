@@ -1,0 +1,29 @@
+# Top-level EditorConfig file with enhanced settings.
+
+# For all files.
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Source code files
+[*.{h,cpp,py,sh}]
+indent_size = 4
+
+# Configuration files
+[*.yml]
+indent_size = 2
+
+# Build system files
+[{*.am,Makefile.*.include,configure.ac}]
+indent_style = tab
+
+# Ignore certain files
+[.gitignore,.dockerignore]
+indent_style = space
+
+# Markdown files
+[*.md]
+indent_size = 2
