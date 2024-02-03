@@ -23,6 +23,7 @@
 #include <rpc/server.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/time.h>
 #include <util/threadnames.h>
 
 #include <univalue.h>
@@ -1227,7 +1228,7 @@ void RPCConsole::updateDetailWidget()
     // This check fails for example if the lock was busy and
     // nodeStateStats couldn't be fetched.
     if (stats->fNodeStateStatsAvailable) {
-        ui->timeoffset->setText(GUIUtil::formatTimeOffset(stats->nodeStateStats.time_offset));
+        ui->timeoffset->setText(GUIUtil::formatTimeOffset(Ticks<std::chrono::seconds>(stats->nodeStateStats.time_offset)));
         ui->peerServices->setText(GUIUtil::formatServicesStr(stats->nodeStateStats.their_services));
         // Sync height is init to -1
         if (stats->nodeStateStats.nSyncHeight > -1) {

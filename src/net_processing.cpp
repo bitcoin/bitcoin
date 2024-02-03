@@ -392,7 +392,7 @@ struct Peer {
 
     /** Time offset computed during the version handshake based on the
      * timestamp the peer sent in the version message. */
-    std::atomic<int64_t> m_time_offset{0};
+    std::atomic<std::chrono::seconds> m_time_offset{0s};
 
     explicit Peer(NodeId id, ServiceFlags our_services)
         : m_id{id}
@@ -3671,11 +3671,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                   peer->m_starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.GetId(),
                   remoteAddr, (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
 
-        peer->m_time_offset = nTime - GetTime();
+        peer->m_time_offset = NodeSeconds{std::chrono::seconds{nTime}} - Now<NodeSeconds>();
         if (!pfrom.IsInboundConn()) {
             // Don't use timedata samples from inbound peers to make it
             // harder for others to tamper with our adjusted time.
-            AddTimeData(pfrom.addr, peer->m_time_offset);
+            AddTimeData(pfrom.addr, Ticks<std::chrono::seconds>(peer->m_time_offset.load()));
         }
 
         // If the peer is old enough to have the old alert system, send it the final alert.

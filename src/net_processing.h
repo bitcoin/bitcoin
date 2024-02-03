@@ -9,6 +9,8 @@
 #include <net.h>
 #include <validationinterface.h>
 
+#include <chrono>
+
 class AddrMan;
 class CChainParams;
 class CTxMemPool;
@@ -41,7 +43,7 @@ struct CNodeStateStats {
     bool m_addr_relay_enabled{false};
     ServiceFlags their_services;
     int64_t presync_height{-1};
-    int64_t time_offset{0};
+    std::chrono::seconds time_offset{0};
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface
