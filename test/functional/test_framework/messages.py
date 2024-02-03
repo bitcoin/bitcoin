@@ -508,6 +508,11 @@ class CTransaction:
                 return False
         return True
 
+    # Calculate the virtual transaction size using
+    # serialization size (does NOT use sigops).
+    def get_vsize(self):
+        return len(self.serialize())
+
     def __repr__(self):
         return "CTransaction(nVersion=%i vin=%s vout=%s nLockTime=%i)" \
                % (self.nVersion, repr(self.vin), repr(self.vout), self.nLockTime)

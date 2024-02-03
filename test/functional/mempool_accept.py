@@ -66,7 +66,8 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
 
         self.log.info('Should not accept garbage to testmempoolaccept')
         assert_raises_rpc_error(-3, 'Expected type array, got string', lambda: node.testmempoolaccept(rawtxs='ff00baar'))
-        assert_raises_rpc_error(-8, 'Array must contain exactly one raw transaction for now', lambda: node.testmempoolaccept(rawtxs=['ff00baar', 'ff22']))
+        assert_raises_rpc_error(-8, 'Array must contain between 1 and 25 transactions.', lambda: node.testmempoolaccept(rawtxs=['ff22']*26))
+        assert_raises_rpc_error(-8, 'Array must contain between 1 and 25 transactions.', lambda: node.testmempoolaccept(rawtxs=[]))
         assert_raises_rpc_error(-22, 'TX decode failed', lambda: node.testmempoolaccept(rawtxs=['ff00baar']))
 
         self.log.info('A transaction already in the blockchain')
@@ -93,20 +94,22 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
         txid_0 = tx.rehash()
         self.check_mempool_result(
-            result_expected=[{'txid': txid_0, 'allowed': True}],
+            result_expected=[{'txid': txid_0, 'allowed': True, 'vsize': tx.get_vsize(), 'fees': {'base': Decimal(str(fee))}}],
             rawtxs=[raw_tx_0],
         )
 
         self.log.info('A final transaction not in the mempool')
         coin = coins.pop()  # Pick a random coin(base) to spend
+        output_amount = 0.025
         raw_tx_final = node.signrawtransactionwithwallet(node.createrawtransaction(
             inputs=[{'txid': coin['txid'], 'vout': coin['vout'], "sequence": 0xffffffff}],  # SEQUENCE_FINAL
-            outputs=[{node.getnewaddress(): 0.025}],
+            outputs=[{node.getnewaddress(): output_amount}],
             locktime=node.getblockcount() + 2000,  # Can be anything
         ))['hex']
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_final)))
+        fee_expected = int(coin['amount']) - output_amount
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': True}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': {'base': Decimal(str(fee_expected))}}],
             rawtxs=[tx.serialize().hex()],
             maxfeerate=0,
         )
@@ -190,7 +193,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
         # Reference tx should be valid on itself
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': True}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': True, 'vsize': tx.get_vsize(), 'fees': { 'base': Decimal(str(0.1 - 0.05))}}],
             rawtxs=[tx.serialize().hex()],
             maxfeerate=0,
         )

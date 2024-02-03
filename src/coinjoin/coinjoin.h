@@ -22,15 +22,19 @@
 #include <optional>
 #include <utility>
 
+class CChainState;
 class CConnman;
 class CBLSPublicKey;
 class CBlockIndex;
 class CMasternodeSync;
 class CTxMemPool;
+class TxValidationState;
 
 namespace llmq {
 class CChainLocksHandler;
 } // namespace llmq
+
+extern RecursiveMutex cs_main;
 
 // timeouts
 static constexpr int COINJOIN_AUTO_TIMEOUT_MIN = 5;
@@ -377,6 +381,8 @@ private:
 
 };
 
+bool ATMPIfSaneFee(CChainState& active_chainstate, CTxMemPool& pool,
+                   const CTransactionRef &tx, bool test_accept = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 extern std::unique_ptr<CDSTXManager> dstxManager;
 

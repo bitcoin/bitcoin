@@ -179,7 +179,11 @@ struct COrphanTx {
     size_t list_pos;
     size_t nTxSize;
 };
+
+/** Guards orphan transactions and extra txs for compact blocks */
 RecursiveMutex g_cs_orphans;
+/** Map from txid to orphan transaction record. Limited by
+ *  -maxorphantx/DEFAULT_MAX_ORPHAN_TRANSACTIONS */
 std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
 
 size_t nMapOrphanTransactionsSize = 0;
@@ -548,12 +552,19 @@ namespace {
             return &(*a) < &(*b);
         }
     };
+
+    /** Index from the parents' COutPoint into the mapOrphanTransactions. Used
+     *  to remove orphan transactions from the mapOrphanTransactions */
     std::map<COutPoint, std::set<std::map<uint256, COrphanTx>::iterator, IteratorComparator>> mapOrphanTransactionsByPrev GUARDED_BY(g_cs_orphans);
+    /** Orphan transactions in vector for quick random eviction */
+    std::vector<std::map<uint256, COrphanTx>::iterator> g_orphan_list GUARDED_BY(g_cs_orphans);
 
-    std::vector<std::map<uint256, COrphanTx>::iterator> g_orphan_list GUARDED_BY(g_cs_orphans); //! For random eviction
-
-    static size_t vExtraTxnForCompactIt GUARDED_BY(g_cs_orphans) = 0;
+    /** Orphan/conflicted/etc transactions that are kept for compact block reconstruction.
+     *  The last -blockreconstructionextratxn/DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN of
+     *  these are kept in a ring buffer */
     static std::vector<std::pair<uint256, CTransactionRef>> vExtraTxnForCompact GUARDED_BY(g_cs_orphans);
+    /** Offset into vExtraTxnForCompact to insert the next tx */
+    static size_t vExtraTxnForCompactIt GUARDED_BY(g_cs_orphans) = 0;
 } // namespace
 
 namespace {
@@ -837,13 +848,12 @@ void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid)
             }
         }
         m_connman.ForNode(nodeid, [this](CNode* pfrom){
-            AssertLockHeld(cs_main);
+            LockAssertion lock(::cs_main);
             uint64_t nCMPCTBLOCKVersion = 1;
             if (lNodesAnnouncingHeaderAndIDs.size() >= 3) {
                 // As per BIP152, we only get 3 of our peers to announce
                 // blocks using compact encodings.
                 m_connman.ForNode(lNodesAnnouncingHeaderAndIDs.front(), [this, nCMPCTBLOCKVersion](CNode* pnodeStop){
-                    AssertLockHeld(cs_main);
                     m_connman.PushMessage(pnodeStop, CNetMsgMaker(pnodeStop->GetCommonVersion()).Make(NetMsgType::SENDCMPCT, /*fAnnounceUsingCMPCTBLOCK=*/false, nCMPCTBLOCKVersion));
                     return true;
                 });
@@ -1716,7 +1726,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
     }
 
     m_connman.ForEachNode([this, &pcmpctblock, pindex, &msgMaker, &hashBlock](CNode* pnode) {
-        AssertLockHeld(cs_main);
+        LockAssertion lock(::cs_main);
         // TODO: Avoid the repeated-serialization here
         if (pnode->fDisconnect)
             return;
@@ -2533,13 +2543,20 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const std::vector<CBlo
     return;
 }
 
+/**
+ * Reconsider orphan transactions after a parent has been accepted to the mempool.
+ *
+ * @param[in/out]  orphan_work_set  The set of orphan transactions to reconsider. Generally only one
+ *                                  orphan will be reconsidered on each call of this function. This set
+ *                                  may be added to if accepting an orphan causes its children to be
+ *                                  reconsidered.
+ */
 void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(g_cs_orphans);
-    std::set<NodeId> setMisbehaving;
-    bool done = false;
-    while (!done && !orphan_work_set.empty()) {
+
+    while (!orphan_work_set.empty()) {
         const uint256 orphanHash = *orphan_work_set.begin();
         orphan_work_set.erase(orphan_work_set.begin());
 
@@ -2547,19 +2564,13 @@ void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
         if (orphan_it == mapOrphanTransactions.end()) continue;
 
         const CTransactionRef porphanTx = orphan_it->second.tx;
-        const CTransaction& orphanTx = *porphanTx;
-        NodeId fromPeer = orphan_it->second.fromPeer;
-        // Use a new TxValidationState because orphans come from different peers (and we call
-        // MaybePunishNodeForTx based on the source peer from the orphan map, not based on the peer
-        // that relayed the previous transaction).
-        TxValidationState orphan_state;
+        const MempoolAcceptResult result = AcceptToMemoryPool(m_chainman.ActiveChainstate(), m_mempool, porphanTx, false /* bypass_limits */);
+        const TxValidationState& state = result.m_state;
 
-        if (setMisbehaving.count(fromPeer)) continue;
-        if (AcceptToMemoryPool(m_chainman.ActiveChainstate(), m_mempool, orphan_state, porphanTx,
-                false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+        if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
-            RelayTransaction(orphanTx.GetHash());
-            for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
+            RelayTransaction(porphanTx->GetHash());
+            for (unsigned int i = 0; i < porphanTx->vout.size(); i++) {
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(orphanHash, i));
                 if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
                     for (const auto& elem : it_by_prev->second) {
@@ -2568,24 +2579,22 @@ void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
                 }
             }
             EraseOrphanTx(orphanHash);
-            done = true;
-        } else if (orphan_state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
-            if (orphan_state.IsInvalid()) {
-                // Punish peer that gave us an invalid orphan tx
-                if (MaybePunishNodeForTx(fromPeer, orphan_state)) {
-                    setMisbehaving.insert(fromPeer);
-                }
+            break;
+        } else if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
+            if (state.IsInvalid()) {
                 LogPrint(BCLog::MEMPOOL, "   invalid orphan tx %s\n", orphanHash.ToString());
+                // Maybe punish peer that gave us an invalid orphan tx
+                MaybePunishNodeForTx(orphan_it->second.fromPeer, state);
             }
             // Has inputs but not accepted to mempool
             // Probably non-standard or insufficient fee
             LogPrint(BCLog::MEMPOOL, "   removed orphan tx %s\n", orphanHash.ToString());
             m_recent_rejects.insert(orphanHash);
             EraseOrphanTx(orphanHash);
-            done = true;
+            break;
         }
-        m_mempool.check(m_chainman.ActiveChainstate());
     }
+    m_mempool.check(m_chainman.ActiveChainstate());
 }
 
 bool PeerManagerImpl::PrepareBlockFilterRequest(CNode& peer, const CChainParams& chain_params,
@@ -3616,10 +3625,26 @@ void PeerManagerImpl::ProcessMessage(
 
         LOCK2(cs_main, g_cs_orphans);
 
-        TxValidationState state;
+        if (AlreadyHave(inv)) {
+            if (pfrom.HasPermission(PF_FORCERELAY)) {
+                // Always relay transactions received from peers with forcerelay permission, even
+                // if they were already in the mempool,
+                // allowing the node to function as a gateway for
+                // nodes hidden behind it.
+                if (!m_mempool.exists(tx.GetHash())) {
+                    LogPrintf("Not relaying non-mempool transaction %s from forcerelay peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
+                } else {
+                    LogPrintf("Force relaying tx %s from peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
+                    RelayTransaction(tx.GetHash());
+                }
+            }
+            return;
+        }
 
-        if (!AlreadyHave(inv) && AcceptToMemoryPool(m_chainman.ActiveChainstate(), m_mempool, state, ptx,
-                false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+        const MempoolAcceptResult result = AcceptToMemoryPool(m_chainman.ActiveChainstate(), m_mempool, ptx, false /* bypass_limits */);
+        const TxValidationState& state = result.m_state;
+
+        if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             // Process custom txes, this changes AlreadyHave to "true"
             if (nInvType == MSG_DSTX) {
                 LogPrint(BCLog::COINJOIN, "DSTX -- Masternode transaction accepted, txid=%s, peer=%d\n",
@@ -3689,19 +3714,6 @@ void PeerManagerImpl::ProcessMessage(
             m_recent_rejects.insert(tx.GetHash());
             if (RecursiveDynamicUsage(*ptx) < 100000) {
                 AddToCompactExtraTransactions(ptx);
-            }
-
-            if (pfrom.HasPermission(PF_FORCERELAY)) {
-                // Always relay transactions received from peers with forcerelay permission, even
-                // if they were already in the mempool,
-                // allowing the node to function as a gateway for
-                // nodes hidden behind it.
-                if (!m_mempool.exists(tx.GetHash())) {
-                    LogPrintf("Not relaying non-mempool transaction %s from forcerelay peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
-                } else {
-                    LogPrintf("Force relaying tx %s from peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
-                    RelayTransaction(tx.GetHash());
-                }
             }
         }
 
@@ -4594,7 +4606,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(int64_t time_in_seconds)
         int64_t oldest_block_announcement = std::numeric_limits<int64_t>::max();
 
         m_connman.ForEachNode([&](CNode* pnode) {
-            AssertLockHeld(cs_main);
+            LockAssertion lock(::cs_main);
 
             // Don't disconnect masternodes just because they were slow in block announcement
             if (pnode->m_masternode_connection) return;
@@ -4613,7 +4625,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(int64_t time_in_seconds)
         });
         if (worst_peer != -1) {
             bool disconnected = m_connman.ForNode(worst_peer, [&](CNode *pnode) {
-                AssertLockHeld(cs_main);
+                LockAssertion lock(::cs_main);
 
                 // Only disconnect a peer that has been connected to us for
                 // some reasonable fraction of our check-frequency, to give

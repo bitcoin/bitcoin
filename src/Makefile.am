@@ -275,6 +275,7 @@ BITCOIN_CORE_H = \
   outputtype.h \
   policy/feerate.h \
   policy/fees.h \
+  policy/packages.h \
   policy/policy.h \
   policy/settings.h \
   pow.h \
@@ -483,6 +484,7 @@ libbitcoin_server_a_SOURCES = \
   node/ui_interface.cpp \
   noui.cpp \
   policy/fees.cpp \
+  policy/packages.cpp \
   policy/policy.cpp \
   policy/settings.cpp \
   pow.cpp \

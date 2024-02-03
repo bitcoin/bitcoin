@@ -294,15 +294,9 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
         // Add the txs to the tx pool
         {
             LOCK(cs_main);
-            TxValidationState state;
             for (const auto& tx : txs) {
-                BOOST_REQUIRE(AcceptToMemoryPool(
-                    ::ChainstateActive(),
-                    *m_node.mempool,
-                    state,
-                    tx,
-                    /* bypass_limits */ false,
-                    /* nAbsurdFee */ 0));
+                const MempoolAcceptResult result = AcceptToMemoryPool(::ChainstateActive(), *m_node.mempool, tx, false /* bypass_limits */);
+                BOOST_REQUIRE(result.m_result_type == MempoolAcceptResult::ResultType::VALID);
             }
         }
 

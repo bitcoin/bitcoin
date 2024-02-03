@@ -705,7 +705,7 @@ public:
     const std::string strTransactionTooLarge = "Transaction too large";
     const std::string strChangeIndexOutOfRange = "Change index out of range";
     const std::string strExceededMaxTries = "Exceeded max tries.";
-    const std::string strMaxFeeExceeded = "Fee exceeds maximum configured by -maxtxfee";
+    const std::string strMaxFeeExceeded = "Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)";
 
     CreateTransactionTestSetup()
     {

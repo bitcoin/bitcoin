@@ -306,6 +306,25 @@ bool CCoinJoinBaseSession::IsValidInOuts(const CTxMemPool& mempool, const std::v
     return true;
 }
 
+// Responsibility for checking fee sanity is moved from the mempool to the client (BroadcastTransaction)
+// but CoinJoin still requires ATMP with fee sanity checks so we need to implement them separately
+bool ATMPIfSaneFee(CChainState& active_chainstate, CTxMemPool& pool, const CTransactionRef &tx, bool test_accept) {
+    AssertLockHeld(cs_main);
+
+    const MempoolAcceptResult result = AcceptToMemoryPool(active_chainstate, pool, tx, /* bypass_limits */ false, /* test_accept */ true);
+    if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
+        /* Fetch fee and fast-fail if ATMP fails regardless */
+        return false;
+    } else if (result.m_base_fees.value() > DEFAULT_MAX_RAW_TX_FEE) {
+        /* Check fee against fixed upper limit */
+        return false;
+    } else if (test_accept) {
+        /* Don't re-run ATMP if only doing test run */
+        return true;
+    }
+    return AcceptToMemoryPool(active_chainstate, pool, tx, /* bypass_limits */ false, test_accept).m_result_type == MempoolAcceptResult::ResultType::VALID;
+}
+
 // check to make sure the collateral provided by the client is valid
 bool CoinJoin::IsCollateralValid(CTxMemPool& mempool, const CTransaction& txCollateral)
 {
@@ -351,8 +370,7 @@ bool CoinJoin::IsCollateralValid(CTxMemPool& mempool, const CTransaction& txColl
 
     {
         LOCK(cs_main);
-        TxValidationState validationState;
-        if (!AcceptToMemoryPool(::ChainstateActive(), mempool, validationState, MakeTransactionRef(txCollateral), /*bypass_limits=*/false, /*nAbsurdFee=*/DEFAULT_MAX_RAW_TX_FEE, /*test_accept=*/true)) {
+        if (!ATMPIfSaneFee(::ChainstateActive(), mempool, MakeTransactionRef(txCollateral), /*test_accept=*/true)) {
             LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- didn't pass AcceptToMemoryPool()\n");
             return false;
         }

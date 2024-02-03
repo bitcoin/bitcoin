@@ -24,8 +24,6 @@
 
 #include <univalue.h>
 
-constexpr static CAmount DEFAULT_MAX_RAW_TX_FEE{COIN / 10};
-
 PeerMsgRet CCoinJoinServer::ProcessMessage(CNode& peer, std::string_view msg_type, CDataStream& vRecv)
 {
     if (!fMasternodeMode) return {};
@@ -319,9 +317,8 @@ void CCoinJoinServer::CommitFinalTransaction()
     {
         // See if the transaction is valid
         TRY_LOCK(cs_main, lockMain);
-        TxValidationState validationState;
         mempool.PrioritiseTransaction(hashTx, 0.1 * COIN);
-        if (!lockMain || !AcceptToMemoryPool(m_chainstate, mempool, validationState, finalTransaction, false /* bypass_limits */, DEFAULT_MAX_RAW_TX_FEE /* nAbsurdFee */)) {
+        if (!lockMain || !ATMPIfSaneFee(m_chainstate, mempool, finalTransaction)) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CommitFinalTransaction -- AcceptToMemoryPool() error: Transaction not valid\n");
             WITH_LOCK(cs_coinjoin, SetNull());
             // not much we can do in this case, just notify clients
@@ -453,8 +450,7 @@ void CCoinJoinServer::ChargeRandomFees() const
 void CCoinJoinServer::ConsumeCollateral(const CTransactionRef& txref) const
 {
     LOCK(cs_main);
-    TxValidationState validationState;
-    if (!AcceptToMemoryPool(m_chainstate, mempool, validationState, txref, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+    if (!ATMPIfSaneFee(m_chainstate, mempool, txref, false /* bypass_limits */)) {
         LogPrint(BCLog::COINJOIN, "%s -- AcceptToMemoryPool failed\n", __func__);
     } else {
         connman.RelayTransaction(*txref);
