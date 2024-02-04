@@ -49,6 +49,7 @@ class PeerEarlyKey(P2PInterface):
     def __init__(self):
         super().__init__()
         self.v2_state = None
+        self.connection_opened = False
 
     def connection_made(self, transport):
         """64 bytes ellswift is sent in 2 parts during `initial_v2_handshake()`"""
@@ -59,6 +60,8 @@ class PeerEarlyKey(P2PInterface):
         # check that data can be received on recvbuf only when mismatch from V1_PREFIX happens (send_net_magic = False)
         assert self.v2_state.can_data_be_received and not self.v2_state.send_net_magic
 
+    def on_open(self):
+        self.connection_opened = True
 
 class P2PEarlyKey(BitcoinTestFramework):
     def set_test_params(self):
@@ -73,6 +76,7 @@ class P2PEarlyKey(BitcoinTestFramework):
         self.log.info('If a response is received, assertion failure would happen in our custom data_received() function')
         # send happens in `initiate_v2_handshake()` in `connection_made()`
         peer1 = node0.add_p2p_connection(PeerEarlyKey(), wait_for_verack=False, send_version=False, supports_v2_p2p=True)
+        self.wait_until(lambda: peer1.connection_opened)
         self.log.info('Sending remaining ellswift and garbage which are different from V1_PREFIX. Since a response is')
         self.log.info('expected now, our custom data_received() function wouldn\'t result in assertion failure')
         ellswift_and_garbage_data = peer1.v2_state.initiate_v2_handshake()

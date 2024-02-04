@@ -15,7 +15,6 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
-#include <timedata.h>
 #include <uint256.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -383,7 +382,6 @@ struct SnapshotTestSetup : TestChain100Setup {
             const ChainstateManager::Options chainman_opts{
                 .chainparams = ::Params(),
                 .datadir = chainman.m_options.datadir,
-                .adjusted_time_callback = GetAdjustedTime,
                 .notifications = *m_node.notifications,
             };
             const BlockManager::Options blockman_opts{

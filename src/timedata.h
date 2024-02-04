@@ -5,11 +5,8 @@
 #ifndef BITCOIN_TIMEDATA_H
 #define BITCOIN_TIMEDATA_H
 
-#include <util/time.h>
-
 #include <algorithm>
 #include <cassert>
-#include <chrono>
 #include <cstdint>
 #include <vector>
 
@@ -75,11 +72,10 @@ public:
 
 /** Functions to keep track of adjusted P2P time */
 int64_t GetTimeOffset();
-NodeClock::time_point GetAdjustedTime();
 void AddTimeData(const CNetAddr& ip, int64_t nTime);
 
 /**
- * Reset the internal state of GetTimeOffset(), GetAdjustedTime() and AddTimeData().
+ * Reset the internal state of GetTimeOffset() and AddTimeData().
  */
 void TestOnlyResetTimeData();
 

@@ -97,7 +97,7 @@ static constexpr bool DEFAULT_FIXEDSEEDS{true};
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
-static constexpr bool DEFAULT_V2_TRANSPORT{false};
+static constexpr bool DEFAULT_V2_TRANSPORT{true};
 
 typedef int64_t NodeId;
 
@@ -1004,6 +1004,12 @@ public:
 
     /** Handle removal of a peer (clear state) */
     virtual void FinalizeNode(const CNode& node) = 0;
+
+    /**
+     * Callback to determine whether the given set of service flags are sufficient
+     * for a peer to be "relevant".
+     */
+    virtual bool HasAllDesirableServiceFlags(ServiceFlags services) const = 0;
 
     /**
     * Process protocol messages received from a given node

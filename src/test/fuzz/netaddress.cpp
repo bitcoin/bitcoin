@@ -26,6 +26,12 @@ FUZZ_TARGET(netaddress)
     if (net_addr.GetNetwork() == Network::NET_ONION) {
         assert(net_addr.IsTor());
     }
+    if (net_addr.GetNetwork() == Network::NET_I2P) {
+        assert(net_addr.IsI2P());
+    }
+    if (net_addr.GetNetwork() == Network::NET_CJDNS) {
+        assert(net_addr.IsCJDNS());
+    }
     if (net_addr.GetNetwork() == Network::NET_INTERNAL) {
         assert(net_addr.IsInternal());
     }
@@ -68,6 +74,12 @@ FUZZ_TARGET(netaddress)
     }
     if (net_addr.IsTor()) {
         assert(net_addr.GetNetwork() == Network::NET_ONION);
+    }
+    if (net_addr.IsI2P()) {
+        assert(net_addr.GetNetwork() == Network::NET_I2P);
+    }
+    if (net_addr.IsCJDNS()) {
+        assert(net_addr.GetNetwork() == Network::NET_CJDNS);
     }
     (void)net_addr.IsValid();
     (void)net_addr.ToStringAddr();

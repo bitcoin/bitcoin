@@ -261,6 +261,18 @@ public:
         }
     }
 
+    /**
+     * BIP155 network ids recognized by this software.
+     */
+    enum BIP155Network : uint8_t {
+        IPV4 = 1,
+        IPV6 = 2,
+        TORV2 = 3,
+        TORV3 = 4,
+        I2P = 5,
+        CJDNS = 6,
+    };
+
     friend class CSubNet;
 
 private:
@@ -281,18 +293,6 @@ private:
      * @see CNetAddr::IsI2P()
      */
     bool SetI2P(const std::string& addr);
-
-    /**
-     * BIP155 network ids recognized by this software.
-     */
-    enum BIP155Network : uint8_t {
-        IPV4 = 1,
-        IPV6 = 2,
-        TORV2 = 3,
-        TORV3 = 4,
-        I2P = 5,
-        CJDNS = 6,
-    };
 
     /**
      * Size of CNetAddr when serialized as ADDRv1 (pre-BIP155) (in bytes).
