@@ -35,7 +35,6 @@
 #include <scheduler.h>
 #include <streams.h>
 #include <sync.h>
-#include <timedata.h>
 #include <tinyformat.h>
 #include <txmempool.h>
 #include <txorphanage.h>
@@ -3684,9 +3683,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         peer->m_time_offset = NodeSeconds{std::chrono::seconds{nTime}} - Now<NodeSeconds>();
         if (!pfrom.IsInboundConn()) {
-            // Don't use time offset samples from inbound peers to make it
+            // Don't use timedata samples from inbound peers to make it
             // harder for others to create false warnings about our clock being out of sync.
-            AddTimeData(pfrom.addr, Ticks<std::chrono::seconds>(peer->m_time_offset.load()));
             m_outbound_time_offsets.Add(peer->m_time_offset);
             m_outbound_time_offsets.WarnIfOutOfSync();
         }
