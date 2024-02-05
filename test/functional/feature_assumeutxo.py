@@ -160,10 +160,13 @@ class AssumeutxoTest(BitcoinTestFramework):
         # though, we have to ferry over the new headers to n1 so that it
         # isn't waiting forever to see the header of the snapshot's base block
         # while disconnected from n0.
+        snapshot_nchaintx = n0.getblockcount() + 1
         for i in range(100):
             if i % 3 == 0:
                 self.mini_wallet.send_self_transfer(from_node=n0)
+                snapshot_nchaintx += 1
             self.generate(n0, nblocks=1, sync_fun=self.no_op)
+            snapshot_nchaintx += 1
             newblock = n0.getblock(n0.getbestblockhash(), 0)
 
             # make n1 aware of the new header, but don't give it the block.
@@ -185,7 +188,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(
             dump_output['txoutset_hash'],
             "a4bf3407ccb2cc0145c49ebba8fa91199f8a3903daf0883875941497d2493c27")
-        assert_equal(dump_output["nchaintx"], 334)
+        assert_equal(dump_output["nchaintx"], snapshot_nchaintx)
         assert_equal(n0.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
 
         # Mine more blocks on top of the snapshot that n1 hasn't yet seen. This
@@ -204,6 +207,30 @@ class AssumeutxoTest(BitcoinTestFramework):
         loaded = n1.loadtxoutset(dump_output['path'])
         assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
+
+        # After loading the snapshot, check nTx and nChainTx values in the
+        # starting block before loading the snapshot, the first block after it,
+        # the last block before the snapshot block, and the snapshot block.
+        start_hash = n1.getblockhash(height=START_HEIGHT)
+        start_next_hash = n1.getblockhash(height=START_HEIGHT+1)
+        snapshot_prev_hash = n1.getblockhash(height=SNAPSHOT_BASE_HEIGHT-1)
+        snapshot_hash = n1.getblockhash(height=SNAPSHOT_BASE_HEIGHT)
+
+        # nTx of the starting block should be 1 because it actually has one
+        # transaction. nTx of later blocks should be fake 1 values set by
+        # snapshot loading code.
+        assert_equal(n1.getblockheader(start_hash)["nTx"], 1)
+        assert_equal(n1.getblockheader(start_next_hash)["nTx"], 1)
+        assert_equal(n1.getblockheader(snapshot_prev_hash)["nTx"], 1)
+        assert_equal(n1.getblockheader(snapshot_hash)["nTx"], 1)
+
+        # nChainTx of the starting block should be its height + 1. nChainTx of
+        # the snapshot block should be snapshot_nchaintx. nChainTx of blocks in
+        # between these should be fake values set by snapshot loading code.
+        assert_equal(n1.getchaintxstats(nblocks=1, blockhash=start_hash)["txcount"], START_HEIGHT + 1)
+        assert_equal(n1.getchaintxstats(nblocks=1, blockhash=start_next_hash)["txcount"], START_HEIGHT + 2)
+        assert_equal(n1.getchaintxstats(nblocks=1, blockhash=snapshot_prev_hash)["txcount"], SNAPSHOT_BASE_HEIGHT)
+        assert_equal(n1.getchaintxstats(nblocks=1, blockhash=snapshot_hash)["txcount"], snapshot_nchaintx)
 
         normal, snapshot = n1.getchainstates()["chainstates"]
         assert_equal(normal['blocks'], START_HEIGHT)
