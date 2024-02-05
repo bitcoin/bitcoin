@@ -58,6 +58,21 @@ std::vector<CPubKey> HidingSigningProvider::GetAggregateParticipantPubkeys(const
     return m_provider->GetAggregateParticipantPubkeys(pubkey);
 }
 
+void HidingSigningProvider::SetMuSig2SecNonce(const uint256& id, MuSig2SecNonce&& nonce) const
+{
+    m_provider->SetMuSig2SecNonce(id, std::move(nonce));
+}
+
+std::optional<std::reference_wrapper<MuSig2SecNonce>> HidingSigningProvider::GetMuSig2SecNonce(const uint256& session_id) const
+{
+    return m_provider->GetMuSig2SecNonce(session_id);
+}
+
+void HidingSigningProvider::DeleteMuSig2Session(const uint256& session_id) const
+{
+    m_provider->DeleteMuSig2Session(session_id);
+}
+
 bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
 bool FlatSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const { return LookupHelper(pubkeys, keyid, pubkey); }
 bool FlatSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const
@@ -94,6 +109,24 @@ std::vector<CPubKey> FlatSigningProvider::GetAggregateParticipantPubkeys(const C
     return it->second;
 }
 
+void FlatSigningProvider::SetMuSig2SecNonce(const uint256& session_id, MuSig2SecNonce&& nonce) const
+{
+    if (!musig2_secnonces) return;
+    musig2_secnonces->emplace(session_id, std::move(nonce));
+}
+
+std::optional<std::reference_wrapper<MuSig2SecNonce>> FlatSigningProvider::GetMuSig2SecNonce(const uint256& session_id) const
+{
+    const auto& it = musig2_secnonces->find(session_id);
+    if (it == musig2_secnonces->end()) return std::nullopt;
+    return it->second;
+}
+
+void FlatSigningProvider::DeleteMuSig2Session(const uint256& session_id) const
+{
+    musig2_secnonces->erase(session_id);
+}
+
 FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
 {
     scripts.merge(b.scripts);
@@ -102,6 +135,7 @@ FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
     origins.merge(b.origins);
     tr_trees.merge(b.tr_trees);
     aggregate_pubkeys.merge(b.aggregate_pubkeys);
+    if (!musig2_secnonces) musig2_secnonces = b.musig2_secnonces;
     return *this;
 }
 
