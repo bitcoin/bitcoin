@@ -250,7 +250,7 @@ CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider,
 
 CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length) noexcept
 {
-    const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+    const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
     return {b.begin(), b.end()};
 }
 
