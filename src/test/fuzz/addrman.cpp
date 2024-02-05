@@ -39,13 +39,6 @@ void initialize_addrman()
     g_setup = testing_setup.get();
 }
 
-[[nodiscard]] inline NetGroupManager ConsumeNetGroupManager(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-    if (!SanityCheckASMap(asmap, 128)) asmap.clear();
-    return NetGroupManager(asmap);
-}
-
 FUZZ_TARGET(data_stream_addr_man, .init = initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};

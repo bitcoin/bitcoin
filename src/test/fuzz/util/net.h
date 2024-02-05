@@ -17,6 +17,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/net.h>
 #include <threadsafety.h>
+#include <util/asmap.h>
 #include <util/sock.h>
 
 #include <chrono>
@@ -195,6 +196,13 @@ public:
 [[nodiscard]] inline FuzzedSock ConsumeSock(FuzzedDataProvider& fuzzed_data_provider)
 {
     return FuzzedSock{fuzzed_data_provider};
+}
+
+[[nodiscard]] inline NetGroupManager ConsumeNetGroupManager(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
+    if (!SanityCheckASMap(asmap, 128)) asmap.clear();
+    return NetGroupManager(asmap);
 }
 
 inline CSubNet ConsumeSubNet(FuzzedDataProvider& fuzzed_data_provider) noexcept
