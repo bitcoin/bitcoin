@@ -32,8 +32,7 @@ std::optional<CPubKey> MuSig2AggregatePubkeys(const std::vector<CPubKey>& pubkey
 class MuSig2SecNonce
 {
 private:
-    //! The actual secnonce itself
-    secure_unique_ptr<secp256k1_musig_secnonce> m_nonce;
+    std::unique_ptr<MuSig2SecNonceImpl> m_impl;
 
 public:
     MuSig2SecNonce();
