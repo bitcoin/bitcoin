@@ -424,6 +424,7 @@ def main():
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
     parser.add_argument('--failfast', '-F', action='store_true', help='stop execution after the first test failure')
     parser.add_argument('--filter', help='filter scripts to run by regular expression')
+    parser.add_argument("--legacy-wallet", action='store_const', const=False, help="Run test using legacy wallets", dest='legacy_wallet')
 
 
     args, unknown_args = parser.parse_known_args()
@@ -535,9 +536,10 @@ def main():
         combined_logs_len=args.combinedlogslen,
         failfast=args.failfast,
         use_term_control=args.ansi,
+        legacy=args.legacy_wallet,
     )
 
-def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, use_term_control):
+def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, use_term_control, legacy=False):
     args = args or []
 
     # Warn if bitcoind is already running
@@ -572,7 +574,10 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
     if len(test_list) > 1 and jobs > 1:
         # Populate cache
         try:
-            subprocess.check_output([sys.executable, tests_dir + 'create_cache.py'] + flags + ["--tmpdir=%s/cache" % tmpdir])
+            # Disable '--descriptors' flag on create_cache if '--legacy-wallet' flag is provided
+            wallet_flag = '--legacy-wallet' if legacy else '--descriptors'
+
+            subprocess.check_output([sys.executable, tests_dir + 'create_cache.py'] + flags + [f"--tmpdir={tmpdir}/cache", wallet_flag])
         except subprocess.CalledProcessError as e:
             sys.stdout.buffer.write(e.output)
             raise
