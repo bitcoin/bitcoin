@@ -58,6 +58,11 @@ std::vector<CPubKey> HidingSigningProvider::GetMuSig2ParticipantPubkeys(const CP
     return m_provider->GetMuSig2ParticipantPubkeys(pubkey);
 }
 
+std::map<CPubKey, std::vector<CPubKey>> HidingSigningProvider::GetAllMuSig2ParticipantPubkeys() const
+{
+    return m_provider->GetAllMuSig2ParticipantPubkeys();
+}
+
 void HidingSigningProvider::SetMuSig2SecNonce(const uint256& id, MuSig2SecNonce&& nonce) const
 {
     m_provider->SetMuSig2SecNonce(id, std::move(nonce));
@@ -107,6 +112,11 @@ std::vector<CPubKey> FlatSigningProvider::GetMuSig2ParticipantPubkeys(const CPub
     std::vector<CPubKey> participant_pubkeys;
     LookupHelper(aggregate_pubkeys, pubkey, participant_pubkeys);
     return participant_pubkeys;
+}
+
+std::map<CPubKey, std::vector<CPubKey>> FlatSigningProvider::GetAllMuSig2ParticipantPubkeys() const
+{
+    return aggregate_pubkeys;
 }
 
 void FlatSigningProvider::SetMuSig2SecNonce(const uint256& session_id, MuSig2SecNonce&& nonce) const
