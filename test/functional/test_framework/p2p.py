@@ -188,6 +188,7 @@ class P2PConnection(asyncio.Protocol):
         self.on_connection_send_msg = None
         self.recvbuf = b""
         self.magic_bytes = MAGIC_BYTES[net]
+        self.p2p_connected_to_node = dstport != 0
 
     def peer_connect(self, dstaddr, dstport, *, net, timeout_factor, supports_v2_p2p):
         self.peer_connect_helper(dstaddr, dstport, net, timeout_factor)
