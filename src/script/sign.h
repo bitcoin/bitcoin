@@ -45,6 +45,8 @@ class MutableTransactionSignatureCreator : public BaseSignatureCreator
     const MutableTransactionSignatureChecker checker;
     const PrecomputedTransactionData* m_txdata;
 
+    std::optional<uint256> ComputeSchnorrSignatureHash(const uint256* leaf_hash, SigVersion sigversion) const;
+
 public:
     MutableTransactionSignatureCreator(const CMutableTransaction& tx LIFETIMEBOUND, unsigned int input_idx, const CAmount& amount, int hash_type);
     MutableTransactionSignatureCreator(const CMutableTransaction& tx LIFETIMEBOUND, unsigned int input_idx, const CAmount& amount, const PrecomputedTransactionData* txdata, int hash_type);
