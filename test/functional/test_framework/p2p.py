@@ -242,7 +242,7 @@ class P2PConnection(asyncio.Protocol):
         self.on_close()
 
     # v2 handshake method
-    def v2_handshake(self):
+    def _on_data_v2_handshake(self):
         """v2 handshake performed before P2P messages are exchanged (see BIP324). P2PConnection is the initiator
         (in inbound connections to TestNode) and the responder (in outbound connections from TestNode).
         Performed by:
@@ -298,7 +298,7 @@ class P2PConnection(asyncio.Protocol):
         if len(t) > 0:
             self.recvbuf += t
             if self.supports_v2_p2p and not self.v2_state.tried_v2_handshake:
-                self.v2_handshake()
+                self._on_data_v2_handshake()
             else:
                 self._on_data()
 
@@ -595,9 +595,7 @@ class P2PInterface(P2PConnection):
 
     def wait_for_reconnect(self, timeout=60):
         def test_function():
-            if not (self.is_connected and self.last_message.get('version') and self.v2_state is None):
-                return False
-            return True
+            return self.is_connected and self.last_message.get('version') and not self.supports_v2_p2p
         self.wait_until(test_function, timeout=timeout, check_connected=False)
 
     # Message receiving helper methods
