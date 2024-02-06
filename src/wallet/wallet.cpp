@@ -361,7 +361,7 @@ std::string COutput::ToString() const
 
 const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
 {
-    LOCK(cs_wallet);
+    AssertLockHeld(cs_wallet);
     std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(hash);
     if (it == mapWallet.end())
         return nullptr;
@@ -1326,15 +1326,13 @@ void CWallet::BlockUntilSyncedToCurrentChain() const {
 
 isminetype CWallet::IsMine(const CTxIn &txin) const
 {
+    AssertLockHeld(cs_wallet);
+    std::map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(txin.prevout.hash);
+    if (mi != mapWallet.end())
     {
-        LOCK(cs_wallet);
-        std::map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(txin.prevout.hash);
-        if (mi != mapWallet.end())
-        {
-            const CWalletTx& prev = (*mi).second;
-            if (txin.prevout.n < prev.tx->vout.size())
-                return IsMine(prev.tx->vout[txin.prevout.n]);
-        }
+        const CWalletTx& prev = (*mi).second;
+        if (txin.prevout.n < prev.tx->vout.size())
+            return IsMine(prev.tx->vout[txin.prevout.n]);
     }
     return ISMINE_NO;
 }
@@ -1487,16 +1485,19 @@ bool CWallet::IsFullyMixed(const COutPoint& outpoint) const
 
 isminetype CWallet::IsMine(const CTxOut& txout) const
 {
+    AssertLockHeld(cs_wallet);
     return IsMine(txout.scriptPubKey);
 }
 
 isminetype CWallet::IsMine(const CTxDestination& dest) const
 {
+    AssertLockHeld(cs_wallet);
     return IsMine(GetScriptForDestination(dest));
 }
 
 isminetype CWallet::IsMine(const CScript& script) const
 {
+    AssertLockHeld(cs_wallet);
     isminetype result = ISMINE_NO;
     for (const auto& spk_man_pair : m_spk_managers) {
         result = std::max(result, spk_man_pair.second->IsMine(script));
@@ -1508,6 +1509,7 @@ CAmount CWallet::GetCredit(const CTxOut& txout, const isminefilter& filter) cons
 {
     if (!MoneyRange(txout.nValue))
         throw std::runtime_error(std::string(__func__) + ": value out of range");
+    LOCK(cs_wallet);
     return ((IsMine(txout) & filter) ? txout.nValue : 0);
 }
 
@@ -1525,13 +1527,12 @@ bool CWallet::IsChange(const CScript& script) const
     // a better way of identifying which outputs are 'the send' and which are
     // 'the change' will need to be implemented (maybe extend CWalletTx to remember
     // which output, if any, was change).
+    AssertLockHeld(cs_wallet);
     if (IsMine(script))
     {
         CTxDestination address;
         if (!ExtractDestination(script, address))
             return true;
-
-        LOCK(cs_wallet);
         if (!FindAddressBookEntry(address)) {
             return true;
         }
@@ -1541,6 +1542,7 @@ bool CWallet::IsChange(const CScript& script) const
 
 CAmount CWallet::GetChange(const CTxOut& txout) const
 {
+    AssertLockHeld(cs_wallet);
     if (!MoneyRange(txout.nValue))
         throw std::runtime_error(std::string(__func__) + ": value out of range");
     return (IsChange(txout) ? txout.nValue : 0);
@@ -1548,6 +1550,7 @@ CAmount CWallet::GetChange(const CTxOut& txout) const
 
 bool CWallet::IsMine(const CTransaction& tx) const
 {
+    AssertLockHeld(cs_wallet);
     for (const CTxOut& txout : tx.vout)
         if (IsMine(txout))
             return true;
@@ -1606,6 +1609,7 @@ CAmount CWallet::GetCredit(const CTransaction& tx, const isminefilter& filter) c
 
 CAmount CWallet::GetChange(const CTransaction& tx) const
 {
+    LOCK(cs_wallet);
     CAmount nChange = 0;
     for (const CTxOut& txout : tx.vout)
     {
@@ -1846,6 +1850,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
         nFee = nDebit - nValueOut;
     }
 
+    LOCK(pwallet->cs_wallet);
     // Sent/received.
     for (unsigned int i = 0; i < tx->vout.size(); ++i)
     {
@@ -2340,6 +2345,7 @@ bool CWalletTx::IsTrusted(std::set<uint256>& trusted_parents) const
     if (!InMempool()) return false;
 
     // Trusted if all inputs are from us and are in the mempool:
+    LOCK(pwallet->cs_wallet);
     for (const CTxIn& txin : tx->vin)
     {
         // Transactions not sent by us: not trusted
@@ -3957,6 +3963,7 @@ DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256
 bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::string& strPurpose)
 {
     bool fUpdated = false;
+    bool is_mine;
     {
         LOCK(cs_wallet);
         std::map<CTxDestination, CAddressBookData>::iterator mi = m_address_book.find(address);
@@ -3964,8 +3971,9 @@ bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& add
         m_address_book[address].SetLabel(strName);
         if (!strPurpose.empty()) /* update purpose only if requested */
             m_address_book[address].purpose = strPurpose;
+        is_mine = IsMine(address) != ISMINE_NO;
     }
-    NotifyAddressBookChanged(this, address, strName, IsMine(address) != ISMINE_NO,
+    NotifyAddressBookChanged(this, address, strName, is_mine,
                              strPurpose, (fUpdated ? CT_UPDATED : CT_NEW) );
     if (!strPurpose.empty() && !batch.WritePurpose(EncodeDestination(address), strPurpose))
         return false;
@@ -3980,18 +3988,17 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& s
 
 bool CWallet::DelAddressBook(const CTxDestination& address)
 {
-    // If we want to delete receiving addresses, we need to take care that DestData "used" (and possibly newer DestData) gets preserved (and the "deleted" address transformed into a change entry instead of actually being deleted)
-    // NOTE: This isn't a problem for sending addresses because they never have any DestData yet!
-    // When adding new DestData, it should be considered here whether to retain or delete it (or move it?).
-    if (IsMine(address)) {
-        WalletLogPrintf("%s called with IsMine address, NOT SUPPORTED. Please report this bug! %s\n", __func__, PACKAGE_BUGREPORT);
-        return false;
-    }
-
+    bool is_mine;
     WalletBatch batch(GetDatabase());
     {
         LOCK(cs_wallet);
-
+        // If we want to delete receiving addresses, we need to take care that DestData "used" (and possibly newer DestData) gets preserved (and the "deleted" address transformed into a change entry instead of actually being deleted)
+        // NOTE: This isn't a problem for sending addresses because they never have any DestData yet!
+        // When adding new DestData, it should be considered here whether to retain or delete it (or move it?).
+        if (IsMine(address)) {
+            WalletLogPrintf("%s called with IsMine address, NOT SUPPORTED. Please report this bug! %s\n", __func__, PACKAGE_BUGREPORT);
+            return false;
+        }
         // Delete destdata tuples associated with address
         std::string strAddress = EncodeDestination(address);
         for (const std::pair<const std::string, std::string> &item : m_address_book[address].destdata)
@@ -3999,9 +4006,10 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
             batch.EraseDestData(strAddress, item.first);
         }
         m_address_book.erase(address);
+        is_mine = IsMine(address) != ISMINE_NO;
     }
 
-    NotifyAddressBookChanged(this, address, "", IsMine(address) != ISMINE_NO, "", CT_DELETED);
+    NotifyAddressBookChanged(this, address, "", is_mine, "", CT_DELETED);
 
     batch.ErasePurpose(EncodeDestination(address));
     return batch.EraseName(EncodeDestination(address));

@@ -100,23 +100,29 @@ CScript ParseScript(const std::string& s)
     return result;
 }
 
-bool DecodeHexTx(CMutableTransaction& tx, const std::string& strHexTx)
+static bool DecodeTx(CMutableTransaction& tx, const std::vector<unsigned char>& tx_data)
 {
-    if (!IsHex(strHexTx))
-        return false;
-
-    std::vector<unsigned char> txData(ParseHex(strHexTx));
-    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssData(tx_data, SER_NETWORK, PROTOCOL_VERSION);
     try {
         ssData >> tx;
-        if (!ssData.empty())
+        if (!ssData.empty()) {
             return false;
-    }
-    catch (const std::exception&) {
+        }
+    } catch (const std::exception&) {
         return false;
     }
 
     return true;
+}
+
+bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx)
+{
+    if (!IsHex(hex_tx)) {
+        return false;
+    }
+
+    std::vector<unsigned char> txData(ParseHex(hex_tx));
+    return DecodeTx(tx, txData);
 }
 
 bool DecodeHexBlockHeader(CBlockHeader& header, const std::string& hex_header)

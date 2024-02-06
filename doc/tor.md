@@ -8,6 +8,16 @@ may not. In particular, the Tor Browser Bundle defaults to listening on port 915
 See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort)
 for how to properly configure Tor.
 
+## How to see information about your Tor configuration via Dash Core
+
+There are several ways to see your local onion address in Dash Core:
+- in the debug log (grep for "tor:" or "AddLocal")
+- in the output of RPC `getnetworkinfo` in the "localaddresses" section
+- in the output of the CLI `-netinfo` peer connections dashboard
+
+You may set the `-debug=tor` config logging option to have additional
+information in the debug log about your Tor configuration.
+
 
 ## 1. Run Dash Core behind a Tor proxy
 
@@ -160,13 +170,18 @@ The directory can be different of course, but virtual port numbers should be equ
 your dashd's P2P listen port (9999 by default), and target addresses and ports
 should be equal to binding address and port for inbound Tor connections (127.0.0.1:9996 by default).
 
-	-externalip=X   You can tell Dash Core about its publicly reachable address using
-	                this option, and this can be a .onion address. Given the above
-	                configuration, you can find your .onion address in
+	-externalip=X   You can tell Dash Core about its publicly reachable addresses using
+	                this option, and this can be an onion address. Given the above
+	                configuration, you can find your onion address in
 	                /var/lib/tor/dashcore-service/hostname. For connections
 	                coming from unroutable addresses (such as 127.0.0.1, where the
-	                Tor proxy typically runs), .onion addresses are given
+	                Tor proxy typically runs), onion addresses are given
 	                preference for your node to advertise itself with.
+
+	                You can set multiple local addresses with -externalip. The
+	                one that will be rumoured to a particular peer is the most
+	                compatible one and also using heuristics, e.g. the address
+	                with the most incoming connections, etc.
 
 	-listen         You'll need to enable listening for incoming connections, as this
 	                is off by default behind a proxy.
@@ -180,7 +195,7 @@ should be equal to binding address and port for inbound Tor connections (127.0.0
 
 In a typical situation, where you're only reachable via Tor, this should suffice:
 
-	./dashd -proxy=127.0.0.1:9050 -externalip=ssapp53tmftyjmjb.onion -listen
+	./dashd -proxy=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -listen
 
 (obviously, replace the .onion address with your own). It should be noted that you still
 listen on all devices and another node could establish a clearnet connection, when knowing
@@ -198,7 +213,7 @@ and open port 9999 on your firewall (or use port mapping, i.e., `-upnp` or `-nat
 If you only want to use Tor to reach .onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:
 
-	./dashd -onion=127.0.0.1:9050 -externalip=ssapp53tmftyjmjb.onion -discover
+	./dashd -onion=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -discover
 
 
 ## 3.1. List of known Dash Core Tor relays

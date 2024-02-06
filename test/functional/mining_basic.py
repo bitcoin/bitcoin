@@ -13,6 +13,8 @@ from decimal import Decimal
 
 from test_framework.blocktools import (
     create_coinbase,
+    NORMAL_GBT_REQUEST_PARAMS,
+    TIME_GENESIS_BLOCK,
 )
 from test_framework.messages import (
     CBlock,
@@ -26,6 +28,8 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
+VERSIONBITS_TOP_BITS = 0x20000000
+VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT = 28
 
 def assert_template(node, block, expect, rehash=True):
     if rehash:
@@ -45,14 +49,23 @@ class MiningTest(BitcoinTestFramework):
 
     def mine_chain(self):
         self.log.info('Create some old blocks')
-        for _ in range(200):
+        for t in range(TIME_GENESIS_BLOCK, TIME_GENESIS_BLOCK + 200 * 156, 156):
             self.bump_mocktime(156)
             self.nodes[0].generate(1)
         mining_info = self.nodes[0].getmininginfo()
         assert_equal(mining_info['blocks'], 200)
         assert_equal(mining_info['currentblocktx'], 0)
         assert_equal(mining_info['currentblocksize'], 1000)
+
+        self.log.info('test blockversion')
+        self.restart_node(0, extra_args=['-mocktime={}'.format(t), '-blockversion=1337'])
+        self.connect_nodes(0, 1)
+        assert_equal(1337, self.nodes[0].getblocktemplate()['version'])
+        self.restart_node(0, extra_args=['-mocktime={}'.format(t)])
+        self.connect_nodes(0, 1)
+        assert_equal(VERSIONBITS_TOP_BITS + (1 << VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT), self.nodes[0].getblocktemplate()['version'])
         self.restart_node(0)
+        # TODO: replace with connect_nodes_bi
         self.connect_nodes(0, 1)
         self.connect_nodes(1, 0)
 
@@ -78,7 +91,7 @@ class MiningTest(BitcoinTestFramework):
 
         # Mine a block to leave initial block download
         node.generatetoaddress(1, node.get_deterministic_priv_key().address)
-        tmpl = node.getblocktemplate()
+        tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
         self.log.info("getblocktemplate: Test capability advertised")
         assert 'proposal' in tmpl['capabilities']
         assert 'coinbasetxn' not in tmpl

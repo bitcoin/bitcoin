@@ -7,7 +7,7 @@
 
 import random
 
-from test_framework.blocktools import COINBASE_MATURITY, create_block, create_coinbase
+from test_framework.blocktools import COINBASE_MATURITY, create_block, NORMAL_GBT_REQUEST_PARAMS
 from test_framework.messages import BlockTransactions, BlockTransactionsRequest, calculate_shortid, CBlock, CBlockHeader, CInv, COutPoint, CTransaction, CTxIn, CTxOut, FromHex, HeaderAndShortIDs, msg_block, msg_blocktxn, msg_cmpctblock, msg_getblocktxn, msg_getdata, msg_getheaders, msg_headers, msg_inv, msg_sendcmpct, msg_sendheaders, msg_tx, MSG_BLOCK, MSG_CMPCT_BLOCK, NODE_NETWORK, P2PHeaderAndShortIDs, PrefilledTransaction, ToHex, NODE_HEADERS_COMPRESSED
 from test_framework.p2p import p2p_lock, P2PInterface
 from test_framework.script import CScript, OP_TRUE, OP_DROP
@@ -103,10 +103,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def build_block_on_tip(self, node):
-        height = node.getblockcount()
-        tip = node.getbestblockhash()
-        mtp = node.getblockheader(tip)['mediantime']
-        block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
+        block = create_block(tmpl=node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
         block.solve()
         return block
 
@@ -718,6 +715,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(int(node.getbestblockhash(), 16), block.sha256)
 
     def run_test(self):
+        # Get the nodes out of IBD
+        self.nodes[0].generate(1)
+
         # Setup the p2p connections
         self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=1))
         self.old_node = self.nodes[0].add_p2p_connection(TestP2PConn(cmpct_version=1), services=NODE_NETWORK | NODE_HEADERS_COMPRESSED)

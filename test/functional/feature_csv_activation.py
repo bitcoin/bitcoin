@@ -151,7 +151,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
         # and '-dip3params=2000:2000' to create pre-dip3 blocks only
         self.extra_args = [[
             '-whitelist=noban@127.0.0.1',
-            '-blockversion=4',
             '-maxtipage=600100', '-dip3params=2000:2000',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]

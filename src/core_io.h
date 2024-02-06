@@ -24,7 +24,7 @@ struct CSpentIndexTxInfo;
 // core_read.cpp
 CScript ParseScript(const std::string& s);
 std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode = false);
-[[nodiscard]] bool DecodeHexTx(CMutableTransaction& tx, const std::string& strHexTx);
+[[nodiscard]] bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx);
 [[nodiscard]] bool DecodeHexBlk(CBlock&, const std::string& strHexBlk);
 bool DecodeHexBlockHeader(CBlockHeader&, const std::string& hex_header);
 /**

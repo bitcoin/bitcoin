@@ -214,20 +214,9 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
 
 UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman, bool txDetails)
 {
-    // Serialize passed information without accessing chain state of the active chain!
-    AssertLockNotHeld(cs_main); // For performance reasons
+    UniValue result = blockheaderToJSON(tip, blockindex, clhandler, isman);
 
-    UniValue result(UniValue::VOBJ);
-    result.pushKV("hash", blockindex->GetBlockHash().GetHex());
-    const CBlockIndex* pnext;
-    int confirmations = ComputeNextBlockAndDepth(tip, blockindex, pnext);
-    result.pushKV("confirmations", confirmations);
     result.pushKV("size", (int)::GetSerializeSize(block, PROTOCOL_VERSION));
-    result.pushKV("height", blockindex->nHeight);
-    result.pushKV("version", block.nVersion);
-    result.pushKV("versionHex", strprintf("%08x", block.nVersion));
-    result.pushKV("merkleroot", block.hashMerkleRoot.GetHex());
-    bool chainLock = clhandler.HasChainLock(blockindex->nHeight, blockindex->GetBlockHash());
     UniValue txs(UniValue::VARR);
     for(const auto& tx : block.vtx)
     {
@@ -236,7 +225,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
             UniValue objTx(UniValue::VOBJ);
             TxToUniv(*tx, uint256(), objTx, true);
             bool fLocked = isman.IsLocked(tx->GetHash());
-            objTx.pushKV("instantlock", fLocked || chainLock);
+            objTx.pushKV("instantlock", fLocked || result["chainlock"].get_bool());
             objTx.pushKV("instantlock_internal", fLocked);
             txs.push_back(objTx);
         }
@@ -249,20 +238,6 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
             result.pushKV("cbTx", opt_cbTx->ToJson());
         }
     }
-    result.pushKV("time", block.GetBlockTime());
-    result.pushKV("mediantime", (int64_t)blockindex->GetMedianTimePast());
-    result.pushKV("nonce", (uint64_t)block.nNonce);
-    result.pushKV("bits", strprintf("%08x", block.nBits));
-    result.pushKV("difficulty", GetDifficulty(blockindex));
-    result.pushKV("chainwork", blockindex->nChainWork.GetHex());
-    result.pushKV("nTx", (uint64_t)blockindex->nTx);
-
-    if (blockindex->pprev)
-        result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
-    if (pnext)
-        result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
-
-    result.pushKV("chainlock", chainLock);
 
     return result;
 }
@@ -1168,11 +1143,20 @@ static UniValue getblock(const JSONRPCRequest& request)
                             {
                                 {RPCResult::Type::STR_HEX, "hash", "the block hash (same as provided)"},
                                 {RPCResult::Type::NUM, "confirmations", "The number of confirmations, or -1 if the block is not on the main chain"},
-                                {RPCResult::Type::NUM, "size", "The block size"},
                                 {RPCResult::Type::NUM, "height", "The block height or index"},
                                 {RPCResult::Type::NUM, "version", "The block version"},
                                 {RPCResult::Type::STR_HEX, "versionHex", "The block version formatted in hexadecimal"},
                                 {RPCResult::Type::STR_HEX, "merkleroot", "The merkle root"},
+                                {RPCResult::Type::NUM_TIME, "time", "The block time expressed in " + UNIX_EPOCH_TIME},
+                                {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
+                                {RPCResult::Type::NUM, "nonce", "The nonce"},
+                                {RPCResult::Type::STR_HEX, "bits", "The bits"},
+                                {RPCResult::Type::NUM, "difficulty", "The difficulty"},
+                                {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the current chain"},
+                                {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
+                                {RPCResult::Type::STR_HEX, "previousblockhash", /* optional */ true, "The hash of the previous block (if available)"},
+                                {RPCResult::Type::STR_HEX, "nextblockhash", /* optional */ true, "The hash of the next block (if available)"},
+                                {RPCResult::Type::NUM, "size", "The block size"},
                                 {RPCResult::Type::ARR, "tx", "The transaction ids",
                                     {{RPCResult::Type::STR_HEX, "", "The transaction id"}}},
                                 {RPCResult::Type::OBJ, "cbTx", "The coinbase special transaction",
@@ -1182,15 +1166,6 @@ static UniValue getblock(const JSONRPCRequest& request)
                                         {RPCResult::Type::STR_HEX, "merkleRootMNList", "The merkle root of the masternode list"},
                                         {RPCResult::Type::STR_HEX, "merkleRootQuorums", "The merkle root of the quorum list"},
                                     }},
-                                {RPCResult::Type::NUM_TIME, "time",       "The block time expressed in " + UNIX_EPOCH_TIME},
-                                {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
-                                {RPCResult::Type::NUM, "nonce", "The nonce"},
-                                {RPCResult::Type::STR_HEX, "bits", "The bits"},
-                                {RPCResult::Type::NUM, "difficulty", "The difficulty"},
-                                {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the chain up to this block (in hex)"},
-                                {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
-                                {RPCResult::Type::STR_HEX, "previousblockhash", "The hash of the previous block"},
-                                {RPCResult::Type::STR_HEX, "nextblockhash", "The hash of the next block"},
                             }},
                     RPCResult{"for verbosity = 2",
                         RPCResult::Type::OBJ, "", "",
