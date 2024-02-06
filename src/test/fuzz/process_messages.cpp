@@ -12,6 +12,7 @@
 #include <test/util/mining.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
+#include <test/util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -33,9 +34,12 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
-    ConnmanTestMsg& connman = *(ConnmanTestMsg*)g_setup->m_node.connman.get();
-    std::vector<CNode*> peers;
+    ConnmanTestMsg& connman = *static_cast<ConnmanTestMsg*>(g_setup->m_node.connman.get());
+    TestChainState& chainstate = *static_cast<TestChainState*>(&g_setup->m_node.chainman->ActiveChainstate());
+    SetMockTime(1610000000); // any time to successfully reset ibd
+    chainstate.ResetIbd();
 
+    std::vector<CNode*> peers;
     const auto num_peers_to_add = fuzzed_data_provider.ConsumeIntegralInRange(1, 3);
     for (int i = 0; i < num_peers_to_add; ++i) {
         peers.push_back(ConsumeNodeAsUniquePtr(fuzzed_data_provider, i).release());
@@ -53,11 +57,14 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
     while (fuzzed_data_provider.ConsumeBool()) {
         const std::string random_message_type{fuzzed_data_provider.ConsumeBytesAsString(CMessageHeader::COMMAND_SIZE).c_str()};
 
+        const auto mock_time = ConsumeTime(fuzzed_data_provider);
+        SetMockTime(mock_time);
+
         CSerializedNetMsg net_msg;
         net_msg.command = random_message_type;
         net_msg.data = ConsumeRandomLengthByteVector(fuzzed_data_provider);
 
-        CNode& random_node = *peers.at(fuzzed_data_provider.ConsumeIntegralInRange<int>(0, peers.size() - 1));
+        CNode& random_node = *PickValue(fuzzed_data_provider, peers);
 
         (void)connman.ReceiveMsgFrom(random_node, net_msg);
         random_node.fPauseSend = false;

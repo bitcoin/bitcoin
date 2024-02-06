@@ -17,6 +17,7 @@
 #include <test/util/mining.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
+#include <test/util/validation.h>
 #include <validationinterface.h>
 #include <version.h>
 
@@ -73,7 +74,12 @@ void initialize_process_message()
 void fuzz_target(FuzzBufferType buffer, const std::string& LIMIT_TO_MESSAGE_TYPE)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    ConnmanTestMsg& connman = *(ConnmanTestMsg*)g_setup->m_node.connman.get();
+
+    ConnmanTestMsg& connman = *static_cast<ConnmanTestMsg*>(g_setup->m_node.connman.get());
+    TestChainState& chainstate = *static_cast<TestChainState*>(&g_setup->m_node.chainman->ActiveChainstate());
+    SetMockTime(1610000000); // any time to successfully reset ibd
+    chainstate.ResetIbd();
+
     const std::string random_message_type{fuzzed_data_provider.ConsumeBytesAsString(CMessageHeader::COMMAND_SIZE).c_str()};
     if (!LIMIT_TO_MESSAGE_TYPE.empty() && random_message_type != LIMIT_TO_MESSAGE_TYPE) {
         return;
@@ -85,6 +91,9 @@ void fuzz_target(FuzzBufferType buffer, const std::string& LIMIT_TO_MESSAGE_TYPE
     connman.AddTestNode(p2p_node);
     g_setup->m_node.peerman->InitializeNode(&p2p_node);
     FillNode(fuzzed_data_provider, p2p_node, /* init_version */ successfully_connected);
+
+    const auto mock_time = ConsumeTime(fuzzed_data_provider);
+    SetMockTime(mock_time);
 
     // fuzzed_data_provider is fully consumed after this call, don't use it
     CDataStream random_bytes_data_stream{fuzzed_data_provider.ConsumeRemainingBytes<unsigned char>(), SER_NETWORK, PROTOCOL_VERSION};
@@ -109,8 +118,16 @@ FUZZ_TARGET_MSG(blocktxn);
 FUZZ_TARGET_MSG(cfcheckpt);
 FUZZ_TARGET_MSG(cfheaders);
 FUZZ_TARGET_MSG(cfilter);
+FUZZ_TARGET_MSG(clsig);
 FUZZ_TARGET_MSG(cmpctblock);
-FUZZ_TARGET_MSG(feefilter);
+FUZZ_TARGET_MSG(dsa);
+FUZZ_TARGET_MSG(dsc);
+FUZZ_TARGET_MSG(dsf);
+FUZZ_TARGET_MSG(dsi);
+FUZZ_TARGET_MSG(dsq);
+FUZZ_TARGET_MSG(dss);
+FUZZ_TARGET_MSG(dssu);
+FUZZ_TARGET_MSG(dstx);
 FUZZ_TARGET_MSG(filteradd);
 FUZZ_TARGET_MSG(filterclear);
 FUZZ_TARGET_MSG(filterload);
@@ -122,17 +139,47 @@ FUZZ_TARGET_MSG(getcfheaders);
 FUZZ_TARGET_MSG(getcfilters);
 FUZZ_TARGET_MSG(getdata);
 FUZZ_TARGET_MSG(getheaders);
+FUZZ_TARGET_MSG(getheaders2);
+FUZZ_TARGET_MSG(getmnlistd);
+FUZZ_TARGET_MSG(getqrinfo);
+FUZZ_TARGET_MSG(getsporks);
+FUZZ_TARGET_MSG(govobj);
+FUZZ_TARGET_MSG(govobjvote);
+FUZZ_TARGET_MSG(govsync);
 FUZZ_TARGET_MSG(headers);
+FUZZ_TARGET_MSG(headers2);
 FUZZ_TARGET_MSG(inv);
+FUZZ_TARGET_MSG(isdlock);
 FUZZ_TARGET_MSG(mempool);
 FUZZ_TARGET_MSG(merkleblock);
+FUZZ_TARGET_MSG(mnauth);
+FUZZ_TARGET_MSG(mnlistdiff);
 FUZZ_TARGET_MSG(notfound);
 FUZZ_TARGET_MSG(ping);
 FUZZ_TARGET_MSG(pong);
+FUZZ_TARGET_MSG(qbsigs);
+FUZZ_TARGET_MSG(qcomplaint);
+FUZZ_TARGET_MSG(qcontrib);
+FUZZ_TARGET_MSG(qdata);
+FUZZ_TARGET_MSG(qfcommit);
+FUZZ_TARGET_MSG(qgetdata);
+FUZZ_TARGET_MSG(qgetsigs);
+FUZZ_TARGET_MSG(qjustify);
+FUZZ_TARGET_MSG(qpcommit);
+FUZZ_TARGET_MSG(qrinfo);
+FUZZ_TARGET_MSG(qsendrecsigs);
+FUZZ_TARGET_MSG(qsigrec);
+FUZZ_TARGET_MSG(qsigsesann);
+FUZZ_TARGET_MSG(qsigshare);
+FUZZ_TARGET_MSG(qsigsinv);
+FUZZ_TARGET_MSG(qwatch);
 FUZZ_TARGET_MSG(sendaddrv2);
 FUZZ_TARGET_MSG(sendcmpct);
+FUZZ_TARGET_MSG(senddsq);
 FUZZ_TARGET_MSG(sendheaders);
+FUZZ_TARGET_MSG(sendheaders2);
+FUZZ_TARGET_MSG(spork);
+FUZZ_TARGET_MSG(ssc);
 FUZZ_TARGET_MSG(tx);
 FUZZ_TARGET_MSG(verack);
 FUZZ_TARGET_MSG(version);
-FUZZ_TARGET_MSG(wtxidrelay);

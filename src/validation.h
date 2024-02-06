@@ -625,8 +625,7 @@ enum class CoinsCacheSizeState
  */
 class CChainState
 {
-private:
-
+protected:
     /**
      * Every received block is assigned a unique and increasing identifier, so we
      * know which one to give priority in case of a fork.
