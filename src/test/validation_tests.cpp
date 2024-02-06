@@ -4,11 +4,16 @@
 
 #include <chainparams.h>
 #include <consensus/amount.h>
+#include <consensus/merkle.h>
+#include <core_io.h>
+#include <hash.h>
 #include <net.h>
 #include <signet.h>
 #include <uint256.h>
 #include <util/chaintype.h>
 #include <validation.h>
+
+#include <string>
 
 #include <test/util/setup_common.h>
 
