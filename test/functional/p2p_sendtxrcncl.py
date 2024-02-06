@@ -29,6 +29,7 @@ class PeerNoVerack(P2PInterface):
         # Avoid sending verack in response to version.
         # When calling add_p2p_connection, wait_for_verack=False must be set (see
         # comment in add_p2p_connection).
+        self.send_version()
         if message.nVersion >= 70016 and self.wtxidrelay:
             self.send_message(msg_wtxidrelay())
 
@@ -43,7 +44,8 @@ class SendTxrcnclReceiver(P2PInterface):
 
 class P2PFeelerReceiver(SendTxrcnclReceiver):
     def on_version(self, message):
-        pass  # feeler connections can not send any message other than their own version
+        # feeler connections can not send any message other than their own version
+        self.send_version()
 
 
 class PeerTrackMsgOrder(P2PInterface):

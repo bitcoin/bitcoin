@@ -17,7 +17,7 @@ class P2PFeelerReceiver(P2PInterface):
         # message is received from the test framework. Don't send any responses
         # to the node's version message since the connection will already be
         # closed.
-        pass
+        self.send_version()
 
 class P2PAddConnections(BitcoinTestFramework):
     def set_test_params(self):

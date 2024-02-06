@@ -224,11 +224,10 @@ class P2PConnection(asyncio.Protocol):
         if self.supports_v2_p2p and self.v2_state.initiating and not self.v2_state.tried_v2_handshake:
             send_handshake_bytes = self.v2_state.initiate_v2_handshake()
             self.send_raw_message(send_handshake_bytes)
-        # if v2 connection, send `on_connection_send_msg` after initial v2 handshake.
-        # if reconnection situation, send `on_connection_send_msg` after version message is received in `on_version()`.
-        if self.on_connection_send_msg and not self.supports_v2_p2p and not self.reconnect:
-            self.send_message(self.on_connection_send_msg)
-            self.on_connection_send_msg = None  # Never used again
+        # for v1 outbound connections, send version message immediately after opening
+        # (for v2 outbound connections, send it after the initial v2 handshake)
+        if self.p2p_connected_to_node and not self.supports_v2_p2p:
+            self.send_version()
         self.on_open()
 
     def connection_lost(self, exc):
@@ -284,9 +283,13 @@ class P2PConnection(asyncio.Protocol):
         if not is_mac_auth:
             raise ValueError("invalid v2 mac tag in handshake authentication")
         self.recvbuf = self.recvbuf[length:]
-        if self.v2_state.tried_v2_handshake and self.on_connection_send_msg:
-            self.send_message(self.on_connection_send_msg)
-            self.on_connection_send_msg = None
+        if self.v2_state.tried_v2_handshake:
+            # for v2 outbound connections, send version message immediately after v2 handshake
+            if self.p2p_connected_to_node:
+                self.send_version()
+            # process post-v2-handshake data immediately, if available
+            if len(self.recvbuf) > 0:
+                self._on_data()
 
     # Socket read methods
 
@@ -557,11 +560,10 @@ class P2PInterface(P2PConnection):
 
     def on_version(self, message):
         assert message.nVersion >= MIN_P2P_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_P2P_VERSION_SUPPORTED)
-        # reconnection using v1 P2P has happened since version message can be processed, previously unsent version message is sent using v1 P2P here
-        if self.reconnect:
-            if self.on_connection_send_msg:
-                self.send_message(self.on_connection_send_msg)
-                self.on_connection_send_msg = None
+        # for inbound connections, reply to version with own version message
+        # (could be due to v1 reconnect after a failed v2 handshake)
+        if not self.p2p_connected_to_node:
+            self.send_version()
             self.reconnect = False
         if message.nVersion >= 70016 and self.wtxidrelay:
             self.send_message(msg_wtxidrelay())
@@ -675,6 +677,11 @@ class P2PInterface(P2PConnection):
         self.wait_until(test_function, timeout=timeout)
 
     # Message sending helper functions
+
+    def send_version(self):
+        if self.on_connection_send_msg:
+            self.send_message(self.on_connection_send_msg)
+            self.on_connection_send_msg = None  # Never used again
 
     def send_and_ping(self, message, timeout=60):
         self.send_message(message)
