@@ -3488,6 +3488,8 @@ static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& st
 
 static bool CheckMerkleRoot(const CBlock& block, BlockValidationState& state)
 {
+    if (block.m_checked_merkle_root) return true;
+
     bool mutated;
     uint256 hashMerkleRoot2 = BlockMerkleRoot(block, &mutated);
     if (block.hashMerkleRoot != hashMerkleRoot2)
@@ -3499,12 +3501,15 @@ static bool CheckMerkleRoot(const CBlock& block, BlockValidationState& state)
     if (mutated)
         return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "bad-txns-duplicate", "duplicate transaction");
 
+    block.m_checked_merkle_root = true;
     return true;
 }
 
 static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_commitment, BlockValidationState& state)
 {
     if (expect_witness_commitment) {
+        if (block.m_checked_witness_commitment) return true;
+
         int commitpos = GetWitnessCommitmentIndex(block);
         if (commitpos != NO_WITNESS_COMMITMENT) {
             bool malleated = false;
@@ -3520,6 +3525,7 @@ static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_comm
                 return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "bad-witness-merkle-match", strprintf("%s : witness merkle commitment mismatch", __func__));
             }
 
+            block.m_checked_witness_commitment = true;
             return true;
         }
     }
