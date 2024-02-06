@@ -20,7 +20,6 @@ class ArgsManager;
 struct bilingual_str;
 
 namespace wallet {
-void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename);
 
 class DatabaseCursor
 {
