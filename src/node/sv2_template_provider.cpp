@@ -86,6 +86,7 @@ Sv2TemplateProvider::Sv2TemplateProvider(ChainstateManager& chainman, CTxMemPool
     uint32_t valid_from = static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::seconds>(now).count()) - 3600;
     uint32_t valid_to =  std::numeric_limits<unsigned int>::max(); // 2106
     m_certificate = Sv2SignatureNoiseMessage(version, valid_from, valid_to, XOnlyPubKey(m_static_key.GetPubKey()), authority_key);
+    m_authority_pubkey = XOnlyPubKey(authority_key.GetPubKey());
 
     // TODO: get rid of Init() ???
     Init({});

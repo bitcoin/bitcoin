@@ -199,8 +199,8 @@ private:
     uint16_t m_port;
 
 public:
-    Mutex m_clients_mutex;
 
+    Mutex m_clients_mutex;
     Mutex m_tp_mutex;
 
     XOnlyPubKey m_authority_pubkey;
@@ -237,6 +237,25 @@ public:
      *  fails.
      */
     void ProcessMaybeSv2Handshake(Sv2Client& client, Span<std::byte> buffer);
+
+    /** Number of clients that are not marked for disconnection, used for tests. */
+    size_t ConnectedClients() EXCLUSIVE_LOCKS_REQUIRED(m_clients_mutex)
+    {
+        return std::count_if(m_sv2_clients.begin(), m_sv2_clients.end(), [](const auto& c) {
+            return !c->m_disconnect_flag;
+        });
+    }
+
+    /** Number of clients with m_setup_connection_confirmed, used for tests. */
+    size_t FullyConnectedClients() EXCLUSIVE_LOCKS_REQUIRED(m_clients_mutex)
+    {
+        return std::count_if(m_sv2_clients.begin(), m_sv2_clients.end(), [](const auto& c) {
+            return !c->m_disconnect_flag && c->m_setup_connection_confirmed;
+        });
+    }
+
+    /* Block templates that connected clients may be working on */
+    BlockTemplateCache& GetBlockTemplates() { return m_block_template_cache; }
 
 private:
     void Init(const Sv2TemplateProviderOptions& options);
