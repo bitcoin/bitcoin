@@ -94,6 +94,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   coins.cpp
   common/args.cpp
   common/bloom.cpp
+  common/bip352.cpp
   common/config.cpp
   common/init.cpp
   common/interfaces.cpp
