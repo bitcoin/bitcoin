@@ -164,7 +164,12 @@ void CQuorum::WriteContributions(CEvoDB& evoDb) const
 
     LOCK(cs);
     if (HasVerificationVector()) {
-        evoDb.GetRawDB().Write(std::make_pair(DB_QUORUM_QUORUM_VVEC, dbKey), *quorumVvec);
+        CDataStream s(SER_DISK, CLIENT_VERSION);
+        WriteCompactSize(s, quorumVvec->size());
+        for (auto& pubkey : *quorumVvec) {
+            s << CBLSPublicKeyVersionWrapper(pubkey, false);
+        }
+        evoDb.GetRawDB().Write(std::make_pair(DB_QUORUM_QUORUM_VVEC, dbKey), s);
     }
     if (skShare.IsValid()) {
         evoDb.GetRawDB().Write(std::make_pair(DB_QUORUM_SK_SHARE, dbKey), skShare);
@@ -174,17 +179,25 @@ void CQuorum::WriteContributions(CEvoDB& evoDb) const
 bool CQuorum::ReadContributions(CEvoDB& evoDb)
 {
     uint256 dbKey = MakeQuorumKey(*this);
+    CDataStream s(SER_DISK, CLIENT_VERSION);
 
-    std::vector<CBLSPublicKey> qv;
-    if (evoDb.Read(std::make_pair(DB_QUORUM_QUORUM_VVEC, dbKey), qv)) {
-        WITH_LOCK(cs, quorumVvec = std::make_shared<std::vector<CBLSPublicKey>>(std::move(qv)));
-    } else {
+    if (!evoDb.GetRawDB().ReadDataStream(std::make_pair(DB_QUORUM_QUORUM_VVEC, dbKey), s)) {
         return false;
     }
 
+    size_t vvec_size = ReadCompactSize(s);
+    CBLSPublicKey pubkey;
+    std::vector<CBLSPublicKey> qv;
+    for ([[maybe_unused]] size_t _ : irange::range(vvec_size)) {
+        s >> CBLSPublicKeyVersionWrapper(pubkey, false);
+        qv.emplace_back(pubkey);
+    }
+
+    LOCK(cs);
+    quorumVvec = std::make_shared<std::vector<CBLSPublicKey>>(std::move(qv));
     // We ignore the return value here as it is ok if this fails. If it fails, it usually means that we are not a
     // member of the quorum but observed the whole DKG process to have the quorum verification vector.
-    WITH_LOCK(cs, evoDb.Read(std::make_pair(DB_QUORUM_SK_SHARE, dbKey), skShare));
+    evoDb.GetRawDB().Read(std::make_pair(DB_QUORUM_SK_SHARE, dbKey), skShare);
 
     return true;
 }
