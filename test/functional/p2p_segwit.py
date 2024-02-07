@@ -5,7 +5,6 @@
 """Test segwit transactions and blocks on P2P network."""
 from decimal import Decimal
 import random
-import struct
 import time
 
 from test_framework.blocktools import (

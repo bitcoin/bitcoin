@@ -8,7 +8,6 @@ This file is modified from python-bitcoinlib.
 """
 
 from collections import namedtuple
-import struct
 import unittest
 
 from .key import TaggedHash, tweak_add_pubkey, compute_xonly_pubkey
