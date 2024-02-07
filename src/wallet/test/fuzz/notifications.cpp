@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <addresstype.h>
-#include <common/args.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <kernel/chain.h>
@@ -89,8 +88,6 @@ void ImportDescriptors(CWallet& wallet, const std::string& seed_insecure)
  * Wraps a descriptor wallet for fuzzing.
  */
 struct FuzzedWallet {
-    ArgsManager args;
-    WalletContext context;
     std::shared_ptr<CWallet> wallet;
     FuzzedWallet(const std::string& name, const std::string& seed_insecure)
     {
