@@ -747,7 +747,7 @@ def SegwitV0SignatureMsg(script, txTo, inIdx, hashtype, amount):
     ss += struct.pack("<q", amount)
     ss += struct.pack("<I", txTo.vin[inIdx].nSequence)
     ss += ser_uint256(hashOutputs)
-    ss += struct.pack("<i", txTo.nLockTime)
+    ss += txTo.nLockTime.to_bytes(4, "little")
     ss += struct.pack("<I", hashtype)
     return ss
 
