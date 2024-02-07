@@ -184,7 +184,9 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         }
         file.SetXor(xor_key);
 
-        file << (uint64_t)vinfo.size();
+        uint64_t mempool_transactions_to_write(vinfo.size());
+        file << mempool_transactions_to_write;
+        LogInfo("Writing %u mempool transactions to disk...\n", mempool_transactions_to_write);
         for (const auto& i : vinfo) {
             file << TX_WITH_WITNESS(*(i.tx));
             file << int64_t{count_seconds(i.m_time)};
@@ -205,9 +207,10 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         }
         auto last = SteadyClock::now();
 
-        LogPrintf("Dumped mempool: %.3fs to copy, %.3fs to dump\n",
+        LogInfo("Dumped mempool: %.3fs to copy, %.3fs to dump, %d bytes dumped to file\n",
                   Ticks<SecondsDouble>(mid - start),
-                  Ticks<SecondsDouble>(last - mid));
+                  Ticks<SecondsDouble>(last - mid),
+                  fs::file_size(dump_path));
     } catch (const std::exception& e) {
         LogPrintf("Failed to dump mempool: %s. Continuing anyway.\n", e.what());
         return false;
