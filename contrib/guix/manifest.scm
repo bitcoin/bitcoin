@@ -139,15 +139,17 @@ chain for " target " development."))
 ;; https://gcc.gnu.org/install/configure.html
 (define (hardened-gcc gcc)
   (package-with-extra-configure-variable (
-    package-with-extra-configure-variable gcc
-    "--enable-default-ssp" "yes")
-    "--enable-default-pie" "yes"))
+    package-with-extra-configure-variable (
+      package-with-extra-configure-variable gcc
+      "--enable-initfini-array" "yes")
+      "--enable-default-ssp" "yes")
+      "--enable-default-pie" "yes"))
 
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
                                        (base-gcc-for-libc base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc (hardened-glibc (make-glibc-without-werror glibc-2.28)))
+                                       (base-libc (hardened-glibc glibc-2.28))
                                        (base-gcc (make-gcc-rpath-link (hardened-gcc base-gcc))))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Dash Core release binaries."
@@ -233,7 +235,7 @@ thus should be able to compile on most platforms where these exist.")
     (license license:gpl3+))) ; license is with openssl exception
 
 (define-public python-elfesteem
-  (let ((commit "87bbd79ab7e361004c98cc8601d4e5f029fd8bd5"))
+  (let ((commit "2eb1e5384ff7a220fd1afacd4a0170acff54fe56"))
     (package
       (name "python-elfesteem")
       (version (git-version "0.1" "1" commit))
@@ -246,8 +248,7 @@ thus should be able to compile on most platforms where these exist.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "1nyvjisvyxyxnd0023xjf5846xd03lwawp5pfzr8vrky7wwm5maz"))
-      (patches (search-our-patches "elfsteem-value-error-python-39.patch"))))
+           "07x6p8clh11z8s1n2kdxrqwqm2almgc5qpkcr9ckb6y5ivjdr5r6"))))
       (build-system python-build-system)
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; PYTHONPATH problems, just disable the test
@@ -500,15 +501,16 @@ and endian independent.")
 inspecting signatures in Mach-O binaries.")
       (license license:expat))))
 
-(define (make-glibc-without-werror glibc)
-  (package-with-extra-configure-variable glibc "enable_werror" "no"))
-
 ;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
+;; We don't use --disable-werror directly, as that would be passed through to bash,
+;; and cause it's build to fail.
 (define (hardened-glibc glibc)
   (package-with-extra-configure-variable (
-    package-with-extra-configure-variable glibc
-    "--enable-stack-protector" "strong")
-    "--enable-bind-now" "yes"))
+    package-with-extra-configure-variable (
+      package-with-extra-configure-variable glibc
+      "enable_werror" "no")
+      "--enable-stack-protector" "strong")
+      "--enable-bind-now" "yes"))
 
 (define-public glibc-2.28
   (package
@@ -599,7 +601,7 @@ parse, modify and abstract ELF, PE and MachO formats.")
         ;; Scripting
         python-minimal ;; (3.9)
         ;; Git
-        git
+        git-minimal
         ;; Tests
         (fix-ppc64-nx-default lief))
   (let ((target (getenv "HOST")))
