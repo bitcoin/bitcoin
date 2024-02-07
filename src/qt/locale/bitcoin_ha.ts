@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;Sabontawa</translation>
+        <translation type="unfinished">&amp;Sabonta</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -19,7 +19,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">C&amp;Rufe</translation>
+        <translation type="unfinished">C&amp;ɓatar</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -52,14 +52,6 @@
     <message>
         <source>C&amp;hoose</source>
         <translation type="unfinished">c&amp;zaɓi</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">adireshin aikawa</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Adireshi da za a karba dashi</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>

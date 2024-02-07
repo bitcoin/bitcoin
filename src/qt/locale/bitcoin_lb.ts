@@ -1,32 +1,75 @@
-<TS version="2.1" language="gd">
+<TS version="2.1" language="lb">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Dèan briogadh deas airson seòladh no bileag a dheasachadh</translation>
+        <translation type="unfinished">Riets-drécken fir Redaktioun adress oder label</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Cruthaich seòladh ùr</translation>
+        <translation type="unfinished">Erschaf een nei adress</translation>
+    </message>
+    <message>
+        <source>&amp;New</source>
+        <translation type="unfinished">&amp;Nei</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Dèan lethbhreac den t-seòladh a chaidh a thaghadh an-dràsta gu cairt-bhòrd an t-siostaim</translation>
+        <translation type="unfinished">Kopéiert déi aktuell ausgewielte Adress an de System-Zwëschenofklaaf.</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Thoir às an seòladh a chaidh a thaghadh an-dràsta bhon liosta</translation>
+        <translation type="unfinished">Läscht déi aktuell ausgewielte Adress aus der Lëscht.</translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation type="unfinished">Gitt d'Adress oder d'Etikett an fir ze sichen.</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">Exportéiert déi Dateien op der aktueller Tabell an eng Datei.</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Tagh an seòladh airson buinn a chuir thuige</translation>
+        <translation type="unfinished">Wielt déi Adress, wou Dir d'Mënz hinschécken wëllt.</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation type="unfinished">Wielt déi Adress, fir Mënz mat ze erhuelen.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">Dat sinn är Bitcoin-Adressen fir Bezuelungen ze schécken. Iwwerpréift ëmmer de Betrag an d'Erhaltsadress virum Mënz ze schécken.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">Dat sinn är Bitcoin-Adressen fir Zuelungen ze erhuelen. Benotzt de 'Nei Erhaltsadress erstellen' Knäppchen am 'Erhalts'-Tab, fir nei Adressen ze erstellen. 
+D'Signatur ass nëmmen mat Adressen vum Typ 'legacy' méiglech.</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
+        <translation type="unfinished">Et gouf en Feeler beim Versuch, d'Adressenlëscht op %1 ze speichern. Versicht et w.e.g. nach eng Kéier.</translation>
     </message>
     </context>
 <context>
-    <name>AddressTableModel</name>
+    <name>AskPassphraseDialog</name>
     <message>
-        <source>Address</source>
-        <translation type="unfinished">Seòladh</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation type="unfinished">Warnung: Wann Dir Är Portemonnaie verschlësselt an Äert Passwort verléiert, da verléiert Dir 1ALLE ÄRE BITCOINS1!</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation type="unfinished">Sidd Dir sécher, dass Dir Är Portemonnaie verschlësselen wëllt?</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation type="unfinished">Gitt deen alten Passwort an den neien Passwort fir d'Portemonnaie an</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation type="unfinished">Erënner Iech, dass d'Verschlësselung vun ärer Portemonnaie Är Bitcoins net vollstänneg vir Malware schützen kann, déi Äre Computer infizéiert.</translation>
     </message>
     </context>
 <context>
@@ -36,15 +79,11 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -54,15 +93,11 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -72,15 +107,11 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -93,26 +124,7 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Mearachd</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation type="unfinished">Rabhadh</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation type="unfinished">Fiosrachadh</translation>
-    </message>
-    <message>
-        <source>Wallet Name</source>
-        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
-        <translation type="unfinished">Ainm Wallet</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -120,23 +132,7 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
-    </message>
-    </context>
-<context>
-    <name>CreateWalletDialog</name>
-    <message>
-        <source>Wallet Name</source>
-        <translation type="unfinished">Ainm Wallet</translation>
-    </message>
-    </context>
-<context>
-    <name>FreespaceChecker</name>
-    <message>
-        <source>name</source>
-        <translation type="unfinished">ainm</translation>
     </message>
     </context>
 <context>
@@ -146,8 +142,6 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
@@ -155,15 +149,11 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -174,42 +164,7 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Mearachd</translation>
-    </message>
-    </context>
-<context>
-    <name>ModalOverlay</name>
-    <message>
-        <source>Form</source>
-        <translation type="unfinished">Fhoirm</translation>
-    </message>
-    </context>
-<context>
-    <name>OptionsDialog</name>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Mearachd</translation>
-    </message>
-    </context>
-<context>
-    <name>OverviewPage</name>
-    <message>
-        <source>Form</source>
-        <translation type="unfinished">Fhoirm</translation>
-    </message>
-    </context>
-<context>
-    <name>PeerTableModel</name>
-    <message>
-        <source>Address</source>
-        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Seòladh</translation>
     </message>
     </context>
 <context>
@@ -217,8 +172,6 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -231,23 +184,14 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     </context>
 <context>
-    <name>TransactionView</name>
+    <name>WalletView</name>
     <message>
-        <source>Address</source>
-        <translation type="unfinished">Seòladh</translation>
-    </message>
-    </context>
-<context>
-    <name>WalletFrame</name>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Mearachd</translation>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">Exportéiert déi Dateien op der aktueller Tabell an eng Datei.</translation>
     </message>
     </context>
 </TS>

@@ -58,14 +58,6 @@
         <translation type="unfinished">&amp;Roghnaigh</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Seoltaí seoladh</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Seoltaí glacadh</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Seo iad do sheoltaí Bitcoin chun íocaíochtaí a sheoladh. Seiceáil i gcónaí an méid agus an seoladh glactha sula seoltar boinn.</translation>
     </message>
@@ -702,10 +694,6 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Táille:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Dusta:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">Iar-tháille:</translation>
     </message>
@@ -770,28 +758,12 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Cóipeáíl bearta</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Cóipeáíl dusta</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Cóipeáíl sóinseáil</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 glasáilte)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">tá</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">níl</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Casann an lipéad seo dearg má fhaigheann aon fhaighteoir méid níos lú ná an tairseach reatha dusta.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -917,20 +889,8 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Déan Sparán Glan</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">Úsáid tuairisceoirí le haghaidh bainistíochta scriptPubKey</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">Sparán Tuairisceoir</translation>
-    </message>
-    <message>
         <source>Create</source>
         <translation type="unfinished">Cruthaigh</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Tiomsaithe gan tacíocht sqlite (riachtanach do sparán tuairisceora)</translation>
     </message>
     </context>
 <context>
@@ -1556,6 +1516,10 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
     <message>
         <source> * Sends %1 to %2</source>
         <translation type="unfinished"> * Seolann %1 chuig %2</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">seoladh féin</translation>
     </message>
     <message>
         <source>Unable to calculate transaction fee or total transaction amount.</source>
@@ -2227,10 +2191,6 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Glan gach réimse den fhoirm.</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Dusta:</translation>
-    </message>
-    <message>
         <source>Hide transaction fee settings</source>
         <translation type="unfinished">Folaigh socruithe táillí idirbhirt</translation>
     </message>
@@ -2289,10 +2249,6 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">Cóipeáíl bearta</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Cóipeáíl dusta</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -2864,10 +2820,6 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Seolta chuig</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Íocaíocht chugat féin</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Mianáilte</translation>
     </message>
@@ -2941,10 +2893,6 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
     <message>
         <source>Sent to</source>
         <translation type="unfinished">Seolta chuig</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">Chugat fhéin</translation>
     </message>
     <message>
         <source>Mined</source>
@@ -3163,10 +3111,6 @@ Téigh go Comhad &gt; Oscail Sparán chun sparán a lódáil.
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation type="unfinished">Dáilte faoin gceadúnas bogearraí MIT, féach na comhad atá in éindí %s nó %s</translation>
-    </message>
-    <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">Earráid ag léamh %s! Léigh gach eochair i gceart, ach d’fhéadfadh sonraí idirbhirt nó iontrálacha leabhar seoltaí a bheidh in easnamh nó mícheart.</translation>
     </message>
     <message>
         <source>More than one onion bind address is provided. Using %s for the automatically created Tor onion service.</source>

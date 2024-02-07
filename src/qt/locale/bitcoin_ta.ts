@@ -58,14 +58,6 @@
         <translation type="unfinished">தே&amp;ர்வுசெய் </translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">முகவரிகள் அனுப்பப்படுகின்றன</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">முகவரிகள் பெறப்படுகின்றன</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">இவை பணம் அனுப்புவதற்கு உங்களின் பிட்காயின் முகவரிகள். பிட்காயின்களை அனுப்புவதற்கு முன் எப்பொழுதும் தொகையும் பெறுதலையும் சரிபார்க்கவும்.</translation>
     </message>
@@ -726,10 +718,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">கட்டணம்:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">டஸ்ட்</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">கட்டணத்திறகுப் பின்:</translation>
     </message>
@@ -794,28 +782,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">நகல் கட்டணம்</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">தூசி நகலெடுக்கவும்</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">மாற்றத்தை நகலெடுக்கவும்</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 பூட்டப்பட்டது)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">ஆம்</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">இல்லை</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">நடப்பு தூசி நிலையை விட குறைவான அளவு பெறுநரை பெறுமானால் இந்த லேபிள் சிவப்பு நிறமாக மாறும்.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1482,6 +1454,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">நெருக்கமான</translation>
     </message>
     <message>
+        <source>own address</source>
+        <translation type="unfinished">சொந்த முகவரி</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation type="unfinished">முழு தொகை</translation>
     </message>
@@ -2068,10 +2044,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">படிவத்தின் அனைத்து துறையையும் அழி.</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">டஸ்ட்</translation>
-    </message>
-    <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
         <translation type="unfinished">தொகுதிகள் உள்ள இடத்தை விட குறைவான பரிவர்த்தனை அளவு இருக்கும் போது, ​​சுரங்க தொழிலாளர்கள் மற்றும் ரிலேடிங் முனைகள் குறைந்தபட்ச கட்டணத்தைச் செயல்படுத்தலாம். இந்த குறைந்தபட்ச கட்டணத்தை மட்டும் செலுத்துவது நன்றாக உள்ளது, ஆனால் நெட்வொர்க்கில் செயல்படுவதை விட bitcoin பரிவர்த்தனைகளுக்கு இன்னும் கோரிக்கை தேவைப்பட்டால் இது ஒருபோதும் உறுதிப்படுத்தாத பரிவர்த்தனைக்கு காரணமாக இருக்கலாம்.</translation>
     </message>
@@ -2126,10 +2098,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">நகல் கட்டணம்</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">தூசி நகலெடுக்கவும்</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -2640,10 +2608,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">அனுப்பப்பட்டது</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">உனக்கே பணம் செலுத்து</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">மைன் செய்யப்பட்டது</translation>
     </message>
@@ -2717,10 +2681,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Sent to</source>
         <translation type="unfinished">அனுப்பப்பட்டது</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">உங்களுக்கே</translation>
     </message>
     <message>
         <source>Mined</source>
@@ -2911,10 +2871,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation type="unfinished">எம்ஐடி சாப்ட்வேர் விதிமுறைகளின் கீழ் பகிர்ந்தளிக்கப்படுகிறது, அதனுடன் கொடுக்கப்பட்டுள்ள %s அல்லது %s பைல் ஐ பார்க்கவும்</translation>
-    </message>
-    <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">%s படிப்பதில் பிழை! எல்லா விசைகளும் சரியாகப் படிக்கப்படுகின்றன, ஆனால் பரிவர்த்தனை டேட்டா அல்லது முகவரி புத்தக உள்ளீடுகள் காணவில்லை அல்லது தவறாக இருக்கலாம்.</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
