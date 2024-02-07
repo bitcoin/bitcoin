@@ -119,6 +119,37 @@ struct ProxySetting {
 static ProxySetting ParseProxyString(const std::string& proxy);
 static std::string ProxyString(bool is_set, QString ip, QString port);
 
+static const QLatin1String fontchoice_str_embedded{"embedded"};
+static const QLatin1String fontchoice_str_best_system{"best_system"};
+static const QString fontchoice_str_custom_prefix{QStringLiteral("custom, ")};
+
+QString OptionsModel::FontChoiceToString(const OptionsModel::FontChoice& f)
+{
+    if (std::holds_alternative<FontChoiceAbstract>(f)) {
+        if (f == UseBestSystemFont) {
+            return fontchoice_str_best_system;
+        } else {
+            return fontchoice_str_embedded;
+        }
+    }
+    return fontchoice_str_custom_prefix + std::get<QFont>(f).toString();
+}
+
+OptionsModel::FontChoice OptionsModel::FontChoiceFromString(const QString& s)
+{
+    if (s == fontchoice_str_best_system) {
+        return FontChoiceAbstract::BestSystemFont;
+    } else if (s == fontchoice_str_embedded) {
+        return FontChoiceAbstract::EmbeddedFont;
+    } else if (s.startsWith(fontchoice_str_custom_prefix)) {
+        QFont f;
+        f.fromString(s.mid(fontchoice_str_custom_prefix.size()));
+        return f;
+    } else {
+        return FontChoiceAbstract::EmbeddedFont;  // default
+    }
+}
+
 OptionsModel::OptionsModel(interfaces::Node& node, QObject *parent) :
     QAbstractListModel(parent), m_node{node}
 {
@@ -216,11 +247,16 @@ bool OptionsModel::Init(bilingual_str& error)
 #endif
 
     // Display
-    if (!settings.contains("UseEmbeddedMonospacedFont")) {
-        settings.setValue("UseEmbeddedMonospacedFont", "true");
+    if (settings.contains("FontForMoney")) {
+        m_font_money = FontChoiceFromString(settings.value("FontForMoney").toString());
+    } else if (settings.contains("UseEmbeddedMonospacedFont")) {
+        if (settings.value("UseEmbeddedMonospacedFont").toBool()) {
+            m_font_money = FontChoiceAbstract::EmbeddedFont;
+        } else {
+            m_font_money = FontChoiceAbstract::BestSystemFont;
+        }
     }
-    m_use_embedded_monospaced_font = settings.value("UseEmbeddedMonospacedFont").toBool();
-    Q_EMIT useEmbeddedMonospacedFontChanged(m_use_embedded_monospaced_font);
+    Q_EMIT fontForMoneyChanged(getFontForMoney());
 
     m_mask_values = settings.value("mask_values", false).toBool();
 
@@ -428,8 +464,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return strThirdPartyTxUrls;
     case Language:
         return QString::fromStdString(SettingToString(setting(), ""));
-    case UseEmbeddedMonospacedFont:
-        return m_use_embedded_monospaced_font;
+    case FontForMoney:
+        return QVariant::fromValue(m_font_money);
     case CoinControlFeatures:
         return fCoinControlFeatures;
     case EnablePSBTControls:
@@ -453,6 +489,23 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
     default:
         return QVariant();
     }
+}
+
+QFont OptionsModel::getFontForChoice(const FontChoice& fc)
+{
+    QFont f;
+    if (std::holds_alternative<FontChoiceAbstract>(fc)) {
+        f = GUIUtil::fixedPitchFont(fc != UseBestSystemFont);
+        f.setWeight(QFont::Bold);
+    } else {
+        f = std::get<QFont>(fc);
+    }
+    return f;
+}
+
+QFont OptionsModel::getFontForMoney() const
+{
+    return getFontForChoice(m_font_money);
 }
 
 bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::string& suffix)
@@ -587,11 +640,15 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             setRestartRequired(true);
         }
         break;
-    case UseEmbeddedMonospacedFont:
-        m_use_embedded_monospaced_font = value.toBool();
-        settings.setValue("UseEmbeddedMonospacedFont", m_use_embedded_monospaced_font);
-        Q_EMIT useEmbeddedMonospacedFontChanged(m_use_embedded_monospaced_font);
+    case FontForMoney:
+    {
+        const auto& new_font = value.value<FontChoice>();
+        if (m_font_money == new_font) break;
+        settings.setValue("FontForMoney", FontChoiceToString(new_font));
+        m_font_money = new_font;
+        Q_EMIT fontForMoneyChanged(getFontForMoney());
         break;
+    }
     case CoinControlFeatures:
         fCoinControlFeatures = value.toBool();
         settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
