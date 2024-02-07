@@ -72,6 +72,8 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         self.sync_blocks([self.nodes[0], self.nodes[2]])
         conflicted = self.nodes[0].gettransaction(conflicted_txid)
         conflicting = self.nodes[0].gettransaction(conflicting_txid)
+        self.nodes[0].syncwithvalidationinterfacequeue()
+        self.nodes[2].syncwithvalidationinterfacequeue()
         assert_equal(conflicted["confirmations"], -9)
         assert_equal(conflicted["walletconflicts"][0], conflicting["txid"])
 
