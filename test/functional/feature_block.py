@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test block processing."""
 import copy
-import struct
 import time
 
 from test_framework.blocktools import (
@@ -67,7 +66,7 @@ class CBrokenBlock(CBlock):
     def serialize(self, with_witness=False):
         r = b""
         r += super(CBlock, self).serialize()
-        r += struct.pack("<BQ", 255, len(self.vtx))
+        r += (255).to_bytes(1, "little") + len(self.vtx).to_bytes(8, "little")
         for tx in self.vtx:
             if with_witness:
                 r += tx.serialize_with_witness()

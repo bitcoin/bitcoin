@@ -29,7 +29,6 @@ These should be pasted into `src/chainparamsseeds.h`.
 
 from base64 import b32decode
 from enum import Enum
-import struct
 import sys
 import os
 import re
@@ -117,11 +116,11 @@ def ser_compact_size(l):
     if l < 253:
         r = l.to_bytes(1, "little")
     elif l < 0x10000:
-        r = struct.pack("<BH", 253, l)
+        r = (253).to_bytes(1, "little") + l.to_bytes(2, "little")
     elif l < 0x100000000:
-        r = struct.pack("<BI", 254, l)
+        r = (254).to_bytes(1, "little") + l.to_bytes(4, "little")
     else:
-        r = struct.pack("<BQ", 255, l)
+        r = (255).to_bytes(1, "little") + l.to_bytes(8, "little")
     return r
 
 def bip155_serialize(spec):
