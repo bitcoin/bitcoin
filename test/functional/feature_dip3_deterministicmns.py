@@ -109,18 +109,29 @@ class DIP3Test(BitcoinTestFramework):
             self.assert_mnlists(mns)
 
         self.log.info("test that MNs disappear from the list when the ProTx collateral is spent")
+        # also make sure "protx info" returns correct historical data for spent collaterals
         spend_mns_count = 3
         mns_tmp = [] + mns
         dummy_txins = []
         old_tip = self.nodes[0].getblockcount()
         old_listdiff = self.nodes[0].protx("listdiff", 1, old_tip)
         for i in range(spend_mns_count):
+            old_protx_hash = mns[i].protx_hash
+            old_collateral_address = mns[i].collateral_address
+            old_blockhash = self.nodes[0].getbestblockhash()
+            old_rpc_info = self.nodes[0].protx("info", old_protx_hash)
+            rpc_collateral_address = old_rpc_info["collateralAddress"]
+            assert_equal(rpc_collateral_address, old_collateral_address)
             dummy_txin = self.spend_mn_collateral(mns[i], with_dummy_input_output=True)
             dummy_txins.append(dummy_txin)
             self.nodes[0].generate(1)
             self.sync_all()
             mns_tmp.remove(mns[i])
             self.assert_mnlists(mns_tmp)
+            new_rpc_info = self.nodes[0].protx("info", old_protx_hash, old_blockhash)
+            del old_rpc_info["metaInfo"]
+            del new_rpc_info["metaInfo"]
+            assert_equal(new_rpc_info, old_rpc_info)
         new_listdiff = self.nodes[0].protx("listdiff", 1, old_tip)
         assert_equal(new_listdiff, old_listdiff)
 
