@@ -58,9 +58,9 @@ class CScriptOp(int):
         elif len(d) <= 0xff:
             return b'\x4c' + bytes([len(d)]) + d  # OP_PUSHDATA1
         elif len(d) <= 0xffff:
-            return b'\x4d' + struct.pack('<H', len(d)) + d  # OP_PUSHDATA2
+            return b'\x4d' + len(d).to_bytes(2, "little") + d  # OP_PUSHDATA2
         elif len(d) <= 0xffffffff:
-            return b'\x4e' + struct.pack('<I', len(d)) + d  # OP_PUSHDATA4
+            return b'\x4e' + len(d).to_bytes(4, "little") + d  # OP_PUSHDATA4
         else:
             raise ValueError("Data too long to encode in a PUSHDATA op")
 
@@ -670,7 +670,7 @@ def LegacySignatureMsg(script, txTo, inIdx, hashtype):
         txtmp.vin.append(tmp)
 
     s = txtmp.serialize_without_witness()
-    s += struct.pack("<I", hashtype)
+    s += hashtype.to_bytes(4, "little")
 
     return (s, None)
 
@@ -726,7 +726,7 @@ def SegwitV0SignatureMsg(script, txTo, inIdx, hashtype, amount):
     if (not (hashtype & SIGHASH_ANYONECANPAY) and (hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
         serialize_sequence = bytes()
         for i in txTo.vin:
-            serialize_sequence += struct.pack("<I", i.nSequence)
+            serialize_sequence += i.nSequence.to_bytes(4, "little")
         hashSequence = uint256_from_str(hash256(serialize_sequence))
 
     if ((hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
@@ -739,16 +739,16 @@ def SegwitV0SignatureMsg(script, txTo, inIdx, hashtype, amount):
         hashOutputs = uint256_from_str(hash256(serialize_outputs))
 
     ss = bytes()
-    ss += struct.pack("<i", txTo.nVersion)
+    ss += txTo.nVersion.to_bytes(4, "little", signed=True)
     ss += ser_uint256(hashPrevouts)
     ss += ser_uint256(hashSequence)
     ss += txTo.vin[inIdx].prevout.serialize()
     ss += ser_string(script)
-    ss += struct.pack("<q", amount)
-    ss += struct.pack("<I", txTo.vin[inIdx].nSequence)
+    ss += amount.to_bytes(8, "little", signed=True)
+    ss += txTo.vin[inIdx].nSequence.to_bytes(4, "little")
     ss += ser_uint256(hashOutputs)
     ss += txTo.nLockTime.to_bytes(4, "little")
-    ss += struct.pack("<I", hashtype)
+    ss += hashtype.to_bytes(4, "little")
     return ss
 
 def SegwitV0SignatureHash(*args, **kwargs):
@@ -818,8 +818,8 @@ def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index = 0, scriptpat
     in_type = hash_type & SIGHASH_ANYONECANPAY
     spk = spent_utxos[input_index].scriptPubKey
     ss = bytes([0, hash_type]) # epoch, hash_type
-    ss += struct.pack("<i", txTo.nVersion)
-    ss += struct.pack("<I", txTo.nLockTime)
+    ss += txTo.nVersion.to_bytes(4, "little", signed=True)
+    ss += txTo.nLockTime.to_bytes(4, "little")
     if in_type != SIGHASH_ANYONECANPAY:
         ss += BIP341_sha_prevouts(txTo)
         ss += BIP341_sha_amounts(spent_utxos)
@@ -835,11 +835,11 @@ def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index = 0, scriptpat
     ss += bytes([spend_type])
     if in_type == SIGHASH_ANYONECANPAY:
         ss += txTo.vin[input_index].prevout.serialize()
-        ss += struct.pack("<q", spent_utxos[input_index].nValue)
+        ss += spent_utxos[input_index].nValue.to_bytes(8, "little", signed=True)
         ss += ser_string(spk)
-        ss += struct.pack("<I", txTo.vin[input_index].nSequence)
+        ss += txTo.vin[input_index].nSequence.to_bytes(4, "little")
     else:
-        ss += struct.pack("<I", input_index)
+        ss += input_index.to_bytes(4, "little")
     if (spend_type & 1):
         ss += sha256(ser_string(annex))
     if out_type == SIGHASH_SINGLE:
@@ -850,7 +850,7 @@ def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index = 0, scriptpat
     if (scriptpath):
         ss += TaggedHash("TapLeaf", bytes([leaf_ver]) + ser_string(script))
         ss += bytes([0])
-        ss += struct.pack("<i", codeseparator_pos)
+        ss += codeseparator_pos.to_bytes(4, "little", signed=True)
     assert len(ss) ==  175 - (in_type == SIGHASH_ANYONECANPAY) * 49 - (out_type != SIGHASH_ALL and out_type != SIGHASH_SINGLE) * 32 + (annex is not None) * 32 + scriptpath * 37
     return ss
 

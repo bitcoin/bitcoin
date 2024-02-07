@@ -115,7 +115,7 @@ def parse_spec(s):
 def ser_compact_size(l):
     r = b""
     if l < 253:
-        r = struct.pack("B", l)
+        r = l.to_bytes(1, "little")
     elif l < 0x10000:
         r = struct.pack("<BH", 253, l)
     elif l < 0x100000000:
@@ -129,10 +129,10 @@ def bip155_serialize(spec):
     Serialize (networkID, addr, port) tuple to BIP155 binary format.
     '''
     r = b""
-    r += struct.pack('B', spec[0].value)
+    r += spec[0].value.to_bytes(1, "little")
     r += ser_compact_size(len(spec[1]))
     r += spec[1]
-    r += struct.pack('>H', spec[2])
+    r += spec[2].to_bytes(2, "big")
     return r
 
 def process_nodes(g, f, structname):
