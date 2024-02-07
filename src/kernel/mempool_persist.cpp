@@ -205,7 +205,7 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         }
         auto last = SteadyClock::now();
 
-        LogPrintf("Dumped mempool: %gs to copy, %gs to dump\n",
+        LogPrintf("Dumped mempool: %.3fs to copy, %.3fs to dump\n",
                   Ticks<SecondsDouble>(mid - start),
                   Ticks<SecondsDouble>(last - mid));
     } catch (const std::exception& e) {

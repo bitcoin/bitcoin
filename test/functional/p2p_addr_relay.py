@@ -75,6 +75,7 @@ class AddrReceiver(P2PInterface):
         return self.num_ipv4_received != 0
 
     def on_version(self, message):
+        self.send_version()
         self.send_message(msg_verack())
         if (self.send_getaddr):
             self.send_message(msg_getaddr())
