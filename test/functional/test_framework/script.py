@@ -800,13 +800,13 @@ def BIP341_sha_prevouts(txTo):
     return sha256(b"".join(i.prevout.serialize() for i in txTo.vin))
 
 def BIP341_sha_amounts(spent_utxos):
-    return sha256(b"".join(struct.pack("<q", u.nValue) for u in spent_utxos))
+    return sha256(b"".join(u.nValue.to_bytes(8, "little", signed=True) for u in spent_utxos))
 
 def BIP341_sha_scriptpubkeys(spent_utxos):
     return sha256(b"".join(ser_string(u.scriptPubKey) for u in spent_utxos))
 
 def BIP341_sha_sequences(txTo):
-    return sha256(b"".join(struct.pack("<I", i.nSequence) for i in txTo.vin))
+    return sha256(b"".join(i.nSequence.to_bytes(4, "little") for i in txTo.vin))
 
 def BIP341_sha_outputs(txTo):
     return sha256(b"".join(o.serialize() for o in txTo.vout))
