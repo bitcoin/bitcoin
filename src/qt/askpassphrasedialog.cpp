@@ -83,14 +83,12 @@ void AskPassphraseDialog::setModel(WalletModel *_model)
 
 void AskPassphraseDialog::accept()
 {
-    SecureString oldpass, newpass1, newpass2;
     if (!model && mode != Encrypt)
         return;
 
-    oldpass.assign(std::string_view{ui->passEdit1->text().toStdString()});
-    newpass1.assign(std::string_view{ui->passEdit2->text().toStdString()});
-    newpass2.assign(std::string_view{ui->passEdit3->text().toStdString()});
-
+    const SecureString oldpass{ui->passEdit1->text().toStdString()};
+    const SecureString newpass1{ui->passEdit2->text().toStdString()};
+    const SecureString newpass2{ui->passEdit3->text().toStdString()};
     secureClearPassFields();
 
     switch(mode)
