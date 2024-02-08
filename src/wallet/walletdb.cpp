@@ -1230,6 +1230,30 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     return result;
 }
 
+bool RunWithinTxn(WalletDatabase& database, std::string_view process_desc, const std::function<bool(WalletBatch&)>& func)
+{
+    WalletBatch batch(database);
+    if (!batch.TxnBegin()) {
+        LogPrint(BCLog::WALLETDB, "Error: cannot create db txn for %s\n", process_desc);
+        return false;
+    }
+
+    // Run procedure
+    if (!func(batch)) {
+        LogPrint(BCLog::WALLETDB, "Error: %s failed\n", process_desc);
+        batch.TxnAbort();
+        return false;
+    }
+
+    if (!batch.TxnCommit()) {
+        LogPrint(BCLog::WALLETDB, "Error: cannot commit db txn for %s\n", process_desc);
+        return false;
+    }
+
+    // All good
+    return true;
+}
+
 void MaybeCompactWalletDB(WalletContext& context)
 {
     static std::atomic<bool> fOneThread(false);
