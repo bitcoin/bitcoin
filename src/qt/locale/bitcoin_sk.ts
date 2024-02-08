@@ -50,14 +50,6 @@
         <translation type="unfinished">Vy&amp;brať</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Odosielajúce adresy</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Prijímajúce adresy</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Toto sú Vaše Bitcoin adresy pre posielanie platieb. Vždy skontrolujte sumu a prijímaciu adresu pred poslaním mincí.</translation>
     </message>
@@ -215,8 +207,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Zadané heslo pre dešifrovanie peňaženky bolo nesprávne.</translation>
     </message>
     <message>
+        <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <translation type="unfinished">Zadaná prístupová fráza na dešifrovanie peňaženky je nesprávna. Obsahuje nulový znak (tj - bajt s hodnotou nula). Ak bola prístupová fráza nastavená verziou tohto softvéru pred verziou 25.0, skúste to znova s použitím iba znakov až po — ale nezahrňujúc — prvý nulový znak. Ak sa vám to podarí, prosím nastavte novú prístupovú frázu, aby ste tomuto problému predišli v budúcnosti.</translation>
+    </message>
+    <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation type="unfinished">Heslo k peňaženke bolo úspešne zmenené.</translation>
+    </message>
+    <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">Zmena prístupovej frázy zlyhala</translation>
+    </message>
+    <message>
+        <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
+        <translation type="unfinished">Stará prístupová fráza zadaná na dešifrovanie peňaženky je nesprávna. Obsahuje nulový znak (tj - bajt s hodnotou nula). Ak bola prístupová fráza nastavená verziou tohto softvéru pred verziou 25.0, skúste to znova s použitím iba znakov až po — ale nezahrňujúc — prvý nulový znak.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -236,6 +240,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </context>
 <context>
     <name>BitcoinApplication</name>
+    <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">Súbor s nastaveniami %1 môže byť poškodený alebo neplatný.</translation>
+    </message>
     <message>
         <source>Runaway exception</source>
         <translation type="unfinished">Nezachytená výnimka</translation>
@@ -660,6 +668,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Zatvoriť peňaženku</translation>
     </message>
     <message>
+        <source>Restore Wallet…</source>
+        <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
+        <translation type="unfinished">Obnoviť peňaženku…</translation>
+    </message>
+    <message>
+        <source>Restore a wallet from a backup file</source>
+        <extracomment>Status tip for Restore Wallet menu item</extracomment>
+        <translation type="unfinished">Obnoviť peňaženku zo zálohovaného súboru</translation>
+    </message>
+    <message>
         <source>Close all wallets</source>
         <translation type="unfinished">Zatvoriť všetky peňaženky</translation>
     </message>
@@ -687,6 +705,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Wallet Data</source>
         <extracomment>Name of the wallet data file format.</extracomment>
         <translation type="unfinished">Dáta peňaženky</translation>
+    </message>
+    <message>
+        <source>Load Wallet Backup</source>
+        <extracomment>The title for Restore Wallet File Windows</extracomment>
+        <translation type="unfinished">Načítať zálohu peňaženky</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">Obnoviť peňaženku</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -745,6 +773,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Enable network activity</source>
         <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
         <translation type="unfinished">Povoliť sieťovú aktivitu</translation>
+    </message>
+    <message>
+        <source>Pre-syncing Headers (%1%)…</source>
+        <translation type="unfinished">Predbežná synchronizácia hlavičiek (%1%)…</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -853,10 +885,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Poplatok:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Prach:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">Po poplatku:</translation>
     </message>
@@ -945,28 +973,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Kopírovať bajty</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopírovať prach</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Kopírovať zmenu</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 zamknutých)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">áno</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">nie</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Tento popis sčervenie ak ktorýkoľvek príjemca dostane sumu menšiu ako súčasný limit pre "prach".</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1009,7 +1021,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Can't list signers</source>
         <translation type="unfinished">Nemôžem zobraziť podpisovateľov</translation>
     </message>
-    </context>
+    <message>
+        <source>Too many external signers found</source>
+        <translation type="unfinished">Bolo nájdených príliš veľa externých podpisovateľov</translation>
+    </message>
+</context>
 <context>
     <name>LoadWalletsActivity</name>
     <message>
@@ -1046,6 +1062,29 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
         <extracomment>Descriptive text of the open wallet progress window which indicates to the user which wallet is currently being opened.</extracomment>
         <translation type="unfinished">Otvára sa peňaženka &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+</context>
+<context>
+    <name>RestoreWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Obnoviť peňaženku</translation>
+    </message>
+    <message>
+        <source>Restore wallet failed</source>
+        <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
+        <translation type="unfinished">Obnovenie peňaženky zlyhalo</translation>
+    </message>
+    <message>
+        <source>Restore wallet warning</source>
+        <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
+        <translation type="unfinished">Varovanie pri obnovovaní peňaženky</translation>
+    </message>
+    <message>
+        <source>Restore wallet message</source>
+        <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
+        <translation type="unfinished">Správa o obnovení peňaženky</translation>
     </message>
 </context>
 <context>
@@ -1114,14 +1153,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Vytvoriť prázdnu peňaženku</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">Na správu scriptPubKey používajte deskriptory</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">Peňaženka deskriptora</translation>
-    </message>
-    <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
         <translation type="unfinished">Použiť externé podpisovacie zariadenie ako napr. hardvérová peňaženka. Nastavte najprv externý skript podpisovateľa v nastaveniach peňaženky.</translation>
     </message>
@@ -1132,10 +1163,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Create</source>
         <translation type="unfinished">Vytvoriť</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Zostavené bez podpory sqlite (povinné pre peňaženky deskriptorov)</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
@@ -1894,6 +1921,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">* Pošle %1 do %2</translation>
     </message>
     <message>
+        <source>own address</source>
+        <translation type="unfinished">vlastná adresa</translation>
+    </message>
+    <message>
         <source>Unable to calculate transaction fee or total transaction amount.</source>
         <translation type="unfinished">Nepodarilo sa vypočítať poplatok za transakciu alebo celkovú sumu transakcie.</translation>
     </message>
@@ -2175,6 +2206,10 @@ Ak ste dostali túto chybu mali by ste požiadať obchodníka o URI kompatibiln�
         <translation type="unfinished">Verzia</translation>
     </message>
     <message>
+        <source>Whether we relay transactions to this peer.</source>
+        <translation type="unfinished">Či preposielame transakcie tomuto uzlu.</translation>
+    </message>
+    <message>
         <source>Starting Block</source>
         <translation type="unfinished">Počiatočný blok</translation>
     </message>
@@ -2207,6 +2242,16 @@ Ak ste dostali túto chybu mali by ste požiadať obchodníka o URI kompatibiln�
         <source>Address Relay</source>
         <extracomment>Text title for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
         <translation type="unfinished">Postupovanie adries</translation>
+    </message>
+    <message>
+        <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
+        <extracomment>Tooltip text for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
+        <translation type="unfinished">Celkový počet adries prijatých od tohto uzlu, ktoré boli spracované (neobsahuje adresy, ktoré boli zrušené kvôli obmedzeniu rýchlosti).</translation>
+    </message>
+    <message>
+        <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
+        <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
+        <translation type="unfinished">Celkový počet adries prijatých od tohto uzlu, ktoré boli zrušené (nespracované) kvôli obmedzeniu rýchlosti.</translation>
     </message>
     <message>
         <source>Addresses Processed</source>
@@ -2589,6 +2634,10 @@ Pre viac informácií o používaní tejto konzoly napíšte %6.
         <translation type="unfinished">Kopírovať &amp;sumu</translation>
     </message>
     <message>
+        <source>Not recommended due to higher fees and less protection against typos.</source>
+        <translation type="unfinished">Nie je odporúčané kvôli vyšším poplatkom a menšej ochrane proti preklepom.</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation type="unfinished">Nepodarilo sa odomknúť peňaženku.</translation>
     </message>
@@ -2778,10 +2827,6 @@ Pre viac informácií o používaní tejto konzoly napíšte %6.
         <translation type="unfinished">Vstupy…</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Prach:</translation>
-    </message>
-    <message>
         <source>Choose…</source>
         <translation type="unfinished">Zvoliť…</translation>
     </message>
@@ -2856,10 +2901,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok pri sadzbe "100 sat
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">Kopírovať bajty</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopírovať prach</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -3493,10 +3534,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok pri sadzbe "100 sat
         <translation type="unfinished">Odoslané na</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Platba sebe samému</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Vyťažené</translation>
     </message>
@@ -3566,10 +3603,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok pri sadzbe "100 sat
     <message>
         <source>Sent to</source>
         <translation type="unfinished">Odoslané na</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">Ku mne</translation>
     </message>
     <message>
         <source>Mined</source>
@@ -3864,8 +3897,8 @@ Choďte do Súbor &gt; Otvoriť Peňaženku, pre načítanie peňaženky.
         <translation type="unfinished">Distribuované pod softvérovou licenciou MIT, pozri sprievodný súbor %s alebo %s</translation>
     </message>
     <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">Nastala chyba pri čítaní súboru %s! Všetkz kľúče sa prečítali správne, ale dáta o transakcíách alebo záznamy v adresári môžu chýbať alebo byť nesprávne.</translation>
+        <source>Error loading wallet. Wallet requires blocks to be downloaded, and software does not currently support loading wallets while blocks are being downloaded out of order when using assumeutxo snapshots. Wallet should be able to load successfully after node sync reaches height %s</source>
+        <translation type="unfinished">Chyba pri načítavaní peňaženky. Peňaženka vyžaduje stiahnutie blokov, a softvér momentálne nepodporuje načítavanie peňaženiek počas sťahovania blokov v nesprávnom poradí pri použití snímok assumeutxo. Peňaženka by mala byť schopná sa úspešne načítať, keď synchronizácia uzlov dosiahne výšku %s</translation>
     </message>
     <message>
         <source>Error reading %s! Transaction data may be missing or incorrect. Rescanning wallet.</source>
@@ -3886,6 +3919,10 @@ Choďte do Súbor &gt; Otvoriť Peňaženku, pre načítanie peňaženky.
     <message>
         <source>Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types</source>
         <translation type="unfinished">Chyba: Staršie peňaženky podporujú len adresy typu "legacy", "p2sh-segwit", a "bech32"</translation>
+    </message>
+    <message>
+        <source>Error: Unable to produce descriptors for this legacy wallet. Make sure to provide the wallet's passphrase if it is encrypted.</source>
+        <translation type="unfinished">Chyba: Nie je možné vytvoriť deskriptory pre túto staršiu peňaženku. Nezabudnite zadať prístupovú frázu peňaženky, ak je šifrovaná.</translation>
     </message>
     <message>
         <source>File %s already exists. If you are sure this is what you want, move it out of the way first.</source>
@@ -3936,10 +3973,6 @@ Choďte do Súbor &gt; Otvoriť Peňaženku, pre načítanie peňaženky.
         <translation type="unfinished">Databáza blokov obsahuje blok, ktorý vyzerá byť z budúcnosti. Toto môže byť spôsobené nesprávnym systémovým časom vášho počítača. Obnovujte databázu blokov len keď ste si istý, že systémový čas je nastavený správne.</translation>
     </message>
     <message>
-        <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
-        <translation type="unfinished">Databáza indexov blokov obsahuje 'txindex' staršieho typu. Pre uvoľnenie obsadeného miesta spustite s parametrom -reindex, inak môžete ignorovať túto chybu. Táto správa sa už nabudúce nezobrazí.</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation type="unfinished">Suma je príliš malá pre odoslanie transakcie</translation>
     </message>
@@ -3974,6 +4007,14 @@ Choďte do Súbor &gt; Otvoriť Peňaženku, pre načítanie peňaženky.
     <message>
         <source>Unknown wallet file format "%s" provided. Please provide one of "bdb" or "sqlite".</source>
         <translation type="unfinished">Poskytnutý neznámy formát peňaženky "%s". Prosím použite "bdb" alebo "sqlite".</translation>
+    </message>
+    <message>
+        <source>Unsupported chainstate database format found. Please restart with -reindex-chainstate. This will rebuild the chainstate database.</source>
+        <translation type="unfinished">Nájdený nepodporovaný formát databázy reťazcového stavu. Prosím reštartujte s -reindex-chainstate. Toto obnoví databázu reťazcového stavu.</translation>
+    </message>
+    <message>
+        <source>Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future.</source>
+        <translation type="unfinished">Peňaženka bola úspešne vytvorená. Starší typ peňaženky sa postupne ruší a podpora pre vytváranie a otváranie starších peňaženiek bude v budúcnosti odstránená.</translation>
     </message>
     <message>
         <source>Warning: Dumpfile wallet format "%s" does not match command line specified format "%s".</source>
@@ -4024,8 +4065,8 @@ Choďte do Súbor &gt; Otvoriť Peňaženku, pre načítanie peňaženky.
         <translation type="unfinished">Nie je možné zapísať do adresára ' %s'. Skontrolujte povolenia.</translation>
     </message>
     <message>
-        <source>The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.</source>
-        <translation type="unfinished">Upgrade -txindex spustený predchádzajúcou verziou nemôže byť dokončený. Reštartujte s prechdádzajúcou verziou programu alebo spustite s parametrom -reindex.</translation>
+        <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation type="unfinished">%s je nastavené veľmi vysoko! Takto vysoké poplatky by mohli byť zaplatené za jednu transakciu.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
@@ -4036,8 +4077,34 @@ Choďte do Súbor &gt; Otvoriť Peňaženku, pre načítanie peňaženky.
         <translation type="unfinished">Chyba pri načítaní %s: Načíta sa peňaženka s externým podpisovaním, ale podpora pre externé podpisovanie nebola začlenená do programu</translation>
     </message>
     <message>
+        <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
+        <translation type="unfinished">Chyba: Dáta adresára v peňaženke nemožno identifikovať ako patriace migrovaným peňaženkám</translation>
+    </message>
+    <message>
+        <source>Error: Duplicate descriptors created during migration. Your wallet may be corrupted.</source>
+        <translation type="unfinished">Chyba: Počas migrácie boli vytvorené duplicitné deskriptory. Vaša peňaženka môže byť poškodená.</translation>
+    </message>
+    <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
         <translation type="unfinished">Nepodarilo sa premenovať chybný súbor peers.dat. Prosím presuňte ho alebo vymažte a skúste znovu.</translation>
+    </message>
+    <message>
+        <source>The preselected coins total amount does not cover the transaction target. Please allow other inputs to be automatically selected or include more coins manually</source>
+        <translation type="unfinished">Celková suma vopred vybraných mincí nepokrýva cieľ transakcie. Prosím, povoľte, aby boli automaticky vybrané iné vstupy alebo pridajte viac mincí manuálne</translation>
+    </message>
+    <message>
+        <source>Unconfirmed UTXOs are available, but spending them creates a chain of transactions that will be rejected by the mempool</source>
+        <translation type="unfinished">Nepotvrdené UTXO sú k dispozícii, ale ich použitie vytvorí reťazec transakcií, ktoré mempool odmietne</translation>
+    </message>
+    <message>
+        <source>Unexpected legacy entry in descriptor wallet found. Loading wallet %s
+
+The wallet might have been tampered with or created with malicious intent.
+</source>
+        <translation type="unfinished">Nájdený neočakávaný starý záznam v deskriptorovej peňaženke. Načítavanie peňaženky %s
+
+S peňaženkou mohlo byť manipulované alebo mohla byť vytvorená s úmyselne škodlivým zámerom
+</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
@@ -4212,12 +4279,20 @@ Choďte do Súbor &gt; Otvoriť Peňaženku, pre načítanie peňaženky.
         <translation type="unfinished">Neplatné oprávnenie P2P: '%s'</translation>
     </message>
     <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
+        <translation type="unfinished">Neplatné množstvo pre %s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation type="unfinished">Neplatná suma pre -%s=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation type="unfinished">Nadaná neplatná netmask vo -whitelist: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid port specified in %s: '%s'</source>
+        <translation type="unfinished">Bol zadaný neplatný port v %s: '%s'</translation>
     </message>
     <message>
         <source>Loading P2P addresses…</source>
@@ -4410,6 +4485,10 @@ Choďte do Súbor &gt; Otvoriť Peňaženku, pre načítanie peňaženky.
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished">Nepodarilo sa spustiť HTTP server. Pre viac detailov zobrazte debug log.</translation>
+    </message>
+    <message>
+        <source>Unable to unload the wallet before migrating</source>
+        <translation type="unfinished">Nepodarilo sa odpojiť peňaženku pred migráciou</translation>
     </message>
     <message>
         <source>Unknown -blockfilterindex value %s.</source>

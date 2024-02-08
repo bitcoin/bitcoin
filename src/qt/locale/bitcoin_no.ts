@@ -55,14 +55,6 @@
         <translation type="unfinished">Velg adressen du vil motta mynter med </translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Sender adresser </translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Mottar adresser </translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Dette er dine Bitcoin adresser for å sende betalinger.Alltid sjekk mengden og mottaker adressen før du sender mynter.  </translation>
     </message>

@@ -1,41 +1,35 @@
-<TS version="2.1" language="gd">
+<TS version="2.1" language="sd">
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Dèan briogadh deas airson seòladh no bileag a dheasachadh</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Cruthaich seòladh ùr</translation>
+        <translation type="unfinished">نئون پتو ٺاھيو</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Dèan lethbhreac den t-seòladh a chaidh a thaghadh an-dràsta gu cairt-bhòrd an t-siostaim</translation>
+        <source>&amp;New</source>
+        <translation type="unfinished">نئون</translation>
     </message>
     <message>
-        <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Thoir às an seòladh a chaidh a thaghadh an-dràsta bhon liosta</translation>
-    </message>
-    <message>
-        <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Tagh an seòladh airson buinn a chuir thuige</translation>
+        <source>C&amp;hoose</source>
+        <translation type="unfinished">پسند ڪيو</translation>
     </message>
     </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Seòladh</translation>
+        <translation type="unfinished">پتو</translation>
     </message>
     </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Amount</source>
+        <translation type="unfinished">مقدار</translation>
+    </message>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -45,15 +39,11 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -63,15 +53,11 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -81,38 +67,25 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     </context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>&amp;Send</source>
+        <translation type="unfinished">موڪليو</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation type="unfinished">حاصل ڪيو</translation>
+    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Mearachd</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation type="unfinished">Rabhadh</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation type="unfinished">Fiosrachadh</translation>
-    </message>
-    <message>
-        <source>Wallet Name</source>
-        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
-        <translation type="unfinished">Ainm Wallet</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -120,32 +93,43 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
+    </message>
+    </context>
+<context>
+    <name>CoinControlDialog</name>
+    <message>
+        <source>Amount</source>
+        <translation type="unfinished">مقدار</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">تاریخ</translation>
     </message>
     </context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
-        <source>Wallet Name</source>
-        <translation type="unfinished">Ainm Wallet</translation>
+        <source>Create</source>
+        <translation type="unfinished">ٺاھيو</translation>
     </message>
     </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
         <source>name</source>
-        <translation type="unfinished">ainm</translation>
+        <translation type="unfinished">نالو</translation>
     </message>
     </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Bitcoin</source>
+        <translation type="unfinished">بٽڪوائن</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -155,15 +139,11 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -174,34 +154,32 @@
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation type="unfinished">Mearachd</translation>
+        <source>Welcome</source>
+        <translation type="unfinished">ڀليڪار</translation>
     </message>
     </context>
 <context>
     <name>ModalOverlay</name>
     <message>
-        <source>Form</source>
-        <translation type="unfinished">Fhoirm</translation>
+        <source>Hide</source>
+        <translation type="unfinished">لڪايو</translation>
     </message>
     </context>
 <context>
     <name>OptionsDialog</name>
     <message>
-        <source>Error</source>
-        <translation type="unfinished">Mearachd</translation>
+        <source>Expert</source>
+        <translation type="unfinished">ماھر</translation>
     </message>
     </context>
 <context>
-    <name>OverviewPage</name>
+    <name>PSBTOperationsDialog</name>
     <message>
-        <source>Form</source>
-        <translation type="unfinished">Fhoirm</translation>
+        <source>or</source>
+        <translation type="unfinished">يہ</translation>
     </message>
     </context>
 <context>
@@ -209,16 +187,44 @@
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Seòladh</translation>
+        <translation type="unfinished">پتو</translation>
+    </message>
+    </context>
+<context>
+    <name>RPCConsole</name>
+    <message>
+        <source>Name</source>
+        <translation type="unfinished">نالو</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation type="unfinished">نہ</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation type="unfinished">نامعلوم</translation>
+    </message>
+</context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">تاریخ</translation>
     </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Hide</source>
+        <translation type="unfinished">لڪايو</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation type="unfinished">يہ</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
             <numerusform />
         </translation>
@@ -226,28 +232,50 @@
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Status</source>
+        <translation type="unfinished">حالت</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">تاریخ</translation>
+    </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
             <numerusform />
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation type="unfinished">مقدار</translation>
+    </message>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">تاریخ</translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
-        <source>Address</source>
-        <translation type="unfinished">Seòladh</translation>
+        <source>All</source>
+        <translation type="unfinished">سڀ</translation>
     </message>
-    </context>
-<context>
-    <name>WalletFrame</name>
     <message>
-        <source>Error</source>
-        <translation type="unfinished">Mearachd</translation>
+        <source>Today</source>
+        <translation type="unfinished">اڄ</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">تاریخ</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation type="unfinished">پتو</translation>
     </message>
     </context>
 </TS>

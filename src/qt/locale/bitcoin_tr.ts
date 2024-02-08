@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Adresi veya etiketi düzenlemek için sağ tıklayın</translation>
+        <translation type="unfinished">Adresi veya etiketi düzenlemek için sağ tıklayın.</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -56,14 +56,6 @@
     <message>
         <source>C&amp;hoose</source>
         <translation type="unfinished">S&amp;eç</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Gönderici adresler</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Alıcı adresler</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -149,7 +141,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished">kilidi açmakparolaBu işlemi yapabilmek için cüzdan parolanızı girmeniz gerekmektedir
+        <translation type="unfinished">Bu işlemi yapabilmek için cüzdan parolanızı girmeniz gerekmektedir
 Cüzdan kilidini aç.</translation>
     </message>
     <message>
@@ -733,6 +725,11 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">daha fazla seçenek için tıklayın.</translation>
     </message>
     <message>
+        <source>Show Peers tab</source>
+        <extracomment>A context menu item. The "Peers tab" is an element of the "Node window".</extracomment>
+        <translation type="unfinished">Eşler sekmesini göster</translation>
+    </message>
+    <message>
         <source>Disable network activity</source>
         <extracomment>A context menu item.</extracomment>
         <translation type="unfinished">Ağ etkinliğini devre dışı bırak</translation>
@@ -849,10 +846,6 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Ücret</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Toz:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">Ücret sonrası:</translation>
     </message>
@@ -933,28 +926,12 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Bitleri kopyala</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">toz kopyala</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Para üstünü kopyala</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1'i kilitli)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">evet</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">hayır</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Herhangi bir alıcı mevcut toz eşiğinden daha düşük bir miktar alırsa bu etiket kırmızıya döner.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -992,6 +969,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Create wallet warning</source>
         <translation type="unfinished">Cüzdan oluşturma uyarısı</translation>
+    </message>
+    <message>
+        <source>Can't list signers</source>
+        <translation type="unfinished">İmzalayanlar listelenmiyor</translation>
     </message>
     <message>
         <source>Too many external signers found</source>
@@ -1130,20 +1111,16 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Boş Cüzdan Oluştur</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">scriptPubKey yönetimi için tanımlayıcıları kullanın</translation>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation type="unfinished">Donanım cüzdanı gibi harici bir imzalama cihazı kullanın. Önce cüzdan tercihlerinde harici imzalayan komut dosyasını yapılandırın.</translation>
     </message>
     <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">Tanımlayıcı Cüzdan </translation>
+        <source>External signer</source>
+        <translation type="unfinished">Harici imzalaycı</translation>
     </message>
     <message>
         <source>Create</source>
         <translation type="unfinished">Oluştur</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Sqlite desteği olmadan derlenmiş. (tanımlayıcı cüzdanlar için gereklidir)</translation>
     </message>
     </context>
 <context>
@@ -1323,7 +1300,7 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Bu pencere kalkıncaya dek bilgisayarı kapatmayınız.</translation>
+        <translation type="unfinished">Bu pencere kapanıncaya dek bilgisayarı kapatmayınız.</translation>
     </message>
 </context>
 <context>
@@ -1638,6 +1615,11 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Değişikliklerin uygulanması için istemcinin yeniden başlatılması lazımdır.</translation>
     </message>
     <message>
+        <source>Current settings will be backed up at "%1".</source>
+        <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
+        <translation type="unfinished">Mevcut ayarlar şu adreste yedeklenecek: "%1".</translation>
+    </message>
+    <message>
         <source>Client will be shut down. Do you want to proceed?</source>
         <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
         <translation type="unfinished">İstemci kapanacaktır. Devam etmek istiyor musunuz?</translation>
@@ -1820,6 +1802,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>PSBT saved to disk.</source>
         <translation type="unfinished">PSBT diske kaydedildi.</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">kendi adresiniz</translation>
     </message>
     <message>
         <source>Unable to calculate transaction fee or total transaction amount.</source>
@@ -2060,6 +2046,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished">Ayrıntılı bilgi görmek için bir eş seçin.</translation>
+    </message>
+    <message>
+        <source>Transport</source>
+        <translation type="unfinished">Aktar</translation>
     </message>
     <message>
         <source>Version</source>
@@ -2570,10 +2560,6 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Girdiler...</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Toz:</translation>
-    </message>
-    <message>
         <source>Choose…</source>
         <translation type="unfinished">Seç...</translation>
     </message>
@@ -2620,10 +2606,6 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">Bitleri kopyala</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">toz kopyala</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -3191,10 +3173,6 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Gönderildiği adres</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Kendinize ödeme</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Madenden</translation>
     </message>
@@ -3268,10 +3246,6 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Sent to</source>
         <translation type="unfinished">Gönderildiği adres</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">Kendinize</translation>
     </message>
     <message>
         <source>Mined</source>
@@ -3440,7 +3414,7 @@ Cüzdan kilidini aç.</translation>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">Dışa aktar</translation>
+        <translation type="unfinished">&amp;Dışa aktar</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -3491,10 +3465,6 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">MIT yazılım lisansı altında dağıtılmıştır, beraberindeki %s ya da %s dosyasına bakınız.</translation>
     </message>
     <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">%s dosyasının okunması sırasında bir hata meydana geldi! Tüm anahtarlar doğru bir şekilde okundu, ancak işlem verileri ya da adres defteri ögeleri hatalı veya eksik olabilir.</translation>
-    </message>
-    <message>
         <source>Error reading %s! Transaction data may be missing or incorrect. Rescanning wallet.</source>
         <translation type="unfinished">%s okuma hatası! İşlem verileri eksik veya yanlış olabilir. Cüzdan yeniden taranıyor.</translation>
     </message>
@@ -3527,12 +3497,12 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Blok veritabanı gelecekten gibi görünen bir blok içermektedir. Bu, bilgisayarınızın saat ve tarihinin yanlış ayarlanmış olmasından kaynaklanabilir. Blok veritabanını sadece bilgisayarınızın tarih ve saatinin doğru olduğundan eminseniz yeniden derleyin.</translation>
     </message>
     <message>
-        <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
-        <translation type="unfinished">Blok dizini db, eski bir 'txindex' içerir. Dolu disk alanını temizlemek için full -reindex çalıştırın, aksi takdirde bu hatayı yok sayın. Bu hata mesajı tekrar görüntülenmeyecek.</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation type="unfinished">Bu işlem, tutar düşüldükten sonra göndermek için çok düşük</translation>
+    </message>
+    <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation type="unfinished">Bu hata, bu cüzdan düzgün bir şekilde kapatılmadıysa ve en son Berkeley DB'nin daha yeni bir sürümü kullanılarak yüklendiyse oluşabilir. Öyleyse, lütfen bu cüzdanı en son sürümünü kullanın.</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -3573,10 +3543,6 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
         <translation type="unfinished">Veriler '%s' klasörüne yazılamıyor ; yetkilendirmeyi kontrol edin.</translation>
-    </message>
-    <message>
-        <source>The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.</source>
-        <translation type="unfinished">Önceki bir sürüm tarafından başlatılan -txindex yükseltmesi tamamlanamaz. Önceki sürümle yeniden başlatın veya full -reindex çalıştırın.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>

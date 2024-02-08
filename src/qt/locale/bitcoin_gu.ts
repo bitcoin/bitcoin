@@ -58,14 +58,6 @@
         <translation type="unfinished">&amp; પસંદ કરો</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">મોકલવા માટે ના સરનામાં</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">મેળવવા માટે ના સરનામાં</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">આ તમારા ચુકવણી કરવા માટે ના સરનામાં છે, હંમેશા કિંમત અને મોકલવાના ના સરનામાં ચકાસી લેવા સિક્કા આપતા પહેલા.</translation>
     </message>
@@ -95,6 +87,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
         <translation type="unfinished">અલ્પવિરામથી વિભાજિત ફાઇલ</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
+        <translation type="unfinished">સરનામાં સૂચિને માં સાચવવાનો પ્રયાસ કરતી વખતે ભૂલ આવી હતી %1. મહેરબાની કરીને ફરીથી પ્રયતન કરો.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -160,7 +157,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">ચેતવણી: જો તમે તમારું વletલેટ એન્ક્રિપ્ટ કરો છો અને તમારો પાસફ્રેઝ ખોવાઈ જાય છે, તો તમે તમારા બધા બિટકોઇન્સ ગુમાવશો!</translation>
+        <translation type="unfinished">ચેતવણી: જો તમે તમારા વૉલેટને એન્ક્રિપ્ટ કરો છો અને તમારો પાસફ્રેઝ ખોવાઈ જાય છે, &lt;b&gt; તો તમે તમારા બધા બિટકોઇન્સ ગુમાવશો&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>

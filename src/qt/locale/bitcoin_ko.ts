@@ -58,14 +58,6 @@
         <translation type="unfinished">&amp;선택</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">보내는 주소들</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">받는 주소들</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">비트코인을 보내는 계좌 주소입니다. 코인을 보내기 전에 금액과 받는 주소를 항상 확인하십시오.</translation>
     </message>
@@ -100,6 +92,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
         <translation type="unfinished">%1 으로 주소 리스트를 저장하는 동안 오류가 발생했습니다. 다시 시도해 주십시오.</translation>
+    </message>
+    <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">보내는 주소들 - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">받는 주소들 - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -224,12 +224,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">지갑 복호화를 위한 암호가 틀렸습니다.</translation>
     </message>
     <message>
+        <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <translation type="unfinished">지갑 암호화 해제를 위해 입력된 비밀문구가 정확하지 않습니다. 비밀문구가 공백 문자 (0 바이트)를 포함하고 있습니다. 만약 비밀문구가 25.0 버전 이전의 비트코인 코어 소프트웨어에 의해 설정되었다면, 비밀문구를 첫 공백 문자 이전까지 입력해보세요. 이렇게 해서 성공적으로 입력되었다면, 차후 이런 문제가 발생하지 않도록 비밀문구를 새로이 설정해 주세요.</translation>
+    </message>
+    <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation type="unfinished">지갑 암호가 성공적으로 변경되었습니다.</translation>
     </message>
     <message>
         <source>Passphrase change failed</source>
         <translation type="unfinished">암호 변경에 실패하였습니다.</translation>
+    </message>
+    <message>
+        <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
+        <translation type="unfinished">지갑 암호화 해제를 위해 입력된 예전 비밀문구가 정확하지 않습니다. 비밀문구가 공백 문자 (0 바이트)를 포함하고 있습니다. 만약 비밀문구가 25.0 버전 이전의 비트코인 코어 소프트웨어에 의해 설정되었다면, 비밀문구를 첫 공백 문자 이전까지 입력해보세요.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -737,7 +745,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Load Wallet Backup</source>
         <extracomment>The title for Restore Wallet File Windows</extracomment>
-        <translation type="unfinished">백업된 지갑 불러오기</translation>
+        <translation type="unfinished">백업된 지갑을 불러옵니다.</translation>
     </message>
     <message>
         <source>Restore Wallet</source>
@@ -799,6 +807,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Enable network activity</source>
         <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
         <translation type="unfinished">네트워크 활성화 하기</translation>
+    </message>
+    <message>
+        <source>Pre-syncing Headers (%1%)…</source>
+        <translation type="unfinished">블록 헤더들을 사전 동기화 중 (%1%)...</translation>
+    </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">지갑 생성 오류</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -907,10 +923,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">수수료:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">더스트:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">수수료 이후:</translation>
     </message>
@@ -999,28 +1011,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">bytes 복사</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">더스트 복사</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">잔돈 복사</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 잠금)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">예</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">아니요</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">수령인이 현재 더스트 임계값보다 작은 양을 수신하면 이 라벨이 빨간색으로 변합니다.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1063,7 +1059,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Can't list signers</source>
         <translation type="unfinished">서명자를 나열할 수 없습니다.</translation>
     </message>
-    </context>
+    <message>
+        <source>Too many external signers found</source>
+        <translation type="unfinished">너무 많은 외부 서명자들이 발견됨</translation>
+    </message>
+</context>
 <context>
     <name>LoadWalletsActivity</name>
     <message>
@@ -1109,7 +1109,27 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
         <translation type="unfinished">지갑 복원하기</translation>
     </message>
-    </context>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">지갑 복구 중 &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Restore wallet failed</source>
+        <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
+        <translation type="unfinished">지갑 복구 실패</translation>
+    </message>
+    <message>
+        <source>Restore wallet warning</source>
+        <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
+        <translation type="unfinished">경고 (지갑 복구)</translation>
+    </message>
+    <message>
+        <source>Restore wallet message</source>
+        <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
+        <translation type="unfinished">지갑 복구 관련 메세지</translation>
+    </message>
+</context>
 <context>
     <name>WalletController</name>
     <message>
@@ -1176,14 +1196,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">빈 지갑 만들기</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">scriptPubKey 관리를 위해 디스크립터를 사용하세요.</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">디스크립터 지갑</translation>
-    </message>
-    <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
         <translation type="unfinished">Hardware wallet과 같은 외부 서명 장치를 사용합니다. 지갑 기본 설정에서 외부 서명자 스크립트를 먼저 구성하십시오.</translation>
     </message>
@@ -1194,10 +1206,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Create</source>
         <translation type="unfinished">생성</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">에스큐엘라이트 지원 없이 컴파일 되었습니다. (디스크립터 지갑에 요구됩니다.)</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
@@ -1308,6 +1316,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     <message>
+        <source>Choose data directory</source>
+        <translation type="unfinished">데이터 디렉토리를 선택하세요</translation>
+    </message>
+    <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">최소 %1 GB의 데이터가 이 디렉토리에 저장되며 시간이 지남에 따라 증가할 것입니다.</translation>
     </message>
@@ -1365,6 +1377,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation type="unfinished">초기 동기화는 매우 오래 걸리며 이전에는 본 적 없는 하드웨어 문제를 발생시킬 수 있습니다. %1을 실행할 때마다 중단 된 곳에서 다시 계속 다운로드 됩니다.</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">OK를 클릭하면, %1는 %4가 최초 출시된 %3에 있는 가장 오래된 트랜잭션들부터 시작하여 전체 %4 블록체인 (%2GB)을 내려 받고 처리하기 시작합니다.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
@@ -1459,7 +1475,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
         <translation type="unfinished">알 수 없음. 헤더 동기화 중(%1, %2)...</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">알려지지 않음. 블록 헤더들을 사전 동기화 중 (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1501,6 +1521,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Number of script &amp;verification threads</source>
         <translation type="unfinished">스크립트 인증 쓰레드의 개수(&amp;V)</translation>
+    </message>
+    <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation type="unfinished">%1가 호환되는 스크립트가 있는 전체 경로 (예시 - C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). 주의: 멀웨어가 당신의 코인들을 훔쳐갈 수도 있습니다!</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1963,6 +1987,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source> * Sends %1 to %2</source>
         <translation type="unfinished">* %1을 %2로 보냅니다.</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">자신의 주소</translation>
     </message>
     <message>
         <source>Unable to calculate transaction fee or total transaction amount.</source>
@@ -2833,10 +2861,6 @@ For more information on using this console, type %6.
         <translation type="unfinished">입력...</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">더스트:</translation>
-    </message>
-    <message>
         <source>Choose…</source>
         <translation type="unfinished">선택...</translation>
     </message>
@@ -2911,10 +2935,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">bytes 복사</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">더스트 복사</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -3544,10 +3564,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">받는 주소 :</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">자신에게 지불</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">채굴</translation>
     </message>
@@ -3621,10 +3637,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Sent to</source>
         <translation type="unfinished">받는 주소 :</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">자기 거래</translation>
     </message>
     <message>
         <source>Mined</source>
@@ -3840,6 +3852,11 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">PSBT 복사됨</translation>
     </message>
     <message>
+        <source>Copied to clipboard</source>
+        <comment>Fee-bump PSBT saved</comment>
+        <translation type="unfinished">클립보드로 복사됨</translation>
+    </message>
+    <message>
         <source>Can't sign transaction.</source>
         <translation type="unfinished">거래에 서명 할 수 없습니다.</translation>
     </message>
@@ -3923,10 +3940,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">MIT 소프트웨어 라이센스에 따라 배포되었습니다. 첨부 파일 %s 또는 %s을 참조하십시오.</translation>
     </message>
     <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">%s 불러오기 오류! 주소 키는 모두 정확하게 로드되었으나 거래 데이터와 주소록 필드에서 누락이나 오류가 존재할 수 있습니다.</translation>
-    </message>
-    <message>
         <source>Error reading %s! Transaction data may be missing or incorrect. Rescanning wallet.</source>
         <translation type="unfinished">%s를 읽는데 에러가 생겼습니다. 트랜잭션 데이터가 잘못되었거나 누락되었습니다. 지갑을 다시 스캐닝합니다.</translation>
     </message>
@@ -3993,10 +4006,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
         <translation type="unfinished">블록 데이터베이스에 미래의 블록이 포함되어 있습니다. 이것은 사용자의 컴퓨터의 날짜와 시간이 올바르게 설정되어 있지 않을때 나타날 수 있습니다. 블록 데이터 베이스의 재구성은 사용자의 컴퓨터의 날짜와 시간이 올바르다고 확신할 때에만 하십시오.</translation>
-    </message>
-    <message>
-        <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
-        <translation type="unfinished">udhdbfjfjdnbdjfjf hdhdbjcn2owkd. jjwbdbdof dkdbdnck wdkdj </translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>

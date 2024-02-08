@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">ලිපිනය හෝ නම්පත සංශෝධනයට දකුණු බොත්තම  ඔබන්න</translation>
+        <translation type="unfinished">ලිපිනය හෝ ලේබලය සංස්කරණය කිරීමට දකුණු-ක්ලික් කරන්න</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -56,14 +56,6 @@
     <message>
         <source>C&amp;hoose</source>
         <translation type="unfinished">තෝ&amp;රන්න</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">යවන ලිපින</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">ලැබෙන ලිපින</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -618,14 +610,6 @@
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">බයිට පිටපත් කරන්න</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">ඔව්</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">නැත</translation>
     </message>
     <message>
         <source>(no label)</source>
