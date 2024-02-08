@@ -648,10 +648,6 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
 
         ptx.collateralOutpoint = COutPoint(collateralHash, (uint32_t)collateralIndex);
         paramIdx += 2;
-
-        // TODO unlock on failure
-        LOCK(wallet->cs_wallet);
-        wallet->LockCoin(ptx.collateralOutpoint);
     }
 
     if (request.params[paramIdx].get_str() != "") {
@@ -721,15 +717,14 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[paramIdx + 6].get_str());
     }
 
-    FundSpecialTx(wallet.get(), tx, ptx, fundDest);
-    UpdateSpecialTxInputsHash(tx, ptx);
-
     bool fSubmit{true};
     if ((isExternalRegister || isFundRegister) && !request.params[paramIdx + 7].isNull()) {
         fSubmit = ParseBoolV(request.params[paramIdx + 7], "submit");
     }
 
     if (isFundRegister) {
+        FundSpecialTx(wallet.get(), tx, ptx, fundDest);
+        UpdateSpecialTxInputsHash(tx, ptx);
         CAmount fundCollateral = GetMnType(mnType).collat_amount;
         uint32_t collateralIndex = (uint32_t) -1;
         for (uint32_t i = 0; i < tx.vout.size(); i++) {
@@ -746,41 +741,57 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     } else {
         // referencing external collateral
 
-        Coin coin;
-        if (!GetUTXOCoin(ptx.collateralOutpoint, coin)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral not found: %s", ptx.collateralOutpoint.ToStringShort()));
-        }
-        CTxDestination txDest;
-        ExtractDestination(coin.out.scriptPubKey, txDest);
-        const PKHash *pkhash = std::get_if<PKHash>(&txDest);
-        if (!pkhash) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral type not supported: %s", ptx.collateralOutpoint.ToStringShort()));
-        }
-
-        if (isPrepareRegister) {
-            // external signing with collateral key
-            ptx.vchSig.clear();
-            SetTxPayload(tx, ptx);
-
-            UniValue ret(UniValue::VOBJ);
-            ret.pushKV("tx", EncodeHexTx(CTransaction(tx)));
-            ret.pushKV("collateralAddress", EncodeDestination(txDest));
-            ret.pushKV("signMessage", ptx.MakeSignString());
-            return ret;
-        } else {
-            // lets prove we own the collateral
-            LegacyScriptPubKeyMan* spk_man = wallet->GetLegacyScriptPubKeyMan();
-            if (!spk_man) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
+        const bool unlockOnError = [&]() {
+            if (LOCK(wallet->cs_wallet); !wallet->IsLockedCoin(ptx.collateralOutpoint.hash, ptx.collateralOutpoint.n)) {
+                wallet->LockCoin(ptx.collateralOutpoint);
+                return true;
+            }
+            return false;
+        }();
+        try {
+            FundSpecialTx(wallet.get(), tx, ptx, fundDest);
+            UpdateSpecialTxInputsHash(tx, ptx);
+            Coin coin;
+            if (!GetUTXOCoin(ptx.collateralOutpoint, coin)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral not found: %s", ptx.collateralOutpoint.ToStringShort()));
+            }
+            CTxDestination txDest;
+            ExtractDestination(coin.out.scriptPubKey, txDest);
+            const PKHash* pkhash = std::get_if<PKHash>(&txDest);
+            if (!pkhash) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral type not supported: %s", ptx.collateralOutpoint.ToStringShort()));
             }
 
-            CKey key;
-            if (!spk_man->GetKey(ToKeyID(*pkhash), key)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral key not in wallet: %s", EncodeDestination(txDest)));
+            if (isPrepareRegister) {
+                // external signing with collateral key
+                ptx.vchSig.clear();
+                SetTxPayload(tx, ptx);
+
+                UniValue ret(UniValue::VOBJ);
+                ret.pushKV("tx", EncodeHexTx(CTransaction(tx)));
+                ret.pushKV("collateralAddress", EncodeDestination(txDest));
+                ret.pushKV("signMessage", ptx.MakeSignString());
+                return ret;
+            } else {
+                // lets prove we own the collateral
+                LegacyScriptPubKeyMan* spk_man = wallet->GetLegacyScriptPubKeyMan();
+                if (!spk_man) {
+                    throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
+                }
+
+                CKey key;
+                if (!spk_man->GetKey(ToKeyID(*pkhash), key)) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral key not in wallet: %s", EncodeDestination(txDest)));
+                }
+                SignSpecialTxPayloadByString(tx, ptx, key);
+                SetTxPayload(tx, ptx);
+                return SignAndSendSpecialTx(request, chainman, tx, fSubmit);
             }
-            SignSpecialTxPayloadByString(tx, ptx, key);
-            SetTxPayload(tx, ptx);
-            return SignAndSendSpecialTx(request, chainman, tx, fSubmit);
+        } catch (...) {
+            if (unlockOnError) {
+                WITH_LOCK(wallet->cs_wallet, wallet->UnlockCoin(ptx.collateralOutpoint));
+            }
+            throw;
         }
     }
 }
