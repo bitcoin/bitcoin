@@ -17,7 +17,7 @@
 FUZZ_TARGET(net_permissions)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    const std::string s = fuzzed_data_provider.ConsumeRandomLengthString(32);
+    const std::string s = fuzzed_data_provider.ConsumeRandomLengthString(1000);
     const NetPermissionFlags net_permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
 
     NetWhitebindPermissions net_whitebind_permissions;
