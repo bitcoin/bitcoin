@@ -1476,7 +1476,7 @@ public:
              SerializeOutput(s, nOutput);
         // Serialize nLockTime
         ::Serialize(s, txTo.nLockTime);
-        if (txTo.IsSpecialTxVersion() && txTo.nType != TRANSACTION_NORMAL)
+        if (txTo.HasExtraPayloadField())
             ::Serialize(s, txTo.vExtraPayload);
     }
 };

@@ -224,7 +224,7 @@ public:
         s << vin;
         s << vout;
         s << nLockTime;
-        if (this->IsSpecialTxVersion() && this->nType != TRANSACTION_NORMAL)
+        if (this->HasExtraPayloadField())
             s << vExtraPayload;
     }
 
@@ -270,6 +270,11 @@ public:
     {
         return nVersion >= 3;
     }
+
+    bool HasExtraPayloadField() const noexcept
+    {
+        return IsSpecialTxVersion() && nType != TRANSACTION_NORMAL;
+    }
 };
 
 /** A mutable version of CTransaction. */
@@ -293,7 +298,7 @@ struct CMutableTransaction
         SER_READ(obj, obj.nVersion = (int16_t) (n32bitVersion & 0xffff));
         SER_READ(obj, obj.nType = (uint16_t) ((n32bitVersion >> 16) & 0xffff));
         READWRITE(obj.vin, obj.vout, obj.nLockTime);
-        if (obj.IsSpecialTxVersion() && obj.nType != TRANSACTION_NORMAL) {
+        if (obj.HasExtraPayloadField()) {
             READWRITE(obj.vExtraPayload);
         }
     }
@@ -313,6 +318,11 @@ struct CMutableTransaction
     bool IsSpecialTxVersion() const
     {
         return nVersion >= 3;
+    }
+
+    bool HasExtraPayloadField() const
+    {
+        return IsSpecialTxVersion() && nType != TRANSACTION_NORMAL;
     }
 };
 

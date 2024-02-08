@@ -2564,7 +2564,7 @@ static RPCHelpMan getspecialtxes()
 
     for(const auto& tx : block.vtx)
     {
-        if (!tx->IsSpecialTxVersion() || tx->nType == TRANSACTION_NORMAL // ensure it's in fact a special tx
+        if (!tx->HasExtraPayloadField()                   // ensure it's in fact a special tx
             || (nTxType != -1 && tx->nType != nTxType)) { // ensure special tx type matches filter, if given
             continue;
         }

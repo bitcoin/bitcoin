@@ -22,7 +22,7 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, const CTransact
 {
     AssertLockHeld(cs_main);
 
-    if (!tx.IsSpecialTxVersion() || tx.nType == TRANSACTION_NORMAL)
+    if (!tx.HasExtraPayloadField())
         return true;
 
     const auto& consensusParams = Params().GetConsensus();
@@ -80,7 +80,7 @@ bool CheckSpecialTx(CDeterministicMNManager& dmnman, const CTransaction& tx, con
 
 [[nodiscard]] bool CSpecialTxProcessor::ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, TxValidationState& state)
 {
-    if (!tx.IsSpecialTxVersion() || tx.nType == TRANSACTION_NORMAL) {
+    if (!tx.HasExtraPayloadField()) {
         return true;
     }
 
@@ -106,7 +106,7 @@ bool CheckSpecialTx(CDeterministicMNManager& dmnman, const CTransaction& tx, con
 
 [[nodiscard]] bool CSpecialTxProcessor::UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
 {
-    if (!tx.IsSpecialTxVersion() || tx.nType == TRANSACTION_NORMAL) {
+    if (!tx.HasExtraPayloadField()) {
         return true;
     }
 

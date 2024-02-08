@@ -3056,7 +3056,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     LOCK(cs_wallet);
 
     int nExtraPayloadSize = 0;
-    if (tx.IsSpecialTxVersion() && tx.nType != TRANSACTION_NORMAL)
+    if (tx.HasExtraPayloadField())
         nExtraPayloadSize = (int)tx.vExtraPayload.size();
 
     CTransactionRef tx_new;
