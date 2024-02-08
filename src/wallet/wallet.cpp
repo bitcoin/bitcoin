@@ -2359,22 +2359,32 @@ bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& add
     {
         LOCK(cs_wallet);
         std::map<CTxDestination, CAddressBookData>::iterator mi = m_address_book.find(address);
-        fUpdated = (mi != m_address_book.end() && !mi->second.IsChange());
-        m_address_book[address].SetLabel(strName);
+        fUpdated = mi != m_address_book.end() && !mi->second.IsChange();
+
+        CAddressBookData& record = mi != m_address_book.end() ? mi->second : m_address_book[address];
+        record.SetLabel(strName);
         is_mine = IsMine(address) != ISMINE_NO;
         if (new_purpose) { /* update purpose only if requested */
-            purpose = m_address_book[address].purpose = new_purpose;
-        } else {
-            purpose = m_address_book[address].purpose;
+            record.purpose = new_purpose;
         }
+        purpose = record.purpose;
     }
+
+    const std::string& encoded_dest = EncodeDestination(address);
+    if (new_purpose && !batch.WritePurpose(encoded_dest, PurposeToString(*new_purpose))) {
+        WalletLogPrintf("Error: fail to write address book 'purpose' entry\n");
+        return false;
+    }
+    if (!batch.WriteName(encoded_dest, strName)) {
+        WalletLogPrintf("Error: fail to write address book 'name' entry\n");
+        return false;
+    }
+
     // In very old wallets, address purpose may not be recorded so we derive it from IsMine
     NotifyAddressBookChanged(address, strName, is_mine,
                              purpose.value_or(is_mine ? AddressPurpose::RECEIVE : AddressPurpose::SEND),
                              (fUpdated ? CT_UPDATED : CT_NEW));
-    if (new_purpose && !batch.WritePurpose(EncodeDestination(address), PurposeToString(*new_purpose)))
-        return false;
-    return batch.WriteName(EncodeDestination(address), strName);
+    return true;
 }
 
 bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& strName, const std::optional<AddressPurpose>& purpose)
@@ -2386,6 +2396,12 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& s
 bool CWallet::DelAddressBook(const CTxDestination& address)
 {
     WalletBatch batch(GetDatabase());
+    return DelAddressBookWithDB(batch, address);
+}
+
+bool CWallet::DelAddressBookWithDB(WalletBatch& batch, const CTxDestination& address)
+{
+    const std::string& dest = EncodeDestination(address);
     {
         LOCK(cs_wallet);
         // If we want to delete receiving addresses, we should avoid calling EraseAddressData because it will delete the previously_spent value. Could instead just erase the label so it becomes a change address, and keep the data.
@@ -2396,14 +2412,30 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
             return false;
         }
         // Delete data rows associated with this address
-        batch.EraseAddressData(address);
+        if (!batch.EraseAddressData(address)) {
+            WalletLogPrintf("Error: cannot erase address book entry data\n");
+            return false;
+        }
+
+        // Delete purpose entry
+        if (!batch.ErasePurpose(dest)) {
+            WalletLogPrintf("Error: cannot erase address book entry purpose\n");
+            return false;
+        }
+
+        // Delete name entry
+        if (!batch.EraseName(dest)) {
+            WalletLogPrintf("Error: cannot erase address book entry name\n");
+            return false;
+        }
+
+        // finally, remove it from the map
         m_address_book.erase(address);
     }
 
+    // All good, signal changes
     NotifyAddressBookChanged(address, "", /*is_mine=*/false, AddressPurpose::SEND, CT_DELETED);
-
-    batch.ErasePurpose(EncodeDestination(address));
-    return batch.EraseName(EncodeDestination(address));
+    return true;
 }
 
 size_t CWallet::KeypoolCountExternalKeys() const
@@ -4008,83 +4040,89 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         }
     }
 
+    // Pair external wallets with their corresponding db handler
+    std::vector<std::pair<std::shared_ptr<CWallet>, std::unique_ptr<WalletBatch>>> wallets_vec;
+    for (const auto& ext_wallet : {data.watchonly_wallet, data.solvable_wallet}) {
+        if (!ext_wallet) continue;
+
+        std::unique_ptr<WalletBatch> batch = std::make_unique<WalletBatch>(ext_wallet->GetDatabase());
+        if (!batch->TxnBegin()) {
+            error = strprintf(_("Error: database transaction cannot be executed for wallet %s"), ext_wallet->GetName());
+            return false;
+        }
+        wallets_vec.emplace_back(ext_wallet, std::move(batch));
+    }
+
+    // Write address book entry to disk
+    auto func_store_addr = [](WalletBatch& batch, const CTxDestination& dest, const CAddressBookData& entry) {
+        auto address{EncodeDestination(dest)};
+        if (entry.purpose) batch.WritePurpose(address, PurposeToString(*entry.purpose));
+        if (entry.label) batch.WriteName(address, *entry.label);
+        for (const auto& [id, request] : entry.receive_requests) {
+            batch.WriteAddressReceiveRequest(dest, id, request);
+        }
+        if (entry.previously_spent) batch.WriteAddressPreviouslySpent(dest, true);
+    };
+
     // Check the address book data in the same way we did for transactions
     std::vector<CTxDestination> dests_to_delete;
-    for (const auto& addr_pair : m_address_book) {
-        // Labels applied to receiving addresses should go based on IsMine
-        if (addr_pair.second.purpose == AddressPurpose::RECEIVE) {
-            if (!IsMine(addr_pair.first)) {
-                // Check the address book data is the watchonly wallet's
-                if (data.watchonly_wallet) {
-                    LOCK(data.watchonly_wallet->cs_wallet);
-                    if (data.watchonly_wallet->IsMine(addr_pair.first)) {
-                        // Add to the watchonly. Copy the entire address book entry
-                        data.watchonly_wallet->m_address_book[addr_pair.first] = addr_pair.second;
-                        dests_to_delete.push_back(addr_pair.first);
-                        continue;
-                    }
-                }
-                if (data.solvable_wallet) {
-                    LOCK(data.solvable_wallet->cs_wallet);
-                    if (data.solvable_wallet->IsMine(addr_pair.first)) {
-                        // Add to the solvable. Copy the entire address book entry
-                        data.solvable_wallet->m_address_book[addr_pair.first] = addr_pair.second;
-                        dests_to_delete.push_back(addr_pair.first);
-                        continue;
-                    }
-                }
+    for (const auto& [dest, record] : m_address_book) {
+        // Ensure "receive" entries that are no longer part of the original wallet are transferred to another wallet
+        // Entries for everything else ("send") will be cloned to all wallets.
+        bool require_transfer = record.purpose == AddressPurpose::RECEIVE && !IsMine(dest);
+        bool copied = false;
+        for (auto& [wallet, batch] : wallets_vec) {
+            LOCK(wallet->cs_wallet);
+            if (require_transfer && !wallet->IsMine(dest)) continue;
 
-                // Skip invalid/non-watched scripts that will not be migrated
-                if (not_migrated_dests.count(addr_pair.first) > 0) {
-                    dests_to_delete.push_back(addr_pair.first);
-                    continue;
-                }
+            // Copy the entire address book entry
+            wallet->m_address_book[dest] = record;
+            func_store_addr(*batch, dest, record);
 
-                // Not ours, not in watchonly wallet, and not in solvable
-                error = _("Error: Address book data in wallet cannot be identified to belong to migrated wallets");
-                return false;
+            copied = true;
+            // Only delete 'receive' records that are no longer part of the original wallet
+            if (require_transfer) {
+                dests_to_delete.push_back(dest);
+                break;
             }
-        } else {
-            // Labels for everything else ("send") should be cloned to all
-            if (data.watchonly_wallet) {
-                LOCK(data.watchonly_wallet->cs_wallet);
-                // Add to the watchonly. Copy the entire address book entry
-                data.watchonly_wallet->m_address_book[addr_pair.first] = addr_pair.second;
+        }
+
+        // Fail immediately if we ever found an entry that was ours and cannot be transferred
+        // to any of the created wallets (watch-only, solvable).
+        // Means that no inferred descriptor maps to the stored entry. Which mustn't happen.
+        if (require_transfer && !copied) {
+
+            // Skip invalid/non-watched scripts that will not be migrated
+            if (not_migrated_dests.count(dest) > 0) {
+                dests_to_delete.push_back(dest);
+                continue;
             }
-            if (data.solvable_wallet) {
-                LOCK(data.solvable_wallet->cs_wallet);
-                // Add to the solvable. Copy the entire address book entry
-                data.solvable_wallet->m_address_book[addr_pair.first] = addr_pair.second;
-            }
+
+            error = _("Error: Address book data in wallet cannot be identified to belong to migrated wallets");
+            return false;
         }
     }
 
-    // Persist added address book entries (labels, purpose) for watchonly and solvable wallets
-    auto persist_address_book = [](const CWallet& wallet) {
-        LOCK(wallet.cs_wallet);
-        WalletBatch batch{wallet.GetDatabase()};
-        for (const auto& [destination, addr_book_data] : wallet.m_address_book) {
-            auto address{EncodeDestination(destination)};
-            if (addr_book_data.purpose) batch.WritePurpose(address, PurposeToString(*addr_book_data.purpose));
-            if (addr_book_data.label) batch.WriteName(address, *addr_book_data.label);
-            for (const auto& [id, request] : addr_book_data.receive_requests) {
-                batch.WriteAddressReceiveRequest(destination, id, request);
-            }
-            if (addr_book_data.previously_spent) batch.WriteAddressPreviouslySpent(destination, true);
+    // Persist external wallets address book entries
+    for (auto& [wallet, batch] : wallets_vec) {
+        if (!batch->TxnCommit()) {
+            error = strprintf(_("Error: address book copy failed for wallet %s"), wallet->GetName());
+            return false;
         }
-    };
-    if (data.watchonly_wallet) persist_address_book(*data.watchonly_wallet);
-    if (data.solvable_wallet) persist_address_book(*data.solvable_wallet);
+    }
 
-    // Remove the things to delete
+    // Remove the things to delete in this wallet
+    WalletBatch local_wallet_batch(GetDatabase());
+    local_wallet_batch.TxnBegin();
     if (dests_to_delete.size() > 0) {
         for (const auto& dest : dests_to_delete) {
-            if (!DelAddressBook(dest)) {
+            if (!DelAddressBookWithDB(local_wallet_batch, dest)) {
                 error = _("Error: Unable to remove watchonly address book data");
                 return false;
             }
         }
     }
+    local_wallet_batch.TxnCommit();
 
     // Connect the SPKM signals
     ConnectScriptPubKeyManNotifiers();
