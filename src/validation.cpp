@@ -5115,6 +5115,11 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pin
     if (pindex == nullptr)
         return 0.0;
 
+    if (!Assume(pindex->nChainTx > 0)) {
+        LogPrintf("Internal bug detected: block %d has unset nChainTx (%s %s). Please report this issue here: %s\n",
+                  pindex->nHeight, PACKAGE_NAME, FormatFullVersion(), PACKAGE_BUGREPORT);
+    }
+
     int64_t nNow = time(nullptr);
 
     double fTxTotal;
