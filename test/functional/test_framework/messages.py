@@ -1063,7 +1063,7 @@ class CPartialMerkleTree:
         self.vBits = []
 
     def deserialize(self, f):
-        self.nTransactions = int.from_bytes(f.read(4), "little", signed=True)
+        self.nTransactions = int.from_bytes(f.read(4), "little")
         self.vHash = deser_uint256_vector(f)
         vBytes = deser_string(f)
         self.vBits = []
@@ -1072,7 +1072,7 @@ class CPartialMerkleTree:
 
     def serialize(self):
         r = b""
-        r += self.nTransactions.to_bytes(4, "little", signed=True)
+        r += self.nTransactions.to_bytes(4, "little")
         r += ser_uint256_vector(self.vHash)
         vBytesArray = bytearray([0x00] * ((len(self.vBits) + 7)//8))
         for i in range(len(self.vBits)):

@@ -58,14 +58,6 @@
         <translation type="unfinished">തി&amp;രഞ്ഞെടുക്കുക</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">അയക്കേണ്ട വിലാസങ്ങൾ</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">സ്വീകരിക്കുന്ന വിലാസങ്ങൾ</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">പൈസ അയയ്ക്കുന്നതിനുള്ള നിങ്ങളുടെ ബിറ്റ് കോയിൻ വിലാസങ്ങളാണ് ഇവ. നാണയങ്ങൾ അയയ്ക്കുന്നതിനുമുമ്പ് എല്ലായ്പ്പോഴും തുകയും സ്വീകരിക്കുന്ന വിലാസവും പരിശോധിക്കുക.</translation>
     </message>
@@ -259,6 +251,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Enter a Bitcoin address (e.g. %1)</source>
         <translation type="unfinished">ഒരു ബിറ്റ്കോയിൻ വിലാസം നൽകുക(e.g. %1)</translation>
     </message>
+    <message>
+        <source>Inbound</source>
+        <extracomment>An inbound connection from a peer. An inbound connection is a connection initiated by a peer.</extracomment>
+        <translation type="unfinished">അകത്തേക്കു വരുന്ന</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An outbound connection to a peer. An outbound connection is a connection initiated by us.</extracomment>
+        <translation type="unfinished">പുറത്തേക് പോകുന്ന </translation>
+    </message>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
@@ -384,6 +386,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Receive</source>
         <translation type="unfinished">&amp;സ്വീകരിക്കുക</translation>
+    </message>
+    <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">ഇഷ്‌ടമുള്ളത്‌ തിരഞ്ഞെടുക്കല്‍</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -653,10 +659,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ഫീസ്‌ / പ്രതിഫലം :</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">പൊടി:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">ഫീസ് കഴിഞ്ഞ്:</translation>
     </message>
@@ -721,28 +723,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ബൈറ്റ്സ് പകർത്തു</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">ഡസ്ട് പകർത്തു</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">ചേഞ്ച് പകർത്തു</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 ലോക്ക് ആക്കിയിരിക്കുന്നു)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">അതെ / ശരി</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">ഇല്ല</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">ഏതെങ്കിലും സ്വീകർത്താവിന് നിലവിലെ ഡസ്ട് പരിധിയേക്കാൾ ചെറിയ തുക ലഭിക്കുകയാണെങ്കിൽ ഈ ലേബൽ ചുവപ്പായി മാറുന്നു.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -988,6 +974,22 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ലഭ്യമായ</translation>
     </message>
     <message>
+        <source>Pending:</source>
+        <translation type="unfinished">തീരുമാനിക്കപ്പെടാത്ത</translation>
+    </message>
+    <message>
+        <source>Balances</source>
+        <translation type="unfinished">മിച്ചം ഉള്ള തുക </translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation type="unfinished">മൊത്തം</translation>
+    </message>
+    <message>
+        <source>Your current total balance</source>
+        <translation type="unfinished">നിങ്ങളുടെ നിലവിൽ ഉള്ള മുഴുവൻ തുക </translation>
+    </message>
+    <message>
         <source>Spendable:</source>
         <translation type="unfinished">വിനിയോഗിക്കാവുന്നത് / ചെലവാക്കാവുന്നത് </translation>
     </message>
@@ -999,12 +1001,28 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
+        <source>Save…</source>
+        <translation type="unfinished">സൂക്ഷിക്കുക</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">അവസാനിപ്പിക്കുക</translation>
+    </message>
+    <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
         <translation type="unfinished">ഇടപാട് വിജയകരമായി ഒപ്പിട്ടു.  ഇടപാട് പ്രക്ഷേപണത്തിന് തയ്യാറാണ്</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation type="unfinished">മുഴുവന്‍ തുക </translation>
     </message>
     </context>
 <context>
     <name>PaymentServer</name>
+    <message>
+        <source>Payment request error</source>
+        <translation type="unfinished">പണം അഭ്യര്‍ത്ഥന പിശക്‌</translation>
+    </message>
     <message>
         <source>URI handling</source>
         <translation type="unfinished">യു‌ആർ‌ഐ കൈകാര്യം ചെയ്യൽ</translation>
@@ -1035,6 +1053,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">പിംഗ് </translation>
     </message>
     <message>
+        <source>Age</source>
+        <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
+        <translation type="unfinished">പ്രായം</translation>
+    </message>
+    <message>
         <source>Sent</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
         <translation type="unfinished">അയക്കുക </translation>
@@ -1049,9 +1072,60 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
         <translation type="unfinished">വിലാസം</translation>
     </message>
+    <message>
+        <source>Type</source>
+        <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
+        <translation type="unfinished">തരം</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
+        <translation type="unfinished">ശൃംഖല</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <extracomment>An Inbound Connection from a Peer.</extracomment>
+        <translation type="unfinished">അകത്തേക്കു വരുന്ന</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An Outbound Connection to a Peer.</extracomment>
+        <translation type="unfinished">പുറത്തേക് പോകുന്ന </translation>
+    </message>
+</context>
+<context>
+    <name>QRImageWidget</name>
+    <message>
+        <source>&amp;Save Image…</source>
+        <translation type="unfinished">ചിത്രം സൂക്ഷിക്കുക</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Image</source>
+        <translation type="unfinished">ചിത്രം പകര്‍ത്തുക</translation>
+    </message>
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>&amp;Information</source>
+        <translation type="unfinished">അറിയിപ്പ്</translation>
+    </message>
+    <message>
+        <source>General</source>
+        <translation type="unfinished">പൊതുവായ</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation type="unfinished">ശൃംഖല</translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation type="unfinished">നാമപദം</translation>
+    </message>
+    <message>
+        <source>Wallet: </source>
+        <translation type="unfinished">പണസഞ്ചി</translation>
+    </message>
     <message>
         <source>Received</source>
         <translation type="unfinished">ലഭിച്ചവ </translation>
@@ -1093,6 +1167,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Wallet:</source>
         <translation type="unfinished">വാലറ്റ്:</translation>
+    </message>
+    <message>
+        <source>&amp;Save Image…</source>
+        <translation type="unfinished">ചിത്രം സൂക്ഷിക്കുക</translation>
     </message>
     </context>
 <context>
@@ -1137,10 +1215,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">മാറ്റം</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">പൊടി:</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">നിര്‍ദ്ധിഷ്‌ടസംഖ്യ / അളവ് പകർത്തുക</translation>
     </message>
@@ -1161,12 +1235,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ബൈറ്റ്സ് പകർത്തു</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">ഡസ്ട് പകർത്തു</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">ചേഞ്ച് പകർത്തു</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation type="unfinished">മുഴുവന്‍ തുക </translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -1228,6 +1302,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">തീയതി </translation>
     </message>
     <message>
+        <source>Type</source>
+        <translation type="unfinished">തരം</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation type="unfinished">ലേബൽ</translation>
     </message>
@@ -1245,6 +1323,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Date</source>
         <translation type="unfinished">തീയതി </translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation type="unfinished">തരം</translation>
     </message>
     <message>
         <source>Label</source>

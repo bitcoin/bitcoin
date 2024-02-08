@@ -3,23 +3,23 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Fadlan garaaci Midig ku dhufo si aad u saxdo ciwaanka ama sumadda.</translation>
+        <translation type="unfinished">Xaq-click si aad cinwaanka edit ama qoraalka</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Fadhlan samee cinwaan cusub.</translation>
+        <translation type="unfinished">Abuur cinwaan cusub</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">Maqal</translation>
+        <translation type="unfinished">&amp;Hormarin</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Ka akhriso cinwaan aad xaqiijinaysay si aad u ku koobid natiijada isticmaalka ee nidaamka</translation>
+        <translation type="unfinished">Nuqul ka dhig cinwaanka hadda la soo xulay ee clipboard system</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;Fidi </translation>
+        <translation type="unfinished">&amp;Nuqul</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
@@ -58,14 +58,6 @@
         <translation type="unfinished">C&amp;Aagga</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Cinwaanada dirista</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Cinwaanada qaabilaadda</translation>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Kuwani waa cinwaanada Seeraar aad ku direyso lacagaha. Marwalba caddadka ama cinwaanka laga soo hubiyo inta aadan dirin lacagta qadaadiicda ah ka hor inta aadan dirin.</translation>
     </message>
@@ -84,9 +76,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">Liiska Cinwaanka Dhoofinta
-
-</translation>
+        <translation type="unfinished">Liiska Cinwaanka Dhoofinta</translation>
     </message>
     <message>
         <source>Comma separated file</source>
@@ -150,7 +140,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">Digniin: Haddii aad qarisid jeebkaaga oo aad lumiso ereyga Passphrase, waxaad 1LOSE DOONAA DHAMMAAN BITCOINS1!</translation>
+        <translation type="unfinished">Digniin: Haddii aad jeebka jeebkaaga qarisid, Oo aad lumiso ereygii,Adigaa sameyn doontaa&lt;b&gt;Lumin oo dhan BITCOINS AAD&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -195,10 +185,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The supplied passphrases do not match.</source>
         <translation type="unfinished">Supplied passrases ma u dhigma.</translation>
-    </message>
-    <message>
-        <source>Wallet unlock failed</source>
-        <translation type="unfinished">Wallet Unlock failed</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>

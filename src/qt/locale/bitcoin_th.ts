@@ -1,5 +1,12 @@
 <TS version="2.1" language="th">
 <context>
+    <name>AddressBookPage</name>
+    <message>
+        <source>Create a new address</source>
+        <translation type="unfinished">สร้างแอดเดรสใหม่</translation>
+    </message>
+    </context>
+<context>
     <name>BitcoinApplication</name>
     <message>
         <source>Settings file %1 might be corrupt or invalid.</source>
@@ -151,16 +158,21 @@
         <translation type="unfinished">ปิดกระเป๋าสตางค์ทั้งหมด</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">แสดง %1 ข้อความช่วยเหลือ เพื่อแสดงรายการ ตัวเลือกที่เป็นไปได้สำหรับ Bitcoin command-line</translation>
+        <source>&amp;Mask values</source>
+        <translation type="unfinished">&amp;ค่ามาสก์</translation>
     </message>
     <message>
         <source>default wallet</source>
-        <translation type="unfinished">กระเป๋าสตางค์เริ่มต้น</translation>
+        <translation type="unfinished">วอลเล็ต เริ่มต้น</translation>
     </message>
     <message>
         <source>No wallets available</source>
-        <translation type="unfinished">ไม่มีกระเป๋าสตางค์</translation>
+        <translation type="unfinished">ไม่มี วอลเล็ต ที่พร้อมใช้งาน</translation>
+    </message>
+    <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">ข้อมูล วอลเล็ต</translation>
     </message>
     <message>
         <source>Load Wallet Backup</source>
@@ -172,17 +184,61 @@
         <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
         <translation type="unfinished">กู้คืนวอลเล็ต</translation>
     </message>
+    <message>
+        <source>Wallet Name</source>
+        <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
+        <translation type="unfinished">ชื่อ วอลเล็ต</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation type="unfinished">&amp;วินโดว์</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation type="unfinished">ซูม</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation type="unfinished">วินโดว์ หลัก</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation type="unfinished">%1 ลูกค้า</translation>
+    </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">&amp;ซ่อน</translation>
+    </message>
+    <message>
+        <source>S&amp;how</source>
+        <translation type="unfinished">&amp;แสดง</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
+            <numerusform>%n เครือข่ายที่สามารถใช้เชื่อมต่อไปยังเครือข่ายบิตคอยน์ได้</numerusform>
         </translation>
     </message>
     <message>
         <source>Click for more actions.</source>
         <extracomment>A substring of the tooltip. "More actions" are available via the context menu.</extracomment>
         <translation type="unfinished">คลิกเพื่อดูการดำเนินการเพิ่มเติม</translation>
+    </message>
+    <message>
+        <source>Show Peers tab</source>
+        <extracomment>A context menu item. The "Peers tab" is an element of the "Node window".</extracomment>
+        <translation type="unfinished">แสดง Peers แท็ป</translation>
+    </message>
+    <message>
+        <source>Disable network activity</source>
+        <extracomment>A context menu item.</extracomment>
+        <translation type="unfinished">ปิดใช้งาน กิจกรรม เครือข่าย</translation>
+    </message>
+    <message>
+        <source>Enable network activity</source>
+        <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
+        <translation type="unfinished">เปิดใช้งาน กิจกรรม เครือข่าย</translation>
     </message>
     </context>
 <context>
@@ -201,6 +257,22 @@
     <message>
         <source>&amp;Unlock unspent</source>
         <translation type="unfinished">&amp;ปลดล็อค ที่ไม่ไดใช้</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation type="unfinished">คัดลอก change</translation>
+    </message>
+    <message>
+        <source>(%1 locked)</source>
+        <translation type="unfinished">(%1 ล็อคแล้ว)</translation>
+    </message>
+    </context>
+<context>
+    <name>CreateWalletActivity</name>
+    <message>
+        <source>Create Wallet</source>
+        <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
+        <translation type="unfinished">สร้าง วอลเล็ต</translation>
     </message>
     </context>
 <context>
@@ -228,12 +300,7 @@
     </message>
     <message>
         <source>default wallet</source>
-        <translation type="unfinished">วอลเล็ต เริ่มต้น</translation>
-    </message>
-    <message>
-        <source>Open Wallet</source>
-        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
-        <translation type="unfinished">เปิด วอลเล็ต</translation>
+        <translation type="unfinished">กระเป๋าสตางค์เริ่มต้น</translation>
     </message>
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
@@ -272,10 +339,6 @@
 <context>
     <name>WalletController</name>
     <message>
-        <source>Close wallet</source>
-        <translation type="unfinished">ปิดกระเป๋าสตางค์</translation>
-    </message>
-    <message>
         <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
         <translation type="unfinished">คุณ แน่ใจ หรือไม่ว่า ต้องการ ปิด วอลเล็ต &lt;i&gt;%1&lt;/i&gt;?</translation>
     </message>
@@ -285,7 +348,7 @@
     </message>
     <message>
         <source>Close all wallets</source>
-        <translation type="unfinished">ปิด วอลเล็ต ทั้งหมด</translation>
+        <translation type="unfinished">ปิดกระเป๋าสตางค์ทั้งหมด</translation>
     </message>
     <message>
         <source>Are you sure you wish to close all wallets?</source>
@@ -333,10 +396,6 @@
     <message>
         <source>Make Blank Wallet</source>
         <translation type="unfinished">ทำ วอลเล็ต ให้ว่างเปล่า</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">ตัวอธิบาย วอลเล็ต</translation>
     </message>
     <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
@@ -422,7 +481,7 @@
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform>(%n GB needed for full chain)</numerusform>
+            <numerusform />
         </translation>
     </message>
     <message>
@@ -578,6 +637,10 @@
         <translation type="unfinished">ผู้ลงนามภายนอก (เช่น ฮาร์ดแวร์วอลเล็ต)</translation>
     </message>
     <message>
+        <source>&amp;Window</source>
+        <translation type="unfinished">&amp;วินโดว์</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation type="unfinished">ข้อผิดพลาด</translation>
     </message>
@@ -670,6 +733,10 @@
         <translation type="unfinished">วินาทีในการ Ping</translation>
     </message>
     <message>
+        <source>Last block time</source>
+        <translation type="unfinished">บล็อกเวลาล่าสุด</translation>
+    </message>
+    <message>
         <source>Debug log file</source>
         <translation type="unfinished">ไฟล์บันทึกการดีบัก</translation>
     </message>
@@ -682,6 +749,13 @@
         <source>Outbound Full Relay: default</source>
         <extracomment>Explanatory text for an outbound peer connection that relays all network information. This is the default behavior for outbound connections.</extracomment>
         <translation type="unfinished">ขาออก Full Relay: ค่าเริ่มต้น</translation>
+    </message>
+    </context>
+<context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation type="unfinished">ไม่สามารถปลดล็อกวอลเล็ตได้</translation>
     </message>
     </context>
 <context>
@@ -773,9 +847,17 @@
     </message>
     <message>
         <source>default wallet</source>
-        <translation type="unfinished">วอลเล็ต เริ่มต้น</translation>
+        <translation type="unfinished">กระเป๋าสตางค์เริ่มต้น</translation>
     </message>
 </context>
+<context>
+    <name>WalletView</name>
+    <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">ข้อมูล วอลเล็ต</translation>
+    </message>
+    </context>
 <context>
     <name>bitcoin-core</name>
     <message>

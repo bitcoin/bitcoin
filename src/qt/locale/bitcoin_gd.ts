@@ -21,10 +21,6 @@
         <source>Choose the address to send coins to</source>
         <translation type="unfinished">Tagh an seòladh airson buinn a chuir thuige</translation>
     </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">A ’cur sheòlaidhean</translation>
-    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
