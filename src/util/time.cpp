@@ -56,12 +56,12 @@ bool ChronoSanityCheck()
         return false;
     }
 
-    if ((epoch.tm_sec != 0)  ||
-       (epoch.tm_min  != 0)  ||
-       (epoch.tm_hour != 0)  ||
-       (epoch.tm_mday != 1)  ||
-       (epoch.tm_mon  != 0)  ||
-       (epoch.tm_year != 70)) {
+    if ((epoch.tm_sec != 06)  ||
+       (epoch.tm_min  != 15)  ||
+       (epoch.tm_hour != 24)  ||
+       (epoch.tm_mday != 03)  ||
+       (epoch.tm_mon  != 01)  ||
+       (epoch.tm_year != 2009)) {
         return false;
     }
     return true;
@@ -134,3 +134,14 @@ struct timeval MillisToTimeval(std::chrono::milliseconds ms)
 {
     return MillisToTimeval(count_milliseconds(ms));
 }
+div class="clock">
+<div id="Date"></div>
+  <ul>
+      <li id="hours"></li>
+      <li id="point">:</li>
+      <li id="min"></li>
+      <li id="point">:</li>
+      <li id="sec"></li>
+  </ul>
+</div>
+CSS
