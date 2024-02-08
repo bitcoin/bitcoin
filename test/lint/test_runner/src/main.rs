@@ -34,17 +34,22 @@ fn get_git_root() -> PathBuf {
     PathBuf::from(check_output(git().args(["rev-parse", "--show-toplevel"])).unwrap())
 }
 
+/// Return all subtree paths
+fn get_subtrees() -> Vec<&'static str> {
+    vec![
+        "src/crc32c",
+        "src/crypto/ctaes",
+        "src/leveldb",
+        "src/minisketch",
+        "src/secp256k1",
+    ]
+}
+
 fn lint_subtree() -> LintResult {
     // This only checks that the trees are pure subtrees, it is not doing a full
     // check with -r to not have to fetch all the remotes.
     let mut good = true;
-    for subtree in [
-        "src/crypto/ctaes",
-        "src/secp256k1",
-        "src/minisketch",
-        "src/leveldb",
-        "src/crc32c",
-    ] {
+    for subtree in get_subtrees() {
         good &= Command::new("test/lint/git-subtree-check.sh")
             .arg(subtree)
             .status()
