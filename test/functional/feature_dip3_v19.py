@@ -107,11 +107,9 @@ class DIP3V19Test(DashTestFramework):
         revoke_protx = self.mninfo[-1].proTxHash
         revoke_keyoperator = self.mninfo[-1].keyOperator
         self.log.info(f"Trying to revoke proTx:{revoke_protx}")
-        self.test_revoke_protx(revoke_protx, revoke_keyoperator)
+        self.test_revoke_protx(evo_info_3.nodeIdx, revoke_protx, revoke_keyoperator)
 
         self.mine_quorum(llmq_type_name='llmq_test', llmq_type=100)
-        # revoking a MN results in disconnects, reconnect it back to let sync_blocks finish correctly
-        self.connect_nodes(evo_info_3.nodeIdx, 0)
 
         self.log.info("Checking that adding more regular MNs after v19 doesn't break DKGs and IS/CLs")
 
@@ -127,7 +125,7 @@ class DIP3V19Test(DashTestFramework):
 
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
-    def test_revoke_protx(self, revoke_protx, revoke_keyoperator):
+    def test_revoke_protx(self, node_idx, revoke_protx, revoke_keyoperator):
         funds_address = self.nodes[0].getnewaddress()
         fund_txid = self.nodes[0].sendtoaddress(funds_address, 1)
         self.wait_for_instantlock(fund_txid, self.nodes[0])
@@ -139,6 +137,10 @@ class DIP3V19Test(DashTestFramework):
         self.wait_for_instantlock(protx_result, self.nodes[0])
         tip = self.nodes[0].generate(1)[0]
         assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)
+        # Revoking a MN results in disconnects. Wait for disconnects to actually happen
+        # and then reconnect the corresponding node back to let sync_blocks finish correctly.
+        self.wait_until(lambda: self.nodes[node_idx].getconnectioncount() == 0)
+        self.connect_nodes(node_idx, 0)
         self.sync_all(self.nodes)
         self.log.info(f"Succesfully revoked={revoke_protx}")
         for mn in self.mninfo:
