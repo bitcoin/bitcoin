@@ -81,9 +81,9 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
                                  vsize, V3_CHILD_MAX_VSIZE);
             }
 
+            // Exactly 1 parent exists, either in mempool or package. Find it.
             const auto parent_info = [&] {
                 if (mempool_ancestors.size() > 0) {
-                    // There's a parent in the mempool.
                     auto& mempool_parent = *mempool_ancestors.begin();
                     Assume(mempool_parent->GetCountWithDescendants() == 1);
                     return ParentInfo{mempool_parent->GetTx().GetHash(),
@@ -91,7 +91,6 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
                                       mempool_parent->GetTx().nVersion,
                                       /*has_mempool_descendant=*/mempool_parent->GetCountWithDescendants() > 1};
                 } else {
-                    // Ancestor must be in the package. Find it.
                     auto& parent_index = in_package_parents.front();
                     auto& package_parent = package.at(parent_index);
                     return ParentInfo{package_parent->GetHash(),
@@ -184,7 +183,7 @@ std::optional<std::string> SingleV3Checks(const CTransactionRef& ptx,
     // The rest of the rules only apply to transactions with nVersion=3.
     if (ptx->nVersion != 3) return std::nullopt;
 
-    // Check that V3_ANCESTOR_LIMIT would not be violated, including both in-package and in-mempool.
+    // Check that V3_ANCESTOR_LIMIT would not be violated.
     if (mempool_ancestors.size() + 1 > V3_ANCESTOR_LIMIT) {
         return strprintf("tx %s (wtxid=%s) would have too many ancestors",
                          ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString());

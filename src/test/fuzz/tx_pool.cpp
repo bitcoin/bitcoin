@@ -407,8 +407,6 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         if (accepted) {
             txids.push_back(tx->GetHash());
-            // Only check fees if accepted and not bypass_limits, otherwise it's not guaranteed that
-            // trimming has happened for this tx and previous iterations.
             CheckMempoolV3Invariants(tx_pool);
         }
     }
