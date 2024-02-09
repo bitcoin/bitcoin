@@ -233,7 +233,7 @@ class LLMQChainLocksTest(DashTestFramework):
             self.log.info("Add a new node and let it sync")
             self.dynamically_add_masternode(evo=False)
             added_idx = len(self.nodes) - 1
-            assert_raises_rpc_error(-32603, "Unable to find any chainlock", self.nodes[added_idx].getbestchainlock)
+            assert_raises_rpc_error(-32603, "Unable to find any ChainLock", self.nodes[added_idx].getbestchainlock)
 
             self.log.info("Test that new node can mine without Chainlock info")
             tip_0 = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)

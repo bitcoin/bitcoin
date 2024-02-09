@@ -172,7 +172,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
                                         {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
                                         {RPCResult::Type::ARR, "addresses", "",
                                         {
-                                            {RPCResult::Type::STR, "address", "dash address"},
+                                            {RPCResult::Type::STR, "address", "Dash address"},
                                         }},
                                     }},
                                 }},
@@ -187,7 +187,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
                             {RPCResult::Type::NUM, "time", "Same as \"blocktime\""},
                             {RPCResult::Type::BOOL, "instantlock", "Current transaction lock state"},
                             {RPCResult::Type::BOOL, "instantlock_internal", "Current internal transaction lock state"},
-                            {RPCResult::Type::BOOL, "chainlock", "he state of the corresponding block chainlock"},
+                            {RPCResult::Type::BOOL, "chainlock", "The state of the corresponding block ChainLock"},
                         }
                     },
                 },
@@ -355,7 +355,7 @@ static UniValue gettxchainlocks(const JSONRPCRequest& request)
 {
     RPCHelpMan{
         "gettxchainlocks",
-        "\nReturns the block height at which each transaction was mined, and indicates whether it is in the mempool, chainlocked, or neither.\n",
+        "\nReturns the block height at which each transaction was mined, and indicates whether it is in the mempool, ChainLocked, or neither.\n",
         {
             {"txids", RPCArg::Type::ARR, RPCArg::Optional::NO, "The transaction ids (no more than 100)",
                 {
@@ -369,7 +369,7 @@ static UniValue gettxchainlocks(const JSONRPCRequest& request)
                 {RPCResult::Type::OBJ, "", "",
                 {
                     {RPCResult::Type::NUM, "height", "The block height"},
-                    {RPCResult::Type::BOOL, "chainlock", "Chainlock status for the block containing the transaction"},
+                    {RPCResult::Type::BOOL, "chainlock", "The state of the corresponding block ChainLock"},
                     {RPCResult::Type::BOOL, "mempool", "Mempool status for the transaction"},
                 }},
             }
@@ -744,7 +744,7 @@ static UniValue createrawtransaction(const JSONRPCRequest& request)
                 {
                     {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                         {
-                            {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the dash address, the value (float or string) is the amount in " + CURRENCY_UNIT},
+                            {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the Dash address, the value (float or string) is the amount in " + CURRENCY_UNIT},
                         },
                         },
                     {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
@@ -822,7 +822,7 @@ static UniValue decoderawtransaction(const JSONRPCRequest& request)
                                     {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
                                     {RPCResult::Type::ARR, "addresses", "",
                                     {
-                                        {RPCResult::Type::STR, "address", "dash address"},
+                                        {RPCResult::Type::STR, "address", "Dash address"},
                                     }},
                                 }},
                             }},
@@ -875,7 +875,7 @@ static UniValue decodescript(const JSONRPCRequest& request)
                         {RPCResult::Type::NUM, "reqSigs", "The required signatures"},
                         {RPCResult::Type::ARR, "addresses", "",
                         {
-                            {RPCResult::Type::STR, "address", "dash address"},
+                            {RPCResult::Type::STR, "address", "Dash address"},
                         }},
                         {RPCResult::Type::STR, "p2sh", "address of P2SH script wrapping this redeem script (not returned if the script is already a P2SH)"},
                     }

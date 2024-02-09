@@ -282,14 +282,14 @@ static UniValue getbestblockhash(const JSONRPCRequest& request)
 static UniValue getbestchainlock(const JSONRPCRequest& request)
 {
     RPCHelpMan{"getbestchainlock",
-        "\nReturns information about the best chainlock. Throws an error if there is no known chainlock yet.",
+        "\nReturns information about the best ChainLock. Throws an error if there is no known ChainLock yet.",
         {},
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::STR_HEX, "hash", "The block hash hex-encoded"},
                 {RPCResult::Type::NUM, "height", "The block height or index"},
-                {RPCResult::Type::STR_HEX, "signature", "The chainlock's BLS signature"},
+                {RPCResult::Type::STR_HEX, "signature", "The ChainLock's BLS signature"},
                 {RPCResult::Type::BOOL, "known_block", "True if the block is known by our node"},
             }},
         RPCExamples{
@@ -304,7 +304,7 @@ static UniValue getbestchainlock(const JSONRPCRequest& request)
     LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     llmq::CChainLockSig clsig = llmq_ctx.clhandler->GetBestChainLock();
     if (clsig.IsNull()) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to find any chainlock");
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to find any ChainLock");
     }
     result.pushKV("blockhash", clsig.getBlockHash().GetHex());
     result.pushKV("height", clsig.getHeight());
@@ -877,6 +877,7 @@ static UniValue getblockheader(const JSONRPCRequest& request)
                     {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
                     {RPCResult::Type::STR_HEX, "previousblockhash", /* optional */ true, "The hash of the previous block (if available)"},
                     {RPCResult::Type::STR_HEX, "nextblockhash", /* optional */ true, "The hash of the next block (if available)"},
+                    {RPCResult::Type::BOOL, "chainlock", "The state of the block ChainLock"},
                 }},
             RPCResult{"for verbose=false",
                 RPCResult::Type::STR_HEX, "", "A string that is serialized, hex-encoded data for block 'hash'"},
@@ -935,7 +936,7 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
                 RPCResult::Type::ARR, "", "",
                     {{RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR_HEX, "hash", "the block hash (same as provided)"},
+                        {RPCResult::Type::STR_HEX, "hash", "The block hash (same as provided)"},
                         {RPCResult::Type::NUM, "confirmations", "The number of confirmations, or -1 if the block is not on the main chain"},
                         {RPCResult::Type::NUM, "height", "The block height or index"},
                         {RPCResult::Type::NUM, "version", "The block version"},
@@ -950,6 +951,7 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
                         {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
                         {RPCResult::Type::STR_HEX, "previousblockhash", /* optional */ true, "The hash of the previous block (if available)"},
                         {RPCResult::Type::STR_HEX, "nextblockhash", /* optional */ true, "The hash of the next block (if available)"},
+                        {RPCResult::Type::BOOL, "chainlock", "The state of the block ChainLock"},
                     }},
                 }},
             RPCResult{"for verbose=false",
@@ -1156,6 +1158,7 @@ static UniValue getblock(const JSONRPCRequest& request)
                                 {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
                                 {RPCResult::Type::STR_HEX, "previousblockhash", /* optional */ true, "The hash of the previous block (if available)"},
                                 {RPCResult::Type::STR_HEX, "nextblockhash", /* optional */ true, "The hash of the next block (if available)"},
+                                {RPCResult::Type::BOOL, "chainlock", "The state of the block ChainLock"},
                                 {RPCResult::Type::NUM, "size", "The block size"},
                                 {RPCResult::Type::ARR, "tx", "The transaction ids",
                                     {{RPCResult::Type::STR_HEX, "", "The transaction id"}}},
@@ -1459,8 +1462,8 @@ static UniValue gettxout(const JSONRPCRequest& request)
                         {RPCResult::Type::STR_HEX, "hex", ""},
                         {RPCResult::Type::NUM, "reqSigs", "Number of required signatures"},
                         {RPCResult::Type::STR_HEX, "type", "The type, eg pubkeyhash"},
-                        {RPCResult::Type::ARR, "addresses", "array of dash addresses",
-                            {{RPCResult::Type::STR, "address", "dash address"}}},
+                        {RPCResult::Type::ARR, "addresses", "Array of Dash addresses",
+                            {{RPCResult::Type::STR, "address", "Dash address"}}},
                     }},
                 {RPCResult::Type::BOOL, "coinbase", "Coinbase or not"},
             }},
@@ -1914,7 +1917,7 @@ static UniValue getmempoolinfo(const JSONRPCRequest& request)
             {
                 {RPCResult::Type::BOOL, "loaded", "True if the mempool is fully loaded"},
                 {RPCResult::Type::NUM, "size", "Current tx count"},
-                {RPCResult::Type::NUM, "bytes", "Sum of all virtual transaction sizes as defined in BIP 141. Differs from actual serialized size because witness data is discounted"},
+                {RPCResult::Type::NUM, "bytes", "Sum of all transaction sizes"},
                 {RPCResult::Type::NUM, "usage", "Total memory usage for the mempool"},
                 {RPCResult::Type::STR_AMOUNT, "total_fee", "Total fees for the mempool in " + CURRENCY_UNIT + ", ignoring modified fees through prioritizetransaction"},
                 {RPCResult::Type::NUM, "maxmempool", "Maximum memory usage for the mempool"},
@@ -2208,7 +2211,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::NUM, "avgfee", "Average fee in the block"},
-                {RPCResult::Type::NUM, "avgfeerate", "Average feerate (in satoshis per virtual byte)"},
+                {RPCResult::Type::NUM, "avgfeerate", "Average feerate (in duffs per virtual byte)"},
                 {RPCResult::Type::NUM, "avgtxsize", "Average transaction size"},
                 {RPCResult::Type::STR_HEX, "blockhash", "The block hash (to check for potential reorgs)"},
                 {RPCResult::Type::ARR_FIXED, "feerate_percentiles", "Feerates at the 10th, 25th, 50th, 75th, and 90th percentile weight unit (in duffs per byte)",
@@ -2222,13 +2225,13 @@ static UniValue getblockstats(const JSONRPCRequest& request)
                 {RPCResult::Type::NUM, "height", "The height of the block"},
                 {RPCResult::Type::NUM, "ins", "The number of inputs (excluding coinbase)"},
                 {RPCResult::Type::NUM, "maxfee", "Maximum fee in the block"},
-                {RPCResult::Type::NUM, "maxfeerate", "Maximum feerate (in satoshis per virtual byte)"},
+                {RPCResult::Type::NUM, "maxfeerate", "Maximum feerate (in duffs per virtual byte)"},
                 {RPCResult::Type::NUM, "maxtxsize", "Maximum transaction size"},
                 {RPCResult::Type::NUM, "medianfee", "Truncated median fee in the block"},
                 {RPCResult::Type::NUM, "mediantime", "The block median time past"},
                 {RPCResult::Type::NUM, "mediantxsize", "Truncated median transaction size"},
                 {RPCResult::Type::NUM, "minfee", "Minimum fee in the block"},
-                {RPCResult::Type::NUM, "minfeerate", "Minimum feerate (in satoshis per virtual byte)"},
+                {RPCResult::Type::NUM, "minfeerate", "Minimum feerate (in duffs per virtual byte)"},
                 {RPCResult::Type::NUM, "mintxsize", "Minimum transaction size"},
                 {RPCResult::Type::NUM, "outs", "The number of outputs"},
                 {RPCResult::Type::NUM, "subsidy", "The block subsidy"},

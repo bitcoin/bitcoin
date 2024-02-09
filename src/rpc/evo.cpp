@@ -45,7 +45,7 @@ static RPCArg GetRpcArg(const std::string& strParamName)
     static const std::map<std::string, RPCArg> mapParamHelp = {
         {"collateralAddress",
             {"collateralAddress", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The dash address to send the collateral to."}
+                "The Dash address to send the collateral to."}
         },
         {"collateralHash",
             {"collateralHash", RPCArg::Type::STR, RPCArg::Optional::NO,
@@ -116,17 +116,17 @@ static RPCArg GetRpcArg(const std::string& strParamName)
         },
         {"ownerAddress",
             {"ownerAddress", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The dash address to use for payee updates and proposal voting.\n"
+                "The Dash address to use for payee updates and proposal voting.\n"
                 "The corresponding private key does not have to be known by your wallet.\n"
                 "The address must be unused and must differ from the collateralAddress."}
         },
         {"payoutAddress_register",
             {"payoutAddress", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The dash address to use for masternode reward payments."}
+                "The Dash address to use for masternode reward payments."}
         },
         {"payoutAddress_update",
             {"payoutAddress", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The dash address to use for masternode reward payments.\n"
+                "The Dash address to use for masternode reward payments.\n"
                 "If set to an empty string, the currently active payout address is reused."}
         },
         {"proTxHash",
