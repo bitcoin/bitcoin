@@ -2311,7 +2311,7 @@ DBErrors CWallet::LoadWallet()
     return nLoadWalletRet;
 }
 
-util::Result<void> CWallet::ZapSelectTx(std::vector<uint256>& txs_to_remove)
+util::Result<void> CWallet::RemoveTxs(std::vector<uint256>& txs_to_remove)
 {
     AssertLockHeld(cs_wallet);
     WalletBatch batch(GetDatabase());
@@ -3951,7 +3951,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
     watchonly_batch.reset(); // Flush
     // Do the removes
     if (txids_to_delete.size() > 0) {
-        if (auto res = ZapSelectTx(txids_to_delete); !res) {
+        if (auto res = RemoveTxs(txids_to_delete); !res) {
             error = _("Error: Could not delete watchonly transactions. ") + util::ErrorString(res);
             return false;
         }
