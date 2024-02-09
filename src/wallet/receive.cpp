@@ -214,10 +214,31 @@ CAmount CachedTxGetAvailableCredit(const CWallet& wallet, const CWalletTx& wtx, 
     return nCredit;
 }
 
+std::vector<StakedCommitmentInfo> GetStakedCommitmentInfo(const CWallet& wallet, const CWalletTx& wtx)
+{
+    AssertLockHeld(wallet.cs_wallet);
+
+    std::vector<StakedCommitmentInfo> ret;
+
+    for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
+        const CTxOut& txout = wtx.tx->vout[i];
+        uint256 hashTx = wtx.GetHash();
+        if (!wallet.IsSpent(COutPoint(hashTx, i))) {
+            if (wallet.IsMine(txout) == ISMINE_STAKED_COMMITMENT_BLSCT) {
+                ret.push_back({txout.blsctData.rangeProof.Vs[0],
+                               wtx.GetBLSCTRecoveryData(i).amount,
+                               wtx.GetBLSCTRecoveryData(i).gamma});
+            }
+        }
+    }
+
+    return ret;
+}
+
 void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
-                  std::list<COutputEntry>& listReceived,
-                  std::list<COutputEntry>& listSent, CAmount& nFee, const isminefilter& filter,
-                  bool include_change)
+                        std::list<COutputEntry>& listReceived,
+                        std::list<COutputEntry>& listSent, CAmount& nFee, const isminefilter& filter,
+                        bool include_change)
 {
     nFee = 0;
     listReceived.clear();
@@ -356,10 +377,12 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
             const bool is_trusted{CachedTxIsTrusted(wallet, wtx, trusted_parents)};
             const int tx_depth{wallet.GetTxDepthInMainChain(wtx)};
             const CAmount tx_credit_mine{CachedTxGetAvailableCredit(wallet, wtx, ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT | reuse_filter)};
+            const CAmount tx_credit_staked_commitment{CachedTxGetAvailableCredit(wallet, wtx, ISMINE_STAKED_COMMITMENT_BLSCT)};
             const CAmount tx_credit_watchonly{CachedTxGetAvailableCredit(wallet, wtx, ISMINE_WATCH_ONLY | reuse_filter)};
             if (is_trusted && tx_depth >= min_depth) {
                 ret.m_mine_trusted += tx_credit_mine;
                 ret.m_watchonly_trusted += tx_credit_watchonly;
+                ret.m_mine_staked_commitment += tx_credit_staked_commitment;
             }
             if (!is_trusted && tx_depth == 0 && wtx.InMempool()) {
                 ret.m_mine_untrusted_pending += tx_credit_mine;
@@ -372,6 +395,25 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
     return ret;
 }
 
+std::vector<StakedCommitmentInfo> GetStakedCommitmentInfo(const CWallet& wallet)
+{
+    std::vector<StakedCommitmentInfo> ret;
+
+    {
+        LOCK(wallet.cs_wallet);
+        std::set<uint256> trusted_parents;
+        for (const auto& entry : wallet.mapWallet) {
+            const CWalletTx& wtx = entry.second;
+            const int tx_depth{wallet.GetTxDepthInMainChain(wtx)};
+            if (tx_depth < 1) continue;
+            auto scinfo = GetStakedCommitmentInfo(wallet, wtx);
+            ret.insert(ret.end(), scinfo.begin(), scinfo.end());
+        }
+    }
+
+    return ret;
+}
+
 std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet)
 {
     std::map<CTxDestination, CAmount> balances;
@@ -379,8 +421,7 @@ std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet)
     {
         LOCK(wallet.cs_wallet);
         std::set<uint256> trusted_parents;
-        for (const auto& walletEntry : wallet.mapWallet)
-        {
+        for (const auto& walletEntry : wallet.mapWallet) {
             const CWalletTx& wtx = walletEntry.second;
 
             if (!CachedTxIsTrusted(wallet, wtx, trusted_parents))
@@ -398,7 +439,7 @@ std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet)
                 CTxDestination addr;
                 if (!wallet.IsMine(output))
                     continue;
-                if(!ExtractDestination(output.scriptPubKey, addr))
+                if (!ExtractDestination(output.scriptPubKey, addr))
                     continue;
 
                 CAmount n = wallet.IsSpent(COutPoint(walletEntry.first, i)) ? 0 : output.nValue;
@@ -410,45 +451,39 @@ std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet)
     return balances;
 }
 
-std::set< std::set<CTxDestination> > GetAddressGroupings(const CWallet& wallet)
+std::set<std::set<CTxDestination>> GetAddressGroupings(const CWallet& wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
-    std::set< std::set<CTxDestination> > groupings;
+    std::set<std::set<CTxDestination>> groupings;
     std::set<CTxDestination> grouping;
 
-    for (const auto& walletEntry : wallet.mapWallet)
-    {
+    for (const auto& walletEntry : wallet.mapWallet) {
         const CWalletTx& wtx = walletEntry.second;
 
-        if (wtx.tx->vin.size() > 0)
-        {
+        if (wtx.tx->vin.size() > 0) {
             bool any_mine = false;
             // group all input addresses with each other
-            for (const CTxIn& txin : wtx.tx->vin)
-            {
+            for (const CTxIn& txin : wtx.tx->vin) {
                 CTxDestination address;
-                if(!InputIsMine(wallet, txin)) /* If this input isn't mine, ignore it */
+                if (!InputIsMine(wallet, txin)) /* If this input isn't mine, ignore it */
                     continue;
-                if(!ExtractDestination(wallet.mapWallet.at(txin.prevout.hash).tx->vout[txin.prevout.n].scriptPubKey, address))
+                if (!ExtractDestination(wallet.mapWallet.at(txin.prevout.hash).tx->vout[txin.prevout.n].scriptPubKey, address))
                     continue;
                 grouping.insert(address);
                 any_mine = true;
             }
 
             // group change with input addresses
-            if (any_mine)
-            {
-               for (const CTxOut& txout : wtx.tx->vout)
-                   if (OutputIsChange(wallet, txout))
-                   {
-                       CTxDestination txoutAddr;
-                       if(!ExtractDestination(txout.scriptPubKey, txoutAddr))
-                           continue;
-                       grouping.insert(txoutAddr);
-                   }
+            if (any_mine) {
+                for (const CTxOut& txout : wtx.tx->vout)
+                    if (OutputIsChange(wallet, txout)) {
+                        CTxDestination txoutAddr;
+                        if (!ExtractDestination(txout.scriptPubKey, txoutAddr))
+                            continue;
+                        grouping.insert(txoutAddr);
+                    }
             }
-            if (grouping.size() > 0)
-            {
+            if (grouping.size() > 0) {
                 groupings.insert(grouping);
                 grouping.clear();
             }
@@ -456,10 +491,9 @@ std::set< std::set<CTxDestination> > GetAddressGroupings(const CWallet& wallet)
 
         // group lone addrs by themselves
         for (const auto& txout : wtx.tx->vout)
-            if (wallet.IsMine(txout))
-            {
+            if (wallet.IsMine(txout)) {
                 CTxDestination address;
-                if(!ExtractDestination(txout.scriptPubKey, address))
+                if (!ExtractDestination(txout.scriptPubKey, address))
                     continue;
                 grouping.insert(address);
                 groupings.insert(grouping);
@@ -467,21 +501,19 @@ std::set< std::set<CTxDestination> > GetAddressGroupings(const CWallet& wallet)
             }
     }
 
-    std::set< std::set<CTxDestination>* > uniqueGroupings; // a set of pointers to groups of addresses
-    std::map< CTxDestination, std::set<CTxDestination>* > setmap;  // map addresses to the unique group containing it
-    for (const std::set<CTxDestination>& _grouping : groupings)
-    {
+    std::set<std::set<CTxDestination>*> uniqueGroupings;        // a set of pointers to groups of addresses
+    std::map<CTxDestination, std::set<CTxDestination>*> setmap; // map addresses to the unique group containing it
+    for (const std::set<CTxDestination>& _grouping : groupings) {
         // make a set of all the groups hit by this new group
-        std::set< std::set<CTxDestination>* > hits;
-        std::map< CTxDestination, std::set<CTxDestination>* >::iterator it;
+        std::set<std::set<CTxDestination>*> hits;
+        std::map<CTxDestination, std::set<CTxDestination>*>::iterator it;
         for (const CTxDestination& address : _grouping)
             if ((it = setmap.find(address)) != setmap.end())
                 hits.insert((*it).second);
 
         // merge all hit groups into a new single group and delete old groups
         std::set<CTxDestination>* merged = new std::set<CTxDestination>(_grouping);
-        for (std::set<CTxDestination>* hit : hits)
-        {
+        for (std::set<CTxDestination>* hit : hits) {
             merged->insert(hit->begin(), hit->end());
             uniqueGroupings.erase(hit);
             delete hit;
@@ -490,12 +522,11 @@ std::set< std::set<CTxDestination> > GetAddressGroupings(const CWallet& wallet)
 
         // update setmap
         for (const CTxDestination& element : *merged)
-            setmap[element] = merged;
+                    setmap[element] = merged;
     }
 
-    std::set< std::set<CTxDestination> > ret;
-    for (const std::set<CTxDestination>* uniqueGrouping : uniqueGroupings)
-    {
+    std::set<std::set<CTxDestination>> ret;
+    for (const std::set<CTxDestination>* uniqueGrouping : uniqueGroupings) {
         ret.insert(*uniqueGrouping);
         delete uniqueGrouping;
     }

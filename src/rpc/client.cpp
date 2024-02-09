@@ -53,6 +53,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendtoaddress", 10, "verbose"},
     { "settxfee", 0, "amount" },
     { "sethdseed", 0, "newkeypool" },
+    { "stakelock", 0, "amount" },
     { "getreceivedbyaddress", 1, "minconf" },
     { "getreceivedbyaddress", 2, "include_immature_coinbase" },
     { "getreceivedbylabel", 1, "minconf" },

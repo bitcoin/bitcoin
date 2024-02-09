@@ -10,6 +10,7 @@
 #include <cassert>
 #include <functional>
 #include <memory>
+#include <thread>
 #include <vector>
 
 class ArgsManager;

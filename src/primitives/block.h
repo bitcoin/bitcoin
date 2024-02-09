@@ -42,9 +42,8 @@ public:
     SERIALIZE_METHODS(CBlockHeader, obj)
     {
         READWRITE(obj.nVersion, obj.hashPrevBlock, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.nNonce);
-        if (obj.IsProofOfStake()) {
+        if (obj.IsProofOfStake())
             READWRITE(obj.posProof);
-        }
     }
 
     void SetNull()
@@ -125,6 +124,8 @@ public:
         vtx.clear();
         fChecked = false;
     }
+
+    uint256 GetHashWithoutPoSProof() const;
 
     CBlockHeader GetBlockHeader() const
     {

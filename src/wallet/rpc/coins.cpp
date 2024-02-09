@@ -159,6 +159,55 @@ RPCHelpMan getreceivedbylabel()
 }
 
 
+UniValue FormatStakedCommitmentInfo(const std::vector<StakedCommitmentInfo>& info)
+{
+    UniValue ret(UniValue::VARR);
+
+    for (auto& it : info) {
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("commitment", HexStr(it.commitment.GetVch()));
+        obj.pushKV("value", HexStr(it.value.GetVch()));
+        obj.pushKV("gamma", HexStr(it.gamma.GetVch()));
+        ret.push_back(obj);
+    }
+
+    return ret;
+}
+
+RPCHelpMan
+liststakedcommitments()
+{
+    return RPCHelpMan{
+        "liststakedcommitments",
+        "\nReturns the staked commitments.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::ARR, "", "", {
+                {RPCResult::Type::OBJ, "", "", {
+                    {RPCResult::Type::STR_HEX, "commitment", "The staked commitment"},
+                    {RPCResult::Type::STR_HEX, "value", "The commitment amount"},
+                    {RPCResult::Type::STR_HEX, "gamma", "The commitment gamma"},
+                }},
+            }},
+        RPCExamples{"\nList the staked commitments\n" + HelpExampleCli("liststakedcommitments", "") + "\nAs a JSON-RPC call\n" + HelpExampleRpc("liststakedcommitments", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+
+            // Make sure the results are valid at least up to the most recent block
+            // the user could have gotten from another RPC command prior to now
+            pwallet->BlockUntilSyncedToCurrentChain();
+
+            LOCK(pwallet->cs_wallet);
+
+            const auto ret = GetStakedCommitmentInfo(*pwallet);
+
+            return FormatStakedCommitmentInfo(ret);
+        },
+    };
+}
+
+
 RPCHelpMan getbalance()
 {
     return RPCHelpMan{"getbalance",
@@ -471,6 +520,7 @@ RPCHelpMan getbalances()
     {
         UniValue balances_mine{UniValue::VOBJ};
         balances_mine.pushKV("trusted", ValueFromAmount(bal.m_mine_trusted));
+        balances_mine.pushKV("staked_commitment_balance", ValueFromAmount(bal.m_mine_staked_commitment));
         balances_mine.pushKV("untrusted_pending", ValueFromAmount(bal.m_mine_untrusted_pending));
         balances_mine.pushKV("immature", ValueFromAmount(bal.m_mine_immature));
         if (wallet.IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE)) {

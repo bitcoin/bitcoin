@@ -5,7 +5,6 @@
 #ifndef NAVCOIN_BLSCT_KEYMAN_H
 #define NAVCOIN_BLSCT_KEYMAN_H
 
-#include <blsct/arith/mcl/mcl.h>
 #include <blsct/double_public_key.h>
 #include <blsct/eip_2333/bls12_381_keygen.h>
 #include <blsct/private_key.h>
@@ -15,6 +14,7 @@
 #include <blsct/range_proof/bulletproofs/range_proof_logic.h>
 #include <blsct/wallet/address.h>
 #include <blsct/wallet/hdchain.h>
+#include <blsct/wallet/helpers.h>
 #include <blsct/wallet/keyring.h>
 #include <logging.h>
 #include <wallet/crypter.h>

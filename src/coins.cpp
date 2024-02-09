@@ -111,7 +111,6 @@ void CCoinsViewCache::AddCoin(const COutPoint& outpoint, Coin&& coin, bool possi
            (uint32_t)it->second.coin.nHeight,
            (int64_t)it->second.coin.out.nValue,
            (bool)it->second.coin.IsCoinBase());
-
     if (it->second.coin.out.IsStakedCommitment()) {
         GetStakedCommitments();
         cacheStakedCommitments.Add(it->second.coin.out.blsctData.rangeProof.Vs[0]);
@@ -279,14 +278,14 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlockIn
         }
     }
     hashBlock = hashBlockIn;
-    cacheStakedCommitments = cacheStakedCommitmentsIn;
+    cacheStakedCommitments.Add(cacheStakedCommitmentsIn);
     return true;
 }
 
 bool CCoinsViewCache::Flush() {
     bool fOk = base->BatchWrite(cacheCoins, hashBlock, cacheStakedCommitments, /*erase=*/true);
     if (fOk) {
-        if (!cacheCoins.empty()) {
+        if (!cacheCoins.empty() && !cacheStakedCommitments.Empty()) {
             /* BatchWrite must erase all cacheCoins elements when erase=true. */
             throw std::logic_error("Not all cached coins were erased");
         }

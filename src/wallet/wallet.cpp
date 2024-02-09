@@ -1531,7 +1531,11 @@ isminetype CWallet::IsMine(const CTxOut& txout) const
     if (txout.IsBLSCT()) {
         auto blsct_man = GetBLSCTKeyMan();
         if (blsct_man) {
-            return blsct_man->IsMine(txout) ? ISMINE_SPENDABLE_BLSCT : ISMINE_NO;
+            bool mine = blsct_man->IsMine(txout);
+            if (mine) {
+                return txout.IsStakedCommitment() ? ISMINE_STAKED_COMMITMENT_BLSCT : ISMINE_SPENDABLE_BLSCT;
+            }
+            return ISMINE_NO;
         }
     }
     return IsMine(txout.scriptPubKey);

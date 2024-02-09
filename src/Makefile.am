@@ -126,6 +126,10 @@ if BUILD_BITCOIN_CLI
   bin_PROGRAMS += navcoin-cli
 endif
 
+if BUILD_NAVCOIN_STAKER
+  bin_PROGRAMS += navcoin-staker
+endif
+
 if BUILD_BITCOIN_TX
   bin_PROGRAMS += navcoin-tx
 endif
@@ -204,6 +208,7 @@ BITCOIN_CORE_H = \
   blsct/signature.h \
   blsct/wallet/address.h \
   blsct/wallet/hdchain.h \
+  blsct/wallet/helpers.h \
   blsct/wallet/keyman.h \
   blsct/wallet/keyring.h \
   blsct/wallet/txfactory.h \
@@ -635,6 +640,7 @@ libbitcoin_wallet_a_SOURCES = \
   blsct/set_mem_proof/set_mem_proof_prover.cpp \
   blsct/signature.cpp \
   blsct/wallet/address.cpp \
+  blsct/wallet/helpers.cpp \
   blsct/wallet/keyman.cpp \
   blsct/wallet/keyring.cpp \
   blsct/wallet/txfactory.cpp \
@@ -1035,6 +1041,26 @@ navcoin_cli_LDADD = \
   $(LIBBITCOIN_CRYPTO)
 
 navcoin_cli_LDADD += $(EVENT_LIBS)
+#
+
+# navcoin-staker binary #
+navcoin_staker_SOURCES = navcoin-staker.cpp
+navcoin_staker_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+navcoin_staker_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+navcoin_staker_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+
+if TARGET_WINDOWS
+navcoin_staker_SOURCES += navcoin-stakaer-res.rc
+endif
+
+navcoin_staker_LDADD = \
+  $(LIBBITCOIN_CLI) \
+  $(LIBUNIVALUE) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CRYPTO)
+
+navcoin_staker_LDADD += $(EVENT_LIBS)
 #
 
 # navcoin-tx binary #

@@ -55,7 +55,7 @@ RangeProof<T> RangeProofLogic<T>::Prove(
     Scalars gammas;
     for (size_t i = 0; i < num_input_values_power_of_2; ++i) {
         auto hash = nonce.GetHashWithSalt(100 + i);
-        gammas.Add(hash - minValue);
+        gammas.Add(hash);
     }
 
     // make the number of input values a power of 2 w/ 0s if needed

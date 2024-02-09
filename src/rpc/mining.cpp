@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <blsct/pos/pos.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/amount.h>
@@ -781,11 +782,6 @@ static RPCHelpMan getblocktemplate()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the signet rule set (call with {\"rules\": [\"segwit\", \"signet\"]})");
     }
 
-    // GBT must be called with 'segwit' set in the rules
-    if (setClientRules.count("segwit") != 1) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the segwit rule set (call with {\"rules\": [\"segwit\"]})");
-    }
-
     // Update block
     static CBlockIndex* pindexPrev;
     static int64_t time_start;
@@ -803,7 +799,7 @@ static RPCHelpMan getblocktemplate()
 
         // Create new block
         CScript scriptDummy = CScript() << OP_TRUE;
-        pblocktemplate = BlockAssembler{active_chainstate, &mempool}.CreateNewBlock(scriptDummy);
+        pblocktemplate = BlockAssembler{active_chainstate, &mempool}.CreateNewBLSCTPOWBlock(blsct::SubAddress(), consensusParams.nBLSCTBlockReward, {});
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
@@ -929,7 +925,7 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("previousblockhash", pblock->hashPrevBlock.GetHex());
     result.pushKV("transactions", transactions);
     result.pushKV("coinbaseaux", aux);
-    result.pushKV("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue);
+    result.pushKV("coinbasevalue", !consensusParams.fBLSCT ? (int64_t)pblock->vtx[0]->vout[0].nValue : consensusParams.nBLSCTBlockReward);
     result.pushKV("longpollid", active_chain.Tip()->GetBlockHash().GetHex() + ToString(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1);
@@ -950,7 +946,24 @@ static RPCHelpMan getblocktemplate()
     }
     result.pushKV("curtime", pblock->GetBlockTime());
     result.pushKV("bits", strprintf("%08x", pblock->nBits));
-    result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
+    result.pushKV("height", (int64_t)(pindexPrev->nHeight + 1));
+
+    CCoinsViewCache* coins_view;
+    {
+        LOCK(::cs_main);
+        coins_view = &active_chainstate.CoinsTip();
+    }
+
+    if (consensusParams.fBLSCT) {
+        UniValue stakedCommitments(UniValue::VARR);
+        auto stakedCommitmentsElements = coins_view->GetStakedCommitments().GetElements();
+
+        for (size_t i = 0; i < stakedCommitmentsElements.Size(); ++i)
+                stakedCommitments.push_back(HexStr(stakedCommitmentsElements[i].GetVch()));
+
+        result.pushKV("staked_commitments", stakedCommitments);
+        result.pushKV("eta", HexStr(blsct::CalculateSetMemProofRandomness(*pindexPrev, *pblock)));
+    }
 
     if (consensusParams.signet_blocks) {
         result.pushKV("signet_challenge", HexStr(consensusParams.signet_challenge));

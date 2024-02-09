@@ -149,6 +149,7 @@ public:
 
     size_t Size() const;
     void Add(const T& x);
+    void Add(const OrderedElements<T>& x);
     bool Remove(const T& x);
     void Clear();
     bool Empty() const;

@@ -93,6 +93,7 @@ static RPCHelpMan getwalletinfo()
             obj.pushKV("walletversion", pwallet->GetVersion());
             obj.pushKV("format", pwallet->GetDatabase().Format());
             obj.pushKV("balance", ValueFromAmount(bal.m_mine_trusted));
+            obj.pushKV("staked_commitment_balance", ValueFromAmount(bal.m_mine_staked_commitment));
             obj.pushKV("unconfirmed_balance", ValueFromAmount(bal.m_mine_untrusted_pending));
             obj.pushKV("immature_balance", ValueFromAmount(bal.m_mine_immature));
             obj.pushKV("txcount", (int)pwallet->mapWallet.size());
@@ -847,6 +848,7 @@ RPCHelpMan lockunspent();
 RPCHelpMan listlockunspent();
 RPCHelpMan getbalances();
 RPCHelpMan listunspent();
+RPCHelpMan liststakedcommitments();
 
 // encryption
 RPCHelpMan walletpassphrase();
@@ -859,6 +861,7 @@ RPCHelpMan sendtoaddress();
 RPCHelpMan sendtoblsctaddress();
 RPCHelpMan sendmany();
 RPCHelpMan settxfee();
+RPCHelpMan stakelock();
 RPCHelpMan fundrawtransaction();
 RPCHelpMan bumpfee();
 RPCHelpMan psbtbumpfee();
@@ -922,6 +925,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &listreceivedbyaddress},
         {"wallet", &listreceivedbylabel},
         {"wallet", &listsinceblock},
+        {"wallet", &liststakedcommitments},
         {"wallet", &listtransactions},
         {"wallet", &listunspent},
         {"wallet", &listwalletdir},
@@ -944,6 +948,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &signrawtransactionwithwallet},
         {"wallet", &simulaterawtransaction},
         {"wallet", &sendall},
+        {"wallet", &stakelock},
         {"wallet", &unloadwallet},
         {"wallet", &upgradewallet},
         {"wallet", &walletcreatefundedpsbt},

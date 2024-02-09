@@ -305,6 +305,10 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                 continue;
             }
 
+            if (!params.include_staked_commitment && output.IsStakedCommitment()) {
+                continue;
+            }
+
             if (params.token_id != output.tokenId) {
                 continue;
             }

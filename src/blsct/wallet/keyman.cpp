@@ -442,11 +442,7 @@ CKeyID KeyMan::GetHashId(const blsct::PublicKey& blindingKey, const blsct::Publi
     if (!fViewKeyDefined || !viewKey.IsValid())
         throw std::runtime_error(strprintf("%s: the wallet has no view key available", __func__));
 
-    auto t = blindingKey.GetG1Point() * viewKey.GetScalar();
-    auto dh = MclG1Point::GetBasePoint() * t.GetHashWithSalt(0).Negate();
-    auto D_prime = spendingKey.GetG1Point() + dh;
-
-    return PublicKey(D_prime).GetID();
+    return CalculateHashId(blindingKey.GetG1Point(), spendingKey.GetG1Point(), viewKey.GetScalar());
 };
 
 blsct::PrivateKey KeyMan::GetMasterSeedKey() const
@@ -503,17 +499,7 @@ blsct::PrivateKey KeyMan::GetSpendingKeyForOutput(const CTxOut& out, const SubAd
 
     auto sk = GetSpendingKey();
 
-    CHashWriter string(SER_GETHASH, 0);
-
-    string << std::vector<unsigned char>(subAddressHeader.begin(), subAddressHeader.end());
-    string << viewKey;
-    string << id.account;
-    string << id.address;
-
-    MclG1Point t = out.blsctData.blindingKey * viewKey.GetScalar();
-    MclScalar ret = t.GetHashWithSalt(0) + sk.GetScalar() + MclScalar(string.GetHash());
-
-    return ret;
+    return CalculatePrivateSpendingKey(out.blsctData.blindingKey, viewKey.GetScalar(), sk.GetScalar(), id.account, id.address);
 }
 
 bulletproofs::AmountRecoveryResult<Mcl> KeyMan::RecoverOutputs(const std::vector<CTxOut>& outs)
@@ -527,7 +513,7 @@ bulletproofs::AmountRecoveryResult<Mcl> KeyMan::RecoverOutputs(const std::vector
 
     for (size_t i = 0; i < outs.size(); i++) {
         CTxOut out = outs[i];
-        auto nonce = out.blsctData.blindingKey * viewKey.GetScalar();
+        auto nonce = CalculateNonce(out.blsctData.blindingKey, viewKey.GetScalar());
         reqs.push_back(bulletproofs::AmountRecoveryRequest<Mcl>::of({out.blsctData.rangeProof}, nonce));
     }
 
@@ -539,10 +525,7 @@ bool KeyMan::IsMine(const blsct::PublicKey& blindingKey, const blsct::PublicKey&
     if (!fViewKeyDefined || !viewKey.IsValid())
         return false;
 
-    CHashWriter hash(SER_GETHASH, PROTOCOL_VERSION);
-    hash << (blindingKey.GetG1Point() * viewKey.GetScalar());
-
-    if (viewTag != (hash.GetHash().GetUint64(0) & 0xFFFF)) return false;
+    if (viewTag != CalculateViewTag(blindingKey.GetG1Point(), viewKey.GetScalar())) return false;
 
     auto hashId = GetHashId(blindingKey, spendingKey);
 

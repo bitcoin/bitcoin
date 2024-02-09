@@ -87,12 +87,13 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
 
     CBlockIndex index;
     index.phashBlock = new uint256(InsecureRand256());
+    CBlock block;
 
-    auto posProof = blsct::ProofOfStakeLogic::Create(coins_view_cache, index, out3.value, out3.gamma);
+    auto posProof = blsct::ProofOfStakeLogic::Create(coins_view_cache, index, out3.value, out3.gamma, block);
 
     blsct::ProofOfStakeLogic posProofLogic(posProof);
 
-    BOOST_ASSERT(posProofLogic.Verify(coins_view_cache, index));
+    BOOST_ASSERT(posProofLogic.Verify(coins_view_cache, index, block));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

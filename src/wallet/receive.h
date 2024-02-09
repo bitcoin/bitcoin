@@ -50,6 +50,7 @@ bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx);
 
 struct Balance {
     CAmount m_mine_trusted{0};           //!< Trusted, at depth=GetBalance.min_depth or more
+    CAmount m_mine_staked_commitment{0}; //!< Staked Commitment value
     CAmount m_mine_untrusted_pending{0}; //!< Untrusted, but in mempool (pending)
     CAmount m_mine_immature{0};          //!< Immature coinbases in the main chain
     CAmount m_watchonly_trusted{0};
@@ -60,6 +61,16 @@ Balance GetBalance(const CWallet& wallet, int min_depth = 0, bool avoid_reuse = 
 
 std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet);
 std::set<std::set<CTxDestination>> GetAddressGroupings(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+
+struct StakedCommitmentInfo {
+    MclG1Point commitment;
+    MclScalar value;
+    MclScalar gamma;
+};
+
+std::vector<StakedCommitmentInfo>
+GetStakedCommitmentInfo(const CWallet& wallet, const CWalletTx& wtx);
+std::vector<StakedCommitmentInfo> GetStakedCommitmentInfo(const CWallet& wallet);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_RECEIVE_H

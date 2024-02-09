@@ -10,6 +10,7 @@
 
 #include <arith_uint256.h>
 #include <blsct/pos/pos.h>
+#include <blsct/pos/proof_logic.h>
 #include <chain.h>
 #include <checkqueue.h>
 #include <common/args.h>
@@ -2083,6 +2084,7 @@ static SteadyClock::duration time_check{};
 static SteadyClock::duration time_forks{};
 static SteadyClock::duration time_connect{};
 static SteadyClock::duration time_verify{};
+static SteadyClock::duration time_pos_calc{};
 static SteadyClock::duration time_undo{};
 static SteadyClock::duration time_index{};
 static SteadyClock::duration time_total{};
@@ -2428,6 +2430,22 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         m_blockman.m_dirty_blockindex.insert(pindex);
     }
 
+    auto time_6{SteadyClock::now()};
+
+    if (params.GetConsensus().fBLSCT && block.IsProofOfStake()) {
+        auto posProof = blsct::ProofOfStakeLogic(block.posProof);
+
+        if (!posProof.Verify(view, *(pindex->pprev), block))
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blsct-pos-proof");
+
+        time_6 = SteadyClock::now();
+        time_verify += time_6 - time_5;
+        LogPrint(BCLog::BENCH, "    - Verify proof of stake proof: %.2fms [%.2fs (%.2fms/blk)]\n",
+                 Ticks<MillisecondsDouble>(time_6 - time_5),
+                 Ticks<SecondsDouble>(time_verify),
+                 Ticks<MillisecondsDouble>(time_verify) / num_blocks_total);
+    }
+
     pindex->SetStakeEntropyBit(block.GetStakeEntropyBit());
 
     uint64_t nStakeModifier = 0;
@@ -2437,23 +2455,33 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     pindex->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
 
+    if (block.IsProofOfStake())
+        pindex->SetKernelHash(blsct::CalculateKernelHash(*(pindex->pprev), block));
+
+    const auto time_7{SteadyClock::now()};
+    time_pos_calc += time_7 - time_6;
+    LogPrint(BCLog::BENCH, "    - Calculate proof of stake values: %.2fms [%.2fs (%.2fms/blk)]\n",
+             Ticks<MillisecondsDouble>(time_7 - time_6),
+             Ticks<SecondsDouble>(time_pos_calc),
+             Ticks<MillisecondsDouble>(time_pos_calc) / num_blocks_total);
+
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
 
-    const auto time_6{SteadyClock::now()};
-    time_index += time_6 - time_5;
+    const auto time_8{SteadyClock::now()};
+    time_index += time_8 - time_7;
     LogPrint(BCLog::BENCH, "    - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n",
-             Ticks<MillisecondsDouble>(time_6 - time_5),
+             Ticks<MillisecondsDouble>(time_8 - time_7),
              Ticks<SecondsDouble>(time_index),
              Ticks<MillisecondsDouble>(time_index) / num_blocks_total);
 
     TRACE6(validation, block_connected,
-        block_hash.data(),
-        pindex->nHeight,
-        block.vtx.size(),
-        nInputs,
-        nSigOpsCost,
-        time_5 - time_start // in microseconds (µs)
+           block_hash.data(),
+           pindex->nHeight,
+           block.vtx.size(),
+           nInputs,
+           nSigOpsCost,
+           time_8 - time_start // in microseconds (µs)
     );
 
     return true;
@@ -3542,8 +3570,11 @@ static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& st
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "blsct-block-version", "wrong blsct block version");
     }
 
+    if (!consensusParams.fBLSCT && block.IsProofOfStake())
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "blsct-pos-block", "blsct is not enabled");
+
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+    if (consensusParams.fBLSCT && !block.IsProofOfStake() && fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
 
     return true;

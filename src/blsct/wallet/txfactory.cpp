@@ -13,10 +13,10 @@ using Scalars = Elements<Scalar>;
 
 namespace blsct {
 
-void TxFactory::AddOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId)
+void TxFactory::AddOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId, const CreateOutputType& type, const CAmount& minStake)
 {
     UnsignedOutput out;
-    out = CreateOutput(destination.GetKeys(), nAmount, sMemo, tokenId);
+    out = CreateOutput(destination.GetKeys(), nAmount, sMemo, tokenId, Scalar::Rand(), type, minStake);
 
     if (nAmounts.count(tokenId) <= 0)
         nAmounts[tokenId] = {0, 0};
@@ -134,13 +134,14 @@ std::optional<CMutableTransaction> TxFactory::BuildTx()
     return std::nullopt;
 }
 
-std::optional<CMutableTransaction> TxFactory::CreateTransaction(wallet::CWallet* wallet, blsct::KeyMan* blsct_km, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId)
+std::optional<CMutableTransaction> TxFactory::CreateTransaction(wallet::CWallet* wallet, blsct::KeyMan* blsct_km, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId, const CreateOutputType& type, const CAmount& minStake)
 {
     LOCK(wallet->cs_wallet);
 
     wallet::CoinFilterParams coins_params;
     coins_params.min_amount = 0;
     coins_params.only_blsct = true;
+    // coins_params.include_staked_commitment = type == STAKED_COMMITMENT;
     coins_params.token_id = tokenId;
 
     auto tx = blsct::TxFactory(blsct_km);
@@ -151,7 +152,7 @@ std::optional<CMutableTransaction> TxFactory::CreateTransaction(wallet::CWallet*
         if (tx.nAmounts[tokenId].nFromInputs > nAmount + (long long)(BLSCT_DEFAULT_FEE * (tx.vInputs.size() + 3))) break;
     }
 
-    tx.AddOutput(destination, nAmount, sMemo, tokenId);
+    tx.AddOutput(destination, nAmount, sMemo, tokenId, type, minStake);
 
     return tx.BuildTx();
 }

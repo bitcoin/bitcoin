@@ -64,6 +64,7 @@ struct tallyitem
     int nConf{std::numeric_limits<int>::max()};
     std::vector<uint256> txids;
     bool fIsWatchonly{false};
+    bool fIsStakedCommitment{false};
     tallyitem() = default;
 };
 
@@ -127,6 +128,8 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
             item.txids.push_back(wtx.GetHash());
             if (mine & ISMINE_WATCH_ONLY)
                 item.fIsWatchonly = true;
+            if (mine & ISMINE_STAKED_COMMITMENT_BLSCT)
+                item.fIsStakedCommitment = true;
         }
     }
 

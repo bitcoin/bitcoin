@@ -30,6 +30,7 @@ template OrderedElements<MclG1Point>::OrderedElements(const OrderedElements& oth
 template <typename T>
 Elements<T> OrderedElements<T>::GetElements() const
 {
+    if (Size() == 0) return Elements<T>();
     std::vector<T> ret;
     std::copy(m_set.begin(), m_set.end(), std::back_inserter(ret));
 
@@ -52,6 +53,17 @@ void OrderedElements<T>::Add(const T& x)
     m_set.insert(x);
 }
 template void OrderedElements<MclG1Point>::Add(const MclG1Point&);
+
+template <typename T>
+void OrderedElements<T>::Add(const OrderedElements<T>& x)
+{
+    auto list = x.GetElements();
+
+    for (size_t i = 0; i < list.Size(); ++i) {
+        Add(list[i]);
+    }
+}
+template void OrderedElements<MclG1Point>::Add(const OrderedElements<MclG1Point>&);
 
 template <typename T>
 bool OrderedElements<T>::Exists(const T& x) const

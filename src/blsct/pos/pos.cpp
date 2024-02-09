@@ -223,14 +223,23 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64_t& nStakeMod
     return true;
 }
 
-std::vector<unsigned char> CalculateSetMemProofRandomness(const CBlockIndex& pindexPrev)
+std::vector<unsigned char> CalculateSetMemProofRandomness(const CBlockIndex& pindexPrev, const CBlock& block)
 {
     CHashWriter ss(0, 0);
 
-    ss << pindexPrev.GetBlockHash() << pindexPrev.nStakeModifier;
+    ss << pindexPrev.GetBlockHash() << pindexPrev.nStakeModifier << block.GetHashWithoutPoSProof();
 
     auto hash = ss.GetHash();
 
     return std::vector<unsigned char>(hash.begin(), hash.end());
+}
+
+uint256 CalculateKernelHash(const CBlockIndex& pindexPrev, const CBlock& block)
+{
+    CHashWriter ss(0, 0);
+
+    ss << pindexPrev.nTime << pindexPrev.nStakeModifier << block.posProof.setMemProof.phi << block.nTime;
+
+    return ss.GetHash();
 }
 } // namespace blsct
