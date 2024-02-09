@@ -25,13 +25,29 @@ static util::Result<SelectionResult> ErrorMaxWeightExceeded()
                          "Please try sending a smaller amount or manually consolidating your wallet's UTXOs")};
 }
 
-// Descending order comparator
+// Sort by descending (effective) value prefer lower waste on tie
 struct {
     bool operator()(const OutputGroup& a, const OutputGroup& b) const
     {
+        if (a.GetSelectionAmount() == b.GetSelectionAmount()) {
+            // Lower waste is better when effective_values are tied
+            return (a.fee - a.long_term_fee) < (b.fee - b.long_term_fee);
+        }
         return a.GetSelectionAmount() > b.GetSelectionAmount();
     }
 } descending;
+
+// Sort by descending (effective) value prefer lower weight on tie
+struct {
+    bool operator()(const OutputGroup& a, const OutputGroup& b) const
+    {
+        if (a.GetSelectionAmount() == b.GetSelectionAmount()) {
+            // Sort lower weight to front on tied effective_value
+            return a.m_weight < b.m_weight;
+        }
+        return a.GetSelectionAmount() > b.GetSelectionAmount();
+    }
+} descending_effval_weight;
 
 /*
  * This is the Branch and Bound Coin Selection algorithm designed by Murch. It searches for an input
@@ -68,6 +84,7 @@ struct {
  *        bound of the range.
  * @param const CAmount& cost_of_change This is the cost of creating and spending a change output.
  *        This plus selection_target is the upper bound of the range.
+ * @param int max_weight The maximum weight available for the input set.
  * @returns The result of this coin selection algorithm, or std::nullopt
  */
 
@@ -179,6 +196,331 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
     }
     result.ComputeAndSetWaste(cost_of_change, cost_of_change, CAmount{0});
     assert(best_waste == result.GetWaste());
+
+    return result;
+}
+
+/*
+ * TL;DR: Coin Grinder is a DFS-based algorithm that deterministically searches for the minimum-weight input set to fund
+ * the transaction. The algorithm is similar to the Branch and Bound algorithm, but will produce a transaction _with_ a
+ * change output instead of a changeless transaction.
+ *
+ * Full description: CoinGrinder can be thought of as a graph walking algorithm. It explores a binary tree
+ * representation of the powerset of the UTXO pool. Each node in the tree represents a candidate input set. The tree’s
+ * root is the empty set. Each node in the tree has two children which are formed by either adding or skipping the next
+ * UTXO ("inclusion/omission branch"). Each level in the tree after the root corresponds to a decision about one UTXO in
+ * the UTXO pool.
+ *
+ * Example:
+ * We represent UTXOs as _alias=[effective_value/weight]_ and indicate omitted UTXOs with an underscore. Given a UTXO
+ * pool {A=[10/2], B=[7/1], C=[5/1], D=[4/2]} sorted by descending effective value, our search tree looks as follows:
+ *
+ *                                       _______________________ {} ________________________
+ *                                      /                                                   \
+ * A=[10/2]               __________ {A} _________                                __________ {_} _________
+ *                       /                        \                              /                        \
+ * B=[7/1]            {AB} _                      {A_} _                      {_B} _                      {__} _
+ *                  /       \                   /       \                   /       \                   /       \
+ * C=[5/1]     {ABC}         {AB_}         {A_C}         {A__}         {_BC}         {_B_}         {__C}         {___}
+ *              / \           / \           / \           / \           / \           / \           / \           / \
+ * D=[4/2] {ABCD} {ABC_} {AB_D} {AB__} {A_CD} {A_C_} {A__D} {A___} {_BCD} {_BC_} {_B_D} {_B__} {__CD} {__C_} {___D} {____}
+ *
+ *
+ * CoinGrinder uses a depth-first search to walk this tree. It first tries inclusion branches, then omission branches. A
+ * naive exploration of a tree with four UTXOs requires visiting all 31 nodes:
+ *
+ *     {} {A} {AB} {ABC} {ABCD} {ABC_} {AB_} {AB_D} {AB__} {A_} {A_C} {A_CD} {A_C_} {A__} {A__D} {A___} {_} {_B} {_BC}
+ *     {_BCD} {_BC_} {_B_} {_B_D} {_B__} {__} {__C} {__CD} {__C} {___} {___D} {____}
+ *
+ * As powersets grow exponentially with the set size, walking the entire tree would quickly get computationally
+ * infeasible with growing UTXO pools. Thanks to traversing the tree in a deterministic order, we can keep track of the
+ * progress of the search solely on basis of the current selection (and the best selection so far). We visit as few
+ * nodes as possible by recognizing and skipping any branches that can only contain solutions worse than the best
+ * solution so far. This makes CoinGrinder a branch-and-bound algorithm
+ * (https://en.wikipedia.org/wiki/Branch_and_bound).
+ * CoinGrinder is searching for the input set with lowest weight that can fund a transaction, so for example we can only
+ * ever find a _better_ candidate input set in a node that adds a UTXO, but never in a node that skips a UTXO. After
+ * visiting {A} and exploring the inclusion branch {AB} and its descendants, the candidate input set in the omission
+ * branch {A_} is equivalent to the parent {A} in effective value and weight. While CoinGrinder does need to visit the
+ * descendants of the omission branch {A_}, it is unnecessary to evaluate the candidate input set in the omission branch
+ * itself. By skipping evaluation of all nodes on an omission branch we reduce the visited nodes to 15:
+ *
+ *     {A} {AB} {ABC} {ABCD} {AB_D} {A_C} {A_CD} {A__D} {_B} {_BC} {_BCD} {_B_D} {__C} {__CD} {___D}
+ *
+ *                                       _______________________ {} ________________________
+ *                                      /                                                   \
+ * A=[10/2]               __________ {A} _________                                ___________\____________
+ *                       /                        \                              /                        \
+ * B=[7/1]            {AB} __                    __\_____                     {_B} __                    __\_____
+ *                  /        \                  /        \                  /        \                  /        \
+ * C=[5/1]     {ABC}          \            {A_C}          \            {_BC}          \            {__C}          \
+ *              /             /             /             /             /             /             /             /
+ * D=[4/2] {ABCD}        {AB_D}        {A_CD}        {A__D}        {_BCD}        {_B_D}        {__CD}        {___D}
+ *
+ *
+ * We refer to the move from the inclusion branch {AB} via the omission branch {A_} to its inclusion-branch child {A_C}
+ * as _shifting to the omission branch_ or just _SHIFT_. (The index of the ultimate element in the candidate input set
+ * shifts right by one: {AB} ⇒ {A_C}.)
+ * When we reach a leaf node in the last level of the tree, shifting to the omission branch is not possible. Instead we
+ * go to the omission branch of the node’s last ancestor on an inclusion branch: from {ABCD}, we go to {AB_D}. From
+ * {AB_D}, we go to {A_C}. We refer to this operation as a _CUT_. (The ultimate element in
+ * the input set is deselected, and the penultimate element is shifted right by one: {AB_D} ⇒ {A_C}.)
+ * If a candidate input set in a node has not selected sufficient funds to build the transaction, we continue directly
+ * along the next inclusion branch. We call this operation _EXPLORE_. (We go from one inclusion branch to the next
+ * inclusion branch: {_B} ⇒ {_BC}.)
+ * Further, any prefix that already has selected sufficient effective value to fund the transaction cannot be improved
+ * by adding more UTXOs. If for example the candidate input set in {AB} is a valid solution, all potential descendant
+ * solutions {ABC}, {ABCD}, and {AB_D} must have a higher weight, thus instead of exploring the descendants of {AB}, we
+ * can SHIFT from {AB} to {A_C}.
+ *
+ * Given the above UTXO set, using a target of 11, and following these initial observations, the basic implementation of
+ * CoinGrinder visits the following 10 nodes:
+ *
+ *     Node   [eff_val/weight]  Evaluation
+ *     ---------------------------------------------------------------
+ *     {A}    [10/2]            Insufficient funds: EXPLORE
+ *     {AB}   [17/3]            Solution: SHIFT to omission branch
+ *     {A_C}  [15/3]            Better solution: SHIFT to omission branch
+ *     {A__D} [14/4]            Worse solution, shift impossible due to leaf node: CUT to omission branch of {A__D},
+ *                              i.e. SHIFT to omission branch of {A}
+ *     {_B}   [7/1]             Insufficient funds: EXPLORE
+ *     {_BC}  [12/2]            Better solution: SHIFT to omission branch
+ *     {_B_D} [11/3]            Worse solution, shift impossible due to leaf node: CUT to omission branch of {_B_D},
+ *                              i.e. SHIFT to omission branch of {_B}
+ *     {__C}  [5/1]             Insufficient funds: EXPLORE
+ *     {__CD} [9/3]             Insufficient funds, leaf node: CUT
+ *     {___D} [4/2]             Insufficient funds, leaf node, cannot CUT since only one UTXO selected: done.
+ *
+ *                                       _______________________ {} ________________________
+ *                                      /                                                   \
+ * A=[10/2]               __________ {A} _________                                ___________\____________
+ *                       /                        \                              /                        \
+ * B=[7/1]            {AB}                       __\_____                     {_B} __                    __\_____
+ *                                              /        \                  /        \                  /        \
+ * C=[5/1]                                 {A_C}          \            {_BC}          \            {__C}          \
+ *                                                        /                           /             /             /
+ * D=[4/2]                                           {A__D}                      {_B_D}        {__CD}        {___D}
+ *
+ *
+ * We implement this tree walk in the following algorithm:
+ * 1. Add `next_utxo`
+ * 2. Evaluate candidate input set
+ * 3. Determine `next_utxo` by deciding whether to
+ *    a) EXPLORE: Add next inclusion branch, e.g. {_B} ⇒ {_B} + `next_uxto`: C
+ *    b) SHIFT: Replace last selected UTXO by next higher index, e.g. {A_C} ⇒ {A__} + `next_utxo`: D
+ *    c) CUT: deselect last selected UTXO and shift to omission branch of penultimate UTXO, e.g. {AB_D} ⇒ {A_} + `next_utxo: C
+ *
+ * The implementation then adds further optimizations by discovering further situations in which either the inclusion
+ * branch can be skipped, or both the inclusion and omission branch can be skipped after evaluating the candidate input
+ * set in the node.
+ *
+ * @param std::vector<OutputGroup>& utxo_pool The UTXOs that we are choosing from. These UTXOs will be sorted in
+ *        descending order by effective value, with lower weight preferred as a tie-breaker. (We can think of an output
+ *        group with multiple as a heavier UTXO with the combined amount here.)
+ * @param const CAmount& selection_target This is the minimum amount that we need for the transaction without considering change.
+ * @param const CAmount& change_target The minimum budget for creating a change output, by which we increase the selection_target.
+ * @param int max_weight The maximum permitted weight for the input set.
+ * @returns The result of this coin selection algorithm, or std::nullopt
+ */
+util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, CAmount change_target, int max_weight)
+{
+    std::sort(utxo_pool.begin(), utxo_pool.end(), descending_effval_weight);
+    // The sum of UTXO amounts after this UTXO index, e.g. lookahead[5] = Σ(UTXO[6+].amount)
+    std::vector<CAmount> lookahead(utxo_pool.size());
+    // The minimum UTXO weight among the remaining UTXOs after this UTXO index, e.g. min_tail_weight[5] = min(UTXO[6+].weight)
+    std::vector<int> min_tail_weight(utxo_pool.size());
+
+    // Calculate lookahead values, min_tail_weights, and check that there are sufficient funds
+    CAmount total_available = 0;
+    int min_group_weight = std::numeric_limits<int>::max();
+    for (size_t i = 0; i < utxo_pool.size(); ++i) {
+        size_t index = utxo_pool.size() - 1 - i; // Loop over every element in reverse order
+        lookahead[index] = total_available;
+        min_tail_weight[index] = min_group_weight;
+        // UTXOs with non-positive effective value must have been filtered
+        Assume(utxo_pool[index].GetSelectionAmount() > 0);
+        total_available += utxo_pool[index].GetSelectionAmount();
+        min_group_weight = std::min(min_group_weight, utxo_pool[index].m_weight);
+    }
+
+    const CAmount total_target = selection_target + change_target;
+    if (total_available < total_target) {
+        // Insufficient funds
+        return util::Error();
+    }
+
+    // The current selection and the best input set found so far, stored as the utxo_pool indices of the UTXOs forming them
+    std::vector<size_t> curr_selection;
+    std::vector<size_t> best_selection;
+
+    // The currently selected effective amount, and the effective amount of the best selection so far
+    CAmount curr_amount = 0;
+    CAmount best_selection_amount = MAX_MONEY;
+
+    // The weight of the currently selected input set, and the weight of the best selection
+    int curr_weight = 0;
+    int best_selection_weight = max_weight; // Tie is fine, because we prefer lower selection amount
+
+    // Whether the input sets generated during this search have exceeded the maximum transaction weight at any point
+    bool max_tx_weight_exceeded = false;
+
+    // Index of the next UTXO to consider in utxo_pool
+    size_t next_utxo = 0;
+
+    /*
+     * You can think of the current selection as a vector of booleans that has decided inclusion or exclusion of all
+     * UTXOs before `next_utxo`. When we consider the next UTXO, we extend this hypothetical boolean vector either with
+     * a true value if the UTXO is included or a false value if it is omitted. The equivalent state is stored more
+     * compactly as the list of indices of the included UTXOs and the `next_utxo` index.
+     *
+     * We can never find a new solution by deselecting a UTXO, because we then revisit a previously evaluated
+     * selection. Therefore, we only need to check whether we found a new solution _after adding_ a new UTXO.
+     *
+     * Each iteration of CoinGrinder starts by selecting the `next_utxo` and evaluating the current selection. We
+     * use three state transitions to progress from the current selection to the next promising selection:
+     *
+     * - EXPLORE inclusion branch: We do not have sufficient funds, yet. Add `next_utxo` to the current selection, then
+     *                             nominate the direct successor of the just selected UTXO as our `next_utxo` for the
+     *                             following iteration.
+     *
+     *                             Example:
+     *                                 Current Selection: {0, 5, 7}
+     *                                 Evaluation: EXPLORE, next_utxo: 8
+     *                                 Next Selection: {0, 5, 7, 8}
+     *
+     * - SHIFT to omission branch: Adding more UTXOs to the current selection cannot produce a solution that is better
+     *                             than the current best, e.g. the current selection weight exceeds the max weight or
+     *                             the current selection amount is equal to or greater than the target.
+     *                             We designate our `next_utxo` the one after the tail of our current selection, then
+     *                             deselect the tail of our current selection.
+     *
+     *                             Example:
+     *                                 Current Selection: {0, 5, 7}
+     *                                 Evaluation: SHIFT, next_utxo: 8, omit last selected: {0, 5}
+     *                                 Next Selection: {0, 5, 8}
+     *
+     * - CUT entire subtree:       We have exhausted the inclusion branch for the penultimately selected UTXO, both the
+     *                             inclusion and the omission branch of the current prefix are barren. E.g. we have
+     *                             reached the end of the UTXO pool, so neither further EXPLORING nor SHIFTING can find
+     *                             any solutions. We designate our `next_utxo` the one after our penultimate selected,
+     *                             then deselect both the last and penultimate selected.
+     *
+     *                             Example:
+     *                                 Current Selection: {0, 5, 7}
+     *                                 Evaluation: CUT, next_utxo: 6, omit two last selected: {0}
+     *                                 Next Selection: {0, 6}
+     */
+    auto deselect_last = [&]() {
+        OutputGroup& utxo = utxo_pool[curr_selection.back()];
+        curr_amount -= utxo.GetSelectionAmount();
+        curr_weight -= utxo.m_weight;
+        curr_selection.pop_back();
+    };
+
+    SelectionResult result(selection_target, SelectionAlgorithm::CG);
+    bool is_done = false;
+    size_t curr_try = 0;
+    while (!is_done) {
+        bool should_shift{false}, should_cut{false};
+        // Select `next_utxo`
+        OutputGroup& utxo = utxo_pool[next_utxo];
+        curr_amount += utxo.GetSelectionAmount();
+        curr_weight += utxo.m_weight;
+        curr_selection.push_back(next_utxo);
+        ++next_utxo;
+        ++curr_try;
+
+        // EVALUATE current selection: check for solutions and see whether we can CUT or SHIFT before EXPLORING further
+        auto curr_tail = curr_selection.back();
+        if (curr_amount + lookahead[curr_tail] < total_target) {
+            // Insufficient funds with lookahead: CUT
+            should_cut = true;
+        } else if (curr_weight > best_selection_weight) {
+            // best_selection_weight is initialized to max_weight
+            if (curr_weight > max_weight) max_tx_weight_exceeded = true;
+            // Worse weight than best solution. More UTXOs only increase weight:
+            // CUT if last selected group had minimal weight, else SHIFT
+            if (utxo_pool[curr_tail].m_weight <= min_tail_weight[curr_tail]) {
+                should_cut = true;
+            } else {
+                should_shift  = true;
+            }
+        } else if (curr_amount >= total_target) {
+            // Success, adding more weight cannot be better: SHIFT
+            should_shift  = true;
+            if (curr_weight < best_selection_weight || (curr_weight == best_selection_weight && curr_amount < best_selection_amount)) {
+                // New lowest weight, or same weight with fewer funds tied up
+                best_selection = curr_selection;
+                best_selection_weight = curr_weight;
+                best_selection_amount = curr_amount;
+            }
+        } else if (!best_selection.empty() && curr_weight + int64_t{min_tail_weight[curr_tail]} * ((total_target - curr_amount + utxo_pool[curr_tail].GetSelectionAmount() - 1) / utxo_pool[curr_tail].GetSelectionAmount()) > best_selection_weight) {
+            // Compare minimal tail weight and last selected amount with the amount missing to gauge whether a better weight is still possible.
+            if (utxo_pool[curr_tail].m_weight <= min_tail_weight[curr_tail]) {
+                should_cut = true;
+            } else {
+                should_shift = true;
+            }
+        }
+
+        if (curr_try >= TOTAL_TRIES) {
+            // Solution is not guaranteed to be optimal if `curr_try` hit TOTAL_TRIES
+            result.SetAlgoCompleted(false);
+            break;
+        }
+
+        if (next_utxo == utxo_pool.size()) {
+            // Last added UTXO was end of UTXO pool, nothing left to add on inclusion or omission branch: CUT
+            should_cut = true;
+        }
+
+        if (should_cut) {
+            // Neither adding to the current selection nor exploring the omission branch of the last selected UTXO can
+            // find any solutions. Redirect to exploring the Omission branch of the penultimate selected UTXO (i.e.
+            // set `next_utxo` to one after the penultimate selected, then deselect the last two selected UTXOs)
+            should_cut = false;
+            deselect_last();
+            should_shift  = true;
+        }
+
+        while (should_shift) {
+            // Set `next_utxo` to one after last selected, then deselect last selected UTXO
+            if (curr_selection.empty()) {
+                // Exhausted search space before running into attempt limit
+                is_done = true;
+                result.SetAlgoCompleted(true);
+                break;
+            }
+            next_utxo = curr_selection.back() + 1;
+            deselect_last();
+            should_shift  = false;
+
+            // After SHIFTing to an omission branch, the `next_utxo` might have the same effective value as the UTXO we
+            // just omitted. Since lower weight is our tiebreaker on UTXOs with equal effective value for sorting, if it
+            // ties on the effective value, it _must_ have the same weight (i.e. be a "clone" of the prior UTXO) or a
+            // higher weight. If so, selecting `next_utxo` would produce an equivalent or worse selection as one we
+            // previously evaluated. In that case, increment `next_utxo` until we find a UTXO with a differing amount.
+            while (utxo_pool[next_utxo - 1].GetSelectionAmount() == utxo_pool[next_utxo].GetSelectionAmount()) {
+                if (next_utxo >= utxo_pool.size() - 1) {
+                    // Reached end of UTXO pool skipping clones: SHIFT instead
+                    should_shift = true;
+                    break;
+                }
+                // Skip clone: previous UTXO is equivalent and unselected
+                ++next_utxo;
+            }
+        }
+    }
+
+    result.SetSelectionsEvaluated(curr_try);
+
+    if (best_selection.empty()) {
+        return max_tx_weight_exceeded ? ErrorMaxWeightExceeded() : util::Error();
+    }
+
+    for (const size_t& i : best_selection) {
+        result.AddInput(utxo_pool[i]);
+    }
 
     return result;
 }
@@ -509,6 +851,26 @@ void SelectionResult::ComputeAndSetWaste(const CAmount min_viable_change, const 
     }
 }
 
+void SelectionResult::SetAlgoCompleted(bool algo_completed)
+{
+    m_algo_completed = algo_completed;
+}
+
+bool SelectionResult::GetAlgoCompleted() const
+{
+    return m_algo_completed;
+}
+
+void SelectionResult::SetSelectionsEvaluated(size_t attempts)
+{
+    m_selections_evaluated = attempts;
+}
+
+size_t SelectionResult::GetSelectionsEvaluated() const
+{
+    return m_selections_evaluated;
+}
+
 CAmount SelectionResult::GetWaste() const
 {
     return *Assert(m_waste);
@@ -602,6 +964,7 @@ std::string GetAlgorithmName(const SelectionAlgorithm algo)
     case SelectionAlgorithm::BNB: return "bnb";
     case SelectionAlgorithm::KNAPSACK: return "knapsack";
     case SelectionAlgorithm::SRD: return "srd";
+    case SelectionAlgorithm::CG: return "cg";
     case SelectionAlgorithm::MANUAL: return "manual";
     // No default case to allow for compiler to warn
     }
