@@ -675,6 +675,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-rpcwhitelistdefault", "Sets default behavior for rpc whitelisting. Unless rpcwhitelistdefault is set to 0, if any -rpcwhitelist is set, the rpc server acts as if all rpc users are subject to empty-unless-otherwise-specified whitelists. If rpcwhitelistdefault is set to 1 and no -rpcwhitelist is set, rpc server acts as if all rpc users are subject to empty whitelists.", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     argsman.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    argsman.AddArg("-sv2bind=<addr>[:<port>]", strprintf("Bind to given address and always listen on it (default: 127.0.0.1). Use [host]:port notation for IPv6."), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-sv2port=<port>", strprintf("Listen for Stratum v2 connections on <port> (default: %u, testnet: %u, signet: %u, regtest: %u)", defaultBaseParams->Sv2Port(), testnetBaseParams->Sv2Port(), signetBaseParams->Sv2Port(), regtestBaseParams->Sv2Port()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
 
 #if HAVE_DECL_FORK
@@ -1319,6 +1320,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         "-onion",
         "-proxy",
         "-rpcbind",
+        "-sv2bind",
         "-torcontrol",
         "-whitebind",
         "-zmqpubhashblock",
@@ -1967,8 +1969,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     if (args.GetBoolArg("-sv2", false)) {
         assert(!node.sv2_template_provider);
+        assert(node.chainman);
 
-        node.sv2_template_provider = std::make_unique<Sv2TemplateProvider>();
+        node.sv2_template_provider = std::make_unique<Sv2TemplateProvider>(*node.chainman);
 
         uint16_t sv2_port;
         const std::string sv2_port_arg = args.GetArg("-sv2port", "");
