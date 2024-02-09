@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <blsct/pos/pos.h>
 #include <blsct/pos/proof_logic.h>
 #include <blsct/wallet/txfactory.h>
 #include <consensus/amount.h>
@@ -89,11 +90,27 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
     index.phashBlock = new uint256(InsecureRand256());
     CBlock block;
 
-    auto posProof = blsct::ProofOfStakeLogic::Create(coins_view_cache, index, out3.value, out3.gamma, block);
+    blsct::ProofOfStake posProof;
+    bool fStop = false;
+
+    while (!fStop) {
+        posProof = blsct::ProofOfStakeLogic::Create(coins_view_cache, index, out3.value, out3.gamma, block);
+
+        arith_uint256 targetBn;
+        targetBn.SetCompact(blsct::GetNextTargetRequired(&index, m_node.chainman->GetConsensus()));
+        arith_uint256 kernelHash = UintToArith256(blsct::CalculateKernelHash(index.nTime, index.nStakeModifier, posProof.setMemProof.phi, block.nTime));
+
+        std::cout << kernelHash.ToString() << " < " << targetBn.ToString() << " " << (kernelHash < targetBn) << " " << (out3.value.GetUint64() - (kernelHash / targetBn).GetLow64()) << "\n";
+
+        if (kernelHash < targetBn)
+            fStop = true;
+        else
+            block.nTime += 1;
+    }
 
     blsct::ProofOfStakeLogic posProofLogic(posProof);
 
-    BOOST_ASSERT(posProofLogic.Verify(coins_view_cache, index, block));
+    BOOST_ASSERT(posProofLogic.Verify(coins_view_cache, index, block, m_node.chainman->GetConsensus()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

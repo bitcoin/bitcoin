@@ -5,9 +5,11 @@
 #ifndef BLSCT_POS_PROOF_H
 #define BLSCT_POS_PROOF_H
 
+#include <arith_uint256.h>
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/set_mem_proof/set_mem_proof.h>
 #include <blsct/set_mem_proof/set_mem_proof_prover.h>
+#include <uint256.h>
 
 using Arith = Mcl;
 using Point = Arith::Point;
@@ -30,7 +32,9 @@ public:
 
     ProofOfStake(const Points& stakedCommitments, const std::vector<unsigned char>& eta, const Scalar& m, const Scalar& f);
 
-    bool Verify(const Points& stakedCommitments, const std::vector<unsigned char>& eta) const;
+    bool Verify(const Points& stakedCommitments, const std::vector<unsigned char>& eta, const uint256& kernelHash, const unsigned int& posTarget) const;
+
+    static bool VerifyKernelHash(const uint256& kernelHash, const unsigned int& posTarget);
 
     template <typename Stream>
     void Serialize(Stream& s) const

@@ -15,6 +15,7 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, const Consensu
 bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64_t& nStakeModifier, bool& fGeneratedStakeModifier, const Consensus::Params& params, const node::BlockManager& m_blockman);
 std::vector<unsigned char> CalculateSetMemProofRandomness(const CBlockIndex& pindexPrev, const CBlock& block);
 uint256 CalculateKernelHash(const CBlockIndex& pindexPrev, const CBlock& block);
+uint256 CalculateKernelHash(const uint32_t& prevTime, const uint64_t& stakeModifier, const MclG1Point& phi, const uint32_t& time);
 } // namespace blsct
 
 #endif // BLSCT_POS_H

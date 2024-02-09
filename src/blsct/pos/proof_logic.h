@@ -30,7 +30,7 @@ public:
 
     SetMemProof<Arith> GetProof() { return setMemProof; };
 
-    bool Verify(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const CBlock& block) const;
+    bool Verify(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const CBlock& block, const Consensus::Params& params) const;
 
     SetMemProof<Arith> setMemProof;
 };

@@ -2391,8 +2391,8 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, params.GetConsensus());
     if (block.IsBLSCT()) {
         if (!blsct::VerifyTx(*block.vtx[0], view, nFees + params.GetConsensus().nBLSCTBlockReward)) {
-            return error("ConnectBlock(): VerifyTx on coinbase of block %s failed",
-                         block.GetHash().ToString());
+            return error("ConnectBlock(): VerifyTx on coinbase of block %s failed (fees: %s reward: %s)\n%s",
+                         block.GetHash().ToString(), FormatMoney(nFees), FormatMoney(params.GetConsensus().nBLSCTBlockReward));
         }
     } else if (block.vtx[0]->GetValueOut() > blockReward) {
         LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)\n", block.vtx[0]->GetValueOut(), blockReward);
@@ -2435,7 +2435,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     if (params.GetConsensus().fBLSCT && block.IsProofOfStake()) {
         auto posProof = blsct::ProofOfStakeLogic(block.posProof);
 
-        if (!posProof.Verify(view, *(pindex->pprev), block))
+        if (!posProof.Verify(view, *(pindex->pprev), block, params.GetConsensus()))
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blsct-pos-proof");
 
         time_6 = SteadyClock::now();
@@ -3729,7 +3729,10 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
 
     // Check proof of work
     const Consensus::Params& consensusParams = chainman.GetConsensus();
-    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
+    if (block.IsProofOfStake()) {
+        if (block.nBits != blsct::GetNextTargetRequired(pindexPrev, consensusParams))
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of stake");
+    } else if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of work");
 
     // Check against checkpoints

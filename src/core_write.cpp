@@ -147,6 +147,13 @@ std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags)
     return HexStr(ssTx);
 }
 
+std::string EncodeHexBlock(const CBlock& block, const int serializeFlags)
+{
+    CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | serializeFlags);
+    ssBlock << block;
+    return HexStr(ssBlock);
+}
+
 void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex, bool include_address, const SigningProvider* provider)
 {
     CTxDestination address;

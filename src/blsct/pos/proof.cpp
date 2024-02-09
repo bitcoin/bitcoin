@@ -4,8 +4,8 @@
 
 #include <blsct/pos/proof.h>
 #include <blsct/range_proof/generators.h>
-
 #include <util/strencodings.h>
+
 using Arith = Mcl;
 using Point = Arith::Point;
 using Scalar = Arith::Scalar;
@@ -25,11 +25,21 @@ ProofOfStake::ProofOfStake(const Points& stakedCommitments, const std::vector<un
     setMemProof = Prover::Prove(setup, stakedCommitments, sigma, m, f, eta);
 }
 
-bool ProofOfStake::Verify(const Points& stakedCommitments, const std::vector<unsigned char>& eta) const
+bool ProofOfStake::Verify(const Points& stakedCommitments, const std::vector<unsigned char>& eta, const uint256& kernelHash, const unsigned int& posTarget) const
 {
     auto setup = SetMemProofSetup<Arith>::Get();
     auto res = Prover::Verify(setup, stakedCommitments, eta, setMemProof);
 
-    return res;
+    return res && VerifyKernelHash(kernelHash, posTarget);
+}
+
+bool ProofOfStake::VerifyKernelHash(const uint256& kernelHash, const unsigned int& posTarget)
+{
+    arith_uint256 posTargetBn;
+    posTargetBn.SetCompact(posTarget);
+
+    arith_uint256 kernelHashBn = UintToArith256(kernelHash);
+
+    return kernelHashBn < posTargetBn;
 }
 } // namespace blsct

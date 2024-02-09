@@ -32,6 +32,7 @@ fi
 BITCOIN_DAEMON_NAME=navcoind
 BITCOIN_TEST_NAME=test_navcoin
 BITCOIN_CLI_NAME=navcoin-cli
+NAVCOIN_STAKER_NAME=navcoin-staker
 BITCOIN_TX_NAME=navcoin-tx
 BITCOIN_UTIL_NAME=navcoin-util
 BITCOIN_CHAINSTATE_NAME=navcoin-chainstate
@@ -612,6 +613,12 @@ CXXFLAGS="$TEMP_CXXFLAGS"
 fi
 
 CORE_CPPFLAGS="$CORE_CPPFLAGS -DHAVE_BUILD_INFO"
+
+AC_ARG_ENABLE([staker],
+  [AS_HELP_STRING([--enable-staker],
+  [build navcoin-staker])],
+  [build_navcoin_staker=$enableval],
+  [build_navcoin_staker=yes])
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
@@ -1647,6 +1654,10 @@ AC_MSG_CHECKING([whether to build bitcoind])
 AM_CONDITIONAL([BUILD_BITCOIND], [test $build_bitcoind = "yes"])
 AC_MSG_RESULT($build_bitcoind)
 
+AC_MSG_CHECKING([whether to build navcoin-staker])
+AM_CONDITIONAL([BUILD_NAVCOIN_STAKER], [test $build_navcoin_staker = "yes"])
+AC_MSG_RESULT($build_navcoin_staker)
+
 AC_MSG_CHECKING([whether to build bitcoin-cli])
 AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test $build_bitcoin_cli = "yes"])
 AC_MSG_RESULT($build_bitcoin_cli)
@@ -1833,6 +1844,7 @@ AC_SUBST(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION")
 AC_SUBST(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL")
 AC_SUBST(BITCOIN_DAEMON_NAME)
 AC_SUBST(BITCOIN_TEST_NAME)
+AC_SUBST(NAVCOIN_STAKER_NAME)
 AC_SUBST(BITCOIN_CLI_NAME)
 AC_SUBST(BITCOIN_TX_NAME)
 AC_SUBST(BITCOIN_UTIL_NAME)

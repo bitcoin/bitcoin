@@ -3,10 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/pos/pos.h>
-
-#include <arith_uint256.h>
 #include <primitives/block.h>
-#include <uint256.h>
 
 namespace blsct {
 // ppcoin: find last block index up to pindex
@@ -234,12 +231,17 @@ std::vector<unsigned char> CalculateSetMemProofRandomness(const CBlockIndex& pin
     return std::vector<unsigned char>(hash.begin(), hash.end());
 }
 
-uint256 CalculateKernelHash(const CBlockIndex& pindexPrev, const CBlock& block)
+uint256 CalculateKernelHash(const uint32_t& prevTime, const uint64_t& stakeModifier, const MclG1Point& phi, const uint32_t& time)
 {
     CHashWriter ss(0, 0);
 
-    ss << pindexPrev.nTime << pindexPrev.nStakeModifier << block.posProof.setMemProof.phi << block.nTime;
+    ss << prevTime << stakeModifier << phi << time;
 
     return ss.GetHash();
+}
+
+uint256 CalculateKernelHash(const CBlockIndex& pindexPrev, const CBlock& block)
+{
+    return CalculateKernelHash(pindexPrev.nTime, pindexPrev.nStakeModifier, block.posProof.setMemProof.phi, block.nTime);
 }
 } // namespace blsct

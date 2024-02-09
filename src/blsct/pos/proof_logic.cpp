@@ -23,14 +23,15 @@ ProofOfStake ProofOfStakeLogic::Create(const CCoinsViewCache& cache, const CBloc
     return proof;
 }
 
-bool ProofOfStakeLogic::Verify(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const CBlock& block) const
+bool ProofOfStakeLogic::Verify(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const CBlock& block, const Consensus::Params& params) const
 {
     auto eta = blsct::CalculateSetMemProofRandomness(pindexPrev, block);
+    auto kernelHash = blsct::CalculateKernelHash(pindexPrev, block);
 
     auto proof = ProofOfStake(setMemProof);
     auto stakedCommitments = cache.GetStakedCommitments().GetElements();
 
-    auto res = proof.Verify(stakedCommitments, eta);
+    auto res = proof.Verify(stakedCommitments, eta, kernelHash, blsct::GetNextTargetRequired(&pindexPrev, params));
 
     return res;
 }
