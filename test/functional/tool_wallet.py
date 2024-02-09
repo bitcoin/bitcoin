@@ -101,27 +101,13 @@ class ToolWalletTest(BitcoinTestFramework):
             Wallet info
             ===========
             Encrypted: no
-            HD (hd seed available): no
-            Keypool Size: 1
-            Transactions: 0
-            Address Book: 1
-        ''')
-        self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
-
-        self.start_node(0)
-        self.nodes[0].upgradetohd()
-        self.stop_node(0)
-
-        out = textwrap.dedent('''\
-            Wallet info
-            ===========
-            Encrypted: no
             HD (hd seed available): yes
             Keypool Size: 2
             Transactions: 0
             Address Book: 1
         ''')
         self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
+
         timestamp_after = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp after calling info: {}'.format(timestamp_after))
         self.log_wallet_timestamp_comparison(timestamp_before, timestamp_after)

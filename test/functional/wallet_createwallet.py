@@ -113,9 +113,7 @@ class CreateWalletTest(BitcoinTestFramework):
         # There should only be 1 key
         walletinfo = w6.getwalletinfo()
         assert_equal(walletinfo['keypoolsize'], 1)
-        # TODO: re-enable  this when HD is the default mode
-        # assert_equal(walletinfo['keypoolsize_hd_internal'], 1)
-        # end TODO
+        assert_equal(walletinfo['keypoolsize_hd_internal'], 1)
         # Allow empty passphrase, but there should be a warning
         resp = self.nodes[0].createwallet(wallet_name='w7', disable_private_keys=False, blank=False, passphrase='')
         assert_equal(resp['warning'], 'Empty string given as passphrase, wallet will not be encrypted.')

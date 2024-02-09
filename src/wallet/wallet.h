@@ -91,7 +91,7 @@ static const CAmount HIGH_TX_FEE_PER_KB = COIN / 100;
 static const CAmount HIGH_MAX_TX_FEE = 100 * HIGH_TX_FEE_PER_KB;
 
 //! if set, all keys will be derived by using BIP39/BIP44
-static const bool DEFAULT_USE_HD_WALLET = false;
+static const bool DEFAULT_USE_HD_WALLET = true;
 
 class CCoinControl;
 class CKey;
@@ -1279,6 +1279,7 @@ public:
     /* Returns true if HD is enabled */
     bool IsHDEnabled() const;
 
+    // TODO: move it to scriptpubkeyman
     /* Generates a new HD chain */
     bool GenerateNewHDChainEncrypted(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, const SecureString& secureWalletPassphrase);
 
@@ -1330,6 +1331,9 @@ public:
 
     /** Upgrade the wallet */
     bool UpgradeWallet(int version, bilingual_str& error);
+
+    /** Upgrade non-HD wallet to HD wallet */
+    bool UpgradeToHD(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, const SecureString& secureWalletPassphrase, bilingual_str& error);
 
     //! Returns all unique ScriptPubKeyMans in m_internal_spk_managers and m_external_spk_managers
     std::set<ScriptPubKeyMan*> GetActiveScriptPubKeyMans() const;
