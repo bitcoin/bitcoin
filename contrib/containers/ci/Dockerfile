@@ -138,7 +138,7 @@ RUN \
   update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix; \
   exit 0
 
-ARG LLVM_VERSION=15
+ARG LLVM_VERSION=16
 # Setup Clang+LLVM support
 RUN apt-get update && apt-get install $APT_ARGS \
     lsb-release \

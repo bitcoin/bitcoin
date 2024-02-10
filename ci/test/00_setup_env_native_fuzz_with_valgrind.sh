@@ -14,4 +14,4 @@ export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=true
 export FUZZ_TESTS_CONFIG="--valgrind"
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer --enable-suppress-external-warnings CC=clang-15 CXX=clang++-15"
+export BITCOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer --enable-suppress-external-warnings CC=clang-16 CXX=clang++-16"
