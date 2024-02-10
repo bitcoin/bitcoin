@@ -144,6 +144,10 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         restorewo_wallet.importaddress(wo2, rescan=False)
         restorewo_wallet.importaddress(wo3, rescan=False)
 
+        self.log.info('Testing abortrescan when no rescan is in progress')
+        assert_equal(restorewo_wallet.getwalletinfo()['scanning'], False)
+        assert_equal(restorewo_wallet.abortrescan(), False)
+
         # check user has 0 balance and no transactions
         assert_equal(restorewo_wallet.getbalance(), 0)
         assert_equal(len(restorewo_wallet.listtransactions()), 0)
