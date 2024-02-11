@@ -15,7 +15,8 @@ that runs all of the unit tests. The main source file for the test library is fo
 Unit tests will be automatically compiled if dependencies were met in `./configure`
 and tests weren't explicitly disabled.
 
-After configuring, they can be run with `make check`.
+After configuring, they can be run with `make check`, which includes unit tests from
+subtrees, or `make && make -C src check-unit` for just the unit tests.
 
 To run the unit tests manually, launch `src/test/test_bitcoin`. To recompile
 after a test file was modified, run `make` and then run the test again. If you

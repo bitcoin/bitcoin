@@ -408,10 +408,8 @@ class BIP68Test(BitcoinTestFramework):
     # Use self.nodes[1] to test that version 2 transactions are standard.
     def test_version2_relay(self):
         mini_wallet = MiniWallet(self.nodes[1])
-        mini_wallet.rescan_utxos()
-        tx = mini_wallet.create_self_transfer()["tx"]
-        tx.nVersion = 2
-        mini_wallet.sendrawtransaction(from_node=self.nodes[1], tx_hex=tx.serialize().hex())
+        mini_wallet.send_self_transfer(from_node=self.nodes[1], version=2)
+
 
 if __name__ == '__main__':
     BIP68Test().main()
