@@ -139,7 +139,7 @@ fn main() -> ExitCode {
         // chdir to root before each lint test
         env::set_current_dir(&git_root).unwrap();
         if let Err(err) = lint_fn() {
-            println!("{err}\n^---- Failure generated from {lint_name}!");
+            println!("{err}\n^---- ⚠️ Failure generated from {lint_name}!");
             test_failed = true;
         }
     }
