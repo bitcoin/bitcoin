@@ -171,7 +171,6 @@ static const std::map<std::string, BCLog::LogFlags> LOG_CATEGORIES_BY_STR{
 #ifdef DEBUG_LOCKCONTENTION
     {"lock", BCLog::LOCK},
 #endif
-    {"util", BCLog::UTIL},
     {"blockstorage", BCLog::BLOCKSTORAGE},
     {"txreconciliation", BCLog::TXRECONCILIATION},
     {"scan", BCLog::SCAN},
