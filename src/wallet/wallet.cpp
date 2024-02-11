@@ -310,6 +310,14 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, interfaces::Coin
             return nullptr;
         }
         if (!create_blank) {
+            // Unlock the wallet
+            if (!wallet->Unlock(passphrase)) {
+                error = Untranslated("Error: Wallet was encrypted but could not be unlocked");
+                status = DatabaseStatus::FAILED_ENCRYPT;
+                return nullptr;
+            }
+
+            // Set a seed for the wallet
             if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
                 LOCK(wallet->cs_wallet);
                 wallet->SetupDescriptorScriptPubKeyMans();
@@ -323,13 +331,6 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, interfaces::Coin
                        return nullptr;
                     }
                 }
-            }
-
-            // Unlock the wallet
-            if (!wallet->Unlock(passphrase)) {
-                error = Untranslated("Error: Wallet was encrypted but could not be unlocked");
-                status = DatabaseStatus::FAILED_ENCRYPT;
-                return nullptr;
             }
 
             // backup the wallet we just encrypted
@@ -4885,6 +4886,7 @@ bool CWallet::UpgradeToHD(const SecureString& secureMnemonic, const SecureString
             error = Untranslated("Failed to generate encrypted HD wallet");
             return false;
         }
+        Lock();
     } else {
         spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase);
     }
@@ -5505,7 +5507,6 @@ bool CWallet::GenerateNewHDChainEncrypted(const SecureString& secureMnemonic, co
     if (!spk_man->NewKeyPool()) {
         throw std::runtime_error(std::string(__func__) + ": NewKeyPool failed");
     }
-    Lock();
     return true;
 }
 
