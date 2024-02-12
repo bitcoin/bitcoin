@@ -66,6 +66,7 @@ range_proof::Generators<T> range_proof::GeneratorsFactory<T>::GetInstance(const 
         GeneratorsFactory<T>::m_G_cache.emplace(token_id, G);
     }
     Point G = GeneratorsFactory<T>::m_G_cache[token_id];
+    std::cout << __func__ << ": generator G=" << HexStr(G.GetVch()) << " for tokenId=" << token_id.ToString() << "\n";
 
     Generators<T> gens(m_H, G, m_Gi, m_Hi);
     return gens;

@@ -94,7 +94,7 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
     bool fStop = false;
 
     while (!fStop) {
-        posProof = blsct::ProofOfStakeLogic::Create(coins_view_cache, index, out3.value, out3.gamma, block);
+        posProof = blsct::ProofOfStakeLogic::Create(coins_view_cache, index, out3.value, out3.gamma);
 
         arith_uint256 targetBn;
         targetBn.SetCompact(blsct::GetNextTargetRequired(&index, m_node.chainman->GetConsensus()));

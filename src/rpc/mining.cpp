@@ -954,7 +954,7 @@ static RPCHelpMan getblocktemplate()
                     stakedCommitments.push_back(HexStr(stakedCommitmentsElements[i].GetVch()));
 
                 result.pushKV("staked_commitments", stakedCommitments);
-                result.pushKV("eta", HexStr(blsct::CalculateSetMemProofRandomness(*pindexPrev, *pblock)));
+                result.pushKV("eta", HexStr(blsct::CalculateSetMemProofRandomness(*pindexPrev)));
             }
 
             if (consensusParams.signet_blocks) {

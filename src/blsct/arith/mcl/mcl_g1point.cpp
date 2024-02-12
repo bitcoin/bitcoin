@@ -200,6 +200,13 @@ std::string MclG1Point::GetString(const uint8_t& radix) const
     return std::string(str);
 }
 
+void MclG1Point::SetString(const std::string& hex)
+{
+    if (mclBnG1_setStr(&m_point, hex.c_str(), hex.size(), 16) == 0) {
+        throw std::runtime_error(std::string(__func__) + ": mclBnG1_setStr failed");
+    }
+}
+
 MclG1Point::Scalar MclG1Point::GetHashWithSalt(const uint64_t salt) const
 {
     CHashWriter hasher(0, 0);

@@ -166,8 +166,25 @@ UniValue FormatStakedCommitmentInfo(const std::vector<StakedCommitmentInfo>& inf
     for (auto& it : info) {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("commitment", HexStr(it.commitment.GetVch()));
+
+        range_proof::GeneratorsFactory<Mcl> gf;
+        range_proof::Generators<Arith> gen = gf.GetInstance(TokenId());
+
+        Point sigma = gen.G * it.value + gen.H * it.gamma;
+
+        obj.pushKV("commitment2", HexStr(sigma.GetVch()));
+        obj.pushKV("G", HexStr(gen.G.GetVch()));
+        obj.pushKV("H", HexStr(gen.H.GetVch()));
+
         obj.pushKV("value", HexStr(it.value.GetVch()));
+        auto val = MclScalar();
+        val.SetVch(ParseHex(HexStr(it.value.GetVch())));
+        obj.pushKV("value2", it.value.GetString());
         obj.pushKV("gamma", HexStr(it.gamma.GetVch()));
+
+        auto gam = MclScalar();
+        gam.SetVch(ParseHex(HexStr(it.gamma.GetVch())));
+        obj.pushKV("gamma2", it.gamma.GetString());
         ret.push_back(obj);
     }
 

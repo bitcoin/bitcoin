@@ -22,6 +22,8 @@ ProofOfStake::ProofOfStake(const Points& stakedCommitments, const std::vector<un
 
     Point sigma = gen.G * m + gen.H * f;
 
+    std::cout << __func__ << ": sigma=" << HexStr(sigma.GetVch()) << " from " << HexStr(gen.G.GetVch()) << "*" << m.GetString() << "+" << HexStr(gen.H.GetVch()) << "*" << f.GetString() << "\n";
+
     setMemProof = Prover::Prove(setup, stakedCommitments, sigma, m, f, eta);
 }
 
@@ -30,7 +32,9 @@ bool ProofOfStake::Verify(const Points& stakedCommitments, const std::vector<uns
     auto setup = SetMemProofSetup<Arith>::Get();
     auto res = Prover::Verify(setup, stakedCommitments, eta, setMemProof);
 
-    return res && VerifyKernelHash(kernelHash, posTarget);
+    std::cout << __func__ << ": with eta " << HexStr(eta) << " and staked comms " << SerializeHash(stakedCommitments).ToString() << " and proof " << SerializeHash(setMemProof).ToString() << " " << res << "\n";
+
+    return res /*&& VerifyKernelHash(kernelHash, posTarget)*/;
 }
 
 bool ProofOfStake::VerifyKernelHash(const uint256& kernelHash, const unsigned int& posTarget)

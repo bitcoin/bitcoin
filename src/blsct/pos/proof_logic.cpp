@@ -12,20 +12,17 @@ using Points = Elements<Point>;
 using Prover = SetMemProofProver<Arith>;
 
 namespace blsct {
-ProofOfStake ProofOfStakeLogic::Create(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const Scalar& m, const Scalar& f, const CBlock& block)
+ProofOfStake ProofOfStakeLogic::Create(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const Scalar& m, const Scalar& f)
 {
-    auto eta = blsct::CalculateSetMemProofRandomness(pindexPrev, block);
-
     auto stakedCommitments = cache.GetStakedCommitments().GetElements();
+    auto eta = blsct::CalculateSetMemProofRandomness(pindexPrev);
 
-    auto proof = ProofOfStake(stakedCommitments, eta, m, f);
-
-    return proof;
+    return ProofOfStake(stakedCommitments, eta, m, f);
 }
 
 bool ProofOfStakeLogic::Verify(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const CBlock& block, const Consensus::Params& params) const
 {
-    auto eta = blsct::CalculateSetMemProofRandomness(pindexPrev, block);
+    auto eta = blsct::CalculateSetMemProofRandomness(pindexPrev);
     auto kernelHash = blsct::CalculateKernelHash(pindexPrev, block);
 
     auto proof = ProofOfStake(setMemProof);

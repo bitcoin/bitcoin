@@ -35,6 +35,7 @@ public:
     void Add(const T& x);
     void Clear();
     bool Empty() const;
+    bool Find(const T& x) const;
     std::vector<uint8_t> GetVch() const;
 
     void ConfirmIndexInsideRange(const uint32_t& index) const;

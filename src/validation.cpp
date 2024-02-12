@@ -3731,7 +3731,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     const Consensus::Params& consensusParams = chainman.GetConsensus();
     if (block.IsProofOfStake()) {
         if (block.nBits != blsct::GetNextTargetRequired(pindexPrev, consensusParams))
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of stake");
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", strprintf("incorrect proof of stake (%08x should be %08x)", block.nBits, blsct::GetNextTargetRequired(pindexPrev, consensusParams)));
     } else if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of work");
 

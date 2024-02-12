@@ -401,7 +401,6 @@ std::vector<StakedCommitmentInfo> GetStakedCommitmentInfo(const CWallet& wallet)
 
     {
         LOCK(wallet.cs_wallet);
-        std::set<uint256> trusted_parents;
         for (const auto& entry : wallet.mapWallet) {
             const CWalletTx& wtx = entry.second;
             const int tx_depth{wallet.GetTxDepthInMainChain(wtx)};

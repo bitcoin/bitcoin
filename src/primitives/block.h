@@ -41,10 +41,11 @@ public:
 
     SERIALIZE_METHODS(CBlockHeader, obj)
     {
+        READWRITE(obj.nVersion);
         if (obj.IsProofOfStake())
-            READWRITE(obj.nVersion, obj.hashPrevBlock, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.posProof);
+            READWRITE(obj.hashPrevBlock, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.posProof);
         else
-            READWRITE(obj.nVersion, obj.hashPrevBlock, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.nNonce);
+            READWRITE(obj.hashPrevBlock, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.nNonce);
     }
 
     void SetNull()

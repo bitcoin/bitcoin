@@ -26,9 +26,12 @@ public:
     {
     }
 
-    static ProofOfStake Create(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const Scalar& m, const Scalar& f, const CBlock& block);
+    static ProofOfStake Create(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const Scalar& m, const Scalar& f);
 
-    SetMemProof<Arith> GetProof() { return setMemProof; };
+    SetMemProof<Arith> GetProof()
+    {
+        return setMemProof;
+    };
 
     bool Verify(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const CBlock& block, const Consensus::Params& params) const;
 

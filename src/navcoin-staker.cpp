@@ -7,14 +7,19 @@
 #include <config/bitcoin-config.h>
 #endif
 
+#include <blsct/arith/mcl/mcl_init.h>
 #include <chainparamsbase.h>
 #include <clientversion.h>
 #include <common/args.h>
 #include <common/url.h>
 #include <compat/compat.h>
 #include <compat/stdin.h>
+#include <consensus/merkle.h>
+#include <core_io.h>
 #include <logging.h>
 #include <policy/feerate.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <rpc/client.h>
 #include <rpc/mining.h>
 #include <rpc/protocol.h>
@@ -143,9 +148,8 @@ static int AppInitRPC(int argc, char* argv[])
             strUsage += FormatParagraph(LicenseInfo());
         } else {
             strUsage += "\n"
-                        "Usage:  bitcoin-cli [options] <command> [params]  Send command to " PACKAGE_NAME "\n"
-                        "or:     bitcoin-cli [options] help                List commands\n"
-                        "or:     bitcoin-cli [options] help <command>      Get help for a command\n";
+                        "Usage:  navcoin-staker [options] Start the staker \n"
+                        "or:     navcoin-staker [options] help        List commands\n";
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
@@ -653,6 +657,10 @@ bool TestSetup()
         // Parse reply
         UniValue result = reply.find_value("result");
         const UniValue& error = reply.find_value("error");
+
+        std::string strError;
+        int nRet;
+
         if (error.isNull()) {
             LogPrintf("Test connection to RPC: OK\n");
 
@@ -661,13 +669,27 @@ bool TestSetup()
             UniValue result = reply.find_value("result");
             const UniValue& error = reply.find_value("error");
 
-            if (error.isNull()) {
+            strError.clear();
+            nRet = 0;
+
+            if (!error.isNull()) {
+                ParseError(error, strError, nRet);
+            }
+
+            if (error.isNull() || nRet == 35) {
                 LogPrintf("Test load wallet %s: OK\n", walletName);
 
                 reply = ConnectAndCallRPC(rh.get(), "getwalletinfo", /* args=*/{}, walletName);
 
                 UniValue result = reply.find_value("result");
                 const UniValue& error = reply.find_value("error");
+
+                strError.clear();
+                nRet = 0;
+
+                if (!error.isNull()) {
+                    ParseError(error, strError, nRet);
+                }
 
                 if (error.isNull()) {
                     if (!result["blsct"].get_bool()) {
@@ -688,13 +710,13 @@ bool TestSetup()
                         UniValue result = reply.find_value("result");
                         const UniValue& error = reply.find_value("error");
 
+                        strError.clear();
+                        nRet = 0;
+
                         if (error.isNull()) {
                             LogPrintf("Wallet passphrase test: OK\n");
                             return true;
                         } else {
-                            std::string strError;
-                            int nRet;
-
                             ParseError(error, strError, nRet);
                             LogPrintf("Could not unlock wallet %s (%s)\n", walletName, strError);
 
@@ -704,27 +726,16 @@ bool TestSetup()
 
                     return true;
                 } else {
-                    std::string strError;
-                    int nRet;
-
-                    ParseError(error, strError, nRet);
                     LogPrintf("Could not get wallet %s info (%s)\n", walletName, strError);
-
                     return false;
                 }
             } else {
-                std::string strError;
-                int nRet;
-
-                ParseError(error, strError, nRet);
-
                 LogPrintf("Could not load wallet %s (%s)\n", walletName, strError);
                 return false;
             }
         } else {
             LogPrintf("Could not connect to RPC node: %s\n", error.getValStr());
             return false;
-            // ParseError(error, strPrint, nRet);
         }
     } catch (const std::exception& e) {
         LogPrintf("error: %s\n", e.what());
@@ -734,12 +745,47 @@ bool TestSetup()
     return true;
 }
 
+Elements<MclG1Point> UniValueArrayToElements(const UniValue& array)
+{
+    Elements<MclG1Point> ret;
+
+    for (const UniValue& elementobject : array.getValues()) {
+        MclG1Point point;
+        point.SetVch(ParseHex(elementobject.get_str()));
+        ret.Add(point);
+    }
+
+    return ret;
+}
+
+std::vector<std::shared_ptr<const CTransaction>> UniValueArrayToTransactions(const UniValue& array)
+{
+    std::vector<std::shared_ptr<const CTransaction>> ret;
+
+    for (const UniValue& object : array.getValues()) {
+        CMutableTransaction tx;
+        if (DecodeHexTx(tx, object.find_value("data").get_str()))
+            ret.push_back(MakeTransactionRef(CTransaction(tx)));
+    }
+
+    return ret;
+}
+
+std::string EncodeHexBlock(const CBlock& block, const int serializeFlags)
+{
+    CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | serializeFlags);
+    ssBlock << block;
+    return HexStr(ssBlock);
+}
+
 MAIN_FUNCTION
 {
 #ifdef WIN32
     common::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
 #endif
+    volatile MclInit for_side_effect_only;
+
     SetupEnvironment();
     if (!SetupNetworking()) {
         tfm::format(std::cerr, "Error: Initializing networking failed\n");
@@ -764,6 +810,43 @@ MAIN_FUNCTION
     Setup();
     if (!TestSetup())
         return ret;
+
+    std::unique_ptr<BaseRequestHandler> rh;
+
+    rh.reset(new DefaultRequestHandler());
+
+    while (true) {
+        CBlock proposal;
+
+        UniValue reply = ConnectAndCallRPC(rh.get(), "getblocktemplate", /* args=*/{}, walletName);
+        UniValue reply_staked = ConnectAndCallRPC(rh.get(), "liststakedcommitments", /* args=*/{}, walletName);
+
+        UniValue result = reply.find_value("result");
+        auto staked_commitments = UniValueArrayToElements(result.find_value("staked_commitments").get_array());
+        auto eta = ParseHex(result.find_value("eta").get_str());
+
+        UniValue result_staked = reply_staked.find_value("result");
+
+        auto vchValue = ParseHex(result_staked.get_array()[0].find_value("value").get_str());
+        MclScalar m;
+        m.SetVch(vchValue);
+
+        auto vchGamma = ParseHex(result_staked.get_array()[0].find_value("gamma").get_str());
+        MclScalar f;
+        f.SetVch(vchGamma);
+
+        proposal.nVersion = result.find_value("version").get_real();
+        proposal.nTime = result.find_value("curtime").get_real();
+        proposal.nBits = stoi(result.find_value("bits").get_str(), 0, 16);
+        proposal.hashPrevBlock = uint256S(result.find_value("previousblockhash").get_str());
+        proposal.vtx = UniValueArrayToTransactions(result.find_value("transactions").get_array());
+        proposal.posProof = blsct::ProofOfStake(staked_commitments, eta, m, f).setMemProof;
+        proposal.hashMerkleRoot = BlockMerkleRoot(proposal);
+
+        UniValue reply_submit = ConnectAndCallRPC(rh.get(), "submitblock", /* args=*/{EncodeHexBlock(proposal, 0)}, walletName);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(50000));
+    }
 
     return ret;
 

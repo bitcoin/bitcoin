@@ -220,11 +220,11 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64_t& nStakeMod
     return true;
 }
 
-std::vector<unsigned char> CalculateSetMemProofRandomness(const CBlockIndex& pindexPrev, const CBlock& block)
+std::vector<unsigned char> CalculateSetMemProofRandomness(const CBlockIndex& pindexPrev)
 {
     CHashWriter ss(0, 0);
 
-    ss << pindexPrev.GetBlockHash() << pindexPrev.nStakeModifier << block.GetHashWithoutPoSProof();
+    ss << pindexPrev.GetBlockHash() << pindexPrev.nStakeModifier;
 
     auto hash = ss.GetHash();
 

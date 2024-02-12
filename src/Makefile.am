@@ -800,6 +800,7 @@ libbitcoin_consensus_a_SOURCES = \
   blsct/set_mem_proof/set_mem_proof.cpp \
   blsct/set_mem_proof/set_mem_proof_setup.cpp \
   blsct/set_mem_proof/set_mem_proof_prover.cpp \
+  blsct/pos/proof.cpp \
   blsct/signature.cpp \
   consensus/amount.h \
   consensus/merkle.cpp \
@@ -1050,15 +1051,18 @@ navcoin_staker_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 navcoin_staker_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
-navcoin_staker_SOURCES += navcoin-stakaer-res.rc
+navcoin_staker_SOURCES += navcoin-staker-res.rc
 endif
 
 navcoin_staker_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CRYPTO)
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBBLS) \
+  $(LIBMCL)
 
 navcoin_staker_LDADD += $(EVENT_LIBS)
 #

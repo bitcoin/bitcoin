@@ -129,6 +129,9 @@ SetMemProof<T> SetMemProofProver<T>::Prove(
     }
     Points Ys = ExtendYs(setup, Ys_src, n);
 
+    if (!Ys_src.Find(sigma))
+        throw std::runtime_error(std::string(__func__) + ": sigma is not part of Ys");
+
     // Prepare Index
     Scalars bL;
     for (auto Y_i: Ys.m_vec) {

@@ -5,9 +5,10 @@
 #include <blsct/arith/elements.h>
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
-#include <tinyformat.h>
 #include <deque>
 #include <sstream>
+#include <tinyformat.h>
+#include <util/strencodings.h>
 
 template <typename T>
 OrderedElements<T>::OrderedElements(){};
@@ -165,6 +166,17 @@ bool Elements<T>::Empty() const
 }
 template bool Elements<MclScalar>::Empty() const;
 template bool Elements<MclG1Point>::Empty() const;
+
+template <typename T>
+bool Elements<T>::Find(const T& x) const
+{
+    for (size_t i = 0; i < Size(); ++i) {
+        if (operator[](i) == x)
+            return true;
+    }
+    return false;
+}
+template bool Elements<MclG1Point>::Find(const MclG1Point& x) const;
 
 template <typename T>
 std::vector<uint8_t> Elements<T>::GetVch() const
@@ -504,7 +516,7 @@ std::string Elements<T>::GetString(const uint8_t& radix) const
     std::stringstream ss;
     ss << "[";
     for (size_t i=0; i<m_vec.size(); ++i) {
-        ss << m_vec[i].GetString(radix);
+        ss << HexStr(m_vec[i].GetVch());
         if (i != m_vec.size() - 1) ss << ", ";
     }
     ss << "]";

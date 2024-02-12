@@ -60,6 +60,8 @@ public:
     bool SetVch(const std::vector<uint8_t>& vec);
 
     std::string GetString(const uint8_t& radix = 16) const;
+    void SetString(const std::string& hex);
+    
     Scalar GetHashWithSalt(const uint64_t salt) const;
 
     template <typename Stream>
