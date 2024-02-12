@@ -888,7 +888,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWalletWithoutChain, BasicTestingSetup)
     UnloadWallet(std::move(wallet));
 }
 
-BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
+BOOST_FIXTURE_TEST_CASE(RemoveTxs, TestChain100Setup)
 {
     m_args.ForceSetArg("-unsafesqlitesync", "1");
     WalletContext context;
@@ -913,8 +913,8 @@ BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
         BOOST_CHECK(wallet->HasWalletSpend(prev_tx));
         BOOST_CHECK_EQUAL(wallet->mapWallet.count(block_hash), 1u);
 
-        std::vector<uint256> vHashIn{ block_hash }, vHashOut;
-        BOOST_CHECK_EQUAL(wallet->ZapSelectTx(vHashIn, vHashOut), DBErrors::LOAD_OK);
+        std::vector<uint256> vHashIn{ block_hash };
+        BOOST_CHECK(wallet->RemoveTxs(vHashIn));
 
         BOOST_CHECK(!wallet->HasWalletSpend(prev_tx));
         BOOST_CHECK_EQUAL(wallet->mapWallet.count(block_hash), 0u);
