@@ -2739,7 +2739,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
                 // If preferred_net has a value set, pick an extra outbound
                 // peer from that network. The eviction logic in net_processing
                 // ensures that a peer from another network will be evicted.
-                std::tie(addr, addr_last_try) = addrman.Select(false, preferred_net);
+                std::unordered_set<Network> preferred_nets;
+                if (preferred_net.has_value()) {
+                    preferred_nets = {*preferred_net};
+                }
+                std::tie(addr, addr_last_try) = addrman.Select(false, preferred_nets);
             }
 
             // Require outbound IPv4/IPv6 connections, other than feelers, to be to distinct network groups

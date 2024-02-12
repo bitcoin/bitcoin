@@ -285,7 +285,15 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
     auto max_pct = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
     auto filtered = fuzzed_data_provider.ConsumeBool();
     (void)const_addr_man.GetAddr(max_addresses, max_pct, network, filtered);
-    (void)const_addr_man.Select(fuzzed_data_provider.ConsumeBool(), network);
+
+    std::unordered_set<Network> nets;
+    for (const auto& net : ALL_NETWORKS) {
+        if (fuzzed_data_provider.ConsumeBool()) {
+            nets.insert(net);
+        }
+    }
+    (void)const_addr_man.Select(fuzzed_data_provider.ConsumeBool(), nets);
+
     std::optional<bool> in_new;
     if (fuzzed_data_provider.ConsumeBool()) {
         in_new = fuzzed_data_provider.ConsumeBool();

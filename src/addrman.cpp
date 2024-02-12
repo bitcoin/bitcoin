@@ -710,7 +710,7 @@ void AddrManImpl::Attempt_(const CService& addr, bool fCountFailure, NodeSeconds
     }
 }
 
-std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool new_only, std::optional<Network> network) const
+std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool new_only, const std::unordered_set<Network>& networks) const
 {
     AssertLockHeld(cs);
 
@@ -719,13 +719,18 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool new_only, std::option
     size_t new_count = nNew;
     size_t tried_count = nTried;
 
-    if (network.has_value()) {
-        auto it = m_network_counts.find(*network);
-        if (it == m_network_counts.end()) return {};
-
-        auto counts = it->second;
-        new_count = counts.n_new;
-        tried_count = counts.n_tried;
+    if (!networks.empty()) {
+        new_count = 0;
+        tried_count = 0;
+        for (auto& network : networks) {
+            auto it = m_network_counts.find(network);
+            if (it == m_network_counts.end()) {
+                continue;
+            }
+            auto counts = it->second;
+            new_count += counts.n_new;
+            tried_count += counts.n_tried;
+        }
     }
 
     if (new_only && new_count == 0) return {};
@@ -758,9 +763,9 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::Select_(bool new_only, std::option
             position = (initial_position + i) % ADDRMAN_BUCKET_SIZE;
             node_id = GetEntry(search_tried, bucket, position);
             if (node_id != -1) {
-                if (network.has_value()) {
+                if (!networks.empty()) {
                     const auto it{mapInfo.find(node_id)};
-                    if (Assume(it != mapInfo.end()) && it->second.GetNetwork() == *network) break;
+                    if (Assume(it != mapInfo.end()) && networks.contains(it->second.GetNetwork())) break;
                 } else {
                     break;
                 }
@@ -1208,11 +1213,11 @@ std::pair<CAddress, NodeSeconds> AddrManImpl::SelectTriedCollision()
     return ret;
 }
 
-std::pair<CAddress, NodeSeconds> AddrManImpl::Select(bool new_only, std::optional<Network> network) const
+std::pair<CAddress, NodeSeconds> AddrManImpl::Select(bool new_only, const std::unordered_set<Network>& networks) const
 {
     LOCK(cs);
     Check();
-    auto addrRet = Select_(new_only, network);
+    auto addrRet = Select_(new_only, networks);
     Check();
     return addrRet;
 }
@@ -1315,9 +1320,9 @@ std::pair<CAddress, NodeSeconds> AddrMan::SelectTriedCollision()
     return m_impl->SelectTriedCollision();
 }
 
-std::pair<CAddress, NodeSeconds> AddrMan::Select(bool new_only, std::optional<Network> network) const
+std::pair<CAddress, NodeSeconds> AddrMan::Select(bool new_only, const std::unordered_set<Network>& networks) const
 {
-    return m_impl->Select(new_only, network);
+    return m_impl->Select(new_only, networks);
 }
 
 std::vector<CAddress> AddrMan::GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered) const
