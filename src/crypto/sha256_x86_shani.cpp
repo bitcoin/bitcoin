@@ -6,7 +6,7 @@
 // Written and placed in public domain by Jeffrey Walton.
 // Based on code from Intel, and by Sean Gulley for the miTLS project.
 
-#ifdef ENABLE_X86_SHANI
+#if defined(ENABLE_SSE41) && defined(ENABLE_X86_SHANI)
 
 #include <stdint.h>
 #include <immintrin.h>
