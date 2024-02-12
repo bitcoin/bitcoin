@@ -2,6 +2,7 @@
 # Copyright (c) 2024 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+from decimal import Decimal
 
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
@@ -397,6 +398,37 @@ class MempoolAcceptV3(BitcoinTestFramework):
         test_accept_2children_with_in_mempool_parent = node.testmempoolaccept([tx_v3_child_1["hex"], tx_v3_child_2["hex"]])
         assert all([result["package-error"] == expected_error_extra for result in test_accept_2children_with_in_mempool_parent])
 
+    @cleanup(extra_args=["-acceptnonstdtxn=1"])
+    def test_reorg_2child_rbf(self):
+        node = self.nodes[0]
+        self.log.info("Test that children of a v3 transaction can be replaced individually, even if there are multiple due to reorg")
+
+        ancestor_tx = self.wallet.send_self_transfer_multi(from_node=node, num_outputs=2, version=3)
+        self.check_mempool([ancestor_tx["txid"]])
+
+        block = self.generate(node, 1)[0]
+        self.check_mempool([])
+
+        child_1 = self.wallet.send_self_transfer(from_node=node, version=3, utxo_to_spend=ancestor_tx["new_utxos"][0])
+        child_2 = self.wallet.send_self_transfer(from_node=node, version=3, utxo_to_spend=ancestor_tx["new_utxos"][1])
+        self.check_mempool([child_1["txid"], child_2["txid"]])
+
+        self.generate(node, 1)
+        self.check_mempool([])
+
+        # Create a reorg, causing ancestor_tx to exceed the 1-child limit
+        node.invalidateblock(block)
+        self.check_mempool([ancestor_tx["txid"], child_1["txid"], child_2["txid"]])
+        assert_equal(node.getmempoolentry(ancestor_tx["txid"])["descendantcount"], 3)
+
+        # Create a replacement of child_1. It does not conflict with child_2.
+        child_1_conflict = self.wallet.send_self_transfer(from_node=node, version=3, utxo_to_spend=ancestor_tx["new_utxos"][0], fee_rate=Decimal("0.01"))
+
+        # Ensure child_1 and child_1_conflict are different transactions
+        assert (child_1_conflict["txid"] != child_1["txid"])
+        self.check_mempool([ancestor_tx["txid"], child_1_conflict["txid"], child_2["txid"]])
+        assert_equal(node.getmempoolentry(ancestor_tx["txid"])["descendantcount"], 3)
+
     def run_test(self):
         self.log.info("Generate blocks to create UTXOs")
         node = self.nodes[0]
@@ -412,6 +444,7 @@ class MempoolAcceptV3(BitcoinTestFramework):
         self.test_mempool_sibling()
         self.test_v3_package_inheritance()
         self.test_v3_in_testmempoolaccept()
+        self.test_reorg_2child_rbf()
 
 
 if __name__ == "__main__":
