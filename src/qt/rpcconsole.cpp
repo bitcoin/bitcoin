@@ -581,6 +581,8 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     clear();
 
     GUIUtil::handleCloseWindowShortcut(this);
+
+    updateWindowTitle();
 }
 
 RPCConsole::~RPCConsole()
@@ -1386,4 +1388,14 @@ void RPCConsole::updateAlerts(const QString& warnings)
 {
     this->ui->label_alerts->setVisible(!warnings.isEmpty());
     this->ui->label_alerts->setText(warnings);
+}
+
+void RPCConsole::updateWindowTitle()
+{
+    const ChainType chain = Params().GetChainType();
+    if (chain == ChainType::MAIN) return;
+
+    const QString chainType = QString::fromStdString(Params().GetChainTypeString());
+    const QString title = tr("Node window - [%1]").arg(chainType);
+    this->setWindowTitle(title);
 }
