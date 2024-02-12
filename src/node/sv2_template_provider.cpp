@@ -260,7 +260,7 @@ void Sv2TemplateProvider::ThreadSv2Handler()
             auto checktime = std::chrono::steady_clock::now() + std::chrono::milliseconds(50);
             g_best_block_cv.wait_until(lock, checktime);
             LOCK(m_tp_mutex);
-            if (m_best_prev_hash != g_best_block) {
+            if (m_best_prev_hash != g_best_block && g_best_block != uint256(0)) {
                 m_best_prev_hash = g_best_block;
                 return true;
             }
@@ -523,6 +523,7 @@ bool Sv2TemplateProvider::SendWork(Sv2Client& client, bool send_new_prevhash)
         // and no new blocks have arrived.
         m_best_prev_hash = new_work_set.block_template->block.hashPrevBlock;
     }
+
     // Do not submit new template if the fee increase is insufficient:
     CAmount fees = 0;
     for (CAmount fee : new_work_set.block_template->vTxFees) {
@@ -752,14 +753,23 @@ void Sv2TemplateProvider::ProcessSv2Message(const Sv2NetMsg& sv2_net_msg, Sv2Cli
         if (cached_block != m_block_template_cache.end()) {
             CBlock& block = (*cached_block->second).block;
 
-            std::vector<uint8_t> witness_reserve_value;
-            if (!block.IsNull()) {
-                auto scriptWitness = block.vtx[0]->vin[0].scriptWitness;
-                if (!scriptWitness.IsNull()) {
-                    std::copy(scriptWitness.stack[0].begin(), scriptWitness.stack[0].end(), std::back_inserter(witness_reserve_value));
-                }
+            if (block.hashPrevBlock != m_best_prev_hash) {
+                LogTrace(BCLog::SV2, "Template id=%lu prevhash=%s, tip=%s\n", request_tx_data.m_template_id, HexStr(block.hashPrevBlock), HexStr(m_best_prev_hash));
+                Sv2RequestTransactionDataErrorMsg request_tx_data_error{request_tx_data.m_template_id, "stale-template-id"};
+
+
+                LogDebug(BCLog::SV2, "Send 0x75 RequestTransactionData.Error (stale-template-id) to client id=%zu\n",
+                        client.m_id);
+                client.m_send_messages.emplace_back(request_tx_data_error);
+                return;
             }
-std::vector<CTransactionRef> txs;
+
+            std::vector<uint8_t> witness_reserve_value;
+            auto scriptWitness = block.vtx[0]->vin[0].scriptWitness;
+            if (!scriptWitness.IsNull()) {
+                std::copy(scriptWitness.stack[0].begin(), scriptWitness.stack[0].end(), std::back_inserter(witness_reserve_value));
+            }
+            std::vector<CTransactionRef> txs;
             if (block.vtx.size() > 0) {
                 std::copy(block.vtx.begin() + 1, block.vtx.end(), std::back_inserter(txs));
             }
