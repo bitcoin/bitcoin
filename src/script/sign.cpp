@@ -7,8 +7,10 @@
 
 #include <consensus/amount.h>
 #include <key.h>
+#include <musig.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <random.h>
 #include <script/keyorigin.h>
 #include <script/miniscript.h>
 #include <script/script.h>
@@ -127,6 +129,35 @@ bool MutableTransactionSignatureCreator::CreateMuSig2AggregateSig(const std::vec
     sig = res.value();
 
     return true;
+}
+
+std::vector<uint8_t> MutableTransactionSignatureCreator::CreateMuSig2Nonce(const SigningProvider& provider, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion, const SignatureData& sigdata) const
+{
+    assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
+
+    // Retrieve the private key
+    CKey key;
+    if (!provider.GetKey(part_pubkey.GetID(), key)) return {};
+
+    // Retrieve participant pubkeys
+    std::vector<CPubKey> pubkeys = provider.GetAggregateParticipantPubkeys(aggregate_pubkey);
+    if (!pubkeys.size()) return {};
+
+    // Compute sighash
+    std::optional<uint256> sighash = ComputeSchnorrSignatureHash(leaf_hash, sigversion);
+    if (!sighash.has_value()) return {};
+
+    MuSig2SecNonce secnonce;
+    std::vector<uint8_t> out = key.CreateMuSig2Nonce(secnonce, *sighash, aggregate_pubkey, pubkeys);
+    if (out.empty()) return {};
+
+    // Store the secnonce in the SigningProvider
+    HashWriter hasher;
+    hasher << script_pubkey << part_pubkey << *sighash;
+    uint256 id = hasher.GetSHA256();
+    provider.SetMuSig2SecNonce(id, std::move(secnonce));
+
+    return out;
 }
 
 static bool GetCScript(const SigningProvider& provider, const SignatureData& sigdata, const CScriptID& scriptid, CScript& script)
@@ -788,6 +819,12 @@ public:
     {
         sig.assign(64, '\000');
         return true;
+    }
+    std::vector<uint8_t> CreateMuSig2Nonce(const SigningProvider& provider, const CPubKey& aggregate_pubkey, const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion, const SignatureData& sigdata) const override
+    {
+        std::vector<uint8_t> out;
+        out.assign(66, '\000');
+        return out;
     }
 };
 
