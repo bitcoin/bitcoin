@@ -794,7 +794,7 @@ struct PSBTInput
 
                     std::vector<uint8_t> pubnonce;
                     s >> pubnonce;
-                    if (pubnonce.size() != 66) {
+                    if (pubnonce.size() != MUSIG2_PUBNONCE_SIZE) {
                         throw std::ios_base::failure("Input musig2 pubnonce value is not 66 bytes");
                     }
 

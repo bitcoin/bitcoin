@@ -13,6 +13,7 @@
 #include <secp256k1.h>
 #include <secp256k1_ellswift.h>
 #include <secp256k1_extrakeys.h>
+#include <secp256k1_musig.h>
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
 
@@ -347,6 +348,39 @@ ECDHSecret CKey::ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift, c
 KeyPair CKey::ComputeKeyPair(const uint256* merkle_root) const
 {
     return KeyPair(*this, merkle_root);
+}
+
+std::vector<uint8_t> CKey::CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& sighash, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys)
+{
+    // Get the keyagg cache and aggregate pubkey
+    secp256k1_musig_keyagg_cache keyagg_cache;
+    if (!MuSig2AggregatePubkeys(pubkeys, keyagg_cache, aggregate_pubkey)) return {};
+
+    // Parse participant pubkey
+    CPubKey our_pubkey = GetPubKey();
+    secp256k1_pubkey pubkey;
+    if (!secp256k1_ec_pubkey_parse(secp256k1_context_static, &pubkey, our_pubkey.data(), our_pubkey.size())) {
+        return {};
+    }
+
+    // Generate randomness for nonce
+    uint256 rand;
+    GetStrongRandBytes(rand);
+
+    // Generate nonce
+    secp256k1_musig_pubnonce pubnonce;
+    if (!secp256k1_musig_nonce_gen(secp256k1_context_sign, secnonce.Get(), &pubnonce, rand.data(), UCharCast(begin()), &pubkey, sighash.data(), &keyagg_cache, nullptr)) {
+        return {};
+    }
+
+    // Serialize pubnonce
+    std::vector<uint8_t> out;
+    out.resize(MUSIG2_PUBNONCE_SIZE);
+    if (!secp256k1_musig_pubnonce_serialize(secp256k1_context_static, out.data(), &pubnonce)) {
+        return {};
+    }
+
+    return out;
 }
 
 CKey GenerateRandomKey(bool compressed) noexcept
