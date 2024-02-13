@@ -1325,10 +1325,8 @@ bool WalletBatch::WriteWalletFlags(const uint64_t flags)
 
 bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
 {
-    return RunWithinTxn(*this, "erase records", [&types](WalletBatch& self) {
-        return std::all_of(types.begin(), types.end(), [&self](const std::string& type) {
-            return self.m_batch->ErasePrefix(DataStream() << type);
-        });
+    return std::all_of(types.begin(), types.end(), [&](const std::string& type) {
+        return m_batch->ErasePrefix(DataStream() << type);
     });
 }
 
