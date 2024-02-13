@@ -25,12 +25,14 @@ class TestType(Enum):
     3. WRONG_GARBAGE_TERMINATOR - Disconnection happens when incorrect garbage terminator is sent
     4. WRONG_GARBAGE - Disconnection happens when garbage bytes that is sent is different from what the peer receives
     5. SEND_NO_AAD - Disconnection happens when AAD of first encrypted packet after the garbage terminator is not filled
+    6. SEND_NON_EMPTY_VERSION_PACKET - non-empty version packet is simply ignored
     """
     EARLY_KEY_RESPONSE = 0
     EXCESS_GARBAGE = 1
     WRONG_GARBAGE_TERMINATOR = 2
     WRONG_GARBAGE = 3
     SEND_NO_AAD = 4
+    SEND_NON_EMPTY_VERSION_PACKET = 5
 
 
 class EarlyKeyResponseState(EncryptedP2PState):
@@ -85,6 +87,13 @@ class NoAADState(EncryptedP2PState):
         return super().complete_handshake(response)
 
 
+class NonEmptyVersionPacketState(EncryptedP2PState):
+    """"Add option for sending non-empty transport version packet."""
+    def complete_handshake(self, response):
+        self.transport_version = random.randbytes(5)
+        return super().complete_handshake(response)
+
+
 class MisbehavingV2Peer(P2PInterface):
     """Custom implementation of P2PInterface which uses modified v2 P2P protocol functions for testing purposes."""
     def __init__(self, test_type):
@@ -102,6 +111,8 @@ class MisbehavingV2Peer(P2PInterface):
             self.v2_state = WrongGarbageState(initiating=True, net='regtest')
         elif self.test_type == TestType.SEND_NO_AAD:
             self.v2_state = NoAADState(initiating=True, net='regtest')
+        elif TestType.SEND_NON_EMPTY_VERSION_PACKET:
+            self.v2_state = NonEmptyVersionPacketState(initiating=True, net='regtest')
         super().connection_made(transport)
 
     def data_received(self, t):
@@ -146,14 +157,19 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
             ["V2 handshake timeout peer=2"],  # WRONG_GARBAGE_TERMINATOR
             ["V2 transport error: packet decryption failure"],  # WRONG_GARBAGE
             ["V2 transport error: packet decryption failure"],  # SEND_NO_AAD
+            [],  # SEND_NON_EMPTY_VERSION_PACKET
         ]
         for test_type in TestType:
             if test_type == TestType.EARLY_KEY_RESPONSE:
                 continue
-            with node0.assert_debug_log(expected_debug_message[test_type.value], timeout=5):
-                peer = node0.add_p2p_connection(MisbehavingV2Peer(test_type), wait_for_verack=False, send_version=False, supports_v2_p2p=True, expect_success=False)
-                peer.wait_for_disconnect()
-            self.log.info(f"Expected disconnection for {test_type.name}")
+            elif test_type == TestType.SEND_NON_EMPTY_VERSION_PACKET:
+                node0.add_p2p_connection(MisbehavingV2Peer(test_type), wait_for_verack=True, send_version=True, supports_v2_p2p=True)
+                self.log.info(f"No disconnection for {test_type.name}")
+            else:
+                with node0.assert_debug_log(expected_debug_message[test_type.value], timeout=5):
+                    peer = node0.add_p2p_connection(MisbehavingV2Peer(test_type), wait_for_verack=False, send_version=False, supports_v2_p2p=True, expect_success=False)
+                    peer.wait_for_disconnect()
+                self.log.info(f"Expected disconnection for {test_type.name}")
 
 
 if __name__ == '__main__':
