@@ -3,11 +3,17 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+import random
 from enum import Enum
 
+from test_framework.crypto.ellswift import ellswift_create
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.v2_p2p import EncryptedP2PState
+from test_framework.v2_p2p import (
+    logger,
+    EncryptedP2PState,
+    MAX_GARBAGE_LEN,
+)
 
 
 class TestType(Enum):
@@ -15,8 +21,10 @@ class TestType(Enum):
 
     1. EARLY_KEY_RESPONSE - The responder needs to wait until one byte is received which does not match the 16 bytes
     consisting of network magic followed by "version\x00\x00\x00\x00\x00" before sending out its ellswift + garbage bytes
+    2. EXCESS_GARBAGE - Disconnection happens when > MAX_GARBAGE_LEN bytes garbage is sent
     """
     EARLY_KEY_RESPONSE = 0
+    EXCESS_GARBAGE = 1
 
 
 class TestEncryptedP2PState(EncryptedP2PState):
@@ -29,7 +37,19 @@ class TestEncryptedP2PState(EncryptedP2PState):
             self.can_data_be_received = False  # variable used to assert if data is received on recvbuf.
 
     def generate_keypair_and_garbage(self):
-        return super().generate_keypair_and_garbage()
+        """Generate > MAX_GARBAGE_LEN garbage bytes
+        when TestType = (EXCESS_GARBAGE)"""
+        self.privkey_ours, self.ellswift_ours = ellswift_create()
+
+        if self.test_type == TestType.EXCESS_GARBAGE:
+            # send > 4095 bytes garbage
+            garbage_len = MAX_GARBAGE_LEN + random.randrange(1, 10)
+        else:
+            garbage_len = random.randrange(MAX_GARBAGE_LEN + 1)
+
+        self.sent_garbage = random.randbytes(garbage_len)
+        logger.debug(f"sending {garbage_len} bytes of garbage data")
+        return self.ellswift_ours + self.sent_garbage
 
     def initiate_v2_handshake(self):
         """Send ellswift and garbage bytes in 2 parts when TestType = (EARLY_KEY_RESPONSE)"""
@@ -86,6 +106,7 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
 
     def run_test(self):
         self.test_earlykeyresponse()
+        self.test_v2disconnection()
 
     def test_earlykeyresponse(self):
         self.log.info('Sending ellswift bytes in parts to ensure that response from responder is received only when')
@@ -103,6 +124,21 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
         with node0.assert_debug_log(['version handshake timeout peer=0']):
             peer1.wait_for_disconnect(timeout=5)
         self.log.info('successful disconnection since modified ellswift was sent as response')
+
+    def test_v2disconnection(self):
+        # test v2 disconnection scenarios
+        node0 = self.nodes[0]
+        expected_debug_message = [
+            [],  # EARLY_KEY_RESPONSE
+            ["V2 transport error: missing garbage terminator, peer=1"],  # EXCESS_GARBAGE
+        ]
+        for test_type in TestType:
+            if test_type == TestType.EARLY_KEY_RESPONSE:
+                continue
+            with node0.assert_debug_log(expected_debug_message[test_type.value], timeout=5):
+                peer = node0.add_p2p_connection(MisbehavingV2Peer(test_type), wait_for_verack=False, send_version=False, supports_v2_p2p=True, expect_success=False)
+                peer.wait_for_disconnect()
+            self.log.info(f"Expected disconnection for {test_type.name}")
 
 
 if __name__ == '__main__':
