@@ -482,6 +482,137 @@ bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::stri
     return true;
 }
 
+bool LoadBLSCTKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
+{
+    LOCK(pwallet->cs_wallet);
+    try {
+        blsct::PublicKey pubKey;
+        ssKey >> pubKey;
+        auto vchPubKey = pubKey.GetVch();
+        if (!pubKey.IsValid()) {
+            strErr = "Error reading wallet database: PublicKey corrupt";
+            return false;
+        }
+        blsct::PrivateKey key;
+        uint256 hash;
+
+        ssValue >> key;
+        ssValue >> hash;
+
+        auto vchPrivateKey = key.GetScalar().GetVch();
+
+        if (!hash.IsNull()) {
+            // hash pubkey/privkey to accelerate wallet load
+            std::vector<unsigned char> vchKey;
+            vchKey.reserve(vchPubKey.size() + vchPrivateKey.size());
+            vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
+            vchKey.insert(vchKey.end(), vchPrivateKey.begin(), vchPrivateKey.end());
+
+            if (Hash(vchKey) != hash) {
+                strErr = "Error reading wallet database: PublicKey/PrivateKey corrupt";
+                return false;
+            }
+        }
+
+        if (key.GetPublicKey() != pubKey) {
+            strErr = "Error reading wallet database: PrivateKey corrupt";
+            return false;
+        }
+        if (!pwallet->GetOrCreateBLSCTKeyMan()->LoadKey(key, vchPubKey)) {
+            strErr = "Error reading wallet database: BLSCTKeyMan::LoadKey failed";
+            return false;
+        }
+    } catch (const std::exception& e) {
+        if (strErr.empty()) {
+            strErr = e.what();
+        }
+        return false;
+    }
+    return true;
+}
+
+bool LoadSpendKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
+{
+    LOCK(pwallet->cs_wallet);
+    try {
+        blsct::PublicKey pubKey;
+        ssKey >> pubKey;
+
+        uint256 hash;
+        ssValue >> hash;
+
+        if (Hash(pubKey.GetVch()) != hash) {
+            strErr = "Error reading wallet database: PublicSpendKey corrupt, hash does not match";
+            return false;
+        }
+
+        if (!pubKey.IsValid()) {
+            strErr = "Error reading wallet database: PublicSpendKey corrupt";
+            return false;
+        }
+
+        if (!pwallet->GetOrCreateBLSCTKeyMan()->LoadSpendKey(pubKey)) {
+            strErr = "Error reading wallet database: BLSCTKeyMan::LoadSpendKey failed";
+            return false;
+        }
+    } catch (const std::exception& e) {
+        if (strErr.empty()) {
+            strErr = e.what();
+        }
+        return false;
+    }
+    return true;
+}
+
+bool LoadViewKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
+{
+    LOCK(pwallet->cs_wallet);
+    try {
+        blsct::PublicKey pubKey;
+        ssKey >> pubKey;
+        auto vchPubKey = pubKey.GetVch();
+        if (!pubKey.IsValid()) {
+            strErr = "Error reading wallet database: PublicKey corrupt";
+            return false;
+        }
+        blsct::PrivateKey privKey;
+        uint256 hash;
+
+        ssValue >> privKey;
+        ssValue >> hash;
+
+        auto vchPrivKey = privKey.GetScalar().GetVch();
+
+        if (!hash.IsNull()) {
+            // hash pubkey/privkey to accelerate wallet load
+            std::vector<unsigned char> vchKey;
+            vchKey.reserve(vchPubKey.size() + vchPrivKey.size());
+            vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
+            vchKey.insert(vchKey.end(), vchPrivKey.begin(), vchPrivKey.end());
+
+            if (Hash(vchKey) != hash) {
+                strErr = "Error reading wallet database: PublicKey/PrivateKey corrupt";
+                return false;
+            }
+        }
+
+        if (privKey.GetPublicKey() != pubKey) {
+            strErr = "Error reading wallet database: PrivateViewKey corrupt";
+            return false;
+        }
+        if (!pwallet->GetOrCreateBLSCTKeyMan()->LoadViewKey(privKey, pubKey)) {
+            strErr = "Error reading wallet database: BLSCTKeyMan::LoadViewKey failed";
+            return false;
+        }
+    } catch (const std::exception& e) {
+        if (strErr.empty()) {
+            strErr = e.what();
+        }
+        return false;
+    }
+    return true;
+}
+
 bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
 {
     LOCK(pwallet->cs_wallet);
@@ -510,6 +641,43 @@ bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, st
         if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadCryptedKey(vchPubKey, vchPrivKey, checksum_valid))
         {
             strErr = "Error reading wallet database: LegacyScriptPubKeyMan::LoadCryptedKey failed";
+            return false;
+        }
+    } catch (const std::exception& e) {
+        if (strErr.empty()) {
+            strErr = e.what();
+        }
+        return false;
+    }
+    return true;
+}
+
+bool LoadBLSCTCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
+{
+    LOCK(pwallet->cs_wallet);
+    try {
+        blsct::PublicKey vchPubKey;
+        ssKey >> vchPubKey;
+        if (!vchPubKey.IsValid()) {
+            strErr = "Error reading wallet database: blsct::PublicKey corrupt";
+            return false;
+        }
+        std::vector<unsigned char> vchPrivKey;
+        ssValue >> vchPrivKey;
+
+        // Get the checksum and check it
+        bool checksum_valid = false;
+        if (!ssValue.eof()) {
+            uint256 checksum;
+            ssValue >> checksum;
+            if (!(checksum_valid = Hash(vchPrivKey) == checksum)) {
+                strErr = "Error reading wallet database: Encrypted blsct private key corrupt";
+                return false;
+            }
+        }
+
+        if (!pwallet->GetOrCreateBLSCTKeyMan()->LoadCryptedKey(vchPubKey, vchPrivKey, checksum_valid)) {
+            strErr = "Error reading wallet database: GetOrCreateBLSCTKeyMan::LoadCryptedKey failed";
             return false;
         }
     } catch (const std::exception& e) {
@@ -555,6 +723,22 @@ bool LoadHDChain(CWallet* pwallet, DataStream& ssValue, std::string& strErr)
         CHDChain chain;
         ssValue >> chain;
         pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadHDChain(chain);
+    } catch (const std::exception& e) {
+        if (strErr.empty()) {
+            strErr = e.what();
+        }
+        return false;
+    }
+    return true;
+}
+
+bool LoadBLSCTHDChain(CWallet* pwallet, DataStream& ssValue, std::string& strErr)
+{
+    LOCK(pwallet->cs_wallet);
+    try {
+        blsct::HDChain chain;
+        ssValue >> chain;
+        pwallet->GetOrCreateBLSCTKeyMan()->LoadHDChain(chain);
     } catch (const std::exception& e) {
         if (strErr.empty()) {
             strErr = e.what();
@@ -706,6 +890,93 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
         return DBErrors::LOAD_OK;
     });
     result = std::max(result, script_res.m_result);
+
+    LoadResult blsct_hd_chain_res = LoadRecords(pwallet, batch, DBKeys::BLSCTHDCHAIN,
+        [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
+        return LoadBLSCTHDChain(pwallet, value, err) ? DBErrors:: LOAD_OK : DBErrors::CORRUPT;
+    });
+    result = std::max(result, blsct_hd_chain_res.m_result);
+
+    LoadResult blsctkey_res = LoadRecords(pwallet, batch, DBKeys::BLSCTKEY,
+        [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
+        return LoadBLSCTKey(pwallet, key, value, err) ? DBErrors::LOAD_OK : DBErrors::CORRUPT;
+    });
+    result = std::max(result, blsctkey_res.m_result);
+
+    LoadResult viewkey_res = LoadRecords(pwallet, batch, DBKeys::VIEWKEY,
+        [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
+        return LoadViewKey(pwallet, key, value, err) ? DBErrors::LOAD_OK : DBErrors::CORRUPT;
+    });
+    result = std::max(result, viewkey_res.m_result);
+
+    LoadResult spendkey_res = LoadRecords(pwallet, batch, DBKeys::SPENDKEY,
+        [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
+        return LoadSpendKey(pwallet, key, value, err) ? DBErrors::LOAD_OK : DBErrors::CORRUPT;
+    });
+    result = std::max(result, spendkey_res.m_result);
+
+    LoadResult blsct_ckey_res = LoadRecords(pwallet, batch, DBKeys::CRYPTED_BLSCTKEY,
+        [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
+        return LoadBLSCTCryptedKey(pwallet, key, value, err) ? DBErrors::LOAD_OK : DBErrors::CORRUPT;
+    });
+    result = std::max(result, blsct_ckey_res.m_result);
+
+    LoadResult blsctsubaddress_res = LoadRecords(pwallet, batch, DBKeys::BLSCTSUBADDRESS,
+        [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
+        CKeyID hash;
+        key >> hash;
+
+        std::pair<int64_t, uint64_t> index;
+        value >> index;
+
+        blsct::SubAddressIdentifier id;
+
+        id.account = index.first;
+        id.address = index.second;
+
+        pwallet->GetOrCreateBLSCTKeyMan()->LoadSubAddress(hash, id);
+        return DBErrors::LOAD_OK;
+    });
+    result = std::max(result, blsctsubaddress_res.m_result);
+
+    LoadResult blsctsubaddressstr_res = LoadRecords(pwallet, batch, DBKeys::BLSCTSUBADDRESSSTR,
+        [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
+        blsct::SubAddress address;
+        key >> address;
+
+        CKeyID hash;
+        value >> hash;
+
+        pwallet->GetOrCreateBLSCTKeyMan()->LoadSubAddressStr(address, hash);
+        return DBErrors::LOAD_OK;
+    });
+    result = std::max(result, blsctsubaddressstr_res.m_result);
+
+    LoadResult blsctsubaddresspool_res = LoadRecords(pwallet, batch, DBKeys::BLSCTSUBADDRESSPOOL,
+        [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
+        std::pair<int64_t, uint64_t> index;
+
+        key >> index;
+
+        blsct::SubAddressIdentifier id;
+        id.account = index.first;
+        id.address = index.second;
+
+        pwallet->GetOrCreateBLSCTKeyMan()->AddSubAddressPoolInner(id);
+        return DBErrors::LOAD_OK;
+    });
+    result = std::max(result, blsctsubaddresspool_res.m_result);
+
+    LoadResult blsctkeymeta_res = LoadRecords(pwallet, batch, DBKeys::BLSCTKEYMETA,
+        [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
+        blsct::PublicKey vchPubKey;
+        key >> vchPubKey;
+        CKeyMetadata keyMeta;
+        value >> keyMeta;
+        pwallet->GetOrCreateBLSCTKeyMan()->LoadKeyMetadata(vchPubKey.GetID(), keyMeta);
+        return DBErrors::LOAD_OK;
+    });
+    result = std::max(result, blsctkeymeta_res.m_result);
 
     // Check whether rewrite is needed
     if (ckey_res.m_records > 0) {

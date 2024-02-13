@@ -328,6 +328,11 @@ bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::stri
 bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);
 bool LoadEncryptionKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);
 bool LoadHDChain(CWallet* pwallet, DataStream& ssValue, std::string& strErr);
+bool LoadBLSCTCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);
+bool LoadBLSCTHDChain(CWallet* pwallet, DataStream& ssValue, std::string& strErr);
+bool LoadBLSCTKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);
+bool LoadSpendKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);
+bool LoadViewKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_WALLETDB_H
