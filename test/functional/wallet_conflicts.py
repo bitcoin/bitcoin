@@ -11,7 +11,8 @@ from decimal import Decimal
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-        assert_equal,
+    assert_equal,
+    find_vout_for_address,
 )
 
 class TxConflicts(BitcoinTestFramework):
@@ -36,6 +37,7 @@ class TxConflicts(BitcoinTestFramework):
         """
 
         self.test_block_conflicts()
+        self.test_unknown_parent_conflict()
         self.test_mempool_conflict()
         self.test_mempool_and_block_conflicts()
         self.test_descendants_with_mempool_conflicts()
@@ -421,6 +423,59 @@ class TxConflicts(BitcoinTestFramework):
         alice.unloadwallet()
         bob.unloadwallet()
         carol.unloadwallet()
+
+    def test_unknown_parent_conflict(self):
+        self.log.info("Test that a conflict with parent not belonging to the wallet causes in-wallet children to also conflict")
+        self.nodes[0].createwallet("parent_conflict")
+        wallet = self.nodes[0].get_wallet_rpc("parent_conflict")
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        # one utxo to target wallet
+        addr = wallet.getnewaddress()
+        addr_desc = wallet.getaddressinfo(addr)["desc"]
+        def_wallet.sendtoaddress(addr, 10)
+        self.generate(self.nodes[0], 1)
+        utxo = wallet.listunspent()[0]
+
+        # Make utxo in grandparent that will be double spent
+        gp_addr = def_wallet.getnewaddress()
+        gp_txid = def_wallet.sendtoaddress(gp_addr, 7)
+        gp_utxo = {"txid": gp_txid, "vout": find_vout_for_address(self.nodes[0], gp_txid, gp_addr)}
+        self.generate(self.nodes[0], 1)
+
+        assert_equal(self.nodes[0].getrawmempool(), [])
+
+        # make unconfirmed parent tx
+        parent_addr = def_wallet.getnewaddress()
+        parent_txid = def_wallet.send(outputs=[{parent_addr: 5}], inputs=[gp_utxo])["txid"]
+        parent_utxo = {"txid": parent_txid, "vout": find_vout_for_address(self.nodes[0], parent_txid, parent_addr)}
+        parent_me = self.nodes[0].getmempoolentry(parent_txid)
+        parent_feerate = parent_me["fees"]["base"] * 100000000 / parent_me["vsize"]
+        assert_equal(self.nodes[0].getrawmempool(), [parent_txid])
+
+        # make child tx that has one input belonging to target wallet, and one input not
+        psbt = def_wallet.walletcreatefundedpsbt(inputs=[utxo, parent_utxo], outputs=[{def_wallet.getnewaddress(): 13}], solving_data={"descriptors":[addr_desc]})["psbt"]
+        psbt = def_wallet.walletprocesspsbt(psbt)["psbt"]
+        psbt_proc = wallet.walletprocesspsbt(psbt)
+        psbt = psbt_proc["psbt"]
+        assert_equal(psbt_proc["complete"], True)
+        child_txid = self.nodes[0].sendrawtransaction(psbt_proc["hex"])
+        assert_equal(set(self.nodes[0].getrawmempool()), {child_txid, parent_txid})
+
+        assert_equal(def_wallet.gettransaction(parent_txid)["confirmations"], 0)
+        assert_equal(wallet.gettransaction(child_txid)["confirmations"], 0)
+
+        # Make a conflict spending parent
+        conflict_psbt = def_wallet.walletcreatefundedpsbt(inputs=[gp_utxo], outputs=[{def_wallet.getnewaddress(): 2}], fee_rate=parent_feerate*3)["psbt"]
+        conflict_proc = def_wallet.walletprocesspsbt(conflict_psbt)
+        assert_equal(conflict_proc["complete"], True)
+        conflict_txid = self.nodes[0].sendrawtransaction(conflict_proc["hex"])
+        assert_equal(set(self.nodes[0].getrawmempool()), {conflict_txid})
+
+        self.generate(self.nodes[0], 1)
+
+        assert_equal(def_wallet.gettransaction(parent_txid)["confirmations"], -1)
+        assert_equal(wallet.gettransaction(child_txid)["confirmations"], -1)
 
 if __name__ == '__main__':
     TxConflicts(__file__).main()
