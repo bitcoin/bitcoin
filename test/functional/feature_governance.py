@@ -77,6 +77,18 @@ class DashGovernanceTest (DashTestFramework):
 
         assert_equal(payments_found, 2)
 
+    def have_trigger_for_height(self, sb_block_height):
+        count = 0
+        for node in self.nodes:
+            valid_triggers = node.gobject("list", "valid", "triggers")
+            for trigger in list(valid_triggers.values()):
+                if json.loads(trigger["DataString"])["event_block_height"] != sb_block_height:
+                    continue
+                if trigger['AbsoluteYesCount'] > 0:
+                    count = count + 1
+                    break
+        return count == len(self.nodes)
+
     def run_test(self):
         map_vote_outcomes = {
             0: "none",
@@ -267,6 +279,11 @@ class DashGovernanceTest (DashTestFramework):
             self.bump_mocktime(1)
             return node.mnsync("status")["IsSynced"]
 
+        # make sure isolated node is fully synced at this point
+        self.wait_until(lambda: sync_gov(isolated))
+        # let all fulfilled requests expire for re-sync to work correctly
+        self.bump_mocktime(5 * 60)
+
         for node in self.nodes:
             # Force sync
             node.mnsync("reset")
@@ -317,20 +334,33 @@ class DashGovernanceTest (DashTestFramework):
         n = sb_cycle - block_count % sb_cycle
 
         # Move remaining n blocks until the next Superblock
-        for _ in range(n):
+        for _ in range(n - 1):
             self.nodes[0].generate(1)
             self.bump_mocktime(1)
             self.sync_blocks()
+        # Wait for new trigger and votes
+        self.wait_until(lambda: self.have_trigger_for_height(260), timeout=5)
+        # Mine superblock
+        self.nodes[0].generate(1)
+        self.bump_mocktime(1)
+        self.sync_blocks()
         assert_equal(self.nodes[0].getblockcount(), 260)
         assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["bip9"]["status"], "active")
 
         # Mine and check a couple more superblocks
         for i in range(2):
-            for _ in range(20):
+            for _ in range(sb_cycle - 1):
                 self.nodes[0].generate(1)
                 self.bump_mocktime(1)
                 self.sync_blocks()
-            assert_equal(self.nodes[0].getblockcount(), 260 + (i + 1) * 20)
+            # Wait for new trigger and votes
+            sb_block_height = 260 + (i + 1) * sb_cycle
+            self.wait_until(lambda: self.have_trigger_for_height(sb_block_height), timeout=5)
+            # Mine superblock
+            self.nodes[0].generate(1)
+            self.bump_mocktime(1)
+            self.sync_blocks()
+            assert_equal(self.nodes[0].getblockcount(), sb_block_height)
             assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["bip9"]["status"], "active")
             self.check_superblockbudget(True)
             self.check_superblock()
