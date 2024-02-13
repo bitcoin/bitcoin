@@ -43,6 +43,9 @@ struct CoinsResult {
     /** Concatenate and return all COutputs as one vector */
     std::vector<COutput> All() const;
 
+    /** Return COutput with the largest value  */
+    std::optional<COutput> Max() const;
+
     /** The following methods are provided so that CoinsResult can mimic a vector,
      * i.e., methods can work with individual OutputType vectors or on the entire object */
     size_t Size() const;
