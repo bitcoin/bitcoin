@@ -569,16 +569,17 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
     return true;
 }
 
-bool WalletModel::displayAddress(std::string sAddress) const
+void WalletModel::displayAddress(std::string sAddress) const
 {
     CTxDestination dest = DecodeDestination(sAddress);
-    bool res = false;
     try {
-        res = m_wallet->displayAddress(dest);
+        util::Result<void> result = m_wallet->displayAddress(dest);
+        if (!result) {
+            QMessageBox::warning(nullptr, tr("Signer error"), QString::fromStdString(util::ErrorString(result).translated));
+        }
     } catch (const std::runtime_error& e) {
         QMessageBox::critical(nullptr, tr("Can't display address"), e.what());
     }
-    return res;
 }
 
 bool WalletModel::isWalletEnabled()

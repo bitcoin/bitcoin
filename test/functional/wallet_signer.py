@@ -141,6 +141,13 @@ class WalletSignerTest(BitcoinTestFramework):
         )
         self.clear_mock_result(self.nodes[1])
 
+        # Returned address MUST match:
+        address_fail = hww.getnewaddress(address_type="bech32")
+        assert_equal(address_fail, "bcrt1ql7zg7ukh3dwr25ex2zn9jse926f27xy2jz58tm")
+        assert_raises_rpc_error(-1, 'Signer echoed unexpected address wrong_address',
+            hww.walletdisplayaddress, address_fail
+        )
+
         self.log.info('Prepare mock PSBT')
         self.nodes[0].sendtoaddress(address4, 1)
         self.generate(self.nodes[0], 1)
