@@ -27,12 +27,14 @@ class TestType(Enum):
     3. WRONG_GARBAGE_TERMINATOR - Disconnection happens when incorrect garbage terminator is sent
     4. WRONG_GARBAGE - Disconnection happens when garbage bytes that is sent is different from what the peer receives
     5. SEND_NO_AAD - Disconnection happens when AAD of first encrypted packet after the garbage terminator is not filled
+    6. SEND_NON_EMPTY_VERSION_PACKET - non-empty version packet is simply ignored
     """
     EARLY_KEY_RESPONSE = 0
     EXCESS_GARBAGE = 1
     WRONG_GARBAGE_TERMINATOR = 2
     WRONG_GARBAGE = 3
     SEND_NO_AAD = 4
+    SEND_NON_EMPTY_VERSION_PACKET = 5
 
 
 class TestEncryptedP2PState(EncryptedP2PState):
@@ -90,8 +92,8 @@ class TestEncryptedP2PState(EncryptedP2PState):
 
     def complete_handshake(self, response):
         """Add option for sending wrong garbage terminator, not filling first encrypted packet after garbage terminator
-        with AAD
-        when TestType = (WRONG_GARBAGE_TERMINATOR, SEND_NO_AAD)"""
+        with AAD, sending non-empty transport version packet.
+        when TestType = (WRONG_GARBAGE_TERMINATOR, SEND_NO_AAD, SEND_NON_EMPTY_VERSION_PACKET)"""
         ellswift_theirs = self.received_prefix + response.read(64 - len(self.received_prefix))
         # return b"" if we need to receive more bytes
         if len(ellswift_theirs) != 64:
@@ -111,8 +113,13 @@ class TestEncryptedP2PState(EncryptedP2PState):
         for decoy_content_len in [random.randint(1, 100) for _ in range(random.randint(0, 10))]:
             msg_to_send += self.v2_enc_packet(decoy_content_len * b'\x00', aad=aad, ignore=True)
             aad = b''
+
         # Send version packet.
-        msg_to_send += self.v2_enc_packet(TRANSPORT_VERSION, aad=aad)
+        if self.test_type == TestType.SEND_NON_EMPTY_VERSION_PACKET:
+            msg_to_send += self.v2_enc_packet(random.randbytes(5), aad=aad)
+        else:
+            msg_to_send += self.v2_enc_packet(TRANSPORT_VERSION, aad=aad)
+
         return 64 - len(self.received_prefix), msg_to_send
 
 
@@ -176,14 +183,19 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
             ["version handshake timeout peer=2"],  # WRONG_GARBAGE_TERMINATOR
             ["V2 transport error: packet decryption failure"],  # WRONG_GARBAGE
             ["V2 transport error: packet decryption failure"],  # SEND_NO_AAD
+            [],  # SEND_NON_EMPTY_VERSION_PACKET
         ]
         for test_type in TestType:
             if test_type == TestType.EARLY_KEY_RESPONSE:
                 continue
-            with node0.assert_debug_log(expected_debug_message[test_type.value], timeout=5):
-                peer = node0.add_p2p_connection(MisbehavingV2Peer(test_type), wait_for_verack=False, send_version=False, supports_v2_p2p=True, expect_success=False)
-                peer.wait_for_disconnect()
-            self.log.info(f"Expected disconnection for {test_type.name}")
+            elif test_type == TestType.SEND_NON_EMPTY_VERSION_PACKET:
+                node0.add_p2p_connection(MisbehavingV2Peer(test_type), wait_for_verack=True, send_version=True, supports_v2_p2p=True)
+                self.log.info(f"No disconnection for {test_type.name}")
+            else:
+                with node0.assert_debug_log(expected_debug_message[test_type.value], timeout=5):
+                    peer = node0.add_p2p_connection(MisbehavingV2Peer(test_type), wait_for_verack=False, send_version=False, supports_v2_p2p=True, expect_success=False)
+                    peer.wait_for_disconnect()
+                self.log.info(f"Expected disconnection for {test_type.name}")
 
 
 if __name__ == '__main__':
