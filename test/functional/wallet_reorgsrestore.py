@@ -45,6 +45,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
         tx = self.nodes[0].gettransaction(txid)
         self.generate(self.nodes[0], 4, sync_fun=self.no_op)
+        self.sync_blocks([self.nodes[0], self.nodes[2]])
         tx_before_reorg = self.nodes[0].gettransaction(txid)
         assert_equal(tx_before_reorg["confirmations"], 4)
 
