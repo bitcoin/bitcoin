@@ -70,7 +70,7 @@ jobs:
           git rebase --exec "echo Running test-one-commit on \$( git log -1 ) && ./autogen.sh && CC=clang-15 CXX=clang++-15 ./configure && make clean && make -j $(nproc) check && ./test/functional/test_runner.py -j $(( $(nproc) * 2 ))" ${{ env.TEST_BASE }}
 
   macos-native-x86_64:
-    name: 'macOS 13 native, x86_64, no depends, sqlite only, gui'
+    name: 'macOS 13 native, x86_64, no depends, sqlite only'
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks).
     # See: https://github.com/actions/runner-images#available-images.
     runs-on: macos-13
