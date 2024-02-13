@@ -109,10 +109,11 @@ class EncryptedP2PState:
             # Responding, place their public key encoding first.
             return TaggedHash("bip324_ellswift_xonly_ecdh", ellswift_theirs + ellswift_ours + ecdh_point_x32)
 
-    def generate_keypair_and_garbage(self):
+    def generate_keypair_and_garbage(self, garbage_len=None):
         """Generates ellswift keypair and 4095 bytes garbage at max"""
         self.privkey_ours, self.ellswift_ours = ellswift_create()
-        garbage_len = random.randrange(MAX_GARBAGE_LEN + 1)
+        if garbage_len is None:
+            garbage_len = random.randrange(MAX_GARBAGE_LEN + 1)
         self.sent_garbage = random.randbytes(garbage_len)
         return self.ellswift_ours + self.sent_garbage
 
