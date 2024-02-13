@@ -2692,6 +2692,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
 
         const auto current_time{NodeClock::now()};
         int nTries = 0;
+        const auto reachable_nets{g_reachable_nets.All()};
+
         while (!interruptNet)
         {
             if (anchor && !m_anchors.empty()) {
@@ -2723,7 +2725,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
                 if (!addr.IsValid()) {
                     // No tried table collisions. Select a new table address
                     // for our feeler.
-                    std::tie(addr, addr_last_try) = addrman.Select(true);
+                    std::tie(addr, addr_last_try) = addrman.Select(true, reachable_nets);
                 } else if (AlreadyConnectedToAddress(addr)) {
                     // If test-before-evict logic would have us connect to a
                     // peer that we're already connected to, just mark that
@@ -2732,18 +2734,16 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
                     // a currently-connected peer.
                     addrman.Good(addr);
                     // Select a new table address for our feeler instead.
-                    std::tie(addr, addr_last_try) = addrman.Select(true);
+                    std::tie(addr, addr_last_try) = addrman.Select(true, reachable_nets);
                 }
             } else {
                 // Not a feeler
                 // If preferred_net has a value set, pick an extra outbound
                 // peer from that network. The eviction logic in net_processing
                 // ensures that a peer from another network will be evicted.
-                std::unordered_set<Network> preferred_nets;
-                if (preferred_net.has_value()) {
-                    preferred_nets = {*preferred_net};
-                }
-                std::tie(addr, addr_last_try) = addrman.Select(false, preferred_nets);
+                std::tie(addr, addr_last_try) = preferred_net.has_value()
+                    ? addrman.Select(false, {*preferred_net})
+                    : addrman.Select(false, reachable_nets);
             }
 
             // Require outbound IPv4/IPv6 connections, other than feelers, to be to distinct network groups
