@@ -366,8 +366,9 @@ public:
     /** Get the DescriptorScriptPubKeyMans (with private keys) that have the same scriptPubKeys as this LegacyScriptPubKeyMan.
      * Does not modify this ScriptPubKeyMan. */
     std::optional<MigrationData> MigrateToDescriptor();
-    /** Delete all the records ofthis LegacyScriptPubKeyMan from disk*/
+    /** Delete all the records of this LegacyScriptPubKeyMan from disk*/
     bool DeleteRecords();
+    bool DeleteRecordsWithDB(WalletBatch& batch);
 };
 
 // Implements the full legacy wallet behavior
