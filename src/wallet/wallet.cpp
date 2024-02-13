@@ -4073,15 +4073,14 @@ std::optional<MigrationData> CWallet::GetDescriptorsForLegacy(bilingual_str& err
     return res;
 }
 
-bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
+util::Result<void> CWallet::ApplyMigrationData(MigrationData& data)
 {
     AssertLockHeld(cs_wallet);
 
     LegacyDataSPKM* legacy_spkm = GetLegacyDataSPKM();
     if (!Assume(legacy_spkm)) {
         // This shouldn't happen
-        error = Untranslated(STR_INTERNAL_BUG("Error: Legacy wallet data missing"));
-        return false;
+        return util::Error{Untranslated(STR_INTERNAL_BUG("Error: Legacy wallet data missing"))};
     }
 
     // Get all invalid or non-watched scripts that will not be migrated
@@ -4095,8 +4094,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
 
     for (auto& desc_spkm : data.desc_spkms) {
         if (m_spk_managers.count(desc_spkm->GetID()) > 0) {
-            error = _("Error: Duplicate descriptors created during migration. Your wallet may be corrupted.");
-            return false;
+            return util::Error{_("Error: Duplicate descriptors created during migration. Your wallet may be corrupted.")};
         }
         uint256 id = desc_spkm->GetID();
         AddScriptPubKeyMan(id, std::move(desc_spkm));
@@ -4104,7 +4102,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
 
     // Remove the LegacyScriptPubKeyMan from disk
     if (!legacy_spkm->DeleteRecords()) {
-        return false;
+        return util::Error{_("Error: cannot remove legacy wallet records")};
     }
 
     // Remove the LegacyScriptPubKeyMan from memory
@@ -4127,8 +4125,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
     // Get best block locator so that we can copy it to the watchonly and solvables
     CBlockLocator best_block_locator;
     if (!WalletBatch(GetDatabase()).ReadBestBlock(best_block_locator)) {
-        error = _("Error: Unable to read wallet's best block locator record");
-        return false;
+        return util::Error{_("Error: Unable to read wallet's best block locator record")};
     }
 
     // Check if the transactions in the wallet are still ours. Either they belong here, or they belong in the watchonly wallet.
@@ -4143,15 +4140,13 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         watchonly_batch->WriteOrderPosNext(data.watchonly_wallet->nOrderPosNext);
         // Write the best block locator to avoid rescanning on reload
         if (!watchonly_batch->WriteBestBlock(best_block_locator)) {
-            error = _("Error: Unable to write watchonly wallet best block locator record");
-            return false;
+            return util::Error{_("Error: Unable to write watchonly wallet best block locator record")};
         }
     }
     if (data.solvable_wallet) {
         // Write the best block locator to avoid rescanning on reload
         if (!WalletBatch(data.solvable_wallet->GetDatabase()).WriteBestBlock(best_block_locator)) {
-            error = _("Error: Unable to write solvable wallet best block locator record");
-            return false;
+            return util::Error{_("Error: Unable to write solvable wallet best block locator record")};
         }
     }
     for (const auto& [_pos, wtx] : wtxOrdered) {
@@ -4170,8 +4165,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                     ins_wtx.CopyFrom(to_copy_wtx);
                     return true;
                 })) {
-                    error = strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex());
-                    return false;
+                    return util::Error{strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex())};
                 }
                 watchonly_batch->WriteTx(data.watchonly_wallet->mapWallet.at(hash));
                 // Mark as to remove from the migrated wallet only if it does not also belong to it
@@ -4183,16 +4177,14 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         }
         if (!is_mine) {
             // Both not ours and not in the watchonly wallet
-            error = strprintf(_("Error: Transaction %s in wallet cannot be identified to belong to migrated wallets"), wtx->GetHash().GetHex());
-            return false;
+            return util::Error{strprintf(_("Error: Transaction %s in wallet cannot be identified to belong to migrated wallets"), wtx->GetHash().GetHex())};
         }
     }
     watchonly_batch.reset(); // Flush
     // Do the removes
     if (txids_to_delete.size() > 0) {
         if (auto res = RemoveTxs(txids_to_delete); !res) {
-            error = _("Error: Could not delete watchonly transactions. ") + util::ErrorString(res);
-            return false;
+            return util::Error{_("Error: Could not delete watchonly transactions. ") + util::ErrorString(res)};
         }
     }
 
@@ -4203,8 +4195,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
 
         std::unique_ptr<WalletBatch> batch = std::make_unique<WalletBatch>(ext_wallet->GetDatabase());
         if (!batch->TxnBegin()) {
-            error = strprintf(_("Error: database transaction cannot be executed for wallet %s"), ext_wallet->GetName());
-            return false;
+            return util::Error{strprintf(_("Error: database transaction cannot be executed for wallet %s"), ext_wallet->GetName())};
         }
         wallets_vec.emplace_back(ext_wallet, std::move(batch));
     }
@@ -4254,16 +4245,14 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                 continue;
             }
 
-            error = _("Error: Address book data in wallet cannot be identified to belong to migrated wallets");
-            return false;
+            return util::Error{_("Error: Address book data in wallet cannot be identified to belong to migrated wallets")};
         }
     }
 
     // Persist external wallets address book entries
     for (auto& [wallet, batch] : wallets_vec) {
         if (!batch->TxnCommit()) {
-            error = strprintf(_("Error: address book copy failed for wallet %s"), wallet->GetName());
-            return false;
+            return util::Error{strprintf(_("Error: address book copy failed for wallet %s"), wallet->GetName())};
         }
     }
 
@@ -4273,8 +4262,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
     if (dests_to_delete.size() > 0) {
         for (const auto& dest : dests_to_delete) {
             if (!DelAddressBookWithDB(local_wallet_batch, dest)) {
-                error = _("Error: Unable to remove watchonly address book data");
-                return false;
+                return util::Error{_("Error: Unable to remove watchonly address book data")};
             }
         }
     }
@@ -4282,7 +4270,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
 
     WalletLogPrintf("Wallet migration complete.\n");
 
-    return true;
+    return {}; // all good
 }
 
 bool CWallet::CanGrindR() const
@@ -4393,7 +4381,8 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
     }
 
     // Add the descriptors to wallet, remove LegacyScriptPubKeyMan, and cleanup txs and address book data
-    if (!wallet.ApplyMigrationData(*data, error)) {
+    if (auto res_migration = wallet.ApplyMigrationData(*data); !res_migration) {
+        error = util::ErrorString(res_migration);
         return false;
     }
     return true;
