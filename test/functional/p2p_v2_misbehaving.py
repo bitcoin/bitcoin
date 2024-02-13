@@ -9,10 +9,12 @@ from enum import Enum
 from test_framework.crypto.ellswift import ellswift_create
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import random_bitflip
 from test_framework.v2_p2p import (
     logger,
     EncryptedP2PState,
     MAX_GARBAGE_LEN,
+    TRANSPORT_VERSION,
 )
 
 
@@ -22,9 +24,11 @@ class TestType(Enum):
     1. EARLY_KEY_RESPONSE - The responder needs to wait until one byte is received which does not match the 16 bytes
     consisting of network magic followed by "version\x00\x00\x00\x00\x00" before sending out its ellswift + garbage bytes
     2. EXCESS_GARBAGE - Disconnection happens when > MAX_GARBAGE_LEN bytes garbage is sent
+    3. WRONG_GARBAGE_TERMINATOR - Disconnection happens when incorrect garbage terminator is sent
     """
     EARLY_KEY_RESPONSE = 0
     EXCESS_GARBAGE = 1
+    WRONG_GARBAGE_TERMINATOR = 2
 
 
 class TestEncryptedP2PState(EncryptedP2PState):
@@ -37,13 +41,15 @@ class TestEncryptedP2PState(EncryptedP2PState):
             self.can_data_be_received = False  # variable used to assert if data is received on recvbuf.
 
     def generate_keypair_and_garbage(self):
-        """Generate > MAX_GARBAGE_LEN garbage bytes
-        when TestType = (EXCESS_GARBAGE)"""
+        """Generate > MAX_GARBAGE_LEN garbage bytes, MAX_GARBAGE_LEN//2 garbage bytes
+        when TestType = (EXCESS_GARBAGE, WRONG_GARBAGE_TERMINATOR)"""
         self.privkey_ours, self.ellswift_ours = ellswift_create()
 
         if self.test_type == TestType.EXCESS_GARBAGE:
             # send > 4095 bytes garbage
             garbage_len = MAX_GARBAGE_LEN + random.randrange(1, 10)
+        elif self.test_type == TestType.WRONG_GARBAGE_TERMINATOR:
+            garbage_len = random.randrange(MAX_GARBAGE_LEN//2)
         else:
             garbage_len = random.randrange(MAX_GARBAGE_LEN + 1)
 
@@ -72,6 +78,30 @@ class TestEncryptedP2PState(EncryptedP2PState):
                 return self.ellswift_ours[4:] + self.sent_garbage
         else:
             return super().initiate_v2_handshake()
+
+    def complete_handshake(self, response):
+        """Add option for sending wrong garbage terminator
+        when TestType = (WRONG_GARBAGE_TERMINATOR)"""
+        ellswift_theirs = self.received_prefix + response.read(64 - len(self.received_prefix))
+        # return b"" if we need to receive more bytes
+        if len(ellswift_theirs) != 64:
+            return 0, b""
+        ecdh_secret = self.v2_ecdh(self.privkey_ours, ellswift_theirs, self.ellswift_ours, self.initiating)
+        self.initialize_v2_transport(ecdh_secret)
+        # Send garbage terminator
+        msg_to_send = self.peer['send_garbage_terminator']
+        aad = self.sent_garbage
+
+        if self.test_type == TestType.WRONG_GARBAGE_TERMINATOR:
+            msg_to_send = random_bitflip(msg_to_send)
+
+        # Optionally send decoy packets after garbage terminator.
+        for decoy_content_len in [random.randint(1, 100) for _ in range(random.randint(0, 10))]:
+            msg_to_send += self.v2_enc_packet(decoy_content_len * b'\x00', aad=aad, ignore=True)
+            aad = b''
+        # Send version packet.
+        msg_to_send += self.v2_enc_packet(TRANSPORT_VERSION, aad=aad)
+        return 64 - len(self.received_prefix), msg_to_send
 
 
 class MisbehavingV2Peer(P2PInterface):
@@ -131,6 +161,7 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
         expected_debug_message = [
             [],  # EARLY_KEY_RESPONSE
             ["V2 transport error: missing garbage terminator, peer=1"],  # EXCESS_GARBAGE
+            ["version handshake timeout peer=2"],  # WRONG_GARBAGE_TERMINATOR
         ]
         for test_type in TestType:
             if test_type == TestType.EARLY_KEY_RESPONSE:
