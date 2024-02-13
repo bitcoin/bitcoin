@@ -25,6 +25,7 @@ TEST_FRAMEWORK_MODULES = [
     "crypto.muhash",
     "crypto.poly1305",
     "crypto.ripemd160",
+    "crypto.secp256k1",
     "script",
     "segwit_addr",
     "wallet_util",
