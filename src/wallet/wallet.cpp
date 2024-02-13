@@ -3626,14 +3626,9 @@ DescriptorScriptPubKeyMan& CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, Wa
     return *spk_manager;
 }
 
-void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
+void CWallet::SetupDescriptorScriptPubKeyMans(WalletBatch& batch, const CExtKey& master_key)
 {
     AssertLockHeld(cs_wallet);
-
-    // Create single batch txn
-    WalletBatch batch(GetDatabase());
-    if (!batch.TxnBegin()) throw std::runtime_error("Error: cannot create db transaction for descriptors setup");
-
     for (bool internal : {false, true}) {
         for (OutputType t : OUTPUT_TYPES) {
             auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, m_keypool_size));
@@ -3651,12 +3646,9 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
             AddActiveScriptPubKeyManWithDb(batch, id, t, internal);
         }
     }
-
-    // Ensure information is committed to disk
-    if (!batch.TxnCommit()) throw std::runtime_error("Error: cannot commit db transaction for descriptors setup");
 }
 
-void CWallet::SetupOwnDescriptorScriptPubKeyMans()
+void CWallet::SetupOwnDescriptorScriptPubKeyMans(WalletBatch& batch)
 {
     assert(!IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
     // Make a seed
@@ -3668,7 +3660,7 @@ void CWallet::SetupOwnDescriptorScriptPubKeyMans()
     CExtKey master_key;
     master_key.SetSeed(seed_key);
 
-    SetupDescriptorScriptPubKeyMans(master_key);
+    SetupDescriptorScriptPubKeyMans(batch, master_key);
 }
 
 void CWallet::SetupDescriptorScriptPubKeyMans()
@@ -3676,7 +3668,10 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
     AssertLockHeld(cs_wallet);
 
     if (!IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
-        SetupOwnDescriptorScriptPubKeyMans();
+        if (!RunWithinTxn(GetDatabase(), /*process_desc=*/"setup descriptors", [&](WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet){
+            SetupOwnDescriptorScriptPubKeyMans(batch);
+            return true;
+        })) throw std::runtime_error("Error: cannot execute db transaction for descriptors setup");
     } else {
         ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
 
@@ -3966,7 +3961,7 @@ std::optional<MigrationData> CWallet::GetDescriptorsForLegacy(bilingual_str& err
     return res;
 }
 
-util::Result<void> CWallet::ApplyMigrationData(MigrationData& data)
+util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, MigrationData& data)
 {
     AssertLockHeld(cs_wallet);
 
@@ -3994,7 +3989,7 @@ util::Result<void> CWallet::ApplyMigrationData(MigrationData& data)
     }
 
     // Remove the LegacyScriptPubKeyMan from disk
-    if (!legacy_spkm->DeleteRecords()) {
+    if (!legacy_spkm->DeleteRecords(local_wallet_batch)) {
         return util::Error{_("Error: cannot remove legacy wallet records")};
     }
 
@@ -4004,20 +3999,20 @@ util::Result<void> CWallet::ApplyMigrationData(MigrationData& data)
     m_internal_spk_managers.clear();
 
     // Setup new descriptors
-    SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+    SetWalletFlagWithDB(local_wallet_batch, WALLET_FLAG_DESCRIPTORS);
     if (!IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         // Use the existing master key if we have it
         if (data.master_key.key.IsValid()) {
-            SetupDescriptorScriptPubKeyMans(data.master_key);
+            SetupDescriptorScriptPubKeyMans(local_wallet_batch, data.master_key);
         } else {
             // Setup with a new seed if we don't.
-            SetupOwnDescriptorScriptPubKeyMans();
+            SetupOwnDescriptorScriptPubKeyMans(local_wallet_batch);
         }
     }
 
     // Get best block locator so that we can copy it to the watchonly and solvables
     CBlockLocator best_block_locator;
-    if (!WalletBatch(GetDatabase()).ReadBestBlock(best_block_locator)) {
+    if (!local_wallet_batch.ReadBestBlock(best_block_locator)) {
         return util::Error{_("Error: Unable to read wallet's best block locator record")};
     }
 
@@ -4076,7 +4071,7 @@ util::Result<void> CWallet::ApplyMigrationData(MigrationData& data)
     watchonly_batch.reset(); // Flush
     // Do the removes
     if (txids_to_delete.size() > 0) {
-        if (auto res = RemoveTxs(txids_to_delete); !res) {
+        if (auto res = RemoveTxs(local_wallet_batch, txids_to_delete); !res) {
             return util::Error{_("Error: Could not delete watchonly transactions. ") + util::ErrorString(res)};
         }
     }
@@ -4150,8 +4145,6 @@ util::Result<void> CWallet::ApplyMigrationData(MigrationData& data)
     }
 
     // Remove the things to delete in this wallet
-    WalletBatch local_wallet_batch(GetDatabase());
-    local_wallet_batch.TxnBegin();
     if (dests_to_delete.size() > 0) {
         for (const auto& dest : dests_to_delete) {
             if (!DelAddressBookWithDB(local_wallet_batch, dest)) {
@@ -4159,9 +4152,6 @@ util::Result<void> CWallet::ApplyMigrationData(MigrationData& data)
             }
         }
     }
-    local_wallet_batch.TxnCommit();
-
-    WalletLogPrintf("Wallet migration complete.\n");
 
     return {}; // all good
 }
@@ -4274,11 +4264,14 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
     }
 
     // Add the descriptors to wallet, remove LegacyScriptPubKeyMan, and cleanup txs and address book data
-    if (auto res_migration = wallet.ApplyMigrationData(*data); !res_migration) {
-        error = util::ErrorString(res_migration);
-        return false;
-    }
-    return true;
+    return RunWithinTxn(wallet.GetDatabase(), /*process_desc=*/"apply migration process", [&](WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet){
+        if (auto res_migration = wallet.ApplyMigrationData(batch, *data); !res_migration) {
+            error = util::ErrorString(res_migration);
+            return false;
+        }
+        wallet.WalletLogPrintf("Wallet migration complete.\n");
+        return true;
+    });
 }
 
 util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& wallet_name, const SecureString& passphrase, WalletContext& context)
