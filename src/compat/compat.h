@@ -6,10 +6,6 @@
 #ifndef BITCOIN_COMPAT_COMPAT_H
 #define BITCOIN_COMPAT_COMPAT_H
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
-
 // Windows defines FD_SETSIZE to 64 (see _fd_types.h in mingw-w64),
 // which is too small for our usage, but allows us to redefine it safely.
 // We redefine it to be 1024, to match glibc, see typesizes.h.
