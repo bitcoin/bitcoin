@@ -115,6 +115,8 @@ public:
     std::optional<uint32_t> m_locktime;
     //! Version
     std::optional<uint32_t> m_version;
+    //! Use this change target instead of default behavior if set
+    std::optional<CAmount> m_change_target;
 
     CCoinControl();
 
