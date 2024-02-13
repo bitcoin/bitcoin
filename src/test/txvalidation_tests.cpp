@@ -119,6 +119,8 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
 
         Package package_v3_v2{mempool_tx_v3, tx_v2_from_v3};
         BOOST_CHECK_EQUAL(*PackageV3Checks(tx_v2_from_v3, GetVirtualTransactionSize(*tx_v2_from_v3), package_v3_v2, empty_ancestors), expected_error_str);
+        CTxMemPool::setEntries entries_mempool_v3{pool.GetIter(mempool_tx_v3->GetHash().ToUint256()).value()};
+        BOOST_CHECK_EQUAL(*PackageV3Checks(tx_v2_from_v3, GetVirtualTransactionSize(*tx_v2_from_v3), {tx_v2_from_v3}, entries_mempool_v3), expected_error_str);
 
         // mempool_tx_v3  mempool_tx_v2
         //            ^    ^
@@ -149,6 +151,8 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
 
         Package package_v2_v3{mempool_tx_v2, tx_v3_from_v2};
         BOOST_CHECK_EQUAL(*PackageV3Checks(tx_v3_from_v2, GetVirtualTransactionSize(*tx_v3_from_v2), package_v2_v3, empty_ancestors), expected_error_str);
+        CTxMemPool::setEntries entries_mempool_v2{pool.GetIter(mempool_tx_v2->GetHash().ToUint256()).value()};
+        BOOST_CHECK_EQUAL(*PackageV3Checks(tx_v3_from_v2, GetVirtualTransactionSize(*tx_v3_from_v2), {tx_v3_from_v2}, entries_mempool_v2), expected_error_str);
 
         // mempool_tx_v3  mempool_tx_v2
         //            ^    ^
