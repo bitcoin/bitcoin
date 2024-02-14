@@ -458,7 +458,7 @@ bool LegacyScriptPubKeyMan::SetHDChain(WalletBatch &batch, const CHDChain& chain
     if (!memonly) {
         if (chain.IsCrypted() && encrypted_batch) {
             if (!encrypted_batch->WriteHDChain(chain))
-                throw std::runtime_error(std::string(__func__) + ": WriteHDChain failed");
+                throw std::runtime_error(std::string(__func__) + ": WriteHDChain failed for encrypted batch");
         } else {
             if (!batch.WriteHDChain(chain)) {
                 throw std::runtime_error(std::string(__func__) + ": WriteHDChain failed");
