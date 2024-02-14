@@ -514,11 +514,12 @@ void SendCoinsDialog::on_sendButton_clicked()
             fileNameSuggestion.append(".psbt");
             QString filename = GUIUtil::getSaveFileName(this,
                 tr("Save Transaction Data"), fileNameSuggestion,
-                tr("Partially Signed Transaction (Binary)", "Name of binary PSBT file format") + QLatin1String(" (*.psbt)"), &selectedFilter);
+                //: Expanded name of the binary PSBT file format. See: BIP 174.
+                tr("Partially Signed Transaction (Binary)") + QLatin1String(" (*.psbt)"), &selectedFilter);
             if (filename.isEmpty()) {
                 return;
             }
-            std::ofstream out(filename.toLocal8Bit().data());
+            std::ofstream out(filename.toLocal8Bit().data(), std::ofstream::out | std::ofstream::binary);
             out << ssTx.str();
             out.close();
             Q_EMIT message(tr("PSBT saved"), "PSBT saved to disk", CClientUIInterface::MSG_INFORMATION);

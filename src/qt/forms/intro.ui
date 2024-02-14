@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>674</width>
-    <height>415</height>
+    <height>447</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -211,16 +211,6 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="prune">
-     <property name="toolTip">
-      <string>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</string>
-     </property>
-     <property name="text">
-      <string></string>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QLabel" name="lblExplanation2">
      <property name="text">
       <string>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</string>
@@ -239,6 +229,47 @@
       <bool>true</bool>
      </property>
     </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="pruneOptLayout">
+     <item>
+      <widget class="QCheckBox" name="prune">
+       <property name="text">
+        <string>Limit block chain storage to</string>
+       </property>
+       <property name="toolTip">
+        <string>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="pruneGB">
+       <property name="suffix">
+        <string> GB</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="lblPruneSuffix">
+       <property name="buddy">
+        <cstring>pruneGB</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
    </item>
    <item>
     <spacer name="verticalSpacer">

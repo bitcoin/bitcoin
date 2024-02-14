@@ -127,6 +127,58 @@ static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTrans
         QApplication::installTranslator(&translator);
 }
 
+static std::string JoinErrors(const std::vector<std::string>& errors)
+{
+    return Join(errors, "\n", [](const std::string& error) { return "- " + error; });
+}
+
+static bool InitSettings()
+{
+    if (!gArgs.GetSettingsPath()) {
+        return true; // Do nothing if settings file disabled.
+    }
+
+    std::vector<std::string> errors;
+    if (!gArgs.ReadSettingsFile(&errors)) {
+        bilingual_str error = _("Settings file could not be read");
+        InitError(Untranslated(strprintf("%s:\n%s\n", error.original, JoinErrors(errors))));
+
+        QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error.translated)), QMessageBox::Reset | QMessageBox::Abort);
+        /*: Explanatory text shown on startup when the settings file cannot be read.
+            Prompts user to make a choice between resetting or aborting. */
+        messagebox.setInformativeText(QObject::tr("Do you want to reset settings to default values, or to abort without making changes?"));
+        messagebox.setDetailedText(QString::fromStdString(JoinErrors(errors)));
+        messagebox.setTextFormat(Qt::PlainText);
+        messagebox.setDefaultButton(QMessageBox::Reset);
+        switch (messagebox.exec()) {
+        case QMessageBox::Reset:
+            break;
+        case QMessageBox::Abort:
+            return false;
+        default:
+            assert(false);
+        }
+    }
+
+    errors.clear();
+    if (!gArgs.WriteSettingsFile(&errors)) {
+        bilingual_str error = _("Settings file could not be written");
+        InitError(Untranslated(strprintf("%s:\n%s\n", error.original, JoinErrors(errors))));
+
+        QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error.translated)), QMessageBox::Ok);
+        /*: Explanatory text shown on startup when the settings file could not be written.
+            Prompts user to check that we have the ability to write to the file.
+            Explains that the user has the option of running without a settings file.*/
+        messagebox.setInformativeText(QObject::tr("A fatal error occured. Check that settings file is writable, or try running with -nosettings."));
+        messagebox.setDetailedText(QString::fromStdString(JoinErrors(errors)));
+        messagebox.setTextFormat(Qt::PlainText);
+        messagebox.setDefaultButton(QMessageBox::Ok);
+        messagebox.exec();
+        return false;
+    }
+    return true;
+}
+
 /* qDebug() message handler --> debug.log */
 void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString &msg)
 {
@@ -308,11 +360,9 @@ void BitcoinApplication::parameterSetup()
     InitParameterInteraction(gArgs);
 }
 
-void BitcoinApplication::InitializePruneSetting(bool prune)
+void BitcoinApplication::InitPruneSetting(int64_t prune_MiB)
 {
-    // If prune is set, intentionally override existing prune size with
-    // the default size since this is called when choosing a new datadir.
-    optionsModel->SetPruneTargetGB(prune ? DEFAULT_PRUNE_TARGET_GB : 0, true);
+    optionsModel->SetPruneTargetGB(PruneMiBtoGB(prune_MiB), true);
 }
 
 void BitcoinApplication::requestInitialize()
@@ -555,9 +605,9 @@ int GuiMain(int argc, char* argv[])
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
     bool did_show_intro = false;
-    bool prune = false; // Intro dialog prune check box
+    int64_t prune_MiB = 0;  // Intro dialog prune configuration
     // Gracefully exit if the user cancels
-    if (!Intro::showIfNeeded(did_show_intro, prune)) return EXIT_SUCCESS;
+    if (!Intro::showIfNeeded(did_show_intro, prune_MiB)) return EXIT_SUCCESS;
 
     /// 6. Determine availability of data directory and parse dash.conf
     /// - Do not call GetDataDir(true) before this step finishes
@@ -592,9 +642,8 @@ int GuiMain(int argc, char* argv[])
     // Parse URIs on command line -- this can affect Params()
     PaymentServer::ipcParseCommandLine(argc, argv);
 #endif
-    if (!gArgs.InitSettings(error)) {
-        InitError(Untranslated(error));
-        QMessageBox::critical(nullptr, PACKAGE_NAME, QObject::tr("Error initializing settings: %1").arg(QString::fromStdString(error)));
+
+    if (!InitSettings()) {
         return EXIT_FAILURE;
     }
 
@@ -729,7 +778,7 @@ int GuiMain(int argc, char* argv[])
 
     if (did_show_intro) {
         // Store intro dialog settings other than datadir (network specific)
-        app.InitializePruneSetting(prune);
+        app.InitPruneSetting(prune_MiB);
     }
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
