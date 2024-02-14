@@ -9,6 +9,7 @@
 #include <llmq/dkgsession.h>
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
+#include <net_types.h>
 
 #include <map>
 #include <memory>
@@ -38,7 +39,6 @@ private:
     CDKGDebugManager& dkgDebugManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
     CSporkManager& spork_manager;
-    const std::unique_ptr<PeerManager>& m_peerman;
 
     //TODO name struct instead of std::pair
     std::map<std::pair<Consensus::LLMQType, int>, CDKGSessionHandler> dkgSessionHandlers;
@@ -65,7 +65,7 @@ private:
 public:
     CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGDebugManager& _dkgDebugManager,
                        CQuorumBlockProcessor& _quorumBlockProcessor, CSporkManager& sporkManager,
-                       const std::unique_ptr<PeerManager>& peerman, bool unitTests, bool fWipe);
+                       bool unitTests, bool fWipe);
     ~CDKGSessionManager() = default;
 
     void StartThreads();
@@ -73,7 +73,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
-    void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv);
+    PeerMsgRet ProcessMessage(CNode& pfrom, PeerManager* peerman, const std::string& msg_type, CDataStream& vRecv);
     bool AlreadyHave(const CInv& inv) const;
     bool GetContribution(const uint256& hash, CDKGContribution& ret) const;
     bool GetComplaint(const uint256& hash, CDKGComplaint& ret) const;

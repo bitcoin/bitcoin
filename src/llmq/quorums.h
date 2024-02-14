@@ -278,6 +278,16 @@ private:
 
 extern std::unique_ptr<CQuorumManager> quorumManager;
 
+// when selecting a quorum for signing and verification, we use CQuorumManager::SelectQuorum with this offset as
+// starting height for scanning. This is because otherwise the resulting signatures would not be verifiable by nodes
+// which are not 100% at the chain tip.
+static constexpr int SIGN_HEIGHT_OFFSET{8};
+
+CQuorumCPtr SelectQuorumForSigning(const Consensus::LLMQParams& llmq_params, const CQuorumManager& quorum_manager, const uint256& selectionHash, int signHeight = -1 /*chain tip*/, int signOffset = SIGN_HEIGHT_OFFSET);
+
+// Verifies a recovered sig that was signed while the chain tip was at signedAtTip
+bool VerifyRecoveredSig(Consensus::LLMQType llmqType, const CQuorumManager& quorum_manager, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig, int signOffset = SIGN_HEIGHT_OFFSET);
+
 } // namespace llmq
 
 template<typename T> struct SaltedHasherImpl;

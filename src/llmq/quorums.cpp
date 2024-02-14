@@ -38,6 +38,9 @@ std::unique_ptr<CQuorumManager> quorumManager;
 RecursiveMutex cs_data_requests;
 static std::unordered_map<CQuorumDataRequestKey, CQuorumDataRequest, StaticSaltedHasher> mapQuorumDataRequests GUARDED_BY(cs_data_requests);
 
+// forward declaration to avoid circular dependency
+uint256 BuildSignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash);
+
 static uint256 MakeQuorumKey(const CQuorum& q)
 {
     CHashWriter hw(SER_NETWORK, 0);
@@ -1094,4 +1097,77 @@ void CQuorumManager::StartCleanupOldQuorumDataThread(const CBlockIndex* pIndex) 
     });
 }
 
+CQuorumCPtr SelectQuorumForSigning(const Consensus::LLMQParams& llmq_params, const CQuorumManager& quorum_manager, const uint256& selectionHash, int signHeight, int signOffset)
+{
+    size_t poolSize = llmq_params.signingActiveQuorumCount;
+
+    CBlockIndex* pindexStart;
+    {
+        LOCK(cs_main);
+        if (signHeight == -1) {
+            signHeight = ::ChainActive().Height();
+        }
+        int startBlockHeight = signHeight - signOffset;
+        if (startBlockHeight > ::ChainActive().Height() || startBlockHeight < 0) {
+            return {};
+        }
+        pindexStart = ::ChainActive()[startBlockHeight];
+    }
+
+    if (IsQuorumRotationEnabled(llmq_params, pindexStart)) {
+        auto quorums = quorum_manager.ScanQuorums(llmq_params.type, pindexStart, poolSize);
+        if (quorums.empty()) {
+            return nullptr;
+        }
+        //log2 int
+        int n = std::log2(llmq_params.signingActiveQuorumCount);
+        //Extract last 64 bits of selectionHash
+        uint64_t b = selectionHash.GetUint64(3);
+        //Take last n bits of b
+        uint64_t signer = (((1ull << n) - 1) & (b >> (64 - n - 1)));
+
+        if (signer > quorums.size()) {
+            return nullptr;
+        }
+        auto itQuorum = std::find_if(quorums.begin(),
+                                     quorums.end(),
+                                     [signer](const CQuorumCPtr& obj) {
+                                         return uint64_t(obj->qc->quorumIndex) == signer;
+                                     });
+        if (itQuorum == quorums.end()) {
+            return nullptr;
+        }
+        return *itQuorum;
+    } else {
+        auto quorums = quorum_manager.ScanQuorums(llmq_params.type, pindexStart, poolSize);
+        if (quorums.empty()) {
+            return nullptr;
+        }
+
+        std::vector<std::pair<uint256, size_t>> scores;
+        scores.reserve(quorums.size());
+        for (const auto i : irange::range(quorums.size())) {
+            CHashWriter h(SER_NETWORK, 0);
+            h << llmq_params.type;
+            h << quorums[i]->qc->quorumHash;
+            h << selectionHash;
+            scores.emplace_back(h.GetHash(), i);
+        }
+        std::sort(scores.begin(), scores.end());
+        return quorums[scores.front().second];
+    }
+}
+
+bool VerifyRecoveredSig(Consensus::LLMQType llmqType, const CQuorumManager& quorum_manager, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig, const int signOffset)
+{
+    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
+    assert(llmq_params_opt.has_value());
+    auto quorum = SelectQuorumForSigning(llmq_params_opt.value(), quorum_manager, id, signedAtHeight, signOffset);
+    if (!quorum) {
+        return false;
+    }
+
+    uint256 signHash = BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
+    return sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
+}
 } // namespace llmq

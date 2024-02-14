@@ -11,6 +11,7 @@
 #include <random.h>
 #include <saltedhasher.h>
 #include <serialize.h>
+#include <threadinterrupt.h>
 #include <sync.h>
 #include <uint256.h>
 

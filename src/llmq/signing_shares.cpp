@@ -1434,11 +1434,9 @@ void CSigSharesManager::WorkThreadMain()
     int64_t lastSendTime = 0;
 
     while (!workInterrupt) {
-        bool fMoreWork{false};
-
         RemoveBannedNodeStates();
-        fMoreWork |= sigman.ProcessPendingRecoveredSigs();
-        fMoreWork |= ProcessPendingSigShares(connman);
+
+        bool fMoreWork = ProcessPendingSigShares(connman);
         SignPendingSigShares();
 
         if (GetTimeMillis() - lastSendTime > 100) {
@@ -1447,7 +1445,6 @@ void CSigSharesManager::WorkThreadMain()
         }
 
         Cleanup();
-        sigman.Cleanup();
 
         // TODO Wakeup when pending signing is needed?
         if (!fMoreWork && !workInterrupt.sleep_for(std::chrono::milliseconds(100))) {

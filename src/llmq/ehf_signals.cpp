@@ -78,7 +78,7 @@ void CEHFSignalsHandler::trySignEHFSignal(int bit, const CBlockIndex* const pind
         return;
     }
 
-    const auto quorum = sigman.SelectQuorumForSigning(llmq_params_opt.value(), qman, requestId);
+    const auto quorum = llmq::SelectQuorumForSigning(llmq_params_opt.value(), qman, requestId);
     if (!quorum) {
         LogPrintf("CEHFSignalsHandler::trySignEHFSignal no quorum for id=%s\n", requestId.ToString());
         return;

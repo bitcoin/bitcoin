@@ -5,9 +5,10 @@
 #ifndef BITCOIN_LLMQ_DKGSESSIONHANDLER_H
 #define BITCOIN_LLMQ_DKGSESSIONHANDLER_H
 
-
 #include <ctpl_stl.h>
 #include <net.h>
+
+#include <gsl/pointers.h>
 
 #include <atomic>
 #include <map>
@@ -50,6 +51,7 @@ public:
 
 private:
     mutable RecursiveMutex cs;
+    std::atomic<PeerManager*> m_peerman{nullptr};
     const int invType;
     size_t maxMessagesPerNode GUARDED_BY(cs);
     std::list<BinaryMessage> pendingMessages GUARDED_BY(cs);
@@ -60,17 +62,18 @@ public:
     explicit CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType) :
             invType(_invType), maxMessagesPerNode(_maxMessagesPerNode) {};
 
-    void PushPendingMessage(NodeId from, CDataStream& vRecv);
+    void PushPendingMessage(NodeId from, PeerManager* peerman, CDataStream& vRecv);
     std::list<BinaryMessage> PopPendingMessages(size_t maxCount);
     bool HasSeen(const uint256& hash) const;
+    void Misbehaving(NodeId from, int score);
     void Clear();
 
     template<typename Message>
-    void PushPendingMessage(NodeId from, Message& msg)
+    void PushPendingMessage(NodeId from, PeerManager* peerman, Message& msg)
     {
         CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
         ds << msg;
-        PushPendingMessage(from, ds);
+        PushPendingMessage(from, peerman, ds);
     }
 
     // Might return nullptr messages, which indicates that deserialization failed for some reason
@@ -120,7 +123,6 @@ private:
     CDKGSessionManager& dkgManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
     const Consensus::LLMQParams params;
-    const std::unique_ptr<PeerManager>& m_peerman;
     const int quorumIndex;
 
     QuorumPhase phase GUARDED_BY(cs) {QuorumPhase::Idle};
@@ -140,11 +142,11 @@ private:
 public:
     CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGDebugManager& _dkgDebugManager,
                        CDKGSessionManager& _dkgManager, CQuorumBlockProcessor& _quorumBlockProcessor,
-                       const Consensus::LLMQParams& _params, const std::unique_ptr<PeerManager>& peerman, int _quorumIndex);
+                       const Consensus::LLMQParams& _params, int _quorumIndex);
     ~CDKGSessionHandler() = default;
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);
-    void ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv);
+    void ProcessMessage(const CNode& pfrom, gsl::not_null<PeerManager*> peerman, const std::string& msg_type, CDataStream& vRecv);
 
     void StartThread();
     void StopThread();

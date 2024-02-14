@@ -549,7 +549,7 @@ static UniValue quorum_sigs_cmd(const JSONRPCRequest& request, const LLMQContext
             llmq::CQuorumCPtr pQuorum;
 
             if (quorumHash.IsNull()) {
-                pQuorum = llmq_ctx.sigman->SelectQuorumForSigning(llmq_params_opt.value(), *llmq_ctx.qman, id);
+                pQuorum = llmq::SelectQuorumForSigning(llmq_params_opt.value(), *llmq_ctx.qman, id);
             } else {
                 pQuorum = llmq_ctx.qman->GetQuorum(llmqType, quorumHash);
             }
@@ -589,8 +589,8 @@ static UniValue quorum_sigs_cmd(const JSONRPCRequest& request, const LLMQContext
             }
             // First check against the current active set, if it fails check against the last active set
             int signOffset{llmq_params_opt->dkgInterval};
-            return llmq_ctx.sigman->VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, msgHash, sig, 0) ||
-                   llmq_ctx.sigman->VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, msgHash, sig, signOffset);
+            return llmq::VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, msgHash, sig, 0) ||
+                   llmq::VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, msgHash, sig, signOffset);
         } else {
             uint256 quorumHash(ParseHashV(request.params[4], "quorumHash"));
             llmq::CQuorumCPtr quorum = llmq_ctx.qman->GetQuorum(llmqType, quorumHash);
@@ -648,7 +648,7 @@ static UniValue quorum_selectquorum(const JSONRPCRequest& request, const LLMQCon
 
     UniValue ret(UniValue::VOBJ);
 
-    auto quorum = llmq_ctx.sigman->SelectQuorumForSigning(llmq_params_opt.value(), *llmq_ctx.qman, id);
+    auto quorum = llmq::SelectQuorumForSigning(llmq_params_opt.value(), *llmq_ctx.qman, id);
     if (!quorum) {
         throw JSONRPCError(RPC_MISC_ERROR, "no quorums active");
     }
@@ -1037,8 +1037,8 @@ static UniValue verifyislock(const JSONRPCRequest& request)
     const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     CHECK_NONFATAL(llmq_params_opt.has_value());
     int signOffset{llmq_params_opt->dkgInterval};
-    return llmq_ctx.sigman->VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, txid, sig, 0) ||
-           llmq_ctx.sigman->VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, txid, sig, signOffset);
+    return llmq::VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, txid, sig, 0) ||
+           llmq::VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, txid, sig, signOffset);
 }
 
 static void submitchainlock_help(const JSONRPCRequest& request)

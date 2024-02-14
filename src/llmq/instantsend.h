@@ -10,6 +10,7 @@
 
 #include <chain.h>
 #include <coins.h>
+#include <net_types.h>
 #include <primitives/transaction.h>
 #include <threadinterrupt.h>
 #include <txmempool.h>
@@ -205,7 +206,7 @@ private:
     CSporkManager& spork_manager;
     CTxMemPool& mempool;
     const CMasternodeSync& m_mn_sync;
-    const std::unique_ptr<PeerManager>& m_peerman;
+    std::atomic<PeerManager*> m_peerman{nullptr};
 
     std::atomic<bool> fUpgradedDB{false};
 
@@ -256,10 +257,10 @@ public:
     explicit CInstantSendManager(CChainLocksHandler& _clhandler, CChainState& chainstate, CConnman& _connman,
                                  CQuorumManager& _qman, CSigningManager& _sigman, CSigSharesManager& _shareman,
                                  CSporkManager& sporkManager, CTxMemPool& _mempool, const CMasternodeSync& mn_sync,
-                                 const std::unique_ptr<PeerManager>& peerman, bool unitTests, bool fWipe) :
+                                 bool unitTests, bool fWipe) :
         db(unitTests, fWipe),
         clhandler(_clhandler), m_chainstate(chainstate), connman(_connman), qman(_qman), sigman(_sigman),
-        shareman(_shareman), spork_manager(sporkManager), mempool(_mempool), m_mn_sync(mn_sync), m_peerman(peerman)
+        shareman(_shareman), spork_manager(sporkManager), mempool(_mempool), m_mn_sync(mn_sync)
     {
         workInterrupt.reset();
     }
@@ -280,7 +281,7 @@ private:
     bool TrySignInputLocks(const CTransaction& tx, bool allowResigning, Consensus::LLMQType llmqType, const Consensus::Params& params) LOCKS_EXCLUDED(cs_inputReqests);
     void TrySignInstantSendLock(const CTransaction& tx) LOCKS_EXCLUDED(cs_creating);
 
-    void ProcessMessageInstantSendLock(const CNode& pfrom, const CInstantSendLockPtr& islock);
+    PeerMsgRet ProcessMessageInstantSendLock(const CNode& pfrom, const CInstantSendLockPtr& islock);
     bool ProcessPendingInstantSendLocks() LOCKS_EXCLUDED(cs_pendingLocks);
 
     std::unordered_set<uint256, StaticSaltedHasher> ProcessPendingInstantSendLocks(const Consensus::LLMQParams& llmq_params,
@@ -312,7 +313,7 @@ public:
 
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override LOCKS_EXCLUDED(cs_inputReqests, cs_creating);
 
-    void ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv);
+    PeerMsgRet ProcessMessage(const CNode& pfrom, gsl::not_null<PeerManager*> peerman, const std::string& msg_type, CDataStream& vRecv);
 
     void TransactionAddedToMempool(const CTransactionRef& tx) LOCKS_EXCLUDED(cs_pendingLocks);
     void TransactionRemovedFromMempool(const CTransactionRef& tx);

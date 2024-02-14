@@ -208,7 +208,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, qc);
+    pendingMessages.PushPendingMessage(-1, nullptr, qc);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
@@ -526,7 +526,7 @@ void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, qc);
+    pendingMessages.PushPendingMessage(-1, nullptr, qc);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
@@ -720,7 +720,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, qj);
+    pendingMessages.PushPendingMessage(-1, nullptr, qj);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
@@ -1032,7 +1032,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, qc);
+    pendingMessages.PushPendingMessage(-1, nullptr, qc);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification

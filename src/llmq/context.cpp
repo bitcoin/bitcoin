@@ -28,13 +28,13 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CEvoDB& evo
         llmq::quorumBlockProcessor = std::make_unique<llmq::CQuorumBlockProcessor>(chainstate, connman, evo_db);
         return llmq::quorumBlockProcessor.get();
     }()},
-    qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*bls_worker, chainstate, connman, *dkg_debugman, *quorum_block_processor, sporkman, peerman, unit_tests, wipe)},
+    qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*bls_worker, chainstate, connman, *dkg_debugman, *quorum_block_processor, sporkman, unit_tests, wipe)},
     qman{[&]() -> llmq::CQuorumManager* const {
         assert(llmq::quorumManager == nullptr);
         llmq::quorumManager = std::make_unique<llmq::CQuorumManager>(*bls_worker, chainstate, connman, *qdkgsman, evo_db, *quorum_block_processor, ::masternodeSync);
         return llmq::quorumManager.get();
     }()},
-    sigman{std::make_unique<llmq::CSigningManager>(connman, *llmq::quorumManager, peerman, unit_tests, wipe)},
+    sigman{std::make_unique<llmq::CSigningManager>(connman, *llmq::quorumManager, unit_tests, wipe)},
     shareman{std::make_unique<llmq::CSigSharesManager>(connman, *llmq::quorumManager, *sigman, peerman)},
     clhandler{[&]() -> llmq::CChainLocksHandler* const {
         assert(llmq::chainLocksHandler == nullptr);
@@ -43,7 +43,7 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CEvoDB& evo
     }()},
     isman{[&]() -> llmq::CInstantSendManager* const {
         assert(llmq::quorumInstantSendManager == nullptr);
-        llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(*llmq::chainLocksHandler, chainstate, connman, *llmq::quorumManager, *sigman, *shareman, sporkman, mempool, *::masternodeSync, peerman, unit_tests, wipe);
+        llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(*llmq::chainLocksHandler, chainstate, connman, *llmq::quorumManager, *sigman, *shareman, sporkman, mempool, *::masternodeSync, unit_tests, wipe);
         return llmq::quorumInstantSendManager.get();
     }()},
     ehfSignalsHandler{std::make_unique<llmq::CEHFSignalsHandler>(chainstate, connman, *sigman, *shareman, sporkman, *llmq::quorumManager, mempool)}
@@ -62,6 +62,7 @@ LLMQContext::~LLMQContext() {
 }
 
 void LLMQContext::Interrupt() {
+    sigman->InterruptWorkerThread();
     shareman->InterruptWorkerThread();
 
     assert(isman == llmq::quorumInstantSendManager.get());
@@ -79,6 +80,7 @@ void LLMQContext::Start() {
     qman->Start();
     shareman->RegisterAsRecoveredSigsListener();
     shareman->StartWorkerThread();
+    sigman->StartWorkerThread();
 
     llmq::chainLocksHandler->Start();
     llmq::quorumInstantSendManager->Start();
@@ -95,6 +97,7 @@ void LLMQContext::Stop() {
 
     shareman->StopWorkerThread();
     shareman->UnregisterAsRecoveredSigsListener();
+    sigman->StopWorkerThread();
     qman->Stop();
     qdkgsman->StopThreads();
     bls_worker->Stop();

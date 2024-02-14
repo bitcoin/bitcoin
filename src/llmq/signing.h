@@ -6,13 +6,15 @@
 #define BITCOIN_LLMQ_SIGNING_H
 
 #include <bls/bls.h>
-#include <unordered_lru_cache.h>
-
 #include <consensus/params.h>
+#include <gsl/pointers.h>
+#include <net_types.h>
 #include <random.h>
 #include <saltedhasher.h>
 #include <sync.h>
+#include <threadinterrupt.h>
 #include <univalue.h>
+#include <unordered_lru_cache.h>
 
 #include <unordered_map>
 
@@ -155,13 +157,6 @@ public:
 
 class CSigningManager
 {
-    friend class CSigSharesManager;
-
-    // when selecting a quorum for signing and verification, we use CQuorumManager::SelectQuorum with this offset as
-    // starting height for scanning. This is because otherwise the resulting signatures would not be verifiable by nodes
-    // which are not 100% at the chain tip.
-    static constexpr int SIGN_HEIGHT_OFFSET{8};
-
 private:
     mutable RecursiveMutex cs;
 
@@ -169,7 +164,7 @@ private:
     CConnman& connman;
     const CQuorumManager& qman;
 
-    const std::unique_ptr<PeerManager>& m_peerman;
+    std::atomic<PeerManager*> m_peerman{nullptr};
 
     // Incoming and not verified yet
     std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>> pendingRecoveredSigs GUARDED_BY(cs);
@@ -182,13 +177,12 @@ private:
     std::vector<CRecoveredSigsListener*> recoveredSigsListeners GUARDED_BY(cs);
 
 public:
-    CSigningManager(CConnman& _connman, const CQuorumManager& _qman,
-                    const std::unique_ptr<PeerManager>& peerman, bool fMemory, bool fWipe);
+    CSigningManager(CConnman& _connman, const CQuorumManager& _qman, bool fMemory, bool fWipe);
 
     bool AlreadyHave(const CInv& inv) const;
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret) const;
 
-    void ProcessMessage(const CNode& pnode, const std::string& msg_type, CDataStream& vRecv);
+    PeerMsgRet ProcessMessage(const CNode& pnode, gsl::not_null<PeerManager*> peerman, const std::string& msg_type, CDataStream& vRecv);
 
     // This is called when a recovered signature was was reconstructed from another P2P message and is known to be valid
     // This is the case for example when a signature appears as part of InstantSend or ChainLocks
@@ -201,7 +195,7 @@ public:
     void TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
 
 private:
-    void ProcessMessageRecoveredSig(const CNode& pfrom, const std::shared_ptr<const CRecoveredSig>& recoveredSig);
+    PeerMsgRet ProcessMessageRecoveredSig(const CNode& pfrom, gsl::not_null<PeerManager*> peerman, const std::shared_ptr<const CRecoveredSig>& recoveredSig);
     static bool PreVerifyRecoveredSig(const CQuorumManager& quorum_manager, const CRecoveredSig& recoveredSig, bool& retBan);
 
     void CollectPendingRecoveredSigsToVerify(size_t maxUniqueSessions,
@@ -209,7 +203,10 @@ private:
             std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums);
     void ProcessPendingReconstructedRecoveredSigs();
     bool ProcessPendingRecoveredSigs(); // called from the worker thread of CSigSharesManager
+public:
+    // TODO - should not be public!
     void ProcessRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig);
+private:
     void Cleanup(); // called from the worker thread of CSigSharesManager
 
 public:
@@ -226,11 +223,15 @@ public:
 
     bool GetVoteForId(Consensus::LLMQType llmqType, const uint256& id, uint256& msgHashRet) const;
 
-    static std::vector<CQuorumCPtr> GetActiveQuorumSet(Consensus::LLMQType llmqType, int signHeight);
-    static CQuorumCPtr SelectQuorumForSigning(const Consensus::LLMQParams& llmq_params, const CQuorumManager& quorum_manager, const uint256& selectionHash, int signHeight = -1 /*chain tip*/, int signOffset = SIGN_HEIGHT_OFFSET);
+private:
+    std::thread workThread;
+    CThreadInterrupt workInterrupt;
+    void WorkThreadMain();
 
-    // Verifies a recovered sig that was signed while the chain tip was at signedAtTip
-    static bool VerifyRecoveredSig(Consensus::LLMQType llmqType, const CQuorumManager& quorum_manager, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig, int signOffset = SIGN_HEIGHT_OFFSET);
+public:
+    void StartWorkerThread();
+    void StopWorkerThread();
+    void InterruptWorkerThread();
 };
 
 template<typename NodesContainer, typename Continue, typename Callback>
