@@ -261,6 +261,7 @@ BASE_SCRIPTS = [
     'feature_filelock.py',
     'feature_loadblock.py',
     'p2p_blockfilters.py',
+    'p2p_message_capture.py',
     'feature_asmap.py',
     'feature_includeconf.py',
     'mempool_unbroadcast.py',
