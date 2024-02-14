@@ -10,7 +10,6 @@ Point GeneratorDeriver<Point>::Derive(
     const size_t index,
     const std::optional<TokenId>& token_id
 ) const {
-    static const std::string salt(salt_str);
     std::vector<uint8_t> serialized_p = p.GetVch();
 
     auto num_to_str = [](auto n) {
@@ -20,7 +19,7 @@ Point GeneratorDeriver<Point>::Derive(
     };
     std::string hash_preimage =
         HexStr(serialized_p) +
-        salt +
+        salt_str +
         num_to_str(index) +
         (token_id.has_value() ? token_id.value().ToString() : "") +
         (token_id.has_value() ? "nft" + num_to_str(token_id.value().subid) : "");
