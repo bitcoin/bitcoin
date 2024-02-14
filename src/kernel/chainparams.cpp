@@ -67,7 +67,7 @@ static CBlock CreateBLSCTGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t 
 {
     auto out = blsct::CreateOutput(dest, genesisReward, "Reward", TokenId(), 1);
 
-    DataStream ss{0, 0};
+    DataStream ss{};
     ss << out;
 
     return CreateBLSCTGenesisBlock(nTime, nNonce, nBits, nVersion, out);
