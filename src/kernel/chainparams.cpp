@@ -76,9 +76,7 @@ static CBlock CreateBLSCTGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t 
 static CBlock CreateBLSCTGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const std::string& outHex)
 {
     blsct::UnsignedOutput out;
-    auto hex = ParseHex(outHex);
-    auto span = MakeByteSpan(hex);
-    DataStream ss{span};
+    DataStream ss{ParseHex(outHex)};
     ss >> out;
 
     return CreateBLSCTGenesisBlock(nTime, nNonce, nBits, nVersion, out);
