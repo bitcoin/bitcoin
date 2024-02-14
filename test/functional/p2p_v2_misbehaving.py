@@ -26,11 +26,13 @@ class TestType(Enum):
     2. EXCESS_GARBAGE - Disconnection happens when > MAX_GARBAGE_LEN bytes garbage is sent
     3. WRONG_GARBAGE_TERMINATOR - Disconnection happens when incorrect garbage terminator is sent
     4. WRONG_GARBAGE - Disconnection happens when garbage bytes that is sent is different from what the peer receives
+    5. SEND_NO_AAD - Disconnection happens when AAD of first encrypted packet after the garbage terminator is not filled
     """
     EARLY_KEY_RESPONSE = 0
     EXCESS_GARBAGE = 1
     WRONG_GARBAGE_TERMINATOR = 2
     WRONG_GARBAGE = 3
+    SEND_NO_AAD = 4
 
 
 class TestEncryptedP2PState(EncryptedP2PState):
@@ -87,8 +89,9 @@ class TestEncryptedP2PState(EncryptedP2PState):
             return super().initiate_v2_handshake()
 
     def complete_handshake(self, response):
-        """Add option for sending wrong garbage terminator
-        when TestType = (WRONG_GARBAGE_TERMINATOR)"""
+        """Add option for sending wrong garbage terminator, not filling first encrypted packet after garbage terminator
+        with AAD
+        when TestType = (WRONG_GARBAGE_TERMINATOR, SEND_NO_AAD)"""
         ellswift_theirs = self.received_prefix + response.read(64 - len(self.received_prefix))
         # return b"" if we need to receive more bytes
         if len(ellswift_theirs) != 64:
@@ -101,6 +104,8 @@ class TestEncryptedP2PState(EncryptedP2PState):
 
         if self.test_type == TestType.WRONG_GARBAGE_TERMINATOR:
             msg_to_send = random_bitflip(msg_to_send)
+        elif self.test_type == TestType.SEND_NO_AAD:
+            aad = b''
 
         # Optionally send decoy packets after garbage terminator.
         for decoy_content_len in [random.randint(1, 100) for _ in range(random.randint(0, 10))]:
@@ -170,6 +175,7 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
             ["V2 transport error: missing garbage terminator, peer=1"],  # EXCESS_GARBAGE
             ["version handshake timeout peer=2"],  # WRONG_GARBAGE_TERMINATOR
             ["V2 transport error: packet decryption failure"],  # WRONG_GARBAGE
+            ["V2 transport error: packet decryption failure"],  # SEND_NO_AAD
         ]
         for test_type in TestType:
             if test_type == TestType.EARLY_KEY_RESPONSE:
