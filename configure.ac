@@ -596,6 +596,9 @@ fi
 
 CORE_CPPFLAGS="$CORE_CPPFLAGS -DHAVE_BUILD_INFO"
 
+# We need to have have BLS_ETH=1 for bls and mcl libs
+CORE_CPPFLAGS="$CORE_CPPFLAGS -DBLS_ETH=1"
+
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
   [build navcoin-cli navcoin-tx navcoin-util navcoin-wallet (default=yes)])],

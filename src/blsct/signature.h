@@ -8,10 +8,9 @@
 #ifndef NAVCOIN_BLSCT_SIGNATURE_H
 #define NAVCOIN_BLSCT_SIGNATURE_H
 
-#define BLS_ETH 1
 #include <bls/bls384_256.h>
-#include <node/protocol_version.h>
 #include <serialize.h>
+
 #include <vector>
 
 namespace blsct {

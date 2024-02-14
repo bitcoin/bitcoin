@@ -5,15 +5,14 @@
 #ifndef NAVCOIN_BLSCT_ARITH_MCL_MCL_G1POINT_H
 #define NAVCOIN_BLSCT_ARITH_MCL_MCL_G1POINT_H
 
-#include <stddef.h>
-#include <string>
-#include <vector>
-
-#define BLS_ETH 1
 #include <bls/bls384_256.h>
 #include <blsct/arith/endianness.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <uint256.h>
+
+#include <stddef.h>
+#include <string>
+#include <vector>
 
 class MclG1Point
 {

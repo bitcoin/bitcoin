@@ -6,12 +6,12 @@
 #ifndef NAVCOIN_BLSCT_EIP_2333_BLS12_381_KEYGEN_H
 #define NAVCOIN_BLSCT_EIP_2333_BLS12_381_KEYGEN_H
 
-#include <array>
-#define BLS_ETH 1
 #include <bls/bls384_256.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
-#include <crypto/sha256.h>
 #include <crypto/hmac_sha256.h>
+#include <crypto/sha256.h>
+
+#include <array>
 
 class BLS12_381_KeyGen
 {

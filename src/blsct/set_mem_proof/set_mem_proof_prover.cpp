@@ -9,12 +9,12 @@
 #include <blsct/building_block/lazy_points.h>
 #include <blsct/common.h>
 #include <blsct/set_mem_proof/set_mem_proof_prover.h>
-#include <cmath>
 #include <hash.h>
-#include <node/protocol_version.h>
-#include <stdexcept>
 #include <streams.h>
 #include <util/strencodings.h>
+
+#include <cmath>
+#include <stdexcept>
 
 template <typename T>
 const typename SetMemProofProver<T>::Scalar& SetMemProofProver<T>::One()

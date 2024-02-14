@@ -9,19 +9,17 @@
 #ifndef NAVCOIN_BLSCT_ARITH_MCL_MCL_SCALAR_H
 #define NAVCOIN_BLSCT_ARITH_MCL_MCL_SCALAR_H
 
+#include <bls/bls384_256.h>
+#include <hash.h>
+#include <serialize.h>
+#include <streams.h>
+#include <uint256.h>
+
 #include <array>
 #include <functional>
 #include <stddef.h>
 #include <string>
 #include <vector>
-
-#define BLS_ETH 1
-#include <bls/bls384_256.h>
-#include <hash.h>
-#include <node/protocol_version.h>
-#include <serialize.h>
-#include <streams.h>
-#include <uint256.h>
 
 using namespace std::literals::string_literals;
 

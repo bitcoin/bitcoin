@@ -5,8 +5,8 @@
 #ifndef NAVCOIN_BLSCT_ARITH_MCL_MCL_INIT_H
 #define NAVCOIN_BLSCT_ARITH_MCL_MCL_INIT_H
 
-#define BLS_ETH 1
 #include <bls/bls384_256.h>
+
 #include <iostream>
 #include <mutex>
 #include <stdexcept>
