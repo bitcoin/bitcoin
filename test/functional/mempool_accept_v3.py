@@ -311,8 +311,8 @@ class MempoolAcceptV3(BitcoinTestFramework):
             utxo_to_spend=tx_mempool_parent["new_utxos"][1],
             version=3
         )
-        expected_error_mempool_sibling = f"v3-rule-violation, tx {tx_mempool_parent['txid']} (wtxid={tx_mempool_parent['wtxid']}) would exceed descendant count limit"
-        assert_raises_rpc_error(-26, expected_error_mempool_sibling, node.sendrawtransaction, tx_has_mempool_sibling["hex"])
+        expected_error_mempool_sibling_no_eviction = f"insufficient fee (including sibling eviction), rejecting replacement"
+        assert_raises_rpc_error(-26, expected_error_mempool_sibling_no_eviction, node.sendrawtransaction, tx_has_mempool_sibling["hex"])
 
         tx_has_mempool_uncle = self.wallet.create_self_transfer(utxo_to_spend=tx_has_mempool_sibling["new_utxo"], version=3)
 
@@ -326,7 +326,7 @@ class MempoolAcceptV3(BitcoinTestFramework):
 
         # Also fails with a child via submitpackage
         result_submitpackage = node.submitpackage([tx_has_mempool_sibling["hex"], tx_has_mempool_uncle["hex"]])
-        assert_equal(result_submitpackage["tx-results"][tx_has_mempool_sibling['wtxid']]['error'], expected_error_mempool_sibling)
+        assert expected_error_mempool_sibling_no_eviction in result_submitpackage["tx-results"][tx_has_mempool_sibling['wtxid']]['error']
 
 
     @cleanup(extra_args=["-datacarriersize=1000", "-acceptnonstdtxn=1"])

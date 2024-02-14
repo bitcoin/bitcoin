@@ -329,18 +329,21 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK(PackageV3Checks(tx_mempool_v3_child, GetVirtualTransactionSize(*tx_mempool_v3_child), package_v3_1p1c, empty_ancestors) == std::nullopt);
     }
 
-    // A v3 transaction cannot have more than 1 descendant.
-    // Configuration where tx has multiple direct children.
+    // A v3 transaction cannot have more than 1 descendant. Sibling is returned when exactly 1 exists.
     {
         auto tx_v3_child2 = make_tx({COutPoint{mempool_tx_v3->GetHash(), 1}}, /*version=*/3);
-        auto ancestors{pool.CalculateMemPoolAncestors(entry.FromTx(tx_v3_child2), m_limits)};
+
+        // Configuration where parent already has 1 other child in mempool
+        auto ancestors_1sibling{pool.CalculateMemPoolAncestors(entry.FromTx(tx_v3_child2), m_limits)};
         const auto expected_error_str{strprintf("tx %s (wtxid=%s) would exceed descendant count limit",
             mempool_tx_v3->GetHash().ToString(), mempool_tx_v3->GetWitnessHash().ToString())};
-        auto result{SingleV3Checks(tx_v3_child2, *ancestors, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_child2))};
-        BOOST_CHECK_EQUAL(result->first, expected_error_str);
-        BOOST_CHECK_EQUAL(result->second, nullptr);
-        // If replacing the child, make sure there is no double-counting.
-        BOOST_CHECK(SingleV3Checks(tx_v3_child2, *ancestors, {tx_mempool_v3_child->GetHash()}, GetVirtualTransactionSize(*tx_v3_child2))
+        auto result_with_sibling_eviction{SingleV3Checks(tx_v3_child2, *ancestors_1sibling, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_child2))};
+        BOOST_CHECK_EQUAL(result_with_sibling_eviction->first, expected_error_str);
+        // The other mempool child is returned to allow for sibling eviction.
+        BOOST_CHECK_EQUAL(result_with_sibling_eviction->second, tx_mempool_v3_child);
+
+        // If directly replacing the child, make sure there is no double-counting.
+        BOOST_CHECK(SingleV3Checks(tx_v3_child2, *ancestors_1sibling, {tx_mempool_v3_child->GetHash()}, GetVirtualTransactionSize(*tx_v3_child2))
                     == std::nullopt);
 
         Package package_v3_1p2c{mempool_tx_v3, tx_mempool_v3_child, tx_v3_child2};

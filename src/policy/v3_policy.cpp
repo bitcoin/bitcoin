@@ -130,10 +130,11 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
             }
 
             // It shouldn't be possible to have any mempool siblings at this point. SingleV3Checks
-            // catches mempool siblings. Also, if the package consists of connected transactions,
+            // catches mempool siblings and sibling eviction is not extended to packages. Also, if the package consists of connected transactions,
             // any tx having a mempool ancestor would mean the package exceeds ancestor limits.
             if (!Assume(!parent_info.m_has_mempool_descendant)) {
-                return strprintf("tx %u would exceed descendant count limit", parent_info.m_wtxid.ToString());
+                return strprintf("tx %s (wtxid=%s) would exceed descendant count limit",
+                                parent_info.m_txid.ToString(), parent_info.m_wtxid.ToString());
             }
         }
     } else {
@@ -214,10 +215,20 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTra
             std::any_of(children.cbegin(), children.cend(),
                 [&direct_conflicts](const CTxMemPoolEntry& child){return direct_conflicts.count(child.GetTx().GetHash()) > 0;});
         if (parent_entry->GetCountWithDescendants() + 1 > V3_DESCENDANT_LIMIT && !child_will_be_replaced) {
+            // Allow sibling eviction for v3 transaction: if another child already exists, even if
+            // we don't conflict inputs with it, consider evicting it under RBF rules. We rely on v3 rules
+            // only permitting 1 descendant, as otherwise we would need to have logic for deciding
+            // which descendant to evict. Skip if this isn't true, e.g. if the transaction has
+            // multiple children or the sibling also has descendants due to a reorg.
+            const bool consider_sibling_eviction{parent_entry->GetCountWithDescendants() == 2 &&
+                children.begin()->get().GetCountWithAncestors() == 2};
+
+            // Return the sibling if its eviction can be considered. Provide the "descendant count
+            // limit" string either way, as the caller may decide not to do sibling eviction.
             return std::make_pair(strprintf("tx %u (wtxid=%s) would exceed descendant count limit",
-                             parent_entry->GetSharedTx()->GetHash().ToString(),
-                             parent_entry->GetSharedTx()->GetWitnessHash().ToString()),
-                nullptr);
+                                            parent_entry->GetSharedTx()->GetHash().ToString(),
+                                            parent_entry->GetSharedTx()->GetWitnessHash().ToString()),
+                                  consider_sibling_eviction ?  children.begin()->get().GetSharedTx() : nullptr);
         }
     }
     return std::nullopt;
