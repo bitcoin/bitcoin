@@ -24,11 +24,13 @@ class TestType(Enum):
     2. EXCESS_GARBAGE - Disconnection happens when > MAX_GARBAGE_LEN bytes garbage is sent
     3. WRONG_GARBAGE_TERMINATOR - Disconnection happens when incorrect garbage terminator is sent
     4. WRONG_GARBAGE - Disconnection happens when garbage bytes that is sent is different from what the peer receives
+    5. SEND_NO_AAD - Disconnection happens when AAD of first encrypted packet after the garbage terminator is not filled
     """
     EARLY_KEY_RESPONSE = 0
     EXCESS_GARBAGE = 1
     WRONG_GARBAGE_TERMINATOR = 2
     WRONG_GARBAGE = 3
+    SEND_NO_AAD = 4
 
 
 class EarlyKeyResponseState(EncryptedP2PState):
@@ -72,6 +74,17 @@ class WrongGarbageState(EncryptedP2PState):
         return ellswift_garbage_bytes[:64] + random_bitflip(ellswift_garbage_bytes[64:])
 
 
+class NoAADState(EncryptedP2PState):
+    """Add option for not filling first encrypted packet after garbage terminator with AAD"""
+    def generate_keypair_and_garbage(self):
+        garbage_len = random.randrange(1, MAX_GARBAGE_LEN)
+        return super().generate_keypair_and_garbage(garbage_len)
+
+    def complete_handshake(self, response):
+        self.sent_garbage = b''  # do not authenticate the garbage which is sent
+        return super().complete_handshake(response)
+
+
 class MisbehavingV2Peer(P2PInterface):
     """Custom implementation of P2PInterface which uses modified v2 P2P protocol functions for testing purposes."""
     def __init__(self, test_type):
@@ -87,6 +100,8 @@ class MisbehavingV2Peer(P2PInterface):
             self.v2_state = WrongGarbageTerminatorState(initiating=True, net='regtest')
         elif self.test_type == TestType.WRONG_GARBAGE:
             self.v2_state = WrongGarbageState(initiating=True, net='regtest')
+        elif self.test_type == TestType.SEND_NO_AAD:
+            self.v2_state = NoAADState(initiating=True, net='regtest')
         super().connection_made(transport)
 
     def data_received(self, t):
@@ -130,6 +145,7 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
             ["V2 transport error: missing garbage terminator, peer=1"],  # EXCESS_GARBAGE
             ["V2 handshake timeout peer=2"],  # WRONG_GARBAGE_TERMINATOR
             ["V2 transport error: packet decryption failure"],  # WRONG_GARBAGE
+            ["V2 transport error: packet decryption failure"],  # SEND_NO_AAD
         ]
         for test_type in TestType:
             if test_type == TestType.EARLY_KEY_RESPONSE:
