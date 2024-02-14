@@ -166,7 +166,7 @@
     "description": "Tests the check for an invalid string input index with replaceable"
   },
   {
-    "exec": "./bitcoin-tx",
+    "exec": "./navcoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
@@ -176,7 +176,7 @@
     "description": "Tests the check for an invalid negative input index with replaceable"
   },
   {
-    "exec": "./bitcoin-tx",
+    "exec": "./navcoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
@@ -186,7 +186,7 @@
     "description": "Tests the check for an invalid positive out-of-bounds input index with replaceable"
   },
   {
-    "exec": "./bitcoin-tx",
+    "exec": "./navcoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
@@ -195,7 +195,7 @@
     "description": "Tests that the 'SEQUENCE' value for a single input is set to fdffffff for single input"
   },
   {
-    "exec": "./bitcoin-tx",
+    "exec": "./navcoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
@@ -204,7 +204,7 @@
     "description": "Tests that the 'SEQUENCE' value for a single input is set to fdffffff when N omitted"
   },
   {
-    "exec": "./bitcoin-tx",
+    "exec": "./navcoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
@@ -215,7 +215,7 @@
     "description": "Tests that only the 'SEQUENCE' value of input[1] is set to fdffffff"
   },
   {
-    "exec": "./bitcoin-tx",
+    "exec": "./navcoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
@@ -226,7 +226,7 @@
     "description": "Tests that the 'SEQUENCE' value for each input is set to fdffffff when N omitted"
   },
   {
-    "exec": "./bitcoin-tx",
+    "exec": "./navcoin-tx",
     "args":
     ["-create",
      "replaceable="],
@@ -234,7 +234,7 @@
     "description": "Tests behavior when no inputs are provided in the transaction"
   },
   {
-    "exec": "./bitcoin-tx",
+    "exec": "./navcoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:abcdef00",
