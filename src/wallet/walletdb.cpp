@@ -1230,88 +1230,33 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     return result;
 }
 
-DBErrors WalletBatch::FindWalletTxHashes(std::vector<uint256>& tx_hashes)
+static bool RunWithinTxn(WalletBatch& batch, std::string_view process_desc, const std::function<bool(WalletBatch&)>& func)
 {
-    DBErrors result = DBErrors::LOAD_OK;
-
-    try {
-        int nMinVersion = 0;
-        if (m_batch->Read(DBKeys::MINVERSION, nMinVersion)) {
-            if (nMinVersion > FEATURE_LATEST)
-                return DBErrors::TOO_NEW;
-        }
-
-        // Get cursor
-        std::unique_ptr<DatabaseCursor> cursor = m_batch->GetNewCursor();
-        if (!cursor)
-        {
-            LogPrintf("Error getting wallet database cursor\n");
-            return DBErrors::CORRUPT;
-        }
-
-        while (true)
-        {
-            // Read next record
-            DataStream ssKey{};
-            DataStream ssValue{};
-            DatabaseCursor::Status status = cursor->Next(ssKey, ssValue);
-            if (status == DatabaseCursor::Status::DONE) {
-                break;
-            } else if (status == DatabaseCursor::Status::FAIL) {
-                LogPrintf("Error reading next record from wallet database\n");
-                return DBErrors::CORRUPT;
-            }
-
-            std::string strType;
-            ssKey >> strType;
-            if (strType == DBKeys::TX) {
-                uint256 hash;
-                ssKey >> hash;
-                tx_hashes.push_back(hash);
-            }
-        }
-    } catch (...) {
-        result = DBErrors::CORRUPT;
+    if (!batch.TxnBegin()) {
+        LogPrint(BCLog::WALLETDB, "Error: cannot create db txn for %s\n", process_desc);
+        return false;
     }
 
-    return result;
+    // Run procedure
+    if (!func(batch)) {
+        LogPrint(BCLog::WALLETDB, "Error: %s failed\n", process_desc);
+        batch.TxnAbort();
+        return false;
+    }
+
+    if (!batch.TxnCommit()) {
+        LogPrint(BCLog::WALLETDB, "Error: cannot commit db txn for %s\n", process_desc);
+        return false;
+    }
+
+    // All good
+    return true;
 }
 
-DBErrors WalletBatch::ZapSelectTx(std::vector<uint256>& vTxHashIn, std::vector<uint256>& vTxHashOut)
+bool RunWithinTxn(WalletDatabase& database, std::string_view process_desc, const std::function<bool(WalletBatch&)>& func)
 {
-    // build list of wallet TX hashes
-    std::vector<uint256> vTxHash;
-    DBErrors err = FindWalletTxHashes(vTxHash);
-    if (err != DBErrors::LOAD_OK) {
-        return err;
-    }
-
-    std::sort(vTxHash.begin(), vTxHash.end());
-    std::sort(vTxHashIn.begin(), vTxHashIn.end());
-
-    // erase each matching wallet TX
-    bool delerror = false;
-    std::vector<uint256>::iterator it = vTxHashIn.begin();
-    for (const uint256& hash : vTxHash) {
-        while (it < vTxHashIn.end() && (*it) < hash) {
-            it++;
-        }
-        if (it == vTxHashIn.end()) {
-            break;
-        }
-        else if ((*it) == hash) {
-            if(!EraseTx(hash)) {
-                LogPrint(BCLog::WALLETDB, "Transaction was found for deletion but returned database error: %s\n", hash.GetHex());
-                delerror = true;
-            }
-            vTxHashOut.push_back(hash);
-        }
-    }
-
-    if (delerror) {
-        return DBErrors::CORRUPT;
-    }
-    return DBErrors::LOAD_OK;
+    WalletBatch batch(database);
+    return RunWithinTxn(batch, process_desc, func);
 }
 
 void MaybeCompactWalletDB(WalletContext& context)
@@ -1376,47 +1321,11 @@ bool WalletBatch::WriteWalletFlags(const uint64_t flags)
 
 bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
 {
-    // Begin db txn
-    if (!m_batch->TxnBegin()) return false;
-
-    // Get cursor
-    std::unique_ptr<DatabaseCursor> cursor = m_batch->GetNewCursor();
-    if (!cursor)
-    {
-        return false;
-    }
-
-    // Iterate the DB and look for any records that have the type prefixes
-    while (true) {
-        // Read next record
-        DataStream key{};
-        DataStream value{};
-        DatabaseCursor::Status status = cursor->Next(key, value);
-        if (status == DatabaseCursor::Status::DONE) {
-            break;
-        } else if (status == DatabaseCursor::Status::FAIL) {
-            cursor.reset(nullptr);
-            m_batch->TxnAbort(); // abort db txn
-            return false;
-        }
-
-        // Make a copy of key to avoid data being deleted by the following read of the type
-        const SerializeData key_data{key.begin(), key.end()};
-
-        std::string type;
-        key >> type;
-
-        if (types.count(type) > 0) {
-            if (!m_batch->Erase(Span{key_data})) {
-                cursor.reset(nullptr);
-                m_batch->TxnAbort();
-                return false; // erase failed
-            }
-        }
-    }
-    // Finish db txn
-    cursor.reset(nullptr);
-    return m_batch->TxnCommit();
+    return RunWithinTxn(*this, "erase records", [&types](WalletBatch& self) {
+        return std::all_of(types.begin(), types.end(), [&self](const std::string& type) {
+            return self.m_batch->ErasePrefix(DataStream() << type);
+        });
+    });
 }
 
 bool WalletBatch::TxnBegin()

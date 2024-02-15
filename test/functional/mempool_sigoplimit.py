@@ -39,7 +39,7 @@ from test_framework.wallet import MiniWallet
 from test_framework.wallet_util import generate_keypair
 
 DEFAULT_BYTES_PER_SIGOP = 20  # default setting
-
+MAX_PUBKEYS_PER_MULTISIG = 20
 
 class BytesPerSigOpTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -159,13 +159,13 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         # Separately, the parent tx is ok
         parent_individual_testres = self.nodes[0].testmempoolaccept([tx_parent.serialize().hex()])[0]
         assert parent_individual_testres["allowed"]
-        # Multisig is counted as MAX_PUBKEYS_PER_MULTISIG = 20 sigops
-        assert_equal(parent_individual_testres["vsize"], 5000 * 20)
+        max_multisig_vsize = MAX_PUBKEYS_PER_MULTISIG * 5000
+        assert_equal(parent_individual_testres["vsize"], max_multisig_vsize)
 
         # But together, it's exceeding limits in the *package* context. If sigops adjusted vsize wasn't being checked
         # here, it would get further in validation and give too-long-mempool-chain error instead.
         packet_test = self.nodes[0].testmempoolaccept([tx_parent.serialize().hex(), tx_child.serialize().hex()])
-        expected_package_error = f"package-mempool-limits, package size {2*20*5000} exceeds ancestor size limit [limit: 101000]"
+        expected_package_error = f"package-mempool-limits, package size {2*max_multisig_vsize} exceeds ancestor size limit [limit: 101000]"
         assert_equal([x["package-error"] for x in packet_test], [expected_package_error] * 2)
 
         # When we actually try to submit, the parent makes it into the mempool, but the child would exceed ancestor vsize limits
