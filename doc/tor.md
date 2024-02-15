@@ -218,14 +218,17 @@ for normal IPv4/IPv6 communication, use:
 
 ## 3.1. List of known Dash Core Tor relays
 
-- 3dnj6le7i2dgzqtj7tth5zoiscmoddovzswdl5pjy5pnyllevxhb3uyd.onion
-- cmhr5r3lqhy7ic2ebeil66ftcz5u62zq5qhbfdz53l6sqxljh7zxntyd.onion
-- k532fqvgzqotj6epfw3rfc377elrj3td47ztad2tkn6vwnw6nhxacrqd.onion
-- nqvpq3urtggxybor6wlf5odzanfqcitg5m7xjo2w25bj7tl2g54te6yd.onion
-- oabd4mxviavh2xhlv4xidbqswsrqvmcnkpfwfwhjgy4w2dmlaoulxwad.onion
-- qpcfsys2rqguha4vahdq6lbx7flc2fivrdicwxqtvh5okujrh6ami3ad.onion
-- v7ttoiov7rc5aut64nfomyfwxt424ihufwvr5ilf7moeg3fwibjpjcqd.onion
-- yjos5hcumgpgggm37xjmgjfzzhbjo6a7phyavutfzkh6qrlnozvajuad.onion
+cmhr5r3lqhy7ic2ebeil66ftcz5u62zq5qhbfdz53l6sqxljh7zxntyd.onion
+k532fqvgzqotj6epfw3rfc377elrj3td47ztad2tkn6vwnw6nhxacrqd.onion
+v7ttoiov7rc5aut64nfomyfwxt424ihufwvr5ilf7moeg3fwibjpjcqd.onion
+snu2xaql3crh2b4t6g2wxemgrpzmaxfxla4tua63bnp2phhxwr6hzzid.onion
+fq63mjtyamklhxtskvvdf7tcdckwvtoo7kb5eazi34tsxuvexveyroad.onion
+5v5lgddolcidtt2qmhmvyka2ewht4mkmmj73tfwuimlckgmqb5lthtid.onion
+
+You can easily validate which of these are still online via nc such as
+```
+nc -v -x 127.0.0.1:9050 -z *.onion 9999
+```
 
 ## 4. Privacy recommendations
 
