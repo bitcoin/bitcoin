@@ -273,10 +273,8 @@ class AssetLocksTest(DashTestFramework):
         locked_1 = 10 * COIN + 141421
         locked_2 = 10 * COIN + 314159
 
-        coins = node_wallet.listunspent()
-        coin = None
-        while coin is None or COIN * coin['amount'] < locked_2:
-            coin = coins.pop()
+        coins = node_wallet.listunspent(query_options={'minimumAmount': Decimal(str(locked_2 / COIN))})
+        coin = coins.pop()
         asset_lock_tx = self.create_assetlock(coin, locked_1, pubkey)
 
 
@@ -604,7 +602,7 @@ class AssetLocksTest(DashTestFramework):
         locked += platform_reward
         assert_equal(locked, self.get_credit_pool_balance())
 
-        coins = node_wallet.listunspent()
+        coins = node_wallet.listunspent(query_options={'minimumAmount': 1})
         coin = coins.pop()
         self.send_tx(self.create_assetlock(coin, COIN, pubkey))
         locked += platform_reward + COIN
