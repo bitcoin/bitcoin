@@ -7,46 +7,6 @@
 
 #include <common/system.h>
 
-#include <atomic>
-
-namespace NetMsgType {
-const char* VERSION = "version";
-const char* VERACK = "verack";
-const char* ADDR = "addr";
-const char* ADDRV2 = "addrv2";
-const char* SENDADDRV2 = "sendaddrv2";
-const char* INV = "inv";
-const char* GETDATA = "getdata";
-const char* MERKLEBLOCK = "merkleblock";
-const char* GETBLOCKS = "getblocks";
-const char* GETHEADERS = "getheaders";
-const char* TX = "tx";
-const char* HEADERS = "headers";
-const char* BLOCK = "block";
-const char* GETADDR = "getaddr";
-const char* MEMPOOL = "mempool";
-const char* PING = "ping";
-const char* PONG = "pong";
-const char* NOTFOUND = "notfound";
-const char* FILTERLOAD = "filterload";
-const char* FILTERADD = "filteradd";
-const char* FILTERCLEAR = "filterclear";
-const char* SENDHEADERS = "sendheaders";
-const char* FEEFILTER = "feefilter";
-const char* SENDCMPCT = "sendcmpct";
-const char* CMPCTBLOCK = "cmpctblock";
-const char* GETBLOCKTXN = "getblocktxn";
-const char* BLOCKTXN = "blocktxn";
-const char* GETCFILTERS = "getcfilters";
-const char* CFILTER = "cfilter";
-const char* GETCFHEADERS = "getcfheaders";
-const char* CFHEADERS = "cfheaders";
-const char* GETCFCHECKPT = "getcfcheckpt";
-const char* CFCHECKPT = "cfcheckpt";
-const char* WTXIDRELAY = "wtxidrelay";
-const char* SENDTXRCNCL = "sendtxrcncl";
-} // namespace NetMsgType
-
 CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
     : pchMessageStart{pchMessageStartIn}
 {
