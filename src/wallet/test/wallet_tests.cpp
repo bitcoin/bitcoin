@@ -1388,6 +1388,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_descriptor_test, BasicTestingSetup)
 
 BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
 {
+    gArgs.ForceSetArg("-unsafesqlitesync", "1");
     auto chain = interfaces::MakeChain(m_node);
     auto wallet = TestLoadWallet(m_node);
     CKey key;
