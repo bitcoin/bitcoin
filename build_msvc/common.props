@@ -13,7 +13,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
-      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);NOMINMAX;BLS_ETH;MCL_USE_VINT;MCL_VINT_FIXED_BUFFER;MCL_DONT_USE_OPENSSL;MCL_DONT_USE_XBYAK;MCLBN_DONT_EXPORT;MT;MCL_SIZEOF_UNIT=4;MCL_MAX_BIT_SIZE=384;CYBOZU_MINIMUM_EXCEPTION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);NOMINMAX;BLS_ETH=1;MCL_USE_VINT;MCL_VINT_FIXED_BUFFER;MCL_DONT_USE_OPENSSL;MCL_DONT_USE_XBYAK;MCLBN_DONT_EXPORT;MT;MCL_SIZEOF_UNIT=4;MCL_MAX_BIT_SIZE=384;CYBOZU_MINIMUM_EXCEPTION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)../cybozulib_ext/lib;$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
