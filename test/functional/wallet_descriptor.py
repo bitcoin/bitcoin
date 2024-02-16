@@ -20,6 +20,8 @@ class WalletDescriptorTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        # TODO: drop it when bitcoin#20267 is done
+        self.skip_if_no_bdb()
         self.skip_if_no_sqlite()
 
     def run_test(self):

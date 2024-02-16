@@ -36,6 +36,8 @@ class TestBitcoinCli(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_cli()
+        # TODO: drop it when bitcoin#20267 is done
+        self.skip_if_no_bdb()
 
     def run_test(self):
         """Main test logic"""

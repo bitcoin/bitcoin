@@ -15,6 +15,10 @@ class FilelockTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
 
+    # TODO: remove it after 20267 done
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_bdb()
+
     def setup_network(self):
         self.add_nodes(self.num_nodes, extra_args=None)
         self.nodes[0].start()
