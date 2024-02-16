@@ -70,8 +70,7 @@ void CEHFSignalsHandler::trySignEHFSignal(int bit, const CBlockIndex* const pind
         return;
     }
     if (sigman.HasRecoveredSigForId(llmqType, requestId)) {
-        LOCK(cs);
-        ids.insert(requestId);
+        WITH_LOCK(cs, ids.insert(requestId));
 
         LogPrint(BCLog::EHF, "CEHFSignalsHandler::trySignEHFSignal: already signed bit=%d at height=%d id=%s\n", bit, pindex->nHeight, requestId.ToString());
         // no need to sign same message one more time
@@ -88,10 +87,7 @@ void CEHFSignalsHandler::trySignEHFSignal(int bit, const CBlockIndex* const pind
     mnhfPayload.signal.quorumHash = quorum->qc->quorumHash;
     const uint256 msgHash = mnhfPayload.PrepareTx().GetHash();
 
-    {
-        LOCK(cs);
-        ids.insert(requestId);
-    }
+    WITH_LOCK(cs, ids.insert(requestId));
     sigman.AsyncSignIfMember(llmqType, shareman, requestId, msgHash);
 }
 
