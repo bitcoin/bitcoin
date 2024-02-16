@@ -45,6 +45,8 @@ IGNORED_WARNINGS=(
     "unusedFunction"
     "unknownMacro"
     "unusedStructMember"
+    "note: Calling function 'Invalid' returns 0"
+    "[note|warning]: Return value 'state.Invalid(.*)' is always false"
 )
 
 # We should attempt to update this with all dash specific code
@@ -77,8 +79,8 @@ FILES=$(git ls-files -- "src/batchedlogger.*" \
                         "src/rpc/governance.cpp" \
                         "src/rpc/masternode.cpp" \
                         "src/rpc/quorums.cpp" \
-                        "src/spork.*" \
                         "src/saltedhasher.*" \
+                        "src/spork.*" \
                         "src/stacktraces.*" \
                         "src/statsd_client.*" \
                         "src/test/block_reward_reallocation_tests.cpp" \
@@ -88,7 +90,8 @@ FILES=$(git ls-files -- "src/batchedlogger.*" \
                         "src/test/evo*.cpp" \
                         "src/test/governance*.cpp" \
                         "src/wallet/hdchain.*" \
-                        "src/unordered_lru_cache.h")
+                        "src/unordered_lru_cache.h" \
+                        )
 
 
 if ! command -v cppcheck > /dev/null; then
