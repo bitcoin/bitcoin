@@ -4502,6 +4502,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::C
     // TODO: Can't use std::make_shared because we need a custom deleter but
     // should be possible to use std::allocate_shared.
     std::shared_ptr<CWallet> walletInstance(new CWallet(&chain, &coinjoin_loader, name, std::move(database)), ReleaseWallet);
+    // TODO: refactor this condition: validation of error looks like workaround
     if (!walletInstance->AutoBackupWallet(walletFile, error, warnings) && !error.original.empty()) {
         return nullptr;
     }
@@ -4942,7 +4943,12 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
     if (strWalletName.empty()) {
         strWalletName = "wallet.dat";
     }
-
+    // This condition is required to be sure that wallet.dat won't be re-opened by IsBDBFile
+    // Re-opening of database file brokes an exclusive inter-process lock for SQLite
+    if (m_database && !m_database->SupportsAutoBackup()) {
+        WalletLogPrintf("Automatic wallet backups are not supported!\n");
+        return false;
+    }
     if (!wallet_path.empty() && !IsBDBFile(BDBDataFile(wallet_path))) {
         WalletLogPrintf("Automatic wallet backups are currently only supported with Berkeley DB!\n");
         return false;
