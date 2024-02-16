@@ -208,6 +208,6 @@ This example lists the steps necessary to setup and build a command line only di
     ./autogen.sh
     ./configure
     make check
-    ./src/bitcoind
+    ./src/navcoind
 
 If you intend to work with legacy Berkeley DB wallets, see [Berkeley DB](#berkeley-db) section.

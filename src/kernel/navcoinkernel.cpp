@@ -5,6 +5,6 @@
 #include <functional>
 #include <string>
 
-// Define G_TRANSLATION_FUN symbol in libbitcoinkernel library so users of the
+// Define G_TRANSLATION_FUN symbol in libnavcoinkernel library so users of the
 // library aren't required to export this symbol
 extern const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;

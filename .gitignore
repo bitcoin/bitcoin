@@ -136,7 +136,7 @@ test/.mypy_cache/
 
 /doc/doxygen/
 
-libbitcoinconsensus.pc
+libnavcoinconsensus.pc
 contrib/devtools/split-debug.sh
 
 # Output from running db4 installation

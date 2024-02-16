@@ -5,7 +5,7 @@
 #include <bench/bench.h>
 #include <key.h>
 #if defined(HAVE_CONSENSUS_LIB)
-#include <script/bitcoinconsensus.h>
+#include <script/navcoinconsensus.h>
 #endif
 #include <script/script.h>
 #include <script/interpreter.h>
@@ -63,7 +63,7 @@ static void VerifyScriptBench(benchmark::Bench& bench)
 #if defined(HAVE_CONSENSUS_LIB)
         DataStream stream;
         stream << TX_WITH_WITNESS(txSpend);
-        int csuccess = bitcoinconsensus_verify_script_with_amount(
+        int csuccess = navcoinconsensus_verify_script_with_amount(
             txCredit.vout[0].scriptPubKey.data(),
             txCredit.vout[0].scriptPubKey.size(),
             txCredit.vout[0].nValue,

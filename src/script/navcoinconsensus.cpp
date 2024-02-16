@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <script/bitcoinconsensus.h>
+#include <script/navcoinconsensus.h>
 
 #include <primitives/transaction.h>
 #include <pubkey.h>
@@ -51,7 +51,7 @@ private:
     size_t m_remaining;
 };
 
-inline int set_error(bitcoinconsensus_error* ret, bitcoinconsensus_error serror)
+inline int set_error(navcoinconsensus_error* ret, navcoinconsensus_error serror)
 {
     if (ret)
         *ret = serror;
@@ -63,20 +63,20 @@ inline int set_error(bitcoinconsensus_error* ret, bitcoinconsensus_error serror)
 /** Check that all specified flags are part of the libconsensus interface. */
 static bool verify_flags(unsigned int flags)
 {
-    return (flags & ~(bitcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL)) == 0;
+    return (flags & ~(navcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL)) == 0;
 }
 
 static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, CAmount amount,
                                     const unsigned char *txTo        , unsigned int txToLen,
                                     const UTXO *spentOutputs, unsigned int spentOutputsLen,
-                                    unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
+                                    unsigned int nIn, unsigned int flags, navcoinconsensus_error* err)
 {
     if (!verify_flags(flags)) {
-        return set_error(err, bitcoinconsensus_ERR_INVALID_FLAGS);
+        return set_error(err, navcoinconsensus_ERR_INVALID_FLAGS);
     }
 
-    if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_TAPROOT && spentOutputs == nullptr) {
-        return set_error(err, bitcoinconsensus_ERR_SPENT_OUTPUTS_REQUIRED);
+    if (flags & navcoinconsensus_SCRIPT_FLAGS_VERIFY_TAPROOT && spentOutputs == nullptr) {
+        return set_error(err, navcoinconsensus_ERR_SPENT_OUTPUTS_REQUIRED);
     }
 
     try {
@@ -86,7 +86,7 @@ static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptP
         std::vector<CTxOut> spent_outputs;
         if (spentOutputs != nullptr) {
             if (spentOutputsLen != tx.vin.size()) {
-                return set_error(err, bitcoinconsensus_ERR_SPENT_OUTPUTS_MISMATCH);
+                return set_error(err, navcoinconsensus_ERR_SPENT_OUTPUTS_MISMATCH);
             }
             for (size_t i = 0; i < spentOutputsLen; i++) {
                 CScript spk = CScript(spentOutputs[i].scriptPubKey, spentOutputs[i].scriptPubKey + spentOutputs[i].scriptPubKeySize);
@@ -97,37 +97,37 @@ static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptP
         }
 
         if (nIn >= tx.vin.size())
-            return set_error(err, bitcoinconsensus_ERR_TX_INDEX);
+            return set_error(err, navcoinconsensus_ERR_TX_INDEX);
         if (GetSerializeSize(TX_WITH_WITNESS(tx)) != txToLen)
-            return set_error(err, bitcoinconsensus_ERR_TX_SIZE_MISMATCH);
+            return set_error(err, navcoinconsensus_ERR_TX_SIZE_MISMATCH);
 
         // Regardless of the verification result, the tx did not error.
-        set_error(err, bitcoinconsensus_ERR_OK);
+        set_error(err, navcoinconsensus_ERR_OK);
 
         PrecomputedTransactionData txdata(tx);
 
-        if (spentOutputs != nullptr && flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_TAPROOT) {
+        if (spentOutputs != nullptr && flags & navcoinconsensus_SCRIPT_FLAGS_VERIFY_TAPROOT) {
             txdata.Init(tx, std::move(spent_outputs));
         }
 
         return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), &tx.vin[nIn].scriptWitness, flags, TransactionSignatureChecker(&tx, nIn, amount, txdata, MissingDataBehavior::FAIL), nullptr);
     } catch (const std::exception&) {
-        return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
+        return set_error(err, navcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
     }
 }
 
-int bitcoinconsensus_verify_script_with_spent_outputs(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, int64_t amount,
+int navcoinconsensus_verify_script_with_spent_outputs(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, int64_t amount,
                                     const unsigned char *txTo        , unsigned int txToLen,
                                     const UTXO *spentOutputs, unsigned int spentOutputsLen,
-                                    unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
+                                    unsigned int nIn, unsigned int flags, navcoinconsensus_error* err)
 {
     CAmount am(amount);
     return ::verify_script(scriptPubKey, scriptPubKeyLen, am, txTo, txToLen, spentOutputs, spentOutputsLen, nIn, flags, err);
 }
 
-int bitcoinconsensus_verify_script_with_amount(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, int64_t amount,
+int navcoinconsensus_verify_script_with_amount(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, int64_t amount,
                                     const unsigned char *txTo        , unsigned int txToLen,
-                                    unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
+                                    unsigned int nIn, unsigned int flags, navcoinconsensus_error* err)
 {
     CAmount am(amount);
     UTXO *spentOutputs = nullptr;
@@ -136,12 +136,12 @@ int bitcoinconsensus_verify_script_with_amount(const unsigned char *scriptPubKey
 }
 
 
-int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen,
+int navcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen,
                                    const unsigned char *txTo        , unsigned int txToLen,
-                                   unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
+                                   unsigned int nIn, unsigned int flags, navcoinconsensus_error* err)
 {
-    if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS) {
-        return set_error(err, bitcoinconsensus_ERR_AMOUNT_REQUIRED);
+    if (flags & navcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS) {
+        return set_error(err, navcoinconsensus_ERR_AMOUNT_REQUIRED);
     }
 
     CAmount am(0);
@@ -150,7 +150,7 @@ int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned i
     return ::verify_script(scriptPubKey, scriptPubKeyLen, am, txTo, txToLen, spentOutputs, spentOutputsLen, nIn, flags, err);
 }
 
-unsigned int bitcoinconsensus_version()
+unsigned int navcoinconsensus_version()
 {
     // Just use the API version for now
     return BITCOINCONSENSUS_API_VER;

@@ -643,15 +643,15 @@ AC_ARG_WITH([libs],
 
 AC_ARG_WITH([experimental-kernel-lib],
   [AS_HELP_STRING([--with-experimental-kernel-lib],
-  [build experimental bitcoinkernel library (default is to build if we're building libraries and the experimental build-chainstate executable)])],
+  [build experimental navcoinkernel library (default is to build if we're building libraries and the experimental build-chainstate executable)])],
   [build_experimental_kernel_lib=$withval],
   [build_experimental_kernel_lib=auto])
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
   [build navcoind daemon (default=yes)])],
-  [build_bitcoind=$withval],
-  [build_bitcoind=yes])
+  [build_navcoind=$withval],
+  [build_navcoind=yes])
 
 case $host in
   *mingw*)
@@ -1280,7 +1280,7 @@ if test "$enable_fuzz" = "yes"; then
   build_bitcoin_util=no
   build_bitcoin_chainstate=no
   build_bitcoin_wallet=no
-  build_bitcoind=no
+  build_navcoind=no
   build_bitcoin_libs=no
   use_bench=no
   use_tests=no
@@ -1301,7 +1301,7 @@ if test "$enable_build_libblsct_only" = "yes"; then
   build_bitcoin_util=no
   build_bitcoin_chainstate=no
   build_bitcoin_wallet=no
-  build_bitcoind=no
+  build_navcoind=no
   build_bitcoin_libs=no
   use_bench=no
   use_tests=no
@@ -1383,7 +1383,7 @@ if test "$use_usdt" != "no"; then
 fi
 AM_CONDITIONAL([ENABLE_USDT_TRACEPOINTS], [test "$use_usdt" = "yes"])
 
-if test "$build_bitcoind$use_bench$use_tests" = "nonono"; then
+if test "$build_navcoind$use_bench$use_tests" = "nonono"; then
   use_upnp=no
   use_natpmp=no
   use_zmq=no
@@ -1433,7 +1433,7 @@ if test "$use_natpmp" != "no"; then
   CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
-if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoind$use_tests$use_bench$enable_fuzz_binary" = "nononononononono"; then
+if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_navcoind$use_tests$use_bench$enable_fuzz_binary" = "nononononononono"; then
   use_boost=no
 else
   use_boost=yes
@@ -1444,7 +1444,7 @@ if test "$use_boost" = "yes"; then
   dnl Check for Boost headers
   AX_BOOST_BASE([1.73.0],[],[AC_MSG_ERROR([Boost is not available!])])
   if test "$want_boost" = "no"; then
-    AC_MSG_ERROR([only libbitcoinconsensus can be built without Boost])
+    AC_MSG_ERROR([only libnavcoinconsensus can be built without Boost])
   fi
 
   dnl we don't use multi_index serialization
@@ -1532,7 +1532,7 @@ fi
 dnl libevent check
 
 use_libevent=no
-if test "$build_bitcoin_cli$build_bitcoind$enable_fuzz_binary$use_tests$use_bench" != "nonononono"; then
+if test "$build_bitcoin_cli$build_navcoind$enable_fuzz_binary$use_tests$use_bench" != "nonononono"; then
   PKG_CHECK_MODULES([EVENT], [libevent >= 2.1.8], [use_libevent=yes], [AC_MSG_ERROR([libevent version 2.1.8 or greater not found.])])
   if test "$TARGET_OS" != "windows"; then
     PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads >= 2.1.8], [], [AC_MSG_ERROR([libevent_pthreads version 2.1.8 or greater not found.])])
@@ -1622,9 +1622,9 @@ if test "$build_multiprocess" != "no"; then
   AC_SUBST(MPGEN_PREFIX)
 fi
 
-AC_MSG_CHECKING([whether to build bitcoind])
-AM_CONDITIONAL([BUILD_BITCOIND], [test $build_bitcoind = "yes"])
-AC_MSG_RESULT($build_bitcoind)
+AC_MSG_CHECKING([whether to build navcoind])
+AM_CONDITIONAL([BUILD_BITCOIND], [test $build_navcoind = "yes"])
+AC_MSG_RESULT($build_navcoind)
 
 AC_MSG_CHECKING([whether to build bitcoin-cli])
 AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test $build_bitcoin_cli = "yes"])
@@ -1645,7 +1645,7 @@ AC_MSG_RESULT($build_bitcoin_util)
 AC_MSG_CHECKING([whether to build experimental bitcoin-chainstate])
 if test "$build_bitcoin_chainstate" = "yes"; then
   if test "$build_experimental_kernel_lib" = "no"; then
-    AC_MSG_ERROR([experimental bitcoin-chainstate cannot be built without the experimental bitcoinkernel library. Use --with-experimental-kernel-lib]);
+    AC_MSG_ERROR([experimental bitcoin-chainstate cannot be built without the experimental navcoinkernel library. Use --with-experimental-kernel-lib]);
   fi
 fi
 AM_CONDITIONAL([BUILD_BITCOIN_CHAINSTATE], [test $build_bitcoin_chainstate = "yes"])
@@ -1656,7 +1656,7 @@ AM_CONDITIONAL([BUILD_BITCOIN_LIBS], [test $build_bitcoin_libs = "yes"])
 
 if test "$build_bitcoin_libs" = "yes"; then
   AC_DEFINE([HAVE_CONSENSUS_LIB], [1], [Define this symbol if the consensus lib has been built])
-  AC_CONFIG_FILES([libbitcoinconsensus.pc:libbitcoinconsensus.pc.in])
+  AC_CONFIG_FILES([libnavcoinconsensus.pc:libnavcoinconsensus.pc.in])
 fi
 
 AM_CONDITIONAL([BUILD_BITCOIN_KERNEL_LIB], [test "$build_experimental_kernel_lib" != "no" && ( test "$build_experimental_kernel_lib" = "yes" || test "$build_bitcoin_chainstate" = "yes" )])
@@ -1758,7 +1758,7 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoin_libs$build_bitcoind$enable_fuzz_binary$use_bench$use_tests" = "nonononononononono"; then
+if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoin_libs$build_navcoind$enable_fuzz_binary$use_bench$use_tests" = "nonononononononono"; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --enable-fuzz(-binary) --enable-bench or --enable-tests])
 fi
 
