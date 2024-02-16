@@ -32,6 +32,7 @@ class WalletBlankTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name="iaddr", disable_private_keys=True, blank=True)
         wallet = self.nodes[0].get_wallet_rpc("iaddr")
         info = wallet.getwalletinfo()
+        print(info)
         assert_equal(info["descriptors"], False)
         assert_equal(info["blank"], True)
         wallet.importaddress(ADDRESS_BCRT1_UNSPENDABLE)
