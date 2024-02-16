@@ -1165,7 +1165,7 @@ static UniValue getblock(const JSONRPCRequest& request)
                                 {RPCResult::Type::OBJ, "cbTx", "The coinbase special transaction",
                                     {
                                         {RPCResult::Type::NUM, "version", "The coinbase special transaction version"},
-                                        {RPCResult::Type::STR_HEX, "height", "The block height"},
+                                        {RPCResult::Type::NUM, "height", "The block height"},
                                         {RPCResult::Type::STR_HEX, "merkleRootMNList", "The merkle root of the masternode list"},
                                         {RPCResult::Type::STR_HEX, "merkleRootQuorums", "The merkle root of the quorum list"},
                                     }},
