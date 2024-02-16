@@ -67,7 +67,7 @@ elif [ "$RUN_UNIT_TESTS" = "true" ] || [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]
   export DIR_UNIT_TEST_DATA=${DIR_QA_ASSETS}/unit_test_data/
   if [ ! -d "$DIR_UNIT_TEST_DATA" ]; then
     mkdir -p "$DIR_UNIT_TEST_DATA"
-    ${CI_RETRY_EXE} curl --location --fail https://github.com/bitcoin-core/qa-assets/raw/main/unit_test_data/script_assets_test.json -o "${DIR_UNIT_TEST_DATA}/script_assets_test.json"
+    ${CI_RETRY_EXE} curl --location --fail https://github.com/navcoin/qa-assets/raw/main/unit_test_data/script_assets_test.json -o "${DIR_UNIT_TEST_DATA}/script_assets_test.json"
   fi
 fi
 
@@ -84,9 +84,9 @@ fi
 
 # Make sure default datadir does not exist and is never read by creating a dummy file
 if [ "$CI_OS_NAME" == "macos" ]; then
-  echo > "${HOME}/Library/Application Support/Bitcoin"
+  echo > "${HOME}/Library/Application Support/Navcoin"
 else
-  echo > "${HOME}/.bitcoin"
+  echo > "${HOME}/.navcoin"
 fi
 
 if [ -z "$NO_DEPENDS" ]; then
