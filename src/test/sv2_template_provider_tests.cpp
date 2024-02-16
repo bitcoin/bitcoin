@@ -1,10 +1,14 @@
+#include <addresstype.h>
 #include <boost/test/unit_test.hpp>
 #include <common/sv2_messages.h>
 #include <interfaces/mining.h>
 #include <node/sv2_template_provider.h>
+#include <node/transaction.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
+#include <test/util/transaction_utils.h>
 #include <util/sock.h>
+#include <util/strencodings.h>
 
 #include <memory>
 
@@ -163,7 +167,43 @@ BOOST_AUTO_TEST_CASE(client_tests)
     // There should now be one template
     BOOST_REQUIRE_EQUAL(tester.GetBlockTemplateCount(), 1);
 
-    // Get the template id
+    // Move mock time by at least the fee check interval
+    // If the mempool doesn't change, no new template is generated.
+    SetMockTime(GetMockTime() + std::chrono::seconds{tester.m_tp_options.fee_check_interval});
+    // Briefly wait for the timer in ThreadSv2Handler and block creation
+    UninterruptibleSleep(std::chrono::milliseconds{200});
+    BOOST_REQUIRE_EQUAL(tester.GetBlockTemplateCount(), 1);
+
+    // Create a transaction with a large fee
+    size_t tx_size;
+    CKey key = GenerateRandomKey();
+    CScript locking_script = GetScriptForDestination(PKHash(key.GetPubKey()));
+    // Don't hold on to the transaction
+    {
+        LOCK(cs_main);
+        BOOST_REQUIRE_EQUAL(m_node.mempool->size(), 0);
+
+        auto mtx = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[0], /*input_vout=*/0,
+                                                        /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
+                                                        /*output_destination=*/locking_script,
+                                                        /*output_amount=*/CAmount(49 * COIN), /*submit=*/true);
+        CTransactionRef tx = MakeTransactionRef(mtx);
+
+        // Get serialized transaction size
+        DataStream ss;
+        ss << TX_WITH_WITNESS(tx);
+        tx_size = ss.size();
+
+        BOOST_REQUIRE_EQUAL(m_node.mempool->size(), 1);
+    }
+
+    // Move mock time
+    SetMockTime(GetMockTime() + std::chrono::seconds{tester.m_tp_options.fee_check_interval});
+
+    // Briefly wait for the timer in ThreadSv2MempoolHandler and block creation
+    UninterruptibleSleep(std::chrono::milliseconds{200});
+
+    // Get the latest template id
     uint64_t template_id = 0;
     {
         LOCK(tester.m_tp->m_tp_mutex);
@@ -173,6 +213,11 @@ BOOST_AUTO_TEST_CASE(client_tests)
             }
         }
     }
+
+    // Expect our peer to receive a NewTemplate message
+    // This time it should contain the 32 byte prevhash (unchanged)
+    constexpr size_t expected_len = SV2_HEADER_ENCRYPTED_SIZE + 91 + 32 + Poly1305::TAGLEN;
+    BOOST_REQUIRE_EQUAL(tester.PeerReceiveBytes(), expected_len);
 
     // Have the peer send us RequestTransactionData
     // We should reply with RequestTransactionData.Success
@@ -187,7 +232,40 @@ BOOST_AUTO_TEST_CASE(client_tests)
     tester.receiveMessage(msg);
     const size_t template_id_size = 8;
     const size_t excess_data_size = 2 + 32;
-    size_t tx_list_size = 2; // no transactions, so transaction_list is 0x0100
+    size_t tx_list_size = 2 + 3 + tx_size;
+    BOOST_REQUIRE_EQUAL(tester.PeerReceiveBytes(), SV2_HEADER_ENCRYPTED_SIZE + template_id_size + excess_data_size + tx_list_size + Poly1305::TAGLEN);
+    {
+        LOCK(cs_main);
+
+        // RBF the transaction with with > DEFAULT_SV2_FEE_DELTA
+        CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[0], /*input_vout=*/0,
+                                                    /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
+                                                    /*output_destination=*/locking_script,
+                                                    /*output_amount=*/CAmount(48 * COIN), /*submit=*/true);
+
+        BOOST_REQUIRE_EQUAL(m_node.mempool->size(), 1);
+    }
+
+    // Move mock time
+    SetMockTime(GetMockTime() + std::chrono::seconds{tester.m_tp_options.fee_check_interval});
+
+    // Briefly wait for the timer in ThreadSv2Handler and block creation
+    UninterruptibleSleep(std::chrono::milliseconds{200});
+
+    // Check that there's a new template
+    BOOST_REQUIRE_EQUAL(tester.GetBlockTemplateCount(), 3);
+
+    // Wait a bit more for macOS native CI
+    UninterruptibleSleep(std::chrono::milliseconds{1000});
+
+    // Expect our peer to receive a NewTemplate message
+    BOOST_REQUIRE_EQUAL(tester.PeerReceiveBytes(), SV2_HEADER_ENCRYPTED_SIZE + 91 + 32 + Poly1305::TAGLEN);
+
+    // Have the peer send us RequestTransactionData for the old template
+    // We should reply with RequestTransactionData.Success, and the original
+    // (replaced) transaction
+    tester.receiveMessage(msg);
+    tx_list_size = 2 + 3 + tx_size;
     BOOST_REQUIRE_EQUAL(tester.PeerReceiveBytes(), SV2_HEADER_ENCRYPTED_SIZE + template_id_size + excess_data_size + tx_list_size + Poly1305::TAGLEN);
 
     // Create a new block
@@ -195,7 +273,7 @@ BOOST_AUTO_TEST_CASE(client_tests)
 
     // We should send out another NewTemplate and SetNewPrevHash
     // The new template contains the new prevhash.
-    BOOST_REQUIRE_EQUAL(tester.PeerReceiveBytes(), 2 * SV2_HEADER_ENCRYPTED_SIZE + 91 + 80 + 2 * Poly1305::TAGLEN);
+    BOOST_REQUIRE_EQUAL(tester.PeerReceiveBytes(), 2 * SV2_HEADER_ENCRYPTED_SIZE + 91 + 32 + 80 + 2 * Poly1305::TAGLEN);
     // The SetNewPrevHash message is redundant
     // TODO: don't send it?
     // Background: in the future we want to send an empty or optimistic template
@@ -204,7 +282,7 @@ BOOST_AUTO_TEST_CASE(client_tests)
     //             a new block, and construct a better template _after_ that.
 
     // Templates are briefly preserved
-    BOOST_REQUIRE_EQUAL(tester.GetBlockTemplateCount(), 2);
+    BOOST_REQUIRE_EQUAL(tester.GetBlockTemplateCount(), 4);
 
     // Do not provide transactions for stale templates
     // TODO
