@@ -617,11 +617,8 @@ void CChainLocksHandler::Cleanup()
         return;
     }
 
-    {
-        LOCK(cs);
-        if (GetTimeMillis() - lastCleanupTime < CLEANUP_INTERVAL) {
-            return;
-        }
+    if (GetTimeMillis() - lastCleanupTime < CLEANUP_INTERVAL) {
+        return;
     }
 
     // need mempool.cs due to GetTransaction calls

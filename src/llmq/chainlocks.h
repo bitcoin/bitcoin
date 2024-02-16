@@ -82,7 +82,7 @@ private:
 
     std::map<uint256, int64_t> seenChainLocks GUARDED_BY(cs);
 
-    int64_t lastCleanupTime GUARDED_BY(cs) {0};
+    std::atomic<int64_t> lastCleanupTime{0};
 
 public:
     explicit CChainLocksHandler(CChainState& chainstate, CConnman& _connman, CMasternodeSync& mn_sync, CQuorumManager& _qman,
