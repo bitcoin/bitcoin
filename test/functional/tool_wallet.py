@@ -75,6 +75,7 @@ class ToolWalletTest(BitcoinTestFramework):
                 Name: %s
                 Format: sqlite
                 BLSCT: no
+                Descriptors: yes
                 Encrypted: no
                 HD (hd seed available): yes
                 Keypool Size: %d
@@ -89,6 +90,7 @@ class ToolWalletTest(BitcoinTestFramework):
                 Name: %s
                 Format: bdb
                 BLSCT: no
+                Descriptors: no
                 Encrypted: no
                 HD (hd seed available): yes
                 Keypool Size: %d
@@ -442,6 +444,7 @@ class ToolWalletTest(BitcoinTestFramework):
             ===========
             Name: conflicts
             Format: {"sqlite" if self.options.descriptors else "bdb"}
+            BLSCT: no
             Descriptors: {"yes" if self.options.descriptors else "no"}
             Encrypted: no
             HD (hd seed available): yes
