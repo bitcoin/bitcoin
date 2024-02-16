@@ -4850,7 +4850,9 @@ void ChainstateManager::CheckBlockIndex()
                // For testing, allow transaction counts to be completely unset.
                || (pindex->nChainTx == 0 && pindex->nTx == 0)
                // For testing, allow this nChainTx to be unset if previous is also unset.
-               || (pindex->nChainTx == 0 && prev_chain_tx == 0 && pindex->pprev));
+               || (pindex->nChainTx == 0 && prev_chain_tx == 0 && pindex->pprev)
+               // Transaction counts prior to snapshot are unknown.
+               || pindex->IsAssumedValid());
 
         if (pindexFirstAssumeValid == nullptr && pindex->nStatus & BLOCK_ASSUMED_VALID) pindexFirstAssumeValid = pindex;
         if (pindexFirstInvalid == nullptr && pindex->nStatus & BLOCK_FAILED_VALID) pindexFirstInvalid = pindex;

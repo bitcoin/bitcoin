@@ -320,7 +320,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     coin_selection_params_bnb.m_change_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_output_size);
     coin_selection_params_bnb.m_cost_of_change = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_spend_size) + coin_selection_params_bnb.m_change_fee;
     coin_selection_params_bnb.min_viable_change = coin_selection_params_bnb.m_effective_feerate.GetFee(coin_selection_params_bnb.change_spend_size);
-    coin_selection_params_bnb.m_subtract_fee_outputs = true;
 
     {
         std::unique_ptr<CWallet> wallet = NewWallet(m_node);
@@ -345,6 +344,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 
         CoinsResult available_coins;
 
+        coin_selection_params_bnb.m_effective_feerate = CFeeRate(0);
         add_coin(available_coins, *wallet, 5 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
         add_coin(available_coins, *wallet, 3 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
         add_coin(available_coins, *wallet, 2 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         PreSelectedInputs selected_input;
         selected_input.Insert(select_coin, coin_selection_params_bnb.m_subtract_fee_outputs);
         available_coins.Erase({available_coins.coins[OutputType::BECH32].begin()->outpoint});
-        coin_selection_params_bnb.m_effective_feerate = CFeeRate(0);
+
         LOCK(wallet->cs_wallet);
         const auto result10 = SelectCoins(*wallet, available_coins, selected_input, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(result10);
@@ -370,12 +370,14 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(5000);
         coin_selection_params_bnb.m_long_term_feerate = CFeeRate(3000);
 
-        add_coin(available_coins, *wallet, 10 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
-        add_coin(available_coins, *wallet, 9 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
-        add_coin(available_coins, *wallet, 1 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        // Add selectable outputs, increasing their raw amounts by their input fee to make the effective value equal to the raw amount
+        CAmount input_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(/*num_bytes=*/68); // bech32 input size (default test output type)
+        add_coin(available_coins, *wallet, 10 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(available_coins, *wallet, 9 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(available_coins, *wallet, 1 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
 
         expected_result.Clear();
-        add_coin(10 * CENT, 2, expected_result);
+        add_coin(10 * CENT + input_fee, 2, expected_result);
         CCoinControl coin_control;
         const auto result11 = SelectCoins(*wallet, available_coins, /*pre_set_inputs=*/{}, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(EquivalentResult(expected_result, *result11));
@@ -385,13 +387,15 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(3000);
         coin_selection_params_bnb.m_long_term_feerate = CFeeRate(5000);
 
-        add_coin(available_coins, *wallet, 10 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
-        add_coin(available_coins, *wallet, 9 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
-        add_coin(available_coins, *wallet, 1 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        // Add selectable outputs, increasing their raw amounts by their input fee to make the effective value equal to the raw amount
+        input_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(/*num_bytes=*/68); // bech32 input size (default test output type)
+        add_coin(available_coins, *wallet, 10 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(available_coins, *wallet, 9 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(available_coins, *wallet, 1 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
 
         expected_result.Clear();
-        add_coin(9 * CENT, 2, expected_result);
-        add_coin(1 * CENT, 2, expected_result);
+        add_coin(9 * CENT + input_fee, 2, expected_result);
+        add_coin(1 * CENT + input_fee, 2, expected_result);
         const auto result12 = SelectCoins(*wallet, available_coins, /*pre_set_inputs=*/{}, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(EquivalentResult(expected_result, *result12));
         available_coins.Clear();
@@ -400,13 +404,15 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(5000);
         coin_selection_params_bnb.m_long_term_feerate = CFeeRate(3000);
 
-        add_coin(available_coins, *wallet, 10 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
-        add_coin(available_coins, *wallet, 9 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
-        add_coin(available_coins, *wallet, 1 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        // Add selectable outputs, increasing their raw amounts by their input fee to make the effective value equal to the raw amount
+        input_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(/*num_bytes=*/68); // bech32 input size (default test output type)
+        add_coin(available_coins, *wallet, 10 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(available_coins, *wallet, 9 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(available_coins, *wallet, 1 * CENT + input_fee, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
 
         expected_result.Clear();
-        add_coin(9 * CENT, 2, expected_result);
-        add_coin(1 * CENT, 2, expected_result);
+        add_coin(9 * CENT + input_fee, 2, expected_result);
+        add_coin(1 * CENT + input_fee, 2, expected_result);
         coin_control.m_allow_other_inputs = true;
         COutput select_coin = available_coins.All().at(1); // pre select 9 coin
         coin_control.Select(select_coin.outpoint);
@@ -447,6 +453,44 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         add_coin(3 * CENT, 2, expected_result);
         BOOST_CHECK(EquivalentResult(expected_result, *res));
     }
+}
+
+BOOST_AUTO_TEST_CASE(bnb_sffo_restriction)
+{
+    // Verify the coin selection process does not produce a BnB solution when SFFO is enabled.
+    // This is currently problematic because it could require a change output. And BnB is specialized on changeless solutions.
+    std::unique_ptr<CWallet> wallet = NewWallet(m_node);
+    WITH_LOCK(wallet->cs_wallet, wallet->SetLastBlockProcessed(300, uint256{})); // set a high block so internal UTXOs are selectable
+
+    FastRandomContext rand{};
+    CoinSelectionParams params{
+            rand,
+            /*change_output_size=*/ 31,  // unused value, p2wpkh output size (wallet default change type)
+            /*change_spend_size=*/ 68,   // unused value, p2wpkh input size (high-r signature)
+            /*min_change_target=*/ 0,    // dummy, set later
+            /*effective_feerate=*/ CFeeRate(3000),
+            /*long_term_feerate=*/ CFeeRate(1000),
+            /*discard_feerate=*/ CFeeRate(1000),
+            /*tx_noinputs_size=*/ 0,
+            /*avoid_partial=*/ false,
+    };
+    params.m_subtract_fee_outputs = true;
+    params.m_change_fee = params.m_effective_feerate.GetFee(params.change_output_size);
+    params.m_cost_of_change = params.m_discard_feerate.GetFee(params.change_spend_size) + params.m_change_fee;
+    params.m_min_change_target = params.m_cost_of_change + 1;
+    // Add spendable coin at the BnB selection upper bound
+    CoinsResult available_coins;
+    add_coin(available_coins, *wallet, COIN + params.m_cost_of_change, /*feerate=*/params.m_effective_feerate, /*nAge=*/6, /*fIsFromMe=*/true, /*nInput=*/0, /*spendable=*/true);
+    add_coin(available_coins, *wallet, 0.5 * COIN + params.m_cost_of_change, /*feerate=*/params.m_effective_feerate, /*nAge=*/6, /*fIsFromMe=*/true, /*nInput=*/0, /*spendable=*/true);
+    add_coin(available_coins, *wallet, 0.5 * COIN, /*feerate=*/params.m_effective_feerate, /*nAge=*/6, /*fIsFromMe=*/true, /*nInput=*/0, /*spendable=*/true);
+    // Knapsack will only find a changeless solution on an exact match to the satoshi, SRD doesn’t look for changeless
+    // If BnB were run, it would produce a single input solution with the best waste score
+    auto result = WITH_LOCK(wallet->cs_wallet, return SelectCoins(*wallet, available_coins, /*pre_set_inputs=*/{}, COIN, /*coin_control=*/{}, params));
+    BOOST_CHECK(result.has_value());
+    BOOST_CHECK_NE(result->GetAlgo(), SelectionAlgorithm::BNB);
+    BOOST_CHECK(result->GetInputSet().size() == 2);
+    // We have only considered BnB, SRD, and Knapsack. Test needs to be reevaluated if new algo is added
+    BOOST_CHECK(result->GetAlgo() == SelectionAlgorithm::SRD || result->GetAlgo() == SelectionAlgorithm::KNAPSACK);
 }
 
 BOOST_AUTO_TEST_CASE(knapsack_solver_test)
