@@ -19,12 +19,12 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libnavcoinconsensus.pc
 endif
 
-BITCOIND_BIN=$(top_builddir)/src/$(BITCOIN_DAEMON_NAME)$(EXEEXT)
-BITCOIN_TEST_BIN=$(top_builddir)/src/test/$(BITCOIN_TEST_NAME)$(EXEEXT)
-BITCOIN_CLI_BIN=$(top_builddir)/src/$(BITCOIN_CLI_NAME)$(EXEEXT)
-BITCOIN_TX_BIN=$(top_builddir)/src/$(BITCOIN_TX_NAME)$(EXEEXT)
-BITCOIN_UTIL_BIN=$(top_builddir)/src/$(BITCOIN_UTIL_NAME)$(EXEEXT)
-BITCOIN_WALLET_BIN=$(top_builddir)/src/$(BITCOIN_WALLET_TOOL_NAME)$(EXEEXT)
+BITCOIND_BIN=$(top_builddir)/src/$(NAVCOIN_DAEMON_NAME)$(EXEEXT)
+BITCOIN_TEST_BIN=$(top_builddir)/src/test/$(NAVCOIN_TEST_NAME)$(EXEEXT)
+BITCOIN_CLI_BIN=$(top_builddir)/src/$(NAVCOIN_CLI_NAME)$(EXEEXT)
+NAVCOIN_TX_BIN=$(top_builddir)/src/$(NAVCOIN_TX_NAME)$(EXEEXT)
+BITCOIN_UTIL_BIN=$(top_builddir)/src/$(NAVCOIN_UTIL_NAME)$(EXEEXT)
+BITCOIN_WALLET_BIN=$(top_builddir)/src/$(NAVCOIN_WALLET_TOOL_NAME)$(EXEEXT)
 BITCOIN_NODE_BIN=$(top_builddir)/src/$(BITCOIN_MP_NODE_NAME)$(EXEEXT)
 
 empty :=
@@ -61,7 +61,7 @@ $(BITCOIND_BIN): FORCE
 $(BITCOIN_CLI_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
-$(BITCOIN_TX_BIN): FORCE
+$(NAVCOIN_TX_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
 $(BITCOIN_UTIL_BIN): FORCE
