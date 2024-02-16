@@ -703,7 +703,7 @@ fs::path GetDefaultDataDir()
     return pathRet / "Library/Application Support/Navcoin";
 #else
     // Unix-like
-    return pathRet / ".Navcoin";
+    return pathRet / ".navcoin";
 #endif
 #endif
 }
