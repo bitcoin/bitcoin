@@ -194,13 +194,13 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_libblsct_only.sh"
 
 task:
-  name: 'no wallet, libbitcoinkernel'
+  name: 'no wallet, libnavcoinkernel'
   << : *GLOBAL_TASK_TEMPLATE
   persistent_worker:
     labels:
       type: small
   env:
-    FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libbitcoinkernel.sh"
+    FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libnavcoinkernel.sh"
 
 task:
   name: 'macOS-cross, no tests'
