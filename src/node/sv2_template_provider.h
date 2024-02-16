@@ -56,6 +56,11 @@ struct Sv2Client
     explicit Sv2Client(size_t id, std::shared_ptr<Sock> sock, std::unique_ptr<Sv2Transport> transport) :
                        m_id{id}, m_sock{std::move(sock)}, m_transport{std::move(transport)} {};
 
+    /**
+     * Fees in sat paid by the last submitted template
+     */
+    CAmount m_latest_submitted_template_fees = 0;
+
 };
 
 struct Sv2TemplateProviderOptions
@@ -114,6 +119,12 @@ private:
      * The main listening socket for new stratum v2 connections.
      */
     std::shared_ptr<Sock> m_listening_socket;
+
+    /**
+    * Minimum fee delta required before submitting an updated template.
+    * This may be negative.
+    */
+    int m_minimum_fee_delta;
 
     /**
      * The main thread for the template provider.
