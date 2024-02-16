@@ -30,7 +30,7 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
         // possible for the config file to cause another configuration to be
         // used, though. Specifying a conf= option in the config file causes a
         // parse error, and specifying a datadir= location containing another
-        // bitcoin.conf file just ignores the other file.)
+        // navcoin.conf file just ignores the other file.)
         const fs::path orig_datadir_path{args.GetDataDirBase()};
         const fs::path orig_config_path{AbsPathForConfigVal(args, args.GetPathArg("-conf", BITCOIN_CONF_FILENAME), /*net_specific=*/false)};
 
@@ -62,7 +62,7 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
             fs::create_directories(net_path / "wallets");
         }
 
-        // Show an error or warning if there is a bitcoin.conf file in the
+        // Show an error or warning if there is a navcoin.conf file in the
         // datadir that is being ignored.
         const fs::path base_config_path = base_path / BITCOIN_CONF_FILENAME;
         if (fs::exists(base_config_path) && !fs::equivalent(orig_config_path, base_config_path)) {

@@ -91,7 +91,7 @@ For instance:
 Each PUB notification has a topic and body, where the header
 corresponds to the notification type. For instance, for the
 notification `-zmqpubhashtx` the topic is `hashtx` (no null
-terminator). These options can also be provided in bitcoin.conf.
+terminator). These options can also be provided in navcoin.conf.
 
 The topics are:
 

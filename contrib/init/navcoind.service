@@ -5,7 +5,7 @@
 # See "man systemd.service" for details.
 
 # Note that almost all daemon options could be specified in
-# /etc/bitcoin/bitcoin.conf, but keep in mind those explicitly
+# /etc/navcoin/navcoin.conf, but keep in mind those explicitly
 # specified as arguments in ExecStart= will override those in the
 # config file.
 
@@ -19,7 +19,7 @@ Wants=network-online.target
 
 [Service]
 ExecStart=/usr/bin/navcoind -pid=/run/navcoind/navcoind.pid \
-                            -conf=/etc/bitcoin/bitcoin.conf \
+                            -conf=/etc/navcoin/navcoin.conf \
                             -datadir=/var/lib/navcoind \
                             -startupnotify='systemd-notify --ready' \
                             -shutdownnotify='systemd-notify --stopping'

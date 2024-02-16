@@ -100,7 +100,7 @@ options, as all its configuration is set at the top of the file. It runs many ti
 pypy3 contrib/devtools/headerssync-params.py
 ```
 
-gen-bitcoin-conf.sh
+gen-navcoin-conf.sh
 ===================
 
 Generates a navcoin.conf file in `share/examples/` by parsing the output from `navcoind --help`. This script is run during the
@@ -112,7 +112,7 @@ repository. To use this tool with out-of-tree builds set `BUILDDIR`. For
 example:
 
 ```bash
-BUILDDIR=$PWD/build contrib/devtools/gen-bitcoin-conf.sh
+BUILDDIR=$PWD/build contrib/devtools/gen-navcoin-conf.sh
 ```
 
 security-check.py and test-security-check.py
