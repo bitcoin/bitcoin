@@ -205,6 +205,8 @@ class TestNode():
         if extra_args is None:
             extra_args = self.extra_args
 
+        self.use_v2transport = "-v2transport=1" in extra_args or (self.default_to_v2 and "-v2transport=0" not in extra_args)
+
         # Add a new stdout and stderr file each time navcoind is started
         if stderr is None:
             stderr = tempfile.NamedTemporaryFile(dir=self.stderr_dir, delete=False)
