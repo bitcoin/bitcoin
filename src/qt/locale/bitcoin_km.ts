@@ -94,6 +94,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">មានបញ្ហាក្នុងការព្យាយាម រក្សាទុកបញ្ជីអាសយដ្ឋានដល់ %1។ សូមព្យាយាមម្ដងទៀត។</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">កំពុងផ្ញើអាសយដ្ឋាន%1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">ទទួលអាសយដ្ឋាន - %1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">ការនាំចេញបានបរាជ័យ</translation>
     </message>
@@ -630,6 +638,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">បិទកាបូបអេឡិចត្រូនិចទាំងអស់</translation>
     </message>
     <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">កាបូបMigrate</translation>
+    </message>
+    <message>
         <source>No wallets available</source>
         <translation type="unfinished">មិនមានកាបូបអេឡិចត្រូនិច</translation>
     </message>
@@ -934,6 +946,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">កំពុងទាញកាបូប...</translation>
     </message>
 </context>
+<context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">កាបូបMigrate</translation>
+    </message>
+    </context>
 <context>
     <name>OpenWalletActivity</name>
     <message>

@@ -2,12 +2,8 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Δεξί-κλικ για επεξεργασία της διεύθυνσης ή της ετικέτας</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Δημιουργία νέας διεύθυνσης</translation>
+        <translation type="unfinished">Δημιουργία νέας διεύθυνσης </translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -92,6 +88,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
         <translation type="unfinished">Σφάλμα κατά την προσπάθεια αποθήκευσης της λίστας διευθύνσεων στο %1. Παρακαλώ δοκιμάστε ξανά.</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Διευθύνσεις λήψης - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -228,6 +228,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Η αλλαγή της φράσης πρόσβασης απέτυχε</translation>
     </message>
     <message>
+        <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
+        <translation type="unfinished">Ο παλιός κωδικός που εισήχθη για την αποκρυπτογράφηση του πορτοφολιού είναι εσφαλμένος. Περιέχει έναν χαρακτήρα null (δηλαδή, ένα μηδενικό byte). Εάν ο κωδικός ορίστηκε πριν από την έκδοση 25.0 του λογισμικού, δοκιμάστε πάλι μόνο με τους χαρακτήρες έως τον πρώτο χαρακτήρα null — αλλά χωρίς αυτόν.</translation>
+    </message>
+    <message>
         <source>Warning: The Caps Lock key is on!</source>
         <translation type="unfinished">Προσοχη: το πλήκτρο Caps Lock είναι ενεργο.</translation>
     </message>
@@ -244,6 +248,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Settings file %1 might be corrupt or invalid.</source>
         <translation type="unfinished">Το αρχείο Ρυθμίσεων %1 ενδέχεται να είναι κατεστραμμένο ή μη έγκυρο.</translation>
+    </message>
+    <message>
+        <source>Runaway exception</source>
+        <translation type="unfinished">Αδυναμία αποθήκευσης παλιών δεδομένων πορτοφολιού</translation>
     </message>
     <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
@@ -295,6 +303,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Αδρομολόγητο</translation>
     </message>
     <message>
+        <source>Onion</source>
+        <comment>network name</comment>
+        <extracomment>Name of Tor network in peer info</extracomment>
+        <translation type="unfinished">Onion (κρυφές υπηρεσίες)</translation>
+    </message>
+    <message>
         <source>Inbound</source>
         <extracomment>An inbound connection from a peer. An inbound connection is a connection initiated by a peer.</extracomment>
         <translation type="unfinished">Εισερχόμενα</translation>
@@ -318,6 +332,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Manual</source>
         <extracomment>Peer connection type established manually through one of several methods.</extracomment>
         <translation type="unfinished">Χειροκίνητα</translation>
+    </message>
+    <message>
+        <source>Feeler</source>
+        <extracomment>Short-lived peer connection type that tests the aliveness of known addresses.</extracomment>
+        <translation type="unfinished">Feeler (εξερχόμενη σύνδεση βραχείας διάρκειας)</translation>
     </message>
     <message>
         <source>Address Fetch</source>
@@ -672,6 +691,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Κλείσιμο όλων των πορτοφολιών</translation>
     </message>
     <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Μετεγκατάσταση Πορτοφολιού</translation>
+    </message>
+    <message>
+        <source>Migrate a wallet</source>
+        <translation type="unfinished">Μετεγκατάσταση ενός πορτοφολιού</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation type="unfinished">Εμφάνισε το %1 βοηθητικό μήνυμα για λήψη μιας λίστας με διαθέσιμες επιλογές για Bitcoin εντολές </translation>
     </message>
@@ -762,6 +789,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Enable network activity</source>
         <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
         <translation type="unfinished">Ενεργοποίηση δραστηριότητας δικτύου</translation>
+    </message>
+    <message>
+        <source>Pre-syncing Headers (%1%)…</source>
+        <translation type="unfinished">Προ-συγχρονισμός Επικεφαλίδων (%1%)...</translation>
+    </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">Σφάλμα δημιουργίας πορτοφολιού</translation>
+    </message>
+    <message>
+        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">Δεν είναι δυνατή η δημιουργία νέου πορτοφολιού, το λογισμικό μεταγλωττίστηκε χωρίς SQLite υποστήριξη (απαιτείται για κρυπτογραφημένα πορτοφόλια)</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1002,7 +1041,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Can't list signers</source>
         <translation type="unfinished">Αδυναμία απαρίθμησης εγγεγραμμένων </translation>
     </message>
-    </context>
+    <message>
+        <source>Too many external signers found</source>
+        <translation type="unfinished">Βρέθηκαν πάρα πολλοί εξωτερικοί υπογράφοντες</translation>
+    </message>
+</context>
 <context>
     <name>LoadWalletsActivity</name>
     <message>
@@ -1014,6 +1057,49 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Loading wallets…</source>
         <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
         <translation type="unfinished">Φόρτωση πορτοφολιών...</translation>
+    </message>
+</context>
+<context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">Μεταφορά πορτοφολιού</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">Είστε σίγουρος/η ότι θέλετε να μεταφέρετε το πορτοφόλι σας; &lt;i&gt;%1&lt;/i&gt;;</translation>
+    </message>
+    <message>
+        <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">Η μετεγκατάσταση του πορτοφολιού θα μετατρέψει αυτό το πορτοφόλι σε ένα ή περισσότερα περιγραφικά πορτοφόλια. Θα χρειαστεί να δημιουργηθεί ένα νέο αντίγραφο ασφαλείας πορτοφολιού.
+Εάν αυτό το πορτοφόλι περιέχει σενάρια μόνο για παρακολούθηση, θα δημιουργηθεί ένα νέο πορτοφόλι το οποίο περιέχει αυτά τα σενάρια παρακολούθησης.
+Εάν αυτό το πορτοφόλι περιέχει επιλύσιμα αλλά όχι για παρακολούθηση σενάρια, θα δημιουργηθεί ένα διαφορετικό και νέο πορτοφόλι που περιέχει αυτά τα σενάρια.
+
+Η διαδικασία μετεγκατάστασης θα δημιουργήσει ένα αντίγραφο ασφαλείας του πορτοφολιού πριν από τη μετεγκατάσταση. Αυτό το αρχείο αντιγράφου ασφαλείας θα ονομάζεται &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak και μπορεί να βρεθεί στον κατάλογο αυτού του πορτοφολιού. Σε περίπτωση εσφαλμένης μετεγκατάστασης, το αντίγραφο ασφαλείας μπορεί να αποκατασταθεί με τη λειτουργία "Επαναφορά Πορτοφολιού".</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Μεταφορά Πορτοφολιού</translation>
+    </message>
+    <message>
+        <source>Migrating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">Μετεγκατάσταση Πορτοφολιού &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
+        <source>The wallet '%1' was migrated successfully.</source>
+        <translation type="unfinished">Το πορτοφόλι '%1' μετεγκαταστάθηκε επιτυχώς.</translation>
+    </message>
+    <message>
+        <source>Migration failed</source>
+        <translation type="unfinished">Η μετεγκατάσταση απέτυχε</translation>
+    </message>
+    <message>
+        <source>Migration Successful</source>
+        <translation type="unfinished">Επιτυχής Μετεγκατάσταση</translation>
     </message>
 </context>
 <context>
@@ -1097,6 +1183,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Create Wallet</source>
         <translation type="unfinished">Δημιουργία Πορτοφολιού</translation>
+    </message>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">Απέχετε ένα βήμα από τη δημιουργία του νέου σας πορτοφολιού!</translation>
+    </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">Παρακαλώ εισαγάγετε ένα όνομα και, εάν θέλετε, ενεργοποιήστε τυχόν προηγμένες επιλογές</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1269,8 +1363,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(επαρκεί για την επαναφορά αντιγράφων ασφαλείας %n ημερών)</numerusform>
+            <numerusform>(επαρκεί για την επαναφορά αντιγράφων ασφαλείας %n ημερών)</numerusform>
         </translation>
     </message>
     <message>
@@ -1308,6 +1402,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation type="unfinished">Αυτός ο αρχικός συγχρονισμός είναι πολύ απαιτητικός και μπορεί να εκθέσει προβλήματα υλικού με τον υπολογιστή σας, τα οποία προηγουμένως είχαν περάσει απαρατήρητα. Κάθε φορά που θα εκτελέσετε το %1, θα συνεχίσει να κατεβαίνει εκεί όπου έχει σταματήσει.</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">Αφού πατήσετε OK, το %1 θα ξεκινήσει τη λήψη και την επεξεργασία της πλήρους αλυσίδας μπλοκ %4 (%2GB) ξεκινώντας με τις πρώτες συναλλαγές στο %3 όταν πρωτο-ξεκίνησε το %4.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
@@ -1406,7 +1504,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
         <translation type="unfinished">Άγνωστο. Συγχρονισμός επικεφαλίδων (%1, %2%)...</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">Άγνωστο. Συγχρονισμός επικεφαλίδων (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1448,6 +1550,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Number of script &amp;verification threads</source>
         <translation type="unfinished">Αριθμός script και γραμμές επαλήθευσης</translation>
+    </message>
+    <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation type="unfinished">Πλήρης διαδρομή ενός script συμβατού με το %1 (π.χ.: C:\Downloads\hwi.exe ή /Users/you/Downloads/hwi.py). Προσοχή: ένα κακόβουλο λογισμικό μπορεί να κλέψει τα νομίσματά σας!</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1494,12 +1600,27 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Η επαναφορά αυτής της ρύθμισης απαιτεί εκ νέου λήψη ολόκληρου του μπλοκ αλυσίδας.</translation>
     </message>
     <message>
+        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation type="unfinished">Μέγιστο μέγεθος βάσης δεδομένων προσωρινής μνήμης. Μια μεγαλύτερη προσωρινή μνήμη μπορεί να συμβάλει στον ταχύτερο συγχρονισμό, μετά τον οποίο το όφελος είναι λιγότερο έντονο για τις περισσότερες περιπτώσεις χρήσης. Η μείωση του μεγέθους της προσωρινής μνήμης θα μειώσει τη χρήση της μνήμης. Η αχρησιμοποίητη μνήμη mempool είναι κοινόχρηστη για αυτήν την προσωρινή μνήμη.</translation>
+    </message>
+    <message>
         <source>MiB</source>
         <translation type="unfinished">MebiBytes</translation>
     </message>
     <message>
+        <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
+        <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
+        <translation type="unfinished">Ορίστε τον αριθμό των νημάτων επαλήθευσης σεναρίου. Οι αρνητικές τιμές αντιστοιχούν στον αριθμό των πυρήνων που θέλετε να αφήσετε ελεύθερους στο σύστημα.</translation>
+    </message>
+    <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation type="unfinished">(0 = αυτόματο, &lt;0 = ελεύθεροι πυρήνες)</translation>
+    </message>
+    <message>
+        <source>This allows you or a third party tool to communicate with the node through command-line and JSON-RPC commands.</source>
+        <extracomment>Tooltip text for Options window setting that enables the RPC server.</extracomment>
+        <translation type="unfinished">Αυτό επιτρέπει σε εσάς ή ένα εργαλείο τρίτων να επικοινωνεί με τον κόμβο μέσω κώδικα γραμμής εντολών και JSON-RPC.</translation>
     </message>
     <message>
         <source>Enable R&amp;PC server</source>
@@ -1514,6 +1635,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Whether to set subtract fee from amount as default or not.</source>
         <extracomment>Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.</extracomment>
         <translation type="unfinished">Να τεθεί ο φόρος αφαίρεσης από το ποσό στην προκαθορισμένη τιμή ή οχι. </translation>
+    </message>
+    <message>
+        <source>Subtract &amp;fee from amount by default</source>
+        <extracomment>An Options window setting to set subtracting the fee from a sending amount as default.</extracomment>
+        <translation type="unfinished">Αφαιρέστε &amp;τέλος από το ποσό προεπιλογής</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -1537,8 +1663,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Ενεργοποίηση ελέγχων &amp;PSBT</translation>
     </message>
     <message>
+        <source>Whether to show PSBT controls.</source>
+        <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
+        <translation type="unfinished">Αν θα εμφανιστούν στοιχεία ελέγχου PSBT.</translation>
+    </message>
+    <message>
         <source>External Signer (e.g. hardware wallet)</source>
         <translation type="unfinished">Εξωτερική συσκευή υπογραφής (π.χ. πορτοφόλι υλικού)</translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation type="unfinished">&amp;Διαδρομή σεναρίου εξωτερικού υπογράφοντος</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1633,6 +1768,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Διαλέξτε την προεπιλεγμένη υποδιαίρεση που θα εμφανίζεται όταν στέλνετε νομίσματα.</translation>
     </message>
     <message>
+        <source>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished">Διευθύνσεις URL τρίτων (π.χ. μπλοκ explorer) που εμφανίζονται στην καρτέλα συναλλαγών ως συμφραζόμενα στοιχεία μενού. %sστο URL αντικαθίσταται από κατακερματισμό συναλλαγής. Πολλαπλές διευθύνσεις URL διαχωρίζονται με κάθετη γραμμή |.</translation>
+    </message>
+    <message>
+        <source>&amp;Third-party transaction URLs</source>
+        <translation type="unfinished">&amp;Διευθύνσεις URL συναλλαγών τρίτων</translation>
+    </message>
+    <message>
         <source>Whether to show coin control features or not.</source>
         <translation type="unfinished">Επιλογή κατά πόσο να αναδείχνονται οι δυνατότητες ελέγχου κερμάτων.</translation>
     </message>
@@ -1643,6 +1786,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
         <translation type="unfinished">Χρησιμοποιήστε ξεχωριστό διακομιστή μεσολάβησης SOCKS&amp;5 για σύνδεση με αποδέκτες μέσω των υπηρεσιών onion του Tor:</translation>
+    </message>
+    <message>
+        <source>Monospaced font in the Overview tab:</source>
+        <translation type="unfinished">Monospaced Γραμματοσειρά στην καρτέλα Επισκόπησης:</translation>
     </message>
     <message>
         <source>embedded "%1"</source>
@@ -1682,6 +1829,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Client restart required to activate changes.</source>
         <extracomment>Text explaining that the settings changed will not come into effect until the client is restarted.</extracomment>
         <translation type="unfinished">Χρειάζεται επανεκκίνηση του προγράμματος για να ενεργοποιηθούν οι αλλαγές.</translation>
+    </message>
+    <message>
+        <source>Current settings will be backed up at "%1".</source>
+        <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
+        <translation type="unfinished">Θα δημιουργηθούν αντίγραφα ασφαλείας για τις τρέχουσες ρυθμίσεις στο "%1".</translation>
     </message>
     <message>
         <source>Client will be shut down. Do you want to proceed?</source>
@@ -1812,6 +1964,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message>
+        <source>PSBT Operations</source>
+        <translation type="unfinished">Λειτουργίες PSBT</translation>
+    </message>
     <message>
         <source>Sign Tx</source>
         <translation type="unfinished">Υπόγραψε Tx</translation>
@@ -1960,6 +2116,14 @@ ID Συναλλαγής: %1</translation>
     <message>
         <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
         <translation type="unfinished">Το 'bitcoin://' δεν είναι έγκυρο URI. Αντ' αυτού χρησιμοποιήστε το 'bitcoin:'.</translation>
+    </message>
+    <message>
+        <source>Cannot process payment request because BIP70 is not supported.
+Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.
+If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation type="unfinished">Αδυναμία επεξεργασίας αιτήματος πληρωμής επειδή το BIP70 δεν υποστηρίζεται.
+Λόγω των εκτεταμένων ελαττωμάτων ασφαλείας στο BIP70, συνιστάται να αγνοούνται τυχόν οδηγίες του εμπόρου για αλλαγή πορτοφολιού.
+Εάν λαμβάνετε αυτό το σφάλμα, θα πρέπει να ζητήσετε από τον έμπορο να παρέχει ένα URI συμβατό με το BIP21.</translation>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
@@ -2153,6 +2317,18 @@ ID Συναλλαγής: %1</translation>
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished">Επιλέξτε έναν χρήστη για να δείτε αναλυτικές πληροφορίες.</translation>
+    </message>
+    <message>
+        <source>The transport layer version: %1</source>
+        <translation type="unfinished">Πρωτόκολλο μεταφοράς: %1</translation>
+    </message>
+    <message>
+        <source>Transport</source>
+        <translation type="unfinished">Μεταφορά</translation>
+    </message>
+    <message>
+        <source>The BIP324 session ID string in hex, if any.</source>
+        <translation type="unfinished">Η συμβολοσειρά αναγνωριστικού περιόδου σύνδεσης BIP324 σε δεκαεξαδική μορφή, εάν υπάρχει.</translation>
     </message>
     <message>
         <source>Version</source>

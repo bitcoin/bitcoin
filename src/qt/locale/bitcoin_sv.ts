@@ -739,7 +739,7 @@ Försök igen.</translation>
     </message>
     <message>
         <source>&amp;Hide</source>
-        <translation type="unfinished">och göm</translation>
+        <translation type="unfinished">&amp;Dölj</translation>
     </message>
     <message>
         <source>S&amp;how</source>
@@ -780,6 +780,10 @@ Försök igen.</translation>
     <message>
         <source>Error creating wallet</source>
         <translation type="unfinished">Misslyckades att skapa plånbok</translation>
+    </message>
+    <message>
+        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">Kan inte skapa ny plånbok, programvaran kompilerades utan stöd för sqlite (krävs för deskriptorplånböcker)</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -952,6 +956,14 @@ Försök igen.</translation>
         <translation type="unfinished">Kopiera transaktion &amp;ID och utdatindex</translation>
     </message>
     <message>
+        <source>L&amp;ock unspent</source>
+        <translation type="unfinished">L&amp;ås oanvända</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation type="unfinished">&amp;Lås upp oanvända</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">Kopiera kvantitet</translation>
     </message>
@@ -1045,12 +1057,30 @@ Försök igen.</translation>
         <translation type="unfinished">Är du säker att du vill migrera plånboken 1 %1 1  ?</translation>
     </message>
     <message>
+        <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">Migrering av plånboken kommer att konvertera denna plånbok till en eller flera deskriptorplånböcker. En ny säkerhetskopia av plånboken måste skapas.
+Om den här plånboken innehåller watchonly-skript skapas en ny plånbok som innehåller dessa watchonly-skript.
+Om den här plånboken innehåller lösbara</translation>
+    </message>
+    <message>
         <source>Migrate Wallet</source>
         <translation type="unfinished">Migrera plånbok</translation>
     </message>
     <message>
+        <source>Migrating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">Migrerar plånbok &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
         <source>The wallet '%1' was migrated successfully.</source>
         <translation type="unfinished">Migrering av plånboken ' %1 ' genomförd.</translation>
+    </message>
+    <message>
+        <source> Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Watchonly-skript har migrerats till en ny plånbok med namnet '%1'.</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -1103,6 +1133,11 @@ Försök igen.</translation>
         <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
         <translation type="unfinished">Det gick inte att återställa plånboken</translation>
     </message>
+    <message>
+        <source>Restore wallet warning</source>
+        <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
+        <translation type="unfinished">Återställ plånboksvarning</translation>
+    </message>
     </context>
 <context>
     <name>WalletController</name>
@@ -1132,6 +1167,14 @@ Försök igen.</translation>
     <message>
         <source>Create Wallet</source>
         <translation type="unfinished">Skapa plånbok</translation>
+    </message>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">Nu är du bara ett steg ifrån att skapa din nya plånbok!</translation>
+    </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">Ange ett namn och, om så önskas, aktivera eventuella avancerade alternativ</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1170,6 +1213,10 @@ Försök igen.</translation>
         <translation type="unfinished">Skapa tom plånbok</translation>
     </message>
     <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation type="unfinished">Använd en extern signeringsenhet, t.ex. en hårdvaruplånbok. Konfigurera först skriptet för extern signering i plånboksinställningarna.</translation>
+    </message>
+    <message>
         <source>External signer</source>
         <translation type="unfinished">Extern signerare</translation>
     </message>
@@ -1177,7 +1224,12 @@ Försök igen.</translation>
         <source>Create</source>
         <translation type="unfinished">Skapa</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Kompilerad utan stöd för extern signering (krävs för extern signering)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1261,8 +1313,8 @@ Försök igen.</translation>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n GB tillgängligt lagringsutrymme</numerusform>
+            <numerusform>%n GB tillgängligt lagringsutrymme</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -1280,6 +1332,10 @@ Försök igen.</translation>
         </translation>
     </message>
     <message>
+        <source>Choose data directory</source>
+        <translation type="unfinished">Välj katalog för data</translation>
+    </message>
+    <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">Minst %1 GB data kommer att sparas i den här katalogen, och de växer över tiden.</translation>
     </message>
@@ -1291,8 +1347,8 @@ Försök igen.</translation>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(tillräckligt för att återställa säkerhetskopior %n dag(ar) gammal)</numerusform>
+            <numerusform>(tillräckligt för att återställa säkerhetskopior %n dag(ar) gammal)</numerusform>
         </translation>
     </message>
     <message>
@@ -1645,6 +1701,11 @@ Försök igen.</translation>
     <message>
         <source>&amp;Cancel</source>
         <translation type="unfinished">&amp;Avbryt</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">Kompilerad utan stöd för extern signering (krävs för extern signering)</translation>
     </message>
     <message>
         <source>default</source>
@@ -2633,6 +2694,10 @@ Försök igen.</translation>
         <translation type="unfinished">%1 (%2 block)</translation>
     </message>
     <message>
+        <source>Connect your hardware wallet first.</source>
+        <translation type="unfinished">Anslut din hårdvaruplånbok först.</translation>
+    </message>
+    <message>
         <source>Cr&amp;eate Unsigned</source>
         <translation type="unfinished">Sk&amp;apa Osignerad</translation>
     </message>
@@ -2677,6 +2742,11 @@ Försök igen.</translation>
         <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</extracomment>
         <translation type="unfinished">Verifiera ditt transaktionsförslag. Det kommer skapas en delvis signerad Bitcoin transaktion (PSBT) som du kan spara eller kopiera och sen signera med t.ex. en offline %1 plånbok, eller en PSBT-kompatibel hårdvaruplånbok.</translation>
+    </message>
+    <message>
+        <source>Do you want to create this transaction?</source>
+        <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
+        <translation type="unfinished">Vill du skapa den här transaktionen?</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>

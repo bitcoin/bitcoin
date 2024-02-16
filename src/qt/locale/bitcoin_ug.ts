@@ -94,6 +94,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ئادرېس تىزىمىنى %1 غا ساقلاشنى سىناۋاتقاندا خاتالىق كۆرۈلدى. قايتا سىناڭ.</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">يوللايدىغان ئادرېس-%1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">قوبۇللايدىغان ئادرېس-%1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">چىقىرالمىدى</translation>
     </message>
@@ -166,6 +174,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Wallet encrypted</source>
         <translation type="unfinished">ھەميان شىفىرلاندى</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">ھەميان شىفىرلىنىدۇ</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation type="unfinished">ھەميانىڭىز شىفىرلىنىدۇ.</translation>
     </message>
     </context>
 <context>

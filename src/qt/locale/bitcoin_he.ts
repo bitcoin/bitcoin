@@ -94,6 +94,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">אירעה שגיאה בעת הניסיון לשמור את רשימת הכתובת אל %1. נא לנסות שוב.</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">כתובות שליחה - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">כתובות קבלה - %1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">הייצוא נכשל</translation>
     </message>

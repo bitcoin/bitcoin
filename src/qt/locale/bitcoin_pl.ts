@@ -178,6 +178,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Hasło do portfela zostało pomyślnie zmienione.</translation>
     </message>
     <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">Zmiana hasła nie powiodła się</translation>
+    </message>
+    <message>
         <source>Warning: The Caps Lock key is on!</source>
         <translation type="unfinished">Uwaga: klawisz Caps Lock jest włączony!</translation>
     </message>
@@ -642,6 +646,14 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Zamknij wszystkie portfele</translation>
     </message>
     <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Przenieś Portfel</translation>
+    </message>
+    <message>
+        <source>Migrate a wallet</source>
+        <translation type="unfinished">Przenieś portfel</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation type="unfinished">Pokaż pomoc %1 aby zobaczyć listę wszystkich opcji lnii poleceń.</translation>
     </message>
@@ -733,6 +745,14 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>Pre-syncing Headers (%1%)…</source>
         <translation type="unfinished">Synchronizuję nagłówki (%1%)…</translation>
+    </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">Błąd podczas tworzenia portfela</translation>
+    </message>
+    <message>
+        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">Nie można stworzyć nowego protfela, program skompilowano bez wsparcia sqlite (wymaganego dla deskryptorów potfeli)</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -996,6 +1016,37 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
 </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">Przenieś portfel</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">Na pewno chcesz przenieść portfel &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Przenieś Portfel</translation>
+    </message>
+    <message>
+        <source>Migrating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">Przenoszenie portfela &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>The wallet '%1' was migrated successfully.</source>
+        <translation type="unfinished">Portfel '%1' został poprawnie przeniesiony,</translation>
+    </message>
+    <message>
+        <source>Migration failed</source>
+        <translation type="unfinished">Przeniesienie nie powiodło się</translation>
+    </message>
+    <message>
+        <source>Migration Successful</source>
+        <translation type="unfinished">Przeniesienie powiodło się</translation>
+    </message>
+</context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open wallet failed</source>
@@ -1076,6 +1127,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>Create Wallet</source>
         <translation type="unfinished">Stwórz potrfel</translation>
+    </message>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">Jesteś jeden krok od stworzenia swojego nowego portfela!</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1234,6 +1289,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
             <numerusform>(%n GB potrzebne na pełny łańcuch)</numerusform>
             <numerusform>(%n GB potrzebnych na pełny łańcuch)</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Choose data directory</source>
+        <translation type="unfinished">Wybierz folder danych</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -1443,6 +1502,10 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>Number of script &amp;verification threads</source>
         <translation type="unfinished">Liczba wątków &amp;weryfikacji skryptu</translation>
+    </message>
+    <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation type="unfinished">Pełna ścieżka do skryptu zgodnego z %1 (np. C:\Downloads\hwi.exe lub /Users/you/Downloads/hwi.py). Uwaga: złośliwe oprogramowanie może ukraść Twoje monety!</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -2182,6 +2245,10 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
         <translation type="unfinished">Wybierz węzeł żeby zobaczyć szczegóły.</translation>
     </message>
     <message>
+        <source>The transport layer version: %1</source>
+        <translation type="unfinished">Wersja warstwy transportowej: %1</translation>
+    </message>
+    <message>
         <source>Version</source>
         <translation type="unfinished">Wersja</translation>
     </message>
@@ -2405,6 +2472,21 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
         <source>Outbound Address Fetch: short-lived, for soliciting addresses</source>
         <extracomment>Explanatory text for a short-lived outbound peer connection that is used to request addresses from a peer.</extracomment>
         <translation type="unfinished">Pobieranie adresu wychodzącego: krótkotrwałe, do pozyskiwania adresów</translation>
+    </message>
+    <message>
+        <source>detecting: peer could be v1 or v2</source>
+        <extracomment>Explanatory text for "detecting" transport type.</extracomment>
+        <translation type="unfinished">Wykrywanie: węzeł może używać v1 lub v2</translation>
+    </message>
+    <message>
+        <source>v1: unencrypted, plaintext transport protocol</source>
+        <extracomment>Explanatory text for v1 transport type.</extracomment>
+        <translation type="unfinished">v1: nieszyfrowany, tekstowy protokół transportowy</translation>
+    </message>
+    <message>
+        <source>v2: BIP324 encrypted transport protocol</source>
+        <extracomment>Explanatory text for v2 transport type.</extracomment>
+        <translation type="unfinished">v2: Szyfrowany protokół transportowy BIP324</translation>
     </message>
     <message>
         <source>we selected the peer for high bandwidth relay</source>
@@ -3635,7 +3717,7 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>Copy transaction &amp;ID</source>
-        <translation type="unfinished">Skopiuj &amp;ID transakcji</translation>
+        <translation type="unfinished">transakcjaSkopiuj &amp;ID transakcji</translation>
     </message>
     <message>
         <source>Copy &amp;raw transaction</source>

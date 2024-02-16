@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Ünvana və ya etiketə düzəliş etmək üçün sağ klikləyin</translation>
+        <translation type="unfinished">Ünvana və ya etiketə düzəliş etmək üçün sağ düyməni klikləyin</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Yeni bir ünvan yaradın</translation>
+        <translation type="unfinished">Yeni ünvan yaradın</translation>
     </message>
     <message>
         <source>&amp;New</source>

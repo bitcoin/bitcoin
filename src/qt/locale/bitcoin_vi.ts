@@ -576,6 +576,10 @@
         <translation type="unfinished">Tiền đồng bộ hóa Headers (%1%)…</translation>
     </message>
     <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">Lỗi tạo ví</translation>
+    </message>
+    <message>
         <source>Error: %1</source>
         <translation type="unfinished">Lỗi: %1</translation>
     </message>
