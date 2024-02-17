@@ -27,6 +27,9 @@
     <ClCompile Include="..\..\src\bench\bench_bitcoin.cpp">
       <ObjectFileName>$(IntDir)bench_bench_bitcoin.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\src\bench\bip324_ecdh.cpp">
+      <ObjectFileName>$(IntDir)bench_bip324_ecdh.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\src\bench\block_assemble.cpp">
       <ObjectFileName>$(IntDir)bench_block_assemble.obj</ObjectFileName>
     </ClCompile>
@@ -35,9 +38,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\bench\chacha20.cpp">
       <ObjectFileName>$(IntDir)bench_chacha20.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\src\bench\chacha_poly_aead.cpp">
-      <ObjectFileName>$(IntDir)bench_chacha_poly_aead.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\src\bench\checkblock.cpp">
       <ObjectFileName>$(IntDir)bench_checkblock.obj</ObjectFileName>
@@ -54,8 +54,14 @@
     <ClCompile Include="..\..\src\bench\descriptors.cpp">
       <ObjectFileName>$(IntDir)bench_descriptors.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\src\bench\disconnected_transactions.cpp">
+      <ObjectFileName>$(IntDir)bench_disconnected_transactions.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\src\bench\duplicate_inputs.cpp">
       <ObjectFileName>$(IntDir)bench_duplicate_inputs.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bench\ellswift.cpp">
+      <ObjectFileName>$(IntDir)bench_ellswift.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\src\bench\examples.cpp">
       <ObjectFileName>$(IntDir)bench_examples.obj</ObjectFileName>
@@ -93,8 +99,14 @@
     <ClCompile Include="..\..\src\bench\poly1305.cpp">
       <ObjectFileName>$(IntDir)bench_poly1305.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\src\bench\pool.cpp">
+      <ObjectFileName>$(IntDir)bench_pool.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\src\bench\prevector.cpp">
       <ObjectFileName>$(IntDir)bench_prevector.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bench\readblock.cpp">
+      <ObjectFileName>$(IntDir)bench_readblock.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\src\bench\rollingbloom.cpp">
       <ObjectFileName>$(IntDir)bench_rollingbloom.obj</ObjectFileName>
@@ -105,6 +117,9 @@
     <ClCompile Include="..\..\src\bench\rpc_mempool.cpp">
       <ObjectFileName>$(IntDir)bench_rpc_mempool.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\src\bench\streams_findbyte.cpp">
+      <ObjectFileName>$(IntDir)bench_streams_findbyte.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\src\bench\strencodings.cpp">
       <ObjectFileName>$(IntDir)bench_strencodings.obj</ObjectFileName>
     </ClCompile>
@@ -114,9 +129,12 @@
     <ClCompile Include="..\..\src\bench\verify_script.cpp">
       <ObjectFileName>$(IntDir)bench_verify_script.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\src\bench\xor.cpp">
+      <ObjectFileName>$(IntDir)bench_xor.obj</ObjectFileName>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libnavcoinconsensus\libnavcoinconsensus.vcxproj">
+    <ProjectReference Include="..\libbitcoin_consensus\libbitcoin_consensus.vcxproj">
       <Project>{2b384fa8-9ee1-4544-93cb-0d733c25e8ce}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libbitcoin_common\libbitcoin_common.vcxproj">
