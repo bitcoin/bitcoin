@@ -125,14 +125,14 @@ task:
   env:
     FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
 
-task:
-  name: 'previous releases, depends DEBUG'
-  << : *GLOBAL_TASK_TEMPLATE
-  persistent_worker:
-    labels:
-      type: small
-  env:
-    FILE_ENV: "./ci/test/00_setup_env_native_previous_releases.sh"
+# task:
+#   name: 'previous releases, depends DEBUG'
+#   << : *GLOBAL_TASK_TEMPLATE
+#   persistent_worker:
+#     labels:
+#       type: small
+#   env:
+#     FILE_ENV: "./ci/test/00_setup_env_native_previous_releases.sh"
 
 task:
   name: 'TSan, depends'
