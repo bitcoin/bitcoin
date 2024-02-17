@@ -1792,7 +1792,7 @@ struct GetMWEBUTXOsMsg
 
     SERIALIZE_METHODS(GetMWEBUTXOsMsg, obj)
     {
-        READWRITE(obj.block_hash, VARINT(obj.start_index), obj.num_requested, obj.output_format);
+        READWRITE(obj.block_hash, COMPACTSIZE(obj.start_index), obj.num_requested, obj.output_format);
     }
 
     uint256 block_hash;
@@ -1807,7 +1807,7 @@ struct MWEBUTXOsMsg
 
     SERIALIZE_METHODS(MWEBUTXOsMsg, obj)
     {
-        READWRITE(obj.block_hash, VARINT(obj.start_index), obj.output_format, obj.utxos, obj.proof_hashes);
+        READWRITE(obj.block_hash, COMPACTSIZE(obj.start_index), obj.output_format, obj.utxos, obj.proof_hashes);
     }
 
     uint256 block_hash;

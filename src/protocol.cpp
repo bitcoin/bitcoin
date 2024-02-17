@@ -215,13 +215,14 @@ static std::string serviceFlagToStr(size_t bit)
     const uint64_t service_flag = 1ULL << bit;
     switch ((ServiceFlags)service_flag) {
     case NODE_NONE: abort();  // impossible
-    case NODE_NETWORK:         return "NETWORK";
-    case NODE_GETUTXO:         return "GETUTXO";
-    case NODE_BLOOM:           return "BLOOM";
-    case NODE_WITNESS:         return "WITNESS";
-    case NODE_COMPACT_FILTERS: return "COMPACT_FILTERS";
-    case NODE_NETWORK_LIMITED: return "NETWORK_LIMITED";
-    case NODE_MWEB:            return "MWEB";
+    case NODE_NETWORK:           return "NETWORK";
+    case NODE_GETUTXO:           return "GETUTXO";
+    case NODE_BLOOM:             return "BLOOM";
+    case NODE_WITNESS:           return "WITNESS";
+    case NODE_COMPACT_FILTERS:   return "COMPACT_FILTERS";
+    case NODE_NETWORK_LIMITED:   return "NETWORK_LIMITED";
+    case NODE_MWEB:              return "MWEB";
+    case NODE_MWEB_LIGHT_CLIENT: return "MWEB_LIGHT_CLIENT";
     // Not using default, so we get warned when a case is missing
     }
 

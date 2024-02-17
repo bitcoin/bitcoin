@@ -19,7 +19,7 @@ Segment SegmentFactory::Assemble(const IMMR& mmr, const ILeafSet& leafset, const
     while (segment.leaves.size() < num_leaves && leaf_idx < leafset.GetNextLeafIdx()) {
         if (leafset.Contains(leaf_idx)) {
             last_leaf_idx = leaf_idx;
-            segment.leaves.push_back(mmr.GetHash(leaf_idx.GetNodeIndex()));
+            segment.leaves.push_back(mmr.GetLeaf(leaf_idx).vec());
         }
 
         ++leaf_idx;
@@ -36,13 +36,14 @@ Segment SegmentFactory::Assemble(const IMMR& mmr, const ILeafSet& leafset, const
     }
 
     // Determine the lowest peak that can be calculated using the hashes we've already provided
-    auto peak = std::find_if(
+    auto peak_iter = std::find_if(
         peak_indices.begin(), peak_indices.end(),
-        [&last_leaf_idx](const Index& peak_idx) { return peak_idx > last_leaf_idx.GetNodeIndex(); });
+        [&last_leaf_idx](const Index& peak_idx) { return peak_idx >= last_leaf_idx.GetNodeIndex(); });
+    assert(peak_iter != peak_indices.end());
 
     // Bag the next lower peak (if there is one), so the root can still be calculated
-    if (peak != peak_indices.end() && peak++ != peak_indices.end()) {
-        segment.lower_peak = MMRUtil::CalcBaggedPeak(mmr, *peak);
+    if (++peak_iter != peak_indices.end()) {
+        segment.lower_peak = MMRUtil::CalcBaggedPeak(mmr, *peak_iter);
     }
 
     return segment;
@@ -69,9 +70,9 @@ std::set<Index> SegmentFactory::CalcHashIndices(
     }
 
     // 2. Add indices needed to reach left edge of mountain
-    auto on_mountain_left_edge = [prev_peak](const Index& idx) -> bool {
-        const uint64_t adjustment = !!prev_peak ? prev_peak->GetPosition() + 1 : 0;
-        return ((idx.GetPosition() + 2) - adjustment) == (uint64_t(2) << idx.GetHeight());
+    uint64_t adjustment = prev_peak ? prev_peak->GetPosition() + 1 : 0;
+    auto on_mountain_left_edge = [adjustment](const Index& idx) -> bool {
+        return (idx.GetPosition() + 2 - adjustment) == (uint64_t(2) << idx.GetHeight());
     };
 
     Index idx = first_leaf_idx.GetNodeIndex();
@@ -96,7 +97,7 @@ std::set<Index> SegmentFactory::CalcHashIndices(
     // 4. Add indices needed to reach right edge of mountain containing the last leaf
     auto peak_iter = std::find_if(
         peak_indices.begin(), peak_indices.end(),
-        [&last_leaf_idx](const Index& peak_idx) { return peak_idx > last_leaf_idx.GetNodeIndex(); });
+        [&last_leaf_idx](const Index& peak_idx) { return peak_idx >= last_leaf_idx.GetNodeIndex(); });
     assert(peak_iter != peak_indices.end());
 
     Index peak = *peak_iter;
