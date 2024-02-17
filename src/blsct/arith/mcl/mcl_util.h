@@ -5,6 +5,8 @@
 #ifndef NAVCOIN_BLSCT_ARITH_MCL_MCL_UTIL_H
 #define NAVCOIN_BLSCT_ARITH_MCL_MCL_UTIL_H
 
+#define BLS_ETH 1
+
 #include <bls/bls384_256.h>
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_scalar.h>

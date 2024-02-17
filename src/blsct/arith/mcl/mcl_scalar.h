@@ -9,6 +9,8 @@
 #ifndef NAVCOIN_BLSCT_ARITH_MCL_MCL_SCALAR_H
 #define NAVCOIN_BLSCT_ARITH_MCL_MCL_SCALAR_H
 
+#define BLS_ETH 1
+
 #include <bls/bls384_256.h>
 #include <hash.h>
 #include <serialize.h>
