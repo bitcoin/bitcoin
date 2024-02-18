@@ -45,12 +45,6 @@
     <ProjectReference Include="..\libtest_util\libtest_util.vcxproj">
       <Project>{1e065f03-3566-47d0-8fa9-daa72b084e7d}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\bls\src\proj\bls384_256.vcxproj">
-      <Project>{1DBB979A-C212-45CD-9563-446A96F87F72}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\bls\mcl\src\proj\mcl.vcxproj">
-      <Project>{1DBB979A-C212-45CD-9563-446A96F87F71}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Target Name="RawBenchHeaderGen" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
