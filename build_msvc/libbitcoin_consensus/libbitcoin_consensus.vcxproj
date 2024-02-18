@@ -8,12 +8,6 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\bls\src\proj\bls384_256.vcxproj">
-      <Project>{1DBB979A-C212-45CD-9563-446A96F87F72}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\bls\mcl\src\proj\mcl.vcxproj">
-      <Project>{1DBB979A-C212-45CD-9563-446A96F87F71}</Project>
-    </ProjectReference>
     <ClCompile Include="..\..\src\arith_uint256.cpp" />
     <ClCompile Include="..\..\src\consensus\merkle.cpp" />
     <ClCompile Include="..\..\src\consensus\tx_check.cpp" />
@@ -32,6 +26,12 @@
     <ClCompile Include="..\..\src\blsct\arith\mcl\mcl_scalar.cpp" />
     <ClCompile Include="..\..\src\blsct\range_proof\bulletproofs\range_proof.cpp" />
     <ClCompile Include="..\..\src\blsct\signature.cpp" />
+    <ProjectReference Include="..\..\src\bls\src\proj\bls384_256.vcxproj">
+      <Project>{1DBB979A-C212-45CD-9563-446A96F87F72}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\bls\mcl\src\proj\mcl.vcxproj">
+      <Project>{1DBB979A-C212-45CD-9563-446A96F87F71}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
