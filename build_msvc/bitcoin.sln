@@ -26,7 +26,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_cli", "libbitcoi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "navcoin-cli", "navcoin-cli\navcoin-cli.vcxproj", "{0B2D7431-F876-4A58-87BF-F748338CD3BF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bench_bench_navcoin", "bench_bench_navcoin\bench_bench_navcoin.vcxproj", "{1125654E-E1B2-4431-8B5C-62EA9A2FEECB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bench_navcoin", "bench_navcoin\bench_navcoin.vcxproj", "{1125654E-E1B2-4431-8B5C-62EA9A2FEECB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "navcoin-tx", "navcoin-tx\navcoin-tx.vcxproj", "{D3022AF6-AD33-4CE3-B358-87CB6A1B29CF}"
 EndProject
