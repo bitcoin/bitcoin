@@ -84,7 +84,6 @@ Makefile.am.user
 
 # Unit-tests
 Makefile.test
-navcoin-qt_test
 
 # Visual Studio
 *.vcxproj.user
