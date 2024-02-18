@@ -13,8 +13,6 @@
     <ClCompile Include="..\..\src\init\navcoind.cpp">
       <ObjectFileName>$(IntDir)init_navcoind.obj</ObjectFileName>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\libbitcoin_consensus\libbitcoin_consensus.vcxproj">
       <Project>{2b384fa8-9ee1-4544-93cb-0d733c25e8ce}</Project>
     </ProjectReference>
@@ -44,12 +42,6 @@
     </ProjectReference>
     <ProjectReference Include="..\libleveldb\libleveldb.vcxproj">
       <Project>{18430fef-6b61-4c53-b396-718e02850f1b}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\bls\src\proj\bls384_256.vcxproj">
-      <Project>{1DBB979A-C212-45CD-9563-446A96F87F72}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\bls\mcl\src\proj\mcl.vcxproj">
-      <Project>{1DBB979A-C212-45CD-9563-446A96F87F71}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />

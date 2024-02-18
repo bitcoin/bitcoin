@@ -20,7 +20,7 @@ libbitcoin_util/libbitcoin_util.vcxproj
 libbitcoin_wallet_tool/libbitcoin_wallet_tool.vcxproj
 libbitcoin_wallet/libbitcoin_wallet.vcxproj
 libbitcoin_zmq/libbitcoin_zmq.vcxproj
-bench_bitcoin/bench_bitcoin.vcxproj
+bench_bench_navcoin/bench_bench_navcoin.vcxproj
 libtest_util/libtest_util.vcxproj
 
 /bitcoin_config.h
