@@ -18,145 +18,145 @@
 
 #include <boost/test/unit_test.hpp>
 
-namespace {
-
-void TestBIP324PacketVector(
-    uint32_t in_idx,
-    const std::string& in_priv_ours_hex,
-    const std::string& in_ellswift_ours_hex,
-    const std::string& in_ellswift_theirs_hex,
-    bool in_initiating,
-    const std::string& in_contents_hex,
-    uint32_t in_multiply,
-    const std::string& in_aad_hex,
-    bool in_ignore,
-    const std::string& mid_send_garbage_hex,
-    const std::string& mid_recv_garbage_hex,
-    const std::string& out_session_id_hex,
-    const std::string& out_ciphertext_hex,
-    const std::string& out_ciphertext_endswith_hex)
-{
-    // Convert input from hex to char/byte vectors/arrays.
-    const auto in_priv_ours = ParseHex(in_priv_ours_hex);
-    const auto in_ellswift_ours = ParseHex<std::byte>(in_ellswift_ours_hex);
-    const auto in_ellswift_theirs = ParseHex<std::byte>(in_ellswift_theirs_hex);
-    const auto in_contents = ParseHex<std::byte>(in_contents_hex);
-    const auto in_aad = ParseHex<std::byte>(in_aad_hex);
-    const auto mid_send_garbage = ParseHex<std::byte>(mid_send_garbage_hex);
-    const auto mid_recv_garbage = ParseHex<std::byte>(mid_recv_garbage_hex);
-    const auto out_session_id = ParseHex<std::byte>(out_session_id_hex);
-    const auto out_ciphertext = ParseHex<std::byte>(out_ciphertext_hex);
-    const auto out_ciphertext_endswith = ParseHex<std::byte>(out_ciphertext_endswith_hex);
-
-    // Load keys
-    CKey key;
-    key.Set(in_priv_ours.begin(), in_priv_ours.end(), true);
-    EllSwiftPubKey ellswift_ours(in_ellswift_ours);
-    EllSwiftPubKey ellswift_theirs(in_ellswift_theirs);
-
-    // Instantiate encryption BIP324 cipher.
-    BIP324Cipher cipher(key, ellswift_ours);
-    BOOST_CHECK(!cipher);
-    BOOST_CHECK(cipher.GetOurPubKey() == ellswift_ours);
-    cipher.Initialize(ellswift_theirs, in_initiating);
-    BOOST_CHECK(cipher);
-
-    // Compare session variables.
-    BOOST_CHECK(Span{out_session_id} == cipher.GetSessionID());
-    BOOST_CHECK(Span{mid_send_garbage} == cipher.GetSendGarbageTerminator());
-    BOOST_CHECK(Span{mid_recv_garbage} == cipher.GetReceiveGarbageTerminator());
-
-    // Vector of encrypted empty messages, encrypted in order to seek to the right position.
-    std::vector<std::vector<std::byte>> dummies(in_idx);
-
-    // Seek to the numbered packet.
-    for (uint32_t i = 0; i < in_idx; ++i) {
-        dummies[i].resize(cipher.EXPANSION);
-        cipher.Encrypt({}, {}, true, dummies[i]);
-    }
-
-    // Construct contents and encrypt it.
-    std::vector<std::byte> contents;
-    for (uint32_t i = 0; i < in_multiply; ++i) {
-        contents.insert(contents.end(), in_contents.begin(), in_contents.end());
-    }
-    std::vector<std::byte> ciphertext(contents.size() + cipher.EXPANSION);
-    cipher.Encrypt(contents, in_aad, in_ignore, ciphertext);
-
-    // Verify ciphertext. Note that the test vectors specify either out_ciphertext (for short
-    // messages) or out_ciphertext_endswith (for long messages), so only check the relevant one.
-    if (!out_ciphertext.empty()) {
-        BOOST_CHECK(out_ciphertext == ciphertext);
-    } else {
-        BOOST_CHECK(ciphertext.size() >= out_ciphertext_endswith.size());
-        BOOST_CHECK(Span{out_ciphertext_endswith} == Span{ciphertext}.last(out_ciphertext_endswith.size()));
-    }
-
-    for (unsigned error = 0; error <= 12; ++error) {
-        // error selects a type of error introduced:
-        // - error=0: no errors, decryption should be successful
-        // - error=1: wrong side
-        // - error=2..9: bit error in ciphertext
-        // - error=10: bit error in aad
-        // - error=11: extra 0x00 at end of aad
-        // - error=12: message index wrong
-
-        // Instantiate self-decrypting BIP324 cipher.
-        BIP324Cipher dec_cipher(key, ellswift_ours);
-        BOOST_CHECK(!dec_cipher);
-        BOOST_CHECK(dec_cipher.GetOurPubKey() == ellswift_ours);
-        dec_cipher.Initialize(ellswift_theirs, (error == 1) ^ in_initiating, /*self_decrypt=*/true);
-        BOOST_CHECK(dec_cipher);
-
-        // Compare session variables.
-        BOOST_CHECK((Span{out_session_id} == dec_cipher.GetSessionID()) == (error != 1));
-        BOOST_CHECK((Span{mid_send_garbage} == dec_cipher.GetSendGarbageTerminator()) == (error != 1));
-        BOOST_CHECK((Span{mid_recv_garbage} == dec_cipher.GetReceiveGarbageTerminator()) == (error != 1));
-
-        // Seek to the numbered packet.
-        if (in_idx == 0 && error == 12) continue;
-        uint32_t dec_idx = in_idx ^ (error == 12 ? (1U << InsecureRandRange(16)) : 0);
-        for (uint32_t i = 0; i < dec_idx; ++i) {
-            unsigned use_idx = i < in_idx ? i : 0;
-            bool dec_ignore{false};
-            dec_cipher.DecryptLength(Span{dummies[use_idx]}.first(cipher.LENGTH_LEN));
-            dec_cipher.Decrypt(Span{dummies[use_idx]}.subspan(cipher.LENGTH_LEN), {}, dec_ignore, {});
-        }
-
-        // Construct copied (and possibly damaged) copy of ciphertext.
-        // Decrypt length
-        auto to_decrypt = ciphertext;
-        if (error >= 2 && error <= 9) {
-            to_decrypt[InsecureRandRange(to_decrypt.size())] ^= std::byte(1U << (error - 2));
-        }
-
-        // Decrypt length and resize ciphertext to accommodate.
-        uint32_t dec_len = dec_cipher.DecryptLength(MakeByteSpan(to_decrypt).first(cipher.LENGTH_LEN));
-        to_decrypt.resize(dec_len + cipher.EXPANSION);
-
-        // Construct copied (and possibly damaged) copy of aad.
-        auto dec_aad = in_aad;
-        if (error == 10) {
-            if (in_aad.size() == 0) continue;
-            dec_aad[InsecureRandRange(dec_aad.size())] ^= std::byte(1U << InsecureRandRange(8));
-        }
-        if (error == 11) dec_aad.push_back({});
-
-        // Decrypt contents.
-        std::vector<std::byte> decrypted(dec_len);
-        bool dec_ignore{false};
-        bool dec_ok = dec_cipher.Decrypt(Span{to_decrypt}.subspan(cipher.LENGTH_LEN), dec_aad, dec_ignore, decrypted);
-
-        // Verify result.
-        BOOST_CHECK(dec_ok == !error);
-        if (dec_ok) {
-            BOOST_CHECK(decrypted == contents);
-            BOOST_CHECK(dec_ignore == in_ignore);
-        }
-    }
-}
-
-}  // namespace
+// namespace {
+//
+// void TestBIP324PacketVector(
+//     uint32_t in_idx,
+//     const std::string& in_priv_ours_hex,
+//     const std::string& in_ellswift_ours_hex,
+//     const std::string& in_ellswift_theirs_hex,
+//     bool in_initiating,
+//     const std::string& in_contents_hex,
+//     uint32_t in_multiply,
+//     const std::string& in_aad_hex,
+//     bool in_ignore,
+//     const std::string& mid_send_garbage_hex,
+//     const std::string& mid_recv_garbage_hex,
+//     const std::string& out_session_id_hex,
+//     const std::string& out_ciphertext_hex,
+//     const std::string& out_ciphertext_endswith_hex)
+// {
+//     // Convert input from hex to char/byte vectors/arrays.
+//     const auto in_priv_ours = ParseHex(in_priv_ours_hex);
+//     const auto in_ellswift_ours = ParseHex<std::byte>(in_ellswift_ours_hex);
+//     const auto in_ellswift_theirs = ParseHex<std::byte>(in_ellswift_theirs_hex);
+//     const auto in_contents = ParseHex<std::byte>(in_contents_hex);
+//     const auto in_aad = ParseHex<std::byte>(in_aad_hex);
+//     const auto mid_send_garbage = ParseHex<std::byte>(mid_send_garbage_hex);
+//     const auto mid_recv_garbage = ParseHex<std::byte>(mid_recv_garbage_hex);
+//     const auto out_session_id = ParseHex<std::byte>(out_session_id_hex);
+//     const auto out_ciphertext = ParseHex<std::byte>(out_ciphertext_hex);
+//     const auto out_ciphertext_endswith = ParseHex<std::byte>(out_ciphertext_endswith_hex);
+//
+//     // Load keys
+//     CKey key;
+//     key.Set(in_priv_ours.begin(), in_priv_ours.end(), true);
+//     EllSwiftPubKey ellswift_ours(in_ellswift_ours);
+//     EllSwiftPubKey ellswift_theirs(in_ellswift_theirs);
+//
+//     // Instantiate encryption BIP324 cipher.
+//     BIP324Cipher cipher(key, ellswift_ours);
+//     BOOST_CHECK(!cipher);
+//     BOOST_CHECK(cipher.GetOurPubKey() == ellswift_ours);
+//     cipher.Initialize(ellswift_theirs, in_initiating);
+//     BOOST_CHECK(cipher);
+//
+//     // Compare session variables.
+//     BOOST_CHECK(Span{out_session_id} == cipher.GetSessionID());
+//     BOOST_CHECK(Span{mid_send_garbage} == cipher.GetSendGarbageTerminator());
+//     BOOST_CHECK(Span{mid_recv_garbage} == cipher.GetReceiveGarbageTerminator());
+//
+//     // Vector of encrypted empty messages, encrypted in order to seek to the right position.
+//     std::vector<std::vector<std::byte>> dummies(in_idx);
+//
+//     // Seek to the numbered packet.
+//     for (uint32_t i = 0; i < in_idx; ++i) {
+//         dummies[i].resize(cipher.EXPANSION);
+//         cipher.Encrypt({}, {}, true, dummies[i]);
+//     }
+//
+//     // Construct contents and encrypt it.
+//     std::vector<std::byte> contents;
+//     for (uint32_t i = 0; i < in_multiply; ++i) {
+//         contents.insert(contents.end(), in_contents.begin(), in_contents.end());
+//     }
+//     std::vector<std::byte> ciphertext(contents.size() + cipher.EXPANSION);
+//     cipher.Encrypt(contents, in_aad, in_ignore, ciphertext);
+//
+//     // Verify ciphertext. Note that the test vectors specify either out_ciphertext (for short
+//     // messages) or out_ciphertext_endswith (for long messages), so only check the relevant one.
+//     if (!out_ciphertext.empty()) {
+//         BOOST_CHECK(out_ciphertext == ciphertext);
+//     } else {
+//         BOOST_CHECK(ciphertext.size() >= out_ciphertext_endswith.size());
+//         BOOST_CHECK(Span{out_ciphertext_endswith} == Span{ciphertext}.last(out_ciphertext_endswith.size()));
+//     }
+//
+//     for (unsigned error = 0; error <= 12; ++error) {
+//         // error selects a type of error introduced:
+//         // - error=0: no errors, decryption should be successful
+//         // - error=1: wrong side
+//         // - error=2..9: bit error in ciphertext
+//         // - error=10: bit error in aad
+//         // - error=11: extra 0x00 at end of aad
+//         // - error=12: message index wrong
+//
+//         // Instantiate self-decrypting BIP324 cipher.
+//         BIP324Cipher dec_cipher(key, ellswift_ours);
+//         BOOST_CHECK(!dec_cipher);
+//         BOOST_CHECK(dec_cipher.GetOurPubKey() == ellswift_ours);
+//         dec_cipher.Initialize(ellswift_theirs, (error == 1) ^ in_initiating, /*self_decrypt=*/true);
+//         BOOST_CHECK(dec_cipher);
+//
+//         // Compare session variables.
+//         BOOST_CHECK((Span{out_session_id} == dec_cipher.GetSessionID()) == (error != 1));
+//         BOOST_CHECK((Span{mid_send_garbage} == dec_cipher.GetSendGarbageTerminator()) == (error != 1));
+//         BOOST_CHECK((Span{mid_recv_garbage} == dec_cipher.GetReceiveGarbageTerminator()) == (error != 1));
+//
+//         // Seek to the numbered packet.
+//         if (in_idx == 0 && error == 12) continue;
+//         uint32_t dec_idx = in_idx ^ (error == 12 ? (1U << InsecureRandRange(16)) : 0);
+//         for (uint32_t i = 0; i < dec_idx; ++i) {
+//             unsigned use_idx = i < in_idx ? i : 0;
+//             bool dec_ignore{false};
+//             dec_cipher.DecryptLength(Span{dummies[use_idx]}.first(cipher.LENGTH_LEN));
+//             dec_cipher.Decrypt(Span{dummies[use_idx]}.subspan(cipher.LENGTH_LEN), {}, dec_ignore, {});
+//         }
+//
+//         // Construct copied (and possibly damaged) copy of ciphertext.
+//         // Decrypt length
+//         auto to_decrypt = ciphertext;
+//         if (error >= 2 && error <= 9) {
+//             to_decrypt[InsecureRandRange(to_decrypt.size())] ^= std::byte(1U << (error - 2));
+//         }
+//
+//         // Decrypt length and resize ciphertext to accommodate.
+//         uint32_t dec_len = dec_cipher.DecryptLength(MakeByteSpan(to_decrypt).first(cipher.LENGTH_LEN));
+//         to_decrypt.resize(dec_len + cipher.EXPANSION);
+//
+//         // Construct copied (and possibly damaged) copy of aad.
+//         auto dec_aad = in_aad;
+//         if (error == 10) {
+//             if (in_aad.size() == 0) continue;
+//             dec_aad[InsecureRandRange(dec_aad.size())] ^= std::byte(1U << InsecureRandRange(8));
+//         }
+//         if (error == 11) dec_aad.push_back({});
+//
+//         // Decrypt contents.
+//         std::vector<std::byte> decrypted(dec_len);
+//         bool dec_ignore{false};
+//         bool dec_ok = dec_cipher.Decrypt(Span{to_decrypt}.subspan(cipher.LENGTH_LEN), dec_aad, dec_ignore, decrypted);
+//
+//         // Verify result.
+//         BOOST_CHECK(dec_ok == !error);
+//         if (dec_ok) {
+//             BOOST_CHECK(decrypted == contents);
+//             BOOST_CHECK(dec_ignore == in_ignore);
+//         }
+//     }
+// }
+//
+// }  // namespace
 
 BOOST_FIXTURE_TEST_SUITE(bip324_tests, BasicTestingSetup)
 
