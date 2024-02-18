@@ -27,12 +27,6 @@
     <ProjectReference Include="..\libunivalue\libunivalue.vcxproj">
       <Project>{5724ba7d-a09a-4ba8-800b-c4c1561b3d69}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\bls\src\proj\bls384_256.vcxproj">
-      <Project>{1DBB979A-C212-45CD-9563-446A96F87F72}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\bls\mcl\src\proj\mcl.vcxproj">
-      <Project>{1DBB979A-C212-45CD-9563-446A96F87F71}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
