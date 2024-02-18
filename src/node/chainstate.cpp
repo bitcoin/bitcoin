@@ -47,6 +47,8 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         .wipe_data = options.reindex,
         .options = chainman.m_options.block_tree_db});
 
+    gp_blocktree = pblocktree.get();
+
     if (options.reindex) {
         pblocktree->WriteReindexing(true);
         //If we're reindexing in prune mode, wipe away unusable block files and all undo data files

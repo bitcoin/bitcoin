@@ -38,6 +38,11 @@ NodeClock::time_point GetAdjustedTime()
     return NodeClock::now() + std::chrono::seconds{GetTimeOffset()};
 }
 
+int64_t GetAdjustedTime64()
+{
+    return GetTime() + GetTimeOffset();
+}
+
 #define BITCOIN_TIMEDATA_MAX_SAMPLES 200
 
 static std::set<CNetAddr> g_sources;

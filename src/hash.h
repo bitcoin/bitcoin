@@ -244,4 +244,14 @@ inline uint160 RIPEMD160(Span<const unsigned char> data)
     return result;
 }
 
+#include <streams.h>
+/** Compute the 256-bit hash of an object's serialization. */
+template<typename T>
+uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL_VERSION)
+{
+    CDataStream ss(nType, nVersion);
+    ss << obj;
+    return Hash(ss);    
+}
+
 #endif // BITCOIN_HASH_H

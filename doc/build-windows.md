@@ -59,6 +59,9 @@ sudo apt install g++-mingw-w64-x86-64-posix
 ```sh
 sudo apt install g++-mingw-w64-x86-64
 ```
+Ubuntu Bionic 18.04:
+
+    sudo update-alternatives --config x86_64-w64-mingw32-g++ # Set the default mingw32 g++ compiler option to posix.
 
 Once the toolchain is installed the build steps are common:
 

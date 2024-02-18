@@ -9,7 +9,7 @@ To Build
 
 ```bash
 ./autogen.sh
-./configure
+./configure --disable-tests
 make # use "-j N" for N parallel jobs
 make install # optional
 ```
@@ -209,5 +209,16 @@ This example lists the steps necessary to setup and build a command line only di
     ./configure
     make check
     ./src/bitcoind
+
+
+Portable Linux build
+-------------------
+    cd depends
+    make
+    cd ..
+    export CONFIG_SITE=`pwd`/depends/x86_64-pc-linux-gnu/share/config.site
+    ./autogen.sh
+    ./configure --enable-glibc-back-compat --prefix=`pwd`/depends/x86_64-pc-linux-gnu LDFLAGS="-static-libstdc++"
+    make
 
 If you intend to work with legacy Berkeley DB wallets, see [Berkeley DB](#berkeley-db) section.

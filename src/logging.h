@@ -61,6 +61,7 @@ namespace BCLog {
         VALIDATION  = (1 << 21),
         I2P         = (1 << 22),
         IPC         = (1 << 23),
+        COINSTAKE   = (1 << 24),
 #ifdef DEBUG_LOCKCONTENTION
         LOCK        = (1 << 24),
 #endif

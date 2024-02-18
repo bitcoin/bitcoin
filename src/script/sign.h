@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,10 +14,12 @@
 #include <script/keyorigin.h>
 #include <script/signingprovider.h>
 #include <uint256.h>
+#include <coins.h>
 
 class CKey;
 class CKeyID;
 class CScript;
+class CScriptID;
 class CTransaction;
 class SigningProvider;
 
@@ -115,10 +117,16 @@ bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, C
                    unsigned int nIn, const CAmount& amount, int nHashType, SignatureData& sig_data);
 bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo,
                    unsigned int nIn, int nHashType, SignatureData& sig_data);
-
+bool VerifySignature(const Coin& coin, uint256 txFromHash, const CTransaction& txTo, unsigned int nIn, unsigned int flags);
 /** Extract signature data from a transaction input, and insert it. */
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout);
 void UpdateInput(CTxIn& input, const SignatureData& data);
+
+/* Check whether we know how to sign for an output like this, assuming we
+ * have all private keys. While this function does not need private keys, the passed
+ * provider is used to look up public keys and redeemscripts by hash.
+ * Solvability is unrelated to whether we consider this output to be ours. */
+bool IsSolvable(const SigningProvider& provider, const CScript& script);
 
 /** Check whether a scriptPubKey is known to be segwit. */
 bool IsSegWitOutput(const SigningProvider& provider, const CScript& script);

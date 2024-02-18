@@ -174,6 +174,19 @@ public:
         }
         return true;
     }
+
+    template<typename V> unsigned int GetValueSize() {
+        V value;
+        try {
+            DataStream ssValue{GetValueImpl()};
+            ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
+            ssValue >> value;
+            return value.size();
+        } catch (const std::exception&) {
+            return 0;
+        }
+        // verify @TODO
+    } 
 };
 
 struct LevelDBContext;

@@ -31,7 +31,7 @@ void initialize_pdb()
 
 PartiallyDownloadedBlock::CheckBlockFn FuzzedCheckBlock(std::optional<BlockValidationResult> result)
 {
-    return [result](const CBlock&, BlockValidationState& state, const Consensus::Params&, bool, bool) {
+    return [result](const CBlock&, BlockValidationState& state, const Consensus::Params&, bool, bool, bool) {
         if (result) {
             return state.Invalid(*result);
         }

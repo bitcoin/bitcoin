@@ -97,6 +97,15 @@ struct Params {
     /** Don't warn about unknown BIP 9 activations below this height.
      * This prevents us from warning about the CSV and segwit activations. */
     int MinBIP9WarningHeight;
+    /** The size of the step going towards reward matching - rewards from
+     * both chains, bitcoin and Bitcoin PoW are coming in sync with steps of this size. */
+    int BTCWRewardMatchStep;
+    /** Block height at which BTCWRewardMatch becomes active - rewards from
+     * both chains, bitcoin and Bitcoin PoW are in sync as of this height. */
+    int BTCWRewardMatchHeight;
+    /** Block height at which BTCWDiffAdj becomes active - difficulty adjustment
+     * formula is changed so that block times are more reliable. */
+    int BTCWDiffAdjHeight;
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
@@ -120,6 +129,16 @@ struct Params {
     uint256 nMinimumChainWork;
     /** By default assume that the signatures in ancestors of this block are valid */
     uint256 defaultAssumeValid;
+    /** Proof of stake parameters */
+    uint256 posLimit;
+    bool fPoSNoRetargeting;
+    int nLastPOWBlock;
+    int nFirstMPoSBlock;
+    int nLastMPoSBlock;
+    int nMPoSRewardRecipients;
+    int nEnableHeaderSignatureHeight;
+    /** Block sync-checkpoint span*/
+    int nCheckpointSpan;
 
     /**
      * If true, witness commitments contain a payload equal to a Bitcoin Script solution

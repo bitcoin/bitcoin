@@ -19,11 +19,16 @@
 #include <iterator>
 #include <utility>
 
-static constexpr uint8_t DB_COIN{'C'};
-static constexpr uint8_t DB_BEST_BLOCK{'B'};
-static constexpr uint8_t DB_HEAD_BLOCKS{'H'};
-// Keys used in previous version that might still be found in the DB:
-static constexpr uint8_t DB_COINS{'c'};
+static constexpr uint8_t DB_COIN = 'C';
+static constexpr uint8_t DB_COINS = 'c';
+static constexpr uint8_t DB_BLOCK_FILES = 'f';
+static constexpr uint8_t DB_BLOCK_INDEX = 'b';
+static constexpr uint8_t DB_STAKEINDEX = 's';
+static constexpr uint8_t DB_BEST_BLOCK = 'B';
+static constexpr uint8_t DB_HEAD_BLOCKS = 'H';
+static constexpr uint8_t DB_FLAG = 'F';
+static constexpr uint8_t DB_REINDEX_FLAG = 'R';
+static constexpr uint8_t DB_LAST_BLOCK = 'l';
 
 bool CCoinsViewDB::NeedsUpgrade()
 {
