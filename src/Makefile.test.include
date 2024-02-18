@@ -65,7 +65,6 @@ if USE_NATPMP
 FUZZ_SUITE_LD_COMMON += $(NATPMP_LIBS)
 endif
 
-# test/bip324_tests.cpp \ TODO: NEED TO FIX THIS
 # test_navcoin binary #
 BITCOIN_TESTS =\
   test/addrman_tests.cpp \
@@ -78,6 +77,7 @@ BITCOIN_TESTS =\
   test/base58_tests.cpp \
   test/base64_tests.cpp \
   test/bech32_tests.cpp \
+  test/bip324_tests.cpp \
   test/bip32_tests.cpp \
   test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
