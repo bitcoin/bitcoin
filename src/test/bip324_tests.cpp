@@ -161,6 +161,7 @@ void TestBIP324PacketVector(
 BOOST_FIXTURE_TEST_SUITE(bip324_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(packet_test_vectors) {
+    // TODO: fix this test to work
     return;
     // BIP324 key derivation uses network magic in the HKDF process. We use mainnet params here
     // as that is what the test vectors are written for.
