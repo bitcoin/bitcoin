@@ -13,7 +13,6 @@ src/navcoin-chainstate
 src/navcoin-wallet
 src/test/fuzz/fuzz
 src/test/test_navcoin
-src/qt/test/test_navcoin-qt
 
 # autoreconf
 Makefile.in
@@ -41,20 +40,6 @@ src/config/bitcoin-config.h
 src/config/bitcoin-config.h.in
 src/config/stamp-h1
 src/obj
-share/setup.nsi
-share/qt/Info.plist
-
-src/qt/*.moc
-src/qt/moc_*.cpp
-src/qt/forms/ui_*.h
-
-src/qt/test/moc*.cpp
-
-src/qt/bitcoin-qt.config
-src/qt/bitcoin-qt.creator
-src/qt/bitcoin-qt.creator.user
-src/qt/bitcoin-qt.files
-src/qt/bitcoin-qt.includes
 
 .deps
 .dirstamp
@@ -93,8 +78,6 @@ src/qt/bitcoin-qt.includes
 *.qm
 Makefile
 !depends/Makefile
-src/qt/navcoin-qt
-Navcoin-Qt.app
 
 # Qt Creator
 Makefile.am.user
@@ -102,6 +85,9 @@ Makefile.am.user
 # Unit-tests
 Makefile.test
 navcoin-qt_test
+
+# Visual Studio
+*.vcxproj.user
 
 # Resources cpp
 qrc_*.cpp
