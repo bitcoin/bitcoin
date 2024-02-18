@@ -74,7 +74,6 @@ noinst_LTLIBRARIES += $(LIBBITCOIN_CRYPTO)
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
-LIBBLS_A = bls/lib/libbls384_256.a
 $(LIBBLS):
 	$(AM_V_at) \
 		ARCH='$(firstword $(subst -, ,$(HOST)))' \
@@ -86,9 +85,8 @@ $(LIBBLS):
 		AR='$(AR)' \
 		RANLIB='$(RANLIB)' \
 		$(MAKE) $(AM_MAKEFLAGS) BLS_ETH=1 -C bls lib/libbls384_256.a
-	$(RANLIB) $(LIBBLS_A)
+	$(RANLIB) $(LIBBLS)
 
-LIBMCL_A = bls/mcl/lib/libmcl.a
 $(LIBMCL):
 	$(AM_V_at) \
 		MCL_USE_LLVM=0 \
@@ -101,7 +99,7 @@ $(LIBMCL):
 		AR='$(AR)' \
 		RANLIB='$(RANLIB)' \
 		$(MAKE) $(AM_MAKEFLAGS) -C bls/mcl lib/libmcl.a
-	$(RANLIB) $(LIBMCL_A)
+	$(RANLIB) $(LIBMCL)
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
@@ -1315,15 +1313,15 @@ CLEANFILES += wallet/*.gcda wallet/*.gcno
 CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += obj/build.h
-CLEANFILES += $(LIBBLS_A)
-CLEANFILES += $(LIBMCL_A)
+CLEANFILES += $(LIBBLS)
+CLEANFILES += $(LIBMCL)
 
 EXTRA_DIST = $(CTAES_DIST)
 
 # blsct library #
 if BUILD_LIBBLSCT_ONLY
-LIBBLSCT_A = libblsct.a
-noinst_LIBRARIES = $(LIBBLSCT_A)
+LIBBLSCT = libblsct.a
+noinst_LIBRARIES = $(LIBBLSCT)
 libblsct_a_SOURCES = \
   crypto/sha256_arm_shani.cpp \
   crypto/sha256_avx2.cpp \
@@ -1356,9 +1354,9 @@ libblsct_a_CXXFLAGS += $(ARM_SHANI_CXXFLAGS)
 libblsct_a_CPPFLAGS += -DENABLE_ARM_SHANI
 endif
 
-$(LIBBLSCT_A): $(LIBBLS) $(LIBMCL)
+$(LIBBLSCT): $(LIBBLS) $(LIBMCL)
 
-CLEANFILES += $(LIBBLSCT_A) blsct/include/libblsct_a-blsct.o
+CLEANFILES += $(LIBBLSCT) blsct/include/libblsct_a-blsct.o
 endif
 #
 
@@ -1371,6 +1369,7 @@ $(top_srcdir)/$(subdir)/config/bitcoin-config.h.in:  $(am__configure_deps)
 
 clean-local:
 	-$(MAKE) -C secp256k1 clean
+	-$(MAKE) -C bls/mcl clean
 	-$(MAKE) -C bls clean
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
