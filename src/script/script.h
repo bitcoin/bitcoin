@@ -43,7 +43,7 @@ static const int MAX_STACK_SIZE = 1000;
 
 // Threshold for nLockTime: below this value it is interpreted as block number,
 // otherwise as UNIX timestamp.
-static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
+static const unsigned int LOCKTIME_THRESHOLD = 500'000'000; // Tue Nov  5 00:53:20 1985 UTC
 
 // Maximum nLockTime. Since a lock time indicates the last invalid timestamp, a
 // transaction with this lock time will never be valid unless lock time
