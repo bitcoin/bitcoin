@@ -113,6 +113,8 @@ code.
     between integer types, use functional casts such as `int(x)` or `int{x}`
     instead of `(int) x`. When casting between more complex types, use `static_cast`.
     Use `reinterpret_cast` and `const_cast` as appropriate.
+  - Enhance readability of numeric literals, especially for amounts, sizes, or bitmasks, by using the C++14 digit separator (`'`).
+    This aids in visual clarity for large numbers by grouping digits in threes from the right, e.g. `CAmount COIN = 100'000'000`.
 
 For function calls a namespace should be specified explicitly, unless such functions have been declared within it.
 Otherwise, [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl), also known as ADL, could be
