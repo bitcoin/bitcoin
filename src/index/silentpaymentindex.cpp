@@ -7,7 +7,7 @@
 #include <node/blockstorage.h>
 #include <pubkey.h>
 #include <primitives/transaction.h>
-// TODO: move GetSilentPaymentsTweakDataFromTxInputs out of wallet?
+// TODO: move GetSilentPaymentTweakDataFromTxInputs out of wallet?
 #include <wallet/silentpayments.h>
 #include <undo.h>
 #include <validation.h>
@@ -16,6 +16,12 @@
 #include <hash.h>
 
 constexpr uint8_t DB_SILENT_PAYMENT_INDEX{'s'};
+/* Save space on mainnet by starting the index at Taproot activation.
+ * Copying the height here assuming DEPLOYMENT_TAPROOT will be dropped:
+ * https://github.com/bitcoin/bitcoin/pull/26201/
+ * Only apply this storage optimization on mainnet.
+ */
+const int TAPROOT_MAINNET_ACTIVATION_HEIGHT{709632};
 
 std::unique_ptr<SilentPaymentIndex> g_silent_payment_index;
 
@@ -40,7 +46,7 @@ bool SilentPaymentIndex::DB::WriteSilentPayments(const std::pair<uint256, std::v
 }
 
 SilentPaymentIndex::SilentPaymentIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe)
-    : BaseIndex(std::move(chain), "silentpaymentindex"), m_db(std::make_unique<SilentPaymentIndex::DB>(n_cache_size, f_memory, f_wipe))
+    : BaseIndex(std::move(chain), "silentpaymentindex", /*start_height=*/Params().IsTestChain() ? 0 : TAPROOT_MAINNET_ACTIVATION_HEIGHT), m_db(std::make_unique<SilentPaymentIndex::DB>(n_cache_size, f_memory, f_wipe))
 {}
 
 SilentPaymentIndex::~SilentPaymentIndex() {}
@@ -71,7 +77,7 @@ bool SilentPaymentIndex::GetSilentPaymentKeys(std::vector<CTransactionRef> txs, 
             coins[tx->vin.at(j).prevout] = undoTX.vprevout.at(j);
         }
 
-        const auto tweak_data = wallet::GetSilentPaymentsTweakDataFromTxInputs(tx->vin, coins);
+        const auto tweak_data = wallet::GetSilentPaymentTweakDataFromTxInputs(tx->vin, coins);
 
         if (!tweak_data) continue;
 
@@ -93,16 +99,14 @@ bool SilentPaymentIndex::GetSilentPaymentKeys(std::vector<CTransactionRef> txs, 
 
 bool SilentPaymentIndex::CustomAppend(const interfaces::BlockInfo& block)
 {
-    // Exclude genesis block transaction because outputs are not spendable.
+    // Exclude genesis block transaction because outputs are not spendable. This
+    // is needed on non-mainnet chains because m_start_height is 0 by default.
     if (block.height == 0) return true;
 
+    // Exclude pre-taproot
+    if (block.height < m_start_height) return true;
+
     assert(block.data);
-
-    Consensus::Params consensus = Params().GetConsensus();
-
-    if (block.height < consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height) {
-        return true;
-    }
 
     std::vector<std::pair<uint256, CPubKey>> items;
 
