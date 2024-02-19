@@ -202,9 +202,9 @@ static CScript GenerateRandomAddress()
     return GetScriptForDestination(PKHash(key.GetPubKey()));
 }
 
-static CDeterministicMNCPtr FindPayoutDmn(const CBlock& block)
+static CDeterministicMNCPtr FindPayoutDmn(CDeterministicMNManager& dmnman, const CBlock& block)
 {
-    auto dmnList = deterministicMNManager->GetListAtChainTip();
+    auto dmnList = dmnman.GetListAtChainTip();
 
     for (const auto& txout : block.vtx[0]->vout) {
         CDeterministicMNCPtr found;
@@ -238,6 +238,8 @@ static bool CheckTransactionSignature(const CTxMemPool& mempool, const CMutableT
 
 void FuncDIP3Activation(TestChainSetup& setup)
 {
+    auto& dmnman = *Assert(setup.m_node.dmnman);
+
     auto utxos = BuildSimpleUtxoMap(setup.m_coinbase_txns);
     CKey ownerKey;
     CBLSSecretKey operatorKey;
@@ -252,7 +254,7 @@ void FuncDIP3Activation(TestChainSetup& setup)
     Assert(setup.m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr);
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
     BOOST_ASSERT(block->GetHash() != ::ChainActive().Tip()->GetBlockHash());
-    BOOST_ASSERT(!deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
+    BOOST_ASSERT(!dmnman.GetListAtChainTip().HasMN(tx.GetHash()));
 
     // This block should activate DIP3
     setup.CreateAndProcessBlock({}, setup.coinbaseKey);
@@ -260,15 +262,17 @@ void FuncDIP3Activation(TestChainSetup& setup)
     // Mining a block with a DIP3 transaction should succeed now
     block = std::make_shared<CBlock>(setup.CreateBlock(txns, setup.coinbaseKey));
     BOOST_ASSERT(Assert(setup.m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    dmnman.UpdatedBlockTip(::ChainActive().Tip());
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 2);
     BOOST_CHECK_EQUAL(block->GetHash(), ::ChainActive().Tip()->GetBlockHash());
-    BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
+    BOOST_ASSERT(dmnman.GetListAtChainTip().HasMN(tx.GetHash()));
 };
 
 void FuncV19Activation(TestChainSetup& setup)
 {
     BOOST_ASSERT(!DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
+
+    auto& dmnman = *Assert(setup.m_node.dmnman);
 
     // create
     auto utxos = BuildSimpleUtxoMap(setup.m_coinbase_txns);
@@ -287,12 +291,12 @@ void FuncV19Activation(TestChainSetup& setup)
     BOOST_ASSERT(!DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-    deterministicMNManager->DoMaintenance();
-    auto tip_list = deterministicMNManager->GetListAtChainTip();
+    dmnman.UpdatedBlockTip(::ChainActive().Tip());
+    dmnman.DoMaintenance();
+    auto tip_list = dmnman.GetListAtChainTip();
     BOOST_ASSERT(tip_list.HasMN(tx_reg_hash));
     auto pindex_create = ::ChainActive().Tip();
-    auto base_list = deterministicMNManager->GetListForBlock(pindex_create);
+    auto base_list = dmnman.GetListForBlock(pindex_create);
     std::vector<CDeterministicMNListDiff> diffs;
 
     // update
@@ -305,9 +309,9 @@ void FuncV19Activation(TestChainSetup& setup)
     BOOST_ASSERT(!DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-    deterministicMNManager->DoMaintenance();
-    tip_list = deterministicMNManager->GetListAtChainTip();
+    dmnman.UpdatedBlockTip(::ChainActive().Tip());
+    dmnman.DoMaintenance();
+    tip_list = dmnman.GetListAtChainTip();
     BOOST_ASSERT(tip_list.HasMN(tx_reg_hash));
     diffs.push_back(base_list.BuildDiff(tip_list));
 
@@ -325,36 +329,36 @@ void FuncV19Activation(TestChainSetup& setup)
     BOOST_ASSERT(!DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-    deterministicMNManager->DoMaintenance();
-    diffs.push_back(tip_list.BuildDiff(deterministicMNManager->GetListAtChainTip()));
-    tip_list = deterministicMNManager->GetListAtChainTip();
+    dmnman.UpdatedBlockTip(::ChainActive().Tip());
+    dmnman.DoMaintenance();
+    diffs.push_back(tip_list.BuildDiff(dmnman.GetListAtChainTip()));
+    tip_list = dmnman.GetListAtChainTip();
     BOOST_ASSERT(!tip_list.HasMN(tx_reg_hash));
-    BOOST_ASSERT(deterministicMNManager->GetListForBlock(pindex_create).HasMN(tx_reg_hash));
+    BOOST_ASSERT(dmnman.GetListForBlock(pindex_create).HasMN(tx_reg_hash));
 
     // mine another block so that it's not the last one before V19
     setup.CreateAndProcessBlock({}, setup.coinbaseKey);
     BOOST_ASSERT(!DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-    deterministicMNManager->DoMaintenance();
-    diffs.push_back(tip_list.BuildDiff(deterministicMNManager->GetListAtChainTip()));
-    tip_list = deterministicMNManager->GetListAtChainTip();
+    dmnman.UpdatedBlockTip(::ChainActive().Tip());
+    dmnman.DoMaintenance();
+    diffs.push_back(tip_list.BuildDiff(dmnman.GetListAtChainTip()));
+    tip_list = dmnman.GetListAtChainTip();
     BOOST_ASSERT(!tip_list.HasMN(tx_reg_hash));
-    BOOST_ASSERT(deterministicMNManager->GetListForBlock(pindex_create).HasMN(tx_reg_hash));
+    BOOST_ASSERT(dmnman.GetListForBlock(pindex_create).HasMN(tx_reg_hash));
 
     // this block should activate V19
     setup.CreateAndProcessBlock({}, setup.coinbaseKey);
     BOOST_ASSERT(DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight);
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-    deterministicMNManager->DoMaintenance();
-    diffs.push_back(tip_list.BuildDiff(deterministicMNManager->GetListAtChainTip()));
-    tip_list = deterministicMNManager->GetListAtChainTip();
+    dmnman.UpdatedBlockTip(::ChainActive().Tip());
+    dmnman.DoMaintenance();
+    diffs.push_back(tip_list.BuildDiff(dmnman.GetListAtChainTip()));
+    tip_list = dmnman.GetListAtChainTip();
     BOOST_ASSERT(!tip_list.HasMN(tx_reg_hash));
-    BOOST_ASSERT(deterministicMNManager->GetListForBlock(pindex_create).HasMN(tx_reg_hash));
+    BOOST_ASSERT(dmnman.GetListForBlock(pindex_create).HasMN(tx_reg_hash));
 
     // check mn list/diff
     CDeterministicMNListDiff dummy_diff = base_list.BuildDiff(tip_list);
@@ -368,17 +372,17 @@ void FuncV19Activation(TestChainSetup& setup)
         setup.CreateAndProcessBlock({}, setup.coinbaseKey);
         BOOST_ASSERT(DeploymentActiveAfter(::ChainActive().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
         BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 1 + i);
-        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
-        deterministicMNManager->DoMaintenance();
-        diffs.push_back(tip_list.BuildDiff(deterministicMNManager->GetListAtChainTip()));
-        tip_list = deterministicMNManager->GetListAtChainTip();
+        dmnman.UpdatedBlockTip(::ChainActive().Tip());
+        dmnman.DoMaintenance();
+        diffs.push_back(tip_list.BuildDiff(dmnman.GetListAtChainTip()));
+        tip_list = dmnman.GetListAtChainTip();
         BOOST_ASSERT(!tip_list.HasMN(tx_reg_hash));
-        BOOST_ASSERT(deterministicMNManager->GetListForBlock(pindex_create).HasMN(tx_reg_hash));
+        BOOST_ASSERT(dmnman.GetListForBlock(pindex_create).HasMN(tx_reg_hash));
     }
 
     // check mn list/diff
     const CBlockIndex* v19_index = ::ChainActive().Tip()->GetAncestor(Params().GetConsensus().V19Height);
-    auto v19_list = deterministicMNManager->GetListForBlock(v19_index);
+    auto v19_list = dmnman.GetListForBlock(v19_index);
     dummy_diff = v19_list.BuildDiff(tip_list);
     dummmy_list = v19_list.ApplyDiff(::ChainActive().Tip(), dummy_diff);
     BOOST_ASSERT(dummmy_list == tip_list);
@@ -398,6 +402,8 @@ void FuncV19Activation(TestChainSetup& setup)
 
 void FuncDIP3Protx(TestChainSetup& setup)
 {
+    auto& dmnman = *Assert(setup.m_node.dmnman);
+
     CKey sporkKey;
     sporkKey.MakeNewKey(false);
     sporkManager->SetSporkAddress(EncodeDestination(PKHash(sporkKey.GetPubKey())));
@@ -438,10 +444,10 @@ void FuncDIP3Protx(TestChainSetup& setup)
         BOOST_ASSERT(!CheckTransactionSignature(*(setup.m_node.mempool), tx2));
 
         setup.CreateAndProcessBlock({tx}, setup.coinbaseKey);
-        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        dmnman.UpdatedBlockTip(::ChainActive().Tip());
 
         BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 1);
-        BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
+        BOOST_ASSERT(dmnman.GetListAtChainTip().HasMN(tx.GetHash()));
 
         nHeight++;
     }
@@ -449,18 +455,18 @@ void FuncDIP3Protx(TestChainSetup& setup)
     int DIP0003EnforcementHeightBackup = Params().GetConsensus().DIP0003EnforcementHeight;
     const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = ::ChainActive().Height() + 1;
     setup.CreateAndProcessBlock({}, setup.coinbaseKey);
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    dmnman.UpdatedBlockTip(::ChainActive().Tip());
     nHeight++;
 
     // check MN reward payments
     for (size_t i = 0; i < 20; i++) {
-        auto dmnExpectedPayee = deterministicMNManager->GetListAtChainTip().GetMNPayee(::ChainActive().Tip());
+        auto dmnExpectedPayee = dmnman.GetListAtChainTip().GetMNPayee(::ChainActive().Tip());
 
         CBlock block = setup.CreateAndProcessBlock({}, setup.coinbaseKey);
-        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        dmnman.UpdatedBlockTip(::ChainActive().Tip());
         BOOST_ASSERT(!block.vtx.empty());
 
-        auto dmnPayout = FindPayoutDmn(block);
+        auto dmnPayout = FindPayoutDmn(dmnman, block);
         BOOST_ASSERT(dmnPayout != nullptr);
         BOOST_CHECK_EQUAL(dmnPayout->proTxHash.ToString(), dmnExpectedPayee->proTxHash.ToString());
 
@@ -480,11 +486,11 @@ void FuncDIP3Protx(TestChainSetup& setup)
             txns.emplace_back(tx);
         }
         setup.CreateAndProcessBlock(txns, setup.coinbaseKey);
-        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        dmnman.UpdatedBlockTip(::ChainActive().Tip());
         BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 1);
 
         for (size_t j = 0; j < 3; j++) {
-            BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(txns[j].GetHash()));
+            BOOST_ASSERT(dmnman.GetListAtChainTip().HasMN(txns[j].GetHash()));
         }
 
         nHeight++;
@@ -493,33 +499,33 @@ void FuncDIP3Protx(TestChainSetup& setup)
     // test ProUpServTx
     auto tx = CreateProUpServTx(*(setup.m_node.mempool), utxos, dmnHashes[0], operatorKeys[dmnHashes[0]], 1000, CScript(), setup.coinbaseKey);
     setup.CreateAndProcessBlock({tx}, setup.coinbaseKey);
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    dmnman.UpdatedBlockTip(::ChainActive().Tip());
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 1);
     nHeight++;
 
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
+    auto dmn = dmnman.GetListAtChainTip().GetMN(dmnHashes[0]);
     BOOST_ASSERT(dmn != nullptr && dmn->pdmnState->addr.GetPort() == 1000);
 
     // test ProUpRevTx
     tx = CreateProUpRevTx(*(setup.m_node.mempool), utxos, dmnHashes[0], operatorKeys[dmnHashes[0]], setup.coinbaseKey);
     setup.CreateAndProcessBlock({tx}, setup.coinbaseKey);
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    dmnman.UpdatedBlockTip(::ChainActive().Tip());
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 1);
     nHeight++;
 
-    dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
+    dmn = dmnman.GetListAtChainTip().GetMN(dmnHashes[0]);
     BOOST_ASSERT(dmn != nullptr && dmn->pdmnState->GetBannedHeight() == nHeight);
 
     // test that the revoked MN does not get paid anymore
     for (size_t i = 0; i < 20; i++) {
-        auto dmnExpectedPayee = deterministicMNManager->GetListAtChainTip().GetMNPayee(::ChainActive().Tip());
+        auto dmnExpectedPayee = dmnman.GetListAtChainTip().GetMNPayee(::ChainActive().Tip());
         BOOST_ASSERT(dmnExpectedPayee->proTxHash != dmnHashes[0]);
 
         CBlock block = setup.CreateAndProcessBlock({}, setup.coinbaseKey);
-        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        dmnman.UpdatedBlockTip(::ChainActive().Tip());
         BOOST_ASSERT(!block.vtx.empty());
 
-        auto dmnPayout = FindPayoutDmn(block);
+        auto dmnPayout = FindPayoutDmn(dmnman, block);
         BOOST_ASSERT(dmnPayout != nullptr);
         BOOST_CHECK_EQUAL(dmnPayout->proTxHash.ToString(), dmnExpectedPayee->proTxHash.ToString());
 
@@ -529,7 +535,7 @@ void FuncDIP3Protx(TestChainSetup& setup)
     // test reviving the MN
     CBLSSecretKey newOperatorKey;
     newOperatorKey.MakeNewKey();
-    dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
+    dmn = dmnman.GetListAtChainTip().GetMN(dmnHashes[0]);
     tx = CreateProUpRegTx(*(setup.m_node.mempool), utxos, dmnHashes[0], ownerKeys[dmnHashes[0]], newOperatorKey.GetPublicKey(), ownerKeys[dmnHashes[0]].GetPubKey().GetID(), dmn->pdmnState->scriptPayout, setup.coinbaseKey);
     // check malleability protection again, but this time by also relying on the signature inside the ProUpRegTx
     auto tx2 = MalleateProTxPayout<CProUpRegTx>(tx);
@@ -543,33 +549,33 @@ void FuncDIP3Protx(TestChainSetup& setup)
     BOOST_ASSERT(!CheckTransactionSignature(*(setup.m_node.mempool), tx2));
     // now process the block
     setup.CreateAndProcessBlock({tx}, setup.coinbaseKey);
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    dmnman.UpdatedBlockTip(::ChainActive().Tip());
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 1);
     nHeight++;
 
     tx = CreateProUpServTx(*(setup.m_node.mempool), utxos, dmnHashes[0], newOperatorKey, 100, CScript(), setup.coinbaseKey);
     setup.CreateAndProcessBlock({tx}, setup.coinbaseKey);
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    dmnman.UpdatedBlockTip(::ChainActive().Tip());
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 1);
     nHeight++;
 
-    dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
+    dmn = dmnman.GetListAtChainTip().GetMN(dmnHashes[0]);
     BOOST_ASSERT(dmn != nullptr && dmn->pdmnState->addr.GetPort() == 100);
     BOOST_ASSERT(dmn != nullptr && !dmn->pdmnState->IsBanned());
 
     // test that the revived MN gets payments again
     bool foundRevived = false;
     for (size_t i = 0; i < 20; i++) {
-        auto dmnExpectedPayee = deterministicMNManager->GetListAtChainTip().GetMNPayee(::ChainActive().Tip());
+        auto dmnExpectedPayee = dmnman.GetListAtChainTip().GetMNPayee(::ChainActive().Tip());
         if (dmnExpectedPayee->proTxHash == dmnHashes[0]) {
             foundRevived = true;
         }
 
         CBlock block = setup.CreateAndProcessBlock({}, setup.coinbaseKey);
-        deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+        dmnman.UpdatedBlockTip(::ChainActive().Tip());
         BOOST_ASSERT(!block.vtx.empty());
 
-        auto dmnPayout = FindPayoutDmn(block);
+        auto dmnPayout = FindPayoutDmn(dmnman, block);
         BOOST_ASSERT(dmnPayout != nullptr);
         BOOST_CHECK_EQUAL(dmnPayout->proTxHash.ToString(), dmnExpectedPayee->proTxHash.ToString());
 
@@ -605,7 +611,7 @@ void FuncTestMempoolReorg(TestChainSetup& setup)
 
     auto block = std::make_shared<CBlock>(setup.CreateBlock({tx_collateral}, setup.coinbaseKey));
     BOOST_ASSERT(Assert(setup.m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    setup.m_node.dmnman->UpdatedBlockTip(::ChainActive().Tip());
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 1);
     BOOST_CHECK_EQUAL(block->GetHash(), ::ChainActive().Tip()->GetBlockHash());
 
@@ -713,6 +719,8 @@ void FuncTestMempoolDualProregtx(TestChainSetup& setup)
 
 void FuncVerifyDB(TestChainSetup& setup)
 {
+    auto& dmnman = *Assert(setup.m_node.dmnman);
+
     int nHeight = ::ChainActive().Height();
     auto utxos = BuildSimpleUtxoMap(setup.m_coinbase_txns);
 
@@ -736,7 +744,7 @@ void FuncVerifyDB(TestChainSetup& setup)
 
     auto block = std::make_shared<CBlock>(setup.CreateBlock({tx_collateral}, setup.coinbaseKey));
     BOOST_ASSERT(Assert(setup.m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    dmnman.UpdatedBlockTip(::ChainActive().Tip());
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 1);
     BOOST_CHECK_EQUAL(block->GetHash(), ::ChainActive().Tip()->GetBlockHash());
 
@@ -768,10 +776,10 @@ void FuncVerifyDB(TestChainSetup& setup)
 
     block = std::make_shared<CBlock>(setup.CreateBlock({tx_reg}, setup.coinbaseKey));
     BOOST_ASSERT(Assert(setup.m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    dmnman.UpdatedBlockTip(::ChainActive().Tip());
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 2);
     BOOST_CHECK_EQUAL(block->GetHash(), ::ChainActive().Tip()->GetBlockHash());
-    BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx_reg_hash));
+    BOOST_ASSERT(dmnman.GetListAtChainTip().HasMN(tx_reg_hash));
 
     // Now spend the collateral while updating the same MN
     SimpleUTXOMap collateral_utxos;
@@ -780,10 +788,10 @@ void FuncVerifyDB(TestChainSetup& setup)
 
     block = std::make_shared<CBlock>(setup.CreateBlock({proUpRevTx}, setup.coinbaseKey));
     BOOST_ASSERT(Assert(setup.m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
-    deterministicMNManager->UpdatedBlockTip(::ChainActive().Tip());
+    dmnman.UpdatedBlockTip(::ChainActive().Tip());
     BOOST_CHECK_EQUAL(::ChainActive().Height(), nHeight + 3);
     BOOST_CHECK_EQUAL(block->GetHash(), ::ChainActive().Tip()->GetBlockHash());
-    BOOST_ASSERT(!deterministicMNManager->GetListAtChainTip().HasMN(tx_reg_hash));
+    BOOST_ASSERT(!dmnman.GetListAtChainTip().HasMN(tx_reg_hash));
 
     // Verify db consistency
     LOCK(cs_main);
