@@ -84,7 +84,7 @@ def get_bind_addrs(pid):
             bind_addrs.append(conn[1])
     return bind_addrs
 
-# from: http://code.activestate.com/recipes/439093/
+# from: https://code.activestate.com/recipes/439093/
 def all_interfaces():
     '''
     Return all interfaces that are up
