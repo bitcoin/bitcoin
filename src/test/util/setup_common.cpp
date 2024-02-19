@@ -232,10 +232,6 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     ::netfulfilledman = std::make_unique<CNetFulfilledRequestManager>(/* load_cache */ false);
     m_node.netfulfilledman = ::netfulfilledman.get();
 
-    creditPoolManager = std::make_unique<CCreditPoolManager>(*m_node.evodb);
-    m_node.creditPoolManager = creditPoolManager.get();
-
-
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
     constexpr int script_check_threads = 2;
     StartScriptCheckWorkerThreads(script_check_threads);
@@ -245,8 +241,6 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 ChainTestingSetup::~ChainTestingSetup()
 {
     m_node.scheduler->stop();
-    creditPoolManager.reset();
-    m_node.creditPoolManager = nullptr;
     StopScriptCheckWorkerThreads();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
