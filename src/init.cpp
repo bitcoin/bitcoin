@@ -304,12 +304,18 @@ void PrepareShutdown(NodeContext& node)
 
     // After all scheduled tasks have been flushed, destroy pointers
     // and reset all to nullptr.
-    ::governance.reset();
-    ::sporkManager.reset();
-    ::masternodeSync.reset();
+    node.netfulfilledman = nullptr;
     ::netfulfilledman.reset();
+    node.mn_metaman = nullptr;
     ::mmetaman.reset();
+    node.dstxman = nullptr;
     ::dstxManager.reset();
+    node.mn_sync = nullptr;
+    ::masternodeSync.reset();
+    node.sporkman = nullptr;
+    ::sporkManager.reset();
+    node.govman = nullptr;
+    ::governance.reset();
 
     // Stop and delete all indexes only after flushing background callbacks.
     if (g_txindex) {
@@ -342,6 +348,7 @@ void PrepareShutdown(NodeContext& node)
             node.llmq_ctx.reset();
         }
         llmq::quorumSnapshotManager.reset();
+        node.dmnman = nullptr;
         deterministicMNManager.reset();
         creditPoolManager.reset();
         node.creditPoolManager = nullptr;
@@ -1705,6 +1712,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     assert(!::governance);
     ::governance = std::make_unique<CGovernanceManager>();
+    node.govman = ::governance.get();
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
@@ -1714,6 +1722,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     assert(!::sporkManager);
     ::sporkManager = std::make_unique<CSporkManager>();
+    node.sporkman = ::sporkManager.get();
 
     std::vector<std::string> vSporkAddresses;
     if (args.IsArgSet("-sporkaddr")) {
@@ -1739,7 +1748,9 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         }
     }
 
+    assert(!::masternodeSync);
     ::masternodeSync = std::make_unique<CMasternodeSync>(*node.connman, *::governance);
+    node.mn_sync = ::masternodeSync.get();
 
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<std::string> uacomments;
@@ -1861,8 +1872,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     }
 #endif
 
-    assert(::governance != nullptr);
-    assert(::masternodeSync != nullptr);
     pdsNotificationInterface = new CDSNotificationInterface(
         *node.connman, *::masternodeSync, ::deterministicMNManager, *::governance, node.llmq_ctx, node.cj_ctx
     );
@@ -1956,7 +1965,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
                 // Same logic as above with pblocktree
                 deterministicMNManager.reset();
-                deterministicMNManager.reset(new CDeterministicMNManager(chainman.ActiveChainstate(), *node.connman, *node.evodb));
+                deterministicMNManager = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *node.connman, *node.evodb);
+                node.dmnman = deterministicMNManager.get();
                 creditPoolManager.reset();
                 creditPoolManager = std::make_unique<CCreditPoolManager>(*node.evodb);
                 node.creditPoolManager = creditPoolManager.get();
@@ -2232,9 +2242,11 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     assert(!::dstxManager);
     ::dstxManager = std::make_unique<CDSTXManager>();
+    node.dstxman = ::dstxManager.get();
 
     assert(!::mmetaman);
     ::mmetaman = std::make_unique<CMasternodeMetaMan>(fLoadCacheFiles);
+    node.mn_metaman = ::mmetaman.get();
     if (!::mmetaman->IsValid()) {
         auto file_path = (GetDataDir() / "mncache.dat").string();
         if (fLoadCacheFiles) {
@@ -2245,6 +2257,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     assert(!::netfulfilledman);
     ::netfulfilledman = std::make_unique<CNetFulfilledRequestManager>(fLoadCacheFiles);
+    node.netfulfilledman = ::netfulfilledman.get();
     if (!::netfulfilledman->IsValid()) {
         auto file_path = (GetDataDir() / "netfulfilled.dat").string();
         if (fLoadCacheFiles) {

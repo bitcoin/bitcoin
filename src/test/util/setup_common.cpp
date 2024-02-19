@@ -109,10 +109,11 @@ void DashTestSetup(NodeContext& node)
     CChainState& chainstate = Assert(node.chainman)->ActiveChainstate();
 
     node.cj_ctx = std::make_unique<CJContext>(chainstate, *node.connman, *node.mempool, *::masternodeSync, /* relay_txes */ true);
+    ::deterministicMNManager = std::make_unique<CDeterministicMNManager>(chainstate, *node.connman, *node.evodb);
+    node.dmnman = ::deterministicMNManager.get();
 #ifdef ENABLE_WALLET
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
 #endif // ENABLE_WALLET
-    ::deterministicMNManager = std::make_unique<CDeterministicMNManager>(chainstate, *node.connman, *node.evodb);
     node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.evodb, *sporkManager, *node.mempool, node.peerman, true, false);
 }
 
@@ -121,6 +122,7 @@ void DashTestSetupClose(NodeContext& node)
     node.llmq_ctx->Interrupt();
     node.llmq_ctx->Stop();
     node.llmq_ctx.reset();
+    node.dmnman = nullptr;
     ::deterministicMNManager.reset();
     node.cj_ctx.reset();
 }
@@ -218,11 +220,17 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman); // Deterministic randomness for tests.
 
     ::sporkManager = std::make_unique<CSporkManager>();
+    m_node.sporkman = ::sporkManager.get();
     ::governance = std::make_unique<CGovernanceManager>();
+    m_node.govman = ::governance.get();
     ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman, *::governance);
+    m_node.mn_sync = ::masternodeSync.get();
     ::dstxManager = std::make_unique<CDSTXManager>();
+    m_node.dstxman = ::dstxManager.get();
     ::mmetaman = std::make_unique<CMasternodeMetaMan>(/* load_cache */ false);
+    m_node.mn_metaman = ::mmetaman.get();
     ::netfulfilledman = std::make_unique<CNetFulfilledRequestManager>(/* load_cache */ false);
+    m_node.netfulfilledman = ::netfulfilledman.get();
 
     creditPoolManager = std::make_unique<CCreditPoolManager>(*m_node.evodb);
     m_node.creditPoolManager = creditPoolManager.get();
@@ -242,11 +250,17 @@ ChainTestingSetup::~ChainTestingSetup()
     StopScriptCheckWorkerThreads();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
+    m_node.netfulfilledman = nullptr;
     ::netfulfilledman.reset();
+    m_node.mn_metaman = nullptr;
     ::mmetaman.reset();
+    m_node.dstxman = nullptr;
     ::dstxManager.reset();
+    m_node.mn_sync = nullptr;
     ::masternodeSync.reset();
+    m_node.govman = nullptr;
     ::governance.reset();
+    m_node.sporkman = nullptr;
     ::sporkManager.reset();
     m_node.connman.reset();
     m_node.addrman.reset();
