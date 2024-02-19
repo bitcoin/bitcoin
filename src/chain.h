@@ -22,7 +22,7 @@
  * current network-adjusted time before the block will be accepted.
  */
 static constexpr int64_t MAX_FUTURE_BLOCK_TIME = 2 * 60 * 60;
-
+static constexpr int64_t MAX_FUTURE_BLOCK_TIME_POS = 15;
 /**
  * Timestamp window used as a grace period by code that compares external
  * timestamps (such as timestamps passed to RPCs, or wallet key creation times)

@@ -23,6 +23,8 @@
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <policy/policy.h>
+#include <pos.h>
+#include <pow.h>
 #include <script/script_error.h>
 #include <sync.h>
 #include <txdb.h>
@@ -1200,6 +1202,9 @@ public:
     /** Update uncommitted block structures (currently: only the witness reserved value). This is safe for submitted blocks. */
     void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev) const;
 
+
+    bool UpdateHashProof(const CBlock& block, BlockValidationState& state, const Consensus::Params& consensusParams, CBlockIndex* pindex, CCoinsViewCache& view);
+
     /** Produce the necessary coinbase commitment for a block (modifies the hash, don't call for mined blocks). */
     std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev) const;
 
@@ -1302,7 +1307,7 @@ bool IsBIP30Unspendable(const CBlockIndex& block_index);
 
 
 
-bool CheckReward(const CBlock& block, BlockValidationState& state, int nHeight, const Consensus::Params& consensusParams, CAmount nFees, CAmount nActualStakeReward, const std::vector<CTxOut>& vouts);
+bool CheckReward(const CBlock& block, BlockValidationState& state, int nHeight, const Consensus::Params& consensusParams, CAmount nFees, CAmount nActualStakeReward);
 bool RemoveStateBlockIndex(CBlockIndex *pindex);
 bool GetBlockPublicKey(const CBlock& block, std::vector<unsigned char>& vchPubKey);
 bool GetSpentCoinFromBlock(const CBlockIndex* pindex, COutPoint prevout, Coin* coin);
@@ -1345,5 +1350,6 @@ struct CHeightTxIndexKey {
         address.SetNull();
     }
 };
+
 
 #endif // BITCOIN_VALIDATION_H

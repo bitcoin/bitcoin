@@ -2243,6 +2243,11 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         return true;
     }
 
+    // State is filled in by UpdateHashProof
+    if (!m_chainman.UpdateHashProof(block, state, params.GetConsensus(), pindex, view)) {
+        return error("%s: ConnectBlock(): %s", __func__, state.GetRejectReason().c_str());
+    }
+
     bool fScriptChecks = true;
     if (!m_chainman.AssumedValidBlock().IsNull()) {
         // We've been configured with the hash of a block which has been externally verified to have a valid history.
@@ -2407,9 +2412,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
         if (!tx.IsCoinBase())
         {
-            if (tx.IsCoinStake())
-                nActualStakeReward = tx.GetValueOut()-view.GetValueIn(tx);
-            
             CAmount txfee = 0;
             TxValidationState tx_state;
             if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee)) {
@@ -2450,6 +2452,9 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
         if (!tx.IsCoinBase())
         {
+            if (tx.IsCoinStake())
+                nActualStakeReward = tx.GetValueOut()-view.GetValueIn(tx);
+                        
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
             TxValidationState tx_state;
@@ -2477,11 +2482,8 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<SecondsDouble>(time_connect),
              Ticks<MillisecondsDouble>(time_connect) / num_blocks_total);
 
-    CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, params.GetConsensus());
-    if (block.vtx[0]->GetValueOut() > blockReward) {
-        LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)\n", block.vtx[0]->GetValueOut(), blockReward);
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
-    }
+    if (!CheckReward(block, state, pindex->nHeight, params.GetConsensus(), nFees, nActualStakeReward))
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "block-reward-invalid");
 
     if (!control.Wait()) {
         LogPrintf("ERROR: %s: CheckQueue failed\n", __func__);
@@ -3881,11 +3883,11 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     }
 
     // Check timestamp against prev
-    if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
+    if (pindexPrev && block.IsProofOfStake() && block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-too-old", "block's timestamp is too early");
 
     // Check timestamp
-    if (block.Time() > now + std::chrono::seconds{MAX_FUTURE_BLOCK_TIME}) {
+    if (block.IsProofOfStake() && block.Time() > now + std::chrono::seconds{MAX_FUTURE_BLOCK_TIME_POS}) {
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
     }
 
@@ -4086,10 +4088,7 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
             return error("%s: Consensus::CheckBlockHeader: %s, %s", __func__, hash.ToString(), state.ToString());
 
     }
-    if (!min_pow_checked) {
-        LogPrint(BCLog::VALIDATION, "%s: not adding new block header %s, missing anti-dos proof-of-work validation\n", __func__, hash.ToString());
-        return state.Invalid(BlockValidationResult::BLOCK_HEADER_LOW_WORK, "too-little-chainwork");
-    }
+
     CBlockIndex* pindex{m_blockman.AddToBlockIndex(block, m_best_header)};
 
     if (ppindex)
@@ -4119,6 +4118,14 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
 bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, bool min_pow_checked, BlockValidationState& state, const CBlockIndex** ppindex)
 {
     AssertLockNotHeld(cs_main);
+
+    if(!IsInitialBlockDownload() && headers.size() > 1) {
+        const CBlockHeader last_header = headers[headers.size()-1];
+        if (last_header.IsProofOfStake() && last_header.GetBlockTime() > FutureDrift(GetAdjustedTime64())) {
+            return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
+        }
+    }
+
     {
         LOCK(cs_main);
         for (const CBlockHeader& header : headers) {
@@ -4185,6 +4192,44 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
 
     if (!accepted_header)
         return false;
+
+    if(block.IsProofOfWork()) {
+        if (!UpdateHashProof(block, state, GetConsensus(), pindex, m_active_chainstate->CoinsTip()))
+        {
+            return error("%s: AcceptBlock(): %s", __func__, state.GetRejectReason().c_str());
+        }
+    }
+
+    // Get prev block index
+    CBlockIndex* pindexPrev = nullptr;
+    if(pindex->nHeight > 0){
+        BlockMap::iterator mi = ::BlockIndex().find(block.hashPrevBlock);
+        if (mi == ::BlockIndex().end())
+            return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "prev-block-not-found", "AcceptBlock() : prev block not found");
+        pindexPrev = &((*mi).second);
+    }
+
+    // Get block height
+    int nHeight = pindex->nHeight;
+
+    // Check for the last proof of work block
+    if (block.IsProofOfWork() && nHeight > GetConsensus().nLastPOWBlock)
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-proof-of-work", strprintf("AcceptBlock() : reject proof-of-work at height %d", nHeight));
+
+    // Check for the early proof of stake block
+    if (block.IsProofOfStake() && nHeight <= GetConsensus().nLastPOWBlock)
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-proof-of-stake", strprintf("AcceptBlock() : reject proof-of-stake at height %d", nHeight));
+
+    // Check timestamp against prev
+    if (pindexPrev && block.IsProofOfStake() && (block.GetBlockTime() <= pindexPrev->GetBlockTime() || FutureDrift(block.GetBlockTime()) < pindexPrev->GetBlockTime()))
+        return error("AcceptBlock() : block's timestamp is too early");
+
+    // Check timestamp
+    if (block.IsProofOfStake() &&  block.GetBlockTime() > FutureDrift(GetAdjustedTime64()))
+        return error("AcceptBlock() : block timestamp too far in the future");
+
+
+
 
     // Check all requested blocks that we do not already have for validity and
     // save them to disk. Skip processing of unrequested blocks as an anti-DoS
@@ -6246,7 +6291,7 @@ bool CheckReward(const CBlock& block, BlockValidationState& state, int nHeight, 
         }
     }
     else
-    {
+    {   // @TODO, remove this code
         // Check full reward
         CAmount blockReward = nFees + GetBlockSubsidy(nHeight, consensusParams);
         if (nActualStakeReward > blockReward) {
@@ -6416,4 +6461,47 @@ bool GetBlockPublicKey(const CBlock& block, std::vector<unsigned char>& vchPubKe
     }
 
     return false;
+}
+
+
+bool ChainstateManager::UpdateHashProof(const CBlock& block, BlockValidationState& state, const Consensus::Params& consensusParams, CBlockIndex* pindex, CCoinsViewCache& view)
+{
+    int nHeight = pindex->nHeight;
+    uint256 hash = block.GetHash();
+
+    //reject proof of work at height consensusParams.nLastPOWBlock
+    if (block.IsProofOfWork() && nHeight > consensusParams.nLastPOWBlock)
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-block-type", strprintf("UpdateHashProof() : reject proof-of-work at height %d", nHeight));
+    
+    // Check coinstake timestamp
+    if (block.IsProofOfStake() && !CheckCoinStakeTimestamp(block.GetBlockTime()))
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-proof-of-stake-timestamp", strprintf("UpdateHashProof() : coinstake timestamp violation nTimeBlock=%d", block.GetBlockTime()));
+
+    // Check proof-of-work or proof-of-stake; genesis does not have a previous block, skip.
+    if (0 != nHeight)
+    {
+        if (block.nBits != GetNextWorkRequired(pindex->pprev, &block, consensusParams))
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-proof-of-work-or-stake", strprintf("UpdateHashProof() : incorrect %s", block.IsProofOfWork() ? "proof-of-work" : "proof-of-stake"));
+    }
+
+    uint256 hashProof;
+    // Verify hash target and signature of coinstake tx
+    if (block.IsProofOfStake())
+    {
+        uint256 targetProofOfStake;
+        if (!CheckProofOfStake(pindex->pprev, state, *block.vtx[1], block.nBits, block.nTime, block.nNonce, hashProof, targetProofOfStake, view))
+        {
+            return error("UpdateHashProof() : check proof-of-stake failed for block %s", hash.ToString());
+        }
+    }
+    
+    // PoW is checked in CheckBlock()
+    if (block.IsProofOfWork())
+    {
+        hashProof = block.GetHash();
+    }
+    
+    // Record proof hash value
+    pindex->hashProof = hashProof;
+    return true;
 }

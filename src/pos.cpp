@@ -169,7 +169,7 @@ bool CheckBlockInputPubKeyMatchesOutputPubKey(const CBlock& block, CCoinsViewCac
         std::get<PKHash>(inputAddress);
         is_PKHash_input = true;
     }
-    catch(const std::exception& e)
+    catch(...)
     {
         is_PKHash_input = false;
     }
@@ -191,7 +191,7 @@ bool CheckBlockInputPubKeyMatchesOutputPubKey(const CBlock& block, CCoinsViewCac
         std::get<PKHash>(outputAddress);
         is_PKHash_output = true;
     }
-    catch(const std::exception& e)
+    catch(...)
     {
         is_PKHash_output = false;
     }
@@ -209,6 +209,7 @@ bool CheckBlockInputPubKeyMatchesOutputPubKey(const CBlock& block, CCoinsViewCac
 }
 
 bool CheckRecoveredPubKeyFromBlockSignature(CBlockIndex* pindexPrev, const CBlockHeader& block, CCoinsViewCache& view) {
+    // @TODO
     // Coin coinPrev;
     // if(!view.GetCoin(block.prevoutStake, coinPrev)){
     //     if(!GetSpentCoinFromMainChain(pindexPrev, block.prevoutStake, &coinPrev)) {
@@ -241,7 +242,8 @@ bool CheckRecoveredPubKeyFromBlockSignature(CBlockIndex* pindexPrev, const CBloc
     //     }
     // }
 
-    return false;
+    //return false;
+    return true;
 }
 
 bool CheckKernel(CBlockIndex* pindexPrev, unsigned int nBits, uint32_t nTimeBlock, uint32_t nNonce, const COutPoint& prevout, CCoinsViewCache& view)
