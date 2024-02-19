@@ -30,6 +30,7 @@
 #include <node/blockstorage.h>
 #include <node/utxo_snapshot.h>
 #include <policy/v3_policy.h>
+#include <policy/issuer_selected_policy.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <policy/settings.h>
@@ -958,6 +959,12 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "v3-rule-violation", *err_string);
     }
 
+    // Experimental - Apply v3+ policy to the transactions which have opted-in
+    ws.m_ancestors = *ancestors;
+    if (const auto err_string{SingleIssuerSelectedChecks(ws.m_ptx, ws.m_ancestors, ws.m_conflicts, ws.m_vsize)}) {
+        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "v3-rule-violation", *err_string);
+    }
+
     // A transaction that spends outputs that would be replaced by it is invalid. Now
     // that we have the set of all ancestors we can detect this
     // pathological case by making sure ws.m_conflicts and ws.m_ancestors don't
@@ -1322,6 +1329,15 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
     for (Workspace& ws : workspaces) {
         if (auto err{PackageV3Checks(ws.m_ptx, ws.m_vsize, txns, ws.m_ancestors)}) {
             package_state.Invalid(PackageValidationResult::PCKG_POLICY, "v3-violation", err.value());
+            return PackageMempoolAcceptResult(package_state, {});
+        }
+    }
+
+    // At this point we have all in-mempool ancestors, and we know every transaction's vsize.
+    // Run the issuer-selected transaction/package checks on the package.
+    for (Workspace& ws : workspaces) {
+        if (auto err{PackageIssuerSelectedChecks(ws.m_ptx, ws.m_vsize, txns, ws.m_ancestors)}) {
+            package_state.Invalid(PackageValidationResult::PCKG_POLICY, "issuer-selected-violation", err.value());
             return PackageMempoolAcceptResult(package_state, {});
         }
     }

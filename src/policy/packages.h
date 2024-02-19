@@ -88,4 +88,8 @@ bool IsChildWithParents(const Package& package);
  * other (the package is a "tree").
  */
 bool IsChildWithParentsTree(const Package& package);
+
+// Common helpers use with issuer-selected transaction/package policy checks
+std::vector<size_t> FindInPackageParents(const Package& package, const CTransactionRef& ptx);
+
 #endif // BITCOIN_POLICY_PACKAGES_H

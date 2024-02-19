@@ -147,3 +147,26 @@ bool IsChildWithParentsTree(const Package& package)
         return true;
     });
 }
+
+/** Helper for PackageV3Checks: Returns a vector containing the indices of transactions (within
+ * package) that are direct parents of ptx. */
+std::vector<size_t> FindInPackageParents(const Package& package, const CTransactionRef& ptx)
+{
+    std::vector<size_t> in_package_parents;
+
+    std::set<Txid> possible_parents;
+    for (auto &input : ptx->vin) {
+        possible_parents.insert(input.prevout.hash);
+    }
+
+    for (size_t i{0}; i < package.size(); ++i) {
+        const auto& tx = package.at(i);
+        // We assume the package is sorted, so that we don't need to continue
+        // looking past the transaction itself.
+        if (&(*tx) == &(*ptx)) break;
+        if (possible_parents.count(tx->GetHash())) {
+            in_package_parents.push_back(i);
+        }
+    }
+    return in_package_parents;
+}
