@@ -313,7 +313,7 @@ public:
 
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override LOCKS_EXCLUDED(cs_inputReqests, cs_creating);
 
-    PeerMsgRet ProcessMessage(const CNode& pfrom, gsl::not_null<PeerManager*> peerman, const std::string& msg_type, CDataStream& vRecv);
+    PeerMsgRet ProcessMessage(const CNode& pfrom, gsl::not_null<PeerManager*> peerman, std::string_view msg_type, CDataStream& vRecv);
 
     void TransactionAddedToMempool(const CTransactionRef& tx) LOCKS_EXCLUDED(cs_pendingLocks);
     void TransactionRemovedFromMempool(const CTransactionRef& tx);
