@@ -146,6 +146,9 @@ void PSBTInput::FillSignatureData(SignatureData& sigdata) const
     for (const auto& [hash, preimage] : hash256_preimages) {
         sigdata.hash256_preimages.emplace(std::vector<unsigned char>(hash.begin(), hash.end()), preimage);
     }
+    sigdata.musig2_pubkeys.insert(m_musig2_participants.begin(), m_musig2_participants.end());
+    sigdata.musig2_pubnonces.insert(m_musig2_pubnonces.begin(), m_musig2_pubnonces.end());
+    sigdata.musig2_partial_sigs.insert(m_musig2_partial_sigs.begin(), m_musig2_partial_sigs.end());
 }
 
 void PSBTInput::FromSignatureData(const SignatureData& sigdata)
@@ -193,6 +196,13 @@ void PSBTInput::FromSignatureData(const SignatureData& sigdata)
     for (const auto& [pubkey, leaf_origin] : sigdata.taproot_misc_pubkeys) {
         m_tap_bip32_paths.emplace(pubkey, leaf_origin);
     }
+    m_musig2_participants.insert(sigdata.musig2_pubkeys.begin(), sigdata.musig2_pubkeys.end());
+    for (const auto& [agg_key_lh, pubnonces] : sigdata.musig2_pubnonces) {
+        m_musig2_pubnonces[agg_key_lh].insert(pubnonces.begin(), pubnonces.end());
+    }
+    for (const auto& [agg_key_lh, psigs] : sigdata.musig2_partial_sigs) {
+        m_musig2_partial_sigs[agg_key_lh].insert(psigs.begin(), psigs.end());
+    }
 }
 
 void PSBTInput::Merge(const PSBTInput& input)
@@ -220,6 +230,13 @@ void PSBTInput::Merge(const PSBTInput& input)
     if (m_tap_key_sig.empty() && !input.m_tap_key_sig.empty()) m_tap_key_sig = input.m_tap_key_sig;
     if (m_tap_internal_key.IsNull() && !input.m_tap_internal_key.IsNull()) m_tap_internal_key = input.m_tap_internal_key;
     if (m_tap_merkle_root.IsNull() && !input.m_tap_merkle_root.IsNull()) m_tap_merkle_root = input.m_tap_merkle_root;
+    m_musig2_participants.insert(input.m_musig2_participants.begin(), input.m_musig2_participants.end());
+    for (const auto& [agg_key_lh, pubnonces] : input.m_musig2_pubnonces) {
+        m_musig2_pubnonces[agg_key_lh].insert(pubnonces.begin(), pubnonces.end());
+    }
+    for (const auto& [agg_key_lh, psigs] : input.m_musig2_partial_sigs) {
+        m_musig2_partial_sigs[agg_key_lh].insert(psigs.begin(), psigs.end());
+    }
 }
 
 void PSBTOutput::FillSignatureData(SignatureData& sigdata) const
@@ -249,6 +266,7 @@ void PSBTOutput::FillSignatureData(SignatureData& sigdata) const
         sigdata.taproot_misc_pubkeys.emplace(pubkey, leaf_origin);
         sigdata.tap_pubkeys.emplace(Hash160(pubkey), pubkey);
     }
+    sigdata.musig2_pubkeys.insert(m_musig2_participants.begin(), m_musig2_participants.end());
 }
 
 void PSBTOutput::FromSignatureData(const SignatureData& sigdata)
@@ -271,6 +289,7 @@ void PSBTOutput::FromSignatureData(const SignatureData& sigdata)
     for (const auto& [pubkey, leaf_origin] : sigdata.taproot_misc_pubkeys) {
         m_tap_bip32_paths.emplace(pubkey, leaf_origin);
     }
+    m_musig2_participants.insert(sigdata.musig2_pubkeys.begin(), sigdata.musig2_pubkeys.end());
 }
 
 bool PSBTOutput::IsNull() const
@@ -288,6 +307,7 @@ void PSBTOutput::Merge(const PSBTOutput& output)
     if (witness_script.empty() && !output.witness_script.empty()) witness_script = output.witness_script;
     if (m_tap_internal_key.IsNull() && !output.m_tap_internal_key.IsNull()) m_tap_internal_key = output.m_tap_internal_key;
     if (m_tap_tree.empty() && !output.m_tap_tree.empty()) m_tap_tree = output.m_tap_tree;
+    m_musig2_participants.insert(output.m_musig2_participants.begin(), output.m_musig2_participants.end());
 }
 
 bool PSBTInputSigned(const PSBTInput& input)
