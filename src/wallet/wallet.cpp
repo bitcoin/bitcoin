@@ -2211,7 +2211,7 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     bool any_pkh{false};
 
     for (const auto& recipient : vecSend) {
-        if (std::get_if<WitnessV1Taproot>(&recipient.dest)) {
+        if (std::get_if<WitnessV1Taproot>(&recipient.dest) || std::get_if<V0SilentPaymentDestination>(&recipient.dest)) {
             any_tr = true;
         } else if (std::get_if<WitnessV0KeyHash>(&recipient.dest)) {
             any_wpkh = true;
@@ -4427,5 +4427,20 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         return util::Error{error};
     }
     return res;
+}
+
+size_t GetSerializeSizeForRecipient(const CRecipient& recipient)
+{
+    return std::visit([&recipient](auto&& dest) -> size_t {
+        using T = std::decay_t<decltype(dest)>;
+        // A Silent Payements address is instructions on how to create a WitnessV1Taproot output
+        // Luckily, we know exactly how big a single WitnessV1Taproot output is, so return the serialization for that
+        // For everything else, convert it to a CTxOut and get the serialized size
+        if constexpr (std::is_same_v<T, V0SilentPaymentDestination>) {
+            return ::GetSerializeSize(CTxOut(recipient.nAmount, GetScriptForDestination(WitnessV1Taproot())));
+        } else {
+            return ::GetSerializeSize(CTxOut(recipient.nAmount, GetScriptForDestination(dest)));
+        }
+    }, recipient.dest);
 }
 } // namespace wallet

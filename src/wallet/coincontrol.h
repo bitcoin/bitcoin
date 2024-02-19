@@ -93,6 +93,8 @@ public:
     bool fAllowWatchOnly = false;
     //! Override automatic min/max checks on fee, m_feerate must be set if true
     bool fOverrideFeeRate = false;
+    //! True if we are doing coin selection to fund a silent payment transaction
+    bool m_silent_payment = false;
     //! Override the wallet's m_pay_tx_fee if set
     std::optional<CFeeRate> m_feerate;
     //! Override the default confirmation target if set

@@ -24,6 +24,7 @@
 #include <wallet/fees.h>
 #include <wallet/receive.h>
 #include <wallet/spend.h>
+#include <wallet/silentpayments.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
@@ -294,6 +295,21 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
             return util::Error{strprintf(_("Not solvable pre-selected input %s"), outpoint.ToString())}; // Not solvable, can't estimate size for fee
         }
 
+        if (coin_control.m_silent_payment) {
+            std::vector<std::vector<uint8_t>> solutions;
+            TxoutType type = Solver(txout.scriptPubKey, solutions);
+            if (type == TxoutType::WITNESS_UNKNOWN) {
+                return util::Error{strprintf(_("%s has an unknown witness version and cannot be used in a silent payment transaction"), outpoint.ToString())};
+            } else if (type == TxoutType::WITNESS_V1_TAPROOT) {
+                std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(txout.scriptPubKey);
+                TaprootSpendData spenddata;
+                if (provider->GetTaprootSpendData(XOnlyPubKey(solutions[0]), spenddata)) {
+                    if (!spenddata.scripts.empty())
+                        return util::Error{strprintf(_("Found script data for %s. Only key path spends are allowed when funding a silent payment, please choose a different input"), outpoint.ToString())};
+                }
+            }
+        }
+
         /* Set some defaults for depth, spendable, solvable, safe, time, and from_me as these don't matter for preset inputs since no selection is being done. */
         COutput output(outpoint, txout, /*depth=*/ 0, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, coin_selection_params.m_effective_feerate);
         output.ApplyBumpFee(map_of_bump_fees.at(output.outpoint));
@@ -316,6 +332,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     const int min_depth = {coinControl ? coinControl->m_min_depth : DEFAULT_MIN_DEPTH};
     const int max_depth = {coinControl ? coinControl->m_max_depth : DEFAULT_MAX_DEPTH};
     const bool only_safe = {coinControl ? !coinControl->m_include_unsafe_inputs : true};
+    const bool silent_payment = {coinControl ? coinControl->m_silent_payment : false};
     const bool can_grind_r = wallet.CanGrindR();
     std::vector<COutPoint> outpoints;
 
@@ -432,6 +449,19 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                 if (!provider->GetCScript(CScriptID(uint160(script_solutions[0])), script)) continue;
                 type = Solver(script, script_solutions);
                 is_from_p2sh = true;
+            }
+
+            // Very unlikely we'd be spending a witness unknown output, but if we are trying to pay a
+            // silent payments v0 address, this can't be included
+            if (silent_payment && type == TxoutType::WITNESS_UNKNOWN) continue;
+            if (silent_payment && type == TxoutType::WITNESS_V1_TAPROOT) {
+                TaprootSpendData spenddata;
+                // If we have scriptpath spend data for the taproot output, just skip it for now. Only keypath
+                // spends can be used with silent payments and at this point we don't know if the keypath or script path is going to be used
+                // so if there's even a chance the script path will be used, better to skip the output for now
+                if (provider->GetTaprootSpendData(XOnlyPubKey(script_solutions[0]), spenddata)) {
+                    if (!spenddata.scripts.empty()) continue;
+                }
             }
 
             result.Add(GetOutputType(type, is_from_p2sh),
@@ -974,6 +1004,88 @@ static void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng
     }
 }
 
+bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet)
+{
+    std::vector<std::vector<unsigned char>> solutions;
+    TxoutType type = Solver(input, solutions);
+
+    switch (type) {
+        // First check the conditional inputs: P2TR and P2SH
+        case TxoutType::SCRIPTHASH:
+            {
+                // Only P2SH-P2WPKH is supported. If it is any other type of P2SH, skip the input
+                // To determine if this input is a P2SH-P2WPKH, get the redeemScript and check the
+                // TxOutType. If we can't get the reedeemScript, we have know way of knowing what type
+                // the P2SH is, and don't have access to the spending data, anyways.
+                std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(input);
+                CScript script;
+                if (!provider->GetCScript(CScriptID(uint160(solutions[0])), script)) return false;
+                type = Solver(script, solutions);
+                if (type == TxoutType::WITNESS_V0_KEYHASH) return true;
+                return false;
+            }
+        case TxoutType::WITNESS_V1_TAPROOT:
+            {
+                // TODO: If the outer public key is H (the NUMS point defined in the BIP), skip the input
+                // if (pubkey == H) return false;
+                return true;
+            }
+        case TxoutType::PUBKEYHASH:
+        case TxoutType::WITNESS_V0_KEYHASH: { return true; }
+        // For all the rest, these can be included as inputs but
+        // are not used when deriving the shared secret
+        case TxoutType::WITNESS_V0_SCRIPTHASH:
+        case TxoutType::MULTISIG:
+        case TxoutType::PUBKEY:
+        case TxoutType::NONSTANDARD:
+        case TxoutType::NULL_DATA: { return false; }
+        case TxoutType::WITNESS_UNKNOWN:
+            // This should never happen, as this step takes place after coin selection
+            // and this input would have been filtered out during coin selection.
+            assert(false);
+    }
+    // No default case so the compiler can warn us if we've missed something
+    assert(false);
+}
+
+std::map<size_t, WitnessV1Taproot> CreateSilentPaymentOutputs(
+    const CWallet& wallet,
+    const std::map<size_t, V0SilentPaymentDestination> silent_payment_destinations,
+    const std::set<std::shared_ptr<COutput>>& selected_coins,
+    bilingual_str& error)
+{
+    std::vector<std::pair<CKey,bool>> input_private_keys;
+    std::vector<COutPoint> tx_outpoints;
+    tx_outpoints.reserve(selected_coins.size());
+    // in most cases, we will use all of the inputs for shared secret derivation,
+    // in rare cases, we will overallocate the vector, but this should be fine
+    input_private_keys.reserve(selected_coins.size());
+    for (const auto& input : selected_coins) {
+        tx_outpoints.push_back(input->outpoint);
+        if (!IsInputForSharedSecretDerivation(input->txout.scriptPubKey, wallet)) continue;
+        const auto& spk_managers = wallet.GetScriptPubKeyMans(input->txout.scriptPubKey);
+        if (spk_managers.size() != 1) {
+            error = _("Only one ScriptPubKeyManager was expected for the input.");
+            return {};
+        }
+        const auto* spk_manager = dynamic_cast<DescriptorScriptPubKeyMan*>(*spk_managers.begin());
+        const auto& [sender_secret_key, is_taproot]{spk_manager->GetPrivKeyForSilentPayment(input->txout.scriptPubKey)};
+        if (!sender_secret_key.IsValid()) {
+            error = _("The private key of one of the inputs was not found.");
+            return {};
+        }
+        input_private_keys.emplace_back(sender_secret_key, is_taproot);
+    }
+    if (input_private_keys.empty()) {
+        error = _("No silent payment eligible inputs were found.");
+        return {};
+    }
+    assert(tx_outpoints.size() > 0);
+    CKey input_private_keys_sum = SumInputPrivKeys(input_private_keys);
+    uint256 inputs_hash = ComputeInputsHash(tx_outpoints, input_private_keys_sum.GetPubKey());
+    return GenerateSilentPaymentTaprootDestinations(input_private_keys_sum, inputs_hash, silent_payment_destinations);
+}
+
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CWallet& wallet,
         const std::vector<CRecipient>& vecSend,
@@ -996,6 +1108,8 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
     // Set the long term feerate estimate to the wallet's consolidate feerate
     coin_selection_params.m_long_term_feerate = wallet.m_consolidate_feerate;
+    // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 witness overhead (dummy, flag, stack size)
+    coin_selection_params.tx_noinputs_size = 10 + GetSizeOfCompactSize(vecSend.size()); // bytes for output count
 
     CAmount recipients_sum = 0;
     const OutputType change_type = wallet.TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : wallet.m_default_change_type, vecSend);
@@ -1008,6 +1122,9 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
             outputs_to_subtract_fee_from++;
             coin_selection_params.m_subtract_fee_outputs = true;
         }
+
+        // Include the fee cost for outputs.
+        coin_selection_params.tx_noinputs_size += GetSerializeSizeForRecipient(recipient);
     }
 
     // Create change script that will be used if we need change
@@ -1086,23 +1203,6 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     const auto change_spend_fee = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size);
     coin_selection_params.min_viable_change = std::max(change_spend_fee + 1, dust);
 
-    // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 witness overhead (dummy, flag, stack size)
-    coin_selection_params.tx_noinputs_size = 10 + GetSizeOfCompactSize(vecSend.size()); // bytes for output count
-
-    // vouts to the payees
-    for (const auto& recipient : vecSend)
-    {
-        CTxOut txout(recipient.nAmount, GetScriptForDestination(recipient.dest));
-
-        // Include the fee cost for outputs.
-        coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout);
-
-        if (IsDust(txout, wallet.chain().relayDustFee())) {
-            return util::Error{_("Transaction amount too small")};
-        }
-        txNew.vout.push_back(txout);
-    }
-
     // Include the fees for things that aren't inputs, excluding the change output
     const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.m_subtract_fee_outputs ? 0 : coin_selection_params.tx_noinputs_size);
     CAmount selection_target = recipients_sum + not_input_fees;
@@ -1143,6 +1243,34 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
            result.GetWaste(),
            result.GetSelectedValue());
 
+    std::vector<CRecipient> mutableVecSend = vecSend;
+    if (coin_control.m_silent_payment) {
+        // Get the silent payment destinations, generate the scriptPubKeys,
+        // and update vecSend with the generated scriptPubKeys
+        std::map<size_t, V0SilentPaymentDestination> sp_dests;
+        for (size_t i = 0; i < mutableVecSend.size(); ++i) {
+            if (const auto* sp = std::get_if<V0SilentPaymentDestination>(&mutableVecSend.at(i).dest)) {
+                // Keep track of the index in vecSend
+                sp_dests[i] = *sp;
+            }
+        }
+        const auto& silent_payment_tr_spks = CreateSilentPaymentOutputs(wallet, sp_dests, result.GetInputSet(), error);
+        for (const auto& [out_idx, tr_dest] : silent_payment_tr_spks) {
+            assert(out_idx < mutableVecSend.size());
+            mutableVecSend[out_idx].dest = tr_dest;
+        }
+
+    }
+    // vouts to the payees
+    for (const auto& recipient : mutableVecSend)
+    {
+        CTxOut txout(recipient.nAmount, GetScriptForDestination(recipient.dest));
+
+        if (IsDust(txout, wallet.chain().relayDustFee())) {
+            return util::Error{_("Transaction amount too small")};
+        }
+        txNew.vout.push_back(txout);
+    }
     const CAmount change_amount = result.GetChange(coin_selection_params.min_viable_change, coin_selection_params.m_change_fee);
     if (change_amount > 0) {
         CTxOut newTxOut(change_amount, scriptChange);
@@ -1245,7 +1373,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CAmount to_reduce = fee_needed - current_fee;
         unsigned int i = 0;
         bool fFirst = true;
-        for (const auto& recipient : vecSend)
+        for (const auto& recipient : mutableVecSend)
         {
             if (change_pos && i == *change_pos) {
                 ++i;

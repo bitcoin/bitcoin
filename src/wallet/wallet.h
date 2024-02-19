@@ -291,7 +291,14 @@ struct CRecipient
     CTxDestination dest;
     CAmount nAmount;
     bool fSubtractFeeFromAmount;
+
+    friend bool operator==(const CRecipient& a, const CRecipient& b)
+    {
+        return a.dest == b.dest && a.nAmount == b.nAmount;
+    }
 };
+
+size_t GetSerializeSizeForRecipient(const CRecipient& recipient);
 
 class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
 /**
