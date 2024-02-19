@@ -74,7 +74,7 @@ struct NodeContext {
     std::unique_ptr<CJContext> cj_ctx;
     std::unique_ptr<CMNHFManager> mnhf_manager;
     std::unique_ptr<LLMQContext> llmq_ctx;
-    CCreditPoolManager* creditPoolManager{nullptr};
+    CCreditPoolManager* cpoolman{nullptr};
     CDeterministicMNManager* dmnman{nullptr};
     CDSTXManager* dstxman{nullptr};
     CGovernanceManager* govman{nullptr};

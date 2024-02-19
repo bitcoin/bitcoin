@@ -350,8 +350,8 @@ void PrepareShutdown(NodeContext& node)
         llmq::quorumSnapshotManager.reset();
         node.dmnman = nullptr;
         deterministicMNManager.reset();
+        node.cpoolman = nullptr;
         creditPoolManager.reset();
-        node.creditPoolManager = nullptr;
         node.mnhf_manager.reset();
         node.evodb.reset();
     }
@@ -1969,7 +1969,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 node.dmnman = deterministicMNManager.get();
                 creditPoolManager.reset();
                 creditPoolManager = std::make_unique<CCreditPoolManager>(*node.evodb);
-                node.creditPoolManager = creditPoolManager.get();
+                node.cpoolman = creditPoolManager.get();
                 llmq::quorumSnapshotManager.reset();
                 llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*node.evodb));
 
