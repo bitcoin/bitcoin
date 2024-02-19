@@ -44,7 +44,7 @@ The Contributor Workflow & Peer Review in libsecp256k1 are similar to Bitcoin Co
 
 In addition, libsecp256k1 tries to maintain the following coding conventions:
 
-* No runtime heap allocation (e.g., no `malloc`) unless explicitly requested by the caller (via `secp256k1_context_create` or `secp256k1_scratch_space_create`, for example). Morever, it should be possible to use the library without any heap allocations.
+* No runtime heap allocation (e.g., no `malloc`) unless explicitly requested by the caller (via `secp256k1_context_create` or `secp256k1_scratch_space_create`, for example). Moreover, it should be possible to use the library without any heap allocations.
 * The tests should cover all lines and branches of the library (see [Test coverage](#coverage)).
 * Operations involving secret data should be tested for being constant time with respect to the secrets (see [src/ctime_tests.c](src/ctime_tests.c)).
 * Local variables containing secret data should be cleared explicitly to try to delete secrets from memory.

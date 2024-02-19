@@ -169,11 +169,11 @@ SECP256K1_API int secp256k1_schnorrsig_sign_custom(
  *
  *  Returns: 1: correct signature
  *           0: incorrect signature
- *  Args:    ctx: a secp256k1 context object.
+ *  Args:    ctx: pointer to a context object.
  *  In:    sig64: pointer to the 64-byte signature to verify.
  *           msg: the message being verified. Can only be NULL if msglen is 0.
  *        msglen: length of the message
- *        pubkey: pointer to an x-only public key to verify with (cannot be NULL)
+ *        pubkey: pointer to an x-only public key to verify with
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_schnorrsig_verify(
     const secp256k1_context *ctx,
