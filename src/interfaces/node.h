@@ -37,6 +37,8 @@ enum class SynchronizationState;
 struct CNodeStateStats;
 struct NodeContext;
 
+enum vote_signal_enum_t : uint8_t;
+
 namespace interfaces {
 class Handler;
 class WalletLoader;
@@ -59,6 +61,8 @@ class GOV
 public:
     virtual ~GOV() {}
     virtual void getAllNewerThan(std::vector<CGovernanceObject> &objs, int64_t nMoreThanTime) = 0;
+    virtual int32_t getObjAbsYesCount(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) = 0;
+    virtual bool getObjLocalValidity(const CGovernanceObject& obj, std::string& error, bool check_collateral) = 0;
 };
 
 //! Interface for the src/llmq part of a dash node (dashd process).

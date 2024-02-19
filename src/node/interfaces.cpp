@@ -100,8 +100,29 @@ class GOVImpl : public GOV
 public:
     void getAllNewerThan(std::vector<CGovernanceObject> &objs, int64_t nMoreThanTime) override
     {
-        if (governance == nullptr) return;
-        governance->GetAllNewerThan(objs, nMoreThanTime);
+        if (::governance != nullptr) {
+            return ::governance->GetAllNewerThan(objs, nMoreThanTime);
+        }
+        return;
+    }
+    int32_t getObjAbsYesCount(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) override
+    {
+        // TODO: Move GetListAtChainTip query outside CGovernanceObject, query requires
+        //       active CDeterministicMNManager instance
+        if (::governance != nullptr && ::deterministicMNManager != nullptr) {
+            return obj.GetAbsoluteYesCount(vote_signal);
+        }
+        return 0;
+    }
+    bool getObjLocalValidity(const CGovernanceObject& obj, std::string& error, bool check_collateral) override
+    {
+        // TODO: Move GetListAtChainTip query outside CGovernanceObject, query requires
+        //       active CDeterministicMNManager instance
+        if (::governance != nullptr && ::deterministicMNManager != nullptr) {
+            LOCK(cs_main);
+            return obj.IsValidLocally(error, check_collateral);
+        }
+        return false;
     }
 };
 

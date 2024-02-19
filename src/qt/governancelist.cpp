@@ -26,8 +26,9 @@
 /// Proposal wrapper
 ///
 
-Proposal::Proposal(const CGovernanceObject& _govObj, QObject* parent) :
+Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj, QObject* parent) :
     QObject(parent),
+    clientModel(_clientModel),
     govObj(_govObj)
 {
     UniValue prop_data;
@@ -68,9 +69,8 @@ QString Proposal::url() const { return m_url; }
 
 bool Proposal::isActive() const
 {
-    LOCK(cs_main);
     std::string strError;
-    return govObj.IsValidLocally(strError, false);
+    return clientModel->node().gov().getObjLocalValidity(govObj, strError, false);
 }
 
 QString Proposal::votingStatus(const int nAbsVoteReq) const
@@ -78,7 +78,7 @@ QString Proposal::votingStatus(const int nAbsVoteReq) const
     // Voting status...
     // TODO: determine if voting is in progress vs. funded or not funded for past proposals.
     // see CSuperblock::GetNearestSuperblocksHeights(nBlockHeight, nLastSuperblock, nNextSuperblock);
-    const int absYesCount = govObj.GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING);
+    const int absYesCount = clientModel->node().gov().getObjAbsYesCount(govObj, VOTE_SIGNAL_FUNDING);
     QString qStatusString;
     if (absYesCount >= nAbsVoteReq) {
         // Could use govObj.IsSetCachedFunding here, but need nAbsVoteReq to display numbers anyway.
@@ -90,7 +90,7 @@ QString Proposal::votingStatus(const int nAbsVoteReq) const
 
 int Proposal::GetAbsoluteYesCount() const
 {
-    return govObj.GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING);
+    return clientModel->node().gov().getObjAbsYesCount(govObj, VOTE_SIGNAL_FUNDING);
 }
 
 void Proposal::openUrl() const
@@ -360,7 +360,7 @@ void GovernanceList::updateProposalList()
                 continue; // Skip triggers.
             }
 
-            newProposals.emplace_back(new Proposal(govObj, proposalModel));
+            newProposals.emplace_back(new Proposal(this->clientModel, govObj, proposalModel));
         }
         proposalModel->reconcile(newProposals);
     }
