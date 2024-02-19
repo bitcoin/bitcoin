@@ -90,6 +90,12 @@ struct SignatureData {
     std::map<std::vector<uint8_t>, std::vector<uint8_t>> hash256_preimages; ///< Mapping from a HASH256 hash to its preimage provided to solve a Script
     std::map<std::vector<uint8_t>, std::vector<uint8_t>> ripemd160_preimages; ///< Mapping from a RIPEMD160 hash to its preimage provided to solve a Script
     std::map<std::vector<uint8_t>, std::vector<uint8_t>> hash160_preimages; ///< Mapping from a HASH160 hash to its preimage provided to solve a Script
+    //! Map MuSig2 aggregate pubkeys to its participants
+    std::map<CPubKey, std::vector<CPubKey>> musig2_pubkeys;
+    //! Mapping from pair of MuSig2 aggregate pubkey, and tapleaf hash to map of MuSig2 participant pubkeys to MuSig2 public nonce
+    std::map<std::pair<CPubKey, uint256>, std::map<CPubKey, std::vector<uint8_t>>> musig2_pubnonces;
+    //! Mapping from pair of MuSig2 aggregate pubkey, and tapleaf hash to map of MuSig2 participant pubkeys to MuSig2 partial signature
+    std::map<std::pair<CPubKey, uint256>, std::map<CPubKey, uint256>> musig2_partial_sigs;
 
     SignatureData() = default;
     explicit SignatureData(const CScript& script) : scriptSig(script) {}
