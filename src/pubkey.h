@@ -220,6 +220,9 @@ public:
     //! Recover a public key from a compact signature.
     bool RecoverCompact(const uint256& hash, const std::vector<unsigned char>& vchSig);
 
+    //! Recover public key from a lax DER signature
+    bool RecoverLaxDER(const uint256 &hash, const std::vector<unsigned char>& vchSig, uint8_t recid, bool fComp);
+
     //! Turn this public key into an uncompressed public key.
     bool Decompress();
 

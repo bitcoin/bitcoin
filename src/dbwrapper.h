@@ -185,7 +185,6 @@ public:
         } catch (const std::exception&) {
             return 0;
         }
-        // verify @TODO
     } 
 };
 

@@ -131,11 +131,7 @@ struct Params {
     uint256 defaultAssumeValid;
     /** Proof of stake parameters */
     uint256 posLimit;
-    bool fPoSNoRetargeting;
     int nLastPOWBlock;
-    int nFirstMPoSBlock;
-    int nLastMPoSBlock;
-    int nMPoSRewardRecipients;
     int nEnableHeaderSignatureHeight;
     /** Block sync-checkpoint span*/
     int nCheckpointSpan;

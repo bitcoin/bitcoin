@@ -6278,60 +6278,24 @@ bool GetSpentCoinFromMainChain(const CBlockIndex* pforkPrev, COutPoint prevoutSt
 
 bool CheckReward(const CBlock& block, BlockValidationState& state, int nHeight, const Consensus::Params& consensusParams, CAmount nFees, CAmount nActualStakeReward)
 {
-    size_t offset = block.IsProofOfStake() ? 1 : 0;
-
     // Check block reward
     if (block.IsProofOfWork())
     {
         // Check proof-of-work reward
         CAmount blockReward = nFees + GetBlockSubsidy(nHeight, consensusParams);
-        if (block.vtx[offset]->GetValueOut() > blockReward) {
-            LogPrintf("CheckReward(): coinbase pays too much (actual=%d vs limit=%d)", block.vtx[offset]->GetValueOut(), blockReward);
+        if (block.vtx[0]->GetValueOut() > blockReward) {
+            LogPrintf("CheckReward(): coinbase pays too much (actual=%d vs limit=%d)", block.vtx[0]->GetValueOut(), blockReward);
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
         }
     }
     else
-    {   // @TODO, remove this code
+    {
         // Check full reward
         CAmount blockReward = nFees + GetBlockSubsidy(nHeight, consensusParams);
         if (nActualStakeReward > blockReward) {
             LogPrintf("CheckReward(): coinstake pays too much (actual=%d vs limit=%d)", nActualStakeReward, blockReward);
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cs-amount");
         }
-
-        // The first proof-of-stake blocks get full reward, the rest of them are split between recipients
-        int rewardRecipients = 1;
-        int nPrevHeight = nHeight -1;
-        if (nPrevHeight >= consensusParams.nFirstMPoSBlock)
-            rewardRecipients = consensusParams.nMPoSRewardRecipients;
-
-        // Check reward recipients number
-        if (rewardRecipients < 1)
-            return error("CheckReward(): invalid reward recipients");
-
-        //if only 1 then no MPoS logic required
-        if (rewardRecipients == 1){
-            return true;
-        }
-
-        // Generate the list of script recipients including all of their parameters
-        std::vector<CScript> mposScriptList;
-        if (!GetMPoSOutputScripts(mposScriptList, nPrevHeight, consensusParams))
-            return error("CheckReward(): cannot create the list of MPoS output scripts");
-
-        std::vector<CTxOut> vTempVouts = block.vtx[offset]->vout;
-        CAmount splitReward = blockReward / rewardRecipients;
-        for(size_t i = 0; i < mposScriptList.size(); i++){
-            std::vector<CTxOut>::iterator it=std::find(vTempVouts.begin(), vTempVouts.end(), CTxOut(splitReward,mposScriptList[i]));
-            if(it==vTempVouts.end()){
-                LogPrintf("CheckReward(): A MPoS participant was not properly paid");
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cs-mpos-missing");
-            }else{
-                vTempVouts.erase(it);
-            }
-        }
-
-        vTempVouts.clear();
     }
 
     return true;
