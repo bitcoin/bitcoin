@@ -345,6 +345,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">探索</translation>
     </message>
     <message>
+        <source>Address Fetch</source>
+        <extracomment>Short-lived peer connection type that solicits known addresses from a peer.</extracomment>
+        <translation type="unfinished">アドレスのフェッチ</translation>
+    </message>
+    <message>
         <source>%1 d</source>
         <translation type="unfinished">%1 日</translation>
     </message>

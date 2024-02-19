@@ -808,6 +808,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </translation>
     </message>
     <message>
+        <source>Sent transaction</source>
+        <translation type="unfinished">送出交易</translation>
+    </message>
+    <message>
         <source>Incoming transaction</source>
         <translation type="unfinished">收款交易</translation>
     </message>
@@ -828,6 +832,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">錢包&lt;b&gt;已加密&lt;/b&gt;並且&lt;b&gt;解鎖中&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation type="unfinished">錢包已加密並且上鎖中</translation>
+    </message>
+    <message>
         <source>Original message:</source>
         <translation type="unfinished">原消息:</translation>
     </message>
@@ -846,8 +854,28 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">手动选币</translation>
     </message>
     <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">數量：</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation type="unfinished">位元組:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation type="unfinished">金额:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation type="unfinished">费用:</translation>
+    </message>
+    <message>
         <source>After Fee:</source>
         <translation type="unfinished">計費後金額:</translation>
+    </message>
+    <message>
+        <source>(un)select all</source>
+        <translation type="unfinished">(取消)全部選擇</translation>
     </message>
     <message>
         <source>Tree mode</source>
@@ -862,8 +890,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">金额</translation>
     </message>
     <message>
+        <source>Received with label</source>
+        <translation type="unfinished">已收款，有標籤</translation>
+    </message>
+    <message>
         <source>Received with address</source>
         <translation type="unfinished">收款地址</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">日期</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -888,6 +924,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>L&amp;ock unspent</source>
         <translation type="unfinished">锁定未花费(&amp;O)</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation type="unfinished">解鎖未花費的</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -1068,7 +1108,11 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>Close all wallets</source>
         <translation type="unfinished">关闭所有钱包</translation>
     </message>
-    </context>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation type="unfinished">您確定要關閉所有錢包嗎？</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
@@ -1115,6 +1159,10 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>Make Blank Wallet</source>
         <translation type="unfinished">製作空白錢包</translation>
     </message>
+    <message>
+        <source>Create</source>
+        <translation type="unfinished">創建</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -1135,6 +1183,10 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">跟這個地址清單關聯的地址。只有發送地址能被修改。</translation>
     </message>
     <message>
+        <source>&amp;Address</source>
+        <translation type="unfinished">地址(&amp;A)</translation>
+    </message>
+    <message>
         <source>New sending address</source>
         <translation type="unfinished">新建付款地址</translation>
     </message>
@@ -1145,6 +1197,10 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Edit sending address</source>
         <translation type="unfinished">编辑付款地址</translation>
+    </message>
+    <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation type="unfinished">地址“%1”為已登記存在“%2”的地址，因此無法新增為發送地址。</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book with label "%2".</source>
@@ -1166,8 +1222,16 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">就要產生新的資料目錄。</translation>
     </message>
     <message>
+        <source>name</source>
+        <translation type="unfinished">姓名</translation>
+    </message>
+    <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
         <translation type="unfinished">已經有這個目錄了。如果你要在裡面造出新的目錄的話，請加上 %1.</translation>
+    </message>
+    <message>
+        <source>Path already exists, and is not a directory.</source>
+        <translation type="unfinished">已經有指定的路徑了，並且不是一個目錄。</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
@@ -1202,6 +1266,10 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">此目录中至少会保存 %1 GB 的数据，并且大小还会随着时间增长。</translation>
     </message>
+    <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation type="unfinished">此目錄中將儲存約%1 GB 的資料。</translation>
+    </message>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
@@ -1230,8 +1298,16 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">欢迎</translation>
     </message>
     <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">歡迎來到  %1。</translation>
+    </message>
+    <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
         <translation type="unfinished">由于这是第一次启动此程序，您可以选择%1存储数据的位置</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation type="unfinished">恢復此設定需要重新下載整個區塊鏈。 先下載完整鏈然後再修剪它的速度更快。 禁用一些高級功能。</translation>
     </message>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
@@ -1253,6 +1329,10 @@ The migration process will create a backup of the wallet before migrating. This 
 <context>
     <name>HelpMessageDialog</name>
     <message>
+        <source>version</source>
+        <translation type="unfinished">版本</translation>
+    </message>
+    <message>
         <source>About %1</source>
         <translation type="unfinished">关于 %1</translation>
     </message>
@@ -1267,12 +1347,24 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>%1 is shutting down…</source>
         <translation type="unfinished">%1正在关闭...</translation>
     </message>
-    </context>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">在該視窗消失之前，請勿關閉電腦。</translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
         <translation type="unfinished">窗体</translation>
+    </message>
+    <message>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
+        <translation type="unfinished">最近的交易可能還看不到，因此錢包餘額可能不正確。在錢包軟體完成跟 bitcoin 網路的同步後，這裡的資訊就會正確。詳情請見下面。</translation>
+    </message>
+    <message>
+        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation type="unfinished">嘗試花費受尚未顯示的交易影響的比特幣將不會被網路接受。</translation>
     </message>
     <message>
         <source>Unknown…</source>
@@ -2259,6 +2351,10 @@ For more information on using this console, type %6.
         <translation type="unfinished">请求支付至...</translation>
     </message>
     <message>
+        <source>Amount:</source>
+        <translation type="unfinished">金额:</translation>
+    </message>
+    <message>
         <source>Label:</source>
         <translation type="unfinished">标签：</translation>
     </message>
@@ -2289,6 +2385,10 @@ For more information on using this console, type %6.
 </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">日期</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation type="unfinished">标签</translation>
@@ -2323,6 +2423,22 @@ For more information on using this console, type %6.
     <message>
         <source>Insufficient funds!</source>
         <translation type="unfinished">金额不足！</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">數量：</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation type="unfinished">位元組:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation type="unfinished">金额:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation type="unfinished">费用:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -2690,6 +2806,10 @@ For more information on using this console, type %6.
         <translation type="unfinished">%1 个确认</translation>
     </message>
     <message>
+        <source>Date</source>
+        <translation type="unfinished">日期</translation>
+    </message>
+    <message>
         <source>Source</source>
         <translation type="unfinished">來源</translation>
     </message>
@@ -2769,6 +2889,10 @@ For more information on using this console, type %6.
 </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">日期</translation>
+    </message>
     <message>
         <source>Type</source>
         <translation type="unfinished">类型</translation>
@@ -2905,6 +3029,10 @@ For more information on using this console, type %6.
     <message>
         <source>Watch-only</source>
         <translation type="unfinished">只能觀看的</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">日期</translation>
     </message>
     <message>
         <source>Type</source>

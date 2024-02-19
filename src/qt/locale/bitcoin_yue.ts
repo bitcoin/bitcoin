@@ -704,7 +704,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
+            <numerusform />
         </translation>
     </message>
     <message>
@@ -772,6 +772,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </translation>
     </message>
     <message>
+        <source>Sent transaction</source>
+        <translation type="unfinished">送出交易</translation>
+    </message>
+    <message>
         <source>Incoming transaction</source>
         <translation type="unfinished">收款交易</translation>
     </message>
@@ -792,6 +796,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">錢包&lt;b&gt;已加密&lt;/b&gt;並且&lt;b&gt;解鎖中&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation type="unfinished">錢包已加密並且上鎖中</translation>
+    </message>
+    <message>
         <source>Original message:</source>
         <translation type="unfinished">原消息:</translation>
     </message>
@@ -810,8 +818,28 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">手动选币</translation>
     </message>
     <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">數量：</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation type="unfinished">位元組:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation type="unfinished">金额:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation type="unfinished">费用:</translation>
+    </message>
+    <message>
         <source>After Fee:</source>
         <translation type="unfinished">計費後金額:</translation>
+    </message>
+    <message>
+        <source>(un)select all</source>
+        <translation type="unfinished">(取消)全部選擇</translation>
     </message>
     <message>
         <source>Tree mode</source>
@@ -826,8 +854,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">金额</translation>
     </message>
     <message>
+        <source>Received with label</source>
+        <translation type="unfinished">已收款，有標籤</translation>
+    </message>
+    <message>
         <source>Received with address</source>
         <translation type="unfinished">收款地址</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">日期</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -852,6 +888,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>L&amp;ock unspent</source>
         <translation type="unfinished">锁定未花费(&amp;O)</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation type="unfinished">解鎖未花費的</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -2211,6 +2251,10 @@ For more information on using this console, type %6.
         <translation type="unfinished">请求支付至...</translation>
     </message>
     <message>
+        <source>Amount:</source>
+        <translation type="unfinished">金额:</translation>
+    </message>
+    <message>
         <source>Label:</source>
         <translation type="unfinished">标签：</translation>
     </message>
@@ -2241,6 +2285,10 @@ For more information on using this console, type %6.
 </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">日期</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation type="unfinished">标签</translation>
@@ -2275,6 +2323,22 @@ For more information on using this console, type %6.
     <message>
         <source>Insufficient funds!</source>
         <translation type="unfinished">金额不足！</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">數量：</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation type="unfinished">位元組:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation type="unfinished">金额:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation type="unfinished">费用:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -2654,6 +2718,10 @@ For more information on using this console, type %6.
         <translation type="unfinished">状态</translation>
     </message>
     <message>
+        <source>Date</source>
+        <translation type="unfinished">日期</translation>
+    </message>
+    <message>
         <source>Source</source>
         <translation type="unfinished">來源</translation>
     </message>
@@ -2737,6 +2805,10 @@ For more information on using this console, type %6.
 </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">日期</translation>
+    </message>
     <message>
         <source>Type</source>
         <translation type="unfinished">类型</translation>
@@ -2877,6 +2949,10 @@ For more information on using this console, type %6.
     <message>
         <source>Watch-only</source>
         <translation type="unfinished">只能觀看的</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">日期</translation>
     </message>
     <message>
         <source>Type</source>

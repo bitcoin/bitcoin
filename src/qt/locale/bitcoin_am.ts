@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">አድራሻ ወይም መለያ ስም ለማርተዕ ቀኙን ጠቅ ያድርጉ</translation>
+        <translation type="unfinished">አድራሻ ወይም መለያ ስም ለመቀየር ቀኙን ጠቅ ያድርጉ</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -92,6 +92,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
         <translation type="unfinished">የአድራሻ ዝርዝሩን ወደ %1 ለማስቀመጥ ሲሞከር ስህተት አጋጥሟል:: እባክዎ መልሰው ይሞክሩ::</translation>
+    </message>
+    <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">አድራሻዎችን በመላክ ላይ - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">አድራሻዎችን በማቀበል ላይ - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>

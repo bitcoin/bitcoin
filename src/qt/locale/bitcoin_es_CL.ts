@@ -6,16 +6,12 @@
         <translation type="unfinished">Click derecho para editar la dirección o etiqueta</translation>
     </message>
     <message>
-        <source>Create a new address</source>
-        <translation type="unfinished">Crear una nueva dirección</translation>
-    </message>
-    <message>
         <source>&amp;New</source>
         <translation type="unfinished">&amp;Nuevo</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Copiar la dirección actualmente seleccionada al sistema de portapapeles</translation>
+        <translation type="unfinished">Copiar la dirección seleccionada actualmente al portapapeles del sistema</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -40,10 +36,6 @@
     <message>
         <source>&amp;Export</source>
         <translation type="unfinished">&amp;Exportar</translation>
-    </message>
-    <message>
-        <source>&amp;Delete</source>
-        <translation type="unfinished">&amp;Borrar</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>

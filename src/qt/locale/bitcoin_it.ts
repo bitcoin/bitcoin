@@ -1059,10 +1059,46 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
         <translation type="unfinished">Sei sicuro di voler migrare il portafoglio &lt;i&gt;%1&lt;/i&gt;?</translation>
     </message>
     <message>
+        <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">La migrazione del portafoglio convertirà questo portafoglio in uno o più portafogli descrittori. Dovrà essere eseguito un nuovo backup del portafoglio.
+Se questo portafoglio contiene script di sola lettura, verrà generato un nuovo portafoglio che contiene quegli scripts di sola lettura.
+Se questo portafoglio contiene script risolvibili ma non osservati, verrà creato un portafoglio nuovo differente, per contenere questi script.
+
+Il processo di migrazione creerà un backup del portafoglio prima della migrazione. Questo file di backup verrà chiamato &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak e verrà collocato nella stessa cartella di questo portafoglio. Se la migrazione non andasse a buon fine, il backup può essere ripristinato con la funzionalità "Ripristina Portafoglio".</translation>
+    </message>
+    <message>
         <source>Migrate Wallet</source>
         <translation type="unfinished">Migra Wallet</translation>
     </message>
-    </context>
+    <message>
+        <source>Migrating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">Migrando il Portafoglio &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
+        <source>The wallet '%1' was migrated successfully.</source>
+        <translation type="unfinished">Portafoglio '%1' migrato con successo.</translation>
+    </message>
+    <message>
+        <source> Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Gli script di sola lettura sono stati trasferiti a un nuovo portafoglio chiamato '%1'.</translation>
+    </message>
+    <message>
+        <source> Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Gli script risolvibili ma non osservati sono stati spostati su un nuovo portafoglio chiamato '%1'.</translation>
+    </message>
+    <message>
+        <source>Migration failed</source>
+        <translation type="unfinished">Migrazione fallita</translation>
+    </message>
+    <message>
+        <source>Migration Successful</source>
+        <translation type="unfinished">Migrazione Riuscita</translation>
+    </message>
+</context>
 <context>
     <name>OpenWalletActivity</name>
     <message>
@@ -1144,6 +1180,14 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
     <message>
         <source>Create Wallet</source>
         <translation type="unfinished">Crea Portafoglio</translation>
+    </message>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">Ti manca un ultimo passo per creare il tuo nuovo portafoglio!</translation>
+    </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">Fornisci un nome e, ove desiderato, attiva le opzioni avanzate</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -2249,6 +2293,22 @@ Se ricevi questo errore, dovresti richiedere al commerciante di fornire un URI c
         <translation type="unfinished">Seleziona un peer per visualizzare informazioni più dettagliate.</translation>
     </message>
     <message>
+        <source>The transport layer version: %1</source>
+        <translation type="unfinished">Versione del livello di trasporto (transport layer): %1</translation>
+    </message>
+    <message>
+        <source>Transport</source>
+        <translation type="unfinished">Trasporto</translation>
+    </message>
+    <message>
+        <source>The BIP324 session ID string in hex, if any.</source>
+        <translation type="unfinished">La stringa dell' ID sessione BIP324 nell'hex, se presente.</translation>
+    </message>
+    <message>
+        <source>Session ID</source>
+        <translation type="unfinished">ID Sessione</translation>
+    </message>
+    <message>
         <source>Version</source>
         <translation type="unfinished">Versione</translation>
     </message>
@@ -2468,6 +2528,21 @@ Se ricevi questo errore, dovresti richiedere al commerciante di fornire un URI c
         <source>Outbound Address Fetch: short-lived, for soliciting addresses</source>
         <extracomment>Explanatory text for a short-lived outbound peer connection that is used to request addresses from a peer.</extracomment>
         <translation type="unfinished">Trova l’indirizzo in uscita: a vita breve, per richiedere indirizzi</translation>
+    </message>
+    <message>
+        <source>detecting: peer could be v1 or v2</source>
+        <extracomment>Explanatory text for "detecting" transport type.</extracomment>
+        <translation type="unfinished">rilevamento: il peer potrebbe essere v1 o v2</translation>
+    </message>
+    <message>
+        <source>v1: unencrypted, plaintext transport protocol</source>
+        <extracomment>Explanatory text for v1 transport type.</extracomment>
+        <translation type="unfinished">v1: non criptato, protocollo di trasporto testo semplice</translation>
+    </message>
+    <message>
+        <source>v2: BIP324 encrypted transport protocol</source>
+        <extracomment>Explanatory text for v2 transport type.</extracomment>
+        <translation type="unfinished">v2: protocollo di trasporto criptato BIP324 </translation>
     </message>
     <message>
         <source>we selected the peer for high bandwidth relay</source>
@@ -3947,6 +4022,10 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
         <translation type="unfinished">%s corrotto. Prova a usare la funzione del portafoglio bitcoin-wallet per salvare o recuperare il backup.</translation>
     </message>
     <message>
+        <source>%s failed to validate the -assumeutxo snapshot state. This indicates a hardware problem, or a bug in the software, or a bad software modification that allowed an invalid snapshot to be loaded. As a result of this, the node will shut down and stop using any state that was built on the snapshot, resetting the chain height from %d to %d. On the next restart, the node will resume syncing from %d without using any snapshot data. Please report this incident to %s, including how you obtained the snapshot. The invalid snapshot chainstate will be left on disk in case it is helpful in diagnosing the issue that caused this error.</source>
+        <translation type="unfinished">%s non è riuscito a validare la data dello snapshot -assumeutxo. Ciò indica un errore hardware, o un bug nel software, o una cattiva modifica del software che ha permesso allo snapshot invalido di essere caricato. Di conseguenza, il nodo verrà spento e smetterà di utilizzare qualunque stato costruito sullo snapshot, reimpostando l'altezza della catena da %d a %d. Al prossimo riavvio, il nodo riprenderà la sincronizzazione da %d senza usare alcun dato dello snapshot. Per favore segnala questo incidente a %s, includendo come hai ottenuto lo snapshot. Il chainstate dello snapshot invalido rimarrà sul disco nel caso in cui tornasse utile per indagare  la causa dell'errore.</translation>
+    </message>
+    <message>
         <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
         <translation type="unfinished">%s richiede di ascoltare sulla porta %u. Questa porta è considerata "cattiva" e quindi è improbabile che un peer vi si connetta. Vedere doc/p2p-bad-ports.md per i dettagli e un elenco completo.</translation>
     </message>
@@ -4043,6 +4122,10 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
         <translation type="unfinished">Epurazione: l'ultima sincronizzazione del portafoglio risulta essere precedente alla eliminazione dei dati per via della modalità epurazione. È necessario eseguire un -reindex (scaricare nuovamente la catena di blocchi in caso di nodo epurato).</translation>
     </message>
     <message>
+        <source>Rename of '%s' -&gt; '%s' failed. You should resolve this by manually moving or deleting the invalid snapshot directory %s, otherwise you will encounter the same error again on the next startup.</source>
+        <translation type="unfinished">Rinomina di '%s'-&gt; '%s' fallita. Potresti risolvere il problema spostando manualmente o eliminando la cartella di snapshot invalida %s, altrimenti potrai incontrare ancora lo stesso errore al prossimo avvio.</translation>
+    </message>
+    <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
         <translation type="unfinished">SQLiteDatabase: Versione dello schema del portafoglio sqlite sconosciuta %d. Solo la versione %d è supportata</translation>
     </message>
@@ -4087,12 +4170,20 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
         <translation type="unfinished">Il formato “%s” del file portafoglio fornito non è riconosciuto. si prega di fornire uno che sia “bdb” o “sqlite”. </translation>
     </message>
     <message>
+        <source>Unsupported category-specific logging level %1$s=%2$s. Expected %1$s=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %3$s. Valid loglevels: %4$s.</source>
+        <translation type="unfinished">Livello di logging specifico per categoria %1$s=%2$s non supportato. Previsto %1$s=&lt;category&gt;:&lt;loglevel&gt;. Categorie valide: %3$s. Livelli di log validi: %4$s.</translation>
+    </message>
+    <message>
         <source>Unsupported chainstate database format found. Please restart with -reindex-chainstate. This will rebuild the chainstate database.</source>
         <translation type="unfinished">Formato del database chainstate non supportato. Riavviare con -reindex-chainstate. In questo modo si ricostruisce il database dello stato della catena.</translation>
     </message>
     <message>
         <source>Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future.</source>
         <translation type="unfinished">Portafoglio creato con successo. Il tipo di portafoglio legacy è stato deprecato e il supporto per la creazione e l'apertura di portafogli legacy sarà rimosso in futuro.</translation>
+    </message>
+    <message>
+        <source>Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet.</source>
+        <translation type="unfinished">Portafoglio caricato con successo. Il portafoglio di tipo legacy è deprecato e verrà rimosso il supporto per creare e aprire portafogli legacy in futuro. I portafogli legacy possono essere migrati a un portafoglio descrittore con migratewallet.</translation>
     </message>
     <message>
         <source>Warning: Dumpfile wallet format "%s" does not match command line specified format "%s".</source>
@@ -4155,6 +4246,10 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
         <translation type="unfinished">Errore caricando %s: il wallet del dispositivo esterno di firma é stato caricato senza che il supporto del dispositivo esterno di firma sia stato compilato.</translation>
     </message>
     <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address metadata may be missing or incorrect.</source>
+        <translation type="unfinished">Errore durante la lettura di %s! Tutte le chiavi lette correttamente, ma i dati della transazione o metadati potrebbero essere mancanti o incorretti.</translation>
+    </message>
+    <message>
         <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
         <translation type="unfinished">Errore: I dati della rubrica nel portafoglio non possono essere identificati come appartenenti a portafogli migrati</translation>
     </message>
@@ -4165,6 +4260,10 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
     <message>
         <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
         <translation type="unfinished">Errore: La transazione %s nel portafoglio non può essere identificata come appartenente ai portafogli migrati.</translation>
+    </message>
+    <message>
+        <source>Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.</source>
+        <translation type="unfinished">Impossibile calcolare il salto di commissioni, poiché gli UTXO non confermati dipendono da una enorme serie di transazioni non confermate.</translation>
     </message>
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
@@ -4431,6 +4530,10 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation type="unfinished">Impossibile ripetere la scansione del portafoglio durante l'inizializzazione</translation>
+    </message>
+    <message>
+        <source>Failed to start indexes, shutting down..</source>
+        <translation type="unfinished">Impossibile inizializzare gli indici, spegnimento...</translation>
     </message>
     <message>
         <source>Failed to verify database</source>
@@ -4743,6 +4846,14 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     <message>
         <source>Unknown new rules activated (versionbit %i)</source>
         <translation type="unfinished">Nuove regole non riconosciute sono state attivate (versionbit %i)</translation>
+    </message>
+    <message>
+        <source>Unsupported global logging level %s=%s. Valid values: %s.</source>
+        <translation type="unfinished">Livello di logging globale non supportato %s=%s. Regole valide: %s.</translation>
+    </message>
+    <message>
+        <source>acceptstalefeeestimates is not supported on %s chain.</source>
+        <translation type="unfinished">acceptstalefeeestimates non è supportato sulla catena %s.</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>

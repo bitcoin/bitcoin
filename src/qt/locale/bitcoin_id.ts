@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Klik kanan untuk mengedit atau label</translation>
+        <translation type="unfinished">Klik kanan untuk mengedit alamat atau label</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -362,6 +362,14 @@ Tanda tangan hanya bisa digunakan dengan tipe alamat 'warisan'</translation>
         <translation type="unfinished">Tutup semua dompet</translation>
     </message>
     <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Migrasi dompet</translation>
+    </message>
+    <message>
+        <source>Migrate a wallet</source>
+        <translation type="unfinished">Migrasi sebuah dompet</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation type="unfinished">Tampilkan %1 pesan bantuan untuk mendapatkan daftar opsi baris perintah Bitcoin yang memungkinkan</translation>
     </message>
@@ -452,6 +460,14 @@ Tanda tangan hanya bisa digunakan dengan tipe alamat 'warisan'</translation>
         <source>Pre-syncing Headers (%1%)…</source>
         <translation type="unfinished">Pra-Singkronisasi Header (%1%)...</translation>
     </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">Gagal saat membuat dompet</translation>
+    </message>
+    <message>
+        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">Tidak bisa membuat dompet baru, perangkat lunak dikompilasi tanpa dukungan sqlite (yang diperlukan untuk dompet deskriptor)</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -491,6 +507,49 @@ Tanda tangan hanya bisa digunakan dengan tipe alamat 'warisan'</translation>
         <source>Loading wallets…</source>
         <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
         <translation type="unfinished">Memuat wallet</translation>
+    </message>
+</context>
+<context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">Migrasi dompet</translation>
+    </message>
+    <message>
+        <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">Memindahkan dompet akan mengubah dompet ini menjadi satu atau beberapa dompet deskriptor. Cadangan dompet baru perlu dibuat.
+Jika dompet ini berisi skrip yang hanya bisa dilihat, dompet baru akan dibuat yang berisi skrip tersebut.
+Jika dompet ini berisi skrip yang dapat dipecahkan tetapi tidak dapat ditonton, dompet yang berbeda dan baru akan dibuat yang berisi skrip tersebut.
+
+Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadangan ini akan diberi nama -.legacy.bak dan dapat ditemukan di direktori untuk dompet ini. Jika terjadi gagal pemindahan, cadangan dapat dipulihkan dengan fungsi "Pulihkan Dompet".</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Migrasi dompet</translation>
+    </message>
+    <message>
+        <source>Migrating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">Memindahkan Dompet &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
+        <source>The wallet '%1' was migrated successfully.</source>
+        <translation type="unfinished">Dompet '%1' berhasil dipindahkan.</translation>
+    </message>
+    <message>
+        <source> Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Skrip Watchonly sudah dipindahkan ke dompet baru bernama '%1'.</translation>
+    </message>
+    <message>
+        <source>Migration failed</source>
+        <translation type="unfinished">Migrasi gagal</translation>
+    </message>
+    <message>
+        <source>Migration Successful</source>
+        <translation type="unfinished">Migrasi berhasil</translation>
     </message>
 </context>
 <context>
@@ -565,6 +624,14 @@ Tanda tangan hanya bisa digunakan dengan tipe alamat 'warisan'</translation>
     <message>
         <source>Create Wallet</source>
         <translation type="unfinished">Bikin dompet</translation>
+    </message>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">Anda hanya selangkah lagi untuk membuat dompet baru anda!</translation>
+    </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">Mohon sertakan nama, dan jika diinginkan, aktifkan pilihan lanjut apapun</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1053,6 +1120,38 @@ Tanda tangan hanya bisa digunakan dengan tipe alamat 'warisan'</translation>
 <context>
     <name>RPCConsole</name>
     <message>
+        <source>Current number of transactions</source>
+        <translation type="unfinished">Jumlah transaksi saat ini</translation>
+    </message>
+    <message>
+        <source>Memory usage</source>
+        <translation type="unfinished">Penggunaan memori</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation type="unfinished">Diterima</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation type="unfinished">Terkirim</translation>
+    </message>
+    <message>
+        <source>Transport</source>
+        <translation type="unfinished">Transpor</translation>
+    </message>
+    <message>
+        <source>The BIP324 session ID string in hex, if any.</source>
+        <translation type="unfinished">String ID sesi BIP324 dalam heksadesimal, jika ada.</translation>
+    </message>
+    <message>
+        <source>Session ID</source>
+        <translation type="unfinished">ID sesi</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation type="unfinished">Versi</translation>
+    </message>
+    <message>
         <source>Whether we relay transactions to this peer.</source>
         <translation type="unfinished">Apakah kita merelay transaksi ke peer ini.</translation>
     </message>
@@ -1073,6 +1172,21 @@ Tanda tangan hanya bisa digunakan dengan tipe alamat 'warisan'</translation>
     <message>
         <source>Last block time</source>
         <translation type="unfinished">Waktu blok terakhir</translation>
+    </message>
+    <message>
+        <source>detecting: peer could be v1 or v2</source>
+        <extracomment>Explanatory text for "detecting" transport type.</extracomment>
+        <translation type="unfinished">mendeteksi: peer bisa jadi v1 atau v2</translation>
+    </message>
+    <message>
+        <source>v1: unencrypted, plaintext transport protocol</source>
+        <extracomment>Explanatory text for v1 transport type.</extracomment>
+        <translation type="unfinished">v1: protokol transportasi teks biasa tanpa enkripsi</translation>
+    </message>
+    <message>
+        <source>v2: BIP324 encrypted transport protocol</source>
+        <extracomment>Explanatory text for v2 transport type.</extracomment>
+        <translation type="unfinished">v2: BIP324 protokol transportasi terenkripsi</translation>
     </message>
     </context>
 <context>
@@ -1244,6 +1358,10 @@ Tanda tangan hanya bisa digunakan dengan tipe alamat 'warisan'</translation>
         <translation type="unfinished">Dompet berhasil dibuat. Jenis dompet lama tidak digunakan lagi dan dukungan untuk membuat dan membuka dompet lama akan dihapus di masa mendatang.</translation>
     </message>
     <message>
+        <source>Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet.</source>
+        <translation type="unfinished">Dompet berhasil dimuat. Tipe dompet lama akan ditinggalkan dan dukungan untuk membuat dan membuka dompet ini akan dihapus di masa depan. Dompet lama dapat dimigrasikan ke dompet deskriptor dengan migratewallet.</translation>
+    </message>
+    <message>
         <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
         <translation type="unfinished">Kesalahan: Data buku alamat di dompet tidak dapat diidentifikasi sebagai dompet yang dimigrasikan</translation>
     </message>
@@ -1254,6 +1372,10 @@ Tanda tangan hanya bisa digunakan dengan tipe alamat 'warisan'</translation>
     <message>
         <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
         <translation type="unfinished">Kesalahan: %s transaksi di dompet tidak dapat diidentifikasi sebagai dompet yang dimigrasikan</translation>
+    </message>
+    <message>
+        <source>Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.</source>
+        <translation type="unfinished">Gagal menghitung biaya peningkatan, karena UTXO yang belum dikonfirmasi bergantung pada kelompok besar transaksi yang belum dikonfirmasi.</translation>
     </message>
     <message>
         <source>Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6</source>
@@ -1282,6 +1404,14 @@ Tanda tangan hanya bisa digunakan dengan tipe alamat 'warisan'</translation>
     <message>
         <source>The preselected coins total amount does not cover the transaction target. Please allow other inputs to be automatically selected or include more coins manually</source>
         <translation type="unfinished">Jumlah total koin yang dipilih tidak menutupi transaksi target. Silahkan izinkan input yang lain untuk secara otomatis dipilih atau masukkan lebih banyak koin secara manual.</translation>
+    </message>
+    <message>
+        <source>UTXO snapshot failed to validate. Restart to resume normal initial block download, or try loading a different snapshot.</source>
+        <translation type="unfinished">Snapshot UTXO gagal divalidasi. Mulai ulang untuk melanjutkan pengunduhan blok awal normal, atau coba muat snapshot yang berbeda.</translation>
+    </message>
+    <message>
+        <source>Unconfirmed UTXOs are available, but spending them creates a chain of transactions that will be rejected by the mempool</source>
+        <translation type="unfinished">UTXO yang belum dikonfirmasi tersedia, tetapi menghabiskannya menciptakan rantai transaksi yang akan ditolak oleh mempool</translation>
     </message>
     <message>
         <source>Unexpected legacy entry in descriptor wallet found. Loading wallet %s
@@ -1316,6 +1446,10 @@ Tidak dapat membersihkan migrasi yang gagal</translation>
 Unable to restore backup of wallet.</source>
         <translation type="unfinished">
 Tidak dapat memulihkan cadangan dompet..</translation>
+    </message>
+    <message>
+        <source>Block verification was interrupted</source>
+        <translation type="unfinished">Verifikasi Blok terganggu</translation>
     </message>
     <message>
         <source>Error: Cannot extract destination from the generated scriptpubkey</source>
@@ -1360,6 +1494,10 @@ Tidak dapat memulihkan cadangan dompet..</translation>
     <message>
         <source>Error: Unable to remove watchonly address book data</source>
         <translation type="unfinished">Kesalahan: Tidak dapat menghapus data buku alamat yang hanya dilihat</translation>
+    </message>
+    <message>
+        <source>Failed to start indexes, shutting down..</source>
+        <translation type="unfinished">Gagal memulai indeks, mematikan..</translation>
     </message>
     <message>
         <source>Insufficient dbcache for block verification</source>

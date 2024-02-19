@@ -34,6 +34,14 @@
         <translation type="unfinished">Magpalub kang address o label para pantunan</translation>
     </message>
     <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">Export me ing data king tab a ini anting metung a file</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation type="unfinished">I&amp;Export</translation>
+    </message>
+    <message>
         <source>&amp;Delete</source>
         <translation type="unfinished">&amp;Ilako</translation>
     </message>
@@ -1071,6 +1079,17 @@
     <message>
         <source>Send Coins</source>
         <translation type="unfinished">Magpadalang Barya</translation>
+    </message>
+    </context>
+<context>
+    <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation type="unfinished">I&amp;Export</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">Export me ing data king tab a ini anting metung a file</translation>
     </message>
     </context>
 <context>

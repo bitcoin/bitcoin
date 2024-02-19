@@ -94,9 +94,12 @@ Registrarse solo es posible utilizando  una direccion tipo "Legal"</translation>
         <translation type="unfinished">Hubo un error al intentar guardar la lista de direcciones a %1. Por favor trate de nuevo.</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Direcciones de envío - %1</translation>
+    </message>
+    <message>
         <source>Receiving addresses - %1</source>
-        <translation type="unfinished">Recepción de direcciones - %1
-</translation>
+        <translation type="unfinished">Direcciones de recepción - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -174,7 +177,7 @@ Registrarse solo es posible utilizando  una direccion tipo "Legal"</translation>
     </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished">Ingrese la nueva contraseña para la billetera. Use una contraseña de diez o más caracteres aleatorios, u ocho o más palabras.</translation>
+        <translation type="unfinished">Ingrese la nueva frase de contraseña para la billetera. &lt;br/&gt;Usa una frase de contraseña de &lt;b&gt;diez o más caracteres aleatorios&lt;/b&gt;, u &lt;b&gt;ocho o más palabras&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
@@ -781,7 +784,7 @@ Registrarse solo es posible utilizando  una direccion tipo "Legal"</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation type="unfinished">La generación de la clave HD está &lt;b&gt; desactivada &lt;/ b&gt;</translation>
+        <translation type="unfinished">La generación de la clave HD está &lt;b&gt; desactivada&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
@@ -983,7 +986,7 @@ Registrarse solo es posible utilizando  una direccion tipo "Legal"</translation>
     </message>
     <message>
         <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
-        <translation type="unfinished">Estas seguro de wue deseas migrar la billetera 1 %1 1 ?</translation>
+        <translation type="unfinished">¿Seguro deseas migrar la billetera &lt;i&gt;%1&lt;/i&gt;?</translation>
     </message>
     <message>
         <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
@@ -2432,7 +2435,7 @@ Escribe %5 para ver un resumen de los comandos disponibles. Para más informaci�
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished">Use este formulario para solicitar pagos. Todos los campos son &lt;b&gt; opcionales &lt;/ b&gt;.</translation>
+        <translation type="unfinished">Use este formulario para solicitar pagos. Todos los campos son &lt;b&gt;opcionales&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
@@ -3856,7 +3859,7 @@ Ir a Archivo &gt; Abrir billetera para cargar una.
     </message>
     <message>
         <source>Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input</source>
-        <translation type="unfinished">La transacción requiere un destino de valor distinto de cero, una tasa de comisión distinta de cero, o una entrada preseleccionada.</translation>
+        <translation type="unfinished">La transacción requiere un destino de valor distinto de 0, una tasa de comisión distinta de 0, o una entrada preseleccionada.</translation>
     </message>
     <message>
         <source>UTXO snapshot failed to validate. Restart to resume normal initial block download, or try loading a different snapshot.</source>

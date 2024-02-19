@@ -94,6 +94,14 @@ Aláírni csak régi típusú, egyessel kezdődő címekkel lehet.</translation>
         <translation type="unfinished">Hiba történt a címlista %1 mentésekor. Kérem próbálja újra.</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Küldési címek - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Fogadó címek - %1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">Sikertelen exportálás</translation>
     </message>
@@ -698,6 +706,14 @@ Aláírni csak régi típusú, egyessel kezdődő címekkel lehet.</translation>
         <translation type="unfinished">Összes tárca bezárása</translation>
     </message>
     <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Tárca Migrálása</translation>
+    </message>
+    <message>
+        <source>Migrate a wallet</source>
+        <translation type="unfinished">Egy tárca migrálása</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation type="unfinished">A %1 súgó megjelenítése a Bitcoin lehetséges parancssori kapcsolóinak listájával</translation>
     </message>
@@ -791,6 +807,14 @@ Aláírni csak régi típusú, egyessel kezdődő címekkel lehet.</translation>
     <message>
         <source>Pre-syncing Headers (%1%)…</source>
         <translation type="unfinished">Fejlécek szinkronizálása (%1%)…</translation>
+    </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">Hiba a tárca létrehozása közben</translation>
+    </message>
+    <message>
+        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">Nem sikerült új tárcát létrehozni, a program sqlite támogatás nélkül lett fordítva (követelmény a leíró tárcákhoz)</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1054,6 +1078,57 @@ Aláírni csak régi típusú, egyessel kezdődő címekkel lehet.</translation>
     </message>
 </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">Tárca migrálása</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">Biztos benne, hogy migrálja ezt a tárcát &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">A tárca migrálása átalakítja ezt a tárcát egy vagy több leíró tárcává. Egy új tárca biztonsági mentés szükséges.
+Ha ez a tárca tartalmaz bármilyen figyelő szkripteket, akkor az új tárca is tartalmazni fogja ezeket a figyelő szkripteket.
+Ha ez a tárca tartalmaz bármilyen megoldható de nem megfigyelt szkripteket, akkor az új tárca is tartalmazni fogja ezeket a szkripteket.
+
+A migrációs folyamat készít biztonsági mentést a tárcáról migrálás előtt. Ennek a biztonsági mentésnek a neve &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak és a tárca könyvtárában lesz megtalálható. Hibás migrálás esetén ebből a biztonsági mentésből a tárca visszaállítható a "Tárca visszaállítása" funkcióval.</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Tárca Migrálása</translation>
+    </message>
+    <message>
+        <source>Migrating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">A &lt;b&gt;%1&lt;/b&gt; Tárca Migrálása Folyamatban...</translation>
+    </message>
+    <message>
+        <source>The wallet '%1' was migrated successfully.</source>
+        <translation type="unfinished">A '%1' tárca sikeresen migrálva lett.</translation>
+    </message>
+    <message>
+        <source> Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Figyelő szkriptek az új '%1' nevű tárcába lettek migrálva.</translation>
+    </message>
+    <message>
+        <source> Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Megoldható de nem megfigyelt szkriptek az új '%1' nevű tárcába lettek migrálva.</translation>
+    </message>
+    <message>
+        <source>Migration failed</source>
+        <translation type="unfinished">Migrálás meghiúsult</translation>
+    </message>
+    <message>
+        <source>Migration Successful</source>
+        <translation type="unfinished">Migrálás Sikeres</translation>
+    </message>
+</context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open wallet failed</source>
@@ -1134,6 +1209,14 @@ Aláírni csak régi típusú, egyessel kezdődő címekkel lehet.</translation>
     <message>
         <source>Create Wallet</source>
         <translation type="unfinished">Tárca létrehozása</translation>
+    </message>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">Egy lépés választja el az új tárcája létrehozásától!</translation>
+    </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">Kérjük adjon meg egy nevet, és ha szeretné, válasszon a haladó beállítások közül</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -2250,6 +2333,22 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">Válasszon ki egy partnert a részletes információk megtekintéséhez.</translation>
     </message>
     <message>
+        <source>The transport layer version: %1</source>
+        <translation type="unfinished">Az átviteli réteg verziója: %1</translation>
+    </message>
+    <message>
+        <source>Transport</source>
+        <translation type="unfinished">Átvitel</translation>
+    </message>
+    <message>
+        <source>The BIP324 session ID string in hex, if any.</source>
+        <translation type="unfinished">A BIP324 munkamenet azonosító hex formátumú szöveglánca, ha van.</translation>
+    </message>
+    <message>
+        <source>Session ID</source>
+        <translation type="unfinished">Munkamenet Azonosító</translation>
+    </message>
+    <message>
         <source>Version</source>
         <translation type="unfinished">Verzió</translation>
     </message>
@@ -2477,6 +2576,21 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <source>Outbound Address Fetch: short-lived, for soliciting addresses</source>
         <extracomment>Explanatory text for a short-lived outbound peer connection that is used to request addresses from a peer.</extracomment>
         <translation type="unfinished">Outbound Address Fetch: rövid életű, címek lekérdezéséhez.</translation>
+    </message>
+    <message>
+        <source>detecting: peer could be v1 or v2</source>
+        <extracomment>Explanatory text for "detecting" transport type.</extracomment>
+        <translation type="unfinished">észlelve: partrer lehet v1 vagy v2</translation>
+    </message>
+    <message>
+        <source>v1: unencrypted, plaintext transport protocol</source>
+        <extracomment>Explanatory text for v1 transport type.</extracomment>
+        <translation type="unfinished">v1: titkosítatlan, egyszerű szöveges átviteli protokol</translation>
+    </message>
+    <message>
+        <source>v2: BIP324 encrypted transport protocol</source>
+        <extracomment>Explanatory text for v2 transport type.</extracomment>
+        <translation type="unfinished">v2: BIP324 titkosított átviteli protokol</translation>
     </message>
     <message>
         <source>we selected the peer for high bandwidth relay</source>
@@ -4219,6 +4333,10 @@ A "Fájl &gt; Tárca megnyitása" menüben tölthet be egyet.
     <message>
         <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
         <translation type="unfinished">Hiba: A tárcában lévő %s tranzakciót nem lehet beazonosítani, hogy a migrált tárcákhoz tartozna</translation>
+    </message>
+    <message>
+        <source>Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.</source>
+        <translation type="unfinished">Sikertelen az emelt díjak becslése, mert a megerősítetlen UTXO-k hatalmas mennyiségű megerősítetlen tranzakcióktól függnek.</translation>
     </message>
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>

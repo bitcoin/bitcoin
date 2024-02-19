@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">创建新地址</translation>
+        <translation type="unfinished">创建一个新地址</translation>
     </message>
     <message>
         <source>&amp;New</source>
