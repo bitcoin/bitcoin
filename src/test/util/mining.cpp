@@ -49,7 +49,7 @@ std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node, const CScript& coi
 {
     assert(node.mempool);
     auto block = std::make_shared<CBlock>(
-        BlockAssembler{*sporkManager, *governance, *node.llmq_ctx, *node.evodb, ::ChainstateActive(), *node.mempool, Params()}
+        BlockAssembler{*node.sporkman, *node.govman, *node.llmq_ctx, *node.evodb, ::ChainstateActive(), *node.mempool, Params()}
             .CreateNewBlock(coinbase_scriptPubKey)
             ->block);
 

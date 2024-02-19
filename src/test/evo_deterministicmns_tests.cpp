@@ -406,8 +406,8 @@ void FuncDIP3Protx(TestChainSetup& setup)
 
     CKey sporkKey;
     sporkKey.MakeNewKey(false);
-    sporkManager->SetSporkAddress(EncodeDestination(PKHash(sporkKey.GetPubKey())));
-    sporkManager->SetPrivKey(EncodeSecret(sporkKey));
+    setup.m_node.sporkman->SetSporkAddress(EncodeDestination(PKHash(sporkKey.GetPubKey())));
+    setup.m_node.sporkman->SetPrivKey(EncodeSecret(sporkKey));
 
     auto utxos = BuildSimpleUtxoMap(setup.m_coinbase_txns);
 
