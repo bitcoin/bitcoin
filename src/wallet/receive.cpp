@@ -209,23 +209,27 @@ bool CachedTxIsFromMe(const CWallet& wallet, const CWalletTx& wtx, const isminef
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uint256>& trusted_parents)
+bool CachedTxIsTrusted(const CWallet& wallet, const TxState& state, const uint256& txid, std::set<uint256>& trusted_parents)
 {
     AssertLockHeld(wallet.cs_wallet);
 
     // This wtx is already trusted
-    if (trusted_parents.contains(wtx.GetHash())) return true;
+    if (trusted_parents.contains(txid)) return true;
 
-    if (wtx.isConfirmed()) return true;
-    if (wtx.isBlockConflicted()) return false;
-    // using wtx's cached debit
-    if (!wallet.m_spend_zero_conf_change || !CachedTxIsFromMe(wallet, wtx, ISMINE_ALL)) return false;
+    if (std::holds_alternative<TxStateConfirmed>(state)) return true;
+    if (std::holds_alternative<TxStateBlockConflicted>(state)) return false;
 
     // Don't trust unconfirmed transactions from us unless they are in the mempool.
-    if (!wtx.InMempool()) return false;
+    if (!std::holds_alternative<TxStateInMempool>(state)) return false;
+
+    const CWalletTx* wtx = wallet.GetWalletTx(txid);
+    assert(wtx);
+
+    // using wtx's cached debit
+    if (!wallet.m_spend_zero_conf_change || !CachedTxIsFromMe(wallet, *wtx, ISMINE_ALL)) return false;
 
     // Trusted if all inputs are from us and are in the mempool:
-    for (const CTxIn& txin : wtx.tx->vin)
+    for (const CTxIn& txin : wtx->tx->vin)
     {
         // Transactions not sent by us: not trusted
         const CWalletTx* parent = wallet.GetWalletTx(txin.prevout.hash);
@@ -240,6 +244,17 @@ bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uin
         trusted_parents.insert(parent->GetHash());
     }
     return true;
+}
+
+bool CachedTxIsTrusted(const CWallet& wallet, const TxState& state, const uint256& txid)
+{
+    std::set<uint256> trusted_parents;
+    return CachedTxIsTrusted(wallet, state, txid, trusted_parents);
+}
+
+bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uint256>& trusted_parents)
+{
+    return CachedTxIsTrusted(wallet, wtx.m_state, wtx.GetHash(), trusted_parents);
 }
 
 bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx)
@@ -258,8 +273,8 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
         for (const auto& [outpoint, txo] : wallet.GetTXOs()) {
             Assert(MoneyRange(txo.GetTxOut().nValue));
 
-            const bool is_trusted{CachedTxIsTrusted(wallet, txo.GetWalletTx())};
-            const int tx_depth{wallet.GetTxDepthInMainChain(txo.GetWalletTx())};
+            const bool is_trusted{CachedTxIsTrusted(wallet, txo.GetState(), outpoint.hash)};
+            const int tx_depth{wallet.GetTxStateDepthInMainChain(txo.GetState())};
 
             if (!wallet.IsSpent(outpoint) && (allow_used_addresses || !wallet.IsSpentKey(txo.GetTxOut().scriptPubKey))) {
                 // Get the amounts for mine and watchonly
@@ -275,13 +290,13 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
                 }
 
                 // Set the amounts in the return object
-                if (wallet.IsTxImmatureCoinBase(txo.GetWalletTx()) && txo.GetWalletTx().isConfirmed()) {
+                if (wallet.IsTXOInImmatureCoinBase(txo) && std::holds_alternative<TxStateConfirmed>(txo.GetState())) {
                     ret.m_mine_immature += credit_mine;
                     ret.m_watchonly_immature += credit_watchonly;
                 } else if (is_trusted && tx_depth >= min_depth) {
                     ret.m_mine_trusted += credit_mine;
                     ret.m_watchonly_trusted += credit_watchonly;
-                } else if (!is_trusted && txo.GetWalletTx().InMempool()) {
+                } else if (!is_trusted && tx_depth == 0 && std::get_if<TxStateInMempool>(&txo.GetState())) {
                     ret.m_mine_untrusted_pending += credit_mine;
                     ret.m_watchonly_untrusted_pending += credit_watchonly;
                 }
@@ -298,10 +313,10 @@ std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet)
     {
         LOCK(wallet.cs_wallet);
         for (const auto& [outpoint, txo] : wallet.GetTXOs()) {
-            if (!CachedTxIsTrusted(wallet, txo.GetWalletTx())) continue;
-            if (wallet.IsTxImmatureCoinBase(txo.GetWalletTx())) continue;
+            if (!CachedTxIsTrusted(wallet, txo.GetState(), outpoint.hash)) continue;
+            if (wallet.IsTXOInImmatureCoinBase(txo)) continue;
 
-            int nDepth = wallet.GetTxDepthInMainChain(txo.GetWalletTx());
+            int nDepth = wallet.GetTxStateDepthInMainChain(txo.GetState());
             if (nDepth < (CachedTxIsFromMe(wallet, txo.GetWalletTx(), ISMINE_ALL) ? 0 : 1)) continue;
 
             CTxDestination addr;
