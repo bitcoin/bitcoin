@@ -150,7 +150,6 @@ static void RefreshMempoolStatus(CWallet& wallet, CWalletTx& tx, interfaces::Cha
     }
     if (state) {
         tx.SetState(*state);
-        wallet.RefreshTXOsFromTx(tx);
     }
 }
 
@@ -1030,13 +1029,6 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
     {
         if (state.index() != wtx.GetState().index()) {
             wtx.SetState(state);
-            for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
-                COutPoint outpoint(wtx.GetHash(), i);
-                auto it = m_txos.find(outpoint);
-                if (it != m_txos.end()) {
-                    it->second.SetState(state);
-                }
-            }
             fUpdated = true;
         } else {
             assert(TxStateSerializedIndex(wtx.GetState()) == TxStateSerializedIndex(state));
@@ -1069,10 +1061,6 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
             MarkInputsDirty(desc_tx->tx);
             for (unsigned int i = 0; i < desc_tx->tx->vout.size(); ++i) {
                 COutPoint outpoint(desc_tx->GetHash(), i);
-                auto it = m_txos.find(outpoint);
-                if (it != m_txos.end()) {
-                    it->second.SetState(inactive_state);
-                }
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(outpoint);
                 for (TxSpends::const_iterator it = range.first; it != range.second; ++it) {
                     const auto wit = mapWallet.find(it->second);
@@ -1362,11 +1350,6 @@ void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const Txid& tx_hash, co
             if (batch) batch->WriteTx(wtx);
             // Iterate over all its outputs, and update those tx states as well (if applicable)
             for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
-                COutPoint outpoint(wtx.GetHash(), i);
-                auto it = m_txos.find(outpoint);
-                if (it != m_txos.end()) {
-                    it->second.SetState(wtx.GetState());
-                }
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(COutPoint(now, i));
                 for (TxSpends::const_iterator iter = range.first; iter != range.second; ++iter) {
                     if (!done.contains(iter->second)) {
@@ -2030,13 +2013,6 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
     bool ret = chain().broadcastTransaction(wtx.tx, m_default_max_tx_fee, broadcast_method, err_string);
     if (ret) {
         wtx.SetState(TxStateInMempool{});
-        for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
-            COutPoint outpoint(wtx.GetHash(), i);
-            auto it = m_txos.find(outpoint);
-            if (it != m_txos.end()) {
-                it->second.SetState(TxStateInMempool{});
-            }
-        }
     }
     return ret;
 }
