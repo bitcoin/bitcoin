@@ -1026,8 +1026,9 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, WalletBatc
 
     // Load tx record
     bool any_unordered = false;
+    bool any_missing_from_me = false;
     LoadResult tx_res = LoadRecords(pwallet, batch, DBKeys::TX,
-        [&any_unordered] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        [&any_unordered, &any_missing_from_me] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
         DBErrors result = DBErrors::LOAD_OK;
         Txid hash;
         key >> hash;
@@ -1047,6 +1048,10 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, WalletBatc
             if (wtx.nOrderPos == -1)
                 any_unordered = true;
 
+            if (!wtx.m_from_me.has_value()) {
+                any_missing_from_me = true;
+            }
+
             return true;
         };
         if (!pwallet->LoadToWallet(hash, fill_wtx)) {
@@ -1061,6 +1066,15 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, WalletBatc
     if (any_unordered) {
         if (!pwallet->ReorderTransactions(wallet_batch)) {
             result = std::max(result, DBErrors::LOAD_FAIL);
+        }
+    }
+
+    // Upgrade each CWalletTx missing m_from_me
+    if (any_missing_from_me) {
+        for (const auto& [_, wtx] : pwallet->wtxOrdered) {
+            if (wtx->m_from_me) continue;
+            wtx->m_from_me = pwallet->IsFromMe(*wtx->tx);
+            wallet_batch.WriteTx(*wtx);
         }
     }
 
