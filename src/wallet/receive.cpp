@@ -257,6 +257,10 @@ bool CachedTxIsFromMe(const CWallet& wallet, const CWalletTx& wtx, const isminef
 bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<Txid>& trusted_parents)
 {
     AssertLockHeld(wallet.cs_wallet);
+
+    // This wtx is already trusted
+    if (trusted_parents.contains(wtx.GetHash())) return true;
+
     if (wtx.isConfirmed()) return true;
     if (wtx.isBlockConflicted()) return false;
     // using wtx's cached debit
