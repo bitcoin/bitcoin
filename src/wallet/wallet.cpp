@@ -1543,16 +1543,10 @@ void CWallet::BlockUntilSyncedToCurrentChain() const {
 // and a not-"is mine" (according to the filter) input.
 CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 {
-    {
-        LOCK(cs_wallet);
-        const auto mi = mapWallet.find(txin.prevout.hash);
-        if (mi != mapWallet.end())
-        {
-            const CWalletTx& prev = (*mi).second;
-            if (txin.prevout.n < prev.tx->vout.size())
-                if (IsMine(prev.tx->vout[txin.prevout.n]) & filter)
-                    return prev.tx->vout[txin.prevout.n].nValue;
-        }
+    LOCK(cs_wallet);
+    auto txo = GetTXO(txin.prevout);
+    if (txo && (txo->GetIsMine() & filter)) {
+        return txo->GetTxOut().nValue;
     }
     return 0;
 }
