@@ -1016,6 +1016,12 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 
         // Update birth time when tx time is older than it.
         MaybeUpdateBirthTime(wtx.GetTxTime());
+
+        wtx.m_from_me = IsFromMe(*wtx.tx);
+    } else {
+        bool from_me_before = *wtx.m_from_me;
+        wtx.m_from_me = IsFromMe(*wtx.tx);
+        fUpdated = fUpdated || (from_me_before != *wtx.m_from_me);
     }
 
     if (!fInsertedNew)
