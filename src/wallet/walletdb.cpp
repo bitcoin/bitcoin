@@ -3,6 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #include <wallet/walletdb.h>
 
 #include <common/system.h>
@@ -804,10 +808,10 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
             strErr = strprintf("%s\nDetails: %s", strErr, e.what());
             return DBErrors::UNKNOWN_DESCRIPTOR;
         }
-        pwallet->LoadDescriptorScriptPubKeyMan(id, desc);
+        DescriptorScriptPubKeyMan& spkm = pwallet->LoadDescriptorScriptPubKeyMan(id, desc);
 
         // Prior to doing anything with this spkm, verify ID compatibility
-        if (id != pwallet->GetDescriptorScriptPubKeyMan(desc)->GetID()) {
+        if (id != spkm.GetID()) {
             strErr = "The descriptor ID calculated by the wallet differs from the one in DB";
             return DBErrors::CORRUPT;
         }

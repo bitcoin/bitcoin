@@ -5,10 +5,6 @@
 #ifndef BITCOIN_NETADDRESS_H
 #define BITCOIN_NETADDRESS_H
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
-
 #include <compat/compat.h>
 #include <crypto/siphash.h>
 #include <prevector.h>

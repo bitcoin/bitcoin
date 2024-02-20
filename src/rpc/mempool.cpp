@@ -45,7 +45,7 @@ static RPCHelpMan sendrawtransaction()
             {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the raw transaction"},
             {"maxfeerate", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK())},
              "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT +
-                 "/kvB.\nSet to 0 to accept any fee rate."},
+                 "/kvB.\nFee rates larger than 1BTC/kvB are rejected.\nSet to 0 to accept any fee rate."},
             {"maxburnamount", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(0)},
              "Reject transactions with provably unspendable outputs (e.g. 'datacarrier' outputs that use the OP_RETURN opcode) greater than the specified value, expressed in " + CURRENCY_UNIT + ".\n"
              "If burning funds through unspendable outputs is desired, increase this value.\n"
@@ -81,9 +81,7 @@ static RPCHelpMan sendrawtransaction()
 
             CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
 
-            const CFeeRate max_raw_tx_fee_rate = request.params[1].isNull() ?
-                                                     DEFAULT_MAX_RAW_TX_FEE_RATE :
-                                                     CFeeRate(AmountFromValue(request.params[1]));
+            const CFeeRate max_raw_tx_fee_rate{ParseFeeRate(self.Arg<UniValue>(1))};
 
             int64_t virtual_size = GetVirtualTransactionSize(*tx);
             CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
@@ -117,7 +115,8 @@ static RPCHelpMan testmempoolaccept()
                 },
             },
             {"maxfeerate", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK())},
-             "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT + "/kvB\n"},
+             "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT +
+                 "/kvB.\nFee rates larger than 1BTC/kvB are rejected.\nSet to 0 to accept any fee rate."},
         },
         RPCResult{
             RPCResult::Type::ARR, "", "The result of the mempool acceptance test for each raw transaction in the input array.\n"
@@ -162,9 +161,7 @@ static RPCHelpMan testmempoolaccept()
                                    "Array must contain between 1 and " + ToString(MAX_PACKAGE_COUNT) + " transactions.");
             }
 
-            const CFeeRate max_raw_tx_fee_rate = request.params[1].isNull() ?
-                                                     DEFAULT_MAX_RAW_TX_FEE_RATE :
-                                                     CFeeRate(AmountFromValue(request.params[1]));
+            const CFeeRate max_raw_tx_fee_rate{ParseFeeRate(self.Arg<UniValue>(1))};
 
             std::vector<CTransactionRef> txns;
             txns.reserve(raw_transactions.size());
