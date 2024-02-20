@@ -472,7 +472,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         }
 
         auto available_output_type = GetOutputType(type, is_from_p2sh);
-        auto available_output = COutput(outpoint, output, nDepth, input_bytes, solvable, tx_safe, wtx.GetTxTime(), tx_from_me, feerate);
+        auto available_output = COutput(outpoint, output, nDepth, input_bytes, solvable, tx_safe, txo.GetTxTime(), tx_from_me, feerate);
         if (wtx.tx->version == TRUC_VERSION && nDepth == 0 && params.check_version_trucness) {
             unconfirmed_truc_coins.emplace_back(available_output_type, available_output);
             auto [it, _] = truc_txid_by_value.try_emplace(wtx.tx->GetHash(), 0);

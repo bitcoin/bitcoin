@@ -400,14 +400,16 @@ private:
     TxState m_tx_state;
     bool m_tx_coinbase;
     bool m_tx_from_me;
+    int64_t m_tx_time;
 
 public:
-    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const TxState& state, bool coinbase, bool tx_from_me)
+    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const TxState& state, bool coinbase, bool tx_from_me, int64_t tx_time)
     : m_wtx(wtx),
     m_output(output),
     m_tx_state(state),
     m_tx_coinbase(coinbase),
-    m_tx_from_me(tx_from_me)
+    m_tx_from_me(tx_from_me),
+    m_tx_time(tx_time)
     {
         Assume(std::ranges::find(wtx.tx->vout, output) != wtx.tx->vout.end());
     }
@@ -423,6 +425,8 @@ public:
 
     void SetTxFromMe(bool from_me) { m_tx_from_me = from_me; }
     bool GetTxFromMe() const { return m_tx_from_me; }
+
+    int64_t GetTxTime() const { return m_tx_time; }
 };
 } // namespace wallet
 
