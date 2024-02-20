@@ -259,7 +259,7 @@ bool CachedTxIsTrusted(const CWallet& wallet, const TxState& state, const uint25
 
 bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uint256>& trusted_parents)
 {
-    return CachedTxIsTrusted(wallet, wtx.m_state, wtx.GetHash(), trusted_parents);
+    return CachedTxIsTrusted(wallet, wtx.GetState(), wtx.GetHash(), trusted_parents);
 }
 
 bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx)

@@ -256,8 +256,11 @@ public:
     }
 
     CTransactionRef tx;
+
+private:
     TxState m_state;
 
+public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
@@ -331,6 +334,8 @@ public:
 
     template<typename T> const T* state() const { return std::get_if<T>(&m_state); }
     template<typename T> T* state() { return std::get_if<T>(&m_state); }
+    void SetState(const TxState& state) { m_state = state; }
+    const TxState& GetState() const { return m_state; }
 
     //! Update transaction state when attaching to a chain, filling in heights
     //! of conflicted and confirmed blocks
