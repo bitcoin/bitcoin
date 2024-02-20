@@ -422,29 +422,17 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
         return nullptr;
     }
 
+    // Unset the blank flag if not specified by the user
+    if (!create_blank) {
+        wallet->UnsetWalletFlag(WALLET_FLAG_BLANK_WALLET);
+    }
+
     // Encrypt the wallet
-    if (!passphrase.empty() && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+    if (!passphrase.empty()) {
         if (!wallet->EncryptWallet(passphrase)) {
             error = Untranslated("Error: Wallet created but failed to encrypt.");
             status = DatabaseStatus::FAILED_ENCRYPT;
             return nullptr;
-        }
-        if (!create_blank) {
-            // Unlock the wallet
-            if (!wallet->Unlock(passphrase)) {
-                error = Untranslated("Error: Wallet was encrypted but could not be unlocked");
-                status = DatabaseStatus::FAILED_ENCRYPT;
-                return nullptr;
-            }
-
-            // Set a seed for the wallet
-            {
-                LOCK(wallet->cs_wallet);
-                wallet->SetupDescriptorScriptPubKeyMans();
-            }
-
-            // Relock the wallet
-            wallet->Lock();
         }
     }
 
@@ -820,10 +808,9 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         Lock();
         Unlock(strWalletPassphrase);
 
-        // Make new descriptors with a new seed
-        if (!IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET)) {
-            SetupDescriptorScriptPubKeyMans();
-        }
+        // Generate new descriptors or seed if not blank or disable private keys
+        SetupWalletGeneration();
+
         Lock();
 
         // Need to completely rewrite the wallet file; if we don't, the database might keep
@@ -2928,9 +2915,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         // Only descriptor wallets can be created
         assert(walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
 
-        if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) || !(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET))) {
-            walletInstance->SetupDescriptorScriptPubKeyMans();
-        }
+        walletInstance->SetupWalletGeneration();
 
         if (chain) {
             std::optional<int> tip_height = chain->getHeight();
@@ -3607,6 +3592,17 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
         // Ensure imported descriptors are committed to disk
         if (!batch.TxnCommit()) throw std::runtime_error("Error: cannot commit db transaction for descriptors import");
     }
+}
+
+void CWallet::SetupWalletGeneration()
+{
+    LOCK(cs_wallet);
+    // Skip if blank or no privkeys
+    if (!IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER) &&
+        (IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET) || IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS))) {
+        return;
+    }
+    SetupDescriptorScriptPubKeyMans();
 }
 
 void CWallet::AddActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal)

@@ -1023,6 +1023,9 @@ public:
     //! Create new seed and default DescriptorScriptPubKeyMans for this wallet
     void SetupOwnDescriptorScriptPubKeyMans(WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    //! Setup new descriptors or seed for new address generation
+    void SetupWalletGeneration();
+
     //! Return the DescriptorScriptPubKeyMan for a WalletDescriptor if it is already in the wallet
     DescriptorScriptPubKeyMan* GetDescriptorScriptPubKeyMan(const WalletDescriptor& desc) const;
 
