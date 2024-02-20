@@ -154,9 +154,9 @@ static void UpdateWalletSetting(interfaces::Chain& chain,
 static void RefreshMempoolStatus(CWalletTx& tx, interfaces::Chain& chain)
 {
     if (chain.isInMempool(tx.GetHash())) {
-        tx.m_state = TxStateInMempool();
+        tx.SetState(TxStateInMempool());
     } else if (tx.state<TxStateInMempool>()) {
-        tx.m_state = TxStateInactive();
+        tx.SetState(TxStateInactive());
     }
 }
 
@@ -1122,7 +1122,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         while (!txs.empty()) {
             CWalletTx* desc_tx = txs.back();
             txs.pop_back();
-            desc_tx->m_state = inactive_state;
+            desc_tx->SetState(inactive_state);
             // Break caches since we have changed the state
             desc_tx->MarkDirty();
             batch.WriteTxMetadata(*desc_tx);
@@ -1339,7 +1339,7 @@ bool CWallet::AbandonTransaction(CWalletTx& tx)
         assert(!wtx.InMempool());
         // If already conflicted or abandoned, no need to set abandoned
         if (!wtx.isBlockConflicted() && !wtx.isAbandoned()) {
-            wtx.m_state = TxStateInactive{/*abandoned=*/true};
+            wtx.SetState(TxStateInactive{/*abandoned=*/true});
             return TxUpdate::NOTIFY_CHANGED;
         }
         return TxUpdate::UNCHANGED;
@@ -1375,7 +1375,7 @@ void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, c
         if (conflictconfirms < GetTxDepthInMainChain(wtx)) {
             // Block is 'more conflicted' than current confirm; update.
             // Mark transaction as conflicted with this block.
-            wtx.m_state = TxStateBlockConflicted{hashBlock, conflicting_height};
+            wtx.SetState(TxStateBlockConflicted{hashBlock, conflicting_height});
             return TxUpdate::CHANGED;
         }
         return TxUpdate::UNCHANGED;
@@ -1615,7 +1615,7 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
                 auto try_updating_state = [&](CWalletTx& tx) {
                     if (!tx.isBlockConflicted()) return TxUpdate::UNCHANGED;
                     if (tx.state<TxStateBlockConflicted>()->conflicting_block_height >= disconnect_height) {
-                        tx.m_state = TxStateInactive{};
+                        tx.SetState(TxStateInactive{});
                         return TxUpdate::CHANGED;
                     }
                     return TxUpdate::UNCHANGED;
@@ -1872,7 +1872,7 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
     // If transaction was previously in the mempool, it should be updated when
     // TransactionRemovedFromMempool fires.
     bool ret = chain().broadcastTransaction(wtx.GetTx(), m_max_tx_fee, m_max_tx_fee_rate, broadcast_method, err_string);
-    if (ret) wtx.m_state = TxStateInMempool{};
+    if (ret) wtx.SetState(TxStateInMempool{});
     return ret;
 }
 
