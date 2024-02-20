@@ -47,7 +47,9 @@ void CWalletTx::updateState(interfaces::Chain& chain)
         // transaction was reorged out while online and then reconfirmed
         // while offline is covered by the rescan logic.
         if (!chain.findBlock(hash, FoundBlock().inActiveChain(active).height(height)) || !active) {
-            SetState(TxStateInactive{});
+            // Note that it is safe to provide nullptr for update_external_states_fn here as this
+            // function is only called during loading prior to the TXOs being cached.
+            SetState(TxStateInactive{}, nullptr);
         }
     };
     if (auto* conf = state<TxStateConfirmed>()) {
@@ -61,7 +63,7 @@ void CWalletTx::updateState(interfaces::Chain& chain)
     if (!isConfirmed()) RecomputeCanonical();
 }
 
-bool CWalletTx::Update(CTransactionRef new_tx, const TxState& new_state)
+bool CWalletTx::Update(CTransactionRef new_tx, const TxState& new_state, std::function<void(const COutPoint&, const TxState&)> update_external_states_fn)
 {
     Assert(new_tx);
     if (!Assume(GetHash() == new_tx->GetHash())) {
@@ -75,7 +77,7 @@ bool CWalletTx::Update(CTransactionRef new_tx, const TxState& new_state)
     const auto& [wtxid, tx] = *tx_pair;
 
     if (new_state.index() != GetState().index()) {
-        SetState(new_state);
+        SetState(new_state, update_external_states_fn);
         if (state<TxStateConfirmed>()) {
             m_canonical_wtxid = wtxid;
         }
@@ -107,5 +109,15 @@ void CWalletTx::RecomputeCanonical()
     m_canonical_wtxid = std::ranges::min_element(m_txs, std::less{}, [](const auto& entry) {
                             return std::make_pair(!entry.second->HasWitness(), GetTransactionWeight(*entry.second));
                         })->first;
+}
+
+void CWalletTx::SetState(const TxState& state, std::function<void(const COutPoint&, const TxState&)> update_external_states_fn)
+{
+    m_state = state;
+    if (update_external_states_fn) {
+        for (uint32_t i = 0; i < GetTx()->vout.size(); ++i) {
+            update_external_states_fn(COutPoint{GetHash(), i}, state);
+        }
+    }
 }
 } // namespace wallet
