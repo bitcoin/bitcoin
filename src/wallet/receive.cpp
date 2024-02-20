@@ -193,14 +193,6 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
 
 }
 
-bool CachedTxIsFromMe(const CWallet& wallet, const CWalletTx& wtx)
-{
-    if (!wtx.m_cached_from_me.has_value()) {
-        wtx.m_cached_from_me = wallet.IsFromMe(*wtx.tx);
-    }
-    return wtx.m_cached_from_me.value();
-}
-
 // NOLINTNEXTLINE(misc-no-recursion)
 bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<Txid>& trusted_parents)
 {
@@ -212,7 +204,7 @@ bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<Txi
     if (wtx.isConfirmed()) return true;
     if (wtx.isBlockConflicted()) return false;
     // using wtx's cached debit
-    if (!wallet.m_spend_zero_conf_change || !CachedTxIsFromMe(wallet, wtx)) return false;
+    if (!wallet.m_spend_zero_conf_change || !wtx.m_from_me) return false;
 
     // Don't trust unconfirmed transactions from us unless they are in the mempool.
     if (!wtx.InMempool()) return false;
@@ -287,7 +279,7 @@ std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet)
             if (wallet.IsTxImmatureCoinBase(wtx)) continue;
 
             int nDepth = wallet.GetTxDepthInMainChain(wtx);
-            if (nDepth < (CachedTxIsFromMe(wallet, wtx) ? 0 : 1)) continue;
+            if (nDepth < (wtx.m_from_me ? 0 : 1)) continue;
 
             CTxDestination addr;
             Assume(wallet.IsMine(txo.GetTxOut()));
