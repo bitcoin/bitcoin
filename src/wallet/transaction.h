@@ -374,12 +374,16 @@ private:
     const CWalletTx& m_wtx;
     const CTxOut& m_output;
     isminetype m_ismine;
+    TxState m_tx_state;
+    bool m_tx_coinbase;
 
 public:
-    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const isminetype ismine)
+    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const isminetype ismine, const TxState& state, bool coinbase)
     : m_wtx(wtx),
     m_output(output),
-    m_ismine(ismine)
+    m_ismine(ismine),
+    m_tx_state(state),
+    m_tx_coinbase(coinbase)
     {}
 
     const CWalletTx& GetWalletTx() const { return m_wtx; }
@@ -388,6 +392,11 @@ public:
 
     isminetype GetIsMine() const { return m_ismine; }
     void SetIsMine(isminetype ismine) { m_ismine = ismine; }
+
+    const TxState& GetState() const { return m_tx_state; }
+    void SetState(const TxState& state) { m_tx_state = state; }
+
+    bool IsTxCoinBase() const { return m_tx_coinbase; }
 };
 } // namespace wallet
 
