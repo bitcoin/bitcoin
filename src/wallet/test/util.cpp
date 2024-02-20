@@ -19,26 +19,25 @@
 #include <memory>
 
 namespace wallet {
-std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, const CKey& key)
+std::shared_ptr<CWallet> CreateSyncedWallet(WalletContext& context, const CKey& key)
 {
-    auto wallet = std::make_unique<CWallet>(&chain, "", CreateMockableWalletDatabase());
-    {
-        LOCK2(wallet->cs_wallet, ::cs_main);
-        wallet->SetLastBlockProcessed(cchain.Height(), cchain.Tip()->GetBlockHash());
-    }
-    {
-        LOCK(wallet->cs_wallet);
-        wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-        wallet->SetupDescriptorScriptPubKeyMans();
-    }
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+    auto wallet = CWallet::CreateNew(context, "", CreateMockableWalletDatabase(), WALLET_FLAG_DESCRIPTORS, /*born_encrypted=*/false, error, warnings);
+
+    // Allow the fallback fee with its default
+    wallet->m_allow_fallback_fee = true;
+
     AddKey(*wallet, key);
     WalletRescanReserver reserver(*wallet);
     reserver.reserve();
-    ScanResult result = wallet->Scanner().Scan(cchain.Genesis()->GetBlockHash(), /*start_height=*/0, /*max_height=*/{}, reserver, /*save_progress=*/false);
+    ScanResult result = wallet->Scanner().Scan(context.chain->getBlockHash(0), /*start_height=*/0, /*max_height=*/{}, reserver, /*save_progress=*/false);
     assert(result.status == ScanResult::SUCCESS);
-    assert(result.last_scanned_block == cchain.Tip()->GetBlockHash());
-    assert(*result.last_scanned_height == cchain.Height());
+    int tip_height = context.chain->getHeight().value();
+    assert(*result.last_scanned_height == tip_height);
+    assert(result.last_scanned_block == context.chain->getBlockHash(tip_height));
     assert(result.last_failed_block.IsNull());
+
     return wallet;
 }
 
