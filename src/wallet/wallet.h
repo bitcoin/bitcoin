@@ -514,6 +514,8 @@ public:
 
     /** Cache outputs that belong to the wallet from a single transaction */
     void RefreshSingleTxTXOs(const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    /** Cache outputs that belong to the wallt for all tranasctions in the wallet */
+    void RefreshAllTXOs() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Return depth of transaction in blockchain:
