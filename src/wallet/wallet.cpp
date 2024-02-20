@@ -1038,6 +1038,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         wtx.nOrderPos = IncOrderPosNext(&batch);
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
         wtx.nTimeSmart = ComputeTimeSmart(wtx, rescanning_old_block);
+        wtx.m_from_me = IsFromMe(*wtx.GetTx());
         AddToSpends(wtx);
         SyncMalleatedTxMetadata(batch, wtx);
 
@@ -1051,6 +1052,10 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 
     if (!fInsertedNew)
     {
+        bool from_me_before = *wtx.m_from_me;
+        wtx.m_from_me = IsFromMe(*wtx.GetTx());
+        fUpdated = fUpdated || (from_me_before != *wtx.m_from_me);
+
         try {
             fUpdated |= wtx.Update(tx, state, batch, fUpdated);
         } catch (const std::ios_base::failure& e) {
@@ -3737,11 +3742,21 @@ void CWallet::RefreshTXOsFromTx(const CWalletTx& wtx)
     }
 }
 
-void CWallet::RefreshAllTXOs()
+void CWallet::RefreshAllTXOs(WalletBatch* batch)
 {
     AssertLockHeld(cs_wallet);
-    for (const auto& [_, wtx] : mapWallet) {
-        RefreshTXOsFromTx(wtx);
+    for (auto& [_, wtx] : wtxOrdered) {
+        bool from_me_before = *wtx->m_from_me;
+        wtx->m_from_me = IsFromMe(*wtx->GetTx());
+        if (from_me_before != *wtx->m_from_me) {
+            if (batch == nullptr) {
+                WalletBatch(GetDatabase()).WriteTxMetadata(*wtx);
+            } else {
+                batch->WriteTxMetadata(*wtx);
+            }
+        }
+
+        RefreshTXOsFromTx(*wtx);
     }
 }
 

@@ -209,7 +209,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
 
     // Update m_txos to match the descriptors remaining in this wallet
     m_txos.clear();
-    RefreshAllTXOs();
+    RefreshAllTXOs(&local_wallet_batch);
 
     // Check if the transactions in the wallet are still ours. Either they belong here, or they belong in the watchonly wallet.
     // We need to go through these in the tx insertion order so that lookups to spends works.
