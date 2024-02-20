@@ -283,12 +283,11 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
             if (input_bytes == -1) {
                 input_bytes = CalculateMaximumSignedInputSize(txout, &wallet, &coin_control);
             }
-            const CWalletTx& parent_tx = txo->GetWalletTx();
-            if (wallet.GetTxDepthInMainChain(parent_tx) == 0) {
-                if (parent_tx.tx->version == TRUC_VERSION && coin_control.m_version != TRUC_VERSION) {
+            if (wallet.GetTxStateDepthInMainChain(txo->GetState()) == 0) {
+                if (txo->m_tx_version == TRUC_VERSION && coin_control.m_version != TRUC_VERSION) {
                     return util::Error{strprintf(_("Can't spend unconfirmed version 3 pre-selected input with a version %d tx"), coin_control.m_version)};
-                } else if (coin_control.m_version == TRUC_VERSION && parent_tx.tx->version != TRUC_VERSION) {
-                    return util::Error{strprintf(_("Can't spend unconfirmed version %d pre-selected input with a version 3 tx"), parent_tx.tx->version)};
+                } else if (coin_control.m_version == TRUC_VERSION && txo->m_tx_version != TRUC_VERSION) {
+                    return util::Error{strprintf(_("Can't spend unconfirmed version %d pre-selected input with a version 3 tx"), txo->m_tx_version)};
                 }
             }
         } else {
@@ -341,18 +340,18 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     // Cache for whether each tx passes the tx level checks (first bool), and whether the transaction is "safe" (second bool)
     std::unordered_map<Txid, std::pair<bool, bool>, SaltedTxidHasher> tx_safe_cache;
     for (const auto& [outpoint, txo] : wallet.GetTXOs()) {
-        const CWalletTx& wtx = txo.GetWalletTx();
         const CTxOut& output = txo.GetTxOut();
 
         if (tx_safe_cache.contains(outpoint.hash) && !tx_safe_cache.at(outpoint.hash).first) {
             continue;
         }
 
-        int nDepth = wallet.GetTxDepthInMainChain(wtx);
+        int nDepth = wallet.GetTxStateDepthInMainChain(txo.GetState());
 
         // Perform tx level checks if we haven't already come across outputs from this tx before.
         if (!tx_safe_cache.contains(outpoint.hash)) {
             tx_safe_cache[outpoint.hash] = {false, false};
+            const CWalletTx& wtx = *wallet.GetWalletTx(outpoint.hash);
 
             if (wallet.IsTxImmatureCoinBase(wtx) && !params.include_immature_coinbase)
                 continue;
@@ -446,7 +445,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             continue;
         }
 
-        bool tx_from_me = *wtx.m_from_me;
+        bool tx_from_me = txo.GetTxFromMe();
 
         std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(output.scriptPubKey);
 
@@ -473,9 +472,9 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
         auto available_output_type = GetOutputType(type, is_from_p2sh);
         auto available_output = COutput(outpoint, output, nDepth, input_bytes, solvable, tx_safe, txo.GetTxTime(), tx_from_me, feerate);
-        if (wtx.tx->version == TRUC_VERSION && nDepth == 0 && params.check_version_trucness) {
+        if (txo.m_tx_version == TRUC_VERSION && nDepth == 0 && params.check_version_trucness) {
             unconfirmed_truc_coins.emplace_back(available_output_type, available_output);
-            auto [it, _] = truc_txid_by_value.try_emplace(wtx.tx->GetHash(), 0);
+            auto [it, _] = truc_txid_by_value.try_emplace(outpoint.hash, 0);
             it->second += output.nValue;
         } else {
             result.Add(available_output_type, available_output);
