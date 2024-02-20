@@ -42,6 +42,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/merkle_root.cpp \
   bench/nanobench.cpp \
   bench/nanobench.h \
+  bench/parse_hex.cpp \
   bench/peer_eviction.cpp \
   bench/poly1305.cpp \
   bench/pool.cpp \
