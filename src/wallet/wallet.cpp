@@ -4496,4 +4496,12 @@ void CWallet::RefreshTXOsFromTx(const CWalletTx& wtx)
         }
     }
 }
+
+void CWallet::RefreshAllTXOs()
+{
+    AssertLockHeld(cs_wallet);
+    for (const auto& [_, wtx] : mapWallet) {
+        RefreshTXOsFromTx(wtx);
+    }
+}
 } // namespace wallet
