@@ -207,9 +207,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     CBlockLocator best_block_locator;
     (void)local_wallet_batch.ReadBestBlock(best_block_locator);
 
-    // Update m_txos to match the descriptors remaining in this wallet
+    // Clear m_txos and m_unusable_txos. These will be updated next to match the descriptors remaining in this wallet
     m_txos.clear();
-    RefreshAllTXOs(&local_wallet_batch);
+    m_unusable_txos.clear();
 
     // Check if the transactions in the wallet are still ours. Either they belong here, or they belong in the watchonly wallet.
     // We need to go through these in the tx insertion order so that lookups to spends works.
@@ -244,6 +244,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         bool is_mine = mine || from_me;
         if (is_mine) {
             wtx->m_from_me = from_me;
+            RefreshTXOsFromTx(*wtx);
             // Rewrite all txs that are "mine" to ensure that any tx upgrades, including the from_me update, is written
             local_wallet_batch.WriteTxMetadata(*wtx);
         }
