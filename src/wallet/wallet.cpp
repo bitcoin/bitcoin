@@ -3792,26 +3792,14 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
     auto spk_man = GetDescriptorScriptPubKeyMan(desc);
     if (spk_man) {
         WalletLogPrintf("Update existing descriptor: %s\n", desc.descriptor->ToString());
-        spk_man->UpdateWalletDescriptor(desc);
+        spk_man->UpdateWalletDescriptor(desc, signing_provider);
     } else {
-        auto new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc, m_keypool_size));
+        auto new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc, m_keypool_size, signing_provider));
         spk_man = new_spk_man.get();
 
         // Save the descriptor to memory
         uint256 id = new_spk_man->GetID();
         AddScriptPubKeyMan(id, std::move(new_spk_man));
-    }
-
-    // Add the private keys to the descriptor
-    for (const auto& entry : signing_provider.keys) {
-        const CKey& key = entry.second;
-        spk_man->AddDescriptorKey(key, key.GetPubKey());
-    }
-
-    // Top up key pool, the manager will generate new scriptPubKeys internally
-    if (!spk_man->TopUp()) {
-        WalletLogPrintf("Could not top up scriptPubKeys\n");
-        return nullptr;
     }
 
     // Apply the label if necessary

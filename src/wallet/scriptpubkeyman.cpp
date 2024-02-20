@@ -1810,9 +1810,8 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
         WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
 
         // Make the DescriptorScriptPubKeyMan and get the scriptPubKeys
-        auto desc_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(m_storage, w_desc, m_keypool_size));
-        desc_spk_man->AddDescriptorKey(key, key.GetPubKey());
-        desc_spk_man->TopUp();
+        keys.keys.emplace(key.GetPubKey().GetID(), key);
+        auto desc_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(m_storage, w_desc, m_keypool_size, keys));
         auto desc_spks = desc_spk_man->GetScriptPubKeys();
 
         // Remove the scriptPubKeys from our current set
@@ -1855,9 +1854,8 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
             WalletDescriptor w_desc(std::move(desc), 0, 0, chain_counter, 0);
 
             // Make the DescriptorScriptPubKeyMan and get the scriptPubKeys
-            auto desc_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(m_storage, w_desc, m_keypool_size));
-            desc_spk_man->AddDescriptorKey(master_key.key, master_key.key.GetPubKey());
-            desc_spk_man->TopUp();
+            keys.keys.emplace(master_key.key.GetPubKey().GetID(), master_key.key);
+            auto desc_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(m_storage, w_desc, m_keypool_size, keys));
             auto desc_spks = desc_spk_man->GetScriptPubKeys();
 
             // Remove the scriptPubKeys from our current set
@@ -1916,16 +1914,15 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
             desc->Expand(0, provider, desc_spks, provider);
         } else {
             // Make the DescriptorScriptPubKeyMan and get the scriptPubKeys
-            WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
-            auto desc_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(m_storage, w_desc, m_keypool_size));
             for (const auto& keyid : privkeyids) {
                 CKey key;
                 if (!GetKey(keyid, key)) {
                     continue;
                 }
-                desc_spk_man->AddDescriptorKey(key, key.GetPubKey());
+                keys.keys.emplace(key.GetPubKey().GetID(), key);
             }
-            desc_spk_man->TopUp();
+            WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
+            auto desc_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(m_storage, w_desc, m_keypool_size, keys));
             auto desc_spks_set = desc_spk_man->GetScriptPubKeys();
             desc_spks.insert(desc_spks.end(), desc_spks_set.begin(), desc_spks_set.end());
 
@@ -2000,6 +1997,14 @@ bool LegacyScriptPubKeyMan::DeleteRecords()
     LOCK(cs_KeyStore);
     WalletBatch batch(m_storage.GetDatabase());
     return batch.EraseRecords(DBKeys::LEGACY_TYPES);
+}
+
+DescriptorScriptPubKeyMan::DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const FlatSigningProvider& provider)
+    : ScriptPubKeyMan(storage),
+    m_keypool_size(keypool_size),
+    m_wallet_descriptor(descriptor)
+{
+    UpdateWithSigningProvider(provider);
 }
 
 DescriptorScriptPubKeyMan::DescriptorScriptPubKeyMan(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys)
@@ -2761,7 +2766,7 @@ void DescriptorScriptPubKeyMan::UpgradeDescriptorCache()
     }
 }
 
-void DescriptorScriptPubKeyMan::UpdateWalletDescriptor(WalletDescriptor& descriptor)
+void DescriptorScriptPubKeyMan::UpdateWalletDescriptor(WalletDescriptor& descriptor, const FlatSigningProvider& provider)
 {
     LOCK(cs_desc_man);
     std::string error;
@@ -2774,7 +2779,22 @@ void DescriptorScriptPubKeyMan::UpdateWalletDescriptor(WalletDescriptor& descrip
     m_max_cached_index = -1;
     m_wallet_descriptor = descriptor;
 
+    UpdateWithSigningProvider(provider);
     NotifyFirstKeyTimeChanged(this, m_wallet_descriptor.creation_time);
+}
+
+void DescriptorScriptPubKeyMan::UpdateWithSigningProvider(const FlatSigningProvider& signing_provider)
+{
+    // Add the private keys to the descriptor
+    for (const auto& entry : signing_provider.keys) {
+        const CKey& key = entry.second;
+        AddDescriptorKey(key, key.GetPubKey());
+    }
+
+    // Top up key pool, to generate scriptPubKeys
+    if (!TopUp()) {
+        throw std::runtime_error("Could not top up scriptPubKeys");
+    }
 }
 
 bool DescriptorScriptPubKeyMan::CanUpdateToWalletDescriptor(const WalletDescriptor& descriptor, std::string& error)
