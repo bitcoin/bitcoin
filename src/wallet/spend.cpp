@@ -323,7 +323,6 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     // Cache for whether each tx passes the tx level checks (first bool), and whether the transaction is "safe" (second bool)
     std::unordered_map<uint256, std::pair<bool, bool>, SaltedTxidHasher> tx_safe_cache;
     for (const auto& [outpoint, txo] : wallet.GetTXOs()) {
-        const CWalletTx& wtx = txo.GetWalletTx();
         const CTxOut& output = txo.GetTxOut();
 
         if (tx_safe_cache.contains(outpoint.hash) && !tx_safe_cache.at(outpoint.hash).first) {
@@ -347,20 +346,21 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             continue;
         }
 
-        if (wallet.IsTxImmatureCoinBase(wtx) && !params.include_immature_coinbase)
+        if (wallet.IsTXOInImmatureCoinBase(txo) && !params.include_immature_coinbase)
             continue;
 
         isminetype mine = wallet.IsMine(output);
 
         assert(mine != ISMINE_NO);
 
-        int nDepth = wallet.GetTxDepthInMainChain(wtx);
+        int nDepth = wallet.GetTxStateDepthInMainChain(txo.GetState());
         if (nDepth < 0)
             continue;
 
         // Perform tx level checks if we haven't already come across outputs from this tx before.
         if (!tx_safe_cache.contains(outpoint.hash)) {
             tx_safe_cache[outpoint.hash] = {false, false};
+            const CWalletTx& wtx = *wallet.GetWalletTx(outpoint.hash);
 
             // We should not consider coins which aren't at least in our mempool
             // It's possible for these to be conflicted via ancestors which we may never be able to detect
@@ -415,7 +415,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             continue;
         }
 
-        bool tx_from_me = CheckIsFromMeMap(wtx.m_from_me, ISMINE_ALL);
+        bool tx_from_me = CheckIsFromMeMap(txo.GetTxFromMe(), ISMINE_ALL);
 
         std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(output.scriptPubKey);
 
