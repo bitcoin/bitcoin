@@ -445,7 +445,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         }
 
         result.Add(GetOutputType(type, is_from_p2sh),
-                   COutput(outpoint, output, nDepth, input_bytes, spendable, solvable, tx_safe, wtx.GetTxTime(), tx_from_me, feerate));
+                   COutput(outpoint, output, nDepth, input_bytes, spendable, solvable, tx_safe, txo.GetTxTime(), tx_from_me, feerate));
 
         outpoints.push_back(outpoint);
 
