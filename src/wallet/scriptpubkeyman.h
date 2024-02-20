@@ -319,7 +319,15 @@ private:
     void AddDescriptorKey(const CKey& key, const CPubKey &pubkey);
     void UpdateWithSigningProvider(WalletBatch& batch, const FlatSigningProvider& signing_provider) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
+    //! Setup descriptors based on the given CExtKey
+    void SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal);
+
 protected:
+    DescriptorScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size)
+        :   ScriptPubKeyMan(storage),
+            m_keypool_size(keypool_size)
+        {}
+
     WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
 
     //! Same as 'TopUp' but designed for use within a batch transaction context
@@ -331,10 +339,8 @@ public:
     DescriptorScriptPubKeyMan(WalletStorage& storage, WalletBatch& batch, WalletDescriptor& descriptor, int64_t keypool_size, const FlatSigningProvider& provider);
     //! Create a DescriptorScriptPubKeyMan from existing data (i.e. during loading)
     DescriptorScriptPubKeyMan(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
-    DescriptorScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size)
-        :   ScriptPubKeyMan(storage),
-            m_keypool_size(keypool_size)
-        {}
+    //! Create an automatically generated DescriptorScriptPubKeyMan (i.e. wallet creation or createwalletdescriptor)
+    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, const CExtKey& master_key, OutputType addr_type, bool internal);
 
     mutable RecursiveMutex cs_desc_man;
 
@@ -356,9 +362,6 @@ public:
     std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) override;
 
     bool IsHDEnabled() const override;
-
-    //! Setup descriptors based on the given CExtkey
-    bool SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal);
 
     bool HavePrivateKeys() const override;
     bool HasPrivKey(const CKeyID& keyid) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);

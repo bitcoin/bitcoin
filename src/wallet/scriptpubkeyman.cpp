@@ -850,6 +850,13 @@ DescriptorScriptPubKeyMan::DescriptorScriptPubKeyMan(WalletStorage& storage, con
     SetCache();
 }
 
+DescriptorScriptPubKeyMan::DescriptorScriptPubKeyMan(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, const CExtKey& master_key, OutputType addr_type, bool internal)
+    :   ScriptPubKeyMan(storage),
+        m_keypool_size(keypool_size)
+{
+    SetupDescriptorGeneration(batch, master_key, addr_type, internal);
+}
+
 util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type)
 {
     // Returns true if this descriptor supports getting new addresses. Conditions where we may be unable to fetch them (e.g. locked) are caught later
@@ -1161,14 +1168,14 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
     }
 }
 
-bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal)
+void DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal)
 {
     LOCK(cs_desc_man);
     assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
 
     // Ignore when there is already a descriptor
     if (m_wallet_descriptor.descriptor) {
-        return false;
+        return;
     }
 
     m_wallet_descriptor = GenerateWalletDescriptor(master_key.Neuter(), addr_type, internal);
@@ -1185,7 +1192,6 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, co
     TopUpWithDB(batch);
 
     m_storage.UnsetBlankWalletFlag(batch);
-    return true;
 }
 
 bool DescriptorScriptPubKeyMan::IsHDEnabled() const
