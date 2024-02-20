@@ -380,14 +380,16 @@ private:
     isminetype m_ismine;
     TxState m_tx_state;
     bool m_tx_coinbase;
+    std::map<isminefilter, bool> m_tx_from_me;
 
 public:
-    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const isminetype ismine, const TxState& state, bool coinbase)
+    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const isminetype ismine, const TxState& state, bool coinbase, const std::map<isminefilter, bool>& tx_from_me)
     : m_wtx(wtx),
     m_output(output),
     m_ismine(ismine),
     m_tx_state(state),
-    m_tx_coinbase(coinbase)
+    m_tx_coinbase(coinbase),
+    m_tx_from_me(tx_from_me)
     {}
 
     const CWalletTx& GetWalletTx() const { return m_wtx; }
@@ -401,6 +403,8 @@ public:
     void SetState(const TxState& state) { m_tx_state = state; }
 
     bool IsTxCoinBase() const { return m_tx_coinbase; }
+
+    const std::map<isminefilter, bool>& GetTxFromMe() const { return m_tx_from_me; }
 };
 } // namespace wallet
 
