@@ -198,8 +198,7 @@ static std::vector<CAddress> ConvertSeeds(const std::vector<uint8_t> &vSeedsIn)
     const auto one_week{7 * 24h};
     std::vector<CAddress> vSeedsOut;
     FastRandomContext rng;
-    DataStream underlying_stream{vSeedsIn};
-    ParamsStream s{underlying_stream, CAddress::V2_NETWORK};
+    ParamsStream s{DataStream{vSeedsIn}, CAddress::V2_NETWORK};
     while (!s.eof()) {
         CService endpoint;
         s >> endpoint;
