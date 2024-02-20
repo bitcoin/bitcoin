@@ -322,7 +322,7 @@ std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet)
             if (wallet.IsTXOInImmatureCoinBase(txo)) continue;
 
             int nDepth = wallet.GetTxStateDepthInMainChain(txo.GetState());
-            if (nDepth < (CheckIsFromMeMap(txo.GetWalletTx().m_from_me, ISMINE_ALL) ? 0 : 1)) continue;
+            if (nDepth < (CheckIsFromMeMap(txo.GetTxFromMe(), ISMINE_ALL) ? 0 : 1)) continue;
 
             CTxDestination addr;
             Assume(wallet.IsMine(txo.GetTxOut()));
