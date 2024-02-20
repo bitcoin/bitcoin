@@ -344,7 +344,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             continue;
         }
 
-        int nDepth = wallet.GetTxDepthInMainChain(wtx);
+        int nDepth = wallet.GetTxStateDepthInMainChain(txo.GetState());
 
         // Perform tx level checks if we haven't already come across outputs from this tx before.
         if (!tx_safe_cache.contains(outpoint.hash)) {
