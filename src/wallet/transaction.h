@@ -397,11 +397,15 @@ class WalletTXO
 private:
     const CWalletTx& m_wtx;
     const CTxOut& m_output;
+    TxState m_tx_state;
+    bool m_tx_coinbase;
 
 public:
-    WalletTXO(const CWalletTx& wtx, const CTxOut& output)
+    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const TxState& state, bool coinbase)
     : m_wtx(wtx),
-    m_output(output)
+    m_output(output),
+    m_tx_state(state),
+    m_tx_coinbase(coinbase)
     {
         Assume(std::ranges::find(wtx.tx->vout, output) != wtx.tx->vout.end());
     }
@@ -409,6 +413,11 @@ public:
     const CWalletTx& GetWalletTx() const { return m_wtx; }
 
     const CTxOut& GetTxOut() const { return m_output; }
+
+    const TxState& GetState() const { return m_tx_state; }
+    void SetState(const TxState& state) { m_tx_state = state; }
+
+    bool IsTxCoinBase() const { return m_tx_coinbase; }
 };
 } // namespace wallet
 
