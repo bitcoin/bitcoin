@@ -1087,6 +1087,9 @@ public:
 
     //! Disconnect chain notifications and wait for all notifications to be processed
     void DisconnectChainNotifications();
+
+    //! Update the stored tx state for the specified output. Called by every CWalletTx::SetState call.
+    void UpdateTXOState(const COutPoint& outpoint, const TxState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 };
 
 /**

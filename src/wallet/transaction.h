@@ -366,7 +366,7 @@ public:
     // If the given transaction has a different wtxid, the transaction is stored if it has not been seen before.
     // The canonical wtxid is also updated. The tx that is confirmed becomes canonical. For unconfirmed txs,
     // those with witnesses are preferred, followed by least weight.
-    bool Update(CTransactionRef tx, const TxState& arg_state);
+    bool Update(CTransactionRef tx, const TxState& arg_state, std::function<void(const COutPoint&, const TxState&)> update_external_states_fn);
 
     //! make sure balances are recalculated
     void MarkDirty()
@@ -386,7 +386,7 @@ public:
 
     template<typename T> const T* state() const { return std::get_if<T>(&m_state); }
     template<typename T> T* state() { return std::get_if<T>(&m_state); }
-    void SetState(const TxState& state) { m_state = state; }
+    void SetState(const TxState& state, std::function<void(const COutPoint&, const TxState&)> update_external_states_fn);
     const TxState& GetState() const { return m_state; }
 
     //! Update transaction state when attaching to a chain, filling in heights
@@ -435,11 +435,15 @@ class WalletTXO
 private:
     const CWalletTx& m_wtx;
     const CTxOut& m_output;
+    TxState m_tx_state;
+    bool m_tx_coinbase;
 
 public:
-    WalletTXO(const CWalletTx& wtx, const CTxOut& output)
+    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const TxState& state, bool coinbase)
     : m_wtx(wtx),
-    m_output(output)
+    m_output(output),
+    m_tx_state(state),
+    m_tx_coinbase(coinbase)
     {
         Assume(std::ranges::find(wtx.GetTx()->vout, output) != wtx.GetTx()->vout.end());
     }
@@ -447,6 +451,11 @@ public:
     const CWalletTx& GetWalletTx() const { return m_wtx; }
 
     const CTxOut& GetTxOut() const { return m_output; }
+
+    const TxState& GetState() const { return m_tx_state; }
+    void SetState(const TxState& state) { m_tx_state = state; }
+
+    bool IsTxCoinBase() const { return m_tx_coinbase; }
 };
 } // namespace wallet
 
