@@ -1050,6 +1050,10 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, std::vecto
             if (wtx.GetHash() != hash)
                 return false;
 
+            if (wtx.m_from_me.empty()) {
+                upgraded_txs.push_back(hash);
+            }
+
             // Undo serialize changes in 31600
             if (31404 <= wtx.fTimeReceivedIsTxTime && wtx.fTimeReceivedIsTxTime <= 31703)
             {
@@ -1083,6 +1087,16 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, std::vecto
         return result;
     });
     result = std::max(result, tx_res.m_result);
+
+    // Upgrade each CWalletTx with new m_from_me data
+    for (auto txid : upgraded_txs) {
+        auto it = pwallet->mapWallet.find(txid);
+        Assert(it != pwallet->mapWallet.end());
+        CWalletTx& wtx = it->second;
+        for (auto filter : {ISMINE_SPENDABLE, ISMINE_WATCH_ONLY}) {
+            wtx.m_from_me[filter] = pwallet->GetDebit(*wtx.tx, filter) > 0;
+        }
+    }
 
     // Load locked utxo record
     LoadResult locked_utxo_res = LoadRecords(pwallet, batch, DBKeys::LOCKED_UTXO,
