@@ -429,7 +429,7 @@ private:
     std::unordered_map<CScript, std::vector<ScriptPubKeyMan*>, SaltedSipHasher> m_cached_spks;
 
     //! Set of both spent and unspent transaction outputs owned by this wallet
-    mutable std::unordered_map<COutPoint, WalletTXO, SaltedOutpointHasher> m_txos GUARDED_BY(cs_wallet);
+    std::unordered_map<COutPoint, WalletTXO, SaltedOutpointHasher> m_txos GUARDED_BY(cs_wallet);
 
     /**
      * Catch wallet up to current chain, scanning new blocks, updating the best
