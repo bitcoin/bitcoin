@@ -252,6 +252,8 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse,
         for (const auto& [outpoint, txo] : wallet.GetTXOs()) {
             const bool is_trusted{CachedTxIsTrusted(wallet, txo.GetState(), outpoint.hash, trusted_parents)};
             const int tx_depth{wallet.GetTxStateDepthInMainChain(txo.GetState())};
+            Assert(tx_depth >= 0);
+            Assert(!wallet.IsSpent(outpoint, /*min_depth=*/1));
 
             bool nonmempool_spent = false;
             switch (wallet.HowSpent(outpoint)) {
