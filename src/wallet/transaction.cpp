@@ -59,5 +59,6 @@ void CWalletTx::updateState(interfaces::Chain& chain)
 void CWalletTx::CopyFrom(const CWalletTx& _tx)
 {
     *this = _tx;
+    m_txos.clear();
 }
 } // namespace wallet
