@@ -370,7 +370,7 @@ public:
 
     template<typename T> const T* state() const { return std::get_if<T>(&m_state); }
     template<typename T> T* state() { return std::get_if<T>(&m_state); }
-    void SetState(const TxState& state) { m_state = state; }
+    void SetState(const TxState& state, std::function<void(const COutPoint&, const TxState&)> update_external_states_fn);
     const TxState& GetState() const { return m_state; }
 
     //! Update transaction state when attaching to a chain, filling in heights
@@ -410,11 +410,15 @@ class WalletTXO
 private:
     const CWalletTx& m_wtx;
     const CTxOut& m_output;
+    TxState m_tx_state;
+    bool m_tx_coinbase;
 
 public:
-    WalletTXO(const CWalletTx& wtx, const CTxOut& output)
+    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const TxState& state, bool coinbase)
     : m_wtx(wtx),
-    m_output(output)
+    m_output(output),
+    m_tx_state(state),
+    m_tx_coinbase(coinbase)
     {
         Assume(std::ranges::find(wtx.tx->vout, output) != wtx.tx->vout.end());
     }
@@ -422,6 +426,11 @@ public:
     const CWalletTx& GetWalletTx() const { return m_wtx; }
 
     const CTxOut& GetTxOut() const { return m_output; }
+
+    const TxState& GetState() const { return m_tx_state; }
+    void SetState(const TxState& state) { m_tx_state = state; }
+
+    bool IsTxCoinBase() const { return m_tx_coinbase; }
 };
 } // namespace wallet
 

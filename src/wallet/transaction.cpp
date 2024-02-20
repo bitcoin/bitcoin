@@ -46,7 +46,9 @@ void CWalletTx::updateState(interfaces::Chain& chain)
         // transaction was reorged out while online and then reconfirmed
         // while offline is covered by the rescan logic.
         if (!chain.findBlock(hash, FoundBlock().inActiveChain(active).height(height)) || !active) {
-            SetState(TxStateInactive{});
+            // Note that it is safe to provide nullptr for update_external_states_fn here as this
+            // function is only called during loading prior to the TXOs being cached.
+            SetState(TxStateInactive{}, nullptr);
         }
     };
     if (auto* conf = state<TxStateConfirmed>()) {
@@ -59,5 +61,15 @@ void CWalletTx::updateState(interfaces::Chain& chain)
 void CWalletTx::CopyFrom(const CWalletTx& _tx)
 {
     *this = _tx;
+}
+
+void CWalletTx::SetState(const TxState& state, std::function<void(const COutPoint&, const TxState&)> update_external_states_fn)
+{
+    m_state = state;
+    if (update_external_states_fn) {
+        for (uint32_t i = 0; i < tx->vout.size(); ++i) {
+            update_external_states_fn(COutPoint{GetHash(), i}, state);
+        }
+    }
 }
 } // namespace wallet

@@ -297,7 +297,7 @@ static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lock
         // Assign wtx.m_state to simplify test and avoid the need to simulate
         // reorg events. Without this, AddToWallet asserts false when the same
         // transaction is confirmed in different blocks.
-        wtx.SetState(state);
+        wtx.SetState(state, [&wallet](const COutPoint& o, const TxState& s) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet) { wallet.UpdateTXOState(o, s); });
         return true;
     })->nTimeSmart;
 }
@@ -415,7 +415,8 @@ public:
         wallet->SetLastBlockProcessed(wallet->GetLastBlockHeight() + 1, m_node.chainman->ActiveChain().Tip()->GetBlockHash());
         auto it = wallet->mapWallet.find(tx->GetHash());
         BOOST_CHECK(it != wallet->mapWallet.end());
-        it->second.SetState(TxStateConfirmed{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*index=*/1});
+        TxStateConfirmed conf_state{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*index=*/1};
+        it->second.SetState(conf_state, [this](const COutPoint& o, const TxState& s) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet) { wallet->UpdateTXOState(o, s); });
         return it->second;
     }
 
