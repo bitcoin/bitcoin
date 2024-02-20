@@ -381,7 +381,7 @@ static void quorum_memberof_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue quorum_memberof(const JSONRPCRequest& request, const ChainstateManager& chainman, const LLMQContext& llmq_ctx)
+static UniValue quorum_memberof(const JSONRPCRequest& request, const ChainstateManager& chainman, const NodeContext& node, const LLMQContext& llmq_ctx)
 {
     quorum_memberof_help(request);
 
@@ -395,8 +395,7 @@ static UniValue quorum_memberof(const JSONRPCRequest& request, const ChainstateM
     }
 
     const CBlockIndex* pindexTip = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
-
-    auto mnList = deterministicMNManager->GetListForBlock(pindexTip);
+    auto mnList = node.dmnman->GetListForBlock(pindexTip);
     auto dmn = mnList.GetMN(protxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "masternode not found");
@@ -885,7 +884,7 @@ static UniValue _quorum(const JSONRPCRequest& request)
     } else if (command == "quorumdkgstatus") {
         return quorum_dkgstatus(new_request, chainman, llmq_ctx);
     } else if (command == "quorummemberof") {
-        return quorum_memberof(new_request, chainman, llmq_ctx);
+        return quorum_memberof(new_request, chainman, node, llmq_ctx);
     } else if (command == "quorumsign" || command == "quorumverify" || command == "quorumhasrecsig" || command == "quorumgetrecsig" || command == "quorumisconflicting") {
         return quorum_sigs_cmd(new_request, llmq_ctx);
     } else if (command == "quorumselectquorum") {

@@ -20,6 +20,7 @@
 #include <masternode/meta.h>
 #include <messagesigner.h>
 #include <netbase.h>
+#include <node/context.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
@@ -928,6 +929,8 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
 
     EnsureWalletIsUnlocked(wallet.get());
 
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
     const bool isV19active{DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     const bool is_bls_legacy = !isV19active;
     if (isEvoRequested && !isV19active) {
@@ -966,7 +969,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
         paramIdx += 3;
     }
 
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
+    auto dmn = node.dmnman->GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
         throw std::runtime_error(strprintf("masternode with proTxHash %s not found", ptx.proTxHash.ToString()));
     }
@@ -1059,10 +1062,12 @@ static UniValue protx_update_registrar_wrapper(const JSONRPCRequest& request, co
 
     EnsureWalletIsUnlocked(wallet.get());
 
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
     CProUpRegTx ptx;
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
 
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
+    auto dmn = node.dmnman->GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
     }
@@ -1170,6 +1175,8 @@ static UniValue protx_revoke(const JSONRPCRequest& request, const ChainstateMana
 
     EnsureWalletIsUnlocked(wallet.get());
 
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
     const bool isV19active{DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     const bool is_bls_legacy = !isV19active;
     CProUpRevTx ptx;
@@ -1186,7 +1193,7 @@ static UniValue protx_revoke(const JSONRPCRequest& request, const ChainstateMana
         ptx.nReason = (uint16_t)nReason;
     }
 
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
+    auto dmn = node.dmnman->GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
     }
@@ -1281,7 +1288,7 @@ static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
 }
 #endif
 
-static UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMN& dmn, bool detailed, const ChainstateManager& chainman, const CBlockIndex* pindex = nullptr)
+static UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMN& dmn, CMasternodeMetaMan& mn_metaman, bool detailed, const ChainstateManager& chainman, const CBlockIndex* pindex = nullptr)
 {
     if (!detailed) {
         return dmn.proTxHash.ToString();
@@ -1329,8 +1336,7 @@ static UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMN& dmn,
     }
 #endif
 
-    CHECK_NONFATAL(mmetaman != nullptr);
-    auto metaInfo = mmetaman->GetMetaInfo(dmn.proTxHash);
+    const auto metaInfo = mn_metaman.GetMetaInfo(dmn.proTxHash);
     o.pushKV("metaInfo", metaInfo->ToJson());
 
     return o;
@@ -1347,6 +1353,8 @@ static UniValue protx_list(const JSONRPCRequest& request, const ChainstateManage
     } catch (...) {
     }
 #endif
+
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
 
     std::string type = "registered";
     if (!request.params[0].isNull()) {
@@ -1384,14 +1392,14 @@ static UniValue protx_list(const JSONRPCRequest& request, const ChainstateManage
             setOutpts.emplace(outpt);
         }
 
-        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(chainman.ActiveChain()[height]);
+        CDeterministicMNList mnList = node.dmnman->GetListForBlock(chainman.ActiveChain()[height]);
         mnList.ForEachMN(false, [&](const auto& dmn) {
             if (setOutpts.count(dmn.collateralOutpoint) ||
                 CheckWalletOwnsKey(wallet.get(), dmn.pdmnState->keyIDOwner) ||
                 CheckWalletOwnsKey(wallet.get(), dmn.pdmnState->keyIDVoting) ||
                 CheckWalletOwnsScript(wallet.get(), dmn.pdmnState->scriptPayout) ||
                 CheckWalletOwnsScript(wallet.get(), dmn.pdmnState->scriptOperatorPayout)) {
-                ret.push_back(BuildDMNListEntry(wallet.get(), dmn, detailed, chainman));
+                ret.push_back(BuildDMNListEntry(wallet.get(), dmn, *node.mn_metaman, detailed, chainman));
             }
         });
 #endif
@@ -1409,12 +1417,12 @@ static UniValue protx_list(const JSONRPCRequest& request, const ChainstateManage
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
 
-        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(chainman.ActiveChain()[height]);
+        CDeterministicMNList mnList = node.dmnman->GetListForBlock(chainman.ActiveChain()[height]);
         bool onlyValid = type == "valid";
         bool onlyEvoNodes = type == "evo";
         mnList.ForEachMN(onlyValid, [&](const auto& dmn) {
             if (onlyEvoNodes && dmn.nType != MnType::Evo) return;
-            ret.push_back(BuildDMNListEntry(wallet.get(), dmn, detailed, chainman));
+            ret.push_back(BuildDMNListEntry(wallet.get(), dmn, *node.mn_metaman, detailed, chainman));
         });
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid type specified");
@@ -1455,6 +1463,8 @@ static UniValue protx_info(const JSONRPCRequest& request, const ChainstateManage
     }
 #endif
 
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
@@ -1475,12 +1485,12 @@ static UniValue protx_info(const JSONRPCRequest& request, const ChainstateManage
         }
     }
 
-    auto mnList = deterministicMNManager->GetListForBlock(pindex);
+    auto mnList = node.dmnman->GetListForBlock(pindex);
     auto dmn = mnList.GetMN(proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));
     }
-    return BuildDMNListEntry(wallet.get(), *dmn, true, chainman, pindex);
+    return BuildDMNListEntry(wallet.get(), *dmn, *node.mn_metaman, true, chainman, pindex);
 }
 
 static void protx_diff_help(const JSONRPCRequest& request)
@@ -1569,6 +1579,8 @@ static UniValue protx_listdiff(const JSONRPCRequest& request, const ChainstateMa
 {
     protx_listdiff_help(request);
 
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
     LOCK(cs_main);
     UniValue ret(UniValue::VOBJ);
 
@@ -1586,8 +1598,8 @@ static UniValue protx_listdiff(const JSONRPCRequest& request, const ChainstateMa
     ret.pushKV("baseHeight", pBaseBlockIndex->nHeight);
     ret.pushKV("blockHeight", pTargetBlockIndex->nHeight);
 
-    auto baseBlockMNList = deterministicMNManager->GetListForBlock(pBaseBlockIndex);
-    auto blockMNList = deterministicMNManager->GetListForBlock(pTargetBlockIndex);
+    auto baseBlockMNList = node.dmnman->GetListForBlock(pBaseBlockIndex);
+    auto blockMNList = node.dmnman->GetListForBlock(pTargetBlockIndex);
 
     auto mnDiff = baseBlockMNList.BuildDiff(blockMNList);
 
