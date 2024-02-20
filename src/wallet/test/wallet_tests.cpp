@@ -553,7 +553,10 @@ public:
     ListCoinsTestingSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        wallet = CreateSyncedWallet(*m_node.chain, WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain()), coinbaseKey);
+        WalletContext context;
+        context.chain = m_node.chain.get();
+        context.args = m_node.args;
+        wallet = CreateSyncedWallet(context, coinbaseKey);
     }
 
     ~ListCoinsTestingSetup()
@@ -577,17 +580,16 @@ public:
             blocktx = CMutableTransaction(*wallet->mapWallet.at(tx->GetHash()).tx);
         }
         CreateAndProcessBlock({CMutableTransaction(blocktx)}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
         LOCK(wallet->cs_wallet);
-        LOCK(Assert(m_node.chainman)->GetMutex());
-        wallet->SetLastBlockProcessed(wallet->GetLastBlockHeight() + 1, m_node.chainman->ActiveChain().Tip()->GetBlockHash());
         auto it = wallet->mapWallet.find(tx->GetHash());
         BOOST_CHECK(it != wallet->mapWallet.end());
-        it->second.SetState(TxStateConfirmed{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*index=*/1});
+        BOOST_CHECK(it->second.state<TxStateConfirmed>());
         return it->second;
     }
 
-    std::unique_ptr<CWallet> wallet;
+    std::shared_ptr<CWallet> wallet;
 };
 
 BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
@@ -650,9 +652,10 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
 void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount,
                      std::map<OutputType, size_t>& expected_coins_sizes)
 {
-    LOCK(context.wallet->cs_wallet);
     util::Result<CTxDestination> dest = Assert(context.wallet->GetNewDestination(out_type, ""));
     CWalletTx& wtx = context.AddTx(CRecipient{*dest, amount, /*fSubtractFeeFromAmount=*/true});
+
+    LOCK(context.wallet->cs_wallet);
     CoinFilterParams filter;
     filter.skip_locked = false;
     CoinsResult available_coins = AvailableCoins(*context.wallet, nullptr, std::nullopt, filter);
