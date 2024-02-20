@@ -445,7 +445,7 @@ class WalletTXO
 {
 private:
     const CTxOut& m_output;
-    TxState m_tx_state;
+    mutable TxState m_tx_state;
     bool m_tx_coinbase;
     bool m_tx_from_me;
     int64_t m_tx_time;
@@ -465,7 +465,7 @@ public:
     const CTxOut& GetTxOut() const { return m_output; }
 
     const TxState& GetState() const { return m_tx_state; }
-    void SetState(const TxState& state) { m_tx_state = state; }
+    void SetState(const TxState& state) const { m_tx_state = state; }
 
     bool IsTxCoinBase() const { return m_tx_coinbase; }
 
