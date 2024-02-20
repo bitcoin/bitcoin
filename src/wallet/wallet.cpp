@@ -4676,7 +4676,7 @@ void CWallet::RefreshTXOsFromTx(const CWalletTx& wtx)
             it->second.SetState(wtx.GetState());
             it->second.SetTxFromMe(*wtx.m_from_me);
         } else {
-            m_txos.emplace(outpoint, WalletTXO{wtx, txout, wtx.GetState(), wtx.IsCoinBase(), *wtx.m_from_me, wtx.GetTxTime(), wtx.tx->version});
+            m_txos.emplace(outpoint, WalletTXO{txout, wtx.GetState(), wtx.IsCoinBase(), *wtx.m_from_me, wtx.GetTxTime(), wtx.tx->version});
         }
     }
 }
