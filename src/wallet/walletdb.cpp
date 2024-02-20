@@ -1080,8 +1080,8 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, WalletBatc
     // Upgrade each CWalletTx missing m_from_me
     if (any_missing_from_me) {
         for (const auto& [_, wtx] : pwallet->wtxOrdered) {
-            if (wtx->m_from_me) continue;
             wtx->m_from_me = pwallet->IsFromMe(*wtx->GetTx());
+            pwallet->RefreshTXOsFromTx(*wtx);
             wallet_batch.WriteTx(*wtx);
         }
     }
