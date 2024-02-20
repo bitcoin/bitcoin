@@ -1288,6 +1288,9 @@ bool LegacyScriptPubKeyMan::TopUp(unsigned int kpSize)
     }
     if (!batch.TxnCommit()) throw std::runtime_error(strprintf("Error during keypool top up. Cannot commit changes for wallet %s", m_storage.GetDisplayName()));
     NotifyCanGetAddressesChanged();
+    // Note: Unlike with DescriptorSPKM, LegacySPKM does not need to call
+    // m_storage.TopUpCallback() as we do not know what new scripts the LegacySPKM is
+    // watching for. CWallet's scriptPubKey cache is not used for LegacySPKMs.
     return true;
 }
 
@@ -2152,6 +2155,7 @@ bool DescriptorScriptPubKeyMan::TopUp(unsigned int size)
 bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int size)
 {
     LOCK(cs_desc_man);
+    std::set<CScript> new_spks;
     unsigned int target_size;
     if (size > 0) {
         target_size = size;
@@ -2182,6 +2186,7 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int siz
             if (!m_wallet_descriptor.descriptor->Expand(i, provider, scripts_temp, out_keys, &temp_cache)) return false;
         }
         // Add all of the scriptPubKeys to the scriptPubKey set
+        new_spks.insert(scripts_temp.begin(), scripts_temp.end());
         for (const CScript& script : scripts_temp) {
             m_map_script_pub_keys[script] = i;
         }
@@ -2207,6 +2212,7 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int siz
     // By this point, the cache size should be the size of the entire range
     assert(m_wallet_descriptor.range_end - 1 == m_max_cached_index);
 
+    m_storage.TopUpCallback(new_spks, this);
     NotifyCanGetAddressesChanged();
     return true;
 }
@@ -2620,6 +2626,7 @@ uint256 DescriptorScriptPubKeyMan::GetID() const
 void DescriptorScriptPubKeyMan::SetCache(const DescriptorCache& cache)
 {
     LOCK(cs_desc_man);
+    std::set<CScript> new_spks;
     m_wallet_descriptor.cache = cache;
     for (int32_t i = m_wallet_descriptor.range_start; i < m_wallet_descriptor.range_end; ++i) {
         FlatSigningProvider out_keys;
@@ -2628,6 +2635,7 @@ void DescriptorScriptPubKeyMan::SetCache(const DescriptorCache& cache)
             throw std::runtime_error("Error: Unable to expand wallet descriptor from cache");
         }
         // Add all of the scriptPubKeys to the scriptPubKey set
+        new_spks.insert(scripts_temp.begin(), scripts_temp.end());
         for (const CScript& script : scripts_temp) {
             if (m_map_script_pub_keys.count(script) != 0) {
                 throw std::runtime_error(strprintf("Error: Already loaded script at index %d as being at index %d", i, m_map_script_pub_keys[script]));
@@ -2645,6 +2653,8 @@ void DescriptorScriptPubKeyMan::SetCache(const DescriptorCache& cache)
         }
         m_max_cached_index++;
     }
+    // Make sure the wallet knows about our new spks
+    m_storage.TopUpCallback(new_spks, this);
 }
 
 bool DescriptorScriptPubKeyMan::AddKey(const CKeyID& key_id, const CKey& key)
