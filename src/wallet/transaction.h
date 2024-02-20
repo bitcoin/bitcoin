@@ -369,6 +369,28 @@ struct WalletTxOrderComparator {
         return a->nOrderPos < b->nOrderPos;
     }
 };
+
+class WalletTXO
+{
+private:
+    const CWalletTx& m_wtx;
+    const CTxOut& m_output;
+    isminetype m_ismine;
+
+public:
+    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const isminetype ismine)
+    : m_wtx(wtx),
+    m_output(output),
+    m_ismine(ismine)
+    {}
+
+    const CWalletTx& GetWalletTx() const { return m_wtx; }
+
+    const CTxOut& GetTxOut() const { return m_output; }
+
+    isminetype GetIsMine() const { return m_ismine; }
+    void SetIsMine(isminetype ismine) { m_ismine = ismine; }
+};
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_TRANSACTION_H
