@@ -1011,6 +1011,12 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 
         // Update birth time when tx time is older than it.
         MaybeUpdateBirthTime(wtx.GetTxTime());
+
+        wtx.m_from_me = IsFromMe(*wtx.tx);
+    } else {
+        bool from_me_before = *wtx.m_from_me;
+        wtx.m_from_me = IsFromMe(*wtx.tx);
+        fUpdated = fUpdated || (from_me_before != *wtx.m_from_me);
     }
 
     if (!fInsertedNew)
@@ -3910,7 +3916,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
 
     // Update m_txos to match the descriptors remaining in this wallet
     m_txos.clear();
-    RefreshAllTXOs();
+    RefreshAllTXOs(&local_wallet_batch);
 
     // Check if the transactions in the wallet are still ours. Either they belong here, or they belong in the watchonly wallet.
     // We need to go through these in the tx insertion order so that lookups to spends works.
@@ -4462,11 +4468,21 @@ void CWallet::RefreshTXOsFromTx(const CWalletTx& wtx)
     }
 }
 
-void CWallet::RefreshAllTXOs()
+void CWallet::RefreshAllTXOs(WalletBatch* batch)
 {
     AssertLockHeld(cs_wallet);
-    for (const auto& [_, wtx] : mapWallet) {
-        RefreshTXOsFromTx(wtx);
+    for (auto& [_, wtx] : wtxOrdered) {
+        bool from_me_before = *wtx->m_from_me;
+        wtx->m_from_me = IsFromMe(*wtx->tx);
+        if (from_me_before != *wtx->m_from_me) {
+            if (batch == nullptr) {
+                WalletBatch(GetDatabase()).WriteTx(*wtx);
+            } else {
+                batch->WriteTx(*wtx);
+            }
+        }
+
+        RefreshTXOsFromTx(*wtx);
     }
 }
 
