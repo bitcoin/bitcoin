@@ -437,7 +437,11 @@ private:
     std::unordered_map<CScript, std::vector<ScriptPubKeyMan*>, SaltedSipHasher> m_cached_spks;
 
     //! Set of both spent and unspent transaction outputs owned by this wallet
-    std::unordered_map<COutPoint, WalletTXO, SaltedOutpointHasher> m_txos GUARDED_BY(cs_wallet);
+    using TXOMap = std::unordered_map<COutPoint, WalletTXO, SaltedOutpointHasher>;
+    TXOMap m_txos GUARDED_BY(cs_wallet);
+    //! Set of transaction outputs that are definitely no longer usable
+    //! These outputs may already be spent in a confirmed tx, or are the outputs of a conflicted tx
+    TXOMap m_unusable_txos GUARDED_BY(cs_wallet);
 
     /**
      * Catch wallet up to current chain, scanning new blocks, updating the best
@@ -525,13 +529,16 @@ public:
 
     std::set<Txid> GetTxConflicts(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    const std::unordered_map<COutPoint, WalletTXO, SaltedOutpointHasher>& GetTXOs() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return m_txos; };
+    const TXOMap& GetTXOs() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return m_txos; };
     std::optional<WalletTXO> GetTXO(const COutPoint& outpoint) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Cache outputs that belong to the wallet from a single transaction */
     void RefreshTXOsFromTx(const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     /** Cache outputs that belong to the wallet for all transactions in the wallet */
     void RefreshAllTXOs(WalletBatch* batch = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void PruneSpentTXOs() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::pair<TXOMap::iterator, TXOMap::iterator> MarkTXOUnusable(const COutPoint& outpoint) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::pair<TXOMap::iterator, TXOMap::iterator> MarkTXOUsable(const COutPoint& outpoint) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Return depth of transaction in blockchain:
