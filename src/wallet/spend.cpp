@@ -332,6 +332,10 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         if (wallet.IsLockedCoin(outpoint) && params.skip_locked)
             continue;
 
+        int nDepth = wallet.GetTxStateDepthInMainChain(txo.GetState());
+        Assert(nDepth >= 0);
+        Assert(!wallet.IsSpent(outpoint, /*min_depth=*/1));
+
         if (wallet.IsSpent(outpoint))
             continue;
 
@@ -348,10 +352,6 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         isminetype mine = wallet.IsMine(output);
 
         assert(mine != ISMINE_NO);
-
-        int nDepth = wallet.GetTxStateDepthInMainChain(txo.GetState());
-        if (nDepth < 0)
-            continue;
 
         if (!tx_safe_cache.contains(outpoint.hash)) {
             tx_safe_cache[outpoint.hash] = {false, false};

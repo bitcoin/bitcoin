@@ -280,6 +280,8 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
 
             const bool is_trusted{CachedTxIsTrusted(wallet, txo.GetState(), outpoint.hash)};
             const int tx_depth{wallet.GetTxStateDepthInMainChain(txo.GetState())};
+            Assert(tx_depth >= 0);
+            Assert(!wallet.IsSpent(outpoint, /*min_depth=*/1));
 
             if (!wallet.IsSpent(outpoint) && (allow_used_addresses || !wallet.IsSpentKey(txo.GetTxOut().scriptPubKey))) {
                 // Get the amounts for mine and watchonly
