@@ -195,7 +195,10 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
 
 bool CachedTxIsFromMe(const CWallet& wallet, const CWalletTx& wtx)
 {
-    return (CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/false) > 0);
+    if (!wtx.m_cached_from_me.has_value()) {
+        wtx.m_cached_from_me = wallet.IsFromMe(*wtx.tx);
+    }
+    return wtx.m_cached_from_me.value();
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
