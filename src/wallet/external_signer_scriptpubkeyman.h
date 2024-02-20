@@ -12,18 +12,13 @@
 namespace wallet {
 class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
 {
-  public:
-  ExternalSignerScriptPubKeyMan(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys)
+public:
+    //! Create an ExternalSPKM from existing wallet data
+    ExternalSignerScriptPubKeyMan(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys)
       :   DescriptorScriptPubKeyMan(storage, id, descriptor, keypool_size, keys, ckeys)
       {}
-  ExternalSignerScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size)
-      :   DescriptorScriptPubKeyMan(storage, keypool_size)
-      {}
-
-  /** Provide a descriptor at setup time
-  * Returns false if already setup or setup fails, true if setup is successful
-  */
-  bool SetupDescriptor(WalletBatch& batch, std::unique_ptr<Descriptor>desc);
+    //! Create a new ExternalSPKM from just a descriptor
+    ExternalSignerScriptPubKeyMan(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, std::unique_ptr<Descriptor> desc);
 
   static ExternalSigner GetExternalSigner();
 
