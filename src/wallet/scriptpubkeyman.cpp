@@ -820,6 +820,22 @@ bool LegacyDataSPKM::DeleteRecordsWithDB(WalletBatch& batch)
     return batch.EraseRecords(DBKeys::LEGACY_TYPES);
 }
 
+DescriptorScriptPubKeyMan::DescriptorScriptPubKeyMan(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys)
+    : ScriptPubKeyMan(storage),
+    m_map_keys(keys),
+    m_map_crypted_keys(ckeys),
+    m_keypool_size(keypool_size),
+    m_wallet_descriptor(descriptor)
+{
+    if (!m_map_keys.empty() && !m_map_crypted_keys.empty()) {
+        throw std::runtime_error("Error: Wallet contains both unencrypted and encrypted keys");
+    }
+    if (id != GetID()) {
+        throw std::runtime_error("The descriptor ID calculated by the wallet differs from the one in DB");
+    }
+    SetCache(m_wallet_descriptor.cache);
+}
+
 util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type)
 {
     // Returns true if this descriptor supports getting new addresses. Conditions where we may be unable to fetch them (e.g. locked) are caught later
@@ -1456,24 +1472,6 @@ void DescriptorScriptPubKeyMan::SetCache(const DescriptorCache& cache)
     }
     // Make sure the wallet knows about our new spks
     m_storage.TopUpCallback(new_spks, this);
-}
-
-bool DescriptorScriptPubKeyMan::AddKey(const CKeyID& key_id, const CKey& key)
-{
-    LOCK(cs_desc_man);
-    m_map_keys[key_id] = key;
-    return true;
-}
-
-bool DescriptorScriptPubKeyMan::AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key)
-{
-    LOCK(cs_desc_man);
-    if (!m_map_keys.empty()) {
-        return false;
-    }
-
-    m_map_crypted_keys[key_id] = make_pair(pubkey, crypted_key);
-    return true;
 }
 
 bool DescriptorScriptPubKeyMan::HasWalletDescriptor(const WalletDescriptor& desc) const
