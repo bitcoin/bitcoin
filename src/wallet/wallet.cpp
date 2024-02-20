@@ -1162,7 +1162,10 @@ bool CWallet::LoadToWallet(const Txid& hash, const UpdateWalletTxFn& fill_wtx)
     MaybeUpdateBirthTime(wtx.GetTxTime());
 
     // Make sure the tx outputs are known by the wallet
-    RefreshTXOsFromTx(wtx);
+    // This cannot be done until m_from_me is upgraded, so skip for any txs that don't have m_from_me set. The caller will handle setting those
+    if (wtx.m_from_me.has_value()) {
+        RefreshTXOsFromTx(wtx);
+    }
     return true;
 }
 
@@ -4008,10 +4011,18 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     for (const auto& [_pos, wtx] : wtxOrdered) {
         // Check it is the watchonly wallet's
         // solvable_wallet doesn't need to be checked because transactions for those scripts weren't being watched for
-        bool is_mine = IsMine(*wtx->tx) || IsFromMe(*wtx->tx);
+        bool mine = IsMine(*wtx->tx);
+        bool from_me = IsFromMe(*wtx->tx);
+        bool is_mine = mine || from_me;
+        if (is_mine) {
+            wtx->m_from_me = from_me;
+            // Rewrite all txs that are "mine" to ensure that any tx upgrades, including the from_me update, is written
+            local_wallet_batch.WriteTx(*wtx);
+        }
         if (data.watchonly_wallet) {
             LOCK(data.watchonly_wallet->cs_wallet);
-            if (data.watchonly_wallet->IsMine(*wtx->tx) || data.watchonly_wallet->IsFromMe(*wtx->tx)) {
+            bool watchonly_from_me = data.watchonly_wallet->IsFromMe(*wtx->tx);
+            if (data.watchonly_wallet->IsMine(*wtx->tx) || watchonly_from_me) {
                 // Add to watchonly wallet
                 const Txid& hash = wtx->GetHash();
                 const CWalletTx& to_copy_wtx = *wtx;
@@ -4019,6 +4030,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
                     if (!new_tx) return false;
                     ins_wtx.SetTx(to_copy_wtx.tx);
                     ins_wtx.CopyFrom(to_copy_wtx);
+                    ins_wtx.m_from_me = watchonly_from_me;
                     return true;
                 })) {
                     return util::Error{strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex())};
@@ -4527,8 +4539,9 @@ void CWallet::RefreshTXOsFromTx(const CWalletTx& wtx)
         auto it = m_txos.find(outpoint);
         if (it != m_txos.end()) {
             it->second.SetState(wtx.m_state);
+            it->second.SetTxFromMe(*wtx.m_from_me);
         } else {
-            m_txos.emplace(outpoint, WalletTXO{wtx, txout, wtx.m_state, wtx.IsCoinBase()});
+            m_txos.emplace(outpoint, WalletTXO{wtx, txout, wtx.m_state, wtx.IsCoinBase(), *wtx.m_from_me});
         }
     }
 }
