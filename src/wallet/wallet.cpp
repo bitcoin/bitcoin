@@ -1094,6 +1094,9 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
     // Break debit/credit balance caches:
     wtx.MarkDirty();
 
+    // Cache the outputs that belong to the wallet
+    RefreshTXOsFromTx(wtx);
+
     // Notify UI of new or updated transaction
     NotifyTransactionChanged(hash, fInsertedNew ? CT_NEW : CT_UPDATED);
 
@@ -1157,6 +1160,8 @@ bool CWallet::LoadToWallet(const Txid& hash, const UpdateWalletTxFn& fill_wtx)
     // Update birth time when tx time is older than it.
     MaybeUpdateBirthTime(wtx.GetTxTime());
 
+    // Make sure the tx outputs are known by the wallet
+    RefreshTXOsFromTx(wtx);
     return true;
 }
 
@@ -2324,6 +2329,9 @@ util::Result<void> CWallet::RemoveTxs(WalletBatch& batch, std::vector<Txid>& txs
             wtxOrdered.erase(it->second.m_it_wtxOrdered);
             for (const auto& txin : it->second.tx->vin)
                 mapTxSpends.erase(txin.prevout);
+            for (unsigned int i = 0; i < it->second.tx->vout.size(); ++i) {
+                m_txos.erase(COutPoint(Txid::FromUint256(hash), i));
+            }
             mapWallet.erase(it);
             NotifyTransactionChanged(hash, CT_DELETED);
         }
@@ -4423,6 +4431,24 @@ void CWallet::WriteBestBlock() const
 
         WalletBatch batch(GetDatabase());
         batch.WriteBestBlock(loc);
+    }
+}
+
+void CWallet::RefreshTXOsFromTx(const CWalletTx& wtx)
+{
+    AssertLockHeld(cs_wallet);
+    for (uint32_t i = 0; i < wtx.tx->vout.size(); ++i) {
+        const CTxOut& txout = wtx.tx->vout.at(i);
+        isminetype ismine = IsMine(txout);
+        if (ismine == ISMINE_NO) {
+            continue;
+        }
+        COutPoint outpoint(wtx.GetHash(), i);
+        if (m_txos.contains(outpoint)) {
+            m_txos.at(outpoint).SetIsMine(ismine);
+        } else {
+            m_txos.emplace(outpoint, WalletTXO{wtx, txout, ismine});
+        }
     }
 }
 } // namespace wallet
