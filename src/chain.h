@@ -426,7 +426,7 @@ public:
         READWRITE(obj.nNonce);
     }
 
-    uint256 ConstructBlockHash() const
+    uint256 ConstructHeaderHash() const
     {
         CBlockHeader block;
         block.nVersion = nVersion;
