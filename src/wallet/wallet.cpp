@@ -1558,7 +1558,10 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
 
     int disconnect_height = block.height;
 
-    for (const CTransactionRef& ptx : Assert(block.data)->vtx) {
+    Assert(block.data);
+    // Iterate the block backwards so that we can undo the UTXO changes in the correct order
+    for (auto it = block.data->vtx.rbegin(); it != block.data->vtx.rend(); ++it) {
+        const CTransactionRef& ptx = *it;
         SyncTransaction(ptx, TxStateInactive{});
 
         for (const CTxIn& tx_in : ptx->vin) {
