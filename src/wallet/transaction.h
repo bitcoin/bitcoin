@@ -218,8 +218,6 @@ public:
      * CWallet::ComputeTimeSmart().
      */
     unsigned int nTimeSmart;
-    // Cached value for whether the transaction spends any inputs known to the wallet
-    mutable std::optional<bool> m_cached_from_me{std::nullopt};
     // Tracks whether the transaction spends any inputs known to the wallet
     std::optional<bool> m_from_me;
     int64_t nOrderPos; //!< position in ordered transaction list
@@ -372,7 +370,6 @@ public:
         m_amounts[CREDIT].Reset();
         fChangeCached = false;
         m_is_cache_empty = true;
-        m_cached_from_me = std::nullopt;
     }
 
     /** True if tx is a malleation of this, i.e. it has the exact same version, locktime,
