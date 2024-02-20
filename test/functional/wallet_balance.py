@@ -4,15 +4,18 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet balance RPC methods."""
 from decimal import Decimal
+import time
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE as ADDRESS_WATCHONLY
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_is_hash_string,
     assert_raises_rpc_error,
 )
+from test_framework.wallet_util import get_generate_key
 
 
 def create_transactions(node, address, amt, fees):
@@ -278,6 +281,31 @@ class WalletTest(BitcoinTestFramework):
         tx_info = self.nodes[1].gettransaction(txid)
         assert_equal(tx_info['lastprocessedblock']['height'], prev_height)
         assert_equal(tx_info['lastprocessedblock']['hash'], prev_hash)
+
+        self.log.info("Test that the balance is updated by an import that makes an untracked output in an existing tx \"mine\"")
+        default = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        self.nodes[0].createwallet("importupdate")
+        wallet = self.nodes[0].get_wallet_rpc("importupdate")
+
+        import_key1 = get_generate_key()
+        import_key2 = get_generate_key()
+        wallet.importdescriptors([{"desc": descsum_create(f"wpkh({import_key1.privkey})"), "timestamp": "now"}])
+
+        amount = 15
+        default.send([{import_key1.p2wpkh_addr: amount},{import_key2.p2wpkh_addr: amount}])
+        self.generate(self.nodes[0], 1)
+        # Mock the time forward by 1 day so that "now" will exclude the block we just mined
+        self.nodes[0].setmocktime(int(time.time()) + 86400)
+        # Mine 11 blocks to move the MTP past the block we just mined
+        self.generate(self.nodes[0], 11, sync_fun=self.no_op)
+
+        balances = wallet.getbalances()
+        assert_equal(balances["mine"]["trusted"], amount)
+
+        # Don't rescan to make sure that the import updates the wallet txos
+        wallet.importdescriptors([{"desc": descsum_create(f"wpkh({import_key2.privkey})"), "timestamp": "now"}])
+        balances = wallet.getbalances()
+        assert_equal(balances["mine"]["trusted"], amount * 2)
 
 if __name__ == '__main__':
     WalletTest(__file__).main()
