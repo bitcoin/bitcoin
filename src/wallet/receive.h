@@ -40,11 +40,12 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
                         std::list<COutputEntry>& listSent,
                         CAmount& nFee, const isminefilter& filter,
                         bool include_change);
-bool CachedTxIsFromMe(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter);
 bool CachedTxIsTrusted(const CWallet& wallet, const TxState& state, const uint256& txid, std::set<uint256>& trusted_parents) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 bool CachedTxIsTrusted(const CWallet& wallet, const TxState& state, const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uint256>& trusted_parents) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx);
+
+bool CheckIsFromMeMap(const std::map<isminefilter, bool>& from_me_map, const isminefilter& filter);
 
 struct Balance {
     CAmount m_mine_trusted{0};           //!< Trusted, at depth=GetBalance.min_depth or more
