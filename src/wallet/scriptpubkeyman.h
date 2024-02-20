@@ -316,6 +316,9 @@ private:
 
     void SetCache();
 
+    void AddDescriptorKey(const CKey& key, const CPubKey &pubkey);
+    void UpdateWithSigningProvider(WalletBatch& batch, const FlatSigningProvider& signing_provider) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+
 protected:
     WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
 
@@ -324,11 +327,8 @@ protected:
 
 public:
     //! Create a new DescriptorScriptPubKeyMan from an existing descriptor (i.e. from an import)
-    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
-        :   ScriptPubKeyMan(storage),
-            m_keypool_size(keypool_size),
-            m_wallet_descriptor(descriptor)
-        {}
+    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const FlatSigningProvider& provider);
+    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletBatch& batch, WalletDescriptor& descriptor, int64_t keypool_size, const FlatSigningProvider& provider);
     //! Create a DescriptorScriptPubKeyMan from existing data (i.e. during loading)
     DescriptorScriptPubKeyMan(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
     DescriptorScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size)
@@ -388,9 +388,8 @@ public:
     uint256 GetID() const override;
 
     bool HasWalletDescriptor(const WalletDescriptor& desc) const;
-    util::Result<void> UpdateWalletDescriptor(WalletDescriptor& descriptor);
+    util::Result<void> UpdateWalletDescriptor(WalletDescriptor& descriptor, const FlatSigningProvider& provider);
     bool CanUpdateToWalletDescriptor(const WalletDescriptor& descriptor, std::string& error);
-    void AddDescriptorKey(const CKey& key, const CPubKey &pubkey);
     void WriteDescriptor();
 
     WalletDescriptor GetWalletDescriptor() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
