@@ -183,7 +183,7 @@ bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, 
     return true;
 }
 
-bool CSimplifiedMNListDiff::BuildQuorumChainlockInfo(const CBlockIndex* blockIndex)
+void CSimplifiedMNListDiff::BuildQuorumChainlockInfo(const CBlockIndex* blockIndex)
 {
     // Group quorums (indexes corresponding to entries of newQuorums) per CBlockIndex containing the expected CL signature in CbTx.
     // We want to avoid to load CbTx now, as more than one quorum will target the same block: hence we want to load CbTxs once per block (heavy operation).
@@ -220,8 +220,6 @@ bool CSimplifiedMNListDiff::BuildQuorumChainlockInfo(const CBlockIndex* blockInd
             it_sig->second.insert(idx_set.begin(), idx_set.end());
         }
     }
-
-    return true;
 }
 
 UniValue CSimplifiedMNListDiff::ToJson(bool extended) const
@@ -363,10 +361,7 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
     }
 
     if (DeploymentActiveAfter(blockIndex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) {
-        if (!mnListDiffRet.BuildQuorumChainlockInfo(blockIndex)) {
-            errorRet = strprintf("failed to build quorums chainlocks info");
-            return false;
-        }
+        mnListDiffRet.BuildQuorumChainlockInfo(blockIndex);
     }
 
     // TODO store coinbase TX in CBlockIndex

@@ -29,7 +29,7 @@ void CMasternodeUtils::DoMaintenance(CConnman& connman, const CMasternodeSync& m
 
     // Don't disconnect masternode connections when we have less then the desired amount of outbound nodes
     int nonMasternodeCount = 0;
-    connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
+    connman.ForEachNode(CConnman::AllNodes, [&](const CNode* pnode) {
         if ((!pnode->IsInboundConn() &&
             !pnode->IsFeelerConn() &&
             !pnode->IsManualConn() &&

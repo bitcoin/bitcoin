@@ -424,7 +424,7 @@ CChainLocksHandler::BlockTxs::mapped_type CChainLocksHandler::GetBlockTxs(const 
         uint32_t blockTime;
         {
             LOCK(cs_main);
-            auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(blockHash);
+            const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(blockHash);
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
                 return nullptr;
@@ -640,7 +640,7 @@ void CChainLocksHandler::Cleanup()
     }
 
     for (auto it = blockTxs.begin(); it != blockTxs.end(); ) {
-        auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(it->first);
+        const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(it->first);
         if (InternalHasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
             for (const auto& txid : *it->second) {
                 txFirstSeenTime.erase(txid);
@@ -659,7 +659,7 @@ void CChainLocksHandler::Cleanup()
             // tx has vanished, probably due to conflicts
             it = txFirstSeenTime.erase(it);
         } else if (!hashBlock.IsNull()) {
-            auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(hashBlock);
+            const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(hashBlock);
             if (m_chainstate.m_chain.Tip()->GetAncestor(pindex->nHeight) == pindex && m_chainstate.m_chain.Height() - pindex->nHeight >= 6) {
                 // tx got confirmed >= 6 times, so we can stop keeping track of it
                 it = txFirstSeenTime.erase(it);

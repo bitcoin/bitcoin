@@ -164,7 +164,7 @@ public:
 
     bool BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex,
                           const llmq::CQuorumBlockProcessor& quorum_block_processor);
-    bool BuildQuorumChainlockInfo(const CBlockIndex* blockIndex);
+    void BuildQuorumChainlockInfo(const CBlockIndex* blockIndex);
 
     [[nodiscard]] UniValue ToJson(bool extended = false) const;
 };

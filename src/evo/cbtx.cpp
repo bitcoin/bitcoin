@@ -175,7 +175,7 @@ using QcIndexedHashMap = std::map<Consensus::LLMQType, std::map<int16_t, uint256
 
 /**
  * Handles the calculation or caching of qcHashes and qcIndexedHashes
- * @param pindexPrev The const CBlockIndex* (ie a block) of a block. Both the Quorum list and quorum rotation actiavtion status will be retrieved based on this block.
+ * @param pindexPrev The const CBlockIndex* (ie a block) of a block. Both the Quorum list and quorum rotation activation status will be retrieved based on this block.
  * @return nullopt if quorumCommitment was unable to be found, otherwise returns the qcHashes and qcIndexedHashes that were calculated or cached
  */
 auto CachedGetQcHashesQcIndexedHashes(const CBlockIndex* pindexPrev, const llmq::CQuorumBlockProcessor& quorum_block_processor) ->

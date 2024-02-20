@@ -407,7 +407,7 @@ CSuperblock::
     nStatus(SeenObjectStatus::Unknown),
     vecPayments()
 {
-    CGovernanceObject* pGovObj = GetGovernanceObject(*governance);
+    const CGovernanceObject* pGovObj = GetGovernanceObject(*governance);
 
     if (!pGovObj) {
         throw std::runtime_error("CSuperblock: Failed to find Governance Object");

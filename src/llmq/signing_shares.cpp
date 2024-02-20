@@ -152,7 +152,7 @@ CSigSharesNodeState::Session* CSigSharesNodeState::GetSessionByRecvId(uint32_t s
 
 bool CSigSharesNodeState::GetSessionInfoByRecvId(uint32_t sessionId, SessionInfo& retInfo)
 {
-    auto* s = GetSessionByRecvId(sessionId);
+    const auto* s = GetSessionByRecvId(sessionId);
     if (s == nullptr) {
         return false;
     }

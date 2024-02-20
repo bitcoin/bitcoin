@@ -101,7 +101,7 @@ private:
     // versionBit <-> height
     unordered_lru_cache<uint256, Signals, StaticSaltedHasher> mnhfCache GUARDED_BY(cs_cache) {MNHFCacheSize};
 
-    // This cache is used only for v20 activation to avoid double lock throught VersionBitsConditionChecker::SignalHeight
+    // This cache is used only for v20 activation to avoid double lock through VersionBitsConditionChecker::SignalHeight
     VersionBitsCache v20_activation GUARDED_BY(cs_cache);
 public:
     explicit CMNHFManager(CEvoDB& evoDb);
@@ -116,8 +116,8 @@ public:
 
     /**
      * Every undo block should be processed when Tip() is updated by calling of CMNHFManager::UndoBlock
-     * This function actually does nothing at the moment, because status of ancester block is already know.
-     * Altough it should be still called to do some sanity checks
+     * This function actually does nothing at the moment, because status of ancestor block is already know.
+     * Although it should be still called to do some sanity checks
      */
     bool UndoBlock(const CBlock& block, const CBlockIndex* const pindex);
 

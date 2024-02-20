@@ -86,7 +86,7 @@ class LLMQConnections(DashTestFramework):
 
         # Since we IS quorums are mined only using dip24 (rotation) we need to enable rotation, and continue tests on llmq_test_dip0024 for connections.
 
-        self.log.info("check that old masternode conections are dropped")
+        self.log.info("check that old masternode connections are dropped")
         removed = False
         for mn in self.mninfo:
             if len(mn.node.quorum("memberof", mn.proTxHash)) > 0:
@@ -102,7 +102,7 @@ class LLMQConnections(DashTestFramework):
                 break
         assert removed # no way we removed none
 
-        self.log.info("check that inter-quorum masternode conections are added")
+        self.log.info("check that inter-quorum masternode connections are added")
         added = False
         for mn in self.mninfo:
             if len(mn.node.quorum("memberof", mn.proTxHash)) > 0:

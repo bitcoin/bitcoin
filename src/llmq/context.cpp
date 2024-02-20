@@ -54,7 +54,7 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CEvoDB& evo
 }
 
 LLMQContext::~LLMQContext() {
-    // LLMQContext doesn't own these objects, but still need to care of them for consistancy:
+    // LLMQContext doesn't own these objects, but still need to care of them for consistency:
     llmq::quorumInstantSendManager.reset();
     llmq::chainLocksHandler.reset();
     llmq::quorumManager.reset();

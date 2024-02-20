@@ -142,7 +142,7 @@ class DIP3V19Test(DashTestFramework):
         self.wait_until(lambda: self.nodes[node_idx].getconnectioncount() == 0)
         self.connect_nodes(node_idx, 0)
         self.sync_all(self.nodes)
-        self.log.info(f"Succesfully revoked={revoke_protx}")
+        self.log.info(f"Successfully revoked={revoke_protx}")
         for mn in self.mninfo:
             if mn.proTxHash == revoke_protx:
                 self.mninfo.remove(mn)

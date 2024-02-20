@@ -94,7 +94,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def mine_quorum_no_check(self, expected_good_nodes, mninfos_online):
         # Unlike in mine_quorum we skip most of the checks and only care about
-        # nodes moving forward from phase to phase and the fact that the quorum is actualy mined.
+        # nodes moving forward from phase to phase and the fact that the quorum is actually mined.
         self.log.info("Mining a quorum with no checks")
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
 
