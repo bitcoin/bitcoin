@@ -22,7 +22,7 @@ env:  # Global defaults
 # - The ./ci/ depedencies (with cirrus-cli) should be installed:
 #
 #   ```
-#   apt update && apt install screen python3 bash podman-docker curl -y && curl -L -o cirrus "https://github.com/cirruslabs/cirrus-cli/releases/latest/download/cirrus-linux-$(dpkg --print-architecture)" && mv cirrus /usr/local/bin/cirrus && chmod +x /usr/local/bin/cirrus
+#   apt update && apt install git screen python3 bash podman-docker curl -y && curl -L -o cirrus "https://github.com/cirruslabs/cirrus-cli/releases/latest/download/cirrus-linux-$(dpkg --print-architecture)" && mv cirrus /usr/local/bin/cirrus && chmod +x /usr/local/bin/cirrus
 #   ```
 #
 # - There are no strict requirements on the hardware, because having less CPUs
@@ -55,7 +55,7 @@ base_template: &BASE_TEMPLATE
   << : *FILTER_TEMPLATE
   merge_base_script:
     # Unconditionally install git (used in fingerprint_script).
-    - bash -c "$PACKAGE_MANAGER_INSTALL git"
+    - git --version || bash -c "$PACKAGE_MANAGER_INSTALL git"
     - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
     - git fetch --depth=1 $CIRRUS_REPO_CLONE_URL "pull/${CIRRUS_PR}/merge"
     - git checkout FETCH_HEAD  # Use merged changes to detect silent merge conflicts
