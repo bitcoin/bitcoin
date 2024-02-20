@@ -852,6 +852,13 @@ DescriptorScriptPubKeyMan::DescriptorScriptPubKeyMan(WalletStorage& storage, con
     SetCache(m_wallet_descriptor.cache);
 }
 
+DescriptorScriptPubKeyMan::DescriptorScriptPubKeyMan(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, const CExtKey& master_key, OutputType addr_type, bool internal)
+    :   ScriptPubKeyMan(storage),
+        m_keypool_size(keypool_size)
+{
+    SetupDescriptorGeneration(batch, master_key, addr_type, internal);
+}
+
 util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type)
 {
     // Returns true if this descriptor supports getting new addresses. Conditions where we may be unable to fetch them (e.g. locked) are caught later
