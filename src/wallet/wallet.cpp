@@ -3294,18 +3294,24 @@ bool CWallet::BackupWallet(const std::string& strDest) const
     return GetDatabase().Backup(strDest);
 }
 
-int CWallet::GetTxDepthInMainChain(const CWalletTx& wtx) const
+int CWallet::GetTxStateDepthInMainChain(const TxState& state) const
 {
     AssertLockHeld(cs_wallet);
-    if (auto* conf = wtx.state<TxStateConfirmed>()) {
+    if (auto* conf = std::get_if<TxStateConfirmed>(&state)) {
         assert(conf->confirmed_block_height >= 0);
         return GetLastBlockHeight() - conf->confirmed_block_height + 1;
-    } else if (auto* conf = wtx.state<TxStateBlockConflicted>()) {
+    } else if (auto* conf = std::get_if<TxStateBlockConflicted>(&state)) {
         assert(conf->conflicting_block_height >= 0);
         return -1 * (GetLastBlockHeight() - conf->conflicting_block_height + 1);
     } else {
         return 0;
     }
+}
+
+int CWallet::GetTxDepthInMainChain(const CWalletTx& wtx) const
+{
+    AssertLockHeld(cs_wallet);
+    return GetTxStateDepthInMainChain(wtx.m_state);
 }
 
 int CWallet::GetTxBlocksToMaturity(const CWalletTx& wtx) const
