@@ -1539,11 +1539,13 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
     // future with a stickier abandoned state or even removing abandontransaction call.
     int disconnect_height = block.height;
 
-    for (size_t index = 0; index < block.data->vtx.size(); index++) {
-        const CTransactionRef& ptx = block.data->vtx[index];
+    Assert(block.data);
+    // Iterate the block backwards so that we can undo the UTXO changes in the correct order
+    for (auto it = block.data->vtx.rbegin(); it != block.data->vtx.rend(); ++it) {
+        const CTransactionRef& ptx = *it;
         // Coinbase transactions are not only inactive but also abandoned,
         // meaning they should never be relayed standalone via the p2p protocol.
-        SyncTransaction(ptx, TxStateInactive{/*abandoned=*/index == 0});
+        SyncTransaction(ptx, TxStateInactive{/*abandoned=*/ptx->IsCoinBase()});
 
         for (const CTxIn& tx_in : ptx->vin) {
             // No other wallet transactions conflicted with this transaction
