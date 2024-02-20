@@ -239,10 +239,18 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     for (const auto& [_pos, wtx] : wtxOrdered) {
         // Check it is the watchonly wallet's
         // solvable_wallet doesn't need to be checked because transactions for those scripts weren't being watched for
-        bool is_mine = IsMine(*wtx->GetTx()) || IsFromMe(*wtx->GetTx());
+        bool mine = IsMine(*wtx->GetTx());
+        bool from_me = IsFromMe(*wtx->GetTx());
+        bool is_mine = mine || from_me;
+        if (is_mine) {
+            wtx->m_from_me = from_me;
+            // Rewrite all txs that are "mine" to ensure that any tx upgrades, including the from_me update, is written
+            local_wallet_batch.WriteTxMetadata(*wtx);
+        }
         if (data.watchonly_wallet) {
             LOCK(data.watchonly_wallet->cs_wallet);
-            if (data.watchonly_wallet->IsMine(*wtx->GetTx()) || data.watchonly_wallet->IsFromMe(*wtx->GetTx())) {
+            bool watchonly_from_me = data.watchonly_wallet->IsFromMe(*wtx->GetTx());
+            if (data.watchonly_wallet->IsMine(*wtx->GetTx()) || watchonly_from_me) {
                 // Add to watchonly wallet
                 const Txid& hash = wtx->GetHash();
                 DataStream wtx_ser;

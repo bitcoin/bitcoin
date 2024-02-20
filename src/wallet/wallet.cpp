@@ -1173,7 +1173,10 @@ bool CWallet::LoadToWallet(CWalletTx&& wtx_in)
     MaybeUpdateBirthTime(wtx.GetTxTime());
 
     // Make sure the tx outputs are known by the wallet
-    RefreshTXOsFromTx(wtx);
+    // This cannot be done until m_from_me is upgraded, so skip for any txs that don't have m_from_me set. The caller will handle setting those
+    if (wtx.m_from_me.has_value()) {
+        RefreshTXOsFromTx(wtx);
+    }
     return true;
 }
 
@@ -3778,8 +3781,9 @@ void CWallet::RefreshTXOsFromTx(const CWalletTx& wtx)
         auto it = m_txos.find(outpoint);
         if (it != m_txos.end()) {
             it->second.SetState(wtx.GetState());
+            it->second.SetTxFromMe(*wtx.m_from_me);
         } else {
-            m_txos.emplace(outpoint, WalletTXO{wtx, txout, wtx.GetState(), wtx.IsCoinBase()});
+            m_txos.emplace(outpoint, WalletTXO{wtx, txout, wtx.GetState(), wtx.IsCoinBase(), *wtx.m_from_me});
         }
     }
 }
