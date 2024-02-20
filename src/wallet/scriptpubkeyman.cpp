@@ -853,6 +853,13 @@ std::unique_ptr<DescriptorScriptPubKeyMan> DescriptorScriptPubKeyMan::LoadFromSt
     return std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(storage, descriptor, keypool_size, keys, ckeys));
 }
 
+std::unique_ptr<DescriptorScriptPubKeyMan> DescriptorScriptPubKeyMan::GenerateNewSingleSig(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, const CExtKey& master_key, OutputType addr_type, bool internal)
+{
+    auto spkm = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(storage, keypool_size));
+    spkm->SetupDescriptorGeneration(batch, master_key, addr_type, internal);
+    return spkm;
+}
+
 util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type)
 {
     // Returns true if this descriptor supports getting new addresses. Conditions where we may be unable to fetch them (e.g. locked) are caught later
@@ -1164,15 +1171,11 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
     }
 }
 
-bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal)
+void DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal)
 {
     LOCK(cs_desc_man);
-    assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
-
-    // Ignore when there is already a descriptor
-    if (m_wallet_descriptor.descriptor) {
-        return false;
-    }
+    Assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+    Assert(!m_wallet_descriptor.descriptor);
 
     m_wallet_descriptor = GenerateWalletDescriptor(master_key.Neuter(), addr_type, internal);
 
@@ -1184,11 +1187,15 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, co
         throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
     }
 
+    // Set m_decryption_thoroughly_checked for encrypted wallets
+    if (m_storage.HasEncryptionKeys()) {
+        m_decryption_thoroughly_checked = true;
+    }
+
     // TopUp
     TopUpWithDB(batch);
 
     m_storage.UnsetBlankWalletFlag(batch);
-    return true;
 }
 
 bool DescriptorScriptPubKeyMan::IsHDEnabled() const
