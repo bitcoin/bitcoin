@@ -4493,4 +4493,12 @@ void CWallet::RefreshWalletTxTXOs(const CWalletTx& wtx)
         }
     }
 }
+
+void CWallet::RefreshAllTXOs()
+{
+    AssertLockHeld(cs_wallet);
+    for (const auto& [_, wtx] : mapWallet) {
+        RefreshWalletTxTXOs(wtx);
+    }
+}
 } // namespace wallet
