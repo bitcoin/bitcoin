@@ -1068,6 +1068,10 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 
         // Update birth time when tx time is older than it.
         MaybeUpdateBirthTime(wtx.GetTxTime());
+
+        for (auto filter : {ISMINE_SPENDABLE, ISMINE_WATCH_ONLY}) {
+            wtx.m_from_me[filter] = GetDebit(*wtx.tx, filter) > 0;
+        }
     }
 
     if (!fInsertedNew)
