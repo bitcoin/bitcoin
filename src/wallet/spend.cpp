@@ -441,7 +441,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             continue;
         }
 
-        bool tx_from_me = *wtx.m_from_me;
+        bool tx_from_me = txo.GetTxFromMe();
 
         std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(output.scriptPubKey);
 
