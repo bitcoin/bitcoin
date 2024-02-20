@@ -526,11 +526,17 @@ public:
      * the height of the last block processed, or the heights of blocks
      * referenced in transaction, and might cause assert failures.
      */
+    int GetTxStateDepthInMainChain(const TxState& state) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     int GetTxDepthInMainChain(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool IsTxStateInMainChain(const TxState& state) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    {
+        AssertLockHeld(cs_wallet);
+        return GetTxStateDepthInMainChain(state) > 0;
+    }
     bool IsTxInMainChain(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
         AssertLockHeld(cs_wallet);
-        return GetTxDepthInMainChain(wtx) > 0;
+        return IsTxStateInMainChain(wtx.m_state);
     }
 
     /**
