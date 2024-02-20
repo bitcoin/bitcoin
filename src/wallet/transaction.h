@@ -218,6 +218,8 @@ public:
     unsigned int nTimeSmart;
     // Cached value for whether the transaction spends any inputs known to the wallet
     mutable std::optional<bool> m_cached_from_me{std::nullopt};
+    // Tracks whether the transaction spends any inputs known to the wallet
+    std::optional<bool> m_from_me;
     int64_t nOrderPos; //!< position in ordered transaction list
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
@@ -293,6 +295,7 @@ public:
         uint256 serializedHash = TxStateSerializedBlockHash(m_state);
         int serializedIndex = TxStateSerializedIndex(m_state);
         s << TX_WITH_WITNESS(tx) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << string_values << msgs_reqs << dummy_int << nTimeReceived << dummy_bool << dummy_bool;
+        if (m_from_me) s << *m_from_me;
     }
 
     template<typename Stream>
@@ -309,6 +312,12 @@ public:
         std::map<std::string, std::string> string_values;
         std::vector<std::pair<std::string, std::string>> msgs_reqs;
         s >> TX_WITH_WITNESS(tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> string_values >> msgs_reqs >> dummy_int >> nTimeReceived >> dummy_bool >> dummy_bool;
+
+        if (!s.empty()) {
+            bool from_me;
+            s >> from_me;
+            m_from_me = from_me;
+        }
 
         m_state = TxStateInterpretSerialized({serialized_block_hash, serializedIndex});
 
