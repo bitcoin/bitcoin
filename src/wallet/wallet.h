@@ -1089,6 +1089,9 @@ public:
 
     //! Set the features of the last client to decrypt this wallet
     void SetLastDecryptedFeatures(uint64_t features) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Update the stored tx state for the specified output. Called by every CWalletTx::SetState call.
+    void UpdateTXOState(const COutPoint& outpoint, const TxState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 };
 
 /**
