@@ -438,6 +438,9 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         if (wallet.IsLockedCoin(outpoint) && params.skip_locked)
             continue;
 
+        Assert(nDepth >= 0);
+        Assert(!wallet.IsSpent(outpoint, /*min_depth=*/1));
+
         if (wallet.IsSpent(outpoint))
             continue;
 
