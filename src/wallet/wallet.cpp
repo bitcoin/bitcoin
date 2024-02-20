@@ -4017,6 +4017,10 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         return false;
     }
 
+    // Update m_txos to match the descriptors remaining in this wallet
+    m_txos.clear();
+    RefreshAllTXOs();
+
     // Check if the transactions in the wallet are still ours. Either they belong here, or they belong in the watchonly wallet.
     // We need to go through these in the tx insertion order so that lookups to spends works.
     std::vector<uint256> txids_to_delete;
