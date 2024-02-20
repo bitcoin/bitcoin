@@ -169,14 +169,18 @@ static const std::unordered_set<OutputType> LEGACY_OUTPUT_TYPES {
     OutputType::BECH32,
 };
 
+using KeyMap = std::map<CKeyID, CKey>;
+using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
+using ScriptPubKeyMap = std::map<CScript, int32_t>; // Map of scripts to descriptor range index
+using PubKeyMap = std::map<CPubKey, int32_t>; // Map of pubkeys involved in scripts to descriptor range index
+
 // Manages the data for a LegacyScriptPubKeyMan.
 // This is the minimum necessary to load a legacy wallet so that it can be migrated.
 class LegacyDataSPKM : public ScriptPubKeyMan, public FillableSigningProvider
 {
-private:
+protected:
     using WatchOnlySet = std::set<CScript>;
     using WatchKeyMap = std::map<CKeyID, CPubKey>;
-    using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
 
     CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
     WatchOnlySet setWatchOnly GUARDED_BY(cs_KeyStore);
@@ -276,11 +280,6 @@ class DescriptorScriptPubKeyMan : public ScriptPubKeyMan
 {
     friend class LegacyDataSPKM;
 private:
-    using ScriptPubKeyMap = std::map<CScript, int32_t>; // Map of scripts to descriptor range index
-    using PubKeyMap = std::map<CPubKey, int32_t>; // Map of pubkeys involved in scripts to descriptor range index
-    using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
-    using KeyMap = std::map<CKeyID, CKey>;
-
     ScriptPubKeyMap m_map_script_pub_keys GUARDED_BY(cs_desc_man);
     PubKeyMap m_map_pubkeys GUARDED_BY(cs_desc_man);
     int32_t m_max_cached_index = -1;
@@ -318,6 +317,8 @@ private:
     // Fetch the SigningProvider for a given index and optionally include private keys. Called by the above functions.
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(int32_t index, bool include_private = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
+    void SetCache(const DescriptorCache& cache);
+
 protected:
     WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
 
@@ -325,11 +326,14 @@ protected:
     bool TopUpWithDB(WalletBatch& batch, unsigned int size = 0);
 
 public:
+    //! Create a new DescriptorScriptPubKeyMan from an existing descriptor (i.e. from an import)
     DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
         :   ScriptPubKeyMan(storage),
             m_keypool_size(keypool_size),
             m_wallet_descriptor(descriptor)
         {}
+    //! Create a DescriptorScriptPubKeyMan from existing data (i.e. during loading)
+    DescriptorScriptPubKeyMan(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
     DescriptorScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size)
         :   ScriptPubKeyMan(storage),
             m_keypool_size(keypool_size)
@@ -385,11 +389,6 @@ public:
     std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, std::optional<int> sighash_type = std::nullopt, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr, bool finalize = true) const override;
 
     uint256 GetID() const override;
-
-    void SetCache(const DescriptorCache& cache);
-
-    bool AddKey(const CKeyID& key_id, const CKey& key);
-    bool AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key);
 
     bool HasWalletDescriptor(const WalletDescriptor& desc) const;
     util::Result<void> UpdateWalletDescriptor(WalletDescriptor& descriptor);

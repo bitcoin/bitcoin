@@ -3485,16 +3485,15 @@ void CWallet::ConnectScriptPubKeyManNotifiers()
     }
 }
 
-DescriptorScriptPubKeyMan& CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc)
+void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc, const KeyMap& keys, const CryptedKeyMap& ckeys)
 {
     DescriptorScriptPubKeyMan* spk_manager;
     if (IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
-        spk_manager = new ExternalSignerScriptPubKeyMan(*this, desc, m_keypool_size);
+        spk_manager = new ExternalSignerScriptPubKeyMan(*this, id, desc, m_keypool_size, keys, ckeys);
     } else {
-        spk_manager = new DescriptorScriptPubKeyMan(*this, desc, m_keypool_size);
+        spk_manager = new DescriptorScriptPubKeyMan(*this, id, desc, m_keypool_size, keys, ckeys);
     }
     AddScriptPubKeyMan(id, std::unique_ptr<ScriptPubKeyMan>(spk_manager));
-    return *spk_manager;
 }
 
 DescriptorScriptPubKeyMan& CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& batch, const CExtKey& master_key, const OutputType& output_type, bool internal)
