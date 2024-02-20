@@ -149,7 +149,7 @@ static void RefreshMempoolStatus(CWallet& wallet, CWalletTx& tx, interfaces::Cha
         state = TxStateInactive();
     }
     if (state) {
-        tx.m_state = *state;
+        tx.SetState(*state);
         wallet.RefreshTXOsFromTx(tx);
     }
 }
@@ -1028,8 +1028,8 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 
     if (!fInsertedNew)
     {
-        if (state.index() != wtx.m_state.index()) {
-            wtx.m_state = state;
+        if (state.index() != wtx.GetState().index()) {
+            wtx.SetState(state);
             for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
                 COutPoint outpoint(wtx.GetHash(), i);
                 auto it = m_txos.find(outpoint);
@@ -1039,8 +1039,8 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
             }
             fUpdated = true;
         } else {
-            assert(TxStateSerializedIndex(wtx.m_state) == TxStateSerializedIndex(state));
-            assert(TxStateSerializedBlockHash(wtx.m_state) == TxStateSerializedBlockHash(state));
+            assert(TxStateSerializedIndex(wtx.GetState()) == TxStateSerializedIndex(state));
+            assert(TxStateSerializedBlockHash(wtx.GetState()) == TxStateSerializedBlockHash(state));
         }
         // If we have a witness-stripped version of this transaction, and we
         // see a new version with a witness, then we must be upgrading a pre-segwit
@@ -1062,7 +1062,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         while (!txs.empty()) {
             CWalletTx* desc_tx = txs.back();
             txs.pop_back();
-            desc_tx->m_state = inactive_state;
+            desc_tx->SetState(inactive_state);
             // Break caches since we have changed the state
             desc_tx->MarkDirty();
             batch.WriteTx(*desc_tx);
@@ -1290,7 +1290,7 @@ bool CWallet::AbandonTransaction(CWalletTx& tx)
         assert(!wtx.InMempool());
         // If already conflicted or abandoned, no need to set abandoned
         if (!wtx.isBlockConflicted() && !wtx.isAbandoned()) {
-            wtx.m_state = TxStateInactive{/*abandoned=*/true};
+            wtx.SetState(TxStateInactive{/*abandoned=*/true});
             return TxUpdate::NOTIFY_CHANGED;
         }
         return TxUpdate::UNCHANGED;
@@ -1326,7 +1326,7 @@ void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, c
         if (conflictconfirms < GetTxDepthInMainChain(wtx)) {
             // Block is 'more conflicted' than current confirm; update.
             // Mark transaction as conflicted with this block.
-            wtx.m_state = TxStateBlockConflicted{hashBlock, conflicting_height};
+            wtx.SetState(TxStateBlockConflicted{hashBlock, conflicting_height});
             return TxUpdate::CHANGED;
         }
         return TxUpdate::UNCHANGED;
@@ -1365,7 +1365,7 @@ void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const Txid& tx_hash, co
                 COutPoint outpoint(wtx.GetHash(), i);
                 auto it = m_txos.find(outpoint);
                 if (it != m_txos.end()) {
-                    it->second.SetState(wtx.m_state);
+                    it->second.SetState(wtx.GetState());
                 }
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(COutPoint(now, i));
                 for (TxSpends::const_iterator iter = range.first; iter != range.second; ++iter) {
@@ -1571,7 +1571,7 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
                 auto try_updating_state = [&](CWalletTx& tx) {
                     if (!tx.isBlockConflicted()) return TxUpdate::UNCHANGED;
                     if (tx.state<TxStateBlockConflicted>()->conflicting_block_height >= disconnect_height) {
-                        tx.m_state = TxStateInactive{};
+                        tx.SetState(TxStateInactive{});
                         return TxUpdate::CHANGED;
                     }
                     return TxUpdate::UNCHANGED;
@@ -2029,7 +2029,7 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
     // TransactionRemovedFromMempool fires.
     bool ret = chain().broadcastTransaction(wtx.tx, m_default_max_tx_fee, broadcast_method, err_string);
     if (ret) {
-        wtx.m_state = TxStateInMempool{};
+        wtx.SetState(TxStateInMempool{});
         for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
             COutPoint outpoint(wtx.GetHash(), i);
             auto it = m_txos.find(outpoint);
@@ -3315,7 +3315,7 @@ int CWallet::GetTxStateDepthInMainChain(const TxState& state) const
 int CWallet::GetTxDepthInMainChain(const CWalletTx& wtx) const
 {
     AssertLockHeld(cs_wallet);
-    return GetTxStateDepthInMainChain(wtx.m_state);
+    return GetTxStateDepthInMainChain(wtx.GetState());
 }
 
 int CWallet::GetTxStateBlocksToMaturity(const TxState& state) const
@@ -3333,7 +3333,7 @@ int CWallet::GetTxBlocksToMaturity(const CWalletTx& wtx) const
     if (!wtx.IsCoinBase()) {
         return 0;
     }
-    return GetTxStateBlocksToMaturity(wtx.m_state);
+    return GetTxStateBlocksToMaturity(wtx.GetState());
 }
 
 bool CWallet::IsTxImmatureCoinBase(const CWalletTx& wtx) const
@@ -4538,10 +4538,10 @@ void CWallet::RefreshTXOsFromTx(const CWalletTx& wtx)
         COutPoint outpoint(wtx.GetHash(), i);
         auto it = m_txos.find(outpoint);
         if (it != m_txos.end()) {
-            it->second.SetState(wtx.m_state);
+            it->second.SetState(wtx.GetState());
             it->second.SetTxFromMe(*wtx.m_from_me);
         } else {
-            m_txos.emplace(outpoint, WalletTXO{wtx, txout, wtx.m_state, wtx.IsCoinBase(), *wtx.m_from_me, wtx.GetTxTime()});
+            m_txos.emplace(outpoint, WalletTXO{wtx, txout, wtx.GetState(), wtx.IsCoinBase(), *wtx.m_from_me, wtx.GetTxTime()});
         }
     }
 }
