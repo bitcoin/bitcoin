@@ -1207,7 +1207,10 @@ bool CWallet::LoadToWallet(CWalletTx&& wtx_in)
     MaybeUpdateBirthTime(wtx.GetTxTime());
 
     // Make sure the tx outputs are known by the wallet
-    RefreshTXOsFromTx(wtx);
+    // This cannot be done until m_from_me is upgraded, so skip for any txs that don't have m_from_me set. The caller will handle setting those
+    if (wtx.m_from_me.has_value()) {
+        RefreshTXOsFromTx(wtx);
+    }
     return true;
 }
 
@@ -4071,10 +4074,18 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     for (const auto& [_pos, wtx] : wtxOrdered) {
         // Check it is the watchonly wallet's
         // solvable_wallet doesn't need to be checked because transactions for those scripts weren't being watched for
-        bool is_mine = IsMine(*wtx->GetTx()) || IsFromMe(*wtx->GetTx());
+        bool mine = IsMine(*wtx->GetTx());
+        bool from_me = IsFromMe(*wtx->GetTx());
+        bool is_mine = mine || from_me;
+        if (is_mine) {
+            wtx->m_from_me = from_me;
+            // Rewrite all txs that are "mine" to ensure that any tx upgrades, including the from_me update, is written
+            local_wallet_batch.WriteTx(*wtx);
+        }
         if (data.watchonly_wallet) {
             LOCK(data.watchonly_wallet->cs_wallet);
-            if (data.watchonly_wallet->IsMine(*wtx->GetTx()) || data.watchonly_wallet->IsFromMe(*wtx->GetTx())) {
+            bool watchonly_from_me = data.watchonly_wallet->IsFromMe(*wtx->GetTx());
+            if (data.watchonly_wallet->IsMine(*wtx->GetTx()) || watchonly_from_me) {
                 // Add to watchonly wallet
                 const Txid& hash = wtx->GetHash();
                 DataStream wtx_ser;
@@ -4642,8 +4653,9 @@ void CWallet::RefreshTXOsFromTx(const CWalletTx& wtx)
         auto it = m_txos.find(outpoint);
         if (it != m_txos.end()) {
             it->second.SetState(wtx.GetState());
+            it->second.SetTxFromMe(*wtx.m_from_me);
         } else {
-            m_txos.emplace(outpoint, WalletTXO{wtx, txout, wtx.GetState(), wtx.IsCoinBase()});
+            m_txos.emplace(outpoint, WalletTXO{wtx, txout, wtx.GetState(), wtx.IsCoinBase(), *wtx.m_from_me});
         }
     }
 }
