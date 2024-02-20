@@ -739,7 +739,6 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
         // fTimeReceivedIsTxTime not copied on purpose
         // nTimeReceived not copied on purpose
         copyTo->nTimeSmart = copyFrom->nTimeSmart;
-        copyTo->fFromMe = copyFrom->fFromMe;
         // nOrderPos not copied on purpose
         // cached members not copied on purpose
     }
@@ -1089,6 +1088,10 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
 
         // Update birth time when tx time is older than it.
         MaybeUpdateBirthTime(wtx.GetTxTime());
+
+        for (auto filter : {ISMINE_SPENDABLE, ISMINE_WATCH_ONLY}) {
+            wtx.m_from_me[filter] = GetDebit(*wtx.tx, filter) > 0;
+        }
     }
 
     if (!fInsertedNew)
@@ -2298,7 +2301,6 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
         wtx.mapValue = std::move(mapValue);
         wtx.vOrderForm = std::move(orderForm);
         wtx.fTimeReceivedIsTxTime = true;
-        wtx.fFromMe = true;
         return true;
     });
 
