@@ -6,14 +6,15 @@ import os
 import subprocess
 import sys
 import tempfile
+import configparser
 
 BINARIES = [
-'src/bitcoind',
-'src/bitcoin-cli',
-'src/bitcoin-tx',
-'src/bitcoin-wallet',
-'src/bitcoin-util',
-'src/qt/bitcoin-qt',
+'build/src/bitcoind',
+'build/src/bitcoin-cli',
+'build/src/bitcoin-tx',
+'build/src/bitcoin-wallet',
+'build/src/bitcoin-util',
+'build/src/qt/bitcoin-qt',
 ]
 
 # Paths to external utilities.
@@ -56,6 +57,48 @@ if any(verstr.endswith('-dirty') for (_, verstr, _) in versions):
     print('man pages generated from dirty binaries should NOT be committed.')
     print('To properly generate man pages, please commit your changes (or discard them), rebuild, then run this script again.')
     print()
+
+# Check enabled build options
+config = configparser.ConfigParser()
+conffile = os.path.join(builddir, 'build/test/config.ini')
+config.read(conffile)
+
+required_components = {
+    'HAVE_SYSTEM': 'System component',
+    'ENABLE_WALLET': 'Wallet functionality',
+    'USE_SQLITE': 'SQLite',
+    'ENABLE_CLI': 'CLI',
+    'ENABLE_BITCOIN_UTIL': 'Bitcoin utility',
+    'ENABLE_WALLET_TOOL': 'Wallet tool',
+    'ENABLE_BITCOIND': 'Bitcoind',
+    'ENABLE_EXTERNAL_SIGNER': 'External Signer',
+}
+
+enabled_components = {
+    'USE_BDB': 'Berkeley DB',
+    'ENABLE_FUZZ_BINARY': 'Fuzz testing binary',
+    'ENABLE_ZMQ': 'ZeroMQ support',
+    'ENABLE_USDT_TRACEPOINTS': 'USDT tracepoints',
+}
+
+for component, description in (required_components | enabled_components).items():
+    if not config['components'].getboolean(component, fallback=False):
+        print(
+            "Aborting generating manpages...\n"
+            f"Error: '{component}' ({description}) support is not enabled.\n"
+            "Please enable it and try again."
+        )
+        sys.exit(1)
+
+for component in config['components']:
+    if component.upper() not in required_components and component.upper() not in enabled_components:
+        print(
+            "Aborting generating manpages...\n"
+            f"Error: Unknown component '{component}' found in configuration.\n"
+            "Please remove it and try again"
+        )
+        sys.exit(1)
+
 
 with tempfile.NamedTemporaryFile('w', suffix='.h2m') as footer:
     # Create copyright footer, and write it to a temporary include file.
