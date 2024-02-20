@@ -162,7 +162,7 @@ void sanity_check_chainparams(const ArgsManager& args, ChainType chain_type)
     const auto consensus = chainParams->GetConsensus();
 
     // hash genesis is correct
-    BOOST_CHECK_EQUAL(consensus.hashGenesisBlock, chainParams->GenesisBlock().GetHash());
+    BOOST_CHECK_EQUAL(consensus.hashGenesisBlock, chainParams->GenesisBlock().GetHeaderHash());
 
     // target timespan is an even multiple of spacing
     BOOST_CHECK_EQUAL(consensus.nPowTargetTimespan % consensus.nPowTargetSpacing, 0);

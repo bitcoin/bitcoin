@@ -288,7 +288,7 @@ public:
     uint256 getBestBlockHash() override
     {
         const CBlockIndex* tip = WITH_LOCK(::cs_main, return chainman().ActiveChain().Tip());
-        return tip ? tip->GetBlockHash() : chainman().GetParams().GenesisBlock().GetHash();
+        return tip ? tip->GetBlockHash() : chainman().GetParams().GenesisBlock().GetHeaderHash();
     }
     int64_t getLastBlockTime() override
     {

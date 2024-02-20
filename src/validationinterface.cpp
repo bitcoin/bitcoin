@@ -208,7 +208,7 @@ void ValidationSignals::BlockConnected(ChainstateRole role, const std::shared_pt
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockConnected(role, pblock, pindex); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: block hash=%s block height=%d", __func__,
-                          pblock->GetHash().ToString(),
+                          pblock->GetHeaderHash().ToString(),
                           pindex->nHeight);
 }
 
@@ -228,7 +228,7 @@ void ValidationSignals::BlockDisconnected(const std::shared_ptr<const CBlock>& p
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockDisconnected(pblock, pindex); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: block hash=%s block height=%d", __func__,
-                          pblock->GetHash().ToString(),
+                          pblock->GetHeaderHash().ToString(),
                           pindex->nHeight);
 }
 
@@ -242,11 +242,11 @@ void ValidationSignals::ChainStateFlushed(ChainstateRole role, const CBlockLocat
 
 void ValidationSignals::BlockChecked(const CBlock& block, const BlockValidationState& state) {
     LOG_EVENT("%s: block hash=%s state=%s", __func__,
-              block.GetHash().ToString(), state.ToString());
+              block.GetHeaderHash().ToString(), state.ToString());
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockChecked(block, state); });
 }
 
 void ValidationSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock> &block) {
-    LOG_EVENT("%s: block hash=%s", __func__, block->GetHash().ToString());
+    LOG_EVENT("%s: block hash=%s", __func__, block->GetHeaderHash().ToString());
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NewPoWValidBlock(pindex, block); });
 }

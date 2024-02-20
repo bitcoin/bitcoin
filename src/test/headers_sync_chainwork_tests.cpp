@@ -77,15 +77,15 @@ BOOST_AUTO_TEST_CASE(headers_sync_state)
 
     // Generate headers for two different chains (using differing merkle roots
     // to ensure the headers are different).
-    GenerateHeaders(first_chain, target_blocks-1, Params().GenesisBlock().GetHash(),
+    GenerateHeaders(first_chain, target_blocks-1, Params().GenesisBlock().GetHeaderHash(),
             Params().GenesisBlock().nVersion, Params().GenesisBlock().nTime,
             ArithToUint256(0), Params().GenesisBlock().nBits);
 
-    GenerateHeaders(second_chain, target_blocks-2, Params().GenesisBlock().GetHash(),
+    GenerateHeaders(second_chain, target_blocks-2, Params().GenesisBlock().GetHeaderHash(),
             Params().GenesisBlock().nVersion, Params().GenesisBlock().nTime,
             ArithToUint256(1), Params().GenesisBlock().nBits);
 
-    const CBlockIndex* chain_start = WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(Params().GenesisBlock().GetHash()));
+    const CBlockIndex* chain_start = WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(Params().GenesisBlock().GetHeaderHash()));
     std::vector<CBlockHeader> headers_batch;
 
     // Feed the first chain to HeadersSyncState, by delivering 1 header

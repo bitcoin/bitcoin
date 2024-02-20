@@ -236,7 +236,7 @@ FUZZ_TARGET(wallet_notifications, .init = initialize_setup)
                     b.FundTx(fuzzed_data_provider, tx);
                 }
                 // Mine block
-                const uint256& hash = block.GetHash();
+                const uint256& hash = block.GetHeaderHash();
                 interfaces::BlockInfo info{hash};
                 info.prev_hash = &block.hashPrevBlock;
                 info.height = chain.size();
@@ -262,7 +262,7 @@ FUZZ_TARGET(wallet_notifications, .init = initialize_setup)
                 auto& [coins, block]{chain.back()};
                 if (block.vtx.empty()) return; // Can only disconnect if the block was submitted first
                 // Disconnect block
-                const uint256& hash = block.GetHash();
+                const uint256& hash = block.GetHeaderHash();
                 interfaces::BlockInfo info{hash};
                 info.prev_hash = &block.hashPrevBlock;
                 info.height = chain.size() - 1;

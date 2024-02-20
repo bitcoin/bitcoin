@@ -216,7 +216,7 @@ BlockFilter::BlockFilter(BlockFilterType filter_type, const uint256& block_hash,
 }
 
 BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const CBlockUndo& block_undo)
-    : m_filter_type(filter_type), m_block_hash(block.GetHash())
+    : m_filter_type(filter_type), m_block_hash(block.GetHeaderHash())
 {
     GCSFilter::Params params;
     if (!BuildParams(params)) {

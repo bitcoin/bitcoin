@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(merkleblock_construct_from_txids_found)
 
     CMerkleBlock merkleBlock(block, txids);
 
-    BOOST_CHECK_EQUAL(merkleBlock.header.GetHash().GetHex(), block.GetHash().GetHex());
+    BOOST_CHECK_EQUAL(merkleBlock.header.GetHash().GetHex(), block.GetHeaderHash().GetHex());
 
     // vMatchedTxn is only used when bloom filter is specified.
     BOOST_CHECK_EQUAL(merkleBlock.vMatchedTxn.size(), 0U);
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(merkleblock_construct_from_txids_not_found)
     txids2.insert(TxidFromString("0xc0ffee00003bafa802c8aa084379aa98d9fcd632ddc2ed9782b586ec87451f20"));
     CMerkleBlock merkleBlock(block, txids2);
 
-    BOOST_CHECK_EQUAL(merkleBlock.header.GetHash().GetHex(), block.GetHash().GetHex());
+    BOOST_CHECK_EQUAL(merkleBlock.header.GetHash().GetHex(), block.GetHeaderHash().GetHex());
     BOOST_CHECK_EQUAL(merkleBlock.vMatchedTxn.size(), 0U);
 
     std::vector<uint256> vMatched;

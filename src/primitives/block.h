@@ -114,6 +114,14 @@ public:
     }
 
     std::string ToString() const;
+
+    // Don't expose the inherited GetHash() method since it might be
+    // interpreted as representing the whole block while it only represents
+    // the header and doesn't check the block's transactions.
+    uint256 GetHash() = delete;
+    uint256 GetHeaderHash() const {
+        return GetBlockHeader().GetHash();
+    }
 };
 
 /** Describes a place in the block chain to another node such that if the

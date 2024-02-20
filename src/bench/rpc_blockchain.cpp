@@ -29,7 +29,7 @@ struct TestBlockAndIndex {
 
         stream >> TX_WITH_WITNESS(block);
 
-        blockHash = block.GetHash();
+        blockHash = block.GetHeaderHash();
         blockindex.phashBlock = &blockHash;
         blockindex.nBits = 403014710;
     }

@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
             break;
         }
 
-        uint256 hash = block.GetHash();
+        uint256 hash = block.GetHeaderHash();
         {
             LOCK(cs_main);
             const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(hash);
@@ -217,7 +217,7 @@ int main(int argc, char* argv[])
         protected:
             void BlockChecked(const CBlock& block, const BlockValidationState& stateIn) override
             {
-                if (block.GetHash() != hash)
+                if (block.GetHeaderHash() != hash)
                     return;
                 found = true;
                 state = stateIn;
@@ -225,7 +225,7 @@ int main(int argc, char* argv[])
         };
 
         bool new_block;
-        auto sc = std::make_shared<submitblock_StateCatcher>(block.GetHash());
+        auto sc = std::make_shared<submitblock_StateCatcher>(block.GetHeaderHash());
         validation_signals.RegisterSharedValidationInterface(sc);
         bool accepted = chainman.ProcessNewBlock(blockptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
         validation_signals.UnregisterSharedValidationInterface(sc);

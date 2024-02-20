@@ -84,7 +84,7 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
         block.hashMerkleRoot = BlockMerkleRoot(block);
     }
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, m_node.chainman->GetConsensus())) ++block.nNonce;
+    while (!CheckProofOfWork(block.GetHeaderHash(), block.nBits, m_node.chainman->GetConsensus())) ++block.nNonce;
 
     return block;
 }
@@ -181,7 +181,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
         const CBlockIndex* block_index;
         {
             LOCK(cs_main);
-            block_index = m_node.chainman->m_blockman.LookupBlockIndex(block->GetHash());
+            block_index = m_node.chainman->m_blockman.LookupBlockIndex(block->GetHeaderHash());
         }
 
         BOOST_CHECK(filter_index.BlockUntilSyncedToCurrentChain());
@@ -199,7 +199,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
         const CBlockIndex* block_index;
         {
             LOCK(cs_main);
-            block_index = m_node.chainman->m_blockman.LookupBlockIndex(block->GetHash());
+            block_index = m_node.chainman->m_blockman.LookupBlockIndex(block->GetHeaderHash());
         }
 
         BOOST_CHECK(filter_index.BlockUntilSyncedToCurrentChain());
@@ -213,7 +213,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
         const CBlockIndex* block_index;
         {
             LOCK(cs_main);
-            block_index = m_node.chainman->m_blockman.LookupBlockIndex(block->GetHash());
+            block_index = m_node.chainman->m_blockman.LookupBlockIndex(block->GetHeaderHash());
         }
 
         BOOST_CHECK(filter_index.BlockUntilSyncedToCurrentChain());
@@ -234,14 +234,14 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
 
          {
              LOCK(cs_main);
-             block_index = m_node.chainman->m_blockman.LookupBlockIndex(chainA[i]->GetHash());
+             block_index = m_node.chainman->m_blockman.LookupBlockIndex(chainA[i]->GetHeaderHash());
          }
          BOOST_CHECK(filter_index.BlockUntilSyncedToCurrentChain());
          CheckFilterLookups(filter_index, block_index, chainA_last_header, m_node.chainman->m_blockman);
 
          {
              LOCK(cs_main);
-             block_index = m_node.chainman->m_blockman.LookupBlockIndex(chainB[i]->GetHash());
+             block_index = m_node.chainman->m_blockman.LookupBlockIndex(chainB[i]->GetHeaderHash());
          }
          BOOST_CHECK(filter_index.BlockUntilSyncedToCurrentChain());
          CheckFilterLookups(filter_index, block_index, chainB_last_header, m_node.chainman->m_blockman);

@@ -123,7 +123,7 @@ std::optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& c
 // Signet block solution checker
 bool CheckSignetBlockSolution(const CBlock& block, const Consensus::Params& consensusParams)
 {
-    if (block.GetHash() == consensusParams.hashGenesisBlock) {
+    if (block.GetHeaderHash() == consensusParams.hashGenesisBlock) {
         // genesis block solution is always valid
         return true;
     }

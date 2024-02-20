@@ -132,7 +132,7 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
     bool block_added = background_cs.ActivateBestChain(state, pblockone);
 
     // Ensure tip is as expected
-    BOOST_CHECK_EQUAL(background_cs.m_chain.Tip()->GetBlockHash(), pblockone->GetHash());
+    BOOST_CHECK_EQUAL(background_cs.m_chain.Tip()->GetBlockHash(), pblockone->GetHeaderHash());
 
     // g_best_block should be unchanged after adding a block to the background
     // validation chain.

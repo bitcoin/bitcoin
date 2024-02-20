@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(findBlock)
 
     CBlock data;
     BOOST_CHECK(chain->findBlock(active[30]->GetBlockHash(), FoundBlock().data(data)));
-    BOOST_CHECK_EQUAL(data.GetHash(), active[30]->GetBlockHash());
+    BOOST_CHECK_EQUAL(data.GetHeaderHash(), active[30]->GetBlockHash());
 
     int64_t time = -1;
     BOOST_CHECK(chain->findBlock(active[40]->GetBlockHash(), FoundBlock().time(time)));
