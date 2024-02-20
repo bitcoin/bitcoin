@@ -7,6 +7,7 @@
 
 #include <consensus/validation.h>
 #include <llmq/chainlocks.h>
+#include <llmq/context.h>
 #include <llmq/instantsend.h>
 #include <rpc/blockchain.h>
 #include <streams.h>
@@ -42,8 +43,9 @@ struct TestBlockAndIndex {
 static void BlockToJsonVerbose(benchmark::Bench& bench)
 {
     TestBlockAndIndex data;
+    const LLMQContext& llmq_ctx = *data.test_setup.m_node.llmq_ctx;
     bench.run([&] {
-        auto univalue = blockToJSON(data.block, &data.blockindex, &data.blockindex, *llmq::chainLocksHandler, *llmq::quorumInstantSendManager, /*verbose*/ true);
+        auto univalue = blockToJSON(data.block, &data.blockindex, &data.blockindex, *llmq_ctx.clhandler, *llmq_ctx.isman, /*verbose*/ true);
         ankerl::nanobench::doNotOptimizeAway(univalue);
     });
 }
@@ -53,7 +55,8 @@ BENCHMARK(BlockToJsonVerbose);
 static void BlockToJsonVerboseWrite(benchmark::Bench& bench)
 {
     TestBlockAndIndex data;
-    auto univalue = blockToJSON(data.block, &data.blockindex, &data.blockindex, *llmq::chainLocksHandler, *llmq::quorumInstantSendManager, /*verbose*/ true);
+    const LLMQContext& llmq_ctx = *data.test_setup.m_node.llmq_ctx;
+    auto univalue = blockToJSON(data.block, &data.blockindex, &data.blockindex, *llmq_ctx.clhandler, *llmq_ctx.isman, /*verbose*/ true);
     bench.run([&] {
         auto str = univalue.write();
         ankerl::nanobench::doNotOptimizeAway(str);
