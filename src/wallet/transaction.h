@@ -216,6 +216,11 @@ public:
      * CWallet::ComputeTimeSmart().
      */
     unsigned int nTimeSmart;
+    /**
+     * For every isminetype, we want to track whether the transaction spends any
+     * inputs that match that isminetype.
+     */
+    std::map<isminefilter, bool> m_from_me;
     int64_t nOrderPos; //!< position in ordered transaction list
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
@@ -247,6 +252,7 @@ public:
         fChangeCached = false;
         nChangeCached = 0;
         nOrderPos = -1;
+        m_from_me.clear();
     }
 
     CTransactionRef tx;
@@ -278,7 +284,7 @@ public:
         bool dummy_bool = false; //!< Used to be fFromMe and fSpent
         uint256 serializedHash = TxStateSerializedBlockHash(m_state);
         int serializedIndex = TxStateSerializedIndex(m_state);
-        s << TX_WITH_WITNESS(tx) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << mapValueCopy << vOrderForm << fTimeReceivedIsTxTime << nTimeReceived << dummy_bool << dummy_bool;
+        s << TX_WITH_WITNESS(tx) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << mapValueCopy << vOrderForm << fTimeReceivedIsTxTime << nTimeReceived << dummy_bool << dummy_bool << m_from_me;
     }
 
     template<typename Stream>
@@ -292,6 +298,10 @@ public:
         uint256 serialized_block_hash;
         int serializedIndex;
         s >> TX_WITH_WITNESS(tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> mapValue >> vOrderForm >> fTimeReceivedIsTxTime >> nTimeReceived >> dummy_bool >> dummy_bool;
+
+        if (!s.eof()) {
+            s >> m_from_me;
+        }
 
         m_state = TxStateInterpretSerialized({serialized_block_hash, serializedIndex});
 
