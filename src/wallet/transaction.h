@@ -385,7 +385,6 @@ struct WalletTxOrderComparator {
 class WalletTXO
 {
 private:
-    const CWalletTx& m_wtx;
     const CTxOut& m_output;
     isminetype m_ismine;
     TxState m_tx_state;
@@ -394,17 +393,14 @@ private:
     int64_t m_tx_time;
 
 public:
-    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const isminetype ismine, const TxState& state, bool coinbase, const std::map<isminefilter, bool>& tx_from_me, int64_t tx_time)
-    : m_wtx(wtx),
-    m_output(output),
+    WalletTXO(const CTxOut& output, const isminetype ismine, const TxState& state, bool coinbase, const std::map<isminefilter, bool>& tx_from_me, int64_t tx_time)
+    : m_output(output),
     m_ismine(ismine),
     m_tx_state(state),
     m_tx_coinbase(coinbase),
     m_tx_from_me(tx_from_me),
     m_tx_time(tx_time)
     {}
-
-    const CWalletTx& GetWalletTx() const { return m_wtx; }
 
     const CTxOut& GetTxOut() const { return m_output; }
 
