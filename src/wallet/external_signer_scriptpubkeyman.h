@@ -15,13 +15,17 @@ struct bilingual_str;
 namespace wallet {
 class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
 {
-  public:
-  ExternalSignerScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
-      :   DescriptorScriptPubKeyMan(storage, descriptor, keypool_size)
-      {}
+private:
+    ExternalSignerScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys)
+        : DescriptorScriptPubKeyMan(storage, descriptor, keypool_size, keys, ckeys)
+    {}
+
+public:
   ExternalSignerScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size)
       :   DescriptorScriptPubKeyMan(storage, keypool_size)
       {}
+
+    static std::unique_ptr<ExternalSignerScriptPubKeyMan> LoadFromStorage(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
 
   /** Provide a descriptor at setup time
   * Returns false if already setup or setup fails, true if setup is successful
