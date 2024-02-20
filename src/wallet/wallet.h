@@ -510,6 +510,8 @@ public:
 
     std::set<uint256> GetTxConflicts(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    const std::unordered_map<COutPoint, WalletTXO, SaltedOutpointHasher>& GetTXOs() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return m_txos; };
+
     /** Cache outputs that belong to the wallet from a single transaction */
     void RefreshSingleTxTXOs(const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
