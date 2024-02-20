@@ -151,12 +151,18 @@ static void UpdateWalletSetting(interfaces::Chain& chain,
  * immediately knows the transaction's status: Whether it can be considered
  * trusted and is eligible to be abandoned ...
  */
-static void RefreshMempoolStatus(CWalletTx& tx, interfaces::Chain& chain)
+static void RefreshMempoolStatus(CWallet& wallet, CWalletTx& tx, interfaces::Chain& chain) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
+    AssertLockHeld(wallet.cs_wallet);
+    std::optional<TxState> state;
     if (chain.isInMempool(tx.GetHash())) {
-        tx.SetState(TxStateInMempool());
+        state = TxStateInMempool();
     } else if (tx.state<TxStateInMempool>()) {
-        tx.SetState(TxStateInactive());
+        state = TxStateInactive();
+    }
+    if (state) {
+        tx.SetState(*state, [&wallet](const COutPoint& o, const TxState& s) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet) { wallet.UpdateTXOState(o, s); });
+        wallet.RefreshTXOsFromTx(tx);
     }
 }
 
@@ -981,7 +987,7 @@ bool CWallet::MarkReplaced(const Txid& originalHash, const Txid& newHash)
     wtx.m_replaced_by_txid = newHash;
 
     // Refresh mempool status without waiting for transactionRemovedFromMempool or transactionAddedToMempool
-    RefreshMempoolStatus(wtx, chain());
+    RefreshMempoolStatus(*this, wtx, chain());
 
     WalletBatch batch(GetDatabase());
 
@@ -1088,7 +1094,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         fUpdated = fUpdated || (from_me_before != *wtx.m_from_me);
 
         try {
-            fUpdated |= wtx.Update(tx, state, batch, fUpdated);
+            fUpdated |= wtx.Update(tx, state, batch, fUpdated, [this](const COutPoint& o, const TxState& s) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { UpdateTXOState(o, s); });
         } catch (const std::ios_base::failure& e) {
             WalletLogPrintf("Error: Unable to write tx update, %s", e.what());
             return nullptr;
@@ -1104,7 +1110,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         while (!txs.empty()) {
             CWalletTx* desc_tx = txs.back();
             txs.pop_back();
-            desc_tx->SetState(inactive_state);
+            desc_tx->SetState(inactive_state, [this](const COutPoint& o, const TxState& s) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { UpdateTXOState(o, s); });
             // Break caches since we have changed the state
             desc_tx->MarkDirty();
             batch.WriteTxMetadata(*desc_tx);
@@ -1315,13 +1321,13 @@ bool CWallet::AbandonTransaction(CWalletTx& tx)
         return false;
     }
 
-    auto try_updating_state = [](CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
+    auto try_updating_state = [this](CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
         // If the orig tx was not in block/mempool, none of its spends can be.
         assert(!wtx.isConfirmed());
         assert(!wtx.InMempool());
         // If already conflicted or abandoned, no need to set abandoned
         if (!wtx.isBlockConflicted() && !wtx.isAbandoned()) {
-            wtx.SetState(TxStateInactive{/*abandoned=*/true});
+            wtx.SetState(TxStateInactive{/*abandoned=*/true}, [this](const COutPoint& o, const TxState& s) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { UpdateTXOState(o, s); });
             return TxUpdate::NOTIFY_CHANGED;
         }
         return TxUpdate::UNCHANGED;
@@ -1357,7 +1363,7 @@ void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, c
         if (conflictconfirms < GetTxDepthInMainChain(wtx)) {
             // Block is 'more conflicted' than current confirm; update.
             // Mark transaction as conflicted with this block.
-            wtx.SetState(TxStateBlockConflicted{hashBlock, conflicting_height});
+            wtx.SetState(TxStateBlockConflicted{hashBlock, conflicting_height}, [this](const COutPoint& o, const TxState& s) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { UpdateTXOState(o, s); });
             return TxUpdate::CHANGED;
         }
         return TxUpdate::UNCHANGED;
@@ -1430,7 +1436,7 @@ void CWallet::transactionAddedToMempool(const CTransactionRef& tx) {
 
     auto it = mapWallet.find(tx->GetHash());
     if (it != mapWallet.end()) {
-        RefreshMempoolStatus(it->second, chain());
+        RefreshMempoolStatus(*this, it->second, chain());
     }
 
     const Txid& txid = tx->GetHash();
@@ -1471,7 +1477,7 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
     LOCK(cs_wallet);
     auto it = mapWallet.find(tx->GetHash());
     if (it != mapWallet.end()) {
-        RefreshMempoolStatus(it->second, chain());
+        RefreshMempoolStatus(*this, it->second, chain());
     }
     // Handle transactions that were removed from the mempool because they
     // conflict with transactions in a newly connected block.
@@ -1597,7 +1603,7 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
                 auto try_updating_state = [&](CWalletTx& tx) {
                     if (!tx.isBlockConflicted()) return TxUpdate::UNCHANGED;
                     if (tx.state<TxStateBlockConflicted>()->conflicting_block_height >= disconnect_height) {
-                        tx.SetState(TxStateInactive{});
+                        tx.SetState(TxStateInactive{}, [this](const COutPoint& o, const TxState& s) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { UpdateTXOState(o, s); });
                         return TxUpdate::CHANGED;
                     }
                     return TxUpdate::UNCHANGED;
@@ -1854,7 +1860,9 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
     // If transaction was previously in the mempool, it should be updated when
     // TransactionRemovedFromMempool fires.
     bool ret = chain().broadcastTransaction(wtx.GetTx(), m_default_max_tx_fee, broadcast_method, err_string);
-    if (ret) wtx.SetState(TxStateInMempool{});
+    if (ret) {
+        wtx.SetState(TxStateInMempool{}, [this](const COutPoint& o, const TxState& s) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { UpdateTXOState(o, s); });
+    }
     return ret;
 }
 
@@ -4476,10 +4484,13 @@ void CWallet::RefreshTXOsFromTx(const CWalletTx& wtx)
     for (uint32_t i = 0; i < wtx.GetTx()->vout.size(); ++i) {
         const CTxOut& txout = wtx.GetTx()->vout.at(i);
         if (!IsMine(txout)) continue;
+
         COutPoint outpoint(wtx.GetHash(), i);
-        if (m_txos.contains(outpoint)) {
+        auto it = m_txos.find(outpoint);
+        if (it != m_txos.end()) {
+            it->second.SetState(wtx.GetState());
         } else {
-            m_txos.emplace(outpoint, WalletTXO{wtx, txout});
+            m_txos.emplace(outpoint, WalletTXO{wtx, txout, wtx.GetState(), wtx.IsCoinBase()});
         }
     }
 }
@@ -4521,4 +4532,12 @@ void CWallet::DisconnectChainNotifications()
     }
 }
 
+void CWallet::UpdateTXOState(const COutPoint& outpoint, const TxState& state)
+{
+    AssertLockHeld(cs_wallet);
+    auto it = m_txos.find(outpoint);
+    if (it != m_txos.end()) {
+        it->second.SetState(state);
+    }
+}
 } // namespace wallet
