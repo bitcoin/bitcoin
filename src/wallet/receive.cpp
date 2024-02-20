@@ -224,7 +224,7 @@ bool CachedTxIsTrusted(const CWallet& wallet, const TxState& state, const Txid& 
         // If we've already trusted this parent, continue
         if (trusted_parents.contains(parent->GetHash())) continue;
         // Recurse to check that the parent is also trusted
-        if (!CachedTxIsTrusted(wallet, parent->m_state, parent->GetHash(), trusted_parents)) return false;
+        if (!CachedTxIsTrusted(wallet, parent->GetState(), parent->GetHash(), trusted_parents)) return false;
         trusted_parents.insert(parent->GetHash());
     }
     return true;
@@ -232,7 +232,7 @@ bool CachedTxIsTrusted(const CWallet& wallet, const TxState& state, const Txid& 
 
 bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<Txid>& trusted_parents)
 {
-    return CachedTxIsTrusted(wallet, wtx.m_state, wtx.GetHash(), trusted_parents);
+    return CachedTxIsTrusted(wallet, wtx.GetState(), wtx.GetHash(), trusted_parents);
 }
 
 bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx)
