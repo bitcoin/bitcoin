@@ -6,6 +6,7 @@
 
 #include <test/util/script.h>
 #include <util/overflow.h>
+#include <util/time.h>
 #include <version.h>
 
 FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider)
@@ -217,6 +218,14 @@ void FillNode(FuzzedDataProvider& fuzzed_data_provider, CNode& node, bool init_v
     }
 }
 
+int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optional<int64_t>& min, const std::optional<int64_t>& max) noexcept
+{
+    // Avoid t=0 (1970-01-01T00:00:00Z) since SetMockTime(0) disables mocktime.
+    static const int64_t time_min = ParseISO8601DateTime("1970-01-01T00:00:01Z");
+    static const int64_t time_max = ParseISO8601DateTime("9999-12-31T23:59:59Z");
+    return fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(min.value_or(time_min), max.value_or(time_max));
+}
+
 CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider, const std::optional<std::vector<uint256>>& prevout_txids, const int max_num_in, const int max_num_out) noexcept
 {
     CMutableTransaction tx_mut;
@@ -248,7 +257,7 @@ CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider,
     return tx_mut;
 }
 
-CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length) noexcept
+CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length) noexcept
 {
     const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
     return {b.begin(), b.end()};
