@@ -93,9 +93,7 @@ def main(args):
 
     # determine remote dir dependent on provided version string
     version_base, version_rc, os_filter = parse_version_string(args[0])
-    remote_dir = f"{VERSIONPREFIX}{version_base}/"
-    if version_rc:
-        remote_dir += f"test.{version_rc}/"
+    remote_dir = f"{VERSIONPREFIX}{version_base}{f'-{version_rc}' if version_rc else ''}/"
     remote_sigfile = remote_dir + SIGNATUREFILENAME
 
     # create working directory
