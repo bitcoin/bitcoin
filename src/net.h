@@ -29,14 +29,15 @@
 #include <uint256.h>
 #include <util/system.h>
 #include <consensus/params.h>
+#include <util/check.h>
 
 #include <atomic>
+#include <condition_variable>
 #include <cstdint>
 #include <deque>
 #include <map>
-#include <thread>
 #include <memory>
-#include <condition_variable>
+#include <thread>
 #include <optional>
 #include <queue>
 
@@ -64,6 +65,8 @@ static const int WARNING_INTERVAL = 10 * 60;
 static const int FEELER_INTERVAL = 120;
 /** The maximum number of entries in an 'inv' protocol message */
 static const unsigned int MAX_INV_SZ = 50000;
+/** Run the extra block-relay-only connection loop once every 5 minutes. **/
+static const int EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL = 300;
 /** The maximum number of addresses from our addrman to return in response to a getaddr message. */
 static constexpr size_t MAX_ADDR_TO_SEND = 1000;
 /** Maximum length of incoming protocol messages (no message over 3 MiB is currently acceptable). */
@@ -487,13 +490,20 @@ public:
     void SetTryNewOutboundPeer(bool flag);
     bool GetTryNewOutboundPeer();
 
+    void StartExtraBlockRelayPeers() {
+        LogPrint(BCLog::NET, "net: enabling extra block-relay-only peers\n");
+        m_start_extra_block_relay_peers = true;
+    }
+
     // Return the number of outbound peers we have in excess of our target (eg,
     // if we previously called SetTryNewOutboundPeer(true), and have since set
     // to false, we may have extra peers that we wish to disconnect). This may
     // return a value less than (num_outbound_connections - num_outbound_slots)
     // in cases where some outbound connections are not yet fully connected, or
     // not yet fully disconnected.
-    int GetExtraOutboundCount();
+    int GetExtraFullOutboundCount();
+    // Count the number of block-relay-only peers we have over our limit.
+    int GetExtraBlockRelayCount();
 
     bool AddNode(const std::string& node);
     bool RemoveAddedNode(const std::string& node);
@@ -827,6 +837,12 @@ private:
      *  in excess of m_max_outbound_full_relay
      *  This takes the place of a feeler connection */
     std::atomic_bool m_try_another_outbound_peer;
+
+    /** flag for initiating extra block-relay-only peer connections.
+     *  this should only be enabled after initial chain sync has occurred,
+     *  as these connections are intended to be short-lived and low-bandwidth.
+     */
+    std::atomic_bool m_start_extra_block_relay_peers{false};
 
     std::atomic<int64_t> m_next_send_inv_to_incoming{0};
 
@@ -1417,6 +1433,7 @@ public:
 
     void SetCommonVersion(int greatest_common_version)
     {
+        Assume(m_greatest_common_version == INIT_PROTO_VERSION);
         m_greatest_common_version = greatest_common_version;
     }
     int GetCommonVersion() const

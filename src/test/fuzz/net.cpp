@@ -31,6 +31,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
 
     CNode node{ConsumeNode(fuzzed_data_provider)};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
+    node.SetCommonVersion(fuzzed_data_provider.ConsumeIntegral<int>());
     while (fuzzed_data_provider.ConsumeBool()) {
         CallOneOf(
             fuzzed_data_provider,
@@ -41,9 +42,6 @@ FUZZ_TARGET_INIT(net, initialize_net)
             },
             [&] {
                 node.MaybeSetAddrName(fuzzed_data_provider.ConsumeRandomLengthString(32));
-            },
-            [&] {
-                node.SetCommonVersion(fuzzed_data_provider.ConsumeIntegral<int>());
             },
             [&] {
                 const std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
