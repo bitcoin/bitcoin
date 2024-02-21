@@ -29,6 +29,8 @@ class ChainstateManager;
 
 namespace Consensus { struct Params; };
 
+namespace util { class SignalInterrupt; };
+
 namespace node {
 static const bool DEFAULT_PRINTPRIORITY = false;
 
@@ -152,6 +154,9 @@ private:
     const CTxMemPool* const m_mempool;
     Chainstate& m_chainstate;
 
+    util::SignalInterrupt* m_shutdown;
+    std::atomic<int>& m_exit_status;
+
 public:
     struct Options {
         // Configuration parameters for the block size
@@ -161,8 +166,8 @@ public:
         bool test_block_validity{true};
     };
 
-    explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool);
-    explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options);
+    explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, util::SignalInterrupt* shutdown, std::atomic<int>& exit_status);
+    explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options, util::SignalInterrupt* shutdown, std::atomic<int>& exit_status);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
     std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);

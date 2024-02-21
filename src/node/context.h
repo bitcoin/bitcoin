@@ -75,7 +75,7 @@ struct NodeContext {
     std::unique_ptr<KernelNotifications> notifications;
     //! Issues calls about blocks and transactions
     std::unique_ptr<ValidationSignals> validation_signals;
-    std::atomic<int> exit_status{EXIT_SUCCESS};
+    mutable std::atomic<int> exit_status{EXIT_SUCCESS};
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the NodeContext struct doesn't need to #include class

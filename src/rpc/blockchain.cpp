@@ -61,6 +61,7 @@ using kernel::CoinStatsHashType;
 
 using node::BlockManager;
 using node::CheckFatal;
+using node::HandleFatalError;
 using node::NodeContext;
 using node::SnapshotMetadata;
 
@@ -1143,12 +1144,16 @@ static RPCHelpMan verifychain()
     const int check_level{request.params[0].isNull() ? DEFAULT_CHECKLEVEL : request.params[0].getInt<int>()};
     const int check_depth{request.params[1].isNull() ? DEFAULT_CHECKBLOCKS : request.params[1].getInt<int>()};
 
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
 
     Chainstate& active_chainstate = chainman.ActiveChainstate();
-    return CVerifyDB(chainman.GetNotifications()).VerifyDB(
-               active_chainstate, chainman.GetParams().GetConsensus(), active_chainstate.CoinsTip(), check_level, check_depth) == VerifyDBResult::SUCCESS;
+    auto res{HandleFatalError(
+        CVerifyDB(chainman.GetNotifications()).VerifyDB(active_chainstate, chainman.GetParams().GetConsensus(), active_chainstate.CoinsTip(), check_level, check_depth),
+        node.shutdown,
+        node.exit_status)};
+    return res && res.value() == VerifyDBResult::SUCCESS;
 },
     };
 }

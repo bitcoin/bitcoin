@@ -15,6 +15,7 @@ enum class FatalError {
     BlockIndexWriteFailed,
     ChainstateRenameFailed,
     CoinDatabaseWriteFailed,
+    CorruptBlock,
     DiskSpaceTooLow,
     DisconnectBlockFailed,
     FlushStateToDiskFailed,

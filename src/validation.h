@@ -375,7 +375,7 @@ static_assert(std::is_nothrow_destructible_v<CScriptCheck>);
 bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
 /** Check a block is completely valid from start to finish (only works on top of our current best block) */
-bool TestBlockValidity(BlockValidationState& state,
+[[nodiscard]] util::Result<bool, kernel::FatalError> TestBlockValidity(BlockValidationState& state,
                        const CChainParams& chainparams,
                        Chainstate& chainstate,
                        const CBlock& block,
@@ -409,7 +409,7 @@ private:
 public:
     explicit CVerifyDB(kernel::Notifications& notifications);
     ~CVerifyDB();
-    [[nodiscard]] VerifyDBResult VerifyDB(
+    [[nodiscard]] util::Result<VerifyDBResult, kernel::FatalError> VerifyDB(
         Chainstate& chainstate,
         const Consensus::Params& consensus_params,
         CCoinsView& coinsview,
@@ -697,7 +697,7 @@ public:
     // Block (dis)connection on a given view:
     DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    bool ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
+    [[nodiscard]] util::Result<bool, kernel::FatalError> ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                       CCoinsViewCache& view, bool fJustCheck = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     // Apply the effects of a block disconnection on the UTXO set.

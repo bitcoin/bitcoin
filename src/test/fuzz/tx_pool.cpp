@@ -88,14 +88,14 @@ void SetMempoolConstraints(ArgsManager& args, FuzzedDataProvider& fuzzed_data_pr
                      ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 999)));
 }
 
-void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Chainstate& chainstate)
+void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Chainstate& chainstate, const NodeContext& node)
 {
     WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
     {
         BlockAssembler::Options options;
         options.nBlockMaxWeight = fuzzed_data_provider.ConsumeIntegralInRange(0U, MAX_BLOCK_WEIGHT);
         options.blockMinFeeRate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
-        auto assembler = BlockAssembler{chainstate, &tx_pool, options};
+        auto assembler = BlockAssembler{chainstate, &tx_pool, options, node.shutdown, node.exit_status};
         auto block_template = assembler.CreateNewBlock(CScript{} << OP_TRUE);
         Assert(block_template->block.vtx.size() >= 1);
     }
@@ -356,7 +356,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
             }
         }
     }
-    Finish(fuzzed_data_provider, tx_pool, chainstate);
+    Finish(fuzzed_data_provider, tx_pool, chainstate, g_setup->m_node);
 }
 
 FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
@@ -411,6 +411,6 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
             CheckMempoolV3Invariants(tx_pool);
         }
     }
-    Finish(fuzzed_data_provider, tx_pool, chainstate);
+    Finish(fuzzed_data_provider, tx_pool, chainstate, g_setup->m_node);
 }
 } // namespace
