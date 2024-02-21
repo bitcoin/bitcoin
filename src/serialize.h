@@ -1103,6 +1103,10 @@ size_t GetSerializeSize(const T& t)
     return (SizeComputer() << t).size();
 }
 
+//! Check if type contains a stream by seeing if has a GetStream() method.
+template<typename T>
+concept ContainsStream = requires(T t) { t.GetStream(); };
+
 /** Wrapper that overrides the GetParams() function of a stream. */
 template <typename SubStream, typename Params>
 class ParamsStream
@@ -1126,11 +1130,11 @@ public:
 
     template <typename U> ParamsStream& operator<<(const U& obj) { ::Serialize(*this, obj); return *this; }
     template <typename U> ParamsStream& operator>>(U&& obj) { ::Unserialize(*this, obj); return *this; }
-    void write(Span<const std::byte> src) { m_substream.write(src); }
-    void read(Span<std::byte> dst) { m_substream.read(dst); }
-    void ignore(size_t num) { m_substream.ignore(num); }
-    bool eof() const { return m_substream.eof(); }
-    size_t size() const { return m_substream.size(); }
+    void write(Span<const std::byte> src) { GetStream().write(src); }
+    void read(Span<std::byte> dst) { GetStream().read(dst); }
+    void ignore(size_t num) { GetStream().ignore(num); }
+    bool eof() const { return GetStream().eof(); }
+    size_t size() const { return GetStream().size(); }
 
     //! Get reference to stream parameters.
     template <typename P>
@@ -1140,6 +1144,24 @@ public:
             return m_params;
         } else {
             return m_substream.template GetParams<P>();
+        }
+    }
+
+    //! Get reference to underlying stream.
+    auto& GetStream()
+    {
+        if constexpr (ContainsStream<SubStream>) {
+            return m_substream.GetStream();
+        } else {
+            return m_substream;
+        }
+    }
+    const auto& GetStream() const
+    {
+        if constexpr (ContainsStream<SubStream>) {
+            return m_substream.GetStream();
+        } else {
+            return m_substream;
         }
     }
 };
