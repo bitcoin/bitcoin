@@ -349,6 +349,38 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         Package package_v3_1p2c{mempool_tx_v3, tx_mempool_v3_child, tx_v3_child2};
         BOOST_CHECK_EQUAL(*PackageV3Checks(tx_v3_child2, GetVirtualTransactionSize(*tx_v3_child2), package_v3_1p2c, empty_ancestors),
                           expected_error_str);
+
+        // Configuration where parent already has 2 other children in mempool (no sibling eviction allowed). This may happen as the result of a reorg.
+        pool.addUnchecked(entry.FromTx(tx_v3_child2));
+        auto tx_v3_child3 = make_tx({COutPoint{mempool_tx_v3->GetHash(), 24}}, /*version=*/3);
+        auto entry_mempool_parent = pool.GetIter(mempool_tx_v3->GetHash().ToUint256()).value();
+        BOOST_CHECK_EQUAL(entry_mempool_parent->GetCountWithDescendants(), 3);
+        auto ancestors_2siblings{pool.CalculateMemPoolAncestors(entry.FromTx(tx_v3_child3), m_limits)};
+
+        auto result_2children{SingleV3Checks(tx_v3_child3, *ancestors_2siblings, empty_conflicts_set, GetVirtualTransactionSize(*tx_v3_child3))};
+        BOOST_CHECK_EQUAL(result_2children->first, expected_error_str);
+        // The other mempool child is not returned because sibling eviction is not allowed.
+        BOOST_CHECK_EQUAL(result_2children->second, nullptr);
+    }
+
+    // Sibling eviction: parent already has 1 other child, which also has its own child (no sibling eviction allowed). This may happen as the result of a reorg.
+    {
+        auto tx_mempool_grandparent = make_tx(random_outpoints(1), /*version=*/3);
+        auto tx_mempool_sibling = make_tx({COutPoint{tx_mempool_grandparent->GetHash(), 0}}, /*version=*/3);
+        auto tx_mempool_nibling = make_tx({COutPoint{tx_mempool_sibling->GetHash(), 0}}, /*version=*/3);
+        auto tx_to_submit = make_tx({COutPoint{tx_mempool_grandparent->GetHash(), 1}}, /*version=*/3);
+
+        pool.addUnchecked(entry.FromTx(tx_mempool_grandparent));
+        pool.addUnchecked(entry.FromTx(tx_mempool_sibling));
+        pool.addUnchecked(entry.FromTx(tx_mempool_nibling));
+
+        auto ancestors_3gen{pool.CalculateMemPoolAncestors(entry.FromTx(tx_to_submit), m_limits)};
+        const auto expected_error_str{strprintf("tx %s (wtxid=%s) would exceed descendant count limit",
+            tx_mempool_grandparent->GetHash().ToString(), tx_mempool_grandparent->GetWitnessHash().ToString())};
+        auto result_3gen{SingleV3Checks(tx_to_submit, *ancestors_3gen, empty_conflicts_set, GetVirtualTransactionSize(*tx_to_submit))};
+        BOOST_CHECK_EQUAL(result_3gen->first, expected_error_str);
+        // The other mempool child is not returned because sibling eviction is not allowed.
+        BOOST_CHECK_EQUAL(result_3gen->second, nullptr);
     }
 
     // Configuration where tx has multiple generations of descendants is not tested because that is
