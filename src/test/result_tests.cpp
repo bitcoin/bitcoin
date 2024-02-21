@@ -265,7 +265,42 @@ util::Result<std::unique_ptr<NoCopyNoMove>> DerivedToBaseFn(util::Result<std::un
 
 BOOST_AUTO_TEST_CASE(derived_to_base)
 {
+    // Check derived to base conversions work for util::Result
     BOOST_CHECK_EQUAL(*Assert(*Assert(DerivedToBaseFn(std::make_unique<Derived>(5)))), 5);
+
+    // Check conversions work between util::Result and util::ResultPtr
+    util::ResultPtr<std::unique_ptr<Derived>> derived{std::make_unique<Derived>(5)};
+    util::ResultPtr<std::unique_ptr<NoCopyNoMove>> base{DerivedToBaseFn(std::move(derived))};
+    BOOST_CHECK_EQUAL(*Assert(base), 5);
+}
+
+//! For testing ResultPtr, return pointer to a pair of ints, or return pointer to null, or return an error message.
+util::ResultPtr<std::unique_ptr<std::pair<int, int>>> PtrFn(std::optional<std::pair<int, int>> i, bool success)
+{
+    if (success) return i ? std::make_unique<std::pair<int, int>>(*i) : nullptr;
+    return util::Error{strprintf(Untranslated("PtrFn(%s) error."), i ? strprintf("%i, %i", i->first, i->second) : "nullopt")};
+}
+
+BOOST_AUTO_TEST_CASE(check_ptr)
+{
+    auto result_pair = PtrFn(std::pair{1, 2}, true);
+    ExpectResult(result_pair, true, {});
+    BOOST_CHECK(result_pair);
+    BOOST_CHECK_EQUAL(result_pair->first, 1);
+    BOOST_CHECK_EQUAL(result_pair->second, 2);
+    BOOST_CHECK(*result_pair == std::pair(1,2));
+
+    auto result_null = PtrFn(std::nullopt, true);
+    ExpectResult(result_null, true, {});
+    BOOST_CHECK(!result_null);
+
+    auto result_error_pair = PtrFn(std::pair{1, 2}, false);
+    ExpectResult(result_error_pair, false, Untranslated("PtrFn(1, 2) error."));
+    BOOST_CHECK(!result_error_pair);
+
+    auto result_error_null = PtrFn(std::nullopt, false);
+    ExpectResult(result_error_null, false, Untranslated("PtrFn(nullopt) error."));
+    BOOST_CHECK(!result_error_null);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

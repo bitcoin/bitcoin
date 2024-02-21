@@ -186,7 +186,7 @@ void ReadFromStream(AddrMan& addr, DataStream& ssPeers)
     DeserializeDB(ssPeers, addr, false);
 }
 
-util::Result<std::unique_ptr<AddrMan>> LoadAddrman(const NetGroupManager& netgroupman, const ArgsManager& args)
+util::ResultPtr<std::unique_ptr<AddrMan>> LoadAddrman(const NetGroupManager& netgroupman, const ArgsManager& args)
 {
     auto check_addrman = std::clamp<int32_t>(args.GetIntArg("-checkaddrman", DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000);
     auto addrman{std::make_unique<AddrMan>(netgroupman, /*deterministic=*/false, /*consistency_check_ratio=*/check_addrman)};
