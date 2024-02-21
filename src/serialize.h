@@ -1103,12 +1103,12 @@ size_t GetSerializeSize(const T& t)
     return (SizeComputer() << t).size();
 }
 
-/** Wrapper that overrides the GetParams() function of a stream (and hides GetVersion/GetType). */
+/** Wrapper that overrides the GetParams() function of a stream. */
 template <typename Params, typename SubStream>
 class ParamsStream
 {
     const Params& m_params;
-    SubStream& m_substream; // private to avoid leaking version/type into serialization code that shouldn't see it
+    SubStream& m_substream;
 
 public:
     ParamsStream(const Params& params LIFETIMEBOUND, SubStream& substream LIFETIMEBOUND) : m_params{params}, m_substream{substream} {}
@@ -1119,8 +1119,6 @@ public:
     void ignore(size_t num) { m_substream.ignore(num); }
     bool eof() const { return m_substream.eof(); }
     size_t size() const { return m_substream.size(); }
-    int GetVersion() = delete; // Deprecated with Params usage
-    int GetType() = delete;    // Deprecated with Params usage
 
     //! Get reference to stream parameters.
     template <typename P>
