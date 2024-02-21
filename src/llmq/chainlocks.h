@@ -59,7 +59,6 @@ private:
     mutable Mutex cs;
     std::atomic<bool> tryLockChainTipScheduled{false};
     std::atomic<bool> isEnabled{false};
-    std::atomic<bool> isEnforced{false};
 
     uint256 bestChainLockHash GUARDED_BY(cs);
     CChainLockSig bestChainLock GUARDED_BY(cs);

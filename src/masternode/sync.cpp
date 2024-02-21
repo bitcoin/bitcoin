@@ -338,9 +338,7 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
     nTimeLastUpdateBlockTip = GetTime<std::chrono::seconds>().count();
 
-    CBlockIndex* pindexTip = WITH_LOCK(cs_main, return pindexBestHeader);
-
-    if (IsSynced() || !pindexTip)
+    if (IsSynced())
         return;
 
     if (!IsBlockchainSynced()) {
@@ -359,6 +357,8 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
     }
 
     // Note: since we sync headers first, it should be ok to use this
+    CBlockIndex* pindexTip = WITH_LOCK(cs_main, return pindexBestHeader);
+    if (pindexTip == nullptr) return;
     bool fReachedBestHeaderNew = pindexNew->GetBlockHash() == pindexTip->GetBlockHash();
 
     if (fReachedBestHeader && !fReachedBestHeaderNew) {
