@@ -696,19 +696,19 @@ bool SQLiteBatch::TxnAbort()
     return res == SQLITE_OK;
 }
 
-util::ResultPtr<std::unique_ptr<SQLiteDatabase>, DatabaseStatus> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options)
+util::ResultPtr<std::unique_ptr<SQLiteDatabase>, DatabaseError> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options)
 {
-    util::ResultPtr<std::unique_ptr<SQLiteDatabase>, DatabaseStatus> result;
+    util::ResultPtr<std::unique_ptr<SQLiteDatabase>, DatabaseError> result;
     try {
         fs::path data_file = SQLiteDataFile(path);
         auto db = std::make_unique<SQLiteDatabase>(data_file.parent_path(), data_file, options);
         if (options.verify && !(db->Verify() >> result)) {
-            result.Update({util::Error{}, DatabaseStatus::FAILED_VERIFY});
+            result.Update({util::Error{}, DatabaseError::FAILED_VERIFY});
         } else {
             result.Update(std::move(db));
         }
     } catch (const std::runtime_error& e) {
-        result.Update({util::Error{Untranslated(e.what())}, DatabaseStatus::FAILED_LOAD});
+        result.Update({util::Error{Untranslated(e.what())}, DatabaseError::FAILED_LOAD});
     }
     return result;
 }
