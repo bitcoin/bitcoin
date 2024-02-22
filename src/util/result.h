@@ -284,6 +284,9 @@ protected:
     using Base = detail::ResultBase<T, F>;
 
 public:
+    using success_type = T;
+    using failure_type = F;
+
     //! Construct a Result object setting a success or failure value and
     //! optional warning and error messages. Initial util::Error, util::Warning,
     //! and util::MoveMessages arguments are processed first to add warning and
@@ -375,5 +378,30 @@ public:
 template <typename T, typename F>
 bilingual_str ErrorString(const Result<T, F>& result) { return detail::JoinMessages(result.GetErrors(), result.GetWarnings()); }
 } // namespace util
+
+//! Temporary helper used to decompose util::Result into success / failure /
+//! error / warning values.  This is used in upcoming commits to incrementally
+//! port code not using util::Result to start using it, and it is removed after
+//! the last commit when everything is using util::Result.
+template<typename Result, typename FailPtr>
+auto ResultExtract(Result&& result, FailPtr failure=nullptr, bilingual_str* error = nullptr, std::vector<bilingual_str>* warnings = nullptr)
+{
+    if constexpr (!std::is_same_v<FailPtr, std::nullptr_t>) {
+        if (failure && !result) *failure = result.GetFailure();
+    }
+    if (error) {
+        const auto& e = result.GetErrors();
+        if (!e.empty()) *error = *e.begin();
+    }
+    if (warnings) {
+        const auto& w = result.GetWarnings();
+        warnings->insert(warnings->end(), w.begin(), w.end());
+    }
+    if constexpr (std::is_same_v<typename Result::success_type, void>) {
+        return bool{result};
+    } else {
+        return result ? std::move(result.value()) : typename Result::success_type{};
+    }
+}
 
 #endif // BITCOIN_UTIL_RESULT_H
