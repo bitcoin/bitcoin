@@ -430,4 +430,35 @@ bilingual_str ErrorString(const Result& result)
 }
 } // namespace util
 
+//! Temporary helper used to decompose util::Result into success / failure /
+//! error / warning values.  This is used in upcoming commits to incrementally
+//! port code not using util::Result to start using it, and it is removed after
+//! the last commit when everything is using util::Result.
+//!
+//! First ResultExtract argument is an input result object. Remaining arguments
+//! are output arguments returning the result failure value and error and
+//! warning messages, if any. Return value is the result success value, if the
+//! success type is non-void, or a boolean indicating success / failure if the
+//! success type is void.
+template<typename Result, typename FailPtr>
+auto ResultExtract(Result&& result, FailPtr failure=nullptr, bilingual_str* error = nullptr, std::vector<bilingual_str>* warnings = nullptr)
+{
+    if constexpr (!std::is_same_v<FailPtr, std::nullptr_t>) {
+        if (failure && !result) *failure = result.GetFailure();
+        if (failure && result) *failure = typename Result::FailureType{};
+    }
+    if (error && result.GetMessages() && !result.GetMessages()->errors.empty()) {
+        *error = util::ErrorString(result);
+    }
+    if (warnings && result.GetMessages()) {
+        const auto& w = result.GetMessages()->warnings;
+        warnings->insert(warnings->end(), w.begin(), w.end());
+    }
+    if constexpr (std::is_same_v<typename Result::SuccessType, void>) {
+        return bool{result};
+    } else {
+        return result ? std::move(result.value()) : typename Result::SuccessType{};
+    }
+}
+
 #endif // BITCOIN_UTIL_RESULT_H
