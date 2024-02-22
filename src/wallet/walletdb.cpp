@@ -1347,13 +1347,13 @@ bool WalletBatch::TxnAbort()
     return m_batch->TxnAbort();
 }
 
-util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseStatus> MakeDatabase(const fs::path& path, const DatabaseOptions& options)
+util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseError> MakeDatabase(const fs::path& path, const DatabaseOptions& options)
 {
     bool exists;
     try {
         exists = fs::symlink_status(path).type() != fs::file_type::not_found;
     } catch (const fs::filesystem_error& e) {
-        return {util::Error{Untranslated(strprintf("Failed to access database path '%s': %s", fs::PathToString(path), fsbridge::get_filesystem_error_message(e)))}, DatabaseStatus::FAILED_BAD_PATH};
+        return {util::Error{Untranslated(strprintf("Failed to access database path '%s': %s", fs::PathToString(path), fsbridge::get_filesystem_error_message(e)))}, DatabaseError::FAILED_BAD_PATH};
     }
 
     std::optional<DatabaseFormat> format;
@@ -1363,25 +1363,25 @@ util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseStatus> MakeDatabase(co
         }
         if (IsSQLiteFile(SQLiteDataFile(path))) {
             if (format) {
-                return {util::Error{Untranslated(strprintf("Failed to load database path '%s'. Data is in ambiguous format.", fs::PathToString(path)))}, DatabaseStatus::FAILED_BAD_FORMAT};
+                return {util::Error{Untranslated(strprintf("Failed to load database path '%s'. Data is in ambiguous format.", fs::PathToString(path)))}, DatabaseError::FAILED_BAD_FORMAT};
             }
             format = DatabaseFormat::SQLITE;
         }
     } else if (options.require_existing) {
-        return {util::Error{Untranslated(strprintf("Failed to load database path '%s'. Path does not exist.", fs::PathToString(path)))}, DatabaseStatus::FAILED_NOT_FOUND};
+        return {util::Error{Untranslated(strprintf("Failed to load database path '%s'. Path does not exist.", fs::PathToString(path)))}, DatabaseError::FAILED_NOT_FOUND};
     }
 
     if (!format && options.require_existing) {
-        return {util::Error{Untranslated(strprintf("Failed to load database path '%s'. Data is not in recognized format.", fs::PathToString(path)))}, DatabaseStatus::FAILED_BAD_FORMAT};
+        return {util::Error{Untranslated(strprintf("Failed to load database path '%s'. Data is not in recognized format.", fs::PathToString(path)))}, DatabaseError::FAILED_BAD_FORMAT};
     }
 
     if (format && options.require_create) {
-        return {util::Error{Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", fs::PathToString(path)))}, DatabaseStatus::FAILED_ALREADY_EXISTS};
+        return {util::Error{Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", fs::PathToString(path)))}, DatabaseError::FAILED_ALREADY_EXISTS};
     }
 
     // A db already exists so format is set, but options also specifies the format, so make sure they agree
     if (format && options.require_format && format != options.require_format) {
-        return {util::Error{Untranslated(strprintf("Failed to load database path '%s'. Data is not in required format.", fs::PathToString(path)))}, DatabaseStatus::FAILED_BAD_FORMAT};
+        return {util::Error{Untranslated(strprintf("Failed to load database path '%s'. Data is not in required format.", fs::PathToString(path)))}, DatabaseError::FAILED_BAD_FORMAT};
     }
 
     // Format is not set when a db doesn't already exist, so use the format specified by the options if it is set.
@@ -1405,7 +1405,7 @@ util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseStatus> MakeDatabase(co
 #endif
         {
             return {util::Error{Untranslated(strprintf("Failed to open database path '%s'. Build does not support SQLite database format.", fs::PathToString(path)))},
-                    DatabaseStatus::FAILED_BAD_FORMAT};
+                    DatabaseError::FAILED_BAD_FORMAT};
         }
     }
 
@@ -1416,7 +1416,7 @@ util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseStatus> MakeDatabase(co
 #endif
     {
         return {util::Error{Untranslated(strprintf("Failed to open database path '%s'. Build does not support Berkeley DB database format.", fs::PathToString(path)))},
-                DatabaseStatus::FAILED_BAD_FORMAT};
+                DatabaseError::FAILED_BAD_FORMAT};
     }
 }
 } // namespace wallet

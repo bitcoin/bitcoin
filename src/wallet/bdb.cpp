@@ -929,7 +929,7 @@ std::unique_ptr<DatabaseBatch> BerkeleyDatabase::MakeBatch(bool flush_on_close)
     return std::make_unique<BerkeleyBatch>(*this, false, flush_on_close);
 }
 
-util::ResultPtr<std::unique_ptr<BerkeleyDatabase>, DatabaseStatus> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options)
+util::ResultPtr<std::unique_ptr<BerkeleyDatabase>, DatabaseError> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options)
 {
     fs::path data_file = BDBDataFile(path);
     std::unique_ptr<BerkeleyDatabase> db;
@@ -939,14 +939,14 @@ util::ResultPtr<std::unique_ptr<BerkeleyDatabase>, DatabaseStatus> MakeBerkeleyD
         std::shared_ptr<BerkeleyEnvironment> env = GetBerkeleyEnv(data_file.parent_path(), options.use_shared_memory);
         if (env->m_databases.count(data_filename)) {
             return {util::Error{Untranslated(strprintf("Refusing to load database. Data file '%s' is already loaded.", fs::PathToString(env->Directory() / data_filename)))},
-                    DatabaseStatus::FAILED_ALREADY_LOADED};
+                    DatabaseError::FAILED_ALREADY_LOADED};
         }
         db = std::make_unique<BerkeleyDatabase>(std::move(env), std::move(data_filename), options);
     }
 
     util::Result<void> verified;
     if (options.verify && !(verified = db->Verify())) {
-        return {util::Error{}, util::MoveMessages(verified), DatabaseStatus::FAILED_VERIFY};
+        return {util::Error{}, util::MoveMessages(verified), DatabaseError::FAILED_VERIFY};
     }
 
     return {std::move(db)};

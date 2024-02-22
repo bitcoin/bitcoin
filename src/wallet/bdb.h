@@ -216,7 +216,7 @@ std::string BerkeleyDatabaseVersion();
 bool BerkeleyDatabaseSanityCheck();
 
 //! Return object giving access to Berkeley database at specified path.
-util::ResultPtr<std::unique_ptr<BerkeleyDatabase>, DatabaseStatus> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options);
+util::ResultPtr<std::unique_ptr<BerkeleyDatabase>, DatabaseError> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_BDB_H

@@ -254,7 +254,7 @@ void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
 }
 
 namespace {
-util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> LoadWalletInternal(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options)
+util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> LoadWalletInternal(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options)
 {
     util::Result<void> result;
     try {
@@ -266,7 +266,7 @@ util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> LoadWalletInternal(Wal
         context.chain->initMessage(_("Loading wallet…").translated);
         auto wallet = CWallet::Create(context, name, std::move(database.value()), options.create_flags) >> result;
         if (!wallet) {
-            return {util::Error{Untranslated("Wallet loading failed.")}, util::MoveMessages(result), DatabaseStatus::FAILED_LOAD};
+            return {util::Error{Untranslated("Wallet loading failed.")}, util::MoveMessages(result), DatabaseError::FAILED_LOAD};
         }
 
         // Legacy wallets are being deprecated, warn if the loaded wallet is legacy
@@ -283,7 +283,7 @@ util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> LoadWalletInternal(Wal
 
         return {util::MoveMessages(result), std::move(wallet.value())};
     } catch (const std::runtime_error& e) {
-        return {util::Error{Untranslated(e.what())}, util::MoveMessages(result), DatabaseStatus::FAILED_LOAD};
+        return {util::Error{Untranslated(e.what())}, util::MoveMessages(result), DatabaseError::FAILED_LOAD};
     }
 }
 
@@ -346,20 +346,20 @@ private:
 };
 } // namespace
 
-util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> LoadWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options)
+util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> LoadWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options)
 {
     auto result = WITH_LOCK(g_loading_wallet_mutex, return g_loading_wallet_set.insert(name));
     if (!result.second) {
-        return {util::Error{Untranslated("Wallet already loading.")}, DatabaseStatus::FAILED_LOAD};
+        return {util::Error{Untranslated("Wallet already loading.")}, DatabaseError::FAILED_LOAD};
     }
     auto wallet = LoadWalletInternal(context, name, load_on_start, options);
     WITH_LOCK(g_loading_wallet_mutex, g_loading_wallet_set.erase(result.first));
     return wallet;
 }
 
-util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options)
+util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options)
 {
-    util::Result<DatabaseStatus> result;
+    util::Result<DatabaseError> result;
 
     uint64_t wallet_creation_flags = options.create_flags;
     const SecureString& passphrase = options.create_passphrase;
@@ -376,42 +376,42 @@ util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> CreateWallet(WalletCon
 
     // Private keys must be disabled for an external signer wallet
     if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        return {util::Error{Untranslated("Private keys must be disabled when using an external signer")}, util::MoveMessages(result), DatabaseStatus::FAILED_CREATE};
+        return {util::Error{Untranslated("Private keys must be disabled when using an external signer")}, util::MoveMessages(result), DatabaseError::FAILED_CREATE};
     }
 
     // Descriptor support must be enabled for an external signer wallet
     if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) && !(wallet_creation_flags & WALLET_FLAG_DESCRIPTORS)) {
-        return {util::Error{Untranslated("Descriptor support must be enabled when using an external signer")}, util::MoveMessages(result), DatabaseStatus::FAILED_CREATE};
+        return {util::Error{Untranslated("Descriptor support must be enabled when using an external signer")}, util::MoveMessages(result), DatabaseError::FAILED_CREATE};
     }
 
     // Do not allow a passphrase when private keys are disabled
     if (!passphrase.empty() && (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        return {util::Error{Untranslated("Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.")}, util::MoveMessages(result), DatabaseStatus::FAILED_CREATE};
+        return {util::Error{Untranslated("Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.")}, util::MoveMessages(result), DatabaseError::FAILED_CREATE};
     }
 
     // Wallet::Verify will check if we're trying to create a wallet with a duplicate name.
     auto database = MakeWalletDatabase(name, options) >> result;
     if (!database) {
-        return {util::Error{Untranslated("Wallet file verification failed.")}, util::MoveMessages(result), DatabaseStatus::FAILED_VERIFY};
+        return {util::Error{Untranslated("Wallet file verification failed.")}, util::MoveMessages(result), DatabaseError::FAILED_VERIFY};
     }
 
     // Make the wallet
     context.chain->initMessage(_("Loading wallet…").translated);
     auto create = CWallet::Create(context, name, std::move(database.value()), wallet_creation_flags) >> result;
     if (!create) {
-        return {util::Error{Untranslated("Wallet creation failed.")}, util::MoveMessages(result), DatabaseStatus::FAILED_CREATE};
+        return {util::Error{Untranslated("Wallet creation failed.")}, util::MoveMessages(result), DatabaseError::FAILED_CREATE};
     }
     std::shared_ptr<CWallet> wallet = create.value();
 
     // Encrypt the wallet
     if (!passphrase.empty() && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         if (!wallet->EncryptWallet(passphrase)) {
-            return {util::Error{Untranslated("Error: Wallet created but failed to encrypt.")}, util::MoveMessages(result), DatabaseStatus::FAILED_ENCRYPT};
+            return {util::Error{Untranslated("Error: Wallet created but failed to encrypt.")}, util::MoveMessages(result), DatabaseError::FAILED_ENCRYPT};
         }
         if (!create_blank) {
             // Unlock the wallet
             if (!wallet->Unlock(passphrase)) {
-                return {util::Error{Untranslated("Error: Wallet was encrypted but could not be unlocked")}, util::MoveMessages(result), DatabaseStatus::FAILED_ENCRYPT};
+                return {util::Error{Untranslated("Error: Wallet was encrypted but could not be unlocked")}, util::MoveMessages(result), DatabaseError::FAILED_ENCRYPT};
             }
 
             // Set a seed for the wallet
@@ -422,7 +422,7 @@ util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> CreateWallet(WalletCon
                 } else {
                     for (auto spk_man : wallet->GetActiveScriptPubKeyMans()) {
                         if (!spk_man->SetupGeneration()) {
-                            return {util::Error{Untranslated("Unable to generate initial keys")}, util::MoveMessages(result), DatabaseStatus::FAILED_CREATE};
+                            return {util::Error{Untranslated("Unable to generate initial keys")}, util::MoveMessages(result), DatabaseError::FAILED_CREATE};
                         }
                     }
                 }
@@ -448,7 +448,7 @@ util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> CreateWallet(WalletCon
     return {util::MoveMessages(result), wallet};
 }
 
-util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start)
+util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start)
 {
     DatabaseOptions options;
     ReadDatabaseArgs(*context.args, options);
@@ -456,15 +456,15 @@ util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> RestoreWallet(WalletCo
 
     const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::u8path(wallet_name));
     auto wallet_file = wallet_path / "wallet.dat";
-    util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> wallet;
+    util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> wallet;
 
     try {
         if (!fs::exists(backup_file)) {
-            return {util::Error{Untranslated("Backup file does not exist")}, DatabaseStatus::FAILED_INVALID_BACKUP_FILE};
+            return {util::Error{Untranslated("Backup file does not exist")}, DatabaseError::FAILED_INVALID_BACKUP_FILE};
         }
 
         if (fs::exists(wallet_path) || !TryCreateDirectories(wallet_path)) {
-            return {util::Error{Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", fs::PathToString(wallet_path)))}, DatabaseStatus::FAILED_ALREADY_EXISTS};
+            return {util::Error{Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", fs::PathToString(wallet_path)))}, DatabaseError::FAILED_ALREADY_EXISTS};
         }
 
         fs::copy_file(backup_file, wallet_file, fs::copy_options::none);
@@ -2854,7 +2854,7 @@ bool CWallet::EraseAddressReceiveRequest(WalletBatch& batch, const CTxDestinatio
     return true;
 }
 
-util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseStatus> MakeWalletDatabase(const std::string& name, const DatabaseOptions& options)
+util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseError> MakeWalletDatabase(const std::string& name, const DatabaseOptions& options)
 {
     // Do some checking on wallet path. It should be either a:
     //
@@ -2872,7 +2872,7 @@ util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseStatus> MakeWalletDatab
               "database/log.?????????? files can be stored, a location where such a directory could be created, "
               "or (for backwards compatibility) the name of an existing data file in -walletdir (%s)",
               name, fs::quoted(fs::PathToString(GetWalletDir()))))},
-                DatabaseStatus::FAILED_BAD_PATH};
+                DatabaseError::FAILED_BAD_PATH};
     }
     return MakeDatabase(wallet_path, options);
 }

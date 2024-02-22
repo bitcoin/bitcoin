@@ -178,7 +178,7 @@ public:
     bool m_use_unsafe_sync;
 };
 
-util::ResultPtr<std::unique_ptr<SQLiteDatabase>, DatabaseStatus> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options);
+util::ResultPtr<std::unique_ptr<SQLiteDatabase>, DatabaseError> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options);
 
 std::string SQLiteDatabaseVersion();
 } // namespace wallet

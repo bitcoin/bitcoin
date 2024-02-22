@@ -87,7 +87,7 @@ bool VerifyWallets(WalletContext& context)
         options.verify = true;
         auto result = MakeWalletDatabase(wallet_file, options);
         if (!result) {
-            if (result.GetFailure() == DatabaseStatus::FAILED_NOT_FOUND) {
+            if (result.GetFailure() == DatabaseError::FAILED_NOT_FOUND) {
                 chain.initWarning(Untranslated(strprintf("Skipping -wallet path that doesn't exist. %s", util::ErrorString(result).original)));
             } else {
                 chain.initError(util::ErrorString(result));
@@ -115,7 +115,7 @@ bool LoadWallets(WalletContext& context)
             options.verify = false; // No need to verify, assuming verified earlier in VerifyWallets()
             util::Result<void> result;
             auto database = MakeWalletDatabase(name, options) >> result;
-            if (!database && database.GetFailure() == DatabaseStatus::FAILED_NOT_FOUND) {
+            if (!database && database.GetFailure() == DatabaseError::FAILED_NOT_FOUND) {
                 continue;
             }
             chain.initMessage(_("Loading wallet…").translated);
