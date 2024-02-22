@@ -283,7 +283,7 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlockIn
 }
 
 bool CCoinsViewCache::Flush() {
-    bool fOk = base->BatchWrite(cacheCoins, hashBlock, cacheStakedCommitments, /*erase=*/true);
+    bool fOk = base->BatchWrite(cacheCoins, hashBlock, GetStakedCommitments(), /*erase=*/true);
     if (fOk) {
         if (!cacheCoins.empty() && !cacheStakedCommitments.Empty()) {
             /* BatchWrite must erase all cacheCoins elements when erase=true. */
@@ -297,7 +297,7 @@ bool CCoinsViewCache::Flush() {
 
 bool CCoinsViewCache::Sync()
 {
-    bool fOk = base->BatchWrite(cacheCoins, hashBlock, cacheStakedCommitments, /*erase=*/false);
+    bool fOk = base->BatchWrite(cacheCoins, hashBlock, GetStakedCommitments(), /*erase=*/false);
     // Instead of clearing `cacheCoins` as we would in Flush(), just clear the
     // FRESH/DIRTY flags of any coin that isn't spent.
     for (auto it = cacheCoins.begin(); it != cacheCoins.end(); ) {

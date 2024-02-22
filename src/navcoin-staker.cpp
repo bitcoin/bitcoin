@@ -1,5 +1,4 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2024 The Navcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -354,7 +353,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
         if (response.error != -1) {
             responseErrorMessage = strprintf(" (error code %d - \"%s\")", response.error, http_errorstring(response.error));
         }
-        throw CConnectionFailed(strprintf("Could not connect to the server %s:%d%s\n\nMake sure the bitcoind server is running and that you are connecting to the correct RPC port.", host, port, responseErrorMessage));
+        throw CConnectionFailed(strprintf("Could not connect to the server %s:%d%s\n\nMake sure the navcoind server is running and that you are connecting to the correct RPC port.", host, port, responseErrorMessage));
     } else if (response.status == HTTP_UNAUTHORIZED) {
         if (failedToGetAuthCookie) {
             throw std::runtime_error(strprintf(
@@ -778,6 +777,68 @@ std::string EncodeHexBlock(const CBlock& block, const int serializeFlags)
     return HexStr(ssBlock);
 }
 
+Elements<MclG1Point> GetStakedCommitments(const std::unique_ptr<BaseRequestHandler>& rh)
+{
+    UniValue reply_staked = ConnectAndCallRPC(rh.get(), "liststakedcommitments", /* args=*/{}, walletName);
+
+    UniValue result = reply.find_value("result");
+    return UniValueArrayToElements(result.find_value("staked_commitments").get_array());
+}
+
+CBlock GetBlockProposal(const std::unique_ptr<BaseRequestHandler>& rh)
+{
+    CBlock proposal;
+
+    auto reply = ConnectAndCallRPC(rh.get(), "getblocktemplate", /* args=*/{}, walletName);
+    auto staked_commitments = GetStakedCommitments(rh);
+
+    auto eta = ParseHex(result.find_value("eta").get_str());
+
+    UniValue result_staked = reply_staked.find_value("result");
+
+    auto vchValue = ParseHex(result_staked.get_array()[0].find_value("value").get_str());
+    MclScalar m;
+    m.SetVch(vchValue);
+
+    auto vchGamma = ParseHex(result_staked.get_array()[0].find_value("gamma").get_str());
+    MclScalar f;
+    f.SetVch(vchGamma);
+
+    proposal.nVersion = result.find_value("version").get_real();
+    proposal.nTime = result.find_value("curtime").get_real();
+    proposal.nBits = stoi(result.find_value("bits").get_str(), 0, 16);
+    proposal.hashPrevBlock = uint256S(result.find_value("previousblockhash").get_str());
+    proposal.vtx = UniValueArrayToTransactions(result.find_value("transactions").get_array());
+    proposal.posProof = blsct::ProofOfStake(staked_commitments, eta, m, f).setMemProof;
+    proposal.hashMerkleRoot = BlockMerkleRoot(proposal);
+
+    return proposal;
+}
+
+void Loop()
+{
+    std::unique_ptr<BaseRequestHandler> rh;
+
+    rh.reset(new DefaultRequestHandler());
+
+    while (true) {
+        CBlock proposal = GetBlockProposal(rh);
+
+        UniValue reply_submit = ConnectAndCallRPC(rh.get(), "submitblock", /* args=*/{EncodeHexBlock(proposal, 0)}, walletName);
+
+        UniValue result_submit = reply_submit.find_value("result");
+        UniValue error_submit = reply_submit.find_value("error");
+
+        if (error_submit.isNull()) {
+            std::cout
+                << "Found block " << reply_submit.write(0, 0) << "\n";
+        }
+
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(50000));
+    }
+}
+
 MAIN_FUNCTION
 {
 #ifdef WIN32
@@ -811,51 +872,7 @@ MAIN_FUNCTION
     if (!TestSetup())
         return ret;
 
-    std::unique_ptr<BaseRequestHandler> rh;
+    Loop();
 
-    rh.reset(new DefaultRequestHandler());
-
-    while (true) {
-        CBlock proposal;
-
-        UniValue reply = ConnectAndCallRPC(rh.get(), "getblocktemplate", /* args=*/{}, walletName);
-        UniValue reply_staked = ConnectAndCallRPC(rh.get(), "liststakedcommitments", /* args=*/{}, walletName);
-
-        UniValue result = reply.find_value("result");
-        auto staked_commitments = UniValueArrayToElements(result.find_value("staked_commitments").get_array());
-        auto eta = ParseHex(result.find_value("eta").get_str());
-
-        UniValue result_staked = reply_staked.find_value("result");
-
-        auto vchValue = ParseHex(result_staked.get_array()[0].find_value("value").get_str());
-        MclScalar m;
-        m.SetVch(vchValue);
-
-        auto vchGamma = ParseHex(result_staked.get_array()[0].find_value("gamma").get_str());
-        MclScalar f;
-        f.SetVch(vchGamma);
-
-        proposal.nVersion = result.find_value("version").get_real();
-        proposal.nTime = result.find_value("curtime").get_real();
-        proposal.nBits = stoi(result.find_value("bits").get_str(), 0, 16);
-        proposal.hashPrevBlock = uint256S(result.find_value("previousblockhash").get_str());
-        proposal.vtx = UniValueArrayToTransactions(result.find_value("transactions").get_array());
-        proposal.posProof = blsct::ProofOfStake(staked_commitments, eta, m, f).setMemProof;
-        proposal.hashMerkleRoot = BlockMerkleRoot(proposal);
-
-        UniValue reply_submit = ConnectAndCallRPC(rh.get(), "submitblock", /* args=*/{EncodeHexBlock(proposal, 0)}, walletName);
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(50000));
-    }
-
-    return ret;
-
-    try {
-        ret = CommandLineRPC(argc, argv);
-    } catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "CommandLineRPC()");
-    } catch (...) {
-        PrintExceptionContinue(nullptr, "CommandLineRPC()");
-    }
-    return ret;
+    return EXIT_SUCCESS;
 }

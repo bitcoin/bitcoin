@@ -15,14 +15,12 @@ using Prover = SetMemProofProver<Arith>;
 namespace blsct {
 ProofOfStake::ProofOfStake(const Points& stakedCommitments, const std::vector<unsigned char>& eta, const Scalar& m, const Scalar& f)
 {
-    auto setup = SetMemProofSetup<Arith>::Get();
-
     range_proof::GeneratorsFactory<Mcl> gf;
     range_proof::Generators<Arith> gen = gf.GetInstance(TokenId());
 
     Point sigma = gen.G * m + gen.H * f;
 
-    std::cout << __func__ << ": sigma=" << HexStr(sigma.GetVch()) << " from " << HexStr(gen.G.GetVch()) << "*" << m.GetString() << "+" << HexStr(gen.H.GetVch()) << "*" << f.GetString() << "\n";
+    auto setup = SetMemProofSetup<Arith>::Get();
 
     setMemProof = Prover::Prove(setup, stakedCommitments, sigma, m, f, eta);
 }
@@ -31,8 +29,6 @@ bool ProofOfStake::Verify(const Points& stakedCommitments, const std::vector<uns
 {
     auto setup = SetMemProofSetup<Arith>::Get();
     auto res = Prover::Verify(setup, stakedCommitments, eta, setMemProof);
-
-    std::cout << __func__ << ": with eta " << HexStr(eta) << " and staked comms " << SerializeHash(stakedCommitments).ToString() << " and proof " << SerializeHash(setMemProof).ToString() << " " << res << "\n";
 
     return res /*&& VerifyKernelHash(kernelHash, posTarget)*/;
 }
