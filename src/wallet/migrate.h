@@ -120,7 +120,7 @@ public:
 };
 
 //! Return object giving access to Berkeley Read Only database at specified path.
-util::ResultPtr<std::unique_ptr<BerkeleyRODatabase>, DatabaseStatus> MakeBerkeleyRODatabase(const fs::path& path, const DatabaseOptions& options);
+util::ResultPtr<std::unique_ptr<BerkeleyRODatabase>, DatabaseError> MakeBerkeleyRODatabase(const fs::path& path, const DatabaseOptions& options);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_MIGRATE_H

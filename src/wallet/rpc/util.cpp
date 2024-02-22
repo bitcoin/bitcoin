@@ -136,24 +136,24 @@ void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, 
     entry.pushKV("parent_descs", std::move(parent_descs));
 }
 
-void HandleWalletError(const util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus>& wallet)
+void HandleWalletError(const util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError>& wallet)
 {
     if (!wallet) {
         // Map bad format to not found, since bad format is returned when the
         // wallet directory exists, but doesn't contain a data file.
         RPCErrorCode code = RPC_WALLET_ERROR;
         switch (wallet.GetFailure()) {
-            case DatabaseStatus::FAILED_NOT_FOUND:
-            case DatabaseStatus::FAILED_BAD_FORMAT:
+            case DatabaseError::FAILED_NOT_FOUND:
+            case DatabaseError::FAILED_BAD_FORMAT:
                 code = RPC_WALLET_NOT_FOUND;
                 break;
-            case DatabaseStatus::FAILED_ALREADY_LOADED:
+            case DatabaseError::FAILED_ALREADY_LOADED:
                 code = RPC_WALLET_ALREADY_LOADED;
                 break;
-            case DatabaseStatus::FAILED_ALREADY_EXISTS:
+            case DatabaseError::FAILED_ALREADY_EXISTS:
                 code = RPC_WALLET_ALREADY_EXISTS;
                 break;
-            case DatabaseStatus::FAILED_INVALID_BACKUP_FILE:
+            case DatabaseError::FAILED_INVALID_BACKUP_FILE:
                 code = RPC_INVALID_PARAMETER;
                 break;
             default: // RPC_WALLET_ERROR is returned for all other cases.
