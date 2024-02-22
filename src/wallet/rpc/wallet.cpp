@@ -418,7 +418,7 @@ static RPCHelpMan createwallet()
     std::optional<bool> load_on_start = request.params[6].isNull() ? std::nullopt : std::optional<bool>(request.params[6].get_bool());
     auto wallet{CreateWallet(context, request.params[0].get_str(), load_on_start, options) >> result};
     if (!wallet) {
-        RPCErrorCode code = wallet.GetFailure() == DatabaseStatus::FAILED_ENCRYPT ? RPC_WALLET_ENCRYPTION_FAILED : RPC_WALLET_ERROR;
+        RPCErrorCode code = wallet.GetFailure() == DatabaseError::FAILED_ENCRYPT ? RPC_WALLET_ENCRYPTION_FAILED : RPC_WALLET_ERROR;
         throw JSONRPCError(code, util::ErrorString(result).original);
     }
 

@@ -271,9 +271,9 @@ void WaitForDeleteWallet(std::shared_ptr<CWallet>&& wallet)
 }
 
 namespace {
-util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> LoadWalletInternal(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options)
+util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> LoadWalletInternal(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options)
 {
-    util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> result;
+    util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> result;
     try {
         auto database{MakeWalletDatabase(name, options) >> result};
         if (!database) {
@@ -288,7 +288,7 @@ util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> LoadWalletInternal(Wal
         if (!wallet) {
             auto& errors{result.EnsureMessages().errors};
             errors.insert(errors.begin(), Untranslated("Wallet loading failed."));
-            result.Update({util::Error{}, DatabaseStatus::FAILED_LOAD});
+            result.Update({util::Error{}, DatabaseError::FAILED_LOAD});
             return result;
         }
 
@@ -301,7 +301,7 @@ util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> LoadWalletInternal(Wal
 
         result.Update(std::move(wallet.value()));
     } catch (const std::runtime_error& e) {
-        result.Update({util::Error{Untranslated(e.what())}, DatabaseStatus::FAILED_LOAD});
+        result.Update({util::Error{Untranslated(e.what())}, DatabaseError::FAILED_LOAD});
     }
     return result;
 }
@@ -362,20 +362,20 @@ private:
 };
 } // namespace
 
-util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> LoadWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options)
+util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> LoadWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options)
 {
     auto result = WITH_LOCK(g_loading_wallet_mutex, return g_loading_wallet_set.insert(name));
     if (!result.second) {
-        return {util::Error{Untranslated("Wallet already loading.")}, DatabaseStatus::FAILED_LOAD};
+        return {util::Error{Untranslated("Wallet already loading.")}, DatabaseError::FAILED_LOAD};
     }
     auto wallet{LoadWalletInternal(context, name, load_on_start, options)};
     WITH_LOCK(g_loading_wallet_mutex, g_loading_wallet_set.erase(result.first));
     return wallet;
 }
 
-util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options)
+util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options)
 {
-    util::Result<std::shared_ptr<CWallet>, DatabaseStatus> result;
+    util::Result<std::shared_ptr<CWallet>, DatabaseError> result;
     uint64_t wallet_creation_flags = options.create_flags;
     const SecureString& passphrase = options.create_passphrase;
 
@@ -393,13 +393,13 @@ util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> CreateWallet(WalletCon
 
     // Private keys must be disabled for an external signer wallet
     if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        result.Update({util::Error{Untranslated("Private keys must be disabled when using an external signer")}, DatabaseStatus::FAILED_CREATE});
+        result.Update({util::Error{Untranslated("Private keys must be disabled when using an external signer")}, DatabaseError::FAILED_CREATE});
         return result;
     }
 
     // Do not allow a passphrase when private keys are disabled
     if (!passphrase.empty() && (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        result.Update({util::Error{Untranslated("Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.")}, DatabaseStatus::FAILED_CREATE});
+        result.Update({util::Error{Untranslated("Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.")}, DatabaseError::FAILED_CREATE});
         return result;
     }
 
@@ -408,7 +408,7 @@ util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> CreateWallet(WalletCon
     if (!database) {
         auto& errors{result.EnsureMessages().errors};
         errors.insert(errors.begin(), Untranslated("Wallet file verification failed."));
-        result.Update({util::Error{}, DatabaseStatus::FAILED_VERIFY});
+        result.Update({util::Error{}, DatabaseError::FAILED_VERIFY});
         return result;
     }
 
@@ -416,7 +416,7 @@ util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> CreateWallet(WalletCon
     context.chain->initMessage(_("Loading wallet…"));
     auto create{CWallet::Create(context, name, std::move(database.value()), wallet_creation_flags) >> result};
     if (!create) {
-        result.Update({util::Error{Untranslated("Wallet creation failed.")}, DatabaseStatus::FAILED_CREATE});
+        result.Update({util::Error{Untranslated("Wallet creation failed.")}, DatabaseError::FAILED_CREATE});
         return result;
     }
     std::shared_ptr<CWallet> wallet = create.value();
@@ -424,13 +424,13 @@ util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> CreateWallet(WalletCon
     // Encrypt the wallet
     if (!passphrase.empty() && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         if (!wallet->EncryptWallet(passphrase)) {
-            result.Update({util::Error{Untranslated("Error: Wallet created but failed to encrypt.")}, DatabaseStatus::FAILED_ENCRYPT});
+            result.Update({util::Error{Untranslated("Error: Wallet created but failed to encrypt.")}, DatabaseError::FAILED_ENCRYPT});
             return result;
         }
         if (!create_blank) {
             // Unlock the wallet
             if (!wallet->Unlock(passphrase)) {
-                result.Update({util::Error{Untranslated("Error: Wallet was encrypted but could not be unlocked")}, DatabaseStatus::FAILED_ENCRYPT});
+                result.Update({util::Error{Untranslated("Error: Wallet was encrypted but could not be unlocked")}, DatabaseError::FAILED_ENCRYPT});
                 return result;
             }
 
@@ -458,9 +458,9 @@ util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> CreateWallet(WalletCon
 
 // Re-creates wallet from the backup file by renaming and moving it into the wallet's directory.
 // If 'load_after_restore=true', the wallet object will be fully initialized and appended to the context.
-util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, bool load_after_restore)
+util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, bool load_after_restore)
 {
-    util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> result;
+    util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> result;
     DatabaseOptions options;
     ReadDatabaseArgs(*context.args, options);
     options.require_existing = true;
@@ -470,12 +470,12 @@ util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> RestoreWallet(WalletCo
 
     try {
         if (!fs::exists(backup_file)) {
-            result.Update({util::Error{Untranslated("Backup file does not exist")}, DatabaseStatus::FAILED_INVALID_BACKUP_FILE});
+            result.Update({util::Error{Untranslated("Backup file does not exist")}, DatabaseError::FAILED_INVALID_BACKUP_FILE});
             return result;
         }
 
         if (fs::exists(wallet_path) || !TryCreateDirectories(wallet_path)) {
-            result.Update({util::Error{Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", fs::PathToString(wallet_path)))}, DatabaseStatus::FAILED_ALREADY_EXISTS});
+            result.Update({util::Error{Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", fs::PathToString(wallet_path)))}, DatabaseError::FAILED_ALREADY_EXISTS});
             return result;
         }
 
@@ -486,7 +486,7 @@ util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> RestoreWallet(WalletCo
         }
     } catch (const std::exception& e) {
         assert(!result.value());
-        result.Update({util::Error{Untranslated(strprintf("Unexpected exception: %s", e.what()))}, DatabaseStatus::FAILED_LOAD});
+        result.Update({util::Error{Untranslated(strprintf("Unexpected exception: %s", e.what()))}, DatabaseError::FAILED_LOAD});
         return result;
     }
 
@@ -2823,12 +2823,12 @@ static util::Result<fs::path> GetWalletPath(const std::string& name)
     return wallet_path;
 }
 
-util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseStatus> MakeWalletDatabase(const std::string& name, const DatabaseOptions& options)
+util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseError> MakeWalletDatabase(const std::string& name, const DatabaseOptions& options)
 {
-    util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseStatus> result;
+    util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseError> result;
     auto wallet_path{GetWalletPath(name) >> result};
     if (!wallet_path) {
-        result.Update({util::Error{}, DatabaseStatus::FAILED_BAD_PATH});
+        result.Update({util::Error{}, DatabaseError::FAILED_BAD_PATH});
         return result;
     }
     result.Update(MakeDatabase(*wallet_path, options));
