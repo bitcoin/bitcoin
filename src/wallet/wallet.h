@@ -94,12 +94,12 @@ util::Result<void> RemoveWallet(WalletContext& context, const std::shared_ptr<CW
 std::vector<std::shared_ptr<CWallet>> GetWallets(WalletContext& context);
 std::shared_ptr<CWallet> GetDefaultWallet(WalletContext& context, size_t& count);
 std::shared_ptr<CWallet> GetWallet(WalletContext& context, const std::string& name);
-util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> LoadWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options);
-util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options);
-util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, bool load_after_restore = true, bool allow_unnamed = false);
+util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> LoadWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options);
+util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options);
+util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, bool load_after_restore = true, bool allow_unnamed = false);
 std::unique_ptr<interfaces::Handler> HandleLoadWallet(WalletContext& context, LoadWalletFn load_wallet);
 void NotifyWalletLoaded(WalletContext& context, const std::shared_ptr<CWallet>& wallet);
-util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseStatus> MakeWalletDatabase(const std::string& name, const DatabaseOptions& options);
+util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseError> MakeWalletDatabase(const std::string& name, const DatabaseOptions& options);
 
 //! -paytxfee default
 constexpr CAmount DEFAULT_PAY_TX_FEE = 0;

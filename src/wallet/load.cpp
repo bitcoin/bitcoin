@@ -96,9 +96,9 @@ bool VerifyWallets(WalletContext& context)
         options.verify = true;
         auto result{MakeWalletDatabase(wallet_file, options)};
         if (!result) {
-            if (result.error() == DatabaseStatus::FAILED_NOT_FOUND) {
+            if (result.error() == DatabaseError::FAILED_NOT_FOUND) {
                 chain.initWarning(Untranslated(strprintf("Skipping -wallet path that doesn't exist. %s", util::ErrorString(result).original)));
-            } else if (result.error() == DatabaseStatus::FAILED_LEGACY_DISABLED) {
+            } else if (result.error() == DatabaseError::FAILED_LEGACY_DISABLED) {
                 // Skipping legacy wallets as they will not be loaded.
                 // This will be properly communicated to the user during the loading process.
                 continue;
@@ -134,8 +134,8 @@ bool LoadWallets(WalletContext& context)
             util::Result<void> result;
             auto database{MakeWalletDatabase(name, options) >> result};
             if (!database) {
-                if (database.error() == DatabaseStatus::FAILED_NOT_FOUND) continue;
-                if (database.error() == DatabaseStatus::FAILED_LEGACY_DISABLED) {
+                if (database.error() == DatabaseError::FAILED_NOT_FOUND) continue;
+                if (database.error() == DatabaseError::FAILED_LEGACY_DISABLED) {
                     // Inform user that legacy wallet is not loaded and suggest upgrade options
                     chain.initWarning(util::ErrorString(result));
                     continue;
