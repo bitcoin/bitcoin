@@ -1417,14 +1417,11 @@ bool CCoinJoinClientSession::MakeCollateralAmounts(const CBlockPolicyEstimator& 
     });
 
     // First try to use only non-denominated funds
-    for (const auto& item : vecTally) {
-        if (!MakeCollateralAmounts(fee_estimator, item, false)) continue;
+    if (std::any_of(vecTally.begin(), vecTally.end(), [&](const auto& item) { return MakeCollateralAmounts(fee_estimator, item, false); })) {
         return true;
     }
-
     // There should be at least some denominated funds we should be able to break in pieces to continue mixing
-    for (const auto& item : vecTally) {
-        if (!MakeCollateralAmounts(fee_estimator, item, true)) continue;
+    if (std::any_of(vecTally.begin(), vecTally.end(), [&](const auto& item) { return MakeCollateralAmounts(fee_estimator, item, true); })) {
         return true;
     }
 
