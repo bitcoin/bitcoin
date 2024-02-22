@@ -3,18 +3,15 @@
   "version-string": "1",
   "dependencies": [
     "berkeleydb",
+    "boost-date-time",
     "boost-multi-index",
-    "boost-process",
     "boost-signals2",
     "boost-test",
+    "libevent",
     "sqlite3",
-    {
-      "name": "libevent",
-      "features": ["thread"]
-    },
     "zeromq"
   ],
-  "builtin-baseline": "f14984af3738e69f197bf0e647a8dca12de92996",
+  "builtin-baseline": "9edb1b8e590cc086563301d735cae4b6e732d2d2",
   "overrides": [
     {
       "name": "libevent",

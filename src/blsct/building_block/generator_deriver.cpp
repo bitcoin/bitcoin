@@ -24,7 +24,7 @@ Point GeneratorDeriver<Point>::Derive(
         (token_id.has_value() ? token_id.value().ToString() : "") +
         (token_id.has_value() ? "nft" + num_to_str(token_id.value().subid) : "");
 
-    CHashWriter ss(SER_GETHASH, 0);
+    HashWriter ss{};
     ss << hash_preimage;
     auto hash = ss.GetHash();
 

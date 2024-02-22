@@ -244,7 +244,7 @@ RangeProof<T> RangeProofLogic<T>::Prove(
     auto g = gens.G;
 
     // This hash is updated for Fiat-Shamir throughout the proof
-    CHashWriter fiat_shamir(0, 0);
+    HashWriter fiat_shamir{};
 
 retry: // hasher is not cleared so that different hash will be obtained upon retry
 

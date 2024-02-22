@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#define BLS_ETH 1
+
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/building_block/lazy_points.h>
 #include <bls/bls384_256.h>

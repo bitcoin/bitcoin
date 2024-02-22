@@ -11,14 +11,9 @@
 
 #include <algorithm>
 #include <array> // For std::begin and std::end.
+#include <bit>
 
 #include <stdint.h>
-
-// Internal implementation code.
-namespace
-{
-uint64_t Rotl(uint64_t x, int n) { return (x << n) | (x >> (64 - n)); }
-} // namespace
 
 void KeccakF(uint64_t (&st)[25])
 {
@@ -41,38 +36,38 @@ void KeccakF(uint64_t (&st)[25])
         bc2 = st[2] ^ st[7] ^ st[12] ^ st[17] ^ st[22];
         bc3 = st[3] ^ st[8] ^ st[13] ^ st[18] ^ st[23];
         bc4 = st[4] ^ st[9] ^ st[14] ^ st[19] ^ st[24];
-        t = bc4 ^ Rotl(bc1, 1); st[0] ^= t; st[5] ^= t; st[10] ^= t; st[15] ^= t; st[20] ^= t;
-        t = bc0 ^ Rotl(bc2, 1); st[1] ^= t; st[6] ^= t; st[11] ^= t; st[16] ^= t; st[21] ^= t;
-        t = bc1 ^ Rotl(bc3, 1); st[2] ^= t; st[7] ^= t; st[12] ^= t; st[17] ^= t; st[22] ^= t;
-        t = bc2 ^ Rotl(bc4, 1); st[3] ^= t; st[8] ^= t; st[13] ^= t; st[18] ^= t; st[23] ^= t;
-        t = bc3 ^ Rotl(bc0, 1); st[4] ^= t; st[9] ^= t; st[14] ^= t; st[19] ^= t; st[24] ^= t;
+        t = bc4 ^ std::rotl(bc1, 1); st[0] ^= t; st[5] ^= t; st[10] ^= t; st[15] ^= t; st[20] ^= t;
+        t = bc0 ^ std::rotl(bc2, 1); st[1] ^= t; st[6] ^= t; st[11] ^= t; st[16] ^= t; st[21] ^= t;
+        t = bc1 ^ std::rotl(bc3, 1); st[2] ^= t; st[7] ^= t; st[12] ^= t; st[17] ^= t; st[22] ^= t;
+        t = bc2 ^ std::rotl(bc4, 1); st[3] ^= t; st[8] ^= t; st[13] ^= t; st[18] ^= t; st[23] ^= t;
+        t = bc3 ^ std::rotl(bc0, 1); st[4] ^= t; st[9] ^= t; st[14] ^= t; st[19] ^= t; st[24] ^= t;
 
         // Rho Pi
         t = st[1];
-        bc0 = st[10]; st[10] = Rotl(t, 1); t = bc0;
-        bc0 = st[7]; st[7] = Rotl(t, 3); t = bc0;
-        bc0 = st[11]; st[11] = Rotl(t, 6); t = bc0;
-        bc0 = st[17]; st[17] = Rotl(t, 10); t = bc0;
-        bc0 = st[18]; st[18] = Rotl(t, 15); t = bc0;
-        bc0 = st[3]; st[3] = Rotl(t, 21); t = bc0;
-        bc0 = st[5]; st[5] = Rotl(t, 28); t = bc0;
-        bc0 = st[16]; st[16] = Rotl(t, 36); t = bc0;
-        bc0 = st[8]; st[8] = Rotl(t, 45); t = bc0;
-        bc0 = st[21]; st[21] = Rotl(t, 55); t = bc0;
-        bc0 = st[24]; st[24] = Rotl(t, 2); t = bc0;
-        bc0 = st[4]; st[4] = Rotl(t, 14); t = bc0;
-        bc0 = st[15]; st[15] = Rotl(t, 27); t = bc0;
-        bc0 = st[23]; st[23] = Rotl(t, 41); t = bc0;
-        bc0 = st[19]; st[19] = Rotl(t, 56); t = bc0;
-        bc0 = st[13]; st[13] = Rotl(t, 8); t = bc0;
-        bc0 = st[12]; st[12] = Rotl(t, 25); t = bc0;
-        bc0 = st[2]; st[2] = Rotl(t, 43); t = bc0;
-        bc0 = st[20]; st[20] = Rotl(t, 62); t = bc0;
-        bc0 = st[14]; st[14] = Rotl(t, 18); t = bc0;
-        bc0 = st[22]; st[22] = Rotl(t, 39); t = bc0;
-        bc0 = st[9]; st[9] = Rotl(t, 61); t = bc0;
-        bc0 = st[6]; st[6] = Rotl(t, 20); t = bc0;
-        st[1] = Rotl(t, 44);
+        bc0 = st[10]; st[10] = std::rotl(t, 1); t = bc0;
+        bc0 = st[7]; st[7] = std::rotl(t, 3); t = bc0;
+        bc0 = st[11]; st[11] = std::rotl(t, 6); t = bc0;
+        bc0 = st[17]; st[17] = std::rotl(t, 10); t = bc0;
+        bc0 = st[18]; st[18] = std::rotl(t, 15); t = bc0;
+        bc0 = st[3]; st[3] = std::rotl(t, 21); t = bc0;
+        bc0 = st[5]; st[5] = std::rotl(t, 28); t = bc0;
+        bc0 = st[16]; st[16] = std::rotl(t, 36); t = bc0;
+        bc0 = st[8]; st[8] = std::rotl(t, 45); t = bc0;
+        bc0 = st[21]; st[21] = std::rotl(t, 55); t = bc0;
+        bc0 = st[24]; st[24] = std::rotl(t, 2); t = bc0;
+        bc0 = st[4]; st[4] = std::rotl(t, 14); t = bc0;
+        bc0 = st[15]; st[15] = std::rotl(t, 27); t = bc0;
+        bc0 = st[23]; st[23] = std::rotl(t, 41); t = bc0;
+        bc0 = st[19]; st[19] = std::rotl(t, 56); t = bc0;
+        bc0 = st[13]; st[13] = std::rotl(t, 8); t = bc0;
+        bc0 = st[12]; st[12] = std::rotl(t, 25); t = bc0;
+        bc0 = st[2]; st[2] = std::rotl(t, 43); t = bc0;
+        bc0 = st[20]; st[20] = std::rotl(t, 62); t = bc0;
+        bc0 = st[14]; st[14] = std::rotl(t, 18); t = bc0;
+        bc0 = st[22]; st[22] = std::rotl(t, 39); t = bc0;
+        bc0 = st[9]; st[9] = std::rotl(t, 61); t = bc0;
+        bc0 = st[6]; st[6] = std::rotl(t, 20); t = bc0;
+        st[1] = std::rotl(t, 44);
 
         // Chi Iota
         bc0 = st[0]; bc1 = st[1]; bc2 = st[2]; bc3 = st[3]; bc4 = st[4];

@@ -41,12 +41,12 @@ BOOST_FIXTURE_TEST_CASE(SyncTest, TestBLSCTChain100Setup)
     auto available_coins = AvailableCoins(*wallet);
     std::vector<COutput> coins = available_coins.All();
 
-    BOOST_ASSERT(coins.size() == 1);
+    BOOST_CHECK(coins.size() == 1);
 
     // Create Transaction sending to another address
     auto tx = blsct::TxFactory::CreateTransaction(wallet.get(), wallet->GetOrCreateBLSCTKeyMan(), blsct::SubAddress(), 1 * COIN, "test");
 
-    BOOST_ASSERT(tx != std::nullopt);
+    BOOST_CHECK(tx != std::nullopt);
 
     auto block = CreateAndProcessBlock({tx.value()}, walletDestination);
 

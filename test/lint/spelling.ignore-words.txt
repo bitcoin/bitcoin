@@ -1,3 +1,4 @@
+afile
 asend
 ba
 blockin
@@ -5,15 +6,18 @@ bu
 cachable
 clen
 crypted
+debbugs
 fo
 fpr
 hights
 inflight
 invokable
 keypair
+lief
 mor
 nd
 nin
+requestor
 ser
 siz
 stap

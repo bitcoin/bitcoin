@@ -5,15 +5,16 @@
 
 #include <blsct/bech32_mod.h>
 #include <blsct/double_public_key.h>
+#include <random.h>
 #include <test/util/str.h>
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 
+#include <iostream>
 #include <random>
 #include <set>
 #include <string>
-#include <iostream>
 
 /** The Bech32 and Bech32m character set for encoding. */
 const char* CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
@@ -54,19 +55,6 @@ void embed_errors(std::string& s, const size_t num_errors) {
     }
 }
 
-std::string gen_random_byte_str(const size_t size) {
-    std::string s;
-
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<uint8_t> dist(0, 255);
-
-    for (size_t i = 0; i < size; ++i) {
-        s += static_cast<char>(dist(gen));
-    }
-    return s;
-}
-
 size_t test_error_detection(
     const size_t num_errors,
     const size_t num_tests,
@@ -77,7 +65,7 @@ size_t test_error_detection(
     for (size_t i=0; i<num_tests; ++i) {
         for (auto encoding : {bech32_mod::Encoding::BECH32, bech32_mod::Encoding::BECH32M}) {
             // generate random double public key
-            std::string dpk = gen_random_byte_str(blsct::DoublePublicKey::SIZE);
+            std::vector<uint8_t> dpk = FastRandomContext().randbytes(blsct::DoublePublicKey::SIZE);
 
             // convert 8-bit vector to 5-bit vector
             std::vector<uint8_t> dpk_v8(dpk.begin(), dpk.end());

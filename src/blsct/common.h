@@ -25,7 +25,7 @@ public:
         '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
         '0', '0', '0', '0', '0', '0', '0', '0'};
 
-    static std::vector<uint8_t> CDataStreamToVector(const CDataStream& st);
+    static std::vector<uint8_t> DataStreamToVector(const DataStream& st);
 
     /**
      * Returns power of 2 that is greater or equal to input_value_len

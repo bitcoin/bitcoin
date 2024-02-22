@@ -5,8 +5,6 @@
 #ifndef NAVCOIN_BLSCT_PUBLIC_KEY_H
 #define NAVCOIN_BLSCT_PUBLIC_KEY_H
 
-#define BLS_ETH 1
-
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/signature.h>
 #include <key.h>

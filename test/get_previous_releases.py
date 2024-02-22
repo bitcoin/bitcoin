@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -89,6 +89,15 @@ SHA256_SUMS = {
     "6b163cef7de4beb07b8cb3347095e0d76a584019b1891135cd1268a1f05b9d88": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-riscv64-linux-gnu.tar.gz"},
     "e2f751512f3c0f00eb68ba946d9c829e6cf99422a61e8f5e0a7c109c318674d0": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-x86_64-apple-darwin.tar.gz"},
     "49df6e444515d457ea0b885d66f521f2a26ca92ccf73d5296082e633544253bf": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-x86_64-linux-gnu.tar.gz"},
+
+    "3a7bdd959a0b426624f63f394f25e5b7769a5a2f96f8126dcc2ea53f3fa5212b": {"tag": "v25.0", "tarball": "bitcoin-25.0-aarch64-linux-gnu.tar.gz"},
+    "e537c8630b05e63242d979c3004f851fd73c2a10b5b4fdbb161788427c7b3c0f": {"tag": "v25.0", "tarball": "bitcoin-25.0-arm-linux-gnueabihf.tar.gz"},
+    "3b35075d6c1209743611c705a13575be2668bc069bc6301ce78a2e1e53ebe7cc": {"tag": "v25.0", "tarball": "bitcoin-25.0-arm64-apple-darwin.tar.gz"},
+    "0c8e135a6fd297270d3b65196042d761453493a022b5ff7fb847fc911e938214": {"tag": "v25.0", "tarball": "bitcoin-25.0-powerpc64-linux-gnu.tar.gz"},
+    "fa8af160782f5adfcea570f72b947073c1663b3e9c3cd0f82b216b609fe47573": {"tag": "v25.0", "tarball": "bitcoin-25.0-powerpc64le-linux-gnu.tar.gz"},
+    "fe6e347a66043946920c72c9c4afca301968101e6b82fb90a63d7885ebcceb32": {"tag": "v25.0", "tarball": "bitcoin-25.0-riscv64-linux-gnu.tar.gz"},
+    "5708fc639cdfc27347cccfd50db9b73b53647b36fb5f3a4a93537cbe8828c27f": {"tag": "v25.0", "tarball": "bitcoin-25.0-x86_64-apple-darwin.tar.gz"},
+    "33930d432593e49d58a9bff4c30078823e9af5d98594d2935862788ce8a20aec": {"tag": "v25.0", "tarball": "bitcoin-25.0-x86_64-linux-gnu.tar.gz"},
 }
 
 
@@ -207,14 +216,11 @@ def build_release(tag, args) -> int:
             print('Tag {} not found'.format(tag))
             return 1
     ret = subprocess.run([
-        'git', 'clone', githubUrl, tag
+        'git', 'clone', f'--branch={tag}', '--depth=1', githubUrl, tag
     ]).returncode
     if ret:
         return ret
     with pushd(tag):
-        ret = subprocess.run(['git', 'checkout', tag]).returncode
-        if ret:
-            return ret
         host = args.host
         if args.depends:
             with pushd('depends'):
@@ -250,6 +256,8 @@ def check_host(args) -> int:
     if args.download_binary:
         platforms = {
             'aarch64-*-linux*': 'aarch64-linux-gnu',
+            'powerpc64le-*-linux-*': 'powerpc64le-linux-gnu',
+            'riscv64-*-linux*': 'riscv64-linux-gnu',
             'x86_64-*-linux*': 'x86_64-linux-gnu',
             'x86_64-apple-darwin*': 'x86_64-apple-darwin',
             'aarch64-apple-darwin*': 'arm64-apple-darwin',

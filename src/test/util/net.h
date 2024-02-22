@@ -6,16 +6,30 @@
 #define BITCOIN_TEST_UTIL_NET_H
 
 #include <compat/compat.h>
-#include <node/eviction.h>
-#include <netaddress.h>
 #include <net.h>
+#include <net_permissions.h>
+#include <net_processing.h>
+#include <netaddress.h>
+#include <node/connection_types.h>
+#include <node/eviction.h>
+#include <sync.h>
 #include <util/sock.h>
 
+#include <algorithm>
 #include <array>
 #include <cassert>
+#include <chrono>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <string>
+#include <unordered_map>
+#include <vector>
+
+class FastRandomContext;
+
+template <typename C>
+class Span;
 
 struct ConnmanTestMsg : public CConnman {
     using CConnman::CConnman;
@@ -25,11 +39,20 @@ struct ConnmanTestMsg : public CConnman {
         m_peer_connect_timeout = timeout;
     }
 
+    std::vector<CNode*> TestNodes()
+    {
+        LOCK(m_nodes_mutex);
+        return m_nodes;
+    }
+
     void AddTestNode(CNode& node)
     {
         LOCK(m_nodes_mutex);
         m_nodes.push_back(&node);
+
+        if (node.IsManualOrFullOutboundConn()) ++m_network_conn_counts[node.addr.GetNetwork()];
     }
+
     void ClearTestNodes()
     {
         LOCK(m_nodes_mutex);
@@ -47,11 +70,20 @@ struct ConnmanTestMsg : public CConnman {
                    bool relay_txs)
         EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex);
 
-    void ProcessMessagesOnce(CNode& node) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex) { m_msgproc->ProcessMessages(&node, flagInterruptMsgProc); }
+    bool ProcessMessagesOnce(CNode& node) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex)
+    {
+        return m_msgproc->ProcessMessages(&node, flagInterruptMsgProc);
+    }
 
     void NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const;
 
-    bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg& ser_msg) const;
+    bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg&& ser_msg) const;
+    void FlushSendBuffer(CNode& node) const;
+
+    bool AlreadyConnectedPublic(const CAddress& addr) { return AlreadyConnectedToAddress(addr); };
+
+    CNode* ConnectNodePublic(PeerManager& peerman, const char* pszDest, ConnectionType conn_type)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
 };
 
 constexpr ServiceFlags ALL_SERVICE_FLAGS[]{
@@ -61,6 +93,7 @@ constexpr ServiceFlags ALL_SERVICE_FLAGS[]{
     NODE_WITNESS,
     NODE_COMPACT_FILTERS,
     NODE_NETWORK_LIMITED,
+    NODE_P2P_V2,
 };
 
 constexpr NetPermissionFlags ALL_NET_PERMISSION_FLAGS[]{
@@ -103,10 +136,10 @@ constexpr auto ALL_NETWORKS = std::array{
 class StaticContentsSock : public Sock
 {
 public:
-    explicit StaticContentsSock(const std::string& contents) : m_contents{contents}
+    explicit StaticContentsSock(const std::string& contents)
+        : Sock{INVALID_SOCKET},
+          m_contents{contents}
     {
-        // Just a dummy number that is not INVALID_SOCKET.
-        m_socket = INVALID_SOCKET - 1;
     }
 
     ~StaticContentsSock() override { m_socket = INVALID_SOCKET; }
@@ -186,6 +219,11 @@ public:
             (void)sock;
             events.occurred = events.requested;
         }
+        return true;
+    }
+
+    bool IsConnected(std::string&) const override
+    {
         return true;
     }
 

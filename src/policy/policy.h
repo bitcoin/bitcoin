@@ -10,7 +10,7 @@
 #include <consensus/consensus.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
-#include <script/standard.h>
+#include <script/solver.h>
 
 #include <cstdint>
 #include <string>
@@ -24,7 +24,7 @@ static constexpr unsigned int DEFAULT_BLOCK_MAX_WEIGHT{MAX_BLOCK_WEIGHT - 4000};
 /** Default for -blockmintxfee, which sets the minimum feerate for a transaction in blocks created by mining code **/
 static constexpr unsigned int DEFAULT_BLOCK_MIN_TX_FEE{1000};
 /** The maximum weight for transactions we're willing to relay/mine */
-static constexpr unsigned int MAX_STANDARD_TX_WEIGHT{400000};
+static constexpr int32_t MAX_STANDARD_TX_WEIGHT{400000};
 /** The minimum non-witness size for transactions we're willing to relay/mine: one larger than 64  */
 static constexpr unsigned int MIN_STANDARD_TX_NONWITNESS_SIZE{65};
 /** Maximum number of signature check operations in an IsStandard() P2SH script */
@@ -63,34 +63,54 @@ static constexpr unsigned int DEFAULT_ANCESTOR_SIZE_LIMIT_KVB{101};
 static constexpr unsigned int DEFAULT_DESCENDANT_LIMIT{25};
 /** Default for -limitdescendantsize, maximum kilobytes of in-mempool descendants */
 static constexpr unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT_KVB{101};
+/** Default for -datacarrier */
+static const bool DEFAULT_ACCEPT_DATACARRIER = true;
+/**
+ * Default setting for -datacarriersize. 80 bytes of data, +1 for OP_RETURN,
+ * +2 for the pushdata opcodes.
+ */
+static const unsigned int MAX_OP_RETURN_RELAY = 83;
 /**
  * An extra transaction can be added to a package, as long as it only has one
  * ancestor and is no larger than this. Not really any reason to make this
  * configurable as it doesn't materially change DoS parameters.
  */
 static constexpr unsigned int EXTRA_DESCENDANT_TX_SIZE_LIMIT{10000};
+
+
+/**
+ * Mandatory script verification flags that all new transactions must comply with for
+ * them to be valid. Failing one of these tests may trigger a DoS ban;
+ * see CheckInputScripts() for details.
+ *
+ * Note that this does not affect consensus validity; see GetBlockScriptFlags()
+ * for that.
+ */
+static constexpr unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS{SCRIPT_VERIFY_P2SH |
+                                                             SCRIPT_VERIFY_DERSIG |
+                                                             SCRIPT_VERIFY_NULLDUMMY |
+                                                             SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY |
+                                                             SCRIPT_VERIFY_CHECKSEQUENCEVERIFY |
+                                                             SCRIPT_VERIFY_WITNESS |
+                                                             SCRIPT_VERIFY_TAPROOT};
+
 /**
  * Standard script verification flags that standard transactions will comply
- * with. However scripts violating these flags may still be present in valid
- * blocks and we must accept those blocks.
+ * with. However we do not ban/disconnect nodes that forward txs violating
+ * the additional (non-mandatory) rules here, to improve forwards and
+ * backwards compatibility.
  */
 static constexpr unsigned int STANDARD_SCRIPT_VERIFY_FLAGS{MANDATORY_SCRIPT_VERIFY_FLAGS |
-                                                             SCRIPT_VERIFY_DERSIG |
                                                              SCRIPT_VERIFY_STRICTENC |
                                                              SCRIPT_VERIFY_MINIMALDATA |
-                                                             SCRIPT_VERIFY_NULLDUMMY |
                                                              SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS |
                                                              SCRIPT_VERIFY_CLEANSTACK |
                                                              SCRIPT_VERIFY_MINIMALIF |
                                                              SCRIPT_VERIFY_NULLFAIL |
-                                                             SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY |
-                                                             SCRIPT_VERIFY_CHECKSEQUENCEVERIFY |
                                                              SCRIPT_VERIFY_LOW_S |
-                                                             SCRIPT_VERIFY_WITNESS |
                                                              SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM |
                                                              SCRIPT_VERIFY_WITNESS_PUBKEYTYPE |
                                                              SCRIPT_VERIFY_CONST_SCRIPTCODE |
-                                                             SCRIPT_VERIFY_TAPROOT |
                                                              SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION |
                                                              SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS |
                                                              SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE};

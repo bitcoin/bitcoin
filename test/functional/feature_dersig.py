@@ -120,7 +120,7 @@ class BIP66Test(BitcoinTestFramework):
                 'txid': spendtx.hash,
                 'wtxid': spendtx.getwtxid(),
                 'allowed': False,
-                'reject-reason': 'non-mandatory-script-verify-flag (Non-canonical DER signature)',
+                'reject-reason': 'mandatory-script-verify-flag-failed (Non-canonical DER signature)',
             }],
             self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
         )
@@ -130,7 +130,7 @@ class BIP66Test(BitcoinTestFramework):
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 
-        with self.nodes[0].assert_debug_log(expected_msgs=[f'CheckInputScripts on {block.vtx[-1].hash} failed with non-mandatory-script-verify-flag (Non-canonical DER signature)']):
+        with self.nodes[0].assert_debug_log(expected_msgs=[f'CheckInputScripts on {block.vtx[-1].hash} failed with mandatory-script-verify-flag-failed (Non-canonical DER signature)']):
             peer.send_and_ping(msg_block(block))
             assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
             peer.sync_with_ping()

@@ -2,7 +2,7 @@
 
 Updated for NetBSD [9.2](https://netbsd.org/releases/formal-9/NetBSD-9.2.html).
 
-This guide describes how to build bitcoind, command-line utilities, and GUI on NetBSD.
+This guide describes how to build navcoind, command-line utilities, and GUI on NetBSD.
 
 ## Preparation
 
@@ -46,7 +46,7 @@ git clone https://github.com/bitcoin/bitcoin.git
 
 #### Wallet Dependencies
 
-It is not necessary to build wallet functionality to run bitcoind or the GUI.
+It is not necessary to build wallet functionality to run navcoind or the GUI.
 
 ###### Descriptor Wallet Support
 

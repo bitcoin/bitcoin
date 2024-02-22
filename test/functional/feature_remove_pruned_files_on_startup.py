@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test removing undeleted pruned blk files on startup."""
 
+import platform
 import os
 from test_framework.test_framework import BitcoinTestFramework
 
@@ -20,10 +21,10 @@ class FeatureRemovePrunedFilesOnStartupTest(BitcoinTestFramework):
         self.sync_blocks()
 
     def run_test(self):
-        blk0 = os.path.join(self.nodes[0].datadir, self.nodes[0].chain, 'blocks', 'blk00000.dat')
-        rev0 = os.path.join(self.nodes[0].datadir, self.nodes[0].chain, 'blocks', 'rev00000.dat')
-        blk1 = os.path.join(self.nodes[0].datadir, self.nodes[0].chain, 'blocks', 'blk00001.dat')
-        rev1 = os.path.join(self.nodes[0].datadir, self.nodes[0].chain, 'blocks', 'rev00001.dat')
+        blk0 = self.nodes[0].blocks_path / "blk00000.dat"
+        rev0 = self.nodes[0].blocks_path / "rev00000.dat"
+        blk1 = self.nodes[0].blocks_path / "blk00001.dat"
+        rev1 = self.nodes[0].blocks_path / "rev00001.dat"
         self.mine_batches(800)
         fo1 = os.open(blk0, os.O_RDONLY)
         fo2 = os.open(rev1, os.O_RDONLY)
@@ -32,7 +33,7 @@ class FeatureRemovePrunedFilesOnStartupTest(BitcoinTestFramework):
         self.nodes[0].pruneblockchain(600)
 
         # Windows systems will not remove files with an open fd
-        if os.name != 'nt':
+        if platform.system() != 'Windows':
             assert not os.path.exists(blk0)
             assert not os.path.exists(rev0)
             assert not os.path.exists(blk1)

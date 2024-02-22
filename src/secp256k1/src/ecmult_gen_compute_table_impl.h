@@ -22,6 +22,9 @@ static void secp256k1_ecmult_gen_compute_table(secp256k1_ge_storage* table, cons
     secp256k1_gej nums_gej;
     int i, j;
 
+    VERIFY_CHECK(g > 0);
+    VERIFY_CHECK(n > 0);
+
     /* get the generator */
     secp256k1_gej_set_ge(&gj, gen);
 
@@ -31,7 +34,7 @@ static void secp256k1_ecmult_gen_compute_table(secp256k1_ge_storage* table, cons
         secp256k1_fe nums_x;
         secp256k1_ge nums_ge;
         int r;
-        r = secp256k1_fe_set_b32(&nums_x, nums_b32);
+        r = secp256k1_fe_set_b32_limit(&nums_x, nums_b32);
         (void)r;
         VERIFY_CHECK(r);
         r = secp256k1_ge_set_xo_var(&nums_ge, &nums_x, 0);

@@ -7,10 +7,10 @@
 #define BITCOIN_WALLET_BDB_H
 
 #include <clientversion.h>
+#include <common/system.h>
 #include <serialize.h>
 #include <streams.h>
 #include <util/fs.h>
-#include <util/system.h>
 #include <wallet/db.h>
 
 #include <atomic>
@@ -21,21 +21,21 @@
 #include <unordered_map>
 #include <vector>
 
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsuggest-override"
-#endif
-#include <db_cxx.h>
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-
 struct bilingual_str;
+
+class DbEnv;
+class DbTxn;
+class Db;
+class Dbc;
+
+// This constant was introduced in BDB 4.0.14 and has never changed, but there
+// is a belt-and-suspenders check in the cpp file just in case.
+#define BDB_DB_FILE_ID_LEN 20 /* Unique file ID length. */
 
 namespace wallet {
 
 struct WalletDatabaseFileId {
-    uint8_t value[DB_FILE_ID_LEN];
+    uint8_t value[BDB_DB_FILE_ID_LEN];
     bool operator==(const WalletDatabaseFileId& rhs) const;
 };
 
@@ -74,14 +74,7 @@ public:
     void CloseDb(const fs::path& filename);
     void ReloadDbEnv();
 
-    DbTxn* TxnBegin(int flags = DB_TXN_WRITE_NOSYNC)
-    {
-        DbTxn* ptxn = nullptr;
-        int ret = dbenv->txn_begin(nullptr, &ptxn, flags);
-        if (!ptxn || ret != 0)
-            return nullptr;
-        return ptxn;
-    }
+    DbTxn* TxnBegin(int flags);
 };
 
 /** Get BerkeleyEnvironment given a directory path. */
@@ -98,12 +91,7 @@ public:
     BerkeleyDatabase() = delete;
 
     /** Create DB handle to real database */
-    BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, fs::path filename, const DatabaseOptions& options) :
-        WalletDatabase(), env(std::move(env)), m_filename(std::move(filename)), m_max_log_mb(options.max_log_mb)
-    {
-        auto inserted = this->env->m_databases.emplace(m_filename, std::ref(*this));
-        assert(inserted.second);
-    }
+    BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, fs::path filename, const DatabaseOptions& options);
 
     ~BerkeleyDatabase() override;
 
@@ -166,33 +154,17 @@ public:
     std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override;
 };
 
-/** RAII class that automatically cleanses its data on destruction */
-class SafeDbt final
-{
-    Dbt m_dbt;
-
-public:
-    // construct Dbt with internally-managed data
-    SafeDbt();
-    // construct Dbt with provided data
-    SafeDbt(void* data, size_t size);
-    ~SafeDbt();
-
-    // delegate to Dbt
-    const void* get_data() const;
-    uint32_t get_size() const;
-
-    // conversion operator to access the underlying Dbt
-    operator Dbt*();
-};
-
 class BerkeleyCursor : public DatabaseCursor
 {
 private:
     Dbc* m_cursor;
+    std::vector<std::byte> m_key_prefix;
+    bool m_first{true};
 
 public:
-    explicit BerkeleyCursor(BerkeleyDatabase& database, BerkeleyBatch* batch=nullptr);
+    // Constructor for cursor for records matching the prefix
+    // To match all records, an empty prefix may be provided.
+    explicit BerkeleyCursor(BerkeleyDatabase& database, const BerkeleyBatch& batch, Span<const std::byte> prefix = {});
     ~BerkeleyCursor() override;
 
     Status Next(DataStream& key, DataStream& value) override;
@@ -229,6 +201,7 @@ public:
     void Close() override;
 
     std::unique_ptr<DatabaseCursor> GetNewCursor() override;
+    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) override;
     bool TxnBegin() override;
     bool TxnCommit() override;
     bool TxnAbort() override;

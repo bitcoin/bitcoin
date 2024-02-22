@@ -11,14 +11,6 @@
 #include <string>
 #include <vector>
 
-#if defined(__has_builtin)
-#if __has_builtin(__builtin_add_overflow)
-#define HAVE_BUILTIN_ADD_OVERFLOW
-#endif
-#elif defined(__GNUC__)
-#define HAVE_BUILTIN_ADD_OVERFLOW
-#endif
-
 namespace {
 template <typename T>
 void TestAdditionOverflow(FuzzedDataProvider& fuzzed_data_provider)
@@ -32,14 +24,12 @@ void TestAdditionOverflow(FuzzedDataProvider& fuzzed_data_provider)
     assert(is_addition_overflow_custom == AdditionOverflow(j, i));
     assert(maybe_add == CheckedAdd(j, i));
     assert(sat_add == SaturatingAdd(j, i));
-#if defined(HAVE_BUILTIN_ADD_OVERFLOW)
     T result_builtin;
     const bool is_addition_overflow_builtin = __builtin_add_overflow(i, j, &result_builtin);
     assert(is_addition_overflow_custom == is_addition_overflow_builtin);
     if (!is_addition_overflow_custom) {
         assert(i + j == result_builtin);
     }
-#endif
     if (is_addition_overflow_custom) {
         assert(sat_add == std::numeric_limits<T>::min() || sat_add == std::numeric_limits<T>::max());
     } else {

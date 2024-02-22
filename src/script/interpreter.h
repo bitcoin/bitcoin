@@ -6,21 +6,23 @@
 #ifndef BITCOIN_SCRIPT_INTERPRETER_H
 #define BITCOIN_SCRIPT_INTERPRETER_H
 
+#include <consensus/amount.h>
 #include <hash.h>
-#include <script/script_error.h>
-#include <span.h>
 #include <primitives/transaction.h>
+#include <script/script_error.h> // IWYU pragma: export
+#include <span.h>
+#include <uint256.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <vector>
-#include <stdint.h>
 
 class CPubKey;
-class XOnlyPubKey;
 class CScript;
-class CTransaction;
-class CTxOut;
-class uint256;
+class CScriptNum;
+class XOnlyPubKey;
+struct CScriptWitness;
 
 /** Signature hash types/flags */
 enum

@@ -5,10 +5,9 @@
 #ifndef NAVCOIN_BLSCT_PUBLIC_KEYS_H
 #define NAVCOIN_BLSCT_PUBLIC_KEYS_H
 
-#define BLS_ETH 1
+#include <blsct/public_key.h>
 
 #include <vector>
-#include <blsct/public_key.h>
 
 namespace blsct {
 

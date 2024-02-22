@@ -7,14 +7,17 @@
 
 #include <kernel/context.h>
 
+#include <atomic>
 #include <cassert>
+#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <vector>
 
 class ArgsManager;
-class BanMan;
 class AddrMan;
+class BanMan;
+class BaseIndex;
 class CBlockPolicyEstimator;
 class CConnman;
 class CScheduler;
@@ -30,6 +33,8 @@ class WalletLoader;
 } // namespace interfaces
 
 namespace node {
+class KernelNotifications;
+
 //! NodeContext struct containing references to chain state and connection
 //! state.
 //!
@@ -45,6 +50,8 @@ struct NodeContext {
     std::unique_ptr<kernel::Context> kernel;
     //! Init interface for initializing current process and connecting to other processes.
     interfaces::Init* init{nullptr};
+    //! Interrupt object used to track whether node shutdown was requested.
+    util::SignalInterrupt* shutdown{nullptr};
     std::unique_ptr<AddrMan> addrman;
     std::unique_ptr<CConnman> connman;
     std::unique_ptr<CTxMemPool> mempool;
@@ -54,6 +61,7 @@ struct NodeContext {
     std::unique_ptr<ChainstateManager> chainman;
     std::unique_ptr<BanMan> banman;
     ArgsManager* args{nullptr}; // Currently a raw pointer because the memory is not managed by this struct
+    std::vector<BaseIndex*> indexes; // raw pointers because memory is not managed by this struct
     std::unique_ptr<interfaces::Chain> chain;
     //! List of all chain clients (wallet processes or other client) connected to node.
     std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
@@ -62,6 +70,8 @@ struct NodeContext {
     interfaces::WalletLoader* wallet_loader{nullptr};
     std::unique_ptr<CScheduler> scheduler;
     std::function<void()> rpc_interruption_point = [] {};
+    std::unique_ptr<KernelNotifications> notifications;
+    std::atomic<int> exit_status{EXIT_SUCCESS};
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the NodeContext struct doesn't need to #include class

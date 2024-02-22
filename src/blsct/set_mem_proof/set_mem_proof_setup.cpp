@@ -85,7 +85,7 @@ typename Mcl::Scalar SetMemProofSetup<Mcl>::H4(const std::vector<uint8_t>& msg) 
 template <typename T>
 typename T::Point SetMemProofSetup<T>::GenPoint(const std::vector<uint8_t>& msg, const uint64_t& i)
 {
-    CHashWriter hasher(0, 0);
+    HashWriter hasher{};
     hasher << msg;
     hasher << i;
     uint256 hash = hasher.GetHash();

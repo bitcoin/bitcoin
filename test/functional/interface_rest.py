@@ -26,6 +26,7 @@ from test_framework.wallet import (
     MiniWallet,
     getnewdestination,
 )
+from typing import Optional
 
 
 INVALID_PARAM = "abc"
@@ -64,7 +65,7 @@ class RESTTest (BitcoinTestFramework):
             body: str = '',
             status: int = 200,
             ret_type: RetType = RetType.JSON,
-            query_params: typing.Dict[str, typing.Any] = None,
+            query_params: Optional[dict[str, typing.Any]] = None,
             ) -> typing.Union[http.client.HTTPResponse, bytes, str, None]:
         rest_uri = '/rest' + uri
         if req_type in ReqType:
@@ -96,7 +97,7 @@ class RESTTest (BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
 
         self.log.info("Broadcast test transaction and sync nodes")
-        txid, _ = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=int(0.1 * COIN))
+        txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=int(0.1 * COIN))["txid"]
         self.sync_all()
 
         self.log.info("Test the /tx URI")
@@ -173,7 +174,7 @@ class RESTTest (BitcoinTestFramework):
         # found with or without /checkmempool.
 
         # do a tx and don't sync
-        txid, _ = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=int(0.1 * COIN))
+        txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=int(0.1 * COIN))["txid"]
         json_obj = self.test_rest_request(f"/tx/{txid}")
         # get the spent output to later check for utxo (should be spent by then)
         spent = (json_obj['vin'][0]['txid'], json_obj['vin'][0]['vout'])
@@ -420,6 +421,10 @@ class RESTTest (BitcoinTestFramework):
 
         deployment_info = self.nodes[0].getdeploymentinfo()
         assert_equal(deployment_info, self.test_rest_request('/deploymentinfo'))
+
+        previous_bb_hash = self.nodes[0].getblockhash(self.nodes[0].getblockcount() - 1)
+        deployment_info = self.nodes[0].getdeploymentinfo(previous_bb_hash)
+        assert_equal(deployment_info, self.test_rest_request(f"/deploymentinfo/{previous_bb_hash}"))
 
         non_existing_blockhash = '42759cde25462784395a337460bde75f58e73d3f08bd31fdc3507cbac856a2c4'
         resp = self.test_rest_request(f'/deploymentinfo/{non_existing_blockhash}', ret_type=RetType.OBJ, status=400)

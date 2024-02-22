@@ -29,7 +29,7 @@ struct TestVector {
     explicit TestVector(std::string strHexMasterIn) : strHexMaster(strHexMasterIn) {}
 
     TestVector& operator()(std::string pub, std::string prv, unsigned int nChild) {
-        vDerive.push_back(TestDerivation());
+        vDerive.emplace_back();
         TestDerivation &der = vDerive.back();
         der.pub = pub;
         der.prv = prv;

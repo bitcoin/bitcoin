@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
         uint32_t chain_all_vbits{0};
         for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++i) {
             const auto dep = static_cast<Consensus::DeploymentPos>(i);
-            // Check that no bits are re-used (within the same chain). This is
+            // Check that no bits are reused (within the same chain). This is
             // disallowed because the transition to FAILED (on timeout) does
             // not take precedence over STARTED/LOCKED_IN. So all softforks on
             // the same bit might overlap, even when non-overlapping start-end

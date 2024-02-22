@@ -216,6 +216,7 @@ DecodeResult Decode(const std::string& str) {
     std::vector<int> errors;
     if (!CheckCharacters(str, errors)) return {};
     size_t pos = str.rfind('1');
+    if (pos == std::string::npos) return {};
 
     data values(str.size() - 1 - pos);
     for (size_t i = 0; i < str.size() - 1 - pos; ++i) {

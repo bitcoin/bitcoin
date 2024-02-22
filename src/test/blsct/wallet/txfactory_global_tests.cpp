@@ -4,6 +4,7 @@
 
 #include <blsct/wallet/txfactory_global.h>
 #include <test/util/setup_common.h>
+#include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 

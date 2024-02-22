@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,15 +14,24 @@
 
 #include <csignal>
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <exception>
 #include <fstream>
 #include <functional>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <string>
 #include <tuple>
 #include <unistd.h>
+#include <utility>
 #include <vector>
+
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && defined(__AFL_FUZZ_INIT)
+__AFL_FUZZ_INIT();
+#endif
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
@@ -50,20 +59,25 @@ const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS = 
     return g_args;
 };
 
-std::map<std::string_view, std::tuple<TypeTestOneInput, TypeInitialize, TypeHidden>>& FuzzTargets()
+struct FuzzTarget {
+    const TypeTestOneInput test_one_input;
+    const FuzzTargetOptions opts;
+};
+
+auto& FuzzTargets()
 {
-    static std::map<std::string_view, std::tuple<TypeTestOneInput, TypeInitialize, TypeHidden>> g_fuzz_targets;
+    static std::map<std::string_view, FuzzTarget> g_fuzz_targets;
     return g_fuzz_targets;
 }
 
-void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, TypeInitialize init, TypeHidden hidden)
+void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, FuzzTargetOptions opts)
 {
-    const auto it_ins = FuzzTargets().try_emplace(name, std::move(target), std::move(init), hidden);
+    const auto it_ins{FuzzTargets().try_emplace(name, FuzzTarget /* temporary can be dropped after clang-16 */ {std::move(target), std::move(opts)})};
     Assert(it_ins.second);
 }
 
 static std::string_view g_fuzz_target;
-static TypeTestOneInput* g_test_one_input{nullptr};
+static const TypeTestOneInput* g_test_one_input{nullptr};
 
 void initialize()
 {
@@ -80,33 +94,43 @@ void initialize()
         return WrappedGetAddrInfo(name, false);
     };
 
-    bool should_abort{false};
+    bool should_exit{false};
     if (std::getenv("PRINT_ALL_FUZZ_TARGETS_AND_ABORT")) {
-        for (const auto& t : FuzzTargets()) {
-            if (std::get<2>(t.second)) continue;
-            std::cout << t.first << std::endl;
+        for (const auto& [name, t] : FuzzTargets()) {
+            if (t.opts.hidden) continue;
+            std::cout << name << std::endl;
         }
-        should_abort = true;
+        should_exit = true;
     }
     if (const char* out_path = std::getenv("WRITE_ALL_FUZZ_TARGETS_AND_ABORT")) {
         std::cout << "Writing all fuzz target names to '" << out_path << "'." << std::endl;
         std::ofstream out_stream{out_path, std::ios::binary};
-        for (const auto& t : FuzzTargets()) {
-            if (std::get<2>(t.second)) continue;
-            out_stream << t.first << std::endl;
+        for (const auto& [name, t] : FuzzTargets()) {
+            if (t.opts.hidden) continue;
+            out_stream << name << std::endl;
         }
-        should_abort = true;
+        should_exit = true;
     }
-    Assert(!should_abort);
-    g_fuzz_target = Assert(std::getenv("FUZZ"));
+    if (should_exit) {
+        std::exit(EXIT_SUCCESS);
+    }
+    if (const auto* env_fuzz{std::getenv("FUZZ")}) {
+        // To allow for easier fuzz executable binary modification,
+        static std::string g_copy{env_fuzz}; // create copy to avoid compiler optimizations, and
+        g_fuzz_target = g_copy.c_str();      // strip string after the first null-char.
+    } else {
+        std::cerr << "Must select fuzz target with the FUZZ env var." << std::endl;
+        std::cerr << "Hint: Set the PRINT_ALL_FUZZ_TARGETS_AND_ABORT=1 env var to see all compiled targets." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
     const auto it = FuzzTargets().find(g_fuzz_target);
     if (it == FuzzTargets().end()) {
-        std::cerr << "No fuzzer for " << g_fuzz_target << "." << std::endl;
+        std::cerr << "No fuzz target compiled for " << g_fuzz_target << "." << std::endl;
         std::exit(EXIT_FAILURE);
     }
     Assert(!g_test_one_input);
-    g_test_one_input = &std::get<0>(it->second);
-    std::get<1>(it->second)();
+    g_test_one_input = &it->second.test_one_input;
+    it->second.opts.init();
 }
 
 #if defined(PROVIDE_FUZZ_MAIN_FUNCTION)
@@ -171,21 +195,13 @@ int main(int argc, char** argv)
 {
     initialize();
     static const auto& test_one_input = *Assert(g_test_one_input);
-#ifdef __AFL_INIT
-    // Enable AFL deferred forkserver mode. Requires compilation using
-    // afl-clang-fast++. See fuzzing.md for details.
-    __AFL_INIT();
-#endif
-
 #ifdef __AFL_LOOP
     // Enable AFL persistent mode. Requires compilation using afl-clang-fast++.
     // See fuzzing.md for details.
-    while (__AFL_LOOP(1000)) {
-        std::vector<uint8_t> buffer;
-        if (!read_stdin(buffer)) {
-            continue;
-        }
-        test_one_input(buffer);
+    const uint8_t* buffer = __AFL_FUZZ_TESTCASE_BUF;
+    while (__AFL_LOOP(100000)) {
+        size_t buffer_len = __AFL_FUZZ_TESTCASE_LEN;
+        test_one_input({buffer, buffer_len});
     }
 #else
     std::vector<uint8_t> buffer;

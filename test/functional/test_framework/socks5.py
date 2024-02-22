@@ -40,6 +40,7 @@ class Socks5Configuration():
         self.af = socket.AF_INET # Bind address family
         self.unauth = False  # Support unauthenticated
         self.auth = False  # Support authentication
+        self.keep_alive = False  # Do not automatically close connections
 
 class Socks5Command():
     """Information about an incoming socks5 command."""
@@ -115,13 +116,14 @@ class Socks5Connection():
 
             cmdin = Socks5Command(cmd, atyp, addr, port, username, password)
             self.serv.queue.put(cmdin)
-            logger.info('Proxy: %s', cmdin)
+            logger.debug('Proxy: %s', cmdin)
             # Fall through to disconnect
         except Exception as e:
             logger.exception("socks5 request handling failed.")
             self.serv.queue.put(e)
         finally:
-            self.conn.close()
+            if not self.serv.keep_alive:
+                self.conn.close()
 
 class Socks5Server():
     def __init__(self, conf):
@@ -133,6 +135,7 @@ class Socks5Server():
         self.running = False
         self.thread = None
         self.queue = queue.Queue() # report connections and exceptions to client
+        self.keep_alive = conf.keep_alive
 
     def run(self):
         while self.running:
@@ -157,4 +160,3 @@ class Socks5Server():
         s.connect(self.conf.addr)
         s.close()
         self.thread.join()
-

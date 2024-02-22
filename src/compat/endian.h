@@ -22,7 +22,7 @@
 #ifndef HAVE_CONFIG_H
 // While not technically a supported configuration, defaulting to defining these
 // DECLs when we were compiled without autotools makes it easier for other build
-// systems to build things like libbitcoinconsensus for strange targets.
+// systems to build things like libnavcoinconsensus for strange targets.
 #ifdef htobe16
 #define HAVE_DECL_HTOBE16 1
 #endif

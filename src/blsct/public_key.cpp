@@ -2,8 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#define BLS_ETH 1
-
 #include <blsct/common.h> // causes mutual dependency issue if included in the public_key header
 #include <blsct/public_key.h>
 #include <tinyformat.h>
@@ -14,7 +12,7 @@ using Point = MclG1Point;
 
 uint256 PublicKey::GetHash() const
 {
-    CHashWriter ss(SER_GETHASH, 0);
+    HashWriter ss{};
     ss << GetVch();
     return ss.GetHash();
 }

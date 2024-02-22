@@ -32,7 +32,7 @@ class InvalidLocatorTest(BitcoinTestFramework):
             within_max_peer = node.add_p2p_connection(P2PInterface())
             msg.locator.vHave = [int(node.getblockhash(i - 1), 16) for i in range(block_count, block_count - (MAX_LOCATOR_SZ), -1)]
             within_max_peer.send_message(msg)
-            if type(msg) == msg_getheaders:
+            if type(msg) is msg_getheaders:
                 within_max_peer.wait_for_header(node.getbestblockhash())
             else:
                 within_max_peer.wait_for_block(int(node.getbestblockhash(), 16))

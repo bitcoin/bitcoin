@@ -1,6 +1,6 @@
 #include <blsct/common.h>
 
-std::vector<uint8_t> blsct::Common::CDataStreamToVector(const CDataStream& st)
+std::vector<uint8_t> blsct::Common::DataStreamToVector(const DataStream& st)
 {
     auto data = reinterpret_cast<const int8_t*>(st.data());
     std::vector<uint8_t> vec;

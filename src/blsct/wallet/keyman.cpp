@@ -503,7 +503,7 @@ blsct::PrivateKey KeyMan::GetSpendingKeyForOutput(const CTxOut& out, const SubAd
 
     auto sk = GetSpendingKey();
 
-    CHashWriter string(SER_GETHASH, 0);
+    HashWriter string{};
 
     string << std::vector<unsigned char>(subAddressHeader.begin(), subAddressHeader.end());
     string << viewKey;
@@ -539,7 +539,7 @@ bool KeyMan::IsMine(const blsct::PublicKey& blindingKey, const blsct::PublicKey&
     if (!fViewKeyDefined || !viewKey.IsValid())
         return false;
 
-    CHashWriter hash(SER_GETHASH, PROTOCOL_VERSION);
+    HashWriter hash{};
     hash << (blindingKey.GetG1Point() * viewKey.GetScalar());
 
     if (viewTag != (hash.GetHash().GetUint64(0) & 0xFFFF)) return false;

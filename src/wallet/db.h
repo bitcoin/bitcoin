@@ -67,7 +67,7 @@ public:
         ssKey.reserve(1000);
         ssKey << key;
 
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        DataStream ssValue{};
         if (!ReadKey(std::move(ssKey), ssValue)) return false;
         try {
             ssValue >> value;
@@ -84,7 +84,7 @@ public:
         ssKey.reserve(1000);
         ssKey << key;
 
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        DataStream ssValue{};
         ssValue.reserve(10000);
         ssValue << value;
 
@@ -113,6 +113,7 @@ public:
     virtual bool ErasePrefix(Span<const std::byte> prefix) = 0;
 
     virtual std::unique_ptr<DatabaseCursor> GetNewCursor() = 0;
+    virtual std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) = 0;
     virtual bool TxnBegin() = 0;
     virtual bool TxnCommit() = 0;
     virtual bool TxnAbort() = 0;
@@ -172,51 +173,6 @@ public:
 
     /** Make a DatabaseBatch connected to this database */
     virtual std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) = 0;
-};
-
-class DummyCursor : public DatabaseCursor
-{
-    Status Next(DataStream& key, DataStream& value) override { return Status::FAIL; }
-};
-
-/** RAII class that provides access to a DummyDatabase. Never fails. */
-class DummyBatch : public DatabaseBatch
-{
-private:
-    bool ReadKey(DataStream&& key, DataStream& value) override { return true; }
-    bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override { return true; }
-    bool EraseKey(DataStream&& key) override { return true; }
-    bool HasKey(DataStream&& key) override { return true; }
-    bool ErasePrefix(Span<const std::byte> prefix) override { return true; }
-
-public:
-    void Flush() override {}
-    void Close() override {}
-
-    std::unique_ptr<DatabaseCursor> GetNewCursor() override { return std::make_unique<DummyCursor>(); }
-    bool TxnBegin() override { return true; }
-    bool TxnCommit() override { return true; }
-    bool TxnAbort() override { return true; }
-};
-
-/** A dummy WalletDatabase that does nothing and never fails. Only used by unit tests.
- **/
-class DummyDatabase : public WalletDatabase
-{
-public:
-    void Open() override {};
-    void AddRef() override {}
-    void RemoveRef() override {}
-    bool Rewrite(const char* pszSkip=nullptr) override { return true; }
-    bool Backup(const std::string& strDest) const override { return true; }
-    void Close() override {}
-    void Flush() override {}
-    bool PeriodicFlush() override { return true; }
-    void IncrementUpdateCounter() override { ++nUpdateCounter; }
-    void ReloadDbEnv() override {}
-    std::string Filename() override { return "dummy"; }
-    std::string Format() override { return "dummy"; }
-    std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override { return std::make_unique<DummyBatch>(); }
 };
 
 enum class DatabaseFormat {

@@ -4,11 +4,15 @@
 
 #include <test/util/net.h>
 
-#include <chainparams.h>
-#include <node/eviction.h>
 #include <net.h>
 #include <net_processing.h>
+#include <netaddress.h>
 #include <netmessagemaker.h>
+#include <node/connection_types.h>
+#include <node/eviction.h>
+#include <protocol.h>
+#include <random.h>
+#include <serialize.h>
 #include <span.h>
 
 #include <vector>
@@ -22,29 +26,30 @@ void ConnmanTestMsg::Handshake(CNode& node,
 {
     auto& peerman{static_cast<PeerManager&>(*m_msgproc)};
     auto& connman{*this};
-    const CNetMsgMaker mm{0};
 
     peerman.InitializeNode(node, local_services);
+    FlushSendBuffer(node); // Drop the version message added by InitializeNode.
 
     CSerializedNetMsg msg_version{
-        mm.Make(NetMsgType::VERSION,
+        NetMsg::Make(NetMsgType::VERSION,
                 version,                                        //
                 Using<CustomUintFormatter<8>>(remote_services), //
                 int64_t{},                                      // dummy time
                 int64_t{},                                      // ignored service bits
-                CService{},                                     // dummy
+                CNetAddr::V1(CService{}),                       // dummy
                 int64_t{},                                      // ignored service bits
-                CService{},                                     // ignored
+                CNetAddr::V1(CService{}),                       // ignored
                 uint64_t{1},                                    // dummy nonce
                 std::string{},                                  // dummy subver
                 int32_t{},                                      // dummy starting_height
                 relay_txs),
     };
 
-    (void)connman.ReceiveMsgFrom(node, msg_version);
+    (void)connman.ReceiveMsgFrom(node, std::move(msg_version));
     node.fPauseSend = false;
     connman.ProcessMessagesOnce(node);
     peerman.SendMessages(&node);
+    FlushSendBuffer(node); // Drop the verack message added by SendMessages.
     if (node.fDisconnect) return;
     assert(node.nVersion == version);
     assert(node.GetCommonVersion() == std::min(version, PROTOCOL_VERSION));
@@ -53,8 +58,8 @@ void ConnmanTestMsg::Handshake(CNode& node,
     assert(statestats.m_relay_txs == (relay_txs && !node.IsBlockOnlyConn()));
     assert(statestats.their_services == remote_services);
     if (successfully_connected) {
-        CSerializedNetMsg msg_verack{mm.Make(NetMsgType::VERACK)};
-        (void)connman.ReceiveMsgFrom(node, msg_verack);
+        CSerializedNetMsg msg_verack{NetMsg::Make(NetMsgType::VERACK)};
+        (void)connman.ReceiveMsgFrom(node, std::move(msg_verack));
         node.fPauseSend = false;
         connman.ProcessMessagesOnce(node);
         peerman.SendMessages(&node);
@@ -70,15 +75,41 @@ void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_by
     }
 }
 
-bool ConnmanTestMsg::ReceiveMsgFrom(CNode& node, CSerializedNetMsg& ser_msg) const
+void ConnmanTestMsg::FlushSendBuffer(CNode& node) const
 {
-    std::vector<uint8_t> ser_msg_header;
-    node.m_serializer->prepareForTransport(ser_msg, ser_msg_header);
+    LOCK(node.cs_vSend);
+    node.vSendMsg.clear();
+    node.m_send_memusage = 0;
+    while (true) {
+        const auto& [to_send, _more, _msg_type] = node.m_transport->GetBytesToSend(false);
+        if (to_send.empty()) break;
+        node.m_transport->MarkBytesSent(to_send.size());
+    }
+}
 
-    bool complete;
-    NodeReceiveMsgBytes(node, ser_msg_header, complete);
-    NodeReceiveMsgBytes(node, ser_msg.data, complete);
+bool ConnmanTestMsg::ReceiveMsgFrom(CNode& node, CSerializedNetMsg&& ser_msg) const
+{
+    bool queued = node.m_transport->SetMessageToSend(ser_msg);
+    assert(queued);
+    bool complete{false};
+    while (true) {
+        const auto& [to_send, _more, _msg_type] = node.m_transport->GetBytesToSend(false);
+        if (to_send.empty()) break;
+        NodeReceiveMsgBytes(node, to_send, complete);
+        node.m_transport->MarkBytesSent(to_send.size());
+    }
     return complete;
+}
+
+CNode* ConnmanTestMsg::ConnectNodePublic(PeerManager& peerman, const char* pszDest, ConnectionType conn_type)
+{
+    CNode* node = ConnectNode(CAddress{}, pszDest, /*fCountFailure=*/false, conn_type, /*use_v2transport=*/true);
+    if (!node) return nullptr;
+    node->SetCommonVersion(PROTOCOL_VERSION);
+    peerman.InitializeNode(*node, ServiceFlags(NODE_NETWORK | NODE_WITNESS));
+    node->fSuccessfullyConnected = true;
+    AddTestNode(*node);
+    return node;
 }
 
 std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candidates, FastRandomContext& random_context)

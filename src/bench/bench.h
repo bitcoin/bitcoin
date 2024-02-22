@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-#include <bench/nanobench.h>
+#include <bench/nanobench.h> // IWYU pragma: export
 
 /*
  * Usage:

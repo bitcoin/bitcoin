@@ -19,7 +19,7 @@ SubAddress::SubAddress(const PrivateKey& viewKey, const PublicKey& spendKey, con
         throw std::runtime_error(std::string(__func__) + ": no valid blsct keys");
     }
 
-    CHashWriter string(SER_GETHASH, 0);
+    HashWriter string{};
 
     string << std::vector<unsigned char>(subAddressHeader.begin(), subAddressHeader.end());
     string << viewKey;

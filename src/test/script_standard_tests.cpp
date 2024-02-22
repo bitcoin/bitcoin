@@ -8,7 +8,7 @@
 #include <key_io.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
+#include <script/solver.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
@@ -136,10 +136,8 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
 
 BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
 {
-    CKey key;
-    CPubKey pubkey;
-    key.MakeNewKey(true);
-    pubkey = key.GetPubKey();
+    CKey key = GenerateRandomKey();
+    CPubKey pubkey = key.GetPubKey();
 
     CScript s;
     std::vector<std::vector<unsigned char> > solutions;
@@ -192,10 +190,8 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
 
 BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
 {
-    CKey key;
-    CPubKey pubkey;
-    key.MakeNewKey(true);
-    pubkey = key.GetPubKey();
+    CKey key = GenerateRandomKey();
+    CPubKey pubkey = key.GetPubKey();
 
     CScript s;
     CTxDestination address;
@@ -203,8 +199,8 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     // TxoutType::PUBKEY
     s.clear();
     s << ToByteVector(pubkey) << OP_CHECKSIG;
-    BOOST_CHECK(ExtractDestination(s, address));
-    BOOST_CHECK(std::get<PKHash>(address) == PKHash(pubkey));
+    BOOST_CHECK(!ExtractDestination(s, address));
+    BOOST_CHECK(std::get<PubKeyDestination>(address) == PubKeyDestination(pubkey));
 
     // TxoutType::PUBKEYHASH
     s.clear();
@@ -249,10 +245,7 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     s.clear();
     s << OP_1 << ToByteVector(pubkey);
     BOOST_CHECK(ExtractDestination(s, address));
-    WitnessUnknown unk;
-    unk.length = 33;
-    unk.version = 1;
-    std::copy(pubkey.begin(), pubkey.end(), unk.program);
+    WitnessUnknown unk{1, ToByteVector(pubkey)};
     BOOST_CHECK(std::get<WitnessUnknown>(address) == unk);
 }
 
@@ -394,7 +387,7 @@ BOOST_AUTO_TEST_CASE(bip341_spk_test_vectors)
     using control_set = decltype(TaprootSpendData::scripts)::mapped_type;
 
     UniValue tests;
-    tests.read((const char*)json_tests::bip341_wallet_vectors, sizeof(json_tests::bip341_wallet_vectors));
+    tests.read(json_tests::bip341_wallet_vectors);
 
     const auto& vectors = tests["scriptPubKey"];
 

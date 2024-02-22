@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(test_de_ser)
     p.b = b;
     p.t_hat = t_hat;
 
-    CDataStream st(SER_DISK, PROTOCOL_VERSION);
+    DataStream st{};
     p.Serialize(st);
 
     bulletproofs::RangeProof<T> q;

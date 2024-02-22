@@ -129,14 +129,14 @@ bool IsSQLiteFile(const fs::path& path)
 
     file.close();
 
-    // Check the magic, see https://sqlite.org/fileformat2.html
+    // Check the magic, see https://sqlite.org/fileformat.html
     std::string magic_str(magic, 16);
-    if (magic_str != std::string("SQLite format 3", 16)) {
+    if (magic_str != std::string{"SQLite format 3\000", 16}) {
         return false;
     }
 
     // Check the application id matches our network magic
-    return memcmp(Params().MessageStart(), app_id, 4) == 0;
+    return memcmp(Params().MessageStart().data(), app_id, 4) == 0;
 }
 
 void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options)

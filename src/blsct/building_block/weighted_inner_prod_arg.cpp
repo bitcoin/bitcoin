@@ -75,7 +75,7 @@ std::optional<WeightedInnerProdArgResult<T>> WeightedInnerProdArg::Run(
     Elements<typename T::Scalar>& a,
     Elements<typename T::Scalar>& b,
     const typename T::Scalar& alpha_src,
-    CHashWriter& fiat_shamir
+    HashWriter& fiat_shamir
 ) {
     using Scalar = typename T::Scalar;
     using Point = typename T::Point;
@@ -210,5 +210,5 @@ std::optional<WeightedInnerProdArgResult<Mcl>> WeightedInnerProdArg::Run(
     Elements<typename Mcl::Scalar>& a,
     Elements<typename Mcl::Scalar>& b,
     const typename Mcl::Scalar& alpha_src,
-    CHashWriter& fiat_shamir
+    HashWriter& fiat_shamir
 );

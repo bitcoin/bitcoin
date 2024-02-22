@@ -88,7 +88,7 @@ static int secp256k1_modinv64_det_check_pow2(const secp256k1_modinv64_trans2x2 *
 static void secp256k1_modinv64_normalize_62(secp256k1_modinv64_signed62 *r, int64_t sign, const secp256k1_modinv64_modinfo *modinfo) {
     const int64_t M62 = (int64_t)(UINT64_MAX >> 2);
     int64_t r0 = r->v[0], r1 = r->v[1], r2 = r->v[2], r3 = r->v[3], r4 = r->v[4];
-    int64_t cond_add, cond_negate;
+    volatile int64_t cond_add, cond_negate;
 
 #ifdef VERIFY
     /* Verify that all limbs are in range (-2^62,2^62). */
@@ -144,7 +144,6 @@ static void secp256k1_modinv64_normalize_62(secp256k1_modinv64_signed62 *r, int6
     r->v[3] = r3;
     r->v[4] = r4;
 
-#ifdef VERIFY
     VERIFY_CHECK(r0 >> 62 == 0);
     VERIFY_CHECK(r1 >> 62 == 0);
     VERIFY_CHECK(r2 >> 62 == 0);
@@ -152,7 +151,6 @@ static void secp256k1_modinv64_normalize_62(secp256k1_modinv64_signed62 *r, int6
     VERIFY_CHECK(r4 >> 62 == 0);
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(r, 5, &modinfo->modulus, 0) >= 0); /* r >= 0 */
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(r, 5, &modinfo->modulus, 1) < 0); /* r < modulus */
-#endif
 }
 
 /* Compute the transition matrix and eta for 59 divsteps (where zeta=-(delta+1/2)).
@@ -175,7 +173,8 @@ static int64_t secp256k1_modinv64_divsteps_59(int64_t zeta, uint64_t f0, uint64_
      * being inside [-2^63,2^63) means that casting to signed works correctly.
      */
     uint64_t u = 8, v = 0, q = 0, r = 8;
-    uint64_t c1, c2, f = f0, g = g0, x, y, z;
+    volatile uint64_t c1, c2;
+    uint64_t mask1, mask2, f = f0, g = g0, x, y, z;
     int i;
 
     for (i = 3; i < 62; ++i) {
@@ -184,23 +183,25 @@ static int64_t secp256k1_modinv64_divsteps_59(int64_t zeta, uint64_t f0, uint64_
         VERIFY_CHECK((q * f0 + r * g0) == g << i);
         /* Compute conditional masks for (zeta < 0) and for (g & 1). */
         c1 = zeta >> 63;
-        c2 = -(g & 1);
+        mask1 = c1;
+        c2 = g & 1;
+        mask2 = -c2;
         /* Compute x,y,z, conditionally negated versions of f,u,v. */
-        x = (f ^ c1) - c1;
-        y = (u ^ c1) - c1;
-        z = (v ^ c1) - c1;
+        x = (f ^ mask1) - mask1;
+        y = (u ^ mask1) - mask1;
+        z = (v ^ mask1) - mask1;
         /* Conditionally add x,y,z to g,q,r. */
-        g += x & c2;
-        q += y & c2;
-        r += z & c2;
+        g += x & mask2;
+        q += y & mask2;
+        r += z & mask2;
         /* In what follows, c1 is a condition mask for (zeta < 0) and (g & 1). */
-        c1 &= c2;
+        mask1 &= mask2;
         /* Conditionally change zeta into -zeta-2 or zeta-1. */
-        zeta = (zeta ^ c1) - 1;
+        zeta = (zeta ^ mask1) - 1;
         /* Conditionally add g,q,r to f,u,v. */
-        f += g & c1;
-        u += q & c1;
-        v += r & c1;
+        f += g & mask1;
+        u += q & mask1;
+        v += r & mask1;
         /* Shifts */
         g >>= 1;
         u <<= 1;
@@ -213,7 +214,7 @@ static int64_t secp256k1_modinv64_divsteps_59(int64_t zeta, uint64_t f0, uint64_
     t->v = (int64_t)v;
     t->q = (int64_t)q;
     t->r = (int64_t)r;
-#ifdef VERIFY
+
     /* The determinant of t must be a power of two. This guarantees that multiplication with t
      * does not change the gcd of f and g, apart from adding a power-of-2 factor to it (which
      * will be divided out again). As each divstep's individual matrix has determinant 2, the
@@ -221,7 +222,7 @@ static int64_t secp256k1_modinv64_divsteps_59(int64_t zeta, uint64_t f0, uint64_
      * 8*identity (which has determinant 2^6) means the overall outputs has determinant
      * 2^65. */
     VERIFY_CHECK(secp256k1_modinv64_det_check_pow2(t, 65, 0));
-#endif
+
     return zeta;
 }
 
@@ -298,13 +299,13 @@ static int64_t secp256k1_modinv64_divsteps_62_var(int64_t eta, uint64_t f0, uint
     t->v = (int64_t)v;
     t->q = (int64_t)q;
     t->r = (int64_t)r;
-#ifdef VERIFY
+
     /* The determinant of t must be a power of two. This guarantees that multiplication with t
      * does not change the gcd of f and g, apart from adding a power-of-2 factor to it (which
      * will be divided out again). As each divstep's individual matrix has determinant 2, the
      * aggregate of 62 of them will have determinant 2^62. */
     VERIFY_CHECK(secp256k1_modinv64_det_check_pow2(t, 62, 0));
-#endif
+
     return eta;
 }
 
@@ -389,13 +390,13 @@ static int64_t secp256k1_modinv64_posdivsteps_62_var(int64_t eta, uint64_t f0, u
     t->v = (int64_t)v;
     t->q = (int64_t)q;
     t->r = (int64_t)r;
-#ifdef VERIFY
+
     /* The determinant of t must be a power of two. This guarantees that multiplication with t
      * does not change the gcd of f and g, apart from adding a power-of-2 factor to it (which
      * will be divided out again). As each divstep's individual matrix has determinant 2 or -2,
      * the aggregate of 62 of them will have determinant 2^62 or -2^62. */
     VERIFY_CHECK(secp256k1_modinv64_det_check_pow2(t, 62, 1));
-#endif
+
     *jacp = jac;
     return eta;
 }
@@ -414,14 +415,13 @@ static void secp256k1_modinv64_update_de_62(secp256k1_modinv64_signed62 *d, secp
     const int64_t u = t->u, v = t->v, q = t->q, r = t->r;
     int64_t md, me, sd, se;
     secp256k1_int128 cd, ce;
-#ifdef VERIFY
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(d, 5, &modinfo->modulus, -2) > 0); /* d > -2*modulus */
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(d, 5, &modinfo->modulus, 1) < 0);  /* d <    modulus */
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(e, 5, &modinfo->modulus, -2) > 0); /* e > -2*modulus */
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(e, 5, &modinfo->modulus, 1) < 0);  /* e <    modulus */
     VERIFY_CHECK(secp256k1_modinv64_abs(u) <= (((int64_t)1 << 62) - secp256k1_modinv64_abs(v))); /* |u|+|v| <= 2^62 */
     VERIFY_CHECK(secp256k1_modinv64_abs(q) <= (((int64_t)1 << 62) - secp256k1_modinv64_abs(r))); /* |q|+|r| <= 2^62 */
-#endif
+
     /* [md,me] start as zero; plus [u,q] if d is negative; plus [v,r] if e is negative. */
     sd = d4 >> 63;
     se = e4 >> 63;
@@ -486,12 +486,11 @@ static void secp256k1_modinv64_update_de_62(secp256k1_modinv64_signed62 *d, secp
     /* What remains is limb 5 of t*[d,e]+modulus*[md,me]; store it as output limb 4. */
     d->v[4] = secp256k1_i128_to_i64(&cd);
     e->v[4] = secp256k1_i128_to_i64(&ce);
-#ifdef VERIFY
+
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(d, 5, &modinfo->modulus, -2) > 0); /* d > -2*modulus */
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(d, 5, &modinfo->modulus, 1) < 0);  /* d <    modulus */
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(e, 5, &modinfo->modulus, -2) > 0); /* e > -2*modulus */
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(e, 5, &modinfo->modulus, 1) < 0);  /* e <    modulus */
-#endif
 }
 
 /* Compute (t/2^62) * [f, g], where t is a transition matrix scaled by 2^62.
@@ -603,25 +602,23 @@ static void secp256k1_modinv64(secp256k1_modinv64_signed62 *x, const secp256k1_m
         /* Update d,e using that transition matrix. */
         secp256k1_modinv64_update_de_62(&d, &e, &t, modinfo);
         /* Update f,g using that transition matrix. */
-#ifdef VERIFY
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, 5, &modinfo->modulus, -1) > 0); /* f > -modulus */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, 5, &modinfo->modulus, 1) <= 0); /* f <= modulus */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, 5, &modinfo->modulus, -1) > 0); /* g > -modulus */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, 5, &modinfo->modulus, 1) < 0);  /* g <  modulus */
-#endif
+
         secp256k1_modinv64_update_fg_62(&f, &g, &t);
-#ifdef VERIFY
+
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, 5, &modinfo->modulus, -1) > 0); /* f > -modulus */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, 5, &modinfo->modulus, 1) <= 0); /* f <= modulus */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, 5, &modinfo->modulus, -1) > 0); /* g > -modulus */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, 5, &modinfo->modulus, 1) < 0);  /* g <  modulus */
-#endif
     }
 
     /* At this point sufficient iterations have been performed that g must have reached 0
      * and (if g was not originally 0) f must now equal +/- GCD of the initial f, g
      * values i.e. +/- 1, and d now contains +/- the modular inverse. */
-#ifdef VERIFY
+
     /* g == 0 */
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, 5, &SECP256K1_SIGNED62_ONE, 0) == 0);
     /* |f| == 1, or (x == 0 and d == 0 and |f|=modulus) */
@@ -631,7 +628,6 @@ static void secp256k1_modinv64(secp256k1_modinv64_signed62 *x, const secp256k1_m
                   secp256k1_modinv64_mul_cmp_62(&d, 5, &SECP256K1_SIGNED62_ONE, 0) == 0 &&
                   (secp256k1_modinv64_mul_cmp_62(&f, 5, &modinfo->modulus, 1) == 0 ||
                    secp256k1_modinv64_mul_cmp_62(&f, 5, &modinfo->modulus, -1) == 0)));
-#endif
 
     /* Optionally negate d, normalize to [0,modulus), and return it. */
     secp256k1_modinv64_normalize_62(&d, f.v[4], modinfo);
@@ -660,12 +656,11 @@ static void secp256k1_modinv64_var(secp256k1_modinv64_signed62 *x, const secp256
         /* Update d,e using that transition matrix. */
         secp256k1_modinv64_update_de_62(&d, &e, &t, modinfo);
         /* Update f,g using that transition matrix. */
-#ifdef VERIFY
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, len, &modinfo->modulus, -1) > 0); /* f > -modulus */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, len, &modinfo->modulus, 1) <= 0); /* f <= modulus */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, len, &modinfo->modulus, -1) > 0); /* g > -modulus */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, len, &modinfo->modulus, 1) < 0);  /* g <  modulus */
-#endif
+
         secp256k1_modinv64_update_fg_62_var(len, &f, &g, &t);
         /* If the bottom limb of g is zero, there is a chance that g=0. */
         if (g.v[0] == 0) {
@@ -690,18 +685,17 @@ static void secp256k1_modinv64_var(secp256k1_modinv64_signed62 *x, const secp256
             g.v[len - 2] |= (uint64_t)gn << 62;
             --len;
         }
-#ifdef VERIFY
+
         VERIFY_CHECK(++i < 12); /* We should never need more than 12*62 = 744 divsteps */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, len, &modinfo->modulus, -1) > 0); /* f > -modulus */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, len, &modinfo->modulus, 1) <= 0); /* f <= modulus */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, len, &modinfo->modulus, -1) > 0); /* g > -modulus */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, len, &modinfo->modulus, 1) < 0);  /* g <  modulus */
-#endif
     }
 
     /* At this point g is 0 and (if g was not originally 0) f must now equal +/- GCD of
      * the initial f, g values i.e. +/- 1, and d now contains +/- the modular inverse. */
-#ifdef VERIFY
+
     /* g == 0 */
     VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, len, &SECP256K1_SIGNED62_ONE, 0) == 0);
     /* |f| == 1, or (x == 0 and d == 0 and |f|=modulus) */
@@ -711,7 +705,6 @@ static void secp256k1_modinv64_var(secp256k1_modinv64_signed62 *x, const secp256
                   secp256k1_modinv64_mul_cmp_62(&d, 5, &SECP256K1_SIGNED62_ONE, 0) == 0 &&
                   (secp256k1_modinv64_mul_cmp_62(&f, len, &modinfo->modulus, 1) == 0 ||
                    secp256k1_modinv64_mul_cmp_62(&f, len, &modinfo->modulus, -1) == 0)));
-#endif
 
     /* Optionally negate d, normalize to [0,modulus), and return it. */
     secp256k1_modinv64_normalize_62(&d, f.v[len - 1], modinfo);
@@ -750,12 +743,11 @@ static int secp256k1_jacobi64_maybe_var(const secp256k1_modinv64_signed62 *x, co
         secp256k1_modinv64_trans2x2 t;
         eta = secp256k1_modinv64_posdivsteps_62_var(eta, f.v[0] | ((uint64_t)f.v[1] << 62), g.v[0] | ((uint64_t)g.v[1] << 62), &t, &jac);
         /* Update f,g using that transition matrix. */
-#ifdef VERIFY
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, len, &modinfo->modulus, 0) > 0); /* f > 0 */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, len, &modinfo->modulus, 1) <= 0); /* f <= modulus */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, len, &modinfo->modulus, 0) > 0); /* g > 0 */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, len, &modinfo->modulus, 1) < 0);  /* g < modulus */
-#endif
+
         secp256k1_modinv64_update_fg_62_var(len, &f, &g, &t);
         /* If the bottom limb of f is 1, there is a chance that f=1. */
         if (f.v[0] == 1) {
@@ -776,12 +768,11 @@ static int secp256k1_jacobi64_maybe_var(const secp256k1_modinv64_signed62 *x, co
         cond |= gn;
         /* If so, reduce length. */
         if (cond == 0) --len;
-#ifdef VERIFY
+
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, len, &modinfo->modulus, 0) > 0); /* f > 0 */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&f, len, &modinfo->modulus, 1) <= 0); /* f <= modulus */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, len, &modinfo->modulus, 0) > 0); /* g > 0 */
         VERIFY_CHECK(secp256k1_modinv64_mul_cmp_62(&g, len, &modinfo->modulus, 1) < 0);  /* g < modulus */
-#endif
     }
 
     /* The loop failed to converge to f=g after 1550 iterations. Return 0, indicating unknown result. */

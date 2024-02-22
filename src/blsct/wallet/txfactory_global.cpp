@@ -78,7 +78,7 @@ UnsignedOutput CreateOutput(const blsct::DoublePublicKey& destKeys, const CAmoun
 
     ret.out.blsctData.rangeProof = p;
 
-    CHashWriter hash(SER_GETHASH, PROTOCOL_VERSION);
+    HashWriter hash{};
     hash << nonce;
 
     ret.GenerateKeys(blindingKey, destKeys);
@@ -107,7 +107,7 @@ CTransactionRef AggregateTransactions(const std::vector<CTransactionRef>& txs)
         }
     }
 
-    ret.vout.push_back(CTxOut{nFee, CScript{OP_RETURN}});
+    ret.vout.emplace_back(nFee, CScript{OP_RETURN});
 
     ret.txSig = blsct::Signature::Aggregate(vSigs);
     ret.nVersion = CTransaction::BLSCT_MARKER;

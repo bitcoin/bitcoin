@@ -22,7 +22,7 @@ RangeProofWithTranscript<T> RangeProofWithTranscript<T>::Build(const RangeProof<
     using Scalar = typename T::Scalar;
 
     // build transcript in the same way the prove function builds it
-    CHashWriter fiat_shamir(0,0);
+    HashWriter fiat_shamir{};
     Scalars es;
 
     size_t m = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(proof.Vs.Size());

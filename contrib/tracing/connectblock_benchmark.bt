@@ -14,15 +14,15 @@
     over <logging threshold in ms>.
   - Threshold <logging threshold in ms>
 
-  This script requires a 'bitcoind' binary compiled with eBPF support and the
-  'validation:block_connected' USDT. By default, it's assumed that 'bitcoind' is
-  located in './src/bitcoind'. This can be modified in the script below.
+  This script requires a 'navcoind' binary compiled with eBPF support and the
+  'validation:block_connected' USDT. By default, it's assumed that 'navcoind' is
+  located in './src/navcoind'. This can be modified in the script below.
 
   EXAMPLES:
 
   bpftrace contrib/tracing/connectblock_benchmark.bt 300000 680000 1000
 
-  When run together 'bitcoind -reindex', this benchmarks the time it takes to
+  When run together 'navcoind -reindex', this benchmarks the time it takes to
   connect the blocks between height 300.000 and 680.000 (inclusive) and prints
   details about all blocks that take longer than 1000ms to connect. Prints a
   histogram with block connection times when the benchmark is finished.
@@ -30,7 +30,7 @@
 
   bpftrace contrib/tracing/connectblock_benchmark.bt 0 0 500
 
-  When running together 'bitcoind', all newly connected blocks that
+  When running together 'navcoind', all newly connected blocks that
   take longer than 500ms to connect are logged. A histogram with block
   connection times is shown when the script is terminated.
 
@@ -67,7 +67,7 @@ BEGIN
   connected block is between the start and end height (or the end height is
   unset).
 */
-usdt:./src/bitcoind:validation:block_connected /arg1 >= $1 && (arg1 <= $2 || $2 == 0 )/
+usdt:./src/navcoind:validation:block_connected /arg1 >= $1 && (arg1 <= $2 || $2 == 0 )/
 {
   $height = arg1;
   $transactions = arg2;
@@ -102,7 +102,7 @@ usdt:./src/bitcoind:validation:block_connected /arg1 >= $1 && (arg1 <= $2 || $2 
   blocks where the time it took to connect the block is above the
   <logging threshold in ms>.
 */
-usdt:./src/bitcoind:validation:block_connected / (uint64) arg5 / 1000> $3 /
+usdt:./src/navcoind:validation:block_connected / (uint64) arg5 / 1000> $3 /
 {
   $hash = arg0;
   $height = (int32) arg1;

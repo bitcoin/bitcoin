@@ -138,7 +138,7 @@ static void secp256k1_sha256_write(secp256k1_sha256 *hash, const unsigned char *
     }
     if (len) {
         /* Fill the buffer with what remains. */
-        memcpy(((unsigned char*)hash->buf) + bufsize, data, len);
+        memcpy(hash->buf + bufsize, data, len);
     }
 }
 

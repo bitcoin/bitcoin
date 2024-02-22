@@ -12,6 +12,7 @@
 #include <consensus/merkle.h>
 #include <consensus/params.h>
 #include <hash.h>
+#include <kernel/messagestartchars.h>
 #include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -66,7 +67,7 @@ static CBlock CreateBLSCTGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t 
 {
     auto out = blsct::CreateOutput(dest, genesisReward, "Reward", TokenId(), 1);
 
-    CDataStream ss{0, 0};
+    DataStream ss{};
     ss << out;
 
     return CreateBLSCTGenesisBlock(nTime, nNonce, nBits, nVersion, out);
@@ -75,7 +76,7 @@ static CBlock CreateBLSCTGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t 
 static CBlock CreateBLSCTGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const std::string& outHex)
 {
     blsct::UnsignedOutput out;
-    CDataStream ss(MakeByteSpan(ParseHex(outHex)), 0, 0);
+    DataStream ss{ParseHex(outHex)};
     ss >> out;
 
     return CreateBLSCTGenesisBlock(nTime, nNonce, nBits, nVersion, out);
@@ -163,8 +164,8 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000;          // August 11th, 2021
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 709632; // Approximately November 12th, 2021
 
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000044a50fe819c39ad624021859");
-        consensus.defaultAssumeValid = uint256S("0x000000000000000000035c3f0d31e71a5ee24c5aaf3354689f65bd7b07dee632"); // 784000
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000052b2559353df4117b7348b64");
+        consensus.defaultAssumeValid = uint256S("0x00000000000000000001a0a448d6cf2546b06801389cc030b2b18c6491266815"); // 804000
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -177,8 +178,8 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
         pchMessageStart[3] = 0xac;
         nDefaultPort = 8333;
         nPruneAfterHeight = 100000;
-        m_assumed_blockchain_size = 540;
-        m_assumed_chain_state_size = 7;
+        m_assumed_blockchain_size = 590;
+        m_assumed_chain_state_size = 9;
 
         genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -213,8 +214,6 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
         vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_main), std::end(chainparams_seed_main));
 
         fDefaultConsistencyChecks = false;
-        fRequireStandard = true;
-        m_is_test_chain = false;
         m_is_mockable_chain = false;
 
         checkpointData = {
@@ -234,7 +233,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
                 {295000, uint256S("0x00000000000000004d9b4ef50f0f9d686fd69db2e03af35a100370c64632a983")},
             }};
 
-        m_assumeutxo_data = MapAssumeutxo{
+        m_assumeutxo_data = {
             // TODO to be specified in a future patch.
         };
 
@@ -288,8 +287,8 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000;     // August 11th, 2021
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000977edb0244170858d07");
-        consensus.defaultAssumeValid = uint256S("0x0000000000000021bc50a89cde4870d4a81ffe0153b3c8de77b435a2fd3f6761"); // 2429000
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000b6a51f415a67c0da307");
+        consensus.defaultAssumeValid = uint256S("0x0000000000000093bcb68c03a9a168ae252572d348a2eaeba2cdf9231d73206f"); // 2500000
 
         pchMessageStart[0] = 0xe2;
         pchMessageStart[1] = 0xbe;
@@ -309,7 +308,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
         vSeeds.emplace_back("testnet-seed.bitcoin.jonasschnelli.ch.");
-        vSeeds.emplace_back("seed.tbtc.petertodd.org.");
+        vSeeds.emplace_back("seed.tbtc.petertodd.net.");
         vSeeds.emplace_back("seed.testnet.bitcoin.sprovoost.nl.");
         vSeeds.emplace_back("testnet-seed.bluematt.me."); // Just a static list of stable node(s), only supports x9
 
@@ -326,8 +325,6 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
         vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_test), std::end(chainparams_seed_test));
 
         fDefaultConsistencyChecks = false;
-        fRequireStandard = false;
-        m_is_test_chain = true;
         m_is_mockable_chain = false;
 
         checkpointData = {
@@ -335,8 +332,13 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
                 {546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")},
             }};
 
-        m_assumeutxo_data = MapAssumeutxo{
-            // TODO to be specified in a future patch.
+        m_assumeutxo_data = {
+            {
+                .height = 2'500'000,
+                .hash_serialized = AssumeutxoHash{uint256S("0xf841584909f68e47897952345234e37fcd9128cd818f41ee6c3ca68db8071be7")},
+                .nChainTx = 66484552,
+                .blockhash = uint256S("0x0000000000000093bcb68c03a9a168ae252572d348a2eaeba2cdf9231d73206f")
+            }
         };
 
         chainTxData = ChainTxData{
@@ -430,7 +432,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
             HashWriter h{};
             h << consensus.signet_challenge;
             uint256 hash = h.GetHash();
-            memcpy(pchMessageStart, hash.begin(), 4);
+            std::copy_n(hash.begin(), 4, pchMessageStart.begin());
 
             nDefaultPort = 38333;
             nPruneAfterHeight = 1000;
@@ -453,8 +455,6 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
             bech32_mod_hrp = "nv";
 
             fDefaultConsistencyChecks = false;
-            fRequireStandard = true;
-            m_is_test_chain = true;
             m_is_mockable_chain = false;
         }
     };
@@ -547,23 +547,27 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
             vSeeds.emplace_back("dummySeed.invalid.");
 
             fDefaultConsistencyChecks = true;
-            fRequireStandard = true;
-            m_is_test_chain = true;
             m_is_mockable_chain = true;
 
             checkpointData = {
                 {
                     {0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206")},
-                }};
+                }
+            };
 
-            m_assumeutxo_data = MapAssumeutxo{
+            m_assumeutxo_data = {
                 {
-                    110,
-                    {AssumeutxoHash{uint256S("0x1ebbf5850204c0bdb15bf030f47c7fe91d45c44c712697e4509ba67adb01c618")}, 110},
+                    .height = 110,
+                    .hash_serialized = AssumeutxoHash{uint256S("0x6657b736d4fe4db0cbc796789e812d5dba7f5c143764b1b6905612f1830609d1")},
+                    .nChainTx = 111,
+                    .blockhash = uint256S("0x696e92821f65549c7ee134edceeeeaaa4105647a3c4fd9f298c0aec0ab50425c")
                 },
                 {
-                    200,
-                    {AssumeutxoHash{uint256S("0x51c8d11d8b5c1de51543c579736e786aa2736206d1e11e627568029ce092cf62")}, 200},
+                    // For use by test/functional/feature_assumeutxo.py
+                    .height = 299,
+                    .hash_serialized = AssumeutxoHash{uint256S("0x61d9c2b29a2571a5fe285fe2d8554f91f93309666fc9b8223ee96338de25ff53")},
+                    .nChainTx = 300,
+                    .blockhash = uint256S("0x7e0517ef3ea6ecbed9117858e42eedc8eb39e8698a38dcbd1b3962a283233f4c")
                 },
             };
 
@@ -670,8 +674,6 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
             vSeeds.emplace_back("dummySeed.invalid.");
 
             fDefaultConsistencyChecks = true;
-            fRequireStandard = true;
-            m_is_test_chain = true;
             m_is_mockable_chain = true;
 
             checkpointData = {

@@ -25,6 +25,11 @@ import os
 STATE_LISTEN = '0A'
 # STATE_CLOSING = '0B'
 
+# Address manager size constants as defined in addrman_impl.h
+ADDRMAN_NEW_BUCKET_COUNT = 1 << 10
+ADDRMAN_TRIED_BUCKET_COUNT = 1 << 8
+ADDRMAN_BUCKET_SIZE = 1 << 6
+
 def get_socket_inodes(pid):
     '''
     Get list of socket inodes for process pid.

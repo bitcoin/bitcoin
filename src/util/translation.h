@@ -49,22 +49,18 @@ inline bilingual_str Untranslated(std::string original) { return {original, orig
 
 // Provide an overload of tinyformat::format which can take bilingual_str arguments.
 namespace tinyformat {
-inline std::string TranslateArg(const bilingual_str& arg, bool translated)
-{
-    return translated ? arg.translated : arg.original;
-}
-
-template <typename T>
-inline T const& TranslateArg(const T& arg, bool translated)
-{
-    return arg;
-}
-
 template <typename... Args>
 bilingual_str format(const bilingual_str& fmt, const Args&... args)
 {
-    return bilingual_str{format(fmt.original, TranslateArg(args, false)...),
-                         format(fmt.translated, TranslateArg(args, true)...)};
+    const auto translate_arg{[](const auto& arg, bool translated) -> const auto& {
+        if constexpr (std::is_same_v<decltype(arg), const bilingual_str&>) {
+            return translated ? arg.translated : arg.original;
+        } else {
+            return arg;
+        }
+    }};
+    return bilingual_str{tfm::format(fmt.original, translate_arg(args, false)...),
+                         tfm::format(fmt.translated, translate_arg(args, true)...)};
 }
 } // namespace tinyformat
 

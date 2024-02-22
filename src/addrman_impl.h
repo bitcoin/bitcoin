@@ -65,8 +65,7 @@ public:
 
     SERIALIZE_METHODS(AddrInfo, obj)
     {
-        READWRITEAS(CAddress, obj);
-        READWRITE(obj.source, Using<ChronoFormatter<int64_t>>(obj.m_last_success), obj.nAttempts);
+        READWRITE(AsBase<CAddress>(obj), obj.source, Using<ChronoFormatter<int64_t>>(obj.m_last_success), obj.nAttempts);
     }
 
     AddrInfo(const CAddress &addrIn, const CNetAddr &addrSource) : CAddress(addrIn), source(addrSource)
@@ -130,7 +129,10 @@ public:
     std::pair<CAddress, NodeSeconds> Select(bool new_only, std::optional<Network> network) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const
+    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    std::vector<std::pair<AddrInfo, AddressPosition>> GetEntries(bool from_tried) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void Connected(const CService& addr, NodeSeconds time)
@@ -255,11 +257,13 @@ private:
 
     /** Helper to generalize looking up an addrman entry from either table.
      *
-     *  @return  int The nid of the entry or -1 if the addrman position is empty.
+     *  @return  int The nid of the entry. If the addrman position is empty or not found, returns -1.
      * */
     int GetEntry(bool use_tried, size_t bucket, size_t position) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    std::vector<CAddress> GetAddr_(size_t max_addresses, size_t max_pct, std::optional<Network> network) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::vector<CAddress> GetAddr_(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    std::vector<std::pair<AddrInfo, AddressPosition>> GetEntries_(bool from_tried) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void Connected_(const CService& addr, NodeSeconds time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 

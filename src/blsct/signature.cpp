@@ -2,14 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <algorithm>
-#include <blsct/signature.h>
 #define BLS_ETH 1
+
+#include <blsct/signature.h>
 #include <bls/bls384_256.h>
 #include <iterator>
 #include <streams.h>
 #include <tinyformat.h>
 
+#include <algorithm>
 
 namespace blsct {
 

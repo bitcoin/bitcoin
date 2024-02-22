@@ -3,10 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/args.h>
+#include <common/settings.h>
 #include <logging.h>
 #include <test/util/setup_common.h>
 #include <univalue.h>
-#include <util/settings.h>
 #include <util/strencodings.h>
 
 #include <limits>
@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(setting_args)
     ArgsManager args;
     SetupArgs(args, {{"-foo", ArgsManager::ALLOW_ANY}});
 
-    auto set_foo = [&](const util::SettingsValue& value) {
-      args.LockSettings([&](util::Settings& settings) {
+    auto set_foo = [&](const common::SettingsValue& value) {
+      args.LockSettings([&](common::Settings& settings) {
         settings.rw_settings["foo"] = value;
       });
     };
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(patharg)
     // Check negated and default argument handling. Specifying an empty argument
     // is the same as not specifying the argument. This is convenient for
     // scripting so later command line arguments can override earlier command
-    // line arguments or bitcoin.conf values. Currently the -dir= case cannot be
+    // line arguments or navcoin.conf values. Currently the -dir= case cannot be
     // distinguished from -dir case with no assignment, but #16545 would add the
     // ability to distinguish these in the future (and treat the no-assign case
     // like an imperative command or an error).

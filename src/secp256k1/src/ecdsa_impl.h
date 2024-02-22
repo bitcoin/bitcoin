@@ -16,17 +16,8 @@
 #include "ecdsa.h"
 
 /** Group order for secp256k1 defined as 'n' in "Standards for Efficient Cryptography" (SEC2) 2.7.1
- *  sage: for t in xrange(1023, -1, -1):
- *     ..   p = 2**256 - 2**32 - t
- *     ..   if p.is_prime():
- *     ..     print '%x'%p
- *     ..     break
- *   'fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f'
- *  sage: a = 0
- *  sage: b = 7
- *  sage: F = FiniteField (p)
- *  sage: '%x' % (EllipticCurve ([F (a), F (b)]).order())
- *   'fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141'
+ *  $ sage -c 'load("secp256k1_params.sage"); print(hex(N))'
+ *  0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
  */
 static const secp256k1_fe secp256k1_ecdsa_const_order_as_fe = SECP256K1_FE_CONST(
     0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFEUL,
@@ -35,12 +26,8 @@ static const secp256k1_fe secp256k1_ecdsa_const_order_as_fe = SECP256K1_FE_CONST
 
 /** Difference between field and order, values 'p' and 'n' values defined in
  *  "Standards for Efficient Cryptography" (SEC2) 2.7.1.
- *  sage: p = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
- *  sage: a = 0
- *  sage: b = 7
- *  sage: F = FiniteField (p)
- *  sage: '%x' % (p - EllipticCurve ([F (a), F (b)]).order())
- *   '14551231950b75fc4402da1722fc9baee'
+ *  $ sage -c 'load("secp256k1_params.sage"); print(hex(P-N))'
+ *  0x14551231950b75fc4402da1722fc9baee
  */
 static const secp256k1_fe secp256k1_ecdsa_const_p_minus_order = SECP256K1_FE_CONST(
     0, 0, 0, 1, 0x45512319UL, 0x50B75FC4UL, 0x402DA172UL, 0x2FC9BAEEUL
@@ -79,8 +66,7 @@ static int secp256k1_der_read_len(size_t *len, const unsigned char **sigp, const
     }
     if (lenleft > sizeof(size_t)) {
         /* The resulting length would exceed the range of a size_t, so
-         * certainly longer than the passed array size.
-         */
+         * it is certainly longer than the passed array size. */
         return 0;
     }
     while (lenleft > 0) {
@@ -89,7 +75,9 @@ static int secp256k1_der_read_len(size_t *len, const unsigned char **sigp, const
         lenleft--;
     }
     if (*len > (size_t)(sigend - *sigp)) {
-        /* Result exceeds the length of the passed array. */
+        /* Result exceeds the length of the passed array.
+           (Checking this is the responsibility of the caller but it
+           can't hurt do it here, too.) */
         return 0;
     }
     if (*len < 128) {
@@ -239,7 +227,8 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_scalar *sigr, const secp25
 }
 #else
     secp256k1_scalar_get_b32(c, sigr);
-    secp256k1_fe_set_b32(&xr, c);
+    /* we can ignore the fe_set_b32_limit return value, because we know the input is in range */
+    (void)secp256k1_fe_set_b32_limit(&xr, c);
 
     /** We now have the recomputed R point in pr, and its claimed x coordinate (modulo n)
      *  in xr. Naively, we would extract the x coordinate from pr (requiring a inversion modulo p),

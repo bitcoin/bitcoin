@@ -4,6 +4,7 @@
 
 #include <chain.h>
 #include <interfaces/chain.h>
+#include <kernel/chain.h>
 #include <sync.h>
 #include <uint256.h>
 
@@ -16,6 +17,7 @@ interfaces::BlockInfo MakeBlockInfo(const CBlockIndex* index, const CBlock* data
     if (index) {
         info.prev_hash = index->pprev ? index->pprev->phashBlock : nullptr;
         info.height = index->nHeight;
+        info.chain_time_max = index->GetBlockTimeMax();
         LOCK(::cs_main);
         info.file_number = index->nFile;
         info.data_pos = index->nDataPos;
@@ -24,3 +26,13 @@ interfaces::BlockInfo MakeBlockInfo(const CBlockIndex* index, const CBlock* data
     return info;
 }
 } // namespace kernel
+
+std::ostream& operator<<(std::ostream& os, const ChainstateRole& role) {
+    switch(role) {
+        case ChainstateRole::NORMAL: os << "normal"; break;
+        case ChainstateRole::ASSUMEDVALID: os << "assumedvalid"; break;
+        case ChainstateRole::BACKGROUND: os << "background"; break;
+        default: os.setstate(std::ios_base::failbit);
+    }
+    return os;
+}

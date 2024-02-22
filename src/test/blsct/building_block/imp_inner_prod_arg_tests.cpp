@@ -56,9 +56,9 @@ BOOST_AUTO_TEST_CASE(test_exec_ypow_loop)
     std::vector<Scalar> act;
     ImpInnerProdArg::LoopWithYPows<Mcl>(3, y,
         [&](const size_t& i, const Scalar& y_pow, const Scalar& y_inv_pow) {
-            act.push_back(Scalar(i));
-            act.push_back(y_pow);
-            act.push_back(y_inv_pow);
+            act.emplace_back(i);
+            act.emplace_back(y_pow);
+            act.emplace_back(y_inv_pow);
         }
     );
     Scalar zero = Scalar(0);
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(test_exec_ypow_loop)
 
 BOOST_AUTO_TEST_CASE(test_gen_all_round_xs_xinvs)
 {
-    CHashWriter fiat_shamir(0, 0);
+    HashWriter fiat_shamir{};
 
     Points Ls, Rs;
     Point g = Point::GetBasePoint();

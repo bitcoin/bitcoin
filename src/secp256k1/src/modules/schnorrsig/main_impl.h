@@ -232,7 +232,7 @@ int secp256k1_schnorrsig_verify(const secp256k1_context* ctx, const unsigned cha
     ARG_CHECK(msg != NULL || msglen == 0);
     ARG_CHECK(pubkey != NULL);
 
-    if (!secp256k1_fe_set_b32(&rx, &sig64[0])) {
+    if (!secp256k1_fe_set_b32_limit(&rx, &sig64[0])) {
         return 0;
     }
 
@@ -261,7 +261,7 @@ int secp256k1_schnorrsig_verify(const secp256k1_context* ctx, const unsigned cha
 
     secp256k1_fe_normalize_var(&r.y);
     return !secp256k1_fe_is_odd(&r.y) &&
-           secp256k1_fe_equal_var(&rx, &r.x);
+           secp256k1_fe_equal(&rx, &r.x);
 }
 
 #endif

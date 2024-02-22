@@ -26,11 +26,11 @@ void initialize_script_sigcache()
     g_setup = testing_setup.get();
 }
 
-FUZZ_TARGET_INIT(script_sigcache, initialize_script_sigcache)
+FUZZ_TARGET(script_sigcache, .init = initialize_script_sigcache)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
-    const std::optional<CMutableTransaction> mutable_transaction = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
+    const std::optional<CMutableTransaction> mutable_transaction = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
     const CTransaction tx{mutable_transaction ? *mutable_transaction : CMutableTransaction{}};
     const unsigned int n_in = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
     const CAmount amount = ConsumeMoney(fuzzed_data_provider);

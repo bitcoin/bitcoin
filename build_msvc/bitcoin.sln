@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoinconsensus", "libbitcoinconsensus\libbitcoinconsensus.vcxproj", "{2B384FA8-9EE1-4544-93CB-0D733C25E8CE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_consensus", "libbitcoin_consensus\libbitcoin_consensus.vcxproj", "{2B384FA8-9EE1-4544-93CB-0D733C25E8CE}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "navcoind", "navcoind\navcoind.vcxproj", "{D4513DDF-6013-44DC-ADCC-12EAF6D1F038}"
 EndProject
@@ -26,7 +26,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_cli", "libbitcoi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "navcoin-cli", "navcoin-cli\navcoin-cli.vcxproj", "{0B2D7431-F876-4A58-87BF-F748338CD3BF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bench_bench_navcoin", "bench_bench_navcoin\bench_bench_navcoin.vcxproj", "{1125654E-E1B2-4431-8B5C-62EA9A2FEECB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bench_navcoin", "bench_navcoin\bench_navcoin.vcxproj", "{1125654E-E1B2-4431-8B5C-62EA9A2FEECB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "navcoin-tx", "navcoin-tx\navcoin-tx.vcxproj", "{D3022AF6-AD33-4CE3-B358-87CB6A1B29CF}"
 EndProject
@@ -46,7 +46,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libminisketch", "libminiske
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mcl", "..\src\bls\mcl\src\proj\mcl.vcxproj", "{1DBB979A-C212-45CD-9563-446A96F87F71}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bls", "..\src\bls\src\proj\bls384_256.vcxproj", "{1DBB979A-C212-45CD-9563-446A96F87F72}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bls384_256", "..\src\bls\src\proj\bls384_256.vcxproj", "{1DBB979A-C212-45CD-9563-446A96F87F72}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -128,10 +128,14 @@ Global
 		{792D487F-F14C-49FC-A9DE-3FC150F31C3F}.Release|x64.Build.0 = Release|x64
 		{792D487F-F14C-49FC-A9DE-3FC150F31C3F}.Release|x86.ActiveCfg = Release|x64
 		{792D487F-F14C-49FC-A9DE-3FC150F31C3F}.Release|x86.Build.0 = Release|x64
-                {A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Debug|x64.ActiveCfg = Debug|x64
-                {A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Debug|x64.Build.0 = Debug|x64
-                {A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Release|x64.ActiveCfg = Release|x64
-                {A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Release|x64.Build.0 = Release|x64
+		{A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Debug|x64.ActiveCfg = Debug|x64
+		{A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Debug|x64.Build.0 = Debug|x64
+		{A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Debug|x86.ActiveCfg = Debug|x64
+		{A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Debug|x86.Build.0 = Debug|x64
+		{A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Release|x64.ActiveCfg = Release|x64
+		{A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Release|x64.Build.0 = Release|x64
+		{A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Release|x86.ActiveCfg = Release|x64
+		{A56B73DB-D46D-4882-8374-1FE3FFA08F07}.Release|x86.Build.0 = Release|x64
 		{0667528C-D734-4009-ADF9-C0D6C4A5A5A6}.Debug|x64.ActiveCfg = Debug|x64
 		{0667528C-D734-4009-ADF9-C0D6C4A5A5A6}.Debug|x64.Build.0 = Debug|x64
 		{0667528C-D734-4009-ADF9-C0D6C4A5A5A6}.Debug|x86.ActiveCfg = Debug|x64
@@ -241,7 +245,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
+                SolutionGuid = {58AAB032-7274-49BD-845E-5EF4DBB69B70}
 		SolutionGuid = {C82D227F-890F-4566-A1D9-4DD7921AD106}
-		        SolutionGuid = {58AAB032-7274-49BD-845E-5EF4DBB69B70}
 	EndGlobalSection
 EndGlobal

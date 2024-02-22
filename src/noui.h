@@ -16,10 +16,10 @@ bool noui_ThreadSafeQuestion(const bilingual_str& /* ignored interactive message
 /** Non-GUI handler, which only logs a message. */
 void noui_InitMessage(const std::string& message);
 
-/** Connect all bitcoind signal handlers */
+/** Connect all navcoind signal handlers */
 void noui_connect();
 
-/** Redirect all bitcoind signal handlers to LogPrintf. Used to check or suppress output during test runs that produce expected errors */
+/** Redirect all navcoind signal handlers to LogPrintf. Used to check or suppress output during test runs that produce expected errors */
 void noui_test_redirect();
 
 /** Reconnects the regular Non-GUI handlers after having used noui_test_redirect */

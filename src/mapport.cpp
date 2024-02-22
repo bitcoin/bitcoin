@@ -9,12 +9,11 @@
 #include <mapport.h>
 
 #include <clientversion.h>
+#include <common/system.h>
 #include <logging.h>
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
-#include <util/syscall_sandbox.h>
-#include <util/system.h>
 #include <util/thread.h>
 #include <util/threadinterrupt.h>
 
@@ -175,10 +174,10 @@ static bool ProcessUpnp()
                 LogPrintf("UPnP: GetExternalIPAddress() returned %d\n", r);
             } else {
                 if (externalIPAddress[0]) {
-                    CNetAddr resolved;
-                    if (LookupHost(externalIPAddress, resolved, false)) {
-                        LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved.ToStringAddr());
-                        AddLocal(resolved, LOCAL_MAPPED);
+                    std::optional<CNetAddr> resolved{LookupHost(externalIPAddress, false)};
+                    if (resolved.has_value()) {
+                        LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved->ToStringAddr());
+                        AddLocal(resolved.value(), LOCAL_MAPPED);
                     }
                 } else {
                     LogPrintf("UPnP: GetExternalIPAddress failed.\n");
@@ -219,7 +218,6 @@ static bool ProcessUpnp()
 
 static void ThreadMapPort()
 {
-    SetSyscallSandboxPolicy(SyscallSandboxPolicy::INITIALIZATION_MAP_PORT);
     bool ok;
     do {
         ok = false;

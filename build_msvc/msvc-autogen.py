@@ -20,7 +20,7 @@ libs = [
     'libbitcoin_wallet_tool',
     'libbitcoin_wallet',
     'libbitcoin_zmq',
-    'bench_bench_navcoin',
+    'bench_navcoin',
     'libtest_util',
 ]
 

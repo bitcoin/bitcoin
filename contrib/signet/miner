@@ -30,7 +30,7 @@ logging.basicConfig(
 
 SIGNET_HEADER = b"\xec\xc7\xda\xa2"
 PSBT_SIGNET_BLOCK = b"\xfc\x06signetb"    # proprietary PSBT global field holding the block being signed
-RE_MULTIMINER = re.compile("^(\d+)(-(\d+))?/(\d+)$")
+RE_MULTIMINER = re.compile(r"^(\d+)(-(\d+))?/(\d+)$")
 
 def create_coinbase(height, value, spk):
     cb = CTransaction()
