@@ -119,6 +119,7 @@ using kernel::DumpMempool;
 using kernel::LoadMempool;
 using kernel::ValidationCacheSizes;
 
+using node::AbortNode;
 using node::ApplyArgsManOptions;
 using node::BlockManager;
 using node::CacheSizes;
@@ -1762,7 +1763,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         // Start indexes initial sync
         if (!StartIndexBackgroundSync(node)) {
             bilingual_str err_str = _("Failed to start indexes, shutting down..");
-            chainman.GetNotifications().fatalError(err_str);
+            AbortNode(node.shutdown, node.exit_status, err_str);
             return;
         }
         // Load mempool from disk
