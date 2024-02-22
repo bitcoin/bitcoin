@@ -623,7 +623,7 @@ public:
         DatabaseOptions options;
         options.require_existing = true;
         auto db{MakeWalletDatabase(wallet_name, options)};
-        if (!db && db.error() == wallet::DatabaseStatus::FAILED_LEGACY_DISABLED) {
+        if (!db && db.error() == wallet::DatabaseError::FAILED_LEGACY_DISABLED) {
             options.require_format = wallet::DatabaseFormat::BERKELEY_RO;
             db.update(MakeWalletDatabase(wallet_name, options));
         }

@@ -185,7 +185,7 @@ public:
     std::vector<fs::path> Files() override { return {}; }
 };
 
-util::ResultPtr<std::unique_ptr<SQLiteDatabase>, DatabaseStatus> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options);
+util::ResultPtr<std::unique_ptr<SQLiteDatabase>, DatabaseError> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options);
 
 std::unique_ptr<WalletDatabase> MakeInMemoryWalletDatabase();
 
