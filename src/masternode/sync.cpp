@@ -76,7 +76,7 @@ void CMasternodeSync::SwitchToNextAsset()
             nCurrentAsset = MASTERNODE_SYNC_FINISHED;
             uiInterface.NotifyAdditionalDataSyncProgressChanged(1);
 
-            connman.ForEachNode(CConnman::AllNodes, [](CNode* pnode) {
+            connman.ForEachNode(CConnman::AllNodes, [](const CNode* pnode) {
                 netfulfilledman->AddFulfilledRequest(pnode->addr, "full-sync");
             });
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Sync has finished\n");
@@ -260,7 +260,7 @@ void CMasternodeSync::ProcessTick()
     }
 
     // request votes on per-obj basis from each node
-    for (auto& pnode : vNodesCopy) {
+    for (const auto& pnode : vNodesCopy) {
         if(!netfulfilledman->HasFulfilledRequest(pnode->addr, "governance-sync")) {
             continue; // to early for this node
         }

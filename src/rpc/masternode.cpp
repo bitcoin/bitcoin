@@ -602,8 +602,8 @@ static UniValue masternodelist(const JSONRPCRequest& request, ChainstateManager&
 
     UniValue obj(UniValue::VOBJ);
 
-    auto mnList = node.dmnman->GetListAtChainTip();
-    auto dmnToStatus = [&](auto& dmn) {
+    const auto mnList = node.dmnman->GetListAtChainTip();
+    const auto dmnToStatus = [&](const auto& dmn) {
         if (mnList.IsMNValid(dmn)) {
             return "ENABLED";
         }
@@ -612,7 +612,7 @@ static UniValue masternodelist(const JSONRPCRequest& request, ChainstateManager&
         }
         return "UNKNOWN";
     };
-    auto dmnToLastPaidTime = [&](auto& dmn) {
+    const auto dmnToLastPaidTime = [&](const auto& dmn) {
         if (dmn.pdmnState->nLastPaidHeight == 0) {
             return (int)0;
         }
@@ -622,9 +622,9 @@ static UniValue masternodelist(const JSONRPCRequest& request, ChainstateManager&
         return (int)pindex->nTime;
     };
 
-    bool showRecentMnsOnly = strMode == "recent";
-    bool showEvoOnly = strMode == "evo";
-    int tipHeight = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip()->nHeight);
+    const bool showRecentMnsOnly = strMode == "recent";
+    const bool showEvoOnly = strMode == "evo";
+    const int tipHeight = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip()->nHeight);
     mnList.ForEachMN(false, [&](auto& dmn) {
         if (showRecentMnsOnly && mnList.IsMNPoSeBanned(dmn)) {
             if (tipHeight - dmn.pdmnState->GetBannedHeight() > Params().GetConsensus().nSuperblockCycle) {

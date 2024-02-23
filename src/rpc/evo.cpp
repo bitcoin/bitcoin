@@ -1262,22 +1262,22 @@ static void protx_list_help(const JSONRPCRequest& request)
 }
 
 #ifdef ENABLE_WALLET
-static bool CheckWalletOwnsKey(CWallet* pwallet, const CKeyID& keyID) {
+static bool CheckWalletOwnsKey(const CWallet* const pwallet, const CKeyID& keyID) {
     if (!pwallet) {
         return false;
     }
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+    const LegacyScriptPubKeyMan* const spk_man = pwallet->GetLegacyScriptPubKeyMan();
     if (!spk_man) {
         return false;
     }
     return spk_man->HaveKey(keyID);
 }
 
-static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
+static bool CheckWalletOwnsScript(const CWallet* const pwallet, const CScript& script) {
     if (!pwallet) {
         return false;
     }
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+    const LegacyScriptPubKeyMan* const spk_man = pwallet->GetLegacyScriptPubKeyMan();
     if (!spk_man) {
         return false;
     }
@@ -1292,7 +1292,7 @@ static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
 }
 #endif
 
-static UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMN& dmn, CMasternodeMetaMan& mn_metaman, bool detailed, const ChainstateManager& chainman, const CBlockIndex* pindex = nullptr)
+static UniValue BuildDMNListEntry(const CWallet* const pwallet, const CDeterministicMN& dmn, CMasternodeMetaMan& mn_metaman, bool detailed, const ChainstateManager& chainman, const CBlockIndex* pindex = nullptr)
 {
     if (!detailed) {
         return dmn.proTxHash.ToString();
