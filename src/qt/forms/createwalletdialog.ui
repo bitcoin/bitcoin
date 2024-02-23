@@ -154,6 +154,19 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="descriptor_checkbox">
+        <property name="toolTip">
+         <string>Use descriptors for scriptPubKey management</string>
+        </property>
+        <property name="text">
+         <string>Descriptor Wallet</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="external_signer_checkbox">
         <property name="toolTip">
          <string>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</string>
@@ -196,6 +209,7 @@
   <tabstop>encrypt_wallet_checkbox</tabstop>
   <tabstop>disable_privkeys_checkbox</tabstop>
   <tabstop>blank_wallet_checkbox</tabstop>
+  <tabstop>descriptor_checkbox</tabstop>
   <tabstop>external_signer_checkbox</tabstop>
  </tabstops>
  <resources/>
