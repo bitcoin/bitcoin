@@ -28,9 +28,9 @@ typedef struct {
 /** Parse a compact ECDSA signature (64 bytes + recovery id).
  *
  *  Returns: 1 when the signature could be parsed, 0 otherwise
- *  Args: ctx:     a secp256k1 context object
- *  Out:  sig:     a pointer to a signature object
- *  In:   input64: a pointer to a 64-byte compact signature
+ *  Args: ctx:     pointer to a context object
+ *  Out:  sig:     pointer to a signature object
+ *  In:   input64: pointer to a 64-byte compact signature
  *        recid:   the recovery id (0, 1, 2 or 3)
  */
 SECP256K1_API int secp256k1_ecdsa_recoverable_signature_parse_compact(
@@ -43,9 +43,9 @@ SECP256K1_API int secp256k1_ecdsa_recoverable_signature_parse_compact(
 /** Convert a recoverable signature into a normal signature.
  *
  *  Returns: 1
- *  Args: ctx:    a secp256k1 context object.
- *  Out:  sig:    a pointer to a normal signature.
- *  In:   sigin:  a pointer to a recoverable signature.
+ *  Args: ctx:    pointer to a context object.
+ *  Out:  sig:    pointer to a normal signature.
+ *  In:   sigin:  pointer to a recoverable signature.
  */
 SECP256K1_API int secp256k1_ecdsa_recoverable_signature_convert(
     const secp256k1_context *ctx,
@@ -56,10 +56,10 @@ SECP256K1_API int secp256k1_ecdsa_recoverable_signature_convert(
 /** Serialize an ECDSA signature in compact format (64 bytes + recovery id).
  *
  *  Returns: 1
- *  Args: ctx:      a secp256k1 context object.
- *  Out:  output64: a pointer to a 64-byte array of the compact signature.
- *        recid:    a pointer to an integer to hold the recovery id.
- *  In:   sig:      a pointer to an initialized signature object.
+ *  Args: ctx:      pointer to a context object.
+ *  Out:  output64: pointer to a 64-byte array of the compact signature.
+ *        recid:    pointer to an integer to hold the recovery id.
+ *  In:   sig:      pointer to an initialized signature object.
  */
 SECP256K1_API int secp256k1_ecdsa_recoverable_signature_serialize_compact(
     const secp256k1_context *ctx,
