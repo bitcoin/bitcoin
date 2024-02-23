@@ -74,6 +74,24 @@ Q_DECLARE_METATYPE(CAmount)
 Q_DECLARE_METATYPE(SynchronizationState)
 Q_DECLARE_METATYPE(uint256)
 
+static void RegisterMetaTypes()
+{
+    // Register meta types used for QMetaObject::invokeMethod and Qt::QueuedConnection
+    qRegisterMetaType<bool*>();
+    qRegisterMetaType<SynchronizationState>();
+  #ifdef ENABLE_WALLET
+    qRegisterMetaType<WalletModel*>();
+  #endif
+    // Register typedefs (see http://qt-project.org/doc/qt-5/qmetatype.html#qRegisterMetaType)
+    // IMPORTANT: if CAmount is no longer a typedef use the normal variant above (see https://doc.qt.io/qt-5/qmetatype.html#qRegisterMetaType-1)
+    qRegisterMetaType<CAmount>("CAmount");
+    qRegisterMetaType<size_t>("size_t");
+
+    qRegisterMetaType<std::function<void()>>("std::function<void()>");
+    qRegisterMetaType<QMessageBox::Icon>("QMessageBox::Icon");
+    qRegisterMetaType<interfaces::BlockAndHeaderTipInfo>("interfaces::BlockAndHeaderTipInfo");
+}
+
 static QString GetLangTerritory()
 {
     QSettings settings;
@@ -262,6 +280,7 @@ BitcoinApplication::BitcoinApplication():
     pollShutdownTimer(nullptr),
     returnValue(0)
 {
+    RegisterMetaTypes();
     // Qt runs setlocale(LC_ALL, "") on initialization.
     setQuitOnLastWindowClosed(false);
 }
@@ -542,21 +561,6 @@ int GuiMain(int argc, char* argv[])
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     BitcoinApplication app;
-
-    // Register meta types used for QMetaObject::invokeMethod and Qt::QueuedConnection
-    qRegisterMetaType<bool*>();
-    qRegisterMetaType<SynchronizationState>();
-#ifdef ENABLE_WALLET
-    qRegisterMetaType<WalletModel*>();
-#endif
-    // Register typedefs (see http://qt-project.org/doc/qt-5/qmetatype.html#qRegisterMetaType)
-    // IMPORTANT: if CAmount is no longer a typedef use the normal variant above (see https://doc.qt.io/qt-5/qmetatype.html#qRegisterMetaType-1)
-    qRegisterMetaType<CAmount>("CAmount");
-    qRegisterMetaType<size_t>("size_t");
-
-    qRegisterMetaType<std::function<void()>>("std::function<void()>");
-    qRegisterMetaType<QMessageBox::Icon>("QMessageBox::Icon");
-    qRegisterMetaType<interfaces::BlockAndHeaderTipInfo>("interfaces::BlockAndHeaderTipInfo");
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:

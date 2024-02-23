@@ -18,7 +18,9 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cassert>
 #include <memory> // for unique_ptr
+#include <mutex>
 #include <unordered_map>
 
 static Mutex g_rpc_warmup_mutex;
@@ -325,17 +327,26 @@ void StartRPC()
 
 void InterruptRPC()
 {
-    LogPrint(BCLog::RPC, "Interrupting RPC\n");
-    // Interrupt e.g. running longpolls
-    g_rpc_running = false;
+    static std::once_flag g_rpc_interrupt_flag;
+    // This function could be called twice if the GUI has been started with -server=1.
+    std::call_once(g_rpc_interrupt_flag, []() {
+        LogPrint(BCLog::RPC, "Interrupting RPC\n");
+        // Interrupt e.g. running longpolls
+        g_rpc_running = false;
+    });
 }
 
 void StopRPC()
 {
-    LogPrint(BCLog::RPC, "Stopping RPC\n");
-    WITH_LOCK(g_deadline_timers_mutex, deadlineTimers.clear());
-    DeleteAuthCookie();
-    g_rpcSignals.Stopped();
+    static std::once_flag g_rpc_stop_flag;
+    // This function could be called twice if the GUI has been started with -server=1.
+    assert(!g_rpc_running);
+    std::call_once(g_rpc_stop_flag, []() {
+        LogPrint(BCLog::RPC, "Stopping RPC\n");
+        WITH_LOCK(g_deadline_timers_mutex, deadlineTimers.clear());
+        DeleteAuthCookie();
+        g_rpcSignals.Stopped();
+    });
 }
 
 bool IsRPCRunning()

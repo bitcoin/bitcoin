@@ -29,7 +29,6 @@
 #endif
 
 LockedPoolManager* LockedPoolManager::_instance = nullptr;
-std::once_flag LockedPoolManager::init_flag;
 
 /*******************************************************************************/
 // Utilities
