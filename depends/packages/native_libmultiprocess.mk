@@ -6,7 +6,7 @@ $(package)_sha256_hash=ac848db49a6ed53e423c62d54bd87f1f08cbb0326254a8667e10bbfe5
 $(package)_dependencies=native_capnp
 
 define $(package)_config_cmds
-  $($(package)_cmake)
+  $($(package)_cmake) .
 endef
 
 define $(package)_build_cmds

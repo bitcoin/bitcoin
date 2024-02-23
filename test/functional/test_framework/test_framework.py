@@ -236,10 +236,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         # source: https://stackoverflow.com/questions/48796169/how-to-fix-ipykernel-launcher-py-error-unrecognized-arguments-in-jupyter/56349168#56349168
         parser.add_argument("-f", "--fff", help="a dummy argument to fool ipython", default="1")
 
+        PortSeed.n = self.options.port_seed
+
     def setup(self):
         """Call this method to start up the test framework object with options set."""
-
-        PortSeed.n = self.options.port_seed
 
         check_json_precision()
 
