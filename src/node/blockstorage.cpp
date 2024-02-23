@@ -1234,10 +1234,12 @@ util::Result<void, kernel::FatalError> ImportBlocks(ChainstateManager& chainman,
         // the relevant pointers before the ABC call.
         for (Chainstate* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
             BlockValidationState state;
-            if (!chainstate->ActivateBestChain(state, nullptr)) {
-                result.Set({util::Error{strprintf(_("Failed to connect best block (%s)"), state.ToString())}, kernel::FatalError::ConnectBestBlockFailed});
+            auto res{chainstate->ActivateBestChain(state, nullptr)};
+            if (!res || !res.value()) {
+                result.Set({util::Error{}, util::MoveMessages(res), res.GetFailure()});
                 return result;
             }
+            result.MoveMessages(res);
         }
     } // End of scope of ImportingNow
     return result;

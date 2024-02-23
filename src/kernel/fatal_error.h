@@ -13,7 +13,7 @@ enum class FatalError {
     AcceptBlockFailed,
     BlockFileImportFailed,
     ChainstateRenameFailed,
-    ConnectBestBlockFailed,
+    DisconnectBlockFailed,
     NoChainstatePaths,
     SnapshotAlreadyValidated,
     SnapshotBaseBlockhashMismatch,
