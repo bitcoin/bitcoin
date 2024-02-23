@@ -855,7 +855,11 @@ static UniValue protx_register_submit(const JSONRPCRequest& request, const Chain
         throw JSONRPCError(RPC_INVALID_PARAMETER, "payload signature not empty");
     }
 
-    ptx.vchSig = DecodeBase64(request.params[1].get_str().c_str());
+    bool decode_fail{false};
+    ptx.vchSig = DecodeBase64(request.params[1].get_str().c_str(), &decode_fail);
+    if (decode_fail) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "malformed base64 encoding");
+    }
 
     SetTxPayload(tx, ptx);
     return SignAndSendSpecialTx(request, chainman, tx);
