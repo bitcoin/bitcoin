@@ -128,6 +128,16 @@ bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockKey>& blo
         m_next_filter_pos.nFile = 0;
         m_next_filter_pos.nPos = 0;
     }
+
+    if (block) {
+        auto op_last_header = ReadFilterHeader(block->height, block->hash);
+        if (!op_last_header) {
+            LogError("Cannot read last block filter header; index may be corrupted\n");
+            return false;
+        }
+        m_last_header = *op_last_header;
+    }
+
     return true;
 }
 
@@ -241,7 +251,6 @@ std::optional<uint256> BlockFilterIndex::ReadFilterHeader(int height, const uint
 bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
 {
     CBlockUndo block_undo;
-    uint256 prev_header;
 
     if (block.height > 0) {
         // pindex variable gives indexing code access to node internals. It
@@ -250,15 +259,14 @@ bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
         if (!m_chainstate->m_blockman.UndoReadFromDisk(block_undo, *pindex)) {
             return false;
         }
-
-        auto op_prev_header = ReadFilterHeader(block.height - 1, *Assert(block.prev_hash));
-        if (!op_prev_header) return false;
-        prev_header = *op_prev_header;
     }
 
     BlockFilter filter(m_filter_type, *Assert(block.data), block_undo);
 
-    return Write(filter, block.height, filter.ComputeHeader(prev_header));
+    const uint256& header = filter.ComputeHeader(m_last_header);
+    bool res = Write(filter, block.height, header);
+    if (res) m_last_header = header; // update last header
+    return res;
 }
 
 bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, const uint256& filter_header)
@@ -326,6 +334,8 @@ bool BlockFilterIndex::CustomRewind(const interfaces::BlockKey& current_tip, con
     batch.Write(DB_FILTER_POS, m_next_filter_pos);
     if (!m_db->WriteBatch(batch)) return false;
 
+    // Update cached header
+    m_last_header = *Assert(ReadFilterHeader(new_tip.height, new_tip.hash));
     return true;
 }
 
