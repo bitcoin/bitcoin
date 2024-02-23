@@ -53,6 +53,7 @@ class EVO
 public:
     virtual ~EVO() {}
     virtual std::pair<CDeterministicMNList, const CBlockIndex*> getListAtChainTip() = 0;
+    virtual void setContext(NodeContext* context) {}
 };
 
 //! Interface for the src/governance part of a dash node (dashd process).
@@ -63,6 +64,7 @@ public:
     virtual void getAllNewerThan(std::vector<CGovernanceObject> &objs, int64_t nMoreThanTime) = 0;
     virtual int32_t getObjAbsYesCount(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) = 0;
     virtual bool getObjLocalValidity(const CGovernanceObject& obj, std::string& error, bool check_collateral) = 0;
+    virtual void setContext(NodeContext* context) {}
 };
 
 //! Interface for the src/llmq part of a dash node (dashd process).
@@ -71,6 +73,7 @@ class LLMQ
 public:
     virtual ~LLMQ() {}
     virtual size_t getInstantSentLockCount() = 0;
+    virtual void setContext(NodeContext* context) {}
 };
 
 //! Interface for the src/masternode part of a dash node (dashd process).
@@ -83,6 +86,7 @@ public:
     virtual bool isBlockchainSynced() = 0;
     virtual bool isSynced() = 0;
     virtual std::string getSyncStatus() =  0;
+    virtual void setContext(NodeContext* context) {}
 };
 }
 
