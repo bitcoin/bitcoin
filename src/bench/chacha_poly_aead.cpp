@@ -23,8 +23,8 @@ static ChaCha20Poly1305AEAD aead(k1, 32, k2, 32);
 
 static void CHACHA20_POLY1305_AEAD(benchmark::Bench& bench, size_t buffersize, bool include_decryption)
 {
-    std::vector<unsigned char> in(buffersize + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN, 0);
-    std::vector<unsigned char> out(buffersize + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN, 0);
+    std::vector<unsigned char> in(buffersize + CHACHA20_POLY1305_AEAD_AAD_LEN + Poly1305::TAGLEN, 0);
+    std::vector<unsigned char> out(buffersize + CHACHA20_POLY1305_AEAD_AAD_LEN + Poly1305::TAGLEN, 0);
     uint64_t seqnr_payload = 0;
     uint64_t seqnr_aad = 0;
     int aad_pos = 0;
