@@ -120,11 +120,12 @@ static std::optional<CBlock> GetBlockForCreditPool(const CBlockIndex* const bloc
     if (!ReadBlockFromDisk(block, block_index, consensusParams)) {
         throw std::runtime_error("failed-getcbforblock-read");
     }
+
+    assert(!block.vtx.empty());
+
     // Should not fail if V20 (DIP0027) is active but it happens for RegChain (unit tests)
     if (block.vtx[0]->nVersion != 3) return std::nullopt;
 
-    assert(!block.vtx.empty());
-    assert(block.vtx[0]->nVersion == 3);
     assert(!block.vtx[0]->vExtraPayload.empty());
 
     return block;
