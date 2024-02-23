@@ -30,6 +30,8 @@ IGNORED_WARNINGS=(
     "src/rpc/masternode.cpp:.*:21: warning: Consider using std::copy algorithm instead of a raw loop." # UniValue doesn't support std::copy
     "src/cachemultimap.h:.*: warning: Variable 'mapIt' can be declared as reference to const"
     "src/evo/simplifiedmns.cpp:.*:20: warning: Consider using std::copy algorithm instead of a raw loop."
+    "src/llmq/commitment.cpp.* warning: Consider using std::all_of or std::none_of algorithm instead of a raw loop. \[useStlAlgorithm\]"
+
 # General catchall, for some reason any value named 'hash' is viewed as never used.
     "Variable 'hash' is assigned a value that is never used."
 
@@ -37,7 +39,8 @@ IGNORED_WARNINGS=(
 #    "Consider performing initialization in initialization list."
     "Consider using std::transform algorithm instead of a raw loop."
     "Consider using std::accumulate algorithm instead of a raw loop."
-#    "Consider using std::any_of algorithm instead of a raw loop."
+    "Consider using std::any_of algorithm instead of a raw loop."
+    "Consider using std::copy_if algorithm instead of a raw loop."
 #    "Consider using std::count_if algorithm instead of a raw loop."
 #    "Consider using std::find_if algorithm instead of a raw loop."
 #    "Member variable '.*' is not initialized in the constructor."
