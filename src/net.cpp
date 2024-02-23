@@ -2168,34 +2168,36 @@ void CConnman::WakeMessageHandler()
 
 void CConnman::ThreadDNSAddressSeed()
 {
-    FastRandomContext rng;
-    std::vector<std::string> seeds = m_params.DNSSeeds();
-    Shuffle(seeds.begin(), seeds.end(), rng);
-    int seeds_right_now = 0; // Number of seeds left before testing if we have enough connections
-    int target_outbound_connections = 2;
+    constexpr int TARGET_OUTBOUND_CONNECTIONS = 2;
     int outbound_connection_count = 0;
 
-    auto start = NodeClock::now();
     if (gArgs.IsArgSet("-seednode")) {
-        LogPrintf("-seednode enabled. Trying the provided seeds before defaulting to the dnsseeds.\n");
+        auto start = NodeClock::now();
+        constexpr std::chrono::seconds SEEDNODE_TIMEOUT = 30s;
+        LogPrintf("-seednode enabled. Trying the provided seeds for %d seconds before defaulting to the dnsseeds.\n", SEEDNODE_TIMEOUT.count());
         while (!interruptNet) {
             if (!interruptNet.sleep_for(std::chrono::milliseconds(500)))
                 return;
 
             // Abort if we have spent enough time without reaching our target.
             // Giving seed nodes 30 seconds so this does not become a race against fixedseeds (which triggers after 1 min)
-            if (NodeClock::now() > start + 30s) {
+            if (NodeClock::now() > start + SEEDNODE_TIMEOUT) {
                 LogPrintf("Couldn't connect to enough peers via seed nodes. Handing fetch logic to the DNS seeds.\n");
                 break;
             }
 
             outbound_connection_count = GetFullOutboundConnCount();
-            if (outbound_connection_count >= target_outbound_connections) {
-                    LogPrintf("P2P peers available. Finished fetching data from seed nodes.\n");
+            if (outbound_connection_count >= TARGET_OUTBOUND_CONNECTIONS) {
+                LogPrintf("P2P peers available. Finished fetching data from seed nodes.\n");
                 break;
             }
         }
     }
+
+    FastRandomContext rng;
+    std::vector<std::string> seeds = m_params.DNSSeeds();
+    Shuffle(seeds.begin(), seeds.end(), rng);
+    int seeds_right_now = 0; // Number of seeds left before testing if we have enough connections
 
     if (gArgs.GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED)) {
         // When -forcednsseed is provided, query all.
@@ -2208,7 +2210,7 @@ void CConnman::ThreadDNSAddressSeed()
     }
 
     // Proceed with dnsseeds if seednodes hasn't reached the target or if forcednsseed is set
-    if (outbound_connection_count < target_outbound_connections || seeds_right_now) {
+    if (outbound_connection_count < TARGET_OUTBOUND_CONNECTIONS || seeds_right_now) {
         // goal: only query DNS seed if address need is acute
         // * If we have a reasonable number of peers in addrman, spend
         //   some time trying them first. This improves user privacy by
@@ -2239,7 +2241,7 @@ void CConnman::ThreadDNSAddressSeed()
                         if (!interruptNet.sleep_for(w)) return;
                         to_wait -= w;
 
-                        if (GetFullOutboundConnCount() >= target_outbound_connections) {
+                        if (GetFullOutboundConnCount() >= TARGET_OUTBOUND_CONNECTIONS) {
                             if (found > 0) {
                                 LogPrintf("%d addresses found from DNS seeds\n", found);
                                 LogPrintf("P2P peers available. Finished DNS seeding.\n");
