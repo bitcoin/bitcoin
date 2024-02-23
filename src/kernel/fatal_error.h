@@ -15,6 +15,7 @@ enum class FatalError {
     ChainstateRenameFailed,
     DisconnectBlockFailed,
     NoChainstatePaths,
+    ReadBlockFailed,
     SnapshotAlreadyValidated,
     SnapshotBaseBlockhashMismatch,
     SnapshotChainstateDirRemovalFailed,
