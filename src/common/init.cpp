@@ -34,9 +34,9 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
         const fs::path orig_datadir_path{args.GetDataDirBase()};
         const fs::path orig_config_path{AbsPathForConfigVal(args, args.GetPathArg("-conf", BITCOIN_CONF_FILENAME), /*net_specific=*/false)};
 
-        std::string error;
-        if (!args.ReadConfigFiles(error, true)) {
-            return ConfigError{ConfigStatus::FAILED, strprintf(_("Error reading configuration file: %s"), error)};
+        std::string config_error;
+        if (!args.ReadConfigFiles(config_error, true)) {
+            return ConfigError{ConfigStatus::FAILED, strprintf(_("Error reading configuration file: %s"), config_error)};
         }
 
         // Check for chain settings (Params() calls are only valid after this clause)
