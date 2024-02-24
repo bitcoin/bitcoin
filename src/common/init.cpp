@@ -70,7 +70,7 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
             const std::string config_source = cli_config_path.empty()
                 ? strprintf("data directory %s", fs::quoted(fs::PathToString(orig_datadir_path)))
                 : strprintf("command line argument %s", fs::quoted("-conf=" + cli_config_path));
-            const std::string error = strprintf(
+            error = strprintf(
                 "Data directory %1$s contains a %2$s file which is ignored, because a different configuration file "
                 "%3$s from %4$s is being used instead. Possible ways to address this would be to:\n"
                 "- Delete or rename the %2$s file in data directory %1$s.\n"
