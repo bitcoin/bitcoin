@@ -84,7 +84,6 @@ static constexpr int64_t log256_58Ratio = 1366LL; // Approximation of log(256)/l
         psz++;
     if (*psz != 0)
         return false;
-    // Skip leading zeroes in b256.
     std::vector<unsigned char>::iterator it = b256.begin() + (size - length);
     // Copy result into output vector.
     vch.reserve(zeroes + (b256.end() - it));
@@ -120,12 +119,9 @@ std::string EncodeBase58(Span<const unsigned char> input)
         length = i;
         input = input.subspan(1);
     }
-    // Skip leading zeroes in base58 result.
-    std::vector<unsigned char>::iterator it = b58.begin() + (size - length);
-    while (it != b58.end() && *it == 0)
-        it++;
     // Translate the result into a string.
     std::string str;
+    std::vector<unsigned char>::iterator it = b58.begin() + (size - length);
     str.reserve(zeroes + (b58.end() - it));
     str.assign(zeroes, '1');
     while (it != b58.end())
