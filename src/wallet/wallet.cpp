@@ -4438,9 +4438,9 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         }
 
         // Restore the backup
-        DatabaseStatus status;
-        std::vector<bilingual_str> warnings;
-        if (!RestoreWallet(context, temp_backup_location, wallet_name, /*load_on_start=*/std::nullopt, status, error, warnings)) {
+        DatabaseStatus restore_status;
+        std::vector<bilingual_str> restore_warnings;
+        if (!RestoreWallet(context, temp_backup_location, wallet_name, /*load_on_start=*/std::nullopt, restore_status, error, restore_warnings)) {
             error += _("\nUnable to restore backup of wallet.");
             return util::Error{error};
         }
