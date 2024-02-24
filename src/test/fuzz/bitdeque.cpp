@@ -350,9 +350,9 @@ FUZZ_TARGET(bitdeque, .init = InitRandData)
             [&] {
                 // back() const
                 if (!cdeq.empty()) {
-                    const auto& cdeq = deq;
+                    const auto& const_deq = deq;
                     const auto& cbitdeq = bitdeq;
-                    auto& ref = cdeq.back();
+                    auto& ref = const_deq.back();
                     auto bitref = cbitdeq.back();
                     assert(ref == bitref);
                 }
