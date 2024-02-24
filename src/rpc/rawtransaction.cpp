@@ -1327,11 +1327,11 @@ static RPCHelpMan decodepsbt()
 
         // Unknown data
         if (input.unknown.size() > 0) {
-            UniValue unknowns(UniValue::VOBJ);
+            UniValue input_unknowns(UniValue::VOBJ);
             for (auto entry : input.unknown) {
-                unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
+                input_unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
             }
-            in.pushKV("unknown", unknowns);
+            in.pushKV("unknown", input_unknowns);
         }
 
         inputs.push_back(in);
@@ -1422,11 +1422,11 @@ static RPCHelpMan decodepsbt()
 
         // Unknown data
         if (output.unknown.size() > 0) {
-            UniValue unknowns(UniValue::VOBJ);
+            UniValue output_unknowns(UniValue::VOBJ);
             for (auto entry : output.unknown) {
-                unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
+                output_unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
             }
-            out.pushKV("unknown", unknowns);
+            out.pushKV("unknown", output_unknowns);
         }
 
         outputs.push_back(out);
