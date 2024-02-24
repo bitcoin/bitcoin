@@ -781,9 +781,9 @@ RPCHelpMan dumpwallet()
             file << "# extended private masterkey: " << EncodeExtKey(masterKey) << "\n\n";
         }
     }
-    for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
-        const CKeyID &keyid = it->second;
-        std::string strTime = FormatISO8601DateTime(it->first);
+    for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator key_birth_it = vKeyBirth.begin(); key_birth_it != vKeyBirth.end(); key_birth_it++) {
+        const CKeyID &keyid = key_birth_it->second;
+        std::string strTime = FormatISO8601DateTime(key_birth_it->first);
         std::string strAddr;
         std::string strLabel;
         CKey key;
