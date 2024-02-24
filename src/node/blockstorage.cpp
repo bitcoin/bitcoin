@@ -40,6 +40,8 @@
 #include <map>
 #include <unordered_map>
 
+using kernel::FatalError;
+
 namespace kernel {
 static constexpr uint8_t DB_BLOCK_FILES{'f'};
 static constexpr uint8_t DB_BLOCK_INDEX{'b'};
@@ -395,7 +397,7 @@ CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
     return pindex;
 }
 
-util::Result<bool, kernel::FatalError> BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockhash)
+util::Result<bool, FatalError> BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockhash)
 {
     if (!m_block_tree_db->LoadBlockIndexGuts(
             GetConsensus(), [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); }, m_interrupt)) {
@@ -405,7 +407,7 @@ util::Result<bool, kernel::FatalError> BlockManager::LoadBlockIndex(const std::o
     if (snapshot_blockhash) {
         const std::optional<AssumeutxoData> maybe_au_data = GetParams().AssumeutxoForBlockhash(*snapshot_blockhash);
         if (!maybe_au_data) {
-            return {util::Error{strprintf(_("Assumeutxo data not found for the given blockhash '%s'."), snapshot_blockhash->ToString())}, kernel::FatalError::AssumeUtxoDataNotFound};
+            return {util::Error{strprintf(_("Assumeutxo data not found for the given blockhash '%s'."), snapshot_blockhash->ToString())}, FatalError::AssumeUtxoDataNotFound};
         }
         const AssumeutxoData& au_data = *Assert(maybe_au_data);
         m_snapshot_height = au_data.height;
@@ -495,7 +497,7 @@ bool BlockManager::WriteBlockIndexDB()
     return true;
 }
 
-util::Result<bool, kernel::FatalError> BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
+util::Result<bool, FatalError> BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
 {
     auto result{LoadBlockIndex(snapshot_blockhash)};
     if (!result || !result.value()) {
@@ -739,18 +741,18 @@ bool BlockManager::UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& in
     return true;
 }
 
-util::Result<bool, kernel::FatalError> BlockManager::FlushUndoFile(int block_file, bool finalize)
+util::Result<bool, FatalError> BlockManager::FlushUndoFile(int block_file, bool finalize)
 {
     FlatFilePos undo_pos_old(block_file, m_blockfile_info[block_file].nUndoSize);
     if (!UndoFileSeq().Flush(undo_pos_old, finalize)) {
-        return {util::Error{_("Flushing undo file to disk failed. This is likely the result of an I/O error.")}, kernel::FatalError::FlushUndoFileFailed};
+        return {util::Error{_("Flushing undo file to disk failed. This is likely the result of an I/O error.")}, FatalError::FlushUndoFileFailed};
     }
     return true;
 }
 
-util::Result<bool, kernel::FatalError> BlockManager::FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo)
+util::Result<bool, FatalError> BlockManager::FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo)
 {
-    util::Result<bool, kernel::FatalError> result{true};
+    util::Result<bool, FatalError> result{true};
     LOCK(cs_LastBlockFile);
 
     if (m_blockfile_info.size() < 1) {
@@ -765,7 +767,7 @@ util::Result<bool, kernel::FatalError> BlockManager::FlushBlockFile(int blockfil
     FlatFilePos block_pos_old(blockfile_num, m_blockfile_info[blockfile_num].nSize);
     if (!BlockFileSeq().Flush(block_pos_old, fFinalize)) {
         LogError("%s: Failed to flush block file\n", __func__);
-        result.Set({util::Error{_("Flushing block file to disk failed. This is likely the result of an I/O error.")}, kernel::FatalError::FlushBlockFileFailed});
+        result.Set({util::Error{_("Flushing block file to disk failed. This is likely the result of an I/O error.")}, FatalError::FlushBlockFileFailed});
     }
     // we do not always flush the undo file, as the chain tip may be lagging behind the incoming blocks,
     // e.g. during IBD or a sync after a node going offline
@@ -788,7 +790,7 @@ BlockfileType BlockManager::BlockfileTypeForHeight(int height)
     return (height >= *m_snapshot_height) ? BlockfileType::ASSUMED : BlockfileType::NORMAL;
 }
 
-util::Result<bool, kernel::FatalError> BlockManager::FlushChainstateBlockFile(int tip_height)
+util::Result<bool, FatalError> BlockManager::FlushChainstateBlockFile(int tip_height)
 {
     LOCK(cs_LastBlockFile);
     auto& cursor = m_blockfile_cursors[BlockfileTypeForHeight(tip_height)];
@@ -852,11 +854,11 @@ fs::path BlockManager::GetBlockPosFilename(const FlatFilePos& pos) const
     return BlockFileSeq().FileName(pos);
 }
 
-util::Result<bool, kernel::FatalError> BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown)
+util::Result<bool, FatalError> BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown)
 {
     LOCK(cs_LastBlockFile);
 
-    util::Result<bool, kernel::FatalError> result{true};
+    util::Result<bool, FatalError> result{true};
 
     const BlockfileType chain_type = BlockfileTypeForHeight(nHeight);
 
@@ -941,7 +943,7 @@ util::Result<bool, kernel::FatalError> BlockManager::FindBlockPos(FlatFilePos& p
         bool out_of_space;
         size_t bytes_allocated = BlockFileSeq().Allocate(pos, nAddSize, out_of_space);
         if (out_of_space) {
-            result.Set({util::Error{_("Disk space is too low!")}, kernel::FatalError::DiskSpaceTooLow});
+            result.Set({util::Error{_("Disk space is too low!")}, FatalError::DiskSpaceTooLow});
             return result;
         }
         if (bytes_allocated != 0 && IsPruneMode()) {
@@ -953,7 +955,7 @@ util::Result<bool, kernel::FatalError> BlockManager::FindBlockPos(FlatFilePos& p
     return result;
 }
 
-util::Result<bool, kernel::FatalError> BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize)
+util::Result<bool, FatalError> BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize)
 {
     pos.nFile = nFile;
 
@@ -966,7 +968,7 @@ util::Result<bool, kernel::FatalError> BlockManager::FindUndoPos(BlockValidation
     bool out_of_space;
     size_t bytes_allocated = UndoFileSeq().Allocate(pos, nAddSize, out_of_space);
     if (out_of_space) {
-        return ValidationFatalError(state, _("Disk space is too low!"), kernel::FatalError::DiskSpaceTooLow);
+        return ValidationFatalError(state, _("Disk space is too low!"), FatalError::DiskSpaceTooLow);
     }
     if (bytes_allocated != 0 && IsPruneMode()) {
         m_check_for_pruning = true;
@@ -1000,12 +1002,12 @@ bool BlockManager::WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const
     return true;
 }
 
-util::Result<bool, kernel::FatalError> BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
+util::Result<bool, FatalError> BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
 {
     AssertLockHeld(::cs_main);
     const BlockfileType type = BlockfileTypeForHeight(block.nHeight);
     auto& cursor = *Assert(WITH_LOCK(cs_LastBlockFile, return m_blockfile_cursors[type]));
-    util::Result<bool, kernel::FatalError> result{true};
+    util::Result<bool, FatalError> result{true};
 
     // Write undo information to disk
     if (block.GetUndoPos().IsNull()) {
@@ -1016,7 +1018,7 @@ util::Result<bool, kernel::FatalError> BlockManager::WriteUndoDataForBlock(const
             return result;
         }
         if (!UndoWriteToDisk(blockundo, _pos, block.pprev->GetBlockHash())) {
-            return ValidationFatalError(state, _("Failed to write undo data"), kernel::FatalError::WriteUndoDataFailed);
+            return ValidationFatalError(state, _("Failed to write undo data"), FatalError::WriteUndoDataFailed);
         }
         // rev files are written in block height order, whereas blk files are written as blocks come in (often out of order)
         // we want to flush the rev (undo) file once we've written the last block, which is indicated by the last height
@@ -1140,10 +1142,10 @@ bool BlockManager::ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatF
     return true;
 }
 
-util::Result<FlatFilePos, kernel::FatalError> BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, const FlatFilePos* dbp)
+util::Result<FlatFilePos, FatalError> BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, const FlatFilePos* dbp)
 {
     unsigned int nBlockSize = ::GetSerializeSize(TX_WITH_WITNESS(block));
-    util::Result<FlatFilePos, kernel::FatalError> result{FlatFilePos{}};
+    util::Result<FlatFilePos, FatalError> result{FlatFilePos{}};
     FlatFilePos blockPos;
     const auto position_known {dbp != nullptr};
     if (position_known) {
@@ -1161,7 +1163,7 @@ util::Result<FlatFilePos, kernel::FatalError> BlockManager::SaveBlockToDisk(cons
     }
     if (!position_known) {
         if (!WriteBlockToDisk(block, blockPos)) {
-            result.Set({util::Error{_("Failed to write block")}, kernel::FatalError::BlockWriteFailed});
+            result.Set({util::Error{_("Failed to write block")}, FatalError::BlockWriteFailed});
             return result;
         }
     }
@@ -1186,10 +1188,10 @@ public:
     }
 };
 
-util::Result<void, kernel::FatalError> ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFiles)
+util::Result<void, FatalError> ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFiles)
 {
     ScheduleBatchPriority();
-    util::Result<void, kernel::FatalError> result{};
+    util::Result<void, FatalError> result{};
 
     {
         ImportingNow imp{chainman.m_blockman.m_importing};

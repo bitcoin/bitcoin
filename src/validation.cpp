@@ -79,6 +79,7 @@
 using kernel::CCoinsStats;
 using kernel::CoinStatsHashType;
 using kernel::ComputeUTXOStats;
+using kernel::FatalError;
 using kernel::Notifications;
 
 using fsbridge::FopenFn;
@@ -294,11 +295,11 @@ static bool IsCurrentForFeeEstimation(Chainstate& active_chainstate) EXCLUSIVE_L
     return true;
 }
 
-util::Result<void, kernel::FatalError> Chainstate::MaybeUpdateMempoolForReorg(
+util::Result<void, FatalError> Chainstate::MaybeUpdateMempoolForReorg(
     DisconnectedBlockTransactions& disconnectpool,
     bool fAddToMempool)
 {
-    util::Result<void, kernel::FatalError> result{};
+    util::Result<void, FatalError> result{};
     if (!m_mempool) return result;
 
     AssertLockHeld(cs_main);
@@ -1689,7 +1690,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
 
 } // anon namespace
 
-util::Result<MempoolAcceptResult, kernel::FatalError> AcceptToMemoryPool(Chainstate& active_chainstate, const CTransactionRef& tx,
+util::Result<MempoolAcceptResult, FatalError> AcceptToMemoryPool(Chainstate& active_chainstate, const CTransactionRef& tx,
                                        int64_t accept_time, bool bypass_limits, bool test_accept)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
@@ -1716,7 +1717,7 @@ util::Result<MempoolAcceptResult, kernel::FatalError> AcceptToMemoryPool(Chainst
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
     BlockValidationState state_dummy;
-    util::Result<MempoolAcceptResult, kernel::FatalError> ret{result};
+    util::Result<MempoolAcceptResult, FatalError> ret{result};
     // Do not return early on fatal flush errors.
     ret.MoveMessages(active_chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC));
     return ret;
@@ -1750,7 +1751,7 @@ util::Result<PackageMempoolAcceptResult, kernel::FatalError> ProcessNewPackage(C
     }
     // Ensure the coins cache is still within limits.
     BlockValidationState state_dummy;
-    util::Result<PackageMempoolAcceptResult, kernel::FatalError> ret{result};
+    util::Result<PackageMempoolAcceptResult, FatalError> ret{result};
     // Do not return early on fatal flush errors.
     ret.MoveMessages(active_chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC));
     return ret;
@@ -2060,12 +2061,6 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
     return true;
 }
 
-bool FatalError(Notifications& notifications, BlockValidationState& state, const bilingual_str& message)
-{
-    notifications.fatalError(message);
-    return state.Error(message.original);
-}
-
 util::Result<bool, kernel::FatalError> ValidationFatalError(BlockValidationState& state, const bilingual_str& message, kernel::FatalError result)
 {
     state.Error(message.original);
@@ -2260,7 +2255,7 @@ static int64_t num_blocks_total = 0;
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
-util::Result<bool, kernel::FatalError> Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
+util::Result<bool, FatalError> Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
                                CCoinsViewCache& view, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
@@ -2291,7 +2286,7 @@ util::Result<bool, kernel::FatalError> Chainstate::ConnectBlock(const CBlock& bl
             // We don't write down blocks to disk if they may have been
             // corrupted, so this should be impossible unless we're having hardware
             // problems.
-            return ValidationFatalError(state, _("Corrupt block found indicating potential hardware failure."), kernel::FatalError::CorruptBlock);
+            return ValidationFatalError(state, _("Corrupt block found indicating potential hardware failure."), FatalError::CorruptBlock);
         }
         LogError("%s: Consensus::CheckBlock: %s\n", __func__, state.ToString());
         return false;
@@ -2635,7 +2630,7 @@ CoinsCacheSizeState Chainstate::GetCoinsCacheSizeState(
     return CoinsCacheSizeState::OK;
 }
 
-util::Result<bool, kernel::FatalError> Chainstate::FlushStateToDisk(
+util::Result<bool, FatalError> Chainstate::FlushStateToDisk(
     BlockValidationState &state,
     FlushStateMode mode,
     int nManualPruneHeight)
@@ -2644,7 +2639,7 @@ util::Result<bool, kernel::FatalError> Chainstate::FlushStateToDisk(
     assert(this->CanFlushToDisk());
     std::set<int> setFilesToPrune;
     bool full_flush_completed = false;
-    util::Result<bool, kernel::FatalError> result{true};
+    util::Result<bool, FatalError> result{true};
 
     const size_t coins_count = CoinsTip().GetCacheSize();
     const size_t coins_mem_usage = CoinsTip().DynamicMemoryUsage();
@@ -2719,7 +2714,7 @@ util::Result<bool, kernel::FatalError> Chainstate::FlushStateToDisk(
         if (fDoFullFlush || fPeriodicWrite) {
             // Ensure we can write block index
             if (!CheckDiskSpace(m_blockman.m_opts.blocks_dir)) {
-                return ValidationFatalError(state, _("Disk space is too low!"), kernel::FatalError::DiskSpaceTooLow);
+                return ValidationFatalError(state, _("Disk space is too low!"), FatalError::DiskSpaceTooLow);
             }
             {
                 LOG_TIME_MILLIS_WITH_CATEGORY("write block and undo data to disk", BCLog::BENCH);
@@ -2739,7 +2734,7 @@ util::Result<bool, kernel::FatalError> Chainstate::FlushStateToDisk(
                 LOG_TIME_MILLIS_WITH_CATEGORY("write block index to disk", BCLog::BENCH);
 
                 if (!m_blockman.WriteBlockIndexDB()) {
-                    return ValidationFatalError(state, _("Failed to write to block index database"), kernel::FatalError::BlockIndexWriteFailed);
+                    return ValidationFatalError(state, _("Failed to write to block index database"), FatalError::BlockIndexWriteFailed);
                 }
             }
             // Finally remove any pruned files
@@ -2761,11 +2756,11 @@ util::Result<bool, kernel::FatalError> Chainstate::FlushStateToDisk(
             // an overestimation, as most will delete an existing entry or
             // overwrite one. Still, use a conservative safety factor of 2.
             if (!CheckDiskSpace(m_chainman.m_options.datadir, 48 * 2 * 2 * CoinsTip().GetCacheSize())) {
-                return ValidationFatalError(state, _("Disk space is too low!"), kernel::FatalError::DiskSpaceTooLow);
+                return ValidationFatalError(state, _("Disk space is too low!"), FatalError::DiskSpaceTooLow);
             }
             // Flush the chainstate (which may refer to block index entries).
             if (!CoinsTip().Flush()) {
-                return ValidationFatalError(state, _("Failed to write coin database"), kernel::FatalError::CoinDatabaseWriteFailed);
+                return ValidationFatalError(state, _("Failed to write coin database"), FatalError::CoinDatabaseWriteFailed);
             }
             m_last_flush = nNow;
             full_flush_completed = true;
@@ -2782,15 +2777,15 @@ util::Result<bool, kernel::FatalError> Chainstate::FlushStateToDisk(
         m_chainman.m_options.signals->ChainStateFlushed(this->GetRole(), m_chain.GetLocator());
     }
     } catch (const std::runtime_error& e) {
-        return ValidationFatalError(state, strprintf(_("Fatal error while flushing: %s"), e.what()), kernel::FatalError::FlushStateToDiskFailed);
+        return ValidationFatalError(state, strprintf(_("Fatal error while flushing: %s"), e.what()), FatalError::FlushStateToDiskFailed);
     }
     return result;
 }
 
-util::Result<void, kernel::FatalError> Chainstate::ForceFlushStateToDisk()
+util::Result<void, FatalError> Chainstate::ForceFlushStateToDisk()
 {
     BlockValidationState state;
-    util::Result<void, kernel::FatalError> result{};
+    util::Result<void, FatalError> result{};
     // Do not return early on fatal flush errors.
     auto res{this->FlushStateToDisk(state, FlushStateMode::ALWAYS)};
     result.MoveMessages(res);
@@ -2800,10 +2795,10 @@ util::Result<void, kernel::FatalError> Chainstate::ForceFlushStateToDisk()
     return result;
 }
 
-util::Result<void, kernel::FatalError> Chainstate::PruneAndFlush()
+util::Result<void, FatalError> Chainstate::PruneAndFlush()
 {
     BlockValidationState state;
-    util::Result<void, kernel::FatalError> result{};
+    util::Result<void, FatalError> result{};
     m_blockman.m_check_for_pruning = true;
     // Do not return early on fatal flush errors.
     auto res{this->FlushStateToDisk(state, FlushStateMode::NONE)};
@@ -2900,12 +2895,12 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
   * disconnectpool (note that the caller is responsible for mempool consistency
   * in any case).
   */
-util::Result<bool, kernel::FatalError> Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTransactions* disconnectpool)
+util::Result<bool, FatalError> Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTransactions* disconnectpool)
 {
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
 
-    util::Result<bool, kernel::FatalError> result{true};
+    util::Result<bool, FatalError> result{true};
 
     CBlockIndex *pindexDelete = m_chain.Tip();
     assert(pindexDelete);
@@ -3020,12 +3015,12 @@ public:
  *
  * The block is added to connectTrace if connection succeeds.
  */
-util::Result<bool, kernel::FatalError> Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions& disconnectpool)
+util::Result<bool, FatalError> Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions& disconnectpool)
 {
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
 
-    util::Result<bool, kernel::FatalError> result{true};
+    util::Result<bool, FatalError> result{true};
 
     assert(pindexNew->pprev == m_chain.Tip());
     // Read block from disk.
@@ -3034,7 +3029,7 @@ util::Result<bool, kernel::FatalError> Chainstate::ConnectTip(BlockValidationSta
     if (!pblock) {
         std::shared_ptr<CBlock> pblockNew = std::make_shared<CBlock>();
         if (!m_blockman.ReadBlockFromDisk(*pblockNew, *pindexNew)) {
-            return ValidationFatalError(state, _("Failed to read block"), kernel::FatalError::ReadBlockFailed);
+            return ValidationFatalError(state, _("Failed to read block"), FatalError::ReadBlockFailed);
         }
         pthisBlock = pblockNew;
     } else {
@@ -3204,12 +3199,12 @@ void Chainstate::PruneBlockIndexCandidates() {
  *
  * @returns true unless a system error occurred
  */
-util::Result<bool, kernel::FatalError> Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace)
+util::Result<bool, FatalError> Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace)
 {
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
 
-    util::Result<bool, kernel::FatalError> result{true};
+    util::Result<bool, FatalError> result{true};
     const CBlockIndex* pindexOldTip = m_chain.Tip();
     const CBlockIndex* pindexFork = m_chain.FindFork(pindexMostWork);
 
@@ -3227,7 +3222,7 @@ util::Result<bool, kernel::FatalError> Chainstate::ActivateBestChainStep(BlockVa
             // then that is a failure of our local system -- we should abort
             // rather than stay on a less work chain.
             if (result) {
-                result.Set(ValidationFatalError(state, _("Failed to disconnect block."), kernel::FatalError::DisconnectBlockFailed));
+                result.Set(ValidationFatalError(state, _("Failed to disconnect block."), FatalError::DisconnectBlockFailed));
             }
             return result;
         }
@@ -3335,7 +3330,7 @@ static void LimitValidationInterfaceQueue(ValidationSignals& signals) LOCKS_EXCL
     }
 }
 
-util::Result<bool, kernel::FatalError> Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<const CBlock> pblock)
+util::Result<bool, FatalError> Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<const CBlock> pblock)
 {
     AssertLockNotHeld(m_chainstate_mutex);
 
@@ -3359,7 +3354,7 @@ util::Result<bool, kernel::FatalError> Chainstate::ActivateBestChain(BlockValida
         return false;
     }
 
-    util::Result<bool, kernel::FatalError> result{true};
+    util::Result<bool, FatalError> result{true};
     CBlockIndex *pindexMostWork = nullptr;
     CBlockIndex *pindexNewTip = nullptr;
     bool exited_ibd{false};
@@ -3494,7 +3489,7 @@ util::Result<bool, kernel::FatalError> Chainstate::ActivateBestChain(BlockValida
     return result;
 }
 
-util::Result<bool, kernel::FatalError> Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
+util::Result<bool, FatalError> Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
 {
     AssertLockNotHeld(m_chainstate_mutex);
     AssertLockNotHeld(::cs_main);
@@ -3525,12 +3520,12 @@ util::Result<bool, kernel::FatalError> Chainstate::PreciousBlock(BlockValidation
     return ActivateBestChain(state, std::shared_ptr<const CBlock>());
 }
 
-util::Result<bool, kernel::FatalError> Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pindex)
+util::Result<bool, FatalError> Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pindex)
 {
     AssertLockNotHeld(m_chainstate_mutex);
     AssertLockNotHeld(::cs_main);
 
-    util::Result<bool, kernel::FatalError> result{false};
+    util::Result<bool, FatalError> result{false};
 
     // Genesis block can't be invalidated
     assert(pindex);
@@ -4323,9 +4318,9 @@ void ChainstateManager::ReportHeadersPresync(const arith_uint256& work, int64_t 
 }
 
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
-util::Result<bool, kernel::FatalError> ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked)
+util::Result<bool, FatalError> ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked)
 {
-    util::Result<bool, kernel::FatalError> result{true};
+    util::Result<bool, FatalError> result{true};
     const CBlock& block = *pblock;
 
     if (fNewBlock) *fNewBlock = false;
@@ -4407,7 +4402,7 @@ util::Result<bool, kernel::FatalError> ChainstateManager::AcceptBlock(const std:
         }
         ReceivedBlockTransactions(block, pindex, blockPos.value());
     } catch (const std::runtime_error& e) {
-        result.Set(ValidationFatalError(state, strprintf(_("System error while saving block to disk: %s"), e.what()), kernel::FatalError::AcceptBlockFailed));
+        result.Set(ValidationFatalError(state, strprintf(_("System error while saving block to disk: %s"), e.what()), FatalError::AcceptBlockFailed));
         return result;
     }
 
@@ -4426,9 +4421,9 @@ util::Result<bool, kernel::FatalError> ChainstateManager::AcceptBlock(const std:
     return result;
 }
 
-util::Result<bool, kernel::FatalError> ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block)
+util::Result<bool, FatalError> ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block)
 {
-    util::Result<bool, kernel::FatalError> result{true};
+    util::Result<bool, FatalError> result{true};
     AssertLockNotHeld(cs_main);
 
     {
@@ -4485,7 +4480,7 @@ util::Result<bool, kernel::FatalError> ChainstateManager::ProcessNewBlock(const 
      return result;
 }
 
-util::Result<MempoolAcceptResult, kernel::FatalError> ChainstateManager::ProcessTransaction(const CTransactionRef& tx, bool test_accept)
+util::Result<MempoolAcceptResult, FatalError> ChainstateManager::ProcessTransaction(const CTransactionRef& tx, bool test_accept)
 {
     AssertLockHeld(cs_main);
     Chainstate& active_chainstate = ActiveChainstate();
@@ -4500,7 +4495,7 @@ util::Result<MempoolAcceptResult, kernel::FatalError> ChainstateManager::Process
     return result;
 }
 
-util::Result<bool, kernel::FatalError> TestBlockValidity(BlockValidationState& state,
+util::Result<bool, FatalError> TestBlockValidity(BlockValidationState& state,
                        const CChainParams& chainparams,
                        Chainstate& chainstate,
                        const CBlock& block,
@@ -4538,10 +4533,10 @@ util::Result<bool, kernel::FatalError> TestBlockValidity(BlockValidationState& s
 }
 
 /* This function is called from the RPC code for pruneblockchain */
-util::Result<void, kernel::FatalError> PruneBlockFilesManual(Chainstate& active_chainstate, int nManualPruneHeight)
+util::Result<void, FatalError> PruneBlockFilesManual(Chainstate& active_chainstate, int nManualPruneHeight)
 {
     BlockValidationState state;
-    util::Result<void, kernel::FatalError> result{};
+    util::Result<void, FatalError> result{};
     // Do not return early on fatal flush errors.
     const auto res{active_chainstate.FlushStateToDisk(state, FlushStateMode::NONE, nManualPruneHeight)};
     if (!res || !res.value()) {
@@ -4590,14 +4585,14 @@ CVerifyDB::~CVerifyDB()
     m_notifications.progress(bilingual_str{}, 100, false);
 }
 
-util::Result<VerifyDBResult, kernel::FatalError> CVerifyDB::VerifyDB(
+util::Result<VerifyDBResult, FatalError> CVerifyDB::VerifyDB(
     Chainstate& chainstate,
     const Consensus::Params& consensus_params,
     CCoinsView& coinsview,
     int nCheckLevel, int nCheckDepth)
 {
     AssertLockHeld(cs_main);
-    util::Result<VerifyDBResult, kernel::FatalError> result{VerifyDBResult::SUCCESS};
+    util::Result<VerifyDBResult, FatalError> result{VerifyDBResult::SUCCESS};
 
     if (chainstate.m_chain.Tip() == nullptr || chainstate.m_chain.Tip()->pprev == nullptr) {
         return result;
@@ -4869,10 +4864,10 @@ void Chainstate::ClearBlockIndexCandidates()
     setBlockIndexCandidates.clear();
 }
 
-util::Result<bool, kernel::FatalError> ChainstateManager::LoadBlockIndex()
+util::Result<bool, FatalError> ChainstateManager::LoadBlockIndex()
 {
     AssertLockHeld(cs_main);
-    util::Result<bool, kernel::FatalError> result{true};
+    util::Result<bool, FatalError> result{true};
     // Load block index from databases
     bool needs_init = fReindex;
     if (!fReindex) {
@@ -4925,10 +4920,10 @@ util::Result<bool, kernel::FatalError> ChainstateManager::LoadBlockIndex()
     return result;
 }
 
-util::Result<bool, kernel::FatalError> Chainstate::LoadGenesisBlock()
+util::Result<bool, FatalError> Chainstate::LoadGenesisBlock()
 {
     LOCK(cs_main);
-    util::Result<bool, kernel::FatalError> result{true};
+    util::Result<bool, FatalError> result{true};
 
     const CChainParams& params{m_chainman.GetParams()};
 
@@ -4960,7 +4955,7 @@ util::Result<bool, kernel::FatalError> Chainstate::LoadGenesisBlock()
     return result;
 }
 
-util::Result<void, kernel::FatalError> ChainstateManager::LoadExternalBlockFile(
+util::Result<void, FatalError> ChainstateManager::LoadExternalBlockFile(
     AutoFile& file_in,
     FlatFilePos* dbp,
     std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent)
@@ -4970,7 +4965,7 @@ util::Result<void, kernel::FatalError> ChainstateManager::LoadExternalBlockFile(
 
     const auto start{SteadyClock::now()};
     const CChainParams& params{GetParams()};
-    util::Result<void, kernel::FatalError> result{};
+    util::Result<void, FatalError> result{};
 
     int nLoaded = 0;
     try {
@@ -5143,7 +5138,7 @@ util::Result<void, kernel::FatalError> ChainstateManager::LoadExternalBlockFile(
             }
         }
     } catch (const std::runtime_error& e) {
-        result.Set({util::Error{strprintf(_("Fatal error: %s"), e.what())}, kernel::FatalError::BlockFileImportFailed});
+        result.Set({util::Error{strprintf(_("Fatal error: %s"), e.what())}, FatalError::BlockFileImportFailed});
     }
     LogPrintf("Loaded %i blocks from external file in %dms\n", nLoaded, Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
     return result;
@@ -5447,7 +5442,7 @@ std::string Chainstate::ToString()
                      tip ? tip->nHeight : -1, tip ? tip->GetBlockHash().ToString() : "null");
 }
 
-util::Result<bool, kernel::FatalError> Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
+util::Result<bool, FatalError> Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
 {
     AssertLockHeld(::cs_main);
     if (coinstip_size == m_coinstip_cache_size_bytes &&
@@ -5573,13 +5568,13 @@ Chainstate& ChainstateManager::InitializeChainstate(CTxMemPool* mempool)
     return destroyed && !fs::exists(db_path);
 }
 
-util::Result<bool, kernel::FatalError> ChainstateManager::ActivateSnapshot(
+util::Result<bool, FatalError> ChainstateManager::ActivateSnapshot(
         AutoFile& coins_file,
         const SnapshotMetadata& metadata,
         bool in_memory)
 {
     uint256 base_blockhash = metadata.m_base_blockhash;
-    util::Result<bool, kernel::FatalError> result{true};
+    util::Result<bool, FatalError> result{true};
 
     if (this->SnapshotBlockhash()) {
         LogPrintf("[snapshot] can't activate a snapshot-based chainstate more than once\n");
@@ -5640,7 +5635,7 @@ util::Result<bool, kernel::FatalError> ChainstateManager::ActivateSnapshot(
             static_cast<size_t>(current_coinstip_cache_size * SNAPSHOT_CACHE_PERC));
     }
 
-    auto cleanup_bad_snapshot = [&](const char* reason) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) -> util::Result<bool, kernel::FatalError> {
+    auto cleanup_bad_snapshot = [&](const char* reason) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) -> util::Result<bool, FatalError> {
         LogPrintf("[snapshot] activation failed - %s\n", reason);
         result.MoveMessages(this->MaybeRebalanceCaches());
 
@@ -5658,7 +5653,7 @@ util::Result<bool, kernel::FatalError> ChainstateManager::ActivateSnapshot(
                         "Failed to remove snapshot chainstate dir (%s). "
                         "Manually remove it before restarting.\n"),
                         fs::PathToString(*snapshot_datadir))},
-                    kernel::FatalError::SnapshotChainstateDirRemovalFailed};
+                    FatalError::SnapshotChainstateDirRemovalFailed};
             }
         }
         result.Set(false);
@@ -5946,7 +5941,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 //      through IsUsable() checks, or
 //
 //  (ii) giving each chainstate its own lock instead of using cs_main for everything.
-util::Result<SnapshotCompletionResult, kernel::FatalError> ChainstateManager::MaybeCompleteSnapshotValidation()
+util::Result<SnapshotCompletionResult, FatalError> ChainstateManager::MaybeCompleteSnapshotValidation()
 {
     AssertLockHeld(cs_main);
     if (m_ibd_chainstate.get() == &this->ActiveChainstate() ||
@@ -5966,12 +5961,12 @@ util::Result<SnapshotCompletionResult, kernel::FatalError> ChainstateManager::Ma
         return SnapshotCompletionResult::SKIPPED;
     }
 
-    util::Result<SnapshotCompletionResult, kernel::FatalError> result{SnapshotCompletionResult::SUCCESS};
+    util::Result<SnapshotCompletionResult, FatalError> result{SnapshotCompletionResult::SUCCESS};
 
     assert(SnapshotBlockhash());
     uint256 snapshot_blockhash = *Assert(SnapshotBlockhash());
 
-    auto handle_invalid_snapshot = [&](kernel::FatalError fatal) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) -> util::Result<SnapshotCompletionResult, kernel::FatalError> {
+    auto handle_invalid_snapshot = [&](FatalError fatal) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) -> util::Result<SnapshotCompletionResult, FatalError> {
         bilingual_str user_error = strprintf(_(
             "%s failed to validate the -assumeutxo snapshot state. "
             "This indicates a hardware problem, or a bug in the software, or a "
@@ -5995,7 +5990,7 @@ util::Result<SnapshotCompletionResult, kernel::FatalError> ChainstateManager::Ma
         assert(!this->IsUsable(m_snapshot_chainstate.get()));
         assert(this->IsUsable(m_ibd_chainstate.get()));
 
-        util::Result<SnapshotCompletionResult, kernel::FatalError> result{util::Error{user_error}, fatal};
+        util::Result<SnapshotCompletionResult, FatalError> result{util::Error{user_error}, fatal};
         result.MoveMessages(m_snapshot_chainstate->InvalidateCoinsDBOnDisk());
         return result;
     };
@@ -6004,7 +5999,7 @@ util::Result<SnapshotCompletionResult, kernel::FatalError> ChainstateManager::Ma
         LogPrintf("[snapshot] supposed base block %s does not match the "
           "snapshot base block %s (height %d). Snapshot is not valid.\n",
           index_new.ToString(), snapshot_blockhash.ToString(), snapshot_base_height);
-        return handle_invalid_snapshot(kernel::FatalError::SnapshotBaseBlockhashMismatch);
+        return handle_invalid_snapshot(FatalError::SnapshotBaseBlockhashMismatch);
     }
 
     assert(index_new.nHeight == snapshot_base_height);
@@ -6024,7 +6019,7 @@ util::Result<SnapshotCompletionResult, kernel::FatalError> ChainstateManager::Ma
     if (!maybe_au_data) {
         LogPrintf("[snapshot] assumeutxo data not found for height "
             "(%d) - refusing to validate snapshot\n", curr_height);
-        return handle_invalid_snapshot(kernel::FatalError::SnapshotMissingChainparams);
+        return handle_invalid_snapshot(FatalError::SnapshotMissingChainparams);
     }
 
     const AssumeutxoData& au_data = *maybe_au_data;
@@ -6047,7 +6042,7 @@ util::Result<SnapshotCompletionResult, kernel::FatalError> ChainstateManager::Ma
         // While this isn't a problem with the snapshot per se, this condition
         // prevents us from validating the snapshot, so we should shut down and let the
         // user handle the issue manually.
-        return handle_invalid_snapshot(kernel::FatalError::SnapshotStatsFailed);
+        return handle_invalid_snapshot(FatalError::SnapshotStatsFailed);
     }
     const auto& ibd_stats = *maybe_ibd_stats;
 
@@ -6061,7 +6056,7 @@ util::Result<SnapshotCompletionResult, kernel::FatalError> ChainstateManager::Ma
         LogPrintf("[snapshot] hash mismatch: actual=%s, expected=%s\n",
             ibd_stats.hashSerialized.ToString(),
             au_data.hash_serialized.ToString());
-        return handle_invalid_snapshot(kernel::FatalError::SnapshotHashMismatch);
+        return handle_invalid_snapshot(FatalError::SnapshotHashMismatch);
     }
 
     LogPrintf("[snapshot] snapshot beginning at %s has been fully validated\n",
@@ -6086,9 +6081,9 @@ bool ChainstateManager::IsSnapshotActive() const
     return m_snapshot_chainstate && m_active_chainstate == m_snapshot_chainstate.get();
 }
 
-util::Result<void, kernel::FatalError> ChainstateManager::MaybeRebalanceCaches()
+util::Result<void, FatalError> ChainstateManager::MaybeRebalanceCaches()
 {
-    util::Result<void, kernel::FatalError> result;
+    util::Result<void, FatalError> result;
     AssertLockHeld(::cs_main);
     bool ibd_usable = this->IsUsable(m_ibd_chainstate.get());
     bool snapshot_usable = this->IsUsable(m_snapshot_chainstate.get());
@@ -6216,7 +6211,7 @@ static fs::path GetSnapshotCoinsDBPath(Chainstate& cs) EXCLUSIVE_LOCKS_REQUIRED(
     return *storage_path_maybe;
 }
 
-util::Result<void, kernel::FatalError> Chainstate::InvalidateCoinsDBOnDisk()
+util::Result<void, FatalError> Chainstate::InvalidateCoinsDBOnDisk()
 {
     fs::path snapshot_datadir = GetSnapshotCoinsDBPath(*this);
 
@@ -6245,7 +6240,7 @@ util::Result<void, kernel::FatalError> Chainstate::InvalidateCoinsDBOnDisk()
             "snapshot directory %s, otherwise you will encounter the same error again "
             "on the next startup."),
             src_str, dest_str, src_str)},
-            kernel::FatalError::ChainstateRenameFailed};
+            FatalError::ChainstateRenameFailed};
     }
     return {};
 }
@@ -6288,7 +6283,7 @@ std::optional<int> ChainstateManager::GetSnapshotBaseHeight() const
     return base ? std::make_optional(base->nHeight) : std::nullopt;
 }
 
-util::Result<void, kernel::FatalError> ChainstateManager::ValidatedSnapshotCleanup()
+util::Result<void, FatalError> ChainstateManager::ValidatedSnapshotCleanup()
 {
     AssertLockHeld(::cs_main);
     auto get_storage_path = [](auto& chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) -> std::optional<fs::path> {
@@ -6304,7 +6299,7 @@ util::Result<void, kernel::FatalError> ChainstateManager::ValidatedSnapshotClean
         // No need to clean up.
         return {
             util::Error{Untranslated("Validated snapshot cleanup stopped, nothing to clean up")},
-            kernel::FatalError::SnapshotAlreadyValidated};
+            FatalError::SnapshotAlreadyValidated};
     }
     // If either path doesn't exist, that means at least one of the chainstates
     // is in-memory, in which case we can't do on-disk cleanup. You'd better be
@@ -6312,7 +6307,7 @@ util::Result<void, kernel::FatalError> ChainstateManager::ValidatedSnapshotClean
     if (!ibd_chainstate_path_maybe || !snapshot_chainstate_path_maybe) {
         LogPrintf("[snapshot] snapshot chainstate cleanup cannot happen with "
                   "in-memory chainstates. You are testing, right?\n");
-        return {util::Error{_("Cannot cleanup chainstate snapshot with in-memory chainstates.")}, kernel::FatalError::NoChainstatePaths};
+        return {util::Error{_("Cannot cleanup chainstate snapshot with in-memory chainstates.")}, FatalError::NoChainstatePaths};
     }
 
     const auto& snapshot_chainstate_path = *snapshot_chainstate_path_maybe;
@@ -6337,13 +6332,13 @@ util::Result<void, kernel::FatalError> ChainstateManager::ValidatedSnapshotClean
     auto rename_failed_abort = [](
                                    fs::path p_old,
                                    fs::path p_new,
-                                   const fs::filesystem_error& err) -> util::Result<void, kernel::FatalError> {
+                                   const fs::filesystem_error& err) -> util::Result<void, FatalError> {
         LogPrintf("Error renaming path (%s) -> (%s): %s\n",
                   fs::PathToString(p_old), fs::PathToString(p_new), err.what());
         return {util::Error{strprintf(_(
             "Rename of '%s' -> '%s' failed. "
             "Cannot clean up the background chainstate leveldb directory."),
-            fs::PathToString(p_old), fs::PathToString(p_new))}, kernel::FatalError::ChainstateRenameFailed};
+            fs::PathToString(p_old), fs::PathToString(p_new))}, FatalError::ChainstateRenameFailed};
     };
 
     try {

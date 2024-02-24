@@ -90,14 +90,6 @@ int main(int argc, char* argv[])
         {
             std::cout << "Warning: " << warning.original << std::endl;
         }
-        void flushError(const bilingual_str& message) override
-        {
-            std::cerr << "Error flushing block data to disk: " << message.original << std::endl;
-        }
-        void fatalError(const bilingual_str& message) override
-        {
-            std::cerr << "Error: " << message.original << std::endl;
-        }
     };
     auto notifications = std::make_unique<KernelNotifications>();
 

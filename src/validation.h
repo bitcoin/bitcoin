@@ -96,8 +96,6 @@ extern const std::vector<std::string> CHECKLEVEL_DOC;
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
-bool FatalError(kernel::Notifications& notifications, BlockValidationState& state, const bilingual_str& message);
-
 [[nodiscard]] util::Result<bool, kernel::FatalError> ValidationFatalError(BlockValidationState& state, const bilingual_str& message, kernel::FatalError result);
 
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */

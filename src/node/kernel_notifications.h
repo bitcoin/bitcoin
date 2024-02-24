@@ -36,10 +36,6 @@ public:
 
     void warning(const bilingual_str& warning) override;
 
-    void flushError(const bilingual_str& message) override;
-
-    void fatalError(const bilingual_str& message) override;
-
     //! Block height after which blockTip notification will return Interrupted{}, if >0.
     int m_stop_at_height{DEFAULT_STOPATHEIGHT};
     //! Useful for tests, can be set to false to avoid shutdown on fatal error.
