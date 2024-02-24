@@ -40,7 +40,7 @@ void SetTxPayload(CMutableTransaction& tx, const T& payload)
 {
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
     ds << payload;
-    tx.vExtraPayload.assign(ds.begin(), ds.end());
+    tx.vExtraPayload.assign(UCharCast(ds.data()), UCharCast(ds.data() + ds.size()));
 }
 
 uint256 CalcTxInputsHash(const CTransaction& tx);

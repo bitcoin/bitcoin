@@ -229,7 +229,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
 
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
     ds << payload;
-    tx.vExtraPayload.assign(ds.begin(), ds.end());
+    tx.vExtraPayload.assign(UCharCast(ds.data()), UCharCast(ds.data() + ds.size()));
 
     static const CTxOut dummyTxOut(0, CScript() << OP_RETURN);
     std::vector<CRecipient> vecSend;

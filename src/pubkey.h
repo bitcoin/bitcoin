@@ -135,14 +135,14 @@ public:
     {
         unsigned int len = size();
         ::WriteCompactSize(s, len);
-        s.write((char*)vch, len);
+        s.write(AsBytes(Span{vch, len}));
     }
     template <typename Stream>
     void Unserialize(Stream& s)
     {
         const unsigned int len(::ReadCompactSize(s));
         if (len <= SIZE) {
-            s.read((char*)vch, len);
+            s.read(AsWritableBytes(Span{vch, len}));
             if (len != size()) {
                 Invalidate();
             }
@@ -269,7 +269,7 @@ struct CExtPubKey {
         ::WriteCompactSize(s, len);
         unsigned char code[BIP32_EXTKEY_SIZE];
         Encode(code);
-        s.write((const char *)&code[0], len);
+        s.write(AsBytes(Span{&code[0], len}));
     }
     template <typename Stream>
     void Unserialize(Stream& s)
@@ -278,7 +278,7 @@ struct CExtPubKey {
         unsigned char code[BIP32_EXTKEY_SIZE];
         if (len != BIP32_EXTKEY_SIZE)
             throw std::runtime_error("Invalid extended key size\n");
-        s.read((char *)&code[0], len);
+        s.read(AsWritableBytes(Span{&code[0], len}));
         Decode(code);
     }
 };

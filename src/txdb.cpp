@@ -191,7 +191,7 @@ public:
 
 private:
     std::unique_ptr<CDBIterator> pcursor;
-    std::pair<char, COutPoint> keyTmp;
+    std::pair<uint8_t, COutPoint> keyTmp;
 
     friend class CCoinsViewDB;
 };
@@ -299,7 +299,7 @@ bool CBlockTreeDB::ReadAddressUnspentIndex(uint160 addressHash, AddressType type
     pcursor->Seek(std::make_pair(DB_ADDRESSUNSPENTINDEX, CAddressIndexIteratorKey(type, addressHash)));
 
     while (pcursor->Valid()) {
-        std::pair<char,CAddressUnspentKey> key;
+        std::pair<uint8_t, CAddressUnspentKey> key;
         if (pcursor->GetKey(key) && key.first == DB_ADDRESSUNSPENTINDEX && key.second.m_address_bytes == addressHash) {
             CAddressUnspentValue nValue;
             if (pcursor->GetValue(nValue)) {
@@ -343,7 +343,7 @@ bool CBlockTreeDB::ReadAddressIndex(uint160 addressHash, AddressType type,
     }
 
     while (pcursor->Valid()) {
-        std::pair<char,CAddressIndexKey> key;
+        std::pair<uint8_t, CAddressIndexKey> key;
         if (pcursor->GetKey(key) && key.first == DB_ADDRESSINDEX && key.second.m_address_bytes == addressHash) {
             if (end > 0 && key.second.m_block_height > end) {
                 break;
@@ -383,7 +383,7 @@ bool CBlockTreeDB::ReadTimestampIndex(const unsigned int &high, const unsigned i
     pcursor->Seek(std::make_pair(DB_TIMESTAMPINDEX, CTimestampIndexIteratorKey(low)));
 
     while (pcursor->Valid()) {
-        std::pair<char, CTimestampIndexKey> key;
+        std::pair<uint8_t, CTimestampIndexKey> key;
         if (pcursor->GetKey(key) && key.first == DB_TIMESTAMPINDEX && key.second.m_block_time <= high) {
             hashes.push_back(key.second.m_block_hash);
             pcursor->Next();
