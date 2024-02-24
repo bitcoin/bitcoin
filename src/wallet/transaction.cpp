@@ -43,10 +43,10 @@ void CWalletTx::updateState(interfaces::Chain& chain)
             state = TxStateInactive{};
         }
     };
-    if (auto* conf = state<TxStateConfirmed>()) {
-        lookup_block(conf->confirmed_block_hash, conf->confirmed_block_height, m_state);
-    } else if (auto* conf = state<TxStateConflicted>()) {
-        lookup_block(conf->conflicting_block_hash, conf->conflicting_block_height, m_state);
+    if (auto* confirmed_conf = state<TxStateConfirmed>()) {
+        lookup_block(confirmed_conf->confirmed_block_hash, confirmed_conf->confirmed_block_height, m_state);
+    } else if (auto* conflicted_conf = state<TxStateConflicted>()) {
+        lookup_block(conflicted_conf->conflicting_block_hash, conflicted_conf->conflicting_block_height, m_state);
     }
 }
 
