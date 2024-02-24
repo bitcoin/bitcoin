@@ -1456,7 +1456,7 @@ void RegisterMiscRPCCommands(CRPCTable &t)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-    { "control",            "debug",                  &debug,                  {} },
+    { "control",            "debug",                  &debug,                  {"category"} },
     { "control",            "getmemoryinfo",          &getmemoryinfo,          {"mode"} },
     { "control",            "logging",                &logging,                {"include", "exclude"}},
     { "util",               "validateaddress",        &validateaddress,        {"address"} },
@@ -1466,7 +1466,7 @@ static const CRPCCommand commands[] =
     { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
     { "util",               "getindexinfo",           &getindexinfo,           {"index_name"} },
-    { "blockchain",         "getspentinfo",           &getspentinfo,           {"json"} },
+    { "blockchain",         "getspentinfo",           &getspentinfo,           {"request"} },
 
     /* Address index */
     { "addressindex",       "getaddressmempool",      &getaddressmempool,      {"addresses"}  },
@@ -1476,7 +1476,7 @@ static const CRPCCommand commands[] =
     { "addressindex",       "getaddressbalance",      &getaddressbalance,      {"addresses"} },
 
     /* Dash features */
-    { "dash",               "mnsync",                 &mnsync,                 {} },
+    { "dash",               "mnsync",                 &mnsync,                 {"mode"} },
     { "dash",               "spork",                  &spork,                  {"command"} },
     { "dash",               "sporkupdate",            &sporkupdate,            {"name","value"} },
 

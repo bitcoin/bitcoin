@@ -183,7 +183,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "voteraw", 5, "time" },
     { "getblockhashes", 0, "high"},
     { "getblockhashes", 1, "low" },
-    { "getspentinfo", 0, "json" },
+    { "getspentinfo", 0, "request" },
     { "getaddresstxids", 0, "addresses" },
     { "getaddressbalance", 0, "addresses" },
     { "getaddressdeltas", 0, "addresses" },
