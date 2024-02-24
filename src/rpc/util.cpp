@@ -531,10 +531,10 @@ RPCHelpMan::RPCHelpMan(std::string name, std::string description, std::vector<RP
     std::map<std::string, int> param_names;
 
     for (const auto& arg : m_args) {
-        std::vector<std::string> names = SplitString(arg.m_names, '|');
+        std::vector<std::string> arg_names = SplitString(arg.m_names, '|');
         // Should have unique named arguments
-        for (const std::string& name : names) {
-            auto& param_type = param_names[name];
+        for (const std::string& arg_name : arg_names) {
+            auto& param_type = param_names[arg_name];
             CHECK_NONFATAL(!(param_type & POSITIONAL));
             CHECK_NONFATAL(!(param_type & NAMED_ONLY));
             param_type |= POSITIONAL;
