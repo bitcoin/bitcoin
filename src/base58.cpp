@@ -43,6 +43,22 @@ static constexpr int baseScale{1000};
 static constexpr int log58_256Ratio = 733;  // Approximation of log(base)/log(256), scaled by baseScale.
 static constexpr int log256_58Ratio = 1366; // Approximation of log(256)/log(base), scaled by baseScale.
 
+// Defines the size of groups that fit into 64 bit batches, processed together for encoding and decoding efficiency.
+static constexpr int encodingBatch = 7;
+
+// The ceiling integer division of x by y.
+static int CeilDiv(const int x, const int y)
+{
+    return (x + (y - 1)) / y;
+}
+
+// The floor modulus of x by y, adjusting for negative values.
+static int FloorMod(const int x, const int y)
+{
+    const auto r = x % y;
+    return r < 0 ? r + y : r;
+}
+
 [[nodiscard]] static bool DecodeBase58(const char* psz, std::vector<unsigned char>& vch, int max_ret_len)
 {
     // Skip leading spaces.
@@ -90,9 +106,19 @@ static constexpr int log256_58Ratio = 1366; // Approximation of log(256)/log(bas
     return true;
 }
 
-auto BatchInput(const Span<const unsigned char>& input, const int start) -> std::vector<unsigned char>
+auto BatchInput(const Span<const unsigned char>& input, const int start) -> std::vector<int64_t>
 {
-    return std::vector(input.begin() + start, input.end());
+    const int effectiveLength = input.size() - start;
+    std::vector<int64_t> inputBatched(CeilDiv(effectiveLength, encodingBatch), 0);
+    const int groupOffset = FloorMod(-effectiveLength, encodingBatch) - start;
+
+    for (uint32_t i = start; i < input.size(); ++i) {
+        const int index = (groupOffset + static_cast<int>(i)) / encodingBatch;
+        inputBatched[index] <<= 8;
+        inputBatched[index] |= input[i];
+    }
+
+    return inputBatched;
 }
 
 std::string EncodeBase58(const Span<const unsigned char> input)
@@ -110,7 +136,7 @@ std::string EncodeBase58(const Span<const unsigned char> input)
     for (auto i{0U}; i < inputBatched.size();) {
         int64_t remainder{0};
         for (auto j{i}; j < inputBatched.size(); ++j) { // Calculate next digit, dividing inputBatched
-            const auto accumulator = (remainder << 8) | inputBatched[j];
+            const auto accumulator = (remainder << (encodingBatch * 8)) | inputBatched[j];
             inputBatched[j] = accumulator / base;
             remainder = accumulator % base;
         }
