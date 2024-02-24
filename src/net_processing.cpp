@@ -2655,9 +2655,9 @@ bool PeerManagerImpl::IsContinuationOfLowWorkHeadersSync(Peer& peer, CNode& pfro
                 // newly updated one) to find the best one.
                 NodeId peer_best{-1};
                 const HeadersPresyncStats* stat_best{nullptr};
-                for (const auto& [peer, stat] : m_headers_presync_stats) {
+                for (const auto& [peer_candidate, stat] : m_headers_presync_stats) {
                     if (!stat_best || stat > *stat_best) {
-                        peer_best = peer;
+                        peer_best = peer_candidate;
                         stat_best = &stat;
                     }
                 }
