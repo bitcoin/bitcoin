@@ -291,8 +291,8 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, std::chrono::m
                 // Only wait at most MAX_WAIT_FOR_IO at a time, unless
                 // we're approaching the end of the specified total timeout
                 const auto remaining = std::chrono::milliseconds{endTime - curTime};
-                const auto timeout = std::min(remaining, std::chrono::milliseconds{MAX_WAIT_FOR_IO});
-                if (!sock.Wait(timeout, Sock::RECV)) {
+                const auto io_timeout = std::min(remaining, std::chrono::milliseconds{MAX_WAIT_FOR_IO});
+                if (!sock.Wait(io_timeout, Sock::RECV)) {
                     return IntrRecvError::NetworkError;
                 }
             } else {
