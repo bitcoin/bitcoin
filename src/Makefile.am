@@ -76,7 +76,7 @@ $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(w
 
 $(LIBBLS):
 	$(AM_V_at) \
-		ARCH='$(firstword $(subst -, ,$(HOST)))' \
+		ARCH='$(host_cpu)' \
 		CC='$(CC)' \
 		CXX='$(CXX)' \
 		CFLAGS='$(CXXFLAGS)' \
@@ -90,7 +90,7 @@ $(LIBBLS):
 $(LIBMCL):
 	$(AM_V_at) \
 		MCL_USE_LLVM=0 \
-		ARCH='$(firstword $(subst -, ,$(HOST)))' \
+		ARCH='$(host_cpu)' \
 		CC='$(CC)' \
 		CXX='$(CXX)' \
 		CFLAGS='$(CXXFLAGS)' \
