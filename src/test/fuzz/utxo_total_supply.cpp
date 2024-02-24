@@ -68,8 +68,8 @@ FUZZ_TARGET(utxo_total_supply)
         txos.emplace_back(COutPoint{tx.GetHash(), i}, tx.vout.at(i));
         if (current_block->vtx.size() == 1 && tx.vout.at(i).scriptPubKey[0] == OP_RETURN) {
             // also store coinbase
-            const uint32_t i = tx.vout.size() - 2;
-            txos.emplace_back(COutPoint{tx.GetHash(), i}, tx.vout.at(i));
+            const uint32_t vout_i = tx.vout.size() - 2;
+            txos.emplace_back(COutPoint{tx.GetHash(), vout_i}, tx.vout.at(vout_i));
         }
     };
     const auto AppendRandomTxo = [&](CMutableTransaction& tx) {
