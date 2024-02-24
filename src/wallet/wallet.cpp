@@ -2782,10 +2782,10 @@ void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t>& mapKeyBirth) const {
 unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx, bool rescanning_old_block) const
 {
     std::optional<uint256> block_hash;
-    if (auto* conf = wtx.state<TxStateConfirmed>()) {
-        block_hash = conf->confirmed_block_hash;
-    } else if (auto* conf = wtx.state<TxStateConflicted>()) {
-        block_hash = conf->conflicting_block_hash;
+    if (auto* confirm_conf = wtx.state<TxStateConfirmed>()) {
+        block_hash = confirm_conf->confirmed_block_hash;
+    } else if (auto* conflict_conf = wtx.state<TxStateConflicted>()) {
+        block_hash = conflict_conf->conflicting_block_hash;
     }
 
     unsigned int nTimeSmart = wtx.nTimeReceived;
@@ -3371,12 +3371,12 @@ CKeyPool::CKeyPool(const CPubKey& vchPubKeyIn, bool internalIn)
 int CWallet::GetTxDepthInMainChain(const CWalletTx& wtx) const
 {
     AssertLockHeld(cs_wallet);
-    if (auto* conf = wtx.state<TxStateConfirmed>()) {
-        assert(conf->confirmed_block_height >= 0);
-        return GetLastBlockHeight() - conf->confirmed_block_height + 1;
-    } else if (auto* conf = wtx.state<TxStateConflicted>()) {
-        assert(conf->conflicting_block_height >= 0);
-        return -1 * (GetLastBlockHeight() - conf->conflicting_block_height + 1);
+    if (auto* confirm_conf = wtx.state<TxStateConfirmed>()) {
+        assert(confirm_conf->confirmed_block_height >= 0);
+        return GetLastBlockHeight() - confirm_conf->confirmed_block_height + 1;
+    } else if (auto* conflict_conf = wtx.state<TxStateConflicted>()) {
+        assert(conflict_conf->conflicting_block_height >= 0);
+        return -1 * (GetLastBlockHeight() - conflict_conf->conflicting_block_height + 1);
     } else {
         return 0;
     }
