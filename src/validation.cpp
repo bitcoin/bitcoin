@@ -1599,10 +1599,10 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
             } else {
                 results_final.emplace(wtxid, txresult);
             }
-        } else if (const auto it{results_final.find(wtxid)}; it != results_final.end()) {
+        } else if (const auto find_it{results_final.find(wtxid)}; find_it != results_final.end()) {
             // Already-in-mempool transaction. Check to see if it's still there, as it could have
             // been evicted when LimitMempoolSize() was called.
-            Assume(it->second.m_result_type != MempoolAcceptResult::ResultType::INVALID);
+            Assume(find_it->second.m_result_type != MempoolAcceptResult::ResultType::INVALID);
             Assume(individual_results_nonfinal.count(wtxid) == 0);
             // Query by txid to include the same-txid-different-witness ones.
             if (!m_pool.exists(GenTxid::Txid(tx->GetHash()))) {
@@ -1613,10 +1613,10 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
                 results_final.erase(wtxid);
                 results_final.emplace(wtxid, MempoolAcceptResult::Failure(mempool_full_state));
             }
-        } else if (const auto it{individual_results_nonfinal.find(wtxid)}; it != individual_results_nonfinal.end()) {
-            Assume(it->second.m_result_type == MempoolAcceptResult::ResultType::INVALID);
+        } else if (const auto nonfinal_it{individual_results_nonfinal.find(wtxid)}; nonfinal_it != individual_results_nonfinal.end()) {
+            Assume(nonfinal_it->second.m_result_type == MempoolAcceptResult::ResultType::INVALID);
             // Interesting result from previous processing.
-            results_final.emplace(wtxid, it->second);
+            results_final.emplace(wtxid, nonfinal_it->second);
         }
     }
     Assume(results_final.size() == package.size());
