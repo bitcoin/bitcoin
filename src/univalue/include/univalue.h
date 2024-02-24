@@ -53,12 +53,12 @@ public:
     void clear();
 
     void setNull();
-    void setBool(bool val);
+    void setBool(bool newVal);
     void setNumStr(std::string str);
-    void setInt(uint64_t val);
-    void setInt(int64_t val);
-    void setInt(int val_) { return setInt(int64_t{val_}); }
-    void setFloat(double val);
+    void setInt(uint64_t newVal);
+    void setInt(int64_t newVal);
+    void setInt(int newVal) { return setInt(int64_t{newVal}); }
+    void setFloat(double newVal);
     void setStr(std::string str);
     void setArray();
     void setObject();
@@ -84,13 +84,13 @@ public:
     bool isArray() const { return (typ == VARR); }
     bool isObject() const { return (typ == VOBJ); }
 
-    void push_back(UniValue val);
+    void push_back(UniValue newVal);
     void push_backV(const std::vector<UniValue>& vec);
     template <class It>
     void push_backV(It first, It last);
 
-    void pushKVEnd(std::string key, UniValue val);
-    void pushKV(std::string key, UniValue val);
+    void pushKVEnd(std::string key, UniValue newVal);
+    void pushKV(std::string key, UniValue newVal);
     void pushKVs(UniValue obj);
 
     std::string write(unsigned int prettyIndent = 0,
