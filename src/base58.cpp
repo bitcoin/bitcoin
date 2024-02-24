@@ -46,6 +46,9 @@ static constexpr int64_t baseScale{1000LL};
 static constexpr int64_t log58_256Ratio =  733LL;  // Approximation of log(base)/log(256), scaled by baseScale.
 static constexpr int64_t log256_58Ratio = 1366LL; // Approximation of log(256)/log(base), scaled by baseScale.
 
+// Defines the size of groups that fit into 64 bit batches, processed together for encoding and decoding efficiency.
+static constexpr int encodingBatch = 7;
+
 [[nodiscard]] static bool DecodeBase58(const char* psz, std::vector<unsigned char>& vch, int max_ret_len)
 {
     // Skip leading spaces.
@@ -104,11 +107,17 @@ std::string EncodeBase58(const Span<const unsigned char> input)
     result.reserve(leading + size);
     result.assign(leading, '1'); // Fill in leading '1's for each zero byte in input.
 
-    auto inputBatched = std::vector(input.begin() + leading, input.end());
+    const size_t effectiveLength = input.size() - leading;
+    std::vector<int64_t> inputBatched((effectiveLength + encodingBatch - 1) / encodingBatch, 0);
+    const size_t groupOffset = (encodingBatch - (effectiveLength % encodingBatch)) % encodingBatch;
+    for (size_t i = leading; i < input.size(); ++i) {
+        const size_t index = (i - leading + groupOffset) / encodingBatch;
+        inputBatched[index] = (inputBatched[index] << 8) | input[i];
+    }
     for (size_t i{0}; i < inputBatched.size();) {
         int64_t remainder{0};
         for (size_t j{i}; j < inputBatched.size(); ++j) { // Calculate next digit, dividing inputBatched
-            const int64_t accumulator = (remainder << 8) | inputBatched[j];
+            const int64_t accumulator = (remainder << (encodingBatch * 8)) | inputBatched[j];
             inputBatched[j] = accumulator / base;
             remainder = accumulator % base;
         }
