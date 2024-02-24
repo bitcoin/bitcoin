@@ -19,7 +19,7 @@ Segment SegmentFactory::Assemble(const IMMR& mmr, const ILeafSet& leafset, const
     while (segment.leaves.size() < num_leaves && leaf_idx < leafset.GetNextLeafIdx()) {
         if (leafset.Contains(leaf_idx)) {
             last_leaf_idx = leaf_idx;
-            segment.leaves.push_back(mmr.GetLeaf(leaf_idx).vec());
+            segment.leaves.push_back(mmr.GetLeaf(leaf_idx));
         }
 
         ++leaf_idx;

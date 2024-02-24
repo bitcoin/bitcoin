@@ -1899,8 +1899,8 @@ static void ProcessGetMWEBUTXOs(CNode& pfrom, const ChainstateManager& chainman,
 
     std::vector<NetUTXO> utxos;
     utxos.reserve(segment.leaves.size());
-    for (const mw::Hash& hash : segment.leaves) {
-        UTXO::CPtr utxo = mweb_cache->GetUTXO(hash);
+    for (const mmr::Leaf& leaf : segment.leaves) {
+        UTXO::CPtr utxo = mweb_cache->GetUTXO(leaf.vec());
         if (!utxo) {
             LogPrint(BCLog::NET, "Could not build segment requested by getmwebutxos from peer=%d\n", pfrom.GetId());
             pfrom.fDisconnect = true;

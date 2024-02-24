@@ -16,6 +16,12 @@ ostream& operator<<(ostream& os, const mw::Hash& hash)
     os << hash.ToHex();
     return os;
 }
+
+ostream& operator<<(ostream& os, const mmr::Leaf& leaf)
+{
+    os << leaf.GetHash().ToHex();
+    return os;
+}
 } // namespace std
 
 using namespace mmr;
@@ -27,7 +33,12 @@ struct MMRWithLeafset {
 
 static mmr::Leaf DeterministicLeaf(const uint64_t i)
 {
-    return mmr::Leaf::Create(mmr::LeafIndex::At(i), Hasher().Append(i).hash().vec());
+    std::vector<uint8_t> serialized{
+        uint8_t(i >> 24),
+        uint8_t(i >> 16),
+        uint8_t(i >> 8),
+        uint8_t(i)};
+    return mmr::Leaf::Create(mmr::LeafIndex::At(i), serialized);
 }
 
 static MMRWithLeafset BuildDetermininisticMMR(const uint64_t num_leaves)
@@ -56,11 +67,11 @@ BOOST_AUTO_TEST_CASE(AssembleSegment)
         4
     );
 
-    std::vector<mw::Hash> expected_leaves{
-        Hasher().Append<uint64_t>(0).hash(),
-        Hasher().Append<uint64_t>(1).hash(),
-        Hasher().Append<uint64_t>(2).hash(),
-        Hasher().Append<uint64_t>(3).hash(),
+    std::vector<mmr::Leaf> expected_leaves{
+        DeterministicLeaf(0),
+        DeterministicLeaf(1),
+        DeterministicLeaf(2),
+        DeterministicLeaf(3)
     };
     BOOST_REQUIRE_EQUAL_COLLECTIONS(segment.leaves.begin(), segment.leaves.end(), expected_leaves.begin(), expected_leaves.end());
 
@@ -73,12 +84,8 @@ BOOST_AUTO_TEST_CASE(AssembleSegment)
     BOOST_REQUIRE_EQUAL(expected_lower_peak, segment.lower_peak);
 
     // Verify PMMR root can be fully recomputed
-    mw::Hash n0 = mmr::Leaf::CalcHash(mmr::LeafIndex::At(0), segment.leaves[0].vec());
-    mw::Hash n1 = mmr::Leaf::CalcHash(mmr::LeafIndex::At(1), segment.leaves[1].vec());
-    mw::Hash n2 = MMRUtil::CalcParentHash(mmr::Index::At(2), n0, n1);
-    mw::Hash n3 = mmr::Leaf::CalcHash(mmr::LeafIndex::At(2), segment.leaves[2].vec());
-    mw::Hash n4 = mmr::Leaf::CalcHash(mmr::LeafIndex::At(3), segment.leaves[3].vec());
-    mw::Hash n5 = MMRUtil::CalcParentHash(mmr::Index::At(5), n3, n4);
+    mw::Hash n2 = MMRUtil::CalcParentHash(mmr::Index::At(2), segment.leaves[0].GetHash(), segment.leaves[1].GetHash());
+    mw::Hash n5 = MMRUtil::CalcParentHash(mmr::Index::At(5), segment.leaves[2].GetHash(), segment.leaves[3].GetHash());
     mw::Hash n6 = MMRUtil::CalcParentHash(mmr::Index::At(6), n2, n5);
     mw::Hash n14 = MMRUtil::CalcParentHash(mmr::Index::At(14), n6, segment.hashes[0]);
     mw::Hash root = MMRUtil::CalcParentHash(Index::At(26), n14, *segment.lower_peak);

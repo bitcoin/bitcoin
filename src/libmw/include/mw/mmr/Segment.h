@@ -2,7 +2,7 @@
 
 #include <mw/common/Macros.h>
 #include <mw/models/crypto/Hash.h>
-#include <mw/mmr/LeafIndex.h>
+#include <mw/mmr/Leaf.h>
 #include <set>
 
 // Forward Declarations
@@ -17,8 +17,8 @@ MMR_NAMESPACE
 /// </summary>
 struct Segment
 {
-    // The hashes of the requested unspent leaves, in ascending order
-    std::vector<mw::Hash> leaves;
+    // The requested unspent leaves, in ascending order
+    std::vector<mmr::Leaf> leaves;
 
     // The MMR node hashes needed to verify the integrity of the MMR & the provided leaves
     std::vector<mw::Hash> hashes;
