@@ -90,40 +90,36 @@ static constexpr int log256_58Ratio = 1366; // Approximation of log(256)/log(bas
     return true;
 }
 
-std::string EncodeBase58(Span<const unsigned char> input)
+auto BatchInput(const Span<const unsigned char>& input, const int start) -> std::vector<unsigned char>
 {
-    // Skip & count leading zeroes.
-    int zeroes = 0;
-    int length = 0;
-    while (input.size() > 0 && input[0] == 0) {
-        input = input.subspan(1);
-        zeroes++;
-    }
-    const int size = 1 + input.size() * log256_58Ratio / baseScale;
-    std::vector<unsigned char> b58(size);
-    // Process the bytes.
-    while (input.size() > 0) {
-        int carry = input[0];
-        int i = 0;
-        // Apply "b58 = b58 * 256 + ch".
-        for (std::vector<unsigned char>::reverse_iterator it = b58.rbegin(); (carry != 0 || i < length) && (it != b58.rend()); it++, i++) {
-            carry += 256 * (*it);
-            *it = carry % 58;
-            carry /= 58;
-        }
+    return std::vector(input.begin() + start, input.end());
+}
 
-        assert(carry == 0);
-        length = i;
-        input = input.subspan(1);
+std::string EncodeBase58(const Span<const unsigned char> input)
+{
+    auto leading{0U};
+    while (leading < input.size() && input[leading] == 0)
+        ++leading;
+
+    const auto size = 1 + input.size() * log256_58Ratio / baseScale;
+    std::string result;
+    result.reserve(leading + size);
+    result.assign(leading, '1'); // Fill in leading '1's for each zero byte in input.
+
+    auto inputBatched = BatchInput(input, leading);
+    for (auto i{0U}; i < inputBatched.size();) {
+        int64_t remainder{0};
+        for (auto j{i}; j < inputBatched.size(); ++j) { // Calculate next digit, dividing inputBatched
+            const auto accumulator = (remainder << 8) | inputBatched[j];
+            inputBatched[j] = accumulator / base;
+            remainder = accumulator % base;
+        }
+        result += pszBase58[remainder];
+        while (i < inputBatched.size() && inputBatched[i] == 0)
+            ++i; // Skip new leading zeros
     }
-    // Translate the result into a string.
-    std::string str;
-    std::vector<unsigned char>::iterator it = b58.begin() + (size - length);
-    str.reserve(zeroes + (b58.end() - it));
-    str.assign(zeroes, '1');
-    while (it != b58.end())
-        str += pszBase58[*(it++)];
-    return str;
+    std::reverse(result.begin() + leading, result.end());
+    return result;
 }
 
 bool DecodeBase58(const std::string& str, std::vector<unsigned char>& vchRet, int max_ret_len)
