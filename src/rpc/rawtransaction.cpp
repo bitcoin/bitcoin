@@ -1091,17 +1091,17 @@ static RPCHelpMan decodepsbt()
     // PSBT version
     result.pushKV("psbt_version", static_cast<uint64_t>(psbtx.GetVersion()));
 
-    // Proprietary
-    UniValue proprietary(UniValue::VARR);
+    // Global Proprietary
+    UniValue global_proprietary(UniValue::VARR);
     for (const auto& entry : psbtx.m_proprietary) {
         UniValue this_prop(UniValue::VOBJ);
         this_prop.pushKV("identifier", HexStr(entry.identifier));
         this_prop.pushKV("subtype", entry.subtype);
         this_prop.pushKV("key", HexStr(entry.key));
         this_prop.pushKV("value", HexStr(entry.value));
-        proprietary.push_back(this_prop);
+        global_proprietary.push_back(this_prop);
     }
-    result.pushKV("proprietary", proprietary);
+    result.pushKV("proprietary", global_proprietary);
 
     // Unknown data
     UniValue unknowns(UniValue::VOBJ);
