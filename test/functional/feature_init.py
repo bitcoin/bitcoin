@@ -98,11 +98,11 @@ class InitStressTest(BitcoinTestFramework):
         files_to_delete = {
             'blocks/index/*.ldb': 'Error opening block database.',
             'chainstate/*.ldb': 'Error opening block database.',
-            'blocks/blk*.dat': 'Error loading block database.',
+            'blocks/blk*.dat': 'Failed loading block database.',
         }
 
         files_to_perturb = {
-            'blocks/index/*.ldb': 'Error loading block database.',
+            'blocks/index/*.ldb': 'Failed loading block database.',
             'chainstate/*.ldb': 'Error opening block database.',
             'blocks/blk*.dat': 'Corrupted block database detected.',
         }

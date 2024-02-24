@@ -11,6 +11,7 @@ namespace kernel {
 
 enum class FatalError {
     AcceptBlockFailed,
+    AssumeUtxoDataNotFound,
     BlockFileImportFailed,
     BlockIndexWriteFailed,
     BlockWriteFailed,
