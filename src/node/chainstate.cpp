@@ -231,9 +231,9 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         // for the fully validated chainstate.
         chainman.ActiveChainstate().ClearBlockIndexCandidates();
 
-        auto [init_status, init_error] = CompleteChainstateInitialization(chainman, cache_sizes, options);
-        if (init_status != ChainstateLoadStatus::SUCCESS) {
-            return {init_status, init_error};
+        auto [reinit_status, reinit_error] = CompleteChainstateInitialization(chainman, cache_sizes, options);
+        if (reinit_status != ChainstateLoadStatus::SUCCESS) {
+            return {reinit_status, reinit_error};
         }
     } else {
         return {ChainstateLoadStatus::FAILURE, _(
