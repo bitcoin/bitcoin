@@ -875,7 +875,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     bool sent{false};
 
     const auto CaptureMessageOrig = CaptureMessage;
-    CaptureMessage = [&sent, &expected](const CAddress& addr,
+    CaptureMessage = [&sent, &expected](const CAddress& msg_addr,
                                         const std::string& msg_type,
                                         Span<const unsigned char> data,
                                         bool is_incoming) -> void {
