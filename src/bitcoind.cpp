@@ -114,9 +114,9 @@ static bool ParseArgs(ArgsManager& args, int argc, char* argv[])
 {
     // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
     SetupServerArgs(args);
-    std::string error;
-    if (!args.ParseParameters(argc, argv, error)) {
-        return InitError(Untranslated(strprintf("Error parsing command line arguments: %s", error)));
+    std::string parse_error;
+    if (!args.ParseParameters(argc, argv, parse_error)) {
+        return InitError(Untranslated(strprintf("Error parsing command line arguments: %s", parse_error)));
     }
 
     if (auto error = common::InitConfig(args)) {
