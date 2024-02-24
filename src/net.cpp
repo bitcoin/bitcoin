@@ -814,12 +814,12 @@ bool V1Transport::SetMessageToSend(CSerializedNetMsg& msg) noexcept
     uint256 hash = Hash(msg.data);
 
     // create header
-    CMessageHeader hdr(m_magic_bytes, msg.m_type.c_str(), msg.data.size());
-    memcpy(hdr.pchChecksum, hash.begin(), CMessageHeader::CHECKSUM_SIZE);
+    CMessageHeader msg_hdr(m_magic_bytes, msg.m_type.c_str(), msg.data.size());
+    memcpy(msg_hdr.pchChecksum, hash.begin(), CMessageHeader::CHECKSUM_SIZE);
 
     // serialize header
     m_header_to_send.clear();
-    VectorWriter{m_header_to_send, 0, hdr};
+    VectorWriter{m_header_to_send, 0, msg_hdr};
 
     // update state
     m_message_to_send = std::move(msg);
