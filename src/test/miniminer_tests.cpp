@@ -179,9 +179,9 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
     };
     std::map<uint256, TxDimensions> tx_dims;
     for (const auto& tx : all_transactions) {
-        const auto& entry{*Assert(pool.GetEntry(tx->GetHash()))};
-        tx_dims.emplace(tx->GetHash(), TxDimensions{entry.GetTxSize(), entry.GetModifiedFee(),
-                                              CFeeRate(entry.GetModifiedFee(), entry.GetTxSize())});
+        const auto& tx_entry{*Assert(pool.GetEntry(tx->GetHash()))};
+        tx_dims.emplace(tx->GetHash(), TxDimensions{tx_entry.GetTxSize(), tx_entry.GetModifiedFee(),
+                                              CFeeRate(tx_entry.GetModifiedFee(), tx_entry.GetTxSize())});
     }
 
     const std::vector<CFeeRate> various_normal_feerates({CFeeRate(0), CFeeRate(500), CFeeRate(999),
