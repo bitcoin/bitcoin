@@ -167,11 +167,11 @@ void CDBBatch::Clear()
     size_estimate = 0;
 }
 
-void CDBBatch::WriteImpl(Span<const std::byte> key, DataStream& ssValue)
+void CDBBatch::WriteImpl(Span<const std::byte> key, DataStream& value)
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
-    ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
-    leveldb::Slice slValue(CharCast(ssValue.data()), ssValue.size());
+    value.Xor(dbwrapper_private::GetObfuscateKey(parent));
+    leveldb::Slice slValue(CharCast(value.data()), value.size());
     m_impl_batch->batch.Put(slKey, slValue);
     // LevelDB serializes writes as:
     // - byte: header

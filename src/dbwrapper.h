@@ -84,7 +84,7 @@ private:
 
     size_t size_estimate{0};
 
-    void WriteImpl(Span<const std::byte> key, DataStream& ssValue);
+    void WriteImpl(Span<const std::byte> key, DataStream& value);
     void EraseImpl(Span<const std::byte> key);
 
 public:
