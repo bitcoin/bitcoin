@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_SUITE(minisketch_tests)
 
 BOOST_AUTO_TEST_CASE(minisketch_test)
 {
-    for (int i = 0; i < 100; ++i) {
+    for (int test_i = 0; test_i < 100; ++test_i) {
         uint32_t errors = 0 + InsecureRandRange(11);
         uint32_t start_a = 1 + InsecureRandRange(1000000000);
         uint32_t a_not_b = InsecureRandRange(errors + 1);
