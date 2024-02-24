@@ -1930,10 +1930,10 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
                 bool ok = true;
                 std::vector<std::unique_ptr<DescriptorImpl>> subscripts; //!< list of script subexpressions
                 std::vector<int> depths; //!< depth in the tree of each subexpression (same length subscripts)
-                for (const auto& [depth, script, leaf_ver] : *tree) {
+                for (const auto& [depth, leaf_script, leaf_ver] : *tree) {
                     std::unique_ptr<DescriptorImpl> subdesc;
                     if (leaf_ver == TAPROOT_LEAF_TAPSCRIPT) {
-                        subdesc = InferScript(CScript(script.begin(), script.end()), ParseScriptContext::P2TR, provider);
+                        subdesc = InferScript(CScript(leaf_script.begin(), leaf_script.end()), ParseScriptContext::P2TR, provider);
                     }
                     if (!subdesc) {
                         ok = false;
