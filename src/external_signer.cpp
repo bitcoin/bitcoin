@@ -46,8 +46,8 @@ bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalS
         const std::string& fingerprintStr{fingerprint.get_str()};
         // Skip duplicate signer
         bool duplicate = false;
-        for (const ExternalSigner& signer : signers) {
-            if (signer.m_fingerprint.compare(fingerprintStr) == 0) duplicate = true;
+        for (const ExternalSigner& existing_signer : signers) {
+            if (existing_signer.m_fingerprint.compare(fingerprintStr) == 0) duplicate = true;
         }
         if (duplicate) break;
         std::string name;
