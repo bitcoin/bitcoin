@@ -38,12 +38,6 @@ public:
 
     const Scalar& GetUint64Max() const;
 
-    // static Point GenerateBaseG1PointH(
-    //     const Point& p,
-    //     size_t index,
-    //     TokenId token_id
-    // );
-
     range_proof::GeneratorsFactory<T>& Gf() const;
     const Scalar& Zero() const;
     const Scalar& One() const;

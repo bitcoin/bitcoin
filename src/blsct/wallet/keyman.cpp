@@ -528,7 +528,7 @@ bulletproofs::AmountRecoveryResult<Mcl> KeyMan::RecoverOutputs(const std::vector
     for (size_t i = 0; i < outs.size(); i++) {
         CTxOut out = outs[i];
         auto nonce = out.blsctData.blindingKey * viewKey.GetScalar();
-        reqs.push_back(bulletproofs::AmountRecoveryRequest<Mcl>::of({out.blsctData.rangeProof}, nonce));
+        reqs.push_back(bulletproofs::AmountRecoveryRequest<Mcl>::of(out.blsctData.rangeProof, nonce));
     }
 
     return rp.RecoverAmounts(reqs);

@@ -121,7 +121,8 @@ SetMemProof<T> SetMemProofProver<T>::Prove(
     const Point& sigma,
     const Scalar& m,
     const Scalar& f,
-    const Scalar& eta
+    const Scalar& eta_fiat_shamir,
+    const blsct::Message& eta_phi
 ) {
     size_t n = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(Ys_src.Size());
     if (n > setup.N) {
@@ -142,8 +143,9 @@ SetMemProof<T> SetMemProofProver<T>::Prove(
 
     // Commit 1
     Point h2 = setup.H5(Ys.GetVch());
-    Point h3 = setup.H6(eta.GetVch());
-    Point g2 = setup.H7(eta.GetVch());
+    auto gens = setup.Gf().GetInstance(eta_phi);
+    Point h3 = gens.G;
+    Point g2 = gens.H;
 
     // generate random scalars
     Scalar alpha = Scalar::Rand(true);
@@ -173,7 +175,7 @@ SetMemProof<T> SetMemProofProver<T>::Prove(
 
     // Challenge 1
     auto fiat_shamir = GenInitialFiatShamir(
-        Ys, A1, A2, S1, S2, S3, phi, eta
+        Ys, A1, A2, S1, S2, S3, phi, eta_fiat_shamir
     );
 
 retry: // retrying without generating fiat_shamir again to get different hashes
@@ -246,14 +248,16 @@ SetMemProof<Mcl> SetMemProofProver<Mcl>::Prove(
     const Point& sigma,
     const Scalar& m,
     const Scalar& f,
-    const Scalar& eta
+    const Scalar& eta_fiat_shamir,
+    const blsct::Message& eta_phi
 );
 
 template <typename T>
 bool SetMemProofProver<T>::Verify(
     const SetMemProofSetup<T>& setup,
     const Points& Ys_src,
-    const Scalar& eta,
+    const Scalar& eta_fiat_shamir,
+    const blsct::Message& eta_phi,
     const SetMemProof<T>& proof
 ) {
     using LazyPoint = LazyPoint<T>;
@@ -268,11 +272,13 @@ bool SetMemProofProver<T>::Verify(
 
     auto fiat_shamir = GenInitialFiatShamir(
         Ys, proof.A1, proof.A2, proof.S1,
-        proof.S2, proof.S3, proof.phi, eta
+        proof.S2, proof.S3, proof.phi, eta_fiat_shamir
     );
     Point h2 = setup.H5(Ys.GetVch());
-    Point h3 = setup.H6(eta.GetVch());
-    Point g2 = setup.H7(eta.GetVch());
+
+    auto gens = setup.Gf().GetInstance(eta_phi);
+    Point h3 = gens.G;
+    Point g2 = gens.H;
 
 retry:
     GEN_FIAT_SHAMIR_VAR(y, fiat_shamir, retry);
@@ -376,6 +382,7 @@ template
 bool SetMemProofProver<Mcl>::Verify(
     const SetMemProofSetup<Mcl>& setup,
     const Points& Ys_src,
-    const Scalar& eta,
+    const Scalar& eta_fiat_shamir,
+    const blsct::Message& eta_phi,
     const SetMemProof<Mcl>& proof
 );

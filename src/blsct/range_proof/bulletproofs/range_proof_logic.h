@@ -5,18 +5,21 @@
 #ifndef NAVCOIN_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_LOGIC_H
 #define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_LOGIC_H
 
-#include <optional>
-#include <vector>
-
 #include <blsct/arith/elements.h>
+#include <blsct/building_block/generator_deriver.h>
 #include <blsct/range_proof/common.h>
 #include <blsct/range_proof/bulletproofs/amount_recovery_request.h>
 #include <blsct/range_proof/bulletproofs/amount_recovery_result.h>
+#include <blsct/range_proof/bulletproofs/range_proof.h>
 #include <blsct/range_proof/bulletproofs/range_proof_with_transcript.h>
 #include <blsct/range_proof/recovered_data.h>
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
 #include <hash.h>
+
+#include <optional>
+#include <variant>
+#include <vector>
 
 namespace bulletproofs {
 
@@ -28,6 +31,7 @@ class RangeProofLogic
 public:
     using Scalar = typename T::Scalar;
     using Point = typename T::Point;
+    using Seed = typename GeneratorDeriver<T>::Seed;
     using Scalars = Elements<Scalar>;
     using Points = Elements<Point>;
 
@@ -35,7 +39,8 @@ public:
         Scalars& vs,
         Point& nonce,
         const std::vector<uint8_t>& message,
-        const TokenId& token_id) const;
+        const Seed& seed
+    ) const;
 
     bool Verify(
         const std::vector<RangeProof<T>>& proofs

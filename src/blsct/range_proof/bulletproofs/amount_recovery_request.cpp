@@ -5,6 +5,10 @@
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/range_proof/bulletproofs/amount_recovery_request.h>
 #include <blsct/range_proof/bulletproofs/range_proof_with_transcript.h>
+#include <blsct/range_proof/bulletproofs/range_proof.h>
+
+#include <stdexcept>
+#include <variant>
 
 namespace bulletproofs {
 
@@ -15,7 +19,7 @@ AmountRecoveryRequest<T> AmountRecoveryRequest<T>::of(RangeProof<T>& proof, type
 
     AmountRecoveryRequest<T> req{
         1,
-        proof.token_id,
+        proof.seed,
         proof_with_transcript.x,
         proof_with_transcript.z,
         proof.Vs,
@@ -23,7 +27,8 @@ AmountRecoveryRequest<T> AmountRecoveryRequest<T>::of(RangeProof<T>& proof, type
         proof.Rs,
         proof.mu,
         proof.tau_x,
-        nonce};
+        nonce
+    };
     return req;
 }
 template AmountRecoveryRequest<Mcl> AmountRecoveryRequest<Mcl>::of(RangeProof<Mcl>&, Mcl::Point&);

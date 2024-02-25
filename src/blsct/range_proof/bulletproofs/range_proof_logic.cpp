@@ -10,11 +10,14 @@
 #include <blsct/building_block/lazy_points.h>
 #include <blsct/building_block/g_h_gi_hi_zero_verifier.h>
 #include <blsct/common.h>
+#include <blsct/range_proof/bulletproofs/range_proof.h>
 #include <blsct/range_proof/bulletproofs/range_proof_logic.h>
 #include <blsct/range_proof/common.h>
 #include <blsct/range_proof/msg_amt_cipher.h>
+#include <stdexcept>
 #include <tinyformat.h>
 #include <optional>
+#include <variant>
 
 namespace bulletproofs {
 
@@ -23,7 +26,7 @@ RangeProof<T> RangeProofLogic<T>::Prove(
     Elements<typename T::Scalar>& vs,
     typename T::Point& nonce,
     const std::vector<uint8_t>& message,
-    const TokenId& token_id
+    const Seed& seed
 ) const {
     using Scalar = typename T::Scalar;
     using Scalars = Elements<Scalar>;
@@ -39,7 +42,7 @@ RangeProof<T> RangeProofLogic<T>::Prove(
 
     ////////////// Proving steps
     RangeProof<T> proof;
-    proof.token_id = token_id;
+    proof.seed = seed;
 
     // generate gammas
     Scalars gammas;
@@ -54,7 +57,7 @@ RangeProof<T> RangeProofLogic<T>::Prove(
     }
 
     // Get Generators<P> for the token_id
-    range_proof::Generators<T> gens = m_common.Gf().GetInstance(token_id);
+    range_proof::Generators<T> gens = m_common.Gf().GetInstance(seed);
     auto Gi = gens.GetGiSubset(concat_input_values_in_bits);
     auto Hi = gens.GetHiSubset(concat_input_values_in_bits);
     auto H = gens.H;
@@ -210,13 +213,14 @@ retry: // hasher is not cleared so that different hash will be obtained upon ret
         proof.a = res.value().a;
         proof.b = res.value().b;
     }
+
     return proof;
 }
 template RangeProof<Mcl> RangeProofLogic<Mcl>::Prove(
     Elements<Mcl::Scalar>&,
     Mcl::Point&,
     const std::vector<uint8_t>&,
-    const TokenId&
+    const Seed&
 ) const;
 
 template <typename T>
@@ -230,7 +234,7 @@ bool RangeProofLogic<T>::VerifyProofs(
     for (const RangeProofWithTranscript<T>& p : proof_transcripts) {
         if (p.proof.Ls.Size() != p.proof.Rs.Size()) return false;
 
-        const range_proof::Generators<T> gens = m_common.Gf().GetInstance(p.proof.token_id);
+        const range_proof::Generators<T> gens = m_common.Gf().GetInstance(p.proof.seed);
         G_H_Gi_Hi_ZeroVerifier<T> verifier(max_mn);
 
         auto num_rounds = range_proof::Common<T>::GetNumRoundsExclLast(p.proof.Vs.Size());
@@ -343,6 +347,7 @@ bool RangeProofLogic<T>::Verify(
     size_t max_num_rounds = 0;
 
     for (const RangeProof<T>& proof : proofs) {
+
         // update max # of rounds and sum of all V bits
         max_num_rounds = std::max(max_num_rounds, proof.Ls.Size());
 
@@ -374,7 +379,7 @@ AmountRecoveryResult<T> RangeProofLogic<T>::RecoverAmounts(
 
     for (size_t i = 0; i < reqs.size(); ++i) {
         auto req = reqs[i];
-        const range_proof::Generators<T> gens = m_common.Gf().GetInstance(req.token_id);
+        const range_proof::Generators<T> gens = m_common.Gf().GetInstance(req.seed);
         Point G = gens.G;
         Point H = gens.H;
 

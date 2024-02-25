@@ -3,15 +3,28 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/range_proof/bulletproofs/range_proof.h>
-#include <blsct/arith/mcl/mcl.h>
+#include <blsct/common.h>
+#include <variant>
 
 namespace bulletproofs {
 
 template <typename T>
 bool RangeProof<T>::operator==(const RangeProof<T>& other) const
 {
-    return range_proof::ProofBase<T>::operator==(other) &&
-        token_id == other.token_id &&
+    using P = range_proof::ProofBase<T>;
+    auto this_parent = static_cast<const P&>(*this);
+    auto other_parent = static_cast<const P&>(other);
+
+    bool seed_matches = false;
+    if (std::holds_alternative<TokenId>(seed) && std::holds_alternative<TokenId>(other.seed)) {
+        seed_matches = std::get<TokenId>(seed) == std::get<TokenId>(other.seed);
+    } else if (std::holds_alternative<blsct::Message>(seed) && std::holds_alternative<blsct::Message>(other.seed)) {
+        seed_matches = std::get<blsct::Message>(seed) == std::get<blsct::Message>(other.seed);
+    }
+
+    return
+        this_parent == other_parent &&
+        seed_matches &&
         A == other.A &&
         S == other.S &&
         T1 == other.T1 &&

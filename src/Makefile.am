@@ -865,9 +865,9 @@ libbitcoin_common_a_SOURCES = \
   blsct/public_keys.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_request.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_result.cpp \
-  blsct/range_proof/bulletproofs/range_proof.cpp \
   blsct/range_proof/bulletproofs/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs/range_proof_with_transcript.cpp \
+  blsct/range_proof/bulletproofs/range_proof.cpp \
   blsct/range_proof/bulletproofs_plus/amount_recovery_request.cpp \
   blsct/range_proof/bulletproofs_plus/amount_recovery_result.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof.cpp \
@@ -1167,9 +1167,9 @@ libnavcoinkernel_la_SOURCES = \
   blsct/public_keys.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_request.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_result.cpp \
-  blsct/range_proof/bulletproofs/range_proof.cpp \
   blsct/range_proof/bulletproofs/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs/range_proof_with_transcript.cpp \
+  blsct/range_proof/bulletproofs/range_proof.cpp \
   blsct/range_proof/bulletproofs_plus/amount_recovery_request.cpp \
   blsct/range_proof/bulletproofs_plus/amount_recovery_result.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof.cpp \

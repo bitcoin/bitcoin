@@ -13,6 +13,7 @@
 #include <blsct/common.h>
 #include <hash.h>
 #include <cmath>
+#include <variant>
 
 namespace bulletproofs {
 

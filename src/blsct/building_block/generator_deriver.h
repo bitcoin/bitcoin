@@ -8,16 +8,22 @@
 #include <ctokens/tokenid.h>
 #include <optional>
 #include <string>
+#include <variant>
+#include <vector>
+
+using Bytes = std::vector<uint8_t>;
 
 template <typename Point>
 class GeneratorDeriver {
 public:
+    using Seed = std::variant<TokenId, Bytes>;
+
     GeneratorDeriver(const std::string& salt_str): salt_str{salt_str} {}
 
     Point Derive(
         const Point& p,
         const size_t index,
-        const std::optional<TokenId>& token_id = std::nullopt
+        const std::optional<Seed>& opt_token_id = TokenId()
     ) const;
 
 private:
@@ -25,3 +31,4 @@ private:
 };
 
 #endif // NAVCOIN_BLSCT_GENERATOR_DERIVER_H
+
