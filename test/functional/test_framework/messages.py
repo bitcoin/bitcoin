@@ -32,7 +32,7 @@ from test_framework.util import hex_str_to_bytes, assert_equal
 import dash_hash
 
 MIN_VERSION_SUPPORTED = 60001
-MY_VERSION = 70230  # MNLISTDIFF_CHAINLOCKS_PROTO_VERSION
+MY_VERSION = 70231  # NO_LEGACY_ISLOCK_PROTO_VERSION
 MY_SUBVERSION = b"/python-p2p-tester:0.0.3%s/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
