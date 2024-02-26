@@ -2034,7 +2034,7 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, std::string& err_string
     // If broadcast fails for any reason, trying to set wtx.m_state here would be incorrect.
     // If transaction was previously in the mempool, it should be updated when
     // TransactionRemovedFromMempool fires.
-    bool ret = chain().broadcastTransaction(wtx.tx, m_default_max_tx_fee, relay, err_string);
+    bool ret = chain().broadcastTransaction(wtx.tx, m_max_tx_fee, relay, err_string);
     if (ret) wtx.m_state = TxStateInMempool{};
     return ret;
 }
@@ -3167,7 +3167,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
             return nullptr;
         }
 
-        walletInstance->m_default_max_tx_fee = max_fee.value();
+        walletInstance->m_max_tx_fee = max_fee.value();
     }
 
     if (args.IsArgSet("-consolidatefeerate")) {
