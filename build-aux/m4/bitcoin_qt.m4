@@ -227,7 +227,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   BITCOIN_QT_PATH_PROGS([LUPDATE], [lupdate-qt5 lupdate5 lupdate],$qt_bin_path, yes)
   BITCOIN_QT_PATH_PROGS([LCONVERT], [lconvert-qt5 lconvert5 lconvert], $qt_bin_path, yes)
 
-  MOC_DEFS='-DHAVE_CONFIG_H -I$(srcdir)'
+  MOC_DEFS='-I$(srcdir)'
   case $host in
     *darwin*)
      BITCOIN_QT_CHECK([
