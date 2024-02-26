@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(key_signature_tests)
     bool bad_sign = false;
     for (int i = 0; i < 256; ++i) {
         sig.clear();
-        std::string msg = "A message to be signed" + ToString(i);
+        msg = "A message to be signed" + ToString(i);
         msg_hash = Hash(msg);
         if (!key.Sign(msg_hash, sig)) {
             bad_sign = true;
