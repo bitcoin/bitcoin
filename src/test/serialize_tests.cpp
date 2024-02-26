@@ -186,32 +186,32 @@ BOOST_AUTO_TEST_CASE(noncanonical)
     std::vector<char>::size_type n;
 
     // zero encoded with three bytes:
-    ss.write(MakeByteSpan("\xfd\x00\x00").first(3));
+    ss << Span{"\xfd\x00\x00"}.first(3);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0xfc encoded with three bytes:
-    ss.write(MakeByteSpan("\xfd\xfc\x00").first(3));
+    ss << Span{"\xfd\xfc\x00"}.first(3);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0xfd encoded with three bytes is OK:
-    ss.write(MakeByteSpan("\xfd\xfd\x00").first(3));
+    ss << Span{"\xfd\xfd\x00"}.first(3);
     n = ReadCompactSize(ss);
     BOOST_CHECK(n == 0xfd);
 
     // zero encoded with five bytes:
-    ss.write(MakeByteSpan("\xfe\x00\x00\x00\x00").first(5));
+    ss << Span{"\xfe\x00\x00\x00\x00"}.first(5);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0xffff encoded with five bytes:
-    ss.write(MakeByteSpan("\xfe\xff\xff\x00\x00").first(5));
+    ss << Span{"\xfe\xff\xff\x00\x00"}.first(5);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // zero encoded with nine bytes:
-    ss.write(MakeByteSpan("\xff\x00\x00\x00\x00\x00\x00\x00\x00").first(9));
+    ss << Span{"\xff\x00\x00\x00\x00\x00\x00\x00\x00"}.first(9);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0x01ffffff encoded with nine bytes:
-    ss.write(MakeByteSpan("\xff\xff\xff\xff\x01\x00\x00\x00\x00").first(9));
+    ss << Span{"\xff\xff\xff\xff\x01\x00\x00\x00\x00"}.first(9);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 }
 
@@ -241,6 +241,15 @@ BOOST_AUTO_TEST_CASE(class_methods)
     ss2 << intval << boolval << stringval << charstrval << txval;
     ss2 >> methodtest3;
     BOOST_CHECK(methodtest3 == methodtest4);
+    {
+        DataStream ds;
+        const std::string in{"ab"};
+        ds << Span{in};
+        std::array<std::byte, 2> out;
+        ds >> Span{out};
+        BOOST_CHECK_EQUAL(out.at(0), std::byte{'a'});
+        BOOST_CHECK_EQUAL(out.at(1), std::byte{'b'});
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

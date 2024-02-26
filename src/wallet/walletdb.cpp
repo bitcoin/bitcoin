@@ -1132,13 +1132,13 @@ bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
         }
 
         // Make a copy of key to avoid data being deleted by the following read of the type
-        Span<const unsigned char> key_data = MakeUCharSpan(key);
+        const SerializeData key_data{key.begin(), key.end()};
 
         std::string type;
         key >> type;
 
         if (types.count(type) > 0) {
-            m_batch->Erase(key_data);
+            m_batch->Erase(Span{key_data});
         }
     }
     return true;

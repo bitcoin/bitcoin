@@ -1,9 +1,9 @@
-25.x Release Notes
+25.2rc1 Release Notes
 ==================
 
-Bitcoin Core version 25.x is now available from:
+Bitcoin Core version 25.2rc1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-25.x/>
+  <https://bitcoincore.org/bin/bitcoin-core-25.2/test.rc1>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -48,6 +48,10 @@ Notable changes
 
 - #29003 rpc: fix getrawtransaction segfault
 
+### Wallet
+
+- #29176 wallet: Fix use-after-free in WalletBatch::EraseRecords
+
 Credits
 =======
 
@@ -55,6 +59,7 @@ Thanks to everyone who directly contributed to this release:
 
 - Martin Zumsande
 - Sebastian Falbesoner
+- MarcoFalke
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
