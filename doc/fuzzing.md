@@ -127,11 +127,6 @@ The default Clang/LLVM version supplied by Apple on macOS does not include
 fuzzing libraries, so macOS users will need to install a full version, for
 example using `brew install llvm`.
 
-Should you run into problems with the address sanitizer, it is possible you
-may need to run `./configure` with `--disable-asm` to avoid errors
-with certain assembly code from Bitcoin Core's code. See [developer notes on sanitizers](https://github.com/bitcoin/bitcoin/blob/master/doc/developer-notes.md#sanitizers)
-for more information.
-
 You may also need to take care of giving the correct path for `clang` and
 `clang++`, like `CC=/path/to/clang CXX=/path/to/clang++` if the non-systems
 `clang` does not come first in your path.
@@ -139,7 +134,7 @@ You may also need to take care of giving the correct path for `clang` and
 Full configure that was tested on macOS with `brew` installed `llvm`:
 
 ```sh
-./configure --enable-fuzz --with-sanitizers=fuzzer,address,undefined --disable-asm CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++
+./configure --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++
 ```
 
 Read the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for more information. This [libFuzzer tutorial](https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.md) might also be of interest.
