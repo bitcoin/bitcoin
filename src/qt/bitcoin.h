@@ -5,9 +5,7 @@
 #ifndef BITCOIN_QT_BITCOIN_H
 #define BITCOIN_QT_BITCOIN_H
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
+#include <config/bitcoin-config.h> // IWYU pragma: keep
 
 #include <interfaces/node.h>
 #include <qt/initexecutor.h>
