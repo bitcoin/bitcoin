@@ -6,10 +6,13 @@
 #define BITCOIN_TEST_FUZZ_FUZZ_H
 
 #include <span.h>
+#include <util/macros.h>
 
 #include <cstdint>
 #include <functional>
 #include <string_view>
+
+#define UNIQUE_LINE_NAME(base) PASTE2(base, __LINE__)
 
 /**
  * Can be used to limit a theoretically unbounded loop. This caps the runtime
@@ -21,7 +24,7 @@
  * for useful data and avoids bloating the fuzz input folder with useless data.
  */
 #define LIMITED_WHILE(condition, limit) \
-    for (unsigned _count{limit}; (condition) && _count; --_count)
+    for (unsigned UNIQUE_LINE_NAME(_count){limit}; (condition) && UNIQUE_LINE_NAME(_count); --UNIQUE_LINE_NAME(_count))
 
 using FuzzBufferType = Span<const uint8_t>;
 
