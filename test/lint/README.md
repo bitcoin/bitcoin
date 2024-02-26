@@ -19,7 +19,7 @@ test runner
 To run all the lint checks in the test runner outside the docker, use:
 
 ```sh
-( cd ./test/lint/test_runner/ && cargo fmt && cargo clippy && cargo run )
+( cd ./test/lint/test_runner/ && cargo fmt && cargo clippy && RUST_BACKTRACE=1 cargo run )
 ```
 
 #### Dependencies
