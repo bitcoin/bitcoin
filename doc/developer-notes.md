@@ -959,8 +959,8 @@ Strings and formatting
 Shadowing
 --------------
 
-Although the shadowing warning (`-Wshadow`) is not enabled by default (it prevents issues arising
-from using a different variable with the same name),
+The shadowing warning (`-Wshadow`) is enabled by default to prevent issues arising
+from using a different variable with the same name,
 please name variables so that their names do not shadow variables defined in the source code.
 
 When using nested cycles, do not name the inner cycle variable the same as in
