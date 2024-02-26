@@ -97,7 +97,6 @@ fs:: namespace, which has unsafe filesystem functions marked as deleted.
 
 fn lint_includes_build_config() -> LintResult {
     let config_path = "./src/config/bitcoin-config.h.in";
-    let include_directive = "#include <config/bitcoin-config.h>";
     if !Path::new(config_path).is_file() {
         assert!(Command::new("./autogen.sh")
             .status()
@@ -154,7 +153,11 @@ fn lint_includes_build_config() -> LintResult {
                 } else {
                     "--files-with-matches"
                 },
-                include_directive,
+                if mode {
+                    "^#include <config/bitcoin-config.h> // IWYU pragma: keep$"
+                } else {
+                    "#include <config/bitcoin-config.h>" // Catch redundant includes with and without the IWYU pragma
+                },
                 "--",
             ])
             .args(defines_files.lines())
@@ -175,6 +178,11 @@ even though bitcoin-config.h indicates that a faster feature is available and sh
 
 If you are unsure which symbol is used, you can find it with this command:
 git grep --perl-regexp '{}' -- file_name
+
+Make sure to include it with the IWYU pragma. Otherwise, IWYU may falsely instruct to remove the
+include again.
+
+#include <config/bitcoin-config.h> // IWYU pragma: keep
             "#,
             defines_regex
         ));
