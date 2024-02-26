@@ -614,16 +614,16 @@ int GuiMain(int argc, char* argv[])
     // - Do not call Params() before this step
     // - QSettings() will use the new application name after this, resulting in network-specific settings
     // - Needs to be done before createOptionsModel
-    if (auto error = common::InitConfig(gArgs, ErrorSettingsRead)) {
-        InitError(error->message, error->details);
-        if (error->status == common::ConfigStatus::FAILED_WRITE) {
+    if (auto init_error = common::InitConfig(gArgs, ErrorSettingsRead)) {
+        InitError(init_error->message, init_error->details);
+        if (init_error->status == common::ConfigStatus::FAILED_WRITE) {
             // Show a custom error message to provide more information in the
             // case of a datadir write error.
-            ErrorSettingsWrite(error->message, error->details);
-        } else if (error->status != common::ConfigStatus::ABORTED) {
+            ErrorSettingsWrite(init_error->message, init_error->details);
+        } else if (init_error->status != common::ConfigStatus::ABORTED) {
             // Show a generic message in other cases, and no additional error
             // message in the case of a read error if the user decided to abort.
-            QMessageBox::critical(nullptr, PACKAGE_NAME, QObject::tr("Error: %1").arg(QString::fromStdString(error->message.translated)));
+            QMessageBox::critical(nullptr, PACKAGE_NAME, QObject::tr("Error: %1").arg(QString::fromStdString(init_error->message.translated)));
         }
         return EXIT_FAILURE;
     }
