@@ -77,3 +77,40 @@ FUZZ_TARGET(net, .init = initialize_net)
     (void)node.HasPermission(net_permission_flags);
     (void)node.ConnectedThroughNetwork();
 }
+
+FUZZ_TARGET(local_address, .init = initialize_net)
+{
+    FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    CService service{ConsumeService(fuzzed_data_provider)};
+    CNode node{ConsumeNode(fuzzed_data_provider)};
+    {
+        LOCK(g_maplocalhost_mutex);
+        mapLocalHost.clear();
+    }
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+        CallOneOf(
+            fuzzed_data_provider,
+            [&] {
+                service = ConsumeService(fuzzed_data_provider);
+            },
+            [&] {
+                const bool added{AddLocal(service, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, LOCAL_MAX - 1))};
+                if (!added) return;
+                assert(service.IsRoutable());
+                assert(IsLocal(service));
+                assert(SeenLocal(service));
+            },
+            [&] {
+                (void)RemoveLocal(service);
+            },
+            [&] {
+                (void)SeenLocal(service);
+            },
+            [&] {
+                (void)IsLocal(service);
+            },
+            [&] {
+                (void)GetLocalAddress(node);
+            });
+    }
+}
