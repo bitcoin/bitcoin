@@ -1215,14 +1215,6 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
  [ AC_MSG_RESULT([no])]
 )
 
-AC_MSG_CHECKING([for if type char equals int8_t])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdint.h>
-  #include <type_traits>]],
- [[ static_assert(std::is_same<int8_t, char>::value, ""); ]])],
- [ AC_MSG_RESULT([yes]); AC_DEFINE([CHAR_EQUALS_INT8], [1], [Define this symbol if type char equals int8_t]) ],
- [ AC_MSG_RESULT([no])]
-)
-
 dnl ensure backtrace() is found, check -lexecinfo if necessary
 if test "$TARGET_OS" != "windows"; then
   if test "$enable_stacktraces" != "no"; then
