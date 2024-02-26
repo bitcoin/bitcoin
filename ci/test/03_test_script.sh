@@ -36,8 +36,8 @@ export HOST=${HOST:-$("$BASE_ROOT_DIR/depends/config.guess")}
   # CI, so as a temporary minimal fix to work around UB and CI failures, leave
   # bytes_written unmodified.
   # See https://github.com/bitcoin/bitcoin/pull/28359#issuecomment-1698694748
-  echo 'diff --git a/src/leveldb/db/db_impl.cc b/src/leveldb/db/db_impl.cc
-index 65e31724bc..f61b471953 100644
+  # Tee patch to stdout to make it clear CI is testing modified code.
+  tee >(patch -p1) <<'EOF'
 --- a/src/leveldb/db/db_impl.cc
 +++ b/src/leveldb/db/db_impl.cc
 @@ -1028,9 +1028,6 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
@@ -49,8 +49,8 @@ index 65e31724bc..f61b471953 100644
 -  }
 
    mutex_.Lock();
-   stats_[compact->compaction->level() + 1].Add(stats);' | patch -p1
-  git diff
+   stats_[compact->compaction->level() + 1].Add(stats);
+EOF
 )
 
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
