@@ -337,8 +337,8 @@ BOOST_AUTO_TEST_CASE(bip340_test_vectors)
             BOOST_CHECK(tweaked);
             XOnlyPubKey tweaked_key = tweaked->first;
             aux256 = InsecureRand256();
-            bool ok = key.SignSchnorr(msg256, sig64, &merkle_root, aux256);
-            BOOST_CHECK(ok);
+            bool sign_ok = key.SignSchnorr(msg256, sig64, &merkle_root, aux256);
+            BOOST_CHECK(sign_ok);
             BOOST_CHECK(tweaked_key.VerifySchnorr(msg256, sig64));
         }
     }
