@@ -964,7 +964,7 @@ static RPCHelpMan getblockheaders()
         "\nIf verbose is false, each item is a string that is serialized, hex-encoded data for a single blockheader.\n"
         "If verbose is true, each item is an Object with information about a single blockheader.\n",
         {
-            {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
             {"count", RPCArg::Type::NUM, /* default */ strprintf("%s", MAX_HEADERS_RESULTS), ""},
             {"verbose", RPCArg::Type::BOOL, /* default */ "true", "true for a json object, false for the hex-encoded data"},
         },
@@ -1100,7 +1100,7 @@ static RPCHelpMan getmerkleblocks()
         "\nReturns an array of hex-encoded merkleblocks for <count> blocks starting from <hash> which match <filter>.\n",
         {
             {"filter", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex-encoded bloom filter"},
-            {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
             {"count", RPCArg::Type::NUM, /* default */ strprintf("%s", MAX_HEADERS_RESULTS), ""},
         },
         RPCResult{

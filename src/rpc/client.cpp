@@ -109,7 +109,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "gettransaction", 1, "include_watchonly" },
     { "gettransaction", 2, "verbose" },
     { "getrawtransaction", 1, "verbose" },
-    { "getrawtransactionmulti", 0, "txid_map" },
+    { "getrawtransactionmulti", 0, "transactions" },
     { "getrawtransactionmulti", 1, "verbose" },
     { "gettxchainlocks", 0, "txids" },
     { "createrawtransaction", 0, "inputs" },
