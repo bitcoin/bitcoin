@@ -188,7 +188,7 @@ static void quorum_info_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMembers, bool includeSkShare)
+static UniValue BuildQuorumInfo(const llmq::CQuorumBlockProcessor& quorum_block_processor, const llmq::CQuorumCPtr& quorum, bool includeMembers, bool includeSkShare)
 {
     UniValue ret(UniValue::VOBJ);
 
@@ -199,7 +199,7 @@ static UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMem
     ret.pushKV("minedBlock", quorum->minedBlockHash.ToString());
 
     if (quorum->params.useRotation) {
-        auto previousActiveCommitment = llmq::quorumBlockProcessor->GetLastMinedCommitmentsByQuorumIndexUntilBlock(quorum->params.type, quorum->m_quorum_base_block_index, quorum->qc->quorumIndex, 0);
+        auto previousActiveCommitment = quorum_block_processor.GetLastMinedCommitmentsByQuorumIndexUntilBlock(quorum->params.type, quorum->m_quorum_base_block_index, quorum->qc->quorumIndex, 0);
         if (previousActiveCommitment.has_value()) {
             int previousConsecutiveDKGFailures = (quorum->m_quorum_base_block_index->nHeight - previousActiveCommitment.value()->nHeight) /  quorum->params.dkgInterval - 1;
             ret.pushKV("previousConsecutiveDKGFailures", previousConsecutiveDKGFailures);
@@ -257,7 +257,7 @@ static UniValue quorum_info(const JSONRPCRequest& request, const LLMQContext& ll
         throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
     }
 
-    return BuildQuorumInfo(quorum, true, includeSkShare);
+    return BuildQuorumInfo(*llmq_ctx.quorum_block_processor, quorum, true, includeSkShare);
 }
 
 static void quorum_dkgstatus_help(const JSONRPCRequest& request)
@@ -381,7 +381,7 @@ static void quorum_memberof_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue quorum_memberof(const JSONRPCRequest& request, const ChainstateManager& chainman, const LLMQContext& llmq_ctx)
+static UniValue quorum_memberof(const JSONRPCRequest& request, const ChainstateManager& chainman, const NodeContext& node, const LLMQContext& llmq_ctx)
 {
     quorum_memberof_help(request);
 
@@ -395,8 +395,7 @@ static UniValue quorum_memberof(const JSONRPCRequest& request, const ChainstateM
     }
 
     const CBlockIndex* pindexTip = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
-
-    auto mnList = deterministicMNManager->GetListForBlock(pindexTip);
+    auto mnList = node.dmnman->GetListForBlock(pindexTip);
     auto dmn = mnList.GetMN(protxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "masternode not found");
@@ -413,7 +412,7 @@ static UniValue quorum_memberof(const JSONRPCRequest& request, const ChainstateM
         auto quorums = llmq_ctx.qman->ScanQuorums(llmq_params_opt->type, count);
         for (auto& quorum : quorums) {
             if (quorum->IsMember(dmn->proTxHash)) {
-                auto json = BuildQuorumInfo(quorum, false, false);
+                auto json = BuildQuorumInfo(*llmq_ctx.quorum_block_processor, quorum, false, false);
                 json.pushKV("isValidMember", quorum->IsValidMember(dmn->proTxHash));
                 json.pushKV("memberIndex", quorum->GetMemberIndex(dmn->proTxHash));
                 result.push_back(json);
@@ -885,7 +884,7 @@ static UniValue _quorum(const JSONRPCRequest& request)
     } else if (command == "quorumdkgstatus") {
         return quorum_dkgstatus(new_request, chainman, llmq_ctx);
     } else if (command == "quorummemberof") {
-        return quorum_memberof(new_request, chainman, llmq_ctx);
+        return quorum_memberof(new_request, chainman, node, llmq_ctx);
     } else if (command == "quorumsign" || command == "quorumverify" || command == "quorumhasrecsig" || command == "quorumgetrecsig" || command == "quorumisconflicting") {
         return quorum_sigs_cmd(new_request, llmq_ctx);
     } else if (command == "quorumselectquorum") {

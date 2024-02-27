@@ -146,6 +146,7 @@ BOOST_AUTO_TEST_SUITE(block_reward_reallocation_tests)
 
 BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationSetup)
 {
+    auto& dmnman = *Assert(m_node.dmnman);
     const auto& consensus_params = Params().GetConsensus();
 
     CScript coinbasePubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
@@ -163,9 +164,9 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
     {
         LOCK(cs_main);
         const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};
-        deterministicMNManager->UpdatedBlockTip(tip);
+        dmnman.UpdatedBlockTip(tip);
 
-        BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
+        BOOST_ASSERT(dmnman.GetListAtChainTip().HasMN(tx.GetHash()));
 
         BOOST_CHECK_EQUAL(tip->nHeight, 498);
         BOOST_CHECK(tip->nHeight < Params().GetConsensus().BRRHeight);
@@ -177,16 +178,16 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         LOCK(cs_main);
         const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};
         BOOST_CHECK_EQUAL(tip->nHeight, 499);
-        deterministicMNManager->UpdatedBlockTip(tip);
-        BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
+        dmnman.UpdatedBlockTip(tip);
+        BOOST_ASSERT(dmnman.GetListAtChainTip().HasMN(tx.GetHash()));
         BOOST_CHECK(tip->nHeight < Params().GetConsensus().BRRHeight);
         // Creating blocks by different ways
-        const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
+        const auto pblocktemplate = BlockAssembler(*m_node.sporkman, *m_node.govman, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
     }
     for ([[maybe_unused]] auto _ : irange::range(1999)) {
         CreateAndProcessBlock({}, coinbaseKey);
         LOCK(cs_main);
-        deterministicMNManager->UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
+        dmnman.UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
     }
     BOOST_CHECK(m_node.chainman->ActiveChain().Height() < Params().GetConsensus().BRRHeight);
     CreateAndProcessBlock({}, coinbaseKey);
@@ -196,8 +197,8 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         LOCK(cs_main);
         const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};
         BOOST_CHECK_EQUAL(tip->nHeight, Params().GetConsensus().BRRHeight - 1);
-        deterministicMNManager->UpdatedBlockTip(tip);
-        BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
+        dmnman.UpdatedBlockTip(tip);
+        BOOST_ASSERT(dmnman.GetListAtChainTip().HasMN(tx.GetHash()));
     }
 
     {
@@ -207,11 +208,11 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         LOCK(cs_main);
         const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};
         const bool isV20Active{DeploymentActiveAfter(tip, consensus_params, Consensus::DEPLOYMENT_V20)};
-        deterministicMNManager->UpdatedBlockTip(tip);
-        BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx.GetHash()));
+        dmnman.UpdatedBlockTip(tip);
+        BOOST_ASSERT(dmnman.GetListAtChainTip().HasMN(tx.GetHash()));
         const CAmount block_subsidy = GetBlockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
         const CAmount masternode_payment = GetMasternodePayment(tip->nHeight, block_subsidy, isV20Active);
-        const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
+        const auto pblocktemplate = BlockAssembler(*m_node.sporkman, *m_node.govman, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, masternode_payment);
     }
 
@@ -225,7 +226,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         const bool isV20Active{DeploymentActiveAfter(tip, consensus_params, Consensus::DEPLOYMENT_V20)};
         const CAmount block_subsidy = GetBlockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
         const CAmount masternode_payment = GetMasternodePayment(tip->nHeight, block_subsidy, isV20Active);
-        const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
+        const auto pblocktemplate = BlockAssembler(*m_node.sporkman, *m_node.govman, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
         BOOST_CHECK_EQUAL(pblocktemplate->block.vtx[0]->GetValueOut(), 122209530);
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, masternode_payment);
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, 61104762); // 0.4999999755
@@ -243,7 +244,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
             const bool isV20Active{DeploymentActiveAfter(tip, consensus_params, Consensus::DEPLOYMENT_V20)};
             const CAmount block_subsidy = GetBlockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
             const CAmount masternode_payment = GetMasternodePayment(tip->nHeight, block_subsidy, isV20Active);
-            const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
+            const auto pblocktemplate = BlockAssembler(*m_node.sporkman, *m_node.govman, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
             BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, masternode_payment);
         }
     }
@@ -261,7 +262,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         CAmount expected_block_reward = block_subsidy_potential - block_subsidy_potential / 5;
 
         const CAmount masternode_payment = GetMasternodePayment(tip->nHeight, block_subsidy, isV20Active);
-        const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
+        const auto pblocktemplate = BlockAssembler(*m_node.sporkman, *m_node.govman, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
         BOOST_CHECK_EQUAL(pblocktemplate->block.vtx[0]->GetValueOut(), expected_block_reward);
         BOOST_CHECK_EQUAL(pblocktemplate->block.vtx[0]->GetValueOut(), 67550353);
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, masternode_payment);
@@ -287,7 +288,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         const bool isMNRewardReallocated{DeploymentActiveAfter(tip, consensus_params, Consensus::DEPLOYMENT_MN_RR)};
         const CAmount block_subsidy = GetBlockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
         CAmount masternode_payment = GetMasternodePayment(tip->nHeight, block_subsidy, isV20Active);
-        const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
+        const auto pblocktemplate = BlockAssembler(*m_node.sporkman, *m_node.govman, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
 
         if (isMNRewardReallocated) {
             const CAmount platform_payment = MasternodePayments::PlatformShare(masternode_payment);
@@ -309,7 +310,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         CAmount masternode_payment = GetMasternodePayment(tip->nHeight, block_subsidy, isV20Active);
         const CAmount platform_payment = MasternodePayments::PlatformShare(masternode_payment);
         masternode_payment -= platform_payment;
-        const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
+        const auto pblocktemplate = BlockAssembler(*m_node.sporkman, *m_node.govman, *m_node.llmq_ctx, *m_node.evodb, m_node.chainman->ActiveChainstate(), *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
 
         CAmount block_subsidy_potential = block_subsidy + block_subsidy_sb;
         BOOST_CHECK_EQUAL(tip->nHeight, 3858);

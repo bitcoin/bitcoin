@@ -16,9 +16,16 @@ class CAddrMan;
 class CBlockPolicyEstimator;
 class CConnman;
 class CCreditPoolManager;
+class CDeterministicMNManager;
 class ChainstateManager;
+class CDSTXManager;
 class CEvoDB;
+class CGovernanceManager;
+class CMasternodeMetaMan;
+class CMasternodeSync;
+class CNetFulfilledRequestManager;
 class CScheduler;
+class CSporkManager;
 class CTxMemPool;
 class CMNHFManager;
 class PeerManager;
@@ -63,12 +70,18 @@ struct NodeContext {
     std::unique_ptr<CScheduler> scheduler;
     std::function<void()> rpc_interruption_point = [] {};
     //! Dash
-    std::unique_ptr<LLMQContext> llmq_ctx;
-    CCreditPoolManager* creditPoolManager;
-    std::unique_ptr<CMNHFManager> mnhf_manager;
-    std::unique_ptr<CJContext> cj_ctx;
-
     std::unique_ptr<CEvoDB> evodb;
+    std::unique_ptr<CJContext> cj_ctx;
+    std::unique_ptr<CMNHFManager> mnhf_manager;
+    std::unique_ptr<LLMQContext> llmq_ctx;
+    CCreditPoolManager* cpoolman{nullptr};
+    CDeterministicMNManager* dmnman{nullptr};
+    CDSTXManager* dstxman{nullptr};
+    CGovernanceManager* govman{nullptr};
+    CMasternodeMetaMan* mn_metaman{nullptr};
+    CMasternodeSync* mn_sync{nullptr};
+    CNetFulfilledRequestManager* netfulfilledman{nullptr};
+    CSporkManager* sporkman{nullptr};
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the NodeContext struct doesn't need to #include class

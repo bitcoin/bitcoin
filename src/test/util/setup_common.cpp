@@ -108,12 +108,13 @@ void DashTestSetup(NodeContext& node)
 {
     CChainState& chainstate = Assert(node.chainman)->ActiveChainstate();
 
-    node.cj_ctx = std::make_unique<CJContext>(chainstate, *node.connman, *node.mempool, *::masternodeSync, /* relay_txes */ true);
+    node.cj_ctx = std::make_unique<CJContext>(chainstate, *node.connman, *node.mempool, *node.mn_sync, /* relay_txes */ true);
+    ::deterministicMNManager = std::make_unique<CDeterministicMNManager>(chainstate, *node.connman, *node.evodb);
+    node.dmnman = ::deterministicMNManager.get();
 #ifdef ENABLE_WALLET
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
 #endif // ENABLE_WALLET
-    ::deterministicMNManager = std::make_unique<CDeterministicMNManager>(chainstate, *node.connman, *node.evodb);
-    node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.evodb, *sporkManager, *node.mempool, node.peerman, true, false);
+    node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.evodb, *node.sporkman, *node.mempool, node.peerman, true, false);
 }
 
 void DashTestSetupClose(NodeContext& node)
@@ -121,6 +122,7 @@ void DashTestSetupClose(NodeContext& node)
     node.llmq_ctx->Interrupt();
     node.llmq_ctx->Stop();
     node.llmq_ctx.reset();
+    node.dmnman = nullptr;
     ::deterministicMNManager.reset();
     node.cj_ctx.reset();
 }
@@ -175,7 +177,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
     llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*m_node.evodb));
     creditPoolManager = std::make_unique<CCreditPoolManager>(*m_node.evodb);
-    m_node.creditPoolManager = creditPoolManager.get();
+    m_node.cpoolman = creditPoolManager.get();
     static bool noui_connected = false;
     if (!noui_connected) {
         noui_connect();
@@ -188,8 +190,8 @@ BasicTestingSetup::~BasicTestingSetup()
 {
     connman.reset();
     llmq::quorumSnapshotManager.reset();
+    m_node.cpoolman = nullptr;
     creditPoolManager.reset();
-    m_node.creditPoolManager = nullptr;
     m_node.mnhf_manager.reset();
     m_node.evodb.reset();
 
@@ -218,15 +220,17 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman); // Deterministic randomness for tests.
 
     ::sporkManager = std::make_unique<CSporkManager>();
+    m_node.sporkman = ::sporkManager.get();
     ::governance = std::make_unique<CGovernanceManager>();
-    ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman, *::governance);
+    m_node.govman = ::governance.get();
+    ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman, *m_node.govman);
+    m_node.mn_sync = ::masternodeSync.get();
     ::dstxManager = std::make_unique<CDSTXManager>();
+    m_node.dstxman = ::dstxManager.get();
     ::mmetaman = std::make_unique<CMasternodeMetaMan>(/* load_cache */ false);
+    m_node.mn_metaman = ::mmetaman.get();
     ::netfulfilledman = std::make_unique<CNetFulfilledRequestManager>(/* load_cache */ false);
-
-    creditPoolManager = std::make_unique<CCreditPoolManager>(*m_node.evodb);
-    m_node.creditPoolManager = creditPoolManager.get();
-
+    m_node.netfulfilledman = ::netfulfilledman.get();
 
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
     constexpr int script_check_threads = 2;
@@ -237,16 +241,20 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 ChainTestingSetup::~ChainTestingSetup()
 {
     m_node.scheduler->stop();
-    creditPoolManager.reset();
-    m_node.creditPoolManager = nullptr;
     StopScriptCheckWorkerThreads();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
+    m_node.netfulfilledman = nullptr;
     ::netfulfilledman.reset();
+    m_node.mn_metaman = nullptr;
     ::mmetaman.reset();
+    m_node.dstxman = nullptr;
     ::dstxManager.reset();
+    m_node.mn_sync = nullptr;
     ::masternodeSync.reset();
+    m_node.govman = nullptr;
     ::governance.reset();
+    m_node.sporkman = nullptr;
     ::sporkManager.reset();
     m_node.connman.reset();
     m_node.addrman.reset();
@@ -279,7 +287,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
     m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman, m_node.banman.get(),
-                                       *m_node.scheduler, *m_node.chainman, *m_node.mempool, *governance,
+                                       *m_node.scheduler, *m_node.chainman, *m_node.mempool, *m_node.govman,
                                        m_node.cj_ctx, m_node.llmq_ctx, false);
     {
         CConnman::Options options;
@@ -381,7 +389,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
     const CChainParams& chainparams = Params();
     CTxMemPool empty_pool;
     CBlock block = BlockAssembler(
-            *sporkManager, *governance, *m_node.llmq_ctx, *m_node.evodb,
+            *m_node.sporkman, *m_node.govman, *m_node.llmq_ctx, *m_node.evodb,
             ::ChainstateActive(), empty_pool, chainparams
         ).CreateNewBlock(scriptPubKey)->block;
 

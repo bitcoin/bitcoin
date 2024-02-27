@@ -16,7 +16,7 @@ class CKey;
 class CKeyID;
 
 // INTENTION OF MASTERNODES REGARDING ITEM
-enum vote_outcome_enum_t {
+enum vote_outcome_enum_t : uint8_t {
     VOTE_OUTCOME_NONE      = 0,
     VOTE_OUTCOME_YES       = 1,
     VOTE_OUTCOME_NO        = 2,
@@ -25,7 +25,7 @@ enum vote_outcome_enum_t {
 
 
 // SIGNAL VARIOUS THINGS TO HAPPEN:
-enum vote_signal_enum_t {
+enum vote_signal_enum_t : uint8_t {
     VOTE_SIGNAL_NONE       = 0,
     VOTE_SIGNAL_FUNDING    = 1, //   -- fund this object for it's stated amount
     VOTE_SIGNAL_VALID      = 2, //   -- this object checks out in sentinel engine

@@ -304,12 +304,18 @@ void PrepareShutdown(NodeContext& node)
 
     // After all scheduled tasks have been flushed, destroy pointers
     // and reset all to nullptr.
-    ::governance.reset();
-    ::sporkManager.reset();
-    ::masternodeSync.reset();
+    node.netfulfilledman = nullptr;
     ::netfulfilledman.reset();
+    node.mn_metaman = nullptr;
     ::mmetaman.reset();
+    node.dstxman = nullptr;
     ::dstxManager.reset();
+    node.mn_sync = nullptr;
+    ::masternodeSync.reset();
+    node.sporkman = nullptr;
+    ::sporkManager.reset();
+    node.govman = nullptr;
+    ::governance.reset();
 
     // Stop and delete all indexes only after flushing background callbacks.
     if (g_txindex) {
@@ -342,9 +348,10 @@ void PrepareShutdown(NodeContext& node)
             node.llmq_ctx.reset();
         }
         llmq::quorumSnapshotManager.reset();
+        node.dmnman = nullptr;
         deterministicMNManager.reset();
+        node.cpoolman = nullptr;
         creditPoolManager.reset();
-        node.creditPoolManager = nullptr;
         node.mnhf_manager.reset();
         node.evodb.reset();
     }
@@ -1705,15 +1712,17 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     assert(!::governance);
     ::governance = std::make_unique<CGovernanceManager>();
+    node.govman = ::governance.get();
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
-                                     *node.scheduler, chainman, *node.mempool, *::governance,
+                                     *node.scheduler, chainman, *node.mempool, *node.govman,
                                      node.cj_ctx, node.llmq_ctx, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
     assert(!::sporkManager);
     ::sporkManager = std::make_unique<CSporkManager>();
+    node.sporkman = ::sporkManager.get();
 
     std::vector<std::string> vSporkAddresses;
     if (args.IsArgSet("-sporkaddr")) {
@@ -1722,24 +1731,26 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         vSporkAddresses = Params().SporkAddresses();
     }
     for (const auto& address: vSporkAddresses) {
-        if (!::sporkManager->SetSporkAddress(address)) {
+        if (!node.sporkman->SetSporkAddress(address)) {
             return InitError(_("Invalid spork address specified with -sporkaddr"));
         }
     }
 
     int minsporkkeys = args.GetArg("-minsporkkeys", Params().MinSporkKeys());
-    if (!::sporkManager->SetMinSporkKeys(minsporkkeys)) {
+    if (!node.sporkman->SetMinSporkKeys(minsporkkeys)) {
         return InitError(_("Invalid minimum number of spork signers specified with -minsporkkeys"));
     }
 
 
     if (args.IsArgSet("-sporkkey")) { // spork priv key
-        if (!::sporkManager->SetPrivKey(args.GetArg("-sporkkey", ""))) {
+        if (!node.sporkman->SetPrivKey(args.GetArg("-sporkkey", ""))) {
             return InitError(_("Unable to sign spork message, wrong key?"));
         }
     }
 
-    ::masternodeSync = std::make_unique<CMasternodeSync>(*node.connman, *::governance);
+    assert(!::masternodeSync);
+    ::masternodeSync = std::make_unique<CMasternodeSync>(*node.connman, *node.govman);
+    node.mn_sync = ::masternodeSync.get();
 
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<std::string> uacomments;
@@ -1861,10 +1872,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     }
 #endif
 
-    assert(::governance != nullptr);
-    assert(::masternodeSync != nullptr);
     pdsNotificationInterface = new CDSNotificationInterface(
-        *node.connman, *::masternodeSync, ::deterministicMNManager, *::governance, node.llmq_ctx, node.cj_ctx
+        *node.connman, *node.mn_sync, ::deterministicMNManager, *node.govman, node.llmq_ctx, node.cj_ctx
     );
     RegisterValidationInterface(pdsNotificationInterface);
 
@@ -1876,7 +1885,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     // ********************************************************* Step 7a: Load sporks
 
-    if (!::sporkManager->LoadCache()) {
+    if (!node.sporkman->LoadCache()) {
         auto file_path = (GetDataDir() / "sporks.dat").string();
         return InitError(strprintf(_("Failed to load sporks cache from %s"), file_path));
     }
@@ -1956,10 +1965,11 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
                 // Same logic as above with pblocktree
                 deterministicMNManager.reset();
-                deterministicMNManager.reset(new CDeterministicMNManager(chainman.ActiveChainstate(), *node.connman, *node.evodb));
+                deterministicMNManager = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *node.connman, *node.evodb);
+                node.dmnman = deterministicMNManager.get();
                 creditPoolManager.reset();
                 creditPoolManager = std::make_unique<CCreditPoolManager>(*node.evodb);
-                node.creditPoolManager = creditPoolManager.get();
+                node.cpoolman = creditPoolManager.get();
                 llmq::quorumSnapshotManager.reset();
                 llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*node.evodb));
 
@@ -1968,7 +1978,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                     node.llmq_ctx->Stop();
                 }
                 node.llmq_ctx.reset();
-                node.llmq_ctx.reset(new LLMQContext(chainman.ActiveChainstate(), *node.connman, *node.evodb, *::sporkManager, *node.mempool, node.peerman, false, fReset || fReindexChainState));
+                node.llmq_ctx.reset(new LLMQContext(chainman.ActiveChainstate(), *node.connman, *node.evodb, *node.sporkman, *node.mempool, node.peerman, false, fReset || fReindexChainState));
                 // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
                 node.llmq_ctx->Start();
 
@@ -2101,11 +2111,11 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                     break; // out of the chainstate activation do-while
                 }
 
-                if (!deterministicMNManager->MigrateDBIfNeeded()) {
+                if (!node.dmnman->MigrateDBIfNeeded()) {
                     strLoadError = _("Error upgrading evo database");
                     break;
                 }
-                if (!deterministicMNManager->MigrateDBIfNeeded2()) {
+                if (!node.dmnman->MigrateDBIfNeeded2()) {
                     strLoadError = _("Error upgrading evo database");
                     break;
                 }
@@ -2209,7 +2219,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     // ********************************************************* Step 7c: Setup CoinJoin
 
-    node.cj_ctx = std::make_unique<CJContext>(chainman.ActiveChainstate(), *node.connman, *node.mempool, *::masternodeSync, !ignores_incoming_txs);
+    node.cj_ctx = std::make_unique<CJContext>(chainman.ActiveChainstate(), *node.connman, *node.mempool, *node.mn_sync, !ignores_incoming_txs);
 
 #ifdef ENABLE_WALLET
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
@@ -2221,7 +2231,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     bool fLoadCacheFiles = !(fReindex || fReindexChainState) && (::ChainActive().Tip() != nullptr);
 
     if (!fDisableGovernance) {
-        if (!::governance->LoadCache(fLoadCacheFiles)) {
+        if (!node.govman->LoadCache(fLoadCacheFiles)) {
             auto file_path = (GetDataDir() / "governance.dat").string();
             if (fLoadCacheFiles && !fDisableGovernance) {
                 return InitError(strprintf(_("Failed to load governance cache from %s"), file_path));
@@ -2232,10 +2242,12 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     assert(!::dstxManager);
     ::dstxManager = std::make_unique<CDSTXManager>();
+    node.dstxman = ::dstxManager.get();
 
     assert(!::mmetaman);
     ::mmetaman = std::make_unique<CMasternodeMetaMan>(fLoadCacheFiles);
-    if (!::mmetaman->IsValid()) {
+    node.mn_metaman = ::mmetaman.get();
+    if (!node.mn_metaman->IsValid()) {
         auto file_path = (GetDataDir() / "mncache.dat").string();
         if (fLoadCacheFiles) {
             return InitError(strprintf(_("Failed to load masternode cache from %s"), file_path));
@@ -2245,7 +2257,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     assert(!::netfulfilledman);
     ::netfulfilledman = std::make_unique<CNetFulfilledRequestManager>(fLoadCacheFiles);
-    if (!::netfulfilledman->IsValid()) {
+    node.netfulfilledman = ::netfulfilledman.get();
+    if (!node.netfulfilledman->IsValid()) {
         auto file_path = (GetDataDir() / "netfulfilled.dat").string();
         if (fLoadCacheFiles) {
             return InitError(strprintf(_("Failed to load fulfilled requests cache from %s"), file_path));
@@ -2316,13 +2329,13 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     // ********************************************************* Step 10a: schedule Dash-specific tasks
 
-    node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(*netfulfilledman)), std::chrono::minutes{1});
-    node.scheduler->scheduleEvery(std::bind(&CMasternodeSync::DoMaintenance, std::ref(*::masternodeSync)), std::chrono::seconds{1});
-    node.scheduler->scheduleEvery(std::bind(&CMasternodeUtils::DoMaintenance, std::ref(*node.connman), std::ref(*::masternodeSync), std::ref(*node.cj_ctx)), std::chrono::minutes{1});
-    node.scheduler->scheduleEvery(std::bind(&CDeterministicMNManager::DoMaintenance, std::ref(*deterministicMNManager)), std::chrono::seconds{10});
+    node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(*node.netfulfilledman)), std::chrono::minutes{1});
+    node.scheduler->scheduleEvery(std::bind(&CMasternodeSync::DoMaintenance, std::ref(*node.mn_sync)), std::chrono::seconds{1});
+    node.scheduler->scheduleEvery(std::bind(&CMasternodeUtils::DoMaintenance, std::ref(*node.connman), std::ref(*node.mn_sync), std::ref(*node.cj_ctx)), std::chrono::minutes{1});
+    node.scheduler->scheduleEvery(std::bind(&CDeterministicMNManager::DoMaintenance, std::ref(*node.dmnman)), std::chrono::seconds{10});
 
     if (!fDisableGovernance) {
-        node.scheduler->scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(*::governance), std::ref(*node.connman)), std::chrono::minutes{5});
+        node.scheduler->scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(*node.govman), std::ref(*node.connman)), std::chrono::minutes{5});
     }
 
     if (fMasternodeMode) {

@@ -83,53 +83,126 @@ namespace node {
 namespace {
 class EVOImpl : public EVO
 {
+private:
+    ChainstateManager& chainman() { return *Assert(m_context->chainman); }
+    NodeContext& context() { return *Assert(m_context); }
+
 public:
     std::pair<CDeterministicMNList, const CBlockIndex*> getListAtChainTip() override
     {
-        const CBlockIndex *tip = WITH_LOCK(::cs_main, return ::ChainActive().Tip());
+        const CBlockIndex *tip = WITH_LOCK(::cs_main, return chainman().ActiveChain().Tip());
         CDeterministicMNList mnList{};
-        if  (tip != nullptr && deterministicMNManager != nullptr) {
-            mnList = deterministicMNManager->GetListForBlock(tip);
+        if (tip != nullptr && context().dmnman != nullptr) {
+            mnList = context().dmnman->GetListForBlock(tip);
         }
         return {std::move(mnList), tip};
     }
+    void setContext(NodeContext* context) override
+    {
+        m_context = context;
+    }
+
+private:
+    NodeContext* m_context{nullptr};
 };
 
 class GOVImpl : public GOV
 {
+private:
+    NodeContext& context() { return *Assert(m_context); }
+
 public:
     void getAllNewerThan(std::vector<CGovernanceObject> &objs, int64_t nMoreThanTime) override
     {
-        if (governance == nullptr) return;
-        governance->GetAllNewerThan(objs, nMoreThanTime);
+        if (context().govman != nullptr) {
+            context().govman->GetAllNewerThan(objs, nMoreThanTime);
+        }
     }
+    int32_t getObjAbsYesCount(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) override
+    {
+        // TODO: Move GetListAtChainTip query outside CGovernanceObject, query requires
+        //       active CDeterministicMNManager instance
+        if (context().govman != nullptr && context().dmnman != nullptr) {
+            return obj.GetAbsoluteYesCount(vote_signal);
+        }
+        return 0;
+    }
+    bool getObjLocalValidity(const CGovernanceObject& obj, std::string& error, bool check_collateral) override
+    {
+        // TODO: Move GetListAtChainTip query outside CGovernanceObject, query requires
+        //       active CDeterministicMNManager instance
+        if (context().govman != nullptr && context().dmnman != nullptr) {
+            LOCK(cs_main);
+            return obj.IsValidLocally(error, check_collateral);
+        }
+        return false;
+    }
+    void setContext(NodeContext* context) override
+    {
+        m_context = context;
+    }
+
+private:
+    NodeContext* m_context{nullptr};
 };
 
 class LLMQImpl : public LLMQ
 {
+private:
+    NodeContext& context() { return *Assert(m_context); }
+
 public:
     size_t getInstantSentLockCount() override
     {
-        return llmq::quorumInstantSendManager == nullptr ? 0 : llmq::quorumInstantSendManager->GetInstantSendLockCount();
+        if (context().llmq_ctx->isman != nullptr) {
+            return context().llmq_ctx->isman->GetInstantSendLockCount();
+        }
+        return 0;
     }
+    void setContext(NodeContext* context) override
+    {
+        m_context = context;
+    }
+
+private:
+    NodeContext* m_context{nullptr};
 };
 
 namespace Masternode = interfaces::Masternode;
 class MasternodeSyncImpl : public Masternode::Sync
 {
+private:
+    NodeContext& context() { return *Assert(m_context); }
+
 public:
     bool isSynced() override
     {
-        return ::masternodeSync == nullptr ? false : ::masternodeSync->IsSynced();
+        if (context().mn_sync != nullptr) {
+            return context().mn_sync->IsSynced();
+        }
+        return false;
     }
     bool isBlockchainSynced() override
     {
-        return ::masternodeSync == nullptr ? false : ::masternodeSync->IsBlockchainSynced();
+        if (context().mn_sync != nullptr) {
+            return context().mn_sync->IsBlockchainSynced();
+        }
+        return false;
     }
     std::string getSyncStatus() override
     {
-        return ::masternodeSync == nullptr ? "" : ::masternodeSync->GetSyncStatus();
+        if (context().mn_sync != nullptr) {
+            return context().mn_sync->GetSyncStatus();
+        }
+        return "";
     }
+    void setContext(NodeContext* context) override
+    {
+        m_context = context;
+    }
+
+private:
+    NodeContext* m_context{nullptr};
 };
 
 namespace CoinJoin = interfaces::CoinJoin;
@@ -518,6 +591,11 @@ public:
     void setContext(NodeContext* context) override
     {
         m_context = context;
+        m_evo.setContext(context);
+        m_gov.setContext(context);
+        m_llmq.setContext(context);
+        m_masternodeSync.setContext(context);
+
         if (context) {
             m_context_ref = *context;
         } else {
@@ -727,8 +805,8 @@ public:
     {
         const CBlockIndex *tip = WITH_LOCK(::cs_main, return ::ChainActive().Tip());
         CDeterministicMNList mnList{};
-        if  (tip != nullptr && deterministicMNManager != nullptr) {
-            mnList = deterministicMNManager->GetListForBlock(tip);
+        if  (tip != nullptr && m_node.dmnman != nullptr) {
+            mnList = m_node.dmnman->GetListForBlock(tip);
         }
         std::vector<COutPoint> listRet;
         for (const auto& [tx, index]: outputs) {

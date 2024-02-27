@@ -59,7 +59,9 @@ class Proposal : public QObject
 private:
     Q_OBJECT
 
+    ClientModel* clientModel;
     const CGovernanceObject govObj;
+
     QString m_title;
     QDateTime m_startDate;
     QDateTime m_endDate;
@@ -67,7 +69,7 @@ private:
     QString m_url;
 
 public:
-    explicit Proposal(const CGovernanceObject& _govObj, QObject* parent = nullptr);
+    explicit Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj, QObject* parent = nullptr);
     QString title() const;
     QString hash() const;
     QDateTime startDate() const;

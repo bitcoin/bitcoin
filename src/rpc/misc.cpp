@@ -101,26 +101,29 @@ static UniValue mnsync(const JSONRPCRequest& request)
 
     std::string strMode = request.params[0].get_str();
 
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    auto& mn_sync = *node.mn_sync;
+
     if(strMode == "status") {
         UniValue objStatus(UniValue::VOBJ);
-        objStatus.pushKV("AssetID", ::masternodeSync->GetAssetID());
-        objStatus.pushKV("AssetName", ::masternodeSync->GetAssetName());
-        objStatus.pushKV("AssetStartTime", ::masternodeSync->GetAssetStartTime());
-        objStatus.pushKV("Attempt", ::masternodeSync->GetAttempt());
-        objStatus.pushKV("IsBlockchainSynced", ::masternodeSync->IsBlockchainSynced());
-        objStatus.pushKV("IsSynced", ::masternodeSync->IsSynced());
+        objStatus.pushKV("AssetID", mn_sync.GetAssetID());
+        objStatus.pushKV("AssetName", mn_sync.GetAssetName());
+        objStatus.pushKV("AssetStartTime", mn_sync.GetAssetStartTime());
+        objStatus.pushKV("Attempt", mn_sync.GetAttempt());
+        objStatus.pushKV("IsBlockchainSynced", mn_sync.IsBlockchainSynced());
+        objStatus.pushKV("IsSynced", mn_sync.IsSynced());
         return objStatus;
     }
 
     if(strMode == "next")
     {
-        ::masternodeSync->SwitchToNextAsset();
-        return "sync updated to " + ::masternodeSync->GetAssetName();
+        mn_sync.SwitchToNextAsset();
+        return "sync updated to " + mn_sync.GetAssetName();
     }
 
     if(strMode == "reset")
     {
-        ::masternodeSync->Reset(true);
+        mn_sync.Reset(true);
         return "success";
     }
     return "failure";
@@ -157,16 +160,17 @@ static UniValue spork(const JSONRPCRequest& request)
 
     // basic mode, show info
     std:: string strCommand = request.params[0].get_str();
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (strCommand == "show") {
         UniValue ret(UniValue::VOBJ);
         for (const auto& sporkDef : sporkDefs) {
-            ret.pushKV(std::string(sporkDef.name), sporkManager->GetSporkValue(sporkDef.sporkId));
+            ret.pushKV(std::string(sporkDef.name), node.sporkman->GetSporkValue(sporkDef.sporkId));
         }
         return ret;
     } else if(strCommand == "active"){
         UniValue ret(UniValue::VOBJ);
         for (const auto& sporkDef : sporkDefs) {
-            ret.pushKV(std::string(sporkDef.name), sporkManager->IsSporkActive(sporkDef.sporkId));
+            ret.pushKV(std::string(sporkDef.name), node.sporkman->IsSporkActive(sporkDef.sporkId));
         }
         return ret;
     }
@@ -206,7 +210,7 @@ static UniValue sporkupdate(const JSONRPCRequest& request)
     int64_t nValue = request.params[1].get_int64();
 
     // broadcast new spork
-    if (sporkManager->UpdateSpork(nSporkID, nValue, *node.connman)) {
+    if (node.sporkman->UpdateSpork(nSporkID, nValue, *node.connman)) {
         return "success";
     }
 
