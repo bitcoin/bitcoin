@@ -2066,15 +2066,8 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     std::string xpub = EncodeExtPubKey(master_key.Neuter());
 
     // Build descriptor string
-    std::string desc_prefix = "pkh(" + xpub + "/44'";
+    std::string desc_prefix = strprintf("pkh(%s/44'/%d'", xpub, Params().ExtCoinType());
     std::string desc_suffix = "/*)";
-
-    // Mainnet derives at 5', testnet and regtest derive at 1'
-    if (Params().IsTestChain()) {
-        desc_prefix += "/1'";
-    } else {
-        desc_prefix += "/5'";
-    }
 
     std::string internal_path = m_internal ? "/1" : "/0";
     std::string desc_str = desc_prefix + "/0'" + internal_path + desc_suffix;
