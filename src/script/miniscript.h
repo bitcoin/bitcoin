@@ -2305,18 +2305,18 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
             if (last - in >= 3 && in[0].first == OP_CHECKMULTISIG) {
                 if (IsTapscript(ctx.MsContext())) return {};
                 std::vector<Key> keys;
-                const auto n = ParseScriptNumber(in[1]);
-                if (!n || last - in < 3 + *n) return {};
-                if (*n < 1 || *n > 20) return {};
-                for (int i = 0; i < *n; ++i) {
+                const auto key_count = ParseScriptNumber(in[1]);
+                if (!key_count || last - in < 3 + *n) return {};
+                if (*key_count < 1 || *key_count > 20) return {};
+                for (int i = 0; i < *key_count; ++i) {
                     if (in[2 + i].second.size() != 33) return {};
                     auto key = ctx.FromPKBytes(in[2 + i].second.begin(), in[2 + i].second.end());
                     if (!key) return {};
                     keys.push_back(std::move(*key));
                 }
-                const auto k = ParseScriptNumber(in[2 + *n]);
-                if (!k || *k < 1 || *k > *n) return {};
-                in += 3 + *n;
+                const auto k = ParseScriptNumber(in[2 + *key_count]);
+                if (!k || *k < 1 || *k > *key_count) return {};
+                in += 3 + *key_count;
                 std::reverse(keys.begin(), keys.end());
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::MULTI, std::move(keys), *k));
                 break;
