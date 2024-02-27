@@ -28,7 +28,6 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/overflow.h>
-#include <util/time.h>
 #include <util/vector.h>
 #include <version.h>
 
@@ -61,18 +60,20 @@ auto& PickValue(FuzzedDataProvider& fuzzed_data_provider, Collection& col)
     return *it;
 }
 
-[[ nodiscard ]] inline std::vector<uint8_t> ConsumeRandomLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
+[[ nodiscard ]] inline std::vector<uint8_t> ConsumeRandomLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
-    const std::string s = fuzzed_data_provider.ConsumeRandomLengthString(max_length);
+    const std::string s = max_length ?
+                              fuzzed_data_provider.ConsumeRandomLengthString(*max_length) :
+                              fuzzed_data_provider.ConsumeRandomLengthString();
     return {s.begin(), s.end()};
 }
 
-[[ nodiscard ]] inline std::vector<bool> ConsumeRandomLengthBitVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
+[[ nodiscard ]] inline std::vector<bool> ConsumeRandomLengthBitVector(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
     return BytesToBits(ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length));
 }
 
-[[ nodiscard ]] inline CDataStream ConsumeDataStream(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
+[[ nodiscard ]] inline CDataStream ConsumeDataStream(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
     return CDataStream{ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length), SER_NETWORK, INIT_PROTO_VERSION};
 }
@@ -99,7 +100,7 @@ template <typename T>
 }
 
 template <typename T>
-[[ nodiscard ]] inline std::optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
+[[ nodiscard ]] inline std::optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
     const std::vector<uint8_t> buffer = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
     CDataStream ds{buffer, SER_NETWORK, INIT_PROTO_VERSION};
@@ -113,7 +114,7 @@ template <typename T>
 }
 
 template <typename WeakEnumType, size_t size>
-[[nodiscard]] WeakEnumType ConsumeWeakEnum(FuzzedDataProvider& fuzzed_data_provider, const WeakEnumType (&all_types)[size]) noexcept
+[[ nodiscard ]] WeakEnumType ConsumeWeakEnum(FuzzedDataProvider& fuzzed_data_provider, const WeakEnumType (&all_types)[size]) noexcept
 {
     return fuzzed_data_provider.ConsumeBool() ?
                fuzzed_data_provider.PickValueInArray<WeakEnumType>(all_types) :
@@ -130,17 +131,11 @@ template <typename WeakEnumType, size_t size>
     return fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, MAX_MONEY);
 }
 
-[[ nodiscard ]] inline int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    // Avoid t=0 (1970-01-01T00:00:00Z) since SetMockTime(0) is a no-op.
-    static const int64_t time_min = ParseISO8601DateTime("1970-01-01T00:00:01Z");
-    static const int64_t time_max = ParseISO8601DateTime("9999-12-31T23:59:59Z");
-    return fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(time_min, time_max);
-}
+[[ nodiscard ]] int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optional<int64_t>& min = std::nullopt, const std::optional<int64_t>& max = std::nullopt) noexcept;
 
 [[ nodiscard ]] CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider, const std::optional<std::vector<uint256>>& prevout_txids, const int max_num_in = 10, const int max_num_out = 10) noexcept;
 
-[[ nodiscard ]] CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept;
+[[ nodiscard ]] CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept;
 
 [[ nodiscard ]] uint32_t ConsumeSequence(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
