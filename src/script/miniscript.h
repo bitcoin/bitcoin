@@ -2306,7 +2306,7 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
                 if (IsTapscript(ctx.MsContext())) return {};
                 std::vector<Key> keys;
                 const auto key_count = ParseScriptNumber(in[1]);
-                if (!key_count || last - in < 3 + *n) return {};
+                if (!key_count || last - in < 3 + *key_count) return {};
                 if (*key_count < 1 || *key_count > 20) return {};
                 for (int i = 0; i < *key_count; ++i) {
                     if (in[2 + i].second.size() != 33) return {};
@@ -2314,23 +2314,23 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
                     if (!key) return {};
                     keys.push_back(std::move(*key));
                 }
-                const auto k = ParseScriptNumber(in[2 + *key_count]);
-                if (!k || *k < 1 || *k > *key_count) return {};
+                const auto keys_required = ParseScriptNumber(in[2 + *key_count]);
+                if (!keys_required || *keys_required < 1 || *keys_required > *key_count) return {};
                 in += 3 + *key_count;
                 std::reverse(keys.begin(), keys.end());
-                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::MULTI, std::move(keys), *k));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::MULTI, std::move(keys), *keys_required));
                 break;
             }
             // Tapscript's equivalent of multi
             if (last - in >= 4 && in[0].first == OP_NUMEQUAL) {
                 if (!IsTapscript(ctx.MsContext())) return {};
                 // The necessary threshold of signatures.
-                const auto k = ParseScriptNumber(in[1]);
-                if (!k) return {};
-                if (*k < 1 || *k > MAX_PUBKEYS_PER_MULTI_A) return {};
-                if (last - in < 2 + *k * 2) return {};
+                const auto keys_required = ParseScriptNumber(in[1]);
+                if (!keys_required) return {};
+                if (*keys_required < 1 || *keys_required > MAX_PUBKEYS_PER_MULTI_A) return {};
+                if (last - in < 2 + *keys_required * 2) return {};
                 std::vector<Key> keys;
-                keys.reserve(*k);
+                keys.reserve(*keys_required);
                 // Walk through the expected (pubkey, CHECKSIG[ADD]) pairs.
                 for (int pos = 2;; pos += 2) {
                     if (last - in < pos + 2) return {};
@@ -2345,10 +2345,10 @@ inline NodeRef<Key> DecodeScript(I& in, I last, const Ctx& ctx)
                     // OP_CHECKSIG means it was the last one to parse.
                     if (in[pos].first == OP_CHECKSIG) break;
                 }
-                if (keys.size() < (size_t)*k) return {};
+                if (keys.size() < (size_t)*keys_required) return {};
                 in += 2 + keys.size() * 2;
                 std::reverse(keys.begin(), keys.end());
-                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::MULTI_A, std::move(keys), *k));
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::MULTI_A, std::move(keys), *keys_required));
                 break;
             }
             /** In the following wrappers, we only need to push SINGLE_BKV_EXPR rather
