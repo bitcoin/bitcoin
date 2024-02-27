@@ -1377,7 +1377,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     peer_connect_timeout = args.GetArg("-peertimeout", DEFAULT_PEER_CONNECT_TIMEOUT);
     if (peer_connect_timeout <= 0) {
-        return InitError(Untranslated("peertimeout cannot be configured with a negative value."));
+        return InitError(Untranslated("peertimeout must be a positive integer."));
     }
 
     if (args.IsArgSet("-minrelaytxfee")) {
