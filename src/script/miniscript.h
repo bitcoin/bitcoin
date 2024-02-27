@@ -646,8 +646,8 @@ private:
         struct DummyState {};
         return TreeEvalMaybe<Result>(DummyState{},
             [](DummyState, const Node&, size_t) { return DummyState{}; },
-            [&upfn](DummyState, const Node& node, Span<Result> subs) {
-                return upfn(node, subs);
+            [&upfn](DummyState, const Node& node, Span<Result> child_subs) {
+                return upfn(node, child_subs);
             }
         );
     }
@@ -660,8 +660,8 @@ private:
         // unconditionally dereference the result (it cannot be std::nullopt).
         return std::move(*TreeEvalMaybe<Result>(std::move(root_state),
             std::forward<DownFn>(downfn),
-            [&upfn](State&& state, const Node& node, Span<Result> subs) {
-                Result res{upfn(std::move(state), node, subs)};
+            [&upfn](State&& state, const Node& node, Span<Result> child_subs) {
+                Result res{upfn(std::move(state), node, child_subs)};
                 return std::optional<Result>(std::move(res));
             }
         ));
@@ -675,8 +675,8 @@ private:
         struct DummyState {};
         return std::move(*TreeEvalMaybe<Result>(DummyState{},
             [](DummyState, const Node&, size_t) { return DummyState{}; },
-            [&upfn](DummyState, const Node& node, Span<Result> subs) {
-                Result res{upfn(node, subs)};
+            [&upfn](DummyState, const Node& node, Span<Result> child_subs) {
+                Result res{upfn(node, child_subs)};
                 return std::optional<Result>(std::move(res));
             }
         ));
@@ -738,7 +738,7 @@ public:
         // The upward function computes for a node, given its followed-by-OP_VERIFY status
         // and the CScripts of its child nodes, the CScript of the node.
         const bool is_tapscript{IsTapscript(m_script_ctx)};
-        auto upfn = [&ctx, is_tapscript](bool verify, const Node& node, Span<CScript> subs) -> CScript {
+        auto upfn = [&ctx, is_tapscript](bool verify, const Node& node, Span<CScript> child_subs) -> CScript {
             switch (node.fragment) {
                 case Fragment::PK_K: return BuildScript(ctx.ToPKBytes(node.keys[0]));
                 case Fragment::PK_H: return BuildScript(OP_DUP, OP_HASH160, ctx.ToPKHBytes(node.keys[0]), OP_EQUALVERIFY);
@@ -748,28 +748,28 @@ public:
                 case Fragment::RIPEMD160: return BuildScript(OP_SIZE, 32, OP_EQUALVERIFY, OP_RIPEMD160, node.data, verify ? OP_EQUALVERIFY : OP_EQUAL);
                 case Fragment::HASH256: return BuildScript(OP_SIZE, 32, OP_EQUALVERIFY, OP_HASH256, node.data, verify ? OP_EQUALVERIFY : OP_EQUAL);
                 case Fragment::HASH160: return BuildScript(OP_SIZE, 32, OP_EQUALVERIFY, OP_HASH160, node.data, verify ? OP_EQUALVERIFY : OP_EQUAL);
-                case Fragment::WRAP_A: return BuildScript(OP_TOALTSTACK, subs[0], OP_FROMALTSTACK);
-                case Fragment::WRAP_S: return BuildScript(OP_SWAP, subs[0]);
-                case Fragment::WRAP_C: return BuildScript(std::move(subs[0]), verify ? OP_CHECKSIGVERIFY : OP_CHECKSIG);
-                case Fragment::WRAP_D: return BuildScript(OP_DUP, OP_IF, subs[0], OP_ENDIF);
+                case Fragment::WRAP_A: return BuildScript(OP_TOALTSTACK, child_subs[0], OP_FROMALTSTACK);
+                case Fragment::WRAP_S: return BuildScript(OP_SWAP, child_subs[0]);
+                case Fragment::WRAP_C: return BuildScript(std::move(child_subs[0]), verify ? OP_CHECKSIGVERIFY : OP_CHECKSIG);
+                case Fragment::WRAP_D: return BuildScript(OP_DUP, OP_IF, child_subs[0], OP_ENDIF);
                 case Fragment::WRAP_V: {
                     if (node.subs[0]->GetType() << "x"_mst) {
-                        return BuildScript(std::move(subs[0]), OP_VERIFY);
+                        return BuildScript(std::move(child_subs[0]), OP_VERIFY);
                     } else {
-                        return std::move(subs[0]);
+                        return std::move(child_subs[0]);
                     }
                 }
-                case Fragment::WRAP_J: return BuildScript(OP_SIZE, OP_0NOTEQUAL, OP_IF, subs[0], OP_ENDIF);
-                case Fragment::WRAP_N: return BuildScript(std::move(subs[0]), OP_0NOTEQUAL);
+                case Fragment::WRAP_J: return BuildScript(OP_SIZE, OP_0NOTEQUAL, OP_IF, child_subs[0], OP_ENDIF);
+                case Fragment::WRAP_N: return BuildScript(std::move(child_subs[0]), OP_0NOTEQUAL);
                 case Fragment::JUST_1: return BuildScript(OP_1);
                 case Fragment::JUST_0: return BuildScript(OP_0);
-                case Fragment::AND_V: return BuildScript(std::move(subs[0]), subs[1]);
-                case Fragment::AND_B: return BuildScript(std::move(subs[0]), subs[1], OP_BOOLAND);
-                case Fragment::OR_B: return BuildScript(std::move(subs[0]), subs[1], OP_BOOLOR);
-                case Fragment::OR_D: return BuildScript(std::move(subs[0]), OP_IFDUP, OP_NOTIF, subs[1], OP_ENDIF);
-                case Fragment::OR_C: return BuildScript(std::move(subs[0]), OP_NOTIF, subs[1], OP_ENDIF);
-                case Fragment::OR_I: return BuildScript(OP_IF, subs[0], OP_ELSE, subs[1], OP_ENDIF);
-                case Fragment::ANDOR: return BuildScript(std::move(subs[0]), OP_NOTIF, subs[2], OP_ELSE, subs[1], OP_ENDIF);
+                case Fragment::AND_V: return BuildScript(std::move(child_subs[0]), child_subs[1]);
+                case Fragment::AND_B: return BuildScript(std::move(child_subs[0]), child_subs[1], OP_BOOLAND);
+                case Fragment::OR_B: return BuildScript(std::move(child_subs[0]), child_subs[1], OP_BOOLOR);
+                case Fragment::OR_D: return BuildScript(std::move(child_subs[0]), OP_IFDUP, OP_NOTIF, child_subs[1], OP_ENDIF);
+                case Fragment::OR_C: return BuildScript(std::move(child_subs[0]), OP_NOTIF, child_subs[1], OP_ENDIF);
+                case Fragment::OR_I: return BuildScript(OP_IF, child_subs[0], OP_ELSE, child_subs[1], OP_ENDIF);
+                case Fragment::ANDOR: return BuildScript(std::move(child_subs[0]), OP_NOTIF, child_subs[2], OP_ELSE, child_subs[1], OP_ENDIF);
                 case Fragment::MULTI: {
                     CHECK_NONFATAL(!is_tapscript);
                     CScript script = BuildScript(node.k);
@@ -787,9 +787,9 @@ public:
                     return BuildScript(std::move(script), node.k, verify ? OP_NUMEQUALVERIFY : OP_NUMEQUAL);
                 }
                 case Fragment::THRESH: {
-                    CScript script = std::move(subs[0]);
-                    for (size_t i = 1; i < subs.size(); ++i) {
-                        script = BuildScript(std::move(script), subs[i], OP_ADD);
+                    CScript script = std::move(child_subs[0]);
+                    for (size_t i = 1; i < child_subs.size(); ++i) {
+                        script = BuildScript(std::move(script), child_subs[i], OP_ADD);
                     }
                     return BuildScript(std::move(script), node.k, verify ? OP_EQUALVERIFY : OP_EQUAL);
                 }
@@ -816,12 +816,12 @@ public:
         // The upward function computes for a node, given whether its parent is a wrapper,
         // and the string representations of its child nodes, the string representation of the node.
         const bool is_tapscript{IsTapscript(m_script_ctx)};
-        auto upfn = [&ctx, is_tapscript](bool wrapped, const Node& node, Span<std::string> subs) -> std::optional<std::string> {
+        auto upfn = [&ctx, is_tapscript](bool wrapped, const Node& node, Span<std::string> child_subs) -> std::optional<std::string> {
             std::string ret = wrapped ? ":" : "";
 
             switch (node.fragment) {
-                case Fragment::WRAP_A: return "a" + std::move(subs[0]);
-                case Fragment::WRAP_S: return "s" + std::move(subs[0]);
+                case Fragment::WRAP_A: return "a" + std::move(child_subs[0]);
+                case Fragment::WRAP_S: return "s" + std::move(child_subs[0]);
                 case Fragment::WRAP_C:
                     if (node.subs[0]->fragment == Fragment::PK_K) {
                         // pk(K) is syntactic sugar for c:pk_k(K)
@@ -835,18 +835,18 @@ public:
                         if (!key_str) return {};
                         return std::move(ret) + "pkh(" + std::move(*key_str) + ")";
                     }
-                    return "c" + std::move(subs[0]);
-                case Fragment::WRAP_D: return "d" + std::move(subs[0]);
-                case Fragment::WRAP_V: return "v" + std::move(subs[0]);
-                case Fragment::WRAP_J: return "j" + std::move(subs[0]);
-                case Fragment::WRAP_N: return "n" + std::move(subs[0]);
+                    return "c" + std::move(child_subs[0]);
+                case Fragment::WRAP_D: return "d" + std::move(child_subs[0]);
+                case Fragment::WRAP_V: return "v" + std::move(child_subs[0]);
+                case Fragment::WRAP_J: return "j" + std::move(child_subs[0]);
+                case Fragment::WRAP_N: return "n" + std::move(child_subs[0]);
                 case Fragment::AND_V:
                     // t:X is syntactic sugar for and_v(X,1).
-                    if (node.subs[1]->fragment == Fragment::JUST_1) return "t" + std::move(subs[0]);
+                    if (node.subs[1]->fragment == Fragment::JUST_1) return "t" + std::move(child_subs[0]);
                     break;
                 case Fragment::OR_I:
-                    if (node.subs[0]->fragment == Fragment::JUST_0) return "l" + std::move(subs[1]);
-                    if (node.subs[1]->fragment == Fragment::JUST_0) return "u" + std::move(subs[0]);
+                    if (node.subs[0]->fragment == Fragment::JUST_0) return "l" + std::move(child_subs[1]);
+                    if (node.subs[1]->fragment == Fragment::JUST_0) return "u" + std::move(child_subs[0]);
                     break;
                 default: break;
             }
@@ -869,16 +869,16 @@ public:
                 case Fragment::RIPEMD160: return std::move(ret) + "ripemd160(" + HexStr(node.data) + ")";
                 case Fragment::JUST_1: return std::move(ret) + "1";
                 case Fragment::JUST_0: return std::move(ret) + "0";
-                case Fragment::AND_V: return std::move(ret) + "and_v(" + std::move(subs[0]) + "," + std::move(subs[1]) + ")";
-                case Fragment::AND_B: return std::move(ret) + "and_b(" + std::move(subs[0]) + "," + std::move(subs[1]) + ")";
-                case Fragment::OR_B: return std::move(ret) + "or_b(" + std::move(subs[0]) + "," + std::move(subs[1]) + ")";
-                case Fragment::OR_D: return std::move(ret) + "or_d(" + std::move(subs[0]) + "," + std::move(subs[1]) + ")";
-                case Fragment::OR_C: return std::move(ret) + "or_c(" + std::move(subs[0]) + "," + std::move(subs[1]) + ")";
-                case Fragment::OR_I: return std::move(ret) + "or_i(" + std::move(subs[0]) + "," + std::move(subs[1]) + ")";
+                case Fragment::AND_V: return std::move(ret) + "and_v(" + std::move(child_subs[0]) + "," + std::move(child_subs[1]) + ")";
+                case Fragment::AND_B: return std::move(ret) + "and_b(" + std::move(child_subs[0]) + "," + std::move(child_subs[1]) + ")";
+                case Fragment::OR_B: return std::move(ret) + "or_b(" + std::move(child_subs[0]) + "," + std::move(child_subs[1]) + ")";
+                case Fragment::OR_D: return std::move(ret) + "or_d(" + std::move(child_subs[0]) + "," + std::move(child_subs[1]) + ")";
+                case Fragment::OR_C: return std::move(ret) + "or_c(" + std::move(child_subs[0]) + "," + std::move(child_subs[1]) + ")";
+                case Fragment::OR_I: return std::move(ret) + "or_i(" + std::move(child_subs[0]) + "," + std::move(child_subs[1]) + ")";
                 case Fragment::ANDOR:
                     // and_n(X,Y) is syntactic sugar for andor(X,Y,0).
-                    if (node.subs[2]->fragment == Fragment::JUST_0) return std::move(ret) + "and_n(" + std::move(subs[0]) + "," + std::move(subs[1]) + ")";
-                    return std::move(ret) + "andor(" + std::move(subs[0]) + "," + std::move(subs[1]) + "," + std::move(subs[2]) + ")";
+                    if (node.subs[2]->fragment == Fragment::JUST_0) return std::move(ret) + "and_n(" + std::move(child_subs[0]) + "," + std::move(child_subs[1]) + ")";
+                    return std::move(ret) + "andor(" + std::move(child_subs[0]) + "," + std::move(child_subs[1]) + "," + std::move(child_subs[2]) + ")";
                 case Fragment::MULTI: {
                     CHECK_NONFATAL(!is_tapscript);
                     auto str = std::move(ret) + "multi(" + ::ToString(node.k);
@@ -901,7 +901,7 @@ public:
                 }
                 case Fragment::THRESH: {
                     auto str = std::move(ret) + "thresh(" + ::ToString(node.k);
-                    for (auto& sub : subs) {
+                    for (auto& sub : child_subs) {
                         str += "," + std::move(sub);
                     }
                     return std::move(str) + ")";
@@ -1427,12 +1427,12 @@ public:
         using keyset = std::set<Key, Comp>;
         using state = std::optional<keyset>;
 
-        auto upfn = [&ctx](const Node& node, Span<state> subs) -> state {
+        auto upfn = [&ctx](const Node& node, Span<state> child_subs) -> state {
             // If this node is already known to have duplicates, nothing left to do.
             if (node.has_duplicate_keys.has_value() && *node.has_duplicate_keys) return {};
 
             // Check if one of the children is already known to have duplicates.
-            for (auto& sub : subs) {
+            for (auto& sub : child_subs) {
                 if (!sub.has_value()) {
                     node.has_duplicate_keys = true;
                     return {};
@@ -1450,7 +1450,7 @@ public:
             }
 
             // Merge the keys from the children into this set.
-            for (auto& sub : subs) {
+            for (auto& sub : child_subs) {
                 keys_count += sub->size();
                 // Small optimization: std::set::merge is linear in the size of the second arg but
                 // logarithmic in the size of the first.
@@ -1535,8 +1535,8 @@ public:
 
     //! Find an insane subnode which has no insane children. Nullptr if there is none.
     const Node* FindInsaneSub() const {
-        return TreeEval<const Node*>([](const Node& node, Span<const Node*> subs) -> const Node* {
-            for (auto& sub: subs) if (sub) return sub;
+        return TreeEval<const Node*>([](const Node& node, Span<const Node*> child_subs) -> const Node* {
+            for (auto& sub: child_subs) if (sub) return sub;
             if (!node.IsSaneSubexpression()) return &node;
             return nullptr;
         });
@@ -1548,7 +1548,7 @@ public:
     bool IsSatisfiable(F fn) const
     {
         // TreeEval() doesn't support bool as NodeType, so use int instead.
-        return TreeEval<int>([&fn](const Node& node, Span<int> subs) -> bool {
+        return TreeEval<int>([&fn](const Node& node, Span<int> child_subs) -> bool {
             switch (node.fragment) {
                 case Fragment::JUST_0:
                     return false;
@@ -1566,20 +1566,20 @@ public:
                 case Fragment::RIPEMD160:
                     return bool{fn(node)};
                 case Fragment::ANDOR:
-                    return (subs[0] && subs[1]) || subs[2];
+                    return (child_subs[0] && child_subs[1]) || child_subs[2];
                 case Fragment::AND_V:
                 case Fragment::AND_B:
-                    return subs[0] && subs[1];
+                    return child_subs[0] && child_subs[1];
                 case Fragment::OR_B:
                 case Fragment::OR_C:
                 case Fragment::OR_D:
                 case Fragment::OR_I:
-                    return subs[0] || subs[1];
+                    return child_subs[0] || child_subs[1];
                 case Fragment::THRESH:
-                    return static_cast<uint32_t>(std::count(subs.begin(), subs.end(), true)) >= node.k;
+                    return static_cast<uint32_t>(std::count(child_subs.begin(), child_subs.end(), true)) >= node.k;
                 default: // wrappers
-                    assert(subs.size() == 1);
-                    return subs[0];
+                    assert(child_subs.size() == 1);
+                    return child_subs[0];
             }
         });
     }
