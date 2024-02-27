@@ -1513,7 +1513,7 @@ public:
             if (const auto exec_ss = GetExecStackSize()) return exec_ss <= MAX_STACK_SIZE;
             return true;
         }
-        if (const auto ss = GetStackSize()) return *ss <= MAX_STANDARD_P2WSH_STACK_ITEMS;
+        if (const auto stack_size = GetStackSize()) return *stack_size <= MAX_STANDARD_P2WSH_STACK_ITEMS;
         return true;
     }
 
