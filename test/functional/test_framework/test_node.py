@@ -667,7 +667,7 @@ class TestNode():
                     assert_msg += "with expected error " + expected_msg
                 self._raise_assertion_error(assert_msg)
 
-    def add_p2p_connection(self, p2p_conn, *, wait_for_verack=True, send_version=True, supports_v2_p2p=False, **kwargs):
+    def add_p2p_connection(self, p2p_conn, *, wait_for_verack=True, send_version=True, supports_v2_p2p=None, wait_for_v2_handshake=True, **kwargs):
         """Add an inbound p2p connection to the node.
 
         This method adds the p2p connection to the self.p2ps list and also
@@ -684,6 +684,9 @@ class TestNode():
             kwargs['dstport'] = p2p_port(self.index)
         if 'dstaddr' not in kwargs:
             kwargs['dstaddr'] = '127.0.0.1'
+        if supports_v2_p2p is None:
+            supports_v2_p2p = self.use_v2transport
+
 
         p2p_conn.p2p_connected_to_node = True
         if self.use_v2transport:
@@ -693,6 +696,8 @@ class TestNode():
 
         self.p2ps.append(p2p_conn)
         p2p_conn.wait_until(lambda: p2p_conn.is_connected, check_connected=False)
+        if supports_v2_p2p and wait_for_v2_handshake:
+            p2p_conn.wait_until(lambda: p2p_conn.v2_state.tried_v2_handshake)
         if send_version:
             p2p_conn.wait_until(lambda: not p2p_conn.on_connection_send_msg)
         if wait_for_verack:
@@ -721,7 +726,7 @@ class TestNode():
 
         return p2p_conn
 
-    def add_outbound_p2p_connection(self, p2p_conn, *, wait_for_verack=True, p2p_idx, connection_type="outbound-full-relay", supports_v2_p2p=False, advertise_v2_p2p=False, **kwargs):
+    def add_outbound_p2p_connection(self, p2p_conn, *, wait_for_verack=True, p2p_idx, connection_type="outbound-full-relay", supports_v2_p2p=None, advertise_v2_p2p=None, **kwargs):
         """Add an outbound p2p connection from node. Must be an
         "outbound-full-relay", "block-relay-only", "addr-fetch" or "feeler" connection.
 
@@ -749,6 +754,11 @@ class TestNode():
             self.addconnection('%s:%d' % (address, port), connection_type, advertise_v2_p2p)
 
         p2p_conn.p2p_connected_to_node = False
+        if supports_v2_p2p is None:
+            supports_v2_p2p = self.use_v2transport
+        if advertise_v2_p2p is None:
+            advertise_v2_p2p = self.use_v2transport
+
         if advertise_v2_p2p:
             kwargs['services'] = kwargs.get('services', P2P_SERVICES) | NODE_P2P_V2
             assert self.use_v2transport  # only a v2 TestNode could make a v2 outbound connection
@@ -771,6 +781,8 @@ class TestNode():
             p2p_conn.wait_for_connect()
             self.p2ps.append(p2p_conn)
 
+            if supports_v2_p2p:
+                p2p_conn.wait_until(lambda: p2p_conn.v2_state.tried_v2_handshake)
             p2p_conn.wait_until(lambda: not p2p_conn.on_connection_send_msg)
             if wait_for_verack:
                 p2p_conn.wait_for_verack()

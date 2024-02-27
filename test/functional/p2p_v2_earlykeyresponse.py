@@ -75,7 +75,7 @@ class P2PEarlyKey(BitcoinTestFramework):
         self.log.info('Sending first 4 bytes of ellswift which match network magic')
         self.log.info('If a response is received, assertion failure would happen in our custom data_received() function')
         # send happens in `initiate_v2_handshake()` in `connection_made()`
-        peer1 = node0.add_p2p_connection(PeerEarlyKey(), wait_for_verack=False, send_version=False, supports_v2_p2p=True)
+        peer1 = node0.add_p2p_connection(PeerEarlyKey(), wait_for_verack=False, send_version=False, supports_v2_p2p=True, wait_for_v2_handshake=False)
         self.wait_until(lambda: peer1.connection_opened)
         self.log.info('Sending remaining ellswift and garbage which are different from V1_PREFIX. Since a response is')
         self.log.info('expected now, our custom data_received() function wouldn\'t result in assertion failure')
