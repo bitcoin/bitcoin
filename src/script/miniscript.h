@@ -1484,7 +1484,7 @@ public:
     //! Check the ops limit of this script against the consensus limit.
     bool CheckOpsLimit() const {
         if (IsTapscript(m_script_ctx)) return true;
-        if (const auto ops = GetOps()) return *ops <= MAX_OPS_PER_SCRIPT;
+        if (const auto max_ops = GetOps()) return *max_ops <= MAX_OPS_PER_SCRIPT;
         return true;
     }
 
