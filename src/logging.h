@@ -241,6 +241,7 @@ namespace BCLog {
     //! category, a reference to the logger object to output to, and a
     //! formatting hook.
     struct Source {
+        static constexpr bool log_source{true};
         LogFlags category;
         Logger& logger;
 
@@ -281,6 +282,12 @@ bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 //! BCLog::Source object or a category constant that BCLog::Source can be
 //! constructed from.
 static inline const BCLog::Source& _LogSource(const BCLog::Source& source LIFETIMEBOUND) { return source; }
+
+//! Internal helper to get log source object from macro argument, if argument is
+//! a custom log source with a log_source member.
+template <typename Source>
+requires (Source::log_source)
+static inline const Source& _LogSource(const Source& source LIFETIMEBOUND) { return source; }
 
 //! Internal helper to get log source object from macro argument, if argument is
 //! just a format string and no source or category was provided.
@@ -347,8 +354,10 @@ void _LogFormat(LogFn&& log, Source&& source, util::ConstevalFormatString<sizeof
 //!   ...
 //!   LogDebug(m_log, "Forget txreconciliation state of peer=%d\n", peer_id);
 //!
-//! Using source objects also allows diverting log messages to a local logger
-//! instead of the global logging instance.
+//! Using source objects also provides the flexibility to add extra information
+//! and custom formatting to log messages, or to divert log messages to a local
+//! logger instead of the global logging instance, without needing to change
+//! existing log statements.
 #define LogError(...) _LogPrint(BCLog::Level::Error, __VA_ARGS__)
 #define LogWarning(...) _LogPrint(BCLog::Level::Warning, __VA_ARGS__)
 #define LogInfo(...) _LogPrint(BCLog::Level::Info, __VA_ARGS__)

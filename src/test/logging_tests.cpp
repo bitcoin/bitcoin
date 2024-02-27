@@ -193,6 +193,44 @@ BOOST_FIXTURE_TEST_CASE(logging_source_args, LogSetup)
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
 
+struct CustomLogSource {
+    static constexpr bool log_source{true};
+    BCLog::LogFlags category{BCLog::VALIDATION};
+    BCLog::Logger& logger{LogInstance()};
+    int& m_counter;
+
+    CustomLogSource(int& counter) : m_counter{counter} {}
+
+    template <typename... Args>
+    std::string Format(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args) const
+    {
+        return tfm::format("Custom #%d %s", ++m_counter, tfm::format(fmt, args...));
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(logging_CustomSource, LogSetup)
+{
+    int counter{0};
+    CustomLogSource log{counter};
+    LogTrace(log, "foo0: %s\n", "bar0"); // not logged
+    LogDebug(log, "foo1: %s\n", "bar1");
+    LogInfo(log, "foo2: %s\n", "bar2");
+    LogWarning(log, "foo3: %s\n", "bar3");
+    LogError(log, "foo4: %s\n", "bar4");
+    std::ifstream file{tmp_log_path};
+    std::vector<std::string> log_lines;
+    for (std::string log; std::getline(file, log);) {
+        log_lines.push_back(log);
+    }
+    constexpr auto expected{std::to_array({
+        "[validation] Custom #1 foo1: bar1",
+        "[validation:info] Custom #2 foo2: bar2",
+        "[validation:warning] Custom #3 foo3: bar3",
+        "[validation:error] Custom #4 foo4: bar4",
+    })};
+    BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
+}
+
 BOOST_AUTO_TEST_CASE(logging_timer)
 {
     auto micro_timer = BCLog::Timer<std::chrono::microseconds>("tests", "end_msg");
