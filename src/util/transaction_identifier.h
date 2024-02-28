@@ -44,6 +44,7 @@ public:
     constexpr void SetNull() { m_wrapped.SetNull(); }
     std::string GetHex() const { return m_wrapped.GetHex(); }
     std::string ToString() const { return m_wrapped.ToString(); }
+    static constexpr auto size() { return decltype(m_wrapped)::size(); }
     constexpr const std::byte* data() const { return reinterpret_cast<const std::byte*>(m_wrapped.data()); }
     constexpr const std::byte* begin() const { return reinterpret_cast<const std::byte*>(m_wrapped.begin()); }
     constexpr const std::byte* end() const { return reinterpret_cast<const std::byte*>(m_wrapped.end()); }
