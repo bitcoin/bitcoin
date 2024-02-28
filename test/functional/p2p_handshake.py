@@ -6,10 +6,12 @@
 Test P2P behaviour during the handshake phase (VERSION, VERACK messages).
 """
 import itertools
+import time
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
     NODE_NETWORK,
+    NODE_NETWORK_LIMITED,
     NODE_NONE,
     NODE_P2P_V2,
     NODE_WITNESS,
@@ -17,8 +19,12 @@ from test_framework.messages import (
 from test_framework.p2p import P2PInterface
 
 
-# usual desirable service flags for outbound non-pruned peers
-DESIRABLE_SERVICE_FLAGS = NODE_NETWORK | NODE_WITNESS
+# Desirable service flags for outbound non-pruned and pruned peers. Note that
+# the desirable service flags for pruned peers are dynamic and only apply if
+#  1. the peer's service flag NODE_NETWORK_LIMITED is set *and*
+#  2. the local chain is close to the tip (<24h)
+DESIRABLE_SERVICE_FLAGS_FULL = NODE_NETWORK | NODE_WITNESS
+DESIRABLE_SERVICE_FLAGS_PRUNED = NODE_NETWORK_LIMITED | NODE_WITNESS
 
 
 class P2PHandshakeTest(BitcoinTestFramework):
@@ -36,7 +42,7 @@ class P2PHandshakeTest(BitcoinTestFramework):
             peer.peer_disconnect()
             peer.wait_for_disconnect()
 
-    def test_desirable_service_flags(self, node, service_flag_tests, expect_disconnect):
+    def test_desirable_service_flags(self, node, service_flag_tests, desirable_service_flags, expect_disconnect):
         """Check that connecting to a peer either fails or succeeds depending on its offered
            service flags in the VERSION message. The test is exercised for all relevant
            outbound connection types where the desirable service flags check is done."""
@@ -47,18 +53,30 @@ class P2PHandshakeTest(BitcoinTestFramework):
             expected_result = "disconnect" if expect_disconnect else "connect"
             self.log.info(f'    - services 0x{services:08x}, type "{conn_type}" [{expected_result}]')
             if expect_disconnect:
+                assert (services & desirable_service_flags) != desirable_service_flags
                 expected_debug_log = f'does not offer the expected services ' \
-                        f'({services:08x} offered, {DESIRABLE_SERVICE_FLAGS:08x} expected)'
+                        f'({services:08x} offered, {desirable_service_flags:08x} expected)'
                 with node.assert_debug_log([expected_debug_log]):
                     self.add_outbound_connection(node, conn_type, services, wait_for_disconnect=True)
             else:
+                assert (services & desirable_service_flags) == desirable_service_flags
                 self.add_outbound_connection(node, conn_type, services, wait_for_disconnect=False)
 
     def run_test(self):
         node = self.nodes[0]
         self.log.info("Check that lacking desired service flags leads to disconnect (non-pruned peers)")
-        self.test_desirable_service_flags(node, [NODE_NONE, NODE_NETWORK, NODE_WITNESS], expect_disconnect=True)
-        self.test_desirable_service_flags(node, [NODE_NETWORK | NODE_WITNESS], expect_disconnect=False)
+        self.test_desirable_service_flags(node, [NODE_NONE, NODE_NETWORK, NODE_WITNESS],
+                                          DESIRABLE_SERVICE_FLAGS_FULL, expect_disconnect=True)
+        self.test_desirable_service_flags(node, [NODE_NETWORK | NODE_WITNESS],
+                                          DESIRABLE_SERVICE_FLAGS_FULL, expect_disconnect=False)
+
+        self.log.info("Check that limited peers are only desired if the local chain is close to the tip (<24h)")
+        node.setmocktime(int(time.time()) + 25 * 3600)  # tip outside the 24h window, should fail
+        self.test_desirable_service_flags(node, [NODE_NETWORK_LIMITED | NODE_WITNESS],
+                                          DESIRABLE_SERVICE_FLAGS_FULL, expect_disconnect=True)
+        node.setmocktime(int(time.time()) + 23 * 3600)  # tip inside the 24h window, should succeed
+        self.test_desirable_service_flags(node, [NODE_NETWORK_LIMITED | NODE_WITNESS],
+                                          DESIRABLE_SERVICE_FLAGS_PRUNED, expect_disconnect=False)
 
         self.log.info("Check that feeler connections get disconnected immediately")
         with node.assert_debug_log([f"feeler connection completed"]):
