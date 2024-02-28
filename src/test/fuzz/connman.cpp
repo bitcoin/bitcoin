@@ -20,6 +20,12 @@
 
 namespace {
 const TestingSetup* g_setup;
+
+int32_t GetCheckRatio()
+{
+    return std::clamp<int32_t>(g_setup->m_node.args->GetIntArg("-checkaddrman", 0), 0, 1000000);
+}
+
 } // namespace
 
 void initialize_connman()
@@ -32,9 +38,21 @@ FUZZ_TARGET(connman, .init = initialize_connman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
+    auto netgroupman{*g_setup->m_node.netgroupman};
+    auto addr_man_ptr{std::make_unique<AddrManDeterministic>(netgroupman, fuzzed_data_provider, GetCheckRatio())};
+    if (fuzzed_data_provider.ConsumeBool()) {
+        const std::vector<uint8_t> serialized_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
+        DataStream ds{serialized_data};
+        try {
+            ds >> *addr_man_ptr;
+        } catch (const std::ios_base::failure&) {
+            addr_man_ptr = std::make_unique<AddrManDeterministic>(netgroupman, fuzzed_data_provider, GetCheckRatio());
+        }
+    }
+    AddrManDeterministic& addr_man{*addr_man_ptr};
     ConnmanTestMsg connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
                      fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
-                     *g_setup->m_node.addrman,
+                     addr_man,
                      *g_setup->m_node.netgroupman,
                      Params(),
                      fuzzed_data_provider.ConsumeBool()};
