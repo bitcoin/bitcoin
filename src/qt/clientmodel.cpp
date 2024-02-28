@@ -70,12 +70,17 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     subscribeToCoreSignals();
 }
 
-ClientModel::~ClientModel()
+void ClientModel::stop()
 {
     unsubscribeFromCoreSignals();
 
     m_thread->quit();
     m_thread->wait();
+}
+
+ClientModel::~ClientModel()
+{
+    stop();
 }
 
 int ClientModel::getNumConnections(unsigned int flags) const
