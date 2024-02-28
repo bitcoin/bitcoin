@@ -9,6 +9,7 @@ import shutil
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     assert_raises_rpc_error,
 )
@@ -150,7 +151,7 @@ class WalletHDTest(BitcoinTestFramework):
             orig_masterkeyid = self.nodes[1].getwalletinfo()['hdseedid']
             self.nodes[1].sethdseed()
             new_masterkeyid = self.nodes[1].getwalletinfo()['hdseedid']
-            assert orig_masterkeyid != new_masterkeyid
+            assert_not_equal(orig_masterkeyid, new_masterkeyid)
             addr = self.nodes[1].getnewaddress()
             # Make sure the new address is the first from the keypool
             assert_equal(self.nodes[1].getaddressinfo(addr)['hdkeypath'], 'm/0\'/0\'/0\'')
@@ -161,7 +162,7 @@ class WalletHDTest(BitcoinTestFramework):
             orig_masterkeyid = new_masterkeyid
             self.nodes[1].sethdseed(False, new_seed)
             new_masterkeyid = self.nodes[1].getwalletinfo()['hdseedid']
-            assert orig_masterkeyid != new_masterkeyid
+            assert_not_equal(orig_masterkeyid, new_masterkeyid)
             addr = self.nodes[1].getnewaddress()
             assert_equal(orig_masterkeyid, self.nodes[1].getaddressinfo(addr)['hdseedid'])
             # Make sure the new address continues previous keypool
@@ -173,7 +174,7 @@ class WalletHDTest(BitcoinTestFramework):
             assert_equal(new_masterkeyid, self.nodes[1].getaddressinfo(next_addr)['hdseedid'])
             # Make sure the new address is not from previous keypool
             assert_equal(self.nodes[1].getaddressinfo(next_addr)['hdkeypath'], 'm/0\'/0\'/0\'')
-            assert next_addr != addr
+            assert_not_equal(next_addr, addr)
 
             # Sethdseed parameter validity
             assert_raises_rpc_error(-1, 'sethdseed', self.nodes[0].sethdseed, False, new_seed, 0)
