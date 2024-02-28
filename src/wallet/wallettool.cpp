@@ -28,7 +28,7 @@ static void WalletCreate(CWallet* wallet_instance)
 
     // generate a new HD seed
     wallet_instance->SetupLegacyScriptPubKeyMan();
-    auto spk_man = wallet_instance->GetLegacyScriptPubKeyMan();
+    auto spk_man = wallet_instance->GetOrCreateLegacyScriptPubKeyMan();
     spk_man->GenerateNewHDChain(/*secureMnemonic=*/"", /*secureMnemonicPassphrase=*/"");
 
     tfm::format(std::cout, "Topping up keypool...\n");
