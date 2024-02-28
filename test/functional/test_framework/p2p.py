@@ -77,6 +77,7 @@ from test_framework.messages import (
     sha256,
 )
 from test_framework.util import (
+    assert_not_equal,
     MAX_NODES,
     p2p_port,
     wait_until_helper_internal,

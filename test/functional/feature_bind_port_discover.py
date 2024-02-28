@@ -7,7 +7,10 @@ Test that -discover does not add all interfaces' addresses if we listen on only 
 """
 
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_not_equal,
+)
 
 # We need to bind to a routable address for this test to exercise the relevant code
 # and also must have another routable address on another interface which must not

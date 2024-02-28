@@ -9,6 +9,7 @@ import itertools
 import time
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_not_equal
 from test_framework.messages import (
     NODE_NETWORK,
     NODE_NETWORK_LIMITED,

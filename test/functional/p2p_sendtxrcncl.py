@@ -19,7 +19,10 @@ from test_framework.p2p import (
     P2P_VERSION,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_not_equal,
+)
 
 class PeerNoVerack(P2PInterface):
     def __init__(self, wtxidrelay=True):
