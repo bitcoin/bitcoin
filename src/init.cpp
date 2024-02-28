@@ -314,8 +314,7 @@ void PrepareShutdown(NodeContext& node)
     node.mn_sync = nullptr;
     ::masternodeSync.reset();
     node.sporkman.reset();
-    node.govman = nullptr;
-    ::governance.reset();
+    node.govman.reset();
 
     // Stop and delete all indexes only after flushing background callbacks.
     if (g_txindex) {
@@ -1712,9 +1711,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.chainman = &g_chainman;
     ChainstateManager& chainman = *Assert(node.chainman);
 
-    assert(!::governance);
-    ::governance = std::make_unique<CGovernanceManager>();
-    node.govman = ::governance.get();
+    assert(!node.govman);
+    node.govman = std::make_unique<CGovernanceManager>();
 
     assert(!node.sporkman);
     node.sporkman = std::make_unique<CSporkManager>();

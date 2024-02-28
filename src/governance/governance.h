@@ -25,8 +25,6 @@ class CGovernanceObject;
 class CGovernanceVote;
 class CSporkManager;
 
-extern std::unique_ptr<CGovernanceManager> governance;
-
 static constexpr int RATE_BUFFER_SIZE = 5;
 
 class CDeterministicMNList;

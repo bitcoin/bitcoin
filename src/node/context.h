@@ -73,6 +73,7 @@ struct NodeContext {
     //! Dash
     std::unique_ptr<CEvoDB> evodb;
     std::unique_ptr<CChainstateHelper> chain_helper;
+    std::unique_ptr<CGovernanceManager> govman;
     std::unique_ptr<CJContext> cj_ctx;
     std::unique_ptr<CMNHFManager> mnhf_manager;
     std::unique_ptr<CSporkManager> sporkman;
@@ -80,7 +81,6 @@ struct NodeContext {
     CCreditPoolManager* cpoolman{nullptr};
     CDeterministicMNManager* dmnman{nullptr};
     CDSTXManager* dstxman{nullptr};
-    CGovernanceManager* govman{nullptr};
     CMasternodeMetaMan* mn_metaman{nullptr};
     CMasternodeSync* mn_sync{nullptr};
     CNetFulfilledRequestManager* netfulfilledman{nullptr};
