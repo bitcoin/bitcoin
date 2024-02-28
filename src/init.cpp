@@ -350,8 +350,7 @@ void PrepareShutdown(NodeContext& node)
         llmq::quorumSnapshotManager.reset();
         node.dmnman = nullptr;
         deterministicMNManager.reset();
-        node.cpoolman = nullptr;
-        creditPoolManager.reset();
+        node.cpoolman.reset();
         node.mnhf_manager.reset();
         node.evodb.reset();
     }
@@ -1966,9 +1965,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 deterministicMNManager.reset();
                 deterministicMNManager = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *node.connman, *node.evodb);
                 node.dmnman = deterministicMNManager.get();
-                creditPoolManager.reset();
-                creditPoolManager = std::make_unique<CCreditPoolManager>(*node.evodb);
-                node.cpoolman = creditPoolManager.get();
+                node.cpoolman.reset();
+                node.cpoolman = std::make_unique<CCreditPoolManager>(*node.evodb);
                 llmq::quorumSnapshotManager.reset();
                 llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*node.evodb));
 
@@ -1982,7 +1980,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 node.llmq_ctx->Start();
 
                 node.chain_helper.reset();
-                node.chain_helper = std::make_unique<CChainstateHelper>(*node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor),
+                node.chain_helper = std::make_unique<CChainstateHelper>(*node.cpoolman, *node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor),
                                                                         chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler));
 
                 if (fReset) {

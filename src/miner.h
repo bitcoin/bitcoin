@@ -19,6 +19,7 @@
 class CBlockIndex;
 class CChainParams;
 class CConnman;
+class CCreditPoolManager;
 class CEvoDB;
 class CChainstateHelper;
 class CMNHFManager;
@@ -158,6 +159,7 @@ private:
     const CChainParams& chainparams;
     const CTxMemPool& m_mempool;
     CChainState& m_chainstate;
+    CCreditPoolManager& m_cpoolman;
     CChainstateHelper& m_chain_helper;
     CMNHFManager& m_mnhfman;
     const llmq::CQuorumBlockProcessor& quorum_block_processor;
@@ -172,9 +174,9 @@ public:
         CFeeRate blockMinFeeRate;
     };
 
-    explicit BlockAssembler(CChainState& chainstate, CEvoDB& evoDb, CChainstateHelper& chain_helper, CMNHFManager& mnhfman,
+    explicit BlockAssembler(CChainState& chainstate, CCreditPoolManager& cpoolman, CEvoDB& evoDb, CChainstateHelper& chain_helper, CMNHFManager& mnhfman,
                             LLMQContext& llmq_ctx, const CTxMemPool& mempool, const CChainParams& params);
-    explicit BlockAssembler(CChainState& chainstate, CEvoDB& evoDb, CChainstateHelper& chain_helper, CMNHFManager& mnhfman,
+    explicit BlockAssembler(CChainState& chainstate, CCreditPoolManager& cpoolman, CEvoDB& evoDb, CChainstateHelper& chain_helper, CMNHFManager& mnhfman,
                             LLMQContext& llmq_ctx, const CTxMemPool& mempool, const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */

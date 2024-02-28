@@ -145,7 +145,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
 
         int64_t nTime1 = GetTimeMicros();
 
-        const CCreditPool creditPool = creditPoolManager->GetCreditPool(pindex->pprev, m_consensus_params);
+        const CCreditPool creditPool = m_cpoolman.GetCreditPool(pindex->pprev, m_consensus_params);
         if (DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_V20)) {
             LogPrint(BCLog::CREDITPOOL, "CSpecialTxProcessor::%s -- CCreditPool is %s\n", __func__, creditPool.ToString());
         }
@@ -275,7 +275,7 @@ bool CSpecialTxProcessor::CheckCreditPoolDiffForBlock(const CBlock& block, const
     try {
         if (!DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_V20)) return true;
 
-        auto creditPoolDiff = GetCreditPoolDiffForBlock(block, pindex->pprev, m_consensus_params, blockSubsidy, state);
+        auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, block, pindex->pprev, m_consensus_params, blockSubsidy, state);
         if (!creditPoolDiff.has_value()) return false;
 
         // If we get there we have v20 activated and credit pool amount must be included in block CbTx

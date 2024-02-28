@@ -15,6 +15,7 @@ class BlockValidationState;
 class CBlock;
 class CBlockIndex;
 class CCoinsViewCache;
+class CCreditPoolManager;
 class CDeterministicMNManager;
 class CMNHFManager;
 class TxValidationState;
@@ -34,6 +35,7 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const
 class CSpecialTxProcessor
 {
 private:
+    CCreditPoolManager& m_cpoolman;
     CDeterministicMNManager& m_dmnman;
     CMNHFManager& m_mnhfman;
     llmq::CQuorumBlockProcessor& m_qblockman;
@@ -45,9 +47,9 @@ private:
     [[nodiscard]] bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex);
 
 public:
-    explicit CSpecialTxProcessor(CDeterministicMNManager& dmnman, CMNHFManager& mnhfman, llmq::CQuorumBlockProcessor& qblockman,
+    explicit CSpecialTxProcessor(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman, CMNHFManager& mnhfman, llmq::CQuorumBlockProcessor& qblockman,
                                  const Consensus::Params& consensus_params, const llmq::CChainLocksHandler& clhandler) :
-        m_dmnman{dmnman}, m_mnhfman{mnhfman}, m_qblockman{qblockman}, m_consensus_params{consensus_params}, m_clhandler{clhandler} {}
+        m_cpoolman(cpoolman), m_dmnman{dmnman}, m_mnhfman{mnhfman}, m_qblockman{qblockman}, m_consensus_params{consensus_params}, m_clhandler{clhandler} {}
 
     bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, const CCoinsViewCache& view, bool fJustCheck,
                                   bool fCheckCbTxMerkleRoots, BlockValidationState& state, std::optional<MNListUpdates>& updatesRet)

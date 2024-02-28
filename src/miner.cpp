@@ -61,11 +61,12 @@ BlockAssembler::Options::Options() {
     nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
 }
 
-BlockAssembler::BlockAssembler(CChainState& chainstate, CEvoDB& evoDb, CChainstateHelper& chain_helper, CMNHFManager& mnhfman,
+BlockAssembler::BlockAssembler(CChainState& chainstate, CCreditPoolManager& cpoolman, CEvoDB& evoDb, CChainstateHelper& chain_helper, CMNHFManager& mnhfman,
                                LLMQContext& llmq_ctx, const CTxMemPool& mempool, const CChainParams& params, const Options& options) :
       chainparams(params),
       m_mempool(mempool),
       m_chainstate(chainstate),
+      m_cpoolman(cpoolman),
       m_chain_helper(chain_helper),
       m_mnhfman(mnhfman),
       quorum_block_processor(*llmq_ctx.quorum_block_processor),
@@ -94,9 +95,9 @@ static BlockAssembler::Options DefaultOptions()
     return options;
 }
 
-BlockAssembler::BlockAssembler(CChainState& chainstate, CEvoDB& evoDb, CChainstateHelper& chain_helper, CMNHFManager& mnhfman,
+BlockAssembler::BlockAssembler(CChainState& chainstate, CCreditPoolManager& cpoolman, CEvoDB& evoDb, CChainstateHelper& chain_helper, CMNHFManager& mnhfman,
                                LLMQContext& llmq_ctx, const CTxMemPool& mempool, const CChainParams& params)
-    : BlockAssembler(chainstate, evoDb, chain_helper, mnhfman, llmq_ctx, mempool, params, DefaultOptions()) {}
+    : BlockAssembler(chainstate, cpoolman, evoDb, chain_helper, mnhfman, llmq_ctx, mempool, params, DefaultOptions()) {}
 
 void BlockAssembler::resetBlock()
 {
@@ -234,7 +235,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                     LogPrintf("CreateNewBlock() h[%d] CbTx failed to find best CL. Inserting null CL\n", nHeight);
                 }
                 BlockValidationState state;
-                const auto creditPoolDiff = GetCreditPoolDiffForBlock(*pblock, pindexPrev, chainparams.GetConsensus(), blockSubsidy, state);
+                const auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, *pblock, pindexPrev, chainparams.GetConsensus(), blockSubsidy, state);
                 if (creditPoolDiff == std::nullopt) {
                     throw std::runtime_error(strprintf("%s: GetCreditPoolDiffForBlock failed: %s", __func__, state.ToString()));
                 }
@@ -408,7 +409,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     // duplicates of indexes. There's used `BlockSubsidy` equaled to 0
     std::optional<CCreditPoolDiff> creditPoolDiff;
     if (DeploymentActiveAfter(pindexPrev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_V20)) {
-        CCreditPool creditPool = creditPoolManager->GetCreditPool(pindexPrev, chainparams.GetConsensus());
+        CCreditPool creditPool = m_cpoolman.GetCreditPool(pindexPrev, chainparams.GetConsensus());
         creditPoolDiff.emplace(std::move(creditPool), pindexPrev, chainparams.GetConsensus(), 0);
     }
 

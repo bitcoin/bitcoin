@@ -134,9 +134,7 @@ private:
     CCreditPool ConstructCreditPool(const CBlockIndex* block_index, CCreditPool prev, const Consensus::Params& consensusParams);
 };
 
-std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams,
-                                                         const CAmount blockSubsidy, BlockValidationState& state);
-
-extern std::unique_ptr<CCreditPoolManager> creditPoolManager;
+std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(CCreditPoolManager& cpoolman, const CBlock& block, const CBlockIndex* pindexPrev,
+                                                         const Consensus::Params& consensusParams, const CAmount blockSubsidy, BlockValidationState& state);
 
 #endif

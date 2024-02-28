@@ -116,7 +116,7 @@ void DashTestSetup(NodeContext& node, const CChainParams& chainparams)
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
 #endif // ENABLE_WALLET
     node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.evodb, *node.mnhf_manager, *node.sporkman, *node.mempool, node.peerman, true, false);
-    node.chain_helper = std::make_unique<CChainstateHelper>(*node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor),
+    node.chain_helper = std::make_unique<CChainstateHelper>(*node.cpoolman, *node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor),
                                                             chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler));
 }
 
@@ -183,8 +183,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     m_node.mnhf_manager = std::make_unique<CMNHFManager>(*m_node.evodb);
     connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
     llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*m_node.evodb));
-    creditPoolManager = std::make_unique<CCreditPoolManager>(*m_node.evodb);
-    m_node.cpoolman = creditPoolManager.get();
+    m_node.cpoolman = std::make_unique<CCreditPoolManager>(*m_node.evodb);
     static bool noui_connected = false;
     if (!noui_connected) {
         noui_connect();
@@ -197,8 +196,7 @@ BasicTestingSetup::~BasicTestingSetup()
 {
     connman.reset();
     llmq::quorumSnapshotManager.reset();
-    m_node.cpoolman = nullptr;
-    creditPoolManager.reset();
+    m_node.cpoolman.reset();
     m_node.mnhf_manager.reset();
     m_node.evodb.reset();
 
@@ -392,7 +390,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
     const CChainParams& chainparams = Params();
     CTxMemPool empty_pool;
     CBlock block = BlockAssembler(
-            ::ChainstateActive(), *m_node.evodb, *m_node.chain_helper, *m_node.mnhf_manager, *m_node.llmq_ctx,
+            ::ChainstateActive(), *m_node.cpoolman, *m_node.evodb, *m_node.chain_helper, *m_node.mnhf_manager, *m_node.llmq_ctx,
             empty_pool, chainparams
         ).CreateNewBlock(scriptPubKey)->block;
 

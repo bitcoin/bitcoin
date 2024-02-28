@@ -52,7 +52,7 @@ BlockAssembler MinerTestingSetup::AssemblerForTest(const CChainParams& params)
 
     options.nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
     options.blockMinFeeRate = blockMinFeeRate;
-    return BlockAssembler(::ChainstateActive(), *m_node.evodb, *m_node.chain_helper, *m_node.mnhf_manager, *m_node.llmq_ctx, *m_node.mempool, params, options);
+    return BlockAssembler(::ChainstateActive(), *m_node.cpoolman, *m_node.evodb, *m_node.chain_helper, *m_node.mnhf_manager, *m_node.llmq_ctx, *m_node.mempool, params, options);
 }
 
 constexpr static struct {

@@ -26,8 +26,6 @@ CAmount PlatformShare(const CAmount masternodeReward);
 
 static const std::string DB_CREDITPOOL_SNAPSHOT = "cpm_S";
 
-std::unique_ptr<CCreditPoolManager> creditPoolManager;
-
 static bool GetDataFromUnlockTx(const CTransaction& tx, CAmount& toUnlock, uint64_t& index, TxValidationState& state)
 {
     const auto opt_assetUnlockTx = GetTxPayload<CAssetUnlockPayload>(tx);
@@ -294,11 +292,11 @@ bool CCreditPoolDiff::ProcessLockUnlockTransaction(const CTransaction& tx, TxVal
     }
 }
 
-std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams,
-                                                         const CAmount blockSubsidy, BlockValidationState& state)
+std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(CCreditPoolManager& cpoolman, const CBlock& block, const CBlockIndex* pindexPrev,
+                                                         const Consensus::Params& consensusParams, const CAmount blockSubsidy, BlockValidationState& state)
 {
     try {
-        const CCreditPool creditPool = creditPoolManager->GetCreditPool(pindexPrev, consensusParams);
+        const CCreditPool creditPool = cpoolman.GetCreditPool(pindexPrev, consensusParams);
         LogPrint(BCLog::CREDITPOOL, "%s: CCreditPool is %s\n", __func__, creditPool.ToString());
         CCreditPoolDiff creditPoolDiff(creditPool, pindexPrev, consensusParams, blockSubsidy);
         for (size_t i = 1; i < block.vtx.size(); ++i) {

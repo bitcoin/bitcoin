@@ -7,6 +7,7 @@
 
 #include <memory>
 
+class CCreditPoolManager;
 class CDeterministicMNManager;
 class CMNHFManager;
 class CMNPaymentsProcessor;
@@ -24,7 +25,7 @@ class CQuorumBlockProcessor;
 class CChainstateHelper
 {
 public:
-    explicit CChainstateHelper(CDeterministicMNManager& dmnman, CMNHFManager& mnhfman, CGovernanceManager& govman,
+    explicit CChainstateHelper(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman, CMNHFManager& mnhfman, CGovernanceManager& govman,
                                llmq::CQuorumBlockProcessor& qblockman, const Consensus::Params& consensus_params,
                                const CMasternodeSync& mn_sync, const CSporkManager& sporkman, const llmq::CChainLocksHandler& clhandler);
     ~CChainstateHelper();
