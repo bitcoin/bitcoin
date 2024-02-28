@@ -25,7 +25,7 @@ static const std::string DB_SKCONTRIB = "qdkg_S";
 static const std::string DB_ENC_CONTRIB = "qdkg_E";
 
 CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGDebugManager& _dkgDebugManager,
-                                       CQuorumBlockProcessor& _quorumBlockProcessor, const CSporkManager& sporkManager,
+                                       CQuorumBlockProcessor& _quorumBlockProcessor, const CSporkManager& sporkman,
                                        bool unitTests, bool fWipe) :
     db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/dkgdb"), 1 << 20, unitTests, fWipe)),
     blsWorker(_blsWorker),
@@ -33,7 +33,7 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chai
     connman(_connman),
     dkgDebugManager(_dkgDebugManager),
     quorumBlockProcessor(_quorumBlockProcessor),
-    spork_manager(sporkManager)
+    spork_manager(sporkman)
 {
     if (!fMasternodeMode && !IsWatchQuorumsEnabled()) {
         // Regular nodes do not care about any DKG internals, bail out
@@ -520,9 +520,9 @@ void CDKGSessionManager::CleanupOldContributions() const
     }
 }
 
-bool IsQuorumDKGEnabled(const CSporkManager& sporkManager)
+bool IsQuorumDKGEnabled(const CSporkManager& sporkman)
 {
-    return sporkManager.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED);
+    return sporkman.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED);
 }
 
 } // namespace llmq

@@ -64,7 +64,7 @@ private:
 
 public:
     CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGDebugManager& _dkgDebugManager,
-                       CQuorumBlockProcessor& _quorumBlockProcessor, const CSporkManager& sporkManager,
+                       CQuorumBlockProcessor& _quorumBlockProcessor, const CSporkManager& sporkman,
                        bool unitTests, bool fWipe);
     ~CDKGSessionManager() = default;
 
@@ -96,7 +96,7 @@ private:
     void CleanupCache() const;
 };
 
-bool IsQuorumDKGEnabled(const CSporkManager& sporkManager);
+bool IsQuorumDKGEnabled(const CSporkManager& sporkman);
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_DKGSESSIONMGR_H
