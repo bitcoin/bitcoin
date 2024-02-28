@@ -2607,8 +2607,10 @@ util::Result<CTxDestination> ReserveDestination::GetReservedDestination(bool int
 
     if (nIndex == -1) {
         CKeyPool keypool;
-        auto op_address = m_spk_man->GetReservedDestination(type, internal, nIndex, keypool);
+        int64_t index;
+        auto op_address = m_spk_man->GetReservedDestination(type, internal, index, keypool);
         if (!op_address) return op_address;
+        nIndex = index;
         address = *op_address;
         fInternal = keypool.fInternal;
     }
