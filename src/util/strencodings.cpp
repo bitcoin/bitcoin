@@ -23,15 +23,15 @@ static const std::string SAFE_CHARS[] =
     CHARS_ALPHA_NUM + "!*'();:@&=+$,/?#[]-_.~%", // SAFE_CHARS_URI
 };
 
-std::string SanitizeString(const std::string& str, int rule)
+std::string SanitizeString(std::string_view str, int rule)
 {
-    std::string strResult;
-    for (std::string::size_type i = 0; i < str.size(); i++)
-    {
-        if (SAFE_CHARS[rule].find(str[i]) != std::string::npos)
-            strResult.push_back(str[i]);
+    std::string result;
+    for (char c : str) {
+        if (SAFE_CHARS[rule].find(c) != std::string::npos) {
+            result.push_back(c);
+        }
     }
-    return strResult;
+    return result;
 }
 
 const signed char p_util_hexdigit[256] =
@@ -57,54 +57,43 @@ signed char HexDigit(char c)
     return p_util_hexdigit[(unsigned char)c];
 }
 
-bool IsHex(const std::string& str)
+bool IsHex(std::string_view str)
 {
-    for(std::string::const_iterator it(str.begin()); it != str.end(); ++it)
-    {
-        if (HexDigit(*it) < 0)
-            return false;
+    for (char c : str) {
+        if (HexDigit(c) < 0) return false;
     }
     return (str.size() > 0) && (str.size()%2 == 0);
 }
 
-bool IsHexNumber(const std::string& str)
+bool IsHexNumber(std::string_view str)
 {
-    size_t starting_location = 0;
-    if (str.size() > 2 && *str.begin() == '0' && *(str.begin()+1) == 'x') {
-        starting_location = 2;
-    }
-    for (const char c : str.substr(starting_location)) {
+    if (str.substr(0, 2) == "0x") str.remove_prefix(2);
+    for (char c : str) {
         if (HexDigit(c) < 0) return false;
     }
     // Return false for empty string or "0x".
-    return (str.size() > starting_location);
+    return str.size() > 0;
 }
 
-std::vector<unsigned char> ParseHex(const char* psz)
+template <typename Byte>
+std::vector<Byte> ParseHex(std::string_view str)
 {
-    // convert hex dump to vector
-    std::vector<unsigned char> vch;
-    while (true)
-    {
-        while (IsSpace(*psz))
-            psz++;
-        signed char c = HexDigit(*psz++);
-        if (c == (signed char)-1)
-            break;
-        auto n{uint8_t(c << 4)};
-        c = HexDigit(*psz++);
-        if (c == (signed char)-1)
-            break;
-        n |= c;
-        vch.push_back(n);
+    std::vector<Byte> vch;
+    auto it = str.begin();
+    while (it != str.end() && it + 1 != str.end()) {
+        if (IsSpace(*it)) {
+            ++it;
+            continue;
+        }
+        auto c1 = HexDigit(*(it++));
+        auto c2 = HexDigit(*(it++));
+        if (c1 < 0 || c2 < 0) break;
+        vch.push_back(Byte(c1 << 4) | Byte(c2));
     }
     return vch;
 }
-
-std::vector<unsigned char> ParseHex(const std::string& str)
-{
-    return ParseHex(str.c_str());
-}
+template std::vector<std::byte> ParseHex(std::string_view);
+template std::vector<uint8_t> ParseHex(std::string_view);
 
 void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut)
 {
@@ -179,7 +168,7 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
         ++p;
     }
     valid = valid && (p - e) % 4 == 0 && p - q < 4;
-    if (pf_invalid) *pf_invalid = !valid;
+    *pf_invalid = !valid;
 
     return ret;
 }
@@ -187,9 +176,7 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
 std::string DecodeBase64(const std::string& str, bool* pf_invalid)
 {
     if (!ValidAsCString(str)) {
-        if (pf_invalid) {
-            *pf_invalid = true;
-        }
+        *pf_invalid = true;
         return {};
     }
     std::vector<unsigned char> vchRet = DecodeBase64(str.c_str(), pf_invalid);
@@ -257,7 +244,7 @@ std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
         ++p;
     }
     valid = valid && (p - e) % 8 == 0 && p - q < 8;
-    if (pf_invalid) *pf_invalid = !valid;
+    *pf_invalid = !valid;
 
     return ret;
 }
@@ -265,9 +252,7 @@ std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
 std::string DecodeBase32(const std::string& str, bool* pf_invalid)
 {
     if (!ValidAsCString(str)) {
-        if (pf_invalid) {
-            *pf_invalid = true;
-        }
+        *pf_invalid = true;
         return {};
     }
     std::vector<unsigned char> vchRet = DecodeBase32(str.c_str(), pf_invalid);

@@ -27,8 +27,8 @@ struct TestBlockAndIndex {
     TestBlockAndIndex()
     {
         CDataStream stream(benchmark::data::block813851, SER_NETWORK, PROTOCOL_VERSION);
-        char a = '\0';
-        stream.write(&a, 1); // Prevent compaction
+        std::byte a{0};
+        stream.write({&a, 1}); // Prevent compaction
 
         stream >> block;
 

@@ -7,6 +7,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using namespace std::string_literals;
+
 BOOST_FIXTURE_TEST_SUITE(streams_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(streams_vector_writer)
@@ -71,7 +73,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
 {
     std::vector<unsigned char> vch = {1, 255, 3, 4, 5, 6};
 
-    VectorReader reader(SER_NETWORK, INIT_PROTO_VERSION, vch, 0);
+    SpanReader reader{SER_NETWORK, INIT_PROTO_VERSION, vch, 0};
     BOOST_CHECK_EQUAL(reader.size(), 6U);
     BOOST_CHECK(!reader.empty());
 
@@ -101,7 +103,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
     BOOST_CHECK_THROW(reader >> d, std::ios_base::failure);
 
     // Read a 4 bytes as a signed int from the beginning of the buffer.
-    VectorReader new_reader(SER_NETWORK, INIT_PROTO_VERSION, vch, 0);
+    SpanReader new_reader{SER_NETWORK, INIT_PROTO_VERSION, vch, 0};
     new_reader >> d;
     BOOST_CHECK_EQUAL(d, 67370753); // 1,255,3,4 in little-endian base-256
     BOOST_CHECK_EQUAL(new_reader.size(), 2U);
@@ -115,7 +117,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
 BOOST_AUTO_TEST_CASE(streams_vector_reader_rvalue)
 {
     std::vector<uint8_t> data{0x82, 0xa7, 0x31};
-    VectorReader reader(SER_NETWORK, INIT_PROTO_VERSION, data, /* pos= */ 0);
+    SpanReader reader{SER_NETWORK, INIT_PROTO_VERSION, data, /* pos= */ 0};
     uint32_t varint = 0;
     // Deserialize into r-value
     reader >> VARINT(varint);
@@ -160,57 +162,36 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
 
 BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 {
-    std::vector<uint8_t> in;
-    std::vector<char> expected_xor;
-    std::vector<unsigned char> key;
-    CDataStream ds(in, 0, 0);
+    std::vector<std::byte> in;
 
     // Degenerate case
+    {
+        CDataStream ds{in, 0, 0};
+        ds.Xor({0x00, 0x00});
+        BOOST_CHECK_EQUAL(""s, ds.str());
+    }
 
-    key.push_back('\x00');
-    key.push_back('\x00');
-    ds.Xor(key);
-    BOOST_CHECK_EQUAL(
-            std::string(expected_xor.begin(), expected_xor.end()),
-            ds.str());
-
-    in.push_back('\x0f');
-    in.push_back('\xf0');
-    expected_xor.push_back('\xf0');
-    expected_xor.push_back('\x0f');
+    in.push_back(std::byte{0x0f});
+    in.push_back(std::byte{0xf0});
 
     // Single character key
-
-    ds.clear();
-    ds.insert(ds.begin(), in.begin(), in.end());
-    key.clear();
-
-    key.push_back('\xff');
-    ds.Xor(key);
-    BOOST_CHECK_EQUAL(
-            std::string(expected_xor.begin(), expected_xor.end()),
-            ds.str());
+    {
+        CDataStream ds{in, 0, 0};
+        ds.Xor({0xff});
+        BOOST_CHECK_EQUAL("\xf0\x0f"s, ds.str());
+    }
 
     // Multi character key
 
     in.clear();
-    expected_xor.clear();
-    in.push_back('\xf0');
-    in.push_back('\x0f');
-    expected_xor.push_back('\x0f');
-    expected_xor.push_back('\x00');
+    in.push_back(std::byte{0xf0});
+    in.push_back(std::byte{0x0f});
 
-    ds.clear();
-    ds.insert(ds.begin(), in.begin(), in.end());
-
-    key.clear();
-    key.push_back('\xff');
-    key.push_back('\x0f');
-
-    ds.Xor(key);
-    BOOST_CHECK_EQUAL(
-            std::string(expected_xor.begin(), expected_xor.end()),
-            ds.str());
+    {
+        CDataStream ds{in, 0, 0};
+        ds.Xor({0xff, 0x0f});
+        BOOST_CHECK_EQUAL("\x0f\x00"s, ds.str());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(streams_buffered_file)
@@ -418,7 +399,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 size_t find = currentPos + InsecureRandRange(8);
                 if (find >= fileSize)
                     find = fileSize - 1;
-                bf.FindByte(static_cast<char>(find));
+                bf.FindByte(uint8_t(find));
                 // The value at each offset is the offset.
                 BOOST_CHECK_EQUAL(bf.GetPos(), find);
                 currentPos = find;

@@ -109,7 +109,7 @@ public:
                 ds.clear();
 
                 ds << _objects[i];
-                blobs[i].assign(ds.begin(), ds.end());
+                blobs[i].assign(UCharCast(ds.data()), UCharCast(ds.data() + ds.size()));
             }
         } catch (const std::exception&) {
             return false;
@@ -122,7 +122,7 @@ public:
     {
         CDataStream ds(SER_NETWORK, nVersion);
         ds << obj;
-        Blob blob(ds.begin(), ds.end());
+        Blob blob(UCharCast(ds.data()), UCharCast(ds.data() + ds.size()));
         return CBLSIESMultiRecipientBlobs::Encrypt(idx, recipient, blob);
     }
 

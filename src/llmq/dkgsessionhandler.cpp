@@ -62,7 +62,7 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, PeerManager* peerman, 
     auto pm = std::make_shared<CDataStream>(std::move(vRecv));
 
     CHashWriter hw(SER_GETHASH, 0);
-    hw.write(reinterpret_cast<const char*>(pm->data()), pm->size());
+    hw.write(AsWritableBytes(Span{*pm}));
     uint256 hash = hw.GetHash();
 
     if (from != -1) {

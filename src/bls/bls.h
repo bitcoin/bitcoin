@@ -167,7 +167,7 @@ public:
     template <typename Stream>
     inline void Serialize(Stream& s, const bool specificLegacyScheme) const
     {
-        s.write(reinterpret_cast<const char*>(ToByteVector(specificLegacyScheme).data()), SerSize);
+        s.write(AsBytes(Span{ToByteVector(specificLegacyScheme).data(), SerSize}));
     }
 
     template <typename Stream>
@@ -180,7 +180,7 @@ public:
     inline void Unserialize(Stream& s, const bool specificLegacyScheme)
     {
         std::array<uint8_t, SerSize> vecBytes{};
-        s.read(reinterpret_cast<char*>(vecBytes.data()), SerSize);
+        s.read(AsWritableBytes(Span{vecBytes.data(), SerSize}));
         SetByteVector(vecBytes, specificLegacyScheme);
 
         if (!CheckMalleable(vecBytes, specificLegacyScheme)) {
@@ -456,7 +456,7 @@ public:
             bufLegacyScheme = specificLegacyScheme;
             hash.SetNull();
         }
-        s.write(reinterpret_cast<const char*>(vecBytes.data()), vecBytes.size());
+        s.write(MakeByteSpan(vecBytes));
     }
 
     template<typename Stream>
@@ -469,7 +469,7 @@ public:
     inline void Unserialize(Stream& s, const bool specificLegacyScheme) const
     {
         std::unique_lock<std::mutex> l(mutex);
-        s.read(reinterpret_cast<char*>(vecBytes.data()), BLSObject::SerSize);
+        s.read(AsWritableBytes(Span{vecBytes.data(), BLSObject::SerSize}));
         bufValid = true;
         bufLegacyScheme = specificLegacyScheme;
         objInitialized = false;
@@ -543,7 +543,7 @@ public:
         }
         if (hash.IsNull()) {
             CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-            ss.write(reinterpret_cast<const char*>(vecBytes.data()), vecBytes.size());
+            ss.write(MakeByteSpan(vecBytes));
             hash = ss.GetHash();
         }
         return hash;

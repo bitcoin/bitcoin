@@ -13,9 +13,9 @@
 #include <validation.h>
 #include <util/check.h>
 
-static constexpr char DB_BLOCK_HASH = 's';
-static constexpr char DB_BLOCK_HEIGHT = 't';
-static constexpr char DB_MUHASH = 'M';
+static constexpr uint8_t DB_BLOCK_HASH{'s'};
+static constexpr uint8_t DB_BLOCK_HEIGHT{'t'};
+static constexpr uint8_t DB_MUHASH{'M'};
 
 namespace {
 
@@ -67,7 +67,7 @@ struct DBHeightKey {
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        char prefix{static_cast<char>(ser_readdata8(s))};
+        const uint8_t prefix{ser_readdata8(s)};
         if (prefix != DB_BLOCK_HEIGHT) {
             throw std::ios_base::failure("Invalid format for coinstatsindex DB height key");
         }
@@ -82,7 +82,7 @@ struct DBHashKey {
 
     SERIALIZE_METHODS(DBHashKey, obj)
     {
-        char prefix{DB_BLOCK_HASH};
+        uint8_t prefix{DB_BLOCK_HASH};
         READWRITE(prefix);
         if (prefix != DB_BLOCK_HASH) {
             throw std::ios_base::failure("Invalid format for coinstatsindex DB hash key");

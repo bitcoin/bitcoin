@@ -169,7 +169,7 @@ public:
 
     CDataStream GetKey() {
         leveldb::Slice slKey = piter->key();
-        return CDataStream(MakeUCharSpan(slKey), SER_DISK, CLIENT_VERSION);
+        return CDataStream{MakeByteSpan(slKey), SER_DISK, CLIENT_VERSION};
     }
 
     unsigned int GetKeySize() {
@@ -179,7 +179,7 @@ public:
     template<typename V> bool GetValue(V& value) {
         leveldb::Slice slValue = piter->value();
         try {
-            CDataStream ssValue(MakeUCharSpan(slValue), SER_DISK, CLIENT_VERSION);
+            CDataStream ssValue{MakeByteSpan(slValue), SER_DISK, CLIENT_VERSION};
             ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
             ssValue >> value;
         } catch (const std::exception&) {
@@ -269,7 +269,7 @@ public:
             LogPrintf("LevelDB read failure: %s\n", status.ToString());
             dbwrapper_private::HandleError(status);
         }
-        CDataStream ssValueTmp(MakeUCharSpan(strValue), SER_DISK, CLIENT_VERSION);
+        CDataStream ssValueTmp{MakeByteSpan(strValue), SER_DISK, CLIENT_VERSION};
         ssValueTmp.Xor(obfuscate_key);
         ssValue = std::move(ssValueTmp);
         return true;

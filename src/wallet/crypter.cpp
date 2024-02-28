@@ -78,7 +78,7 @@ bool CCrypter::Encrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned
     vchCiphertext.resize(vchPlaintext.size() + AES_BLOCKSIZE);
 
     AES256CBCEncrypt enc(vchKey.data(), vchIV.data(), true);
-    size_t nLen = enc.Encrypt(&vchPlaintext[0], vchPlaintext.size(), vchCiphertext.data());
+    size_t nLen = enc.Encrypt(vchPlaintext.data(), vchPlaintext.size(), vchCiphertext.data());
     if(nLen < vchPlaintext.size())
         return false;
     vchCiphertext.resize(nLen);
@@ -97,7 +97,7 @@ bool CCrypter::Decrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingM
     vchPlaintext.resize(nLen);
 
     AES256CBCDecrypt dec(vchKey.data(), vchIV.data(), true);
-    nLen = dec.Decrypt(vchCiphertext.data(), vchCiphertext.size(), &vchPlaintext[0]);
+    nLen = dec.Decrypt(vchCiphertext.data(), vchCiphertext.size(), vchPlaintext.data());
     if(nLen == 0)
         return false;
     vchPlaintext.resize(nLen);
@@ -127,8 +127,8 @@ bool EncryptAES256(const SecureString& sKey, const SecureString& sPlaintext, con
     // n + AES_BLOCKSIZE bytes
     sCiphertext.resize(sPlaintext.size() + AES_BLOCKSIZE);
 
-    AES256CBCEncrypt enc((const unsigned char*) &sKey[0], (const unsigned char*) &sIV[0], true);
-    size_t nLen = enc.Encrypt((const unsigned char*) &sPlaintext[0], sPlaintext.size(), (unsigned char*) &sCiphertext[0]);
+    AES256CBCEncrypt enc((const unsigned char*)sKey.data(), (const unsigned char*)sIV.data(), true);
+    size_t nLen = enc.Encrypt((const unsigned char*)sPlaintext.data(), sPlaintext.size(), (unsigned char*)&sCiphertext[0]);
     if(nLen < sPlaintext.size())
         return false;
     sCiphertext.resize(nLen);
@@ -143,7 +143,7 @@ bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned
     memcpy(chIV.data(), &nIV, WALLET_CRYPTO_IV_SIZE);
     if(!cKeyCrypter.SetKey(vMasterKey, chIV))
         return false;
-    return cKeyCrypter.Decrypt(vchCiphertext, *((CKeyingMaterial*)&vchPlaintext));
+    return cKeyCrypter.Decrypt(vchCiphertext, vchPlaintext);
 }
 
 // General secure AES 256 CBC decryption routine
@@ -160,8 +160,8 @@ bool DecryptAES256(const SecureString& sKey, const std::string& sCiphertext, con
 
     sPlaintext.resize(nLen);
 
-    AES256CBCDecrypt dec((const unsigned char*) &sKey[0], (const unsigned char*) &sIV[0], true);
-    nLen = dec.Decrypt((const unsigned char*) &sCiphertext[0], sCiphertext.size(), (unsigned char*) &sPlaintext[0]);
+    AES256CBCDecrypt dec((const unsigned char*)sKey.data(), (const unsigned char*)sIV.data(), true);
+    nLen = dec.Decrypt((const unsigned char*)sCiphertext.data(), sCiphertext.size(), (unsigned char*)&sPlaintext[0]);
     if(nLen == 0)
         return false;
     sPlaintext.resize(nLen);

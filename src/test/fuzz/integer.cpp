@@ -117,10 +117,6 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
         assert(dynamic_usage == incremental_dynamic_usage * i64s.size());
     }
     (void)MillisToTimeval(i64);
-    const double d = ser_uint64_to_double(u64);
-    assert(ser_double_to_uint64(d) == u64);
-    const float f = ser_uint32_to_float(u32);
-    assert(ser_float_to_uint32(f) == u32);
     (void)SighashToStr(uch);
     (void)SipHashUint256(u64, u64, u256);
     (void)SipHashUint256Extra(u64, u64, u256, u32);
@@ -218,11 +214,6 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
         stream << i8;
         stream >> deserialized_i8;
         assert(i8 == deserialized_i8 && stream.empty());
-
-        char deserialized_ch;
-        stream << ch;
-        stream >> deserialized_ch;
-        assert(ch == deserialized_ch && stream.empty());
 
         bool deserialized_b;
         stream << b;

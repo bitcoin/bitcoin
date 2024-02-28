@@ -229,7 +229,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
 
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
     ds << payload;
-    tx.vExtraPayload.assign(ds.begin(), ds.end());
+    tx.vExtraPayload.assign(UCharCast(ds.data()), UCharCast(ds.data() + ds.size()));
 
     static const CTxOut dummyTxOut(0, CScript() << OP_RETURN);
     std::vector<CRecipient> vecSend;
@@ -855,7 +855,11 @@ static UniValue protx_register_submit(const JSONRPCRequest& request, const Chain
         throw JSONRPCError(RPC_INVALID_PARAMETER, "payload signature not empty");
     }
 
-    ptx.vchSig = DecodeBase64(request.params[1].get_str().c_str());
+    bool decode_fail{false};
+    ptx.vchSig = DecodeBase64(request.params[1].get_str().c_str(), &decode_fail);
+    if (decode_fail) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "malformed base64 encoding");
+    }
 
     SetTxPayload(tx, ptx);
     return SignAndSendSpecialTx(request, chainman, tx);

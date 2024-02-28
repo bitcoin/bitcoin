@@ -35,24 +35,25 @@ enum SafeChars
 * @param[in] rule   The set of safe chars to choose (default: least restrictive)
 * @return           A new string without unsafe chars
 */
-std::string SanitizeString(const std::string& str, int rule = SAFE_CHARS_DEFAULT);
-std::vector<unsigned char> ParseHex(const char* psz);
-std::vector<unsigned char> ParseHex(const std::string& str);
+std::string SanitizeString(std::string_view str, int rule = SAFE_CHARS_DEFAULT);
+/** Parse the hex string into bytes (uint8_t or std::byte). Ignores whitespace. */
+template <typename Byte = uint8_t>
+std::vector<Byte> ParseHex(std::string_view str);
 signed char HexDigit(char c);
 /* Returns true if each character in str is a hex character, and has an even
  * number of hex digits.*/
-bool IsHex(const std::string& str);
+bool IsHex(std::string_view str);
 /**
 * Return true if the string is a hex number, optionally prefixed with "0x"
 */
-bool IsHexNumber(const std::string& str);
-std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid = nullptr);
-std::string DecodeBase64(const std::string& str, bool* pf_invalid = nullptr);
+bool IsHexNumber(std::string_view str);
+std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid);
+std::string DecodeBase64(const std::string& str, bool* pf_invalid);
 std::string EncodeBase64(Span<const unsigned char> input);
 inline std::string EncodeBase64(Span<const std::byte> input) { return EncodeBase64(MakeUCharSpan(input)); }
 inline std::string EncodeBase64(const std::string& str) { return EncodeBase64(MakeUCharSpan(str)); }
-std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid = nullptr);
-std::string DecodeBase32(const std::string& str, bool* pf_invalid = nullptr);
+std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid);
+std::string DecodeBase32(const std::string& str, bool* pf_invalid);
 
 /**
  * Base32 encode.
