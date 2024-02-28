@@ -839,6 +839,7 @@ void InitParameterInteraction(ArgsManager& args)
 {
     if (args.GetBoolArg("-corepolicy", DEFAULT_COREPOLICY)) {
         args.SoftSetArg("-bytespersigopstrict", "0");
+        args.SoftSetArg("-permitbarepubkey", "1");
         args.SoftSetArg("-permitbaremultisig", "1");
         args.SoftSetArg("-datacarriercost", "0.25");
         args.SoftSetArg("-datacarrierfullcount", "0");
