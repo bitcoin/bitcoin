@@ -58,18 +58,21 @@ class GeneratorsFactory
 {
     using Point = typename T::Point;
     using Points = Elements<Point>;
+    using Seed = typename GeneratorDeriver<T>::Seed;
 
 public:
     GeneratorsFactory();
 
-    Generators<T> GetInstance(const TokenId& token_id);
+    // derives G from the seed. other generators
+    // are shared amongst all instances
+    Generators<T> GetInstance(const Seed& seed) const;
 
 private:
     inline const static GeneratorDeriver m_deriver =
         GeneratorDeriver<typename T::Point>("bulletproofs");
 
     // G generators are cached
-    inline static std::map<const TokenId, const Point> m_G_cache;
+    inline static std::map<const Seed, const Point> m_G_cache;
 
     inline static Point m_H;
     inline static Points m_Gi;

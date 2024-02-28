@@ -6,6 +6,7 @@
 #include <blsct/range_proof/bulletproofs_plus/range_proof.h>
 #include <tinyformat.h>
 #include <stdexcept>
+#include <variant>
 
 namespace range_proof {
 
@@ -197,4 +198,6 @@ template void Common<Mcl>::ValidateProofsBySizes(
     const std::vector<bulletproofs_plus::RangeProof<Mcl>>&
 );
 
+
 }
+

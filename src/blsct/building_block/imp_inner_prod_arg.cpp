@@ -3,7 +3,6 @@
 #include <blsct/building_block/imp_inner_prod_arg.h>
 #include <blsct/building_block/lazy_points.h>
 #include <blsct/common.h>
-#include <blsct/range_proof/bulletproofs/range_proof.h>
 #include <blsct/range_proof/setup.h>
 
 template <typename T>

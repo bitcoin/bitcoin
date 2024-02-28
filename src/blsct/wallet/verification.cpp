@@ -4,6 +4,11 @@
 
 #include <blsct/wallet/verification.h>
 #include <util/strencodings.h>
+#include <blsct/arith/mcl/mcl.h>
+#include <blsct/public_keys.h>
+#include <blsct/range_proof/bulletproofs/range_proof.h>
+#include <blsct/range_proof/bulletproofs/range_proof_logic.h>
+#include <blsct/range_proof/generators.h>
 
 namespace blsct {
 bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount& blockReward)

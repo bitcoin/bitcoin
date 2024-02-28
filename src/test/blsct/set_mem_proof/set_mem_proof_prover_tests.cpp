@@ -94,9 +94,14 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_good_inputs_of_power_of_2)
     Ys.Add(sigma);
     Ys.Add(y4);
 
-    Scalar eta = Scalar::Rand();
-    auto proof = Prover::Prove(setup, Ys, sigma, m, f, eta);
-    auto res = Prover::Verify(setup, Ys, eta, proof);
+    Scalar eta_fiat_shamir = Scalar::Rand();
+    blsct::Message eta_phi { 1, 2, 3 };
+    auto proof = Prover::Prove(
+        setup, Ys, sigma, m, f, eta_fiat_shamir, eta_phi
+    );
+    auto res = Prover::Verify(
+        setup, Ys, eta_fiat_shamir, eta_phi, proof
+    );
 
     BOOST_CHECK_EQUAL(res, true);
 }
@@ -117,9 +122,14 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_good_inputs_of_non_power_of_2)
     Ys.Add(y2);
     Ys.Add(sigma);
 
-    Scalar eta = Scalar::Rand();
-    auto proof = Prover::Prove(setup, Ys, sigma, m, f, eta);
-    auto res = Prover::Verify(setup, Ys, eta, proof);
+    Scalar eta_fiat_shamir = Scalar::Rand();
+    blsct::Message eta_phi { 1, 2, 3 };
+    auto proof = Prover::Prove(
+        setup, Ys, sigma, m, f, eta_fiat_shamir, eta_phi
+    );
+    auto res = Prover::Verify(
+        setup, Ys, eta_fiat_shamir, eta_phi, proof
+    );
 
     BOOST_CHECK_EQUAL(res, true);
 }
@@ -149,9 +159,14 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_not_included)
     verify_Ys.Add(y3);
     verify_Ys.Add(y4);
 
-    Scalar eta = Scalar::Rand();
-    auto proof = Prover::Prove(setup, prove_Ys, sigma, m, f, eta);
-    auto res = Prover::Verify(setup, verify_Ys, eta, proof);
+    Scalar eta_fiat_shamir = Scalar::Rand();
+    blsct::Message eta_phi { 1, 2, 3 };
+    auto proof = Prover::Prove(
+        setup, prove_Ys, sigma, m, f, eta_fiat_shamir, eta_phi
+    );
+    auto res = Prover::Verify(
+        setup, verify_Ys, eta_fiat_shamir, eta_phi, proof
+    );
 
     BOOST_CHECK_EQUAL(res, false);
 }
@@ -181,15 +196,20 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_generated_from_other_inp
     ys.Add(C);
     ys.Add(E);
 
-    Scalar eta = Scalar::Rand();
+    Scalar eta_fiat_shamir = Scalar::Rand();
+    blsct::Message eta_phi { 1, 2, 3 };
 
     // A proof over the membership of D=A+B=g*(f_a+f_b)+h*(m_a+m_b) should be deemed as invalid
     auto m_d = m_a + m_b;
     auto f_d = f_a + f_b;
     auto D = setup.pedersen.Commit(m_d, f_d);
 
-    auto proof = Prover::Prove(setup, ys, D, m_d, f_d, eta);
-    auto res = Prover::Verify(setup, ys, eta, proof);
+    auto proof = Prover::Prove(
+        setup, ys, D, m_d, f_d, eta_fiat_shamir, eta_phi
+    );
+    auto res = Prover::Verify(
+        setup, ys, eta_fiat_shamir, eta_phi, proof
+    );
 
     BOOST_CHECK_EQUAL(res, false);
 }
@@ -218,9 +238,15 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_in_different_pos)
     verify_Ys.Add(y3);
     verify_Ys.Add(sigma);
 
-    Scalar eta = Scalar::Rand();
-    auto proof = Prover::Prove(setup, prove_Ys, sigma, m, f, eta);
-    auto res = Prover::Verify(setup, verify_Ys, eta, proof);
+    Scalar eta_fiat_shamir = Scalar::Rand();
+    blsct::Message eta_phi { 1, 2, 3 };
+
+    auto proof = Prover::Prove(
+        setup, prove_Ys, sigma, m, f, eta_fiat_shamir, eta_phi
+    );
+    auto res = Prover::Verify(
+        setup, verify_Ys, eta_fiat_shamir, eta_phi, proof
+    );
 
     BOOST_CHECK_EQUAL(res, false);
 }
@@ -243,10 +269,16 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_different_eta)
     ys.Add(sigma);
     ys.Add(y4);
 
-    Scalar eta_123(123);
-    Scalar eta_456(456);
-    auto proof = Prover::Prove(setup, ys, sigma, m, f, eta_123);
-    auto res = Prover::Verify(setup, ys, eta_456, proof);
+    Scalar eta_fiat_shamir_123(123);
+    Scalar eta_fiat_shamir_456(456);
+    blsct::Message eta_phi { 1, 2, 3 };
+
+    auto proof = Prover::Prove(
+        setup, ys, sigma, m, f, eta_fiat_shamir_123, eta_phi
+    );
+    auto res = Prover::Verify(
+        setup, ys, eta_fiat_shamir_456, eta_phi, proof
+    );
 
     BOOST_CHECK_EQUAL(res, false);
 }
@@ -279,9 +311,15 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_same_sigma_different_ys)
     verify_Ys.Add(sigma);
     verify_Ys.Add(y4_2);
 
-    Scalar eta = Scalar::Rand();
-    auto proof = Prover::Prove(setup, prove_Ys, sigma, m, f, eta);
-    auto res = Prover::Verify(setup, verify_Ys, eta, proof);
+    Scalar eta_fiat_shamir = Scalar::Rand();
+    blsct::Message eta_phi { 1, 2, 3 };
+
+    auto proof = Prover::Prove(
+        setup, prove_Ys, sigma, m, f, eta_fiat_shamir, eta_phi
+    );
+    auto res = Prover::Verify(
+        setup, verify_Ys, eta_fiat_shamir, eta_phi, proof
+    );
 
     BOOST_CHECK_EQUAL(res, false);
 }
@@ -308,9 +346,15 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_large_size_input)
         }
     }
 
-    Scalar eta = Scalar::Rand();
-    auto proof = Prover::Prove(setup, Ys, sigma, m, f, eta);
-    auto res = Prover::Verify(setup, Ys, eta, proof);
+    Scalar eta_fiat_shamir = Scalar::Rand();
+    blsct::Message eta_phi { 1, 2, 3 };
+
+    auto proof = Prover::Prove(
+        setup, Ys, sigma, m, f, eta_fiat_shamir, eta_phi
+    );
+    auto res = Prover::Verify(
+        setup, Ys, eta_fiat_shamir, eta_phi, proof
+    );
 
     BOOST_CHECK_EQUAL(res, true);
 }
