@@ -249,6 +249,10 @@ def main():
         sys.exit(1)
     title = info['title'].strip()
     body = info['body'].strip()
+    # Extract forker's repo SSH URL and branch name
+    forker_repo_ssh_url = info['head']['repo']['ssh_url']
+    target_branch = info['head']['ref']
+
     # precedence order for destination branch argument:
     #   - command line argument
     #   - githubmerge.branch setting
@@ -274,6 +278,57 @@ def main():
     except subprocess.CalledProcessError:
         print("ERROR: Cannot find pull request #%s or branch %s on %s." % (pull,branch,host_repo), file=stderr)
         sys.exit(3)
+
+    # Ask the user if they want to rebase the branch
+    rebase_reply = ask_prompt("Would you like to rebase the branch? Type 'yes' to rebase or anything else to continue without rebasing.").lower()
+    if rebase_reply == 'yes':
+        try:
+            subprocess.check_call([GIT, 'checkout', head_branch])
+            # Capture the commit hash of head_branch before the rebase
+            head_commit_before_rebase = subprocess.check_output([GIT, 'rev-parse', 'HEAD']).strip().decode('utf-8')
+            # Identify the base commit before the rebase
+            base_commit_before_rebase = subprocess.check_output([GIT, 'merge-base', base_branch, head_branch]).strip().decode('utf-8')
+
+            # Perform the rebase
+            subprocess.check_call([GIT, 'rebase', base_branch])
+
+            # Identify the new head commit after rebase
+            new_head_commit = subprocess.check_output([GIT, 'rev-parse', 'HEAD']).strip().decode('utf-8')
+
+            # Using git range-diff to compare changes before and after the rebase
+            range_diff_output = subprocess.check_output([GIT, 'range-diff', base_commit_before_rebase + '..' + head_commit_before_rebase, base_commit_before_rebase + '..' + new_head_commit], stderr=subprocess.STDOUT)
+
+            # Check the range-diff output for significant changes
+            if not range_diff_output:
+                print("No significant changes detected by git range-diff.")
+            else:
+                print("Significant changes detected by git range-diff. Please review the output below:")
+                print(range_diff_output.decode('utf-8'))
+            try:
+                subprocess.check_call([GIT,'log','--graph','--topo-order','--pretty=format:'+COMMIT_FORMAT])
+            except:
+                pass
+            review_reply = ask_prompt("Do you want to continue with force push? Type 'yes' to continue or anything else to abort.").lower()
+            if review_reply != 'yes':
+                sys.exit(5)
+
+            # If no significant changes or user accepts changes, force push the rebased branch to the PR branch
+            # subprocess.check_call([GIT, 'push', host_repo, head_branch + ':' + 'pull/' + pull + '/head'])
+            try:
+                subprocess.check_call([GIT, 'push', '--force', forker_repo_ssh_url, f'HEAD:refs/heads/{target_branch}'])
+                print(f"Force pushed to {target_branch} on {forker_repo_ssh_url}.")
+            except subprocess.CalledProcessError as e:
+                print(f"Error while pushing: {str(e)}", file=stderr)
+                sys.exit(1)
+
+        except subprocess.CalledProcessError as e:
+            print("ERROR: ", e.output.decode('utf-8'))
+            sys.exit(4)
+
+    subprocess.check_call([GIT,'checkout','-q',base_branch])
+    subprocess.call([GIT,'branch','-q','-D',local_merge_branch], stderr=devnull)
+    subprocess.check_call([GIT,'checkout','-q','-b',local_merge_branch])
+
     try:
         subprocess.check_call([GIT,'log','-q','-1','refs/heads/'+head_branch], stdout=devnull, stderr=stdout)
         head_commit = subprocess.check_output([GIT,'log','-1','--pretty=format:%H',head_branch]).decode('utf-8')
