@@ -1,1 +1,0 @@
-../extra/python/README.rst
