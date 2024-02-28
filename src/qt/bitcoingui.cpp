@@ -1305,10 +1305,7 @@ void BitcoinGUI::gotoLoadPSBT(bool from_clipboard)
 
 void BitcoinGUI::updateNetworkState()
 {
-    if (clientModel == nullptr) {
-        return;
-    }
-
+    if (!clientModel) return;
     static int nCountPrev{0};
     static bool fNetworkActivePrev{false};
     int count = clientModel->getNumConnections();

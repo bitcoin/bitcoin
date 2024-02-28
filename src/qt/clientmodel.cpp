@@ -72,12 +72,17 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     subscribeToCoreSignals();
 }
 
-ClientModel::~ClientModel()
+void ClientModel::stop()
 {
     unsubscribeFromCoreSignals();
 
     m_thread->quit();
     m_thread->wait();
+}
+
+ClientModel::~ClientModel()
+{
+    stop();
 }
 
 int ClientModel::getNumConnections(unsigned int flags) const
@@ -270,62 +275,53 @@ void ClientModel::TipChanged(SynchronizationState sync_state, interfaces::BlockT
 
 void ClientModel::subscribeToCoreSignals()
 {
-    m_handler_show_progress = m_node.handleShowProgress(
+    m_event_handlers.emplace_back(m_node.handleShowProgress(
         [this](const std::string& title, int progress, [[maybe_unused]] bool resume_possible) {
             Q_EMIT showProgress(QString::fromStdString(title), progress);
-        });
-    m_handler_notify_num_connections_changed = m_node.handleNotifyNumConnectionsChanged(
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyNumConnectionsChanged(
         [this](int new_num_connections) {
             Q_EMIT numConnectionsChanged(new_num_connections);
-        });
-    m_handler_notify_network_active_changed = m_node.handleNotifyNetworkActiveChanged(
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyNetworkActiveChanged(
         [this](bool network_active) {
             Q_EMIT networkActiveChanged(network_active);
-        });
-    m_handler_notify_alert_changed = m_node.handleNotifyAlertChanged(
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyAlertChanged(
         [this]() {
             qDebug() << "ClientModel: NotifyAlertChanged";
             Q_EMIT alertsChanged(getStatusBarWarnings());
-        });
-    m_handler_banned_list_changed = m_node.handleBannedListChanged(
+        }));
+    m_event_handlers.emplace_back(m_node.handleBannedListChanged(
         [this]() {
             qDebug() << "ClienModel: Requesting update for peer banlist";
             QMetaObject::invokeMethod(banTableModel, [this] { banTableModel->refresh(); });
-        });
-    m_handler_notify_block_tip = m_node.handleNotifyBlockTip(
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyBlockTip(
         [this](SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress) {
             TipChanged(sync_state, tip, verification_progress, /*header=*/false);
-        });
-    m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyHeaderTip(
         [this](SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress) {
             TipChanged(sync_state, tip, verification_progress, /*header=*/true);
-        });
-    m_handler_notify_additional_data_sync_progess_changed = m_node.handleNotifyAdditionalDataSyncProgressChanged(
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyAdditionalDataSyncProgressChanged(
         [this](double nSyncProgress) {
             Q_EMIT additionalDataSyncProgressChanged(nSyncProgress);
-        });
-    m_handler_notify_chainlock = m_node.handleNotifyChainLock(
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyChainLock(
         [this](const std::string& best_hash, int best_height) {
             Q_EMIT chainLockChanged(QString::fromStdString(best_hash), best_height);
-        });
-    m_handler_notify_masternodelist_changed = m_node.handleNotifyMasternodeListChanged(
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyMasternodeListChanged(
         [this](const CDeterministicMNList& newList, const CBlockIndex* pindex) {
             setMasternodeList(newList, pindex);
-        });
+        }));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
 {
-    m_handler_show_progress->disconnect();
-    m_handler_notify_num_connections_changed->disconnect();
-    m_handler_notify_network_active_changed->disconnect();
-    m_handler_notify_alert_changed->disconnect();
-    m_handler_banned_list_changed->disconnect();
-    m_handler_notify_block_tip->disconnect();
-    m_handler_notify_header_tip->disconnect();
-    m_handler_notify_additional_data_sync_progess_changed->disconnect();
-    m_handler_notify_chainlock->disconnect();
-    m_handler_notify_masternodelist_changed->disconnect();
+    m_event_handlers.clear();
 }
 
 bool ClientModel::getProxyInfo(std::string& ip_port) const
