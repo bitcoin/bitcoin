@@ -297,13 +297,16 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level leve
 bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 
 
-//! Internal helper to return first arg in a __VA_ARGS__ pack.
-#define FirstArg_(arg, ...) arg
+//! Internal helper to return first arg in a __VA_ARGS__ pack. This could be
+//! simplified to `#define FirstArg_(arg, ...) arg` if not for a preprocessor
+//! bug in Visual C++.
+#define FirstArg_Impl(arg, ...) arg
+#define FirstArg_(args) FirstArg_Impl args
 
 //! Internal helper to conditionally log. Only evaluates arguments when needed.
 #define LogPrint_(level, ...)                                                  \
     do {                                                                       \
-        const auto& ctx{BCLog::detail::GetContext(FirstArg_(__VA_ARGS__))};    \
+        const auto& ctx{BCLog::detail::GetContext(FirstArg_((__VA_ARGS__)))};  \
         if (LogEnabled(ctx, (level))) {                                        \
             const auto& func = __func__;                                       \
             BCLog::detail::Format([&](auto&& message) {                        \
