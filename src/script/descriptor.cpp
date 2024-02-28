@@ -401,7 +401,7 @@ public:
 /** Base class for all Descriptor implementations. */
 class DescriptorImpl : public Descriptor
 {
-    //! Public key arguments for this descriptor (size 1 for PK, PKH, WPKH; any size for Multisig).
+    //! Public key arguments for this descriptor (size 1 for PK, PKH; any size for Multisig).
     const std::vector<std::unique_ptr<PubkeyProvider>> m_pubkey_args;
     //! The string name of the descriptor function.
     const std::string m_name;
@@ -668,10 +668,10 @@ protected:
         out.pubkeys.emplace(id, keys[0]);
         ret.emplace_back(GetScriptForRawPubKey(keys[0])); // P2PK
         if (keys[0].IsCompressed()) {
-            CScript p2wpkh = GetScriptForDestination(PKHash(id));
-            out.scripts.emplace(CScriptID(p2wpkh), p2wpkh);
-            ret.emplace_back(p2wpkh);
-            ret.emplace_back(GetScriptForDestination(ScriptHash(p2wpkh))); // P2SH-P2WPKH
+            CScript p2pkh = GetScriptForDestination(PKHash(id));
+            out.scripts.emplace(CScriptID(p2pkh), p2pkh);
+            ret.emplace_back(p2pkh);
+            ret.emplace_back(GetScriptForDestination(ScriptHash(p2pkh))); // P2SH-P2PKH
         }
         return ret;
     }
