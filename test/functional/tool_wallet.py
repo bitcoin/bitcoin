@@ -208,7 +208,7 @@ class ToolWalletTest(BitcoinTestFramework):
             Descriptors: no
             Encrypted: no
             HD (hd seed available): no
-            Keypool Size: 1000
+            Keypool Size: 2000
             Transactions: 0
             Address Book: 0
         ''')
