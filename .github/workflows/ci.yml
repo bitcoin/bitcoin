@@ -148,14 +148,15 @@ jobs:
         with:
           arch: x64
 
-      - name: Check MSBuild and Qt
+      - name: Get tool information
         run: |
           msbuild -version | Out-File -FilePath "$env:GITHUB_WORKSPACE\msbuild_version"
           Get-Content -Path "$env:GITHUB_WORKSPACE\msbuild_version"
           $env:VCToolsVersion | Out-File -FilePath "$env:GITHUB_WORKSPACE\toolset_version"
-          Get-Content -Path "$env:GITHUB_WORKSPACE\toolset_version"
+          Write-Host "VCToolsVersion $(Get-Content -Path "$env:GITHUB_WORKSPACE\toolset_version")"
           $env:CI_QT_URL | Out-File -FilePath "$env:GITHUB_WORKSPACE\qt_url"
           $env:CI_QT_CONF | Out-File -FilePath "$env:GITHUB_WORKSPACE\qt_conf"
+          py -3 --version
 
       - name: Restore static Qt cache
         id: static-qt-cache
