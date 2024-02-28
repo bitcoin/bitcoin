@@ -15,6 +15,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    assert_not_equal,
 )
 from test_framework.wallet import (
     MiniWallet,
@@ -239,7 +240,7 @@ class EphemeralDustTest(BitcoinTestFramework):
 
         # Spend works with dust spent
         sweep_tx_2 = self.wallet.create_self_transfer_multi(fee_per_output=2000, utxos_to_spend=dusty_tx["new_utxos"], version=3)
-        assert sweep_tx["hex"] != sweep_tx_2["hex"]
+        assert_not_equal(sweep_tx["hex"], sweep_tx_2["hex"])
         res = self.nodes[0].submitpackage([dusty_tx["hex"], sweep_tx_2["hex"]])
         assert_equal(res["package_msg"], "success")
 
