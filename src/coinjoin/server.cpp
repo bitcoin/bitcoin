@@ -330,13 +330,13 @@ void CCoinJoinServer::CommitFinalTransaction()
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CommitFinalTransaction -- CREATING DSTX\n");
 
     // create and sign masternode dstx transaction
-    if (!::dstxManager->GetDSTX(hashTx)) {
+    if (!m_dstxman.GetDSTX(hashTx)) {
         CCoinJoinBroadcastTx dstxNew(finalTransaction,
                                     WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.outpoint),
                                     WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash),
                                     GetAdjustedTime());
         dstxNew.Sign();
-        ::dstxManager->AddDSTX(dstxNew);
+        m_dstxman.AddDSTX(dstxNew);
     }
 
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CommitFinalTransaction -- TRANSMITTING DSTX\n");
@@ -453,7 +453,7 @@ void CCoinJoinServer::ConsumeCollateral(const CTransactionRef& txref) const
     if (!ATMPIfSaneFee(m_chainstate, mempool, txref, false /* bypass_limits */)) {
         LogPrint(BCLog::COINJOIN, "%s -- AcceptToMemoryPool failed\n", __func__);
     } else {
-        connman.RelayTransaction(*txref);
+        connman.RelayTransaction(*txref, static_cast<bool>(m_dstxman.GetDSTX(txref->GetHash())));
         LogPrint(BCLog::COINJOIN, "%s -- Collateral was consumed\n", __func__);
     }
 }

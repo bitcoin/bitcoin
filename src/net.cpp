@@ -3859,14 +3859,10 @@ bool CConnman::DisconnectNode(NodeId id)
     return false;
 }
 
-void CConnman::RelayTransaction(const CTransaction& tx)
+void CConnman::RelayTransaction(const CTransaction& tx, const bool is_dstx)
 {
     uint256 hash = tx.GetHash();
-    int nInv = MSG_TX;
-    if (::dstxManager->GetDSTX(hash)) {
-        nInv = MSG_DSTX;
-    }
-    CInv inv(nInv, hash);
+    CInv inv(is_dstx ? MSG_DSTX : MSG_TX, hash);
     RelayInv(inv);
 }
 

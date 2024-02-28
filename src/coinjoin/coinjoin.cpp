@@ -431,9 +431,6 @@ bilingual_str CoinJoin::GetMessageByID(PoolMessage nMessageID)
     }
 }
 
-// Definitions for static data members
-std::unique_ptr<CDSTXManager> dstxManager;
-
 void CDSTXManager::AddDSTX(const CCoinJoinBroadcastTx& dstx)
 {
     AssertLockNotHeld(cs_mapdstx);

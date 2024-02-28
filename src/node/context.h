@@ -19,7 +19,6 @@ class CCreditPoolManager;
 class CDeterministicMNManager;
 class CChainstateHelper;
 class ChainstateManager;
-class CDSTXManager;
 class CEvoDB;
 class CGovernanceManager;
 class CMasternodeMetaMan;
@@ -80,7 +79,6 @@ struct NodeContext {
     std::unique_ptr<CSporkManager> sporkman;
     std::unique_ptr<LLMQContext> llmq_ctx;
     CDeterministicMNManager* dmnman{nullptr};
-    CDSTXManager* dstxman{nullptr};
     CMasternodeMetaMan* mn_metaman{nullptr};
     CMasternodeSync* mn_sync{nullptr};
     CNetFulfilledRequestManager* netfulfilledman{nullptr};

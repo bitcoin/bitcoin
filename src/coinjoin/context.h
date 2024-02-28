@@ -15,6 +15,7 @@ class CBlockPolicyEstimator;
 class CChainState;
 class CCoinJoinServer;
 class CConnman;
+class CDSTXManager;
 class CMasternodeSync;
 class CTxMemPool;
 
@@ -29,6 +30,7 @@ struct CJContext {
     CJContext(CChainState& chainstate, CConnman& connman, CTxMemPool& mempool, const CMasternodeSync& mn_sync, bool relay_txes);
     ~CJContext();
 
+    const std::unique_ptr<CDSTXManager> dstxman;
 #ifdef ENABLE_WALLET
     // The main object for accessing mixing
     const std::unique_ptr<CoinJoinWalletManager> walletman;
