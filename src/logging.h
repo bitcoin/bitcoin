@@ -269,17 +269,20 @@ void _LogFormat(LogFn&& log, Source&& source, Arg&& arg, Args&&... args)
     }
 }
 
-//! Internal helper to return first arg in a __VA_ARGS__ pack.
-#define _FirstArg(arg, ...) arg
+//! Internal helper to return first arg in a __VA_ARGS__ pack. This could be
+//! simplified to `#define _FirstArg(arg, ...) arg` if not for a preprocessor
+//! bug in Visual C++.
+#define _FirstArgImpl(arg, ...) arg
+#define _FirstArg(args) _FirstArgImpl args
 
 //! Internal helper to check level and log. Avoids evaluating arguments if not logging.
 #define _LogPrint(level, ...)                                               \
     do {                                                                    \
-        if (LogEnabled(_LogSource(_FirstArg(__VA_ARGS__)), (level))) {      \
+        if (LogEnabled(_LogSource(_FirstArg((__VA_ARGS__))), (level))) {    \
             _LogFormat([&](auto&& source, auto&&message) {                  \
                 source.logger.LogPrintStr(message, __func__, __FILE__,      \
                     __LINE__, source.category, (level));                    \
-            }, _LogSource(_FirstArg(__VA_ARGS__)), __VA_ARGS__);            \
+            }, _LogSource(_FirstArg((__VA_ARGS__))), __VA_ARGS__);          \
         }                                                                   \
     } while (0)
 
