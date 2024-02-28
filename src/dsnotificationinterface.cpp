@@ -23,11 +23,18 @@
 #include <llmq/instantsend.h>
 #include <llmq/quorums.h>
 
-CDSNotificationInterface::CDSNotificationInterface(CConnman& _connman,
-                                                   CMasternodeSync& _mn_sync, const std::unique_ptr<CDeterministicMNManager>& _dmnman,
-                                                   CGovernanceManager& _govman, const std::unique_ptr<LLMQContext>& _llmq_ctx,
-                                                   const std::unique_ptr<CJContext>& _cj_ctx
-) : connman(_connman), m_mn_sync(_mn_sync), dmnman(_dmnman), govman(_govman), llmq_ctx(_llmq_ctx), cj_ctx(_cj_ctx) {}
+CDSNotificationInterface::CDSNotificationInterface(CConnman& connman,
+                                                   CMasternodeSync& mn_sync,
+                                                   CGovernanceManager& govman,
+                                                   const std::unique_ptr<CDeterministicMNManager>& dmnman,
+                                                   const std::unique_ptr<LLMQContext>& llmq_ctx,
+                                                   const std::unique_ptr<CJContext>& cj_ctx)
+  : m_connman(connman),
+    m_mn_sync(mn_sync),
+    m_govman(govman),
+    m_dmnman(dmnman),
+    m_llmq_ctx(llmq_ctx),
+    m_cj_ctx(cj_ctx) {}
 
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
@@ -37,7 +44,9 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
 
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
-    llmq_ctx->clhandler->AcceptedBlockHeader(pindexNew);
+    assert(m_llmq_ctx);
+
+    m_llmq_ctx->clhandler->AcceptedBlockHeader(pindexNew);
     m_mn_sync.AcceptedBlockHeader(pindexNew);
 }
 
@@ -48,14 +57,18 @@ void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, boo
 
 void CDSNotificationInterface::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
+    assert(m_dmnman);
+
     if (pindexNew == pindexFork) // blocks were disconnected without any new ones
         return;
 
-    dmnman->UpdatedBlockTip(pindexNew);
+    m_dmnman->UpdatedBlockTip(pindexNew);
 }
 
 void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
+    assert(m_cj_ctx && ::dstxManager && m_llmq_ctx);
+
     if (pindexNew == pindexFork) // blocks were disconnected without any new ones
         return;
 
@@ -67,57 +80,67 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     if (fInitialDownload)
         return;
 
-    ::dstxManager->UpdatedBlockTip(pindexNew, *llmq_ctx->clhandler, m_mn_sync);
+    ::dstxManager->UpdatedBlockTip(pindexNew, *m_llmq_ctx->clhandler, m_mn_sync);
 #ifdef ENABLE_WALLET
-    for (auto& pair : cj_ctx->walletman->raw()) {
+    for (auto& pair : m_cj_ctx->walletman->raw()) {
         pair.second->UpdatedBlockTip(pindexNew);
     }
 #endif // ENABLE_WALLET
 
-    llmq_ctx->isman->UpdatedBlockTip(pindexNew);
-    llmq_ctx->clhandler->UpdatedBlockTip();
+    m_llmq_ctx->isman->UpdatedBlockTip(pindexNew);
+    m_llmq_ctx->clhandler->UpdatedBlockTip();
 
-    llmq_ctx->qman->UpdatedBlockTip(pindexNew, fInitialDownload);
-    llmq_ctx->qdkgsman->UpdatedBlockTip(pindexNew, fInitialDownload);
-    llmq_ctx->ehfSignalsHandler->UpdatedBlockTip(pindexNew);
+    m_llmq_ctx->qman->UpdatedBlockTip(pindexNew, fInitialDownload);
+    m_llmq_ctx->qdkgsman->UpdatedBlockTip(pindexNew, fInitialDownload);
+    m_llmq_ctx->ehfSignalsHandler->UpdatedBlockTip(pindexNew);
 
-    if (!fDisableGovernance) govman.UpdatedBlockTip(pindexNew, connman);
+    if (!fDisableGovernance) m_govman.UpdatedBlockTip(pindexNew, m_connman);
 }
 
 void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx, int64_t nAcceptTime)
 {
-    llmq_ctx->isman->TransactionAddedToMempool(ptx);
-    llmq_ctx->clhandler->TransactionAddedToMempool(ptx, nAcceptTime);
+    assert(m_llmq_ctx && ::dstxManager);
+
+    m_llmq_ctx->isman->TransactionAddedToMempool(ptx);
+    m_llmq_ctx->clhandler->TransactionAddedToMempool(ptx, nAcceptTime);
     ::dstxManager->TransactionAddedToMempool(ptx);
 }
 
 void CDSNotificationInterface::TransactionRemovedFromMempool(const CTransactionRef& ptx, MemPoolRemovalReason reason)
 {
-    llmq_ctx->isman->TransactionRemovedFromMempool(ptx);
+    assert(m_llmq_ctx);
+
+    m_llmq_ctx->isman->TransactionRemovedFromMempool(ptx);
 }
 
 void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
-    llmq_ctx->isman->BlockConnected(pblock, pindex);
-    llmq_ctx->clhandler->BlockConnected(pblock, pindex);
+    assert(m_llmq_ctx && ::dstxManager);
+
+    m_llmq_ctx->isman->BlockConnected(pblock, pindex);
+    m_llmq_ctx->clhandler->BlockConnected(pblock, pindex);
     ::dstxManager->BlockConnected(pblock, pindex);
 }
 
 void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
 {
-    llmq_ctx->isman->BlockDisconnected(pblock, pindexDisconnected);
-    llmq_ctx->clhandler->BlockDisconnected(pblock, pindexDisconnected);
+    assert(m_llmq_ctx && ::dstxManager);
+
+    m_llmq_ctx->isman->BlockDisconnected(pblock, pindexDisconnected);
+    m_llmq_ctx->clhandler->BlockDisconnected(pblock, pindexDisconnected);
     ::dstxManager->BlockDisconnected(pblock, pindexDisconnected);
 }
 
 void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
 {
-    CMNAuth::NotifyMasternodeListChanged(undo, oldMNList, diff, connman);
-    govman.UpdateCachesAndClean();
+    CMNAuth::NotifyMasternodeListChanged(undo, oldMNList, diff, m_connman);
+    m_govman.UpdateCachesAndClean();
 }
 
 void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig)
 {
-    llmq_ctx->isman->NotifyChainLock(pindex);
-    ::dstxManager->NotifyChainLock(pindex, *llmq_ctx->clhandler, m_mn_sync);
+    assert(m_llmq_ctx && ::dstxManager);
+
+    m_llmq_ctx->isman->NotifyChainLock(pindex);
+    ::dstxManager->NotifyChainLock(pindex, *m_llmq_ctx->clhandler, m_mn_sync);
 }
