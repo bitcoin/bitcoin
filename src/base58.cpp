@@ -49,50 +49,48 @@ static constexpr int64_t log256_58Ratio = 1366LL; // Approximation of log(256)/l
 // Defines the size of groups that fit into 64 bit batches, processed together for encoding and decoding efficiency.
 static constexpr int encodingBatch = 7;
 
-[[nodiscard]] static bool DecodeBase58(const char* psz, std::vector<unsigned char>& vch, int max_ret_len)
+[[nodiscard]] static bool DecodeBase58(const char* input, std::vector<unsigned char>& result, const int max_ret_len)
 {
-    // Skip leading spaces.
-    while (*psz && IsSpace(*psz))
-        psz++;
-    // Skip and count leading '1's.
-    int zeroes = 0;
-    int length = 0;
-    while (*psz == '1') {
-        zeroes++;
-        if (zeroes > max_ret_len) return false;
-        psz++;
+    while (*input && IsSpace(*input))
+        ++input;
+
+    size_t leading{0};
+    for (; *input == '1'; ++input, ++leading)
+        if (leading >= static_cast<size_t>(max_ret_len)) [[unlikely]] return false;
+
+    size_t effectiveLength{0};
+    for (const char* p{input}; *p; ++p)
+        if (!IsSpace(*p)) ++effectiveLength;
+
+    const size_t size = 1 + effectiveLength * log58_256Ratio / baseScale;
+    result.reserve(leading + size);
+    result.assign(leading, 0x00);
+
+    std::vector<uint8_t> inputBatched;
+    inputBatched.reserve(effectiveLength);
+    for (; *input && !IsSpace(*input); ++input) {
+        const int8_t digit = mapBase58[static_cast<uint8_t>(*input)];
+        if (digit == -1) [[unlikely]]  return false;
+        inputBatched.push_back(digit);
     }
-    const int size = 1 + strlen(psz) * log58_256Ratio / baseScale;
-    std::vector<unsigned char> b256(size);
-    // Process the characters.
-    static_assert(std::size(mapBase58) == 256, "mapBase58.size() should be 256"); // guarantee not out of range
-    while (*psz && !IsSpace(*psz)) {
-        // Decode base58 character
-        int carry = mapBase58[(uint8_t)*psz];
-        if (carry == -1)  // Invalid b58 character
-            return false;
-        int i = 0;
-        for (std::vector<unsigned char>::reverse_iterator it = b256.rbegin(); (carry != 0 || i < length) && (it != b256.rend()); ++it, ++i) {
-            carry += base * (*it);
-            *it = carry % 256;
-            carry /= 256;
+    for (; *input; ++input)
+        if (!IsSpace(*input)) [[unlikely]] return false; // Ensure no non-space characters after processing.
+
+    size_t resultLength{leading};
+    for (size_t i{0}; i < inputBatched.size(); ++resultLength) {
+        int64_t remainder = 0;
+        for (size_t j{i}; j < inputBatched.size(); ++j) { // Calculate next digit, dividing inputBatched
+            const int64_t accumulator = (remainder * base) + inputBatched[j];
+            inputBatched[j] = accumulator / 256;
+            remainder = accumulator % 256;
         }
-        assert(carry == 0);
-        length = i;
-        if (length + zeroes > max_ret_len) return false;
-        psz++;
+        if (resultLength >= static_cast<size_t>(max_ret_len)) [[unlikely]] return false;
+        result.push_back(remainder);
+
+        while (i < inputBatched.size() && inputBatched[i] == 0)
+            ++i; // Skip new leading zeros
     }
-    // Skip trailing spaces.
-    while (IsSpace(*psz))
-        psz++;
-    if (*psz != 0)
-        return false;
-    std::vector<unsigned char>::iterator it = b256.begin() + (size - length);
-    // Copy result into output vector.
-    vch.reserve(zeroes + (b256.end() - it));
-    vch.assign(zeroes, 0x00);
-    while (it != b256.end())
-        vch.push_back(*(it++));
+    std::reverse(result.begin() + leading, result.end());
     return true;
 }
 
