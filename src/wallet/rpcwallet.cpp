@@ -2558,8 +2558,9 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
         obj.pushKV("timefirstkey", spk_man->GetTimeFirstKey());
         obj.pushKV("keypoololdest", spk_man->GetOldestKeyPoolTime());
     }
-    obj.pushKV("keypoolsize",   (int64_t)pwallet->KeypoolCountExternalKeys());
-    obj.pushKV("keypoolsize_hd_internal",   (int64_t)(pwallet->KeypoolCountInternalKeys()));
+    size_t kpExternalSize = pwallet->KeypoolCountExternalKeys();
+    obj.pushKV("keypoolsize",   (int64_t)kpExternalSize);
+    obj.pushKV("keypoolsize_hd_internal",   (int64_t)(pwallet->GetKeyPoolSize() - kpExternalSize));
     obj.pushKV("keys_left",     pwallet->nKeysLeftSinceAutoBackup);
     if (pwallet->IsCrypted())
         obj.pushKV("unlocked_until", pwallet->nRelockTime);

@@ -192,7 +192,6 @@ public:
     virtual int64_t GetOldestKeyPoolTime() const { return GetTime(); }
 
     virtual size_t KeypoolCountExternalKeys() const { return 0; }
-    virtual size_t KeypoolCountInternalKeys() const { return 0; }
     virtual unsigned int GetKeyPoolSize() const { return 0; }
 
     virtual int64_t GetTimeFirstKey() const { return 0; }
@@ -344,7 +343,6 @@ public:
 
     int64_t GetOldestKeyPoolTime() const override;
     size_t KeypoolCountExternalKeys() const override;
-    size_t KeypoolCountInternalKeys() const override;
 
     unsigned int GetKeyPoolSize() const override;
 

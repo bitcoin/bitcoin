@@ -4006,18 +4006,6 @@ size_t CWallet::KeypoolCountExternalKeys() const
     return count;
 }
 
-size_t CWallet::KeypoolCountInternalKeys() const
-{
-    AssertLockHeld(cs_wallet);
-
-    unsigned int count = 0;
-    for (auto spk_man : GetActiveScriptPubKeyMans()) {
-        count += spk_man->KeypoolCountInternalKeys();
-    }
-
-    return count;
-}
-
 unsigned int CWallet::GetKeyPoolSize() const
 {
     AssertLockHeld(cs_wallet);
@@ -4864,7 +4852,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::C
 
     {
         walletInstance->WalletLogPrintf("setExternalKeyPool.size() = %u\n",   walletInstance->KeypoolCountExternalKeys());
-        walletInstance->WalletLogPrintf("setInternalKeyPool.size() = %u\n",   walletInstance->KeypoolCountInternalKeys());
+        walletInstance->WalletLogPrintf("GetKeyPoolSize() = %u\n",   walletInstance->GetKeyPoolSize());
         walletInstance->WalletLogPrintf("mapWallet.size() = %u\n",            walletInstance->mapWallet.size());
         walletInstance->WalletLogPrintf("m_address_book.size() = %u\n",  walletInstance->m_address_book.size());
         for (auto spk_man : walletInstance->GetAllScriptPubKeyMans()) {

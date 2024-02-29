@@ -673,12 +673,6 @@ size_t LegacyScriptPubKeyMan::KeypoolCountExternalKeys() const
     return setExternalKeyPool.size();
 }
 
-size_t LegacyScriptPubKeyMan::KeypoolCountInternalKeys() const
-{
-    LOCK(cs_KeyStore); // setInternalKeyPool
-    return setInternalKeyPool.size();
-}
-
 unsigned int LegacyScriptPubKeyMan::GetKeyPoolSize() const
 {
     LOCK(cs_KeyStore);
