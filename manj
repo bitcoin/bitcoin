@@ -1,0 +1,5 @@
+$ cd src
+$ mkdir signet
+$ echo "signet=1
+daemon=1" > signet/bitcoin.conf
+$ ./bitcoind -datadir=signet
