@@ -28,7 +28,9 @@ don't have test cases for.
   could lead to bugs and issues in the test code.
 - Use [type hints](https://docs.python.org/3/library/typing.html) in your code to improve code readability
   and to detect possible bugs earlier.
-- Avoid wildcard imports
+- Avoid wildcard imports.
+- If more than one name from a module is needed, use lexicographically sorted multi-line imports
+  in order to reduce the possibility of potential merge conflicts.
 - Use a module-level docstring to describe what the test is testing, and how it
   is testing it.
 - When subclassing the BitcoinTestFramework, place overrides for the
