@@ -150,6 +150,7 @@ def main():
     else:
         mns = json.load(sys.stdin)
 
+    onions = []
     if len(sys.argv) > 2:
         with open(sys.argv[2], 'r', encoding="utf8") as f:
             onions = f.read().split('\n')
