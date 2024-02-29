@@ -106,16 +106,8 @@
         <translation>Exporteer adressenlijst</translation>
     </message>
     <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Kommagescheiden bestand (*.csv)</translation>
-    </message>
-    <message>
         <source>Exporting Failed</source>
         <translation>Exporteren mislukt</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Er is een fout is opgetreden tijdens het opslaan van deze adreslijst naar %1. Probeer het opnieuw.</translation>
     </message>
 </context>
 <context>
@@ -211,14 +203,6 @@
         <translation>Ontgrendel portemonnee</translation>
     </message>
     <message>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Deze bewerking heeft de wachtwoordzin van je portemonnee nodig om deze te ontgrendelen.</translation>
-    </message>
-    <message>
-        <source>Decrypt wallet</source>
-        <translation>Ontsleutel portemonnee </translation>
-    </message>
-    <message>
         <source>Change passphrase</source>
         <translation>Wijzig wachtwoordzin</translation>
     </message>
@@ -291,10 +275,6 @@
         <translation>Het ingevoerde wachtwoord om de portemonnee te ontsleutelen was incorrect.</translation>
     </message>
     <message>
-        <source>Wallet decryption failed</source>
-        <translation>Het ontsleutelen van de portemonnee is mislukt</translation>
-    </message>
-    <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Het wachtwoord van de portemonnee is succesvol gewijzigd.</translation>
     </message>
@@ -323,10 +303,6 @@
 </context>
 <context>
     <name>BitcoinGUI</name>
-    <message>
-        <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
-        <translation>Er heeft zich een fatale fout voorgedaan. Dash Core kan niet veilig worden voortgezet en zal worden afgesloten.</translation>
-    </message>
     <message>
         <source>&amp;Overview</source>
         <translation>&amp;Overzicht</translation>
@@ -516,10 +492,6 @@
         <translation>&amp;Debug console</translation>
     </message>
     <message>
-        <source>Open debugging console</source>
-        <translation>Open debugging console</translation>
-    </message>
-    <message>
         <source>&amp;Network Monitor</source>
         <translation>&amp;Networkmonitor</translation>
     </message>
@@ -570,10 +542,6 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Open &amp;URI</translation>
-    </message>
-    <message>
-        <source>Open a dash: URI or payment request</source>
-        <translation>Open een dash: URI of betalingsaanvraag</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -811,7 +779,7 @@
         <source>Original message:</source>
         <translation>Originele bericht:</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -969,10 +937,6 @@
     <message>
         <source>Some coins were unselected because they were spent.</source>
         <translation>Sommige munten zijn niet geselecteerd omdat ze al zijn uitgegeven.</translation>
-    </message>
-    <message>
-        <source>Some coins were unselected because they do not have enough mixing rounds.</source>
-        <translation>Sommige munten zijn niet geselecteerd omdat ze niet genoeg mengrondes hebben.</translation>
     </message>
     <message>
         <source>Show all coins</source>
@@ -1150,10 +1114,6 @@
         <translation>Filter Lijst:</translation>
     </message>
     <message>
-        <source>Filter propsal list</source>
-        <translation>Filter proposal lijst</translation>
-    </message>
-    <message>
         <source>Proposal Count:</source>
         <translation>Proposal aantal:</translation>
     </message>
@@ -1246,14 +1206,6 @@
     <message>
         <source>Error</source>
         <translation>Fout</translation>
-    </message>
-    <message>
-        <source>%1 GB of free space available</source>
-        <translation>%1 GB aan vrije opslagruimte beschikbaar</translation>
-    </message>
-    <message>
-        <source>(of %1 GB needed)</source>
-        <translation>(van %1 GB benodigd)</translation>
     </message>
 </context>
 <context>
@@ -1437,20 +1389,8 @@
         <translation>Open URI</translation>
     </message>
     <message>
-        <source>Open payment request from URI or file</source>
-        <translation>Open betalingsverzoek via URI of bestand</translation>
-    </message>
-    <message>
         <source>URI:</source>
         <translation>URI:</translation>
-    </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation>Selecteer betalingsverzoek bestand</translation>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>Selecteer betalingsverzoekbestand om te openen</translation>
     </message>
 </context>
 <context>
@@ -1591,10 +1531,6 @@
         <translation>Open automatisch de Dash client poort op de router. Dit werkt alleen als uw router UPnP ondersteunt en dit is ingeschakeld.</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation>Open automatisch de Bitcoin clientpoort op de router. Dit werkt alleen als de router NAT-PMP ondersteunt en is ingeschakeld. De externe poort kan willekeurig zijn.</translation>
-    </message>
-    <message>
         <source>Map port using NA&amp;T-PMP</source>
         <translation>Map de poort door middel van  NA&amp;T-PMP</translation>
     </message>
@@ -1617,10 +1553,6 @@
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
         <translation>Toont of de opgegeven standaard SOCK5 proxy gebruikt is om peers via dit netwerk type te bereiken.</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Gebruik afzonderlijke SOCKS&amp;5 proxy om peers te bereiken via verborgen Tor services:</translation>
     </message>
     <message>
         <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
@@ -1713,10 +1645,6 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
-    </message>
-    <message>
-        <source>Connect to the Dash network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Maak verbinding met Dashnetwerk door een aparte SOCKS5-proxy voor verborgen diensten van Tor.</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -2030,6 +1958,9 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
     </message>
 </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     <message>
         <source>Payment request error</source>
@@ -2048,14 +1979,6 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
         <translation>'dash://' is geen geldige URI. Gebruik in plaats daarvan 'dash:'.</translation>
     </message>
     <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>URL om betalingsverzoek te verkrijgen is ongeldig: %1</translation>
-    </message>
-    <message>
-        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
-        <translation>Kan betalingsverzoek niet verwerken omdat BIP70 ondersteuning niet is gecompileerd.</translation>
-    </message>
-    <message>
         <source>Invalid payment address %1</source>
         <translation>Ongeldig betalingsadres %1</translation>
     </message>
@@ -2067,77 +1990,9 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
         <source>Payment request file handling</source>
         <translation>Betalingsverzoek bestandsafhandeling</translation>
     </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>Betalingsverzoekbestand kan niet gelezen of verwerkt worden! Dit kan veroorzaakt worden door een ongeldig betalingsverzoekbestand.</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Betalingsverzoek geweigerd</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>Betalingsaanvraagnetwerk komt niet overeen met klantennetwerk.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Betalingsverzoek verlopen.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>Betalingsaanvraag is niet geïnitialiseerd.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Niet-geverifieerde betalingsverzoeken naar aangepaste betalingsscripts worden niet ondersteund.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Ongeldig betalingsverzoek.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Het gevraagde betalingsbedrag van %1 is te weinig (beschouwd als stof).</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>Restitutie van %1</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>Betalingsverzoek %1 is te groot (%2 bytes, toegestaan ​​%3 bytes).</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Fout bij communiceren met %1: %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>Betalingsverzoek kan niet worden verwerkt!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>Ongeldige respons van server %1</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Fout bij netwerkverzoek</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>Betaling bevestigd</translation>
-    </message>
 </context>
 <context>
     <name>PeerTableModel</name>
-    <message>
-        <source>NodeId</source>
-        <translation>Node ID</translation>
-    </message>
-    <message>
-        <source>Node/Service</source>
-        <translation>Node/Dienst</translation>
-    </message>
     <message>
         <source>User Agent</source>
         <translation>User Agent</translation>
@@ -2154,7 +2009,7 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
         <source>Received</source>
         <translation>Ontvangen</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Proposal</name>
     <message>
@@ -2238,10 +2093,6 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
     <message>
         <source>Reset all settings changed in the GUI</source>
         <translation>Reset alle wijzigingen aan instellingen gedaan in de GUI</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Zet SSL root certificaten voor betalingsverzoek (standaard: -sytem-)</translation>
     </message>
     <message>
         <source>Show splash screen on startup (default: %u)</source>
@@ -2402,29 +2253,6 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
         <source>&amp;Save Image...</source>
         <translation>&amp;Sla afbeelding op...</translation>
     </message>
-    <message>
-        <source>Error creating QR Code.</source>
-        <translation>Fout bij het Creëren van QR Code.</translation>
-    </message>
-</context>
-<context>
-    <name>QRGeneralImageWidget</name>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Sla afbeelding op...</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Image</source>
-        <translation>&amp;Afbeelding kopiëren</translation>
-    </message>
-    <message>
-        <source>Save QR Code</source>
-        <translation>Sla QR Code op.</translation>
-    </message>
-    <message>
-        <source>PNG Image (*.png)</source>
-        <translation>PNG afbeelding (*.png)</translation>
-    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -2452,11 +2280,7 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
         <source>Save QR Code</source>
         <translation>Sla QR-code op</translation>
     </message>
-    <message>
-        <source>PNG Image (*.png)</source>
-        <translation>PNG afbeelding (*.png)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -2512,10 +2336,6 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
         <translation>Blokketen</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
-        <translation>Aantal Masternodes</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>Memory Pool</translation>
     </message>
@@ -2564,10 +2384,6 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
         <translation>Selecteer een peer om details te bekijken</translation>
     </message>
     <message>
-        <source>Whitelisted</source>
-        <translation>Toegestaan</translation>
-    </message>
-    <message>
         <source>Direction</source>
         <translation>Richting</translation>
     </message>
@@ -2606,10 +2422,6 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
     <message>
         <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
         <translation>-rescan=2: Scan de Blockchain opnieuw op ontbrekende transacties, startend bij de allereerste block.</translation>
-    </message>
-    <message>
-        <source>Wallet Path</source>
-        <translation>Portemonnee bestandspad</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -2724,30 +2536,6 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
         <translation>&amp;Portemonnee Herstel</translation>
     </message>
     <message>
-        <source>Recover transactions 1</source>
-        <translation>Herstel transacties 1</translation>
-    </message>
-    <message>
-        <source>Recover transactions 2</source>
-        <translation>Herstel transacties 2</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet format</source>
-        <translation>Upgrade portemonnee</translation>
-    </message>
-    <message>
-        <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
-        <translation>-zapwallettxes=1: Herstel transacties van de blocks (behoud metadata; bv. accounteigenaar)</translation>
-    </message>
-    <message>
-        <source>-zapwallettxes=2: Recover transactions from blockchain (drop meta-data).</source>
-        <translation>-zapwallettxes=2: Herstel transacties van de blocks (laat metadata vervallen)</translation>
-    </message>
-    <message>
-        <source>-upgradewallet: Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself!)</source>
-        <translation>-upgrade portemonnee= Upgrade portemonnee naar het laatste formaat bij het starten: (Let op: dit is GEEN update van de portemonnee zelf!)</translation>
-    </message>
-    <message>
         <source>Wallet repair options.</source>
         <translation>Portemonneeherstelopties</translation>
     </message>
@@ -2832,10 +2620,6 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
         <translation>Opdracht uitvoeren met portemonnee "%1" </translation>
     </message>
     <message>
-        <source>(node id: %1)</source>
-        <translation>(node id: %1)</translation>
-    </message>
-    <message>
         <source>via %1</source>
         <translation>via %1</translation>
     </message>
@@ -2850,14 +2634,6 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
     <message>
         <source>Outbound</source>
         <translation>Uitgaand</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation>Ja</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Nee</translation>
     </message>
     <message>
         <source>Regular</source>
@@ -2975,10 +2751,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QR-code</translation>
-    </message>
-    <message>
         <source>Copy &amp;URI</source>
         <translation>Kopieer &amp;URI</translation>
     </message>
@@ -2997,30 +2769,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Payment information</source>
         <translation>Betalingsinformatie</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adres</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Bedrag</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Label</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Bericht</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Portemonnee</translation>
     </message>
 </context>
 <context>
@@ -3129,10 +2877,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Als de aangepaste vergoeding is ingesteld op 1000 duffs en de transactie is maar 250 bytes, dan wordt bij "per kilobyte" 250 duffs aan toeslag berekend, &lt;br /&gt;terwijl er bij "tenminste" 1000 duffs worden berekend. Voor transacties die groter zijn dan een kilobyte, wordt in beide gevallen per kilobyte de toeslag berekend.</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
-        <translation>Het betalen van de minimale vergoeding is prima zo lang er minder transactie volume is dan ruimte in de blocks. &lt;br /&gt;Maar houd er rekening mee dat dit kan eindigen in een nooit bevestigde transactie zodra er meer vraag is voor Dash transacties fdan het netwerk kan verwerken.</translation>
-    </message>
-    <message>
         <source>per kilobyte</source>
         <translation>per kilobyte</translation>
     </message>
@@ -3151,10 +2895,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Hide</source>
         <translation>Verbergen</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(lees de tooltip)</translation>
     </message>
     <message>
         <source>Recommended:</source>
@@ -3227,10 +2967,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>%1 (%2 blocks)</source>
         <translation>%1 (%2 blokken)</translation>
-    </message>
-    <message>
-        <source>from wallet %1</source>
-        <translation>van portemonnee %1</translation>
     </message>
     <message>
         <source>using</source>
@@ -3331,14 +3067,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation>Een vergoeding van meer dan %1 wordt beschouwd als een absurd hoge vergoeding.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Betalingsverzoek verlopen.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Betaal alleen de verplichte transactie vergoeding van %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -3446,17 +3174,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Memo:</source>
         <translation>Memo:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Vul een label in voor dit adres om het toe te voegen aan uw adresboek</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Send</source>
-        <translation>Versturen</translation>
     </message>
 </context>
 <context>
@@ -3630,13 +3347,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     </message>
 </context>
 <context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnetwerk]</translation>
-    </message>
-</context>
-<context>
     <name>TrafficGraphWidget</name>
     <message>
         <source>KB/s</source>
@@ -3792,14 +3502,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Transaction total size</source>
         <translation>Transactie totale grootte</translation>
-    </message>
-    <message>
-        <source> (Certificate was not verified)</source>
-        <translation>(Certificaat is niet geverifieerd)</translation>
-    </message>
-    <message>
-        <source>Merchant</source>
-        <translation>Handelaar</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
@@ -4107,10 +3809,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Exporteer transactiegeschiedenis</translation>
     </message>
     <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Kommagescheiden bestand (*.csv)</translation>
-    </message>
-    <message>
         <source>Confirmed</source>
         <translation>Bevestigd</translation>
     </message>
@@ -4188,14 +3886,10 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Als u de portemonnee te afgesloten laat met terugsnoeien ingeschakeld, kan dit ertoe leiden dat de hele blockchain opnieuw moet worden gesynchroniseerd.</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletFrame</name>
-    <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Er is geen portemonnee geladen.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -4224,10 +3918,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Backup Wallet</source>
         <translation>Portemonnee backuppen</translation>
-    </message>
-    <message>
-        <source>Wallet Data (*.dat)</source>
-        <translation>Portemonneedata (*.dat)</translation>
     </message>
     <message>
         <source>Backup Failed</source>
@@ -4269,20 +3959,12 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Dit is een pre-release testversie - gebruik op eigen risico! Gebruik deze niet voor het delven van munten of handelsdoeleinden</translation>
     </message>
     <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Waarschuwing: Het lijkt erop dat het netwerk geen consensus kan vinden! Sommige delvers lijken problemen te ondervinden.</translation>
-    </message>
-    <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Waarschuwing: Het lijkt erop dat we geen consensus kunnen vinden met onze peers! Mogelijk dient u te upgraden, of andere nodes moeten wellicht upgraden.</translation>
     </message>
     <message>
         <source>Already have that input.</source>
         <translation>Deze invoer is reeds gekend</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Kan de portemonnee niet verlagen van versie</translation>
     </message>
     <message>
         <source>Collateral not valid.</source>
@@ -4405,20 +4087,8 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Ongeldig minumum aantal spork ondertekenaars zoals ingesteld met -minsporkkeys</translation>
     </message>
     <message>
-        <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>Keypool op geraakt, roep alsjeblieft eerst keypoolrefill functie aan</translation>
-    </message>
-    <message>
         <source>Loading banlist...</source>
         <translation>Verbanningslijst aan het laden...</translation>
-    </message>
-    <message>
-        <source>Loading fulfilled requests cache...</source>
-        <translation>Laden fulfilled requests chache...</translation>
-    </message>
-    <message>
-        <source>Loading masternode cache...</source>
-        <translation>Laden masternode cache...</translation>
     </message>
     <message>
         <source>Lock is already in place.</source>
@@ -4521,10 +4191,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Prune: laatste wallet synchronisatie gaat verder terug dan de middels -prune beperkte data. U moet -reindex gebruiken (downloadt opnieuw de gehele blockchain voor een pruned node)</translation>
     </message>
     <message>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Herscannen is niet mogelijk i.c.m. -prune. U moet -reindex gebruiken dat de hele blockchain opnieuw zal downloaden.</translation>
-    </message>
-    <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
         <translation>De blokdatabase bevat een blok dat lijkt uit de toekomst te komen. Dit kan gebeuren omdat de datum en tijd van uw computer niet goed staat. Herbouw de blokdatabase pas nadat u de datum en tijd van uw computer correct heeft ingesteld.</translation>
     </message>
@@ -4593,10 +4259,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Fout bij het upgraden van de evo database</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Fout: er is een fout opgetreden,  zie debug.log voor details</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low for %s</source>
         <translation>Fout: Schijfruimte is laag voor %s</translation>
     </message>
@@ -4645,18 +4307,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Laden blokindex...</translation>
     </message>
     <message>
-        <source>Loading governance cache...</source>
-        <translation>Laden governance cache...</translation>
-    </message>
-    <message>
-        <source>Loading sporks cache...</source>
-        <translation>Laden sporks cache...</translation>
-    </message>
-    <message>
-        <source>Loading wallet... (%3.2f %%)</source>
-        <translation>Laden portemonnee... (%3.2f %%)</translation>
-    </message>
-    <message>
         <source>Loading wallet...</source>
         <translation>Laden portemonnee...</translation>
     </message>
@@ -4693,10 +4343,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Prune kan niet worden geconfigureerd met een negatieve waarde.</translation>
     </message>
     <message>
-        <source>Prune mode is incompatible with -blockfilterindex.</source>
-        <translation>Terugsnoeimodus is niet compatibel met -blockfilterindex.</translation>
-    </message>
-    <message>
         <source>Prune mode is incompatible with -disablegovernance=false.</source>
         <translation>Prune modus is niet compatibel met -disablegovernance=false.</translation>
     </message>
@@ -4727,12 +4373,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Synchronizing blockchain...</source>
         <translation>Blokketen aan het synchronizeren...</translation>
-    </message>
-    <message>
-        <source>The specified config file %s does not exist
-</source>
-        <translation>Het opgegeven configuratiebestand %s bestaat niet
-</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -4793,10 +4433,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
         <translation>Portemonnee moest herschreven worden: Herstart %s om te voltooien</translation>
-    </message>
-    <message>
-        <source>Warning: unknown new rules activated (versionbit %i)</source>
-        <translation>Waarschuwing: onbekende nieuwe regels geactiveerd (versionbit %i)</translation>
     </message>
     <message>
         <source>Wasn't able to create wallet backup folder %s!</source>
@@ -4867,10 +4503,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Dit is de transactievergoeding die je mogelijk betaalt indien geschatte tarief niet beschikbaar is</translation>
     </message>
     <message>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Dit product bevat software dat ontwikkeld is door het OpenSSL Project voor gebruik in de OpenSSL Toolkit %s en cryptografische software geschreven door Eric Young en UPnP software geschreven door Thomas Bernard.</translation>
-    </message>
-    <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation>Kan blokken niet nalopen. U moet de database opnieuw opbouwen met behulp van -reindex-chainstate.</translation>
     </message>
@@ -4879,16 +4511,8 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Waarschuwing: privésleutels gedetecteerd in portemonnee {%s} terwijl privésleutels zijn uitgeschakeld</translation>
     </message>
     <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d van de laatste 100 blokken hebben een onverwachte versie</translation>
-    </message>
-    <message>
         <source>%s is not a valid backup folder!</source>
         <translation>%s is geen geldige back-up map!</translation>
-    </message>
-    <message>
-        <source>%s is only allowed with a single wallet file</source>
-        <translation>%s is alleen toegestaan met een enkel portefeuillebestand</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -4949,10 +4573,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
         <translation>Fout bij laden %s. HD kan niet worden uitgeschakeld bij een HD portemonnee.</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Fout bij het laden van portemonnee %s. Dubbele -wallet bestandsnaam gespecificeerd.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
@@ -5067,10 +4687,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>%s corrupt. Probeer de portemonnee tool te gebruiken om een back-up te redden of te herstellen.</translation>
     </message>
     <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>Kan geen wisselgeld adressleutel genereren. Geen sleutels in de interne keypool en kan geen sleutels genereren.</translation>
-    </message>
-    <message>
         <source>Last successful action was too recent.</source>
         <translation>Vorige succesvolle actie is te recent.</translation>
     </message>
@@ -5173,10 +4789,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Your entries added successfully.</source>
         <translation>Uw gegevens zijn succesvol toegevoegd.</translation>
-    </message>
-    <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Bezig met het zappen van alle transacties van de portemonnee...</translation>
     </message>
 </context>
 </TS>
