@@ -1374,6 +1374,7 @@ RPCHelpMan sendall()
             RPCResult::Type::OBJ, "", "",
                 {
                     {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
+                    {RPCResult::Type::NUM, "weight", "The resulting transaction weight in weight units"},
                     {RPCResult::Type::STR_HEX, "txid", /*optional=*/true, "The transaction id for the send. Only 1 transaction is created regardless of the number of addresses."},
                     {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "If add_to_wallet is false, the hex-encoded raw transaction with signature(s)"},
                     {RPCResult::Type::STR, "psbt", /*optional=*/true, "If more signatures are needed, or if add_to_wallet is false, the base64-encoded (partially) signed transaction"}
@@ -1561,8 +1562,9 @@ RPCHelpMan sendall()
                     pwallet->LockCoin(txin.prevout);
                 }
             }
-
-            return FinishTransaction(pwallet, options, rawTx);
+            auto result = FinishTransaction(pwallet, options, rawTx);
+            result.pushKV("weight", tx_size.weight);
+            return result;
         }
     };
 }
