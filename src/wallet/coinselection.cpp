@@ -597,11 +597,12 @@ util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utx
  *                              nTargetValue, with indices corresponding to groups. If the ith
  *                              entry is true, that means the ith group in groups was selected.
  * param@[out]  nBest           Total amount of subset chosen that is closest to nTargetValue.
+ * paramp[in]   max_selection_weight  The maximum allowed weight for a selection result to be valid.
  * param@[in]   iterations      Maximum number of tries.
  */
 static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::vector<OutputGroup>& groups,
                                   const CAmount& nTotalLower, const CAmount& nTargetValue,
-                                  std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000)
+                                  std::vector<char>& vfBest, CAmount& nBest, int max_selection_weight, int iterations = 1000)
 {
     std::vector<char> vfIncluded;
 
@@ -613,6 +614,7 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
     {
         vfIncluded.assign(groups.size(), false);
         CAmount nTotal = 0;
+        int selected_coins_weight{0};
         bool fReachedTarget = false;
         for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
         {
@@ -627,9 +629,9 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
                 if (nPass == 0 ? insecure_rand.randbool() : !vfIncluded[i])
                 {
                     nTotal += groups[i].GetSelectionAmount();
+                    selected_coins_weight += groups[i].m_weight;
                     vfIncluded[i] = true;
-                    if (nTotal >= nTargetValue)
-                    {
+                    if (nTotal >= nTargetValue && selected_coins_weight <= max_selection_weight) {
                         fReachedTarget = true;
                         // If the total is between nTargetValue and nBest, it's our new best
                         // approximation.
@@ -639,6 +641,7 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
                             vfBest = vfIncluded;
                         }
                         nTotal -= groups[i].GetSelectionAmount();
+                        selected_coins_weight -= groups[i].m_weight;
                         vfIncluded[i] = false;
                     }
                 }
@@ -652,6 +655,7 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
 {
     SelectionResult result(nTargetValue, SelectionAlgorithm::KNAPSACK);
 
+    bool max_weight_exceeded{false};
     // List of values less than target
     std::optional<OutputGroup> lowest_larger;
     // Groups with selection amount smaller than the target and any change we might produce.
@@ -662,6 +666,10 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
     Shuffle(groups.begin(), groups.end(), rng);
 
     for (const OutputGroup& group : groups) {
+        if (group.m_weight > max_selection_weight) {
+            max_weight_exceeded = true;
+            continue;
+        }
         if (group.GetSelectionAmount() == nTargetValue) {
             result.AddInput(group);
             return result;
@@ -677,11 +685,18 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
         for (const auto& group : applicable_groups) {
             result.AddInput(group);
         }
-        return result;
+        if (result.GetWeight() <= max_selection_weight) return result;
+        else max_weight_exceeded = true;
+
+        // Try something else
+        result.Clear();
     }
 
     if (nTotalLower < nTargetValue) {
-        if (!lowest_larger) return util::Error();
+        if (!lowest_larger) {
+            if (max_weight_exceeded) return ErrorMaxWeightExceeded();
+            return util::Error();
+        }
         result.AddInput(*lowest_larger);
         return result;
     }
@@ -691,9 +706,9 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
     std::vector<char> vfBest;
     CAmount nBest;
 
-    ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue, vfBest, nBest);
+    ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue, vfBest, nBest, max_selection_weight);
     if (nBest != nTargetValue && nTotalLower >= nTargetValue + change_target) {
-        ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue + change_target, vfBest, nBest);
+        ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue + change_target, vfBest, nBest, max_selection_weight);
     }
 
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
@@ -728,7 +743,7 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
             LogPrint(BCLog::SELECTCOINS, "%stotal %s\n", log_message, FormatMoney(nBest));
         }
     }
-
+    Assume(result.GetWeight() <= max_selection_weight);
     return result;
 }
 
