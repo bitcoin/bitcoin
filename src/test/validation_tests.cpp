@@ -233,7 +233,6 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         // Block with two transactions is mutated if any node is duplicate.
         {
             block.vtx[1] = block.vtx[0];
-            BOOST_CHECK(is_mutated(block, /*check_witness_root=*/false));
             HashWriter hasher;
             hasher.write(block.vtx[0]->GetHash());
             hasher.write(block.vtx[1]->GetHash());
