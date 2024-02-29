@@ -174,10 +174,13 @@ struct CoinSelectionParams {
      * 1) Received from other wallets, 2) replacing other txs, 3) that have been replaced.
      */
     bool m_include_unsafe_inputs = false;
+    /** The maximum weight for this transaction. */
+    std::optional<int> m_max_tx_weight{std::nullopt};
 
     CoinSelectionParams(FastRandomContext& rng_fast, int change_output_size, int change_spend_size,
                         CAmount min_change_target, CFeeRate effective_feerate,
-                        CFeeRate long_term_feerate, CFeeRate discard_feerate, int tx_noinputs_size, bool avoid_partial)
+                        CFeeRate long_term_feerate, CFeeRate discard_feerate, int tx_noinputs_size, bool avoid_partial,
+                        std::optional<int> max_tx_weight = std::nullopt)
         : rng_fast{rng_fast},
           change_output_size(change_output_size),
           change_spend_size(change_spend_size),
@@ -186,7 +189,8 @@ struct CoinSelectionParams {
           m_long_term_feerate(long_term_feerate),
           m_discard_feerate(discard_feerate),
           tx_noinputs_size(tx_noinputs_size),
-          m_avoid_partial_spends(avoid_partial)
+          m_avoid_partial_spends(avoid_partial),
+          m_max_tx_weight(max_tx_weight)
     {
     }
     CoinSelectionParams(FastRandomContext& rng_fast)
