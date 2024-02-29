@@ -1139,19 +1139,23 @@ class DashTestFramework(BitcoinTestFramework):
     def activate_v20(self, expected_activation_height=None):
         self.activate_by_name('v20', expected_activation_height)
 
-    def activate_mn_rr(self, expected_activation_height=None):
+    def activate_ehf_by_name(self, name, expected_activation_height=None):
         self.nodes[0].sporkupdate("SPORK_24_TEST_EHF", 0)
         self.wait_for_sporks_same()
-        mn_rr_height = 0
-        while mn_rr_height == 0:
+        assert get_bip9_details(self.nodes[0], name)['ehf']
+        ehf_height = 0
+        while ehf_height == 0:
             time.sleep(1)
             try:
-                mn_rr_height = get_bip9_details(self.nodes[0], 'mn_rr')['ehf_height']
+                ehf_height = get_bip9_details(self.nodes[0], name)['ehf_height']
             except KeyError:
                 pass
             self.nodes[0].generate(1)
             self.sync_all()
-        self.activate_by_name('mn_rr', expected_activation_height)
+        self.activate_by_name(name, expected_activation_height)
+
+    def activate_mn_rr(self, expected_activation_height=None):
+        self.activate_ehf_by_name('mn_rr', expected_activation_height)
 
     def set_dash_llmq_test_params(self, llmq_size, llmq_threshold):
         self.llmq_size = llmq_size
