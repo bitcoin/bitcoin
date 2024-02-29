@@ -705,7 +705,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
         } else append_error(std::move(bnb_result));
     }
 
-    // As Knapsack and SRD can create change, also deduce change weight.
+    // Deduct change weight because remaining Coin Selection algorithms can create change output
     max_selection_weight -= (coin_selection_params.change_output_size * WITNESS_SCALE_FACTOR);
 
     // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
