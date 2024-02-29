@@ -15,6 +15,7 @@ from test_framework.messages import (
     msg_block,
     msg_blocktxn,
     HeaderAndShortIDs,
+    CTxWitness,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.blocktools import (
@@ -26,6 +27,9 @@ from test_framework.blocktools import (
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 import copy
+
+LOGMESSAGE_REJECTED_MUTATED_BLOCK = "Rejected mutated block="
+
 
 class MutatedBlocksTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -79,7 +83,10 @@ class MutatedBlocksTest(BitcoinTestFramework):
 
         # Attempt to clear the honest relayer's download request by sending the
         # mutated block (as the attacker).
-        with self.nodes[0].assert_debug_log(expected_msgs=["Block mutated: bad-txnmrklroot, hashMerkleRoot mismatch"]):
+        with self.nodes[0].assert_debug_log(
+          expected_msgs=["Block mutated: bad-txnmrklroot, hashMerkleRoot mismatch"],
+          # header is known - mutated block isn't logged
+          unexpected_msgs=[LOGMESSAGE_REJECTED_MUTATED_BLOCK]):
             attacker.send_message(msg_block(mutated_block))
         # Attacker should get disconnected for sending a mutated block
         attacker.wait_for_disconnect(timeout=5)
@@ -109,6 +116,23 @@ class MutatedBlocksTest(BitcoinTestFramework):
             assert_equal(len(self.nodes[0].getpeerinfo()), 2)
             with self.nodes[0].assert_debug_log(expected_msgs=["AcceptBlock FAILED (prev-blk-not-found)"]):
                 attacker.send_message(msg_block(block_missing_prev))
+        attacker.wait_for_disconnect(timeout=5)
+
+        # Test that we log when receiving a previously unknown, valid-PoW
+        # mutated block.
+        # Mine a block and mutate it
+        tx = self.wallet.create_self_transfer()["tx"]
+        block = create_block(tmpl=self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS), txlist=[tx])
+        add_witness_commitment(block)
+        block.solve()
+        mutated_block = copy.deepcopy(block)
+        mutated_block.vtx[0].wit = CTxWitness()
+
+        # Send the mutated block and check that the rejection was logged.
+        attacker = self.nodes[0].add_p2p_connection(P2PInterface())
+        with self.nodes[0].assert_debug_log(
+          expected_msgs=["bad-witness-nonce-size, CheckWitnessMalleation", LOGMESSAGE_REJECTED_MUTATED_BLOCK]):
+            attacker.send_message(msg_block(mutated_block))
         attacker.wait_for_disconnect(timeout=5)
 
 

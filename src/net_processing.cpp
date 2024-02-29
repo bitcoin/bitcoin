@@ -4726,7 +4726,19 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                            /*check_witness_root=*/DeploymentActiveAfter(prev_block, m_chainman, Consensus::DEPLOYMENT_SEGWIT))) {
             LogDebug(BCLog::NET, "Received mutated block from peer=%d\n", peer->m_id);
             Misbehaving(*peer, 100, "mutated block");
-            WITH_LOCK(cs_main, RemoveBlockRequest(pblock->GetHash(), peer->m_id));
+            {
+                LOCK(cs_main);
+                RemoveBlockRequest(pblock->GetHash(), peer->m_id);
+                if (prev_block && prev_block->nChainWork + CalculateHeadersWork({pblock->GetBlockHeader()}) >= GetAntiDoSWorkThreshold()) {
+                   const CBlockIndex* mutated_block{m_chainman.m_blockman.LookupBlockIndex(pblock->GetHash())};
+                   if(!mutated_block) {
+                     // Log about a mutated block only if it builds on a known previous block,
+                     // has enough work, and we don't know about a non-mutated version of the
+                     // block yet. These might be honest mistakes by miners.
+                     LogWarning("Rejected mutated block=%s from peer=%d\n", pblock->GetHash().ToString(), peer->m_id);
+                   }
+                }
+            }
             return;
         }
 
