@@ -47,6 +47,7 @@ KNOWN_VIOLATIONS = [
     "src/test/util_tests.cpp:.*strtoll",
     "src/wallet/bdb.cpp:.*DbEnv::strerror",  # False positive
     "src/util/syserror.cpp:.*strerror",      # Outside this function use `SysErrorString`
+    "contrib/devtools/bitcoin-tidy/fatal_error.cpp:.*std::to_string*",
 ]
 
 REGEXP_EXTERNAL_DEPENDENCIES_EXCLUSIONS = [
