@@ -1325,7 +1325,6 @@ void CoinsViews::InitCache()
 
 CChainState::CChainState(CTxMemPool* mempool,
                          BlockManager& blockman,
-                         CMNHFManager& mnhfManager,
                          CEvoDB& evoDb,
                          const std::unique_ptr<CChainstateHelper>& chain_helper,
                          const std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
@@ -1336,7 +1335,6 @@ CChainState::CChainState(CTxMemPool* mempool,
       m_chain_helper(chain_helper),
       m_clhandler(clhandler),
       m_isman(isman),
-      m_mnhfManager(mnhfManager),
       m_evoDb(evoDb),
       m_blockman(blockman),
       m_from_snapshot_blockhash(from_snapshot_blockhash) {}
@@ -2549,11 +2547,6 @@ CoinsCacheSizeState CChainState::GetCoinsCacheSizeState(
         return CoinsCacheSizeState::LARGE;
     }
     return CoinsCacheSizeState::OK;
-}
-
-std::unordered_map<uint8_t, int> CChainState::GetMNHFSignalsStage(const CBlockIndex* const pindexPrev)
-{
-    return m_mnhfManager.GetSignalsStage(pindexPrev);
 }
 
 bool CChainState::FlushStateToDisk(
@@ -5720,7 +5713,6 @@ std::vector<CChainState*> ChainstateManager::GetAll()
 }
 
 CChainState& ChainstateManager::InitializeChainstate(CTxMemPool* mempool,
-                                                     CMNHFManager& mnhfManager,
                                                      CEvoDB& evoDb,
                                                      const std::unique_ptr<CChainstateHelper>& chain_helper,
                                                      const std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
@@ -5735,7 +5727,7 @@ CChainState& ChainstateManager::InitializeChainstate(CTxMemPool* mempool,
         throw std::logic_error("should not be overwriting a chainstate");
     }
 
-    to_modify.reset(new CChainState(mempool, m_blockman, mnhfManager, evoDb, chain_helper, clhandler, isman, snapshot_blockhash));
+    to_modify.reset(new CChainState(mempool, m_blockman, evoDb, chain_helper, clhandler, isman, snapshot_blockhash));
 
     // Snapshot chainstates and initial IBD chaintates always become active.
     if (is_snapshot || (!is_snapshot && !m_active_chainstate)) {
@@ -5806,7 +5798,6 @@ bool ChainstateManager::ActivateSnapshot(
 
     auto snapshot_chainstate = WITH_LOCK(::cs_main, return std::make_unique<CChainState>(
             /* mempool */ nullptr, m_blockman,
-            this->ActiveChainstate().m_mnhfManager,
             this->ActiveChainstate().m_evoDb,
             this->ActiveChainstate().m_chain_helper,
             this->ActiveChainstate().m_clhandler,

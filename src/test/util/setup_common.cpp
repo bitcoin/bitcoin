@@ -115,7 +115,7 @@ void DashTestSetup(NodeContext& node, const CChainParams& chainparams)
 #ifdef ENABLE_WALLET
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
 #endif // ENABLE_WALLET
-    node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.evodb, *node.sporkman, *node.mempool, node.peerman, true, false);
+    node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.evodb, *node.mnhf_manager, *node.sporkman, *node.mempool, node.peerman, true, false);
     node.chain_helper = std::make_unique<CChainstateHelper>(*node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor),
                                                             chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler));
 }
@@ -278,7 +278,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    m_node.chainman->InitializeChainstate(m_node.mempool.get(), *m_node.mnhf_manager, *m_node.evodb, m_node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager);
+    m_node.chainman->InitializeChainstate(m_node.mempool.get(), *m_node.evodb, m_node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager);
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!::ChainstateActive().CanFlushToDisk());
@@ -392,7 +392,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
     const CChainParams& chainparams = Params();
     CTxMemPool empty_pool;
     CBlock block = BlockAssembler(
-            ::ChainstateActive(), *m_node.evodb, *m_node.chain_helper, *m_node.llmq_ctx,
+            ::ChainstateActive(), *m_node.evodb, *m_node.chain_helper, *m_node.mnhf_manager, *m_node.llmq_ctx,
             empty_pool, chainparams
         ).CreateNewBlock(scriptPubKey)->block;
 

@@ -43,9 +43,10 @@
 #include <versionbits.h>
 #include <warnings.h>
 
-#include <evo/specialtx.h>
 #include <evo/cbtx.h>
 #include <evo/evodb.h>
+#include <evo/mnhftx.h>
+#include <evo/specialtx.h>
 
 #include <llmq/chainlocks.h>
 #include <llmq/instantsend.h>
@@ -1739,16 +1740,21 @@ RPCHelpMan getblockchaininfo()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    LOCK(cs_main);
-    CChainState& active_chainstate = chainman.ActiveChainstate();
-
     std::string strChainName = gArgs.IsArgSet("-devnet") ? gArgs.GetDevNetName() : Params().NetworkIDString();
 
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
+
+    LOCK(cs_main);
+    CChainState& active_chainstate = chainman.ActiveChainstate();
     const CBlockIndex* tip = active_chainstate.m_chain.Tip();
+
     CHECK_NONFATAL(tip);
     const int height = tip->nHeight;
-    const auto ehfSignals = active_chainstate.GetMNHFSignalsStage(tip);
+
+    CHECK_NONFATAL(node.mnhf_manager);
+    const auto ehfSignals = node.mnhf_manager->GetSignalsStage(tip);
+
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("chain",                 strChainName);
     obj.pushKV("blocks",                height);

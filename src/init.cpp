@@ -1951,7 +1951,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
 
                 chainman.Reset();
-                chainman.InitializeChainstate(Assert(node.mempool.get()), *node.mnhf_manager, *node.evodb, node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager);
+                chainman.InitializeChainstate(Assert(node.mempool.get()), *node.evodb, node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager);
                 chainman.m_total_coinstip_cache = nCoinCacheUsage;
                 chainman.m_total_coinsdb_cache = nCoinDBCache;
 
@@ -1977,7 +1977,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                     node.llmq_ctx->Stop();
                 }
                 node.llmq_ctx.reset();
-                node.llmq_ctx.reset(new LLMQContext(chainman.ActiveChainstate(), *node.connman, *node.evodb, *node.sporkman, *node.mempool, node.peerman, false, fReset || fReindexChainState));
+                node.llmq_ctx.reset(new LLMQContext(chainman.ActiveChainstate(), *node.connman, *node.evodb, *node.mnhf_manager, *node.sporkman, *node.mempool, node.peerman, false, fReset || fReindexChainState));
                 // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
                 node.llmq_ctx->Start();
 

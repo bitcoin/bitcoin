@@ -19,8 +19,8 @@
 #include <llmq/signing_shares.h>
 #include <masternode/sync.h>
 
-LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CEvoDB& evo_db, CSporkManager& sporkman, CTxMemPool& mempool,
-                         const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe) :
+LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CEvoDB& evo_db, CMNHFManager& mnhfman, CSporkManager& sporkman,
+                         CTxMemPool& mempool, const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe) :
     bls_worker{std::make_shared<CBLSWorker>()},
     dkg_debugman{std::make_unique<llmq::CDKGDebugManager>()},
     quorum_block_processor{[&]() -> llmq::CQuorumBlockProcessor* const {
@@ -46,7 +46,7 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CEvoDB& evo
         llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(*llmq::chainLocksHandler, chainstate, connman, *llmq::quorumManager, *sigman, *shareman, sporkman, mempool, *::masternodeSync, unit_tests, wipe);
         return llmq::quorumInstantSendManager.get();
     }()},
-    ehfSignalsHandler{std::make_unique<llmq::CEHFSignalsHandler>(chainstate, connman, *sigman, *shareman, sporkman, *llmq::quorumManager, mempool)}
+    ehfSignalsHandler{std::make_unique<llmq::CEHFSignalsHandler>(chainstate, connman, mnhfman, *sigman, *shareman, sporkman, *llmq::quorumManager, mempool)}
 {
     // NOTE: we use this only to wipe the old db, do NOT use it for anything else
     // TODO: remove it in some future version

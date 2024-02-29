@@ -665,7 +665,6 @@ protected:
     const std::unique_ptr<CChainstateHelper>& m_chain_helper;
     const std::unique_ptr<llmq::CChainLocksHandler>& m_clhandler;
     const std::unique_ptr<llmq::CInstantSendManager>& m_isman;
-    CMNHFManager& m_mnhfManager;
     CEvoDB& m_evoDb;
 
 public:
@@ -675,7 +674,6 @@ public:
 
     explicit CChainState(CTxMemPool* mempool,
                          BlockManager& blockman,
-                         CMNHFManager& mnhfManager,
                          CEvoDB& evoDb,
                          const std::unique_ptr<CChainstateHelper>& chain_helper,
                          const std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
@@ -858,9 +856,6 @@ public:
         size_t max_coins_cache_size_bytes,
         size_t max_mempool_size_bytes) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    /** Return list of MN EHF signals for current Tip() */
-    std::unordered_map<uint8_t, int> GetMNHFSignalsStage(const CBlockIndex* pindex);
-
     std::string ToString() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 private:
     bool ActivateBestChainStep(BlockValidationState& state, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
@@ -1025,7 +1020,6 @@ public:
     //! @param[in] snapshot_blockhash   If given, signify that this chainstate
     //!                                 is based on a snapshot.
     CChainState& InitializeChainstate(CTxMemPool* mempool,
-                                      CMNHFManager& mnhfManager,
                                       CEvoDB& evoDb,
                                       const std::unique_ptr<CChainstateHelper>& chain_helper,
                                       const std::unique_ptr<llmq::CChainLocksHandler>& clhandler,

@@ -153,7 +153,7 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
     return true;
 }
 
-static UniValue generateBlocks(ChainstateManager& chainman, CEvoDB& evodb, CChainstateHelper& chain_helper, LLMQContext& llmq_ctx,
+static UniValue generateBlocks(ChainstateManager& chainman, CEvoDB& evodb, CChainstateHelper& chain_helper, CMNHFManager& mnhfman, LLMQContext& llmq_ctx,
                                const CTxMemPool& mempool, const CScript& coinbase_script, int nGenerate, uint64_t nMaxTries)
 {
     int nHeightEnd = 0;
@@ -169,7 +169,7 @@ static UniValue generateBlocks(ChainstateManager& chainman, CEvoDB& evodb, CChai
     UniValue blockHashes(UniValue::VARR);
     while (nHeight < nHeightEnd && !ShutdownRequested())
     {
-        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(chainman.ActiveChainstate(), evodb, chain_helper, llmq_ctx, mempool, Params()).CreateNewBlock(coinbase_script));
+        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(chainman.ActiveChainstate(), evodb, chain_helper, mnhfman, llmq_ctx, mempool, Params()).CreateNewBlock(coinbase_script));
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         CBlock *pblock = &pblocktemplate->block;
@@ -255,7 +255,7 @@ static RPCHelpMan generatetodescriptor()
     ChainstateManager& chainman = EnsureChainman(node);
     LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    return generateBlocks(chainman, *node.evodb, *node.chain_helper, llmq_ctx, mempool, coinbase_script, num_blocks, max_tries);
+    return generateBlocks(chainman, *node.evodb, *node.chain_helper, *node.mnhf_manager, llmq_ctx, mempool, coinbase_script, num_blocks, max_tries);
 },
     };
 }
@@ -296,7 +296,7 @@ static RPCHelpMan generatetoaddress()
 
     CScript coinbase_script = GetScriptForDestination(destination);
 
-    return generateBlocks(chainman, *node.evodb, *node.chain_helper, llmq_ctx, mempool, coinbase_script, num_blocks, max_tries);
+    return generateBlocks(chainman, *node.evodb, *node.chain_helper, *node.mnhf_manager, llmq_ctx, mempool, coinbase_script, num_blocks, max_tries);
 },
     };
 }
@@ -378,7 +378,7 @@ static RPCHelpMan generateblock()
         LOCK(cs_main);
 
         CTxMemPool empty_mempool;
-        std::unique_ptr<CBlockTemplate> blocktemplate(BlockAssembler(active_chainstate, *node.evodb, *node.chain_helper, llmq_ctx, empty_mempool, chainparams).CreateNewBlock(coinbase_script));
+        std::unique_ptr<CBlockTemplate> blocktemplate(BlockAssembler(active_chainstate, *node.evodb, *node.chain_helper, *node.mnhf_manager, llmq_ctx, empty_mempool, chainparams).CreateNewBlock(coinbase_script));
         if (!blocktemplate) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         }
@@ -814,7 +814,7 @@ static RPCHelpMan getblocktemplate()
         // Create new block
         CScript scriptDummy = CScript() << OP_TRUE;
         LLMQContext& llmq_ctx = EnsureAnyLLMQContext(request.context);
-        pblocktemplate = BlockAssembler(active_chainstate, *node.evodb, *node.chain_helper, llmq_ctx, mempool, Params()).CreateNewBlock(scriptDummy);
+        pblocktemplate = BlockAssembler(active_chainstate, *node.evodb, *node.chain_helper, *node.mnhf_manager, llmq_ctx, mempool, Params()).CreateNewBlock(scriptDummy);
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 

@@ -12,6 +12,7 @@
 class CBlockIndex;
 class CChainState;
 class CConnman;
+class CMNHFManager;
 class CSporkManager;
 class CTxMemPool;
 
@@ -26,6 +27,7 @@ class CEHFSignalsHandler : public CRecoveredSigsListener
 private:
     CChainState& chainstate;
     CConnman& connman;
+    CMNHFManager& mnhfman;
     CSigningManager& sigman;
     CSigSharesManager& shareman;
     const CSporkManager& sporkman;
@@ -39,7 +41,7 @@ private:
     std::set<uint256> ids GUARDED_BY(cs);
 public:
     explicit CEHFSignalsHandler(CChainState& chainstate, CConnman& connman,
-                                CSigningManager& sigman, CSigSharesManager& shareman,
+                                CMNHFManager& mnhfman, CSigningManager& sigman, CSigSharesManager& shareman,
                                 const CSporkManager& sporkman, const CQuorumManager& qman, CTxMemPool& mempool);
     ~CEHFSignalsHandler();
 

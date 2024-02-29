@@ -61,12 +61,13 @@ BlockAssembler::Options::Options() {
     nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
 }
 
-BlockAssembler::BlockAssembler(CChainState& chainstate, CEvoDB& evoDb, CChainstateHelper& chain_helper, LLMQContext& llmq_ctx,
-                               const CTxMemPool& mempool, const CChainParams& params, const Options& options) :
+BlockAssembler::BlockAssembler(CChainState& chainstate, CEvoDB& evoDb, CChainstateHelper& chain_helper, CMNHFManager& mnhfman,
+                               LLMQContext& llmq_ctx, const CTxMemPool& mempool, const CChainParams& params, const Options& options) :
       chainparams(params),
       m_mempool(mempool),
       m_chainstate(chainstate),
       m_chain_helper(chain_helper),
+      m_mnhfman(mnhfman),
       quorum_block_processor(*llmq_ctx.quorum_block_processor),
       m_clhandler(*llmq_ctx.clhandler),
       m_isman(*llmq_ctx.isman),
@@ -93,9 +94,9 @@ static BlockAssembler::Options DefaultOptions()
     return options;
 }
 
-BlockAssembler::BlockAssembler(CChainState& chainstate, CEvoDB& evoDb, CChainstateHelper& chain_helper, LLMQContext& llmq_ctx,
-                               const CTxMemPool& mempool, const CChainParams& params)
-    : BlockAssembler(chainstate, evoDb, chain_helper, llmq_ctx, mempool, params, DefaultOptions()) {}
+BlockAssembler::BlockAssembler(CChainState& chainstate, CEvoDB& evoDb, CChainstateHelper& chain_helper, CMNHFManager& mnhfman,
+                               LLMQContext& llmq_ctx, const CTxMemPool& mempool, const CChainParams& params)
+    : BlockAssembler(chainstate, evoDb, chain_helper, mnhfman, llmq_ctx, mempool, params, DefaultOptions()) {}
 
 void BlockAssembler::resetBlock()
 {
@@ -412,7 +413,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     }
 
     // This map with signals is used only to find duplicates
-    std::unordered_map<uint8_t, int> signals = m_chainstate.GetMNHFSignalsStage(pindexPrev);
+    std::unordered_map<uint8_t, int> signals = m_mnhfman.GetSignalsStage(pindexPrev);
 
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block
