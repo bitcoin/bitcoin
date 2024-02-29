@@ -149,8 +149,7 @@ CAmount PlatformShare(const CAmount reward)
     // all we know is predefined budget cycle and window
 
     int nOffset = nBlockHeight % m_consensus_params.nBudgetPaymentsCycleBlocks;
-    if(nBlockHeight >= m_consensus_params.nBudgetPaymentsStartBlock &&
-       nOffset < m_consensus_params.nBudgetPaymentsWindowBlocks) {
+    if (nOffset < m_consensus_params.nBudgetPaymentsWindowBlocks) {
         // NOTE: old budget system is disabled since 12.1
         if(m_mn_sync.IsSynced()) {
             // no old budget blocks should be accepted here on mainnet,
