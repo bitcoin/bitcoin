@@ -195,11 +195,11 @@ FUZZ_TARGET(coin_grinder_is_optimal)
 
     if (best_weight < std::numeric_limits<int>::max()) {
         // Sufficient funds and acceptable weight: CoinGrinder should find at least one solution
-        int high_max_weight = fuzzed_data_provider.ConsumeIntegralInRange<int>(best_weight, std::numeric_limits<int>::max());
+        int high_max_selection_weight = fuzzed_data_provider.ConsumeIntegralInRange<int>(best_weight, std::numeric_limits<int>::max());
 
-        auto result_cg = CoinGrinder(group_pos, target, coin_params.m_min_change_target, high_max_weight);
+        auto result_cg = CoinGrinder(group_pos, target, coin_params.m_min_change_target, high_max_selection_weight);
         assert(result_cg);
-        assert(result_cg->GetWeight() <= high_max_weight);
+        assert(result_cg->GetWeight() <= high_max_selection_weight);
         assert(result_cg->GetSelectedEffectiveValue() >= target + coin_params.m_min_change_target);
         assert(best_weight < result_cg->GetWeight() || (best_weight == result_cg->GetWeight() && best_amount <= result_cg->GetSelectedEffectiveValue()));
         if (result_cg->GetAlgoCompleted()) {
@@ -210,8 +210,8 @@ FUZZ_TARGET(coin_grinder_is_optimal)
     }
 
     // CoinGrinder cannot ever find a better solution than the brute-forced best, or there is none in the first place
-    int low_max_weight = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, best_weight - 1);
-    auto result_cg = CoinGrinder(group_pos, target, coin_params.m_min_change_target, low_max_weight);
+    int low_max_selection_weight = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, best_weight - 1);
+    auto result_cg = CoinGrinder(group_pos, target, coin_params.m_min_change_target, low_max_selection_weight);
     // Max_weight should have been exceeded, or there were insufficient funds
     assert(!result_cg);
 }
