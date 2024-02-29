@@ -450,7 +450,7 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
 
 void CDKGSession::VerifyConnectionAndMinProtoVersions() const
 {
-    if (!IsQuorumPoseEnabled(params.type)) {
+    if (!IsQuorumPoseEnabled(params.type, m_sporkman)) {
         return;
     }
 
@@ -465,7 +465,7 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions() const
         protoMap.emplace(verifiedProRegTxHash, pnode->nVersion);
     });
 
-    bool fShouldAllMembersBeConnected = IsAllMembersConnectedEnabled(params.type);
+    bool fShouldAllMembersBeConnected = IsAllMembersConnectedEnabled(params.type, m_sporkman);
     for (const auto& m : members) {
         if (m->dmn->proTxHash == myProTxHash) {
             continue;

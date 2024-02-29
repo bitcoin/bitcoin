@@ -13,6 +13,7 @@
 #include <vector>
 
 class CBlockIndex;
+class CSporkManager;
 
 namespace llmq
 {
@@ -28,8 +29,8 @@ static constexpr bool DEFAULT_ENABLE_QUORUM_DATA_RECOVERY{true};
 // If true, we will connect to all new quorums and watch their communication
 static constexpr bool DEFAULT_WATCH_QUORUMS{false};
 
-bool IsAllMembersConnectedEnabled(Consensus::LLMQType llmqType);
-bool IsQuorumPoseEnabled(Consensus::LLMQType llmqType);
+bool IsAllMembersConnectedEnabled(const Consensus::LLMQType llmqType, const CSporkManager& sporkman);
+bool IsQuorumPoseEnabled(const Consensus::LLMQType llmqType, const CSporkManager& sporkman);
 
 bool IsQuorumRotationEnabled(const Consensus::LLMQParams& llmqParams, gsl::not_null<const CBlockIndex*> pindex);
 

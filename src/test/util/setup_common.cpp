@@ -222,8 +222,7 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman); // Deterministic randomness for tests.
 
-    ::sporkManager = std::make_unique<CSporkManager>();
-    m_node.sporkman = ::sporkManager.get();
+    m_node.sporkman = std::make_unique<CSporkManager>();
     ::governance = std::make_unique<CGovernanceManager>();
     m_node.govman = ::governance.get();
     ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman, *m_node.govman);
@@ -257,8 +256,7 @@ ChainTestingSetup::~ChainTestingSetup()
     ::masternodeSync.reset();
     m_node.govman = nullptr;
     ::governance.reset();
-    m_node.sporkman = nullptr;
-    ::sporkManager.reset();
+    m_node.sporkman.reset();
     m_node.connman.reset();
     m_node.addrman.reset();
     m_node.args = nullptr;
@@ -291,7 +289,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman, m_node.banman.get(),
                                        *m_node.scheduler, *m_node.chainman, *m_node.mempool, *m_node.govman,
-                                       m_node.cj_ctx, m_node.llmq_ctx, false);
+                                       *m_node.sporkman, m_node.cj_ctx, m_node.llmq_ctx, false);
     {
         CConnman::Options options;
         options.m_msgproc = m_node.peerman.get();

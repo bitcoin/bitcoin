@@ -649,10 +649,10 @@ uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256
     return proTxHash2;
 }
 
-std::set<uint256> GetQuorumConnections(const Consensus::LLMQParams& llmqParams, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
-                                                   const uint256& forMember, bool onlyOutbound)
+std::set<uint256> GetQuorumConnections(const Consensus::LLMQParams& llmqParams, const CSporkManager& sporkman,
+                                       gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound)
 {
-    if (IsAllMembersConnectedEnabled(llmqParams.type)) {
+    if (IsAllMembersConnectedEnabled(llmqParams.type, sporkman)) {
         auto mns = GetAllQuorumMembers(llmqParams.type, pQuorumBaseBlockIndex);
         std::set<uint256> result;
 
@@ -749,8 +749,8 @@ std::set<size_t> CalcDeterministicWatchConnections(Consensus::LLMQType llmqType,
     return result;
 }
 
-bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
-                                         CConnman& connman, const uint256& myProTxHash)
+bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& connman, const CSporkManager& sporkman,
+                             gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& myProTxHash)
 {
     if (!fMasternodeMode && !IsWatchQuorumsEnabled()) {
         return false;
@@ -773,7 +773,7 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, gsl::not_n
     std::set<uint256> connections;
     std::set<uint256> relayMembers;
     if (isMember) {
-        connections = GetQuorumConnections(llmqParams, pQuorumBaseBlockIndex, myProTxHash, true);
+        connections = GetQuorumConnections(llmqParams, sporkman, pQuorumBaseBlockIndex, myProTxHash, true);
         relayMembers = GetQuorumRelayMembers(llmqParams, pQuorumBaseBlockIndex, myProTxHash, true);
     } else {
         auto cindexes = CalcDeterministicWatchConnections(llmqParams.type, pQuorumBaseBlockIndex, members.size(), 1);
@@ -804,10 +804,10 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, gsl::not_n
     return true;
 }
 
-void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
-                               CConnman& connman, const uint256 &myProTxHash)
+void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman& connman, const CSporkManager& sporkman,
+                               gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256 &myProTxHash)
 {
-    if (!IsQuorumPoseEnabled(llmqParams.type)) {
+    if (!IsQuorumPoseEnabled(llmqParams.type, sporkman)) {
         return;
     }
 

@@ -238,7 +238,8 @@ class PeerManagerImpl final : public PeerManager
 public:
     PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
                     BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman,
-                    CTxMemPool& pool, CGovernanceManager& govman, const std::unique_ptr<CJContext>& cj_ctx,
+                    CTxMemPool& pool, CGovernanceManager& govman, CSporkManager& sporkman,
+                    const std::unique_ptr<CJContext>& cj_ctx,
                     const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs);
 
     /** Overridden from CValidationInterface. */
@@ -335,6 +336,7 @@ private:
     const std::unique_ptr<CJContext>& m_cj_ctx;
     const std::unique_ptr<LLMQContext>& m_llmq_ctx;
     CGovernanceManager& m_govman;
+    CSporkManager& m_sporkman;
 
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
@@ -1587,15 +1589,16 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex, const Conse
 
 std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman, BanMan* banman,
                                                CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                               CGovernanceManager& govman, const std::unique_ptr<CJContext>& cj_ctx,
+                                               CGovernanceManager& govman, CSporkManager& sporkman,
+                                               const std::unique_ptr<CJContext>& cj_ctx,
                                                const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs)
 {
-    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, scheduler, chainman, pool, govman, cj_ctx, llmq_ctx, ignore_incoming_txs);
+    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, scheduler, chainman, pool, govman, sporkman, cj_ctx, llmq_ctx, ignore_incoming_txs);
 }
 
 PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman, BanMan* banman,
                                  CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                 CGovernanceManager& govman, const std::unique_ptr<CJContext>& cj_ctx,
+                                 CGovernanceManager& govman, CSporkManager& sporkman, const std::unique_ptr<CJContext>& cj_ctx,
                                  const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs)
     : m_chainparams(chainparams),
       m_connman(connman),
@@ -1606,6 +1609,7 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
       m_cj_ctx(cj_ctx),
       m_llmq_ctx(llmq_ctx),
       m_govman(govman),
+      m_sporkman(sporkman),
       m_ignore_incoming_txs(ignore_incoming_txs)
 {
     assert(std::addressof(g_chainman) == std::addressof(m_chainman));
@@ -1884,7 +1888,7 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
 
     case MSG_SPORK:
         {
-            return sporkManager->GetSporkByHash(inv.hash).has_value();
+            return m_sporkman.GetSporkByHash(inv.hash).has_value();
         }
 
     case MSG_GOVERNANCE_OBJECT:
@@ -2220,7 +2224,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         }
 
         if (!push && inv.type == MSG_SPORK) {
-            if (auto opt_spork = sporkManager->GetSporkByHash(inv.hash)) {
+            if (auto opt_spork = m_sporkman.GetSporkByHash(inv.hash)) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SPORK, *opt_spork));
                 push = true;
             }
@@ -4429,14 +4433,14 @@ void PeerManagerImpl::ProcessMessage(
         }
 #endif // ENABLE_WALLET
         ProcessPeerMsgRet(m_cj_ctx->server->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
-        ProcessPeerMsgRet(sporkManager->ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom);
+        ProcessPeerMsgRet(m_sporkman.ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom);
         ::masternodeSync->ProcessMessage(pfrom, msg_type, vRecv);
         ProcessPeerMsgRet(m_govman.ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(CMNAuth::ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(m_llmq_ctx->qdkgsman->ProcessMessage(pfrom, this, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(m_llmq_ctx->qman->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
-        m_llmq_ctx->shareman->ProcessMessage(pfrom, *sporkManager, msg_type, vRecv);
+        m_llmq_ctx->shareman->ProcessMessage(pfrom, m_sporkman, msg_type, vRecv);
         ProcessPeerMsgRet(m_llmq_ctx->sigman->ProcessMessage(pfrom, this, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(m_llmq_ctx->clhandler->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(m_llmq_ctx->isman->ProcessMessage(pfrom, this, msg_type, vRecv), pfrom);

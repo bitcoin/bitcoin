@@ -75,6 +75,7 @@ struct NodeContext {
     std::unique_ptr<CChainstateHelper> chain_helper;
     std::unique_ptr<CJContext> cj_ctx;
     std::unique_ptr<CMNHFManager> mnhf_manager;
+    std::unique_ptr<CSporkManager> sporkman;
     std::unique_ptr<LLMQContext> llmq_ctx;
     CCreditPoolManager* cpoolman{nullptr};
     CDeterministicMNManager* dmnman{nullptr};
@@ -83,7 +84,6 @@ struct NodeContext {
     CMasternodeMetaMan* mn_metaman{nullptr};
     CMasternodeSync* mn_sync{nullptr};
     CNetFulfilledRequestManager* netfulfilledman{nullptr};
-    CSporkManager* sporkman{nullptr};
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the NodeContext struct doesn't need to #include class
