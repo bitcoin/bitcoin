@@ -101,12 +101,19 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].getrawchangeaddress()
         nodes[0].getrawchangeaddress()
         nodes[0].getrawchangeaddress()
+        # remember keypool sizes
+        wi = nodes[0].getwalletinfo()
+        kp_size_before = [wi['keypoolsize_hd_internal'], wi['keypoolsize']]
         # the next one should fail
         try:
             nodes[0].getrawchangeaddress()
             raise AssertionError('Keypool should be exhausted after six addresses')
         except JSONRPCException as e:
             assert e.error['code']==-12
+        # check that keypool sizes did not change
+        wi = nodes[0].getwalletinfo()
+        kp_size_after = [wi['keypoolsize_hd_internal'], wi['keypoolsize']]
+        assert_equal(kp_size_before, kp_size_after)
 
         addr = set()
         # drain the external keys
@@ -117,12 +124,19 @@ class KeyPoolTest(BitcoinTestFramework):
         addr.add(nodes[0].getnewaddress())
         addr.add(nodes[0].getnewaddress())
         assert len(addr) == 6
+        # remember keypool sizes
+        wi = nodes[0].getwalletinfo()
+        kp_size_before = [wi['keypoolsize_hd_internal'], wi['keypoolsize']]
         # the next one should fail
         try:
             addr = nodes[0].getnewaddress()
             raise AssertionError('Keypool should be exhausted after six addresses')
         except JSONRPCException as e:
             assert e.error['code']==-12
+        # check that keypool sizes did not change
+        wi = nodes[0].getwalletinfo()
+        kp_size_after = [wi['keypoolsize_hd_internal'], wi['keypoolsize']]
+        assert_equal(kp_size_before, kp_size_after)
 
         # refill keypool with three new addresses
         nodes[0].walletpassphrase('test', 1)
