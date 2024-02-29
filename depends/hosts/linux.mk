@@ -10,7 +10,7 @@ endif
 linux_release_CFLAGS=-O2
 linux_release_CXXFLAGS=$(linux_release_CFLAGS)
 
-linux_debug_CFLAGS=-O1
+linux_debug_CFLAGS=-O1 -g
 linux_debug_CXXFLAGS=$(linux_debug_CFLAGS)
 
 linux_debug_CPPFLAGS=-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_LIBCPP_ENABLE_DEBUG_MODE=1
