@@ -146,6 +146,42 @@ BOOST_AUTO_TEST_CASE(bnb_test)
     AddCoins(clone_pool, {2 * CENT, 7 * CENT, 7 * CENT});
     AddDuplicateCoins(clone_pool, 50'000, 5 * CENT);
     TestBnBSuccess("Skip equivalent input sets", clone_pool, /*selection_target=*/16 * CENT, /*expected_input_amounts=*/{2 * CENT, 7 * CENT, 7 * CENT});
+
+    /* Test BnB attempt limit (`TOTAL_TRIES`)
+     *
+     * Generally, on a diverse UTXO pool BnB will quickly pass over UTXOs bigger than the target and then start
+     * combining small counts of UTXOs that in sum remain under the selection_target+cost_of_change. When there are
+     * multiple UTXOs that have matching amount and cost, combinations with equivalent input sets are skipped. The UTXO
+     * pool for this test is specifically crafted to create as much branching as possible. The selection target is
+     * 8 CENT while all UTXOs are slightly bigger than 1 CENT. The smallest eight are 100,000…100,007 sats, while the larger
+     * nine are 100,368…100,375 (i.e., 100,008…100,016 sats plus cost_of_change (359 sats)).
+     *
+     * Because BnB will only select input sets that fall between selection_target and selection_target + cost_of_change,
+     * and the search traverses the UTXO pool from large to small amounts, the search will visit every single
+     * combination of eight inputs. All except the last combination will overshoot by more than cost_of_change on the
+     * eighth input, because the larger nine inputs each exceed 1 CENT by more than cost_of_change. Only the last
+     * combination consisting of the eight smallest UTXOs falls into the target window.
+     */
+    std::vector<OutputGroup> doppelganger_pool;
+    std::vector<CAmount> doppelgangers;
+    std::vector<CAmount> expected_inputs;
+    for (int i = 0; i < 17; ++i) {
+        if (i < 8) {
+            // The eight smallest UTXOs can be combined to create expected_result
+            doppelgangers.push_back(1 * CENT + i);
+            expected_inputs.push_back(doppelgangers[i]);
+        } else {
+            // Any eight UTXOs including at least one UTXO with the added cost_of_change will exceed target window
+            doppelgangers.push_back(1 * CENT + default_cs_params.m_cost_of_change + i);
+        }
+    }
+    AddCoins(doppelganger_pool, doppelgangers);
+    // Among up to 17 unique UTXOs of similar effective value we will find a solution composed of the eight smallest UTXOs
+    TestBnBSuccess("Combine smallest 8 of 17 unique UTXOs", doppelganger_pool, /*selection_target=*/8 * CENT, /*expected_input_amounts=*/expected_inputs);
+
+    // Starting with 18 unique UTXOs of similar effective value we will not find the solution due to exceeding the attempt limit
+    AddCoins(doppelganger_pool, {1 * CENT + default_cs_params.m_cost_of_change + 17});
+    TestBnBFail("Exhaust looking for smallest 8 of 18 unique UTXOs", doppelganger_pool, /*selection_target=*/8 * CENT);
 }
 
 BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)

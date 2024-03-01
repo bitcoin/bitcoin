@@ -37,15 +37,6 @@ static const CoinEligibilityFilter filter_confirmed(1, 1, 0);
 static const CoinEligibilityFilter filter_standard_extra(6, 6, 0);
 static int nextLockTime = 0;
 
-static void add_coin(const CAmount& nValue, int nInput, std::vector<COutput>& set)
-{
-    CMutableTransaction tx;
-    tx.vout.resize(nInput + 1);
-    tx.vout[nInput].nValue = nValue;
-    tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
-    set.emplace_back(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, /*fees=*/ 0);
-}
-
 static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result)
 {
     CMutableTransaction tx;
@@ -133,18 +124,6 @@ static bool EqualResult(const SelectionResult& a, const SelectionResult& b)
     return ret.first == a.GetInputSet().end() && ret.second == b.GetInputSet().end();
 }
 
-static CAmount make_hard_case(int utxos, std::vector<COutput>& utxo_pool)
-{
-    utxo_pool.clear();
-    CAmount target = 0;
-    for (int i = 0; i < utxos; ++i) {
-        target += CAmount{1} << (utxos+i);
-        add_coin(CAmount{1} << (utxos+i), 2*i, utxo_pool);
-        add_coin((CAmount{1} << (utxos+i)) + (CAmount{1} << (utxos-1-i)), 2*i + 1, utxo_pool);
-    }
-    return target;
-}
-
 inline std::vector<OutputGroup>& GroupCoins(const std::vector<COutput>& available_coins, bool subtract_fee_outputs = false)
 {
     static std::vector<OutputGroup> static_groups;
@@ -194,17 +173,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     // Setup
     std::vector<COutput> utxo_pool;
     SelectionResult expected_result(CAmount(0), SelectionAlgorithm::BNB);
-
-    /////////////////////////
-    // Known Outcome tests //
-    /////////////////////////
-
-    // Iteration exhaustion test
-    CAmount target = make_hard_case(17, utxo_pool);
-    BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), target, 1)); // Should exhaust
-    target = make_hard_case(14, utxo_pool);
-    const auto result7 = SelectCoinsBnB(GroupCoins(utxo_pool), target, 1); // Should not exhaust
-    BOOST_CHECK(result7);
 
     ////////////////////
     // Behavior tests //
