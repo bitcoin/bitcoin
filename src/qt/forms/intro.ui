@@ -203,7 +203,7 @@
    <item>
     <widget class="QLabel" name="lblExplanation1">
      <property name="text">
-      <string>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</string>
+      <string>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
