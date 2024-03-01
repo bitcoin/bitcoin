@@ -323,6 +323,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         del block_headers[random.randrange(1, len(block_headers)-1)]
         with self.nodes[0].assert_debug_log(expected_msgs=MISBEHAVING_NONCONTINUOUS_HEADERS_MSGS):
             peer.send_and_ping(msg_headers(block_headers))
+            assert_equal(self.nodes[0].getpeerinfo()[0]['misbehavior_score'], 20)
         self.nodes[0].disconnect_p2ps()
 
     def test_resource_exhaustion(self):

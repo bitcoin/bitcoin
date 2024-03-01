@@ -1756,6 +1756,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
             stats.presync_height = peer->m_headers_sync->GetPresyncHeight();
         }
     }
+    stats.m_misbehavior_score = WITH_LOCK(peer->m_misbehavior_mutex, return peer->m_misbehavior_score);
 
     return true;
 }
