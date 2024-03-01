@@ -106,6 +106,16 @@
         <translation>Esporta Lista Indirizzi</translation>
     </message>
     <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation>File separato da virgole</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
+        <translation>Si è verificato un errore durante il tentativo di salvare l'elenco di indirizzi in %1. Per favore riprova.</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation>Esportazione Fallita.</translation>
     </message>
@@ -480,6 +490,10 @@
         <translation>Verificare i messaggi per assicurarsi che sono firmati con gli indirizzi specificati di Dash</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>&amp;Carica PSBT dal file...</translation>
+    </message>
+    <message>
         <source>&amp;Information</source>
         <translation>&amp;Informazioni</translation>
     </message>
@@ -582,6 +596,14 @@
         <translation>Carica transazione Dash parzialmente firmata</translation>
     </message>
     <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>Carica PSBT dagli appunti...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation>Carica la transazione Bitcoin parzialmente firmata dagli appunti</translation>
+    </message>
+    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Aprire la console di debug e diagnostica</translation>
     </message>
@@ -598,12 +620,28 @@
         <translation>Crea un nuovo portafoglio</translation>
     </message>
     <message>
+        <source>Close All Wallets...</source>
+        <translation>Chiudi tutti i Wallet...</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Chiudi tutti i Wallet...</translation>
+    </message>
+    <message>
         <source>%1 &amp;information</source>
         <translation>%1 &amp;Informazioni</translation>
     </message>
     <message>
         <source>Show the %1 basic information</source>
         <translation>Mostra le informazioni basiche del %1</translation>
+    </message>
+    <message>
+        <source>&amp;Discreet mode</source>
+        <translation>&amp;Modalità discreta</translation>
+    </message>
+    <message>
+        <source>Mask the values in the Overview tab</source>
+        <translation>Maschera i valori nella scheda Panoramica</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
@@ -1196,8 +1234,16 @@
         <translation>Quando fai click su OK, %1 comincerà a scaricare e processare l'intera %4 block chain (%2GB) a partire dalla prime transazioni del %3 quando %4 venne inaugurato.</translation>
     </message>
     <message>
+        <source>Limit block chain storage to</source>
+        <translation>Limita l'archiviazione della blockchain a</translation>
+    </message>
+    <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
         <translation>Per ripristinare questa impostazione è necessario scaricare nuovamente l'intera blockchain. È più veloce scaricare prima l'intera catena e sfoltirla in seguito. Disabilita alcune funzionalità avanzate.</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation> GB</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
@@ -1214,6 +1260,14 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Usa una cartella dati personalizzata:</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n GB di spazio libero disponibile</numerusform><numerusform>%n GB di spazio libero disponibile</numerusform><numerusform>%n GB di spazio libero disponibile</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(di %n GB richiesti)</numerusform><numerusform>(di %n GB richiesti)</numerusform><numerusform>(di %n GB richiesti)</numerusform></translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -1495,8 +1549,18 @@
         <translation>Il ripristino di questa impostazione richiede il nuovo download dell'intera blockchain.</translation>
     </message>
     <message>
+        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation>Dimensione massima della cache del database. Una cache più grande può contribuire a una sincronizzazione più rapida, dopodiché il vantaggio è meno pronunciato per la maggior parte dei casi d'uso. La riduzione della dimensione della cache ridurrà l'utilizzo della memoria. La memoria mempool inutilizzata viene condivisa per questa cache.</translation>
+    </message>
+    <message>
         <source>MiB</source>
         <translation>MiB</translation>
+    </message>
+    <message>
+        <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
+        <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
+        <translation>Imposta il numero di thread di verifica dello script. I valori negativi corrispondono al numero di core che vuoi lasciare liberi nel sistema.</translation>
     </message>
     <message>
         <source>Whether to keep the specified custom change address or not.</source>
@@ -1951,6 +2015,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>%1 Balance</source>
         <translation>%1 Saldo</translation>
     </message>
+    <message>
+        <source>Discreet mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Discreet mode.</source>
+        <translation>Modalità discreta attivata per la scheda Panoramica. Per smascherare i valori, deseleziona Impostazioni-&gt;Modalità discreta.</translation>
+    </message>
     <message numerus="yes">
         <source>%n Rounds</source>
         <translation><numerusform>%n Round</numerusform><numerusform>%n Rounds</numerusform><numerusform>%n Rounds</numerusform></translation>
@@ -2050,7 +2118,128 @@ https://www.transifex.com/projects/p/dash/</translation>
 </context>
 <context>
     <name>PSBTOperationsDialog</name>
-    </context>
+    <message>
+        <source>Dialog</source>
+        <translation>Dialogo</translation>
+    </message>
+    <message>
+        <source>Sign Tx</source>
+        <translation>Firma Tx</translation>
+    </message>
+    <message>
+        <source>Broadcast Tx</source>
+        <translation>Trasmetti Tx</translation>
+    </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation>Copia negli appunti</translation>
+    </message>
+    <message>
+        <source>Save...</source>
+        <translation>Salva...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Chiudi</translation>
+    </message>
+    <message>
+        <source>Failed to load transaction: %1</source>
+        <translation>Impossibile caricare la transazione: %1</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation>Impossibile firmare la transazione: %1</translation>
+    </message>
+    <message>
+        <source>Could not sign any more inputs.</source>
+        <translation>Impossibile firmare altri input.</translation>
+    </message>
+    <message>
+        <source>Signed %1 inputs, but more signatures are still required.</source>
+        <translation>Ingressi %1 firmati, ma sono necessarie più firme.</translation>
+    </message>
+    <message>
+        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
+        <translation>Transazione firmata con successo. La transazione è pronta per la trasmissione.</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation>Errore sconosciuto durante l'elaborazione della transazione.</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation>Transazione trasmessa con successo! ID transazione: %1</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast failed: %1</source>
+        <translation>Trasmissione della transazione non riuscita: %1</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation>PSBT copiato negli appunti.</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Salva i dati della transazione</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary)</source>
+        <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
+        <translation>Transazione parzialmente firmata (Binaria)</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk.</source>
+        <translation>PSBT salvato su disco.</translation>
+    </message>
+    <message>
+        <source> * Sends %1 to %2</source>
+        <translation>* Invia %1 a %2</translation>
+    </message>
+    <message>
+        <source>Unable to calculate transaction fee or total transaction amount.</source>
+        <translation>Impossibile calcolare la commissione di transazione o l'importo totale della transazione.</translation>
+    </message>
+    <message>
+        <source>Pays transaction fee: </source>
+        <translation>Paga la commissione della transazione:</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Importo totale</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>o</translation>
+    </message>
+    <message>
+        <source>Transaction has %1 unsigned inputs.</source>
+        <translation>La transazione ha %1 input senza segno.</translation>
+    </message>
+    <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation>Nella transazione mancano alcune informazioni sugli input.</translation>
+    </message>
+    <message>
+        <source>Transaction still needs signature(s).</source>
+        <translation>La transazione necessita ancora di firme.</translation>
+    </message>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation>(Ma questo wallet non può firmare transazioni.)</translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation>(Ma questo wallet non ha le chiavi giuste.)</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation>La transazione è completamente firmata e pronta per la trasmissione.</translation>
+    </message>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation>Lo stato della transazione è sconosciuto.</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -2108,7 +2297,19 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Received</source>
         <translation>Ricevuto</translation>
     </message>
-    </context>
+    <message>
+        <source>Peer Id</source>
+        <translation>Peer Id</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Indirizzo</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation>Network</translation>
+    </message>
+</context>
 <context>
     <name>Proposal</name>
     <message>
@@ -2161,6 +2362,16 @@ https://www.transifex.com/projects/p/dash/</translation>
 </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation>Desideri ripristinare le impostazioni sui valori predefiniti o interrompere senza apportare modifiche?</translation>
+    </message>
+    <message>
+        <source>A fatal error occured. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation>Si è verificato un errore irreversibile. Controlla che il file delle impostazioni sia scrivibile o prova a eseguirlo con -nosettings.</translation>
+    </message>
     <message>
         <source>Choose data directory on startup (default: %u)</source>
         <translation>Seleziona la directory dei dati all'avvio (default: %u)</translation>
@@ -2260,6 +2471,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>This can also be adjusted later in the "Appearance" tab of the preferences.</source>
         <translation>Questo può anche essere regolato in seguito nella scheda "Aspetto" delle preferenze.</translation>
+    </message>
+    <message>
+        <source>Unroutable</source>
+        <translation>Non instradabile</translation>
+    </message>
+    <message>
+        <source>Internal</source>
+        <translation>Interna</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -2379,7 +2598,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Save QR Code</source>
         <translation>Salva codice QR</translation>
     </message>
-    </context>
+    <message>
+        <source>PNG Image</source>
+        <extracomment>Expanded name of the PNG file format. See https://en.wikipedia.org/wiki/Portable_Network_Graphics</extracomment>
+        <translation>Immagine PNG</translation>
+    </message>
+</context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -2607,6 +2831,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Punteggio PoSe</translation>
     </message>
     <message>
+        <source>The network protocol this peer is connected through: IPv4, IPv6, Onion, I2P, or CJDNS.</source>
+        <translation>Il protocollo di rete tramite cui è connesso questo peer: IPv4, IPv6, Onion, I2P o CJDNS.</translation>
+    </message>
+    <message>
+        <source>Permissions</source>
+        <translation>Autorizzazioni</translation>
+    </message>
+    <message>
         <source>Services</source>
         <translation>Servizi</translation>
     </message>
@@ -2729,6 +2961,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Executing command without any wallet</source>
         <translation>Comando in esecuzione senza alcun portafoglio</translation>
+    </message>
+    <message>
+        <source>(peer id: %1)</source>
+        <translation>(peer id: %1)</translation>
     </message>
     <message>
         <source>Executing command using "%1" wallet</source>
@@ -2872,6 +3108,30 @@ https://www.transifex.com/projects/p/dash/</translation>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Request payment to ...</source>
+        <translation>Richiedi il pagamento a...</translation>
+    </message>
+    <message>
+        <source>Address:</source>
+        <translation>Indirizzo:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>Quantità:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Etichetta:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Messaggio:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Wallet:</translation>
+    </message>
     <message>
         <source>Copy &amp;URI</source>
         <translation>Copia &amp;URI</translation>
@@ -3221,6 +3481,11 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Send</source>
         <translation>Invia</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary)</source>
+        <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
+        <translation>Transazione parzialmente firmata (binaria)</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -3999,6 +4264,11 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Esporta lo storico delle transazioni</translation>
     </message>
     <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation>File separato da virgole</translation>
+    </message>
+    <message>
         <source>Confirmed</source>
         <translation>Confermato</translation>
     </message>
@@ -4076,7 +4346,15 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>La chiusura del portafoglio per periodi prolungati può comportare la risincronizzazione dell'intera catena se l'eliminazione è abilitata.</translation>
     </message>
-    </context>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Chiudi tutti i wallet</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation>Sei sicuro di voler chiudere tutti i wallet?</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -4118,12 +4396,25 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
         <translation>Importo selezionato:</translation>
     </message>
     <message>
+        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
+        <translation>Impossibile decodificare PSBT dagli appunti (base64 non valido)</translation>
+    </message>
+    <message>
         <source>Load Transaction Data</source>
         <translation>Carica i Dati della Transazione</translation>
     </message>
     <message>
         <source>Partially Signed Transaction (*.psbt)</source>
         <translation>Transazione parzialmente firmata (*.psbt)</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT</source>
+        <translation>Impossibile decodificare PSBT</translation>
+    </message>
+    <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation>Dati del wallet</translation>
     </message>
     <message>
         <source>Error</source>
@@ -4429,6 +4720,10 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
         <translation>La lunghezza totale della stringa di network version (%i) eccede la lunghezza massima (%i). Ridurre il numero o la dimensione di uacomments.</translation>
     </message>
     <message>
+        <source>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</source>
+        <translation>La transazione richiede un indirizzo di modifica, ma non possiamo generarlo. Per favore chiama prima KeypoolRefill.</translation>
+    </message>
+    <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>ATTENZIONE! Impossibile riempire il keypool, per favore sblocca il tuo portafoglio per farlo ..</translation>
     </message>
@@ -4487,6 +4782,10 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
     <message>
         <source>Error: Disk space is low for %s</source>
         <translation>Errore: lo spazio su disco è insufficiente per %s</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Errore: Keypool esaurito, chiamare prima keypoolrefill</translation>
     </message>
     <message>
         <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
@@ -4563,6 +4862,10 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
     <message>
         <source>No matching denominations found for mixing.</source>
         <translation>Nessuna denominazione corrispondente trovata per il mixing.</translation>
+    </message>
+    <message>
+        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
+        <translation>Nessun server proxy specificato. Utilizzare -proxy=&lt;ip&gt; o -proxy=&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <source>Not compatible with existing transactions.</source>
@@ -4675,6 +4978,10 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
     <message>
         <source>Unknown -blockfilterindex value %s.</source>
         <translation>Sconosciuto - valore blockfilterindex %s.</translation>
+    </message>
+    <message>
+        <source>Unknown new rules activated (versionbit %i)</source>
+        <translation>Nuove regole sconosciute attivate (versione bit %i)</translation>
     </message>
     <message>
         <source>Upgrading UTXO database</source>
