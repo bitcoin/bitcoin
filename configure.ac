@@ -958,7 +958,7 @@ if test "$TARGET_OS" = "darwin"; then
   AX_CHECK_LINK_FLAG([-Wl,-fixup_chains], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-fixup_chains"], [], [$LDFLAG_WERROR])
 fi
 
-AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h sys/select.h sys/prctl.h sys/sysctl.h vm/vm_param.h sys/vmmeter.h sys/resources.h])
+AC_CHECK_HEADERS([sys/select.h sys/prctl.h sys/sysctl.h vm/vm_param.h sys/vmmeter.h sys/resources.h])
 
 AC_CHECK_DECLS([getifaddrs, freeifaddrs],[CHECK_SOCKET],,
     [#include <sys/types.h>
@@ -972,18 +972,6 @@ AC_CHECK_DECLS([setsid])
 AC_CHECK_DECLS([pipe2])
 
 AC_CHECK_FUNCS([timingsafe_bcmp])
-
-AC_CHECK_DECLS([le16toh, le32toh, le64toh, htole16, htole32, htole64, be16toh, be32toh, be64toh, htobe16, htobe32, htobe64],,,
-    [#if HAVE_ENDIAN_H
-                 #include <endian.h>
-                 #elif HAVE_SYS_ENDIAN_H
-                 #include <sys/endian.h>
-                 #endif])
-
-AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64],,,
-    [#if HAVE_BYTESWAP_H
-                 #include <byteswap.h>
-                 #endif])
 
 AC_MSG_CHECKING([for __builtin_clzl])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
