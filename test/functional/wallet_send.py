@@ -563,6 +563,7 @@ class WalletSendTest(BitcoinTestFramework):
             options={"inputs": [ext_utxo], "input_weights": [{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": 1000}]}
         )
 
+        target_fee_rate_sat_vb = 10
         # Funding should also work when input weights are provided
         res = self.test_send(
             from_wallet=ext_wallet,
@@ -572,14 +573,17 @@ class WalletSendTest(BitcoinTestFramework):
             add_inputs=True,
             psbt=True,
             include_watching=True,
-            fee_rate=10
+            fee_rate=target_fee_rate_sat_vb
         )
         signed = ext_wallet.walletprocesspsbt(res["psbt"])
         signed = ext_fund.walletprocesspsbt(res["psbt"])
         assert signed["complete"]
         testres = self.nodes[0].testmempoolaccept([signed["hex"]])[0]
         assert_equal(testres["allowed"], True)
-        assert_fee_amount(testres["fees"]["base"], testres["vsize"], Decimal(0.0001))
+        actual_fee_rate_sat_vb = Decimal(testres["fees"]["base"]) * Decimal(1e8) / Decimal(testres["vsize"])
+        # Due to ECDSA signatures not always being the same length, the actual fee rate may be slightly different
+        # but rounded to nearest integer, it should be the same as the target fee rate
+        assert_equal(round(actual_fee_rate_sat_vb), target_fee_rate_sat_vb)
 
 if __name__ == '__main__':
     WalletSendTest().main()
