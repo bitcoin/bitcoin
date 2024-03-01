@@ -38,7 +38,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    auto netgroupman{*g_setup->m_node.netgroupman};
+    auto netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
     auto addr_man_ptr{std::make_unique<AddrManDeterministic>(netgroupman, fuzzed_data_provider, GetCheckRatio())};
     if (fuzzed_data_provider.ConsumeBool()) {
         const std::vector<uint8_t> serialized_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
@@ -53,7 +53,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     ConnmanTestMsg connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
                      fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
                      addr_man,
-                     *g_setup->m_node.netgroupman,
+                     netgroupman,
                      Params(),
                      fuzzed_data_provider.ConsumeBool()};
 
