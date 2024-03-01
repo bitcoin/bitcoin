@@ -543,11 +543,16 @@ class WalletSendTest(BitcoinTestFramework):
                 break
         psbt_in = dec["inputs"][input_idx]
         # Calculate the input weight
-        # (prevout + sequence + length of scriptSig + scriptsig + 1 byte buffer) * WITNESS_SCALE_FACTOR + num scriptWitness stack items + (length of stack item + stack item) * N stack items + 1 byte buffer
+        # (prevout + sequence + length of scriptSig + scriptsig) * WITNESS_SCALE_FACTOR + len of num scriptWitness stack items + (length of stack item + stack item) * N stack items
+        # Note that occasionally this weight estimate may be slightly larger or smaller than the real weight
+        # as sometimes ECDSA signatures are one byte shorter than expected with a probability of 1/128
         len_scriptsig = len(psbt_in["final_scriptSig"]["hex"]) // 2 if "final_scriptSig" in psbt_in else 0
-        len_scriptsig += len(ser_compact_size(len_scriptsig)) + 1
-        len_scriptwitness = (sum([(len(x) // 2) + len(ser_compact_size(len(x) // 2)) for x in psbt_in["final_scriptwitness"]]) + len(psbt_in["final_scriptwitness"]) + 1) if "final_scriptwitness" in psbt_in else 0
-        input_weight = ((40 + len_scriptsig) * WITNESS_SCALE_FACTOR) + len_scriptwitness
+        len_scriptsig += len(ser_compact_size(len_scriptsig))
+        len_scriptwitness = (sum([(len(x) // 2) + len(ser_compact_size(len(x) // 2)) for x in psbt_in["final_scriptwitness"]]) + len(ser_compact_size(len(psbt_in["final_scriptwitness"])))) if "final_scriptwitness" in psbt_in else 0
+        len_prevout_txid = 32
+        len_prevout_index = 4
+        len_sequence = 4
+        input_weight = ((len_prevout_txid + len_prevout_index + len_sequence + len_scriptsig) * WITNESS_SCALE_FACTOR) + len_scriptwitness
 
         # Input weight error conditions
         assert_raises_rpc_error(
