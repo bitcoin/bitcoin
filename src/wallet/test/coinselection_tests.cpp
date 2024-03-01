@@ -86,12 +86,12 @@ static std::string InputAmountsToString(const SelectionResult& selection)
     return "[" + util::Join(selection.GetInputSet(), " ", [](const auto& input){ return util::ToString(input->txout.nValue);}) + "]";
 }
 
-static void TestBnBSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const std::vector<CAmount>& expected_input_amounts, const CoinSelectionParams& cs_params = default_cs_params)
+static void TestBnBSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const std::vector<CAmount>& expected_input_amounts, const CoinSelectionParams& cs_params = default_cs_params, int custom_spending_vsize = 68)
 {
     SelectionResult expected_result(CAmount(0), SelectionAlgorithm::BNB);
     CAmount expected_amount = 0;
     for (CAmount input_amount : expected_input_amounts) {
-        OutputGroup group = MakeCoin(input_amount, true, cs_params);
+        OutputGroup group = MakeCoin(input_amount, true, cs_params, custom_spending_vsize);
         expected_amount += group.m_value;
         expected_result.AddInput(group);
     }
@@ -116,6 +116,29 @@ BOOST_AUTO_TEST_CASE(bnb_test)
 
     // BnB finds changeless solution while overshooting by up to cost_of_change
     TestBnBSuccess("Select upper bound", utxo_pool, /*selection_target=*/4 * CENT - default_cs_params.m_cost_of_change, /*expected_input_amounts=*/{1 * CENT, 3 * CENT});
+}
+
+BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
+{
+    // Create sets of UTXOs with the same effective amounts at different feerates (but different absolute amounts)
+    std::vector<OutputGroup> low_feerate_pool; // 5 sat/vB (default, and lower than long_term_feerate of 10 sat/vB)
+    AddCoins(low_feerate_pool, {2 * CENT, 3 * CENT, 5 * CENT, 10 * CENT});
+    TestBnBSuccess("Select many inputs at low feerates", low_feerate_pool, /*selection_target=*/10 * CENT, /*expected_input_amounts=*/{2 * CENT, 3 * CENT, 5 * CENT});
+
+    CoinSelectionParams high_feerate_params = init_default_params();
+    high_feerate_params.m_effective_feerate = CFeeRate{25'000};
+    std::vector<OutputGroup> high_feerate_pool; // 25 sat/vB (greater than long_term_feerate of 10 sat/vB)
+    AddCoins(high_feerate_pool, {2 * CENT, 3 * CENT, 5 * CENT, 10 * CENT}, high_feerate_params);
+    TestBnBSuccess("Select one input at high feerates", high_feerate_pool, /*selection_target=*/10 * CENT, /*expected_input_amounts=*/{10 * CENT}, high_feerate_params);
+
+    // Add heavy inputs {6, 7} to existing {2, 3, 5, 10}
+    low_feerate_pool.push_back(MakeCoin(6 * CENT, true, default_cs_params, /*custom_spending_vsize=*/500));
+    low_feerate_pool.push_back(MakeCoin(7 * CENT, true, default_cs_params, /*custom_spending_vsize=*/500));
+    TestBnBSuccess("Prefer two heavy inputs over two light inputs at low feerates", low_feerate_pool, /*selection_target=*/13 * CENT, /*expected_input_amounts=*/{6 * CENT, 7 * CENT}, default_cs_params, /*custom_spending_vsize=*/500);
+
+    high_feerate_pool.push_back(MakeCoin(6 * CENT, true, high_feerate_params, /*custom_spending_vsize=*/500));
+    high_feerate_pool.push_back(MakeCoin(7 * CENT, true, high_feerate_params, /*custom_spending_vsize=*/500));
+    TestBnBSuccess("Prefer two light inputs over two heavy inputs at high feerates", high_feerate_pool, /*selection_target=*/13 * CENT, /*expected_input_amounts=*/{3 * CENT, 10 * CENT}, high_feerate_params);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
