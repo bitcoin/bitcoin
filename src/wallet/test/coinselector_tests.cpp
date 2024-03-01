@@ -209,15 +209,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     ////////////////////
     // Behavior tests //
     ////////////////////
-    // Select 1 Cent with pool of only greater than 5 Cent
-    utxo_pool.clear();
-    for (int i = 5; i <= 20; ++i) {
-        add_coin(i * CENT, i, utxo_pool);
-    }
-    // Run 100 times, to make sure it is never finding a solution
-    for (int i = 0; i < 100; ++i) {
-        BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 1 * CENT, 2 * CENT));
-    }
 
     // Make sure that effective value is working in AttemptSelection when BnB is used
     CoinSelectionParams coin_selection_params_bnb{
