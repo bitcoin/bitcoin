@@ -199,27 +199,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     // Known Outcome tests //
     /////////////////////////
 
-    // Empty utxo pool
-    BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 1 * CENT, 0.5 * CENT));
-
-    // Add utxos
-    add_coin(1 * CENT, 1, utxo_pool);
-    add_coin(2 * CENT, 2, utxo_pool);
-    add_coin(3 * CENT, 3, utxo_pool);
-    add_coin(4 * CENT, 4, utxo_pool);
-
-    // Select 11 Cent, not possible
-    BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 11 * CENT, 0.5 * CENT));
-    expected_result.Clear();
-
-    // Cost of change is less than the difference between target value and utxo sum
-    BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 0.9 * CENT, 0));
-    expected_result.Clear();
-
-    // Select 0.25 Cent, not possible
-    BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 0.25 * CENT, 0.5 * CENT));
-    expected_result.Clear();
-
     // Iteration exhaustion test
     CAmount target = make_hard_case(17, utxo_pool);
     BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), target, 1)); // Should exhaust

@@ -109,9 +109,18 @@ static void TestBnBSuccess(std::string test_title, std::vector<OutputGroup>& utx
     BOOST_CHECK_MESSAGE(result->GetSelectedValue() == expected_amount, strprintf("Selected amount mismatch in BnB-Success: %s. Expected %d, but got %d", test_title, expected_amount, result->GetSelectedValue()));
 }
 
+static void TestBnBFail(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target)
+{
+    BOOST_CHECK_MESSAGE(!SelectCoinsBnB(utxo_pool, selection_target, /*cost_of_change=*/default_cs_params.m_cost_of_change, /*max_selection_weight=*/MAX_STANDARD_TX_WEIGHT), "BnB-Fail: " + test_title);
+}
+
 BOOST_AUTO_TEST_CASE(bnb_test)
 {
     std::vector<OutputGroup> utxo_pool;
+
+    // Fail for empty UTXO pool
+    TestBnBFail("Empty UTXO pool", utxo_pool, /*selection_target=*/1 * CENT);
+
     AddCoins(utxo_pool, {1 * CENT, 3 * CENT, 5 * CENT});
 
     // Simple success cases
@@ -123,6 +132,14 @@ BOOST_AUTO_TEST_CASE(bnb_test)
 
     // BnB finds changeless solution while overshooting by up to cost_of_change
     TestBnBSuccess("Select upper bound", utxo_pool, /*selection_target=*/4 * CENT - default_cs_params.m_cost_of_change, /*expected_input_amounts=*/{1 * CENT, 3 * CENT});
+
+    // BnB fails to find changeless solution when overshooting by cost_of_change + 1 sat
+    TestBnBFail("Overshoot upper bound", utxo_pool, /*selection_target=*/4 * CENT - default_cs_params.m_cost_of_change - 1);
+
+    // Simple cases without BnB solution
+    TestBnBFail("Smallest combination too big", utxo_pool, /*selection_target=*/0.5 * CENT);
+    TestBnBFail("No UTXO combination in target window", utxo_pool, /*selection_target=*/7 * CENT);
+    TestBnBFail("Select more than available", utxo_pool, /*selection_target=*/10 * CENT);
 
     // Test skipping of equivalent input sets
     std::vector<OutputGroup> clone_pool;
