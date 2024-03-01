@@ -985,6 +985,30 @@ AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64],,,
                  #include <byteswap.h>
                  #endif])
 
+AC_MSG_CHECKING([for __builtin_ctz])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
+ (void) __builtin_clz(0);
+  ]])],
+ [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_BUILTIN_CTZ, [1], [Define this symbol if you have __builtin_ctz])],
+ [ AC_MSG_RESULT([no])]
+)
+
+AC_MSG_CHECKING([for __builtin_ctzl])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
+ (void) __builtin_ctzl(0);
+  ]])],
+ [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_BUILTIN_CTZL, [1], [Define this symbol if you have __builtin_ctzl])],
+ [ AC_MSG_RESULT([no])]
+)
+
+AC_MSG_CHECKING([for __builtin_ctzll])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
+ (void) __builtin_ctzll(0);
+  ]])],
+ [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_BUILTIN_CTZLL, [1], [Define this symbol if you have __builtin_ctzll])],
+ [ AC_MSG_RESULT([no])]
+)
+
 AC_MSG_CHECKING([for __builtin_clzl])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
  (void) __builtin_clzl(0);
