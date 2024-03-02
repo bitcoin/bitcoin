@@ -3744,9 +3744,9 @@ static bool CheckMerkleRoot(const CBlock& block, BlockValidationState& state)
  * first transaction needs to have at least one input. */
 static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_commitment, BlockValidationState& state)
 {
-    if (expect_witness_commitment) {
-        if (block.m_checked_witness_commitment) return true;
+    if (block.m_checked_witness_commitment) return true;
 
+    if (expect_witness_commitment) {
         int commitpos = GetWitnessCommitmentIndex(block);
         if (commitpos != NO_WITNESS_COMMITMENT) {
             assert(!block.vtx.empty() && !block.vtx[0]->vin.empty());
@@ -3787,6 +3787,7 @@ static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_comm
         }
     }
 
+    block.m_checked_witness_commitment = true;
     return true;
 }
 
