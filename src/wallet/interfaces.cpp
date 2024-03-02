@@ -154,10 +154,7 @@ public:
     std::string getWalletName() override { return m_wallet->GetName(); }
     bool getNewDestination(const std::string label, CTxDestination& dest) override
     {
-        auto spk_man = m_wallet->GetLegacyScriptPubKeyMan();
-        if (!spk_man) {
-            return false;
-        }
+        LOCK(m_wallet->cs_wallet);
         std::string error;
         return m_wallet->GetNewDestination(label, dest, error);
     }

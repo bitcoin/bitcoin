@@ -3820,6 +3820,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             LegacyScriptPubKeyMan* legacy_spk_man = pwallet->GetLegacyScriptPubKeyMan();
             if (legacy_spk_man != nullptr) {
                 const PKHash *pkhash = std::get_if<PKHash>(&dest);
+                // TODO: refactor to use hd_seed_id from `meta`
                 if (pkhash && legacy_spk_man->HaveHDKey(ToKeyID(*pkhash), hdChainCurrent)) {
                     ret.pushKV("hdchainid", hdChainCurrent.GetID().GetHex());
                 }
