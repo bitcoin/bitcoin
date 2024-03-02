@@ -3698,6 +3698,13 @@ static bool CheckMerkleRoot(const CBlock& block, BlockValidationState& state)
 static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_commitment, BlockValidationState& state)
 {
     if (expect_witness_commitment) {
+        // The m_checked_witness_commitment flag is only used when a witness
+        // commitment is expected because segwit deployment is assumed disabled
+        // for blocks that are not attached to the chain since no previous
+        // block is available. Should the previous block arrive while the
+        // current block is still being processed (possible because cs_main is
+        // not held the whole time) it could happen that the check is skipped
+        // completely.
         if (block.m_checked_witness_commitment) return true;
 
         int commitpos = GetWitnessCommitmentIndex(block);
