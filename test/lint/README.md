@@ -16,7 +16,11 @@ result is cached and it prevents issues when the image changes.
 test runner
 ===========
 
-To run all the lint checks in the test runner outside the docker, use:
+To run all the lint checks in the test runner outside the docker you first need
+to install the rust toolchain using your package manager of choice or
+[rustup](https://www.rust-lang.org/tools/install).
+
+Then you can use:
 
 ```sh
 ( cd ./test/lint/test_runner/ && cargo fmt && cargo clippy && RUST_BACKTRACE=1 cargo run )
