@@ -130,6 +130,7 @@ win32-build
 test/config.ini
 test/cache/*
 test/.mypy_cache/
+test/lint/test_runner/target/
 
 !src/leveldb*/Makefile
 
