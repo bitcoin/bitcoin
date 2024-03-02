@@ -383,10 +383,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
 {
     const CChainParams& chainparams = Params();
     CTxMemPool empty_pool;
-    CBlock block = BlockAssembler(
-            ::ChainstateActive(), *m_node.cpoolman, *m_node.evodb, *m_node.chain_helper, *m_node.mnhf_manager, *m_node.llmq_ctx,
-            empty_pool, chainparams
-        ).CreateNewBlock(scriptPubKey)->block;
+    CBlock block = BlockAssembler(::ChainstateActive(), m_node, empty_pool, chainparams).CreateNewBlock(scriptPubKey)->block;
 
     std::vector<CTransactionRef> llmqCommitments;
     for (const auto& tx : block.vtx) {

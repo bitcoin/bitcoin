@@ -25,6 +25,7 @@ class CChainstateHelper;
 class CMNHFManager;
 class CScript;
 struct LLMQContext;
+struct NodeContext;
 
 namespace Consensus { struct Params; };
 namespace llmq {
@@ -174,10 +175,9 @@ public:
         CFeeRate blockMinFeeRate;
     };
 
-    explicit BlockAssembler(CChainState& chainstate, CCreditPoolManager& cpoolman, CEvoDB& evoDb, CChainstateHelper& chain_helper, CMNHFManager& mnhfman,
-                            LLMQContext& llmq_ctx, const CTxMemPool& mempool, const CChainParams& params);
-    explicit BlockAssembler(CChainState& chainstate, CCreditPoolManager& cpoolman, CEvoDB& evoDb, CChainstateHelper& chain_helper, CMNHFManager& mnhfman,
-                            LLMQContext& llmq_ctx, const CTxMemPool& mempool, const CChainParams& params, const Options& options);
+    explicit BlockAssembler(CChainState& chainstate, const NodeContext& node, const CTxMemPool& mempool, const CChainParams& params);
+    explicit BlockAssembler(CChainState& chainstate, const NodeContext& node, const CTxMemPool& mempool, const CChainParams& params,
+                            const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
     std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);

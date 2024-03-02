@@ -14,6 +14,7 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <node/context.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
@@ -61,18 +62,17 @@ BlockAssembler::Options::Options() {
     nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
 }
 
-BlockAssembler::BlockAssembler(CChainState& chainstate, CCreditPoolManager& cpoolman, CEvoDB& evoDb, CChainstateHelper& chain_helper, CMNHFManager& mnhfman,
-                               LLMQContext& llmq_ctx, const CTxMemPool& mempool, const CChainParams& params, const Options& options) :
+BlockAssembler::BlockAssembler(CChainState& chainstate, const NodeContext& node, const CTxMemPool& mempool, const CChainParams& params, const Options& options) :
       chainparams(params),
       m_mempool(mempool),
       m_chainstate(chainstate),
-      m_cpoolman(cpoolman),
-      m_chain_helper(chain_helper),
-      m_mnhfman(mnhfman),
-      quorum_block_processor(*llmq_ctx.quorum_block_processor),
-      m_clhandler(*llmq_ctx.clhandler),
-      m_isman(*llmq_ctx.isman),
-      m_evoDb(evoDb)
+      m_cpoolman(*Assert(node.cpoolman)),
+      m_chain_helper(*Assert(node.chain_helper)),
+      m_mnhfman(*Assert(node.mnhf_manager)),
+      quorum_block_processor(*Assert(Assert(node.llmq_ctx)->quorum_block_processor)),
+      m_clhandler(*Assert(Assert(node.llmq_ctx)->clhandler)),
+      m_isman(*Assert(Assert(node.llmq_ctx)->isman)),
+      m_evoDb(*Assert(node.evodb))
 {
     blockMinFeeRate = options.blockMinFeeRate;
     nBlockMaxSize = options.nBlockMaxSize;
@@ -95,9 +95,8 @@ static BlockAssembler::Options DefaultOptions()
     return options;
 }
 
-BlockAssembler::BlockAssembler(CChainState& chainstate, CCreditPoolManager& cpoolman, CEvoDB& evoDb, CChainstateHelper& chain_helper, CMNHFManager& mnhfman,
-                               LLMQContext& llmq_ctx, const CTxMemPool& mempool, const CChainParams& params)
-    : BlockAssembler(chainstate, cpoolman, evoDb, chain_helper, mnhfman, llmq_ctx, mempool, params, DefaultOptions()) {}
+BlockAssembler::BlockAssembler(CChainState& chainstate, const NodeContext& node, const CTxMemPool& mempool, const CChainParams& params)
+    : BlockAssembler(chainstate, node, mempool, params, DefaultOptions()) {}
 
 void BlockAssembler::resetBlock()
 {
