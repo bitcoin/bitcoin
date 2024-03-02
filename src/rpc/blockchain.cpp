@@ -1577,6 +1577,27 @@ static RPCHelpMan preciousblock()
     };
 }
 
+void InvalidateBlock(ChainstateManager& chainman, const uint256 block_hash) {
+    BlockValidationState state;
+    CBlockIndex* pblockindex;
+    {
+        LOCK(chainman.GetMutex());
+        pblockindex = chainman.m_blockman.LookupBlockIndex(block_hash);
+        if (!pblockindex) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+        }
+    }
+    chainman.ActiveChainstate().InvalidateBlock(state, pblockindex);
+
+    if (state.IsValid()) {
+        chainman.ActiveChainstate().ActivateBestChain(state);
+    }
+
+    if (!state.IsValid()) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
+    }
+}
+
 static RPCHelpMan invalidateblock()
 {
     return RPCHelpMan{"invalidateblock",
@@ -1591,27 +1612,10 @@ static RPCHelpMan invalidateblock()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    uint256 hash(ParseHashV(request.params[0], "blockhash"));
-    BlockValidationState state;
-
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    CBlockIndex* pblockindex;
-    {
-        LOCK(cs_main);
-        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
-        if (!pblockindex) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-        }
-    }
-    chainman.ActiveChainstate().InvalidateBlock(state, pblockindex);
+    uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
-    if (state.IsValid()) {
-        chainman.ActiveChainstate().ActivateBestChain(state);
-    }
-
-    if (!state.IsValid()) {
-        throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
-    }
+    InvalidateBlock(chainman, hash);
 
     return UniValue::VNULL;
 },
