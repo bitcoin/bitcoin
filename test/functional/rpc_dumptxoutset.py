@@ -56,6 +56,10 @@ class DumptxoutsetTest(BitcoinTestFramework):
         assert_raises_rpc_error(
             -8, "Couldn't open file {}.incomplete for writing".format(invalid_path), node.dumptxoutset, invalid_path, "latest")
 
+        self.log.info(f"Test that dumptxoutset with unknown dump type fails")
+        assert_raises_rpc_error(
+            -8, 'Invalid snapshot type "bogus" specified. Please specify "rollback" or "latest"', node.dumptxoutset, 'utxos.dat', "bogus")
+
 
 if __name__ == '__main__':
     DumptxoutsetTest(__file__).main()
