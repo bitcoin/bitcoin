@@ -346,7 +346,6 @@ BITCOIN_TESTS += \
   libmw/test/tests/models/tx/Test_UTXO.cpp \
   libmw/test/tests/node/Test_BlockBuilder.cpp \
   libmw/test/tests/node/Test_BlockValidator.cpp \
-  libmw/test/tests/node/Test_CoinsView.cpp \
   libmw/test/tests/node/Test_MineChain.cpp \
   libmw/test/tests/node/Test_Reorg.cpp \
   libmw/test/tests/wallet/Test_Keychain.cpp

@@ -10,6 +10,7 @@
     ],
     "vout": [
         {
+            "ismweb": false,
             "value": 1.00000000,
             "n": 0,
             "scriptPubKey": {
