@@ -8,12 +8,13 @@
 #include <memory>
 #include <string>
 
-class CMasternodeSync;
-class CBlockIndex;
 class CConnman;
-class CNode;
+class CBlockIndex;
 class CDataStream;
 class CGovernanceManager;
+class CMasternodeSync;
+class CNetFulfilledRequestManager;
+class CNode;
 
 static constexpr int MASTERNODE_SYNC_BLOCKCHAIN      = 1;
 static constexpr int MASTERNODE_SYNC_GOVERNANCE      = 4;
@@ -50,10 +51,11 @@ private:
     std::atomic<int64_t> nTimeLastUpdateBlockTip{0};
 
     CConnman& connman;
+    CNetFulfilledRequestManager& m_netfulfilledman;
     const CGovernanceManager& m_govman;
 
 public:
-    explicit CMasternodeSync(CConnman& _connman, const CGovernanceManager& govman);
+    explicit CMasternodeSync(CConnman& _connman, CNetFulfilledRequestManager& netfulfilledman, const CGovernanceManager& govman);
 
     void SendGovernanceSyncRequest(CNode* pnode) const;
 

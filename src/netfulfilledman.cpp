@@ -8,20 +8,19 @@
 #include <shutdown.h>
 #include <util/system.h>
 
-std::unique_ptr<CNetFulfilledRequestManager> netfulfilledman;
-
-CNetFulfilledRequestManager::CNetFulfilledRequestManager(bool load_cache) :
-    m_db{std::make_unique<db_type>("netfulfilled.dat", "magicFulfilledCache")},
-    is_valid{
-        [&]() -> bool {
-            assert(m_db != nullptr);
-            return load_cache ? m_db->Load(*this) : m_db->Store(*this);
-        }()
-    }
+CNetFulfilledRequestManager::CNetFulfilledRequestManager() :
+    m_db{std::make_unique<db_type>("netfulfilled.dat", "magicFulfilledCache")}
 {
+}
+
+bool CNetFulfilledRequestManager::LoadCache(bool load_cache)
+{
+    assert(m_db != nullptr);
+    is_valid = load_cache ? m_db->Load(*this) : m_db->Store(*this);
     if (is_valid && load_cache) {
         CheckAndRemove();
     }
+    return is_valid;
 }
 
 CNetFulfilledRequestManager::~CNetFulfilledRequestManager()

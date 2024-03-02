@@ -43,8 +43,9 @@ GovernanceStore::GovernanceStore() :
 {
 }
 
-CGovernanceManager::CGovernanceManager() :
+CGovernanceManager::CGovernanceManager(CNetFulfilledRequestManager& netfulfilledman) :
     m_db{std::make_unique<db_type>("governance.dat", "magicGovernanceCache")},
+    m_netfulfilledman{netfulfilledman},
     nTimeLastDiff(0),
     nCachedBlockHeight(0),
     setRequestedObjects(),
@@ -895,15 +896,17 @@ void CGovernanceManager::SyncSingleObjVotes(CNode& peer, const uint256& nProp, c
 
 PeerMsgRet CGovernanceManager::SyncObjects(CNode& peer, CConnman& connman) const
 {
+    assert(m_netfulfilledman.IsValid());
+
     // do not provide any data until our node is synced
     if (!::masternodeSync->IsSynced()) return {};
 
-    if (netfulfilledman->HasFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC)) {
+    if (m_netfulfilledman.HasFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC)) {
         // Asking for the whole list multiple times in a short period of time is no good
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- peer already asked me for the list\n", __func__);
         return tl::unexpected{20};
     }
-    netfulfilledman->AddFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC);
+    m_netfulfilledman.AddFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC);
 
     int nObjCount = 0;
 

@@ -16,6 +16,7 @@
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>
 #include <net.h>
+#include <netfulfilledman.h>
 #include <net_processing.h>
 #include <policy/fees.h>
 #include <scheduler.h>

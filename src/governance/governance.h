@@ -23,6 +23,7 @@ class CInv;
 class CGovernanceManager;
 class CGovernanceObject;
 class CGovernanceVote;
+class CNetFulfilledRequestManager;
 class CSporkManager;
 
 static constexpr int RATE_BUFFER_SIZE = 5;
@@ -251,6 +252,8 @@ private:
     const std::unique_ptr<db_type> m_db;
     bool is_valid{false};
 
+    CNetFulfilledRequestManager& m_netfulfilledman;
+
     int64_t nTimeLastDiff;
     // keep track of current block height
     int nCachedBlockHeight;
@@ -263,7 +266,7 @@ private:
     std::map<uint256, std::shared_ptr<CSuperblock>> mapTrigger;
 
 public:
-    CGovernanceManager();
+    explicit CGovernanceManager(CNetFulfilledRequestManager& netfulfilledman);
     ~CGovernanceManager();
 
     bool LoadCache(bool load_cache);
