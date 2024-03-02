@@ -27,7 +27,7 @@ class DumptxoutsetTest(BitcoinTestFramework):
         self.generate(node, COINBASE_MATURITY)
 
         FILENAME = 'txoutset.dat'
-        out = node.dumptxoutset(FILENAME)
+        out = node.dumptxoutset(FILENAME, "latest")
         expected_path = node.datadir_path / self.chain / FILENAME
 
         assert expected_path.is_file()
@@ -51,10 +51,10 @@ class DumptxoutsetTest(BitcoinTestFramework):
 
         # Specifying a path to an existing or invalid file will fail.
         assert_raises_rpc_error(
-            -8, '{} already exists'.format(FILENAME),  node.dumptxoutset, FILENAME)
+            -8, '{} already exists'.format(FILENAME),  node.dumptxoutset, FILENAME, "latest")
         invalid_path = node.datadir_path / "invalid" / "path"
         assert_raises_rpc_error(
-            -8, "Couldn't open file {}.incomplete for writing".format(invalid_path), node.dumptxoutset, invalid_path)
+            -8, "Couldn't open file {}.incomplete for writing".format(invalid_path), node.dumptxoutset, invalid_path, "latest")
 
 
 if __name__ == '__main__':

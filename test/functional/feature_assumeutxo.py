@@ -295,7 +295,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(n1.getblockcount(), START_HEIGHT)
 
         self.log.info(f"Creating a UTXO snapshot at height {SNAPSHOT_BASE_HEIGHT}")
-        dump_output = n0.dumptxoutset('utxos.dat')
+        dump_output = n0.dumptxoutset('utxos.dat', "latest")
 
         self.log.info("Test loading snapshot when the node tip is on the same block as the snapshot")
         assert_equal(n0.getblockcount(), SNAPSHOT_BASE_HEIGHT)
