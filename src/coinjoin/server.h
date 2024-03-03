@@ -77,7 +77,7 @@ private:
     void ProcessDSVIN(CNode& peer, CDataStream& vRecv) LOCKS_EXCLUDED(cs_coinjoin);
     void ProcessDSSIGNFINALTX(CDataStream& vRecv) LOCKS_EXCLUDED(cs_coinjoin);
 
-    void SetNull() EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
+    void SetNull() override EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
 public:
     explicit CCoinJoinServer(CChainState& chainstate, CConnman& _connman, CTxMemPool& mempool, const CMasternodeSync& mn_sync) :

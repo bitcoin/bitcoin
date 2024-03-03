@@ -154,7 +154,7 @@ private:
 
     void RelayIn(const CCoinJoinEntry& entry, CConnman& connman) const;
 
-    void SetNull() EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
+    void SetNull() override EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
 public:
     explicit CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletManager& walletman, const CMasternodeSync& mn_sync,
