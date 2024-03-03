@@ -220,17 +220,17 @@ static void secp256k1_scalar_inverse(secp256k1_scalar *r, const secp256k1_scalar
     secp256k1_scalar_mul(r, t, &x6); /* 111111 */
 }
 
+SECP256K1_INLINE static int secp256k1_scalar_is_even(const secp256k1_scalar *a) {
+    return !(a->d[0] & 1);
+}
+#endif
+
 static int secp256k1_scalar_set_b32_seckey(secp256k1_scalar* r, const unsigned char* bin)
 {
     int overflow;
     secp256k1_scalar_set_b32(r, bin, &overflow);
     return (!overflow) & (!secp256k1_scalar_is_zero(r));
 }
-
-SECP256K1_INLINE static int secp256k1_scalar_is_even(const secp256k1_scalar *a) {
-    return !(a->d[0] & 1);
-}
-#endif
 
 static void secp256k1_scalar_inverse_var(secp256k1_scalar *r, const secp256k1_scalar *x) {
 #if defined(USE_SCALAR_INV_BUILTIN)

@@ -4426,6 +4426,7 @@ int test_ecdsa_der_parse(const unsigned char *sig, size_t siglen, int certainly_
         ret |= (!parsed_der_lax) << 16;
     }
 
+    return ret;
 #ifdef ENABLE_OPENSSL_TESTS
     sig_openssl = ECDSA_SIG_new();
     sigptr = sig;
@@ -4463,7 +4464,6 @@ int test_ecdsa_der_parse(const unsigned char *sig, size_t siglen, int certainly_
         ret |= (memcmp(roundtrip_der, roundtrip_openssl, len_der) != 0) << 9;
     }
 #endif
-    return ret;
 }
 
 static void assign_big_endian(unsigned char *ptr, size_t ptrlen, uint32_t val) {
