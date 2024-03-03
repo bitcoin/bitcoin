@@ -775,7 +775,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
                 return ret;
             } else {
                 // lets prove we own the collateral
-                LegacyScriptPubKeyMan* spk_man = wallet->GetLegacyScriptPubKeyMan();
+                const LegacyScriptPubKeyMan* spk_man = wallet->GetLegacyScriptPubKeyMan();
                 if (!spk_man) {
                     throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
                 }
@@ -1511,7 +1511,7 @@ static void protx_diff_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static uint256 ParseBlock(const UniValue& v, const ChainstateManager& chainman, std::string strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static uint256 ParseBlock(const UniValue& v, const ChainstateManager& chainman, const std::string& strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
 
@@ -1561,7 +1561,7 @@ static void protx_listdiff_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static const CBlockIndex* ParseBlockIndex(const UniValue& v, const ChainstateManager& chainman, std::string strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static const CBlockIndex* ParseBlockIndex(const UniValue& v, const ChainstateManager& chainman, const std::string& strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
 
