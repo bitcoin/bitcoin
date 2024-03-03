@@ -36,6 +36,7 @@ public:
     mw::Header::CPtr GetBestHeader() const noexcept { return m_pHeader; }
 
     const std::shared_ptr<mw::DBWrapper>& GetDatabase() const noexcept { return m_pDatabase; }
+    void SetDatabase(const std::shared_ptr<mw::DBWrapper>& pDBWrapper) noexcept { m_pDatabase = pDBWrapper; }
 
     virtual bool IsCache() const noexcept = 0;
 

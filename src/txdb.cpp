@@ -53,6 +53,7 @@ void CCoinsViewDB::ResizeCache(size_t new_cache_size)
     m_db.reset();
     m_db = MakeUnique<CDBWrapper>(
         m_ldb_path, new_cache_size, m_is_memory, /*fWipe*/ false, /*obfuscate*/ true);
+    GetMWEBView()->SetDatabase(std::make_shared<MWEB::DBWrapper>(GetDB()));
 }
 
 bool CCoinsViewDB::GetCoin(const COutPoint &outpoint, Coin &coin) const {
