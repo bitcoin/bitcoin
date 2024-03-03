@@ -38,7 +38,7 @@ ACTUAL_OUTDIR="${OUTDIR}"
 OUTDIR="${DISTSRC}/output"
 
 git_head_version() {
-    recent_tag="$(git -C "$1" describe --abbrev=12 --dirty 2> /dev/null)"
+    recent_tag="$(git -C "$1" describe --abbrev=12 --dirty --always 2> /dev/null)"
     echo "${recent_tag#v}"
 }
 
