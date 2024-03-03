@@ -16,7 +16,6 @@
 #include <memory>
 #include <utility>
 
-class CBlockPolicyEstimator;
 class CCoinJoinClientManager;
 class CCoinJoinClientQueueManager;
 class CConnman;
@@ -82,7 +81,7 @@ public:
     }
 
     void Add(CWallet& wallet);
-    void DoMaintenance(CBlockPolicyEstimator& fee_estimator);
+    void DoMaintenance();
 
     void Remove(const std::string& name);
     void Flush(const std::string& name);
@@ -123,12 +122,12 @@ private:
     CKeyHolderStorage keyHolderStorage; // storage for keys used in PrepareDenominate
 
     /// Create denominations
-    bool CreateDenominated(CBlockPolicyEstimator& fee_estimator, CAmount nBalanceToDenominate);
-    bool CreateDenominated(CBlockPolicyEstimator& fee_estimator, CAmount nBalanceToDenominate, const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals);
+    bool CreateDenominated(CAmount nBalanceToDenominate);
+    bool CreateDenominated(CAmount nBalanceToDenominate, const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals);
 
     /// Split up large inputs or make fee sized inputs
-    bool MakeCollateralAmounts(const CBlockPolicyEstimator& fee_estimator);
-    bool MakeCollateralAmounts(const CBlockPolicyEstimator& fee_estimator, const CompactTallyItem& tallyItem, bool fTryDenominated);
+    bool MakeCollateralAmounts();
+    bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated);
 
     bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason);
 
@@ -171,7 +170,7 @@ public:
     bool GetMixingMasternodeInfo(CDeterministicMNCPtr& ret) const;
 
     /// Passively run mixing in the background according to the configuration in settings
-    bool DoAutomaticDenominating(CConnman& connman, CBlockPolicyEstimator& fee_estimator, CTxMemPool& mempool, bool fDryRun = false) LOCKS_EXCLUDED(cs_coinjoin);
+    bool DoAutomaticDenominating(CConnman& connman, CTxMemPool& mempool, bool fDryRun = false) LOCKS_EXCLUDED(cs_coinjoin);
 
     /// As a client, submit part of a future mixing transaction to a Masternode to start the process
     bool SubmitDenominate(CConnman& connman);
@@ -259,7 +258,7 @@ public:
     bool GetMixingMasternodesInfo(std::vector<CDeterministicMNCPtr>& vecDmnsRet) const LOCKS_EXCLUDED(cs_deqsessions);
 
     /// Passively run mixing in the background according to the configuration in settings
-    bool DoAutomaticDenominating(CConnman& connman, CBlockPolicyEstimator& fee_estimator, CTxMemPool& mempool, bool fDryRun = false) LOCKS_EXCLUDED(cs_deqsessions);
+    bool DoAutomaticDenominating(CConnman& connman, CTxMemPool& mempool, bool fDryRun = false) LOCKS_EXCLUDED(cs_deqsessions);
 
     bool TrySubmitDenominate(const CService& mnAddr, CConnman& connman) LOCKS_EXCLUDED(cs_deqsessions);
     bool MarkAlreadyJoinedQueueAsTried(CCoinJoinQueue& dsq) const LOCKS_EXCLUDED(cs_deqsessions);
@@ -275,7 +274,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex* pindex);
 
-    void DoMaintenance(CConnman& connman, CBlockPolicyEstimator& fee_estimator, CTxMemPool& mempool);
+    void DoMaintenance(CConnman& connman, CTxMemPool& mempool);
 
     void GetJsonInfo(UniValue& obj) const LOCKS_EXCLUDED(cs_deqsessions);
 };

@@ -7,7 +7,6 @@
 
 #include <wallet/wallet.h>
 
-class CBlockPolicyEstimator;
 class CTransactionBuilder;
 struct bilingual_str;
 
@@ -101,7 +100,7 @@ class CTransactionBuilder
     friend class CTransactionBuilderOutput;
 
 public:
-    CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, const CompactTallyItem& tallyItemIn, const CBlockPolicyEstimator& fee_estimator);
+    CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, const CompactTallyItem& tallyItemIn);
     ~CTransactionBuilder();
     /// Check it would be possible to add a single output with the amount nAmount. Returns true if its possible and false if not.
     bool CouldAddOutput(CAmount nAmountOutput) const;
