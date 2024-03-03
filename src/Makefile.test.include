@@ -1348,7 +1348,7 @@ if ENABLE_BENCH
 	$(BENCH_BINARY) > /dev/null
 endif
 endif
-	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1-zkp check
 if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
 endif

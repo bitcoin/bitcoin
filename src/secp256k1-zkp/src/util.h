@@ -68,6 +68,18 @@ static SECP256K1_INLINE void secp256k1_callback_call(const secp256k1_callback * 
 #define VERIFY_SETUP(stmt)
 #endif
 
+/* Define `VG_UNDEF` and `VG_CHECK` when VALGRIND is defined  */
+#if !defined(VG_CHECK)
+# if defined(VALGRIND)
+#  include <valgrind/memcheck.h>
+#  define VG_UNDEF(x,y) VALGRIND_MAKE_MEM_UNDEFINED((x),(y))
+#  define VG_CHECK(x,y) VALGRIND_CHECK_MEM_IS_DEFINED((x),(y))
+# else
+#  define VG_UNDEF(x,y)
+#  define VG_CHECK(x,y)
+# endif
+#endif
+
 /* Like `VG_CHECK` but on VERIFY only */
 #if defined(VERIFY)
 #define VG_CHECK_VERIFY(x, y) VG_CHECK((x), (y))
