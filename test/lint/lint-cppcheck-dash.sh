@@ -31,6 +31,12 @@ IGNORED_WARNINGS=(
     "src/cachemultimap.h:.*: warning: Variable 'mapIt' can be declared as reference to const"
     "src/evo/simplifiedmns.cpp:.*:20: warning: Consider using std::copy algorithm instead of a raw loop."
     "src/llmq/commitment.cpp.* warning: Consider using std::all_of or std::none_of algorithm instead of a raw loop. \[useStlAlgorithm\]"
+    "src/rpc/.*cpp:.*: note: Function pointer used here."
+    "src/masternode/sync.cpp:.*: warning: Variable 'pnode' can be declared as pointer to const \[constVariableReference\]"
+
+    "src/stacktraces.cpp:.*: .*: Parameter 'info' can be declared as pointer to const"
+    "src/stacktraces.cpp:.*: note: You might need to cast the function pointer here"
+
     "[note|warning]: Return value 'state.Invalid(.*)' is always false"
     "note: Calling function 'Invalid' returns 0"
 
