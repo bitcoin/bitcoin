@@ -243,18 +243,11 @@ std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRota
     }
 
     for (const size_t i : irange::range(nQuorums)) {
-        for (const auto &m: previousQuarters.quarterHMinus3C[i]) {
-            quorumMembers[i].push_back(std::move(m));
-        }
-        for (const auto &m: previousQuarters.quarterHMinus2C[i]) {
-            quorumMembers[i].push_back(std::move(m));
-        }
-        for (const auto &m: previousQuarters.quarterHMinusC[i]) {
-            quorumMembers[i].push_back(std::move(m));
-        }
-        for (const auto &m: newQuarterMembers[i]) {
-            quorumMembers[i].push_back(std::move(m));
-        }
+        // Move elements from previous quarters into quorumMembers
+        std::move(previousQuarters.quarterHMinus3C[i].begin(), previousQuarters.quarterHMinus3C[i].end(), std::back_inserter(quorumMembers[i]));
+        std::move(previousQuarters.quarterHMinus2C[i].begin(), previousQuarters.quarterHMinus2C[i].end(), std::back_inserter(quorumMembers[i]));
+        std::move(previousQuarters.quarterHMinusC[i].begin(), previousQuarters.quarterHMinusC[i].end(), std::back_inserter(quorumMembers[i]));
+        std::move(newQuarterMembers[i].begin(), newQuarterMembers[i].end(), std::back_inserter(quorumMembers[i]));
 
         if (LogAcceptCategory(BCLog::LLMQ)) {
             std::stringstream ss;
