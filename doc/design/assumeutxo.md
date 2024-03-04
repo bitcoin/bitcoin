@@ -36,12 +36,10 @@ use a significant amount of disk space.
 
 ## Generating a snapshot
 
-The RPC command `dumptxoutset` can be used to generate a snapshot. This can be used
+The RPC command `dumptxoutset` can be used to generate a snapshot for the current
+tip or a recent height. This can be used
 to create a snapshot on one node that you wish to load on another node.
 It can also be used to verify the hardcoded snapshot hash in the source code.
-
-The utility script
-`./contrib/devtools/utxo_snapshot.sh` may be of use.
 
 ## General background
 
