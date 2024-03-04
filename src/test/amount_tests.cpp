@@ -4,11 +4,12 @@
 
 #include <amount.h>
 #include <policy/feerate.h>
-#include <test/util/setup_common.h>
+
+#include <limits>
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(amount_tests, BasicTestingSetup)
+BOOST_AUTO_TEST_SUITE(amount_tests)
 
 BOOST_AUTO_TEST_CASE(MoneyRangeTest)
 {

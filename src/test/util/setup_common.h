@@ -16,6 +16,7 @@
 #include <util/check.h>
 #include <util/system.h>
 #include <util/string.h>
+#include <util/vector.h>
 
 #include <stdexcept>
 #include <type_traits>
@@ -185,6 +186,23 @@ struct TestChainV19BeforeActivationSetup : public TestChainSetup
 {
     TestChainV19BeforeActivationSetup();
 };
+
+/**
+ * Make a test setup that has disk access to the debug.log file disabled. Can
+ * be used in "hot loops", for example fuzzing or benchmarking.
+ */
+template <class T = const BasicTestingSetup>
+std::unique_ptr<T> MakeNoLogFileContext(const std::string& chain_name = CBaseChainParams::REGTEST, const std::vector<const char*>& extra_args = {})
+{
+    const std::vector<const char*> arguments = Cat(
+        {
+            "-nodebuglogfile",
+            "-nodebug",
+        },
+        extra_args);
+
+    return std::make_unique<T>(chain_name, arguments);
+}
 
 class CTxMemPoolEntry;
 

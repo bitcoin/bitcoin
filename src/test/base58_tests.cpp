@@ -5,7 +5,7 @@
 #include <test/data/base58_encode_decode.json.h>
 
 #include <base58.h>
-#include <test/util/setup_common.h>
+#include <test/util/setup_common.h> // for InsecureRand*
 #include <util/strencodings.h>
 #include <util/vector.h>
 
@@ -18,7 +18,7 @@ using namespace std::literals;
 
 extern UniValue read_json(const std::string& jsondata);
 
-BOOST_FIXTURE_TEST_SUITE(base58_tests, BasicTestingSetup)
+BOOST_AUTO_TEST_SUITE(base58_tests)
 
 // Goal: test low-level base58 encoding functionality
 BOOST_AUTO_TEST_CASE(base58_EncodeBase58)

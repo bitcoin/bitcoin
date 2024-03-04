@@ -24,11 +24,9 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/util/net.h>
-#include <test/util/setup_common.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/overflow.h>
-#include <util/vector.h>
 #include <version.h>
 
 #include <algorithm>
@@ -317,7 +315,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
     const std::string addr_name = fuzzed_data_provider.ConsumeRandomLengthString(64);
 
     const ConnectionType conn_type = fuzzed_data_provider.PickValueInArray({ConnectionType::INBOUND, ConnectionType::OUTBOUND_FULL_RELAY, ConnectionType::MANUAL, ConnectionType::FEELER, ConnectionType::BLOCK_RELAY, ConnectionType::ADDR_FETCH});
-    const bool inbound_onion = fuzzed_data_provider.ConsumeBool();
+    const bool inbound_onion{conn_type == ConnectionType::INBOUND ? fuzzed_data_provider.ConsumeBool() : false};
     if constexpr (ReturnUniquePtr) {
         return std::make_unique<CNode>(node_id, local_services, socket, address, keyed_net_group, local_host_nonce, addr_bind, addr_name, conn_type, inbound_onion);
     } else {
@@ -327,19 +325,6 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
 inline std::unique_ptr<CNode> ConsumeNodeAsUniquePtr(FuzzedDataProvider& fdp, const std::optional<NodeId>& node_id_in = std::nullopt) { return ConsumeNode<true>(fdp, node_id_in); }
 
 void FillNode(FuzzedDataProvider& fuzzed_data_provider, CNode& node, bool init_version) noexcept;
-
-template <class T = const BasicTestingSetup>
-std::unique_ptr<T> MakeNoLogFileContext(const std::string& chain_name = CBaseChainParams::REGTEST, const std::vector<const char*>& extra_args = {})
-{
-    // Prepend default arguments for fuzzing
-    const std::vector<const char*> arguments = Cat(
-        {
-            "-nodebuglogfile",
-        },
-        extra_args);
-
-    return std::make_unique<T>(chain_name, arguments);
-}
 
 class FuzzedFileProvider
 {

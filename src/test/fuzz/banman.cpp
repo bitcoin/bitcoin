@@ -9,6 +9,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <util/readwritefile.h>
+#include <test/util/setup_common.h>
 #include <util/system.h>
 
 #include <cassert>
