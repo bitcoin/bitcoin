@@ -776,6 +776,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
                 return ret;
             } else {
                 // lets prove we own the collateral
+                // TODO: make collateral works with Descriptor wallets too
                 const LegacyScriptPubKeyMan* spk_man = wallet->GetLegacyScriptPubKeyMan();
                 if (!spk_man) {
                     throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
