@@ -1233,7 +1233,11 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         std::map<std::string, common::SettingsValue> utxo_targets_json;
         std::vector<std::string> read_errors;
         common::ReadSettings(utxo_targets_file_path, utxo_targets_json, read_errors);
-        utxo_targets = UtxoTargetsFromJson(utxo_targets_json["buckets"], available_coins);
+        // calculate targets from both confirmed and unconfirmed coins, but only spend from confirmed coins
+        CCoinControl tmp_coin_control = coin_control;
+        tmp_coin_control.m_min_depth = 0;
+        CoinsResult tmp_available_coins = AvailableCoins(wallet, &tmp_coin_control, coin_selection_params.m_effective_feerate);
+        utxo_targets = UtxoTargetsFromJson(utxo_targets_json["buckets"], tmp_available_coins);
         bucket_refill_feerate = CFeeRate(utxo_targets_json["bucket_refill_feerate"].getInt<CAmount>());
     }
 
