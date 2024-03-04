@@ -380,6 +380,7 @@ BASE_SCRIPTS = [
     'mempool_datacarrier.py',
     'feature_coinstatsindex.py',
     'wallet_orphanedreward.py',
+    'wallet_musig.py --descriptors',
     'wallet_timelock.py',
     'p2p_node_network_limited.py --v1transport',
     'p2p_node_network_limited.py --v2transport',
