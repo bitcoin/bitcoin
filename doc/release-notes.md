@@ -1,12 +1,8 @@
-# Dash Core version v20.0.4
+# Dash Core version v20.1.0
 
-Release is now available from:
+This is a new minor version release, including various new features, improvements, and bug fixes.
 
-  <https://www.dash.org/downloads/#wallets>
-
-This is a new patch version release, bringing small bug fixes and build system enhancements.
-
-This release is optional for all nodes.
+This release is optional but recommended for all nodes.
 
 Please report bugs using the issue tracker at GitHub:
 
@@ -20,10 +16,7 @@ Please report bugs using the issue tracker at GitHub:
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Dash-Qt (on Mac) or
-dashd/dash-qt (on Linux). If you upgrade after DIP0003 activation and you were
-using version < 0.13 you will have to reindex (start with -reindex-chainstate
-or -reindex) to make sure your wallet has all the new data synced. Upgrading
-from version 0.13 should not require any additional actions.
+dashd/dash-qt (on Linux).
 
 ## Downgrade warning
 
@@ -35,29 +28,96 @@ reindex or re-sync the whole chain.
 
 # Notable changes
 
-## Build changes
+## HD Wallets Enabled by Default
 
-The miner has been disabled for Windows binaries built via Guix. This resolves
-an issue that was preventing users from installing v20.0.3 due to false
-positive alerts from Microsoft Defender and other antivirus providers.
+In this release, we are taking a significant step towards enhancing the Dash wallet's usability by enabling Hierarchical
+Deterministic (HD) wallets by default. This change aligns the behavior of `dashd` and `dash-qt` with the previously
+optional `-usehd=1` flag, making HD wallets the standard for all users.
 
-Use a self-signed Windows code signing certificate instead of expired one. The
-expired certificate being used previously caused most antivirus software to trigger.
-The new self-signed certificate results in a greatly improved installation experience.
+While HD wallets are now enabled by default to improve user experience, Dash Core still allows for the creation of
+non-HD wallets by using the `-usehd=0` flag. However, users should be aware that this option is intended for legacy
+support and will be removed in future releases. Importantly, even with an HD wallet, users can still import non-HD
+private keys, ensuring flexibility in managing their funds.
 
-Updated expired gpg keys for builders. Note that the actual keys themselves are the same.
-The updated keys changed their expiration dates and added additional information such as
-new email addresses.
+## Windows release signing
 
-## Governance
+Windows releases are signed by a new certificate that replaces the expired one used previously.
 
-Triggers from the past are now ignored when voting.
+## Removal of Non-Deterministic InstantSend
 
-## Asset lock and unlock transactions
+Legacy InstantSend was deprecated with the activation of Deterministic InstantSend, but we kept the underlying logic for some time to ensure a smooth transition. v20.1 finally removes all Legacy InstantSend logic and will no longer support sending and receiving islock p2p messages and inv p2p messages with id 30. Such messages will be seen as unknown by v20.1 nodes. The protocol version was incremented to 70231 to indicate a change in network protocol. Please note that the -llmqinstantsend and -llmqtestinstantsend command line options have also been removed as part of this change.
 
-Use the correct quorum for signing withdrawal (asset unlock) txes on RegTest.
+## RPC changes
 
-# v20.0.4 Change log
+- `protx info`: It's now possible to get historical data at a specific block by providing its blockhash.
+- `gettxchainlocks`: will now return the status `mempool` indicating whether the transaction is in the mempool.
+or not.
+- Exposed transaction version numbers are now treated as unsigned 16-bit integers instead of signed 16-bit integers.
+This matches their treatment in consensus logic. Versions greater than 3 continue to be non-standard (matching previous
+behavior of smaller than 1 or greater than 3 being non-standard). Note that this includes the joinpsbt command, which
+combines partially-signed transactions by selecting the highest version number.
+- `getpeerinfo`: now returns a `connection_type` field. This indicates the type of connection established with
+the peer. It will return one of six options. For more information, see the `getpeerinfo` help documentation.
+- `getpeerinfo`: now has additional `last_block` and `last_transaction` fields that return the UNIX epoch time
+of the last block and the last valid transaction received from each peer.
+- `getblockchaininfo`: now returns a new `time` field that provides the chain tip time.
+- `fundrawtransaction` and `walletcreatefundedpsbt`: when used with the `lockUnspents` argument now lock manually
+selected coins, in addition to automatically selected coins. Note that locked coins are never used in automatic coin
+selection, but can still be manually selected.
+- `testmempoolaccept`: returns `vsize` and a `fee` object with the `base` fee if the transaction passes
+validation. The `testmempoolaccept` RPC now accepts multiple transactions (still experimental at the moment, API may be
+unstable).
+
+## Added RPCs
+
+- `submitchainlock`: allows the submission of a ChainLock signature. Note: This RPC is whitelisted for the Platform
+RPC user.
+- `getassetunlockstatuses`: allows fetching of Asset Unlock txs by their withdrawal index. The RPC accepts an array
+of indexes and an optional block height. The possible outcomes per each index are: `chainlocked`, `mined`, `mempooled`,
+`unknown`. Note: If a specific block height is passed on request, then only `chainlocked` and `unknown` outcomes are
+possible. This RPC is whitelisted for the Platform RPC user.
+- `quorum dkginfo`: returns information about DKGs: `active_dkgs` and `next_dkg`.
+- `getrawtransactionmulti`: allows requesting a batch of up to 100 raw transactions per request.
+
+## Docker Build System
+
+Modified the Dockerfile to exclude the `dash-qt` graphical wallet interface from the set of binaries copied to
+`/usr/local/bin` during the Docker image build process. This change streamlines the Docker image, making it more
+suitable for server environments and headless applications, where the graphical user interface of `dash-qt` is not
+required. The update enhances the Docker image's efficiency by reducing its size and minimizing unnecessary components.
+
+## Command-line options
+
+- The same ZeroMQ notification (e.g. `-zmqpubhashtx=address`) can now be specified multiple times to publish the same
+notification to different ZeroMQ sockets.
+- `-startupnotify=<cmd>`: Execute command on startup.
+
+
+## Notification changes
+
+- `-walletnotify` notifications are now sent for wallet transactions that are removed from the mempool because they
+conflict with a new block. These notifications were sent previously, but have been broken since
+the v18.1 release.
+- The `startupnotify` option is used to specify a command to execute when Dash Core has finished with its startup
+sequence.
+
+## Build System
+
+The `--enable-upnp-default` and `--enable-natpmp-default` options have been removed. If you want to use port mapping,
+you can configure it using a `.conf` file, or by passing the relevant options at runtime.
+
+## Wallet
+
+- The wallet can create a transaction without change even when the keypool is empty. Previously it failed.
+- New Discreet mode for hiding balances in Dash-Qt
+- Added a "Close all wallet" menu item for Dash-Qt
+
+## Backports from Bitcoin Core
+
+This release introduces many updates from Bitcoin  v0.20-v25.0. Breaking changes are documented here; however, for
+additional detail on what’s included in Bitcoin, please refer to their release notes.
+
+# v20.1.0 Change log
 
 See detailed [set of changes][set-of-changes].
 
@@ -65,35 +125,23 @@ See detailed [set of changes][set-of-changes].
 
 Thanks to everyone who directly contributed to this release:
 
-- Konstantin Akimov (knst)
+- Alessandro Rezzi
+- Kittywhiskers Van Gogh
+- Konstantin Akimov
+- Odysseas Gabrielides
 - PastaPastaPasta
+- thephez
 - UdjinM6
+- Vijay Manikpuri
 
 As well as everyone that submitted issues, reviewed pull requests and helped
 debug the release candidates.
 
 # Older releases
 
-Dash was previously known as Darkcoin.
-
-Darkcoin tree 0.8.x was a fork of Litecoin tree 0.8, original name was XCoin
-which was first released on Jan/18/2014.
-
-Darkcoin tree 0.9.x was the open source implementation of masternodes based on
-the 0.8.x tree and was first released on Mar/13/2014.
-
-Darkcoin tree 0.10.x used to be the closed source implementation of Darksend
-which was released open source on Sep/25/2014.
-
-Dash Core tree 0.11.x was a fork of Bitcoin Core tree 0.9,
-Darkcoin was rebranded to Dash.
-
-Dash Core tree 0.12.0.x was a fork of Bitcoin Core tree 0.10.
-
-Dash Core tree 0.12.1.x was a fork of Bitcoin Core tree 0.12.
-
 These release are considered obsolete. Old release notes can be found here:
 
+- [v20.0.4](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-20.0.4.md) released Jan/13/2024
 - [v20.0.3](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-20.0.3.md) released December/26/2023
 - [v20.0.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-20.0.2.md) released December/06/2023
 - [v20.0.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-20.0.1.md) released November/18/2023
@@ -140,4 +188,4 @@ These release are considered obsolete. Old release notes can be found here:
 - [v0.10.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.10.0.md) released Sep/25/2014
 - [v0.9.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.9.0.md) released Mar/13/2014
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v20.0.3...dashpay:v20.0.4
+[set-of-changes]: https://github.com/dashpay/dash/compare/v20.0.4...dashpay:v20.1.0
