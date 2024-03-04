@@ -1623,10 +1623,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Iznosi transakcija ne smiju biti negativni</translation>
     </message>
     <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">Transakcija ima predugačak mempool lanac </translation>
-    </message>
-    <message>
         <source>Transaction must have at least one recipient</source>
         <translation type="unfinished">Transakcija mora imati najmanje jednog primaoca</translation>
     </message>

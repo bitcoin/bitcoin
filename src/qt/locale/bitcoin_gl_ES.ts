@@ -123,10 +123,6 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
         <translation type="unfinished">Nova frase contrasinal</translation>
     </message>
     <message>
-        <source>Repeat new passphrase</source>
-        <translation type="unfinished">Repite a frase contrasinal</translation>
-    </message>
-    <message>
         <source>Show passphrase</source>
         <translation type="unfinished">Mostra frase contrasinal</translation>
     </message>

@@ -69,7 +69,15 @@
         <source>Export Address List</source>
         <translation type="unfinished">Xuất danh sách địa chỉ</translation>
     </message>
-    </context>
+    <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Địa chỉ gửi%1</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">Quá trình xuất dữ liệu đã thất bại</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -443,6 +451,22 @@
         <translation type="unfinished">
             <numerusform>Đã xử lý %n khối của lịch sử giao dịch.</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation type="unfinished">%1 phía sau</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Lỗi</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation type="unfinished">Thông tin</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation type="unfinished">cập nhật</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
@@ -953,6 +977,10 @@
         <source>Continue</source>
         <translation type="unfinished">Tiếp tục</translation>
     </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Lỗi</translation>
+    </message>
     </context>
 <context>
     <name>OptionsModel</name>
@@ -1210,12 +1238,20 @@
         <source>Address</source>
         <translation type="unfinished">Địa chỉ</translation>
     </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">Quá trình xuất dữ liệu đã thất bại</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>
     <message>
         <source>Create a new wallet</source>
         <translation type="unfinished">Tạo một ví mới</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Lỗi</translation>
     </message>
     </context>
 <context>
@@ -1326,20 +1362,8 @@ Không thể khôi phục bản sao lưu của ví.</translation>
         <translation type="unfinished">Lỗi: Không thể trích xuất điểm đến trong mã khóa công khai đã tạo</translation>
     </message>
     <message>
-        <source>Error: Could not add watchonly tx to watchonly wallet</source>
-        <translation type="unfinished">Lỗi: Không thể thêm giao dịch chỉ xem vào ví chỉ xem</translation>
-    </message>
-    <message>
-        <source>Error: Could not delete watchonly transactions</source>
-        <translation type="unfinished">Lỗi: Không thể xóa các giao dịch chỉ xem</translation>
-    </message>
-    <message>
         <source>Error: Failed to create new watchonly wallet</source>
         <translation type="unfinished">Lỗi: Tạo ví chỉ xem mới thất bại</translation>
-    </message>
-    <message>
-        <source>Error: Not all watchonly txs could be deleted</source>
-        <translation type="unfinished">Lỗi: Không phải giao dịch chỉ xem nào cũng xóa được</translation>
     </message>
     <message>
         <source>Error: This wallet already uses SQLite</source>

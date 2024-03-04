@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;Нова</translation>
+        <translation type="unfinished">Нова</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -19,15 +19,15 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;Копирај</translation>
+        <translation type="unfinished">Копирај</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">З&amp;атвори</translation>
+        <translation type="unfinished">Затвори</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Избриши ја избраната адреса од листата</translation>
+        <translation type="unfinished">Избриши ја избраната адреса од списокот</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -35,19 +35,19 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Експортирај ги податоците од активното јазиче во датотека</translation>
+        <translation type="unfinished">Извези ги податоците од активното јазиче во датотека</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;Експорт</translation>
+        <translation type="unfinished">Извези</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation type="unfinished">&amp;Избриши</translation>
+        <translation type="unfinished">Избриши</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Извези ги податоците во избраниот дел кон датотека</translation>
+        <translation type="unfinished">Избери адреса на која ќе испратиш монети</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
@@ -120,19 +120,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation type="unfinished">Внеси тајна фраза</translation>
+        <translation type="unfinished">Внеси лозинка</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation type="unfinished">Нова тајна фраза</translation>
+        <translation type="unfinished">Нова лозинка</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished">Повторете ја новата тајна фраза</translation>
+        <translation type="unfinished">Повтори ја лозинката</translation>
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation type="unfinished">Покажи ја лозинката</translation>
+        <translation type="unfinished">Покажување на лозинката</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -216,7 +216,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished">Лозинката за паричник е успешно променета.</translation>
+        <translation type="unfinished">Лозинката за паричникот е успешно променета.</translation>
     </message>
     <message>
         <source>Passphrase change failed</source>
@@ -235,7 +235,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Banned Until</source>
-        <translation type="unfinished">Блокиран до:</translation>
+        <translation type="unfinished">Блокиран до</translation>
     </message>
 </context>
 <context>
@@ -370,7 +370,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
-        <translation type="unfinished">&amp;Преглед</translation>
+        <translation type="unfinished">Преглед</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
@@ -378,19 +378,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation type="unfinished">&amp;Трансакции</translation>
+        <translation type="unfinished">Трансакции</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation type="unfinished">Преглед на историјата на трансакции</translation>
+        <translation type="unfinished">Разгледај ја историјата на трансакциите</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation type="unfinished">И&amp;злез</translation>
+        <translation type="unfinished">Излез</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation type="unfinished">Напушти ја апликацијата</translation>
+        <translation type="unfinished">Излез од примената</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -402,7 +402,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation type="unfinished">За &amp;Qt</translation>
+        <translation type="unfinished">За Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
@@ -435,7 +435,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">Испрати биткоини на Биткоин адреса</translation>
+        <translation type="unfinished">Испрати биткоини на биткоин-адреса</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -447,11 +447,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation type="unfinished">&amp;Испрати</translation>
+        <translation type="unfinished">Испрати</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation type="unfinished">&amp;Прими</translation>
+        <translation type="unfinished">Прими</translation>
     </message>
     <message>
         <source>&amp;Options…</source>
@@ -463,7 +463,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished">Криптирај ги приватните клучеви кои припаѓаат на твојот паричник</translation>
+        <translation type="unfinished">Шифрирање на личните клучеви што припаѓаат на вашиот паричник</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet…</source>
@@ -515,7 +515,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation type="unfinished">&amp;Подесувања</translation>
+        <translation type="unfinished">&amp;Поставки</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -527,7 +527,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>
-        <translation type="unfinished">Синхронизација на заглавијата (%1 %)</translation>
+        <translation type="unfinished">Синхронизација на заглавијата (%1 %)...</translation>
     </message>
     <message>
         <source>Synchronizing with network…</source>
@@ -539,7 +539,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Processing blocks on disk…</source>
-        <translation type="unfinished">Обработување сектори на дискови...</translation>
+        <translation type="unfinished">Обработување блокови на дискови...</translation>
     </message>
     <message>
         <source>Connecting to peers…</source>
@@ -571,7 +571,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation type="unfinished">%1 позади</translation>
+        <translation type="unfinished">%1 зад</translation>
     </message>
     <message>
         <source>Catching up…</source>
@@ -591,7 +591,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Warning</source>
-        <translation type="unfinished">Предупредување</translation>
+        <translation type="unfinished">Внимание</translation>
     </message>
     <message>
         <source>Information</source>
@@ -607,7 +607,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
-        <translation type="unfinished">Вчитај PSBT од &amp;клипбордот...</translation>
+        <translation type="unfinished">Вчитајте PSBT од &amp;клипбордот...</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
@@ -635,7 +635,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Open Wallet</source>
-        <translation type="unfinished">Отвори паричник</translation>
+        <translation type="unfinished">Отвори го паричникот</translation>
     </message>
     <message>
         <source>Open a wallet</source>
@@ -1352,11 +1352,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;Експорт</translation>
+        <translation type="unfinished">Извези</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Експортирај ги податоците од активното јазиче во датотека</translation>
+        <translation type="unfinished">Извези ги податоците од активното јазиче во датотека</translation>
     </message>
     <message>
         <source>Wallet Data</source>
