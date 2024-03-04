@@ -298,7 +298,7 @@ struct CMutableTransaction
         SER_READ(obj, obj.nVersion = (int16_t) (n32bitVersion & 0xffff));
         SER_READ(obj, obj.nType = (uint16_t) ((n32bitVersion >> 16) & 0xffff));
         READWRITE(obj.vin, obj.vout, obj.nLockTime);
-        if (obj.HasExtraPayloadField()) {
+        if (obj.nVersion >= 3 && obj.nType != TRANSACTION_NORMAL) {
             READWRITE(obj.vExtraPayload);
         }
     }
@@ -314,16 +314,6 @@ struct CMutableTransaction
     uint256 GetHash() const;
 
     std::string ToString() const;
-
-    bool IsSpecialTxVersion() const
-    {
-        return nVersion >= 3;
-    }
-
-    bool HasExtraPayloadField() const
-    {
-        return IsSpecialTxVersion() && nType != TRANSACTION_NORMAL;
-    }
 };
 
 typedef std::shared_ptr<const CTransaction> CTransactionRef;
