@@ -1,4 +1,4 @@
-<TS language="bg" version="2.1">
+<TS version="2.1" language="bg">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -78,8 +78,8 @@
         <translation>Това са вашите Dash адреси за изпращане на плащания. Преди изпращане винаги проверявайте количеството и адреса за получаване на монетите.</translation>
     </message>
     <message>
-        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Това са вашите Dash адреси за получаване на плащания. Препоръчително е да използвате нов адрес за всяка нова транзакция. </translation>
+        <source>These are your Dash addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Това са вашите Dash адреси за получаване на плащания. Използвайте бутона „Създаване на нов адрес за получаване“ в раздела за получаване, за да създадете нови адреси. </translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -106,16 +106,8 @@
         <translation>Експортиране на списъка с адреси</translation>
     </message>
     <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>CSV файл (*.csv)</translation>
-    </message>
-    <message>
         <source>Exporting Failed</source>
         <translation>Грешка при експортирането</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Възникна грешка при опита за запазване на списъка с адресите към %1.</translation>
     </message>
 </context>
 <context>
@@ -191,12 +183,8 @@
         <translation>Въведете новата парола повторно</translation>
     </message>
     <message>
-        <source>Show password</source>
-        <translation>Покажи парола</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Въведете нова парола за портфейла.&lt;br/&gt;Моля използвайте &lt;b&gt;поне 10 случайни символа&lt;/b&gt; или &lt;b&gt;8, или повече думи&lt;/b&gt;.</translation>
+        <source>Show passphrase</source>
+        <translation>Показване на парола</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -215,20 +203,8 @@
         <translation>Отключване на портфейла</translation>
     </message>
     <message>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Тази операция изисква Вашата парола за дешифриране на портфейла.</translation>
-    </message>
-    <message>
-        <source>Decrypt wallet</source>
-        <translation>Дешифриране на портфейла</translation>
-    </message>
-    <message>
         <source>Change passphrase</source>
         <translation>Смяна на паролата</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Въведете старата парола и нова парола за портфейла.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -245,6 +221,30 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Портфейлът е шифриран</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Въведете новата парола за портфейла.&lt;br/&gt;Моля, използвайте парола от&lt;b&gt; десет или повече произволни знака  &lt;/b&gt;, или  &lt;b&gt;осем или повече думи&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Въведете старата и новата парола за портфейла.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
+        <translation>Не забравяйте, че криптирането на вашия портфейл не може напълно да защити средствата ви от кражба чрез зловреден софтуер, с който може да е заразен компютъра ви.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Криптирай портфейла</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Вашият портфейл ще бъде криптиран.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Вашият портфейл е криптиран.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
@@ -273,10 +273,6 @@
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
         <translation>Паролата въведена за дешифриране на портфейла е грешна.</translation>
-    </message>
-    <message>
-        <source>Wallet decryption failed</source>
-        <translation>Дешифрирането на портфейла беше неуспешно</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
@@ -308,22 +304,6 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
-        <translation>Възникна фатална грешка. Dash Core не може да продължи безопасно и ще се изключи.</translation>
-    </message>
-    <message>
-        <source>Dash Core</source>
-        <translation>Dash Ядро</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Портфейл</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Възел</translation>
-    </message>
-    <message>
         <source>&amp;Overview</source>
         <translation>&amp;Баланс</translation>
     </message>
@@ -348,6 +328,50 @@
         <translation>Заявка за плащане (генерира QR кодове и Dash: URI)</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Адреси за изпращане</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;Адреси за получаване</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Отвори портфейла</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Отворете портфейл </translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Затваряне на портфейла...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Затворете портфейла </translation>
+    </message>
+    <message>
+        <source>No wallets available</source>
+        <translation>Няма налични портфейли </translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Прозорец</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Минимизирай</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Увеличи</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>Основен прозорец</translation>
+    </message>
+    <message>
         <source>&amp;Transactions</source>
         <translation>&amp;Транзакции</translation>
     </message>
@@ -370,10 +394,6 @@
     <message>
         <source>Quit application</source>
         <translation>Изход от приложението</translation>
-    </message>
-    <message>
-        <source>Show information about Dash Core</source>
-        <translation>Покаци информация за Dash Core</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -472,10 +492,6 @@
         <translation>&amp;Конзола за отстраняване на грешки</translation>
     </message>
     <message>
-        <source>Open debugging console</source>
-        <translation>Отваряне конзола за отстраняване на грешки</translation>
-    </message>
-    <message>
         <source>&amp;Network Monitor</source>
         <translation>&amp;Наблюдение на мрежата</translation>
     </message>
@@ -516,16 +532,8 @@
         <translation>Покажи автоматично направените резервни копия на портфейла</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Адреси за изпращане...</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Покажи списъкът от използваните адреси за изпращане и наименования</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Адреси за получаване</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
@@ -536,16 +544,16 @@
         <translation>Отвори &amp;URI...</translation>
     </message>
     <message>
-        <source>Open a dash: URI or payment request</source>
-        <translation>Отвори Dash: URI или заявка за плащане</translation>
-    </message>
-    <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;Опции на командния ред</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Dash command-line options</source>
         <translation>Покажи %1 помощното съобщение за да получите списък с възможни Dash команди</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>портфейл по подразбиране</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -566,6 +574,30 @@
         <translation>&amp;Файл</translation>
     </message>
     <message>
+        <source>Show information about %1</source>
+        <translation>Показване на информация за %1 </translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Dash Transaction</source>
+        <translation>Зареждане на частично подписана Dash трансакция </translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>Отвори конзолата за отстраняване на грешки и диагностика</translation>
+    </message>
+    <message>
+        <source>Open a dash: URI</source>
+        <translation>Отвори dash: URI</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>Създай портфейл...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Създай нов портфейл</translation>
+    </message>
+    <message>
         <source>%1 &amp;information</source>
         <translation>%1 &amp;информация</translation>
     </message>
@@ -578,16 +610,20 @@
         <translation>&amp;Настройки</translation>
     </message>
     <message>
-        <source>&amp;Tools</source>
-        <translation>&amp;Инструменти</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>&amp;Помощ</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
         <translation>Лента с инструменти</translation>
+    </message>
+    <message>
+        <source>&amp;Governance</source>
+        <translation>&amp;Управление</translation>
+    </message>
+    <message>
+        <source>View Governance Proposals</source>
+        <translation>Преглед на предложенията за управление </translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dash network</source>
@@ -654,8 +690,16 @@
         <translation>Грешка</translation>
     </message>
     <message>
+        <source>Error: %1</source>
+        <translation>Грешка: %1</translation>
+    </message>
+    <message>
         <source>Warning</source>
         <translation>Предупреждение</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>Внимание: %1</translation>
     </message>
     <message>
         <source>Information</source>
@@ -738,6 +782,18 @@
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Портфейлът е &lt;b&gt;криптиран&lt;/b&gt; и в момента &lt;b&gt;заключен&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Прокси е &lt;b&gt;включено&lt;/b&gt;: %1</translation>
+    </message>
+    <message>
+        <source>Original message:</source>
+        <translation>Оригинално съобщение:</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation>Възникна фатална грешка. %1 не може да продължи безопасно и ще се изключи.</translation>
     </message>
 </context>
 <context>
@@ -899,10 +955,6 @@
         <translation>Някои монети не бяха избрани, защото бяха похарчени.</translation>
     </message>
     <message>
-        <source>Some coins were unselected because they do not have enough mixing rounds.</source>
-        <translation>Някои монети не бяха избрани, тъй като нямат достатъчно цикли за смесване.</translation>
-    </message>
-    <message>
         <source>Show all coins</source>
         <translation>Покажи всички монети</translation>
     </message>
@@ -935,6 +987,36 @@
         <translation>няма такъв</translation>
     </message>
 </context>
+<context>
+    <name>CreateWalletActivity</name>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Създаване на портфейл &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>Неуспешно създаване на портфейл</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Внимание при създаване на портфейл</translation>
+    </message>
+</context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Създай портфейл</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Име на портфейл</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Портфейл</translation>
+    </message>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -974,10 +1056,6 @@
         <translation>Въведеният адрес "%1" не е валиден Dash адрес.</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Вече има адрес "%1" в списъка с адреси.</translation>
-    </message>
-    <message>
         <source>Could not unlock wallet.</source>
         <translation>Отключването на портфейла беше неуспешно.</translation>
     </message>
@@ -1010,14 +1088,13 @@
     </message>
 </context>
 <context>
+    <name>GovernanceList</name>
+    </context>
+<context>
     <name>HelpMessageDialog</name>
     <message>
         <source>version</source>
         <translation>версия</translation>
-    </message>
-    <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-битов)</translation>
     </message>
     <message>
         <source>About %1</source>
@@ -1094,14 +1171,6 @@
         <source>Error</source>
         <translation>Грешка</translation>
     </message>
-    <message>
-        <source>%1 GB of free space available</source>
-        <translation>%1 GB от свободното пространство</translation>
-    </message>
-    <message>
-        <source>(of %1 GB needed)</source>
-        <translation>(от %1 GB са необходими)</translation>
-    </message>
 </context>
 <context>
     <name>MasternodeList</name>
@@ -1112,10 +1181,6 @@
     <message>
         <source>Status</source>
         <translation>Статус</translation>
-    </message>
-    <message>
-        <source>0</source>
-        <translation>0</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1276,11 +1341,7 @@
         <source>Hide</source>
         <translation>Скрий</translation>
     </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Неизвестен. Синхронизиране на Headers (%1) ...</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1288,22 +1349,13 @@
         <translation>Отвори URI</translation>
     </message>
     <message>
-        <source>Open payment request from URI or file</source>
-        <translation>Отвори заявка за плащане от URI или файл</translation>
-    </message>
-    <message>
         <source>URI:</source>
         <translation>URI:</translation>
     </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation>Избор на файл за заявка за плащане</translation>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>Изберете за отваряне файл с заявка за плащане</translation>
-    </message>
 </context>
+<context>
+    <name>OpenWalletActivity</name>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -1317,10 +1369,6 @@
     <message>
         <source>Size of &amp;database cache</source>
         <translation>Размер на &amp;кеша на базата данни</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>МБ</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -1423,10 +1471,6 @@
         <translation>Показва ако зададеното по подразбиране SOCKS5 proxy се използва за намиране на пиъри чрез тази мрежа.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Използвай отделен SOCKS&amp;5 прокси за да достигнеш пиъри от Tor услуги:</translation>
-    </message>
-    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Скрий иконата от системният трей.</translation>
     </message>
@@ -1511,10 +1555,6 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Dash network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Свързване с мрежата на Dash чрез SOCKS5 прокси за Tor скрити услуги.</translation>
-    </message>
-    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>След минимизиране ще е видима само иконата в системния трей.</translation>
     </message>
@@ -1555,10 +1595,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>Десетични цифри</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Активна опция от командния ред, която замества горните опции:</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1829,6 +1865,9 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     <message>
         <source>Payment request error</source>
@@ -1847,10 +1886,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>'dash://' не е валиден URI. Използвайте 'dash:' вместо това.</translation>
     </message>
     <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>Неправилен URL на заявка за плащане: %1</translation>
-    </message>
-    <message>
         <source>Invalid payment address %1</source>
         <translation>Невалиден адрес за плащане %1</translation>
     </message>
@@ -1862,77 +1897,9 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Payment request file handling</source>
         <translation>Обработка на файл със заявка за плащане</translation>
     </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>Файлът със заявката за плащане не може да се прочете! Причината за това може да бъде невалиден файл със заявка за плащане.</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Заявката за плашане отказана</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>Заявка за плащане на мрежата не съвпада с клиентската мрежа.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Заявката за плащане е изтекла</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>Заявката за плащане не е инициализирана.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Непотвърдените заявки за плащане към клиентски скриптове за плащане не се поддържат.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Невалидна заявка за плащане.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Заявената сума за плащане: %1 е твърде малка (се приема за незначителен остатък)</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>Възстановяване от %1</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>Заявка за плащане %1 е твърде голяма (%2 байта, позволени %3 bytes).</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Грeшка при комуникация с %1: %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>Заявката за плащане не може да бъде анализирана!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>Невалиден отговор от сървъра %1</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Грешка в мрежовата заявка</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>Плащането е приетo</translation>
-    </message>
 </context>
 <context>
     <name>PeerTableModel</name>
-    <message>
-        <source>NodeId</source>
-        <translation>Node Id</translation>
-    </message>
-    <message>
-        <source>Node/Service</source>
-        <translation>Възел/Услуга</translation>
-    </message>
     <message>
         <source>User Agent</source>
         <translation>Потребителски агент</translation>
@@ -1949,7 +1916,13 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Received</source>
         <translation>Получени</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>Proposal</name>
+    </context>
+<context>
+    <name>ProposalModel</name>
+    </context>
 <context>
     <name>QObject</name>
     <message>
@@ -1983,10 +1956,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Reset all settings changed in the GUI</source>
         <translation>Нулиране на всички настройки направени чрез GUI</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Задай SSL основен сертификат при искане за плащане (по подразбиране: -system-)</translation>
     </message>
     <message>
         <source>Show splash screen on startup (default: %u)</source>
@@ -2094,49 +2063,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>Грешка:Избраната директория за данни "%1" не съществува.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>Грешка: Не може да се анализира конфигурационния файл: %1. Използвайте само синтаксис key=value .</translation>
-    </message>
-    <message>
-        <source>Error: %1</source>
-        <translation>Грешка: %1</translation>
-    </message>
-    <message>
-        <source>Error: Failed to load application fonts.</source>
-        <translation>Грешка: Неуспешно зареждане шрифтовете на приложението.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>Грешка: Невалиден вид шрифт. Валидни стойности: %1.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
-        <translation>Грешка: Невалидна дебелина на нормален шрифт. Валидни граници %1 до %2.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
-        <translation>Грешка: Невалидна дебелина на удебелен шрифт. Валидни граници %1 до %2.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
-        <translation>Грешка: Невалидно мащабиране на шрифта. Валидни граници %1 до %2.</translation>
-    </message>
-    <message>
-        <source>Error: Invalid -custom-css-dir path.</source>
-        <translation>Грешка: Невалиден -custom-css-dir път.</translation>
-    </message>
-    <message>
-        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
-        <translation>Грешка: %1 CSS липсващи файлов(е) в -custom-css-dir път.</translation>
-    </message>
-</context>
-<context>
     <name>QRDialog</name>
     <message>
         <source>QR-Code Title</source>
@@ -2149,29 +2075,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Save Image...</source>
         <translation>&amp;Запиши изображение...</translation>
-    </message>
-    <message>
-        <source>Error creating QR Code.</source>
-        <translation>Грешно създаден QR Код.</translation>
-    </message>
-</context>
-<context>
-    <name>QRGeneralImageWidget</name>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Запиши изображение...</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Image</source>
-        <translation>&amp;Копирай изображение</translation>
-    </message>
-    <message>
-        <source>Save QR Code</source>
-        <translation>Запази QR Код</translation>
-    </message>
-    <message>
-        <source>PNG Image (*.png)</source>
-        <translation>PNG изображение (*.png)</translation>
     </message>
 </context>
 <context>
@@ -2188,11 +2091,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Save QR Code</source>
         <translation>Запази QR Кода</translation>
     </message>
-    <message>
-        <source>PNG Image (*.png)</source>
-        <translation>PNG Image (*.png)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -2240,24 +2139,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Лог-файл за откриване на грешки</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Текущ брой блокове</translation>
-    </message>
-    <message>
         <source>Client version</source>
         <translation>Версия на клиента</translation>
     </message>
     <message>
-        <source>Using BerkeleyDB version</source>
-        <translation>Използва BerkeleyDB версия</translation>
-    </message>
-    <message>
         <source>Block chain</source>
         <translation>Регистър на блокове</translation>
-    </message>
-    <message>
-        <source>Number of Masternodes</source>
-        <translation>Брой на Masternodes</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -2308,10 +2195,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Избери пиър за подробна информация.</translation>
     </message>
     <message>
-        <source>Whitelisted</source>
-        <translation>Whitelisted</translation>
-    </message>
-    <message>
         <source>Direction</source>
         <translation>Направление</translation>
     </message>
@@ -2346,10 +2229,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
         <translation>-rescan=2: Повторно сканиране на блокчейна за липсващи транзакции в портфейла, започвайки от първият блок в мрежата.</translation>
-    </message>
-    <message>
-        <source>Wallet Path</source>
-        <translation>Път на портфейла</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -2440,42 +2319,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Поправяне на портфейла</translation>
     </message>
     <message>
-        <source>Salvage wallet</source>
-        <translation>Възстановен портфейл</translation>
-    </message>
-    <message>
-        <source>Recover transactions 1</source>
-        <translation>Възстановени транзакции 1</translation>
-    </message>
-    <message>
-        <source>Recover transactions 2</source>
-        <translation>Възстановени транзакции 2</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet format</source>
-        <translation>Обновен формат на портфейла</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</source>
-        <translation>Бутоните отдолу ще рестартират портфейла с опция от командния ред за поправка на портфейла,ще фиксира проблеми с неправилни блок-верига файлове или липсващи/остарели транзакции.</translation>
-    </message>
-    <message>
-        <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
-        <translation>-salvagewallet: Опит да се възстановят частни ключове от повреден wallet.dat</translation>
-    </message>
-    <message>
-        <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
-        <translation>-zapwallettxes=1: Възстановява транзакции от блок веригата (запазва meta-data,напр. собственик на акаунта).</translation>
-    </message>
-    <message>
-        <source>-zapwallettxes=2: Recover transactions from blockchain (drop meta-data).</source>
-        <translation>-zapwallettxes=2: Възстановява транзакции от блок веригата(отпада meta-data).</translation>
-    </message>
-    <message>
-        <source>-upgradewallet: Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself!)</source>
-        <translation>-upgradewallet: Надгражда до последната версия на портфейла при стартиране. (Белажка: това НЕ Е самообновяване на портфейла)</translation>
-    </message>
-    <message>
         <source>Wallet repair options.</source>
         <translation>Опции за възстановяване на портфейла.</translation>
     </message>
@@ -2560,10 +2403,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>За изпълняване на команди използвайте "%1" портфейл</translation>
     </message>
     <message>
-        <source>(node id: %1)</source>
-        <translation>(node id: %1)</translation>
-    </message>
-    <message>
         <source>via %1</source>
         <translation>чрез %1</translation>
     </message>
@@ -2578,14 +2417,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Outbound</source>
         <translation>Изходящи</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation>Да</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Не</translation>
     </message>
     <message>
         <source>Regular</source>
@@ -2637,10 +2468,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Amount:</source>
         <translation>&amp;Сума</translation>
-    </message>
-    <message>
-        <source>&amp;Request payment</source>
-        <translation>&amp;Заявка за плащане</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2698,10 +2525,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QR Код</translation>
-    </message>
-    <message>
         <source>Copy &amp;URI</source>
         <translation>Копирай &amp;URI</translation>
     </message>
@@ -2720,38 +2543,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Payment information</source>
         <translation>Данни за плащането</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Адрес</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Сума</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Наименование</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Съобщение</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Портфейл</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Получения URI е твърде дълъг, опитайте да съкратите текста на наименованието / съобщението.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Грешка при създаването на QR Code от URI.</translation>
     </message>
 </context>
 <context>
@@ -2852,20 +2643,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Избери...</translation>
     </message>
     <message>
-        <source>collapse fee-settings</source>
-        <translation>Показване настройки за такса</translation>
-    </message>
-    <message>
         <source>Confirmation time target:</source>
         <translation>Целево време за потвърждение:</translation>
     </message>
     <message>
         <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>Ако променената такса е 1000 duffs и транзакцията е само 250 байта, тогава "за килобайт" само плаща такса 250 duffs,,&lt;br /&gt; тогава"за последно" заплаща 1000 duffs. За транзакции по-големи от килобайт едновременно се заплащат от килобайт.</translation>
-    </message>
-    <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
-        <translation>Разплащането само минималната такса ще продължи толкова дълго,докато транзакцията заема по-малък обем в блоковото пространство.&lt;br /&gt; Но имайте предвид, че транзакцията може да се окаже без първоначално потвърждение ако се появи голямо търсене на dash транзакции отколкото мрежата може да обработи.</translation>
     </message>
     <message>
         <source>per kilobyte</source>
@@ -2882,10 +2665,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Hide</source>
         <translation>Скрит</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(прочети пояснението)</translation>
     </message>
     <message>
         <source>Recommended:</source>
@@ -2960,10 +2739,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%1 (%2 блока)</translation>
     </message>
     <message>
-        <source>from wallet %1</source>
-        <translation>от портфейл %1</translation>
-    </message>
-    <message>
         <source>using</source>
         <translation>използвайки</translation>
     </message>
@@ -2974,14 +2749,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Are you sure you want to send?</source>
         <translation>Наистина ли искате да изпратите?</translation>
-    </message>
-    <message>
-        <source>are added as transaction fee</source>
-        <translation>се добавя като такса за транзакция</translation>
-    </message>
-    <message>
-        <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
-        <translation>Обща сума = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
     </message>
     <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
@@ -3052,20 +2819,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Грешка при създаването на транзакция!</translation>
     </message>
     <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>Транзакцията беше отхвърлена със следната причина: %1</translation>
-    </message>
-    <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation>Такса по-висока от %1 се смята за абсурдно висока.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Заявката за плащане е изтекла</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Плати само задължителната такса от %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -3094,10 +2849,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 </context>
 <context>
     <name>SendCoinsEntry</name>
-    <message>
-        <source>This is a normal payment.</source>
-        <translation>Това е нормално плащане.</translation>
-    </message>
     <message>
         <source>Pay &amp;To:</source>
         <translation>Плати &amp;На:</translation>
@@ -3173,17 +2924,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Memo:</source>
         <translation>Бележка:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Въведете наименование за този адрес, за да го добавите в списъка с адреси</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Yes</source>
-        <translation>Да</translation>
     </message>
 </context>
 <context>
@@ -3349,13 +3089,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-</context>
-<context>
     <name>TrafficGraphWidget</name>
     <message>
         <source>KB/s</source>
@@ -3511,10 +3244,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Transaction total size</source>
         <translation>Краен размер на транзакцията</translation>
-    </message>
-    <message>
-        <source>Merchant</source>
-        <translation>Търговец</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
@@ -3806,10 +3535,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Копирай всички детайли за транзакцията</translation>
     </message>
     <message>
-        <source>Edit label</source>
-        <translation>Редактирай наименование</translation>
-    </message>
-    <message>
         <source>Show transaction details</source>
         <translation>Подробности за транзакцията</translation>
     </message>
@@ -3820,10 +3545,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Export Transaction History</source>
         <translation>Изнасяне историята на транзакциите</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>CSV файл (*.csv)</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -3890,19 +3611,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
+    <name>WalletController</name>
+    </context>
+<context>
     <name>WalletFrame</name>
-    <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Няма зареден портфейл.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
         <translation>Изпращане</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
@@ -3920,10 +3640,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Backup Wallet</source>
         <translation>Запазване на портфейла</translation>
-    </message>
-    <message>
-        <source>Wallet Data (*.dat)</source>
-        <translation>Данните за портфейла(*.dat)</translation>
     </message>
     <message>
         <source>Backup Failed</source>
@@ -3957,20 +3673,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Това е предварителна тест версия - използвайте я на ваша отговорност - не използвайте за копане или за търговски приложения.</translation>
     </message>
     <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Внимание! Изглежда няма пълно съгласуване в мрежата! Някой копачи изглежда изпитват проблеми.</translation>
-    </message>
-    <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Внимание: Не е намерена пълна съвместимост с останалите в мрежата ! Може би се нуждаете от обновяване , или някой от другите нодове се нуждае от обновяване .</translation>
     </message>
     <message>
         <source>Already have that input.</source>
         <translation>Вече има такъв вход.</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Връщане към по-стара версия на портфейла е невъзможно</translation>
     </message>
     <message>
         <source>Collateral not valid.</source>
@@ -4013,14 +3721,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Грешка при четене от базата данни, изключване.</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation>Грешка</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Грешка: Мястото на твърдия диск е малко!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Неуспешно "слушане" на всеки порт. Използвайте -listen=0 ако искате това.</translation>
     </message>
@@ -4057,18 +3757,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Входа надвишава максималният размер.</translation>
     </message>
     <message>
-        <source>Failed to load fulfilled requests cache from</source>
-        <translation>Неуспешно зареждане на  кеш с изпълнени заявки от</translation>
-    </message>
-    <message>
-        <source>Failed to load governance cache from</source>
-        <translation>Неуспешно зареждане кеша за управлението от</translation>
-    </message>
-    <message>
-        <source>Failed to load masternode cache from</source>
-        <translation>Неуспешно зареждане на masternode кеша от</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>Открити са достатъчно потребители, подписване ( изчаква %s )</translation>
     </message>
@@ -4093,10 +3781,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Намерен е неправилен или не създаден блок. Грешна data директория за мрежата?</translation>
     </message>
     <message>
-        <source>Information</source>
-        <translation>Информация</translation>
-    </message>
-    <message>
         <source>Input is not valid.</source>
         <translation>Въвеждането е невалидно.</translation>
     </message>
@@ -4117,20 +3801,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Невалиден минимален брой ауторизатори на spork определен с -minsporkkeys</translation>
     </message>
     <message>
-        <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>Keypool изтече, моля поискайте първо keypoolrefill</translation>
-    </message>
-    <message>
         <source>Loading banlist...</source>
         <translation>Зареждане на бан лист...</translation>
-    </message>
-    <message>
-        <source>Loading fulfilled requests cache...</source>
-        <translation>Зараждане на кеша с изпълнените заявки...</translation>
-    </message>
-    <message>
-        <source>Loading masternode cache...</source>
-        <translation>Зареждане на masternode кеш...</translation>
     </message>
     <message>
         <source>Lock is already in place.</source>
@@ -4177,18 +3849,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Неизвестен отговор.</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Неподдържан аргумен -benchmark е игнориран, използвайте -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Неподдържан аргументът -debugnet е игнориран, използвайте -debug=net .</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Неподдържан аргумент -tor е намерен,използвайте -onion.</translation>
-    </message>
-    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>User Agent comment (%s) съдържа опасни символи.</translation>
     </message>
@@ -4213,10 +3873,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%s е в изчакване.</translation>
     </message>
     <message>
-        <source>%s request incomplete: %s</source>
-        <translation>%s незавършена заявка: %s</translation>
-    </message>
-    <message>
         <source>Can't mix while sync in progress.</source>
         <translation>Не може да се смесват, докато се синхронизира.</translation>
     </message>
@@ -4231,10 +3887,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>Файл %s  съдържа всички частни ключове от този портфейл. Не го споделяйте с никого!</translation>
-    </message>
-    <message>
-        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
-        <translation>-masternode опцията е оттеглена и игнорирана, уточняването на -masternodeblsprivkey е достатъчно да стартирате този нод като masternode.</translation>
     </message>
     <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
@@ -4253,10 +3905,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Изчистване: последното синхронизиране надхвърля почстените данни. Нужен е -reindex (изтегляне на цялата блко-верига в случай на "изчистен" възел)</translation>
     </message>
     <message>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Повторно сканиране не е възможно в изчистен режим. Вие ще трябва да използвате -reindex, което ще изтегли цялата блок-верига отново.</translation>
-    </message>
-    <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
         <translation>Базата данни на блока съдържа блок, който изглежда е от бъдещето. Това може да се дължи на дата и час на компютъра Ви, който е настроен неправилно. Възстановявайте на базата данни за блока, само ако сте сигурни, че датата и часът на компютъра ви са верни</translation>
     </message>
@@ -4269,14 +3917,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Общата дължина на мрежовата версия на низ (%i) надвишава максималната дължина (%i). Намалете  броя или размера на коментарите.</translation>
     </message>
     <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Открит е неподдържан аргумент -socks .Настройката SOCKS версия вече не е възможна, само SOCKS5 прокси се поддържа.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Неподдържан аргумент -whitelistalwaysrelay игнориран, използвайте -whitelistrelay и/или -whitelistforcerelay.</translation>
-    </message>
-    <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>ВНИМАНИЕ! Неуспешно попълване на keypool, моля отключете портфейла си за да се извърши.</translation>
     </message>
@@ -4285,20 +3925,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Портфейлът е заключен, невъзможно е попълването на keypool! Автоматичното архивиране са изключени, моля отключете вашият портфейл за попълване на keypool.</translation>
     </message>
     <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>ВНИМАНИЕ: Непозната версия на блока!Възможно е да са активирани неизвестни правила</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to change -timestampindex</source>
         <translation>Трябва да възстановите базата данни, като използвате -reindex за да промените -timestampindex</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Необходимо е повторно изграждане на базата данни използвайки -reindex за да се върнете в неизчистен режим.Това ще изтегли отново съществуващата блок-верига</translation>
-    </message>
-    <message>
-        <source>-litemode is deprecated.</source>
-        <translation>-litemode е отстарял.</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -4317,28 +3949,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Грешка при надстройката на базата данни evo</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Грешка: Възникна сериозна вътрешна грешка, виж debug.log за подробности</translation>
-    </message>
-    <message>
         <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
         <translation>Грешка: неуспешно добавяне на socket към epollfd (epoll_ctl дава грешка %s)</translation>
     </message>
     <message>
         <source>Exceeded max tries.</source>
         <translation>Надвишен брой опити.</translation>
-    </message>
-    <message>
-        <source>Failed to clear fulfilled requests cache at</source>
-        <translation>Неуспешно изчистване на кеша на изпълнени заявки при</translation>
-    </message>
-    <message>
-        <source>Failed to clear governance cache at</source>
-        <translation>Неуспешно изчистване на кеша за управление на</translation>
-    </message>
-    <message>
-        <source>Failed to clear masternode cache at</source>
-        <translation>Неуспешно изчистване на кеша на masternode при</translation>
     </message>
     <message>
         <source>Failed to commit EvoDB</source>
@@ -4357,10 +3973,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Неуспешно изтриване на архив, грешка: %s</translation>
     </message>
     <message>
-        <source>Failed to load sporks cache from</source>
-        <translation>Неуспешно зареждане на кеша за sporks от</translation>
-    </message>
-    <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation>Неуспешно сканиране на портфейла по време на инициализация</translation>
     </message>
@@ -4373,28 +3985,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Невалиден masternodeblsprivkey. Моля вижте документацията.</translation>
     </message>
     <message>
-        <source>It has been replaced by -disablegovernance.</source>
-        <translation>Заменено е от -disablegovernance.</translation>
-    </message>
-    <message>
-        <source>Its replacement -disablegovernance has been forced instead.</source>
-        <translation>Подмяната му е причинена  от -disablegovernance .</translation>
-    </message>
-    <message>
         <source>Loading block index...</source>
         <translation>Зареждане на блок индекса...</translation>
-    </message>
-    <message>
-        <source>Loading governance cache...</source>
-        <translation>Зарежда се  masternode кеш...</translation>
-    </message>
-    <message>
-        <source>Loading sporks cache...</source>
-        <translation>Зареждане на sporks кеш...</translation>
-    </message>
-    <message>
-        <source>Loading wallet... (%3.2f %%)</source>
-        <translation>Зареждане на портфейла... (%3.2f %%)</translation>
     </message>
     <message>
         <source>Loading wallet...</source>
@@ -4509,16 +4101,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Обновяване на UTXO база данни</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>Портфейл %s се намира извън директорията на портфейла %s</translation>
-    </message>
-    <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
         <translation>Портфейлът трябва да бъде презаписан: рестартирайте %s за да завършите</translation>
-    </message>
-    <message>
-        <source>Warning: unknown new rules activated (versionbit %i)</source>
-        <translation>Внимание: активирани непознати нови правила (versionbit %i)</translation>
     </message>
     <message>
         <source>Wasn't able to create wallet backup folder %s!</source>
@@ -4537,20 +4121,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Необходимо е повторно изграждане на базата данни използвайки -reindex, за да промените  -spentindex</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Необходимо е повторно изграждане на базата данни използвайки -reindex, за да промените -txindex</translation>
-    </message>
-    <message>
         <source>no mixing available.</source>
         <translation>няма налично миксиране.</translation>
     </message>
     <message>
         <source>see debug.log for details.</source>
         <translation>виж debug.log за подробности.</translation>
-    </message>
-    <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
     </message>
     <message>
         <source>The %s developers</source>
@@ -4597,24 +4173,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Това е таксата за транзакция, която можете да платите, когато не са налице оценки на таксите.</translation>
     </message>
     <message>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Този продукт включва софтуер, разработен от проекта OpenSSL за използване в OpenSSL Toolkit %s и криптографски софтуер, написан от Eric Young и UPnP софтуер, написан от Thomas Bernard.</translation>
-    </message>
-    <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation>Блокове не могат да се възпроизведат. Ще трябва да възстановите базата данни с помощта на -reindex-chainstate.</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Внимание: Файла на портфейла  е повреден, данните са спасени! Оригиналния  %s е запазен като %s в %s; ако вашият баланс или транзакции са неверни трябва да възстановите от резервното копие/архив.</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d от последните 100 блока са с неочаквана версия</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s е повреден, спасяването е неуспешно</translation>
     </message>
     <message>
         <source>%s is not a valid backup folder!</source>
@@ -4667,10 +4227,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
         <translation>Грешка при зареждане %s: Не можете да деактивирате HD във вече съществуващ HD портфейл</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Грешка при зареждането на портфейла %s. Посочено е дублирано име на файлa.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
@@ -4793,10 +4349,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Транзакцията е невалидна.</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>Транзакцията е твърде голяма за таксовите политики.</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Не може да се свърже с %s на този компютър (връща грешка %s)</translation>
     </message>
@@ -4837,14 +4389,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Портфейлът е заключен.</translation>
     </message>
     <message>
-        <source>Warning</source>
-        <translation>Предупреждение</translation>
-    </message>
-    <message>
-        <source>Warning: %s is deprecated, please use %s instead</source>
-        <translation>Внимение: %s е неизползваемо, моля използвайте %s instead</translation>
-    </message>
-    <message>
         <source>Warning: can't use %s and %s together, will prefer %s</source>
         <translation>Внимение: не може да се използва %s и %s заедно, за предпочитане %s</translation>
     </message>
@@ -4863,10 +4407,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Your entries added successfully.</source>
         <translation>Вашите записи са добавени успешно.</translation>
-    </message>
-    <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Премахване на всички транзакции от портфейла ...</translation>
     </message>
 </context>
 </TS>

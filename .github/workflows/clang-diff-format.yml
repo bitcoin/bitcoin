@@ -13,5 +13,5 @@ jobs:
       - name: Fetch git
         run: git fetch
       - name: Run Clang-Format-Diff.py
-        run: git diff -U0 origin/develop | ./contrib/devtools/clang-format-diff.py -p1
+        run: git diff -U0 origin/develop -- . ':(exclude)src/qt/dashstrings.cpp' ':(exclude)src/qt/locale/' | ./contrib/devtools/clang-format-diff.py -p1
 

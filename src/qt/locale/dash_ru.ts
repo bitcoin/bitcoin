@@ -106,18 +106,18 @@
         <translation>Экспортировать список адресов</translation>
     </message>
     <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Текст, разделённый запятыми (*.csv)</translation>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation>Текст, разделённый запятыми</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
+        <translation>Произошла ошибка при сохранении адресной книги в %1. Пожалуйста, попробуйте еще раз.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
         <translation>Экспорт не удался</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <comment>An error message.</comment>
-        <extracomment>%1 is a name of the file (e.g., "addrbook.csv") that the bitcoin addresses were exported to.</extracomment>
-        <translation>Произошла ошибка при сохранении адресной книги в %1. Пожалуйста, попробуйте еще раз.</translation>
     </message>
 </context>
 <context>
@@ -213,14 +213,6 @@
         <translation>Разблокировать кошелёк</translation>
     </message>
     <message>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Для выполнения операции расшифровки требуется пароль вашего кошелька.</translation>
-    </message>
-    <message>
-        <source>Decrypt wallet</source>
-        <translation>Дешифровать кошелёк</translation>
-    </message>
-    <message>
         <source>Change passphrase</source>
         <translation>Сменить пароль</translation>
     </message>
@@ -291,10 +283,6 @@
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
         <translation>Указанный пароль не подходит.</translation>
-    </message>
-    <message>
-        <source>Wallet decryption failed</source>
-        <translation>Дешифрование кошелька не удалось</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
@@ -502,6 +490,10 @@
         <translation>Проверить сообщения, чтобы удостовериться, что они были подписаны определёнными адресами Dash</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>&amp;Загрузить PSBT из файла...</translation>
+    </message>
+    <message>
         <source>&amp;Information</source>
         <translation>&amp;Информация</translation>
     </message>
@@ -600,12 +592,16 @@
         <translation>Показать информацию о %1</translation>
     </message>
     <message>
-        <source>Load PSBT...</source>
-        <translation>Загрузить PSBT...</translation>
-    </message>
-    <message>
         <source>Load Partially Signed Dash Transaction</source>
         <translation>Загрузить частично подписанную транзакцию Dash</translation>
+    </message>
+    <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>Загрузить PSBT из буфера обмена...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation>Загрузить частично подписанную транзакцию Dash из буфера обмена</translation>
     </message>
     <message>
         <source>Open debugging and diagnostic console</source>
@@ -624,12 +620,28 @@
         <translation>Создать новый кошелёк</translation>
     </message>
     <message>
+        <source>Close All Wallets...</source>
+        <translation>Закрыть все кошельки...</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Закрыть все кошельки</translation>
+    </message>
+    <message>
         <source>%1 &amp;information</source>
         <translation>&amp;Информация о %1</translation>
     </message>
     <message>
         <source>Show the %1 basic information</source>
         <translation>Показать краткую информацию о %1</translation>
+    </message>
+    <message>
+        <source>&amp;Discreet mode</source>
+        <translation>&amp;Осторожный режим</translation>
+    </message>
+    <message>
+        <source>Mask the values in the Overview tab</source>
+        <translation>Скрыть суммы на вкладке Обзор</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
@@ -981,10 +993,6 @@
         <translation>Выбор некоторых монет был отменен, потому что они были потрачены.</translation>
     </message>
     <message>
-        <source>Some coins were unselected because they do not have enough mixing rounds.</source>
-        <translation>Выбор некоторых монет был отменен, потому что у них недостаточно раундов перемешивания.</translation>
-    </message>
-    <message>
         <source>Show all coins</source>
         <translation>Показать все монеты</translation>
     </message>
@@ -1226,8 +1234,16 @@
         <translation>После нажатия OK, %1 начнет скачивать и проверять всю цепочку блоков %4 (%2ГБ), начиная с самых ранних транзакций %3, т.е. со времени запуска проекта %4.</translation>
     </message>
     <message>
+        <source>Limit block chain storage to</source>
+        <translation>Ограничить хранение цепочки блоков</translation>
+    </message>
+    <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
         <translation>Отмена этой настройки потребует скачивания всей цепочки блоков заново. Будет быстрее скачать всю цепочку блоков, а потом удалить лишнее. Отключает некоторые расширенные функции.</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation> ГБ</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
@@ -1265,6 +1281,11 @@
         <source>Approximately %1 GB of data will be stored in this directory.</source>
         <translation>Приблизительно %1 ГБ данных будет сохранено в этой папке.</translation>
     </message>
+    <message numerus="yes">
+        <source>(sufficient to restore backups %n day(s) old)</source>
+        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
+        <translation><numerusform>(достаточно для восстановления бэкапов за %n день)</numerusform><numerusform>(достаточно для восстановления бэкапов за %n дня)</numerusform><numerusform>(достаточно для восстановления бэкапов за %n дней)</numerusform><numerusform>(достаточно для восстановления бэкапов за %n дней)</numerusform></translation>
+    </message>
     <message>
         <source>%1 will download and store a copy of the Dash block chain.</source>
         <translation>%1 скачает и сохранит копию цепочки блоков Dash.</translation>
@@ -1276,10 +1297,6 @@
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
         <translation>Ошибка: не удалось создать указанный каталог данных "%1".</translation>
-    </message>
-    <message>
-        <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
-        <translation>Отбросить блоки после верификации, исключая последние %1 ГБ (удалить)</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1461,7 +1478,7 @@
     </message>
     <message>
         <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
-        <translation>%1 синхронизируется.  Он будет скачивать заголовки и блоки и проверять их, пока не достигнет вершины цепочки блоков.</translation>
+        <translation>%1 синхронизируется.  Он будет скачивать заголовки и блоки от пиров и проверять их, пока не достигнет вершины цепочки блоков.</translation>
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
@@ -1541,8 +1558,18 @@
         <translation>Отмена этой настройки потребует скачивания всех блоков заново.</translation>
     </message>
     <message>
+        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation>Максимальный размер кэша базы данных. Большый размер кэша может помочь ускорить синхронизацию, но по ее завершению эффект будет менее заметен в большинстве случаев. Уменьшение размера кэша снизит использование память. Неиспользованная память мемпула также используется для этого кэша.</translation>
+    </message>
+    <message>
         <source>MiB</source>
         <translation>МиБ</translation>
+    </message>
+    <message>
+        <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
+        <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
+        <translation>Установить количество потоков проверки скриптов. Отрицательные значения соответствуют количеству ядер, которые останутся доступными для системы.</translation>
     </message>
     <message>
         <source>Whether to keep the specified custom change address or not.</source>
@@ -1629,12 +1656,24 @@
         <translation>Целевой баланс</translation>
     </message>
     <message>
+        <source>How many inputs of each denominated amount are created.&lt;br/&gt;Lower these numbers if you want fewer smaller denominations.</source>
+        <translation>Сколько входов каждого номинала создается. &lt;br/&gt; Уменьшите, если вы хотите получить меньшее количество мелких номиналов.</translation>
+    </message>
+    <message>
         <source>Inputs per denomination</source>
         <translation>Количество входов каждого номинала</translation>
     </message>
     <message>
+        <source>Try to create at least this many inputs for each denominated amount.&lt;br/&gt;Lower this number if you want fewer smaller denominations.</source>
+        <translation>Постарайтесь создать по крайней мере столько входов для каждой деноминированной суммы. &lt;br/&gt; Уменьшите это число, если вы хотите получить меньшее количество мелких номиналов.</translation>
+    </message>
+    <message>
         <source>Target</source>
         <translation>Цель</translation>
+    </message>
+    <message>
+        <source>Create up to this many inputs for each denominated amount.&lt;br/&gt;Lower this number if you want fewer smaller denominations.</source>
+        <translation>Создайте до такого количества входов для каждой деноминированной суммы. &lt;br/&gt;Уменьшите это число, если хотите получить меньшее количество мелких номиналов.</translation>
     </message>
     <message>
         <source>Maximum</source>
@@ -1985,6 +2024,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>%1 Balance</source>
         <translation>Баланс %1</translation>
     </message>
+    <message>
+        <source>Discreet mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Discreet mode.</source>
+        <translation>На вкладке Обзор включен Осторожный режим. Чтобы открыть значения, отключите Настройки-&gt;Осторожный режим.</translation>
+    </message>
     <message numerus="yes">
         <source>%n Rounds</source>
         <translation><numerusform>%n раунд</numerusform><numerusform>%n  раунда</numerusform><numerusform>%n раундов</numerusform><numerusform>%n раундов</numerusform></translation>
@@ -2083,6 +2126,130 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>Диалог</translation>
+    </message>
+    <message>
+        <source>Sign Tx</source>
+        <translation>Подписать</translation>
+    </message>
+    <message>
+        <source>Broadcast Tx</source>
+        <translation>Отправить</translation>
+    </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation>Скопировать в буфер обмена</translation>
+    </message>
+    <message>
+        <source>Save...</source>
+        <translation>Сохранить...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Закрыть</translation>
+    </message>
+    <message>
+        <source>Failed to load transaction: %1</source>
+        <translation>Ошибка загрузки транзакции: %1</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation>Ошибка подписи транзакции: %1</translation>
+    </message>
+    <message>
+        <source>Could not sign any more inputs.</source>
+        <translation>Невозможно подписать больше входов.</translation>
+    </message>
+    <message>
+        <source>Signed %1 inputs, but more signatures are still required.</source>
+        <translation>Подписано %1 входов, но нужно больше подписей.</translation>
+    </message>
+    <message>
+        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
+        <translation>Транзакция подписана успешно. Транзакция готова к отправке.</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation>При обработке транзакции произошла неизвестная ошибка.</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation>Транзакция отправлена успешно! ID транзакции: %1</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast failed: %1</source>
+        <translation>Отправка транзакции не удалась: %1</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation>PSBT скопирована в буфер обмена.</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Сохранить данные транзакции</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary)</source>
+        <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
+        <translation>Частично подписанная транзакция (двоичная)</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk.</source>
+        <translation>PSBT сохранена на диск.</translation>
+    </message>
+    <message>
+        <source> * Sends %1 to %2</source>
+        <translation> * отправляет %1 на %2</translation>
+    </message>
+    <message>
+        <source>Unable to calculate transaction fee or total transaction amount.</source>
+        <translation>Невозможно вычислить комиссию или полную сумму транзакции.</translation>
+    </message>
+    <message>
+        <source>Pays transaction fee: </source>
+        <translation>Платит комиссию:</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Полная сумма</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>или</translation>
+    </message>
+    <message>
+        <source>Transaction has %1 unsigned inputs.</source>
+        <translation>У транзакции %1 неподписанных входов.</translation>
+    </message>
+    <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation>Отсутствует некоторая информация о входах транзакции.</translation>
+    </message>
+    <message>
+        <source>Transaction still needs signature(s).</source>
+        <translation>Транзакции все еще нужны подписи.</translation>
+    </message>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation>(Но этот кошелёк не может подписывать транзакции.)</translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation>(Но этот кошелёк не содержит нужных ключей.)</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation>Транзакция полностью подписана и готова к отправке.</translation>
+    </message>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation>Статус транзакции не известен.</translation>
+    </message>
+</context>
+<context>
     <name>PaymentServer</name>
     <message>
         <source>Payment request error</source>
@@ -2124,14 +2291,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>PeerTableModel</name>
     <message>
-        <source>NodeId</source>
-        <translation>ID ноды</translation>
-    </message>
-    <message>
-        <source>Node/Service</source>
-        <translation>Узел/Сервис</translation>
-    </message>
-    <message>
         <source>User Agent</source>
         <translation>User Agent</translation>
     </message>
@@ -2146,6 +2305,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Received</source>
         <translation>Получено</translation>
+    </message>
+    <message>
+        <source>Peer Id</source>
+        <translation>Id пира</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Адрес</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation>Сеть</translation>
     </message>
 </context>
 <context>
@@ -2201,6 +2372,16 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject</name>
     <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation>Вы хотите сбросить настройки в значения по умолчанию или прервать без внесения изменений?</translation>
+    </message>
+    <message>
+        <source>A fatal error occured. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation>Произошла критическая ошибка. Убедитесь, что файл настроек доступен для записи или попробуйте запустить с флагом -nosettings.</translation>
+    </message>
+    <message>
         <source>Choose data directory on startup (default: %u)</source>
         <translation>Выбрать каталог данных при запуске (по умолчанию: %u)</translation>
     </message>
@@ -2247,10 +2428,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Error: %1</source>
         <translation>Ошибка: %1</translation>
-    </message>
-    <message>
-        <source>Error initializing settings: %1</source>
-        <translation>Ошибка инициализации настроек: %1</translation>
     </message>
     <message>
         <source>Error: Failed to load application fonts.</source>
@@ -2303,6 +2480,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>This can also be adjusted later in the "Appearance" tab of the preferences.</source>
         <translation>Вы также можете поменять их позже на закладке "Внешний вид" в настройках.</translation>
+    </message>
+    <message>
+        <source>Unroutable</source>
+        <translation>Немаршрутизируемый</translation>
+    </message>
+    <message>
+        <source>Internal</source>
+        <translation>Внутренний</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -2423,8 +2608,9 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Сохранить QR-код</translation>
     </message>
     <message>
-        <source>PNG Image (*.png)</source>
-        <translation>Изображение PNG (*.png)</translation>
+        <source>PNG Image</source>
+        <extracomment>Expanded name of the PNG file format. See https://en.wikipedia.org/wiki/Portable_Network_Graphics</extracomment>
+        <translation>PNG изображение</translation>
     </message>
 </context>
 <context>
@@ -2530,10 +2716,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Выберите пира для просмотра детализированной информации.</translation>
     </message>
     <message>
-        <source>Whitelisted</source>
-        <translation>В белом списке</translation>
-    </message>
-    <message>
         <source>Direction</source>
         <translation>Направление</translation>
     </message>
@@ -2552,6 +2734,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synced Blocks</source>
         <translation>Синхронизированные блоки</translation>
+    </message>
+    <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Сопоставленная автономная система, используемая для диверсифицированного выбора пиров.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>Сопоставление AS</translation>
     </message>
     <message>
         <source>Rescan blockchain files 1</source>
@@ -2648,6 +2838,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>PoSe Score</source>
         <translation>PoSe штраф</translation>
+    </message>
+    <message>
+        <source>The network protocol this peer is connected through: IPv4, IPv6, Onion, I2P, or CJDNS.</source>
+        <translation>Сетевой протокол, через который подсоединён этот пир: IPv4, IPv6, Onion, I2P или CJDNS.</translation>
+    </message>
+    <message>
+        <source>Permissions</source>
+        <translation>Разрешения</translation>
     </message>
     <message>
         <source>Services</source>
@@ -2774,12 +2972,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Выполнение команд без какого либо кошелька</translation>
     </message>
     <message>
-        <source>Executing command using "%1" wallet</source>
-        <translation>Выполнение команд, используя "%1" кошелек</translation>
+        <source>(peer id: %1)</source>
+        <translation>(id пира: %1)</translation>
     </message>
     <message>
-        <source>(node id: %1)</source>
-        <translation>(id узла: %1)</translation>
+        <source>Executing command using "%1" wallet</source>
+        <translation>Выполнение команд, используя "%1" кошелек</translation>
     </message>
     <message>
         <source>via %1</source>
@@ -2800,14 +2998,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Outbound block-relay</source>
         <translation>Исходящая ретрансляция блоков</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation>Да</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Нет</translation>
     </message>
     <message>
         <source>Regular</source>
@@ -2928,8 +3118,28 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QR-код</translation>
+        <source>Request payment to ...</source>
+        <translation>Запросить платёж на ...</translation>
+    </message>
+    <message>
+        <source>Address:</source>
+        <translation>Адрес:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>Сумма:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Метка:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Сообщение:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Кошелек:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2950,30 +3160,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Payment information</source>
         <translation>Информация платежа</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Адрес</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Сумма</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Метка</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Сообщение</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Кошелек</translation>
     </message>
 </context>
 <context>
@@ -3294,16 +3480,21 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Сохранить данные транзакции</translation>
     </message>
     <message>
-        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
-        <translation>Частично подписанная транзакция (двоичная) (*.psbt)</translation>
-    </message>
-    <message>
         <source>PSBT saved</source>
         <translation>PSBT сохранен</translation>
     </message>
     <message>
+        <source>Watch-only balance:</source>
+        <translation>Баланс только для просмотра:</translation>
+    </message>
+    <message>
         <source>Send</source>
         <translation>Отправить</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary)</source>
+        <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
+        <translation>Частично подписанная транзакция (двоичная)</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -3332,10 +3523,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation>Комиссия выше чем %1 считается "безумно высокой".</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Время этого запроса платежа истекло.</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -4086,8 +4273,9 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Экспортировать историю транзакций</translation>
     </message>
     <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Текст, разделённый запятыми (*.csv)</translation>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <translation>Текст, разделённый запятыми</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -4167,6 +4355,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Закрытие кошелька на слишком долгое время может привести к необходимости скачивания всей цепочки с самого начала, если у вас включено удаление блоков.</translation>
     </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Закрыть все кошельки</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation>Вы уверены, что хотите закрыть все кошельки?</translation>
+    </message>
 </context>
 <context>
     <name>WalletFrame</name>
@@ -4209,12 +4405,25 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Сумма выбранных:</translation>
     </message>
     <message>
+        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
+        <translation>Невозможно декодировать PSBT из буфера обмена (некорректный base64)</translation>
+    </message>
+    <message>
         <source>Load Transaction Data</source>
         <translation>Загрузить данные транзакции</translation>
     </message>
     <message>
         <source>Partially Signed Transaction (*.psbt)</source>
         <translation>Частично подписанная транзакция (*.psbt)</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT</source>
+        <translation>Невозможно декодировать PSBT</translation>
+    </message>
+    <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation>Данные кошелька</translation>
     </message>
     <message>
         <source>Error</source>
@@ -4225,28 +4434,8 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Файл PSBT должен быть меньше 100 МиБ</translation>
     </message>
     <message>
-        <source>Unable to decode PSBT file</source>
-        <translation>Невозможно декодировать файл PSBT</translation>
-    </message>
-    <message>
-        <source>Would you like to send this transaction?</source>
-        <translation>Вы хотите отправить данную транзакцию?</translation>
-    </message>
-    <message>
-        <source>Success</source>
-        <translation>Успешно</translation>
-    </message>
-    <message>
-        <source>PSBT copied</source>
-        <translation>PSBT скопирован</translation>
-    </message>
-    <message>
         <source>Backup Wallet</source>
         <translation>Сделать резервную копию кошелька</translation>
-    </message>
-    <message>
-        <source>Wallet Data (*.dat)</source>
-        <translation>Данные кошелька (*.dat)</translation>
     </message>
     <message>
         <source>Backup Failed</source>
@@ -4289,7 +4478,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Внимание: обнаружено несогласие с подключенными участниками! Вам или другим участникам, возможно, следует обновиться.</translation>
+        <translation>Внимание: обнаружено несогласие с нашими пирами! Вам или другим нодам, возможно, следует обновиться.</translation>
     </message>
     <message>
         <source>Already have that input.</source>
@@ -4420,10 +4609,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Некорректное минимальное количество подписантов спорков, указанное в -minsporkkeys</translation>
     </message>
     <message>
-        <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>Не осталось ключей, пожалуйста, выполните команду keypoolrefill</translation>
-    </message>
-    <message>
         <source>Loading banlist...</source>
         <translation>Загрузка списка заблокированных...</translation>
     </message>
@@ -4520,6 +4705,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Не забудьте зашифровать кошелек и удалить все незашифрованные резервные копии после того как убедитесь, что кошелек работает!</translation>
     </message>
     <message>
+        <source>More than one onion bind address is provided. Using %s for the automatically created Tor onion service.</source>
+        <translation>Указано более одного адреса привязки onion. Использование %s для автоматически созданной службы Tor onion.</translation>
+    </message>
+    <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
         <translation>Удаление блоков настроено ниже допустимого предела в %d МиБ.  Пожалуйста, укажите большее число.</translation>
     </message>
@@ -4538,6 +4727,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Длина строки сетевой версии (%i) превышает максимально допустимую (%i). Уменьшите количество или размер строк uacomment.</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</source>
+        <translation>Транзакции нужен адрес сдачи, но мы не можем его сгенерировать. Пожалуйста, сначала выполните команду keypoolrefill.</translation>
     </message>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
@@ -4598,6 +4791,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Error: Disk space is low for %s</source>
         <translation>Ошибка: мало места на диске для %s</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Ошибка: Не осталось ключей, пожалуйста, выполните команду keypoolrefill</translation>
     </message>
     <message>
         <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
@@ -4674,6 +4871,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>No matching denominations found for mixing.</source>
         <translation>Отсутствуют совпадающие для перемешивания номиналы.</translation>
+    </message>
+    <message>
+        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
+        <translation>Прокси не указан. Используйте -proxy=&lt;ip&gt; или -proxy=&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <source>Not compatible with existing transactions.</source>
@@ -4788,16 +4989,16 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Неизвестное значение -blockfilterindex %s.</translation>
     </message>
     <message>
+        <source>Unknown new rules activated (versionbit %i)</source>
+        <translation>Вступили в силу неизвестные правила (versionbit %i)</translation>
+    </message>
+    <message>
         <source>Upgrading UTXO database</source>
         <translation>Обновление базы UTXO</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
         <translation>Необходимо перезаписать кошелёк: перезапустите %s для завершения операции</translation>
-    </message>
-    <message>
-        <source>Warning: unknown new rules activated (versionbit %i)</source>
-        <translation>Внимание: вступили в силу неизвестные правила (versionbit %i)</translation>
     </message>
     <message>
         <source>Wasn't able to create wallet backup folder %s!</source>
@@ -5062,10 +5263,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup.</source>
         <translation>%s поврежден. Попробуете воспользоваться утилитой dash-wallet для восстановления.</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>Не удалось сгенерировать ключ для адреса сдачи. Нет ключей во внутреннем хранилище и не получилось сгенерировать новых.</translation>
     </message>
     <message>
         <source>Last successful action was too recent.</source>
