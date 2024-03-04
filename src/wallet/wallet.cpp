@@ -3055,12 +3055,8 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     // CreateTransaction call and LockCoin calls (when lockUnspents is true).
     LOCK(cs_wallet);
 
-    int nExtraPayloadSize = 0;
-    if (tx.HasExtraPayloadField())
-        nExtraPayloadSize = (int)tx.vExtraPayload.size();
-
     CTransactionRef tx_new;
-    if (!CreateTransaction(vecSend, tx_new, nFeeRet, nChangePosInOut, error, coinControl, false, nExtraPayloadSize)) {
+    if (!CreateTransaction(vecSend, tx_new, nFeeRet, nChangePosInOut, error, coinControl, false, tx.vExtraPayload.size())) {
         return false;
     }
 
