@@ -355,11 +355,19 @@ static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCrea
 
     // Try key path spending.
     {
-        KeyOriginInfo info;
-        if (provider.GetKeyOriginByXOnly(sigdata.tr_spenddata.internal_key, info)) {
+        KeyOriginInfo internal_key_info;
+        if (provider.GetKeyOriginByXOnly(sigdata.tr_spenddata.internal_key, internal_key_info)) {
             auto it = sigdata.taproot_misc_pubkeys.find(sigdata.tr_spenddata.internal_key);
             if (it == sigdata.taproot_misc_pubkeys.end()) {
-                sigdata.taproot_misc_pubkeys.emplace(sigdata.tr_spenddata.internal_key, std::make_pair(std::set<uint256>(), info));
+                sigdata.taproot_misc_pubkeys.emplace(sigdata.tr_spenddata.internal_key, std::make_pair(std::set<uint256>(), internal_key_info));
+            }
+        }
+
+        KeyOriginInfo output_key_info;
+        if (provider.GetKeyOriginByXOnly(output, output_key_info)) {
+            auto it = sigdata.taproot_misc_pubkeys.find(output);
+            if (it == sigdata.taproot_misc_pubkeys.end()) {
+                sigdata.taproot_misc_pubkeys.emplace(output, std::make_pair(std::set<uint256>(), output_key_info));
             }
         }
 
