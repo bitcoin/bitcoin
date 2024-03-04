@@ -31,6 +31,11 @@ class MutatedBlocksTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+        self.extra_args = [
+            [
+                "-testactivationheight=segwit@1", # causes unconnected headers/blocks to not have segwit considered deployed
+            ],
+        ]
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
@@ -74,7 +79,7 @@ class MutatedBlocksTest(BitcoinTestFramework):
 
         # Attempt to clear the honest relayer's download request by sending the
         # mutated block (as the attacker).
-        with self.nodes[0].assert_debug_log(expected_msgs=["bad-txnmrklroot, hashMerkleRoot mismatch"]):
+        with self.nodes[0].assert_debug_log(expected_msgs=["Block mutated: bad-txnmrklroot, hashMerkleRoot mismatch"]):
             attacker.send_message(msg_block(mutated_block))
         # Attacker should get disconnected for sending a mutated block
         attacker.wait_for_disconnect(timeout=5)
@@ -91,6 +96,21 @@ class MutatedBlocksTest(BitcoinTestFramework):
         block_txn.block_transactions = BlockTransactions(blockhash=block.sha256, transactions=[tx])
         honest_relayer.send_and_ping(block_txn)
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
+
+        # Check that unexpected-witness mutation check doesn't trigger on a header that doesn't connect to anything
+        assert_equal(len(self.nodes[0].getpeerinfo()), 1)
+        attacker = self.nodes[0].add_p2p_connection(P2PInterface())
+        block_missing_prev = copy.deepcopy(block)
+        block_missing_prev.hashPrevBlock = 123
+        block_missing_prev.solve()
+
+        # Attacker gets a DoS score of 10, not immediately disconnected, so we do it 10 times to get to 100
+        for _ in range(10):
+            assert_equal(len(self.nodes[0].getpeerinfo()), 2)
+            with self.nodes[0].assert_debug_log(expected_msgs=["AcceptBlock FAILED (prev-blk-not-found)"]):
+                attacker.send_message(msg_block(block_missing_prev))
+        attacker.wait_for_disconnect(timeout=5)
+
 
 if __name__ == '__main__':
     MutatedBlocksTest().main()
