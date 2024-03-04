@@ -1148,12 +1148,12 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">Кошелек '%1' был успешно перенесён.</translation>
     </message>
     <message>
-        <source> Watchonly scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished"> Скрипты Watchonly были перенесены на новый кошелек под названием '%1'.</translation>
+        <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Скрипты Watchonly были перенесены в новый кошелек под названием  '%1'.</translation>
     </message>
     <message>
-        <source> Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished"> Решаемые, но не наблюдаемые сценарии были перенесены на новый кошелек под названием '%1'.</translation>
+        <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Решаемые, но не наблюдаемые сценарии были перенесены в новый кошелек под названием  '%1'.</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -1861,18 +1861,6 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">Использовать &amp;отдельный прокси SOCKS5 для соединения с узлами через скрытые сервисы Tor:</translation>
     </message>
     <message>
-        <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">Моноширинный шрифт на вкладке Обзор:</translation>
-    </message>
-    <message>
-        <source>embedded "%1"</source>
-        <translation type="unfinished">встроенный "%1"</translation>
-    </message>
-    <message>
-        <source>closest matching "%1"</source>
-        <translation type="unfinished">самый похожий системный "%1"</translation>
-    </message>
-    <message>
         <source>&amp;OK</source>
         <translation type="unfinished">&amp;ОК</translation>
     </message>
@@ -2107,10 +2095,6 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>PSBT saved to disk.</source>
         <translation type="unfinished">PSBT сохранена на диск.</translation>
-    </message>
-    <message>
-        <source> * Sends %1 to %2</source>
-        <translation type="unfinished"> * Отправляет %1 на %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -3172,10 +3156,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">Создает частично подписанную биткоин-транзакцию (PSBT), чтобы использовать её, например, с офлайновым кошельком %1, или PSBT-совместимым аппаратным кошельком.</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished"> с кошелька "%1"</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation type="unfinished">%1 на "%2"</translation>
     </message>
@@ -3700,10 +3680,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Output index</source>
         <translation type="unfinished">Индекс выхода</translation>
-    </message>
-    <message>
-        <source> (Certificate was not verified)</source>
-        <translation type="unfinished"> (Сертификат не был проверен)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -4586,14 +4562,6 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">Ошибка: не удалось извлечь получателя из сгенерированного scriptpubkey</translation>
     </message>
     <message>
-        <source>Error: Could not add watchonly tx to watchonly wallet</source>
-        <translation type="unfinished">Ошибка: не удалось добавить транзакцию для наблюдения в кошелёк для наблюдения</translation>
-    </message>
-    <message>
-        <source>Error: Could not delete watchonly transactions</source>
-        <translation type="unfinished">Ошибка: транзакции только для наблюдения не удаляются</translation>
-    </message>
-    <message>
         <source>Error: Couldn't create cursor into database</source>
         <translation type="unfinished">Ошибка: не удалось создать курсор в базе данных</translation>
     </message>
@@ -4628,10 +4596,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Error: No %s addresses available.</source>
         <translation type="unfinished">Ошибка: нет %s доступных адресов.</translation>
-    </message>
-    <message>
-        <source>Error: Not all watchonly txs could be deleted</source>
-        <translation type="unfinished">Ошибка: не все наблюдаемые транзакции могут быть удалены</translation>
     </message>
     <message>
         <source>Error: This wallet already uses SQLite</source>
@@ -4912,10 +4876,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Transaction change output index out of range</source>
         <translation type="unfinished">Индекс получателя адреса сдачи вне диапазона</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">У транзакции слишком длинная цепочка в пуле в памяти</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>

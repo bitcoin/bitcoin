@@ -1617,18 +1617,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Tor onion సేవల ద్వారా సహచరులను చేరుకోవడానికి ప్రత్యేక SOCKS&amp;5 ప్రాక్సీని ఉపయోగించండి:</translation>
     </message>
     <message>
-        <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">ఓవర్‌వ్యూ ట్యాబ్‌లో మోనోస్పేస్డ్ ఫాంట్:</translation>
-    </message>
-    <message>
-        <source>embedded "%1"</source>
-        <translation type="unfinished">పొందుపరిచారు "%1"</translation>
-    </message>
-    <message>
-        <source>closest matching "%1"</source>
-        <translation type="unfinished">సన్నిహిత సరిపోలిక "%1"</translation>
-    </message>
-    <message>
         <source>&amp;OK</source>
         <translation type="unfinished">&amp;అలాగే</translation>
     </message>
@@ -1864,10 +1852,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>PSBT saved to disk.</source>
         <translation type="unfinished">PSBT డిస్క్‌లో సేవ్ చేయబడింది.</translation>
-    </message>
-    <message>
-        <source> * Sends %1 to %2</source>
-        <translation type="unfinished">* %1 ని %2 కి పంపుతుంది</translation>
     </message>
     <message>
         <source>Unable to calculate transaction fee or total transaction amount.</source>
@@ -2320,10 +2304,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">%1 (%2 బ్లాక్‌లు)</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished">వాలెట్ నుండి '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation type="unfinished">%1 కు '%2'</translation>
     </message>
@@ -2617,10 +2597,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Transaction change output index out of range</source>
         <translation type="unfinished">లావాదేవీ మార్పు అవుట్‌పుట్ సూచిక పరిధి వెలుపల ఉంది</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">లావాదేవీ మెంపూల్ చైన్‌లో చాలా పొడవుగా ఉంది</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>

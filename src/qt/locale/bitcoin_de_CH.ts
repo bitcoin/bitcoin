@@ -303,6 +303,18 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <translation type="unfinished">unbekannt</translation>
     </message>
     <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">Eingebettet "%1"</translation>
+    </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">Standard Systemschriftart "%1"</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation type="unfinished">Benutzerdefiniert...</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation type="unfinished">Betrag</translation>
     </message>
@@ -921,12 +933,12 @@ Während des Migrationsprozesses wird vor der Migration ein Backup der Wallet er
         <translation type="unfinished">Die Wallet '%1' wurde erfolgreich migriert.</translation>
     </message>
     <message>
-        <source> Watchonly scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished"> Watchonly-Skripte wurden in eine neue Wallet mit dem Namen '%1' migriert.</translation>
+        <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Nur-beobachten Scripts wurden in eine neue Wallet namens '%1' überführt.</translation>
     </message>
     <message>
-        <source> Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished"> Lösbare, aber nicht beobachtete Skripte wurden in eine neue Wallet mit dem Namen '%1' migriert.</translation>
+        <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Lösbare aber nicht beobachtete Scripts wurde in eine neue Wallet namens '%1' überführt.</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -1394,6 +1406,10 @@ Während des Migrationsprozesses wird vor der Migration ein Backup der Wallet er
         <translation type="unfinished">Minimiert die Anwendung anstatt sie zu beenden wenn das Fenster geschlossen wird. Wenn dies aktiviert ist, müssen Sie die Anwendung über "Beenden" im Menü schließen.</translation>
     </message>
     <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">Schriftart im Überblicks-Tab:</translation>
+    </message>
+    <message>
         <source>Options set in this dialog are overridden by the command line:</source>
         <translation type="unfinished">Einstellungen in diesem Dialog werden von der Kommandozeile überschrieben:</translation>
     </message>
@@ -1604,18 +1620,6 @@ Während des Migrationsprozesses wird vor der Migration ein Backup der Wallet er
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
         <translation type="unfinished">Nutze separaten SOCKS&amp;5-Proxy um Gegenstellen über Tor-Onion-Dienste zu erreichen:</translation>
-    </message>
-    <message>
-        <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">Monospace Font im Übersichtsreiter:</translation>
-    </message>
-    <message>
-        <source>embedded "%1"</source>
-        <translation type="unfinished">eingebettet "%1"</translation>
-    </message>
-    <message>
-        <source>closest matching "%1"</source>
-        <translation type="unfinished">nächstliegende Übereinstimmung "%1"</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
@@ -1855,8 +1859,8 @@ Während des Migrationsprozesses wird vor der Migration ein Backup der Wallet er
         <translation type="unfinished">PSBT auf Platte gespeichert.</translation>
     </message>
     <message>
-        <source> * Sends %1 to %2</source>
-        <translation type="unfinished">* Sende %1 an %2</translation>
+        <source>Sends %1 to %2</source>
+        <translation type="unfinished">Schickt %1 an %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2461,6 +2465,10 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
         <translation type="unfinished">Strg+P</translation>
     </message>
     <message>
+        <source>Node window - [%1]</source>
+        <translation type="unfinished">Node-Fenster - [%1]</translation>
+    </message>
+    <message>
         <source>Executing command using "%1" wallet</source>
         <translation type="unfinished">Befehl wird mit Wallet "%1" ausgeführt</translation>
     </message>
@@ -2917,10 +2925,6 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
         <translation type="unfinished">Erzeugt eine teilsignierte Bitcoin Transaktion (PSBT) zur Benutzung mit z.B. einem Offline %1 Wallet, oder einem kompatiblen Hardware Wallet.</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished">von der Wallet '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation type="unfinished">%1 an '%2'</translation>
     </message>
@@ -2976,6 +2980,10 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
         <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</extracomment>
         <translation type="unfinished">Überprüfen Sie bitte Ihr Transaktionsvorhaben. Dadurch wird eine Partiell Signierte Bitcoin-Transaktion (PSBT) erstellt, die Sie speichern oder kopieren und dann z. B. mit einer Offline-Wallet %1 oder einer PSBT-kompatible Hardware-Wallet nutzen können.</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation type="unfinished">%1 von Wallet '%2'</translation>
     </message>
     <message>
         <source>Do you want to create this transaction?</source>
@@ -3434,8 +3442,8 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
         <translation type="unfinished">Ausgabeindex</translation>
     </message>
     <message>
-        <source> (Certificate was not verified)</source>
-        <translation type="unfinished">(Zertifikat wurde nicht verifiziert)</translation>
+        <source>%1 (Certificate was not verified)</source>
+        <translation type="unfinished">%1 (Zertifikat wurde nicht verifiziert)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -4258,6 +4266,10 @@ Die Sicherung der Wallet kann nicht wiederhergestellt werden.</translation>
         <translation type="unfinished">Speicherauszugsdatei %sexistiert nicht.</translation>
     </message>
     <message>
+        <source>Error committing db txn for wallet transactions removal</source>
+        <translation type="unfinished">Fehler beim Bestätigen der Datenbanktransaktion für die Entfernung der Wallet-transaktionen.</translation>
+    </message>
+    <message>
         <source>Error creating %s</source>
         <translation type="unfinished">Error beim Erstellen von %s</translation>
     </message>
@@ -4306,16 +4318,12 @@ Die Sicherung der Wallet kann nicht wiederhergestellt werden.</translation>
         <translation type="unfinished">Fehler beim Lesen des nächsten Eintrags aus der Wallet Datenbank</translation>
     </message>
     <message>
+        <source>Error starting db txn for wallet transactions removal</source>
+        <translation type="unfinished">Fehler beim Starten der Datenbanktransaktion für die Entfernung der Wallet-Transaktionen.</translation>
+    </message>
+    <message>
         <source>Error: Cannot extract destination from the generated scriptpubkey</source>
         <translation type="unfinished">Fehler: Das Ziel kann nicht aus dem generierten scriptpubkey extrahiert werden</translation>
-    </message>
-    <message>
-        <source>Error: Could not add watchonly tx to watchonly wallet</source>
-        <translation type="unfinished">Fehler: watchonly tx konnte nicht zu watchonly Wallet hinzugefügt werden</translation>
-    </message>
-    <message>
-        <source>Error: Could not delete watchonly transactions</source>
-        <translation type="unfinished">Fehler: Watchonly-Transaktionen konnten nicht gelöscht werden</translation>
     </message>
     <message>
         <source>Error: Couldn't create cursor into database</source>
@@ -4355,10 +4363,6 @@ Berechnet: %s, erwartet: %s</translation>
         <translation type="unfinished">Fehler: Keine %s Adressen verfügbar.</translation>
     </message>
     <message>
-        <source>Error: Not all watchonly txs could be deleted</source>
-        <translation type="unfinished">Fehler: Nicht alle nur-beobachten txs konnten gelöscht werden</translation>
-    </message>
-    <message>
         <source>Error: This wallet already uses SQLite</source>
         <translation type="unfinished">Fehler: Diese Wallet verwendet bereits SQLite</translation>
     </message>
@@ -4383,12 +4387,32 @@ Berechnet: %s, erwartet: %s</translation>
         <translation type="unfinished">Fehler: Nicht alle Datensätze in der Datenbank können gelesen werden</translation>
     </message>
     <message>
+        <source>Error: Unable to read wallet's best block locator record</source>
+        <translation type="unfinished">Fehler: Konnte Wallet Eintrag für Ort des besten Blocks nicht lesen.</translation>
+    </message>
+    <message>
         <source>Error: Unable to remove watchonly address book data</source>
         <translation type="unfinished">Fehler: Watchonly-Adressbuchdaten konnten nicht entfernt werden</translation>
     </message>
     <message>
         <source>Error: Unable to write record to new wallet</source>
         <translation type="unfinished">Fehler: Kann neuen Eintrag nicht in Wallet schreiben</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write solvable wallet best block locator record</source>
+        <translation type="unfinished">Fehler: Konnte Wallet Eintrag für Ort des besten Blocks nicht schreiben.</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write watchonly wallet best block locator record</source>
+        <translation type="unfinished">Fehler: Konnte Nur-beobachten-Wallet Eintrag für Ort des besten Blocks nicht schreiben.</translation>
+    </message>
+    <message>
+        <source>Error: address book copy failed for wallet %s</source>
+        <translation type="unfinished">Fehler: Adressbuchkopie für Wallet %s fehlgeschlagen</translation>
+    </message>
+    <message>
+        <source>Error: database transaction cannot be executed for wallet %s</source>
+        <translation type="unfinished">Fehler: Datenbank-Transaktion kann für Wallet %s nicht ausgeführt werden.</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -4405,6 +4429,10 @@ Berechnet: %s, erwartet: %s</translation>
     <message>
         <source>Failed to verify database</source>
         <translation type="unfinished">Verifizierung der Datenbank fehlgeschlagen</translation>
+    </message>
+    <message>
+        <source>Failure removing transaction: %s</source>
+        <translation type="unfinished">Fehler beim Entfernen der Transaktion: %s</translation>
     </message>
     <message>
         <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
@@ -4628,6 +4656,10 @@ Verifikations-Error: %s</translation>
         <translation type="unfinished">Dies ist die Gebühr, die beim Senden einer Transaktion fällig wird.</translation>
     </message>
     <message>
+        <source>Transaction %s does not belong to this wallet</source>
+        <translation type="unfinished">Transaktion %s gehört nicht zu dieser Brieftasche</translation>
+    </message>
+    <message>
         <source>Transaction amount too small</source>
         <translation type="unfinished">Transaktionsbetrag zu niedrig</translation>
     </message>
@@ -4638,10 +4670,6 @@ Verifikations-Error: %s</translation>
     <message>
         <source>Transaction change output index out of range</source>
         <translation type="unfinished">Ausgangsindex des Wechselgelds außerhalb des Bereichs</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">Die Speicherpoolkette der Transaktion ist zu lang.</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>
@@ -4724,12 +4752,24 @@ Verifikations-Error: %s</translation>
         <translation type="unfinished">Nicht unterstützte globale Protokollierungsebene %s=%s. Gültige Werte: %s.</translation>
     </message>
     <message>
+        <source>Wallet file creation failed: %s</source>
+        <translation type="unfinished">Wallet Datei konnte nicht angelegt werden: %s</translation>
+    </message>
+    <message>
         <source>acceptstalefeeestimates is not supported on %s chain.</source>
         <translation type="unfinished">acceptstalefeeestimates wird auf der %s Chain nicht unterstützt.</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation type="unfinished">Nicht unterstützte Protokollkategorie %s=%s.</translation>
+    </message>
+    <message>
+        <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
+        <translation type="unfinished">Fehler: Konnte Nur-beobachten TX %s der Nur-beobachten-Wallet nicht hinzufügen.</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions. </source>
+        <translation type="unfinished">Fehler: Watchonly-Transaktionen konnten nicht gelöscht werden.</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>

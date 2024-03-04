@@ -299,6 +299,18 @@ La signature n'est possible qu'avec les adresses de type "patrimoine".</translat
         <translation type="unfinished">inconnue</translation>
     </message>
     <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">Intégré « %1 »</translation>
+    </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">Police système par défaut « %1 »</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation type="unfinished">Persnnalisé…</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation type="unfinished">Montant</translation>
     </message>
@@ -1104,12 +1116,12 @@ Le processus de migration créera une sauvegarde du porte-monnaie avant la migra
         <translation type="unfinished">Le porte-monnaie '%1' a été migré avec succès.</translation>
     </message>
     <message>
-        <source> Watchonly scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished">Les scripts en mode de visualisation ont été migrés vers un nouveau porte-monnaie nommé '%1'.</translation>
+        <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Les scripts juste-regarder ont été migrés vers un nouveau porte-monnaie nommé « %1 ».</translation>
     </message>
     <message>
-        <source> Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished">Les scripts solvables mais non surveillés ont été migrés vers un nouveau porte-monnaie nommé '%1'.</translation>
+        <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Les scripts solubles, mais non surveillés ont été migrés vers un nouveau porte-monnaie nommé « %1 ».</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -1347,8 +1359,8 @@ Le processus de migration créera une sauvegarde du porte-monnaie avant la migra
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n Go d’espace libre</numerusform>
+            <numerusform>%n Go d’espace libre</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -1590,6 +1602,10 @@ Le processus de migration créera une sauvegarde du porte-monnaie avant la migra
         <translation type="unfinished">Quand la fenêtre est fermée, la réduire au lieu de quitter l’application. Si cette option est activée, l’application ne sera fermée qu’en sélectionnant Quitter dans le menu.</translation>
     </message>
     <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">Police de l’onglet Vue d’ensemble :</translation>
+    </message>
+    <message>
         <source>Options set in this dialog are overridden by the command line:</source>
         <translation type="unfinished">Les options définies dans cette boîte de dialogue sont remplacées par la ligne de commande :</translation>
     </message>
@@ -1808,18 +1824,6 @@ Le processus de migration créera une sauvegarde du porte-monnaie avant la migra
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
         <translation type="unfinished">Utiliser un mandataire SOCKS&amp;5 séparé pour atteindre les pairs par les services oignon de Tor :</translation>
-    </message>
-    <message>
-        <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">Police à espacement constant dans l’onglet Vue d’ensemble :</translation>
-    </message>
-    <message>
-        <source>embedded "%1"</source>
-        <translation type="unfinished">intégré « %1 »</translation>
-    </message>
-    <message>
-        <source>closest matching "%1"</source>
-        <translation type="unfinished">correspondance la plus proche « %1 »</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -2063,8 +2067,8 @@ Le processus de migration créera une sauvegarde du porte-monnaie avant la migra
         <translation type="unfinished">La TBSP a été enregistrée sur le disque.</translation>
     </message>
     <message>
-        <source> * Sends %1 to %2</source>
-        <translation type="unfinished"> * Envoie %1 à %2</translation>
+        <source>Sends %1 to %2</source>
+        <translation type="unfinished"> Envoie %1 à %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2620,6 +2624,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">Exécution de la commande sans aucun porte-monnaie</translation>
     </message>
     <message>
+        <source>Node window - [%1]</source>
+        <translation type="unfinished">Fenêtre des nœuds – [%1]</translation>
+    </message>
+    <message>
         <source>Executing command using "%1" wallet</source>
         <translation type="unfinished">Exécution de la commande en utilisant le porte-monnaie « %1 »</translation>
     </message>
@@ -3071,10 +3079,6 @@ Note : Les frais étant calculés par octet, un taux de frais de « 100 satoshi
         <translation type="unfinished">Crée une transaction Bitcoin signée partiellement (TBSP) à utiliser, par exemple, avec un porte-monnaie %1 hors ligne ou avec un porte-monnaie matériel compatible TBSP.</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished">du porte-monnaie '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation type="unfinished">%1 à '%2'</translation>
     </message>
@@ -3130,6 +3134,10 @@ Note : Les frais étant calculés par octet, un taux de frais de « 100 satoshi
         <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</extracomment>
         <translation type="unfinished">Veuillez réviser votre proposition de transaction. Une transaction Bitcoin partiellement signée (TBSP) sera produite, que vous pourrez enregistrer ou copier puis signer avec, par exemple, un porte-monnaie %1 hors ligne ou avec un porte-monnaie matériel compatible TBSP.</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation type="unfinished">%1 du porte-monnaie « %2 ».</translation>
     </message>
     <message>
         <source>Do you want to create this transaction?</source>
@@ -3571,8 +3579,8 @@ Note : Les frais étant calculés par octet, un taux de frais de « 100 satoshi
         <translation type="unfinished">Index des sorties</translation>
     </message>
     <message>
-        <source> (Certificate was not verified)</source>
-        <translation type="unfinished">(Le certificat n’a pas été vérifié)</translation>
+        <source>%1 (Certificate was not verified)</source>
+        <translation type="unfinished">%1 (ce certificat n’a pas été vérifié)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -4381,6 +4389,10 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
         <translation type="unfinished">Le fichier de vidage %s n’existe pas.</translation>
     </message>
     <message>
+        <source>Error committing db txn for wallet transactions removal</source>
+        <translation type="unfinished">Erreur de validation des transactions de la base de données pour la suppression des transactions du porte-monnaie</translation>
+    </message>
+    <message>
         <source>Error creating %s</source>
         <translation type="unfinished">Erreur de création de %s</translation>
     </message>
@@ -4429,16 +4441,12 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
         <translation type="unfinished">Erreur de lecture de l’enregistrement suivant de la base de données du porte-monnaie</translation>
     </message>
     <message>
+        <source>Error starting db txn for wallet transactions removal</source>
+        <translation type="unfinished">Erreur de démarrage des transactions de la base de données pour la suppression des transactions du porte-monnaie</translation>
+    </message>
+    <message>
         <source>Error: Cannot extract destination from the generated scriptpubkey</source>
         <translation type="unfinished">Erreur : Impossible d'extraire la destination du scriptpubkey généré</translation>
-    </message>
-    <message>
-        <source>Error: Could not add watchonly tx to watchonly wallet</source>
-        <translation type="unfinished">Erreur : Impossible d'ajouter le tx watchonly au portefeuille watchonly</translation>
-    </message>
-    <message>
-        <source>Error: Could not delete watchonly transactions</source>
-        <translation type="unfinished">Erreur : Impossible d'effacer les transactions de type "watchonly".</translation>
     </message>
     <message>
         <source>Error: Couldn't create cursor into database</source>
@@ -4477,10 +4485,6 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
         <translation type="unfinished">Erreur : Aucune adresse %s n’est disponible.</translation>
     </message>
     <message>
-        <source>Error: Not all watchonly txs could be deleted</source>
-        <translation type="unfinished">Erreur : Toutes les transactions watchonly n'ont pas pu être supprimés.</translation>
-    </message>
-    <message>
         <source>Error: This wallet already uses SQLite</source>
         <translation type="unfinished">Erreur : Ce portefeuille utilise déjà SQLite</translation>
     </message>
@@ -4505,12 +4509,32 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
         <translation type="unfinished">Erreur : Impossible de lire tous les enregistrements de la base de données</translation>
     </message>
     <message>
+        <source>Error: Unable to read wallet's best block locator record</source>
+        <translation type="unfinished">Erreur : Impossible de lire l’enregistrement du meilleur bloc du porte-monnaie.</translation>
+    </message>
+    <message>
         <source>Error: Unable to remove watchonly address book data</source>
         <translation type="unfinished">Erreur : Impossible de supprimer les données du carnet d'adresses en mode veille</translation>
     </message>
     <message>
         <source>Error: Unable to write record to new wallet</source>
         <translation type="unfinished">Erreur : Impossible d’écrire l’enregistrement dans le nouveau porte-monnaie</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write solvable wallet best block locator record</source>
+        <translation type="unfinished">Erreur : Impossible d’écrire l’enregistrement du localisateur du meilleur bloc soluble du porte-monnaie</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write watchonly wallet best block locator record</source>
+        <translation type="unfinished">Erreur : Impossible d’écrire l’enregistrement du localisateur du meilleur bloc du porte-monnaie juste-regarder</translation>
+    </message>
+    <message>
+        <source>Error: address book copy failed for wallet %s</source>
+        <translation type="unfinished">Erreur :Échec d’écriture du carnet d’adresses pour le porte-monnaie %s</translation>
+    </message>
+    <message>
+        <source>Error: database transaction cannot be executed for wallet %s</source>
+        <translation type="unfinished">Erreur ; La transaction de la base de données ne peut pas être exécutée pour le porte-monnaie %s</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -4527,6 +4551,10 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
     <message>
         <source>Failed to verify database</source>
         <translation type="unfinished">Échec de vérification de la base de données</translation>
+    </message>
+    <message>
+        <source>Failure removing transaction: %s</source>
+        <translation type="unfinished">Échec de suppression de la transaction :%s</translation>
     </message>
     <message>
         <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
@@ -4749,6 +4777,10 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
         <translation type="unfinished">Il s’agit des frais minimaux que vous payerez si vous envoyez une transaction.</translation>
     </message>
     <message>
+        <source>Transaction %s does not belong to this wallet</source>
+        <translation type="unfinished">La transaction %s n’appartient pas à ce porte-monnaie</translation>
+    </message>
+    <message>
         <source>Transaction amount too small</source>
         <translation type="unfinished">Le montant de la transaction est trop bas</translation>
     </message>
@@ -4759,10 +4791,6 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
     <message>
         <source>Transaction change output index out of range</source>
         <translation type="unfinished">L’index des sorties de monnaie des transactions est hors échelle</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">La chaîne de la réserve de mémoire de la transaction est trop longue</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>
@@ -4845,12 +4873,24 @@ Impossible de restaurer la sauvegarde du portefeuille.</translation>
         <translation type="unfinished">Niveau de journalisation global non pris en charge %s=%s. Valeurs valides : %s.</translation>
     </message>
     <message>
+        <source>Wallet file creation failed: %s</source>
+        <translation type="unfinished">Échec de création du fichier du porte-monnaie : %s</translation>
+    </message>
+    <message>
         <source>acceptstalefeeestimates is not supported on %s chain.</source>
         <translation type="unfinished">acceptstalefeeestimates n'est pas pris en charge sur la chaîne %s.</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation type="unfinished">La catégorie de journalisation %s=%s n’est pas prise en charge</translation>
+    </message>
+    <message>
+        <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
+        <translation type="unfinished">Erreur : Impossible d’ajouter la transaction juste-regarder %s au portefeuille juste-regarder</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions. </source>
+        <translation type="unfinished">Erreur : Impossible d’effacer les transactions juste-regarder.</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>

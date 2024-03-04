@@ -51,7 +51,7 @@
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Trieu l'adreça on rebre les monedes</translation>
+        <translation type="unfinished">Trieu l'adreça on rebre les monedes amb</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -92,6 +92,14 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
         <translation type="unfinished">S'ha produït un error en desar la llista d'adreces a %1. Torneu-ho a provar.</translation>
+    </message>
+    <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Adreces d'enviament - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Adreces de recepció - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -216,12 +224,20 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <translation type="unfinished">La contrasenya introduïda per a desxifrar el moneder és incorrecta.</translation>
     </message>
     <message>
+        <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <translation type="unfinished">La contrasenya introduïda per a desxifrar la cartera és incorrecta. Conté un caràcter nul (és a dir, un byte zero). Si la contrasenya es va establir amb una versió d'aquest programari anterior a la 25.0, si us plau, torneu-ho a provar només amb els caràcters fins a — però sense incloure — el primer caràcter nul. En cas d'èxit, si us plau, establiu una nova contrasenya per evitar aquest problema en el futur.</translation>
+    </message>
+    <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation type="unfinished">La contrasenya del moneder ha estat canviada correctament.</translation>
     </message>
     <message>
         <source>Passphrase change failed</source>
         <translation type="unfinished">Ha fallat el canvi de frase de pas</translation>
+    </message>
+    <message>
+        <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
+        <translation type="unfinished">La contrasenya antiga introduïda per a desxifrar la cartera és incorrecta. Conté un caràcter nul (és a dir, un byte zero). Si la contrasenya es va establir amb una versió d'aquest programari anterior a la 25.0, si us plau, intenta-ho de nou només amb els caràcters fins a — però sense incloure — el primer caràcter nul.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -241,6 +257,10 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
 </context>
 <context>
     <name>BitcoinApplication</name>
+    <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">El fitxer de configuració %1 pot estar corrupte o invàlid.</translation>
+    </message>
     <message>
         <source>Runaway exception</source>
         <translation type="unfinished">Excepció fugitiva</translation>
@@ -646,8 +666,26 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <translation type="unfinished">Tanca la cartera</translation>
     </message>
     <message>
+        <source>Restore Wallet…</source>
+        <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
+        <translation type="unfinished">Reestablir cartera...</translation>
+    </message>
+    <message>
+        <source>Restore a wallet from a backup file</source>
+        <extracomment>Status tip for Restore Wallet menu item</extracomment>
+        <translation type="unfinished">Reestablir una cartera des d'un fitxer de còpia de seguretat</translation>
+    </message>
+    <message>
         <source>Close all wallets</source>
         <translation type="unfinished">Tanqueu totes les carteres</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Migrar cartera</translation>
+    </message>
+    <message>
+        <source>Migrate a wallet</source>
+        <translation type="unfinished">Migrar una cartera</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
@@ -673,6 +711,16 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <source>Wallet Data</source>
         <extracomment>Name of the wallet data file format.</extracomment>
         <translation type="unfinished">Dades de la cartera</translation>
+    </message>
+    <message>
+        <source>Load Wallet Backup</source>
+        <extracomment>The title for Restore Wallet File Windows</extracomment>
+        <translation type="unfinished">Carregar còpia de seguretat d'una cartera</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">Restaurar cartera</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -730,6 +778,18 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <source>Enable network activity</source>
         <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
         <translation type="unfinished">Habilita l'activitat de la xarxa</translation>
+    </message>
+    <message>
+        <source>Pre-syncing Headers (%1%)…</source>
+        <translation type="unfinished">Pre-sincronitzant capçaleres (%1%)...</translation>
+    </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">Error al crear la cartera</translation>
+    </message>
+    <message>
+        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">No s'ha pogut crear una nova cartera, el programari s'ha compilat sense suport per a SQLite (necessari per a les carteres de descriptors)</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -894,6 +954,10 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <translation type="unfinished">Copia la &amp;quantitat</translation>
     </message>
     <message>
+        <source>Copy transaction &amp;ID and output index</source>
+        <translation type="unfinished">Copiar &amp;ID de transacció i índex de sortida</translation>
+    </message>
+    <message>
         <source>L&amp;ock unspent</source>
         <translation type="unfinished">Bl&amp;oqueja sense gastar</translation>
     </message>
@@ -966,7 +1030,75 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <source>Can't list signers</source>
         <translation type="unfinished">No es poden enumerar signants</translation>
     </message>
-    </context>
+    <message>
+        <source>Too many external signers found</source>
+        <translation type="unfinished">Massa signants externs trobats</translation>
+    </message>
+</context>
+<context>
+    <name>LoadWalletsActivity</name>
+    <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation type="unfinished">Carregar carteres</translation>
+    </message>
+    <message>
+        <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
+        <translation type="unfinished">Carregant carteres...</translation>
+    </message>
+</context>
+<context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">Migrar cartera</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">Esteu segurs que voleu migrar la cartera &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">Migrar la cartera convertirà aquesta cartera en una o més carteres de descriptors. Caldrà fer una nova còpia de seguretat de la cartera.
+Si aquesta cartera conté algun script només per a visualització, es crearà una nova cartera que contingui aquests scripts només per a visualització.
+Si aquesta cartera conté algun script resoluble però no visualitzat, es crearà una cartera diferent i nova que contingui aquests scripts.
+
+El procés de migració crearà una còpia de seguretat de la cartera abans de migrar-la. Aquest fitxer de còpia de seguretat tindrà el nom &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak i es podrà trobar al directori d'aquesta cartera. En cas d'una migració incorrecta, es podrà restaurar la còpia de seguretat mitjançant la funcionalitat "Restaurar cartera".</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Migrar cartera</translation>
+    </message>
+    <message>
+        <source>Migrating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">Migrant cartera &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>The wallet '%1' was migrated successfully.</source>
+        <translation type="unfinished">La cartera '%1' s'ha migrat amb èxit.</translation>
+    </message>
+    <message>
+        <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Els scripts de només visualització s'han migrat a una nova cartera anomenada '%1'.</translation>
+    </message>
+    <message>
+        <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Els scripts resolubles però no vigilats s'han migrat a una nova cartera anomenada '%1'.</translation>
+    </message>
+    <message>
+        <source>Migration failed</source>
+        <translation type="unfinished">Migració fallida</translation>
+    </message>
+    <message>
+        <source>Migration Successful</source>
+        <translation type="unfinished">Migració exitosa</translation>
+    </message>
+</context>
 <context>
     <name>OpenWalletActivity</name>
     <message>
@@ -992,6 +1124,19 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <translation type="unfinished">Obrint la Cartera &lt;b&gt;%1&lt;/b&gt;...</translation>
     </message>
 </context>
+<context>
+    <name>RestoreWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Restaurar cartera</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Restaurant cartera &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    </context>
 <context>
     <name>WalletController</name>
     <message>
@@ -1538,18 +1683,6 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <translation type="unfinished">Utilitzeu el servidor intermediari SOCKS&amp;5 per a arribar als iguals mitjançant els serveis d'onion de Tor:</translation>
     </message>
     <message>
-        <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">Tipus de lletra monoespai a la pestanya Visió general:</translation>
-    </message>
-    <message>
-        <source>embedded "%1"</source>
-        <translation type="unfinished">incrustat "%1"</translation>
-    </message>
-    <message>
-        <source>closest matching "%1"</source>
-        <translation type="unfinished">coincidència més propera "%1"</translation>
-    </message>
-    <message>
         <source>&amp;OK</source>
         <translation type="unfinished">&amp;D'acord</translation>
     </message>
@@ -1749,10 +1882,6 @@ Això és ideal per a carteres de mode només lectura.</translation>
     <message>
         <source>PSBT saved to disk.</source>
         <translation type="unfinished">PSBT guardada al disc.</translation>
-    </message>
-    <message>
-        <source> * Sends %1 to %2</source>
-        <translation type="unfinished">*Envia %1 a %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2678,10 +2807,6 @@ Nota: atès que la tarifa es calcula per byte, una tarifa de "100 satoshis per k
         <translation type="unfinished">Crea una transacció bitcoin parcialment signada (PSBT) per a utilitzar, per exemple,  amb una cartera %1 fora de línia o amb una cartera compatible amb PSBT.</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished">de la cartera "%1"</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation type="unfinished">%1 a '%2'</translation>
     </message>
@@ -3173,10 +3298,6 @@ Nota: atès que la tarifa es calcula per byte, una tarifa de "100 satoshis per k
     <message>
         <source>Output index</source>
         <translation type="unfinished">Índex de resultats</translation>
-    </message>
-    <message>
-        <source> (Certificate was not verified)</source>
-        <translation type="unfinished">(El certificat no s'ha verificat)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -4083,10 +4204,6 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
     <message>
         <source>Transaction amounts must not be negative</source>
         <translation type="unfinished">Els imports de la transacció no han de ser negatius</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">La transacció té massa temps d'una cadena de mempool</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>

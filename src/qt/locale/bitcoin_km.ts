@@ -2233,10 +2233,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">ចម្លងតម្លៃ</translation>
     </message>
     <message>
-        <source>Copy change</source>
-        <translation type="unfinished">ចម្លងការផ្លាស់ប្តូរ</translation>
-    </message>
-    <message>
         <source>Sign on device</source>
         <extracomment>"device" usually means a hardware wallet.</extracomment>
         <translation type="unfinished">ចុះហត្ថលេខាលើឧបករណ៍</translation>
@@ -3015,10 +3011,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Transaction amounts must not be negative</source>
         <translation type="unfinished">ចំនួនប្រត្តិបត្តិការ មិនអាចអវិជ្ជមានបានទេ</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">ប្រត្តិបត្តិការមានខ្សែចង្វាក់រងចាំដើម្បីធ្វើការផ្ទៀងផ្ទាត់វែង</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>

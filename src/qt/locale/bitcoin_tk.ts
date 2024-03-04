@@ -1731,18 +1731,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <translation type="unfinished">Tor onion hyzmatlary arkaly düwünlere aralaşmak üçin SOCKS&amp;5 proksisini ulan:</translation>
     </message>
     <message>
-        <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">Gözden geçir sahypasynda monoaralykly harp görnüşi:</translation>
-    </message>
-    <message>
-        <source>embedded "%1"</source>
-        <translation type="unfinished">içine gurnalan "%1"</translation>
-    </message>
-    <message>
-        <source>closest matching "%1"</source>
-        <translation type="unfinished">iň meňzeş gabat gelme "%1"</translation>
-    </message>
-    <message>
         <source>&amp;Cancel</source>
         <translation type="unfinished">&amp;Ýatyr</translation>
     </message>
@@ -1978,10 +1966,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>PSBT saved to disk.</source>
         <translation type="unfinished">PSBT diskde ýatda saklandy.</translation>
-    </message>
-    <message>
-        <source> * Sends %1 to %2</source>
-        <translation type="unfinished"> * %2-ä %1 iberilýär</translation>
     </message>
     <message>
         <source>Unable to calculate transaction fee or total transaction amount.</source>
