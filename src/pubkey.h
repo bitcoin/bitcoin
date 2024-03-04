@@ -224,7 +224,7 @@ public:
     bool Decompress();
 
     //! Derive BIP32 child pubkey.
-    [[nodiscard]] bool Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
+    [[nodiscard]] bool Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc, uint256& tweak_out) const;
 };
 
 class XOnlyPubKey
@@ -377,6 +377,7 @@ struct CExtPubKey {
     void EncodeWithVersion(unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE]) const;
     void DecodeWithVersion(const unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE]);
     [[nodiscard]] bool Derive(CExtPubKey& out, unsigned int nChild) const;
+    [[nodiscard]] bool Derive(CExtPubKey& out, unsigned int nChild, uint256& tweak_out) const;
 };
 
 #endif // BITCOIN_PUBKEY_H
