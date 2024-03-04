@@ -277,7 +277,8 @@ FUZZ_TARGET(key, .init = initialize_key)
     {
         CPubKey child_pubkey;
         ChainCode child_chaincode;
-        const bool ok = pubkey.Derive(child_pubkey, child_chaincode, 0, random_uint256);
+        uint256 tweak;
+        const bool ok = pubkey.Derive(child_pubkey, child_chaincode, 0, random_uint256, tweak);
         assert(ok);
         assert(child_pubkey != pubkey);
         assert(child_pubkey.IsCompressed());
