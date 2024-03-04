@@ -1492,7 +1492,7 @@ void CInstantSendManager::AskNodesForLockedTx(const uint256& txid, const CConnma
 
 void CInstantSendManager::ProcessPendingRetryLockTxs()
 {
-    auto retryTxs = WITH_LOCK(cs_pendingRetry, return pendingRetryTxs);
+    const auto retryTxs = WITH_LOCK(cs_pendingRetry, return pendingRetryTxs);
 
     if (retryTxs.empty()) {
         return;
