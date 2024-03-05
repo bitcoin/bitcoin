@@ -75,8 +75,6 @@ int main(int argc, char* argv[])
         setenv("QT_QPA_PLATFORM", "minimal", /* overwrite */ 0);
     #endif
 
-    // Don't remove this, it's needed to access
-    // QApplication:: and QCoreApplication:: in the tests
     BitcoinApplication app;
     app.setNode(*node);
     app.setApplicationName("Dash-Qt-test");

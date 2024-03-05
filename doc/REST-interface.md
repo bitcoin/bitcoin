@@ -30,13 +30,14 @@ Supported API
 `GET /rest/tx/<TX-HASH>.<bin|hex|json>`
 
 Given a transaction hash: returns a transaction in binary, hex-encoded binary, or JSON formats.
+Responds with 404 if the transaction doesn't exist.
 
 By default, this endpoint will only search the mempool.
 To query for a confirmed transaction, enable the transaction index via "txindex=1" command line / configuration option.
 
 #### Blocks
-`GET /rest/block/<BLOCK-HASH>.<bin|hex|json>`
-`GET /rest/block/notxdetails/<BLOCK-HASH>.<bin|hex|json>`
+- `GET /rest/block/<BLOCK-HASH>.<bin|hex|json>`
+- `GET /rest/block/notxdetails/<BLOCK-HASH>.<bin|hex|json>`
 
 Given a block hash: returns a block, in binary, hex-encoded binary or JSON formats.
 Responds with 404 if the block doesn't exist.
@@ -55,6 +56,7 @@ Returns empty if the block doesn't exist or it isn't in the active chain.
 `GET /rest/blockhashbyheight/<HEIGHT>.<bin|hex|json>`
 
 Given a height: returns hash of block in best-block-chain at height provided.
+Responds with 404 if block not found.
 
 #### Chaininfos
 `GET /rest/chaininfo.json`
@@ -75,11 +77,13 @@ Only supports JSON as output format.
 * bip9_softforks : (object) status of BIP9 softforks in progress
 
 #### Query UTXO set
-`GET /rest/getutxos/<checkmempool>/<txid>-<n>/<txid>-<n>/.../<txid>-<n>.<bin|hex|json>`
+- `GET /rest/getutxos/<TXID>-<N>/<TXID>-<N>/.../<TXID>-<N>.<bin|hex|json>`
+- `GET /rest/getutxos/checkmempool/<TXID>-<N>/<TXID>-<N>/.../<TXID>-<N>.<bin|hex|json>`
 
-The getutxo command allows querying of the UTXO set given a set of outpoints.
-See BIP64 for input and output serialisation:
-https://github.com/bitcoin/bips/blob/master/bip-0064.mediawiki
+The getutxos endpoint allows querying the UTXO set, given a set of outpoints.
+With the `/checkmempool/` option, the mempool is also taken into account.
+See [BIP64](https://github.com/bitcoin/bips/blob/master/bip-0064.mediawiki) for
+input and output serialization (relevant for `bin` and `hex` output formats).
 
 Example:
 ```
