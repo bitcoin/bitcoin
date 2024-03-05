@@ -15,39 +15,11 @@ class CTransaction;
 
 class CSuperblock;
 class CGovernanceManager;
-class CGovernanceTriggerManager;
 class CSuperblockManager;
 
 using CSuperblock_sptr = std::shared_ptr<CSuperblock>;
 
-// DECLARE GLOBAL VARIABLES FOR GOVERNANCE CLASSES
-extern CGovernanceTriggerManager triggerman;
-
 CAmount ParsePaymentAmount(const std::string& strAmount);
-
-/**
-*   Trigger Manager
-*
-*   - Track governance objects which are triggers
-*   - After triggers are activated and executed, they can be removed
-*/
-
-class CGovernanceTriggerManager
-{
-    friend class CSuperblockManager;
-    friend class CGovernanceManager;
-
-private:
-    std::map<uint256, CSuperblock_sptr> mapTrigger;
-
-    std::vector<CSuperblock_sptr> GetActiveTriggers();
-    bool AddNewTrigger(uint256 nHash);
-    void CleanAndRemove();
-
-public:
-    CGovernanceTriggerManager() :
-        mapTrigger() {}
-};
 
 /**
 *   Superblock Manager

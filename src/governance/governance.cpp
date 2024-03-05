@@ -51,7 +51,8 @@ CGovernanceManager::CGovernanceManager() :
     nCachedBlockHeight(0),
     setRequestedObjects(),
     fRateChecksEnabled(true),
-    votedFundingYesTriggerHash(std::nullopt)
+    votedFundingYesTriggerHash(std::nullopt),
+    mapTrigger{}
 {
 }
 
@@ -315,7 +316,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- Before trigger block, GetDataAsPlainString = %s, nObjectType = %d\n",
                 govobj.GetDataAsPlainString(), ToUnderlying(govobj.GetObjectType()));
 
-    if (govobj.GetObjectType() == GovernanceObject::TRIGGER && !triggerman.AddNewTrigger(nHash)) {
+    if (govobj.GetObjectType() == GovernanceObject::TRIGGER && !AddNewTrigger(nHash)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- undo adding invalid trigger object: hash = %s\n", nHash.ToString());
         objpair.first->second.PrepareDeletion(GetTime<std::chrono::seconds>().count());
         return;
@@ -359,7 +360,7 @@ void CGovernanceManager::UpdateCachesAndClean()
     ScopedLockBool guard(cs, fRateChecksEnabled, false);
 
     // Clean up any expired or invalid triggers
-    triggerman.CleanAndRemove();
+    CleanAndRemoveTriggers();
 
     auto it = mapObjects.begin();
     int64_t nNow = GetTime<std::chrono::seconds>().count();
@@ -417,7 +418,6 @@ void CGovernanceManager::UpdateCachesAndClean()
             mapErasedGovernanceObjects.insert(std::make_pair(nHash, nTimeExpired));
             mapObjects.erase(it++);
         } else {
-            // NOTE: triggers are handled via triggerman
             if (pObj->GetObjectType() == GovernanceObject::PROPOSAL) {
                 CProposalValidator validator(pObj->GetDataAsHexString());
                 if (!validator.Validate()) {
@@ -732,7 +732,7 @@ void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGover
     }
 
     // Vote NO-FUNDING for the rest of the active triggers
-    const auto activeTriggers = triggerman.GetActiveTriggers();
+    const auto activeTriggers = GetActiveTriggers();
     for (const auto& trigger : activeTriggers) {
         const uint256 trigger_hash = trigger->GetGovernanceObject(*this)->GetHash();
         if (trigger->GetBlockHeight() <= nCachedBlockHeight) {
@@ -1355,7 +1355,7 @@ void CGovernanceManager::AddCachedTriggers()
             continue;
         }
 
-        if (!triggerman.AddNewTrigger(govobj.GetHash())) {
+        if (!AddNewTrigger(govobj.GetHash())) {
             govobj.PrepareDeletion(nNow);
         }
     }

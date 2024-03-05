@@ -21,7 +21,6 @@ class CFlatDB;
 class CInv;
 
 class CGovernanceManager;
-class CGovernanceTriggerManager;
 class CGovernanceObject;
 class CGovernanceVote;
 class CSporkManager;
@@ -263,6 +262,7 @@ private:
     hash_s_t setRequestedVotes;
     bool fRateChecksEnabled;
     std::optional<uint256> votedFundingYesTriggerHash;
+    std::map<uint256, std::shared_ptr<CSuperblock>> mapTrigger;
 
 public:
     CGovernanceManager();
@@ -355,6 +355,15 @@ public:
 
     int RequestGovernanceObjectVotes(CNode& peer, CConnman& connman) const;
     int RequestGovernanceObjectVotes(Span<CNode*> vNodesCopy, CConnman& connman) const;
+
+    /*
+     * Trigger Management (formerly CGovernanceTriggerManager)
+     *   - Track governance objects which are triggers
+     *   - After triggers are activated and executed, they can be removed
+    */
+    std::vector<std::shared_ptr<CSuperblock>> GetActiveTriggers();
+    bool AddNewTrigger(uint256 nHash);
+    void CleanAndRemoveTriggers();
 
 private:
     std::optional<const CSuperblock> CreateSuperblockCandidate(int nHeight) const;
