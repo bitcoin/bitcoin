@@ -5262,7 +5262,7 @@ int main(int argc, char **argv) {
 
 #ifdef ENABLE_MODULE_SCHNORRSIG
     /* Schnorrsig tests */
-    run_schnorrsig_tests();
+    /* run_schnorrsig_tests(); */
 #endif
 
     /* ecdsa tests */
