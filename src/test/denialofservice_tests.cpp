@@ -350,7 +350,6 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     peerLogic->InitializeNode(*nodes[1], NODE_NETWORK);
     nodes[1]->fSuccessfullyConnected = true;
     connman->AddTestNode(*nodes[1]);
-    peerLogic->UnitTestMisbehaving(nodes[1]->GetId(), DISCOURAGEMENT_THRESHOLD - 1);
     BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
     // [0] is still discouraged/disconnected.
     BOOST_CHECK(banman->IsDiscouraged(addr[0]));
@@ -358,7 +357,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     // [1] is not discouraged/disconnected yet.
     BOOST_CHECK(!banman->IsDiscouraged(addr[1]));
     BOOST_CHECK(!nodes[1]->fDisconnect);
-    peerLogic->UnitTestMisbehaving(nodes[1]->GetId(), 1); // [1] reaches discouragement threshold
+    peerLogic->UnitTestMisbehaving(nodes[1]->GetId(), DISCOURAGEMENT_THRESHOLD); // [1] reaches discouragement threshold
     BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
     // Expect both [0] and [1] to be discouraged/disconnected now.
     BOOST_CHECK(banman->IsDiscouraged(addr[0]));
