@@ -9,6 +9,7 @@
 #include <interfaces/init.h>
 #include <interfaces/node.h>
 #include <qt/bitcoin.h>
+#include <qt/guiconstants.h>
 #include <qt/test/apptests.h>
 #include <qt/test/optiontests.h>
 #include <qt/test/rpcnestedtests.h>
@@ -24,6 +25,7 @@
 #include <QApplication>
 #include <QDebug>
 #include <QObject>
+#include <QSettings>
 #include <QTest>
 
 #include <functional>
@@ -84,7 +86,8 @@ int main(int argc, char* argv[])
     #endif
 
     BitcoinApplication app;
-    app.setApplicationName("Bitcoin-Qt-test");
+    app.setOrganizationName(QAPP_ORG_NAME);
+    app.setApplicationName(QAPP_APP_NAME_DEFAULT "-test");
     app.createNode(*init);
 
     int num_test_failures{0};
