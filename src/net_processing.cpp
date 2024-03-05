@@ -114,8 +114,8 @@ static constexpr int STALE_RELAY_AGE_LIMIT = 30 * 24 * 60 * 60;
 /// Age after which a block is considered historical for purposes of rate
 /// limiting block relay. Set to one week, denominated in seconds.
 static constexpr int HISTORICAL_BLOCK_AGE = 7 * 24 * 60 * 60;
-/** Time between pings automatically sent out for latency probing and keepalive (in seconds). */
-static const int PING_INTERVAL = 2 * 60;
+/** Time between pings automatically sent out for latency probing and keepalive */
+static constexpr std::chrono::minutes PING_INTERVAL{2};
 /** The maximum number of entries in a locator */
 static const unsigned int MAX_LOCATOR_SZ = 101;
 /** Number of blocks that can be requested at any given time from a single peer. */
@@ -262,7 +262,7 @@ public:
     void SetBestHeight(int height) override { m_best_height = height; };
     void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") override;
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
-                        int64_t nTimeReceived, const std::atomic<bool>& interruptMsgProc) override;
+                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override;
     bool IsBanned(NodeId pnode) override EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 private:
@@ -2194,14 +2194,26 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 push = true;
 
                 // As we're going to send tx, make sure its unconfirmed parents are made requestable.
-                for (const auto& txin : tx->vin) {
-                    auto txinfo = m_mempool.info(txin.prevout.hash);
-                    if (txinfo.tx && txinfo.m_time > now - UNCONDITIONAL_RELAY_DELAY) {
-                        // Relaying a transaction with a recent but unconfirmed parent.
-                        if (WITH_LOCK(pfrom.m_tx_relay->cs_tx_inventory, return !pfrom.m_tx_relay->filterInventoryKnown.contains(txin.prevout.hash))) {
-                            LOCK(cs_main);
-                            State(pfrom.GetId())->m_recently_announced_invs.insert(txin.prevout.hash);
+                std::vector<uint256> parent_ids_to_add;
+                {
+                    LOCK(m_mempool.cs);
+                    auto txiter = m_mempool.GetIter(tx->GetHash());
+                    if (txiter) {
+                        const CTxMemPoolEntry::Parents& parents = (*txiter)->GetMemPoolParentsConst();
+                        parent_ids_to_add.reserve(parents.size());
+                        for (const CTxMemPoolEntry& parent : parents) {
+                            if (parent.GetTime() > now - UNCONDITIONAL_RELAY_DELAY) {
+                                parent_ids_to_add.push_back(parent.GetTx().GetHash());
+                            }
                         }
+                    }
+                }
+
+                for (const uint256& parent_txid : parent_ids_to_add) {
+                    // Relaying a transaction with a recent but unconfirmed parent.
+                    if (WITH_LOCK(pfrom.m_tx_relay->cs_tx_inventory, return !pfrom.m_tx_relay->filterInventoryKnown.contains(parent_txid))) {
+                        LOCK(cs_main);
+                        State(pfrom.GetId())->m_recently_announced_invs.insert(parent_txid);
                     }
                 }
             }
@@ -2857,7 +2869,7 @@ void PeerManagerImpl::ProcessMessage(
     CNode& pfrom,
     const std::string& msg_type,
     CDataStream& vRecv,
-    int64_t nTimeReceived,
+    const std::chrono::microseconds time_received,
     const std::atomic<bool>& interruptMsgProc)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(msg_type), vRecv.size(), pfrom.GetId());
@@ -3688,8 +3700,19 @@ void PeerManagerImpl::ProcessMessage(
         else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
         {
             bool fRejectedParents = false; // It may be the case that the orphans parents have all been rejected
+
+            // Deduplicate parent txids, so that we don't have to loop over
+            // the same parent txid more than once down below.
+            std::vector<uint256> unique_parents;
+            unique_parents.reserve(tx.vin.size());
             for (const CTxIn& txin : tx.vin) {
-                if (m_recent_rejects.contains(txin.prevout.hash)) {
+                // We start with all parents, and then remove duplicates below.
+                unique_parents.push_back(txin.prevout.hash);
+            }
+            std::sort(unique_parents.begin(), unique_parents.end());
+            unique_parents.erase(std::unique(unique_parents.begin(), unique_parents.end()), unique_parents.end());
+            for (const uint256& parent_txid : unique_parents) {
+                if (m_recent_rejects.contains(parent_txid)) {
                     fRejectedParents = true;
                     break;
                 }
@@ -3697,12 +3720,12 @@ void PeerManagerImpl::ProcessMessage(
             if (!fRejectedParents) {
                 const auto current_time = GetTime<std::chrono::microseconds>();
 
-                for (const CTxIn& txin : tx.vin) {
-                    CInv _inv(MSG_TX, txin.prevout.hash);
+                for (const uint256& parent_txid : unique_parents) {
+                    CInv _inv(MSG_TX, parent_txid);
                     pfrom.AddKnownInventory(_inv.hash);
                     if (!AlreadyHave(_inv)) RequestObject(State(pfrom.GetId()), _inv, current_time);
                     // We don't know if the previous tx was a regular or a mixing one, try both
-                    CInv _inv2(MSG_DSTX, txin.prevout.hash);
+                    CInv _inv2(MSG_DSTX, parent_txid);
                     pfrom.AddKnownInventory(_inv2.hash);
                     if (!AlreadyHave(_inv2)) RequestObject(State(pfrom.GetId()), _inv2, current_time);
                 }
@@ -3923,7 +3946,7 @@ void PeerManagerImpl::ProcessMessage(
         } // cs_main
 
         if (fProcessBLOCKTXN)
-            return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, nTimeReceived, interruptMsgProc);
+            return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, time_received, interruptMsgProc);
 
         if (fRevertToHeaderProcessing) {
             // Headers received from HB compact block peers are permitted to be
@@ -4182,7 +4205,7 @@ void PeerManagerImpl::ProcessMessage(
     }
 
     if (msg_type == NetMsgType::PONG) {
-        int64_t pingUsecEnd = nTimeReceived;
+        const auto ping_end = time_received;
         uint64_t nonce = 0;
         size_t nAvail = vRecv.in_avail();
         bool bPingFinished = false;
@@ -4196,11 +4219,11 @@ void PeerManagerImpl::ProcessMessage(
                 if (nonce == pfrom.nPingNonceSent) {
                     // Matching pong received, this ping is no longer outstanding
                     bPingFinished = true;
-                    int64_t pingUsecTime = pingUsecEnd - pfrom.nPingUsecStart;
-                    if (pingUsecTime >= 0) {
+                    const auto ping_time = ping_end - pfrom.m_ping_start.load();
+                    if (ping_time.count() >= 0) {
                         // Successful ping time measurement, replace previous
-                        pfrom.nPingUsecTime = pingUsecTime;
-                        pfrom.nMinPingUsecTime = std::min(pfrom.nMinPingUsecTime.load(), pingUsecTime);
+                        pfrom.nPingUsecTime = count_microseconds(ping_time);
+                        pfrom.nMinPingUsecTime = std::min(pfrom.nMinPingUsecTime.load(), count_microseconds(ping_time));
                     } else {
                         // This should never happen
                         sProblem = "Timing mishap";
@@ -4778,7 +4801,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         // RPC ping request by user
         pingSend = true;
     }
-    if (pto->nPingNonceSent == 0 && pto->nPingUsecStart + PING_INTERVAL * 1000000 < GetTimeMicros()) {
+    if (pto->nPingNonceSent == 0 && pto->m_ping_start.load() + PING_INTERVAL < GetTime<std::chrono::microseconds>()) {
         // Ping automatically sent as a latency probe & keepalive.
         pingSend = true;
     }
@@ -4788,7 +4811,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
         }
         pto->fPingQueued = false;
-        pto->nPingUsecStart = GetTimeMicros();
+        pto->m_ping_start = GetTime<std::chrono::microseconds>();
         pto->nPingNonceSent = nonce;
         m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::PING, nonce));
     }

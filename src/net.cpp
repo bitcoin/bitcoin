@@ -691,15 +691,15 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     // since pingtime does not update until the ping is complete, which might take a while.
     // So, if a ping is taking an unusually long time in flight,
     // the caller can immediately detect that this is happening.
-    int64_t nPingUsecWait = 0;
-    if ((0 != nPingNonceSent) && (0 != nPingUsecStart)) {
-        nPingUsecWait = GetTimeMicros() - nPingUsecStart;
+    std::chrono::microseconds ping_wait{0};
+    if ((0 != nPingNonceSent) && (0 != m_ping_start.load().count())) {
+        ping_wait = GetTime<std::chrono::microseconds>() - m_ping_start.load();
     }
 
     // Raw ping time is in microseconds, but show it to user as whole seconds (Dash users should be well used to small numbers with many decimal places by now :)
     stats.m_ping_usec = nPingUsecTime;
     stats.m_min_ping_usec  = nMinPingUsecTime;
-    stats.m_ping_wait_usec = nPingUsecWait;
+    stats.m_ping_wait_usec = count_microseconds(ping_wait);
 
     // Leave string empty if addrLocal invalid (not filled in yet)
     CService addrLocalUnlocked = GetAddrLocal();
@@ -718,9 +718,10 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
 bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
 {
     complete = false;
-    int64_t nTimeMicros = GetTimeMicros();
+    // TODO: use mocktime here after bitcoin#19499 is backported
+    const auto time = std::chrono::microseconds(GetTimeMicros());
     LOCK(cs_vRecv);
-    nLastRecv = nTimeMicros / 1000000;
+    nLastRecv = std::chrono::duration_cast<std::chrono::seconds>(time).count();
     nRecvBytes += msg_bytes.size();
     while (msg_bytes.size() > 0) {
         // absorb network data
@@ -733,7 +734,7 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
         if (m_deserializer->Complete()) {
             // decompose a transport agnostic CNetMessage from the deserializer
             uint32_t out_err_raw_size{0};
-            std::optional<CNetMessage> result{m_deserializer->GetMessage(nTimeMicros, out_err_raw_size)};
+            std::optional<CNetMessage> result{m_deserializer->GetMessage(time, out_err_raw_size)};
             if (!result) {
                 // Message deserialization failed.  Drop the message but don't disconnect the peer.
                 // store the size of the corrupt message
@@ -825,7 +826,7 @@ const uint256& V1TransportDeserializer::GetMessageHash() const
     return data_hash;
 }
 
-std::optional<CNetMessage> V1TransportDeserializer::GetMessage(int64_t time, uint32_t& out_err_raw_size)
+std::optional<CNetMessage> V1TransportDeserializer::GetMessage(const std::chrono::microseconds time, uint32_t& out_err_raw_size)
 {
     // decompose a single CNetMessage from the TransportDeserializer
     std::optional<CNetMessage> msg(std::move(vRecv));
@@ -867,7 +868,7 @@ void V1TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vec
     uint256 hash = Hash(msg.data);
 
     // create header
-    CMessageHeader hdr(Params().MessageStart(), msg.command.c_str(), msg.data.size());
+    CMessageHeader hdr(Params().MessageStart(), msg.m_type.c_str(), msg.data.size());
     memcpy(hdr.pchChecksum, hash.begin(), CMessageHeader::CHECKSUM_SIZE);
 
     // serialize header
@@ -1514,11 +1515,11 @@ bool CConnman::InactivityCheck(const CNode& node) const
         return true;
     }
 
-    if (node.nPingNonceSent && node.nPingUsecStart.load() + TIMEOUT_INTERVAL * 1000000 < GetTimeMicros()) {
+    if (node.nPingNonceSent && node.m_ping_start.load() + std::chrono::seconds{TIMEOUT_INTERVAL} < GetTime<std::chrono::microseconds>()) {
         // We use mockable time for ping timeouts. This means that setmocktime
         // may cause pings to time out for peers that have been connected for
         // longer than m_peer_connect_timeout.
-        LogPrintf("ping timeout: %fs\n", 0.000001 * (GetTimeMicros() - node.nPingUsecStart));
+        LogPrintf("ping timeout: %fs\n", 0.000001 * count_microseconds(GetTime<std::chrono::microseconds>() - node.m_ping_start.load()));
         return true;
     }
 
@@ -3128,7 +3129,7 @@ void Discover()
 
 void CConnman::SetNetworkActive(bool active)
 {
-    LogPrint(BCLog::NET, "SetNetworkActive: %s\n", active);
+    LogPrintf("%s: %s\n", __func__, active);
 
     if (fNetworkActive == active) {
         return;
@@ -3136,20 +3137,24 @@ void CConnman::SetNetworkActive(bool active)
 
     fNetworkActive = active;
 
-    // Always call the Reset() if the network gets enabled/disabled to make sure the sync process
-    // gets a reset if its outdated..
-    ::masternodeSync->Reset();
+    // masternodeSync is nullptr during app initialization with `-networkactive=`
+    if (::masternodeSync) {
+        // Always call the Reset() if the network gets enabled/disabled to make sure the sync process
+        // gets a reset if its outdated..
+        ::masternodeSync->Reset();
+    }
 
     uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
 }
 
-CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, CAddrMan& addrman_in) :
+CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, CAddrMan& addrman_in, bool network_active) :
         addrman(addrman_in), nSeed0(nSeed0In), nSeed1(nSeed1In)
 {
     SetTryNewOutboundPeer(false);
 
     Options connOptions;
     Init(connOptions);
+    SetNetworkActive(network_active);
 }
 
 NodeId CConnman::GetNewNodeId()
@@ -4060,9 +4065,9 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     size_t nMessageSize = msg.data.size();
-    LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n", SanitizeString(msg.command), nMessageSize, pnode->GetId());
+    LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n", SanitizeString(msg.m_type), nMessageSize, pnode->GetId());
     if (gArgs.GetBoolArg("-capturemessages", false)) {
-        CaptureMessage(pnode->addr, msg.command, msg.data, /* incoming */ false);
+        CaptureMessage(pnode->addr, msg.m_type, msg.data, /* incoming */ false);
     }
 
     // make sure we use the appropriate network transport format
@@ -4070,15 +4075,15 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     pnode->m_serializer->prepareForTransport(msg, serializedHeader);
 
     size_t nTotalSize = nMessageSize + serializedHeader.size();
-    statsClient.count("bandwidth.message." + SanitizeString(msg.command.c_str()) + ".bytesSent", nTotalSize, 1.0f);
-    statsClient.inc("message.sent." + SanitizeString(msg.command.c_str()), 1.0f);
+    statsClient.count("bandwidth.message." + SanitizeString(msg.m_type.c_str()) + ".bytesSent", nTotalSize, 1.0f);
+    statsClient.inc("message.sent." + SanitizeString(msg.m_type.c_str()), 1.0f);
 
     {
         LOCK(pnode->cs_vSend);
         bool hasPendingData = !pnode->vSendMsg.empty();
 
-        //log total amount of bytes per command
-        pnode->mapSendBytesPerMsgCmd[msg.command] += nTotalSize;
+        //log total amount of bytes per message type
+        pnode->mapSendBytesPerMsgCmd[msg.m_type] += nTotalSize;
         pnode->nSendSize += nTotalSize;
 
         if (pnode->nSendSize > nSendBufferMaxSize) pnode->fPauseSend = true;

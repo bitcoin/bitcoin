@@ -13,7 +13,7 @@ Checks LLMQs signing sessions
 from test_framework.messages import CSigShare, msg_qsigshare, uint256_to_string
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync, hex_str_to_bytes, wait_until
+from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync, hex_str_to_bytes, wait_until_helper
 
 
 class LLMQSigningTest(DashTestFramework):
@@ -55,7 +55,7 @@ class LLMQSigningTest(DashTestFramework):
             self.wait_until(lambda: check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout)
 
         def assert_sigs_nochange(hasrecsigs, isconflicting1, isconflicting2, timeout):
-            assert not wait_until(lambda: not check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout, do_assert = False)
+            assert not wait_until_helper(lambda: not check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout, do_assert = False)
 
         # Initial state
         wait_for_sigs(False, False, False, 1)
@@ -188,7 +188,7 @@ class LLMQSigningTest(DashTestFramework):
             force_finish_mnsync(mn.node)
             # Make sure intra-quorum connections were also restored
             self.bump_mocktime(1)  # need this to bypass quorum connection retry timeout
-            wait_until(lambda: mn.node.getconnectioncount() == self.llmq_size, timeout=10, sleep=2)
+            self.wait_until(lambda: mn.node.getconnectioncount() == self.llmq_size, timeout=10)
             mn.node.ping()
             self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
             # Let 2 seconds pass so that the next node is used for recovery, which should succeed

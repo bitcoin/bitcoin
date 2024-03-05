@@ -15,7 +15,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
     force_finish_mnsync,
-    wait_until,
+    wait_until_helper,
 )
 
 '''
@@ -65,14 +65,14 @@ def wait_for_banscore(node, peer_id, expected_score):
                     time.sleep(1)
                 return peer["banscore"]
         return None
-    wait_until(lambda: get_score() == expected_score, timeout=6)
+    wait_until_helper(lambda: get_score() == expected_score, timeout=6)
 
 
 def p2p_connection(node, uacomment=None):
     return node.add_p2p_connection(QuorumDataInterface(), uacomment=uacomment)
 
 
-def get_mininode_id(node, uacomment=None):
+def get_p2p_id(node, uacomment=None):
     def get_id():
         for p in node.getpeerinfo():
             for p2p in node.p2ps:
@@ -81,7 +81,7 @@ def get_mininode_id(node, uacomment=None):
                 if p["subver"] == p2p.strSubVer.decode():
                     return p["id"]
         return None
-    wait_until(lambda: get_id() is not None, timeout=10)
+    wait_until_helper(lambda: get_id() is not None, timeout=10)
     return get_id()
 
 
@@ -106,7 +106,7 @@ class QuorumDataInterface(P2PInterface):
             assert_qdata(self.get_qdata(), qgetdata, expected_error, len_vvec, len_contributions)
 
     def wait_for_qmessage(self, message=None, timeout=3, message_expected=True):
-        wait_until(lambda: self.message_count[message] > 0, timeout=timeout, lock=p2p_lock, do_assert=message_expected)
+        wait_until_helper(lambda: self.message_count[message] > 0, timeout=timeout, lock=p2p_lock, do_assert=message_expected)
         if not message_expected:
             assert self.message_count[message] == 0
         self.message_count[message] = 0
@@ -143,8 +143,8 @@ class QuorumDataMessagesTest(DashTestFramework):
             force_request_expire()
             p2p_node0 = p2p_connection(node0)
             p2p_mn2 = p2p_connection(mn2.node)
-            id_p2p_node0 = get_mininode_id(node0)
-            id_p2p_mn2 = get_mininode_id(mn2.node)
+            id_p2p_node0 = get_p2p_id(node0)
+            id_p2p_mn2 = get_p2p_id(mn2.node)
 
             # Ensure that both nodes start with zero ban score
             wait_for_banscore(node0, id_p2p_node0, 0)
@@ -166,7 +166,7 @@ class QuorumDataMessagesTest(DashTestFramework):
             node0.disconnect_p2ps()
             mn2.node.disconnect_p2ps()
             p2p_mn2 = p2p_connection(mn2.node)
-            id_p2p_mn2 = get_mininode_id(mn2.node)
+            id_p2p_mn2 = get_p2p_id(mn2.node)
             mnauth(mn2.node, id_p2p_mn2, fake_mnauth_2[0], fake_mnauth_2[1])
             # The masternode should now respond to qgetdata requests
             self.log.info("Request verification vector")
@@ -188,8 +188,8 @@ class QuorumDataMessagesTest(DashTestFramework):
             self.log.info("Test ban score increase for invalid / unexpected QDATA")
             p2p_mn1 = p2p_connection(mn1.node)
             p2p_mn2 = p2p_connection(mn2.node)
-            id_p2p_mn1 = get_mininode_id(mn1.node)
-            id_p2p_mn2 = get_mininode_id(mn2.node)
+            id_p2p_mn1 = get_p2p_id(mn1.node)
+            id_p2p_mn2 = get_p2p_id(mn2.node)
             mnauth(mn1.node, id_p2p_mn1, fake_mnauth_1[0], fake_mnauth_1[1])
             mnauth(mn2.node, id_p2p_mn2, fake_mnauth_2[0], fake_mnauth_2[1])
             wait_for_banscore(mn1.node, id_p2p_mn1, 0)
@@ -236,7 +236,7 @@ class QuorumDataMessagesTest(DashTestFramework):
 
             self.log.info("Test all available error codes")
             p2p_mn2 = p2p_connection(mn2.node)
-            id_p2p_mn2 = get_mininode_id(mn2.node)
+            id_p2p_mn2 = get_p2p_id(mn2.node)
             mnauth(mn2.node, id_p2p_mn2, fake_mnauth_2[0], fake_mnauth_2[1])
             qgetdata_invalid_type = msg_qgetdata(quorum_hash_int, 105, 0x01, protx_hash_int)
             qgetdata_invalid_block = msg_qgetdata(protx_hash_int, 100, 0x01, protx_hash_int)
@@ -252,8 +252,8 @@ class QuorumDataMessagesTest(DashTestFramework):
             # Re-connect to the masternode
             p2p_mn1 = p2p_connection(mn1.node)
             p2p_mn2 = p2p_connection(mn2.node)
-            id_p2p_mn1 = get_mininode_id(mn1.node)
-            id_p2p_mn2 = get_mininode_id(mn2.node)
+            id_p2p_mn1 = get_p2p_id(mn1.node)
+            id_p2p_mn2 = get_p2p_id(mn2.node)
             assert id_p2p_mn1 is not None
             assert id_p2p_mn2 is not None
             mnauth(mn1.node, id_p2p_mn1, fake_mnauth_1[0], fake_mnauth_1[1])
@@ -304,7 +304,7 @@ class QuorumDataMessagesTest(DashTestFramework):
             self.log.info("Test request limiting / banscore increases")
 
             p2p_mn1 = p2p_connection(mn1.node)
-            id_p2p_mn1 = get_mininode_id(mn1.node)
+            id_p2p_mn1 = get_p2p_id(mn1.node)
             mnauth(mn1.node, id_p2p_mn1, fake_mnauth_1[0], fake_mnauth_1[1])
             p2p_mn1.test_qgetdata(qgetdata_vvec, 0, self.llmq_threshold, 0)
             wait_for_banscore(mn1.node, id_p2p_mn1, 0)
@@ -319,8 +319,8 @@ class QuorumDataMessagesTest(DashTestFramework):
             # in banscore increase for either of both.
             p2p_mn3_1 = p2p_connection(mn3.node, uacomment_m3_1)
             p2p_mn3_2 = p2p_connection(mn3.node, uacomment_m3_2)
-            id_p2p_mn3_1 = get_mininode_id(mn3.node, uacomment_m3_1)
-            id_p2p_mn3_2 = get_mininode_id(mn3.node, uacomment_m3_2)
+            id_p2p_mn3_1 = get_p2p_id(mn3.node, uacomment_m3_1)
+            id_p2p_mn3_2 = get_p2p_id(mn3.node, uacomment_m3_2)
             assert id_p2p_mn3_1 != id_p2p_mn3_2
             mnauth(mn3.node, id_p2p_mn3_1, fake_mnauth_1[0], fake_mnauth_1[1])
             mnauth(mn3.node, id_p2p_mn3_2, fake_mnauth_2[0], fake_mnauth_2[1])
@@ -348,8 +348,8 @@ class QuorumDataMessagesTest(DashTestFramework):
             force_request_expire()
             p2p_mn3_1 = p2p_connection(mn3.node, uacomment_m3_1)
             p2p_mn3_2 = p2p_connection(mn3.node, uacomment_m3_2)
-            id_p2p_mn3_1 = get_mininode_id(mn3.node, uacomment_m3_1)
-            id_p2p_mn3_2 = get_mininode_id(mn3.node, uacomment_m3_2)
+            id_p2p_mn3_1 = get_p2p_id(mn3.node, uacomment_m3_1)
+            id_p2p_mn3_2 = get_p2p_id(mn3.node, uacomment_m3_2)
             assert id_p2p_mn3_1 != id_p2p_mn3_2
 
             wait_for_banscore(mn3.node, id_p2p_mn3_1, 0)
@@ -377,8 +377,8 @@ class QuorumDataMessagesTest(DashTestFramework):
                     self.connect_nodes(0, i + 1)
                 p2p_node0 = p2p_connection(node0)
                 p2p_mn2 = p2p_connection(mn2.node)
-                id_p2p_node0 = get_mininode_id(node0)
-                id_p2p_mn2 = get_mininode_id(mn2.node)
+                id_p2p_node0 = get_p2p_id(node0)
+                id_p2p_mn2 = get_p2p_id(mn2.node)
                 mnauth(node0, id_p2p_node0, fake_mnauth_1[0], fake_mnauth_1[1])
                 mnauth(mn2.node, id_p2p_mn2, fake_mnauth_2[0], fake_mnauth_2[1])
                 p2p_mn2.test_qgetdata(qgetdata_vvec, 0, self.llmq_threshold)

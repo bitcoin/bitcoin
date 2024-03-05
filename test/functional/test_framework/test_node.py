@@ -30,7 +30,7 @@ from .util import (
     get_auth_cookie,
     get_rpc_proxy,
     rpc_url,
-    wait_until,
+    wait_until_helper,
     p2p_port,
     get_chain_folder,
     EncodeDecimal,
@@ -248,7 +248,7 @@ class TestNode():
                 if self.version_is_at_least(180000):
                     # getmempoolinfo.loaded is available since commit
                     # 71e38b9ebcb78b3a264a4c25c7c4e373317f2a40 (version 0.18.0)
-                    wait_until(lambda: rpc.getmempoolinfo()['loaded'])
+                    wait_until_helper(lambda: rpc.getmempoolinfo()['loaded'])
                     # Wait for the node to finish reindex, block import, and
                     # loading the mempool. Usually importing happens fast or
                     # even "immediate" when the node is started. However, there
@@ -379,7 +379,7 @@ class TestNode():
         return True
 
     def wait_until_stopped(self, timeout=BITCOIND_PROC_WAIT_TIMEOUT):
-        wait_until(self.is_node_stopped, timeout=timeout, timeout_factor=self.timeout_factor)
+        wait_until_helper(self.is_node_stopped, timeout=timeout, timeout_factor=self.timeout_factor)
 
     @contextlib.contextmanager
     def assert_debug_log(self, expected_msgs, unexpected_msgs=None, timeout=2):
@@ -546,6 +546,7 @@ class TestNode():
 
         p2p_conn.peer_connect(**kwargs, net=self.chain, timeout_factor=self.timeout_factor)()
         self.p2ps.append(p2p_conn)
+        p2p_conn.wait_until(lambda: p2p_conn.is_connected, check_connected=False)
         if wait_for_verack:
             # Wait for the node to send us the version and verack
             p2p_conn.wait_for_verack()
@@ -579,10 +580,10 @@ class TestNode():
                     if p['subver'] == p2p.strSubVer.decode():
                         return False
             return True
-        wait_until(check_peers, timeout=5)
+        wait_until_helper(check_peers, timeout=5)
 
         del self.p2ps[:]
-        wait_until(lambda: self.num_test_p2p_connections() == 0)
+        wait_until_helper(lambda: self.num_test_p2p_connections() == 0, timeout_factor=self.timeout_factor)
 
 
 class TestNodeCLIAttr:

@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import wait_until
 
 '''
 '''
@@ -43,7 +42,7 @@ class SporkTest(BitcoinTestFramework):
         # check spork propagation for connected nodes
         spork_new_state = not spork_default_state
         self.set_test_spork_state(self.nodes[0], spork_new_state)
-        wait_until(lambda: self.get_test_spork_state(self.nodes[1]), sleep=0.1, timeout=10)
+        self.wait_until(lambda: self.get_test_spork_state(self.nodes[1]), timeout=10)
 
         # restart nodes to check spork persistence
         self.stop_node(0)
@@ -58,7 +57,7 @@ class SporkTest(BitcoinTestFramework):
 
         # connect new node and check spork propagation after restoring from cache
         self.connect_nodes(1, 2)
-        wait_until(lambda: self.get_test_spork_state(self.nodes[2]), sleep=0.1, timeout=10)
+        self.wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=10)
 
 if __name__ == '__main__':
     SporkTest().main()
