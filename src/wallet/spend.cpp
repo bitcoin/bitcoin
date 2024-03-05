@@ -1386,18 +1386,8 @@ util::Result<CreatedTransactionResult> CreateTransaction(
     return res;
 }
 
-util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CMutableTransaction& tx, const std::vector<CRecipient>& vecSend, std::optional<unsigned int> change_pos, bool lockUnspents, CCoinControl coinControl)
+util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const std::vector<CTxIn>& inputs, const std::vector<CRecipient>& vecSend, std::optional<unsigned int> change_pos, bool lockUnspents, CCoinControl coinControl)
 {
-    // We want to make sure tx.vout is not used now that we are passing outputs as a vector of recipients.
-    // This sets us up to remove tx completely in a future PR in favor of passing the inputs directly.
-    assert(tx.vout.empty());
-
-    // Set the user desired locktime
-    coinControl.m_locktime = tx.nLockTime;
-
-    // Set the user desired version
-    coinControl.m_version = tx.nVersion;
-
     // Acquire the locks to prevent races to the new locked unspents between the
     // CreateTransaction call and LockCoin calls (when lockUnspents is true).
     LOCK(wallet.cs_wallet);
@@ -1405,12 +1395,12 @@ util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CM
     // Fetch specified UTXOs from the UTXO set to get the scriptPubKeys and values of the outputs being selected
     // and to match with the given solving_data. Only used for non-wallet outputs.
     std::map<COutPoint, Coin> coins;
-    for (const CTxIn& txin : tx.vin) {
+    for (const CTxIn& txin : inputs) {
         coins[txin.prevout]; // Create empty map entry keyed by prevout.
     }
     wallet.chain().findCoins(coins);
 
-    for (const CTxIn& txin : tx.vin) {
+    for (const CTxIn& txin : inputs) {
         const auto& outPoint = txin.prevout;
         PreselectedInput& preset_txin = coinControl.Select(outPoint);
         if (!wallet.IsMine(outPoint)) {
