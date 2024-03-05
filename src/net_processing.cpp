@@ -223,8 +223,6 @@ struct Peer {
 
     /** Protects misbehavior data members */
     Mutex m_misbehavior_mutex;
-    /** Accumulated misbehavior score for this peer */
-    int m_misbehavior_score GUARDED_BY(m_misbehavior_mutex){0};
     /** Whether this peer should be disconnected and marked as discouraged (unless it has NetPermissionFlags::NoBan permission). */
     bool m_should_discourage GUARDED_BY(m_misbehavior_mutex){false};
 
@@ -521,7 +519,7 @@ public:
         m_best_height = height;
         m_best_block_time = time;
     };
-    void UnitTestMisbehaving(NodeId peer_id, int howmuch) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex) { Misbehaving(*Assert(GetPeerRef(peer_id)), howmuch, ""); };
+    void UnitTestMisbehaving(NodeId peer_id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex) { Misbehaving(*Assert(GetPeerRef(peer_id)), ""); };
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, DataStream& vRecv,
                         const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex);
@@ -546,11 +544,9 @@ private:
      *  May return an empty shared_ptr if the Peer object can't be found. */
     PeerRef RemovePeer(NodeId id) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
-    /**
-     * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
-     * to be discouraged, meaning the peer might be disconnected and added to the discouragement filter.
-     */
-    void Misbehaving(Peer& peer, int howmuch, const std::string& message);
+    /** Mark a peer as misbehaving, which will cause it to be disconnected and its
+     *  address discouraged. */
+    void Misbehaving(Peer& peer, const std::string& message);
 
     /**
      * Potentially mark a node discouraged based on the contents of a BlockValidationState object
@@ -1711,7 +1707,6 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
 void PeerManagerImpl::FinalizeNode(const CNode& node)
 {
     NodeId nodeid = node.GetId();
-    int misbehavior{0};
     {
     LOCK(cs_main);
     {
@@ -1722,7 +1717,6 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         // destructed.
         PeerRef peer = RemovePeer(nodeid);
         assert(peer != nullptr);
-        misbehavior = WITH_LOCK(peer->m_misbehavior_mutex, return peer->m_misbehavior_score);
         m_wtxid_relay_peers -= peer->m_wtxid_relay;
         assert(m_wtxid_relay_peers >= 0);
     }
@@ -1765,7 +1759,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         assert(m_orphanage.Size() == 0);
     }
     } // cs_main
-    if (node.fSuccessfullyConnected && misbehavior == 0 &&
+    if (node.fSuccessfullyConnected &&
         !node.IsBlockOnlyConn() && !node.IsInboundConn()) {
         // Only change visible addrman state for full outbound peers.  We don't
         // call Connected() for feeler connections since they don't have
@@ -1886,25 +1880,13 @@ void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx)
     vExtraTxnForCompactIt = (vExtraTxnForCompactIt + 1) % m_opts.max_extra_txs;
 }
 
-void PeerManagerImpl::Misbehaving(Peer& peer, int howmuch, const std::string& message)
+void PeerManagerImpl::Misbehaving(Peer& peer, const std::string& message)
 {
-    assert(howmuch > 0);
-
     LOCK(peer.m_misbehavior_mutex);
-    const int score_before{peer.m_misbehavior_score};
-    peer.m_misbehavior_score += howmuch;
-    const int score_now{peer.m_misbehavior_score};
 
     const std::string message_prefixed = message.empty() ? "" : (": " + message);
-    std::string warning;
-
-    if (score_now >= DISCOURAGEMENT_THRESHOLD && score_before < DISCOURAGEMENT_THRESHOLD) {
-        warning = " DISCOURAGE THRESHOLD EXCEEDED";
-        peer.m_should_discourage = true;
-    }
-
-    LogPrint(BCLog::NET, "Misbehaving: peer=%d (%d -> %d)%s%s\n",
-             peer.m_id, score_before, score_now, warning, message_prefixed);
+    peer.m_should_discourage = true;
+    LogPrint(BCLog::NET, "Misbehaving: peer=%d%s\n", peer.m_id, message_prefixed);
 }
 
 bool PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,
@@ -1922,7 +1904,7 @@ bool PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidati
     case BlockValidationResult::BLOCK_CONSENSUS:
     case BlockValidationResult::BLOCK_MUTATED:
         if (!via_compact_block) {
-            if (peer) Misbehaving(*peer, 100, message);
+            if (peer) Misbehaving(*peer, message);
             return true;
         }
         break;
@@ -1937,7 +1919,7 @@ bool PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidati
             // Discourage outbound (but not inbound) peers if on an invalid chain.
             // Exempt HB compact block peers. Manual connections are always protected from discouragement.
             if (!via_compact_block && !node_state->m_is_inbound) {
-                if (peer) Misbehaving(*peer, 100, message);
+                if (peer) Misbehaving(*peer, message);
                 return true;
             }
             break;
@@ -1945,11 +1927,11 @@ bool PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidati
     case BlockValidationResult::BLOCK_INVALID_HEADER:
     case BlockValidationResult::BLOCK_CHECKPOINT:
     case BlockValidationResult::BLOCK_INVALID_PREV:
-        if (peer) Misbehaving(*peer, 100, message);
+        if (peer) Misbehaving(*peer, message);
         return true;
     // Conflicting (but not necessarily invalid) data or different policy:
     case BlockValidationResult::BLOCK_MISSING_PREV:
-        if (peer) Misbehaving(*peer, 100, message);
+        if (peer) Misbehaving(*peer, message);
         return true;
     case BlockValidationResult::BLOCK_RECENT_CONSENSUS_CHANGE:
     case BlockValidationResult::BLOCK_TIME_FUTURE:
@@ -1969,7 +1951,7 @@ bool PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationStat
         break;
     // The node is providing invalid data:
     case TxValidationResult::TX_CONSENSUS:
-        if (peer) Misbehaving(*peer, 100, "");
+        if (peer) Misbehaving(*peer, "");
         return true;
     // Conflicting (but not necessarily invalid) data or different policy:
     case TxValidationResult::TX_RECENT_CONSENSUS_CHANGE:
@@ -2670,7 +2652,7 @@ void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, Peer& peer, const CBlo
     BlockTransactions resp(req);
     for (size_t i = 0; i < req.indexes.size(); i++) {
         if (req.indexes[i] >= block.vtx.size()) {
-            Misbehaving(peer, 100, "getblocktxn with out-of-bounds tx indices");
+            Misbehaving(peer, "getblocktxn with out-of-bounds tx indices");
             return;
         }
         resp.txn[i] = block.vtx[req.indexes[i]];
@@ -2683,13 +2665,13 @@ bool PeerManagerImpl::CheckHeadersPoW(const std::vector<CBlockHeader>& headers, 
 {
     // Do these headers have proof-of-work matching what's claimed?
     if (!HasValidProofOfWork(headers, consensusParams)) {
-        Misbehaving(peer, 100, "header with invalid proof of work");
+        Misbehaving(peer, "header with invalid proof of work");
         return false;
     }
 
     // Are these headers connected to each other?
     if (!CheckHeadersAreContinuous(headers)) {
-        Misbehaving(peer, 100, "non-continuous headers sequence");
+        Misbehaving(peer, "non-continuous headers sequence");
         return false;
     }
     return true;
@@ -3622,7 +3604,7 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
         ReadStatus status = partialBlock.FillBlock(*pblock, block_transactions.txn);
         if (status == READ_STATUS_INVALID) {
             RemoveBlockRequest(block_transactions.blockhash, pfrom.GetId()); // Reset in-flight state in case Misbehaving does not result in a disconnect
-            Misbehaving(peer, 100, "invalid compact block/non-matching block transactions");
+            Misbehaving(peer, "invalid compact block/non-matching block transactions");
             return;
         } else if (status == READ_STATUS_FAILED) {
             if (first_in_flight) {
@@ -4106,7 +4088,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         if (vAddr.size() > MAX_ADDR_TO_SEND)
         {
-            Misbehaving(*peer, 100, strprintf("%s message size = %u", msg_type, vAddr.size()));
+            Misbehaving(*peer, strprintf("%s message size = %u", msg_type, vAddr.size()));
             return;
         }
 
@@ -4188,7 +4170,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         vRecv >> vInv;
         if (vInv.size() > MAX_INV_SZ)
         {
-            Misbehaving(*peer, 100, strprintf("inv message size = %u", vInv.size()));
+            Misbehaving(*peer, strprintf("inv message size = %u", vInv.size()));
             return;
         }
 
@@ -4280,7 +4262,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         vRecv >> vInv;
         if (vInv.size() > MAX_INV_SZ)
         {
-            Misbehaving(*peer, 100, strprintf("getdata message size = %u", vInv.size()));
+            Misbehaving(*peer, strprintf("getdata message size = %u", vInv.size()));
             return;
         }
 
@@ -4820,7 +4802,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 ReadStatus status = partialBlock.InitData(cmpctblock, vExtraTxnForCompact);
                 if (status == READ_STATUS_INVALID) {
                     RemoveBlockRequest(pindex->GetBlockHash(), pfrom.GetId()); // Reset in-flight state in case Misbehaving does not result in a disconnect
-                    Misbehaving(*peer, 100, "invalid compact block");
+                    Misbehaving(*peer, "invalid compact block");
                     return;
                 } else if (status == READ_STATUS_FAILED) {
                     if (first_in_flight)  {
@@ -4965,7 +4947,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
         if (nCount > MAX_HEADERS_RESULTS) {
-            Misbehaving(*peer, 100, strprintf("headers message size = %u", nCount));
+            Misbehaving(*peer, strprintf("headers message size = %u", nCount));
             return;
         }
         headers.resize(nCount);
@@ -5012,7 +4994,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (prev_block && IsBlockMutated(/*block=*/*pblock,
                            /*check_witness_root=*/DeploymentActiveAfter(prev_block, m_chainman, Consensus::DEPLOYMENT_SEGWIT))) {
             LogDebug(BCLog::NET, "Received mutated block from peer=%d\n", peer->m_id);
-            Misbehaving(*peer, 100, "mutated block");
+            Misbehaving(*peer, "mutated block");
             WITH_LOCK(cs_main, RemoveBlockRequest(pblock->GetHash(), peer->m_id));
             return;
         }
@@ -5193,7 +5175,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (!filter.IsWithinSizeConstraints())
         {
             // There is no excuse for sending a too-large filter
-            Misbehaving(*peer, 100, "too-large bloom filter");
+            Misbehaving(*peer, "too-large bloom filter");
         } else if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
             {
                 LOCK(tx_relay->m_bloom_filter_mutex);
@@ -5229,7 +5211,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             }
         }
         if (bad) {
-            Misbehaving(*peer, 100, "bad filteradd message");
+            Misbehaving(*peer, "bad filteradd message");
         }
         return;
     }
