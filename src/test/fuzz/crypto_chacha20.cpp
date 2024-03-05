@@ -8,6 +8,8 @@
 #include <test/fuzz/util.h>
 #include <test/util/xoroshiro128plusplus.h>
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -150,4 +152,22 @@ FUZZ_TARGET(chacha20_split_keystream)
 {
     FuzzedDataProvider provider{buffer.data(), buffer.size()};
     ChaCha20SplitFuzz<false>(provider);
+}
+
+FUZZ_TARGET(crypto_fschacha20)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+
+    auto key = fuzzed_data_provider.ConsumeBytes<std::byte>(FSChaCha20::KEYLEN);
+    key.resize(FSChaCha20::KEYLEN);
+
+    auto fsc20 = FSChaCha20{key, fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(1, 1024)};
+
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
+    {
+        auto input = fuzzed_data_provider.ConsumeBytes<std::byte>(fuzzed_data_provider.ConsumeIntegralInRange(0, 4096));
+        std::vector<std::byte> output;
+        output.resize(input.size());
+        fsc20.Crypt(input, output);
+    }
 }

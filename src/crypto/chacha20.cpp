@@ -7,6 +7,7 @@
 
 #include <crypto/common.h>
 #include <crypto/chacha20.h>
+#include <support/cleanse.h>
 
 #include <algorithm>
 #include <string.h>
@@ -40,6 +41,11 @@ void ChaCha20Aligned::SetKey32(const unsigned char* k)
 ChaCha20Aligned::ChaCha20Aligned()
 {
     memset(input, 0, sizeof(input));
+}
+
+ChaCha20Aligned::~ChaCha20Aligned()
+{
+    memory_cleanse(input, sizeof(input));
 }
 
 ChaCha20Aligned::ChaCha20Aligned(const unsigned char* key32)
@@ -316,5 +322,40 @@ void ChaCha20::Crypt(const unsigned char* m, unsigned char* c, size_t bytes)
             c[i] = m[i] ^ m_buffer[i];
         }
         m_bufleft = 64 - bytes;
+    }
+}
+
+ChaCha20::~ChaCha20()
+{
+    memory_cleanse(m_buffer, sizeof(m_buffer));
+}
+
+FSChaCha20::FSChaCha20(Span<const std::byte> key, uint32_t rekey_interval) noexcept :
+    m_chacha20(UCharCast(key.data())), m_rekey_interval(rekey_interval)
+{
+    assert(key.size() == KEYLEN);
+}
+
+void FSChaCha20::Crypt(Span<const std::byte> input, Span<std::byte> output) noexcept
+{
+    assert(input.size() == output.size());
+
+    // Invoke internal stream cipher for actual encryption/decryption.
+    m_chacha20.Crypt(UCharCast(input.data()), UCharCast(output.data()), input.size());
+
+    // Rekey after m_rekey_interval encryptions/decryptions.
+    if (++m_chunk_counter == m_rekey_interval) {
+        // Get new key from the stream cipher.
+        std::byte new_key[KEYLEN];
+        m_chacha20.Keystream(UCharCast(new_key), sizeof(new_key));
+        // Update its key.
+        m_chacha20.SetKey32(UCharCast(new_key));
+        // Wipe the key (a copy remains inside m_chacha20, where it'll be wiped on the next rekey
+        // or on destruction).
+        memory_cleanse(new_key, sizeof(new_key));
+        // Set the nonce for the new section of output.
+        m_chacha20.Seek64({0, ++m_rekey_counter}, 0);
+        // Reset the chunk counter.
+        m_chunk_counter = 0;
     }
 }
