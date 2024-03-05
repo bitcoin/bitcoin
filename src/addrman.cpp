@@ -810,6 +810,12 @@ std::vector<CAddress> AddrManImpl::GetAddr_(size_t max_addresses, size_t max_pct
     AssertLockHeld(cs);
 
     size_t nNodes = vRandom.size();
+    if (network) {
+        auto it = m_network_counts.find(*network);
+        if (it == m_network_counts.end()) return {};
+        const auto counts{it->second};
+        nNodes = counts.n_new + counts.n_tried;
+    }
     if (max_pct != 0) {
         nNodes = max_pct * nNodes / 100;
     }
