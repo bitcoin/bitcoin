@@ -218,14 +218,14 @@ bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key
         if (keyFail) {
             return false;
         }
-        if (!keyPass && !accept_no_keys && cryptedHDChain.IsNull()) {
+        if (!keyPass && !accept_no_keys && (hdChain.IsNull() || !hdChain.IsNull() && !hdChain.IsCrypted())) {
             return false;
         }
 
-        if(!cryptedHDChain.IsNull()) {
+        if(!hdChain.IsNull() && !hdChain.IsCrypted()) {
             // try to decrypt seed and make sure it matches
             CHDChain hdChainTmp;
-            if (!DecryptHDChain(master_key, hdChainTmp) || (cryptedHDChain.GetID() != hdChainTmp.GetSeedHash())) {
+            if (!DecryptHDChain(master_key, hdChainTmp) || (hdChain.GetID() != hdChainTmp.GetSeedHash())) {
                 return false;
             }
         }
@@ -237,11 +237,16 @@ bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key
 bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch)
 {
     LOCK(cs_KeyStore);
+
     encrypted_batch = batch;
     if (!mapCryptedKeys.empty()) {
         encrypted_batch = nullptr;
         return false;
     }
+
+    // must get current HD chain before EncryptKeys
+    CHDChain hdChainCurrent;
+    GetHDChain(hdChainCurrent);
 
     KeyMap keys_to_encrypt;
     keys_to_encrypt.swap(mapKeys); // Clear mapKeys so AddCryptedKeyInner will succeed.
@@ -260,6 +265,26 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
             return false;
         }
     }
+
+    if (!hdChainCurrent.IsNull()) {
+        assert(EncryptHDChain(master_key, hdChain));
+        assert(SetHDChain(hdChain));
+
+        CHDChain hdChainCrypted;
+        assert(GetHDChain(hdChainCrypted));
+
+        DBG(
+            tfm::format(std::cout, "EncryptWallet -- current seed: '%s'\n", HexStr(hdChainCurrent.GetSeed()));
+            tfm::format(std::cout, "EncryptWallet -- crypted seed: '%s'\n", HexStr(hdChainCrypted.GetSeed()));
+        );
+
+        // ids should match, seed hashes should not
+        assert(hdChainCurrent.GetID() == hdChainCrypted.GetID());
+        assert(hdChainCurrent.GetSeedHash() != hdChainCrypted.GetSeedHash());
+
+        assert(SetHDChain(*encrypted_batch, hdChainCrypted, false));
+    }
+
     encrypted_batch = nullptr;
     return true;
 }
@@ -355,6 +380,50 @@ void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
     }
 }
 
+void LegacyScriptPubKeyMan::GenerateNewCryptedHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, CKeyingMaterial vMasterKey)
+{
+    assert(!m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
+
+
+    CHDChain hdChainTmp;
+
+    // NOTE: an empty mnemonic means "generate a new one for me"
+    // NOTE: default mnemonic passphrase is an empty string
+    if (!hdChainTmp.SetMnemonic(secureMnemonic, secureMnemonicPassphrase, true)) {
+        throw std::runtime_error(std::string(__func__) + ": SetMnemonic failed");
+    }
+
+    // add default account
+    hdChainTmp.AddAccount();
+    hdChainTmp.Debug(__func__);
+
+    // We need to safe chain for validation further
+    CHDChain hdChainPrev = hdChainTmp;
+    bool res = EncryptHDChain(vMasterKey, hdChainTmp);
+    assert(res);
+    res = SetHDChain(hdChainTmp);
+    assert(res);
+
+    CHDChain hdChainCrypted;
+    res = GetHDChain(hdChainCrypted);
+    assert(res);
+
+    DBG(
+        tfm::format(std::cout, "GenerateNewCryptedHDChain -- current seed: '%s'\n", HexStr(hdChainTmp.GetSeed()));
+        tfm::format(std::cout, "GenerateNewCryptedHDChain -- crypted seed: '%s'\n", HexStr(hdChainCrypted.GetSeed()));
+    );
+
+    // ids should match, seed hashes should not
+    assert(hdChainPrev.GetID() == hdChainCrypted.GetID());
+    assert(hdChainPrev.GetSeedHash() != hdChainCrypted.GetSeedHash());
+
+    hdChainCrypted.Debug(__func__);
+
+    if (!SetHDChainSingle(hdChainCrypted, false)) {
+        throw std::runtime_error(std::string(__func__) + ": SetHDChainSingle failed");
+    }
+}
+
 void LegacyScriptPubKeyMan::GenerateNewHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase)
 {
     assert(!m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
@@ -387,31 +456,15 @@ bool LegacyScriptPubKeyMan::SetHDChain(WalletBatch &batch, const CHDChain& chain
         return false;
 
     if (!memonly) {
-        if (!batch.WriteHDChain(chain)) {
-            throw std::runtime_error(std::string(__func__) + ": WriteHDChain failed");
-        }
-
-        m_storage.UnsetBlankWalletFlag(batch);
-    }
-
-    return true;
-}
-
-bool LegacyScriptPubKeyMan::SetCryptedHDChain(WalletBatch &batch, const CHDChain& chain, bool memonly)
-{
-    LOCK(cs_KeyStore);
-
-    if (!SetCryptedHDChain(chain))
-        return false;
-
-    if (!memonly) {
-        if (encrypted_batch) {
-            if (!encrypted_batch->WriteCryptedHDChain(chain))
-                throw std::runtime_error(std::string(__func__) + ": WriteCryptedHDChain failed");
+        if (chain.IsCrypted() && encrypted_batch) {
+            if (!encrypted_batch->WriteHDChain(chain))
+                throw std::runtime_error(std::string(__func__) + ": WriteHDChain failed for encrypted batch");
         } else {
-            if (!batch.WriteCryptedHDChain(chain))
-                throw std::runtime_error(std::string(__func__) + ": WriteCryptedHDChain failed");
+            if (!batch.WriteHDChain(chain)) {
+                throw std::runtime_error(std::string(__func__) + ": WriteHDChain failed");
+            }
         }
+
         m_storage.UnsetBlankWalletFlag(batch);
     }
 
@@ -422,12 +475,6 @@ bool LegacyScriptPubKeyMan::SetHDChainSingle(const CHDChain& chain, bool memonly
 {
     WalletBatch batch(m_storage.GetDatabase());
     return SetHDChain(batch, chain, memonly);
-}
-
-bool LegacyScriptPubKeyMan::SetCryptedHDChainSingle(const CHDChain& chain, bool memonly)
-{
-    WalletBatch batch(m_storage.GetDatabase());
-    return SetCryptedHDChain(batch, chain, memonly);
 }
 
 bool LegacyScriptPubKeyMan::GetDecryptedHDChain(CHDChain& hdChainRet)
@@ -451,62 +498,52 @@ bool LegacyScriptPubKeyMan::GetDecryptedHDChain(CHDChain& hdChainRet)
     return true;
 }
 
-bool LegacyScriptPubKeyMan::EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, const CHDChain& chain)
+bool LegacyScriptPubKeyMan::EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, CHDChain& chain)
 {
     LOCK(cs_KeyStore);
     // should call EncryptKeys first
     if (!m_storage.HasEncryptionKeys())
         return false;
 
-    if (!cryptedHDChain.IsNull())
+    if (chain.IsCrypted())
         return true;
-
-    if (cryptedHDChain.IsCrypted())
-        return true;
-
-    if (hdChain.IsNull() && !chain.IsNull()) {
-        // Encrypting a new HDChain for an already encrypted non-HD wallet
-        hdChain = chain;
-    }
 
     // make sure seed matches this chain
-    if (hdChain.GetID() != hdChain.GetSeedHash())
+    if (chain.GetID() != chain.GetSeedHash())
         return false;
 
     std::vector<unsigned char> vchCryptedSeed;
-    if (!EncryptSecret(vMasterKeyIn, hdChain.GetSeed(), hdChain.GetID(), vchCryptedSeed))
+    if (!EncryptSecret(vMasterKeyIn, chain.GetSeed(), chain.GetID(), vchCryptedSeed))
         return false;
 
-    hdChain.Debug(__func__);
-    cryptedHDChain = hdChain;
-    cryptedHDChain.SetCrypted(true);
+    CHDChain cryptedChain = chain;
+    cryptedChain.Debug(__func__);
+    cryptedChain.SetCrypted(true);
 
     SecureVector vchSecureCryptedSeed(vchCryptedSeed.begin(), vchCryptedSeed.end());
-    if (!cryptedHDChain.SetSeed(vchSecureCryptedSeed, false))
+    if (!cryptedChain.SetSeed(vchSecureCryptedSeed, false))
         return false;
 
     SecureVector vchMnemonic;
     SecureVector vchMnemonicPassphrase;
 
     // it's ok to have no mnemonic if wallet was initialized via hdseed
-    if (hdChain.GetMnemonic(vchMnemonic, vchMnemonicPassphrase)) {
+    if (chain.GetMnemonic(vchMnemonic, vchMnemonicPassphrase)) {
         std::vector<unsigned char> vchCryptedMnemonic;
         std::vector<unsigned char> vchCryptedMnemonicPassphrase;
 
-        if (!vchMnemonic.empty() && !EncryptSecret(vMasterKeyIn, vchMnemonic, hdChain.GetID(), vchCryptedMnemonic))
+        if (!vchMnemonic.empty() && !EncryptSecret(vMasterKeyIn, vchMnemonic, chain.GetID(), vchCryptedMnemonic))
             return false;
-        if (!vchMnemonicPassphrase.empty() && !EncryptSecret(vMasterKeyIn, vchMnemonicPassphrase, hdChain.GetID(), vchCryptedMnemonicPassphrase))
+        if (!vchMnemonicPassphrase.empty() && !EncryptSecret(vMasterKeyIn, vchMnemonicPassphrase, chain.GetID(), vchCryptedMnemonicPassphrase))
             return false;
 
         SecureVector vchSecureCryptedMnemonic(vchCryptedMnemonic.begin(), vchCryptedMnemonic.end());
         SecureVector vchSecureCryptedMnemonicPassphrase(vchCryptedMnemonicPassphrase.begin(), vchCryptedMnemonicPassphrase.end());
-        if (!cryptedHDChain.SetMnemonic(vchSecureCryptedMnemonic, vchSecureCryptedMnemonicPassphrase, false))
+        if (!cryptedChain.SetMnemonic(vchSecureCryptedMnemonic, vchSecureCryptedMnemonicPassphrase, false))
             return false;
     }
 
-    if (!hdChain.SetNull())
-        return false;
-
+    chain = cryptedChain;
     return true;
 }
 
@@ -516,40 +553,40 @@ bool LegacyScriptPubKeyMan::DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, 
     if (!m_storage.HasEncryptionKeys())
         return true;
 
-    if (cryptedHDChain.IsNull())
+    if (hdChain.IsNull())
         return false;
 
-    if (!cryptedHDChain.IsCrypted())
+    if (!hdChain.IsCrypted())
         return false;
 
     SecureVector vchSecureSeed;
-    SecureVector vchSecureCryptedSeed = cryptedHDChain.GetSeed();
+    SecureVector vchSecureCryptedSeed = hdChain.GetSeed();
     std::vector<unsigned char> vchCryptedSeed(vchSecureCryptedSeed.begin(), vchSecureCryptedSeed.end());
-    if (!DecryptSecret(vMasterKeyIn, vchCryptedSeed, cryptedHDChain.GetID(), vchSecureSeed))
+    if (!DecryptSecret(vMasterKeyIn, vchCryptedSeed, hdChain.GetID(), vchSecureSeed))
         return false;
 
-    hdChainRet = cryptedHDChain;
+    hdChainRet = hdChain;
     if (!hdChainRet.SetSeed(vchSecureSeed, false))
         return false;
 
     // hash of decrypted seed must match chain id
-    if (hdChainRet.GetSeedHash() != cryptedHDChain.GetID())
+    if (hdChainRet.GetSeedHash() != hdChain.GetID())
         return false;
 
     SecureVector vchSecureCryptedMnemonic;
     SecureVector vchSecureCryptedMnemonicPassphrase;
 
     // it's ok to have no mnemonic if wallet was initialized via hdseed
-    if (cryptedHDChain.GetMnemonic(vchSecureCryptedMnemonic, vchSecureCryptedMnemonicPassphrase)) {
+    if (hdChain.GetMnemonic(vchSecureCryptedMnemonic, vchSecureCryptedMnemonicPassphrase)) {
         SecureVector vchSecureMnemonic;
         SecureVector vchSecureMnemonicPassphrase;
 
         std::vector<unsigned char> vchCryptedMnemonic(vchSecureCryptedMnemonic.begin(), vchSecureCryptedMnemonic.end());
         std::vector<unsigned char> vchCryptedMnemonicPassphrase(vchSecureCryptedMnemonicPassphrase.begin(), vchSecureCryptedMnemonicPassphrase.end());
 
-        if (!vchCryptedMnemonic.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonic, cryptedHDChain.GetID(), vchSecureMnemonic))
+        if (!vchCryptedMnemonic.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonic, hdChain.GetID(), vchSecureMnemonic))
             return false;
-        if (!vchCryptedMnemonicPassphrase.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonicPassphrase, cryptedHDChain.GetID(), vchSecureMnemonicPassphrase))
+        if (!vchCryptedMnemonicPassphrase.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonicPassphrase, hdChain.GetID(), vchSecureMnemonicPassphrase))
             return false;
 
         if (!hdChainRet.SetMnemonic(vchSecureMnemonic, vchSecureMnemonicPassphrase, false))
@@ -1077,26 +1114,10 @@ bool LegacyScriptPubKeyMan::AddWatchOnly(const CScript& dest, int64_t nCreateTim
 bool LegacyScriptPubKeyMan::SetHDChain(const CHDChain& chain)
 {
     LOCK(cs_KeyStore);
-    if (m_storage.HasEncryptionKeys())
-        return false;
 
-    if (chain.IsCrypted())
-        return false;
+    if (m_storage.HasEncryptionKeys() != chain.IsCrypted()) return false;
 
     hdChain = chain;
-    return true;
-}
-
-bool LegacyScriptPubKeyMan::SetCryptedHDChain(const CHDChain& chain)
-{
-    LOCK(cs_KeyStore);
-    if (!m_storage.HasEncryptionKeys())
-        return false;
-
-    if (!chain.IsCrypted())
-        return false;
-
-    cryptedHDChain = chain;
     return true;
 }
 
@@ -1322,13 +1343,8 @@ void LegacyScriptPubKeyMan::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& 
     if (!hdChainCurrent.SetAccount(nAccountIndex, acc))
         throw std::runtime_error(std::string(__func__) + ": SetAccount failed");
 
-    if (m_storage.HasEncryptionKeys()) {
-        if (!SetCryptedHDChain(batch, hdChainCurrent, false))
-            throw std::runtime_error(std::string(__func__) + ": SetCryptedHDChain failed");
-    }
-    else {
-        if (!SetHDChain(batch, hdChainCurrent, false))
-            throw std::runtime_error(std::string(__func__) + ": SetHDChain failed");
+    if (!SetHDChain(batch, hdChainCurrent, false)) {
+        throw std::runtime_error(std::string(__func__) + ": SetHDChain failed");
     }
 
     if (!AddHDPubKey(batch, childKey.Neuter(), fInternal))
@@ -1760,11 +1776,6 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
 bool LegacyScriptPubKeyMan::GetHDChain(CHDChain& hdChainRet) const
 {
     LOCK(cs_KeyStore);
-    if (m_storage.HasEncryptionKeys() && !cryptedHDChain.IsNull()) {
-        hdChainRet = cryptedHDChain;
-        return true;
-    }
-
     hdChainRet = hdChain;
     return !hdChain.IsNull();
 }

@@ -4,7 +4,7 @@
 
 #include <test/data/bip39_vectors.json.h>
 
-#include <bip39.h>
+#include <wallet/bip39.h>
 #include <key.h>
 #include <key_io.h>
 #include <test/util/setup_common.h>

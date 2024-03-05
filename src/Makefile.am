@@ -138,8 +138,6 @@ BITCOIN_CORE_H = \
   base58.h \
   batchedlogger.h \
   bech32.h \
-  bip39.h \
-  bip39_english.h \
   blockencodings.h \
   bloom.h \
   cachemap.h \
@@ -203,7 +201,6 @@ BITCOIN_CORE_H = \
   gsl/assert.h \
   gsl/pointers.h \
   flat-database.h \
-  hdchain.h \
   flatfile.h \
   fs.h \
   httprpc.h \
@@ -365,12 +362,15 @@ BITCOIN_CORE_H = \
   validationinterface.h \
   versionbits.h \
   wallet/bdb.h \
+  wallet/bip39.h \
+  wallet/bip39_english.h \
   wallet/coincontrol.h \
   wallet/coinselection.h \
   wallet/context.h \
   wallet/crypter.h \
   wallet/db.h \
   wallet/fees.h \
+  wallet/hdchain.h \
   wallet/ismine.h \
   wallet/load.h \
   wallet/rpcwallet.h \
@@ -540,12 +540,13 @@ libbitcoin_wallet_a_SOURCES = \
   coinjoin/client.cpp \
   coinjoin/interfaces.cpp \
   coinjoin/util.cpp \
-  hdchain.cpp \
+  wallet/bip39.cpp \
   wallet/coincontrol.cpp \
   wallet/context.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/fees.cpp \
+  wallet/hdchain.cpp \
   wallet/interfaces.cpp \
   wallet/load.cpp \
   wallet/rpcdump.cpp \
@@ -708,7 +709,6 @@ libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
   base58.cpp \
   bech32.cpp \
-  bip39.cpp \
   bloom.cpp \
   chainparams.cpp \
   coins.cpp \

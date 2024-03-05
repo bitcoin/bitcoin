@@ -12,6 +12,7 @@
 #include <util/message.h>
 #include <util/time.h>
 #include <wallet/crypter.h>
+#include <wallet/hdchain.h>
 #include <wallet/ismine.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
@@ -274,9 +275,15 @@ private:
     /** Add a KeyOriginInfo to the wallet */
     bool AddKeyOriginWithDB(WalletBatch& batch, const CPubKey& pubkey, const KeyOriginInfo& info);
 
+    /* Set the HD chain model (chain child index counters) */
+    bool SetHDChain(WalletBatch &batch, const CHDChain& chain, bool memonly);
+
+    bool EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, CHDChain& chain);
+    bool DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, CHDChain& hdChainRet) const;
+    bool SetHDChain(const CHDChain& chain);
+
     /* the HD chain data model (external chain counters) */
     CHDChain hdChain GUARDED_BY(cs_KeyStore);
-    CHDChain cryptedHDChain GUARDED_BY(cs_KeyStore);
 
     /* HD derive new child key (on internal or external chain) */
     void DeriveNewChildKey(WalletBatch& batch, CKeyMetadata& metadata, CKey& secretRet, uint32_t nAccountIndex, bool fInternal /*= false*/) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
@@ -387,15 +394,11 @@ public:
     //! Generate a new key
     CPubKey GenerateNewKey(WalletBatch& batch, uint32_t nAccountIndex, bool fInternal /*= false*/) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
-    /* Set the HD chain model (chain child index counters) */
-    bool SetHDChain(WalletBatch &batch, const CHDChain& chain, bool memonly);
-    bool SetCryptedHDChain(WalletBatch &batch, const CHDChain& chain, bool memonly);
     /**
      * Set the HD chain model (chain child index counters) using temporary wallet db object
      * which causes db flush every time these methods are used
      */
     bool SetHDChainSingle(const CHDChain& chain, bool memonly);
-    bool SetCryptedHDChainSingle(const CHDChain& chain, bool memonly);
 
     //! Adds a watch-only address to the store, without saving it to disk (used by LoadWallet)
     bool LoadWatchOnly(const CScript &dest);
@@ -452,14 +455,11 @@ public:
      * HD Wallet Functions
      */
 
-    bool EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, const CHDChain& chain = CHDChain());
-    bool DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, CHDChain& hdChainRet) const;
-    bool SetHDChain(const CHDChain& chain);
     bool GetHDChain(CHDChain& hdChainRet) const;
-    bool SetCryptedHDChain(const CHDChain& chain);
     bool GetDecryptedHDChain(CHDChain& hdChainRet);
 
     /* Generates a new HD chain */
+    void GenerateNewCryptedHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, CKeyingMaterial vMasterKey);
     void GenerateNewHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase);
 
     /**

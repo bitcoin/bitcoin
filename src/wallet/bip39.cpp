@@ -24,8 +24,8 @@
 // Source:
 // https://github.com/trezor/trezor-crypto
 
-#include <bip39.h>
-#include <bip39_english.h>
+#include <wallet/bip39.h>
+#include <wallet/bip39_english.h>
 #include <crypto/pkcs5_pbkdf2_hmac_sha512.h>
 #include <crypto/sha256.h>
 #include <random.h>

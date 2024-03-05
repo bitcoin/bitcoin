@@ -46,8 +46,8 @@ FUZZ_SUITE_LD_COMMON = \
  $(LIBTEST_FUZZ) \
  $(LIBTEST_UTIL) \
  $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
  $(LIBBITCOIN_WALLET) \
+ $(LIBBITCOIN_CRYPTO) \
  $(LIBBITCOIN_CLI) \
  $(LIBDASHBLS) \
  $(BDB_LIBS) \
@@ -83,7 +83,6 @@ BITCOIN_TESTS =\
   test/base64_tests.cpp \
   test/bech32_tests.cpp \
   test/bip32_tests.cpp \
-  test/bip39_tests.cpp \
   test/block_reward_reallocation_tests.cpp \
   test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
@@ -181,6 +180,7 @@ BITCOIN_TESTS =\
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \
+  wallet/test/bip39_tests.cpp \
   wallet/test/coinjoin_tests.cpp \
   wallet/test/psbt_wallet_tests.cpp \
   wallet/test/wallet_tests.cpp \
