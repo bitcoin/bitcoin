@@ -45,10 +45,12 @@ Notable changes
 - #28994 wallet: skip BnB when SFFO is enabled
 - #28920 wallet: birth time update during tx scanning
 - #29176 wallet: Fix use-after-free in WalletBatch::EraseRecords
+- #29510 wallet: getrawchangeaddress and getnewaddress failures should not affect keypools for descriptor wallets
 
 ### RPC
 
 - #29003 rpc: fix getrawtransaction segfault
+- #28784 rpc: keep .cookie file if it was not generated
 
 ### Logs
 
@@ -57,6 +59,8 @@ Notable changes
 ### P2P and network changes
 
 - #29200 net: create I2P sessions using both ECIES-X25519 and ElGamal encryption
+- #29412 p2p: Don't process mutated blocks
+- #29524 p2p: Don't consider blocks mutated if they don't connect to known prev block
 
 ### Build
 
@@ -73,22 +77,28 @@ Notable changes
 - #28391 refactor: Simplify CTxMempool/BlockAssembler fields, remove some external mapTx access
 - #29179 test: wallet rescan with reorged parent + IsFromMe child in mempool
 - #28791 snapshots: don't core dump when running -checkblockindex after loadtxoutset
+- #29357 test: Drop x modifier in fsbridge::fopen call for MinGW builds
+- #29529 fuzz: restrict fopencookie usage to Linux & FreeBSD
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
+- dergoegge
 - fanquake
 - furszy
 - glozow
+- Greg Sanders
 - Hennadii Stepanov
 - Jon Atack
 - MarcoFalke
 - Mark Friedenbach
 - Martin Zumsande
 - Murch
+- Roman Zeyde
 - stickies-v
+- UdjinM6
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
