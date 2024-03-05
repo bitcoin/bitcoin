@@ -27,6 +27,7 @@ MIN_BLOCKS = 730000
 PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):(\d+)$")
 PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:(\d+)$")
 PATTERN_ONION = re.compile(r"^([a-z2-7]{56}\.onion):(\d+)$")
+PATTERN_I2P = re.compile(r"^([a-z2-7]{52}\.b32.i2p):(\d+)$")
 PATTERN_AGENT = re.compile(
     r"^/Satoshi:("
     r"0.14.(0|1|2|3|99)|"
@@ -66,7 +67,13 @@ def parseline(line: str) -> Union[dict, None]:
         if m is None:
             m = PATTERN_ONION.match(sline[0])
             if m is None:
-                return None
+                m = PATTERN_I2P.match(sline[0])
+                if m is None:
+                    return None
+                else:
+                    net = 'i2p'
+                    ipstr = sortkey = m.group(1)
+                    port = int(m.group(2))
             else:
                 net = 'onion'
                 ipstr = sortkey = m.group(1)
@@ -141,6 +148,7 @@ def filterbyasn(asmap: ASMap, ips: list[dict], max_per_asn: dict, max_per_net: i
     # Sift out ips by type
     ips_ipv46 = [ip for ip in ips if ip['net'] in ['ipv4', 'ipv6']]
     ips_onion = [ip for ip in ips if ip['net'] == 'onion']
+    ips_i2p = [ip for ip in ips if ip['net'] == 'i2p']
 
     # Filter IPv46 by ASN, and limit to max_per_net per network
     result = []
@@ -164,6 +172,7 @@ def filterbyasn(asmap: ASMap, ips: list[dict], max_per_asn: dict, max_per_net: i
 
     # Add back Onions (up to max_per_net)
     result.extend(ips_onion[0:max_per_net])
+    result.extend(ips_i2p[0:max_per_net])
     return result
 
 def ip_stats(ips: list[dict]) -> str:
@@ -173,7 +182,7 @@ def ip_stats(ips: list[dict]) -> str:
         if ip is not None:
             hist[ip['net']] += 1
 
-    return f"{hist['ipv4']:6d} {hist['ipv6']:6d} {hist['onion']:6d}"
+    return f"{hist['ipv4']:6d} {hist['ipv6']:6d} {hist['onion']:6d} {hist['i2p']:6d}"
 
 def parse_args():
     argparser = argparse.ArgumentParser(description='Generate a list of bitcoin node seed ip addresses.')
@@ -195,7 +204,7 @@ def main():
     ips = [parseline(line) for line in lines]
     print('Done.', file=sys.stderr)
 
-    print('\x1b[7m  IPv4   IPv6  Onion Pass                                               \x1b[0m', file=sys.stderr)
+    print('\x1b[7m  IPv4   IPv6  Onion  I2P Pass                                               \x1b[0m', file=sys.stderr)
     print(f'{ip_stats(ips):s} Initial', file=sys.stderr)
     # Skip entries with invalid address.
     ips = [ip for ip in ips if ip is not None]
@@ -209,11 +218,12 @@ def main():
     # Require service bit 1.
     ips = [ip for ip in ips if (ip['service'] & 1) == 1]
     print(f'{ip_stats(ips):s} Require service bit 1', file=sys.stderr)
-    # Require at least 50% 30-day uptime for clearnet, 10% for onion.
+    # Require at least 50% 30-day uptime for clearnet, 10% for onion and i2p.
     req_uptime = {
         'ipv4': 50,
         'ipv6': 50,
         'onion': 10,
+        'i2p' : 10,
     }
     ips = [ip for ip in ips if ip['uptime'] > req_uptime[ip['net']]]
     print(f'{ip_stats(ips):s} Require minimum uptime', file=sys.stderr)
