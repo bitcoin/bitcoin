@@ -30,15 +30,15 @@ CAmount ParsePaymentAmount(const std::string& strAmount);
 class CSuperblockManager
 {
 private:
-    static bool GetBestSuperblock(CGovernanceManager& governanceManager, CSuperblock_sptr& pSuperblockRet, int nBlockHeight);
+    static bool GetBestSuperblock(CGovernanceManager& govman, CSuperblock_sptr& pSuperblockRet, int nBlockHeight);
 
 public:
-    static bool IsSuperblockTriggered(CGovernanceManager& governanceManager, int nBlockHeight);
+    static bool IsSuperblockTriggered(CGovernanceManager& govman, int nBlockHeight);
 
-    static bool GetSuperblockPayments(CGovernanceManager& governanceManager, int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet);
-    static void ExecuteBestSuperblock(CGovernanceManager& governanceManager, int nBlockHeight);
+    static bool GetSuperblockPayments(CGovernanceManager& govman, int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet);
+    static void ExecuteBestSuperblock(CGovernanceManager& govman, int nBlockHeight);
 
-    static bool IsValid(CGovernanceManager& governanceManager, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
+    static bool IsValid(CGovernanceManager& govman, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
 };
 
 /**
@@ -115,7 +115,7 @@ public:
     // TELL THE ENGINE WE EXECUTED THIS EVENT
     void SetExecuted() { nStatus = SeenObjectStatus::Executed; }
 
-    CGovernanceObject* GetGovernanceObject(CGovernanceManager& governanceManager);
+    CGovernanceObject* GetGovernanceObject(CGovernanceManager& govman);
 
     int GetBlockHeight() const
     {
@@ -127,7 +127,7 @@ public:
     CAmount GetPaymentsTotalAmount();
 
     bool IsValid(CGovernanceManager& govman, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
-    bool IsExpired(const CGovernanceManager& governanceManager) const;
+    bool IsExpired(const CGovernanceManager& govman) const;
 
     std::vector<uint256> GetProposalHashes() const;
 };
