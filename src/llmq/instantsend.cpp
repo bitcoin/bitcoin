@@ -106,8 +106,7 @@ void CInstantSendDb::WriteNewInstantSendLock(const uint256& hash, const CInstant
     }
     db->WriteBatch(batch);
 
-    auto p = std::make_shared<CInstantSendLock>(islock);
-    islockCache.insert(hash, p);
+    islockCache.insert(hash, std::make_shared<CInstantSendLock>(islock));
     txidCache.insert(islock.txid, hash);
     for (const auto& in : islock.inputs) {
         outpointCache.insert(in, hash);
@@ -200,10 +199,10 @@ std::unordered_map<uint256, CInstantSendLockPtr, StaticSaltedHasher> CInstantSen
         }
 
         auto& islockHash = std::get<2>(curKey);
-        auto islock = GetInstantSendLockByHashInternal(islockHash, false);
-        if (islock) {
+
+        if (auto islock = GetInstantSendLockByHashInternal(islockHash, false)) {
             RemoveInstantSendLock(batch, islockHash, islock);
-            ret.emplace(islockHash, islock);
+            ret.try_emplace(islockHash, std::move(islock));
         }
 
         // archive the islock hash, so that we're still able to check if we've seen the islock in the past
@@ -1211,8 +1210,7 @@ void CInstantSendManager::RemoveNonLockedTx(const uint256& txid, bool retryChild
 
     if (info.tx) {
         for (const auto& in : info.tx->vin) {
-            auto jt = nonLockedTxs.find(in.prevout.hash);
-            if (jt != nonLockedTxs.end()) {
+            if (auto jt = nonLockedTxs.find(in.prevout.hash); jt != nonLockedTxs.end()) {
                 jt->second.children.erase(txid);
                 if (!jt->second.tx && jt->second.children.empty()) {
                     nonLockedTxs.erase(jt);
@@ -1255,11 +1253,9 @@ void CInstantSendManager::NotifyChainLock(const CBlockIndex* pindexChainLock)
 
 void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
 {
-    if (!fUpgradedDB) {
-        if (pindexNew->nHeight + 1 >= Params().GetConsensus().DIP0020Height) {
-            db.Upgrade(mempool);
-            fUpgradedDB = true;
-        }
+    if (!fUpgradedDB && pindexNew->nHeight + 1 >= Params().GetConsensus().DIP0020Height) {
+        db.Upgrade(mempool);
+        fUpgradedDB = true;
     }
 
     bool fDIP0008Active = pindexNew->pprev && pindexNew->pprev->nHeight >= Params().GetConsensus().DIP0008Height;
@@ -1496,7 +1492,7 @@ void CInstantSendManager::AskNodesForLockedTx(const uint256& txid, const CConnma
 
 void CInstantSendManager::ProcessPendingRetryLockTxs()
 {
-    decltype(pendingRetryTxs) retryTxs = WITH_LOCK(cs_pendingRetry, return std::move(pendingRetryTxs));
+    const auto retryTxs = WITH_LOCK(cs_pendingRetry, return pendingRetryTxs);
 
     if (retryTxs.empty()) {
         return;
