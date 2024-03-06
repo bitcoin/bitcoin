@@ -157,6 +157,7 @@ jobs:
           $env:CI_QT_URL | Out-File -FilePath "$env:GITHUB_WORKSPACE\qt_url"
           $env:CI_QT_CONF | Out-File -FilePath "$env:GITHUB_WORKSPACE\qt_conf"
           py -3 --version
+          Write-Host "PowerShell version $($PSVersionTable.PSVersion.ToString())"
 
       - name: Restore static Qt cache
         id: static-qt-cache
