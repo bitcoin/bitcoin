@@ -750,7 +750,8 @@ std::set<size_t> CalcDeterministicWatchConnections(Consensus::LLMQType llmqType,
 }
 
 bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& connman, const CSporkManager& sporkman,
-                             gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& myProTxHash)
+                             const CDeterministicMNList& tip_mn_list, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
+                             const uint256& myProTxHash)
 {
     if (!fMasternodeMode && !IsWatchQuorumsEnabled()) {
         return false;
@@ -784,10 +785,9 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& 
     }
     if (!connections.empty()) {
         if (!connman.HasMasternodeQuorumNodes(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash()) && LogAcceptCategory(BCLog::LLMQ)) {
-            auto mnList = deterministicMNManager->GetListAtChainTip();
             std::string debugMsg = strprintf("%s -- adding masternodes quorum connections for quorum %s:\n", __func__, pQuorumBaseBlockIndex->GetBlockHash().ToString());
             for (const auto& c : connections) {
-                auto dmn = mnList.GetValidMN(c);
+                auto dmn = tip_mn_list.GetValidMN(c);
                 if (!dmn) {
                     debugMsg += strprintf("  %s (not in valid MN set anymore)\n", c.ToString());
                 } else {
@@ -805,7 +805,8 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& 
 }
 
 void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman& connman, const CSporkManager& sporkman,
-                               gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256 &myProTxHash)
+                               const CDeterministicMNList& tip_mn_list, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
+                               const uint256 &myProTxHash)
 {
     if (!IsQuorumPoseEnabled(llmqParams.type, sporkman)) {
         return;
@@ -829,10 +830,9 @@ void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman
 
     if (!probeConnections.empty()) {
         if (LogAcceptCategory(BCLog::LLMQ)) {
-            auto mnList = deterministicMNManager->GetListAtChainTip();
             std::string debugMsg = strprintf("%s -- adding masternodes probes for quorum %s:\n", __func__, pQuorumBaseBlockIndex->GetBlockHash().ToString());
             for (const auto& c : probeConnections) {
-                auto dmn = mnList.GetValidMN(c);
+                auto dmn = tip_mn_list.GetValidMN(c);
                 if (!dmn) {
                     debugMsg += strprintf("  %s (not in valid MN set anymore)\n", c.ToString());
                 } else {

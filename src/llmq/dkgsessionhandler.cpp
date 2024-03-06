@@ -527,9 +527,10 @@ void CDKGSessionHandler::HandleDKGRound()
         return changed;
     });
 
-    utils::EnsureQuorumConnections(params, connman, m_sporkman, pQuorumBaseBlockIndex, curSession->myProTxHash);
+    const auto tip_mn_list = deterministicMNManager->GetListAtChainTip();
+    utils::EnsureQuorumConnections(params, connman, m_sporkman, tip_mn_list, pQuorumBaseBlockIndex, curSession->myProTxHash);
     if (curSession->AreWeMember()) {
-        utils::AddQuorumProbeConnections(params, connman, m_sporkman, pQuorumBaseBlockIndex, curSession->myProTxHash);
+        utils::AddQuorumProbeConnections(params, connman, m_sporkman, tip_mn_list, pQuorumBaseBlockIndex, curSession->myProTxHash);
     }
 
     WaitForNextPhase(QuorumPhase::Initialized, QuorumPhase::Contribute, curQuorumHash);

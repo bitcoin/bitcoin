@@ -49,9 +49,9 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataS
         return tl::unexpected{100};
     }
 
+    const auto tip_mn_list = deterministicMNManager->GetListAtChainTip();
     if (dsq.masternodeOutpoint.IsNull()) {
-        auto mnList = deterministicMNManager->GetListAtChainTip();
-        if (auto dmn = mnList.GetValidMN(dsq.m_protxHash)) {
+        if (auto dmn = tip_mn_list.GetValidMN(dsq.m_protxHash)) {
             dsq.masternodeOutpoint = dmn->collateralOutpoint;
         } else {
             return tl::unexpected{10};
@@ -82,8 +82,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataS
 
         if (dsq.IsTimeOutOfBounds()) return {};
 
-        auto mnList = deterministicMNManager->GetListAtChainTip();
-        auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
+        auto dmn = tip_mn_list.GetValidMNByCollateral(dsq.masternodeOutpoint);
         if (!dmn) return {};
 
         if (dsq.m_protxHash.IsNull()) {
@@ -105,7 +104,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataS
             return {};
         } else {
             int64_t nLastDsq = mmetaman->GetMetaInfo(dmn->proTxHash)->GetLastDsq();
-            int64_t nDsqThreshold = mmetaman->GetDsqThreshold(dmn->proTxHash, mnList.GetValidMNsCount());
+            int64_t nDsqThreshold = mmetaman->GetDsqThreshold(dmn->proTxHash, tip_mn_list.GetValidMNsCount());
             LogPrint(BCLog::COINJOIN, "DSQUEUE -- nLastDsq: %d  nDsqThreshold: %d  nDsqCount: %d\n", nLastDsq,
                      nDsqThreshold, mmetaman->GetDsqCount());
             // don't allow a few nodes to dominate the queuing process
