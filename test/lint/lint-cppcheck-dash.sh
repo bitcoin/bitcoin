@@ -30,6 +30,16 @@ IGNORED_WARNINGS=(
     "src/rpc/masternode.cpp:.*:21: warning: Consider using std::copy algorithm instead of a raw loop." # UniValue doesn't support std::copy
     "src/cachemultimap.h:.*: warning: Variable 'mapIt' can be declared as reference to const"
     "src/evo/simplifiedmns.cpp:.*:20: warning: Consider using std::copy algorithm instead of a raw loop."
+    "src/llmq/commitment.cpp.* warning: Consider using std::all_of or std::none_of algorithm instead of a raw loop. \[useStlAlgorithm\]"
+    "src/rpc/.*cpp:.*: note: Function pointer used here."
+    "src/masternode/sync.cpp:.*: warning: Variable 'pnode' can be declared as pointer to const \[constVariableReference\]"
+
+    "src/stacktraces.cpp:.*: .*: Parameter 'info' can be declared as pointer to const"
+    "src/stacktraces.cpp:.*: note: You might need to cast the function pointer here"
+
+    "[note|warning]: Return value 'state.Invalid(.*)' is always false"
+    "note: Calling function 'Invalid' returns 0"
+
 # General catchall, for some reason any value named 'hash' is viewed as never used.
     "Variable 'hash' is assigned a value that is never used."
 
@@ -37,7 +47,8 @@ IGNORED_WARNINGS=(
 #    "Consider performing initialization in initialization list."
     "Consider using std::transform algorithm instead of a raw loop."
     "Consider using std::accumulate algorithm instead of a raw loop."
-#    "Consider using std::any_of algorithm instead of a raw loop."
+    "Consider using std::any_of algorithm instead of a raw loop."
+    "Consider using std::copy_if algorithm instead of a raw loop."
 #    "Consider using std::count_if algorithm instead of a raw loop."
 #    "Consider using std::find_if algorithm instead of a raw loop."
 #    "Member variable '.*' is not initialized in the constructor."
@@ -77,8 +88,8 @@ FILES=$(git ls-files -- "src/batchedlogger.*" \
                         "src/rpc/governance.cpp" \
                         "src/rpc/masternode.cpp" \
                         "src/rpc/quorums.cpp" \
-                        "src/spork.*" \
                         "src/saltedhasher.*" \
+                        "src/spork.*" \
                         "src/stacktraces.*" \
                         "src/statsd_client.*" \
                         "src/test/block_reward_reallocation_tests.cpp" \
@@ -88,7 +99,8 @@ FILES=$(git ls-files -- "src/batchedlogger.*" \
                         "src/test/evo*.cpp" \
                         "src/test/governance*.cpp" \
                         "src/wallet/hdchain.*" \
-                        "src/unordered_lru_cache.h")
+                        "src/unordered_lru_cache.h" \
+                        )
 
 
 if ! command -v cppcheck > /dev/null; then

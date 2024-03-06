@@ -775,7 +775,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
                 return ret;
             } else {
                 // lets prove we own the collateral
-                LegacyScriptPubKeyMan* spk_man = wallet->GetLegacyScriptPubKeyMan();
+                const LegacyScriptPubKeyMan* spk_man = wallet->GetLegacyScriptPubKeyMan();
                 if (!spk_man) {
                     throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
                 }
@@ -1262,22 +1262,22 @@ static void protx_list_help(const JSONRPCRequest& request)
 }
 
 #ifdef ENABLE_WALLET
-static bool CheckWalletOwnsKey(CWallet* pwallet, const CKeyID& keyID) {
+static bool CheckWalletOwnsKey(const CWallet* const pwallet, const CKeyID& keyID) {
     if (!pwallet) {
         return false;
     }
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+    const LegacyScriptPubKeyMan* const spk_man = pwallet->GetLegacyScriptPubKeyMan();
     if (!spk_man) {
         return false;
     }
     return spk_man->HaveKey(keyID);
 }
 
-static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
+static bool CheckWalletOwnsScript(const CWallet* const pwallet, const CScript& script) {
     if (!pwallet) {
         return false;
     }
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+    const LegacyScriptPubKeyMan* const spk_man = pwallet->GetLegacyScriptPubKeyMan();
     if (!spk_man) {
         return false;
     }
@@ -1292,7 +1292,7 @@ static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
 }
 #endif
 
-static UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMN& dmn, CMasternodeMetaMan& mn_metaman, bool detailed, const ChainstateManager& chainman, const CBlockIndex* pindex = nullptr)
+static UniValue BuildDMNListEntry(const CWallet* const pwallet, const CDeterministicMN& dmn, CMasternodeMetaMan& mn_metaman, bool detailed, const ChainstateManager& chainman, const CBlockIndex* pindex = nullptr)
 {
     if (!detailed) {
         return dmn.proTxHash.ToString();
@@ -1511,7 +1511,7 @@ static void protx_diff_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static uint256 ParseBlock(const UniValue& v, const ChainstateManager& chainman, std::string strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static uint256 ParseBlock(const UniValue& v, const ChainstateManager& chainman, const std::string& strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
 
@@ -1561,7 +1561,7 @@ static void protx_listdiff_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static const CBlockIndex* ParseBlockIndex(const UniValue& v, const ChainstateManager& chainman, std::string strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static const CBlockIndex* ParseBlockIndex(const UniValue& v, const ChainstateManager& chainman, const std::string& strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
 

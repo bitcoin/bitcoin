@@ -68,8 +68,7 @@ static UniValue coinjoin(const JSONRPCRequest& request)
         }
 
         CTxMemPool& mempool = EnsureMemPool(node);
-        CBlockPolicyEstimator& fee_estimator = EnsureFeeEstimator(node);
-        bool result = cj_clientman->DoAutomaticDenominating(*node.connman, fee_estimator, mempool);
+        bool result = cj_clientman->DoAutomaticDenominating(*node.connman, mempool);
         return "Mixing " + (result ? "started successfully" : ("start failed: " + cj_clientman->GetStatuses().original + ", will retry"));
     }
 

@@ -61,7 +61,7 @@ class StatsdClient {
         static void cleanup(std::string& key);
 
     protected:
-        std::unique_ptr<struct _StatsdClientData> d;
+        const std::unique_ptr<struct _StatsdClientData> d;
 };
 
 } // namespace statsd

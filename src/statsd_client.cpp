@@ -231,7 +231,7 @@ int StatsdClient::send(const std::string& message)
     {
         return ret;
     }
-    ret = sendto(d->sock, message.data(), message.size(), 0, (struct sockaddr *) &d->server, sizeof(d->server));
+    ret = sendto(d->sock, message.data(), message.size(), 0, reinterpret_cast<const sockaddr*>(&d->server), sizeof(d->server));
     if ( ret == -1) {
         snprintf(d->errmsg, sizeof(d->errmsg),
                 "sendto server fail, host=%s:%d, err=%m", d->host.c_str(), d->port);

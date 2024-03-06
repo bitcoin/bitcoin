@@ -61,7 +61,7 @@ public:
     std::string GetStateString() const;
     std::string GetStatus() const;
 
-    static bool IsValidNetAddr(CService addrIn);
+    static bool IsValidNetAddr(const CService& addrIn);
 
 private:
     bool GetLocalAddress(CService& addrRet);
