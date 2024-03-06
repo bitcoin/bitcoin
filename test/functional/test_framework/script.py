@@ -17,7 +17,7 @@ from .messages import (
     sha256,
 )
 
-from .ripemd160 import ripemd160
+from .crypto.ripemd160 import ripemd160
 
 MAX_SCRIPT_ELEMENT_SIZE = 520
 def hash160(s):

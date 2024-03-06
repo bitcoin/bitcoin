@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Helper routines relevant for compact block filters (BIP158).
 """
-from .siphash import siphash
+from .crypto.siphash import siphash
 
 
 def bip158_basic_element_hash(script_pub_key, N, block_hash):

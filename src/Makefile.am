@@ -138,6 +138,7 @@ BITCOIN_CORE_H = \
   base58.h \
   batchedlogger.h \
   bech32.h \
+  bip324.h \
   blockencodings.h \
   bloom.h \
   cachemap.h \
@@ -408,6 +409,7 @@ libbitcoin_server_a_SOURCES = \
   addrman.cpp \
   banman.cpp \
   batchedlogger.cpp \
+  bip324.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
   chain.cpp \
@@ -577,10 +579,10 @@ crypto_libbitcoin_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLA
 crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
-  crypto/chacha_poly_aead.h \
-  crypto/chacha_poly_aead.cpp \
   crypto/chacha20.h \
   crypto/chacha20.cpp \
+  crypto/chacha20poly1305.h \
+  crypto/chacha20poly1305.cpp \
   crypto/common.h \
   crypto/hkdf_sha256_32.cpp \
   crypto/hkdf_sha256_32.h \
