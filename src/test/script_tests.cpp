@@ -1498,28 +1498,33 @@ BOOST_AUTO_TEST_CASE(script_HasValidOps)
     BOOST_CHECK(!script.HasValidOps());
 }
 
+static std::string DatacarrierBytesStr(const CScript &script) {
+    auto dcb = script.DatacarrierBytes();
+    return strprintf("%s+%s", dcb.first, dcb.second);
+}
+
 BOOST_AUTO_TEST_CASE(script_DataCarrierBytes)
 {
     using zeros = std::vector<unsigned char>;
 
     // empty script
-    BOOST_CHECK_EQUAL(0, (CScript()).DatacarrierBytes());
+    BOOST_CHECK_EQUAL("0+0", DatacarrierBytesStr(CScript()));
     // series of pushes are not data
-    BOOST_CHECK_EQUAL(0, (CScript() << OP_0 << OP_0 << OP_0).DatacarrierBytes());
+    BOOST_CHECK_EQUAL("0+0", DatacarrierBytesStr(CScript() << OP_0 << OP_0 << OP_0));
     // unspendable if first op is OP_RETURN, then length(1), zeros(11)
-    BOOST_CHECK_EQUAL(13, (CScript() << OP_RETURN << zeros(11)).DatacarrierBytes());
+    BOOST_CHECK_EQUAL("13+0", DatacarrierBytesStr(CScript() << OP_RETURN << zeros(11)));
     // invalid script (no data following PUSHDATA) makes it all data
-    BOOST_CHECK_EQUAL(2, (CScript() << OP_0 << OP_PUSHDATA4).DatacarrierBytes());
+    BOOST_CHECK_EQUAL("0+2", DatacarrierBytesStr(CScript() << OP_0 << OP_PUSHDATA4));
     // no data here
-    BOOST_CHECK_EQUAL(0, (CScript() << OP_TRUE << OP_IF << OP_ENDIF).DatacarrierBytes());
+    BOOST_CHECK_EQUAL("0+0", DatacarrierBytesStr(CScript() << OP_TRUE << OP_IF << OP_ENDIF));
     // specific data pattern, entire script is data
-    BOOST_CHECK_EQUAL(4, (CScript() << OP_FALSE << OP_IF << OP_7 << OP_ENDIF).DatacarrierBytes());
+    BOOST_CHECK_EQUAL("0+4", DatacarrierBytesStr(CScript() << OP_FALSE << OP_IF << OP_7 << OP_ENDIF));
     // consecutive data
-    BOOST_CHECK_EQUAL(6, (CScript() << OP_FALSE << OP_IF << OP_ENDIF << OP_FALSE << OP_IF << OP_ENDIF).DatacarrierBytes());
+    BOOST_CHECK_EQUAL("0+6", DatacarrierBytesStr(CScript() << OP_FALSE << OP_IF << OP_ENDIF << OP_FALSE << OP_IF << OP_ENDIF));
     // nested data (all is data)
-    BOOST_CHECK_EQUAL(6, (CScript() << OP_FALSE << OP_IF << OP_TRUE << OP_IF << OP_ENDIF << OP_ENDIF).DatacarrierBytes());
+    BOOST_CHECK_EQUAL("0+6", DatacarrierBytesStr(CScript() << OP_FALSE << OP_IF << OP_TRUE << OP_IF << OP_ENDIF << OP_ENDIF));
     // pushing then immediately dropping is data: length(1), zero(11), OP_DROP
-    BOOST_CHECK_EQUAL(13, (CScript() << zeros(11) << OP_DROP).DatacarrierBytes());
+    BOOST_CHECK_EQUAL("0+13", DatacarrierBytesStr(CScript() << zeros(11) << OP_DROP));
 }
 
 BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
@@ -1534,7 +1539,7 @@ BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
         auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
         BOOST_CHECK(ret_script == tx_in.scriptSig);
         BOOST_CHECK_EQUAL(scale, WITNESS_SCALE_FACTOR);
-        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+        BOOST_CHECK_EQUAL(DatacarrierBytesStr(ret_script), "0+0");
     }
     { // P2PKH - no datacarrier bytes
         CScript prev_script; // scriptPubKey
@@ -1545,7 +1550,7 @@ BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
         auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
         BOOST_CHECK(ret_script == tx_in.scriptSig);
         BOOST_CHECK_EQUAL(scale, WITNESS_SCALE_FACTOR);
-        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+        BOOST_CHECK_EQUAL(DatacarrierBytesStr(ret_script), "0+0");
     }
     { // P2SH - no datacarrier bytes
         CScript prev_script; // scriptPubKey
@@ -1558,7 +1563,7 @@ BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
         auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
         BOOST_CHECK(ret_script == redeem_script);
         BOOST_CHECK_EQUAL(scale, WITNESS_SCALE_FACTOR);
-        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+        BOOST_CHECK_EQUAL(DatacarrierBytesStr(ret_script), "0+0");
     }
     { // P2SH - with datacarrier bytes
         CScript prev_script; // scriptPubKey
@@ -1573,7 +1578,7 @@ BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
         BOOST_CHECK(ret_script == redeem_script);
         BOOST_CHECK_EQUAL(scale, WITNESS_SCALE_FACTOR);
         // OP_RETURN(1), length(1), zeros(27) = 29
-        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 29);
+        BOOST_CHECK_EQUAL(DatacarrierBytesStr(ret_script), "29+0");
     }
     { // P2WPKH - no datacarrier bytes
         CScript prev_script; // scriptPubKey
@@ -1589,7 +1594,7 @@ BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
         // should have no script at all since it's wrapped P2WPKH
         BOOST_CHECK(ret_script == CScript());
         BOOST_CHECK_EQUAL(scale, 0);
-        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+        BOOST_CHECK_EQUAL(DatacarrierBytesStr(ret_script), "0+0");
     }
     { // P2WSH - no datacarrier bytes
         CScript prev_script; // scriptPubKey
@@ -1605,7 +1610,7 @@ BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
         auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
         BOOST_CHECK(ret_script == redeem_script);
         BOOST_CHECK_EQUAL(scale, 1);
-        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+        BOOST_CHECK_EQUAL(DatacarrierBytesStr(ret_script), "0+0");
     }
     { // P2WSH - some datacarrier bytes
         CScript prev_script; // scriptPubKey
@@ -1622,7 +1627,7 @@ BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
         BOOST_CHECK(ret_script == redeem_script);
         BOOST_CHECK_EQUAL(scale, 1);
         // OP_FALSE(1), OP_IF(1), length(1), zeros(10), OP_ENDIF(1)
-        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 14);
+        BOOST_CHECK_EQUAL(DatacarrierBytesStr(ret_script), "0+14");
     }
     { // P2SH-P2WPKH - no datacarrier bytes
         CScript prev_script; // scriptPubKey
@@ -1637,7 +1642,7 @@ BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
         BOOST_CHECK(ret_script == CScript());
         // data bytes in the witness get discounted (*1 instead of *4)
         BOOST_CHECK_EQUAL(scale, 0);
-        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+        BOOST_CHECK_EQUAL(DatacarrierBytesStr(ret_script), "0+0");
     }
     { // P2SH-P2WSH - no datacarrier bytes
         CScript prev_script; // scriptPubKey
@@ -1661,7 +1666,7 @@ BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
         BOOST_CHECK(ret_script == witness_redeem_script);
         // data bytes in the witness get discounted (*1 instead of *4)
         BOOST_CHECK_EQUAL(scale, 1);
-        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+        BOOST_CHECK_EQUAL(DatacarrierBytesStr(ret_script), "0+0");
     }
     { // P2SH-P2WSH - some datacarrier bytes
         CScript prev_script; // scriptPubKey
@@ -1686,7 +1691,7 @@ BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
         // data bytes in the witness get discounted (*1 instead of *4)
         BOOST_CHECK_EQUAL(scale, 1);
         // OP_FALSE(1), OP_IF(1), length(1), zeros(10), OP_ENDIF(1) = 14
-        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 14);
+        BOOST_CHECK_EQUAL(DatacarrierBytesStr(ret_script), "0+14");
     }
     { // P2TR keypath - no datacarrier bytes
         CScript prev_script; // scriptPubKey
@@ -1698,7 +1703,7 @@ BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
         auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
         BOOST_CHECK(ret_script == CScript());
         BOOST_CHECK_EQUAL(scale, 0);
-        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+        BOOST_CHECK_EQUAL(DatacarrierBytesStr(ret_script), "0+0");
     }
     { // P2TR keypath - annex but no script - no datacarrier bytes
         CScript prev_script; // scriptPubKey
@@ -1712,7 +1717,7 @@ BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
         auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
         BOOST_CHECK(ret_script == CScript());
         BOOST_CHECK_EQUAL(scale, 0);
-        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+        BOOST_CHECK_EQUAL(DatacarrierBytesStr(ret_script), "0+0");
     }
     { // P2TR scriptpath - no datacarrier bytes
         CScript prev_script; // scriptPubKey
@@ -1731,7 +1736,7 @@ BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
         auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
         BOOST_CHECK(ret_script == script);
         BOOST_CHECK_EQUAL(scale, 1);
-        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+        BOOST_CHECK_EQUAL(DatacarrierBytesStr(ret_script), "0+0");
     }
     { // P2TR scriptpath - some datacarrier bytes
         CScript prev_script; // scriptPubKey
@@ -1749,7 +1754,7 @@ BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
         auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
         BOOST_CHECK(ret_script == script);
         BOOST_CHECK_EQUAL(scale, 1);
-        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 3);
+        BOOST_CHECK_EQUAL(DatacarrierBytesStr(ret_script), "3+0");
     }
 }
 

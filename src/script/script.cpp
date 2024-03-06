@@ -303,7 +303,7 @@ bool CScript::HasValidOps() const
     return true;
 }
 
-size_t CScript::DatacarrierBytes() const
+std::pair<size_t, size_t> CScript::DatacarrierBytes() const
 {
     size_t counted{0};
     opcodetype opcode, last_opcode{OP_INVALIDOPCODE};
@@ -314,17 +314,17 @@ size_t CScript::DatacarrierBytes() const
         opcode_it = it;
         if (!GetOp(it, opcode, push_data)) {
             // Invalid scripts are necessarily all data
-            return size();
+            return {0, size()};
         }
 
         if (opcode == OP_IF || opcode == OP_NOTIF) {
             ++inside_conditional;
         } else if (opcode == OP_ENDIF) {
-            if (!inside_conditional) return size();  // invalid
+            if (!inside_conditional) return {0, size()};  // invalid
             --inside_conditional;
         } else if (opcode == OP_RETURN && !inside_conditional) {
             // unconditional OP_RETURN is unspendable
-            return size();
+            return {size(), 0};
         }
 
         // Match OP_FALSE OP_IF
@@ -350,7 +350,7 @@ size_t CScript::DatacarrierBytes() const
             counted += it - data_began;
         }
     }
-    return counted;
+    return {0, counted};
 }
 
 bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator end, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet)

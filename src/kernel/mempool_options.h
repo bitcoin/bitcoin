@@ -30,6 +30,8 @@ static constexpr RBFPolicy DEFAULT_MEMPOOL_RBF_POLICY{RBFPolicy::Always};
 static constexpr TRUCPolicy DEFAULT_MEMPOOL_TRUC_POLICY{TRUCPolicy::Enforce};
 /** Whether to fall back to legacy V1 serialization when writing mempool.dat */
 static constexpr bool DEFAULT_PERSIST_V1_DAT{false};
+/** Default for -acceptnonstddatacarrier */
+static constexpr bool DEFAULT_ACCEPT_NON_STD_DATACARRIER{true};
 /** Default for -acceptnonstdtxn */
 static constexpr bool DEFAULT_ACCEPT_NON_STD_TXN{false};
 /** Default for -acceptunknownwitness */
@@ -63,6 +65,7 @@ struct MemPoolOptions {
     bool datacarrier_fullcount{DEFAULT_DATACARRIER_FULLCOUNT};
     bool permit_bare_pubkey{DEFAULT_PERMIT_BAREPUBKEY};
     bool permit_bare_multisig{DEFAULT_PERMIT_BAREMULTISIG};
+    bool accept_non_std_datacarrier{DEFAULT_ACCEPT_NON_STD_DATACARRIER};
     bool require_standard{true};
     bool acceptunknownwitness{DEFAULT_ACCEPTUNKNOWNWITNESS};
     RBFPolicy rbf_policy{DEFAULT_MEMPOOL_RBF_POLICY};
