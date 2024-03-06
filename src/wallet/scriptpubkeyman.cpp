@@ -268,17 +268,21 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
     }
 
     if (!hdChainCurrent.IsNull()) {
-        assert(EncryptHDChain(master_key, m_hd_chain));
-        assert(LoadHDChain(m_hd_chain));
+        bool res = EncryptHDChain(master_key, m_hd_chain);
+        assert(res);
+        res = LoadHDChain(m_hd_chain);
+        assert(res);
 
         CHDChain hdChainCrypted;
-        assert(GetHDChain(hdChainCrypted));
+        res = GetHDChain(hdChainCrypted);
+        assert(res);
 
         // ids should match, seed hashes should not
         assert(hdChainCurrent.GetID() == hdChainCrypted.GetID());
         assert(hdChainCurrent.GetSeedHash() != hdChainCrypted.GetSeedHash());
 
-        assert(AddHDChain(*encrypted_batch, hdChainCrypted));
+        res = AddHDChain(*encrypted_batch, hdChainCrypted);
+        assert(res);
     }
 
     encrypted_batch = nullptr;
