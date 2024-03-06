@@ -526,7 +526,7 @@ static int secp256k1_ecdsa_sign_inner(const secp256k1_context* ctx, secp256k1_sc
             break;
         }
         is_nonce_valid = secp256k1_scalar_set_b32_seckey(&non, nonce32);
-        /* The nonce is still secret here, but it being invalid is is less likely than 1:2^255. */
+        /* The nonce is still secret here, but it being invalid is less likely than 1:2^255. */
         secp256k1_declassify(ctx, &is_nonce_valid, sizeof(is_nonce_valid));
         if (is_nonce_valid) {
             ret = secp256k1_ecdsa_sig_sign(&ctx->ecmult_gen_ctx, r, s, &sec, &msg, &non, recid);
