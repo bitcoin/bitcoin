@@ -47,3 +47,12 @@ BIPs that are implemented by Bitcoin Core (up-to-date up to **v0.21.1**):
 * [`BIP 339`](https://github.com/bitcoin/bips/blob/master/bip-0339.mediawiki): Relay of transactions by wtxid is supported as of **v0.21.0** ([PR 18044](https://github.com/bitcoin/bitcoin/pull/18044)).
 * [`BIP 340`](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki) [`341`](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki) [`342`](https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki): Validation rules for Taproot (including Schnorr signatures and Tapscript leaves) are implemented as of **v0.21.0** ([PR 19953](https://github.com/bitcoin/bitcoin/pull/19953)), without mainnet activation.
 * [`BIP 350`](https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki): Addresses for native v1+ segregated Witness outputs use Bech32m instead of Bech32 as of **v0.21.1** ([PR 20861](https://github.com/bitcoin/bitcoin/pull/20861)).
+
+
+------------------
+
+LIPs implemented by Litecoin Core (up-to-date up to v0.21.3)
+* [`LIP002`](https://github.com/litecoin-project/lips/blob/master/lip-0002.mediawiki): Extension blocks as a mechanism to implement new protocols to Litecoin without relaxing any consensus rules.
+* [`LIP003`](https://github.com/litecoin-project/lips/blob/master/lip-0003.mediawiki): Opt-in MimbleWimble through Extension Blocks.
+* [`LIP004`](https://github.com/litecoin-project/lips/blob/master/lip-0004.mediawiki): One sided MimbleWimble transactions without needing to build a transaction interactively with the receiving party. 
+* [`LIP006`](https://github.com/litecoin-project/lips/blob/c01068d06136fb21bf35fd6dac2977de60057714/LIP-0006.mediawiki): New p2p messages for supporting light-client syncing of MWEB components.
