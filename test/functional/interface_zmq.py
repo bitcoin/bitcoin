@@ -45,6 +45,8 @@ class ZMQTest (BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_py3_zmq()
         self.skip_if_no_bitcoind_zmq()
+        # TODO: drop this check after migration to MiniWallet, see bitcoin/bitcoin#24653
+        self.skip_if_no_bdb()
 
     def setup_nodes(self):
         import zmq

@@ -20,10 +20,15 @@ from test_framework.wallet_util import test_address
 class WalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
-        self.extra_args = [[
-            "-acceptnonstdtxn=1",
-            '-usehd={:d}'.format(i%2==0),
-        ] for i in range(self.num_nodes)]
+        if self.options.descriptors:
+            self.extra_args = [[
+                "-acceptnonstdtxn=1"
+            ] for i in range(self.num_nodes)]
+        else:
+            self.extra_args = [[
+                "-acceptnonstdtxn=1",
+                '-usehd={:d}'.format(i%2==0)
+            ] for i in range(self.num_nodes)]
         self.setup_clean_chain = True
         self.supports_cli = False
 
@@ -46,6 +51,7 @@ class WalletTest(BitcoinTestFramework):
         return curr_balance
 
     def run_test(self):
+
         # Check that there's no UTXO on none of the nodes
         assert_equal(len(self.nodes[0].listunspent()), 0)
         assert_equal(len(self.nodes[1].listunspent()), 0)
@@ -229,7 +235,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
         node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), node_0_bal + Decimal('100'), fee_per_byte, count_bytes(self.nodes[2].gettransaction(txid)['hex']))
 
-        self.start_node(3)
+        self.start_node(3, self.nodes[3].extra_args)
         self.connect_nodes(0, 3)
         # Sendmany with explicit fee (DASH/kB)
         # Throw if no conf_target provided
@@ -378,125 +384,127 @@ class WalletTest(BitcoinTestFramework):
         # This will raise an exception since generate does not accept a string
         assert_raises_rpc_error(-1, "not an integer", self.nodes[0].generate, "2")
 
-        # This will raise an exception for the invalid private key format
-        assert_raises_rpc_error(-5, "Invalid private key encoding", self.nodes[0].importprivkey, "invalid")
+        if not self.options.descriptors:
 
-        # This will raise an exception for importing an address with the PS2H flag
-        temp_address = self.nodes[1].getnewaddress()
-        assert_raises_rpc_error(-5, "Cannot use the p2sh flag with an address - use a script instead", self.nodes[0].importaddress, temp_address, "label", False, True)
+            # This will raise an exception for the invalid private key format
+            assert_raises_rpc_error(-5, "Invalid private key encoding", self.nodes[0].importprivkey, "invalid")
 
-        # This will raise an exception for attempting to dump the private key of an address you do not own
-        assert_raises_rpc_error(-4, "Private key for address %s is not known" % temp_address, self.nodes[0].dumpprivkey, temp_address)
+            # This will raise an exception for importing an address with the PS2H flag
+            temp_address = self.nodes[1].getnewaddress()
+            assert_raises_rpc_error(-5, "Cannot use the p2sh flag with an address - use a script instead", self.nodes[0].importaddress, temp_address, "label", False, True)
 
-        # This will raise an exception for attempting to get the private key of an invalid Dash address
-        assert_raises_rpc_error(-5, "Invalid Dash address", self.nodes[0].dumpprivkey, "invalid")
+            # This will raise an exception for attempting to dump the private key of an address you do not own
+            assert_raises_rpc_error(-4, "Private key for address %s is not known" % temp_address, self.nodes[0].dumpprivkey, temp_address)
 
-        # This will raise an exception for attempting to set a label for an invalid Dash address
-        assert_raises_rpc_error(-5, "Invalid Dash address", self.nodes[0].setlabel, "invalid address", "label")
+            # This will raise an exception for attempting to get the private key of an invalid Dash address
+            assert_raises_rpc_error(-5, "Invalid Dash address", self.nodes[0].dumpprivkey, "invalid")
 
-        # This will raise an exception for importing an invalid address
-        assert_raises_rpc_error(-5, "Invalid Dash address or script", self.nodes[0].importaddress, "invalid")
+            # This will raise an exception for attempting to set a label for an invalid Dash address
+            assert_raises_rpc_error(-5, "Invalid Dash address", self.nodes[0].setlabel, "invalid address", "label")
 
-        # This will raise an exception for attempting to import a pubkey that isn't in hex
-        assert_raises_rpc_error(-5, "Pubkey must be a hex string", self.nodes[0].importpubkey, "not hex")
+            # This will raise an exception for importing an invalid address
+            assert_raises_rpc_error(-5, "Invalid Dash address or script", self.nodes[0].importaddress, "invalid")
 
-        # This will raise an exception for importing an invalid pubkey
-        assert_raises_rpc_error(-5, "Pubkey is not a valid public key", self.nodes[0].importpubkey, "5361746f736869204e616b616d6f746f")
+            # This will raise an exception for attempting to import a pubkey that isn't in hex
+            assert_raises_rpc_error(-5, "Pubkey must be a hex string", self.nodes[0].importpubkey, "not hex")
 
-        # Import address and private key to check correct behavior of spendable unspents
-        # 1. Send some coins to generate new UTXO
-        address_to_import = self.nodes[2].getnewaddress()
-        txid = self.nodes[0].sendtoaddress(address_to_import, 1)
-        self.nodes[0].generate(1)
-        self.sync_all(self.nodes[0:3])
+            # This will raise an exception for importing an invalid pubkey
+            assert_raises_rpc_error(-5, "Pubkey is not a valid public key", self.nodes[0].importpubkey, "5361746f736869204e616b616d6f746f")
 
-        # send with explicit dash/kb fee
-        self.log.info("test explicit fee (sendtoaddress as dash/kb)")
-        self.nodes[0].generate(1)
-        self.sync_all(self.nodes[0:3])
-        prebalance = self.nodes[2].getbalance()
-        assert prebalance > 2
-        address = self.nodes[1].getnewaddress()
-        # Throw if no conf_target provided
-        assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
-            self.nodes[2].sendtoaddress,
-            address=address,
-            amount=1.0,
-            estimate_mode='dash/Kb')
-        # Throw if negative feerate
-        assert_raises_rpc_error(-3, "Amount out of range",
-            self.nodes[2].sendtoaddress,
-            address=address,
-            amount=1.0,
-            conf_target=-1,
-            estimate_mode='dash/kb')
-        txid = self.nodes[2].sendtoaddress(
-            address=address,
-            amount=1.0,
-            conf_target=0.00002500,
-            estimate_mode='dash/kb',
-        )
-        tx_size = count_bytes(self.nodes[2].gettransaction(txid)['hex'])
-        self.sync_all(self.nodes[0:3])
-        self.nodes[0].generate(1)
-        self.sync_all(self.nodes[0:3])
-        postbalance = self.nodes[2].getbalance()
-        fee = prebalance - postbalance - Decimal('1')
-        assert_fee_amount(fee, tx_size, Decimal('0.00002500'))
+            # Import address and private key to check correct behavior of spendable unspents
+            # 1. Send some coins to generate new UTXO
+            address_to_import = self.nodes[2].getnewaddress()
+            txid = self.nodes[0].sendtoaddress(address_to_import, 1)
+            self.nodes[0].generate(1)
+            self.sync_all(self.nodes[0:3])
 
-        # send with explicit duff/b fee
-        self.sync_all(self.nodes[0:3])
-        self.log.info("test explicit fee (sendtoaddress as duff/b)")
-        self.nodes[0].generate(1)
-        prebalance = self.nodes[2].getbalance()
-        assert prebalance > 2
-        address = self.nodes[1].getnewaddress()
-        # Throw if no conf_target provided
-        assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
-            self.nodes[2].sendtoaddress,
-            address=address,
-            amount=1.0,
-            estimate_mode='duff/b')
-        # Throw if negative feerate
-        assert_raises_rpc_error(-3, "Amount out of range",
-            self.nodes[2].sendtoaddress,
-            address=address,
-            amount=1.0,
-            conf_target=-1,
-            estimate_mode='duff/b')
-        txid = self.nodes[2].sendtoaddress(
-            address=address,
-            amount=1.0,
-            conf_target=2,
-            estimate_mode='duff/B',
-        )
-        tx_size = count_bytes(self.nodes[2].gettransaction(txid)['hex'])
-        self.sync_all(self.nodes[0:3])
-        self.nodes[0].generate(1)
-        self.sync_all(self.nodes[0:3])
-        postbalance = self.nodes[2].getbalance()
-        fee = prebalance - postbalance - Decimal('1')
-        assert_fee_amount(fee, tx_size, Decimal('0.00002000'))
+            # send with explicit dash/kb fee
+            self.log.info("test explicit fee (sendtoaddress as dash/kb)")
+            self.nodes[0].generate(1)
+            self.sync_all(self.nodes[0:3])
+            prebalance = self.nodes[2].getbalance()
+            assert prebalance > 2
+            address = self.nodes[1].getnewaddress()
+            # Throw if no conf_target provided
+            assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
+                self.nodes[2].sendtoaddress,
+                address=address,
+                amount=1.0,
+                estimate_mode='dash/Kb')
+            # Throw if negative feerate
+            assert_raises_rpc_error(-3, "Amount out of range",
+                self.nodes[2].sendtoaddress,
+                address=address,
+                amount=1.0,
+                conf_target=-1,
+                estimate_mode='dash/kb')
+            txid = self.nodes[2].sendtoaddress(
+                address=address,
+                amount=1.0,
+                conf_target=0.00002500,
+                estimate_mode='dash/kb',
+            )
+            tx_size = count_bytes(self.nodes[2].gettransaction(txid)['hex'])
+            self.sync_all(self.nodes[0:3])
+            self.nodes[0].generate(1)
+            self.sync_all(self.nodes[0:3])
+            postbalance = self.nodes[2].getbalance()
+            fee = prebalance - postbalance - Decimal('1')
+            assert_fee_amount(fee, tx_size, Decimal('0.00002500'))
 
-        # 2. Import address from node2 to node1
-        self.nodes[1].importaddress(address_to_import)
+            # send with explicit duff/b fee
+            self.sync_all(self.nodes[0:3])
+            self.log.info("test explicit fee (sendtoaddress as duff/b)")
+            self.nodes[0].generate(1)
+            prebalance = self.nodes[2].getbalance()
+            assert prebalance > 2
+            address = self.nodes[1].getnewaddress()
+            # Throw if no conf_target provided
+            assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
+                self.nodes[2].sendtoaddress,
+                address=address,
+                amount=1.0,
+                estimate_mode='duff/b')
+            # Throw if negative feerate
+            assert_raises_rpc_error(-3, "Amount out of range",
+                self.nodes[2].sendtoaddress,
+                address=address,
+                amount=1.0,
+                conf_target=-1,
+                estimate_mode='duff/b')
+            txid = self.nodes[2].sendtoaddress(
+                address=address,
+                amount=1.0,
+                conf_target=2,
+                estimate_mode='duff/B',
+            )
+            tx_size = count_bytes(self.nodes[2].gettransaction(txid)['hex'])
+            self.sync_all(self.nodes[0:3])
+            self.nodes[0].generate(1)
+            self.sync_all(self.nodes[0:3])
+            postbalance = self.nodes[2].getbalance()
+            fee = prebalance - postbalance - Decimal('1')
+            assert_fee_amount(fee, tx_size, Decimal('0.00002000'))
 
-        # 3. Validate that the imported address is watch-only on node1
-        assert self.nodes[1].getaddressinfo(address_to_import)["iswatchonly"]
+            # 2. Import address from node2 to node1
+            self.nodes[1].importaddress(address_to_import)
 
-        # 4. Check that the unspents after import are not spendable
-        assert_array_result(self.nodes[1].listunspent(),
-                            {"address": address_to_import},
-                            {"spendable": False})
+            # 3. Validate that the imported address is watch-only on node1
+            assert self.nodes[1].getaddressinfo(address_to_import)["iswatchonly"]
 
-        # 5. Import private key of the previously imported address on node1
-        priv_key = self.nodes[2].dumpprivkey(address_to_import)
-        self.nodes[1].importprivkey(priv_key)
+            # 4. Check that the unspents after import are not spendable
+            assert_array_result(self.nodes[1].listunspent(),
+                                {"address": address_to_import},
+                                {"spendable": False})
 
-        # 6. Check that the unspents are now spendable on node1
-        assert_array_result(self.nodes[1].listunspent(),
-                            {"address": address_to_import},
-                            {"spendable": True})
+            # 5. Import private key of the previously imported address on node1
+            priv_key = self.nodes[2].dumpprivkey(address_to_import)
+            self.nodes[1].importprivkey(priv_key)
+
+            # 6. Check that the unspents are now spendable on node1
+            assert_array_result(self.nodes[1].listunspent(),
+                                {"address": address_to_import},
+                                {"spendable": True})
 
         # Mine a block from node0 to an address from node1
         coinbase_addr = self.nodes[1].getnewaddress()
@@ -560,7 +568,7 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         node0_balance = self.nodes[0].getbalance()
         # Split into two chains
-        rawtx = self.nodes[0].createrawtransaction([{"txid": singletxid, "vout": 0}], {chain_addrs[0]: node0_balance / 2 - Decimal('0.01'), chain_addrs[1]: node0_balance / 2 - Decimal('0.01')})
+        rawtx = self.nodes[0].createrawtransaction([{"txid": singletxid, "vout": 0}], {chain_addrs[0]: node0_balance // 2 - Decimal('0.01'), chain_addrs[1]: node0_balance // 2 - Decimal('0.01')})
         signedtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
         singletxid = self.nodes[0].sendrawtransaction(hexstring=signedtx["hex"], maxfeerate=0)
         self.nodes[0].generate(1)
@@ -586,7 +594,9 @@ class WalletTest(BitcoinTestFramework):
 
         # Try with walletrejectlongchains
         # Double chain limit but require combining inputs, so we pass SelectCoinsMinConf
-        self.restart_node(0, extra_args=["-walletrejectlongchains", "-limitancestorcount=" + str(2 * chainlimit)])
+        self.stop_node(0)
+        extra_args = ["-walletrejectlongchains", "-limitancestorcount=" + str(2 * chainlimit)]
+        self.start_node(0, extra_args=extra_args)
 
         # wait until the wallet has submitted all transactions to the mempool
         self.wait_until(lambda: len(self.nodes[0].getrawmempool()) == chainlimit * 2)

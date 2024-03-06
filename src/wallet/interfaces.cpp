@@ -154,10 +154,7 @@ public:
     std::string getWalletName() override { return m_wallet->GetName(); }
     bool getNewDestination(const std::string label, CTxDestination& dest) override
     {
-        auto spk_man = m_wallet->GetLegacyScriptPubKeyMan();
-        if (!spk_man) {
-            return false;
-        }
+        LOCK(m_wallet->cs_wallet);
         std::string error;
         return m_wallet->GetNewDestination(label, dest, error);
     }
@@ -519,6 +516,7 @@ public:
     {
         RemoveWallet(m_wallet, false /* load_on_start */);
     }
+    bool isLegacy() override { return m_wallet->IsLegacy(); }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {
         return MakeHandler(m_wallet->NotifyUnload.connect(fn));

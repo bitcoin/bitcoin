@@ -161,6 +161,8 @@ public:
 
     /** Make a BerkeleyBatch connected to this database */
     std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override;
+
+    virtual bool SupportsAutoBackup() override { return true; }
 };
 
 /** RAII class that provides access to a Berkeley database */

@@ -28,16 +28,52 @@ class KeyPoolTest(BitcoinTestFramework):
         addr_before_encrypting = nodes[0].getnewaddress()
         addr_before_encrypting_data = nodes[0].getaddressinfo(addr_before_encrypting)
         wallet_info_old = nodes[0].getwalletinfo()
-        assert addr_before_encrypting_data['hdchainid'] == wallet_info_old['hdchainid']
+        if not self.options.descriptors:
+            assert addr_before_encrypting_data['hdchainid'] == wallet_info_old['hdchainid']
 
         # Encrypt wallet and wait to terminate
         nodes[0].encryptwallet('test')
+        if self.options.descriptors:
+            # Import hardened derivation only descriptors
+            nodes[0].walletpassphrase('test', 10)
+            nodes[0].importdescriptors([
+                {
+                    "desc": "pkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1h/*h)#a0nyvl0k",
+                    "timestamp": "now",
+                    "range": [0,0],
+                    "active": True
+                },
+                {
+                    "desc": "sh(pkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/2h/*h))#lmeu2axg",
+                    "timestamp": "now",
+                    "range": [0,0],
+                    "active": True
+                },
+                {
+                    "desc": "pkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/4h/*h)#l3crwaus",
+                    "timestamp": "now",
+                    "range": [0,0],
+                    "active": True,
+                    "internal": True
+                },
+                {
+                    "desc": "sh(pkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/5h/*h))#qg8wa75f",
+                    "timestamp": "now",
+                    "range": [0,0],
+                    "active": True,
+                    "internal": True
+                }
+            ])
+            nodes[0].walletlock()
         # Keep creating keys
         addr = nodes[0].getnewaddress()
         addr_data = nodes[0].getaddressinfo(addr)
         wallet_info = nodes[0].getwalletinfo()
-        assert addr_before_encrypting_data['hdchainid'] == wallet_info['hdchainid']
-        assert addr_data['hdchainid'] == wallet_info['hdchainid']
+
+        # TODO: enable this assert after bitcoin#17681 is backported
+        # assert addr_before_encrypting_data['hdmasterfingerprint'] != addr_data['hdmasterfingerprint']
+        if not self.options.descriptors:
+            assert addr_data['hdchainid'] == wallet_info['hdchainid']
 
         try:
             addr = nodes[0].getnewaddress()
@@ -50,8 +86,13 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].keypoolrefill(6)
         nodes[0].walletlock()
         wi = nodes[0].getwalletinfo()
-        assert_equal(wi['keypoolsize_hd_internal'], 6)
-        assert_equal(wi['keypoolsize'], 6)
+        if self.options.descriptors:
+            # this counters are zero, bitcoin have here 6 * 3 (3 different types)
+            assert_equal(wi['keypoolsize_hd_internal'], 6)
+            assert_equal(wi['keypoolsize'], 6)
+        else:
+            assert_equal(wi['keypoolsize_hd_internal'], 6)
+            assert_equal(wi['keypoolsize'], 6)
 
         # drain the internal keys
         nodes[0].getrawchangeaddress()
@@ -60,12 +101,19 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].getrawchangeaddress()
         nodes[0].getrawchangeaddress()
         nodes[0].getrawchangeaddress()
+        # remember keypool sizes
+        wi = nodes[0].getwalletinfo()
+        kp_size_before = [wi['keypoolsize_hd_internal'], wi['keypoolsize']]
         # the next one should fail
         try:
             nodes[0].getrawchangeaddress()
             raise AssertionError('Keypool should be exhausted after six addresses')
         except JSONRPCException as e:
             assert e.error['code']==-12
+        # check that keypool sizes did not change
+        wi = nodes[0].getwalletinfo()
+        kp_size_after = [wi['keypoolsize_hd_internal'], wi['keypoolsize']]
+        assert_equal(kp_size_before, kp_size_after)
 
         addr = set()
         # drain the external keys
@@ -76,12 +124,19 @@ class KeyPoolTest(BitcoinTestFramework):
         addr.add(nodes[0].getnewaddress())
         addr.add(nodes[0].getnewaddress())
         assert len(addr) == 6
+        # remember keypool sizes
+        wi = nodes[0].getwalletinfo()
+        kp_size_before = [wi['keypoolsize_hd_internal'], wi['keypoolsize']]
         # the next one should fail
         try:
             addr = nodes[0].getnewaddress()
             raise AssertionError('Keypool should be exhausted after six addresses')
         except JSONRPCException as e:
             assert e.error['code']==-12
+        # check that keypool sizes did not change
+        wi = nodes[0].getwalletinfo()
+        kp_size_after = [wi['keypoolsize_hd_internal'], wi['keypoolsize']]
+        assert_equal(kp_size_before, kp_size_after)
 
         # refill keypool with three new addresses
         nodes[0].walletpassphrase('test', 1)
@@ -98,11 +153,16 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].walletpassphrase('test', 100)
         nodes[0].keypoolrefill(100)
         wi = nodes[0].getwalletinfo()
-        assert_equal(wi['keypoolsize_hd_internal'], 100)
-        assert_equal(wi['keypoolsize'], 100)
+        if self.options.descriptors:
+            # dash has only 1 type of output addresses
+            assert_equal(wi['keypoolsize_hd_internal'], 100)
+            assert_equal(wi['keypoolsize'], 100)
+        else:
+            assert_equal(wi['keypoolsize_hd_internal'], 100)
+            assert_equal(wi['keypoolsize'], 100)
 
         # create a blank wallet
-        nodes[0].createwallet(wallet_name='w2', blank=True)
+        nodes[0].createwallet(wallet_name='w2', blank=True, disable_private_keys=True)
         w2 = nodes[0].get_wallet_rpc('w2')
 
         # refer to initial wallet as w1
@@ -110,8 +170,11 @@ class KeyPoolTest(BitcoinTestFramework):
 
         # import private key and fund it
         address = addr.pop()
-        privkey = w1.dumpprivkey(address)
-        res = w2.importmulti([{'scriptPubKey': {'address': address}, 'keys': [privkey], 'timestamp': 'now'}])
+        desc = w1.getaddressinfo(address)['desc']
+        if self.options.descriptors:
+            res = w2.importdescriptors([{'desc': desc, 'timestamp': 'now'}])
+        else:
+            res = w2.importmulti([{'desc': desc, 'timestamp': 'now'}])
         assert_equal(res[0]['success'], True)
         w1.walletpassphrase('test', 100)
 
@@ -141,7 +204,7 @@ class KeyPoolTest(BitcoinTestFramework):
         # create a transaction without change at the maximum fee rate, such that the output is still spendable:
         res = w2.walletcreatefundedpsbt(inputs=[], outputs=[{destination: 0.00010000}], options={"subtractFeeFromOutputs": [0], "feeRate": 0.00008824})
         assert_equal("psbt" in res, True)
-        assert_equal(res["fee"], Decimal("0.00001685"))
+        assert_equal(res["fee"], Decimal("0.00001694"))
 
         # creating a 10,000 sat transaction with a manual change address should be possible
         res = w2.walletcreatefundedpsbt(inputs=[], outputs=[{destination: 0.00010000}], options={"subtractFeeFromOutputs": [0], "feeRate": 0.000010, "changeAddress": addr.pop()})

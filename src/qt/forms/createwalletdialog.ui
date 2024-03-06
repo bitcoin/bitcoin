@@ -99,6 +99,24 @@
         </property>
        </widget>
       </item>
+      <item>
+        <widget class="QCheckBox" name="descriptor_checkbox">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>140</y>
+           <width>171</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <property name="toolTip">
+          <string>Use descriptors for scriptPubKey management</string>
+         </property>
+         <property name="text">
+          <string>Descriptor Wallet</string>
+         </property>
+        </widget>
+      </item>
      </layout>
     </widget>
    </item>
