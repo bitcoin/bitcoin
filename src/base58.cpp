@@ -45,6 +45,8 @@ static constexpr int log256_58Ratio = 1366; // Approximation of log(256)/log(bas
 
 // Defines the size of groups that fit into 64 bit batches, processed together for encoding and decoding efficiency.
 static constexpr int encodingBatch = 7;
+static constexpr int decodingBatch = 9;
+static constexpr int64_t decodingPowerOf58 = static_cast<int64_t>(base)*base*base*base*base*base*base*base*base; // pow(base, decodingBatch)
 
 // The ceiling integer division of x by y.
 static int CeilDiv(const int x, const int y)
@@ -68,17 +70,23 @@ static int FloorMod(const int x, const int y)
     for (; *input == '1'; ++input, ++leading)
         if (leading >= maxRetLen) return false;
 
-    const auto effectiveLength = strlen(input);
+    auto effectiveLength{0};
+    for (auto p{input}; *p; ++p)
+        if (!IsSpace(*p)) ++effectiveLength;
+
     const auto size = 1 + effectiveLength * log58_256Ratio / baseScale;
     result.reserve(leading + size);
     result.assign(leading, 0x00);
 
-    std::vector<uint8_t> inputBatched;
-    inputBatched.reserve(effectiveLength);
-    for (; *input && !IsSpace(*input); ++input) {
+    // Convert the Base58 string to a 64 bit representation for faster manipulation.
+    std::vector<int64_t> inputBatched(CeilDiv(effectiveLength, decodingBatch), 0);
+    const auto groupOffset = FloorMod(-effectiveLength, decodingBatch);
+    for (auto i{0U}; *input && !IsSpace(*input); ++input, ++i) {
         const auto digit = mapBase58[static_cast<uint8_t>(*input)];
         if (digit == -1) return false;
-        inputBatched.push_back(digit);
+        const auto index = (groupOffset + i) / decodingBatch;
+        inputBatched[index] *= base;
+        inputBatched[index] += digit;
     }
     for (; *input; ++input)
         if (!IsSpace(*input)) return false; // Ensure no non-space characters after processing.
@@ -87,7 +95,7 @@ static int FloorMod(const int x, const int y)
     for (auto i{0U}; i < inputBatched.size(); ++resultLength) {
         int64_t remainder = 0;
         for (auto j{i}; j < inputBatched.size(); ++j) { // Calculate next digit, dividing inputBatched
-            const auto accumulator = (remainder * 58) + inputBatched[j];
+            const auto accumulator = (remainder * decodingPowerOf58) + inputBatched[j];
             inputBatched[j] = accumulator / 256;
             remainder = accumulator % 256;
         }
