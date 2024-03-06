@@ -838,6 +838,7 @@ static bool AppInitServers(NodeContext& node)
 void InitParameterInteraction(ArgsManager& args)
 {
     if (args.GetBoolArg("-corepolicy", DEFAULT_COREPOLICY)) {
+        args.SoftSetArg("-acceptnonstddatacarrier", "1");
         args.SoftSetArg("-bytespersigopstrict", "0");
         args.SoftSetArg("-permitbarepubkey", "1");
         args.SoftSetArg("-permitbaremultisig", "1");
