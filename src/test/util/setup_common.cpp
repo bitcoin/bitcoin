@@ -381,14 +381,16 @@ std::pair<CMutableTransaction, CAmount> TestChain100Setup::CreateValidTransactio
     for (const auto& outpoint_to_spend : inputs) {
         // - Use GetCoin to properly populate utxo_to_spend,
         Coin utxo_to_spend;
-        assert(coins_cache.GetCoin(outpoint_to_spend, utxo_to_spend));
+        bool has_utxo = coins_cache.GetCoin(outpoint_to_spend, utxo_to_spend);
+        assert(has_utxo);
         input_coins.insert({outpoint_to_spend, utxo_to_spend});
         inputs_amount += utxo_to_spend.out.nValue;
     }
     // - Default signature hashing type
     int nHashType = SIGHASH_ALL;
     std::map<int, bilingual_str> input_errors;
-    assert(SignTransaction(mempool_txn, &keystore, input_coins, nHashType, input_errors));
+    bool complete = SignTransaction(mempool_txn, &keystore, input_coins, nHashType, input_errors);
+    assert(complete);
     CAmount current_fee = inputs_amount - std::accumulate(outputs.begin(), outputs.end(), CAmount(0),
         [](const CAmount& acc, const CTxOut& out) {
         return acc + out.nValue;
@@ -405,7 +407,8 @@ std::pair<CMutableTransaction, CAmount> TestChain100Setup::CreateValidTransactio
             mempool_txn.vout[fee_output.value()].nValue -= deduction;
             // Re-sign since an output has changed
             input_errors.clear();
-            assert(SignTransaction(mempool_txn, &keystore, input_coins, nHashType, input_errors));
+            complete = SignTransaction(mempool_txn, &keystore, input_coins, nHashType, input_errors);
+            assert(complete);
             current_fee = target_fee;
         }
     }
