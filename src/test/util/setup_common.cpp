@@ -226,7 +226,7 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     m_node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
     m_node.sporkman = std::make_unique<CSporkManager>();
-    m_node.govman = std::make_unique<CGovernanceManager>(*m_node.netfulfilledman);
+    m_node.govman = std::make_unique<CGovernanceManager>(*m_node.netfulfilledman, ::deterministicMNManager);
     ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman, *m_node.netfulfilledman, *m_node.govman);
     m_node.mn_sync = ::masternodeSync.get();
     ::mmetaman = std::make_unique<CMasternodeMetaMan>(/* load_cache */ false);

@@ -1711,7 +1711,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
 
     assert(!node.govman);
-    node.govman = std::make_unique<CGovernanceManager>(*node.netfulfilledman);
+    node.govman = std::make_unique<CGovernanceManager>(*node.netfulfilledman, ::deterministicMNManager);
 
     assert(!node.sporkman);
     node.sporkman = std::make_unique<CSporkManager>();
