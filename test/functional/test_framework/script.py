@@ -66,27 +66,30 @@ class CScriptOp(int):
     @staticmethod
     def encode_op_n(n):
         """Encode a small integer op, returning an opcode"""
-        if not (0 <= n <= 16):
-            raise ValueError('Integer must be in range 0 <= n <= 16, got %d' % n)
+        if not (-1 <= n <= 16):
+            raise ValueError('Integer must be in range -1 <= n <= 16, got %d' % n)
 
         if n == 0:
             return OP_0
+        elif n == -1:
+            return OP_1NEGATE
         else:
             return CScriptOp(OP_1 + n - 1)
 
     def decode_op_n(self):
         """Decode a small integer opcode, returning an integer"""
+        if not self.is_small_int():
+            raise ValueError('op %r is not an OP_N' % self)
         if self == OP_0:
             return 0
-
-        if not (self == OP_0 or OP_1 <= self <= OP_16):
-            raise ValueError('op %r is not an OP_N' % self)
-
-        return int(self - OP_1 + 1)
+        elif self == OP_1NEGATE:
+            return -1
+        else:
+            return int(self - OP_1 + 1)
 
     def is_small_int(self):
         """Return true if the op pushes a small integer to the stack"""
-        if 0x51 <= self <= 0x60 or self == 0:
+        if self == OP_0 or OP_1 <= self <= OP_16 or self == OP_1NEGATE:
             return True
         else:
             return False
@@ -443,10 +446,8 @@ class CScript(bytes):
             else:
                 other = CScriptNum.encode(other)
         elif isinstance(other, int):
-            if 0 <= other <= 16:
+            if -1 <= other <= 16:
                 other = bytes([CScriptOp.encode_op_n(other)])
-            elif other == -1:
-                other = bytes([OP_1NEGATE])
             else:
                 other = CScriptOp.encode_op_pushdata(bn2vch(other))
         elif isinstance(other, (bytes, bytearray)):
