@@ -662,10 +662,10 @@ private:
     bool CheckHeadersPoW(const std::vector<CBlockHeader>& headers, const Consensus::Params& consensusParams, Peer& peer);
     /** Calculate an anti-DoS work threshold for headers chains */
     arith_uint256 GetAntiDoSWorkThreshold();
-    /** Deal with state tracking and headers sync for peers that send the
-     * occasional non-connecting header (this can happen due to BIP 130 headers
+    /** Deal with state tracking and headers sync for peers that send
+     * non-connecting headers (this can happen due to BIP 130 headers
      * announcements for blocks interacting with the 2hr (MAX_FUTURE_BLOCK_TIME) rule). */
-    void HandleFewUnconnectingHeaders(CNode& pfrom, Peer& peer, const std::vector<CBlockHeader>& headers) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+    void HandleUnconnectingHeaders(CNode& pfrom, Peer& peer, const std::vector<CBlockHeader>& headers) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
     /** Return true if the headers connect to each other, false otherwise */
     bool CheckHeadersAreContinuous(const std::vector<CBlockHeader>& headers) const;
     /** Try to continue a low-work headers sync that has already begun.
@@ -2715,7 +2715,7 @@ arith_uint256 PeerManagerImpl::GetAntiDoSWorkThreshold()
  *
  * We'll send a getheaders message in response to try to connect the chain.
  */
-void PeerManagerImpl::HandleFewUnconnectingHeaders(CNode& pfrom, Peer& peer,
+void PeerManagerImpl::HandleUnconnectingHeaders(CNode& pfrom, Peer& peer,
         const std::vector<CBlockHeader>& headers)
 {
     // Try to fill in the missing headers.
@@ -3094,12 +3094,10 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     bool headers_connect_blockindex{chain_start_header != nullptr};
 
     if (!headers_connect_blockindex) {
-        if (nCount <= MAX_BLOCKS_TO_ANNOUNCE) {
-            // If this looks like it could be a BIP 130 block announcement, use
-            // special logic for handling headers that don't connect, as this
-            // could be benign.
-            HandleFewUnconnectingHeaders(pfrom, peer, headers);
-        }
+        // This could be a BIP 130 block announcement, use
+        // special logic for handling headers that don't connect, as this
+        // could be benign.
+        HandleUnconnectingHeaders(pfrom, peer, headers);
         return;
     }
 
