@@ -67,11 +67,13 @@ class CScriptOp(int):
     @staticmethod
     def encode_op_n(n):
         """Encode a small integer op, returning an opcode"""
-        if not (0 <= n <= 16):
-            raise ValueError('Integer must be in range 0 <= n <= 16, got %d' % n)
+        if not (-1 <= n <= 16):
+            raise ValueError('Integer must be in range -1 <= n <= 16, got %d' % n)
 
         if n == 0:
             return OP_0
+        if n == -1:
+            return OP_1NEGATE
         else:
             return CScriptOp(OP_1 + n - 1)
 
