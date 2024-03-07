@@ -611,7 +611,7 @@ bool LegacyScriptPubKeyMan::CanGetAddresses(bool internal) const
     LOCK(cs_KeyStore);
     // Check if the keypool has keys
     bool keypool_has_keys;
-    if (internal && m_storage.CanSupportFeature(FEATURE_HD)) {
+    if (internal) {
         keypool_has_keys = setInternalKeyPool.size() > 0;
     } else {
         keypool_has_keys = KeypoolCountExternalKeys() > 0;
