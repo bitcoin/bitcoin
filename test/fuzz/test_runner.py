@@ -105,7 +105,10 @@ def main():
         sys.exit(1)
 
     # Build list of tests
-    test_list_all = parse_test_list(fuzz_bin=os.path.join(config["environment"]["BUILDDIR"], 'src', 'test', 'fuzz', 'fuzz'))
+    test_list_all = parse_test_list(
+        fuzz_bin=os.path.join(config["environment"]["BUILDDIR"], 'src', 'test', 'fuzz', 'fuzz'),
+        source_dir=config['environment']['SRCDIR'],
+    )
 
     if not test_list_all:
         logging.error("No fuzz targets found")
@@ -383,11 +386,12 @@ def run_once(*, fuzz_pool, corpus, test_list, src_dir, build_dir, using_libfuzze
             print(f"{t}{s}")
 
 
-def parse_test_list(*, fuzz_bin):
+def parse_test_list(*, fuzz_bin, source_dir):
     test_list_all = subprocess.run(
         fuzz_bin,
         env={
-            'PRINT_ALL_FUZZ_TARGETS_AND_ABORT': ''
+            'PRINT_ALL_FUZZ_TARGETS_AND_ABORT': '',
+            **get_fuzz_env(target="", source_dir=source_dir)
         },
         stdout=subprocess.PIPE,
         text=True,
