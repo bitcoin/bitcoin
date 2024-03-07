@@ -272,6 +272,7 @@ BASE_SCRIPTS = [
     'rpc_verifyislock.py',
     'rpc_verifychainlock.py',
     'wallet_create_tx.py',
+    'wallet_send.py',
     'p2p_fingerprint.py',
     'rpc_platform_filter.py',
     'rpc_wipewallettxes.py',
