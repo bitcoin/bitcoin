@@ -1,9 +1,9 @@
-25.2rc1 Release Notes
+25.2rc2 Release Notes
 ==================
 
-Bitcoin Core version 25.2rc1 is now available from:
+Bitcoin Core version 25.2rc2 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-25.2/test.rc1>
+  <https://bitcoincore.org/bin/bitcoin-core-25.2/test.rc2>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -51,6 +51,12 @@ Notable changes
 ### Wallet
 
 - #29176 wallet: Fix use-after-free in WalletBatch::EraseRecords
+- #29510 wallet: `getrawchangeaddress` and `getnewaddress` failures should not affect keypools for descriptor wallets
+
+### P2P and network changes
+
+- #29412 p2p: Don't process mutated blocks
+- #29524 p2p: Don't consider blocks mutated if they don't connect to known prev block
 
 Credits
 =======
@@ -60,6 +66,9 @@ Thanks to everyone who directly contributed to this release:
 - Martin Zumsande
 - Sebastian Falbesoner
 - MarcoFalke
+- UdjinM6
+- dergoegge
+- Greg Sanders
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
