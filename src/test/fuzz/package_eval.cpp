@@ -107,7 +107,7 @@ void MockTime(FuzzedDataProvider& fuzzed_data_provider, const Chainstate& chains
     SetMockTime(time);
 }
 
-CTxMemPool MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeContext& node)
+std::unique_ptr<CTxMemPool> MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeContext& node)
 {
     // Take the default options for tests...
     CTxMemPool::Options mempool_opts{MemPoolOptionsForTest(node)};
@@ -117,8 +117,11 @@ CTxMemPool MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeConte
     mempool_opts.limits.ancestor_count = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 50);
     mempool_opts.limits.ancestor_size_vbytes = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202) * 1'000;
     mempool_opts.limits.descendant_count = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 50);
-    mempool_opts.limits.descendant_size_vbytes = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202) * 1'000;
-    mempool_opts.max_size_bytes = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 200) * 1'000'000;
+    auto set_descendants_size = [&]() {
+        mempool_opts.limits.descendant_size_vbytes = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202) * 1'000;
+        mempool_opts.max_size_bytes = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 200) * 1'000'000;
+    };
+    set_descendants_size();
     mempool_opts.expiry = std::chrono::hours{fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 999)};
     // Only interested in 2 cases: sigop cost 0 or when single legacy sigop cost is >> 1KvB
     nBytesPerSigOp = fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 1) * 10'000;
@@ -127,7 +130,15 @@ CTxMemPool MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeConte
     mempool_opts.require_standard = fuzzed_data_provider.ConsumeBool();
 
     // ...and construct a CTxMemPool from it
-    return CTxMemPool{mempool_opts};
+    while (true) {
+        if (auto res{CTxMemPool::MakeUnique(mempool_opts)}) {
+            return std::move(res.value());
+        } else {
+            // Ensure this harness is updated when additional mempool construction failure paths are introduced
+            assert(util::ErrorString(res).original.starts_with("-maxmempool must be at least"));
+            set_descendants_size();
+        }
+    }
 }
 
 FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
@@ -149,8 +160,8 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
     auto outpoints_updater = std::make_shared<OutpointsUpdater>(mempool_outpoints);
     RegisterSharedValidationInterface(outpoints_updater);
 
-    CTxMemPool tx_pool_{MakeMempool(fuzzed_data_provider, node)};
-    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(&tx_pool_);
+    auto tx_pool_{Assert(MakeMempool(fuzzed_data_provider, node))};
+    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(tx_pool_.get());
 
     chainstate.SetMempool(&tx_pool);
 

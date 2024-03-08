@@ -38,7 +38,8 @@ FUZZ_TARGET(rbf, .init = initialize_rbf)
         return;
     }
 
-    CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node)};
+    auto pool_{std::move(CTxMemPool::MakeUnique(MemPoolOptionsForTest(g_setup->m_node)).value())};
+    CTxMemPool& pool = *pool_;
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
     {

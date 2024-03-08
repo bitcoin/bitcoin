@@ -395,7 +395,7 @@ void CTxMemPoolEntry::UpdateAncestorState(int32_t modifySize, CAmount modifyFee,
 }
 
 CTxMemPool::CTxMemPool(const Options& opts)
-    : m_check_ratio{opts.check_ratio},
+    : m_check_ratio{std::clamp<int>(opts.check_ratio, 0, 1'000'000)},
       m_max_size_bytes{opts.max_size_bytes},
       m_expiry{opts.expiry},
       m_incremental_relay_feerate{opts.incremental_relay_feerate},
@@ -406,8 +406,15 @@ CTxMemPool::CTxMemPool(const Options& opts)
       m_require_standard{opts.require_standard},
       m_full_rbf{opts.full_rbf},
       m_persist_v1_dat{opts.persist_v1_dat},
-      m_limits{opts.limits}
+      m_limits{opts.limits} {}
+
+util::Result<std::unique_ptr<CTxMemPool>> CTxMemPool::MakeUnique(const Options& opts)
 {
+    int64_t descendant_limit_bytes = opts.limits.descendant_size_vbytes * 40;
+    if (opts.max_size_bytes < 0 || opts.max_size_bytes < descendant_limit_bytes) {
+        return util::Error{strprintf(_("-maxmempool must be at least %d MB"), std::ceil(descendant_limit_bytes / 1'000'000.0))};
+    }
+    return std::unique_ptr<CTxMemPool>(new CTxMemPool{opts});
 }
 
 bool CTxMemPool::isSpent(const COutPoint& outpoint) const
