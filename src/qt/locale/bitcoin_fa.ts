@@ -1,5 +1,16 @@
 <TS version="2.1" language="fa">
 <context>
+    <name>AddressBookPage</name>
+    <message>
+        <source>Create a new address</source>
+        <translation type="unfinished">یک آدرس جدید ایجاد کنید</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected address to the system clipboard</source>
+        <translation type="unfinished">کپی آدرسی که اکنون انتخاب کردید در کلیپ بورد سیستم</translation>
+    </message>
+    </context>
+<context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Your wallet is about to be encrypted. </source>
@@ -1413,18 +1424,6 @@
  </translation>
     </message>
     <message>
-        <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">فونت تک فضا(منو اسپیس) در برگه مرور کلی </translation>
-    </message>
-    <message>
-        <source>embedded "%1"</source>
-        <translation type="unfinished">تعبیه شده%1</translation>
-    </message>
-    <message>
-        <source>closest matching "%1"</source>
-        <translation type="unfinished">%1نزدیک ترین تطابق</translation>
-    </message>
-    <message>
         <source>&amp;OK</source>
         <translation type="unfinished">تایید</translation>
     </message>
@@ -2360,6 +2359,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Insufficient funds!</source>
         <translation type="unfinished">وجوه ناکافی</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">مقدار</translation>
     </message>
     <message>
         <source>Bytes:</source>
@@ -3655,11 +3658,6 @@ The wallet might have been tampered with or created with malicious intent.
     <message>
         <source>Transaction amounts must not be negative</source>
         <translation type="unfinished">مقدار تراکنش نمی‌تواند منفی باشد.</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">معاملات بسیار طولانی از یک زنجیره ممپول است
- </translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>

@@ -114,7 +114,7 @@ At this point, it's important to understand that both the `offline_wallet` and o
 tb1qtu5qgc6ddhmqm5yqjvhg83qgk2t4ewajg0h6yh
 ```
 
-2. Visit a faucet like https://signet.bc-2.jp and enter your address from the previous command to receive a small amount of signet coins to this address.
+2. Visit a faucet like https://signetfaucet.com and enter your address from the previous command to receive a small amount of signet coins to this address.
 
 3. Confirm that coins were received using the online `watch_only_wallet`. Note that the transaction may take a few moments before being received on your local node, depending on its connectivity. Just re-run the command periodically until the transaction is received.
 

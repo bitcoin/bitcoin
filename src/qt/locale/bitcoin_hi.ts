@@ -516,6 +516,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Load PSBT from &amp;clipboard…</source>
         <translation type="unfinished">पीएसबीटी को &amp;क्लिपबोर्ड से लोड करें…</translation>
     </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">वॉलेट माइग्रेट करें</translation>
+    </message>
+    <message>
+        <source>Migrate a wallet</source>
+        <translation type="unfinished">कोई वॉलेट माइग्रेट करें</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
@@ -669,6 +677,21 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Loading wallets…</source>
         <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
         <translation type="unfinished">वॉलेट लोड हो रहा है...</translation>
+    </message>
+</context>
+<context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">वॉलेट माइग्रेट करें</translation>
+    </message>
+    <message>
+        <source>Migration failed</source>
+        <translation type="unfinished">माइग्रेशन नहीं हो पाया</translation>
+    </message>
+    <message>
+        <source>Migration Successful</source>
+        <translation type="unfinished">माइग्रेशन हो गया</translation>
     </message>
 </context>
 <context>
@@ -1533,10 +1556,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">कॉपी बाइट्स</translation>
     </message>
     <message>
-        <source>Copy change</source>
-        <translation type="unfinished">कॉपी चैंज</translation>
-    </message>
-    <message>
         <source>%1 (%2 blocks)</source>
         <translation type="unfinished">%1 (%2 ब्लाकस)</translation>
     </message>
@@ -1561,10 +1580,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <translation type="unfinished">उदाहरण के लिए उपयोग के लिए आंशिक रूप से हस्ताक्षरित बिटकॉइन लेनदेन (PSBT) बनाता है। एक ऑफ़लाइन% 1 %1  वॉलेट, या एक PSBT-संगत हार्डवेयर वॉलेट।</translation>
-    </message>
-    <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished">वॉलिट से '%1'</translation>
     </message>
     <message>
         <source>%1 to '%2'</source>
@@ -2092,10 +2107,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">आउटपुट इंडेक्स</translation>
     </message>
     <message>
-        <source> (Certificate was not verified)</source>
-        <translation type="unfinished">(प्रमाणपत्र सत्यापित नहीं किया गया था)</translation>
-    </message>
-    <message>
         <source>Merchant</source>
         <translation type="unfinished">सौदागर</translation>
     </message>
@@ -2319,7 +2330,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">निर्यात विफल हो गया है</translation>
+        <translation type="unfinished">एक्सपोर्ट नहीं हो पाया</translation>
     </message>
     </context>
 <context>
@@ -2349,7 +2360,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">मौजूदा टैब में डेटा को फ़ाइल में निर्यात करें</translation>
+        <translation type="unfinished">मौजूदा टैब में डेटा को फ़ाइल में एक्सपोर्ट करें</translation>
     </message>
     </context>
 <context>

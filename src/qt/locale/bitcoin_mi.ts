@@ -620,10 +620,6 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
         <translation type="unfinished">He whakawhitiwhitinga whakaputanga hōputu whakararuraru te tūnga</translation>
     </message>
     <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">He whakawhitiwhitinga whakapau kaha te whakapau kaha o te whakapau kaha.</translation>
-    </message>
-    <message>
         <source>Transaction must have at least one recipient</source>
         <translation type="unfinished">Me whiwhi whakaritenga tātari tētahi whiwhi whakaritenga ki te kaiwhiwhi kotahi i te minimuma</translation>
     </message>

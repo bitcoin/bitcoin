@@ -11,6 +11,7 @@ import argparse
 import configparser
 import logging
 import os
+import random
 import subprocess
 import sys
 
@@ -264,9 +265,13 @@ def generate_corpus(*, fuzz_pool, src_dir, build_dir, corpus_dir, targets):
     for target, t_env in targets:
         target_corpus_dir = corpus_dir / target
         os.makedirs(target_corpus_dir, exist_ok=True)
+        use_value_profile = int(random.random() < .3)
         command = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
-            "-runs=100000",
+            "-rss_limit_mb=8000",
+            "-max_total_time=6000",
+            "-reload=0",
+            f"-use_value_profile={use_value_profile}",
             target_corpus_dir,
         ]
         futures.append(fuzz_pool.submit(job, command, target, t_env))

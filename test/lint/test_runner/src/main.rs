@@ -4,7 +4,7 @@
 
 use std::env;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::process::ExitCode;
 
@@ -34,17 +34,30 @@ fn get_git_root() -> PathBuf {
     PathBuf::from(check_output(git().args(["rev-parse", "--show-toplevel"])).unwrap())
 }
 
+/// Return all subtree paths
+fn get_subtrees() -> Vec<&'static str> {
+    vec![
+        "src/crc32c",
+        "src/crypto/ctaes",
+        "src/leveldb",
+        "src/minisketch",
+        "src/secp256k1",
+    ]
+}
+
+/// Return the pathspecs to exclude all subtrees
+fn get_pathspecs_exclude_subtrees() -> Vec<String> {
+    get_subtrees()
+        .iter()
+        .map(|s| format!(":(exclude){}", s))
+        .collect()
+}
+
 fn lint_subtree() -> LintResult {
     // This only checks that the trees are pure subtrees, it is not doing a full
     // check with -r to not have to fetch all the remotes.
     let mut good = true;
-    for subtree in [
-        "src/crypto/ctaes",
-        "src/secp256k1",
-        "src/minisketch",
-        "src/leveldb",
-        "src/crc32c",
-    ] {
+    for subtree in get_subtrees() {
         good &= Command::new("test/lint/git-subtree-check.sh")
             .arg(subtree)
             .status()
@@ -80,6 +93,102 @@ fs:: namespace, which has unsafe filesystem functions marked as deleted.
     } else {
         Ok(())
     }
+}
+
+fn lint_includes_build_config() -> LintResult {
+    let config_path = "./src/config/bitcoin-config.h.in";
+    let include_directive = "#include <config/bitcoin-config.h>";
+    if !Path::new(config_path).is_file() {
+        assert!(Command::new("./autogen.sh")
+            .status()
+            .expect("command error")
+            .success());
+    }
+    let defines_regex = format!(
+        r"^\s*(?!//).*({})",
+        check_output(Command::new("grep").args(["undef ", "--", config_path]))
+            .expect("grep failed")
+            .lines()
+            .map(|line| {
+                line.split("undef ")
+                    .nth(1)
+                    .unwrap_or_else(|| panic!("Could not extract name in line: {line}"))
+            })
+            .collect::<Vec<_>>()
+            .join("|")
+    );
+    let print_affected_files = |mode: bool| {
+        // * mode==true: Print files which use the define, but lack the include
+        // * mode==false: Print files which lack the define, but use the include
+        let defines_files = check_output(
+            git()
+                .args([
+                    "grep",
+                    "--perl-regexp",
+                    if mode {
+                        "--files-with-matches"
+                    } else {
+                        "--files-without-match"
+                    },
+                    &defines_regex,
+                    "--",
+                    "*.cpp",
+                    "*.h",
+                ])
+                .args(get_pathspecs_exclude_subtrees())
+                .args([
+                    // These are exceptions which don't use bitcoin-config.h, rather the Makefile.am adds
+                    // these cppflags manually.
+                    ":(exclude)src/crypto/sha256_arm_shani.cpp",
+                    ":(exclude)src/crypto/sha256_avx2.cpp",
+                    ":(exclude)src/crypto/sha256_sse41.cpp",
+                    ":(exclude)src/crypto/sha256_x86_shani.cpp",
+                ]),
+        )
+        .expect("grep failed");
+        git()
+            .args([
+                "grep",
+                if mode {
+                    "--files-without-match"
+                } else {
+                    "--files-with-matches"
+                },
+                include_directive,
+                "--",
+            ])
+            .args(defines_files.lines())
+            .status()
+            .expect("command error")
+            .success()
+    };
+    let missing = print_affected_files(true);
+    if missing {
+        return Err(format!(
+            r#"
+^^^
+One or more files use a symbol declared in the bitcoin-config.h header. However, they are not
+including the header. This is problematic, because the header may or may not be indirectly
+included. If the indirect include were to be intentionally or accidentally removed, the build could
+still succeed, but silently be buggy. For example, a slower fallback algorithm could be picked,
+even though bitcoin-config.h indicates that a faster feature is available and should be used.
+
+If you are unsure which symbol is used, you can find it with this command:
+git grep --perl-regexp '{}' -- file_name
+            "#,
+            defines_regex
+        ));
+    }
+    let redundant = print_affected_files(false);
+    if redundant {
+        return Err(r#"
+^^^
+None of the files use a symbol declared in the bitcoin-config.h header. However, they are including
+the header. Consider removing the unused include.
+            "#
+        .to_string());
+    }
+    Ok(())
 }
 
 fn lint_doc() -> LintResult {
@@ -123,6 +232,7 @@ fn main() -> ExitCode {
     let test_list: Vec<(&str, LintFn)> = vec![
         ("subtree check", lint_subtree),
         ("std::filesystem check", lint_std_filesystem),
+        ("build config includes check", lint_includes_build_config),
         ("-help=1 documentation check", lint_doc),
         ("lint-*.py scripts", lint_all),
     ];
@@ -134,7 +244,7 @@ fn main() -> ExitCode {
         // chdir to root before each lint test
         env::set_current_dir(&git_root).unwrap();
         if let Err(err) = lint_fn() {
-            println!("{err}\n^---- Failure generated from {lint_name}!");
+            println!("{err}\n^---- ⚠️ Failure generated from {lint_name}!");
             test_failed = true;
         }
     }

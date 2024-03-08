@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopiera den markerade adressen till systemets Urklipp</translation>
+        <translation type="unfinished">Kopiera den tillfälligt markerade adressen till systemets urklippsfunktion</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -1079,10 +1079,6 @@ Om den här plånboken innehåller lösbara</translation>
         <translation type="unfinished">Migrering av plånboken ' %1 ' genomförd.</translation>
     </message>
     <message>
-        <source> Watchonly scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished">Watchonly-skript har migrerats till en ny plånbok med namnet '%1'.</translation>
-    </message>
-    <message>
         <source>Migration failed</source>
         <translation type="unfinished">Migrering misslyckades</translation>
     </message>
@@ -1138,7 +1134,12 @@ Om den här plånboken innehåller lösbara</translation>
         <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
         <translation type="unfinished">Återställ plånboksvarning</translation>
     </message>
-    </context>
+    <message>
+        <source>Restore wallet message</source>
+        <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
+        <translation type="unfinished">Återskapa plånboksmeddelande</translation>
+    </message>
+</context>
 <context>
     <name>WalletController</name>
     <message>
@@ -1532,6 +1533,10 @@ Om den här plånboken innehåller lösbara</translation>
         <translation type="unfinished">Minimera istället för att stänga programmet när fönstret stängs. När detta alternativ är aktiverat stängs programmet endast genom att välja Stäng i menyn.</translation>
     </message>
     <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">Typsnitt på översiktsfliken:</translation>
+    </message>
+    <message>
         <source>Open the %1 configuration file from the working directory.</source>
         <translation type="unfinished">Öppna konfigurationsfilen %1 från arbetskatalogen.</translation>
     </message>
@@ -1693,10 +1698,6 @@ Om den här plånboken innehåller lösbara</translation>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
         <translation type="unfinished">Använd en fristående SOCKS&amp;5 proxy för att  nå noder via Tor onion tjänster:</translation>
-    </message>
-    <message>
-        <source>closest matching "%1"</source>
-        <translation type="unfinished">närmast träff " %1 "</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
@@ -1895,8 +1896,8 @@ Om den här plånboken innehåller lösbara</translation>
         <translation type="unfinished">PSBT sparad till disk.</translation>
     </message>
     <message>
-        <source> * Sends %1 to %2</source>
-        <translation type="unfinished">* Skickar %1 till %2</translation>
+        <source>Sends %1 to %2</source>
+        <translation type="unfinished">Skickar %1 till %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -1929,6 +1930,10 @@ Om den här plånboken innehåller lösbara</translation>
     <message>
         <source>Transaction still needs signature(s).</source>
         <translation type="unfinished">Transaktionen behöver signatur(er).</translation>
+    </message>
+    <message>
+        <source>(But no wallet is loaded.)</source>
+        <translation type="unfinished">&lt;br&gt;(</translation>
     </message>
     <message>
         <source>(But this wallet cannot sign transactions.)</source>
@@ -2706,10 +2711,6 @@ Om den här plånboken innehåller lösbara</translation>
         <translation type="unfinished">Skapar en delvis signerad Bitcoin transaktion (PSBT) att använda vid t.ex. en offline %1 plånbok, eller en PSBT-kompatibel hårdvaruplånbok.</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished">från plånbok: '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation type="unfinished">%1 till '%2'</translation>
     </message>
@@ -3161,10 +3162,6 @@ Om den här plånboken innehåller lösbara</translation>
     <message>
         <source>Output index</source>
         <translation type="unfinished">Utmatningsindex</translation>
-    </message>
-    <message>
-        <source> (Certificate was not verified)</source>
-        <translation type="unfinished">(Certifikatet verifierades inte)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -3933,10 +3930,6 @@ Gå till Fil &gt; Öppna plånbok för att läsa in en plånbok.
     <message>
         <source>Transaction amounts must not be negative</source>
         <translation type="unfinished">Transaktionsbelopp får ej vara negativt</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">Transaktionen har för lång mempool-kedja</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>

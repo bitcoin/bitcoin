@@ -2,6 +2,22 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation type="unfinished">0xB006A7c1B9639BE87461Ee9 0xB006A7c1B9639BE87461Ee9</translation>
+    </message>
+    <message>
+        <source>Create a new address</source>
+        <translation type="unfinished">0xB006A7c1B9639BE87461Ee9 0xB006A7c1B9639BE87461Ee9</translation>
+    </message>
+    <message>
+        <source>&amp;New</source>
+        <translation type="unfinished">&amp;Nuevo</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected address to the system clipboard</source>
+        <translation type="unfinished">Copiar la dirección actualmente seleccionada al portapapeles del sistema</translation>
+    </message>
+    <message>
         <source>Sending addresses - %1</source>
         <translation type="unfinished">Enviando direcciones- %1</translation>
     </message>
@@ -11,7 +27,22 @@
     </message>
     </context>
 <context>
+    <name>AskPassphraseDialog</name>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation type="unfinished">Encrypt wallet jesus daniel</translation>
+    </message>
+    </context>
+<context>
     <name>QObject</name>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">Fuente predeterminada del sistema "%1"</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation type="unfinished">Personalizada...</translation>
+    </message>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
@@ -225,12 +256,12 @@ El proceso de migración creará una copia de seguridad de la billetera antes de
         <translation type="unfinished">La migración de la billetera "%1" se realizó correctamente.</translation>
     </message>
     <message>
-        <source> Watchonly scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished">Los scripts solo de lectura se migraron a una nueva billetera llamada "%1".</translation>
+        <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Guiones vigilantes han sido migrados a un monedero con el nombre '%1'.</translation>
     </message>
     <message>
-        <source> Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished">Los scripts solucionables pero no de lectura se migraron a una nueva billetera llamada "%1".</translation>
+        <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Solucionable pero ninguno de los guiones vigilados han sido migrados a un monedero llamados '%1'.</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -285,6 +316,20 @@ El proceso de migración creará una copia de seguridad de la billetera antes de
     </message>
     </context>
 <context>
+    <name>OptionsDialog</name>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">Fuente en la pestaña Resumen:</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Sends %1 to %2</source>
+        <translation type="unfinished">Envía %1 a %2</translation>
+    </message>
+    </context>
+<context>
     <name>RPCConsole</name>
     <message>
         <source>The transport layer version: %1</source>
@@ -317,9 +362,21 @@ El proceso de migración creará una copia de seguridad de la billetera antes de
         <extracomment>Explanatory text for v2 transport type.</extracomment>
         <translation type="unfinished">v2: protocolo de transporte encriptado BIP324</translation>
     </message>
+    <message>
+        <source>Node window - [%1]</source>
+        <translation type="unfinished">Ventana de nodo - [%1]</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">Cantidad:</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation type="unfinished">%1 desde monedero '%2'</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
@@ -337,12 +394,65 @@ El proceso de migración creará una copia de seguridad de la billetera antes de
             <numerusform>matures in %n more block(s)</numerusform>
         </translation>
     </message>
+    <message>
+        <source>%1 (Certificate was not verified)</source>
+        <translation type="unfinished">%1 (El certificado no fue verificado)</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
     <message>
         <source>Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.</source>
         <translation type="unfinished">No se pudo calcular la comisión de incremento porque las UTXO sin confirmar dependen de un grupo enorme de transacciones no confirmadas.</translation>
+    </message>
+    <message>
+        <source>Error committing db txn for wallet transactions removal</source>
+        <translation type="unfinished">Error al confirmar db txn para eliminar transacciones de billetera</translation>
+    </message>
+    <message>
+        <source>Error starting db txn for wallet transactions removal</source>
+        <translation type="unfinished">Error al iniciar db txn para eliminar transacciones de billetera</translation>
+    </message>
+    <message>
+        <source>Error: Unable to read wallet's best block locator record</source>
+        <translation type="unfinished">Error: no es capaz de leer el mejor registro del localizador del bloque del monedero</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write solvable wallet best block locator record</source>
+        <translation type="unfinished">Error: no es capaz de escribir el mejor registro del localizador del bloque del monedero</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write watchonly wallet best block locator record</source>
+        <translation type="unfinished">Error: no es capaz de escribir el mejor monedero vigilado del bloque del registro localizador</translation>
+    </message>
+    <message>
+        <source>Error: address book copy failed for wallet %s</source>
+        <translation type="unfinished">Error: falló copia de la libreta de direcciones para la billetera 1%s
+ </translation>
+    </message>
+    <message>
+        <source>Error: database transaction cannot be executed for wallet %s</source>
+        <translation type="unfinished">Error: la transacción de la base de datos no se puede ejecutar para la billetera %s</translation>
+    </message>
+    <message>
+        <source>Failure removing transaction: %s</source>
+        <translation type="unfinished">Error al eliminar la transacción: 1%s</translation>
+    </message>
+    <message>
+        <source>Transaction %s does not belong to this wallet</source>
+        <translation type="unfinished">La transacción %s no pertenece a esta billetera</translation>
+    </message>
+    <message>
+        <source>Wallet file creation failed: %s</source>
+        <translation type="unfinished">Creación errónea del fichero monedero: %s</translation>
+    </message>
+    <message>
+        <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
+        <translation type="unfinished">Error: no pudo agregar tx de solo vigía %s para monedero de solo vigía</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions. </source>
+        <translation type="unfinished">Error: no se pudieron eliminar las transacciones de watchonly.</translation>
     </message>
     </context>
 </TS>

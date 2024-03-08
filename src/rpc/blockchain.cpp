@@ -2571,7 +2571,7 @@ static RPCHelpMan dumptxoutset()
 {
     return RPCHelpMan{
         "dumptxoutset",
-        "Write the serialized UTXO set to disk.",
+        "Write the serialized UTXO set to a file.",
         {
             {"path", RPCArg::Type::STR, RPCArg::Optional::NO, "Path to the output file. If relative, will be prefixed by datadir."},
         },
@@ -2699,7 +2699,7 @@ static RPCHelpMan loadtxoutset()
 {
     return RPCHelpMan{
         "loadtxoutset",
-        "Load the serialized UTXO set from disk.\n"
+        "Load the serialized UTXO set from a file.\n"
         "Once this snapshot is loaded, its contents will be "
         "deserialized into a second chainstate data structure, which is then used to sync to "
         "the network's tip. "
@@ -2753,34 +2753,14 @@ static RPCHelpMan loadtxoutset()
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to load UTXO snapshot, "
             "assumeutxo block hash in snapshot metadata not recognized (%s)", base_blockhash.ToString()));
     }
-    int max_secs_to_wait_for_headers = 60 * 10;
-    CBlockIndex* snapshot_start_block = nullptr;
-
-    LogPrintf("[snapshot] waiting to see blockheader %s in headers chain before snapshot activation\n",
-        base_blockhash.ToString());
-
-    while (max_secs_to_wait_for_headers > 0) {
-        snapshot_start_block = WITH_LOCK(::cs_main,
+    CBlockIndex* snapshot_start_block = WITH_LOCK(::cs_main,
             return chainman.m_blockman.LookupBlockIndex(base_blockhash));
-        max_secs_to_wait_for_headers -= 1;
-
-        if (!IsRPCRunning()) {
-            throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Shutting down");
-        }
-
-        if (!snapshot_start_block) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        } else {
-            break;
-        }
-    }
 
     if (!snapshot_start_block) {
-        LogPrintf("[snapshot] timed out waiting for snapshot start blockheader %s\n",
-            base_blockhash.ToString());
         throw JSONRPCError(
             RPC_INTERNAL_ERROR,
-            "Timed out waiting for base block header to appear in headers chain");
+            strprintf("The base block header (%s) must appear in the headers chain. Make sure all headers are syncing, and call this RPC again.",
+                      base_blockhash.ToString()));
     }
     if (!chainman.ActivateSnapshot(afile, metadata, false)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to load UTXO snapshot " + fs::PathToString(path));

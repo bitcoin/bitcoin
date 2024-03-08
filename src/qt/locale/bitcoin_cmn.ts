@@ -290,13 +290,43 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">未知</translation>
     </message>
     <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">嵌入的 "%1"</translation>
+    </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">默认系统字体 "%1"</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation type="unfinished">自定义...</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation type="unfinished">金额</translation>
+    </message>
+    <message>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation type="unfinished">请输入一个比特币地址 (例如 %1)</translation>
+    </message>
+    <message>
+        <source>Unroutable</source>
+        <translation type="unfinished">不可路由</translation>
     </message>
     <message>
         <source>Inbound</source>
         <extracomment>An inbound connection from a peer. An inbound connection is a connection initiated by a peer.</extracomment>
         <translation type="unfinished">進來</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An outbound connection to a peer. An outbound connection is a connection initiated by us.</extracomment>
+        <translation type="unfinished">傳出</translation>
+    </message>
+    <message>
+        <source>Full Relay</source>
+        <extracomment>Peer connection type that relays all network information.</extracomment>
+        <translation type="unfinished">完整转发</translation>
     </message>
     <message>
         <source>Block Relay</source>
@@ -309,12 +339,34 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">手册</translation>
     </message>
     <message>
+        <source>Feeler</source>
+        <extracomment>Short-lived peer connection type that tests the aliveness of known addresses.</extracomment>
+        <translation type="unfinished">触须</translation>
+    </message>
+    <message>
+        <source>Address Fetch</source>
+        <extracomment>Short-lived peer connection type that solicits known addresses from a peer.</extracomment>
+        <translation type="unfinished">地址取回</translation>
+    </message>
+    <message>
+        <source>%1 d</source>
+        <translation type="unfinished">%1 天</translation>
+    </message>
+    <message>
         <source>%1 h</source>
         <translation type="unfinished">%1 小时</translation>
     </message>
     <message>
         <source>%1 m</source>
         <translation type="unfinished">%1 分</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation type="unfinished">%1 秒</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished">无</translation>
     </message>
     <message>
         <source>N/A</source>
@@ -784,9 +836,21 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">警告: %1</translation>
     </message>
     <message>
+        <source>Date: %1
+</source>
+        <translation type="unfinished">日期: %1
+</translation>
+    </message>
+    <message>
         <source>Amount: %1
 </source>
         <translation type="unfinished">金額: %1
+</translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation type="unfinished">錢包: %1
 </translation>
     </message>
     <message>
@@ -806,6 +870,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </source>
         <translation type="unfinished">地址: %1
 </translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation type="unfinished">送出交易</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
@@ -828,6 +896,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">錢包&lt;b&gt;已加密&lt;/b&gt;並且&lt;b&gt;解鎖中&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation type="unfinished">錢包&lt;b&gt;已加密&lt;/b&gt;並且&lt;b&gt;上鎖中&lt;/b&gt;</translation>
+    </message>
+    <message>
         <source>Original message:</source>
         <translation type="unfinished">原消息:</translation>
     </message>
@@ -846,8 +918,32 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">手动选币</translation>
     </message>
     <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">总量:</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation type="unfinished">位元組數:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation type="unfinished">金额:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation type="unfinished">费用:</translation>
+    </message>
+    <message>
         <source>After Fee:</source>
         <translation type="unfinished">計費後金額:</translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation type="unfinished">找零:</translation>
+    </message>
+    <message>
+        <source>(un)select all</source>
+        <translation type="unfinished">全(不)选</translation>
     </message>
     <message>
         <source>Tree mode</source>
@@ -862,8 +958,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">金额</translation>
     </message>
     <message>
+        <source>Received with label</source>
+        <translation type="unfinished">收款标签</translation>
+    </message>
+    <message>
         <source>Received with address</source>
         <translation type="unfinished">收款地址</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">日期</translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation type="unfinished">已确认</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -888,6 +996,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>L&amp;ock unspent</source>
         <translation type="unfinished">锁定未花费(&amp;O)</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation type="unfinished">解锁未花费(&amp;U)</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -925,7 +1037,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>change from %1 (%2)</source>
         <translation type="unfinished">找零來自於 %1 (%2)</translation>
     </message>
-    </context>
+    <message>
+        <source>(change)</source>
+        <translation type="unfinished">(找零)</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletActivity</name>
     <message>
@@ -990,12 +1106,12 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">已成功迁移钱包 '%1' 。</translation>
     </message>
     <message>
-        <source> Watchonly scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished">仅观察脚本已被迁移至名为 '%1' 的新钱包中。</translation>
+        <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">仅观察脚本已经被迁移到被命名为“%1”的新钱包中。</translation>
     </message>
     <message>
-        <source> Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished"> 可解但又未被监视的脚本已被迁移至名为 '%1' 的新钱包中。</translation>
+        <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">可解决但未被观察到的脚本已经被迁移到被命名为“%1”的新钱包。</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -1068,7 +1184,11 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>Close all wallets</source>
         <translation type="unfinished">关闭所有钱包</translation>
     </message>
-    </context>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation type="unfinished">您确定想要关闭所有钱包吗?</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
@@ -1115,6 +1235,10 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>Make Blank Wallet</source>
         <translation type="unfinished">製作空白錢包</translation>
     </message>
+    <message>
+        <source>Create</source>
+        <translation type="unfinished">创建</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -1135,6 +1259,10 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">跟這個地址清單關聯的地址。只有發送地址能被修改。</translation>
     </message>
     <message>
+        <source>&amp;Address</source>
+        <translation type="unfinished">地址(&amp;A)</translation>
+    </message>
+    <message>
         <source>New sending address</source>
         <translation type="unfinished">新建付款地址</translation>
     </message>
@@ -1145,6 +1273,10 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Edit sending address</source>
         <translation type="unfinished">编辑付款地址</translation>
+    </message>
+    <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation type="unfinished">地址“%1”已经存在，它是一个收款地址，标签为“%2”，所以它不能作为一个付款地址被添加进来。</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book with label "%2".</source>
@@ -1166,8 +1298,16 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">就要產生新的資料目錄。</translation>
     </message>
     <message>
+        <source>name</source>
+        <translation type="unfinished">名称</translation>
+    </message>
+    <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
         <translation type="unfinished">已經有這個目錄了。如果你要在裡面造出新的目錄的話，請加上 %1.</translation>
+    </message>
+    <message>
+        <source>Path already exists, and is not a directory.</source>
+        <translation type="unfinished">路径已存在，并且不是一个目录。</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
@@ -1202,6 +1342,10 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation type="unfinished">此目录中至少会保存 %1 GB 的数据，并且大小还会随着时间增长。</translation>
     </message>
+    <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation type="unfinished">会在此目录中存储约 %1 GB 的数据。</translation>
+    </message>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
@@ -1230,8 +1374,16 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">欢迎</translation>
     </message>
     <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">欢迎使用 %1</translation>
+    </message>
+    <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
         <translation type="unfinished">由于这是第一次启动此程序，您可以选择%1存储数据的位置</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation type="unfinished">取消此设置需要重新下载整个区块链。先完整下载整条链再进行修剪会更快。这会禁用一些高级功能。</translation>
     </message>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
@@ -1253,6 +1405,10 @@ The migration process will create a backup of the wallet before migrating. This 
 <context>
     <name>HelpMessageDialog</name>
     <message>
+        <source>version</source>
+        <translation type="unfinished">版本</translation>
+    </message>
+    <message>
         <source>About %1</source>
         <translation type="unfinished">关于 %1</translation>
     </message>
@@ -1267,12 +1423,28 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>%1 is shutting down…</source>
         <translation type="unfinished">%1正在关闭...</translation>
     </message>
-    </context>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">在此窗口消失前不要关闭计算机。</translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
         <translation type="unfinished">窗体</translation>
+    </message>
+    <message>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
+        <translation type="unfinished">近期交易可能尚未显示，因此当前余额可能不准确。以上信息将在与比特币网络完全同步后更正。详情如下</translation>
+    </message>
+    <message>
+        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation type="unfinished">尝试使用受未可见交易影响的余额将不被网络接受。</translation>
+    </message>
+    <message>
+        <source>Number of blocks left</source>
+        <translation type="unfinished">剩余区块数量</translation>
     </message>
     <message>
         <source>Unknown…</source>
@@ -1283,12 +1455,20 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">计算中...</translation>
     </message>
     <message>
+        <source>Last block time</source>
+        <translation type="unfinished">上一区块时间</translation>
+    </message>
+    <message>
         <source>Progress</source>
         <translation type="unfinished">进度</translation>
     </message>
     <message>
         <source>Progress increase per hour</source>
         <translation type="unfinished">每小时进度增加</translation>
+    </message>
+    <message>
+        <source>Estimated time left until synced</source>
+        <translation type="unfinished">预计剩余同步时间</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -1313,12 +1493,25 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>Open bitcoin URI</source>
         <translation type="unfinished">打开比特币URI</translation>
     </message>
-    </context>
+    <message>
+        <source>Paste address from clipboard</source>
+        <extracomment>Tooltip text for button that allows you to paste an address that is in your clipboard.</extracomment>
+        <translation type="unfinished">从剪贴板粘贴地址</translation>
+    </message>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
         <translation type="unfinished">選項</translation>
+    </message>
+    <message>
+        <source>&amp;Main</source>
+        <translation type="unfinished">主要(&amp;M)</translation>
+    </message>
+    <message>
+        <source>Automatically start %1 after logging in to the system.</source>
+        <translation type="unfinished">在登入系统后自动启动 %1</translation>
     </message>
     <message>
         <source>&amp;Start %1 on system login</source>
@@ -1327,6 +1520,14 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</source>
         <translation type="unfinished">启用区块修剪会显著减小存储交易对磁盘空间的需求。所有的区块仍然会被完整校验。取消这个设置需要重新下载整条区块链。</translation>
+    </message>
+    <message>
+        <source>Size of &amp;database cache</source>
+        <translation type="unfinished">数据库缓存大小(&amp;D)</translation>
+    </message>
+    <message>
+        <source>Number of script &amp;verification threads</source>
+        <translation type="unfinished">脚本验证线程数(&amp;V)</translation>
     </message>
     <message>
         <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
@@ -1343,6 +1544,10 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation type="unfinished">窗口被关闭时最小化程序而不是退出。当此选项启用时，只有在菜单中选择“退出”时才会让程序退出。</translation>
+    </message>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">在概览标签页的字体:</translation>
     </message>
     <message>
         <source>Options set in this dialog are overridden by the command line:</source>
@@ -1367,6 +1572,10 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>&amp;Network</source>
         <translation type="unfinished">网络(&amp;N)</translation>
+    </message>
+    <message>
+        <source>Prune &amp;block storage to</source>
+        <translation type="unfinished">将区块存储修剪至(&amp;B)</translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
@@ -1397,6 +1606,10 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">启用R&amp;PC服务器</translation>
     </message>
     <message>
+        <source>W&amp;allet</source>
+        <translation type="unfinished">钱包(&amp;A)</translation>
+    </message>
+    <message>
         <source>Whether to set subtract fee from amount as default or not.</source>
         <extracomment>Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.</extracomment>
         <translation type="unfinished">是否要默认从金额中减去手续费。</translation>
@@ -1407,8 +1620,20 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">默认从金额中减去交易手续费(&amp;F)</translation>
     </message>
     <message>
+        <source>Expert</source>
+        <translation type="unfinished">专家</translation>
+    </message>
+    <message>
+        <source>Enable coin &amp;control features</source>
+        <translation type="unfinished">启用手动选币功能(&amp;C)</translation>
+    </message>
+    <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
         <translation type="unfinished">如果您禁止动用尚未确认的找零资金，则一笔交易的找零资金至少需要有1个确认后才能动用。这同时也会影响账户余额的计算。</translation>
+    </message>
+    <message>
+        <source>&amp;Spend unconfirmed change</source>
+        <translation type="unfinished">动用尚未确认的找零资金(&amp;S)</translation>
     </message>
     <message>
         <source>Enable &amp;PSBT controls</source>
@@ -1421,8 +1646,24 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">是否要显示PSBT控件</translation>
     </message>
     <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation type="unfinished">外接簽證設備 (e.g. 硬體錢包)</translation>
+    </message>
+    <message>
         <source>&amp;External signer script path</source>
         <translation type="unfinished">外部签名器脚本路径(&amp;E)</translation>
+    </message>
+    <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation type="unfinished">自动在路由器中为比特币客户端打开端口。只有当您的路由器开启了 UPnP 选项时此功能才会有用。</translation>
+    </message>
+    <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">自动在路由器中为比特币客户端打开端口。只有当您的路由器支持 NAT-PMP 功能并开启它，这个功能才会正常工作。外边端口可以是随机的。</translation>
+    </message>
+    <message>
+        <source>Map port using NA&amp;T-PMP</source>
+        <translation type="unfinished">使用 NA&amp;T-PMP 映射端口</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1441,6 +1682,14 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">通过 SO&amp;CKS5 代理连接(默认代理):</translation>
     </message>
     <message>
+        <source>Proxy &amp;IP:</source>
+        <translation type="unfinished">代理服务器 &amp;IP:</translation>
+    </message>
+    <message>
+        <source>&amp;Port:</source>
+        <translation type="unfinished">端口(&amp;P):</translation>
+    </message>
+    <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation type="unfinished">代理伺服器的通訊埠(像是 9050)</translation>
     </message>
@@ -1453,6 +1702,14 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">窗口(&amp;W)</translation>
     </message>
     <message>
+        <source>Show the icon in the system tray.</source>
+        <translation type="unfinished">在通知区域显示图标。</translation>
+    </message>
+    <message>
+        <source>&amp;Show tray icon</source>
+        <translation type="unfinished">显示通知区域图标(&amp;S)</translation>
+    </message>
+    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation type="unfinished">視窗縮到最小後只在通知區顯示圖示。</translation>
     </message>
@@ -1463,6 +1720,10 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>M&amp;inimize on close</source>
         <translation type="unfinished">单击关闭按钮时最小化(&amp;I)</translation>
+    </message>
+    <message>
+        <source>&amp;Display</source>
+        <translation type="unfinished">显示(&amp;D)</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
@@ -1489,20 +1750,37 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">第三方交易网址(&amp;T)</translation>
     </message>
     <message>
+        <source>Whether to show coin control features or not.</source>
+        <translation type="unfinished">是否显示手动选币功能。</translation>
+    </message>
+    <message>
         <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
         <translation type="unfinished">连接比特币网络时专门为Tor onion服务使用另一个 SOCKS5 代理。</translation>
     </message>
     <message>
-        <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">在概览标签页的等宽字体:</translation>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
+        <translation type="unfinished">连接Tor onion服务节点时使用另一个SOCKS&amp;5代理：</translation>
     </message>
     <message>
-        <source>embedded "%1"</source>
-        <translation type="unfinished">嵌入的 "%1"</translation>
+        <source>&amp;OK</source>
+        <translation type="unfinished">确定(&amp;O)</translation>
+    </message>
+    <message>
+        <source>&amp;Cancel</source>
+        <translation type="unfinished">取消(&amp;C)</translation>
     </message>
     <message>
         <source>default</source>
         <translation type="unfinished">預設值</translation>
+    </message>
+    <message>
+        <source>none</source>
+        <translation type="unfinished">无</translation>
+    </message>
+    <message>
+        <source>Confirm options reset</source>
+        <extracomment>Window title text of pop-up window shown when the user has chosen to reset options.</extracomment>
+        <translation type="unfinished">确认恢复默认设置</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
@@ -1545,7 +1823,15 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>The configuration file could not be opened.</source>
         <translation type="unfinished">无法打开配置文件。</translation>
     </message>
-    </context>
+    <message>
+        <source>This change would require a client restart.</source>
+        <translation type="unfinished">此更改需要重启客户端。</translation>
+    </message>
+    <message>
+        <source>The supplied proxy address is invalid.</source>
+        <translation type="unfinished">提供的代理服务器地址无效。</translation>
+    </message>
+</context>
 <context>
     <name>OptionsModel</name>
     <message>
@@ -1562,6 +1848,10 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation type="unfinished">顯示的資訊可能是過期的。跟 Bitcoin 網路的連線建立後，你的錢包會自動和網路同步，但是這個步驟還沒完成。</translation>
+    </message>
+    <message>
+        <source>Watch-only:</source>
+        <translation type="unfinished">仅观察:</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1592,8 +1882,20 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">餘額</translation>
     </message>
     <message>
+        <source>Total:</source>
+        <translation type="unfinished">总额:</translation>
+    </message>
+    <message>
         <source>Your current total balance</source>
         <translation type="unfinished">您当前的总余额</translation>
+    </message>
+    <message>
+        <source>Your current balance in watch-only addresses</source>
+        <translation type="unfinished">您当前在仅观察观察地址中的余额</translation>
+    </message>
+    <message>
+        <source>Spendable:</source>
+        <translation type="unfinished">可动用:</translation>
     </message>
     <message>
         <source>Recent transactions</source>
@@ -1602,6 +1904,10 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Unconfirmed transactions to watch-only addresses</source>
         <translation type="unfinished">仅观察地址的未确认交易</translation>
+    </message>
+    <message>
+        <source>Mined balance in watch-only addresses that has not yet matured</source>
+        <translation type="unfinished">仅观察地址中尚未成熟的挖矿收入余额:</translation>
     </message>
     <message>
         <source>Current total balance in watch-only addresses</source>
@@ -1639,6 +1945,14 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">關閉</translation>
     </message>
     <message>
+        <source>Failed to load transaction: %1</source>
+        <translation type="unfinished">加载交易失败: %1</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation type="unfinished">签名交易失败: %1</translation>
+    </message>
+    <message>
         <source>Cannot sign inputs while wallet is locked.</source>
         <translation type="unfinished">钱包已锁定，无法签名交易输入项。</translation>
     </message>
@@ -1651,6 +1965,22 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">已签名 %1 个交易输入项，但是仍然还有余下的项目需要签名。</translation>
     </message>
     <message>
+        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
+        <translation type="unfinished">成功签名交易。交易已经可以广播。</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation type="unfinished">处理交易时遇到未知错误。</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation type="unfinished">已复制PSBT到剪贴板</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation type="unfinished">保存交易数据</translation>
+    </message>
+    <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
         <translation type="unfinished">部分签名交易(二进制)</translation>
@@ -1658,6 +1988,18 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>PSBT saved to disk.</source>
         <translation type="unfinished">PSBT已保存到硬盘</translation>
+    </message>
+    <message>
+        <source>Sends %1 to %2</source>
+        <translation type="unfinished">将“%1”发送到“%2”</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">自己的地址</translation>
+    </message>
+    <message>
+        <source>Unable to calculate transaction fee or total transaction amount.</source>
+        <translation type="unfinished">无法计算交易费用或总交易金额。</translation>
     </message>
     <message>
         <source>Pays transaction fee: </source>
@@ -1688,6 +2030,14 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">(但这个钱包不能签名交易)</translation>
     </message>
     <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation type="unfinished">(但这个钱包没有正确的密钥)</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation type="unfinished">交易已经完全签名，可以广播。</translation>
+    </message>
+    <message>
         <source>Transaction status is unknown.</source>
         <translation type="unfinished">交易状态未知。</translation>
     </message>
@@ -1697,6 +2047,10 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Payment request error</source>
         <translation type="unfinished">支付请求出错</translation>
+    </message>
+    <message>
+        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <translation type="unfinished">无法启动 bitcoin: 协议的“一键支付”处理程序</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1775,7 +2129,12 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <extracomment>An Inbound Connection from a Peer.</extracomment>
         <translation type="unfinished">進來</translation>
     </message>
-    </context>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An Outbound Connection to a Peer.</extracomment>
+        <translation type="unfinished">傳出</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1783,8 +2142,20 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">保存图像(&amp;S)...</translation>
     </message>
     <message>
+        <source>&amp;Copy Image</source>
+        <translation type="unfinished">复制图像(&amp;C)</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation type="unfinished">URI 太長，請縮短標籤或訊息文字。</translation>
+    </message>
+    <message>
         <source>Error encoding URI into QR Code.</source>
         <translation type="unfinished">把 URI 编码成二维码时发生错误。</translation>
+    </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation type="unfinished">不支持二维码。</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1811,6 +2182,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">資訊(&amp;I)</translation>
     </message>
     <message>
+        <source>General</source>
+        <translation type="unfinished">常规</translation>
+    </message>
+    <message>
         <source>Datadir</source>
         <translation type="unfinished">数据目录</translation>
     </message>
@@ -1823,12 +2198,20 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">区块存储目录</translation>
     </message>
     <message>
+        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
+        <translation type="unfinished">如果要自訂區塊儲存目錄的位置，請使用 '%1' 這個選項來指定新的位置。</translation>
+    </message>
+    <message>
         <source>Startup time</source>
         <translation type="unfinished">啓動時間</translation>
     </message>
     <message>
         <source>Network</source>
         <translation type="unfinished">网络</translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation type="unfinished">名称</translation>
     </message>
     <message>
         <source>Number of connections</source>
@@ -1839,8 +2222,20 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">區塊鏈</translation>
     </message>
     <message>
+        <source>Memory Pool</source>
+        <translation type="unfinished">内存池</translation>
+    </message>
+    <message>
+        <source>Current number of transactions</source>
+        <translation type="unfinished">当前交易数量</translation>
+    </message>
+    <message>
         <source>Memory usage</source>
         <translation type="unfinished">内存使用</translation>
+    </message>
+    <message>
+        <source>Wallet: </source>
+        <translation type="unfinished">钱包:</translation>
     </message>
     <message>
         <source>(none)</source>
@@ -1887,6 +2282,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">会话ID</translation>
     </message>
     <message>
+        <source>Version</source>
+        <translation type="unfinished">版本</translation>
+    </message>
+    <message>
         <source>Whether we relay transactions to this peer.</source>
         <translation type="unfinished">是否要将交易转发给这个节点。</translation>
     </message>
@@ -1895,8 +2294,16 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">交易转发</translation>
     </message>
     <message>
+        <source>Starting Block</source>
+        <translation type="unfinished">起步区块</translation>
+    </message>
+    <message>
         <source>Synced Headers</source>
         <translation type="unfinished">已同步前導資料</translation>
+    </message>
+    <message>
+        <source>Synced Blocks</source>
+        <translation type="unfinished">已同步区块</translation>
     </message>
     <message>
         <source>Last Transaction</source>
@@ -1953,6 +2360,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">当前区块高度</translation>
     </message>
     <message>
+        <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation type="unfinished">打开当前数据目录中的 %1 调试日志文件。日志文件大的话可能要等上几秒钟。</translation>
+    </message>
+    <message>
         <source>Decrease font size</source>
         <translation type="unfinished">缩小字体大小</translation>
     </message>
@@ -1989,8 +2400,21 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">高带宽</translation>
     </message>
     <message>
+        <source>Connection Time</source>
+        <translation type="unfinished">连接时间</translation>
+    </message>
+    <message>
+        <source>Elapsed time since a novel block passing initial validity checks was received from this peer.</source>
+        <translation type="unfinished">來自這個節點上次成功驗證新區塊已經過的時間</translation>
+    </message>
+    <message>
         <source>Last Block</source>
         <translation type="unfinished">上一个区块</translation>
+    </message>
+    <message>
+        <source>Elapsed time since a novel transaction accepted into our mempool was received from this peer.</source>
+        <extracomment>Tooltip text for the Last Transaction field in the peer details area.</extracomment>
+        <translation type="unfinished">來自這個節點上次成功驗證新交易進入內存池已經過的時間</translation>
     </message>
     <message>
         <source>Last Send</source>
@@ -2001,12 +2425,28 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">上次接收</translation>
     </message>
     <message>
+        <source>Ping Time</source>
+        <translation type="unfinished">Ping 延时</translation>
+    </message>
+    <message>
         <source>The duration of a currently outstanding ping.</source>
         <translation type="unfinished">目前这一次 ping 已经过去的时间。</translation>
     </message>
     <message>
         <source>Ping Wait</source>
         <translation type="unfinished">Ping 等待</translation>
+    </message>
+    <message>
+        <source>Min Ping</source>
+        <translation type="unfinished">最小 Ping 值</translation>
+    </message>
+    <message>
+        <source>Time Offset</source>
+        <translation type="unfinished">时间偏移</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation type="unfinished">上一区块时间</translation>
     </message>
     <message>
         <source>&amp;Open</source>
@@ -2023,6 +2463,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Totals</source>
         <translation type="unfinished">總計</translation>
+    </message>
+    <message>
+        <source>Debug log file</source>
+        <translation type="unfinished">调试日志文件</translation>
     </message>
     <message>
         <source>Clear console</source>
@@ -2062,6 +2506,11 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">出站触须: 短暂，用于测试地址</translation>
     </message>
     <message>
+        <source>Outbound Address Fetch: short-lived, for soliciting addresses</source>
+        <extracomment>Explanatory text for a short-lived outbound peer connection that is used to request addresses from a peer.</extracomment>
+        <translation type="unfinished">Outbound 地址取得: 用於短暫，暫時 測試地址</translation>
+    </message>
+    <message>
         <source>detecting: peer could be v1 or v2</source>
         <extracomment>Explanatory text for "detecting" transport type.</extracomment>
         <translation type="unfinished">检测中: 节点可能是v1或是v2</translation>
@@ -2085,13 +2534,33 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">对端选择了我们用于高带宽转发</translation>
     </message>
     <message>
+        <source>no high bandwidth relay selected</source>
+        <translation type="unfinished">未選擇高頻寬轉發點</translation>
+    </message>
+    <message>
         <source>&amp;Copy address</source>
         <extracomment>Context menu action to copy the address of a peer.</extracomment>
         <translation type="unfinished">复制地址(&amp;C)</translation>
     </message>
     <message>
+        <source>&amp;Disconnect</source>
+        <translation type="unfinished">断开(&amp;D)</translation>
+    </message>
+    <message>
         <source>1 &amp;hour</source>
         <translation type="unfinished">1 小时(&amp;H)</translation>
+    </message>
+    <message>
+        <source>1 d&amp;ay</source>
+        <translation type="unfinished">1 天(&amp;A)</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation type="unfinished">1 周(&amp;W)</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation type="unfinished">1 年(&amp;Y)</translation>
     </message>
     <message>
         <source>&amp;Copy IP/Netmask</source>
@@ -2101,6 +2570,22 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>&amp;Unban</source>
         <translation type="unfinished">解封(&amp;U)</translation>
+    </message>
+    <message>
+        <source>Network activity disabled</source>
+        <translation type="unfinished">网络活动已禁用</translation>
+    </message>
+    <message>
+        <source>Executing command without any wallet</source>
+        <translation type="unfinished">不使用任何钱包执行命令</translation>
+    </message>
+    <message>
+        <source>Node window - [%1]</source>
+        <translation type="unfinished">节点窗口 - [%1]</translation>
+    </message>
+    <message>
+        <source>Executing command using "%1" wallet</source>
+        <translation type="unfinished">使用“%1”钱包执行命令</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.
@@ -2125,12 +2610,20 @@ For more information on using this console, type %6.
         <translation type="unfinished">执行中……</translation>
     </message>
     <message>
+        <source>(peer: %1)</source>
+        <translation type="unfinished">(节点: %1)</translation>
+    </message>
+    <message>
         <source>via %1</source>
         <translation type="unfinished">經由 %1</translation>
     </message>
     <message>
         <source>Yes</source>
         <translation type="unfinished">是</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation type="unfinished">否</translation>
     </message>
     <message>
         <source>To</source>
@@ -2160,12 +2653,20 @@ For more information on using this console, type %6.
         <translation type="unfinished">金额(&amp;A):</translation>
     </message>
     <message>
+        <source>&amp;Label:</source>
+        <translation type="unfinished">标签(&amp;L):</translation>
+    </message>
+    <message>
         <source>&amp;Message:</source>
         <translation type="unfinished">訊息(&amp;M):</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
         <translation type="unfinished">可在支付请求上备注一条信息，在打开支付请求时可以看到。注意:该消息不是通过比特币网络传送。</translation>
+    </message>
+    <message>
+        <source>An optional label to associate with the new receiving address.</source>
+        <translation type="unfinished">可为新建的收款地址添加一个标签。</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
@@ -2180,8 +2681,16 @@ For more information on using this console, type %6.
         <translation type="unfinished">一个关联到新收款地址（被您用来识别发票）的可选标签。它也会被附加到付款请求中。</translation>
     </message>
     <message>
+        <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
+        <translation type="unfinished">一条附加到付款请求中的可选消息，可以显示给付款方。</translation>
+    </message>
+    <message>
         <source>&amp;Create new receiving address</source>
         <translation type="unfinished">&amp;產生新的接收地址</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation type="unfinished">清除此表单的所有字段。</translation>
     </message>
     <message>
         <source>Clear</source>
@@ -2202,6 +2711,10 @@ For more information on using this console, type %6.
     <message>
         <source>Remove the selected entries from the list</source>
         <translation type="unfinished">从列表中移除选中的条目</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation type="unfinished">移除</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2259,6 +2772,14 @@ For more information on using this console, type %6.
         <translation type="unfinished">请求支付至...</translation>
     </message>
     <message>
+        <source>Address:</source>
+        <translation type="unfinished">地址:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation type="unfinished">金额:</translation>
+    </message>
+    <message>
         <source>Label:</source>
         <translation type="unfinished">标签：</translation>
     </message>
@@ -2279,8 +2800,20 @@ For more information on using this console, type %6.
         <translation type="unfinished">複製 &amp;地址</translation>
     </message>
     <message>
+        <source>&amp;Verify</source>
+        <translation type="unfinished">验证(&amp;V)</translation>
+    </message>
+    <message>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation type="unfinished">在像是硬件钱包屏幕的地方检验这个地址</translation>
+    </message>
+    <message>
         <source>&amp;Save Image…</source>
         <translation type="unfinished">保存图像(&amp;S)...</translation>
+    </message>
+    <message>
+        <source>Payment information</source>
+        <translation type="unfinished">付款信息</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
@@ -2290,12 +2823,24 @@ For more information on using this console, type %6.
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
+        <source>Date</source>
+        <translation type="unfinished">日期</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation type="unfinished">标签</translation>
     </message>
     <message>
+        <source>Message</source>
+        <translation type="unfinished">消息</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation type="unfinished">(无标签)</translation>
+    </message>
+    <message>
+        <source>(no message)</source>
+        <translation type="unfinished">(无消息)</translation>
     </message>
     <message>
         <source>(no amount requested)</source>
@@ -2325,12 +2870,36 @@ For more information on using this console, type %6.
         <translation type="unfinished">金额不足！</translation>
     </message>
     <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">數量：</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation type="unfinished">位元組:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation type="unfinished">金额:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation type="unfinished">费用:</translation>
+    </message>
+    <message>
         <source>After Fee:</source>
         <translation type="unfinished">計費後金額:</translation>
     </message>
     <message>
+        <source>Change:</source>
+        <translation type="unfinished">找零:</translation>
+    </message>
+    <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
         <translation type="unfinished">如果這項有打開，但是找零地址是空的或無效，那麼找零會送到一個產生出來的地址去。</translation>
+    </message>
+    <message>
+        <source>Custom change address</source>
+        <translation type="unfinished">自定义找零地址</translation>
     </message>
     <message>
         <source>Transaction Fee:</source>
@@ -2345,6 +2914,10 @@ For more information on using this console, type %6.
         <translation type="unfinished">警告: 目前无法进行手续费估计。</translation>
     </message>
     <message>
+        <source>per kilobyte</source>
+        <translation type="unfinished">每KB</translation>
+    </message>
+    <message>
         <source>Hide</source>
         <translation type="unfinished">隐藏</translation>
     </message>
@@ -2357,8 +2930,20 @@ For more information on using this console, type %6.
         <translation type="unfinished">自訂:</translation>
     </message>
     <message>
+        <source>Send to multiple recipients at once</source>
+        <translation type="unfinished">一次发送给多个收款人</translation>
+    </message>
+    <message>
         <source>Add &amp;Recipient</source>
         <translation type="unfinished">增加收款人(&amp;R)</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation type="unfinished">清除此表单的所有字段。</translation>
+    </message>
+    <message>
+        <source>Inputs…</source>
+        <translation type="unfinished">输入...</translation>
     </message>
     <message>
         <source>Choose…</source>
@@ -2369,16 +2954,52 @@ For more information on using this console, type %6.
         <translation type="unfinished">隱藏交易手續費設定</translation>
     </message>
     <message>
+        <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
+
+Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satoshis per kvB" for a transaction size of 500 virtual bytes (half of 1 kvB) would ultimately yield a fee of only 50 satoshis.</source>
+        <translation type="unfinished">指定交易虚拟大小的每kB (1,000字节) 自定义费率。
+
+附注：因为矿工费是按字节计费的，所以如果费率是“每kvB支付100聪”，那么对于一笔500虚拟字节 (1kvB的一半) 的交易，最终将只会产生50聪的矿工费。（译注：这里就是提醒单位是字节，而不是千字节，如果搞错的话，矿工费会过低，导致交易长时间无法确认，或者压根无法发出）</translation>
+    </message>
+    <message>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation type="unfinished">當交易量小於可用區塊空間時，礦工和節點可能會執行最低手續費率限制。 以這個最低費率來支付手續費也是可以的，但請注意，一旦交易需求超出比特幣網路能處理的限度，你的交易可能永遠無法確認。</translation>
+    </message>
+    <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
         <translation type="unfinished">手續費太低的話可能會造成永遠無法確認的交易(請參考提示)</translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks…)</source>
+        <translation type="unfinished">(手續費智慧演算法還沒準備好。通常都要等幾個區塊才行...)</translation>
+    </message>
+    <message>
+        <source>Confirmation time target:</source>
+        <translation type="unfinished">确认时间目标:</translation>
+    </message>
+    <message>
+        <source>Enable Replace-By-Fee</source>
+        <translation type="unfinished">启用手续费追加</translation>
     </message>
     <message>
         <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
         <translation type="unfinished">手续费追加（Replace-By-Fee，BIP-125）可以让你在送出交易后继续追加手续费。不用这个功能的话，建议付比较高的手续费来降低交易延迟的风险。</translation>
     </message>
     <message>
+        <source>Clear &amp;All</source>
+        <translation type="unfinished">清除所有(&amp;A)</translation>
+    </message>
+    <message>
         <source>Balance:</source>
         <translation type="unfinished">餘額:</translation>
+    </message>
+    <message>
+        <source>Confirm the send action</source>
+        <translation type="unfinished">确认发送操作</translation>
+    </message>
+    <message>
+        <source>S&amp;end</source>
+        <translation type="unfinished">发送(&amp;E)</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -2409,12 +3030,26 @@ For more information on using this console, type %6.
         <translation type="unfinished">%1 (%2个块)</translation>
     </message>
     <message>
-        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation type="unfinished">创建一个“部分签名比特币交易”（PSBT），以用于诸如离线%1钱包，或是兼容PSBT的硬件钱包这类用途。</translation>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet.</extracomment>
+        <translation type="unfinished">在設備上簽證</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished">從錢包 %1</translation>
+        <source>Connect your hardware wallet first.</source>
+        <translation type="unfinished">請先連接硬體錢包</translation>
+    </message>
+    <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">在 選項 -&gt; 錢包 中設定外部簽名器腳本路徑 </translation>
+    </message>
+    <message>
+        <source>Cr&amp;eate Unsigned</source>
+        <translation type="unfinished">创建未签名交易(&amp;E)</translation>
+    </message>
+    <message>
+        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation type="unfinished">创建一个“部分签名比特币交易”（PSBT），以用于诸如离线%1钱包，或是兼容PSBT的硬件钱包这类用途。</translation>
     </message>
     <message>
         <source>%1 to %2</source>
@@ -2430,6 +3065,10 @@ For more information on using this console, type %6.
         <translation type="unfinished">外部签名器失败</translation>
     </message>
     <message>
+        <source>Save Transaction Data</source>
+        <translation type="unfinished">保存交易数据</translation>
+    </message>
+    <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
         <translation type="unfinished">部分签名交易(二进制)</translation>
@@ -2441,6 +3080,10 @@ For more information on using this console, type %6.
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation type="unfinished">你可以之後再提高手續費(有 BIP-125 手續費追加的標記)</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation type="unfinished">%1 来自钱包 “%2”</translation>
     </message>
     <message>
         <source>Do you want to create this transaction?</source>
@@ -2456,6 +3099,14 @@ For more information on using this console, type %6.
         <source>Please, review your transaction.</source>
         <extracomment>Text to prompt a user to review the details of the transaction they are attempting to send.</extracomment>
         <translation type="unfinished">请检查您的交易。</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation type="unfinished">交易手续费</translation>
+    </message>
+    <message>
+        <source>Not signalling Replace-By-Fee, BIP-125.</source>
+        <translation type="unfinished">没有打上BIP-125手续费追加的标记。</translation>
     </message>
     <message>
         <source>Total Amount</source>
@@ -2488,6 +3139,22 @@ For more information on using this console, type %6.
         <translation type="unfinished">支付金额必须大于0。</translation>
     </message>
     <message>
+        <source>The amount exceeds your balance.</source>
+        <translation type="unfinished">金额超出您的余额。</translation>
+    </message>
+    <message>
+        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
+        <translation type="unfinished">计入 %1 手续费后，金额超出了您的余额。</translation>
+    </message>
+    <message>
+        <source>Duplicate address found: addresses should only be used once each.</source>
+        <translation type="unfinished">发现重复地址:每个地址应该只使用一次。</translation>
+    </message>
+    <message>
+        <source>Transaction creation failed!</source>
+        <translation type="unfinished">交易创建失败！</translation>
+    </message>
+    <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation type="unfinished">超过 %1 的手续费被视为高得离谱。</translation>
     </message>
@@ -2498,8 +3165,16 @@ For more information on using this console, type %6.
         </translation>
     </message>
     <message>
+        <source>Warning: Unknown change address</source>
+        <translation type="unfinished">警告:未知的找零地址</translation>
+    </message>
+    <message>
         <source>Confirm custom change address</source>
         <translation type="unfinished">确认自定义找零地址</translation>
+    </message>
+    <message>
+        <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
+        <translation type="unfinished">你选择的找零地址未被包含在本钱包中，你钱包中的部分或全部金额将被发送至该地址。你确定要这样做吗？</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2517,12 +3192,32 @@ For more information on using this console, type %6.
         <translation type="unfinished">付給(&amp;T):</translation>
     </message>
     <message>
+        <source>&amp;Label:</source>
+        <translation type="unfinished">标签(&amp;L):</translation>
+    </message>
+    <message>
+        <source>Choose previously used address</source>
+        <translation type="unfinished">选择以前用过的地址</translation>
+    </message>
+    <message>
         <source>The Bitcoin address to send the payment to</source>
         <translation type="unfinished">將支付發送到的比特幣地址給</translation>
     </message>
     <message>
+        <source>Paste address from clipboard</source>
+        <translation type="unfinished">从剪贴板粘贴地址</translation>
+    </message>
+    <message>
+        <source>Remove this entry</source>
+        <translation type="unfinished">移除此项</translation>
+    </message>
+    <message>
         <source>The amount to send in the selected unit</source>
         <translation type="unfinished">用被选单位表示的待发送金额</translation>
+    </message>
+    <message>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation type="unfinished">交易费将从发送金额中扣除。接收人收到的比特币将会比您在金额框中输入的更少。如果选中了多个收件人，交易费平分。</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -2571,6 +3266,22 @@ For more information on using this console, type %6.
         <translation type="unfinished">您可以使用您的地址簽名訊息/協議，以證明您可以接收發送給他們的比特幣。但是請小心，不要簽名語意含糊不清，或隨機產生的內容，因為釣魚式詐騙可能會用騙你簽名的手法來冒充是你。只有簽名您同意的詳細內容。</translation>
     </message>
     <message>
+        <source>The Bitcoin address to sign the message with</source>
+        <translation type="unfinished">用来对消息签名的地址</translation>
+    </message>
+    <message>
+        <source>Choose previously used address</source>
+        <translation type="unfinished">选择以前用过的地址</translation>
+    </message>
+    <message>
+        <source>Paste address from clipboard</source>
+        <translation type="unfinished">从剪贴板粘贴地址</translation>
+    </message>
+    <message>
+        <source>Enter the message you want to sign here</source>
+        <translation type="unfinished">在这里输入您想要签名的消息</translation>
+    </message>
+    <message>
         <source>Signature</source>
         <translation type="unfinished">簽章</translation>
     </message>
@@ -2591,8 +3302,16 @@ For more information on using this console, type %6.
         <translation type="unfinished">清空所有签名消息栏</translation>
     </message>
     <message>
+        <source>Clear &amp;All</source>
+        <translation type="unfinished">清除所有(&amp;A)</translation>
+    </message>
+    <message>
         <source>&amp;Verify Message</source>
         <translation type="unfinished">消息验证(&amp;V)</translation>
+    </message>
+    <message>
+        <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
+        <translation type="unfinished">请在下面输入接收者地址、消息（确保换行符、空格符、制表符等完全相同）和签名以验证消息。请仔细核对签名信息，以提防中间人攻击。请注意，这只是证明接收方可以用这个地址签名，它不能证明任何交易的发送人身份！</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
@@ -2611,6 +3330,14 @@ For more information on using this console, type %6.
         <translation type="unfinished">驗證這個訊息來確定是用指定的比特幣地址簽名的</translation>
     </message>
     <message>
+        <source>Verify &amp;Message</source>
+        <translation type="unfinished">验证消息签名(&amp;M)</translation>
+    </message>
+    <message>
+        <source>Reset all verify message fields</source>
+        <translation type="unfinished">清空所有验证消息栏</translation>
+    </message>
+    <message>
         <source>Click "Sign Message" to generate signature</source>
         <translation type="unfinished">請按一下「簽署訊息」來產生簽章</translation>
     </message>
@@ -2627,6 +3354,10 @@ For more information on using this console, type %6.
         <translation type="unfinished">找不到与输入地址相关的密钥。</translation>
     </message>
     <message>
+        <source>Wallet unlock was cancelled.</source>
+        <translation type="unfinished">已取消解锁钱包。</translation>
+    </message>
+    <message>
         <source>No error</source>
         <translation type="unfinished">沒有錯誤</translation>
     </message>
@@ -2639,12 +3370,24 @@ For more information on using this console, type %6.
         <translation type="unfinished">消息签名失败。</translation>
     </message>
     <message>
+        <source>Message signed.</source>
+        <translation type="unfinished">消息已签名。</translation>
+    </message>
+    <message>
+        <source>The signature could not be decoded.</source>
+        <translation type="unfinished">签名无法解码。</translation>
+    </message>
+    <message>
         <source>Please check the signature and try again.</source>
         <translation type="unfinished">请检查签名后重试。</translation>
     </message>
     <message>
         <source>The signature did not match the message digest.</source>
         <translation type="unfinished">這個簽章跟訊息的數位摘要不符。</translation>
+    </message>
+    <message>
+        <source>Message verification failed.</source>
+        <translation type="unfinished">消息验证失败。</translation>
     </message>
     <message>
         <source>Message verified.</source>
@@ -2680,6 +3423,11 @@ For more information on using this console, type %6.
         <translation type="unfinished">0/未确认，不在内存池中</translation>
     </message>
     <message>
+        <source>abandoned</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an abandoned transaction.</extracomment>
+        <translation type="unfinished">已丢弃</translation>
+    </message>
+    <message>
         <source>%1/unconfirmed</source>
         <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in at least one block, but less than 6 blocks.</extracomment>
         <translation type="unfinished">%1 次/未確認</translation>
@@ -2690,8 +3438,16 @@ For more information on using this console, type %6.
         <translation type="unfinished">%1 个确认</translation>
     </message>
     <message>
+        <source>Date</source>
+        <translation type="unfinished">日期</translation>
+    </message>
+    <message>
         <source>Source</source>
         <translation type="unfinished">來源</translation>
+    </message>
+    <message>
+        <source>Generated</source>
+        <translation type="unfinished">挖矿生成</translation>
     </message>
     <message>
         <source>From</source>
@@ -2706,12 +3462,20 @@ For more information on using this console, type %6.
         <translation type="unfinished">到</translation>
     </message>
     <message>
+        <source>own address</source>
+        <translation type="unfinished">自己的地址</translation>
+    </message>
+    <message>
         <source>watch-only</source>
         <translation type="unfinished">只能看</translation>
     </message>
     <message>
         <source>label</source>
         <translation type="unfinished">标签</translation>
+    </message>
+    <message>
+        <source>Credit</source>
+        <translation type="unfinished">收入</translation>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
@@ -2720,16 +3484,44 @@ For more information on using this console, type %6.
         </translation>
     </message>
     <message>
+        <source>not accepted</source>
+        <translation type="unfinished">未被接受</translation>
+    </message>
+    <message>
+        <source>Debit</source>
+        <translation type="unfinished">支出</translation>
+    </message>
+    <message>
         <source>Total debit</source>
         <translation type="unfinished">总支出</translation>
+    </message>
+    <message>
+        <source>Total credit</source>
+        <translation type="unfinished">总收入</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation type="unfinished">交易手续费</translation>
     </message>
     <message>
         <source>Net amount</source>
         <translation type="unfinished">淨額</translation>
     </message>
     <message>
+        <source>Message</source>
+        <translation type="unfinished">消息</translation>
+    </message>
+    <message>
+        <source>Comment</source>
+        <translation type="unfinished">备注</translation>
+    </message>
+    <message>
         <source>Transaction ID</source>
         <translation type="unfinished">交易 ID</translation>
+    </message>
+    <message>
+        <source>Transaction total size</source>
+        <translation type="unfinished">交易总大小</translation>
     </message>
     <message>
         <source>Transaction virtual size</source>
@@ -2740,8 +3532,20 @@ For more information on using this console, type %6.
         <translation type="unfinished">输出索引</translation>
     </message>
     <message>
-        <source> (Certificate was not verified)</source>
-        <translation type="unfinished">（證書未驗證）</translation>
+        <source>%1 (Certificate was not verified)</source>
+        <translation type="unfinished">%1（证书未被验证）</translation>
+    </message>
+    <message>
+        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation type="unfinished">新挖出的比特币在可以使用前必须经过 %1 个区块确认的成熟过程。当您挖出此区块后，它将被广播到网络中以加入区块链。如果它未成功进入区块链，其状态将变更为“不接受”并且不可使用。这可能偶尔会发生，在另一个节点比你早几秒钟成功挖出一个区块时就会这样。</translation>
+    </message>
+    <message>
+        <source>Debug information</source>
+        <translation type="unfinished">调试信息</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation type="unfinished">交易</translation>
     </message>
     <message>
         <source>Inputs</source>
@@ -2755,7 +3559,11 @@ For more information on using this console, type %6.
         <source>true</source>
         <translation type="unfinished">是</translation>
     </message>
-    </context>
+    <message>
+        <source>false</source>
+        <translation type="unfinished">否</translation>
+    </message>
+</context>
 <context>
     <name>TransactionDescDialog</name>
     <message>
@@ -2770,6 +3578,10 @@ For more information on using this console, type %6.
 <context>
     <name>TransactionTableModel</name>
     <message>
+        <source>Date</source>
+        <translation type="unfinished">日期</translation>
+    </message>
+    <message>
         <source>Type</source>
         <translation type="unfinished">类型</translation>
     </message>
@@ -2778,12 +3590,32 @@ For more information on using this console, type %6.
         <translation type="unfinished">标签</translation>
     </message>
     <message>
+        <source>Unconfirmed</source>
+        <translation type="unfinished">未确认</translation>
+    </message>
+    <message>
+        <source>Abandoned</source>
+        <translation type="unfinished">已丢弃</translation>
+    </message>
+    <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
         <translation type="unfinished">确认中 (推荐 %2个确认，已经有 %1个确认)</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
         <translation type="unfinished">已確認(%1 次)</translation>
+    </message>
+    <message>
+        <source>Conflicted</source>
+        <translation type="unfinished">有冲突</translation>
+    </message>
+    <message>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation type="unfinished">未成熟 (%1 个确认，将在 %2 个后可用)</translation>
+    </message>
+    <message>
+        <source>Generated but not accepted</source>
+        <translation type="unfinished">已生成但未被接受</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2822,6 +3654,10 @@ For more information on using this console, type %6.
         <translation type="unfinished">收到交易的日期和時間。</translation>
     </message>
     <message>
+        <source>Type of transaction.</source>
+        <translation type="unfinished">交易类型。</translation>
+    </message>
+    <message>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
         <translation type="unfinished">该交易中是否涉及仅观察地址。</translation>
     </message>
@@ -2837,12 +3673,24 @@ For more information on using this console, type %6.
         <translation type="unfinished">全部</translation>
     </message>
     <message>
+        <source>Today</source>
+        <translation type="unfinished">今天</translation>
+    </message>
+    <message>
         <source>This week</source>
         <translation type="unfinished">這星期</translation>
     </message>
     <message>
         <source>This month</source>
         <translation type="unfinished">這個月</translation>
+    </message>
+    <message>
+        <source>Last month</source>
+        <translation type="unfinished">上个月</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation type="unfinished">今年</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2859,6 +3707,10 @@ For more information on using this console, type %6.
     <message>
         <source>Enter address, transaction id, or label to search</source>
         <translation type="unfinished">输入地址、交易ID或标签进行搜索</translation>
+    </message>
+    <message>
+        <source>Min amount</source>
+        <translation type="unfinished">最小金额</translation>
     </message>
     <message>
         <source>Range…</source>
@@ -2885,8 +3737,20 @@ For more information on using this console, type %6.
         <translation type="unfinished">复制原始交易(&amp;R)</translation>
     </message>
     <message>
+        <source>Copy full transaction &amp;details</source>
+        <translation type="unfinished">複製完整交易明細</translation>
+    </message>
+    <message>
+        <source>&amp;Show transaction details</source>
+        <translation type="unfinished">顯示交易明細</translation>
+    </message>
+    <message>
         <source>Increase transaction &amp;fee</source>
         <translation type="unfinished">增加矿工费(&amp;F)</translation>
+    </message>
+    <message>
+        <source>A&amp;bandon transaction</source>
+        <translation type="unfinished">放棄交易(&amp;b)</translation>
     </message>
     <message>
         <source>&amp;Edit address label</source>
@@ -2898,13 +3762,25 @@ For more information on using this console, type %6.
         <translation type="unfinished">在 %1中显示</translation>
     </message>
     <message>
+        <source>Export Transaction History</source>
+        <translation type="unfinished">导出交易历史</translation>
+    </message>
+    <message>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
         <translation type="unfinished">逗號分隔文件</translation>
     </message>
     <message>
+        <source>Confirmed</source>
+        <translation type="unfinished">已确认</translation>
+    </message>
+    <message>
         <source>Watch-only</source>
         <translation type="unfinished">只能觀看的</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">日期</translation>
     </message>
     <message>
         <source>Type</source>
@@ -2942,7 +3818,11 @@ For more information on using this console, type %6.
         <source>Range:</source>
         <translation type="unfinished">範圍:</translation>
     </message>
-    </context>
+    <message>
+        <source>to</source>
+        <translation type="unfinished">到</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -2973,7 +3853,15 @@ Go to File &gt; Open Wallet to load a wallet.
         <source>Partially Signed Transaction (*.psbt)</source>
         <translation type="unfinished">部分签名交易 (*.psbt)</translation>
     </message>
-    </context>
+    <message>
+        <source>PSBT file must be smaller than 100 MiB</source>
+        <translation type="unfinished">PSBT文件必须小于100MiB</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT</source>
+        <translation type="unfinished">无法解码PSBT</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -2981,9 +3869,21 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">付款</translation>
     </message>
     <message>
+        <source>Fee bump error</source>
+        <translation type="unfinished">追加手续费出错</translation>
+    </message>
+    <message>
+        <source>Increasing transaction fee failed</source>
+        <translation type="unfinished">追加交易手续费失败</translation>
+    </message>
+    <message>
         <source>Do you want to increase the fee?</source>
         <extracomment>Asks a user if they would like to manually increase the fee of a transaction that has already been created.</extracomment>
         <translation type="unfinished">想要提高手續費嗎？</translation>
+    </message>
+    <message>
+        <source>Increase:</source>
+        <translation type="unfinished">增加量:</translation>
     </message>
     <message>
         <source>New fee:</source>
@@ -3002,6 +3902,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">無法草擬交易。</translation>
     </message>
     <message>
+        <source>PSBT copied</source>
+        <translation type="unfinished">PSBT已複製</translation>
+    </message>
+    <message>
         <source>Copied to clipboard</source>
         <comment>Fee-bump PSBT saved</comment>
         <translation type="unfinished">复制到剪贴板</translation>
@@ -3013,6 +3917,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Could not commit transaction</source>
         <translation type="unfinished">沒辦法提交交易</translation>
+    </message>
+    <message>
+        <source>Can't display address</source>
+        <translation type="unfinished">無法顯示地址</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -3078,6 +3986,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">无法把钱包版本从%i降级到%i。钱包版本未改变。</translation>
     </message>
     <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation type="unfinished">无法锁定数据目录 %s。%s 可能已经在运行。</translation>
+    </message>
+    <message>
         <source>Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified.</source>
         <translation type="unfinished">无法在不支持“拆分前的密钥池”（pre split keypool）的情况下把“非拆分HD钱包”（non HD split wallet）从版本%i升级到%i。请使用版本号%i，或者压根不要指定版本号。</translation>
     </message>
@@ -3102,6 +4014,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">错误: 转储文件格式不正确。得到是"%s"，而预期本应得到的是 "format"。</translation>
     </message>
     <message>
+        <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
+        <translation type="unfinished">错误: 转储文件标识符记录不正确。得到的是 "%s"，而预期本应得到的是 "%s"。</translation>
+    </message>
+    <message>
         <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
         <translation type="unfinished">错误: 转储文件版本不被支持。这个版本的 bitcoin-wallet 只支持版本为 1 的转储文件。得到的转储文件版本却是%s</translation>
     </message>
@@ -3114,16 +4030,40 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">错误: 无法为该旧式钱包生成描述符。如果钱包已被加密，请确保提供的钱包加密密码正确。</translation>
     </message>
     <message>
+        <source>File %s already exists. If you are sure this is what you want, move it out of the way first.</source>
+        <translation type="unfinished">檔案%s已經存在。 如果你確定這就是你想做的，先把這份檔案移開。</translation>
+    </message>
+    <message>
         <source>Invalid or corrupt peers.dat (%s). If you believe this is a bug, please report it to %s. As a workaround, you can move the file (%s) out of the way (rename, move, or delete) to have a new one created on the next start.</source>
         <translation type="unfinished">无效或损坏的peers.dat (%s)。如果你确信这是一个bug，请反馈到%s。作为变通办法，你可以把现有文件 (%s) 移开(重命名、移动或删除)，这样就可以在下次启动时创建一个新文件了。</translation>
+    </message>
+    <message>
+        <source>More than one onion bind address is provided. Using %s for the automatically created Tor onion service.</source>
+        <translation type="unfinished">提供多數TOR路由綁定位址。 對自動建立的Tor服務用%s</translation>
     </message>
     <message>
         <source>No dump file provided. To use createfromdump, -dumpfile=&lt;filename&gt; must be provided.</source>
         <translation type="unfinished">没有提供转储文件。要使用 createfromdump ，必须提供 -dumpfile=&lt;filename&gt;。</translation>
     </message>
     <message>
+        <source>No dump file provided. To use dump, -dumpfile=&lt;filename&gt; must be provided.</source>
+        <translation type="unfinished">沒有提供轉儲文件。 要使用 dump ，必須提供 -dumpfile=&lt;filename&gt;。</translation>
+    </message>
+    <message>
         <source>No wallet file format provided. To use createfromdump, -format=&lt;format&gt; must be provided.</source>
         <translation type="unfinished">没有提供钱包格式。要使用 createfromdump ，必须提供 -format=&lt;format&gt;</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation type="unfinished">请检查电脑的日期时间设置是否正确！时间错误可能会导致 %s 运行异常。</translation>
+    </message>
+    <message>
+        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
+        <translation type="unfinished">如果你认为%s对你比较有用的话，请对我们进行一些自愿贡献。请访问%s网站来获取有关这个软件的更多信息。</translation>
+    </message>
+    <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation type="unfinished">修剪被设置得太小，已经低于最小值%d MiB，请使用更大的数值。</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead.</source>
@@ -3148,6 +4088,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation type="unfinished">扣除手續費後的交易金額太少而不能傳送</translation>
+    </message>
+    <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation type="unfinished">如果这个钱包之前没有正确关闭，而且上一次是被新版的Berkeley DB加载过，就会发生这个错误。如果是这样，请使用上次加载过这个钱包的那个软件。</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -3202,6 +4146,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">警告：在已经禁用私钥的钱包 {%s} 中仍然检测到私钥</translation>
     </message>
     <message>
+        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
+        <translation type="unfinished">警告：我们和其他节点似乎没达成共识！您可能需要升级，或者就是其他节点可能需要升级。</translation>
+    </message>
+    <message>
         <source>Witness data for blocks after height %d requires validation. Please restart with -reindex.</source>
         <translation type="unfinished">需要验证高度在%d之后的区块见证数据。请使用 -reindex 重新启动。</translation>
     </message>
@@ -3216,6 +4164,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation type="unfinished">參數 -maxmempool 至少要給 %d 百萬位元組(MB)</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation type="unfinished">发生了致命的内部错误，请在debug.log中查看详情</translation>
     </message>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
@@ -3360,6 +4312,26 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">对 %s 的配置设置只对 %s 网络生效，如果它位于配置的 [%s] 章节的话</translation>
     </message>
     <message>
+        <source>Copyright (C) %i-%i</source>
+        <translation type="unfinished">版权所有 (C) %i-%i</translation>
+    </message>
+    <message>
+        <source>Corrupted block database detected</source>
+        <translation type="unfinished">检测到区块数据库损坏</translation>
+    </message>
+    <message>
+        <source>Could not find asmap file %s</source>
+        <translation type="unfinished">找不到asmap文件%s</translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation type="unfinished">無法解析asmap文件%s</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation type="unfinished">磁盘空间太低!</translation>
+    </message>
+    <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation type="unfinished">你想现在就重建区块数据库吗？</translation>
     </message>
@@ -3372,12 +4344,20 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">转储文件 %s 不存在</translation>
     </message>
     <message>
+        <source>Error committing db txn for wallet transactions removal</source>
+        <translation type="unfinished">在提交删除钱包交易的数据库事务时出错</translation>
+    </message>
+    <message>
         <source>Error creating %s</source>
         <translation type="unfinished">创建%s时出错</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">初始化区块数据库时出错</translation>
+    </message>
+    <message>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation type="unfinished">初始化钱包数据库环境错误 %s!</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -3396,6 +4376,14 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">載入檔案 %s 時發生錯誤: 這個錢包需要新版的 %s</translation>
     </message>
     <message>
+        <source>Error loading block database</source>
+        <translation type="unfinished">加载区块数据库时出错</translation>
+    </message>
+    <message>
+        <source>Error opening block database</source>
+        <translation type="unfinished">打开区块数据库时出错</translation>
+    </message>
+    <message>
         <source>Error reading configuration file: %s</source>
         <translation type="unfinished">读取配置文件失败: %s</translation>
     </message>
@@ -3404,16 +4392,16 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">读取数据库出错，关闭中。</translation>
     </message>
     <message>
+        <source>Error reading next record from wallet database</source>
+        <translation type="unfinished">從錢包資料庫讀取下一筆記錄時出錯</translation>
+    </message>
+    <message>
+        <source>Error starting db txn for wallet transactions removal</source>
+        <translation type="unfinished">在开始删除钱包交易的数据库事务时出错</translation>
+    </message>
+    <message>
         <source>Error: Cannot extract destination from the generated scriptpubkey</source>
         <translation type="unfinished">错误: 无法从生成的scriptpubkey提取目标</translation>
-    </message>
-    <message>
-        <source>Error: Could not add watchonly tx to watchonly wallet</source>
-        <translation type="unfinished">错误：无法添加仅观察交易至仅观察钱包</translation>
-    </message>
-    <message>
-        <source>Error: Could not delete watchonly transactions</source>
-        <translation type="unfinished">错误：无法删除仅观察交易</translation>
     </message>
     <message>
         <source>Error: Couldn't create cursor into database</source>
@@ -3430,10 +4418,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Error: Keypool ran out, please call keypoolrefill first</source>
         <translation type="unfinished">錯誤：keypool已用完，請先重新呼叫keypoolrefill</translation>
-    </message>
-    <message>
-        <source>Error: Not all watchonly txs could be deleted</source>
-        <translation type="unfinished">错误：有些仅观察交易无法被删除</translation>
     </message>
     <message>
         <source>Error: This wallet already uses SQLite</source>
@@ -3460,6 +4444,10 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">错误：无法读取这个数据库中的所有记录</translation>
     </message>
     <message>
+        <source>Error: Unable to read wallet's best block locator record</source>
+        <translation type="unfinished">错误：无法读取钱包最佳区块定位器记录</translation>
+    </message>
+    <message>
         <source>Error: Unable to remove watchonly address book data</source>
         <translation type="unfinished">错误：无法移除仅观察地址簿数据</translation>
     </message>
@@ -3468,12 +4456,32 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">错误: 无法写入记录到新钱包</translation>
     </message>
     <message>
+        <source>Error: Unable to write solvable wallet best block locator record</source>
+        <translation type="unfinished">错误：无法写入可解决钱包最佳区块定位器记录</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write watchonly wallet best block locator record</source>
+        <translation type="unfinished">错误：无法写入仅观察钱包最佳区块定位器记录</translation>
+    </message>
+    <message>
+        <source>Error: address book copy failed for wallet %s</source>
+        <translation type="unfinished">错误: 复制钱包%s的地址本时失败</translation>
+    </message>
+    <message>
+        <source>Error: database transaction cannot be executed for wallet %s</source>
+        <translation type="unfinished">错误: 钱包%s的数据库事务无法被执行</translation>
+    </message>
+    <message>
         <source>Failed to start indexes, shutting down..</source>
         <translation type="unfinished">无法启动索引，关闭中...</translation>
     </message>
     <message>
         <source>Failed to verify database</source>
         <translation type="unfinished">校验数据库失败</translation>
+    </message>
+    <message>
+        <source>Failure removing transaction: %s</source>
+        <translation type="unfinished">%s删除交易时失败: </translation>
     </message>
     <message>
         <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
@@ -3644,6 +4652,10 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">这是你每次交易付款时最少要付的手续费。</translation>
     </message>
     <message>
+        <source>Transaction %s does not belong to this wallet</source>
+        <translation type="unfinished">交易%s不属于这个钱包</translation>
+    </message>
+    <message>
         <source>Transaction amounts must not be negative</source>
         <translation type="unfinished">交易金额不不可为负数</translation>
     </message>
@@ -3712,12 +4724,24 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">不支持的全局日志等级 %s=%s。有效数值: %s.</translation>
     </message>
     <message>
+        <source>Wallet file creation failed: %s</source>
+        <translation type="unfinished">钱包文件创建失败：1%s</translation>
+    </message>
+    <message>
         <source>acceptstalefeeestimates is not supported on %s chain.</source>
         <translation type="unfinished">%s链上acceptstalefeeestimates 不受支持。</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation type="unfinished">不支持的日志分类 %s=%s。</translation>
+    </message>
+    <message>
+        <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
+        <translation type="unfinished">错误：无法添加仅观察交易%s到仅观察钱包</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions. </source>
+        <translation type="unfinished">错误: 无法删除仅观察交易。</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>

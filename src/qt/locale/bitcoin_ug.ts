@@ -175,6 +175,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Wallet encrypted</source>
         <translation type="unfinished">ھەميان شىفىرلاندى</translation>
     </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">ھەميان شىفىرلىنىدۇ</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation type="unfinished">ھەميانىڭىز شىفىرلىنىدۇ.</translation>
+    </message>
     </context>
 <context>
     <name>QObject</name>

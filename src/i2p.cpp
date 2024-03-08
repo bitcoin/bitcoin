@@ -392,7 +392,7 @@ Binary Session::MyDestination() const
     }
 
     memcpy(&cert_len, &m_private_key.at(CERT_LEN_POS), sizeof(cert_len));
-    cert_len = be16toh(cert_len);
+    cert_len = be16toh_internal(cert_len);
 
     const size_t dest_len = DEST_LEN_BASE + cert_len;
 
