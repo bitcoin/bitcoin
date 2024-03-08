@@ -358,7 +358,7 @@ produce better debugging builds.
 ### Show sources in debugging
 
 If you have ccache enabled, absolute paths are stripped from debug information
-with the -fdebug-prefix-map and -fmacro-prefix-map options (if supported by the
+with the `-fdebug-prefix-map` and `-fmacro-prefix-map` options (if supported by the
 compiler). This might break source file detection in case you move binaries
 after compilation, debug from the directory other than the project root or use
 an IDE that only supports absolute paths for debugging.
