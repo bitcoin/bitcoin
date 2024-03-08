@@ -1829,4 +1829,15 @@ BOOST_AUTO_TEST_CASE(clearshrink_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(is_space_byte_range_test)
+{
+    std::vector expected(256, false);
+    for (auto c : std::string_view(" \f\n\r\t\v")) expected[c] = true;
+
+    for (auto i{0U}; i < expected.size(); ++i) {
+        auto c = static_cast<char>(i);
+        BOOST_CHECK_MESSAGE(IsSpace(c) == expected[i], "IsSpace test failed for char value: " << i);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
