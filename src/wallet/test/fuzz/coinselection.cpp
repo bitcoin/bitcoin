@@ -158,7 +158,7 @@ FUZZ_TARGET(coin_grinder_is_optimal)
         // Only make UTXOs with positive effective value
         const CAmount input_fee = coin_params.m_effective_feerate.GetFee(n_input_bytes);
         // Ensure that each UTXO has at least an effective value of 1 sat
-        const CAmount eff_value{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY - max_spendable - max_output_groups + group_pos.size())};
+        const CAmount eff_value{fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(1, MAX_MONEY + group_pos.size() - max_spendable - max_output_groups)};
         const CAmount amount{eff_value + input_fee};
         std::vector<COutput> temp_utxo_pool;
 

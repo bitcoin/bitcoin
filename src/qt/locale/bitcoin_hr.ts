@@ -1651,18 +1651,6 @@ Potpisivanje je moguće samo sa 'legacy' adresama. </translation>
         <translation type="unfinished">Koristite zaseban SOCKS&amp;5 proxy kako biste dohvatili klijente preko Tora:</translation>
     </message>
     <message>
-        <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">Font fiksne širine u tabu Pregled:</translation>
-    </message>
-    <message>
-        <source>embedded "%1"</source>
-        <translation type="unfinished">ugrađen "%1"</translation>
-    </message>
-    <message>
-        <source>closest matching "%1"</source>
-        <translation type="unfinished">najbliže poklapanje "%1"</translation>
-    </message>
-    <message>
         <source>&amp;OK</source>
         <translation type="unfinished">&amp;U redu</translation>
     </message>
@@ -1886,10 +1874,6 @@ Potpisivanje je moguće samo sa 'legacy' adresama. </translation>
     <message>
         <source>PSBT saved to disk.</source>
         <translation type="unfinished">PBST spremljen na disk.</translation>
-    </message>
-    <message>
-        <source> * Sends %1 to %2</source>
-        <translation type="unfinished">* Šalje %1 %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2860,10 +2844,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
         <translation type="unfinished">Stvara djelomično potpisanu Bitcoin transakciju (Partially Signed Bitcoin Transaction - PSBT) za upotrebu sa npr. novčanikom %1 koji nije povezan s mrežom ili sa PSBT kompatibilnim hardverskim novčanikom.</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished">iz novčanika '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation type="unfinished">od %1 do '%2'</translation>
     </message>
@@ -3353,10 +3333,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>Output index</source>
         <translation type="unfinished">Indeks outputa</translation>
-    </message>
-    <message>
-        <source> (Certificate was not verified)</source>
-        <translation type="unfinished">(Certifikat nije bio ovjeren)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -4310,10 +4286,6 @@ Idi na Datoteka &gt;  Otvori novčanik za učitanje novčanika.
     <message>
         <source>Transaction change output index out of range</source>
         <translation type="unfinished">Indeks change outputa transakcije je izvan dometa</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">Transakcija ima prevelik lanac memorijskog bazena</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>

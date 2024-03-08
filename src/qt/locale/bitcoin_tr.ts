@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Adresi veya etiketi düzenlemek için sağ tıklayın.</translation>
+        <translation type="unfinished">Adresi veya etiketi düzenlemek için sağ tıklayın</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -92,6 +92,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
         <translation type="unfinished">Adres listesinin %1 konumuna kaydedilmesi sırasında bir hata meydana geldi. Lütfen tekrar deneyin.</translation>
+    </message>
+    <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Adresler gönderiliyor - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Adresler alınıyor - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -3071,10 +3079,6 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Çıktı indeksi</translation>
     </message>
     <message>
-        <source> (Certificate was not verified)</source>
-        <translation type="unfinished">(Sertifika doğrulanmadı)</translation>
-    </message>
-    <message>
         <source>Merchant</source>
         <translation type="unfinished">Tüccar</translation>
     </message>
@@ -3773,10 +3777,6 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
     <message>
         <source>Transaction change output index out of range</source>
         <translation type="unfinished">İşlem değişikliği çıktı endeksi aralık dışında</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">İşlem çok uzun bir mempool zincirine sahip</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>

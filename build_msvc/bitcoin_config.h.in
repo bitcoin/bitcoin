@@ -41,69 +41,9 @@
 /* Define this symbol to enable ZMQ functions */
 #define ENABLE_ZMQ 1
 
-/* Define to 1 if you have the declaration of `be16toh', and to 0 if you
-   don't. */
-#define HAVE_DECL_BE16TOH 0
-
-/* Define to 1 if you have the declaration of `be32toh', and to 0 if you
-   don't. */
-#define HAVE_DECL_BE32TOH 0
-
-/* Define to 1 if you have the declaration of `be64toh', and to 0 if you
-   don't. */
-#define HAVE_DECL_BE64TOH 0
-
-/* Define to 1 if you have the declaration of `bswap_16', and to 0 if you
-   don't. */
-#define HAVE_DECL_BSWAP_16 0
-
-/* Define to 1 if you have the declaration of `bswap_32', and to 0 if you
-   don't. */
-#define HAVE_DECL_BSWAP_32 0
-
-/* Define to 1 if you have the declaration of `bswap_64', and to 0 if you
-   don't. */
-#define HAVE_DECL_BSWAP_64 0
-
 /* Define to 1 if you have the declaration of `fork', and to 0 if you don't.
    */
 #define HAVE_DECL_FORK 0
-
-/* Define to 1 if you have the declaration of `htobe16', and to 0 if you
-   don't. */
-#define HAVE_DECL_HTOBE16 0
-
-/* Define to 1 if you have the declaration of `htobe32', and to 0 if you
-   don't. */
-#define HAVE_DECL_HTOBE32 0
-
-/* Define to 1 if you have the declaration of `htobe64', and to 0 if you
-   don't. */
-#define HAVE_DECL_HTOBE64 0
-
-/* Define to 1 if you have the declaration of `htole16', and to 0 if you
-   don't. */
-#define HAVE_DECL_HTOLE16 0
-
-/* Define to 1 if you have the declaration of `htole32', and to 0 if you
-   don't. */
-#define HAVE_DECL_HTOLE32 0
-
-/* Define to 1 if you have the declaration of `htole64', and to 0 if you
-   don't. */
-#define HAVE_DECL_HTOLE64 0
-
-/* Define to 1 if you have the declaration of `le16toh', and to 0 if you
-   don't. */
-#define HAVE_DECL_LE16TOH 0
-
-/* Define to 1 if you have the declaration of `le32toh', and to 0 if you
-   don't. */
-#define HAVE_DECL_LE32TOH 0
-
-/* Define to 1 if you have the declaration of `le64toh', and to 0 if you
-   don't. */
-#define HAVE_DECL_LE64TOH 0
 
 /* Define to 1 if you have the declaration of `setsid', and to 0 if you don't.
    */

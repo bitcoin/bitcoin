@@ -43,7 +43,7 @@
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation type="unfinished">E&amp;xcluir</translation>
+        <translation type="unfinished">&amp;Excluir</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -59,7 +59,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Estes são seus endereços para enviar pagamentos. Sempre confira o valor e o endereço do destinatário antes de enviar moedas.</translation>
+        <translation type="unfinished">Estes são os seus endereços para enviar pagamentos. Sempre confira o valor e o endereço do destinatário antes de enviar bitcoins.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
@@ -297,6 +297,18 @@ Só é possível assinar com endereços do tipo 'legado'.</translation>
     <message>
         <source>unknown</source>
         <translation type="unfinished">desconhecido</translation>
+    </message>
+    <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">Embutido "%1"</translation>
+    </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">Fonte padrão do sistema "%1"</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation type="unfinished">Personalizado...</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -1054,12 +1066,8 @@ O processo de migração criará um backup da carteira antes da migração. Este
         <translation type="unfinished">A carteira '%1' foi migrada com sucesso.</translation>
     </message>
     <message>
-        <source> Watchonly scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished">Os scripts watchonly foram migrados para uma nova carteira chamada '%1'.</translation>
-    </message>
-    <message>
-        <source> Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished">Os scripts solucionáveis, mas não monitorados, forammigrados para uma nova carteira chamada '%1'.</translation>
+        <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Os guiões solucionáveis mas não observados foram migrados para uma nova pasta chamada '%1'.</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -1523,6 +1531,10 @@ O processo de migração criará um backup da carteira antes da migração. Este
         <translation type="unfinished">Minimizar em vez de fechar o programa quando a janela for fechada. Quando essa opção estiver ativa, o programa só será fechado somente pela opção Sair no menu Arquivo.</translation>
     </message>
     <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">Fonte no painel de visualização:</translation>
+    </message>
+    <message>
         <source>Options set in this dialog are overridden by the command line:</source>
         <translation type="unfinished">Opções configuradas nessa caixa de diálogo serão sobrescritas pela linhas de comando: </translation>
     </message>
@@ -1713,10 +1725,6 @@ O processo de migração criará um backup da carteira antes da migração. Este
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
         <translation type="unfinished">Use um proxy SOCKS&amp;5 separado para alcançar os nós via serviços Tor:</translation>
-    </message>
-    <message>
-        <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">Fonte no painel de visualização:</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
@@ -1938,8 +1946,8 @@ O processo de migração criará um backup da carteira antes da migração. Este
         <translation type="unfinished">PSBT salvo no disco.</translation>
     </message>
     <message>
-        <source> * Sends %1 to %2</source>
-        <translation type="unfinished">* Envia %1 para %2</translation>
+        <source>Sends %1 to %2</source>
+        <translation type="unfinished">Envia %1 para %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2439,6 +2447,10 @@ O processo de migração criará um backup da carteira antes da migração. Este
         <translation type="unfinished">Control+P</translation>
     </message>
     <message>
+        <source>Node window - [%1]</source>
+        <translation type="unfinished">Janela do nó - [%1]</translation>
+    </message>
+    <message>
         <source>Executing command using "%1" wallet</source>
         <translation type="unfinished">Executando comando usando a carteira "%1"</translation>
     </message>
@@ -2850,7 +2862,7 @@ Nota: Como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished">Copiar alteração</translation>
+        <translation type="unfinished">Copiar troco</translation>
     </message>
     <message>
         <source>%1 (%2 blocks)</source>
@@ -2863,10 +2875,6 @@ Nota: Como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
     <message>
         <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <translation type="unfinished">Cria uma Transação de Bitcoin Parcialmente Assinada (PSBT) para usar com, por exemplo, uma carteira %1 offline ou uma carteira física compatível com PSBTs.</translation>
-    </message>
-    <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished">da carteira '%1'</translation>
     </message>
     <message>
         <source>%1 to '%2'</source>
@@ -2905,6 +2913,10 @@ Nota: Como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
         <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</extracomment>
         <translation type="unfinished">Por favor, revise a transação. Será produzido uma Transação de Bitcoin Parcialmente Assinada (PSBT) que você pode copiar e assinar com, por exemplo, uma carteira %1 offline, ou uma carteira física compatível com PSBTs.</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation type="unfinished">%1 da pasta "%2</translation>
     </message>
     <message>
         <source>Do you want to create this transaction?</source>
@@ -3363,8 +3375,9 @@ Nota: Como a taxa é calculada por byte, uma taxa de "100 satoshis por kvB" para
         <translation type="unfinished">Index da saída</translation>
     </message>
     <message>
-        <source> (Certificate was not verified)</source>
-        <translation type="unfinished">(O certificado não foi verificado)</translation>
+        <source>%1 (Certificate was not verified)</source>
+        <translation type="unfinished">
+%1 (O certificado não foi verificado)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -4088,6 +4101,10 @@ Impossível restaurar backup da carteira.</translation>
         <translation type="unfinished">Carregamento terminado!</translation>
     </message>
     <message>
+        <source>Error committing db txn for wallet transactions removal</source>
+        <translation type="unfinished">Erro durante commiting db txn para a remoção das transações da carteira.</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">Erro ao inicializar banco de dados de blocos</translation>
     </message>
@@ -4128,16 +4145,12 @@ Impossível restaurar backup da carteira.</translation>
         <translation type="unfinished">Erro ao ler o banco de dados. Encerrando.</translation>
     </message>
     <message>
+        <source>Error starting db txn for wallet transactions removal</source>
+        <translation type="unfinished">Erro durante o início db txn para a remoção das transações da carteira.</translation>
+    </message>
+    <message>
         <source>Error: Cannot extract destination from the generated scriptpubkey</source>
         <translation type="unfinished">Erro: não é possível extrair a destinação do scriptpubkey gerado</translation>
-    </message>
-    <message>
-        <source>Error: Could not add watchonly tx to watchonly wallet</source>
-        <translation type="unfinished">Erro: impossível adicionar tx apenas-visualização para carteira apenas-visualização</translation>
-    </message>
-    <message>
-        <source>Error: Could not delete watchonly transactions</source>
-        <translation type="unfinished">Erro: Impossível excluir transações apenas-visualização </translation>
     </message>
     <message>
         <source>Error: Disk space is low for %s</source>
@@ -4150,10 +4163,6 @@ Impossível restaurar backup da carteira.</translation>
     <message>
         <source>Error: Keypool ran out, please call keypoolrefill first</source>
         <translation type="unfinished">Keypool exaurida, por gentileza execute keypoolrefill primeiro</translation>
-    </message>
-    <message>
-        <source>Error: Not all watchonly txs could be deleted</source>
-        <translation type="unfinished">Erro: Nem todos os txs apenas-visualização foram excluídos</translation>
     </message>
     <message>
         <source>Error: This wallet already uses SQLite</source>
@@ -4180,8 +4189,28 @@ Impossível restaurar backup da carteira.</translation>
         <translation type="unfinished">Erro: Impossível ler todos os registros no banco de dados</translation>
     </message>
     <message>
+        <source>Error: Unable to read wallet's best block locator record</source>
+        <translation type="unfinished">Erro: Não foi possível ler o melhor registo de localização de blocos da carteira</translation>
+    </message>
+    <message>
         <source>Error: Unable to remove watchonly address book data</source>
         <translation type="unfinished">Erro: Impossível remover dados somente-visualização do Livro de Endereços </translation>
+    </message>
+    <message>
+        <source>Error: Unable to write solvable wallet best block locator record</source>
+        <translation type="unfinished">Erro: Não foi possível escrever o registo do melhor localizador de bloqueio da pasta solvível</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write watchonly wallet best block locator record</source>
+        <translation type="unfinished">Erro: Não é possível escrever o registo do melhor localizador de blocos da pasta watchonly</translation>
+    </message>
+    <message>
+        <source>Error: address book copy failed for wallet %s</source>
+        <translation type="unfinished">Erro: falha na cópia da agenda de endereços para a carteira %s</translation>
+    </message>
+    <message>
+        <source>Error: database transaction cannot be executed for wallet %s</source>
+        <translation type="unfinished">Erro: a transação do banco de dados não pode ser executada para a carteira %s</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -4198,6 +4227,10 @@ Impossível restaurar backup da carteira.</translation>
     <message>
         <source>Failed to verify database</source>
         <translation type="unfinished">Falha ao verificar a base de dados</translation>
+    </message>
+    <message>
+        <source>Failure removing transaction: %s</source>
+        <translation type="unfinished">Falha ao remover a transação: %s</translation>
     </message>
     <message>
         <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
@@ -4412,6 +4445,10 @@ Impossível restaurar backup da carteira.</translation>
         <translation type="unfinished">Esta é a taxa que você irá pagar se enviar uma transação.</translation>
     </message>
     <message>
+        <source>Transaction %s does not belong to this wallet</source>
+        <translation type="unfinished">A transação %s não pertence a esta carteira.</translation>
+    </message>
+    <message>
         <source>Transaction amount too small</source>
         <translation type="unfinished">Quantidade da transação muito pequena</translation>
     </message>
@@ -4422,10 +4459,6 @@ Impossível restaurar backup da carteira.</translation>
     <message>
         <source>Transaction change output index out of range</source>
         <translation type="unfinished">Endereço de troco da transação fora da faixa</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">A transação demorou muito na memória</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>
@@ -4500,8 +4533,24 @@ Impossível restaurar backup da carteira.</translation>
         <translation type="unfinished">Nível de registo global não suportado %s=%s. Valores válidos: %s.</translation>
     </message>
     <message>
+        <source>Wallet file creation failed: %s</source>
+        <translation type="unfinished">falha na criação do ficheiro da pasta: %s</translation>
+    </message>
+    <message>
+        <source>acceptstalefeeestimates is not supported on %s chain.</source>
+        <translation type="unfinished">acceptstalefeeestimates não é suportado na cadeia %s.</translation>
+    </message>
+    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation type="unfinished">Categoria de log desconhecida %s=%s.</translation>
+    </message>
+    <message>
+        <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
+        <translation type="unfinished">Erro: Não foi possível adicionar tx %s de vigilância à pasta de vigilância</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions. </source>
+        <translation type="unfinished">Erro: Impossível excluir transações apenas-visualização.</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>

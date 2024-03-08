@@ -1514,10 +1514,6 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">IBSP sábháilte ar dhiosca.</translation>
     </message>
     <message>
-        <source> * Sends %1 to %2</source>
-        <translation type="unfinished"> * Seolann %1 chuig %2</translation>
-    </message>
-    <message>
         <source>own address</source>
         <translation type="unfinished">seoladh féin</translation>
     </message>
@@ -2267,10 +2263,6 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Cruthaíonn Idirbheart Bitcoin Sínithe go Páirteach (IBSP) le húsáid le e.g. sparán as líne %1, nó sparán crua-earraí atá comhoiriúnach le IBSP.</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished">ó sparán '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation type="unfinished">%1 go '%2'</translation>
     </message>
@@ -2716,10 +2708,6 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
     <message>
         <source>Output index</source>
         <translation type="unfinished">Innéacs aschuir</translation>
-    </message>
-    <message>
-        <source> (Certificate was not verified)</source>
-        <translation type="unfinished">(Níor fíoraíodh teastas)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -3427,10 +3415,6 @@ Téigh go Comhad &gt; Oscail Sparán chun sparán a lódáil.
     <message>
         <source>Transaction amounts must not be negative</source>
         <translation type="unfinished">Níor cheart go mbeadh suimeanna idirbhirt diúltach</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">Tá slabhra mempool ró-fhada ag an idirbheart</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>

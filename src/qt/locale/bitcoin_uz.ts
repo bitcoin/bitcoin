@@ -2078,7 +2078,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished">Нусха қайтими</translation>
+        <translation type="unfinished">O'zgarishni nusxalash</translation>
     </message>
     <message>
         <source>%1 to %2</source>

@@ -11,6 +11,7 @@ import argparse
 import configparser
 import logging
 import os
+import random
 import subprocess
 import sys
 
@@ -104,7 +105,10 @@ def main():
         sys.exit(1)
 
     # Build list of tests
-    test_list_all = parse_test_list(fuzz_bin=os.path.join(config["environment"]["BUILDDIR"], 'src', 'test', 'fuzz', 'fuzz'))
+    test_list_all = parse_test_list(
+        fuzz_bin=os.path.join(config["environment"]["BUILDDIR"], 'src', 'test', 'fuzz', 'fuzz'),
+        source_dir=config['environment']['SRCDIR'],
+    )
 
     if not test_list_all:
         logging.error("No fuzz targets found")
@@ -264,9 +268,13 @@ def generate_corpus(*, fuzz_pool, src_dir, build_dir, corpus_dir, targets):
     for target, t_env in targets:
         target_corpus_dir = corpus_dir / target
         os.makedirs(target_corpus_dir, exist_ok=True)
+        use_value_profile = int(random.random() < .3)
         command = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
-            "-runs=100000",
+            "-rss_limit_mb=8000",
+            "-max_total_time=6000",
+            "-reload=0",
+            f"-use_value_profile={use_value_profile}",
             target_corpus_dir,
         ]
         futures.append(fuzz_pool.submit(job, command, target, t_env))
@@ -378,11 +386,12 @@ def run_once(*, fuzz_pool, corpus, test_list, src_dir, build_dir, using_libfuzze
             print(f"{t}{s}")
 
 
-def parse_test_list(*, fuzz_bin):
+def parse_test_list(*, fuzz_bin, source_dir):
     test_list_all = subprocess.run(
         fuzz_bin,
         env={
-            'PRINT_ALL_FUZZ_TARGETS_AND_ABORT': ''
+            'PRINT_ALL_FUZZ_TARGETS_AND_ABORT': '',
+            **get_fuzz_env(target="", source_dir=source_dir)
         },
         stdout=subprocess.PIPE,
         text=True,

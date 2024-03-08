@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Bonyeza kitufe cha kulia kufanya mabadiliko kwenye anuani au chapa</translation>
+        <translation type="unfinished">Bonyeza kulia ili kuhariri anwani au lebo</translation>
     </message>
     <message>
         <source>Create a new address</source>

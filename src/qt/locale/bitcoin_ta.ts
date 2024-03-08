@@ -2108,10 +2108,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">%1 (%2 ப்ளாக்ஸ்)</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished">வாலட்டில்  இருந்து '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation type="unfinished">%1 இருந்து '%2'</translation>
     </message>
@@ -2520,10 +2516,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Output index</source>
         <translation type="unfinished">வெளியீட்டு அட்டவணை</translation>
-    </message>
-    <message>
-        <source> (Certificate was not verified)</source>
-        <translation type="unfinished">(சான்றிதழ் சரிபார்க்கப்படவில்லை)</translation>
     </message>
     <message>
         <source>Merchant</source>

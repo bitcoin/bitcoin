@@ -84,6 +84,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">കയറ്റുമതി വിലാസങ്ങൾ </translation>
     </message>
     <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">കോമയാൽ വേർതിരിച്ച ഫയൽ (* .csv)</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">കയറ്റുമതി പരാജയപ്പെട്ടു</translation>
     </message>
@@ -206,8 +211,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">വാലറ്റ് ഡീക്രിപ്ഷനായി നൽകിയ പാസ്‌ഫ്രേസ് തെറ്റാണ്.</translation>
     </message>
     <message>
+        <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <translation type="unfinished">വാലറ്റ് ഡീക്രിപ്ഷനായി നൽകിയ പാസ്ഫ്രെയ്സ് തെറ്റാണ്. അതിൽ ഒരു ശൂന്യ പ്രതീകം അടങ്ങിയിരിക്കുന്നു (അതായത് - ഒരു സീറോ ബൈറ്റ്). 25.0-ന് മുമ്പ് ഈ സോഫ്‌റ്റ്‌വെയറിൻ്റെ ഒരു പതിപ്പ് ഉപയോഗിച്ചാണ് പാസ്‌ഫ്രെയ്‌സ് സജ്ജീകരിച്ചതെങ്കിൽ, ആദ്യത്തെ അസാധുവായ പ്രതീകം വരെയുള്ള - എന്നാൽ ഉൾപ്പെടുത്താതെയുള്ള പ്രതീകങ്ങൾ മാത്രം ഉപയോഗിച്ച് വീണ്ടും ശ്രമിക്കുക. ഇത് വിജയകരമാണെങ്കിൽ, ഭാവിയിൽ ഈ പ്രശ്‌നം ഒഴിവാക്കുന്നതിന് ദയവായി ഒരു പുതിയ പാസ്‌ഫ്രെയ്‌സ് സജ്ജീകരിക്കുക.</translation>
+    </message>
+    <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation type="unfinished">വാലറ്റ് പാസ്‌ഫ്രെയ്‌സ് വിജയകരമായി മാറ്റി.</translation>
+    </message>
+    <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">പാസ്‌ഫ്രെയ്‌സ് മാറ്റം പരാജയപ്പെട്ടു</translation>
+    </message>
+    <message>
+        <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
+        <translation type="unfinished">വാലറ്റ് ഡീക്രിപ്‌ഷനായി നൽകിയ പഴയ പാസ്‌ഫ്രെയ്‌സ് തെറ്റാണ്. അതിൽ ഒരു ശൂന്യ പ്രതീകം അടങ്ങിയിരിക്കുന്നു (അതായത് - ഒരു സീറോ ബൈറ്റ്). 25.0-ന് മുമ്പ് ഈ സോഫ്‌റ്റ്‌വെയറിൻ്റെ ഒരു പതിപ്പ് ഉപയോഗിച്ചാണ് പാസ്‌ഫ്രെയ്‌സ് സജ്ജീകരിച്ചതെങ്കിൽ, ആദ്യത്തെ അസാധുവായ പ്രതീകം വരെയുള്ള - എന്നാൽ ഉൾപ്പെടുത്താതെയുള്ള പ്രതീകങ്ങൾ മാത്രം ഉപയോഗിച്ച് വീണ്ടും ശ്രമിക്കുക.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -227,6 +244,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </context>
 <context>
     <name>BitcoinApplication</name>
+    <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">ക്രമീകരണങ്ങൾ ഫയൽ %1 കേടായതോ അസാധുവായതോ ആയിരിക്കാം.</translation>
+    </message>
+    <message>
+        <source>Runaway exception</source>
+        <translation type="unfinished">റൺവേ ഒഴിവാക്കൽ പിശക്</translation>
+    </message>
     <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
         <translation type="unfinished">മാരകമായ ഒരു പിശക് സംഭവിച്ചു. %1 ന് മേലിൽ സുരക്ഷിതമായി തുടരാനാകില്ല, ഒപ്പം ഉപേക്ഷിക്കുകയും ചെയ്യും.</translation>
@@ -356,7 +381,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Wallet:</source>
-        <translation type="unfinished">വാലറ്റ്:</translation>
+        <translation type="unfinished">പണസഞ്ചി </translation>
     </message>
     <message>
         <source>Network activity disabled.</source>
@@ -369,7 +394,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation type="unfinished">ഒരു ബിറ്റ്കോയിൻ വിലാസത്തിലേക്ക് നാണയങ്ങൾ അയയ്ക്കുക</translation>
+        <translation type="unfinished">ഒരു ബിറ്റ്‌കോയിൻ വിലാസത്തിലേക് പണം അയക്കുക </translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -529,6 +554,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>No wallets available</source>
         <translation type="unfinished">വാലറ്റ് ഒന്നും ലഭ്യം അല്ല </translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">വാലറ്റ് പുനഃസ്ഥാപിക്കുക</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -776,6 +806,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>RestoreWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">വാലറ്റ് പുനഃസ്ഥാപിക്കുക</translation>
+    </message>
+    </context>
+<context>
     <name>WalletController</name>
     <message>
         <source>Close wallet</source>
@@ -954,6 +992,26 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>OptionsDialog</name>
+    <message>
+        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
+        <translation type="unfinished">(0 = ഓട്ടോ, &lt;0 = അത്രയും കോറുകൾ സൗജന്യമായി വിടുക)</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation type="unfinished">വാലറ്റ്</translation>
+    </message>
+    <message>
+        <source>Expert</source>
+        <translation type="unfinished">വിദഗ്ധൻ</translation>
+    </message>
+    <message>
+        <source>&amp;Port:</source>
+        <translation type="unfinished">&amp;പോർട്ട്:</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation type="unfinished">ടോർ</translation>
+    </message>
     <message>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;ജാലകം </translation>
@@ -1316,6 +1374,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">കോമയാൽ വേർതിരിച്ച ഫയൽ (* .csv)</translation>
+    </message>
     <message>
         <source>Confirmed</source>
         <translation type="unfinished">സ്ഥിതീകരിച്ചു</translation>

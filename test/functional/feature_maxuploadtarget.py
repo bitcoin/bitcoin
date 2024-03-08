@@ -81,7 +81,8 @@ class MaxUploadTest(BitcoinTestFramework):
         p2p_conns = []
 
         for _ in range(3):
-            p2p_conns.append(self.nodes[0].add_p2p_connection(TestP2PConn()))
+            # Don't use v2transport in this test (too slow with the unoptimized python ChaCha20 implementation)
+            p2p_conns.append(self.nodes[0].add_p2p_connection(TestP2PConn(), supports_v2_p2p=False))
 
         # Now mine a big block
         mine_large_block(self, self.wallet, self.nodes[0])
@@ -173,7 +174,7 @@ class MaxUploadTest(BitcoinTestFramework):
         self.assert_uploadtarget_state(target_reached=False, serve_historical_blocks=False)
 
         # Reconnect to self.nodes[0]
-        peer = self.nodes[0].add_p2p_connection(TestP2PConn())
+        peer = self.nodes[0].add_p2p_connection(TestP2PConn(), supports_v2_p2p=False)
 
         # Sending mempool message shouldn't disconnect peer, as total limit isn't reached yet
         peer.send_and_ping(msg_mempool())

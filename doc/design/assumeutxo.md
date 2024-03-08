@@ -21,7 +21,7 @@ minimum and uses at least 1100 MiB.
 
 As the background sync continues there will be temporarily two chainstate
 directories, each multiple gigabytes in size (likely growing larger than the
-the downloaded snapshot).
+downloaded snapshot).
 
 ### Indexes
 
@@ -145,7 +145,7 @@ sequentially.
 
 Once the tip of the background chainstate hits the base block of the snapshot
 chainstate, we stop use of the background chainstate by setting `m_disabled`, in
-`CompleteSnapshotValidation()`, which is checked in `ActivateBestChain()`). We hash the
+`MaybeCompleteSnapshotValidation()`, which is checked in `ActivateBestChain()`). We hash the
 background chainstate's UTXO set contents and ensure it matches the compiled value in
 `CMainParams::m_assumeutxo_data`.
 

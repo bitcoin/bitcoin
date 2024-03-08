@@ -2,6 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif // HAVE_CONFIG_H
 #include <bench/bench.h>
 #include <interfaces/chain.h>
 #include <key.h>
@@ -11,9 +14,9 @@
 #include <util/translation.h>
 #include <validationinterface.h>
 #include <wallet/context.h>
+#include <wallet/test/util.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
-#include <wallet/test/util.h>
 
 namespace wallet {
 static void WalletIsMine(benchmark::Bench& bench, bool legacy_wallet, int num_combo = 0)

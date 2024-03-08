@@ -94,6 +94,14 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
         <translation type="unfinished">Een fout is opgetreden tijdens het opslaan van deze adreslijst naar %1. Probeer nogmaals.</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Verzendadressen - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Ontvangstadressen - %1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">Exporteren Mislukt</translation>
     </message>
@@ -693,6 +701,14 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
         <translation type="unfinished">Sluit alle portemonnees</translation>
     </message>
     <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Wallet migreren</translation>
+    </message>
+    <message>
+        <source>Migrate a wallet</source>
+        <translation type="unfinished">Een wallet migreren</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation type="unfinished">Toon het %1 hulpbericht om een lijst te krijgen met mogelijke Bitcoin commandoregelopties</translation>
     </message>
@@ -779,6 +795,14 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     <message>
         <source>Pre-syncing Headers (%1%)…</source>
         <translation type="unfinished">Blokhoofden synchroniseren (%1%)...</translation>
+    </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">Fout bij wallet maken</translation>
+    </message>
+    <message>
+        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">Kan geen nieuwe wallet maken, de software werd gecompileerd zonder sqlite-ondersteuning (nodig voor descriptor wallets)</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1020,6 +1044,57 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     </message>
 </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">Wallet migreren</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">Weet je zeker dat je wil migreren van wallet &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">De wallet migreren converteert deze wallet naar één of meerdere descriptor wallets. Er moet een nieuwe wallet backup gemaakt worden.
+Indien deze wallet alleen lezen scripts bevat, wordt er een nieuwe wallet gemaakt die deze alleen lezen scripts bevat.
+Indien deze wallet oplosbare maar ongemonitorde scripts bevat, wordt er een andere en nieuwe wallet gemaakt die deze scripts bevat.
+
+Het migratieproces maakt voorafgaand aan het migreren een backup van de wallet. Dit backupbestand krijgt de naam &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak en is te vinden in de map van deze wallet. In het geval van een onjuiste migratie, kan de backup hersteld worden met de "Wallet Herstellen" functie.</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Wallet migreren</translation>
+    </message>
+    <message>
+        <source>Migrating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">Migreren wallet &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
+        <source>The wallet '%1' was migrated successfully.</source>
+        <translation type="unfinished">De wallet '%1' werd succesvol gemigreerd.</translation>
+    </message>
+    <message>
+        <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Alleen lezen scripts zijn gemigreerd naar een nieuwe wallet met de naam '%1'.</translation>
+    </message>
+    <message>
+        <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Oplosbare maar ongemonitorde scripts zijn gemigreerd naar een nieuwe wallet met de naam '%1'.</translation>
+    </message>
+    <message>
+        <source>Migration failed</source>
+        <translation type="unfinished">Migreren mislukt</translation>
+    </message>
+    <message>
+        <source>Migration Successful</source>
+        <translation type="unfinished">Migreren succesvol</translation>
+    </message>
+</context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open wallet failed</source>
@@ -1100,6 +1175,14 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     <message>
         <source>Create Wallet</source>
         <translation type="unfinished">Wallet aanmaken</translation>
+    </message>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">Je bent één stap verwijderd van het maken van je nieuwe wallet!</translation>
+    </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">Voer aub een naam in en activeer, indien gewenst, geavanceerde opties</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1680,18 +1763,6 @@ Ongebruikte mempool geheugen is gedeeld voor deze cache.</translation>
         <translation type="unfinished">Gebruik afzonderlijke SOCKS &amp; 5-proxy om peers te bereiken via Tor Onion-services:</translation>
     </message>
     <message>
-        <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">Monospaced lettertype in het Overzicht tab:</translation>
-    </message>
-    <message>
-        <source>embedded "%1"</source>
-        <translation type="unfinished">ingebed "%1"</translation>
-    </message>
-    <message>
-        <source>closest matching "%1"</source>
-        <translation type="unfinished">best overeenkomende "%1"</translation>
-    </message>
-    <message>
         <source>&amp;OK</source>
         <translation type="unfinished">&amp;Oké</translation>
     </message>
@@ -1933,8 +2004,8 @@ Ongebruikte mempool geheugen is gedeeld voor deze cache.</translation>
         <translation type="unfinished">PSBT opgeslagen op de schijf</translation>
     </message>
     <message>
-        <source> * Sends %1 to %2</source>
-        <translation type="unfinished">Verstuur %1 naar %2</translation>
+        <source>Sends %1 to %2</source>
+        <translation type="unfinished">Verzenden %1 van %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2186,6 +2257,18 @@ Als je deze fout ziet zou je de aanbieder moeten verzoeken om een BIP21-compatib
         <translation type="unfinished">Selecteer een peer om gedetailleerde informatie te bekijken.</translation>
     </message>
     <message>
+        <source>The transport layer version: %1</source>
+        <translation type="unfinished">De transport layer versie: %1</translation>
+    </message>
+    <message>
+        <source>The BIP324 session ID string in hex, if any.</source>
+        <translation type="unfinished">De BIP324 sessie ID string in hex, indien aanwezig.</translation>
+    </message>
+    <message>
+        <source>Session ID</source>
+        <translation type="unfinished">Sessie ID</translation>
+    </message>
+    <message>
         <source>Version</source>
         <translation type="unfinished">Versie</translation>
     </message>
@@ -2393,6 +2476,21 @@ Als je deze fout ziet zou je de aanbieder moeten verzoeken om een BIP21-compatib
         <source>Outbound Address Fetch: short-lived, for soliciting addresses</source>
         <extracomment>Explanatory text for a short-lived outbound peer connection that is used to request addresses from a peer.</extracomment>
         <translation type="unfinished">Uitgaand adres verkrijgen: Kort levend, voor opvragen van adressen</translation>
+    </message>
+    <message>
+        <source>detecting: peer could be v1 or v2</source>
+        <extracomment>Explanatory text for "detecting" transport type.</extracomment>
+        <translation type="unfinished">detecteren: Peer kan v1 of v2 zijn</translation>
+    </message>
+    <message>
+        <source>v1: unencrypted, plaintext transport protocol</source>
+        <extracomment>Explanatory text for v1 transport type.</extracomment>
+        <translation type="unfinished">v1: onversleuteld, platte tekst transportprotocol</translation>
+    </message>
+    <message>
+        <source>v2: BIP324 encrypted transport protocol</source>
+        <extracomment>Explanatory text for v2 transport type.</extracomment>
+        <translation type="unfinished">v2: BIP324 versleuteld transportprotocol</translation>
     </message>
     <message>
         <source>we selected the peer for high bandwidth relay</source>
@@ -2877,10 +2975,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation type="unfinished">Creëert een Gedeeltelijk Getekende Bitcoin Transactie (PSBT) om te gebruiken met b.v. een offline %1 wallet, of een PSBT-compatibele hardware wallet.</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished">van wallet '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation type="unfinished">%1 naar %2</translation>
     </message>
@@ -2936,6 +3030,10 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</extracomment>
         <translation type="unfinished">Controleer aub je transactievoorstel. Dit zal een Gedeeltelijk Getekende Bitcoin Transactie (PSBT) produceren die je kan opslaan of kopiëren en vervolgens ondertekenen met bijv. een offline %1 wallet, of een PSBT-combatibele hardware wallet.</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation type="unfinished">%1 van wallet '%2'</translation>
     </message>
     <message>
         <source>Do you want to create this transaction?</source>
@@ -3378,8 +3476,8 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation type="unfinished">Transactie virtuele grootte</translation>
     </message>
     <message>
-        <source> (Certificate was not verified)</source>
-        <translation type="unfinished">(Certificaat kon niet worden geverifieerd)</translation>
+        <source>%1 (Certificate was not verified)</source>
+        <translation type="unfinished">%1 (Certificaat kon niet worden geverifieerd)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -4056,6 +4154,10 @@ Ga naar Bestand &gt; Wallet openen om een wallet te laden.
         <translation type="unfinished">Fout: Transactie %s in portemonnee kan niet worden geïdentificeerd als behorend bij gemigreerde portemonnees</translation>
     </message>
     <message>
+        <source>Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.</source>
+        <translation type="unfinished">Berekenen van bump fees mislukt, omdat onbevestigde UTXO's afhankelijk zijn van een enorm cluster onbevestigde transacties.</translation>
+    </message>
+    <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
         <translation type="unfinished">Kan de naam van het ongeldige peers.dat bestand niet hernoemen. Verplaats of verwijder het en probeer het opnieuw.</translation>
     </message>
@@ -4228,14 +4330,6 @@ Kan mislukte migratie niet opschonen</translation>
         <translation type="unfinished">Fout: Kan de bestemming niet extraheren uit de gegenereerde scriptpubkey</translation>
     </message>
     <message>
-        <source>Error: Could not add watchonly tx to watchonly wallet</source>
-        <translation type="unfinished">Fout: kon alleen-bekijkbaar transactie niet toevoegen aan alleen-bekijkbaar portemonnee</translation>
-    </message>
-    <message>
-        <source>Error: Could not delete watchonly transactions</source>
-        <translation type="unfinished">Fout: Kan alleen-bekijkbare transacties niet verwijderen</translation>
-    </message>
-    <message>
         <source>Error: Couldn't create cursor into database</source>
         <translation type="unfinished">Fout: Kan geen cursor in de database maken</translation>
     </message>
@@ -4272,10 +4366,6 @@ Kan mislukte migratie niet opschonen</translation>
         <translation type="unfinished">Fout: Geen %s adressen beschikbaar</translation>
     </message>
     <message>
-        <source>Error: Not all watchonly txs could be deleted</source>
-        <translation type="unfinished">Fout: niet alle alleen-bekijkbare transacties konden worden verwijderd</translation>
-    </message>
-    <message>
         <source>Error: This wallet already uses SQLite</source>
         <translation type="unfinished">Fout: deze portemonnee gebruikt al SQLite</translation>
     </message>
@@ -4300,12 +4390,24 @@ Kan mislukte migratie niet opschonen</translation>
         <translation type="unfinished">Fout: Kan niet alle records in de database lezen</translation>
     </message>
     <message>
+        <source>Error: Unable to read wallet's best block locator record</source>
+        <translation type="unfinished">Fout: Onleesbare beste block locatie aanduiding in wallet</translation>
+    </message>
+    <message>
         <source>Error: Unable to remove watchonly address book data</source>
         <translation type="unfinished">Fout: kan alleen-bekijkbaar adresboekgegevens niet verwijderen</translation>
     </message>
     <message>
         <source>Error: Unable to write record to new wallet</source>
         <translation type="unfinished">Fout: Kan record niet naar nieuwe wallet schrijven</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write solvable wallet best block locator record</source>
+        <translation type="unfinished">Fout: Kan beste block locatie aanduiding niet opslaan in wallet</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write watchonly wallet best block locator record</source>
+        <translation type="unfinished">Fout: Kan beste block locatie aanduiding niet opslaan in alleen lezen wallet</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -4556,10 +4658,6 @@ Kan mislukte migratie niet opschonen</translation>
         <translation type="unfinished">Transactie change output is buiten bereik</translation>
     </message>
     <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">Transactie heeft een te lange mempoolketen</translation>
-    </message>
-    <message>
         <source>Transaction must have at least one recipient</source>
         <translation type="unfinished">Transactie moet ten minste één ontvanger hebben</translation>
     </message>
@@ -4640,12 +4738,20 @@ Kan mislukte migratie niet opschonen</translation>
         <translation type="unfinished">Niet-ondersteund globaal logniveau %s=%s. Geldige waarden: %s.</translation>
     </message>
     <message>
+        <source>Wallet file creation failed: %s</source>
+        <translation type="unfinished">Walletbestand maken mislukt: %s</translation>
+    </message>
+    <message>
         <source>acceptstalefeeestimates is not supported on %s chain.</source>
         <translation type="unfinished">acceptstalefeeestimates worden niet ondersteund in de %s keten.</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation type="unfinished">Niet-ondersteunde logcategorie %s=%s.</translation>
+    </message>
+    <message>
+        <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
+        <translation type="unfinished">Fout: Kon alleen lezen tx %s niet toevoegen aan alleen lezen wallet</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>

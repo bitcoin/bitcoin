@@ -2,10 +2,6 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Valitse hiiren oikealla painikkeella muokataksesi osoitetta tai nimikettä</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation type="unfinished">Luo uusi osoite</translation>
     </message>
@@ -1638,18 +1634,6 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
         <translation type="unfinished">Käytä erillistä SOCKS&amp;5-välityspalvelinta tavoittaaksesi vertaisia Torin onion-palvelujen kautta:</translation>
     </message>
     <message>
-        <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">Monospaced-fontti Overview-välilehdellä:</translation>
-    </message>
-    <message>
-        <source>embedded "%1"</source>
-        <translation type="unfinished">upotettu "%1"</translation>
-    </message>
-    <message>
-        <source>closest matching "%1"</source>
-        <translation type="unfinished">lähin vastaavuus "%1"</translation>
-    </message>
-    <message>
         <source>&amp;Cancel</source>
         <translation type="unfinished">&amp;Peruuta</translation>
     </message>
@@ -1869,10 +1853,6 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
     <message>
         <source>PSBT saved to disk.</source>
         <translation type="unfinished">PSBT (osittain tallennettu bitcoin-siirto) tallennettiin levylle.</translation>
-    </message>
-    <message>
-        <source> * Sends %1 to %2</source>
-        <translation type="unfinished">*Lähettää %1'n kohteeseen %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2766,10 +2746,6 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
         <translation type="unfinished">Luo osittain allekirjoitetun bitcoin-siirtotapahtuman (PSBT) käytettäväksi mm. offline %1 lompakko tai PSBT-yhteensopiva hardware-lompakko.</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished"> lompakosta '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation type="unfinished">%1 - '%2'</translation>
     </message>
@@ -3247,10 +3223,6 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
     <message>
         <source>Output index</source>
         <translation type="unfinished">Ulostulon indeksi</translation>
-    </message>
-    <message>
-        <source> (Certificate was not verified)</source>
-        <translation type="unfinished"> (Sertifikaattia ei vahvistettu)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -4071,10 +4043,6 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
     <message>
         <source>Transaction amounts must not be negative</source>
         <translation type="unfinished">Lähetyksen siirtosumman tulee olla positiivinen</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">Maksutapahtumalla on liian pitkä muistialtaan ketju</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>

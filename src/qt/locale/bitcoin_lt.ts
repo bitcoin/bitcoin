@@ -2117,10 +2117,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">%1 (%2 blokai)</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished">iš piniginės '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation type="unfinished">'%1' į '%2'</translation>
     </message>
@@ -2955,10 +2951,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Transaction amounts must not be negative</source>
         <translation type="unfinished">Transakcijos suma negali buti neigiama</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">Sandoris turi per ilgą mempool grandinę</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>

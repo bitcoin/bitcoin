@@ -9,6 +9,7 @@
 #include <interfaces/init.h>
 #include <interfaces/node.h>
 #include <qt/bitcoin.h>
+#include <qt/guiconstants.h>
 #include <qt/test/apptests.h>
 #include <qt/test/optiontests.h>
 #include <qt/test/rpcnestedtests.h>
@@ -24,6 +25,7 @@
 #include <QApplication>
 #include <QDebug>
 #include <QObject>
+#include <QSettings>
 #include <QTest>
 
 #include <functional>
@@ -83,36 +85,45 @@ int main(int argc, char* argv[])
         setenv("QT_QPA_PLATFORM", "minimal", 0 /* overwrite */);
     #endif
 
-    BitcoinApplication app;
-    app.setApplicationName("Bitcoin-Qt-test");
-    app.createNode(*init);
+
+    QCoreApplication::setOrganizationName(QAPP_ORG_NAME);
+    QCoreApplication::setApplicationName(QAPP_APP_NAME_DEFAULT "-test");
 
     int num_test_failures{0};
 
-    AppTests app_tests(app);
-    num_test_failures += QTest::qExec(&app_tests);
+    {
+        BitcoinApplication app;
+        app.createNode(*init);
 
-    OptionTests options_tests(app.node());
-    num_test_failures += QTest::qExec(&options_tests);
+        AppTests app_tests(app);
+        num_test_failures += QTest::qExec(&app_tests);
 
-    URITests test1;
-    num_test_failures += QTest::qExec(&test1);
+        OptionTests options_tests(app.node());
+        num_test_failures += QTest::qExec(&options_tests);
 
-    RPCNestedTests test3(app.node());
-    num_test_failures += QTest::qExec(&test3);
+        URITests test1;
+        num_test_failures += QTest::qExec(&test1);
+
+        RPCNestedTests test3(app.node());
+        num_test_failures += QTest::qExec(&test3);
 
 #ifdef ENABLE_WALLET
-    WalletTests test5(app.node());
-    num_test_failures += QTest::qExec(&test5);
+        WalletTests test5(app.node());
+        num_test_failures += QTest::qExec(&test5);
 
-    AddressBookTests test6(app.node());
-    num_test_failures += QTest::qExec(&test6);
+        AddressBookTests test6(app.node());
+        num_test_failures += QTest::qExec(&test6);
 #endif
 
-    if (num_test_failures) {
-        qWarning("\nFailed tests: %d\n", num_test_failures);
-    } else {
-        qDebug("\nAll tests passed.\n");
+        if (num_test_failures) {
+            qWarning("\nFailed tests: %d\n", num_test_failures);
+        } else {
+            qDebug("\nAll tests passed.\n");
+        }
     }
+
+    QSettings settings;
+    settings.clear();
+
     return num_test_failures;
 }
