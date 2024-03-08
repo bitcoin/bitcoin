@@ -81,6 +81,8 @@ class CScriptOp(int):
         """Decode a small integer opcode, returning an integer"""
         if self == OP_0:
             return 0
+        if self == OP_1NEGATE:
+            return -1
 
         if not (self == OP_0 or OP_1 <= self <= OP_16):
             raise ValueError('op %r is not an OP_N' % self)
@@ -89,7 +91,7 @@ class CScriptOp(int):
 
     def is_small_int(self):
         """Return true if the op pushes a small integer to the stack"""
-        if 0x51 <= self <= 0x60 or self == 0:
+        if 0x51 <= self <= 0x60 or self == 0 or self == -1:
             return True
         else:
             return False
