@@ -135,6 +135,7 @@ BITCOIN_CORE_H = \
   chainparamsseeds.h \
   checkqueue.h \
   clientversion.h \
+  cluster_linearize.h \
   coins.h \
   common/args.h \
   common/bloom.h \
@@ -196,6 +197,7 @@ BITCOIN_CORE_H = \
   kernel/messagestartchars.h \
   kernel/notifications_interface.h \
   kernel/validation_cache_sizes.h \
+  kernel/txgraph.h \
   key.h \
   key_io.h \
   logging.h \
@@ -295,6 +297,7 @@ BITCOIN_CORE_H = \
   util/batchpriority.h \
   util/bip32.h \
   util/bitdeque.h \
+  util/bitset.h \
   util/bytevectorhash.h \
   util/chaintype.h \
   util/check.h \
@@ -302,6 +305,7 @@ BITCOIN_CORE_H = \
   util/error.h \
   util/exception.h \
   util/fastrange.h \
+  util/feefrac.h \
   util/fees.h \
   util/fs.h \
   util/fs_helpers.h \
@@ -408,6 +412,7 @@ libbitcoin_node_a_SOURCES = \
   kernel/disconnected_transactions.cpp \
   kernel/mempool_persist.cpp \
   kernel/mempool_removal_reason.cpp \
+  kernel/txgraph.cpp \
   mapport.cpp \
   net.cpp \
   net_processing.cpp \

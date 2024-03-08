@@ -19,14 +19,7 @@ other consensus and policy rules, each of the following conditions are met:
    Use the (`-mempoolfullrbf`) configuration option to allow transaction replacement without enforcement of the
    opt-in signaling rule.
 
-2. The replacement transaction only include an unconfirmed input if that input was included in
-   one of the directly conflicting transactions. An unconfirmed input spends an output from a
-   currently-unconfirmed transaction.
-
-   *Rationale*: When RBF was originally implemented, the mempool did not keep track of
-   ancestor feerates yet. This rule was suggested as a temporary restriction.
-
-3. The replacement transaction pays an absolute fee of at least the sum paid by the original
+2. The replacement transaction pays an absolute fee of at least the sum paid by the original
    transactions.
 
    *Rationale*: Only requiring the replacement transaction to have a higher feerate could allow an
@@ -36,7 +29,7 @@ other consensus and policy rules, each of the following conditions are met:
    rational miner, a replacement policy allowing the replacement transaction to decrease the absolute
    fees in the next block would be incentive-incompatible.
 
-4. The additional fees (difference between absolute fee paid by the replacement transaction and the
+3. The additional fees (difference between absolute fee paid by the replacement transaction and the
    sum paid by the original transactions) pays for the replacement transaction's bandwidth at or
    above the rate set by the node's incremental relay feerate. For example, if the incremental relay
    feerate is 1 satoshi/vB and the replacement transaction is 500 virtual bytes total, then the
@@ -45,23 +38,23 @@ other consensus and policy rules, each of the following conditions are met:
    *Rationale*: Try to prevent DoS attacks where an attacker causes the network to repeatedly relay
    transactions each paying a tiny additional amount in fees, e.g. just 1 satoshi.
 
-5. The number of original transactions does not exceed 100. More precisely, the sum of all
-   directly conflicting transactions' descendant counts (number of transactions inclusive of itself
-   and its descendants) must not exceed 100; it is possible that this overestimates the true number
-   of original transactions.
+4. The number of conflicting transactions does not exceed 100. This only counts
+   direct conflicts, and not their descendants.
 
-   *Rationale*: Try to prevent DoS attacks where an attacker is able to easily occupy and flush out
-   significant portions of the node's mempool using replacements with multiple directly conflicting
-   transactions, each with large descendant sets.
+   *Rationale*: This bound the number of clusters that might need to be
+   relinearized due to accepting a single replacement transaction.
 
-6. The replacement transaction's feerate is greater than the feerates of all directly conflicting
-   transactions.
+5. The mempool's feerate diagram must improve as a result of accepting the
+   replacement. That is, at every size, the amount of total fee that would be
+   available if a block of that size were to be mined from the mempool, must
+   be the same or greater if we accept the replacement (and there must be at
+   least one size at which the new mempool has strictly more fee than before).
+   Note: to ignore the tail effects of packing a block, we treat the mempool
+   chunks as having a single feerate that is smoothed over the full size of
+   the chunk.
 
-   *Rationale*: This rule was originally intended to ensure that the replacement transaction is
-   preferable for block-inclusion, compared to what would be removed from the mempool. This rule
-   predates ancestor feerate-based transaction selection.
-
-This set of rules is similar but distinct from BIP125.
+   *Rationale*: This is a conservative way to ensure that we never accept a
+   transaction that is somehow worse for miners than what was available before.
 
 ## History
 

@@ -85,11 +85,11 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
             const auto parent_info = [&] {
                 if (mempool_ancestors.size() > 0) {
                     auto& mempool_parent = *mempool_ancestors.begin();
-                    Assume(mempool_parent->GetCountWithDescendants() == 1);
+                    Assume(mempool_parent->GetNumChildren() == 0);
                     return ParentInfo{mempool_parent->GetTx().GetHash(),
                                       mempool_parent->GetTx().GetWitnessHash(),
                                       mempool_parent->GetTx().nVersion,
-                                      /*has_mempool_descendant=*/mempool_parent->GetCountWithDescendants() > 1};
+                                      /*has_mempool_descendant=*/mempool_parent->GetNumChildren() > 0};
                 } else {
                     auto& parent_index = in_package_parents.front();
                     auto& package_parent = package.at(parent_index);
@@ -202,14 +202,14 @@ std::optional<std::string> SingleV3Checks(const CTransactionRef& ptx,
         // If there are any ancestors, this is the only child allowed. The parent cannot have any
         // other descendants. We handle the possibility of multiple children as that case is
         // possible through a reorg.
-        const auto& children = parent_entry->GetMemPoolChildrenConst();
+        const auto& children = parent_entry->GetChildren();
         // Don't double-count a transaction that is going to be replaced. This logic assumes that
         // any descendant of the V3 transaction is a direct child, which makes sense because a V3
         // transaction can only have 1 descendant.
         const bool child_will_be_replaced = !children.empty() &&
             std::any_of(children.cbegin(), children.cend(),
-                [&direct_conflicts](const CTxMemPoolEntry& child){return direct_conflicts.count(child.GetTx().GetHash()) > 0;});
-        if (parent_entry->GetCountWithDescendants() + 1 > V3_DESCENDANT_LIMIT && !child_will_be_replaced) {
+                [&direct_conflicts](const CTxMemPoolEntry::CTxMemPoolEntryRef& child){return direct_conflicts.count(child.get().GetTx().GetHash()) > 0;});
+        if (parent_entry->GetNumChildren() + 2 > V3_DESCENDANT_LIMIT && !child_will_be_replaced) {
             return strprintf("tx %u (wtxid=%s) would exceed descendant count limit",
                              parent_entry->GetSharedTx()->GetHash().ToString(),
                              parent_entry->GetSharedTx()->GetWitnessHash().ToString());

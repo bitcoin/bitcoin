@@ -986,10 +986,34 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
 
 AC_MSG_CHECKING([for __builtin_clzll])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
-  (void) __builtin_clzll(0);
+ (void) __builtin_clzll(0);
   ]])],
  [ AC_MSG_RESULT([yes]); have_clzll=yes; AC_DEFINE([HAVE_BUILTIN_CLZLL], [1], [Define this symbol if you have __builtin_clzll])],
  [ AC_MSG_RESULT([no]); have_clzll=no;]
+)
+
+AC_MSG_CHECKING([for __builtin_ctz])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
+ (void) __builtin_ctz(0);
+  ]])],
+ [ AC_MSG_RESULT([yes]); have_ctz=yes; AC_DEFINE([HAVE_BUILTIN_CTZ], [1], [Define this symbol if you have __builtin_ctz])],
+ [ AC_MSG_RESULT([no]); have_ctz=no;]
+)
+
+AC_MSG_CHECKING([for __builtin_ctzl])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
+ (void) __builtin_ctzl(0);
+ ]])],
+ [ AC_MSG_RESULT([yes]); have_ctzl=yes; AC_DEFINE([HAVE_BUILTIN_CTZL], [1], [Define this symbol if you have __builtin_ctzl])],
+ [ AC_MSG_RESULT([no]); have_ctzl=no;]
+)
+
+AC_MSG_CHECKING([for __builtin_ctzll])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
+ (void) __builtin_ctzll(0);
+ ]])],
+ [ AC_MSG_RESULT([yes]); have_ctzll=yes; AC_DEFINE([HAVE_BUILTIN_CTZLL], [1], [Define this symbol if you have __builtin_ctzll])],
+ [ AC_MSG_RESULT([no]); have_ctzll=no;]
 )
 
 dnl Check for malloc_info (for memory statistics information in getmemoryinfo)
