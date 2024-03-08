@@ -42,13 +42,13 @@ static constexpr int64_t MAX_BLOCK_TIME_GAP = 90 * 60;
 class CBlockFileInfo
 {
 public:
-    unsigned int nBlocks;      //!< number of blocks stored in file
-    unsigned int nSize;        //!< number of used bytes of block file
-    unsigned int nUndoSize;    //!< number of used bytes in the undo file
-    unsigned int nHeightFirst; //!< lowest height of block in file
-    unsigned int nHeightLast;  //!< highest height of block in file
-    uint64_t nTimeFirst;       //!< earliest time of block in file
-    uint64_t nTimeLast;        //!< latest time of block in file
+    unsigned int nBlocks{};      //!< number of blocks stored in file
+    unsigned int nSize{};        //!< number of used bytes of block file
+    unsigned int nUndoSize{};    //!< number of used bytes in the undo file
+    unsigned int nHeightFirst{}; //!< lowest height of block in file
+    unsigned int nHeightLast{};  //!< highest height of block in file
+    uint64_t nTimeFirst{};       //!< earliest time of block in file
+    uint64_t nTimeLast{};        //!< latest time of block in file
 
     SERIALIZE_METHODS(CBlockFileInfo, obj)
     {
@@ -61,21 +61,7 @@ public:
         READWRITE(VARINT(obj.nTimeLast));
     }
 
-    void SetNull()
-    {
-        nBlocks = 0;
-        nSize = 0;
-        nUndoSize = 0;
-        nHeightFirst = 0;
-        nHeightLast = 0;
-        nTimeFirst = 0;
-        nTimeLast = 0;
-    }
-
-    CBlockFileInfo()
-    {
-        SetNull();
-    }
+    CBlockFileInfo() {}
 
     std::string ToString() const;
 
@@ -134,10 +120,18 @@ enum BlockStatus : uint32_t {
     BLOCK_OPT_WITNESS = 128, //!< block data in blk*.dat was received with a witness-enforcing client
 
     /**
-     * If set, this indicates that the block index entry is assumed-valid.
-     * Certain diagnostics will be skipped in e.g. CheckBlockIndex().
-     * It almost certainly means that the block's full validation is pending
-     * on a background chainstate. See `doc/design/assumeutxo.md`.
+     * If ASSUMED_VALID is set, it means that this block has not been validated
+     * and has validity status less than VALID_SCRIPTS. Also that it may have
+     * descendant blocks with VALID_SCRIPTS set, because they can be validated
+     * based on an assumeutxo snapshot.
+     *
+     * When an assumeutxo snapshot is loaded, the ASSUMED_VALID flag is added to
+     * unvalidated blocks at the snapshot height and below. Then, as the background
+     * validation progresses, and these blocks are validated, the ASSUMED_VALID
+     * flags are removed. See `doc/design/assumeutxo.md` for details.
+     *
+     * This flag is only used to implement checks in CheckBlockIndex() and
+     * should not be used elsewhere.
      */
     BLOCK_ASSUMED_VALID = 256,
     BLOCK_POS_ENTROPY = 512,
@@ -277,8 +271,12 @@ public:
      *
      * Does not imply the transactions are consensus-valid (ConnectTip might fail)
      * Does not imply the transactions are still stored on disk. (IsBlockPruned might return true)
+     *
+     * Note that this will be true for the snapshot base block, if one is loaded (and
+     * all subsequent assumed-valid blocks) since its nChainTx value will have been set
+     * manually based on the related AssumeutxoData entry.
      */
-    bool HaveTxsDownloaded() const { return nChainTx != 0; }
+    bool HaveNumChainTxs() const { return nChainTx != 0; }
 
     NodeSeconds Time() const
     {
@@ -300,36 +298,42 @@ public:
         return nVersion & CBlockHeader::VERSION_BIT_POS;
     }
 
-    bool GetStakeEntropyBit() const
+    bool GetStakeEntropyBit() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
+        AssertLockHeld(::cs_main);
         return (nStatus & BLOCK_POS_ENTROPY);
     }
 
-    void SetStakeEntropyBit(const bool& bit)
+    void SetStakeEntropyBit(const bool& bit) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
+        AssertLockHeld(::cs_main);
         if (bit) nStatus |= BLOCK_POS_ENTROPY;
     }
 
-    void SetStakeModifier(const uint64_t& nModifier, const bool& fGeneratedStakeModifier)
+    void SetStakeModifier(const uint64_t& nModifier, const bool& fGeneratedStakeModifier) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
+        AssertLockHeld(::cs_main);
         nStakeModifier = nModifier;
         if (fGeneratedStakeModifier)
             nStatus |= BLOCK_STAKE_MODIFIER;
     }
 
-    bool GeneratedStakeModifier() const
+    bool GeneratedStakeModifier() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
+        AssertLockHeld(::cs_main);
         return (nStatus & BLOCK_STAKE_MODIFIER);
     }
 
-    void SetKernelHash(const uint256& kernelHashIn)
+    void SetKernelHash(const uint256& kernelHashIn) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
+        AssertLockHeld(::cs_main);
         nStatus |= BLOCK_KERNEL_HASH;
         kernelHash = kernelHashIn;
     }
 
-    bool HasKernelHash() const
+    bool HasKernelHash() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
+        AssertLockHeld(::cs_main);
         return (nStatus & BLOCK_KERNEL_HASH);
     }
 
@@ -427,6 +431,14 @@ const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* 
 /** Used to marshal pointers into hashes for db storage. */
 class CDiskBlockIndex : public CBlockIndex
 {
+    /** Historically CBlockLocator's version field has been written to disk
+     * streams as the client version, but the value has never been used.
+     *
+     * Hard-code to the highest client version ever written.
+     * SerParams can be used if the field requires any meaning in the future.
+     **/
+    static constexpr int DUMMY_VERSION = 259900;
+
 public:
     uint256 hashPrev;
 
@@ -443,8 +455,8 @@ public:
     SERIALIZE_METHODS(CDiskBlockIndex, obj)
     {
         LOCK(::cs_main);
-        int _nVersion = s.GetVersion();
-        if (!(s.GetType() & SER_GETHASH)) READWRITE(VARINT_MODE(_nVersion, VarIntMode::NONNEGATIVE_SIGNED));
+        int _nVersion = DUMMY_VERSION;
+        READWRITE(VARINT_MODE(_nVersion, VarIntMode::NONNEGATIVE_SIGNED));
 
         READWRITE(VARINT_MODE(obj.nHeight, VarIntMode::NONNEGATIVE_SIGNED));
         READWRITE(VARINT(obj.nStatus));

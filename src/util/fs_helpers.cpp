@@ -11,12 +11,10 @@
 
 #include <logging.h>
 #include <sync.h>
-#include <tinyformat.h>
 #include <util/fs.h>
-#include <util/getuniquepath.h>
+#include <util/syserror.h>
 
 #include <cerrno>
-#include <filesystem>
 #include <fstream>
 #include <map>
 #include <memory>
@@ -52,31 +50,35 @@ static GlobalMutex cs_dir_locks;
  * is called.
  */
 static std::map<std::string, std::unique_ptr<fsbridge::FileLock>> dir_locks GUARDED_BY(cs_dir_locks);
-
-bool LockDirectory(const fs::path& directory, const fs::path& lockfile_name, bool probe_only)
+namespace util {
+LockResult LockDirectory(const fs::path& directory, const fs::path& lockfile_name, bool probe_only)
 {
     LOCK(cs_dir_locks);
     fs::path pathLockFile = directory / lockfile_name;
 
     // If a lock for this directory already exists in the map, don't try to re-lock it
     if (dir_locks.count(fs::PathToString(pathLockFile))) {
-        return true;
+        return LockResult::Success;
     }
 
     // Create empty lock file if it doesn't exist.
-    FILE* file = fsbridge::fopen(pathLockFile, "a");
-    if (file) fclose(file);
+    if (auto created{fsbridge::fopen(pathLockFile, "a")}) {
+        std::fclose(created);
+    } else {
+        return LockResult::ErrorWrite;
+    }
     auto lock = std::make_unique<fsbridge::FileLock>(pathLockFile);
     if (!lock->TryLock()) {
-        return error("Error while attempting to lock directory %s: %s", fs::PathToString(directory), lock->GetReason());
+        error("Error while attempting to lock directory %s: %s", fs::PathToString(directory), lock->GetReason());
+        return LockResult::ErrorLock;
     }
     if (!probe_only) {
         // Lock successful and we're not just probing, put it into the map
         dir_locks.emplace(fs::PathToString(pathLockFile), std::move(lock));
     }
-    return true;
+    return LockResult::Success;
 }
-
+} // namespace util
 void UnlockDirectory(const fs::path& directory, const fs::path& lockfile_name)
 {
     LOCK(cs_dir_locks);
@@ -87,19 +89,6 @@ void ReleaseDirectoryLocks()
 {
     LOCK(cs_dir_locks);
     dir_locks.clear();
-}
-
-bool DirIsWritable(const fs::path& directory)
-{
-    fs::path tmpFile = GetUniquePath(directory);
-
-    FILE* file = fsbridge::fopen(tmpFile, "a");
-    if (!file) return false;
-
-    fclose(file);
-    remove(tmpFile);
-
-    return true;
 }
 
 bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes)
@@ -120,28 +109,28 @@ std::streampos GetFileSize(const char* path, std::streamsize max)
 bool FileCommit(FILE* file)
 {
     if (fflush(file) != 0) { // harmless if redundantly called
-        LogPrintf("%s: fflush failed: %d\n", __func__, errno);
+        LogPrintf("fflush failed: %s\n", SysErrorString(errno));
         return false;
     }
 #ifdef WIN32
     HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
     if (FlushFileBuffers(hFile) == 0) {
-        LogPrintf("%s: FlushFileBuffers failed: %d\n", __func__, GetLastError());
+        LogPrintf("FlushFileBuffers failed: %s\n", Win32ErrorString(GetLastError()));
         return false;
     }
 #elif defined(MAC_OSX) && defined(F_FULLFSYNC)
     if (fcntl(fileno(file), F_FULLFSYNC, 0) == -1) { // Manpage says "value other than -1" is returned on success
-        LogPrintf("%s: fcntl F_FULLFSYNC failed: %d\n", __func__, errno);
+        LogPrintf("fcntl F_FULLFSYNC failed: %s\n", SysErrorString(errno));
         return false;
     }
 #elif HAVE_FDATASYNC
     if (fdatasync(fileno(file)) != 0 && errno != EINVAL) { // Ignore EINVAL for filesystems that don't support sync
-        LogPrintf("%s: fdatasync failed: %d\n", __func__, errno);
+        LogPrintf("fdatasync failed: %s\n", SysErrorString(errno));
         return false;
     }
 #else
     if (fsync(fileno(file)) != 0 && errno != EINVAL) {
-        LogPrintf("%s: fsync failed: %d\n", __func__, errno);
+        LogPrintf("fsync failed: %s\n", SysErrorString(errno));
         return false;
     }
 #endif
@@ -262,7 +251,7 @@ bool RenameOver(fs::path src, fs::path dest)
 {
 #ifdef __MINGW64__
     // This is a workaround for a bug in libstdc++ which
-    // implements std::filesystem::rename with _wrename function.
+    // implements fs::rename with _wrename function.
     // This bug has been fixed in upstream:
     //  - GCC 10.3: 8dd1c1085587c9f8a21bb5e588dfe1e8cdbba79e
     //  - GCC 11.1: 1dfd95f0a0ca1d9e6cbc00e6cbfd1fa20a98f312

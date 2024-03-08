@@ -5,6 +5,8 @@
 #ifndef BITCOIN_WALLET_CRYPTER_H
 #define BITCOIN_WALLET_CRYPTER_H
 
+#include <blsct/double_public_key.h>
+#include <blsct/private_key.h>
 #include <serialize.h>
 #include <support/allocators/secure.h>
 #include <script/signingprovider.h>

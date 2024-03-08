@@ -2,8 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#define BLS_ETH 1
-
 #include <algorithm>
 #include <blsct/common.h>
 #include <blsct/public_keys.h>

@@ -30,6 +30,10 @@
 #include "../include/secp256k1_schnorrsig.h"
 #endif
 
+#ifdef ENABLE_MODULE_ELLSWIFT
+#include "../include/secp256k1_ellswift.h"
+#endif
+
 static void run_tests(secp256k1_context *ctx, unsigned char *key);
 
 int main(void) {
@@ -79,6 +83,10 @@ static void run_tests(secp256k1_context *ctx, unsigned char *key) {
 #endif
 #ifdef ENABLE_MODULE_EXTRAKEYS
     secp256k1_keypair keypair;
+#endif
+#ifdef ENABLE_MODULE_ELLSWIFT
+    unsigned char ellswift[64];
+    static const unsigned char prefix[64] = {'t', 'e', 's', 't'};
 #endif
 
     for (i = 0; i < 32; i++) {
@@ -170,5 +178,32 @@ static void run_tests(secp256k1_context *ctx, unsigned char *key) {
     ret = secp256k1_schnorrsig_sign32(ctx, sig, msg, &keypair, NULL);
     SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
     CHECK(ret == 1);
+#endif
+
+#ifdef ENABLE_MODULE_ELLSWIFT
+    SECP256K1_CHECKMEM_UNDEFINE(key, 32);
+    ret = secp256k1_ellswift_create(ctx, ellswift, key, NULL);
+    SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+    CHECK(ret == 1);
+
+    SECP256K1_CHECKMEM_UNDEFINE(key, 32);
+    ret = secp256k1_ellswift_create(ctx, ellswift, key, ellswift);
+    SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+    CHECK(ret == 1);
+
+    for (i = 0; i < 2; i++) {
+        SECP256K1_CHECKMEM_UNDEFINE(key, 32);
+        SECP256K1_CHECKMEM_DEFINE(&ellswift, sizeof(ellswift));
+        ret = secp256k1_ellswift_xdh(ctx, msg, ellswift, ellswift, key, i, secp256k1_ellswift_xdh_hash_function_bip324, NULL);
+        SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+        CHECK(ret == 1);
+
+        SECP256K1_CHECKMEM_UNDEFINE(key, 32);
+        SECP256K1_CHECKMEM_DEFINE(&ellswift, sizeof(ellswift));
+        ret = secp256k1_ellswift_xdh(ctx, msg, ellswift, ellswift, key, i, secp256k1_ellswift_xdh_hash_function_prefix, (void *)prefix);
+        SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+        CHECK(ret == 1);
+    }
+
 #endif
 }

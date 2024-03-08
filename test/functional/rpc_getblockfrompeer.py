@@ -117,9 +117,11 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, error_msg, self.nodes[1].getblockfrompeer, blockhash, node1_interface_id)
 
         self.log.info("Connect pruned node")
-        # We need to generate more blocks to be able to prune
         self.connect_nodes(0, 2)
         pruned_node = self.nodes[2]
+        self.sync_blocks([self.nodes[0], pruned_node])
+
+        # We need to generate more blocks to be able to prune
         self.generate(self.nodes[0], 400, sync_fun=self.no_op)
         self.sync_blocks([self.nodes[0], pruned_node])
         pruneheight = pruned_node.pruneblockchain(300)

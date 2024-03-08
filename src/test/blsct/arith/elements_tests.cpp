@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(test_serialize)
         xs.Add(one);
         xs.Add(two);
 
-        CDataStream st(0, 0);
+        DataStream st{};
         xs.Serialize(st);
         BOOST_CHECK(st.size() == 1 + xs.Size() * sizeof(one.m_scalar));
 
@@ -585,7 +585,7 @@ BOOST_AUTO_TEST_CASE(test_serialize)
         xs.Add(g);
         xs.Add(gg);
 
-        CDataStream st(0, 0);
+        DataStream st{};
         xs.Serialize(st);
 
         Points ys;

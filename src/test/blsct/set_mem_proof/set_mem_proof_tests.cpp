@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #define BOOST_UNIT_TEST
-#define BLS_ETH 1
 
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/elements.h>
@@ -144,7 +143,7 @@ BOOST_AUTO_TEST_CASE(test_de_ser)
         omega
     );
 
-    CDataStream st(SER_DISK, PROTOCOL_VERSION);
+    DataStream st{};
     p.Serialize(st);
 
     SetMemProof<Mcl> q;

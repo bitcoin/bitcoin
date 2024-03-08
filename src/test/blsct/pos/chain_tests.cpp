@@ -41,20 +41,18 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
     SeedInsecureRand(SeedRand::ZEROS);
     CCoinsViewDB base{{.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};
 
-    wallet::DatabaseOptions options;
-    options.create_flags |= wallet::WALLET_FLAG_BLSCT;
+    CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+    wallet.InitWalletFlags(wallet::WALLET_FLAG_BLSCT);
 
-    wallet::CWallet* wallet(new wallet::CWallet(m_node.chain.get(), "", wallet::CreateMockWalletDatabase(options)));
-
-    LOCK(wallet->cs_wallet);
-    auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
+    LOCK(wallet.cs_wallet);
+    auto blsct_km = wallet.GetOrCreateBLSCTKeyMan();
     BOOST_CHECK(blsct_km->SetupGeneration(true));
 
     auto recvAddress = std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(0).value());
 
-    COutPoint outpoint{InsecureRand256(), /*nIn=*/0};
-    COutPoint outpoint2{InsecureRand256(), /*nIn=*/1};
-    COutPoint outpoint3{InsecureRand256(), /*nIn=*/2};
+    COutPoint outpoint{Txid::FromUint256(InsecureRand256()), /*nIn=*/0};
+    COutPoint outpoint2{Txid::FromUint256(InsecureRand256()), /*nIn=*/1};
+    COutPoint outpoint3{Txid::FromUint256(InsecureRand256()), /*nIn=*/2};
 
     Coin coin = CreateCoin(recvAddress);
     Coin coin2 = CreateCoin(recvAddress);

@@ -43,7 +43,9 @@ struct PrecomputedData
         for (uint32_t i = 0; i < NUM_OUTPOINTS; ++i) {
             uint32_t idx = (i * 1200U) >> 12; /* Map 3 or 4 entries to same txid. */
             const uint8_t ser[4] = {uint8_t(idx), uint8_t(idx >> 8), uint8_t(idx >> 16), uint8_t(idx >> 24)};
-            CSHA256().Write(PREFIX_O, 1).Write(ser, sizeof(ser)).Finalize(outpoints[i].hash.begin());
+            uint256 txid;
+            CSHA256().Write(PREFIX_O, 1).Write(ser, sizeof(ser)).Finalize(txid.begin());
+            outpoints[i].hash = Txid::FromUint256(txid);
             outpoints[i].n = i;
         }
 

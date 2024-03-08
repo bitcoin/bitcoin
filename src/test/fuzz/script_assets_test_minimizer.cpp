@@ -54,7 +54,7 @@ CMutableTransaction TxFromHex(const std::string& str)
 {
     CMutableTransaction tx;
     try {
-        SpanReader{SER_DISK, SERIALIZE_TRANSACTION_NO_WITNESS, CheckedParseHex(str)} >> tx;
+        SpanReader{CheckedParseHex(str)} >> TX_NO_WITNESS(tx);
     } catch (const std::ios_base::failure&) {
         throw std::runtime_error("Tx deserialization failure");
     }
@@ -68,7 +68,7 @@ std::vector<CTxOut> TxOutsFromJSON(const UniValue& univalue)
     for (size_t i = 0; i < univalue.size(); ++i) {
         CTxOut txout;
         try {
-            SpanReader{SER_DISK, 0, CheckedParseHex(univalue[i].get_str())} >> txout;
+            SpanReader{CheckedParseHex(univalue[i].get_str())} >> txout;
         } catch (const std::ios_base::failure&) {
             throw std::runtime_error("Prevout invalid format");
         }
@@ -186,7 +186,7 @@ void Test(const std::string& str)
 
 void test_init() {}
 
-FUZZ_TARGET_INIT_HIDDEN(script_assets_test_minimizer, test_init, /*hidden=*/true)
+FUZZ_TARGET(script_assets_test_minimizer, .init = test_init, .hidden = true)
 {
     if (buffer.size() < 2 || buffer.back() != '\n' || buffer[buffer.size() - 2] != ',') return;
     const std::string str((const char*)buffer.data(), buffer.size() - 2);

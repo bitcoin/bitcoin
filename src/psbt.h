@@ -89,13 +89,15 @@ struct PSBTProprietary
 template<typename Stream, typename... X>
 void SerializeToVector(Stream& s, const X&... args)
 {
-    WriteCompactSize(s, GetSerializeSizeMany(s.GetVersion(), args...));
+    SizeComputer sizecomp;
+    SerializeMany(sizecomp, args...);
+    WriteCompactSize(s, sizecomp.size());
     SerializeMany(s, args...);
 }
 
 // Takes a stream and multiple arguments and unserializes them first as a vector then each object individually in the order provided in the arguments
 template<typename Stream, typename... X>
-void UnserializeFromVector(Stream& s, X&... args)
+void UnserializeFromVector(Stream& s, X&&... args)
 {
     size_t expected_size = ReadCompactSize(s);
     size_t remaining_before = s.size();
@@ -226,8 +228,7 @@ struct PSBTInput
         // Write the utxo
         if (non_witness_utxo) {
             SerializeToVector(s, CompactSizeWriter(PSBT_IN_NON_WITNESS_UTXO));
-            OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS);
-            SerializeToVector(os, non_witness_utxo);
+            SerializeToVector(s, TX_NO_WITNESS(non_witness_utxo));
         }
         if (!witness_utxo.IsNull()) {
             SerializeToVector(s, CompactSizeWriter(PSBT_IN_WITNESS_UTXO));
@@ -315,7 +316,7 @@ struct PSBTInput
                 const auto& [leaf_hashes, origin] = leaf_origin;
                 SerializeToVector(s, PSBT_IN_TAP_BIP32_DERIVATION, xonly);
                 std::vector<unsigned char> value;
-                CVectorWriter s_value(s.GetType(), s.GetVersion(), value, 0);
+                VectorWriter s_value{value, 0};
                 s_value << leaf_hashes;
                 SerializeKeyOrigin(s_value, origin);
                 s << value;
@@ -381,7 +382,7 @@ struct PSBTInput
             }
 
             // Type is compact size uint at beginning of key
-            SpanReader skey(s.GetType(), s.GetVersion(), key);
+            SpanReader skey{key};
             uint64_t type = ReadCompactSize(skey);
 
             // Do stuff based on type
@@ -394,8 +395,7 @@ struct PSBTInput
                         throw std::ios_base::failure("Non-witness utxo key is more than one byte type");
                     }
                     // Set the stream to unserialize with witness since this is always a valid network transaction
-                    OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() & ~SERIALIZE_TRANSACTION_NO_WITNESS);
-                    UnserializeFromVector(os, non_witness_utxo);
+                    UnserializeFromVector(s, TX_WITH_WITNESS(non_witness_utxo));
                     break;
                 }
                 case PSBT_IN_WITNESS_UTXO:
@@ -590,7 +590,7 @@ struct PSBTInput
                     } else if (key.size() != 65) {
                         throw std::ios_base::failure("Input Taproot script signature key is not 65 bytes");
                     }
-                    SpanReader s_key(s.GetType(), s.GetVersion(), Span{key}.subspan(1));
+                    SpanReader s_key{Span{key}.subspan(1)};
                     XOnlyPubKey xonly;
                     uint256 hash;
                     s_key >> xonly;
@@ -632,7 +632,7 @@ struct PSBTInput
                     } else if (key.size() != 33) {
                         throw std::ios_base::failure("Input Taproot BIP32 keypath key is not at 33 bytes");
                     }
-                    SpanReader s_key(s.GetType(), s.GetVersion(), Span{key}.subspan(1));
+                    SpanReader s_key{Span{key}.subspan(1)};
                     XOnlyPubKey xonly;
                     s_key >> xonly;
                     std::set<uint256> leaf_hashes;
@@ -757,7 +757,7 @@ struct PSBTOutput
         if (!m_tap_tree.empty()) {
             SerializeToVector(s, PSBT_OUT_TAP_TREE);
             std::vector<unsigned char> value;
-            CVectorWriter s_value(s.GetType(), s.GetVersion(), value, 0);
+            VectorWriter s_value{value, 0};
             for (const auto& [depth, leaf_ver, script] : m_tap_tree) {
                 s_value << depth;
                 s_value << leaf_ver;
@@ -771,7 +771,7 @@ struct PSBTOutput
             const auto& [leaf_hashes, origin] = leaf;
             SerializeToVector(s, PSBT_OUT_TAP_BIP32_DERIVATION, xonly);
             std::vector<unsigned char> value;
-            CVectorWriter s_value(s.GetType(), s.GetVersion(), value, 0);
+            VectorWriter s_value{value, 0};
             s_value << leaf_hashes;
             SerializeKeyOrigin(s_value, origin);
             s << value;
@@ -807,7 +807,7 @@ struct PSBTOutput
             }
 
             // Type is compact size uint at beginning of key
-            SpanReader skey(s.GetType(), s.GetVersion(), key);
+            SpanReader skey{key};
             uint64_t type = ReadCompactSize(skey);
 
             // Do stuff based on type
@@ -856,7 +856,7 @@ struct PSBTOutput
                     }
                     std::vector<unsigned char> tree_v;
                     s >> tree_v;
-                    SpanReader s_tree(s.GetType(), s.GetVersion(), tree_v);
+                    SpanReader s_tree{tree_v};
                     if (s_tree.empty()) {
                         throw std::ios_base::failure("Output Taproot tree must not be empty");
                     }
@@ -874,7 +874,7 @@ struct PSBTOutput
                         if ((leaf_ver & ~TAPROOT_LEAF_MASK) != 0) {
                             throw std::ios_base::failure("Output Taproot tree has a leaf with an invalid leaf version");
                         }
-                        m_tap_tree.push_back(std::make_tuple(depth, leaf_ver, script));
+                        m_tap_tree.emplace_back(depth, leaf_ver, script);
                         builder.Add((int)depth, script, (int)leaf_ver, /*track=*/true);
                     }
                     if (!builder.IsComplete()) {
@@ -984,8 +984,7 @@ struct PartiallySignedTransaction
         SerializeToVector(s, CompactSizeWriter(PSBT_GLOBAL_UNSIGNED_TX));
 
         // Write serialized tx to a stream
-        OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS);
-        SerializeToVector(os, *tx);
+        SerializeToVector(s, TX_NO_WITNESS(*tx));
 
         // Write xpubs
         for (const auto& xpub_pair : m_xpubs) {
@@ -1061,7 +1060,7 @@ struct PartiallySignedTransaction
             }
 
             // Type is compact size uint at beginning of key
-            SpanReader skey(s.GetType(), s.GetVersion(), key);
+            SpanReader skey{key};
             uint64_t type = ReadCompactSize(skey);
 
             // Do stuff based on type
@@ -1075,8 +1074,7 @@ struct PartiallySignedTransaction
                     }
                     CMutableTransaction mtx;
                     // Set the stream to serialize with non-witness since this should always be non-witness
-                    OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS);
-                    UnserializeFromVector(os, mtx);
+                    UnserializeFromVector(s, TX_NO_WITNESS(mtx));
                     tx = std::move(mtx);
                     // Make sure that all scriptSigs and scriptWitnesses are empty
                     for (const CTxIn& txin : tx->vin) {

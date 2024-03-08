@@ -7,16 +7,7 @@
 #include <univalue.h>
 
 #ifdef ENABLE_EXTERNAL_SIGNER
-#if defined(__GNUC__)
-// Boost 1.78 requires the following workaround.
-// See: https://github.com/boostorg/process/issues/235
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wnarrowing"
-#endif
 #include <boost/process.hpp>
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
 #endif // ENABLE_EXTERNAL_SIGNER
 
 #include <boost/test/unit_test.hpp>
@@ -99,7 +90,13 @@ BOOST_AUTO_TEST_CASE(run_command)
         });
     }
     {
-        BOOST_REQUIRE_THROW(RunCommandParseJSON("echo \"{\""), std::runtime_error); // Unable to parse JSON
+        // Unable to parse JSON
+#ifdef WIN32
+        const std::string command{"cmd.exe /c echo {"};
+#else
+        const std::string command{"echo {"};
+#endif
+        BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, HasReason("Unable to parse JSON: {"));
     }
     // Test std::in, except for Windows
 #ifndef WIN32

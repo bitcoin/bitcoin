@@ -22,10 +22,10 @@ void initialize_signet()
     static const auto testing_setup = MakeNoLogFileContext<>(ChainType::SIGNET);
 }
 
-FUZZ_TARGET_INIT(signet, initialize_signet)
+FUZZ_TARGET(signet, .init = initialize_signet)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    const std::optional<CBlock> block = ConsumeDeserializable<CBlock>(fuzzed_data_provider);
+    const std::optional<CBlock> block = ConsumeDeserializable<CBlock>(fuzzed_data_provider, TX_WITH_WITNESS);
     if (!block) {
         return;
     }

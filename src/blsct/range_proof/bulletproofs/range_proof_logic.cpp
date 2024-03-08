@@ -71,7 +71,7 @@ RangeProof<T> RangeProofLogic<T>::Prove(
     auto G = gens.G;
 
     // This hash is updated for Fiat-Shamir throughout the proof
-    CHashWriter fiat_shamir(0, 0);
+    HashWriter fiat_shamir{};
 
     // Calculate value commitments directly form the input values
     for (size_t i = 0; i < vs.Size(); ++i) {

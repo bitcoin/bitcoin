@@ -3,10 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <arith_uint256.h>
+#include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <script/standard.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <txorphanage.h>
@@ -30,8 +30,8 @@ public:
     CTransactionRef RandomOrphan() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         LOCK(m_mutex);
-        std::map<uint256, OrphanTx>::iterator it;
-        it = m_orphans.lower_bound(InsecureRand256());
+        std::map<Txid, OrphanTx>::iterator it;
+        it = m_orphans.lower_bound(Txid::FromUint256(InsecureRand256()));
         if (it == m_orphans.end())
             it = m_orphans.begin();
         return it->second.tx;
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         CMutableTransaction tx;
         tx.vin.resize(1);
         tx.vin[0].prevout.n = 0;
-        tx.vin[0].prevout.hash = InsecureRand256();
+        tx.vin[0].prevout.hash = Txid::FromUint256(InsecureRand256());
         tx.vin[0].scriptSig << OP_1;
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         }
         SignatureData empty;
         BOOST_CHECK(SignSignature(keystore, *txPrev, tx, 0, SIGHASH_ALL, empty));
-        // Re-use same signature for other inputs
+        // Reuse same signature for other inputs
         // (they don't have to be valid for this test)
         for (unsigned int j = 1; j < tx.vin.size(); j++)
             tx.vin[j].scriptSig = tx.vin[0].scriptSig;
@@ -129,11 +129,12 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     }
 
     // Test LimitOrphanTxSize() function:
-    orphanage.LimitOrphans(40);
+    FastRandomContext rng{/*fDeterministic=*/true};
+    orphanage.LimitOrphans(40, rng);
     BOOST_CHECK(orphanage.CountOrphans() <= 40);
-    orphanage.LimitOrphans(10);
+    orphanage.LimitOrphans(10, rng);
     BOOST_CHECK(orphanage.CountOrphans() <= 10);
-    orphanage.LimitOrphans(0);
+    orphanage.LimitOrphans(0, rng);
     BOOST_CHECK(orphanage.CountOrphans() == 0);
 }
 

@@ -10,6 +10,7 @@
 #include <chainparamsbase.h>
 #include <clientversion.h>
 #include <common/args.h>
+#include <common/system.h>
 #include <common/url.h>
 #include <compat/compat.h>
 #include <compat/stdin.h>
@@ -28,7 +29,6 @@
 #include <util/chaintype.h>
 #include <util/exception.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
 
@@ -744,20 +744,45 @@ bool TestSetup()
     return true;
 }
 
-Elements<MclG1Point> UniValueArrayToElements(const UniValue& array)
+struct StakedCommitment {
+    MclG1Point point;
+    MclScalar value;
+    MclScalar gamma;
+};
+
+std::vector<StakedCommitment>
+UniValueArrayToStakedCommitments(const UniValue& array)
 {
-    Elements<MclG1Point> ret;
+    std::vector<StakedCommitment> ret;
 
     for (const UniValue& elementobject : array.getValues()) {
+        auto obj = elementobject.get_obj();
         MclG1Point point;
-        point.SetVch(ParseHex(elementobject.get_str()));
-        ret.Add(point);
+        MclScalar value;
+        MclScalar gamma;
+        point.SetVch(ParseHex(obj.find_value("commitment").get_str()));
+        value.SetVch(ParseHex(obj.find_value("value").get_str()));
+        gamma.SetVch(ParseHex(obj.find_value("gamma").get_str()));
+        ret.push_back({point, value, gamma});
     }
 
     return ret;
 }
 
-std::vector<std::shared_ptr<const CTransaction>> UniValueArrayToTransactions(const UniValue& array)
+Elements<MclG1Point>
+StakedCommitmentsArrayToElements(const std::vector<StakedCommitment>& commitments)
+{
+    Elements<MclG1Point> ret;
+
+    for (auto& it : commitments) {
+        ret.Add(it.point);
+    }
+
+    return ret;
+}
+
+std::vector<std::shared_ptr<const CTransaction>>
+UniValueArrayToTransactions(const UniValue& array)
 {
     std::vector<std::shared_ptr<const CTransaction>> ret;
 
@@ -770,19 +795,20 @@ std::vector<std::shared_ptr<const CTransaction>> UniValueArrayToTransactions(con
     return ret;
 }
 
-std::string EncodeHexBlock(const CBlock& block, const int serializeFlags)
+std::string EncodeHexBlock(const CBlock& block)
 {
-    CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | serializeFlags);
-    ssBlock << block;
+    DataStream ssBlock;
+    ssBlock << TX_WITH_WITNESS(block);
     return HexStr(ssBlock);
 }
 
-Elements<MclG1Point> GetStakedCommitments(const std::unique_ptr<BaseRequestHandler>& rh)
+std::vector<StakedCommitment> GetStakedCommitments(const std::unique_ptr<BaseRequestHandler>& rh)
 {
     UniValue reply_staked = ConnectAndCallRPC(rh.get(), "liststakedcommitments", /* args=*/{}, walletName);
 
-    UniValue result = reply.find_value("result");
-    return UniValueArrayToElements(result.find_value("staked_commitments").get_array());
+    UniValue result = reply_staked.find_value("result");
+
+    return UniValueArrayToStakedCommitments(result.get_array());
 }
 
 CBlock GetBlockProposal(const std::unique_ptr<BaseRequestHandler>& rh)
@@ -790,26 +816,22 @@ CBlock GetBlockProposal(const std::unique_ptr<BaseRequestHandler>& rh)
     CBlock proposal;
 
     auto reply = ConnectAndCallRPC(rh.get(), "getblocktemplate", /* args=*/{}, walletName);
+    UniValue result = reply.find_value("result");
+
     auto staked_commitments = GetStakedCommitments(rh);
+    auto staked_elments = StakedCommitmentsArrayToElements(staked_commitments);
 
     auto eta = ParseHex(result.find_value("eta").get_str());
 
-    UniValue result_staked = reply_staked.find_value("result");
-
-    auto vchValue = ParseHex(result_staked.get_array()[0].find_value("value").get_str());
-    MclScalar m;
-    m.SetVch(vchValue);
-
-    auto vchGamma = ParseHex(result_staked.get_array()[0].find_value("gamma").get_str());
-    MclScalar f;
-    f.SetVch(vchGamma);
+    MclScalar m = staked_commitments[0].value;
+    MclScalar f = staked_commitments[0].gamma;
 
     proposal.nVersion = result.find_value("version").get_real();
     proposal.nTime = result.find_value("curtime").get_real();
     proposal.nBits = stoi(result.find_value("bits").get_str(), 0, 16);
     proposal.hashPrevBlock = uint256S(result.find_value("previousblockhash").get_str());
     proposal.vtx = UniValueArrayToTransactions(result.find_value("transactions").get_array());
-    proposal.posProof = blsct::ProofOfStake(staked_commitments, eta, m, f).setMemProof;
+    proposal.posProof = blsct::ProofOfStake(staked_elments, eta, m, f).setMemProof;
     proposal.hashMerkleRoot = BlockMerkleRoot(proposal);
 
     return proposal;
@@ -824,7 +846,7 @@ void Loop()
     while (true) {
         CBlock proposal = GetBlockProposal(rh);
 
-        UniValue reply_submit = ConnectAndCallRPC(rh.get(), "submitblock", /* args=*/{EncodeHexBlock(proposal, 0)}, walletName);
+        UniValue reply_submit = ConnectAndCallRPC(rh.get(), "submitblock", /* args=*/{EncodeHexBlock(proposal)}, walletName);
 
         UniValue result_submit = reply_submit.find_value("result");
         UniValue error_submit = reply_submit.find_value("error");

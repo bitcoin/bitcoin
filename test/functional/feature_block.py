@@ -14,7 +14,6 @@ from test_framework.blocktools import (
     get_legacy_sigopcount_block,
     MAX_BLOCK_SIGOPS,
 )
-from test_framework.key import ECKey
 from test_framework.messages import (
     CBlock,
     COIN,
@@ -44,8 +43,7 @@ from test_framework.script import (
     OP_INVALIDOPCODE,
     OP_RETURN,
     OP_TRUE,
-    SIGHASH_ALL,
-    LegacySignatureHash,
+    sign_input_legacy,
 )
 from test_framework.script_util import (
     script_to_p2sh_script,
@@ -55,6 +53,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
 )
+from test_framework.wallet_util import generate_keypair
 from data import invalid_txs
 
 
@@ -98,9 +97,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.bootstrap_p2p()  # Add one p2p connection to the node
 
         self.block_heights = {}
-        self.coinbase_key = ECKey()
-        self.coinbase_key.generate()
-        self.coinbase_pubkey = self.coinbase_key.get_pubkey().get_bytes()
+        self.coinbase_key, self.coinbase_pubkey = generate_keypair()
         self.tip = None
         self.blocks = {}
         self.genesis_hash = int(self.nodes[0].getbestblockhash(), 16)
@@ -541,12 +538,8 @@ class FullBlockTest(BitcoinTestFramework):
             # second input is corresponding P2SH output from b39
             tx.vin.append(CTxIn(COutPoint(b39.vtx[i].sha256, 0), b''))
             # Note: must pass the redeem_script (not p2sh_script) to the signature hash function
-            (sighash, err) = LegacySignatureHash(redeem_script, tx, 1, SIGHASH_ALL)
-            sig = self.coinbase_key.sign_ecdsa(sighash) + bytes(bytearray([SIGHASH_ALL]))
-            scriptSig = CScript([sig, redeem_script])
-
-            tx.vin[1].scriptSig = scriptSig
-            tx.rehash()
+            tx.vin[1].scriptSig = CScript([redeem_script])
+            sign_input_legacy(tx, 1, redeem_script, self.coinbase_key)
             new_txs.append(tx)
             lastOutpoint = COutPoint(tx.sha256, 0)
 
@@ -1340,8 +1333,7 @@ class FullBlockTest(BitcoinTestFramework):
         if (scriptPubKey[0] == OP_TRUE):  # an anyone-can-spend
             tx.vin[0].scriptSig = CScript()
             return
-        (sighash, err) = LegacySignatureHash(spend_tx.vout[0].scriptPubKey, tx, 0, SIGHASH_ALL)
-        tx.vin[0].scriptSig = CScript([self.coinbase_key.sign_ecdsa(sighash) + bytes(bytearray([SIGHASH_ALL]))])
+        sign_input_legacy(tx, 0, spend_tx.vout[0].scriptPubKey, self.coinbase_key)
 
     def create_and_sign_transaction(self, spend_tx, value, script=CScript([OP_TRUE])):
         tx = self.create_tx(spend_tx, 0, value, script)

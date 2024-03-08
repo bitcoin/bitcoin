@@ -34,7 +34,7 @@ void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, std::optio
         const UniValue& input = inputs[idx];
         const UniValue& o = input.get_obj();
 
-        uint256 txid = ParseHashO(o, "txid");
+        Txid txid = Txid::FromUint256(ParseHashO(o, "txid"));
 
         const UniValue& vout_v = o.find_value("vout");
         if (!vout_v.isNum())
@@ -185,7 +185,7 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                     {"scriptPubKey", UniValueType(UniValue::VSTR)},
                 });
 
-            uint256 txid = ParseHashO(prevOut, "txid");
+            Txid txid = Txid::FromUint256(ParseHashO(prevOut, "txid"));
 
             int nOut = prevOut.find_value("vout").getInt<int>();
             if (nOut < 0) {

@@ -15,10 +15,8 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "chainparamsbase -> common/args -> chainparamsbase",
     "node/blockstorage -> validation -> node/blockstorage",
     "node/utxo_snapshot -> validation -> node/utxo_snapshot",
-    "wallet/fees -> wallet/wallet -> wallet/fees",
     "wallet/wallet -> wallet/walletdb -> wallet/wallet",
     "kernel/coinstats -> validation -> kernel/coinstats",
-    "kernel/mempool_persist -> validation -> kernel/mempool_persist",
 
     # Temporary, removed in followup https://github.com/bitcoin/bitcoin/pull/24230
     "index/base -> node/context -> net_processing -> index/blockfilterindex -> index/base",

@@ -8,6 +8,17 @@ Test re-org scenarios with a mempool that contains transactions
 that spend (directly or indirectly) coinbase transactions.
 """
 
+import time
+
+from test_framework.messages import (
+    CInv,
+    MSG_WTX,
+    msg_getdata,
+)
+from test_framework.p2p import (
+    P2PTxInvStore,
+    p2p_lock,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
@@ -22,8 +33,84 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
             []
         ]
 
+    def test_reorg_relay(self):
+        self.log.info("Test that transactions from disconnected blocks are available for relay immediately")
+        # Prevent time from moving forward
+        self.nodes[1].setmocktime(int(time.time()))
+        self.connect_nodes(0, 1)
+        self.generate(self.wallet, 3)
+
+        # Disconnect node0 and node1 to create different chains.
+        self.disconnect_nodes(0, 1)
+        # Connect a peer to node1, which doesn't have immediate tx relay
+        peer1 = self.nodes[1].add_p2p_connection(P2PTxInvStore())
+
+        # Create a transaction that is included in a block.
+        tx_disconnected = self.wallet.send_self_transfer(from_node=self.nodes[1])
+        self.generate(self.nodes[1], 1, sync_fun=self.no_op)
+
+        # Create a transaction and submit it to node1's mempool.
+        tx_before_reorg = self.wallet.send_self_transfer(from_node=self.nodes[1])
+
+        # Create a child of that transaction and submit it to node1's mempool.
+        tx_child = self.wallet.send_self_transfer(utxo_to_spend=tx_disconnected["new_utxo"], from_node=self.nodes[1])
+        assert_equal(self.nodes[1].getmempoolentry(tx_child["txid"])["ancestorcount"], 1)
+        assert_equal(len(peer1.get_invs()), 0)
+
+        # node0 has a longer chain in which tx_disconnected was not confirmed.
+        self.generate(self.nodes[0], 3, sync_fun=self.no_op)
+
+        # Reconnect the nodes and sync chains. node0's chain should win.
+        self.connect_nodes(0, 1)
+        self.sync_blocks()
+
+        # Child now has an ancestor from the disconnected block
+        assert_equal(self.nodes[1].getmempoolentry(tx_child["txid"])["ancestorcount"], 2)
+        assert_equal(self.nodes[1].getmempoolentry(tx_before_reorg["txid"])["ancestorcount"], 1)
+
+        # peer1 should not have received an inv for any of the transactions during this time, as no
+        # mocktime has elapsed for those transactions to be announced. Likewise, it cannot
+        # request very recent, unanounced transactions.
+        assert_equal(len(peer1.get_invs()), 0)
+        # It's too early to request these two transactions
+        requests_too_recent = msg_getdata([CInv(t=MSG_WTX, h=int(tx["tx"].getwtxid(), 16)) for tx in [tx_before_reorg, tx_child]])
+        peer1.send_and_ping(requests_too_recent)
+        for _ in range(len(requests_too_recent.inv)):
+            peer1.sync_with_ping()
+        with p2p_lock:
+            assert "tx" not in peer1.last_message
+            assert "notfound" in peer1.last_message
+
+        # Request the tx from the disconnected block
+        request_disconnected_tx = msg_getdata([CInv(t=MSG_WTX, h=int(tx_disconnected["tx"].getwtxid(), 16))])
+        peer1.send_and_ping(request_disconnected_tx)
+
+        # The tx from the disconnected block was never announced, and it entered the mempool later
+        # than the transactions that are too recent.
+        assert_equal(len(peer1.get_invs()), 0)
+        with p2p_lock:
+            # However, the node will answer requests for the tx from the recently-disconnected block.
+            assert_equal(peer1.last_message["tx"].tx.getwtxid(),tx_disconnected["tx"].getwtxid())
+
+        self.nodes[1].setmocktime(int(time.time()) + 300)
+        peer1.sync_with_ping()
+        # the transactions are now announced
+        assert_equal(len(peer1.get_invs()), 3)
+        for _ in range(3):
+            # make sure all tx requests have been responded to
+            peer1.sync_with_ping()
+        last_tx_received = peer1.last_message["tx"]
+
+        tx_after_reorg = self.wallet.send_self_transfer(from_node=self.nodes[1])
+        request_after_reorg = msg_getdata([CInv(t=MSG_WTX, h=int(tx_after_reorg["tx"].getwtxid(), 16))])
+        assert tx_after_reorg["txid"] in self.nodes[1].getrawmempool()
+        peer1.send_and_ping(request_after_reorg)
+        with p2p_lock:
+            assert_equal(peer1.last_message["tx"], last_tx_received)
+
     def run_test(self):
-        wallet = MiniWallet(self.nodes[0])
+        self.wallet = MiniWallet(self.nodes[0])
+        wallet = self.wallet
 
         # Start with a 200 block chain
         assert_equal(self.nodes[0].getblockcount(), 200)
@@ -102,6 +189,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.log.info("Check that the mempool is empty")
         assert_equal(set(self.nodes[0].getrawmempool()), set())
         self.sync_all()
+
+        self.test_reorg_relay()
 
 
 if __name__ == '__main__':

@@ -4,17 +4,17 @@
 
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/building_block/fiat_shamir.h>
+#include <blsct/building_block/g_h_gi_hi_zero_verifier.h>
 #include <blsct/building_block/imp_inner_prod_arg.h>
 #include <blsct/building_block/lazy_points.h>
-#include <blsct/building_block/g_h_gi_hi_zero_verifier.h>
 #include <blsct/common.h>
 #include <blsct/set_mem_proof/set_mem_proof_prover.h>
-#include <stdexcept>
-#include <cmath>
 #include <hash.h>
 #include <streams.h>
-#include <version.h>
 #include <util/strencodings.h>
+
+#include <cmath>
+#include <stdexcept>
 
 template <typename T>
 const typename SetMemProofProver<T>::Scalar& SetMemProofProver<T>::One()
@@ -38,9 +38,9 @@ typename T::Scalar SetMemProofProver<T>::ComputeX(
     const Point& T1,
     const Point& T2
 ) {
-    CDataStream st(SER_DISK, PROTOCOL_VERSION);
+    DataStream st{};
     st << omega << y << z << T1 << T2;
-    auto vec = blsct::Common::CDataStreamToVector(st);
+    auto vec = blsct::Common::DataStreamToVector(st);
     Scalar x = setup.H1(vec);
     return x;
 }
@@ -56,7 +56,7 @@ typename Mcl::Scalar SetMemProofProver<Mcl>::ComputeX(
 
 
 template <typename T>
-CHashWriter SetMemProofProver<T>::GenInitialFiatShamir(
+HashWriter SetMemProofProver<T>::GenInitialFiatShamir(
     const Points& Ys,
     const Point& A1,
     const Point& A2,
@@ -66,12 +66,12 @@ CHashWriter SetMemProofProver<T>::GenInitialFiatShamir(
     const Point& phi,
     const Scalar& eta
 ) {
-    CHashWriter fiat_shamir(0, 0);
+    HashWriter fiat_shamir{};
     fiat_shamir << Ys << A1 << A2 << S1 << S2 << S3 << phi << eta;
     return fiat_shamir;
 }
 template
-CHashWriter SetMemProofProver<Mcl>::GenInitialFiatShamir(
+HashWriter SetMemProofProver<Mcl>::GenInitialFiatShamir(
     const Points& Ys,
     const Point& A1,
     const Point& A2,

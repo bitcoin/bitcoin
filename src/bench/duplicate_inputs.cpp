@@ -7,6 +7,7 @@
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
 #include <pow.h>
+#include <random.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
 #include <validation.h>
@@ -46,7 +47,7 @@ static void DuplicateInputs(benchmark::Bench& bench)
 
     uint64_t n_inputs = (((MAX_BLOCK_SERIALIZED_SIZE / WITNESS_SCALE_FACTOR) - (CTransaction(coinbaseTx).GetTotalSize() + CTransaction(naughtyTx).GetTotalSize())) / 41) - 100;
     for (uint64_t x = 0; x < (n_inputs - 1); ++x) {
-        naughtyTx.vin.emplace_back(GetRandHash(), 0, CScript(), 0);
+        naughtyTx.vin.emplace_back(Txid::FromUint256(GetRandHash()), 0, CScript(), 0);
     }
     naughtyTx.vin.emplace_back(naughtyTx.vin.back());
 

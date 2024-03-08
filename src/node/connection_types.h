@@ -6,6 +6,7 @@
 #define BITCOIN_NODE_CONNECTION_TYPES_H
 
 #include <string>
+#include <stdint.h>
 
 /** Different types of connections to a peer. This enum encapsulates the
  * information we have available at the time of opening or accepting the
@@ -78,5 +79,15 @@ enum class ConnectionType {
 
 /** Convert ConnectionType enum to a string value */
 std::string ConnectionTypeAsString(ConnectionType conn_type);
+
+/** Transport layer version */
+enum class TransportProtocolType : uint8_t {
+    DETECTING, //!< Peer could be v1 or v2
+    V1, //!< Unencrypted, plaintext protocol
+    V2, //!< BIP324 protocol
+};
+
+/** Convert TransportProtocolType enum to a string value */
+std::string TransportTypeAsString(TransportProtocolType transport_type);
 
 #endif // BITCOIN_NODE_CONNECTION_TYPES_H

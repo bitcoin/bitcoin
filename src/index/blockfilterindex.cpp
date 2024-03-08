@@ -4,15 +4,16 @@
 
 #include <map>
 
+#include <clientversion.h>
 #include <common/args.h>
 #include <dbwrapper.h>
 #include <hash.h>
 #include <index/blockfilterindex.h>
+#include <logging.h>
 #include <node/blockstorage.h>
+#include <undo.h>
 #include <util/fs_helpers.h>
 #include <validation.h>
-
-using node::UndoReadFromDisk;
 
 /* The index database stores three items for each block: the disk location of the encoded filter,
  * its dSHA256 hash, and the header. Those belonging to blocks on the active chain are indexed by
@@ -173,8 +174,8 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
     assert(filter.GetFilterType() == GetFilterType());
 
     size_t data_size =
-        GetSerializeSize(filter.GetBlockHash(), CLIENT_VERSION) +
-        GetSerializeSize(filter.GetEncodedFilter(), CLIENT_VERSION);
+        GetSerializeSize(filter.GetBlockHash()) +
+        GetSerializeSize(filter.GetEncodedFilter());
 
     // If writing the filter would overflow the file, flush and move to the next one.
     if (pos.nPos + data_size > MAX_FLTR_FILE_SIZE) {
@@ -223,7 +224,7 @@ bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
         // pindex variable gives indexing code access to node internals. It
         // will be removed in upcoming commit
         const CBlockIndex* pindex = WITH_LOCK(cs_main, return m_chainstate->m_blockman.LookupBlockIndex(block.hash));
-        if (!UndoReadFromDisk(block_undo, pindex)) {
+        if (!m_chainstate->m_blockman.UndoReadFromDisk(block_undo, *pindex)) {
             return false;
         }
 
@@ -260,7 +261,7 @@ bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
     return true;
 }
 
-static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
+[[nodiscard]] static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
                                        const std::string& index_name,
                                        int start_height, int stop_height)
 {

@@ -39,7 +39,7 @@ public:
 #ifndef BOOST_UNIT_TEST
 private:
 #endif
-    static CHashWriter GenInitialFiatShamir(
+    static HashWriter GenInitialFiatShamir(
         const Points& Ys,
         const Point& A1,
         const Point& A2,

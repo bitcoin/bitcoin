@@ -62,9 +62,6 @@ so you should log out and log back in.
 Please refer to fanquake's instructions
 [here](https://github.com/fanquake/core-review/tree/master/guix).
 
-Note that the `Dockerfile` is largely equivalent to running through the binary
-tarball installation steps.
-
 ## Option 4: Using a distribution-maintained package
 
 Note that this section is based on the distro packaging situation at the time of
@@ -74,24 +71,14 @@ https://repology.org/project/guix/versions
 
 ### Debian / Ubuntu
 
-Guix v1.2.0 is available as a distribution package starting in [Debian
-11](https://packages.debian.org/bullseye/guix) and [Ubuntu
-21.04](https://packages.ubuntu.com/search?keywords=guix).
-
-Note that if you intend on using Guix without using any substitutes (more
-details [here][security-model]), v1.2.0 has a known problem when building GnuTLS
-from source. Solutions and workarounds are documented
-[here](#gnutls-test-suite-fail-status-request-revoked).
-
+Guix is available as a distribution package in [Debian
+](https://packages.debian.org/search?keywords=guix) and [Ubuntu
+](https://packages.ubuntu.com/search?keywords=guix).
 
 To install:
 ```sh
 sudo apt install guix
 ```
-
-For up-to-date information on Debian and Ubuntu's release history:
-- [Debian release history](https://www.debian.org/releases/)
-- [Ubuntu release history](https://ubuntu.com/about/release-cycle)
 
 ### Arch Linux
 
@@ -167,80 +154,41 @@ For reference, the graphic below outlines Guix v1.3.0's dependency graph:
 
 ![bootstrap map](https://user-images.githubusercontent.com/6399679/125064185-a9a59880-e0b0-11eb-82c1-9b8e5dc9950d.png)
 
-#### Consider /tmp on tmpfs
+If you do not care about building each dependency from source, and Guix is
+already packaged for your distribution, you can easily install only the build
+dependencies of Guix. For example, to enable deb-src and install the Guix build
+dependencies on Ubuntu/Debian:
 
-If you use an NVME (SSD) drive, you may encounter [cryptic build errors](#coreutils-fail-teststail-2inotify-dir-recreate). Mounting a [tmpfs at /tmp](https://ubuntu.com/blog/data-driven-analysis-tmp-on-tmpfs) should prevent this and may improve performance as a bonus.
+```sh
+sed -i 's|# deb-src|deb-src|g' /etc/apt/sources.list
+apt update
+apt-get build-dep -y guix
+```
+
+If this succeeded, you can likely skip to section
+["Building and Installing Guix itself"](#building-and-installing-guix-itself).
 
 #### Guile
 
-##### Choosing a Guile version and sticking to it
-
-One of the first things you need to decide is which Guile version you want to
-use: Guile v2.2 or Guile v3.0. Unlike the python2 to python3 transition, Guile
-v2.2 and Guile v3.0 are largely compatible, as evidenced by the fact that most
-Guile packages and even [Guix
-itself](https://guix.gnu.org/en/blog/2020/guile-3-and-guix/) support running on
-both.
-
-What is important here is that you **choose one**, and you **remain consistent**
-with your choice throughout **all Guile-related packages**, no matter if they
-are installed via the distribution's package manager or installed from source.
-This is because the files for Guile packages are installed to directories which
-are separated based on the Guile version.
-
-###### Example: Checking that Ubuntu's `guile-git` is compatible with your chosen Guile version
-
-On Ubuntu Focal:
-
-```sh
-$ apt show guile-git
-Package: guile-git
-...
-Depends: guile-2.2, guile-bytestructures, libgit2-dev
-...
-```
-
-As you can see, the package `guile-git` depends on `guile-2.2`, meaning that it
-was likely built for Guile v2.2. This means that if you decided to use Guile
-v3.0 on Ubuntu Focal, you would need to build guile-git from source instead of
-using the distribution package.
-
-On Ubuntu Hirsute:
-
-```sh
-$ apt show guile-git
-Package: guile-git
-...
-Depends: guile-3.0 | guile-2.2, guile-bytestructures (>= 1.0.7-3~), libgit2-dev (>= 1.0)
-...
-```
-
-In this case, `guile-git` depends on either `guile-3.0` or `guile-2.2`, meaning
-that it would work no matter what Guile version you decided to use.
-
 ###### Corner case: Multiple versions of Guile on one system
 
-It is recommended to only install one version of Guile, so that build systems do
+It is recommended to only install the required version of Guile, so that build systems do
 not get confused about which Guile to use.
 
-However, if you insist on having both Guile v2.2 and Guile v3.0 installed on
-your system, then you need to **consistently** specify one of
-`GUILE_EFFECTIVE_VERSION=3.0` or `GUILE_EFFECTIVE_VERSION=2.2` to all
+However, if you insist on having more versions of Guile installed on
+your system, then you need to **consistently** specify
+`GUILE_EFFECTIVE_VERSION=3.0` to all
 `./configure` invocations for Guix and its dependencies.
 
 ##### Installing Guile
 
-Guile is most likely already packaged for your distribution, so after you have
-[chosen a Guile version](#choosing-a-guile-version-and-sticking-to-it), install
-it via your distribution's package manager.
-
 If your distribution splits packages into `-dev`-suffixed and
 non-`-dev`-suffixed sub-packages (as is the case for Debian-derived
 distributions), please make sure to install both. For example, to install Guile
-v2.2 on Debian/Ubuntu:
+v3.0 on Debian/Ubuntu:
 
 ```sh
-apt install guile-2.2 guile-2.2-dev
+apt install guile-3.0 guile-3.0-dev
 ```
 
 #### Mixing distribution packages and source-built packages
@@ -258,16 +206,16 @@ source-built packages, you will need to augment the `GUILE_LOAD_PATH` and
 `GUILE_LOAD_COMPILED_PATH` environment variables so that Guile will look
 under the right prefix and find your source-built packages.
 
-For example, if you are using Guile v2.2, and have Guile packages in the
+For example, if you are using Guile v3.0, and have Guile packages in the
 `/usr/local` prefix, either add the following lines to your `.profile` or
 `.bash_profile` so that the environment variable is properly set for all future
 shell logins, or paste the lines into a POSIX-style shell to temporarily modify
 the environment variables of your current shell session.
 
 ```sh
-# Help Guile v2.2.x find packages in /usr/local
-export GUILE_LOAD_PATH="/usr/local/share/guile/site/2.2${GUILE_LOAD_PATH:+:}$GUILE_LOAD_PATH"
-export GUILE_LOAD_COMPILED_PATH="/usr/local/lib/guile/2.2/site-ccache${GUILE_LOAD_COMPILED_PATH:+:}$GUILE_COMPILED_LOAD_PATH"
+# Help Guile v3.0.x find packages in /usr/local
+export GUILE_LOAD_PATH="/usr/local/share/guile/site/3.0${GUILE_LOAD_PATH:+:}$GUILE_LOAD_PATH"
+export GUILE_LOAD_COMPILED_PATH="/usr/local/lib/guile/3.0/site-ccache${GUILE_LOAD_COMPILED_PATH:+:}$GUILE_COMPILED_LOAD_PATH"
 ```
 
 Note that these environment variables are used to check for packages during
@@ -352,7 +300,7 @@ Relevant for:
 - Those installing `guile-git` from their distribution where `guile-git` is
   built against `libgit2 < 1.1`
 
-As of v0.4.0, `guile-git` claims to only require `libgit2 >= 0.28.0`, however,
+As of v0.5.2, `guile-git` claims to only require `libgit2 >= 0.28.0`, however,
 it actually requires `libgit2 >= 1.1`, otherwise, it will be confused by a
 reference of `origin/keyring`: instead of interpreting the reference as "the
 'keyring' branch of the 'origin' remote", the reference is interpreted as "the
@@ -366,20 +314,6 @@ Should you be in this situation, you need to build both `libgit2 v1.1.x` and
 
 Source: https://logs.guix.gnu.org/guix/2020-11-12.log#232527
 
-##### `{scheme,guile}-bytestructures` v1.0.8 and v1.0.9 are broken for Guile v2.2
-
-Relevant for:
-- Those building `{scheme,guile}-bytestructures` from source against Guile v2.2
-
-Commit
-[707eea3](https://github.com/TaylanUB/scheme-bytestructures/commit/707eea3a85e1e375e86702229ebf73d496377669)
-introduced a regression for Guile v2.2 and was first included in v1.0.8, this
-was later corrected in commit
-[ec9a721](https://github.com/TaylanUB/scheme-bytestructures/commit/ec9a721957c17bcda13148f8faa5f06934431ff7)
-and included in v1.1.0.
-
-TL;DR If you decided to use Guile v2.2, do not use `{scheme,guile}-bytestructures` v1.0.8 or v1.0.9.
-
 ### Building and Installing Guix itself
 
 Start by cloning Guix:
@@ -389,10 +323,8 @@ git clone https://git.savannah.gnu.org/git/guix.git
 cd guix
 ```
 
-You will likely want to build the latest release, however, if the latest release
-when you're reading this is still 1.3.0 then you may want to use 998eda30 instead
-to avoid the issues described in [#25099](
-https://github.com/bitcoin/bitcoin/pull/25099).
+You will likely want to build the latest release.
+At the time of writing (November 2023), the latest release was `v1.4.0`.
 
 ```
 git branch -a -l 'origin/version-*'  # check for the latest release
@@ -578,7 +510,7 @@ sudo --login guix pull --commit=<particular-commit>
 ```
 
 `guix pull` is quite a long process (especially if you're using
-`--no-substitute`). If you encounter build problems, please refer to the
+`--no-substitutes`). If you encounter build problems, please refer to the
 [troubleshooting section](#troubleshooting).
 
 Note that running a bare `guix pull` with no commit or branch specified will
@@ -616,7 +548,7 @@ systemctl enable guix-daemon
 systemctl start guix-daemon
 ```
 
-Remember to set `--no-substitute` in `$libdir/systemd/system/guix-daemon.service` and other customizations if you used them for `guix-daemon-original.service`.
+Remember to set `--no-substitutes` in `$libdir/systemd/system/guix-daemon.service` and other customizations if you used them for `guix-daemon-original.service`.
 
 ##### If you installed Guix via the Debian/Ubuntu distribution packages
 
@@ -726,26 +658,18 @@ $ bzcat /var/log/guix/drvs/../...-foo-3.6.12.drv.bz2 | less
 times, it may be `/tmp/...drv-1` or `/tmp/...drv-2`. Always consult the build
 failure output for the most accurate, up-to-date information.
 
-### openssl-1.1.1l and openssl-1.1.1n
-
-OpenSSL includes tests that will fail once some certificate has expired. A workaround
-is to change your system clock:
-
-```sh
-sudo timedatectl set-ntp no
-sudo date --set "28 may 2022 15:00:00"
-sudo --login guix build --cores=1 /gnu/store/g9alz81w4q03ncm542487xd001s6akd4-openssl-1.1.1l.drv
-sudo --login guix build --cores=1 /gnu/store/mw6ax0gk33gh082anrdrxp2flrbskxv6-openssl-1.1.1n.drv
-sudo timedatectl set-ntp yes
-```
-
 ### python(-minimal): [Errno 84] Invalid or incomplete multibyte or wide character
 
 This error occurs when your `$TMPDIR` (default: /tmp) exists on a filesystem
 which rejects characters not present in the UTF-8 character code set. An example
 is ZFS with the utf8only=on option set.
 
-More information: https://bugs.python.org/issue37584
+More information: https://github.com/python/cpython/issues/81765
+
+### openssl-1.1.1l and openssl-1.1.1n
+
+OpenSSL includes tests that will fail once some certificate has expired.
+The workarounds from the GnuTLS section immediately below can be used.
 
 ### GnuTLS: test-suite FAIL: status-request-revoked
 
@@ -781,13 +705,41 @@ authorized.
 This workaround was described [here](https://issues.guix.gnu.org/44559#5).
 
 Basically:
-1. Turn off networking
 2. Turn off NTP
 3. Set system time to 2020-10-01
 4. guix build --no-substitutes /gnu/store/vhphki5sg9xkdhh2pbc8gi6vhpfzryf0-gnutls-3.6.12.drv
 5. Set system time back to accurate current time
 6. Turn NTP back on
-7. Turn networking back on
+
+For example,
+
+```sh
+sudo timedatectl set-ntp no
+sudo date --set "01 oct 2020 15:00:00"
+guix build /gnu/store/vhphki5sg9xkdhh2pbc8gi6vhpfzryf0-gnutls-3.6.12.drv
+sudo timedatectl set-ntp yes
+```
+
+#### Workaround 3: Disable the tests in the Guix source code for this single derivation
+
+If all of the above workarounds fail, you can also disable the `tests` phase of
+the derivation via the `arguments` option, as described in the official
+[`package`
+reference](https://guix.gnu.org/manual/en/html_node/package-Reference.html).
+
+For example, to disable the openssl-1.1 check phase:
+
+```diff
+diff --git a/gnu/packages/tls.scm b/gnu/packages/tls.scm
+index f1e844b..1077c4b 100644
+--- a/gnu/packages/tls.scm
++++ b/gnu/packages/tls.scm
+@@ -494,4 +494,5 @@ (define-public openssl-1.1
+     (arguments
+      `(#:parallel-tests? #f
++       #:tests? #f
+        #:test-target "test"
+```
 
 ### coreutils: FAIL: tests/tail-2/inotify-dir-recreate
 
@@ -796,7 +748,7 @@ The inotify-dir-create test fails on "remote" filesystems such as overlayfs
 as non-remote.
 
 A relatively easy workaround to this is to make sure that a somewhat traditional
-filesystem is mounted at `/tmp` (where `guix-daemon` performs its builds), see [/tmp on tmpfs](#consider-tmp-on-tmpfs). For
+filesystem is mounted at `/tmp` (where `guix-daemon` performs its builds). For
 Docker users, this might mean [using a volume][docker/volumes], [binding
 mounting][docker/bind-mnt] from host, or (for those with enough RAM and swap)
 [mounting a tmpfs][docker/tmpfs] using the `--tmpfs` flag.

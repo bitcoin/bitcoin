@@ -22,6 +22,7 @@ TPUBS = [
     "tpubD6NzVbkrYhZ4XRMcMFMMFvzVt6jaDAtjZhD7JLwdPdMm9xa76DnxYYP7w9TZGJDVFkek3ArwVsuacheqqPog8TH5iBCX1wuig8PLXim4n9a",
     "tpubD6NzVbkrYhZ4WsqRzDmkL82SWcu42JzUvKWzrJHQ8EC2vEHRHkXj1De93sD3biLrKd8XGnamXURGjMbYavbszVDXpjXV2cGUERucLJkE6cy",
     "tpubDEFLeBkKTm8aiYkySz8hXAXPVnPSfxMi7Fxhg9sejUrkwJuRWvPdLEiXjTDbhGbjLKCZUDUUibLxTnK5UP1q7qYrSnPqnNe7M8mvAW1STcc",
+    "tpubD6NzVbkrYhZ4WR99ygpiJvPMAJiwahjLgGywc5vJx2gUfKUfEPCrbKmQczDPJZmLcyZzRb5Ti6rfUb89S2WFyPH7FDtD6RFDA1hdgTEgEUL",
 ]
 PUBKEYS = [
     "02aebf2d10b040eb936a6f02f44ee82f8b34f5c1ccb20ff3949c2b28206b7c1068",
@@ -33,7 +34,7 @@ PUBKEYS = [
     "0211c7b2e18b6fd330f322de087da62da92ae2ae3d0b7cec7e616479cce175f183",
 ]
 
-MINISCRIPTS = [
+P2WSH_MINISCRIPTS = [
     # One of two keys
     f"or_b(pk({TPUBS[0]}/*),s:pk({TPUBS[1]}/*))",
     # A script similar (same spending policy) to BOLT3's offered HTLC (with anchor outputs)
@@ -44,10 +45,22 @@ MINISCRIPTS = [
     f"or_i(and_b(pk({PUBKEYS[0]}),a:and_b(pk({PUBKEYS[1]}),a:and_b(pk({PUBKEYS[2]}),a:and_b(pk({PUBKEYS[3]}),s:pk({PUBKEYS[4]}))))),and_v(v:thresh(2,pkh({TPUBS[0]}/*),a:pkh({PUBKEYS[5]}),a:pkh({PUBKEYS[6]})),older(4209713)))",
 ]
 
-MINISCRIPTS_PRIV = [
+DESCS = [
+    *[f"wsh({ms})" for ms in P2WSH_MINISCRIPTS],
+    # A Taproot with one of the above scripts as the single script path.
+    f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{P2WSH_MINISCRIPTS[0]})",
+    # A Taproot with two script paths among the above scripts.
+    f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{{{P2WSH_MINISCRIPTS[0]},{P2WSH_MINISCRIPTS[1]}}})",
+    # A Taproot with three script paths among the above scripts.
+    f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{{{{{P2WSH_MINISCRIPTS[0]},{P2WSH_MINISCRIPTS[1]}}},{P2WSH_MINISCRIPTS[2].replace('multi', 'multi_a')}}})",
+    # A Taproot with all above scripts in its tree.
+    f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{{{{{P2WSH_MINISCRIPTS[0]},{P2WSH_MINISCRIPTS[1]}}},{{{P2WSH_MINISCRIPTS[2].replace('multi', 'multi_a')},{P2WSH_MINISCRIPTS[3]}}}}})",
+]
+
+DESCS_PRIV = [
     # One of two keys, of which one private key is known
     {
-        "ms": f"or_i(pk({TPRVS[0]}/*),pk({TPUBS[0]}/*))",
+        "desc": f"wsh(or_i(pk({TPRVS[0]}/*),pk({TPUBS[0]}/*)))",
         "sequence": None,
         "locktime": None,
         "sigs_count": 1,
@@ -55,7 +68,7 @@ MINISCRIPTS_PRIV = [
     },
     # A more complex policy, that can't be satisfied through the first branch (need for a preimage)
     {
-        "ms": f"andor(ndv:older(2),and_v(v:pk({TPRVS[0]}),sha256(2a8ce30189b2ec3200b47aeb4feaac8fcad7c0ba170389729f4898b0b7933bcb)),and_v(v:pkh({TPRVS[1]}),pk({TPRVS[2]}/*)))",
+        "desc": f"wsh(andor(ndv:older(2),and_v(v:pk({TPRVS[0]}),sha256(2a8ce30189b2ec3200b47aeb4feaac8fcad7c0ba170389729f4898b0b7933bcb)),and_v(v:pkh({TPRVS[1]}),pk({TPRVS[2]}/*))))",
         "sequence": 2,
         "locktime": None,
         "sigs_count": 3,
@@ -63,7 +76,7 @@ MINISCRIPTS_PRIV = [
     },
     # The same policy but we provide the preimage. This path will be chosen as it's a smaller witness.
     {
-        "ms": f"andor(ndv:older(2),and_v(v:pk({TPRVS[0]}),sha256(61e33e9dbfefc45f6a194187684d278f789fd4d5e207a357e79971b6519a8b12)),and_v(v:pkh({TPRVS[1]}),pk({TPRVS[2]}/*)))",
+        "desc": f"wsh(andor(ndv:older(2),and_v(v:pk({TPRVS[0]}),sha256(61e33e9dbfefc45f6a194187684d278f789fd4d5e207a357e79971b6519a8b12)),and_v(v:pkh({TPRVS[1]}),pk({TPRVS[2]}/*))))",
         "sequence": 2,
         "locktime": None,
         "sigs_count": 3,
@@ -74,7 +87,7 @@ MINISCRIPTS_PRIV = [
     },
     # Signature with a relative timelock
     {
-        "ms": f"and_v(v:older(2),pk({TPRVS[0]}/*))",
+        "desc": f"wsh(and_v(v:older(2),pk({TPRVS[0]}/*)))",
         "sequence": 2,
         "locktime": None,
         "sigs_count": 1,
@@ -82,7 +95,7 @@ MINISCRIPTS_PRIV = [
     },
     # Signature with an absolute timelock
     {
-        "ms": f"and_v(v:after(20),pk({TPRVS[0]}/*))",
+        "desc": f"wsh(and_v(v:after(20),pk({TPRVS[0]}/*)))",
         "sequence": None,
         "locktime": 20,
         "sigs_count": 1,
@@ -90,7 +103,7 @@ MINISCRIPTS_PRIV = [
     },
     # Signature with both
     {
-        "ms": f"and_v(v:older(4),and_v(v:after(30),pk({TPRVS[0]}/*)))",
+        "desc": f"wsh(and_v(v:older(4),and_v(v:after(30),pk({TPRVS[0]}/*))))",
         "sequence": 4,
         "locktime": 30,
         "sigs_count": 1,
@@ -98,7 +111,7 @@ MINISCRIPTS_PRIV = [
     },
     # We have one key on each branch; Core signs both (can't finalize)
     {
-        "ms": f"c:andor(pk({TPRVS[0]}/*),pk_k({TPUBS[0]}),and_v(v:pk({TPRVS[1]}),pk_k({TPUBS[1]})))",
+        "desc": f"wsh(c:andor(pk({TPRVS[0]}/*),pk_k({TPUBS[0]}),and_v(v:pk({TPRVS[1]}),pk_k({TPUBS[1]}))))",
         "sequence": None,
         "locktime": None,
         "sigs_count": 2,
@@ -106,7 +119,7 @@ MINISCRIPTS_PRIV = [
     },
     # We have all the keys, wallet selects the timeout path to sign since it's smaller and sequence is set
     {
-        "ms": f"andor(pk({TPRVS[0]}/*),pk({TPRVS[2]}),and_v(v:pk({TPRVS[1]}),older(10)))",
+        "desc": f"wsh(andor(pk({TPRVS[0]}/*),pk({TPRVS[2]}),and_v(v:pk({TPRVS[1]}),older(10))))",
         "sequence": 10,
         "locktime": None,
         "sigs_count": 3,
@@ -114,7 +127,7 @@ MINISCRIPTS_PRIV = [
     },
     # We have all the keys, wallet selects the primary path to sign unconditionally since nsequence wasn't set to be valid for timeout path
     {
-        "ms": f"andor(pk({TPRVS[0]}/*),pk({TPRVS[2]}),and_v(v:pkh({TPRVS[1]}),older(10)))",
+        "desc": f"wsh(andor(pk({TPRVS[0]}/*),pk({TPRVS[2]}),and_v(v:pkh({TPRVS[1]}),older(10))))",
         "sequence": None,
         "locktime": None,
         "sigs_count": 3,
@@ -122,7 +135,7 @@ MINISCRIPTS_PRIV = [
     },
     # Finalizes to the smallest valid witness, regardless of sequence
     {
-        "ms": f"or_d(pk({TPRVS[0]}/*),and_v(v:pk({TPRVS[1]}),and_v(v:pk({TPRVS[2]}),older(10))))",
+        "desc": f"wsh(or_d(pk({TPRVS[0]}/*),and_v(v:pk({TPRVS[1]}),and_v(v:pk({TPRVS[2]}),older(10)))))",
         "sequence": 12,
         "locktime": None,
         "sigs_count": 3,
@@ -130,7 +143,57 @@ MINISCRIPTS_PRIV = [
     },
     # Liquid-like federated pegin with emergency recovery privkeys
     {
-        "ms": f"or_i(and_b(pk({TPUBS[0]}/*),a:and_b(pk({TPUBS[1]}),a:and_b(pk({TPUBS[2]}),a:and_b(pk({TPUBS[3]}),s:pk({PUBKEYS[0]}))))),and_v(v:thresh(2,pkh({TPRVS[0]}),a:pkh({TPRVS[1]}),a:pkh({TPUBS[4]})),older(42)))",
+        "desc": f"wsh(or_i(and_b(pk({TPUBS[0]}/*),a:and_b(pk({TPUBS[1]}),a:and_b(pk({TPUBS[2]}),a:and_b(pk({TPUBS[3]}),s:pk({PUBKEYS[0]}))))),and_v(v:thresh(2,pkh({TPRVS[0]}),a:pkh({TPRVS[1]}),a:pkh({TPUBS[4]})),older(42))))",
+        "sequence": 42,
+        "locktime": None,
+        "sigs_count": 2,
+        "stack_size": 8,
+    },
+    # Each leaf needs two sigs. We've got one key on each. Will sign both but can't finalize.
+    {
+        "desc": f"tr({TPUBS[0]}/*,{{and_v(v:pk({TPRVS[0]}/*),pk({TPUBS[1]})),and_v(v:pk({TPRVS[1]}/*),pk({TPUBS[2]}))}})",
+        "sequence": None,
+        "locktime": None,
+        "sigs_count": 2,
+        "stack_size": None,
+    },
+    # The same but now the two leaves are identical. Will add a single sig that is valid for both. Can't finalize.
+    {
+        "desc": f"tr({TPUBS[0]}/*,{{and_v(v:pk({TPRVS[0]}/*),pk({TPUBS[1]})),and_v(v:pk({TPRVS[0]}/*),pk({TPUBS[1]}))}})",
+        "sequence": None,
+        "locktime": None,
+        "sigs_count": 1,
+        "stack_size": None,
+    },
+    # The same but we have the two necessary privkeys on one of the leaves. Also it uses a pubkey hash.
+    {
+        "desc": f"tr({TPUBS[0]}/*,{{and_v(v:pk({TPRVS[0]}/*),pk({TPUBS[1]})),and_v(v:pkh({TPRVS[1]}/*),pk({TPRVS[2]}))}})",
+        "sequence": None,
+        "locktime": None,
+        "sigs_count": 3,
+        "stack_size": 5,
+    },
+    # A key immediately or one of two keys after a timelock. If both paths are available it'll use the
+    # non-timelocked path because it's a smaller witness.
+    {
+        "desc": f"tr({TPUBS[0]}/*,{{pk({TPRVS[0]}/*),and_v(v:older(42),multi_a(1,{TPRVS[1]},{TPRVS[2]}))}})",
+        "sequence": 42,
+        "locktime": None,
+        "sigs_count": 3,
+        "stack_size": 3,
+    },
+    # A key immediately or one of two keys after a timelock. If the "primary" key isn't available though it'll
+    # use the timelocked path. Same remark for multi_a.
+    {
+        "desc": f"tr({TPUBS[0]}/*,{{pk({TPUBS[1]}/*),and_v(v:older(42),multi_a(1,{TPRVS[0]},{TPRVS[1]}))}})",
+        "sequence": 42,
+        "locktime": None,
+        "sigs_count": 2,
+        "stack_size": 4,
+    },
+    # Liquid-like federated pegin with emergency recovery privkeys, but in a Taproot.
+    {
+        "desc": f"tr({TPUBS[1]}/*,{{and_b(pk({TPUBS[2]}/*),a:and_b(pk({TPUBS[3]}),a:and_b(pk({TPUBS[4]}),a:and_b(pk({TPUBS[5]}),s:pk({PUBKEYS[0]}))))),and_v(v:thresh(2,pkh({TPRVS[0]}),a:pkh({TPRVS[1]}),a:pkh({TPUBS[6]})),older(42))}})",
         "sequence": 42,
         "locktime": None,
         "sigs_count": 2,
@@ -145,14 +208,15 @@ class WalletMiniscriptTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 1
+        self.rpc_timeout = 180
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
         self.skip_if_no_sqlite()
 
-    def watchonly_test(self, ms):
-        self.log.info(f"Importing Miniscript '{ms}'")
-        desc = descsum_create(f"wsh({ms})")
+    def watchonly_test(self, desc):
+        self.log.info(f"Importing descriptor '{desc}'")
+        desc = descsum_create(f"{desc}")
         assert self.ms_wo_wallet.importdescriptors(
             [
                 {
@@ -166,11 +230,14 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         )[0]["success"]
 
         self.log.info("Testing we derive new addresses for it")
+        addr_type = "bech32m" if desc.startswith("tr(") else "bech32"
         assert_equal(
-            self.ms_wo_wallet.getnewaddress(), self.funder.deriveaddresses(desc, 0)[0]
+            self.ms_wo_wallet.getnewaddress(address_type=addr_type),
+            self.funder.deriveaddresses(desc, 0)[0],
         )
         assert_equal(
-            self.ms_wo_wallet.getnewaddress(), self.funder.deriveaddresses(desc, 1)[1]
+            self.ms_wo_wallet.getnewaddress(address_type=addr_type),
+            self.funder.deriveaddresses(desc, 1)[1],
         )
 
         self.log.info("Testing we detect funds sent to one of them")
@@ -183,10 +250,11 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         assert utxo["txid"] == txid and utxo["solvable"]
 
     def signing_test(
-        self, ms, sequence, locktime, sigs_count, stack_size, sha256_preimages
+        self, desc, sequence, locktime, sigs_count, stack_size, sha256_preimages
     ):
-        self.log.info(f"Importing private Miniscript '{ms}'")
-        desc = descsum_create(f"wsh({ms})")
+        self.log.info(f"Importing private Miniscript descriptor '{desc}'")
+        is_taproot = desc.startswith("tr(")
+        desc = descsum_create(desc)
         res = self.ms_sig_wallet.importdescriptors(
             [
                 {
@@ -201,7 +269,8 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         assert res[0]["success"], res
 
         self.log.info("Generating an address for it and testing it detects funds")
-        addr = self.ms_sig_wallet.getnewaddress()
+        addr_type = "bech32m" if is_taproot else "bech32"
+        addr = self.ms_sig_wallet.getnewaddress(address_type=addr_type)
         txid = self.funder.sendtoaddress(addr, 0.01)
         self.wait_until(lambda: txid in self.funder.getrawmempool())
         self.funder.generatetoaddress(1, self.funder.getnewaddress())
@@ -233,7 +302,8 @@ class WalletMiniscriptTest(BitcoinTestFramework):
             psbt = psbt.to_base64()
         res = self.ms_sig_wallet.walletprocesspsbt(psbt=psbt, finalize=False)
         psbtin = self.nodes[0].rpc.decodepsbt(res["psbt"])["inputs"][0]
-        assert len(psbtin["partial_signatures"]) == sigs_count
+        sigs_field_name = "taproot_script_path_sigs" if is_taproot else "partial_signatures"
+        assert len(psbtin[sigs_field_name]) == sigs_count
         res = self.ms_sig_wallet.finalizepsbt(res["psbt"])
         assert res["complete"] == (stack_size is not None)
 
@@ -277,20 +347,57 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         assert not res["success"]
         assert "is not sane: witnesses without signature exist" in res["error"]["message"]
 
+        # Sanity check we wouldn't let an unspendable Miniscript descriptor in
+        res = self.ms_wo_wallet.importdescriptors(
+            [
+                {
+                    "desc": descsum_create("wsh(0)"),
+                    "active": False,
+                    "timestamp": "now",
+                }
+            ]
+        )[0]
+        assert not res["success"] and "is not satisfiable" in res["error"]["message"]
+
         # Test we can track any type of Miniscript
-        for ms in MINISCRIPTS:
-            self.watchonly_test(ms)
+        for desc in DESCS:
+            self.watchonly_test(desc)
 
         # Test we can sign for any Miniscript.
-        for ms in MINISCRIPTS_PRIV:
+        for desc in DESCS_PRIV:
             self.signing_test(
-                ms["ms"],
-                ms["sequence"],
-                ms["locktime"],
-                ms["sigs_count"],
-                ms["stack_size"],
-                ms.get("sha256_preimages"),
+                desc["desc"],
+                desc["sequence"],
+                desc["locktime"],
+                desc["sigs_count"],
+                desc["stack_size"],
+                desc.get("sha256_preimages"),
             )
+
+        # Test we can sign for a max-size TapMiniscript. Recompute the maximum accepted size
+        # for a TapMiniscript (see cpp file for details). Then pad a simple pubkey check up
+        # to the maximum size. Make sure we can import and spend this script.
+        leeway_weight = (4 + 4 + 1 + 36 + 4 + 1 + 1 + 8 + 1 + 1 + 33) * 4 + 2
+        max_tapmini_size = 400_000 - 3 - (1 + 65) * 1_000 - 3 - (33 + 32 * 128) - leeway_weight - 5
+        padding = max_tapmini_size - 33 - 1
+        ms = f"pk({TPRVS[0]}/*)"
+        ms = "n" * padding + ":" + ms
+        desc = f"tr({PUBKEYS[0]},{ms})"
+        self.signing_test(desc, None, None, 1, 3, None)
+        # This was really the maximum size, one more byte and we can't import it.
+        ms = "n" + ms
+        desc = f"tr({PUBKEYS[0]},{ms})"
+        res = self.ms_wo_wallet.importdescriptors(
+            [
+                {
+                    "desc": descsum_create(desc),
+                    "active": False,
+                    "timestamp": "now",
+                }
+            ]
+        )[0]
+        assert not res["success"]
+        assert "is not a valid descriptor function" in res["error"]["message"]
 
 
 if __name__ == "__main__":

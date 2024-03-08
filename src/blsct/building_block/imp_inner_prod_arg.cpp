@@ -16,7 +16,7 @@ std::optional<ImpInnerProdArgResult<T>> ImpInnerProdArg::Run(
     Elements<typename T::Scalar>& b,
     const typename T::Scalar& c_factor,
     const typename T::Scalar& y,
-    CHashWriter& fiat_shamir
+    HashWriter& fiat_shamir
 ) {
     using Scalar = typename T::Scalar;
     using Point = typename T::Point;
@@ -86,7 +86,7 @@ std::optional<ImpInnerProdArgResult<Mcl>> ImpInnerProdArg::Run(
     Elements<typename Mcl::Scalar>& b,
     const typename Mcl::Scalar& c_factor,
     const typename Mcl::Scalar& y,
-    CHashWriter& fiat_shamir
+    HashWriter& fiat_shamir
 );
 
 template <typename T>
@@ -144,7 +144,7 @@ template <typename T>
 std::optional<Elements<typename T::Scalar>> ImpInnerProdArg::GenAllRoundXs(
     const Elements<typename T::Point>& Ls,
     const Elements<typename T::Point>& Rs,
-    CHashWriter& fiat_shamir)
+    HashWriter& fiat_shamir)
 {
     using Scalar = typename T::Scalar;
     using Scalars = Elements<Scalar>;
@@ -166,4 +166,4 @@ retry:
 template std::optional<Elements<Mcl::Scalar>> ImpInnerProdArg::GenAllRoundXs<Mcl>(
     const Elements<Mcl::Point>& Ls,
     const Elements<Mcl::Point>& Rs,
-    CHashWriter& fiat_shamir);
+    HashWriter& fiat_shamir);

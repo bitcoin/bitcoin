@@ -153,8 +153,7 @@ using CCoinsMap = std::unordered_map<COutPoint,
                                      SaltedOutpointHasher,
                                      std::equal_to<COutPoint>,
                                      PoolAllocator<std::pair<const COutPoint, CCoinsCacheEntry>,
-                                                   sizeof(std::pair<const COutPoint, CCoinsCacheEntry>) + sizeof(void*) * 4,
-                                                   alignof(void*)>>;
+                                                   sizeof(std::pair<const COutPoint, CCoinsCacheEntry>) + sizeof(void*) * 4>>;
 
 using CCoinsMapMemoryResource = CCoinsMap::allocator_type::ResourceType;
 
@@ -379,12 +378,12 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool 
 //! This function can be quite expensive because in the event of a transaction
 //! which is not found in the cache, it can cause up to MAX_OUTPUTS_PER_BLOCK
 //! lookups to database, so it should be used with care.
-const Coin& AccessByTxid(const CCoinsViewCache& cache, const uint256& txid);
+const Coin& AccessByTxid(const CCoinsViewCache& cache, const Txid& txid);
 
 /**
  * This is a minimally invasive approach to shutdown on LevelDB read errors from the
  * chainstate, while keeping user interface out of the common library, which is shared
- * between bitcoind, and bitcoin-qt and non-server tools.
+ * between navcoind, and bitcoin-qt and non-server tools.
  *
  * Writes do not need similar protection, as failure to write is handled by the caller.
  */
@@ -398,7 +397,8 @@ public:
         m_err_callbacks.emplace_back(std::move(f));
     }
 
-    bool GetCoin(const COutPoint& outpoint, Coin& coin) const override;
+    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+    bool HaveCoin(const COutPoint &outpoint) const override;
 
 private:
     /** A list of callbacks to execute upon leveldb read error. */

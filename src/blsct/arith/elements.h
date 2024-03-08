@@ -144,7 +144,7 @@ public:
 
     OrderedElements();
     OrderedElements(const std::set<T>& vec);
-    OrderedElements(const OrderedElements& other);
+    OrderedElements(const OrderedElements& other) : m_set(other.m_set) {};
 
     Elements<T> GetElements() const;
 

@@ -20,17 +20,6 @@ static void nonce_function_bip340_bitflip(unsigned char **args, size_t n_flip, s
     CHECK(secp256k1_memcmp_var(nonces[0], nonces[1], 32) != 0);
 }
 
-/* Tests for the equality of two sha256 structs. This function only produces a
- * correct result if an integer multiple of 64 many bytes have been written
- * into the hash functions. */
-static void test_sha256_eq(const secp256k1_sha256 *sha1, const secp256k1_sha256 *sha2) {
-    /* Is buffer fully consumed? */
-    CHECK((sha1->bytes & 0x3F) == 0);
-
-    CHECK(sha1->bytes == sha2->bytes);
-    CHECK(secp256k1_memcmp_var(sha1->s, sha2->s, sizeof(sha1->s)) == 0);
-}
-
 static void run_nonce_function_bip340_tests(void) {
     unsigned char tag[13] = "BIP0340/nonce";
     unsigned char aux_tag[11] = "BIP0340/aux";
@@ -127,14 +116,6 @@ static void test_schnorrsig_api(void) {
     secp256k1_schnorrsig_extraparams extraparams = SECP256K1_SCHNORRSIG_EXTRAPARAMS_INIT;
     secp256k1_schnorrsig_extraparams invalid_extraparams = {{ 0 }, NULL, NULL};
 
-    /** setup **/
-    int ecount = 0;
-
-    secp256k1_context_set_error_callback(CTX, counting_illegal_callback_fn, &ecount);
-    secp256k1_context_set_illegal_callback(CTX, counting_illegal_callback_fn, &ecount);
-    secp256k1_context_set_error_callback(STATIC_CTX, counting_illegal_callback_fn, &ecount);
-    secp256k1_context_set_illegal_callback(STATIC_CTX, counting_illegal_callback_fn, &ecount);
-
     secp256k1_testrand256(sk1);
     secp256k1_testrand256(sk2);
     secp256k1_testrand256(sk3);
@@ -148,57 +129,30 @@ static void test_schnorrsig_api(void) {
     memset(&zero_pk, 0, sizeof(zero_pk));
 
     /** main test body **/
-    ecount = 0;
     CHECK(secp256k1_schnorrsig_sign32(CTX, sig, msg, &keypairs[0], NULL) == 1);
-    CHECK(ecount == 0);
-    CHECK(secp256k1_schnorrsig_sign32(CTX, NULL, msg, &keypairs[0], NULL) == 0);
-    CHECK(ecount == 1);
-    CHECK(secp256k1_schnorrsig_sign32(CTX, sig, NULL, &keypairs[0], NULL) == 0);
-    CHECK(ecount == 2);
-    CHECK(secp256k1_schnorrsig_sign32(CTX, sig, msg, NULL, NULL) == 0);
-    CHECK(ecount == 3);
-    CHECK(secp256k1_schnorrsig_sign32(CTX, sig, msg, &invalid_keypair, NULL) == 0);
-    CHECK(ecount == 4);
-    CHECK(secp256k1_schnorrsig_sign32(STATIC_CTX, sig, msg, &keypairs[0], NULL) == 0);
-    CHECK(ecount == 5);
+    CHECK_ILLEGAL(CTX, secp256k1_schnorrsig_sign32(CTX, NULL, msg, &keypairs[0], NULL));
+    CHECK_ILLEGAL(CTX, secp256k1_schnorrsig_sign32(CTX, sig, NULL, &keypairs[0], NULL));
+    CHECK_ILLEGAL(CTX, secp256k1_schnorrsig_sign32(CTX, sig, msg, NULL, NULL));
+    CHECK_ILLEGAL(CTX, secp256k1_schnorrsig_sign32(CTX, sig, msg, &invalid_keypair, NULL));
+    CHECK_ILLEGAL(STATIC_CTX, secp256k1_schnorrsig_sign32(STATIC_CTX, sig, msg, &keypairs[0], NULL));
 
-    ecount = 0;
     CHECK(secp256k1_schnorrsig_sign_custom(CTX, sig, msg, sizeof(msg), &keypairs[0], &extraparams) == 1);
-    CHECK(ecount == 0);
-    CHECK(secp256k1_schnorrsig_sign_custom(CTX, NULL, msg, sizeof(msg), &keypairs[0], &extraparams) == 0);
-    CHECK(ecount == 1);
-    CHECK(secp256k1_schnorrsig_sign_custom(CTX, sig, NULL, sizeof(msg), &keypairs[0], &extraparams) == 0);
-    CHECK(ecount == 2);
+    CHECK_ILLEGAL(CTX, secp256k1_schnorrsig_sign_custom(CTX, NULL, msg, sizeof(msg), &keypairs[0], &extraparams));
+    CHECK_ILLEGAL(CTX, secp256k1_schnorrsig_sign_custom(CTX, sig, NULL, sizeof(msg), &keypairs[0], &extraparams));
     CHECK(secp256k1_schnorrsig_sign_custom(CTX, sig, NULL, 0, &keypairs[0], &extraparams) == 1);
-    CHECK(ecount == 2);
-    CHECK(secp256k1_schnorrsig_sign_custom(CTX, sig, msg, sizeof(msg), NULL, &extraparams) == 0);
-    CHECK(ecount == 3);
-    CHECK(secp256k1_schnorrsig_sign_custom(CTX, sig, msg, sizeof(msg), &invalid_keypair, &extraparams) == 0);
-    CHECK(ecount == 4);
+    CHECK_ILLEGAL(CTX, secp256k1_schnorrsig_sign_custom(CTX, sig, msg, sizeof(msg), NULL, &extraparams));
+    CHECK_ILLEGAL(CTX, secp256k1_schnorrsig_sign_custom(CTX, sig, msg, sizeof(msg), &invalid_keypair, &extraparams));
     CHECK(secp256k1_schnorrsig_sign_custom(CTX, sig, msg, sizeof(msg), &keypairs[0], NULL) == 1);
-    CHECK(ecount == 4);
-    CHECK(secp256k1_schnorrsig_sign_custom(CTX, sig, msg, sizeof(msg), &keypairs[0], &invalid_extraparams) == 0);
-    CHECK(ecount == 5);
-    CHECK(secp256k1_schnorrsig_sign_custom(STATIC_CTX, sig, msg, sizeof(msg), &keypairs[0], &extraparams) == 0);
-    CHECK(ecount == 6);
+    CHECK_ILLEGAL(CTX, secp256k1_schnorrsig_sign_custom(CTX, sig, msg, sizeof(msg), &keypairs[0], &invalid_extraparams));
+    CHECK_ILLEGAL(STATIC_CTX, secp256k1_schnorrsig_sign_custom(STATIC_CTX, sig, msg, sizeof(msg), &keypairs[0], &extraparams));
 
-    ecount = 0;
     CHECK(secp256k1_schnorrsig_sign32(CTX, sig, msg, &keypairs[0], NULL) == 1);
     CHECK(secp256k1_schnorrsig_verify(CTX, sig, msg, sizeof(msg), &pk[0]) == 1);
-    CHECK(ecount == 0);
-    CHECK(secp256k1_schnorrsig_verify(CTX, NULL, msg, sizeof(msg), &pk[0]) == 0);
-    CHECK(ecount == 1);
-    CHECK(secp256k1_schnorrsig_verify(CTX, sig, NULL, sizeof(msg), &pk[0]) == 0);
-    CHECK(ecount == 2);
+    CHECK_ILLEGAL(CTX, secp256k1_schnorrsig_verify(CTX, NULL, msg, sizeof(msg), &pk[0]));
+    CHECK_ILLEGAL(CTX, secp256k1_schnorrsig_verify(CTX, sig, NULL, sizeof(msg), &pk[0]));
     CHECK(secp256k1_schnorrsig_verify(CTX, sig, NULL, 0, &pk[0]) == 0);
-    CHECK(ecount == 2);
-    CHECK(secp256k1_schnorrsig_verify(CTX, sig, msg, sizeof(msg), NULL) == 0);
-    CHECK(ecount == 3);
-    CHECK(secp256k1_schnorrsig_verify(CTX, sig, msg, sizeof(msg), &zero_pk) == 0);
-    CHECK(ecount == 4);
-
-    secp256k1_context_set_error_callback(STATIC_CTX, NULL, NULL);
-    secp256k1_context_set_illegal_callback(STATIC_CTX, NULL, NULL);
+    CHECK_ILLEGAL(CTX, secp256k1_schnorrsig_verify(CTX, sig, msg, sizeof(msg), NULL));
+    CHECK_ILLEGAL(CTX, secp256k1_schnorrsig_verify(CTX, sig, msg, sizeof(msg), &zero_pk));
 }
 
 /* Checks that hash initialized by secp256k1_schnorrsig_sha256_tagged has the
@@ -215,28 +169,36 @@ static void test_schnorrsig_sha256_tagged(void) {
 
 /* Helper function for schnorrsig_bip_vectors
  * Signs the message and checks that it's the same as expected_sig. */
-static void test_schnorrsig_bip_vectors_check_signing(const unsigned char *sk, const unsigned char *pk_serialized, const unsigned char *aux_rand, const unsigned char *msg32, const unsigned char *expected_sig) {
+static void test_schnorrsig_bip_vectors_check_signing(const unsigned char *sk, const unsigned char *pk_serialized, const unsigned char *aux_rand, const unsigned char *msg, size_t msglen, const unsigned char *expected_sig) {
     unsigned char sig[64];
     secp256k1_keypair keypair;
     secp256k1_xonly_pubkey pk, pk_expected;
 
+    secp256k1_schnorrsig_extraparams extraparams = SECP256K1_SCHNORRSIG_EXTRAPARAMS_INIT;
+    extraparams.ndata = (unsigned char*)aux_rand;
+
     CHECK(secp256k1_keypair_create(CTX, &keypair, sk));
-    CHECK(secp256k1_schnorrsig_sign32(CTX, sig, msg32, &keypair, aux_rand));
+    CHECK(secp256k1_schnorrsig_sign_custom(CTX, sig, msg, msglen, &keypair, &extraparams));
     CHECK(secp256k1_memcmp_var(sig, expected_sig, 64) == 0);
+    if (msglen == 32) {
+        memset(sig, 0, 64);
+        CHECK(secp256k1_schnorrsig_sign32(CTX, sig, msg, &keypair, aux_rand));
+        CHECK(secp256k1_memcmp_var(sig, expected_sig, 64) == 0);
+    }
 
     CHECK(secp256k1_xonly_pubkey_parse(CTX, &pk_expected, pk_serialized));
     CHECK(secp256k1_keypair_xonly_pub(CTX, &pk, NULL, &keypair));
     CHECK(secp256k1_memcmp_var(&pk, &pk_expected, sizeof(pk)) == 0);
-    CHECK(secp256k1_schnorrsig_verify(CTX, sig, msg32, 32, &pk));
+    CHECK(secp256k1_schnorrsig_verify(CTX, sig, msg, msglen, &pk));
 }
 
 /* Helper function for schnorrsig_bip_vectors
  * Checks that both verify and verify_batch (TODO) return the same value as expected. */
-static void test_schnorrsig_bip_vectors_check_verify(const unsigned char *pk_serialized, const unsigned char *msg32, const unsigned char *sig, int expected) {
+static void test_schnorrsig_bip_vectors_check_verify(const unsigned char *pk_serialized, const unsigned char *msg, size_t msglen, const unsigned char *sig, int expected) {
     secp256k1_xonly_pubkey pk;
 
     CHECK(secp256k1_xonly_pubkey_parse(CTX, &pk, pk_serialized));
-    CHECK(expected == secp256k1_schnorrsig_verify(CTX, sig, msg32, 32, &pk));
+    CHECK(expected == secp256k1_schnorrsig_verify(CTX, sig, msg, msglen, &pk));
 }
 
 /* Test vectors according to BIP-340 ("Schnorr Signatures for secp256k1"). See
@@ -256,7 +218,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0xB5, 0x31, 0xC8, 0x45, 0x83, 0x6F, 0x99, 0xB0,
             0x86, 0x01, 0xF1, 0x13, 0xBC, 0xE0, 0x36, 0xF9
         };
-        unsigned char aux_rand[32] = {
+        const unsigned char aux_rand[32] = {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -278,8 +240,8 @@ static void test_schnorrsig_bip_vectors(void) {
             0xEB, 0xEE, 0xE8, 0xFD, 0xB2, 0x17, 0x2F, 0x47,
             0x7D, 0xF4, 0x90, 0x0D, 0x31, 0x05, 0x36, 0xC0
         };
-        test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sig);
-        test_schnorrsig_bip_vectors_check_verify(pk, msg, sig, 1);
+        test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sizeof(msg), sig);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
     }
     {
         /* Test vector 1 */
@@ -295,7 +257,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0x58, 0xFE, 0xAE, 0x1D, 0xA2, 0xDE, 0xCE, 0xD8,
             0x43, 0x24, 0x0F, 0x7B, 0x50, 0x2B, 0xA6, 0x59
         };
-        unsigned char aux_rand[32] = {
+        const unsigned char aux_rand[32] = {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -317,8 +279,8 @@ static void test_schnorrsig_bip_vectors(void) {
             0x89, 0x7E, 0xFC, 0xB6, 0x39, 0xEA, 0x87, 0x1C,
             0xFA, 0x95, 0xF6, 0xDE, 0x33, 0x9E, 0x4B, 0x0A
         };
-        test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sig);
-        test_schnorrsig_bip_vectors_check_verify(pk, msg, sig, 1);
+        test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sizeof(msg), sig);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
     }
     {
         /* Test vector 2 */
@@ -334,7 +296,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0x01, 0x39, 0x71, 0x53, 0x09, 0xB0, 0x86, 0xC9,
             0x60, 0xE1, 0x8F, 0xD9, 0x69, 0x77, 0x4E, 0xB8
         };
-        unsigned char aux_rand[32] = {
+        const unsigned char aux_rand[32] = {
             0xC8, 0x7A, 0xA5, 0x38, 0x24, 0xB4, 0xD7, 0xAE,
             0x2E, 0xB0, 0x35, 0xA2, 0xB5, 0xBB, 0xBC, 0xCC,
             0x08, 0x0E, 0x76, 0xCD, 0xC6, 0xD1, 0x69, 0x2C,
@@ -356,8 +318,8 @@ static void test_schnorrsig_bip_vectors(void) {
             0x7A, 0xDE, 0xA9, 0x8D, 0x82, 0xF8, 0x48, 0x1E,
             0x0E, 0x1E, 0x03, 0x67, 0x4A, 0x6F, 0x3F, 0xB7
         };
-        test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sig);
-        test_schnorrsig_bip_vectors_check_verify(pk, msg, sig, 1);
+        test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sizeof(msg), sig);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
     }
     {
         /* Test vector 3 */
@@ -373,7 +335,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0x3A, 0x0D, 0x95, 0xFB, 0xF2, 0x1D, 0x46, 0x8A,
             0x1B, 0x33, 0xF8, 0xC1, 0x60, 0xD8, 0xF5, 0x17
         };
-        unsigned char aux_rand[32] = {
+        const unsigned char aux_rand[32] = {
             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -395,8 +357,8 @@ static void test_schnorrsig_bip_vectors(void) {
             0xF2, 0x5F, 0xD7, 0x88, 0x81, 0xEB, 0xB3, 0x27,
             0x71, 0xFC, 0x59, 0x22, 0xEF, 0xC6, 0x6E, 0xA3
         };
-        test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sig);
-        test_schnorrsig_bip_vectors_check_verify(pk, msg, sig, 1);
+        test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sizeof(msg), sig);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
     }
     {
         /* Test vector 4 */
@@ -422,7 +384,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0x60, 0xCB, 0x71, 0xC0, 0x4E, 0x80, 0xF5, 0x93,
             0x06, 0x0B, 0x07, 0xD2, 0x83, 0x08, 0xD7, 0xF4
         };
-        test_schnorrsig_bip_vectors_check_verify(pk, msg, sig, 1);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
     }
     {
         /* Test vector 5 */
@@ -460,7 +422,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0x7A, 0x73, 0xC6, 0x43, 0xE1, 0x66, 0xBE, 0x5E,
             0xBE, 0xAF, 0xA3, 0x4B, 0x1A, 0xC5, 0x53, 0xE2
         };
-        test_schnorrsig_bip_vectors_check_verify(pk, msg, sig, 0);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 7 */
@@ -486,7 +448,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0x62, 0x2A, 0x95, 0x4C, 0xFE, 0x54, 0x57, 0x35,
             0xAA, 0xEA, 0x51, 0x34, 0xFC, 0xCD, 0xB2, 0xBD
         };
-        test_schnorrsig_bip_vectors_check_verify(pk, msg, sig, 0);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 8 */
@@ -512,7 +474,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0xE8, 0xD7, 0xC9, 0x3E, 0x00, 0xC5, 0xED, 0x0C,
             0x18, 0x34, 0xFF, 0x0D, 0x0C, 0x2E, 0x6D, 0xA6
         };
-        test_schnorrsig_bip_vectors_check_verify(pk, msg, sig, 0);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 9 */
@@ -538,7 +500,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0x4F, 0xB7, 0x34, 0x76, 0xF0, 0xD5, 0x94, 0xDC,
             0xB6, 0x5C, 0x64, 0x25, 0xBD, 0x18, 0x60, 0x51
         };
-        test_schnorrsig_bip_vectors_check_verify(pk, msg, sig, 0);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 10 */
@@ -564,7 +526,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0xDB, 0xA8, 0x7F, 0x11, 0xAC, 0x67, 0x54, 0xF9,
             0x37, 0x80, 0xD5, 0xA1, 0x83, 0x7C, 0xF1, 0x97
         };
-        test_schnorrsig_bip_vectors_check_verify(pk, msg, sig, 0);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 11 */
@@ -590,7 +552,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0xD1, 0xD7, 0x13, 0xA8, 0xAE, 0x82, 0xB3, 0x2F,
             0xA7, 0x9D, 0x5F, 0x7F, 0xC4, 0x07, 0xD3, 0x9B
         };
-        test_schnorrsig_bip_vectors_check_verify(pk, msg, sig, 0);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 12 */
@@ -616,7 +578,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0xD1, 0xD7, 0x13, 0xA8, 0xAE, 0x82, 0xB3, 0x2F,
             0xA7, 0x9D, 0x5F, 0x7F, 0xC4, 0x07, 0xD3, 0x9B
         };
-        test_schnorrsig_bip_vectors_check_verify(pk, msg, sig, 0);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 13 */
@@ -642,7 +604,7 @@ static void test_schnorrsig_bip_vectors(void) {
             0xBA, 0xAE, 0xDC, 0xE6, 0xAF, 0x48, 0xA0, 0x3B,
             0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41
         };
-        test_schnorrsig_bip_vectors_check_verify(pk, msg, sig, 0);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 0);
     }
     {
         /* Test vector 14 */
@@ -655,6 +617,147 @@ static void test_schnorrsig_bip_vectors(void) {
         secp256k1_xonly_pubkey pk_parsed;
         /* No need to check the signature of the test vector as parsing the pubkey already fails */
         CHECK(!secp256k1_xonly_pubkey_parse(CTX, &pk_parsed, pk));
+    }
+    {
+        /* Test vector 15 */
+        const unsigned char sk[32] = {
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+        };
+        const unsigned char pk[32] = {
+            0x77, 0x8C, 0xAA, 0x53, 0xB4, 0x39, 0x3A, 0xC4,
+            0x67, 0x77, 0x4D, 0x09, 0x49, 0x7A, 0x87, 0x22,
+            0x4B, 0xF9, 0xFA, 0xB6, 0xF6, 0xE6, 0x8B, 0x23,
+            0x08, 0x64, 0x97, 0x32, 0x4D, 0x6F, 0xD1, 0x17,
+        };
+        const unsigned char aux_rand[32] = {
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        };
+        /* const unsigned char msg[0] = {}; */
+        const unsigned char sig[64] = {
+            0x71, 0x53, 0x5D, 0xB1, 0x65, 0xEC, 0xD9, 0xFB,
+            0xBC, 0x04, 0x6E, 0x5F, 0xFA, 0xEA, 0x61, 0x18,
+            0x6B, 0xB6, 0xAD, 0x43, 0x67, 0x32, 0xFC, 0xCC,
+            0x25, 0x29, 0x1A, 0x55, 0x89, 0x54, 0x64, 0xCF,
+            0x60, 0x69, 0xCE, 0x26, 0xBF, 0x03, 0x46, 0x62,
+            0x28, 0xF1, 0x9A, 0x3A, 0x62, 0xDB, 0x8A, 0x64,
+            0x9F, 0x2D, 0x56, 0x0F, 0xAC, 0x65, 0x28, 0x27,
+            0xD1, 0xAF, 0x05, 0x74, 0xE4, 0x27, 0xAB, 0x63,
+        };
+        test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, NULL, 0, sig);
+        test_schnorrsig_bip_vectors_check_verify(pk, NULL, 0, sig, 1);
+    }
+    {
+        /* Test vector 16 */
+        const unsigned char sk[32] = {
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+        };
+        const unsigned char pk[32] = {
+            0x77, 0x8C, 0xAA, 0x53, 0xB4, 0x39, 0x3A, 0xC4,
+            0x67, 0x77, 0x4D, 0x09, 0x49, 0x7A, 0x87, 0x22,
+            0x4B, 0xF9, 0xFA, 0xB6, 0xF6, 0xE6, 0x8B, 0x23,
+            0x08, 0x64, 0x97, 0x32, 0x4D, 0x6F, 0xD1, 0x17,
+        };
+        const unsigned char aux_rand[32] = {
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        };
+        const unsigned char msg[] = { 0x11 };
+        const unsigned char sig[64] = {
+            0x08, 0xA2, 0x0A, 0x0A, 0xFE, 0xF6, 0x41, 0x24,
+            0x64, 0x92, 0x32, 0xE0, 0x69, 0x3C, 0x58, 0x3A,
+            0xB1, 0xB9, 0x93, 0x4A, 0xE6, 0x3B, 0x4C, 0x35,
+            0x11, 0xF3, 0xAE, 0x11, 0x34, 0xC6, 0xA3, 0x03,
+            0xEA, 0x31, 0x73, 0xBF, 0xEA, 0x66, 0x83, 0xBD,
+            0x10, 0x1F, 0xA5, 0xAA, 0x5D, 0xBC, 0x19, 0x96,
+            0xFE, 0x7C, 0xAC, 0xFC, 0x5A, 0x57, 0x7D, 0x33,
+            0xEC, 0x14, 0x56, 0x4C, 0xEC, 0x2B, 0xAC, 0xBF,
+        };
+        test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sizeof(msg), sig);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
+    }
+    {
+        /* Test vector 17 */
+        const unsigned char sk[32] = {
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+        };
+        const unsigned char pk[32] = {
+            0x77, 0x8C, 0xAA, 0x53, 0xB4, 0x39, 0x3A, 0xC4,
+            0x67, 0x77, 0x4D, 0x09, 0x49, 0x7A, 0x87, 0x22,
+            0x4B, 0xF9, 0xFA, 0xB6, 0xF6, 0xE6, 0x8B, 0x23,
+            0x08, 0x64, 0x97, 0x32, 0x4D, 0x6F, 0xD1, 0x17,
+        };
+        const unsigned char aux_rand[32] = {
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        };
+        const unsigned char msg[] = {
+            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+            0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10,
+            0x11,
+        };
+        const unsigned char sig[64] = {
+            0x51, 0x30, 0xF3, 0x9A, 0x40, 0x59, 0xB4, 0x3B,
+            0xC7, 0xCA, 0xC0, 0x9A, 0x19, 0xEC, 0xE5, 0x2B,
+            0x5D, 0x86, 0x99, 0xD1, 0xA7, 0x1E, 0x3C, 0x52,
+            0xDA, 0x9A, 0xFD, 0xB6, 0xB5, 0x0A, 0xC3, 0x70,
+            0xC4, 0xA4, 0x82, 0xB7, 0x7B, 0xF9, 0x60, 0xF8,
+            0x68, 0x15, 0x40, 0xE2, 0x5B, 0x67, 0x71, 0xEC,
+            0xE1, 0xE5, 0xA3, 0x7F, 0xD8, 0x0E, 0x5A, 0x51,
+            0x89, 0x7C, 0x55, 0x66, 0xA9, 0x7E, 0xA5, 0xA5,
+        };
+        test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sizeof(msg), sig);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
+    }
+    {
+        /* Test vector 18 */
+        const unsigned char sk[32] = {
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+            0x03, 0x40, 0x03, 0x40, 0x03, 0x40, 0x03, 0x40,
+        };
+        const unsigned char pk[32] = {
+            0x77, 0x8C, 0xAA, 0x53, 0xB4, 0x39, 0x3A, 0xC4,
+            0x67, 0x77, 0x4D, 0x09, 0x49, 0x7A, 0x87, 0x22,
+            0x4B, 0xF9, 0xFA, 0xB6, 0xF6, 0xE6, 0x8B, 0x23,
+            0x08, 0x64, 0x97, 0x32, 0x4D, 0x6F, 0xD1, 0x17,
+        };
+        const unsigned char aux_rand[32] = {
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        };
+        const unsigned char sig[64] = {
+            0x40, 0x3B, 0x12, 0xB0, 0xD8, 0x55, 0x5A, 0x34,
+            0x41, 0x75, 0xEA, 0x7E, 0xC7, 0x46, 0x56, 0x63,
+            0x03, 0x32, 0x1E, 0x5D, 0xBF, 0xA8, 0xBE, 0x6F,
+            0x09, 0x16, 0x35, 0x16, 0x3E, 0xCA, 0x79, 0xA8,
+            0x58, 0x5E, 0xD3, 0xE3, 0x17, 0x08, 0x07, 0xE7,
+            0xC0, 0x3B, 0x72, 0x0F, 0xC5, 0x4C, 0x7B, 0x23,
+            0x89, 0x7F, 0xCB, 0xA0, 0xE9, 0xD0, 0xB4, 0xA0,
+            0x68, 0x94, 0xCF, 0xD2, 0x49, 0xF2, 0x23, 0x67,
+        };
+        unsigned char msg[100];
+        memset(msg, 0x99, sizeof(msg));
+        test_schnorrsig_bip_vectors_check_signing(sk, pk, aux_rand, msg, sizeof(msg), sig);
+        test_schnorrsig_bip_vectors_check_verify(pk, msg, sizeof(msg), sig, 1);
     }
 }
 

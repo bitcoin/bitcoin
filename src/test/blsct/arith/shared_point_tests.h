@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(test_get_string)
 BOOST_AUTO_TEST_CASE(test_serialize_unserialize)
 {
     Point p = Point::GetBasePoint();
-    CDataStream st(0, 0);
+    DataStream st{};
     p.Serialize(st);
     BOOST_CHECK_EQUAL(st.size(), Point::SERIALIZATION_SIZE);
 

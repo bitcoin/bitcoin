@@ -130,6 +130,7 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
  * the solution (according to the waste metric) will be chosen. If a valid input cannot be found from any
  * single OutputType, fallback to running `ChooseSelectionResult()` over all available coins.
  *
+ * param@[in]  chain                     The chain interface to get information on unconfirmed UTXOs bump fees
  * param@[in]  nTargetValue              The target value
  * param@[in]  groups                    The grouped outputs mapped by coin eligibility filters
  * param@[in]  coin_selection_params     Parameters for the coin selection
@@ -139,7 +140,7 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
  *                                                  or (2) an specific error message if there was something particularly wrong (e.g. a selection
  *                                                  result that surpassed the tx max weight size).
  */
-util::Result<SelectionResult> AttemptSelection(const CAmount& nTargetValue, OutputGroupTypeMap& groups,
+util::Result<SelectionResult> AttemptSelection(interfaces::Chain& chain, const CAmount& nTargetValue, OutputGroupTypeMap& groups,
                         const CoinSelectionParams& coin_selection_params, bool allow_mixed_output_types);
 
 /**
@@ -147,6 +148,7 @@ util::Result<SelectionResult> AttemptSelection(const CAmount& nTargetValue, Outp
  * Multiple coin selection algorithms will be run and the input set that produces the least waste
  * (according to the waste metric) will be chosen.
  *
+ * param@[in]  chain                     The chain interface to get information on unconfirmed UTXOs bump fees
  * param@[in]  nTargetValue              The target value
  * param@[in]  groups                    The struct containing the outputs grouped by script and divided by (1) positive only outputs and (2) all outputs (positive + negative).
  * param@[in]  coin_selection_params     Parameters for the coin selection
@@ -155,7 +157,7 @@ util::Result<SelectionResult> AttemptSelection(const CAmount& nTargetValue, Outp
  *                                                  or (2) an specific error message if there was something particularly wrong (e.g. a selection
  *                                                  result that surpassed the tx max weight size).
  */
-util::Result<SelectionResult> ChooseSelectionResult(const CAmount& nTargetValue, Groups& groups, const CoinSelectionParams& coin_selection_params);
+util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, const CAmount& nTargetValue, Groups& groups, const CoinSelectionParams& coin_selection_params);
 
 // User manually selected inputs that must be part of the transaction
 struct PreSelectedInputs
@@ -212,24 +214,24 @@ struct CreatedTransactionResult
     CTransactionRef tx;
     CAmount fee;
     FeeCalculation fee_calc;
-    int change_pos;
+    std::optional<unsigned int> change_pos;
 
-    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, int _change_pos, const FeeCalculation& _fee_calc)
+    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, const FeeCalculation& _fee_calc)
         : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos) {}
 };
 
 /**
  * Create a new transaction paying the recipients with a set of coins
  * selected by SelectCoins(); Also create the change output, when needed
- * @note passing change_pos as -1 will result in setting a random position
+ * @note passing change_pos as std::nullopt will result in setting a random position
  */
-util::Result<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, int change_pos, const CCoinControl& coin_control, bool sign = true);
+util::Result<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, std::optional<unsigned int> change_pos, const CCoinControl& coin_control, bool sign = true);
 
 /**
  * Insert additional inputs into the transaction by
  * calling CreateTransaction();
  */
-bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
+util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CMutableTransaction& tx, std::optional<unsigned int> change_pos, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_SPEND_H

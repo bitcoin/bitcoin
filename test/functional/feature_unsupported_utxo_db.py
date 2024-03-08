@@ -40,9 +40,9 @@ class UnsupportedUtxoDbTest(BitcoinTestFramework):
 
         self.log.info("Check init error")
         legacy_utxos_dir = self.nodes[0].chain_path / "chainstate"
-        legacy_blocks_dir = self.nodes[0].chain_path / "blocks"
+        legacy_blocks_dir = self.nodes[0].blocks_path
         recent_utxos_dir = self.nodes[1].chain_path / "chainstate"
-        recent_blocks_dir = self.nodes[1].chain_path / "blocks"
+        recent_blocks_dir = self.nodes[1].blocks_path
         shutil.copytree(legacy_utxos_dir, recent_utxos_dir)
         shutil.copytree(legacy_blocks_dir, recent_blocks_dir)
         self.nodes[1].assert_start_raises_init_error(

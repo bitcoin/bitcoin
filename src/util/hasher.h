@@ -45,7 +45,7 @@ public:
      * a slight performance penalty (around 1.6%), but this is compensated by
      * memory savings of about 9% which allow for a larger dbcache setting.
      *
-     * @see https://gcc.gnu.org/onlinedocs/gcc-9.2.0/libstdc++/manual/manual/unordered_associative.html
+     * @see https://gcc.gnu.org/onlinedocs/gcc-13.2.0/libstdc++/manual/manual/unordered_associative.html
      */
     size_t operator()(const COutPoint& id) const noexcept {
         return SipHashUint256Extra(k0, k1, id.hash, id.n);

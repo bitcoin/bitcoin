@@ -5,7 +5,9 @@
 
 #include <random.h>
 
+#include <compat/compat.h>
 #include <compat/cpuid.h>
+#include <crypto/chacha20.h>
 #include <crypto/sha256.h>
 #include <crypto/sha512.h>
 #include <logging.h>
@@ -16,6 +18,7 @@
 #include <sync.h>
 #include <util/time.h>
 
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <thread>
@@ -28,16 +31,15 @@
 #include <sys/time.h>
 #endif
 
-#ifdef HAVE_SYS_GETRANDOM
-#include <sys/syscall.h>
-#include <linux/random.h>
-#endif
-#if defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
-#include <unistd.h>
+#if defined(HAVE_GETRANDOM) || (defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX))
 #include <sys/random.h>
 #endif
+
 #ifdef HAVE_SYSCTL_ARND
 #include <sys/sysctl.h>
+#endif
+#if defined(HAVE_STRONG_GETAUXVAL) && defined(__aarch64__)
+#include <sys/auxv.h>
 #endif
 
 [[noreturn]] static void RandFailure()
@@ -174,6 +176,62 @@ static uint64_t GetRdSeed() noexcept
 #endif
 }
 
+#elif defined(__aarch64__) && defined(HWCAP2_RNG)
+
+static bool g_rndr_supported = false;
+
+static void InitHardwareRand()
+{
+    if (getauxval(AT_HWCAP2) & HWCAP2_RNG) {
+        g_rndr_supported = true;
+    }
+}
+
+static void ReportHardwareRand()
+{
+    // This must be done in a separate function, as InitHardwareRand() may be indirectly called
+    // from global constructors, before logging is initialized.
+    if (g_rndr_supported) {
+        LogPrintf("Using RNDR and RNDRRS as additional entropy sources\n");
+    }
+}
+
+/** Read 64 bits of entropy using rndr.
+ *
+ * Must only be called when RNDR is supported.
+ */
+static uint64_t GetRNDR() noexcept
+{
+    uint8_t ok;
+    uint64_t r1;
+    do {
+        // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/RNDR--Random-Number
+        __asm__ volatile("mrs %0, s3_3_c2_c4_0; cset %w1, ne;"
+                         : "=r"(r1), "=r"(ok)::"cc");
+        if (ok) break;
+        __asm__ volatile("yield");
+    } while (true);
+    return r1;
+}
+
+/** Read 64 bits of entropy using rndrrs.
+ *
+ * Must only be called when RNDRRS is supported.
+ */
+static uint64_t GetRNDRRS() noexcept
+{
+    uint8_t ok;
+    uint64_t r1;
+    do {
+        // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/RNDRRS--Reseeded-Random-Number
+        __asm__ volatile("mrs %0, s3_3_c2_c4_1; cset %w1, ne;"
+                         : "=r"(r1), "=r"(ok)::"cc");
+        if (ok) break;
+        __asm__ volatile("yield");
+    } while (true);
+    return r1;
+}
+
 #else
 /* Access to other hardware random number generators could be added here later,
  * assuming it is sufficiently fast (in the order of a few hundred CPU cycles).
@@ -189,6 +247,12 @@ static void SeedHardwareFast(CSHA512& hasher) noexcept {
 #if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
     if (g_rdrand_supported) {
         uint64_t out = GetRdRand();
+        hasher.Write((const unsigned char*)&out, sizeof(out));
+        return;
+    }
+#elif defined(__aarch64__) && defined(HWCAP2_RNG)
+    if (g_rndr_supported) {
+        uint64_t out = GetRNDR();
         hasher.Write((const unsigned char*)&out, sizeof(out));
         return;
     }
@@ -213,6 +277,14 @@ static void SeedHardwareSlow(CSHA512& hasher) noexcept {
         for (int i = 0; i < 4; ++i) {
             uint64_t out = 0;
             for (int j = 0; j < 1024; ++j) out ^= GetRdRand();
+            hasher.Write((const unsigned char*)&out, sizeof(out));
+        }
+        return;
+    }
+#elif defined(__aarch64__) && defined(HWCAP2_RNG)
+    if (g_rndr_supported) {
+        for (int i = 0; i < 4; ++i) {
+            uint64_t out = GetRNDRRS();
             hasher.Write((const unsigned char*)&out, sizeof(out));
         }
         return;
@@ -252,7 +324,7 @@ static void Strengthen(const unsigned char (&seed)[32], SteadyClock::duration du
 /** Fallback: get 32 bytes of system entropy from /dev/urandom. The most
  * compatible way to get cryptographic randomness on UNIX-ish platforms.
  */
-static void GetDevURandom(unsigned char *ent32)
+[[maybe_unused]] static void GetDevURandom(unsigned char *ent32)
 {
     int f = open("/dev/urandom", O_RDONLY);
     if (f == -1) {
@@ -285,23 +357,14 @@ void GetOSRand(unsigned char *ent32)
         RandFailure();
     }
     CryptReleaseContext(hProvider, 0);
-#elif defined(HAVE_SYS_GETRANDOM)
+#elif defined(HAVE_GETRANDOM)
     /* Linux. From the getrandom(2) man page:
      * "If the urandom source has been initialized, reads of up to 256 bytes
      * will always return as many bytes as requested and will not be
      * interrupted by signals."
      */
-    int rv = syscall(SYS_getrandom, ent32, NUM_OS_RANDOM_BYTES, 0);
-    if (rv != NUM_OS_RANDOM_BYTES) {
-        if (rv < 0 && errno == ENOSYS) {
-            /* Fallback for kernel <3.17: the return value will be -1 and errno
-             * ENOSYS if the syscall is not available, in that case fall back
-             * to /dev/urandom.
-             */
-            GetDevURandom(ent32);
-        } else {
-            RandFailure();
-        }
+    if (getrandom(ent32, NUM_OS_RANDOM_BYTES, 0) != NUM_OS_RANDOM_BYTES) {
+        RandFailure();
     }
 #elif defined(__OpenBSD__)
     /* OpenBSD. From the arc4random(3) man page:
@@ -311,16 +374,10 @@ void GetOSRand(unsigned char *ent32)
        The function call is always successful.
      */
     arc4random_buf(ent32, NUM_OS_RANDOM_BYTES);
-    // Silence a compiler warning about unused function.
-    (void)GetDevURandom;
 #elif defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
-    /* getentropy() is available on macOS 10.12 and later.
-     */
     if (getentropy(ent32, NUM_OS_RANDOM_BYTES) != 0) {
         RandFailure();
     }
-    // Silence a compiler warning about unused function.
-    (void)GetDevURandom;
 #elif defined(HAVE_SYSCTL_ARND)
     /* FreeBSD, NetBSD and similar. It is possible for the call to return less
      * bytes than requested, so need to read in a loop.
@@ -334,8 +391,6 @@ void GetOSRand(unsigned char *ent32)
         }
         have += len;
     } while (have < NUM_OS_RANDOM_BYTES);
-    // Silence a compiler warning about unused function.
-    (void)GetDevURandom;
 #else
     /* Fall back to /dev/urandom if there is no specific method implemented to
      * get system entropy for this OS.
@@ -598,7 +653,7 @@ uint256 GetRandHash() noexcept
 void FastRandomContext::RandomSeed()
 {
     uint256 seed = GetRandHash();
-    rng.SetKey32(seed.begin());
+    rng.SetKey(MakeByteSpan(seed));
     requires_seed = false;
 }
 
@@ -606,24 +661,27 @@ uint256 FastRandomContext::rand256() noexcept
 {
     if (requires_seed) RandomSeed();
     uint256 ret;
-    rng.Keystream(ret.data(), ret.size());
+    rng.Keystream(MakeWritableByteSpan(ret));
     return ret;
 }
 
-std::vector<unsigned char> FastRandomContext::randbytes(size_t len)
+template <typename B>
+std::vector<B> FastRandomContext::randbytes(size_t len)
+{
+    std::vector<B> ret(len);
+    fillrand(MakeWritableByteSpan(ret));
+    return ret;
+}
+template std::vector<unsigned char> FastRandomContext::randbytes(size_t);
+template std::vector<std::byte> FastRandomContext::randbytes(size_t);
+
+void FastRandomContext::fillrand(Span<std::byte> output)
 {
     if (requires_seed) RandomSeed();
-    std::vector<unsigned char> ret(len);
-    if (len > 0) {
-        rng.Keystream(ret.data(), len);
-    }
-    return ret;
+    rng.Keystream(output);
 }
 
-FastRandomContext::FastRandomContext(const uint256& seed) noexcept : requires_seed(false), bitbuf_size(0)
-{
-    rng.SetKey32(seed.begin());
-}
+FastRandomContext::FastRandomContext(const uint256& seed) noexcept : requires_seed(false), rng(MakeByteSpan(seed)), bitbuf_size(0) {}
 
 bool Random_SanityCheck()
 {
@@ -671,13 +729,13 @@ bool Random_SanityCheck()
     return true;
 }
 
-FastRandomContext::FastRandomContext(bool fDeterministic) noexcept : requires_seed(!fDeterministic), bitbuf_size(0)
+static constexpr std::array<std::byte, ChaCha20::KEYLEN> ZERO_KEY{};
+
+FastRandomContext::FastRandomContext(bool fDeterministic) noexcept : requires_seed(!fDeterministic), rng(ZERO_KEY), bitbuf_size(0)
 {
-    if (!fDeterministic) {
-        return;
-    }
-    uint256 seed;
-    rng.SetKey32(seed.begin());
+    // Note that despite always initializing with ZERO_KEY, requires_seed is set to true if not
+    // fDeterministic. That means the rng will be reinitialized with a secure random key upon first
+    // use.
 }
 
 FastRandomContext& FastRandomContext::operator=(FastRandomContext&& from) noexcept

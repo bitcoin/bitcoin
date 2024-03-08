@@ -14,15 +14,16 @@ import sys
 
 FALSE_POSITIVES = [
     ("src/dbwrapper.cpp", "vsnprintf(p, limit - p, format, backup_ap)"),
-    ("src/index/base.cpp", "FatalError(const char* fmt, const Args&... args)"),
+    ("src/index/base.cpp", "FatalErrorf(const char* fmt, const Args&... args)"),
+    ("src/index/base.h", "FatalErrorf(const char* fmt, const Args&... args)"),
     ("src/netbase.cpp", "LogConnectFailure(bool manual_connection, const char* fmt, const Args&... args)"),
     ("src/clientversion.cpp", "strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
     ("src/test/translation_tests.cpp", "strprintf(format, arg)"),
     ("src/validationinterface.cpp", "LogPrint(BCLog::VALIDATION, fmt \"\\n\", __VA_ARGS__)"),
-    ("src/wallet/wallet.h",  "WalletLogPrintf(std::string fmt, Params... parameters)"),
-    ("src/wallet/wallet.h", "LogPrintf((\"%s \" + fmt).c_str(), GetDisplayName(), parameters...)"),
-    ("src/wallet/scriptpubkeyman.h",  "WalletLogPrintf(std::string fmt, Params... parameters)"),
-    ("src/wallet/scriptpubkeyman.h", "LogPrintf((\"%s \" + fmt).c_str(), m_storage.GetDisplayName(), parameters...)"),
+    ("src/wallet/wallet.h", "WalletLogPrintf(const char* fmt, Params... parameters)"),
+    ("src/wallet/wallet.h", "LogPrintf((\"%s \" + std::string{fmt}).c_str(), GetDisplayName(), parameters...)"),
+    ("src/wallet/scriptpubkeyman.h", "WalletLogPrintf(const char* fmt, Params... parameters)"),
+    ("src/wallet/scriptpubkeyman.h", "LogPrintf((\"%s \" + std::string{fmt}).c_str(), m_storage.GetDisplayName(), parameters...)"),
 ]
 
 
@@ -241,20 +242,32 @@ def count_format_specifiers(format_string):
     3
     >>> count_format_specifiers("foo %d bar %i foo %% foo %*d foo")
     4
+    >>> count_format_specifiers("foo %5$d")
+    5
+    >>> count_format_specifiers("foo %5$*7$d")
+    7
     """
     assert type(format_string) is str
     format_string = format_string.replace('%%', 'X')
-    n = 0
-    in_specifier = False
-    for i, char in enumerate(format_string):
-        if char == "%":
-            in_specifier = True
+    n = max_pos = 0
+    for m in re.finditer("%(.*?)[aAcdeEfFgGinopsuxX]", format_string, re.DOTALL):
+        # Increase the max position if the argument has a position number like
+        # "5$", otherwise increment the argument count.
+        pos_num, = re.match(r"(?:(^\d+)\$)?", m.group(1)).groups()
+        if pos_num is not None:
+            max_pos = max(max_pos, int(pos_num))
+        else:
             n += 1
-        elif char in "aAcdeEfFgGinopsuxX":
-            in_specifier = False
-        elif in_specifier and char == "*":
+
+        # Increase the max position if there is a "*" width argument with a
+        # position like "*7$", and increment the argument count if there is a
+        # "*" width argument with no position.
+        star, star_pos_num = re.match(r"(?:.*?(\*(?:(\d+)\$)?)|)", m.group(1)).groups()
+        if star_pos_num is not None:
+            max_pos = max(max_pos, int(star_pos_num))
+        elif star is not None:
             n += 1
-    return n
+    return max(n, max_pos)
 
 
 def main():

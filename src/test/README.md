@@ -42,7 +42,7 @@ test_navcoin --log_level=all --run_test=getarg_tests
 
 `log_level` controls the verbosity of the test framework, which logs when a
 test case is entered, for example. `test_navcoin` also accepts the command
-line arguments accepted by `bitcoind`. Use `--` to separate both types of
+line arguments accepted by `navcoind`. Use `--` to separate both types of
 arguments:
 
 ```bash

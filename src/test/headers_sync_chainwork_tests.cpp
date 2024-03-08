@@ -40,7 +40,7 @@ void HeadersGeneratorSetup::GenerateHeaders(std::vector<CBlockHeader>& headers,
     uint256 prev_hash = starting_hash;
 
     while (headers.size() < count) {
-        headers.push_back(CBlockHeader());
+        headers.emplace_back();
         CBlockHeader& next_header = headers.back();;
         next_header.nVersion = nVersion;
         next_header.hashPrevBlock = prev_hash;

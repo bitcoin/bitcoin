@@ -18,7 +18,7 @@ struct Util {
     static Elements<typename T::Scalar> GetYPows(
         const typename T::Scalar& y,
         const size_t& n,
-        CHashWriter& fiat_shamir
+        HashWriter& fiat_shamir
     );
 };
 

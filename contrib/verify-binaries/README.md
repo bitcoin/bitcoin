@@ -17,7 +17,7 @@ must obtain that key for your local GPG installation.
 You can obtain these keys by
   - through a browser using a key server (e.g. keyserver.ubuntu.com),
   - manually using the `gpg --keyserver <url> --recv-keys <key>` command, or
-  - you can run the packaged `verify.py ... --import-keys` script to
+  - you can run the packaged `verify.py --import-keys ...` script to
     have it automatically retrieve unrecognized keys.
 
 #### Usage

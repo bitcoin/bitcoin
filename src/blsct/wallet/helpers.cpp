@@ -7,7 +7,7 @@
 namespace blsct {
 uint64_t CalculateViewTag(const MclG1Point& blindingKey, const MclScalar& viewKey)
 {
-    CHashWriter hash(SER_GETHASH, PROTOCOL_VERSION);
+    HashWriter hash{};
     hash << (blindingKey * viewKey);
 
     return (hash.GetHash().GetUint64(0) & 0xFFFF);
@@ -24,7 +24,7 @@ CKeyID CalculateHashId(const MclG1Point& blindingKey, const MclG1Point& spending
 
 MclScalar CalculatePrivateSpendingKey(const MclG1Point& blindingKey, const MclScalar& viewKey, const MclScalar& spendingKey, const int64_t& account, const uint64_t& address)
 {
-    CHashWriter string(SER_GETHASH, 0);
+    HashWriter string{};
 
     string << std::vector<unsigned char>(subAddressHeader.begin(), subAddressHeader.end());
     string << viewKey;

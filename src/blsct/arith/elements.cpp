@@ -22,13 +22,6 @@ OrderedElements<T>::OrderedElements(const std::set<T>& set)
 template OrderedElements<MclG1Point>::OrderedElements(const std::set<MclG1Point>& set);
 
 template <typename T>
-OrderedElements<T>::OrderedElements(const OrderedElements& other)
-{
-    m_set = other.m_set;
-};
-template OrderedElements<MclG1Point>::OrderedElements(const OrderedElements& other);
-
-template <typename T>
 Elements<T> OrderedElements<T>::GetElements() const
 {
     if (Size() == 0) return Elements<T>();

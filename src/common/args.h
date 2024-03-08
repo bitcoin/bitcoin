@@ -5,11 +5,11 @@
 #ifndef BITCOIN_COMMON_ARGS_H
 #define BITCOIN_COMMON_ARGS_H
 
+#include <common/settings.h>
 #include <compat/compat.h>
 #include <sync.h>
 #include <util/chaintype.h>
 #include <util/fs.h>
-#include <util/settings.h>
 
 #include <iosfwd>
 #include <list>
@@ -28,7 +28,6 @@ extern const char * const BITCOIN_SETTINGS_FILENAME;
 
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption(const ArgsManager& args);
-fs::path GetConfigFile(const ArgsManager& args, const fs::path& configuration_file_path);
 
 /**
  * Most paths passed as configuration arguments are treated as relative to
@@ -76,7 +75,7 @@ struct KeyInfo {
 
 KeyInfo InterpretKey(std::string key);
 
-std::optional<util::SettingsValue> InterpretValue(const KeyInfo& key, const std::string* value,
+std::optional<common::SettingsValue> InterpretValue(const KeyInfo& key, const std::string* value,
                                                          unsigned int flags, std::string& error);
 
 struct SectionInfo {
@@ -85,14 +84,14 @@ struct SectionInfo {
     int m_line;
 };
 
-std::string SettingToString(const util::SettingsValue&, const std::string&);
-std::optional<std::string> SettingToString(const util::SettingsValue&);
+std::string SettingToString(const common::SettingsValue&, const std::string&);
+std::optional<std::string> SettingToString(const common::SettingsValue&);
 
-int64_t SettingToInt(const util::SettingsValue&, int64_t);
-std::optional<int64_t> SettingToInt(const util::SettingsValue&);
+int64_t SettingToInt(const common::SettingsValue&, int64_t);
+std::optional<int64_t> SettingToInt(const common::SettingsValue&);
 
-bool SettingToBool(const util::SettingsValue&, bool);
-std::optional<bool> SettingToBool(const util::SettingsValue&);
+bool SettingToBool(const common::SettingsValue&, bool);
+std::optional<bool> SettingToBool(const common::SettingsValue&);
 
 class ArgsManager
 {
@@ -131,13 +130,14 @@ protected:
     };
 
     mutable RecursiveMutex cs_args;
-    util::Settings m_settings GUARDED_BY(cs_args);
+    common::Settings m_settings GUARDED_BY(cs_args);
     std::vector<std::string> m_command GUARDED_BY(cs_args);
     std::string m_network GUARDED_BY(cs_args);
     std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
     bool m_accept_any_command GUARDED_BY(cs_args){true};
     std::list<SectionInfo> m_config_sections GUARDED_BY(cs_args);
+    std::optional<fs::path> m_config_path GUARDED_BY(cs_args);
     mutable fs::path m_cached_blocks_path GUARDED_BY(cs_args);
     mutable fs::path m_cached_datadir_path GUARDED_BY(cs_args);
     mutable fs::path m_cached_network_datadir_path GUARDED_BY(cs_args);
@@ -159,12 +159,12 @@ protected:
      * false if "-nosetting" argument was passed, and a string if a "-setting=value"
      * argument was passed.
      */
-    util::SettingsValue GetSetting(const std::string& arg) const;
+    common::SettingsValue GetSetting(const std::string& arg) const;
 
     /**
      * Get list of setting values.
      */
-    std::vector<util::SettingsValue> GetSettingsList(const std::string& arg) const;
+    std::vector<common::SettingsValue> GetSettingsList(const std::string& arg) const;
 
     ArgsManager();
     ~ArgsManager();
@@ -180,6 +180,7 @@ protected:
      * Return config file path (read-only)
      */
     fs::path GetConfigFilePath() const;
+    void SetConfigFilePath(fs::path);
     [[nodiscard]] bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
 
     /**
@@ -214,21 +215,21 @@ protected:
      *
      * @return Blocks path which is network specific
      */
-    const fs::path& GetBlocksDirPath() const;
+    fs::path GetBlocksDirPath() const;
 
     /**
      * Get data directory path
      *
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      */
-    const fs::path& GetDataDirBase() const { return GetDataDir(false); }
+    fs::path GetDataDirBase() const { return GetDataDir(false); }
 
     /**
      * Get data directory path with appended network identifier
      *
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      */
-    const fs::path& GetDataDirNet() const { return GetDataDir(true); }
+    fs::path GetDataDirNet() const { return GetDataDir(true); }
 
     /**
      * Clear cached directory paths
@@ -394,7 +395,7 @@ protected:
      * Get current setting from config file or read/write settings file,
      * ignoring nonpersistent command line or forced settings values.
      */
-    util::SettingsValue GetPersistentSetting(const std::string& name) const;
+    common::SettingsValue GetPersistentSetting(const std::string& name) const;
 
     /**
      * Access settings with lock held.
@@ -419,7 +420,7 @@ private:
      * @param net_specific Append network identifier to the returned path
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      */
-    const fs::path& GetDataDir(bool net_specific) const;
+    fs::path GetDataDir(bool net_specific) const;
 
     /**
      * Return -regtest/-signet/-testnet/-chain= setting as a ChainType enum if a
@@ -433,7 +434,7 @@ private:
     void logArgsPrefix(
         const std::string& prefix,
         const std::string& section,
-        const std::map<std::string, std::vector<util::SettingsValue>>& args) const;
+        const std::map<std::string, std::vector<common::SettingsValue>>& args) const;
 };
 
 extern ArgsManager gArgs;

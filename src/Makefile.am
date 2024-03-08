@@ -8,8 +8,8 @@ print-%: FORCE
 
 DIST_SUBDIRS = secp256k1
 
-AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS) $(LTO_LDFLAGS) $(CORE_LDFLAGS)
-AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS) $(LTO_CXXFLAGS) $(CORE_CXXFLAGS)
+AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS) $(CORE_LDFLAGS)
+AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS) $(CORE_CXXFLAGS)
 AM_CPPFLAGS = $(DEBUG_CPPFLAGS) $(HARDENED_CPPFLAGS) $(CORE_CPPFLAGS)
 AM_LIBTOOLFLAGS = --preserve-dup-deps
 PTHREAD_FLAGS = $(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
@@ -26,7 +26,7 @@ BENCHMARKS =
 
 BLS_INCLUDES=-I$(srcdir)/bls/include -I$(srcdir)/bls/mcl/include -I$(srcdir)/bls/mcl/src
 
-BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(LEVELDB_CPPFLAGS)
+BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/$(MINISKETCH_INCLUDE_DIR_INT) -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
 
 LIBBITCOIN_NODE=libbitcoin_node.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
@@ -42,10 +42,10 @@ if ENABLE_ZMQ
 LIBBITCOIN_ZMQ=libbitcoin_zmq.a
 endif
 if BUILD_BITCOIN_LIBS
-LIBBITCOINCONSENSUS=libbitcoinconsensus.la
+LIBBITCOINCONSENSUS=libnavcoinconsensus.la
 endif
 if BUILD_BITCOIN_KERNEL_LIB
-LIBBITCOINKERNEL=libbitcoinkernel.la
+LIBBITCOINKERNEL=libnavcoinkernel.la
 endif
 if ENABLE_WALLET
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
@@ -79,13 +79,13 @@ $(LIBBLS):
 		ARCH='$(firstword $(subst -, ,$(HOST)))' \
 		CC='$(CC)' \
 		CXX='$(CXX)' \
-		CFLAGS='$(CXXFLAGS) -DBLS_ETH=1' \
+		CFLAGS='$(CXXFLAGS)' \
 		LDFLAGS='$(LDFLAGS)' \
 		ARFLAGS='$(ARFLAGS)' \
 		AR='$(AR)' \
 		RANLIB='$(RANLIB)' \
 		$(MAKE) $(AM_MAKEFLAGS) BLS_ETH=1 -C bls lib/libbls384_256.a
-	$(RANLIB) bls/lib/libbls384_256.a
+	$(RANLIB) $(LIBBLS)
 
 $(LIBMCL):
 	$(AM_V_at) \
@@ -99,7 +99,7 @@ $(LIBMCL):
 		AR='$(AR)' \
 		RANLIB='$(RANLIB)' \
 		$(MAKE) $(AM_MAKEFLAGS) -C bls/mcl lib/libmcl.a
-	$(RANLIB) bls/mcl/lib/libmcl.a
+	$(RANLIB) $(LIBMCL)
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
@@ -148,29 +148,18 @@ if BUILD_BITCOIN_CHAINSTATE
   bin_PROGRAMS += navcoin-chainstate
 endif
 
-.PHONY: FORCE check-symbols check-security
-# navcoin core #
-BITCOIN_CORE_H = \
-  addrdb.h \
-  addrman.h \
-  addrman_impl.h \
-  attributes.h \
-  banman.h \
-  base58.h \
-  bech32.h \
-  bech32_mod.h \
-  blockencodings.h \
-  blockfilter.h \
+BLSCT_H = \
+  blsct/arith/elements.h \
+  blsct/arith/endianness.h \
   blsct/arith/mcl/mcl.h \
   blsct/arith/mcl/mcl_g1point.h \
   blsct/arith/mcl/mcl_init.h \
   blsct/arith/mcl/mcl_scalar.h \
   blsct/arith/mcl/mcl_util.h \
-  blsct/arith/elements.h \
-  blsct/arith/endianness.h \
+  blsct/bech32_mod.h \
   blsct/building_block/fiat_shamir.h \
-  blsct/building_block/generator_deriver.h \
   blsct/building_block/g_h_gi_hi_zero_verifier.h \
+  blsct/building_block/generator_deriver.h \
   blsct/building_block/imp_inner_prod_arg.h \
   blsct/building_block/lazy_point.h \
   blsct/building_block/lazy_points.h \
@@ -179,6 +168,7 @@ BITCOIN_CORE_H = \
   blsct/common.h \
   blsct/double_public_key.h \
   blsct/eip_2333/bls12_381_keygen.h \
+  blsct/external_api/blsct.h \
   blsct/private_key.h \
   blsct/public_key.h \
   blsct/public_keys.h \
@@ -187,14 +177,14 @@ BITCOIN_CORE_H = \
   blsct/pos/proof_logic.h \
   blsct/range_proof/bulletproofs/amount_recovery_request.h \
   blsct/range_proof/bulletproofs/amount_recovery_result.h \
+  blsct/range_proof/bulletproofs/range_proof.h \
   blsct/range_proof/bulletproofs/range_proof_logic.h \
   blsct/range_proof/bulletproofs/range_proof_with_transcript.h \
-  blsct/range_proof/bulletproofs/range_proof.h \
   blsct/range_proof/bulletproofs_plus/amount_recovery_request.h \
   blsct/range_proof/bulletproofs_plus/amount_recovery_result.h \
+  blsct/range_proof/bulletproofs_plus/range_proof.h \
   blsct/range_proof/bulletproofs_plus/range_proof_logic.h \
   blsct/range_proof/bulletproofs_plus/range_proof_with_transcript.h \
-  blsct/range_proof/bulletproofs_plus/range_proof.h \
   blsct/range_proof/bulletproofs_plus/util.h \
   blsct/range_proof/common.h \
   blsct/range_proof/generators.h \
@@ -202,9 +192,9 @@ BITCOIN_CORE_H = \
   blsct/range_proof/proof_base.h \
   blsct/range_proof/recovered_data.h \
   blsct/range_proof/setup.h \
-  blsct/set_mem_proof/set_mem_proof_setup.h \
   blsct/set_mem_proof/set_mem_proof.h \
   blsct/set_mem_proof/set_mem_proof_prover.h \
+  blsct/set_mem_proof/set_mem_proof_setup.h \
   blsct/signature.h \
   blsct/wallet/address.h \
   blsct/wallet/hdchain.h \
@@ -213,7 +203,61 @@ BITCOIN_CORE_H = \
   blsct/wallet/keyring.h \
   blsct/wallet/txfactory.h \
   blsct/wallet/txfactory_global.h \
-  blsct/wallet/verification.h \
+  blsct/wallet/verification.h
+
+BLSCT_CPP = \
+  blsct/arith/elements.cpp \
+  blsct/arith/mcl/mcl_g1point.cpp \
+  blsct/arith/mcl/mcl_scalar.cpp \
+  blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
+  blsct/building_block/generator_deriver.cpp \
+  blsct/building_block/imp_inner_prod_arg.cpp \
+  blsct/building_block/lazy_point.cpp \
+  blsct/building_block/lazy_points.cpp \
+  blsct/building_block/weighted_inner_prod_arg.cpp \
+  blsct/common.cpp \
+  blsct/double_public_key.cpp \
+  blsct/eip_2333/bls12_381_keygen.cpp \
+  blsct/external_api/blsct.cpp \
+  blsct/private_key.cpp \
+  blsct/public_key.cpp \
+  blsct/public_keys.cpp \
+  blsct/range_proof/bulletproofs/amount_recovery_request.cpp \
+  blsct/range_proof/bulletproofs/amount_recovery_result.cpp \
+  blsct/range_proof/bulletproofs/range_proof.cpp \
+  blsct/range_proof/bulletproofs/range_proof_logic.cpp \
+  blsct/range_proof/bulletproofs/range_proof_with_transcript.cpp \
+  blsct/range_proof/bulletproofs_plus/amount_recovery_request.cpp \
+  blsct/range_proof/bulletproofs_plus/amount_recovery_result.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof_logic.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof_with_transcript.cpp \
+  blsct/range_proof/bulletproofs_plus/util.cpp \
+  blsct/range_proof/common.cpp \
+  blsct/range_proof/generators.cpp \
+  blsct/range_proof/msg_amt_cipher.cpp \
+  blsct/range_proof/proof_base.cpp \
+  blsct/set_mem_proof/set_mem_proof.cpp \
+  blsct/set_mem_proof/set_mem_proof_prover.cpp \
+  blsct/set_mem_proof/set_mem_proof_setup.cpp \
+  blsct/signature.cpp \
+  blsct/wallet/verification.cpp
+
+
+.PHONY: FORCE check-symbols check-security
+# navcoin core #
+BITCOIN_CORE_H = \
+  addrdb.h \
+  addresstype.h \
+  addrman.h \
+  addrman_impl.h \
+  attributes.h \
+  banman.h \
+  base58.h \
+  bech32.h \
+  bip324.h \
+  blockencodings.h \
+  blockfilter.h \
   dandelion.h \
   chain.h \
   chainparams.h \
@@ -232,6 +276,8 @@ BITCOIN_CORE_H = \
   compat/compat.h \
   compat/cpuid.h \
   compat/endian.h \
+  common/settings.h \
+  common/system.h \
   compressor.h \
   consensus/consensus.h \
   consensus/tx_check.h \
@@ -272,10 +318,14 @@ BITCOIN_CORE_H = \
   kernel/coinstats.h \
   kernel/context.h \
   kernel/cs_main.h \
+  kernel/disconnected_transactions.h \
   kernel/mempool_entry.h \
   kernel/mempool_limits.h \
   kernel/mempool_options.h \
   kernel/mempool_persist.h \
+  kernel/mempool_removal_reason.h \
+  kernel/messagestartchars.h \
+  kernel/notifications_interface.h \
   kernel/validation_cache_sizes.h \
   key.h \
   key_io.h \
@@ -292,6 +342,7 @@ BITCOIN_CORE_H = \
   netbase.h \
   netgroup.h \
   netmessagemaker.h \
+  node/abort.h \
   node/blockmanager_args.h \
   node/blockstorage.h \
   node/caches.h \
@@ -304,10 +355,14 @@ BITCOIN_CORE_H = \
   node/database_args.h \
   node/eviction.h \
   node/interface_ui.h \
+  node/kernel_notifications.h \
   node/mempool_args.h \
   node/mempool_persist_args.h \
   node/miner.h \
+  node/mini_miner.h \
   node/minisketchwrapper.h \
+  node/peerman_args.h \
+  node/protocol_version.h \
   node/psbt.h \
   node/transaction.h \
   node/txreconciliation.h \
@@ -347,8 +402,7 @@ BITCOIN_CORE_H = \
   script/sigcache.h \
   script/sign.h \
   script/signingprovider.h \
-  script/standard.h \
-  shutdown.h \
+  script/solver.h \
   signet.h \
   streams.h \
   support/allocators/pool.h \
@@ -366,7 +420,9 @@ BITCOIN_CORE_H = \
   txorphanage.h \
   txrequest.h \
   undo.h \
+  util/any.h \
   util/asmap.h \
+  util/batchpriority.h \
   util/bip32.h \
   util/bitdeque.h \
   util/bytevectorhash.h \
@@ -379,10 +435,10 @@ BITCOIN_CORE_H = \
   util/fees.h \
   util/fs.h \
   util/fs_helpers.h \
-  util/getuniquepath.h \
   util/golombrice.h \
   util/hash_type.h \
   util/hasher.h \
+  util/insert.h \
   util/macros.h \
   util/message.h \
   util/moneystr.h \
@@ -392,19 +448,18 @@ BITCOIN_CORE_H = \
   util/readwritefile.h \
   util/result.h \
   util/serfloat.h \
-  util/settings.h \
+  util/signalinterrupt.h \
   util/sock.h \
   util/spanparsing.h \
   util/string.h \
-  util/syscall_sandbox.h \
   util/syserror.h \
-  util/system.h \
   util/thread.h \
   util/threadinterrupt.h \
   util/threadnames.h \
   util/time.h \
   util/tokenpipe.h \
   util/trace.h \
+  util/transaction_identifier.h \
   util/translation.h \
   util/types.h \
   util/ui_change_type.h \
@@ -442,22 +497,24 @@ BITCOIN_CORE_H = \
   zmq/zmqnotificationinterface.h \
   zmq/zmqpublishnotifier.h \
   zmq/zmqrpc.h \
-  zmq/zmqutil.h
+  zmq/zmqutil.h \
+  $(BLSCT_H)
 
 
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
-	@$(top_srcdir)/share/genbuild.sh "$(abs_top_builddir)/src/obj/build.h" \
+	$(AM_V_GEN) $(top_srcdir)/share/genbuild.sh "$(abs_top_builddir)/src/obj/build.h" \
 	  "$(abs_top_srcdir)"
 libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
 # node #
-libbitcoin_node_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libbitcoin_node_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(LEVELDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libbitcoin_node_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_node_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
   banman.cpp \
+  bip324.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
   blsct/arith/mcl/mcl_g1point.cpp \
@@ -518,11 +575,14 @@ libbitcoin_node_a_SOURCES = \
   kernel/coinstats.cpp \
   kernel/context.cpp \
   kernel/cs_main.cpp \
+  kernel/disconnected_transactions.cpp \
   kernel/mempool_persist.cpp \
+  kernel/mempool_removal_reason.cpp \
   mapport.cpp \
   net.cpp \
   net_processing.cpp \
   netgroup.cpp \
+  node/abort.cpp \
   node/blockmanager_args.cpp \
   node/blockstorage.cpp \
   node/caches.cpp \
@@ -536,10 +596,13 @@ libbitcoin_node_a_SOURCES = \
   node/eviction.cpp \
   node/interface_ui.cpp \
   node/interfaces.cpp \
+  node/kernel_notifications.cpp \
   node/mempool_args.cpp \
   node/mempool_persist_args.cpp \
   node/miner.cpp \
+  node/mini_miner.cpp \
   node/minisketchwrapper.cpp \
+  node/peerman_args.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
   node/txreconciliation.cpp \
@@ -566,7 +629,6 @@ libbitcoin_node_a_SOURCES = \
   rpc/signmessage.cpp \
   rpc/txoutproof.cpp \
   script/sigcache.cpp \
-  shutdown.cpp \
   signet.cpp \
   timedata.cpp \
   torcontrol.cpp \
@@ -577,6 +639,7 @@ libbitcoin_node_a_SOURCES = \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
+  $(BLSCT_CPP) \
   $(BITCOIN_CORE_H)
 
 if ENABLE_WALLET
@@ -605,11 +668,11 @@ endif
 libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS) $(BDB_CPPFLAGS) $(SQLITE_CFLAGS)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
+  blsct/arith/elements.cpp \
   blsct/arith/mcl/mcl_g1point.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
-  blsct/arith/elements.cpp \
-  blsct/building_block/generator_deriver.cpp \
   blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
+  blsct/building_block/generator_deriver.cpp \
   blsct/building_block/imp_inner_prod_arg.cpp \
   blsct/building_block/lazy_point.cpp \
   blsct/building_block/lazy_points.cpp \
@@ -622,13 +685,13 @@ libbitcoin_wallet_a_SOURCES = \
   blsct/public_keys.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_request.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_result.cpp \
-  blsct/range_proof/bulletproofs/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs/range_proof.cpp \
+  blsct/range_proof/bulletproofs/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs/range_proof_with_transcript.cpp \
   blsct/range_proof/bulletproofs_plus/amount_recovery_request.cpp \
   blsct/range_proof/bulletproofs_plus/amount_recovery_result.cpp \
-  blsct/range_proof/bulletproofs_plus/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof_with_transcript.cpp \
   blsct/range_proof/bulletproofs_plus/util.cpp \
   blsct/range_proof/common.cpp \
@@ -636,8 +699,8 @@ libbitcoin_wallet_a_SOURCES = \
   blsct/range_proof/msg_amt_cipher.cpp \
   blsct/range_proof/proof_base.cpp \
   blsct/set_mem_proof/set_mem_proof.cpp \
-  blsct/set_mem_proof/set_mem_proof_setup.cpp \
   blsct/set_mem_proof/set_mem_proof_prover.cpp \
+  blsct/set_mem_proof/set_mem_proof_setup.cpp \
   blsct/signature.cpp \
   blsct/wallet/address.cpp \
   blsct/wallet/helpers.cpp \
@@ -706,8 +769,8 @@ crypto_libbitcoin_crypto_base_la_SOURCES = \
   crypto/aes.h \
   crypto/chacha20.cpp \
   crypto/chacha20.h \
-  crypto/chacha_poly_aead.cpp \
-  crypto/chacha_poly_aead.h \
+  crypto/chacha20poly1305.cpp \
+  crypto/chacha20poly1305.h \
   crypto/common.h \
   crypto/hkdf_sha256_32.cpp \
   crypto/hkdf_sha256_32.h \
@@ -791,6 +854,8 @@ libbitcoin_consensus_a_SOURCES = \
   blsct/building_block/lazy_points.cpp \
   blsct/building_block/weighted_inner_prod_arg.cpp \
   blsct/common.cpp \
+  blsct/range_proof/bulletproofs/range_proof.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof.cpp \
   blsct/range_proof/common.cpp \
   blsct/range_proof/generators.cpp \
   blsct/range_proof/proof_base.cpp \
@@ -817,7 +882,7 @@ libbitcoin_consensus_a_SOURCES = \
   primitives/transaction.h \
   pubkey.cpp \
   pubkey.h \
-  script/bitcoinconsensus.cpp \
+  script/navcoinconsensus.cpp \
   script/interpreter.cpp \
   script/interpreter.h \
   script/script.cpp \
@@ -832,20 +897,20 @@ libbitcoin_consensus_a_SOURCES = \
   uint256.h \
   util/moneystr.cpp \
   util/strencodings.cpp \
-  util/strencodings.h \
-  version.h
+  util/strencodings.h
 #
 
 # common #
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
+  addresstype.cpp \
   base58.cpp \
   bech32.cpp \
   blsct/arith/mcl/mcl_g1point.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
-  bech32_mod.cpp \
   blsct/arith/elements.cpp \
+  blsct/bech32_mod.cpp \
   blsct/building_block/generator_deriver.cpp \
   blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
   blsct/building_block/imp_inner_prod_arg.cpp \
@@ -857,18 +922,15 @@ libbitcoin_common_a_SOURCES = \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \
-  blsct/range_proof/bulletproofs/range_proof.cpp \
-  blsct/range_proof/bulletproofs/range_proof_logic.cpp \
-  blsct/range_proof/bulletproofs_plus/range_proof.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_request.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_result.cpp \
-  blsct/range_proof/bulletproofs/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs/range_proof.cpp \
+  blsct/range_proof/bulletproofs/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs/range_proof_with_transcript.cpp \
   blsct/range_proof/bulletproofs_plus/amount_recovery_request.cpp \
   blsct/range_proof/bulletproofs_plus/amount_recovery_result.cpp \
-  blsct/range_proof/bulletproofs_plus/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof_with_transcript.cpp \
   blsct/range_proof/bulletproofs_plus/util.cpp \
   blsct/range_proof/common.cpp \
@@ -876,8 +938,8 @@ libbitcoin_common_a_SOURCES = \
   blsct/range_proof/msg_amt_cipher.cpp \
   blsct/range_proof/proof_base.cpp \
   blsct/set_mem_proof/set_mem_proof.cpp \
-  blsct/set_mem_proof/set_mem_proof_setup.cpp \
   blsct/set_mem_proof/set_mem_proof_prover.cpp \
+  blsct/set_mem_proof/set_mem_proof_setup.cpp \
   blsct/signature.cpp \
   blsct/wallet/address.cpp \
   blsct/wallet/txfactory_global.cpp \
@@ -889,6 +951,8 @@ libbitcoin_common_a_SOURCES = \
   common/init.cpp \
   common/interfaces.cpp \
   common/run_command.cpp \
+  common/settings.cpp \
+  common/system.cpp \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
@@ -917,7 +981,7 @@ libbitcoin_common_a_SOURCES = \
   script/miniscript.cpp \
   script/sign.cpp \
   script/signingprovider.cpp \
-  script/standard.cpp \
+  script/solver.cpp \
   warnings.cpp \
   $(BITCOIN_CORE_H)
 
@@ -939,9 +1003,11 @@ libbitcoin_util_a_SOURCES = \
   logging.cpp \
   random.cpp \
   randomenv.cpp \
+  streams.cpp \
   support/cleanse.cpp \
   sync.cpp \
   util/asmap.cpp \
+  util/batchpriority.cpp \
   util/bip32.cpp \
   util/bytevectorhash.cpp \
   util/chaintype.cpp \
@@ -951,16 +1017,14 @@ libbitcoin_util_a_SOURCES = \
   util/fees.cpp \
   util/fs.cpp \
   util/fs_helpers.cpp \
-  util/getuniquepath.cpp \
   util/hasher.cpp \
   util/sock.cpp \
   util/syserror.cpp \
-  util/system.cpp \
   util/message.cpp \
   util/moneystr.cpp \
   util/rbf.cpp \
   util/readwritefile.cpp \
-  util/settings.cpp \
+  util/signalinterrupt.cpp \
   util/thread.cpp \
   util/threadinterrupt.cpp \
   util/threadnames.cpp \
@@ -968,7 +1032,6 @@ libbitcoin_util_a_SOURCES = \
   util/spanparsing.cpp \
   util/strencodings.cpp \
   util/string.cpp \
-  util/syscall_sandbox.cpp \
   util/time.cpp \
   util/tokenpipe.cpp \
   $(BITCOIN_CORE_H)
@@ -987,13 +1050,13 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # navcoind & navcoin-node binaries #
-navcoin_daemon_sources = bitcoind.cpp
+navcoin_daemon_sources = navcoind.cpp
 navcoin_bin_cppflags = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 navcoin_bin_cxxflags = $(AM_CXXFLAGS) $(PIE_FLAGS)
 navcoin_bin_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
-navcoin_daemon_sources += bitcoind-res.rc
+navcoin_daemon_sources += navcoind-res.rc
 endif
 
 navcoin_bin_ldadd = \
@@ -1012,7 +1075,7 @@ navcoin_bin_ldadd = \
 
 navcoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
-navcoind_SOURCES = $(navcoin_daemon_sources) init/bitcoind.cpp
+navcoind_SOURCES = $(navcoin_daemon_sources) init/navcoind.cpp
 navcoind_CPPFLAGS = $(navcoin_bin_cppflags)
 navcoind_CXXFLAGS = $(navcoin_bin_cxxflags)
 navcoind_LDFLAGS = $(navcoin_bin_ldflags)
@@ -1143,31 +1206,31 @@ navcoin_chainstate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(PTHREAD_FLAGS) $(LIBTO
 navcoin_chainstate_LDADD = $(LIBBITCOINKERNEL)
 
 # libtool is unable to calculate this indirect dependency, presumably because it's a subproject.
-# libsecp256k1 only needs to be linked in when libbitcoinkernel is static.
+# libsecp256k1 only needs to be linked in when libnavcoinkernel is static.
 navcoin_chainstate_LDADD += $(LIBSECP256K1) $(LIBBLS) $(LIBMCL)
 #
 
-# bitcoinkernel library #
+# navcoinkernel library #
 if BUILD_BITCOIN_KERNEL_LIB
 lib_LTLIBRARIES += $(LIBBITCOINKERNEL)
 
-libbitcoinkernel_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
-libbitcoinkernel_la_LIBADD = $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1) $(LIBBLS) $(LIBMCL)
-libbitcoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -DBUILD_BITCOIN_INTERNAL $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
+libnavcoinkernel_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
+libnavcoinkernel_la_LIBADD = $(LIBBITCOIN_CRYPTO) $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1) $(LIBBLS) $(LIBMCL)
+libnavcoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -DBUILD_BITCOIN_INTERNAL $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 
-# libbitcoinkernel requires default symbol visibility, explicitly specify that
+# libnavcoinkernel requires default symbol visibility, explicitly specify that
 # here so that things still work even when user configures with
 #   --enable-reduce-exports
 #
 # Note this is a quick hack that will be removed as we incrementally define what
 # to export from the library.
-libbitcoinkernel_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -fvisibility=default
+libnavcoinkernel_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -fvisibility=default
 
-# TODO: libbitcoinkernel is a work in progress consensus engine library, as more
+# TODO: libnavcoinkernel is a work in progress consensus engine library, as more
 #       and more modules are decoupled from the consensus engine, this list will
 #       shrink to only those which are absolutely necessary.
-libbitcoinkernel_la_SOURCES = \
-  kernel/bitcoinkernel.cpp \
+libnavcoinkernel_la_SOURCES = \
+  kernel/navcoinkernel.cpp \
   arith_uint256.cpp \
   blockfilter.cpp \
   blsct/arith/mcl/mcl_g1point.cpp \
@@ -1184,18 +1247,15 @@ libbitcoinkernel_la_SOURCES = \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \
-  blsct/range_proof/bulletproofs/range_proof.cpp \
-  blsct/range_proof/bulletproofs/range_proof_logic.cpp \
-  blsct/range_proof/bulletproofs_plus/range_proof.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_request.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_result.cpp \
-  blsct/range_proof/bulletproofs/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs/range_proof.cpp \
+  blsct/range_proof/bulletproofs/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs/range_proof_with_transcript.cpp \
   blsct/range_proof/bulletproofs_plus/amount_recovery_request.cpp \
   blsct/range_proof/bulletproofs_plus/amount_recovery_result.cpp \
-  blsct/range_proof/bulletproofs_plus/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof_with_transcript.cpp \
   blsct/range_proof/bulletproofs_plus/util.cpp \
   blsct/range_proof/common.cpp \
@@ -1203,18 +1263,14 @@ libbitcoinkernel_la_SOURCES = \
   blsct/range_proof/msg_amt_cipher.cpp \
   blsct/range_proof/proof_base.cpp \
   blsct/set_mem_proof/set_mem_proof.cpp \
-  blsct/set_mem_proof/set_mem_proof_setup.cpp \
   blsct/set_mem_proof/set_mem_proof_prover.cpp \
+  blsct/set_mem_proof/set_mem_proof_setup.cpp \
   blsct/signature.cpp \
   blsct/wallet/txfactory_global.cpp \
   blsct/wallet/verification.cpp \
   chain.cpp \
-  chainparamsbase.cpp \
-  chainparams.cpp \
   clientversion.cpp \
   coins.cpp \
-  common/args.cpp \
-  common/config.cpp \
   compressor.cpp \
   consensus/merkle.cpp \
   consensus/tx_check.cpp \
@@ -1231,15 +1287,15 @@ libbitcoinkernel_la_SOURCES = \
   kernel/coinstats.cpp \
   kernel/context.cpp \
   kernel/cs_main.cpp \
+  kernel/disconnected_transactions.cpp \
   kernel/mempool_persist.cpp \
+  kernel/mempool_removal_reason.cpp \
   key.cpp \
   logging.cpp \
   node/blockstorage.cpp \
   node/chainstate.cpp \
-  node/interface_ui.cpp \
   node/utxo_snapshot.cpp \
   policy/feerate.cpp \
-  policy/fees.cpp \
   policy/packages.cpp \
   policy/policy.cpp \
   policy/rbf.cpp \
@@ -1255,32 +1311,30 @@ libbitcoinkernel_la_SOURCES = \
   script/script.cpp \
   script/script_error.cpp \
   script/sigcache.cpp \
-  script/standard.cpp \
-  shutdown.cpp \
+  script/solver.cpp \
   signet.cpp \
+  streams.cpp \
   support/cleanse.cpp \
   support/lockedpool.cpp \
   sync.cpp \
   txdb.cpp \
   txmempool.cpp \
   uint256.cpp \
+  util/batchpriority.cpp \
   util/bytevectorhash.cpp \
   util/chaintype.cpp \
   util/check.cpp \
   util/exception.cpp \
   util/fs.cpp \
   util/fs_helpers.cpp \
-  util/getuniquepath.cpp \
   util/hasher.cpp \
   util/moneystr.cpp \
   util/rbf.cpp \
   util/serfloat.cpp \
-  util/settings.cpp \
+  util/signalinterrupt.cpp \
   util/strencodings.cpp \
   util/string.cpp \
-  util/syscall_sandbox.cpp \
   util/syserror.cpp \
-  util/system.cpp \
   util/thread.cpp \
   util/threadnames.cpp \
   util/time.cpp \
@@ -1292,24 +1346,24 @@ libbitcoinkernel_la_SOURCES = \
 
 # Required for obj/build.h to be generated first.
 # More details: https://www.gnu.org/software/automake/manual/html_node/Built-Sources-Example.html
-libbitcoinkernel_la-clientversion.l$(OBJEXT): obj/build.h
+libnavcoinkernel_la-clientversion.l$(OBJEXT): obj/build.h
 endif # BUILD_BITCOIN_KERNEL_LIB
 #
 
-# bitcoinconsensus library #
+# navcoinconsensus library #
 if BUILD_BITCOIN_LIBS
 lib_LTLIBRARIES += $(LIBBITCOINCONSENSUS)
 
-include_HEADERS = script/bitcoinconsensus.h
-libbitcoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_la_SOURCES) $(libbitcoin_consensus_a_SOURCES)
+include_HEADERS = script/navcoinconsensus.h
+libnavcoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_la_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
-libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libbitcoinconsensus_la_LIBADD = \
+libnavcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
+libnavcoinconsensus_la_LIBADD = \
   $(LIBBLS) \
   $(LIBMCL) \
   $(LIBSECP256K1)
-libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -DBUILD_BITCOIN_INTERNAL
-libbitcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libnavcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -DBUILD_BITCOIN_INTERNAL
+libnavcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
 #
@@ -1341,9 +1395,52 @@ CLEANFILES += wallet/*.gcda wallet/*.gcno
 CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += obj/build.h
+CLEANFILES += $(LIBBLS)
+CLEANFILES += $(LIBMCL)
 
 EXTRA_DIST = $(CTAES_DIST)
 
+# blsct library #
+if BUILD_LIBBLSCT_ONLY
+LIBBLSCT = libblsct.a
+noinst_LIBRARIES = $(LIBBLSCT)
+libblsct_a_SOURCES = \
+  crypto/sha256_arm_shani.cpp \
+  crypto/sha256_avx2.cpp \
+  crypto/sha256_sse4.cpp \
+  crypto/sha256_sse41.cpp \
+  crypto/sha256_x86_shani.cpp \
+  crypto/sha256.cpp \
+  blsct/external_api/blsct.cpp \
+  $(BLSCT_CPP)
+libblsct_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libblsct_a_CPPFLAGS = $(AM_CPPFLAGS) $(BLS_INCLUDES) $(BOOST_CPPFLAGS)
+
+if ENABLE_SSE41
+libblsct_a_CXXFLAGS += $(SSE41_CXXFLAGS)
+libblsct_a_CPPFLAGS += -DENABLE_SSE41
+endif
+
+if ENABLE_AVX2
+libblsct_a_CXXFLAGS += $(AVX2_CXXFLAGS)
+libblsct_a_CPPFLAGS += -DENABLE_AVX2
+endif
+
+if ENABLE_X86_SHANI
+libblsct_a_CXXFLAGS += $(X86_SHANI_CXXFLAGS)
+libblsct_a_CPPFLAGS += -DENABLE_X86_SHANI
+endif
+
+if ENABLE_ARM_SHANI
+libblsct_a_CXXFLAGS += $(ARM_SHANI_CXXFLAGS)
+libblsct_a_CPPFLAGS += -DENABLE_ARM_SHANI
+endif
+
+$(LIBBLSCT): $(LIBBLS) $(LIBMCL)
+
+CLEANFILES += $(LIBBLSCT) blsct/include/libblsct_a-blsct.o
+endif
+#
 
 config/bitcoin-config.h: config/stamp-h1
 	@$(MAKE) -C $(top_builddir) $(subdir)/$(@)
@@ -1354,13 +1451,14 @@ $(top_srcdir)/$(subdir)/config/bitcoin-config.h.in:  $(am__configure_deps)
 
 clean-local:
 	-$(MAKE) -C secp256k1 clean
+	-$(MAKE) -C bls/mcl clean
 	-$(MAKE) -C bls clean
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 	-rm -rf test/__pycache__
 
 .rc.o:
-	@test -f $(WINDRES)
+	@test -f $(WINDRES) || (echo "windres $(WINDRES) not found, but is required to compile windows resource files"; exit 1)
 	## FIXME: How to get the appropriate modulename_CPPFLAGS in here?
 	$(AM_V_GEN) $(WINDRES) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) -DWINDRES_PREPROC -i $< -o $@
 
@@ -1415,12 +1513,11 @@ endif
 
 %.raw.h: %.raw
 	@$(MKDIR_P) $(@D)
-	@{ \
+	$(AM_V_GEN) { \
 	 echo "static unsigned const char $(*F)_raw[] = {" && \
 	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
 	 echo "};"; \
 	} > "$@.new" && mv -f "$@.new" "$@"
-	@echo "Generated $@"
 
 include Makefile.minisketch.include
 

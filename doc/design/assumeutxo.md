@@ -1,10 +1,46 @@
 # assumeutxo
 
 Assumeutxo is a feature that allows fast bootstrapping of a validating navcoind
-instance with a very similar security model to assumevalid.
+instance.
 
-The RPC commands `dumptxoutset` and `loadtxoutset` (yet to be merged) are used to
-respectively generate and load UTXO snapshots. The utility script
+## Loading a snapshot
+
+There is currently no canonical source for snapshots, but any downloaded snapshot
+will be checked against a hash that's been hardcoded in source code.
+
+Once you've obtained the snapshot, you can use the RPC command `loadtxoutset` to
+load it.
+
+### Pruning
+
+A pruned node can load a snapshot. To save space, it's possible to delete the
+snapshot file as soon as `loadtxoutset` finishes.
+
+The minimum `-dbcache` setting is 550 MiB, but this functionality ignores that
+minimum and uses at least 1100 MiB.
+
+As the background sync continues there will be temporarily two chainstate
+directories, each multiple gigabytes in size (likely growing larger than the
+the downloaded snapshot).
+
+### Indexes
+
+Indexes work but don't take advantage of this feature. They always start building
+from the genesis block. Once the background validation reaches the snapshot block,
+indexes will continue to build all the way to the tip.
+
+For indexes that support pruning, note that no pruning will take place between
+the snapshot and the tip, until the background sync has completed - after which
+everything is pruned. Depending on how old the snapshot is, this may temporarily
+use a significant amount of disk space.
+
+## Generating a snapshot
+
+The RPC command `dumptxoutset` can be used to generate a snapshot. This can be used
+to create a snapshot on one node that you wish to load on another node.
+It can also be used to verify the hardcoded snapshot hash in the source code.
+
+The utility script
 `./contrib/devtools/utxo_snapshot.sh` may be of use.
 
 ## General background
@@ -17,10 +53,9 @@ respectively generate and load UTXO snapshots. The utility script
 
 - A new block index `nStatus` flag is introduced, `BLOCK_ASSUMED_VALID`, to mark block
   index entries that are required to be assumed-valid by a chainstate created
-  from a UTXO snapshot. This flag is mostly used as a way to modify certain
+  from a UTXO snapshot. This flag is used as a way to modify certain
   CheckBlockIndex() logic to account for index entries that are pending validation by a
-  chainstate running asynchronously in the background. We also use this flag to control
-  which index entries are added to setBlockIndexCandidates during LoadBlockIndex().
+  chainstate running asynchronously in the background.
 
 - The concept of UTXO snapshots is treated as an implementation detail that lives
   behind the ChainstateManager interface. The external presentation of the changes

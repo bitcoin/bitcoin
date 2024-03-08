@@ -1,0 +1,17 @@
+build: disable zlib
+
+This isn't needed, and causes issues when clang-tblgen
+is built, but trys to reach for a system libz.so.
+
+diff --git a/build.sh b/build.sh
+index e25d2f732..ec8422621 100755
+--- a/build.sh
++++ b/build.sh
+@@ -66,6 +66,7 @@ cmake ../src/llvm \
+  -DCMAKE_INSTALL_PREFIX=$INSTALLPREFIX \
+  -DTAPI_REPOSITORY_STRING=$TAPI_VERSION \
+  -DTAPI_FULL_VERSION=$TAPI_VERSION \
++ -DLLVM_ENABLE_ZLIB=OFF \
+  $CMAKE_EXTRA_ARGS
+ 
+ echo ""

@@ -71,6 +71,8 @@ static RPCHelpMan getwalletinfo()
                 {RPCResult::Type::BOOL, "descriptors", "whether this wallet uses descriptors for scriptPubKey management"},
                 {RPCResult::Type::BOOL, "external_signer", "whether this wallet is configured to use an external signer such as a hardware wallet"},
                 {RPCResult::Type::BOOL, "blsct", "whether this wallet supports BLSCT keys"},
+                {RPCResult::Type::BOOL, "blank", "Whether this wallet intentionally does not contain any keys, scripts, or descriptors"},
+                {RPCResult::Type::NUM_TIME, "birthtime", /*optional=*/true, "The start time for blocks scanning. It could be modified by (re)importing any descriptor with an earlier timestamp."},
                 RESULT_LAST_PROCESSED_BLOCK,
             }},
         },
@@ -131,6 +133,10 @@ static RPCHelpMan getwalletinfo()
             obj.pushKV("descriptors", pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
             obj.pushKV("external_signer", pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
             obj.pushKV("blsct", pwallet->IsWalletFlagSet(WALLET_FLAG_BLSCT));
+            obj.pushKV("blank", pwallet->IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET));
+            if (int64_t birthtime = pwallet->GetBirthTime(); birthtime != UNKNOWN_TIME) {
+                obj.pushKV("birthtime", birthtime);
+            }
 
             AppendLastProcessedBlock(obj, *pwallet);
             return obj;
@@ -164,7 +170,7 @@ static RPCHelpMan listwalletdir()
     UniValue wallets(UniValue::VARR);
     for (const auto& path : ListDatabases(GetWalletDir())) {
         UniValue wallet(UniValue::VOBJ);
-        wallet.pushKV("name", path.u8string());
+        wallet.pushKV("name", path.utf8string());
         wallets.push_back(wallet);
     }
 
@@ -210,7 +216,7 @@ static RPCHelpMan loadwallet()
 {
     return RPCHelpMan{"loadwallet",
                 "\nLoads a wallet from a wallet file or directory."
-                "\nNote that all wallet command-line options used when starting bitcoind will be"
+                "\nNote that all wallet command-line options used when starting navcoind will be"
                 "\napplied to the new wallet.\n",
                 {
                     {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet directory or .dat file."},
@@ -220,7 +226,6 @@ static RPCHelpMan loadwallet()
                     RPCResult::Type::OBJ, "", "",
                     {
                         {RPCResult::Type::STR, "name", "The wallet name if loaded successfully."},
-                        {RPCResult::Type::STR, "warning", /*optional=*/true, "Warning messages, if any, related to loading the wallet. Multiple messages will be delimited by newlines. (DEPRECATED, returned only if config option -deprecatedrpc=walletwarningfield is passed.)"},
                         {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Warning messages, if any, related to loading the wallet.",
                         {
                             {RPCResult::Type::STR, "", ""},
@@ -257,9 +262,6 @@ static RPCHelpMan loadwallet()
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
-    if (wallet->chain().rpcEnableDeprecated("walletwarningfield")) {
-        obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
-    }
     PushWarnings(warnings, obj);
 
     return obj;
@@ -346,7 +348,7 @@ static RPCHelpMan createwallet()
             {"passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Encrypt the wallet with this passphrase."},
             {"avoid_reuse", RPCArg::Type::BOOL, RPCArg::Default{false}, "Keep track of coin reuse, and treat dirty and clean coins differently with privacy considerations in mind."},
             {"descriptors", RPCArg::Type::BOOL, RPCArg::Default{true}, "Create a native descriptor wallet. The wallet will use descriptors internally to handle address creation."
-                                                                       " Setting to \"false\" will create a legacy wallet; however, the legacy wallet type is being deprecated and"
+                                                                       " Setting to \"false\" will create a legacy wallet; This is only possible with the -deprecatedrpc=create_bdb setting because, the legacy wallet type is being deprecated and"
                                                                        " support for creating and opening legacy wallets will be removed in the future."},
             {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
             {"external_signer", RPCArg::Type::BOOL, RPCArg::Default{false}, "Use an external signer such as a hardware wallet. Requires -signer to be configured. Wallet creation will fail if keys cannot be fetched. Requires disable_private_keys and descriptors set to true."},
@@ -438,14 +440,13 @@ static RPCHelpMan createwallet()
 static RPCHelpMan unloadwallet()
 {
     return RPCHelpMan{"unloadwallet",
-                "Unloads the wallet referenced by the request endpoint otherwise unloads the wallet specified in the argument.\n"
+                "Unloads the wallet referenced by the request endpoint, otherwise unloads the wallet specified in the argument.\n"
                 "Specifying the wallet name on a wallet endpoint is invalid.",
                 {
                     {"wallet_name", RPCArg::Type::STR, RPCArg::DefaultHint{"the wallet name from the RPC endpoint"}, "The name of the wallet to unload. If provided both here and in the RPC endpoint, the two must be identical."},
                     {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
                 },
                 RPCResult{RPCResult::Type::OBJ, "", "", {
-                    {RPCResult::Type::STR, "warning", /*optional=*/true, "Warning messages, if any, related to unloading the wallet. Multiple messages will be delimited by newlines. (DEPRECATED, returned only if config option -deprecatedrpc=walletwarningfield is passed.)"},
                     {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Warning messages, if any, related to unloading the wallet.",
                     {
                         {RPCResult::Type::STR, "", ""},
@@ -482,18 +483,17 @@ static RPCHelpMan unloadwallet()
         // Release the "main" shared pointer and prevent further notifications.
         // Note that any attempt to load the same wallet would fail until the wallet
         // is destroyed (see CheckUniqueFileid).
-        std::optional<bool> load_on_start = request.params[1].isNull() ? std::nullopt : std::optional<bool>(request.params[1].get_bool());
+        std::optional<bool> load_on_start{self.MaybeArg<bool>(1)};
         if (!RemoveWallet(context, wallet, load_on_start, warnings)) {
             throw JSONRPCError(RPC_MISC_ERROR, "Requested wallet already unloaded");
         }
     }
-    UniValue result(UniValue::VOBJ);
-    if (wallet->chain().rpcEnableDeprecated("walletwarningfield")) {
-        result.pushKV("warning", Join(warnings, Untranslated("\n")).original);
-    }
-    PushWarnings(warnings, result);
 
     UnloadWallet(std::move(wallet));
+
+    UniValue result(UniValue::VOBJ);
+    PushWarnings(warnings, result);
+
     return result;
 },
     };
@@ -642,7 +642,7 @@ RPCHelpMan simulaterawtransaction()
                     {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
                 },
             },
-            {"options", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::OMITTED, "Options",
+            {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                 {
                     {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Whether to include watch-only addresses (see RPC importaddress)"},
                 },
@@ -802,7 +802,7 @@ static RPCHelpMan migratewallet()
             if (res->solvables_wallet) {
                 r.pushKV("solvables_name", res->solvables_wallet->GetName());
             }
-            r.pushKV("backup_path", res->backup_path.u8string());
+            r.pushKV("backup_path", res->backup_path.utf8string());
 
             return r;
         },

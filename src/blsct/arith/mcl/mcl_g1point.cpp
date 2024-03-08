@@ -3,8 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/arith/mcl/mcl_g1point.h>
-#include <numeric>
 #include <streams.h>
+
+#include <numeric>
 
 MclG1Point::MclG1Point()
 {
@@ -184,6 +185,9 @@ std::vector<uint8_t> MclG1Point::GetVch() const
 
 bool MclG1Point::SetVch(const std::vector<uint8_t>& b)
 {
+    // auto g = GetBasePoint();
+    // auto x = GetBasePoint().GetVch();
+    // if (mclBnG1_deserialize(&m_point, &x[0], x.size()) == 0) {
     if (mclBnG1_deserialize(&m_point, &b[0], b.size()) == 0) {
         mclBnG1_clear(&m_point);
         return false;
@@ -209,7 +213,7 @@ void MclG1Point::SetString(const std::string& hex)
 
 MclG1Point::Scalar MclG1Point::GetHashWithSalt(const uint64_t salt) const
 {
-    CHashWriter hasher(0, 0);
+    HashWriter hasher{};
     hasher << *this;
     hasher << salt;
     MclScalar hash(hasher.GetHash());

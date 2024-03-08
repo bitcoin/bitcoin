@@ -142,14 +142,14 @@ public:
     {
         unsigned int len = size();
         ::WriteCompactSize(s, len);
-        s.write(AsBytes(Span{vch, len}));
+        s << Span{vch, len};
     }
     template <typename Stream>
     void Unserialize(Stream& s)
     {
         const unsigned int len(::ReadCompactSize(s));
         if (len <= SIZE) {
-            s.read(AsWritableBytes(Span{vch, len}));
+            s >> Span{vch, len};
             if (len != size()) {
                 Invalidate();
             }
@@ -189,6 +189,12 @@ public:
     bool IsValid() const
     {
         return size() > 0;
+    }
+
+    /** Check if a public key is a syntactically valid compressed or uncompressed key. */
+    bool IsValidNonHybrid() const noexcept
+    {
+        return size() > 0 && (vch[0] == 0x02 || vch[0] == 0x03 || vch[0] == 0x04);
     }
 
     //! fully validate whether this is a valid public key (more expensive than IsValid())
@@ -276,11 +282,14 @@ public:
      */
     std::vector<CKeyID> GetKeyIDs() const;
 
+    CPubKey GetEvenCorrespondingCPubKey() const;
+
     const unsigned char& operator[](int pos) const { return *(m_keydata.begin() + pos); }
-    const unsigned char* data() const { return m_keydata.begin(); }
     static constexpr size_t size() { return decltype(m_keydata)::size(); }
+    const unsigned char* data() const { return m_keydata.begin(); }
     const unsigned char* begin() const { return m_keydata.begin(); }
     const unsigned char* end() const { return m_keydata.end(); }
+    unsigned char* data() { return m_keydata.begin(); }
     unsigned char* begin() { return m_keydata.begin(); }
     unsigned char* end() { return m_keydata.end(); }
     bool operator==(const XOnlyPubKey& other) const { return m_keydata == other.m_keydata; }
@@ -289,6 +298,40 @@ public:
 
     //! Implement serialization without length prefixes since it is a fixed length
     SERIALIZE_METHODS(XOnlyPubKey, obj) { READWRITE(obj.m_keydata); }
+};
+
+/** An ElligatorSwift-encoded public key. */
+struct EllSwiftPubKey
+{
+private:
+    static constexpr size_t SIZE = 64;
+    std::array<std::byte, SIZE> m_pubkey;
+
+public:
+    /** Default constructor creates all-zero pubkey (which is valid). */
+    EllSwiftPubKey() noexcept = default;
+
+    /** Construct a new ellswift public key from a given serialization. */
+    EllSwiftPubKey(Span<const std::byte> ellswift) noexcept;
+
+    /** Decode to normal compressed CPubKey (for debugging purposes). */
+    CPubKey Decode() const;
+
+    // Read-only access for serialization.
+    const std::byte* data() const { return m_pubkey.data(); }
+    static constexpr size_t size() { return SIZE; }
+    auto begin() const { return m_pubkey.cbegin(); }
+    auto end() const { return m_pubkey.cend(); }
+
+    bool friend operator==(const EllSwiftPubKey& a, const EllSwiftPubKey& b)
+    {
+        return a.m_pubkey == b.m_pubkey;
+    }
+
+    bool friend operator!=(const EllSwiftPubKey& a, const EllSwiftPubKey& b)
+    {
+        return a.m_pubkey != b.m_pubkey;
+    }
 };
 
 struct CExtPubKey {

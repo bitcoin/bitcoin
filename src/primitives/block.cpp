@@ -10,13 +10,13 @@
 
 uint256 CBlockHeader::GetHash() const
 {
-    return SerializeHash(*this);
+    return (HashWriter{} << *this).GetHash();
 }
 
 uint256 CBlock::GetHashWithoutPoSProof() const
 {
-    CHashWriter ss(0, 0);
-    ss << nVersion << hashPrevBlock << hashMerkleRoot << nTime << nBits << nNonce << vtx;
+    HashWriter ss;
+    ss << nVersion << hashPrevBlock << hashMerkleRoot << nTime << nBits << nNonce << TX_NO_WITNESS(vtx);
     return ss.GetHash();
 }
 

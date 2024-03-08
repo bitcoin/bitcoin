@@ -39,7 +39,7 @@ void initialize_torcontrol()
     static const auto testing_setup = MakeNoLogFileContext<>();
 }
 
-FUZZ_TARGET_INIT(torcontrol, initialize_torcontrol)
+FUZZ_TARGET(torcontrol, .init = initialize_torcontrol)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 

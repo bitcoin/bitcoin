@@ -27,7 +27,7 @@ PROGRAM = """
 struct added_event
 {
   u8    hash[HASH_LENGTH];
-  u64   vsize;
+  s32   vsize;
   s64   fee;
 };
 
@@ -35,7 +35,7 @@ struct removed_event
 {
   u8    hash[HASH_LENGTH];
   char  reason[MAX_REMOVAL_REASON_LENGTH];
-  u64   vsize;
+  s32   vsize;
   s64   fee;
   u64   entry_time;
 };
@@ -49,11 +49,11 @@ struct rejected_event
 struct replaced_event
 {
   u8    replaced_hash[HASH_LENGTH];
-  u64   replaced_vsize;
+  s32   replaced_vsize;
   s64   replaced_fee;
   u64   replaced_entry_time;
   u8    replacement_hash[HASH_LENGTH];
-  u64   replacement_vsize;
+  s32   replacement_vsize;
   s64   replacement_fee;
 };
 
@@ -114,16 +114,16 @@ int trace_replaced(struct pt_regs *ctx) {
 """
 
 
-def main(bitcoind_path):
-    bitcoind_with_usdts = USDT(path=str(bitcoind_path))
+def main(navcoind_path):
+    navcoind_with_usdts = USDT(path=str(navcoind_path))
 
     # attaching the trace functions defined in the BPF program
     # to the tracepoints
-    bitcoind_with_usdts.enable_probe(probe="mempool:added", fn_name="trace_added")
-    bitcoind_with_usdts.enable_probe(probe="mempool:removed", fn_name="trace_removed")
-    bitcoind_with_usdts.enable_probe(probe="mempool:replaced", fn_name="trace_replaced")
-    bitcoind_with_usdts.enable_probe(probe="mempool:rejected", fn_name="trace_rejected")
-    bpf = BPF(text=PROGRAM, usdt_contexts=[bitcoind_with_usdts])
+    navcoind_with_usdts.enable_probe(probe="mempool:added", fn_name="trace_added")
+    navcoind_with_usdts.enable_probe(probe="mempool:removed", fn_name="trace_removed")
+    navcoind_with_usdts.enable_probe(probe="mempool:replaced", fn_name="trace_replaced")
+    navcoind_with_usdts.enable_probe(probe="mempool:rejected", fn_name="trace_rejected")
+    bpf = BPF(text=PROGRAM, usdt_contexts=[navcoind_with_usdts])
 
     events = []
 
@@ -365,7 +365,7 @@ class Dashboard:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("USAGE: ", sys.argv[0], "path/to/bitcoind")
+        print("USAGE: ", sys.argv[0], "path/to/navcoind")
         exit(1)
 
     path = sys.argv[1]

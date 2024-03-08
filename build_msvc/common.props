@@ -4,7 +4,7 @@
   <PropertyGroup Label="UserMacros" />
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)\..\src\bls\mcl\../cybozulib/include;$(SolutionDir)\..\src\bls\mcl\../cybozulib_ext/include;$(SolutionDir)\..\src\bls\mcl\include;$(SolutionDir)\..\src\bls\mcl\../xbyak;$(SolutionDir)..\src\bls\include;$(SolutionDir)..\src;$(SolutionDir)..\src\univalue\include;$(SolutionDir)..\src\leveldb\include;$(SolutionDir)..\src\minisketch\include;$(SolutionDir)..\src\secp256k1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\src\bls\cybozulib\include;$(SolutionDir)\..\src\bls\cybozulib_ext\include;$(SolutionDir)\..\src\bls\mcl\include;$(SolutionDir)\..\src\bls\xbyak;$(SolutionDir)..\src\bls\include;$(SolutionDir)..\src;$(SolutionDir)..\src\univalue\include;$(SolutionDir)..\src\leveldb\include;$(SolutionDir)..\src\minisketch\include;$(SolutionDir)..\src\secp256k1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup>
@@ -13,10 +13,10 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
-      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);NOMINMAX;BLS_ETH;MCL_USE_VINT;MCL_VINT_FIXED_BUFFER;MCL_DONT_USE_OPENSSL;MCL_DONT_USE_XBYAK;MCLBN_DONT_EXPORT;MT;MCL_SIZEOF_UNIT=4;MCL_MAX_BIT_SIZE=384;CYBOZU_MINIMUM_EXCEPTION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_MBCS;NOMINMAX;BLS_ETH;MCL_USE_VINT;MCL_VINT_FIXED_BUFFER;MCL_DONT_USE_OPENSSL;MCL_DONT_USE_XBYAK;MCLBN_DONT_EXPORT;MT;MCL_SIZEOF_UNIT=4;MCL_MAX_BIT_SIZE=384;CYBOZU_MINIMUM_EXCEPTION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)../cybozulib_ext/lib;$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\cybozulib_ext\lib;$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />

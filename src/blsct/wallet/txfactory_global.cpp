@@ -77,16 +77,16 @@ UnsignedOutput CreateOutput(const blsct::DoublePublicKey& destKeys, const CAmoun
 
         stakeRp.Vs.Clear();
 
-        CDataStream ss(0, 0);
+        DataStream ss{};
         ss << stakeRp;
 
-        ret.out.scriptPubKey << OP_TRUE << OP_STAKED_COMMITMENT << blsct::Common::CDataStreamToVector(ss) << OP_DROP;
+        ret.out.scriptPubKey << OP_TRUE << OP_STAKED_COMMITMENT << blsct::Common::DataStreamToVector(ss) << OP_DROP;
     }
 
     auto p = rp.Prove(vs, nonce, memo, tokenId);
     ret.out.blsctData.rangeProof = p;
 
-    CHashWriter hash(SER_GETHASH, PROTOCOL_VERSION);
+    HashWriter hash{};
     hash << nonce;
 
     ret.GenerateKeys(blindingKey, destKeys);
@@ -115,7 +115,7 @@ CTransactionRef AggregateTransactions(const std::vector<CTransactionRef>& txs)
         }
     }
 
-    ret.vout.push_back(CTxOut{nFee, CScript{OP_RETURN}});
+    ret.vout.emplace_back(nFee, CScript{OP_RETURN});
 
     ret.txSig = blsct::Signature::Aggregate(vSigs);
     ret.nVersion = CTransaction::BLSCT_MARKER;

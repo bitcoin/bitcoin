@@ -39,6 +39,7 @@ from http import HTTPStatus
 import http.client
 import json
 import logging
+import pathlib
 import socket
 import time
 import urllib.parse
@@ -59,8 +60,10 @@ class JSONRPCException(Exception):
         self.http_status = http_status
 
 
-def EncodeDecimal(o):
+def serialization_fallback(o):
     if isinstance(o, decimal.Decimal):
+        return str(o)
+    if isinstance(o, pathlib.Path):
         return str(o)
     raise TypeError(repr(o) + " is not JSON serializable")
 
@@ -108,7 +111,7 @@ class AuthServiceProxy():
         log.debug("-{}-> {} {}".format(
             AuthServiceProxy.__id_count,
             self._service_name,
-            json.dumps(args or argsn, default=EncodeDecimal, ensure_ascii=self.ensure_ascii),
+            json.dumps(args or argsn, default=serialization_fallback, ensure_ascii=self.ensure_ascii),
         ))
         if args and argsn:
             params = dict(args=args, **argsn)
@@ -120,7 +123,7 @@ class AuthServiceProxy():
                 'id': AuthServiceProxy.__id_count}
 
     def __call__(self, *args, **argsn):
-        postdata = json.dumps(self.get_request(*args, **argsn), default=EncodeDecimal, ensure_ascii=self.ensure_ascii)
+        postdata = json.dumps(self.get_request(*args, **argsn), default=serialization_fallback, ensure_ascii=self.ensure_ascii)
         response, status = self._request('POST', self.__url.path, postdata.encode('utf-8'))
         if response['error'] is not None:
             raise JSONRPCException(response['error'], status)
@@ -134,7 +137,7 @@ class AuthServiceProxy():
             return response['result']
 
     def batch(self, rpc_call_list):
-        postdata = json.dumps(list(rpc_call_list), default=EncodeDecimal, ensure_ascii=self.ensure_ascii)
+        postdata = json.dumps(list(rpc_call_list), default=serialization_fallback, ensure_ascii=self.ensure_ascii)
         log.debug("--> " + postdata)
         response, status = self._request('POST', self.__url.path, postdata.encode('utf-8'))
         if status != HTTPStatus.OK:
@@ -167,7 +170,7 @@ class AuthServiceProxy():
         response = json.loads(responsedata, parse_float=decimal.Decimal)
         elapsed = time.time() - req_start_time
         if "error" in response and response["error"] is None:
-            log.debug("<-%s- [%.6f] %s" % (response["id"], elapsed, json.dumps(response["result"], default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
+            log.debug("<-%s- [%.6f] %s" % (response["id"], elapsed, json.dumps(response["result"], default=serialization_fallback, ensure_ascii=self.ensure_ascii)))
         else:
             log.debug("<-- [%.6f] %s" % (elapsed, responsedata))
         return response, http_response.status

@@ -21,7 +21,7 @@ RangeProofWithTranscript<T> RangeProofWithTranscript<T>::Build(const RangeProof<
     using Scalar = typename T::Scalar;
 
     // build transcript in the same way the prove function builds it
-    CHashWriter fiat_shamir(0,0);
+    HashWriter fiat_shamir{};
 retry:
     for (size_t i = 0; i < proof.Vs.Size(); ++i) {
         fiat_shamir << proof.Vs[i];

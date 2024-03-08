@@ -24,7 +24,7 @@ fi
 rm -rf ${TEMPDIR}
 mkdir -p ${TEMPDIR}
 
-${SIGNAPPLE} sign -f --detach "${TEMPDIR}/${OUTROOT}"  "$@" "${BUNDLE}"
+${SIGNAPPLE} sign -f --detach "${TEMPDIR}/${OUTROOT}"  "$@" "${BUNDLE}" --hardened-runtime
 
 tar -C "${TEMPDIR}" -czf "${OUT}" .
 rm -rf "${TEMPDIR}"

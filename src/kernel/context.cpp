@@ -14,7 +14,6 @@
 
 
 namespace kernel {
-
 Context::Context()
 {
     std::string sha256_algo = SHA256AutoDetect();

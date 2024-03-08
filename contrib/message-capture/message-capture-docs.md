@@ -6,7 +6,7 @@ This feature allows for message capture on a per-peer basis.  It answers the sim
 
 ## Usage and Functionality
 
-* Run `bitcoind` with the `-capturemessages` option.
+* Run `navcoind` with the `-capturemessages` option.
 * Look in the `message_capture` folder in your datadir.
   * Typically this will be `~/.bitcoin/message_capture`.
   * See that there are many folders inside, one for each peer names with its IP address and port.

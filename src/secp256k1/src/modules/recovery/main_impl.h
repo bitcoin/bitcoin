@@ -98,7 +98,7 @@ static int secp256k1_ecdsa_sig_recover(const secp256k1_scalar *sigr, const secp2
     }
 
     secp256k1_scalar_get_b32(brx, sigr);
-    r = secp256k1_fe_set_b32(&fx, brx);
+    r = secp256k1_fe_set_b32_limit(&fx, brx);
     (void)r;
     VERIFY_CHECK(r); /* brx comes from a scalar, so is less than the order; certainly less than p */
     if (recid & 2) {

@@ -163,14 +163,8 @@ brew install python
 
 #### Deploy Dependencies
 
-You can deploy a `.dmg` containing the Bitcoin Core application using `make deploy`.
-This command depends on a couple of python packages, so it is required that you have `python` installed.
-
-Ensuring that `python` is installed, you can install the deploy dependencies by running the following commands in your terminal:
-
-``` bash
-pip3 install ds_store mac_alias
-```
+You can deploy a `.zip` containing the Bitcoin Core application using `make deploy`.
+It is required that you have `python` installed.
 
 ## Building Bitcoin Core
 
@@ -181,7 +175,6 @@ There are many ways to configure Bitcoin Core, here are a few common examples:
 ##### Wallet (BDB + SQlite) Support, No GUI:
 
 If `berkeley-db@4` is installed, then legacy wallet support will be built.
-If `berkeley-db@4` is not installed, then this will throw an error.
 If `sqlite` is installed, then descriptor wallet support will also be built.
 Additionally, this explicitly disables the GUI.
 
@@ -230,7 +223,7 @@ make check  # Run tests if Python 3 is available
 
 ### 3. Deploy (optional)
 
-You can also create a  `.dmg` containing the `.app` bundle by running the following command:
+You can also create a  `.zip` containing the `.app` bundle by running the following command:
 
 ``` bash
 make deploy
@@ -255,9 +248,9 @@ Before running, you may create an empty configuration file:
 ```shell
 mkdir -p "/Users/${USER}/Library/Application Support/Bitcoin"
 
-touch "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
+touch "/Users/${USER}/Library/Application Support/Bitcoin/navcoin.conf"
 
-chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
+chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/navcoin.conf"
 ```
 
 You can monitor the download process by looking at the debug.log file:

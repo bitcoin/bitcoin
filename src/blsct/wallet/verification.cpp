@@ -32,9 +32,9 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
                 return false;
             }
 
-            vPubKeys.push_back(coin.out.blsctData.spendingKey);
+            vPubKeys.emplace_back(coin.out.blsctData.spendingKey);
             auto in_hash = in.GetHash();
-            vMessages.push_back(Message(in_hash.begin(), in_hash.end()));
+            vMessages.emplace_back(in_hash.begin(), in_hash.end());
             balanceKey = balanceKey + coin.out.blsctData.rangeProof.Vs[0];
         }
     }
@@ -44,10 +44,10 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
 
     for (auto& out : tx.vout) {
         if (out.IsBLSCT()) {
-            vPubKeys.push_back(out.blsctData.ephemeralKey);
+            vPubKeys.emplace_back(out.blsctData.ephemeralKey);
             auto out_hash = out.GetHash();
-            vMessages.push_back(Message(out_hash.begin(), out_hash.end()));
-            vProofs.push_back(out.blsctData.rangeProof);
+            vMessages.emplace_back(out_hash.begin(), out_hash.end());
+            vProofs.emplace_back(out.blsctData.rangeProof);
             balanceKey = balanceKey - out.blsctData.rangeProof.Vs[0];
 
             if (out.GetStakedCommitmentRangeProof(stakedCommitmentRangeProof, minStake)) {
@@ -67,8 +67,8 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
         }
     }
 
-    vMessages.push_back(blsct::Common::BLSCTBALANCE);
-    vPubKeys.push_back(balanceKey);
+    vMessages.emplace_back(blsct::Common::BLSCTBALANCE);
+    vPubKeys.emplace_back(balanceKey);
 
     return PublicKeys{vPubKeys}.VerifyBatch(vMessages, tx.txSig, true) &&
            rp.Verify(vProofs);

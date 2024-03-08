@@ -104,7 +104,7 @@ static bool SelectBlockFromCandidates(std::vector<std::pair<int64_t, uint256>>& 
             continue;
         // compute the selection hash by hashing its proof-hash and the
         // previous proof-of-stake modifier
-        CHashWriter ss(SER_GETHASH, 0);
+        HashWriter ss{};
         ss << pindex->kernelHash << nStakeModifierPrev;
         uint256 hashSelection = ss.GetHash();
 
@@ -222,7 +222,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64_t& nStakeMod
 
 std::vector<unsigned char> CalculateSetMemProofRandomness(const CBlockIndex& pindexPrev)
 {
-    CHashWriter ss(0, 0);
+    HashWriter ss{};
 
     ss << pindexPrev.GetBlockHash() << pindexPrev.nStakeModifier;
 
@@ -233,7 +233,7 @@ std::vector<unsigned char> CalculateSetMemProofRandomness(const CBlockIndex& pin
 
 uint256 CalculateKernelHash(const uint32_t& prevTime, const uint64_t& stakeModifier, const MclG1Point& phi, const uint32_t& time)
 {
-    CHashWriter ss(0, 0);
+    HashWriter ss{};
 
     ss << prevTime << stakeModifier << phi << time;
 

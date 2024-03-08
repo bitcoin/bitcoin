@@ -85,6 +85,32 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK(CFeeRate(CAmount(27), 789) == CFeeRate(34));
     // Maximum size in bytes, should not crash
     CFeeRate(MAX_MONEY, std::numeric_limits<uint32_t>::max()).GetFeePerK();
+
+    // check multiplication operator
+    // check multiplying by zero
+    feeRate = CFeeRate(1000);
+    BOOST_CHECK(0 * feeRate == CFeeRate(0));
+    BOOST_CHECK(feeRate * 0 == CFeeRate(0));
+    // check multiplying by a positive integer
+    BOOST_CHECK(3 * feeRate == CFeeRate(3000));
+    BOOST_CHECK(feeRate * 3 == CFeeRate(3000));
+    // check multiplying by a negative integer
+    BOOST_CHECK(-3 * feeRate == CFeeRate(-3000));
+    BOOST_CHECK(feeRate * -3 == CFeeRate(-3000));
+    // check commutativity
+    BOOST_CHECK(2 * feeRate == feeRate * 2);
+    // check with large numbers
+    int largeNumber = 1000000;
+    BOOST_CHECK(largeNumber * feeRate == feeRate * largeNumber);
+    // check boundary values
+    int maxInt = std::numeric_limits<int>::max();
+    feeRate = CFeeRate(maxInt);
+    BOOST_CHECK(feeRate * 2 == CFeeRate(static_cast<int64_t>(maxInt) * 2));
+    BOOST_CHECK(2 * feeRate == CFeeRate(static_cast<int64_t>(maxInt) * 2));
+    // check with zero fee rate
+    feeRate = CFeeRate(0);
+    BOOST_CHECK(feeRate * 5 == CFeeRate(0));
+    BOOST_CHECK(5 * feeRate == CFeeRate(0));
 }
 
 BOOST_AUTO_TEST_CASE(BinaryOperatorTest)

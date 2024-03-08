@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #define BOOST_UNIT_TEST
-#define BLS_ETH 1
 
 #include <blsct/common.h>
 #include <blsct/private_key.h>

@@ -5,6 +5,7 @@
 #include <psbt.h>
 
 #include <policy/policy.h>
+#include <script/signingprovider.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 
@@ -131,6 +132,7 @@ void PSBTInput::FillSignatureData(SignatureData& sigdata) const
     }
     for (const auto& [pubkey, leaf_origin] : m_tap_bip32_paths) {
         sigdata.taproot_misc_pubkeys.emplace(pubkey, leaf_origin);
+        sigdata.tap_pubkeys.emplace(Hash160(pubkey), pubkey);
     }
     for (const auto& [hash, preimage] : ripemd160_preimages) {
         sigdata.ripemd160_preimages.emplace(std::vector<unsigned char>(hash.begin(), hash.end()), preimage);
@@ -245,6 +247,7 @@ void PSBTOutput::FillSignatureData(SignatureData& sigdata) const
     }
     for (const auto& [pubkey, leaf_origin] : m_tap_bip32_paths) {
         sigdata.taproot_misc_pubkeys.emplace(pubkey, leaf_origin);
+        sigdata.tap_pubkeys.emplace(Hash160(pubkey), pubkey);
     }
 }
 
@@ -542,7 +545,7 @@ bool DecodeBase64PSBT(PartiallySignedTransaction& psbt, const std::string& base6
 
 bool DecodeRawPSBT(PartiallySignedTransaction& psbt, Span<const std::byte> tx_data, std::string& error)
 {
-    CDataStream ss_data(tx_data, SER_NETWORK, PROTOCOL_VERSION);
+    DataStream ss_data{tx_data};
     try {
         ss_data >> psbt;
         if (!ss_data.empty()) {

@@ -43,5 +43,7 @@ SpacesInAngles:  false
 SpacesInContainerLiterals: true
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
-Standard:        c++17
+BreakBeforeConceptDeclarations: Always
+RequiresExpressionIndentation: OuterScope
+Standard: c++20
 UseTab:          Never

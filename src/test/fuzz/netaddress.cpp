@@ -84,7 +84,7 @@ FUZZ_TARGET(netaddress)
     (void)CServiceHash(0, 0)(service);
 
     const CNetAddr other_net_addr = ConsumeNetAddr(fuzzed_data_provider);
-    (void)net_addr.GetReachabilityFrom(&other_net_addr);
+    (void)net_addr.GetReachabilityFrom(other_net_addr);
     (void)sub_net.Match(other_net_addr);
 
     const CService other_service{net_addr, fuzzed_data_provider.ConsumeIntegral<uint16_t>()};

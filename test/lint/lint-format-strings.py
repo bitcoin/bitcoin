@@ -16,10 +16,15 @@ import re
 import sys
 
 FUNCTION_NAMES_AND_NUMBER_OF_LEADING_ARGUMENTS = [
-    'FatalError,0',
+    'FatalErrorf,0',
     'fprintf,1',
     'tfm::format,1',  # Assuming tfm::::format(std::ostream&, ...
     'LogConnectFailure,1',
+    'LogError,0',
+    'LogWarning,0',
+    'LogInfo,0',
+    'LogDebug,1',
+    'LogTrace,1',
     'LogPrint,1',
     'LogPrintf,0',
     'LogPrintfCategory,1',
@@ -77,7 +82,7 @@ def main():
 
         matching_files_filtered = []
         for matching_file in matching_files:
-            if not re.search('^src/(bls|leveldb|secp256k1|minisketch|tinyformat|test/fuzz/strprintf.cpp)', matching_file):
+            if not re.search('^src/(bls|leveldb|secp256k1|minisketch|tinyformat|test/fuzz/strprintf.cpp)|contrib/devtools/bitcoin-tidy/example_logprintf.cpp', matching_file):
                 matching_files_filtered.append(matching_file)
         matching_files_filtered.sort()
 
