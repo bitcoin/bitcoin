@@ -9,6 +9,7 @@
 void CCoinControl::SetNull(bool fResetCoinType)
 {
     destChange = CNoDestination();
+    m_add_inputs = true;
     fAllowOtherInputs = false;
     fAllowWatchOnly = false;
     m_avoid_partial_spends = gArgs.GetBoolArg("-avoidpartialspends", DEFAULT_AVOIDPARTIALSPENDS);
@@ -26,4 +27,3 @@ void CCoinControl::SetNull(bool fResetCoinType)
         nCoinType = CoinType::ALL_COINS;
     }
 }
-
