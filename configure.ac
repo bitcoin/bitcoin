@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-define(_CLIENT_VERSION_MAJOR, 26)
+define(_CLIENT_VERSION_MAJOR, 27)
 define(_CLIENT_VERSION_MINOR, 99)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_RC, 0)
@@ -780,7 +780,10 @@ case $host in
 
      AX_CHECK_LINK_FLAG([-Wl,-headerpad_max_install_names], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-headerpad_max_install_names"], [], [$LDFLAG_WERROR])
      CORE_CPPFLAGS="$CORE_CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
-     OBJCXXFLAGS="$CXXFLAGS"
+
+     dnl ignore deprecated-declarations warnings coming from objcxx code
+     dnl "'NSUserNotificationCenter' is deprecated: first deprecated in macOS 11.0".
+     OBJCXXFLAGS="$CXXFLAGS -Wno-deprecated-declarations"
      ;;
    *android*)
      dnl make sure android stays above linux for hosts like *linux-android*
