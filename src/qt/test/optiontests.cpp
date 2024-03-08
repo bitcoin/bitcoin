@@ -50,6 +50,17 @@ void OptionTests::migrateSettings()
 
     settings.sync();
 
+    QVERIFY(settings.contains("nDatabaseCache"));
+    QVERIFY(settings.contains("nThreadsScriptVerif"));
+    QVERIFY(settings.contains("fUseUPnP"));
+    QVERIFY(settings.contains("fListen"));
+    QVERIFY(settings.contains("bPrune"));
+    QVERIFY(settings.contains("nPruneSize"));
+    QVERIFY(settings.contains("fUseProxy"));
+    QVERIFY(settings.contains("addrProxy"));
+    QVERIFY(settings.contains("fUseSeparateProxyTor"));
+    QVERIFY(settings.contains("addrSeparateProxyTor"));
+
     OptionsModel options{m_node};
     bilingual_str error;
     QVERIFY(options.Init(error));

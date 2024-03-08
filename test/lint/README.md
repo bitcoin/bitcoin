@@ -34,7 +34,7 @@ To run all the lint checks in the test runner outside the docker, use:
 | [`lint-shell.py`](lint/lint-shell.py) | [ShellCheck](https://github.com/koalaman/shellcheck)
 | [`lint-spelling.py`](lint/lint-spelling.py) | [codespell](https://github.com/codespell-project/codespell)
 
-In use versions and install instructions are available in the [CI setup](../ci/lint/04_install.sh).
+In use versions and install instructions are available in the [CI setup](../../ci/lint/04_install.sh).
 
 Please be aware that on Linux distributions all dependencies are usually available as packages, but could be outdated.
 
