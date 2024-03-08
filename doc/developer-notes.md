@@ -497,6 +497,10 @@ make cov
 # unit and functional tests.
 ```
 
+Additional LCOV options can be specified using `LCOV_OPTS`, but may be dependant
+on the version of LCOV. For example, when using LCOV `2.x`, branch coverage can be
+enabled by setting `LCOV_OPTS="--rc branch_coverage=1"`, when configuring.
+
 ### Performance profiling with perf
 
 Profiling is a good way to get a precise idea of where time is being spent in
