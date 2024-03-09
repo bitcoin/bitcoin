@@ -20,10 +20,10 @@ namespace
 typedef std::vector<uint8_t> data;
 
 /** The Bech32 and Bech32m character set for encoding. */
-const char* CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+constexpr auto CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
 /** The Bech32 and Bech32m character set for decoding. */
-const int8_t CHARSET_REV[128] = {
+constexpr int8_t CHARSET_REV[128] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -127,7 +127,7 @@ uint32_t EncodingConstant(Encoding encoding) {
 /** This function will compute what 6 5-bit values to XOR into the last 6 input values, in order to
  *  make the checksum 0. These 6 values are packed together in a single 30-bit integer. The higher
  *  bits correspond to earlier values. */
-uint32_t PolyMod(const data& v)
+uint32_t PolyMod(const data& enc)
 {
     // The input is interpreted as a list of coefficients of a polynomial over F = GF(32), with an
     // implicit 1 in front. If the input is [v0,v1,v2,v3,v4], that polynomial is v(x) =
@@ -175,7 +175,7 @@ uint32_t PolyMod(const data& v)
     // length 1023 and distance 4. See https://en.wikipedia.org/wiki/BCH_code for more details.
 
     uint32_t c = 1;
-    for (const auto v_i : v) {
+    for (const auto v_i : enc) {
         // We want to update `c` to correspond to a polynomial with one extra term. If the initial
         // value of `c` consists of the coefficients of c(x) = f(x) mod g(x), we modify it to
         // correspond to c'(x) = (f(x) * x + v_i) mod g(x), where v_i is the next input to
@@ -354,7 +354,8 @@ data CreateChecksum(Encoding encoding, const std::string& hrp, const data& value
 } // namespace
 
 /** Encode a Bech32 or Bech32m string. */
-std::string Encode(Encoding encoding, const std::string& hrp, const data& values) {
+std::string Encode(Encoding encoding, const std::string& hrp, const data& values)
+{
     // First ensure that the HRP is all lowercase. BIP-173 and BIP350 require an encoder
     // to return a lowercase Bech32/Bech32m string, but if given an uppercase HRP, the
     // result will always be invalid.
@@ -388,6 +389,7 @@ DecodeResult Decode(const std::string& str) {
         values[i] = rev;
     }
     std::string hrp;
+    hrp.reserve(pos);
     for (size_t i = 0; i < pos; ++i) {
         hrp += LowerCase(str[i]);
     }
@@ -420,6 +422,7 @@ std::pair<std::string, std::vector<int>> LocateErrors(const std::string& str) {
     }
 
     std::string hrp;
+    hrp.reserve(pos);
     for (size_t i = 0; i < pos; ++i) {
         hrp += LowerCase(str[i]);
     }
