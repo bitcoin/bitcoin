@@ -23,12 +23,12 @@ BOOST_AUTO_TEST_CASE(bech32_testvectors_valid)
         "split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w",
         "?1ezyfcl",
     };
-    for (const std::string& str : CASES) {
+    for (const auto& str : CASES) {
         const auto dec = bech32::Decode(str);
-        BOOST_CHECK(dec.encoding == bech32::Encoding::BECH32);
-        std::string recode = bech32::Encode(bech32::Encoding::BECH32, dec.hrp, dec.data);
-        BOOST_CHECK(!recode.empty());
-        BOOST_CHECK(CaseInsensitiveEqual(str, recode));
+        BOOST_CHECK_MESSAGE(dec.encoding == bech32::Encoding::BECH32, "Decoded encoding does not match BECH32 for test case: " + str);
+        std::string recode = Encode(bech32::Encoding::BECH32, dec.hrp, dec.data);
+        BOOST_CHECK_MESSAGE(!recode.empty(), "Re-encoded string is empty for test case: " + str);
+        BOOST_CHECK_MESSAGE(CaseInsensitiveEqual(str, recode), "Case-insensitive comparison failed between " << str << " and " + recode);
     }
 }
 
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(bech32m_testvectors_valid)
     for (const std::string& str : CASES) {
         const auto dec = bech32::Decode(str);
         BOOST_CHECK(dec.encoding == bech32::Encoding::BECH32M);
-        std::string recode = bech32::Encode(bech32::Encoding::BECH32M, dec.hrp, dec.data);
+        std::string recode = Encode(bech32::Encoding::BECH32M, dec.hrp, dec.data);
         BOOST_CHECK(!recode.empty());
         BOOST_CHECK(CaseInsensitiveEqual(str, recode));
     }
