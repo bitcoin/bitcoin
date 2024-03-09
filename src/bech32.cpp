@@ -308,18 +308,16 @@ bool CheckCharacters(const std::string& str, std::vector<int>& errors)
     return errors.empty();
 }
 
-/** Expand a HRP for use in checksum computation. */
 data ExpandHRP(const std::string& hrp)
 {
     data ret;
     ret.reserve(hrp.size() + 90);
-    ret.resize(hrp.size() * 2 + 1);
-    for (size_t i = 0; i < hrp.size(); ++i) {
-        unsigned char c = hrp[i];
-        ret[i] = c >> 5;
-        ret[i + hrp.size() + 1] = c & 0x1f;
-    }
-    ret[hrp.size()] = 0;
+
+    /** Expand a HRP for use in checksum computation. */
+    for (size_t i = 0; i < hrp.size(); ++i) ret.push_back(hrp[i] >> 5);
+    ret.push_back(0);
+    for (size_t i = 0; i < hrp.size(); ++i) ret.push_back(hrp[i] & 0x1f);
+
     return ret;
 }
 
