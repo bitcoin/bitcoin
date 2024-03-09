@@ -2690,8 +2690,8 @@ bool PeerManagerImpl::IsContinuationOfLowWorkHeadersSync(Peer& peer, CNode& pfro
 
 bool PeerManagerImpl::TryLowWorkHeadersSync(Peer& peer, CNode& pfrom, const CBlockIndex* chain_start_header, std::vector<CBlockHeader>& headers)
 {
-    // Calculate the total work on this chain.
-    arith_uint256 total_work = chain_start_header->nChainWork + CalculateHeadersWork(headers);
+    // Calculate the claimed total work on this chain.
+    arith_uint256 total_work = chain_start_header->nChainWork + CalculateClaimedHeadersWork(headers);
 
     // Our dynamic anti-DoS threshold (minimum work required on a headers chain
     // before we'll store it)
@@ -4424,7 +4424,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 MaybeSendGetHeaders(pfrom, GetLocator(m_chainman.m_best_header), *peer);
             }
             return;
-        } else if (prev_block->nChainWork + CalculateHeadersWork({cmpctblock.header}) < GetAntiDoSWorkThreshold()) {
+        } else if (prev_block->nChainWork + CalculateClaimedHeadersWork({cmpctblock.header}) < GetAntiDoSWorkThreshold()) {
             // If we get a low-work header in a compact block, we can ignore it.
             LogPrint(BCLog::NET, "Ignoring low-work compact block from peer %d\n", pfrom.GetId());
             return;
@@ -4744,8 +4744,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // cs_main in ProcessNewBlock is fine.
             mapBlockSource.emplace(hash, std::make_pair(pfrom.GetId(), true));
 
-            // Check work on this block against our anti-dos thresholds.
-            if (prev_block && prev_block->nChainWork + CalculateHeadersWork({pblock->GetBlockHeader()}) >= GetAntiDoSWorkThreshold()) {
+            // Check claimed work on this block against our anti-dos thresholds.
+            if (prev_block && prev_block->nChainWork + CalculateClaimedHeadersWork({pblock->GetBlockHeader()}) >= GetAntiDoSWorkThreshold()) {
                 min_pow_checked = true;
             }
         }
