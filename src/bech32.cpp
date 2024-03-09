@@ -34,6 +34,8 @@ constexpr int8_t CHARSET_REV[128] = {
      1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1
 };
 
+constexpr size_t CHECKSUM_SIZE = 6;
+
 /** We work with the finite field GF(1024) defined as a degree 2 extension of the base field GF(32)
  * The defining polynomial of the extension is x^2 + 9x + 23.
  * Let (e) be a root of this defining polynomial. Then (e) is a primitive element of GF(1024),
@@ -339,12 +341,13 @@ Encoding VerifyChecksum(const std::string& hrp, const data& values)
 data CreateChecksum(Encoding encoding, const std::string& hrp, const data& values)
 {
     data enc = Cat(ExpandHRP(hrp), values);
-    enc.resize(enc.size() + 6); // Append 6 zeroes
+    enc.resize(enc.size() + CHECKSUM_SIZE); // Append 6 zeroes
     uint32_t mod = PolyMod(enc) ^ EncodingConstant(encoding); // Determine what to XOR into those 6 zeroes.
-    data ret(6);
-    for (size_t i = 0; i < 6; ++i) {
-        // Convert the 5-bit groups in mod to checksum values.
-        ret[i] = (mod >> (5 * (5 - i))) & 31;
+
+    data ret;
+    ret.reserve(CHECKSUM_SIZE);
+    for (size_t i = 0; i < CHECKSUM_SIZE; ++i) {
+        ret.push_back((mod >> (5 * (5 - i))) & 31); // Convert the 5-bit groups in mod to checksum values.
     }
     return ret;
 }
