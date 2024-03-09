@@ -95,12 +95,12 @@ COutPoint MineBlock(const NodeContext& node, std::shared_ptr<CBlock>& block)
     const auto old_height = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight());
     bool new_block;
     BlockValidationStateCatcher bvsc{block->GetHash()};
-    RegisterValidationInterface(&bvsc);
+    node.validation_signals->RegisterValidationInterface(&bvsc);
     const bool processed{chainman.ProcessNewBlock(block, true, true, &new_block)};
     const bool duplicate{!new_block && processed};
     assert(!duplicate);
-    UnregisterValidationInterface(&bvsc);
-    SyncWithValidationInterfaceQueue();
+    node.validation_signals->UnregisterValidationInterface(&bvsc);
+    node.validation_signals->SyncWithValidationInterfaceQueue();
     const bool was_valid{bvsc.m_state && bvsc.m_state->IsValid()};
     assert(old_height + was_valid == WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight()));
 

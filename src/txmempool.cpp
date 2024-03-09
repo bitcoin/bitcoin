@@ -406,7 +406,8 @@ CTxMemPool::CTxMemPool(const Options& opts)
       m_require_standard{opts.require_standard},
       m_full_rbf{opts.full_rbf},
       m_persist_v1_dat{opts.persist_v1_dat},
-      m_limits{opts.limits}
+      m_limits{opts.limits},
+      m_signals{opts.signals}
 {
 }
 
@@ -487,12 +488,12 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     // even if not directly reported below.
     uint64_t mempool_sequence = GetAndIncrementSequence();
 
-    if (reason != MemPoolRemovalReason::BLOCK) {
+    if (reason != MemPoolRemovalReason::BLOCK && m_signals) {
         // Notify clients that a transaction has been removed from the mempool
         // for any reason except being included in a block. Clients interested
         // in transactions included in blocks can subscribe to the BlockConnected
         // notification.
-        GetMainSignals().TransactionRemovedFromMempool(it->GetSharedTx(), reason, mempool_sequence);
+        m_signals->TransactionRemovedFromMempool(it->GetSharedTx(), reason, mempool_sequence);
     }
     TRACE5(mempool, removed,
         it->GetTx().GetHash().data(),
@@ -643,7 +644,9 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
         removeConflicts(*tx);
         ClearPrioritisation(tx->GetHash());
     }
-    GetMainSignals().MempoolTransactionsRemovedForBlock(txs_removed_for_block, nBlockHeight);
+    if (m_signals) {
+        m_signals->MempoolTransactionsRemovedForBlock(txs_removed_for_block, nBlockHeight);
+    }
     lastRollingFeeUpdate = GetTime();
     blockSinceLastRollingFeeBump = true;
 }
