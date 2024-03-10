@@ -23,6 +23,7 @@
 #include <array>
 #include <cmath>
 #include <cstdlib>
+#include <optional>
 #include <thread>
 
 #ifdef WIN32
@@ -417,6 +418,10 @@ class RNGState {
     uint64_t m_counter GUARDED_BY(m_mutex) = 0;
     bool m_strongly_seeded GUARDED_BY(m_mutex) = false;
 
+    /** If not nullopt, the output of this RNGState is redirected and drawn from here
+     *  (unless always_use_real_rng is passed to MixExtract). */
+    std::optional<ChaCha20> m_deterministic_prng GUARDED_BY(m_mutex);
+
     Mutex m_events_mutex;
     CSHA256 m_events_hasher GUARDED_BY(m_events_mutex);
 
@@ -457,11 +462,21 @@ public:
         m_events_hasher.Write(events_hash, 32);
     }
 
+    /** Make the output of MixExtract (unless always_use_real_rng) deterministic, with specified seed. */
+    void MakeDeterministic(const uint256& seed) noexcept EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        LOCK(m_mutex);
+        m_deterministic_prng.emplace(MakeByteSpan(seed));
+    }
+
     /** Extract up to 32 bytes of entropy from the RNG state, mixing in new entropy from hasher.
      *
      * If this function has never been called with strong_seed = true, false is returned.
+     *
+     * If always_use_real_rng is false, and MakeDeterministic has been called before, output
+     * from the deterministic PRNG instead.
      */
-    bool MixExtract(unsigned char* out, size_t num, CSHA512&& hasher, bool strong_seed) noexcept EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    bool MixExtract(unsigned char* out, size_t num, CSHA512&& hasher, bool strong_seed, bool always_use_real_rng) noexcept EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         assert(num <= 32);
         unsigned char buf[64];
@@ -479,6 +494,13 @@ public:
             hasher.Finalize(buf);
             // Store the last 32 bytes of the hash output as new RNG state.
             memcpy(m_state, buf + 32, 32);
+            // Handle requests for deterministic randomness.
+            if (!always_use_real_rng && m_deterministic_prng.has_value()) [[unlikely]] {
+                // Overwrite the beginning of buf, which will be used for output.
+                m_deterministic_prng->Keystream(AsWritableBytes(Span{buf, num}));
+                // Do not require strong seeding for deterministic output.
+                ret = true;
+            }
         }
         // If desired, copy (up to) the first 32 bytes of the hash output as output.
         if (num) {
@@ -552,8 +574,9 @@ static void SeedSlow(CSHA512& hasher, RNGState& rng) noexcept
 static void SeedStrengthen(CSHA512& hasher, RNGState& rng, SteadyClock::duration dur) noexcept
 {
     // Generate 32 bytes of entropy from the RNG, and a copy of the entropy already in hasher.
+    // Never use the deterministic PRNG for this, as the result is only used internally.
     unsigned char strengthen_seed[32];
-    rng.MixExtract(strengthen_seed, sizeof(strengthen_seed), CSHA512(hasher), false);
+    rng.MixExtract(strengthen_seed, sizeof(strengthen_seed), CSHA512(hasher), false, /*always_use_real_rng=*/true);
     // Strengthen the seed, and feed it into hasher.
     Strengthen(strengthen_seed, dur, hasher);
 }
@@ -604,7 +627,7 @@ enum class RNGLevel {
     PERIODIC, //!< Called by RandAddPeriodic()
 };
 
-static void ProcRand(unsigned char* out, int num, RNGLevel level) noexcept
+static void ProcRand(unsigned char* out, int num, RNGLevel level, bool always_use_real_rng) noexcept
 {
     // Make sure the RNG is initialized first (as all Seed* function possibly need hwrand to be available).
     RNGState& rng = GetRNGState();
@@ -625,24 +648,40 @@ static void ProcRand(unsigned char* out, int num, RNGLevel level) noexcept
     }
 
     // Combine with and update state
-    if (!rng.MixExtract(out, num, std::move(hasher), false)) {
+    if (!rng.MixExtract(out, num, std::move(hasher), false, always_use_real_rng)) {
         // On the first invocation, also seed with SeedStartup().
         CSHA512 startup_hasher;
         SeedStartup(startup_hasher, rng);
-        rng.MixExtract(out, num, std::move(startup_hasher), true);
+        rng.MixExtract(out, num, std::move(startup_hasher), true, always_use_real_rng);
     }
 }
 
-void GetRandBytes(Span<unsigned char> bytes) noexcept { ProcRand(bytes.data(), bytes.size(), RNGLevel::FAST); }
-void GetStrongRandBytes(Span<unsigned char> bytes) noexcept { ProcRand(bytes.data(), bytes.size(), RNGLevel::SLOW); }
-void RandAddPeriodic() noexcept { ProcRand(nullptr, 0, RNGLevel::PERIODIC); }
-void RandAddEvent(const uint32_t event_info) noexcept { GetRNGState().AddEvent(event_info); }
+/** Internal function to set g_determinstic_rng. Only accessed from tests. */
+void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept
+{
+    GetRNGState().MakeDeterministic(seed);
+}
 
-bool g_mock_deterministic_tests{false};
+void GetRandBytes(Span<unsigned char> bytes) noexcept
+{
+    ProcRand(bytes.data(), bytes.size(), RNGLevel::FAST, /*always_use_real_rng=*/false);
+}
+
+void GetStrongRandBytes(Span<unsigned char> bytes) noexcept
+{
+    ProcRand(bytes.data(), bytes.size(), RNGLevel::SLOW, /*always_use_real_rng=*/true);
+}
+
+void RandAddPeriodic() noexcept
+{
+    ProcRand(nullptr, 0, RNGLevel::PERIODIC, /*always_use_real_rng=*/false);
+}
+
+void RandAddEvent(const uint32_t event_info) noexcept { GetRNGState().AddEvent(event_info); }
 
 uint64_t GetRandInternal(uint64_t nMax) noexcept
 {
-    return FastRandomContext(g_mock_deterministic_tests).randrange(nMax);
+    return FastRandomContext().randrange(nMax);
 }
 
 uint256 GetRandHash() noexcept
@@ -708,7 +747,7 @@ bool Random_SanityCheck()
     CSHA512 to_add;
     to_add.Write((const unsigned char*)&start, sizeof(start));
     to_add.Write((const unsigned char*)&stop, sizeof(stop));
-    GetRNGState().MixExtract(nullptr, 0, std::move(to_add), false);
+    GetRNGState().MixExtract(nullptr, 0, std::move(to_add), false, /*always_use_real_rng=*/true);
 
     return true;
 }
@@ -734,7 +773,7 @@ FastRandomContext& FastRandomContext::operator=(FastRandomContext&& from) noexce
 void RandomInit()
 {
     // Invoke RNG code to trigger initialization (if not already performed)
-    ProcRand(nullptr, 0, RNGLevel::FAST);
+    ProcRand(nullptr, 0, RNGLevel::FAST, /*always_use_real_rng=*/true);
 
     ReportHardwareRand();
 }

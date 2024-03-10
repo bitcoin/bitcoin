@@ -63,6 +63,12 @@
  * When mixing in new entropy, H = SHA512(entropy || old_rng_state) is computed, and
  * (up to) the first 32 bytes of H are produced as output, while the last 32 bytes
  * become the new RNG state.
+ *
+ * During tests, the RNG can be put into a special deterministic mode, in which the output
+ * of all RNG functions, with the exception of GetStrongRandBytes(), is replaced with the
+ * output of a deterministic RNG. This deterministic RNG does not gather entropy, and is
+ * unaffected by RandAddPeriodic() or RandAddEvent(). It produces pseudorandom data that
+ * only depends on the seed it was initialized with, possibly until it is reinitialized.
 */
 
 /**
@@ -340,6 +346,7 @@ private:
     void RandomSeed() noexcept;
 
 public:
+    /** Construct a FastRandomContext with GetRandHash()-based entropy (or zero key if fDeterministic). */
     explicit FastRandomContext(bool fDeterministic = false) noexcept;
 
     /** Initialize with explicit seed (only for testing) */
