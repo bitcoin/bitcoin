@@ -71,41 +71,14 @@ public:
 
     void RandomContentFill(Entry& entry)
     {
-        XoRoShiRo128PlusPlus rng(entry.seed);
-        auto ptr = entry.span.data();
-        auto size = entry.span.size();
-
-        while (size >= 8) {
-            auto r = rng();
-            std::memcpy(ptr, &r, 8);
-            size -= 8;
-            ptr += 8;
-        }
-        if (size > 0) {
-            auto r = rng();
-            std::memcpy(ptr, &r, size);
-        }
+        InsecureRandomContext(entry.seed).fillrand(entry.span);
     }
 
     void RandomContentCheck(const Entry& entry)
     {
-        XoRoShiRo128PlusPlus rng(entry.seed);
-        auto ptr = entry.span.data();
-        auto size = entry.span.size();
-
-        std::byte buf[8];
-        while (size >= 8) {
-            auto r = rng();
-            std::memcpy(buf, &r, 8);
-            assert(std::memcmp(buf, ptr, 8) == 0);
-            size -= 8;
-            ptr += 8;
-        }
-        if (size > 0) {
-            auto r = rng();
-            std::memcpy(buf, &r, size);
-            assert(std::memcmp(buf, ptr, size) == 0);
-        }
+        std::vector<std::byte> expect(entry.span.size());
+        InsecureRandomContext(entry.seed).fillrand(expect);
+        assert(entry.span == expect);
     }
 
     void Deallocate(const Entry& entry)

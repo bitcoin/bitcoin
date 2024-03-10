@@ -28,7 +28,7 @@ void TestType(Span<const uint8_t> buffer, uint64_t rng_tweak)
 {
     FuzzedDataProvider provider(buffer.data(), buffer.size());
     // Local RNG, only used for the seeds to initialize T objects with.
-    XoRoShiRo128PlusPlus rng(provider.ConsumeIntegral<uint64_t>() ^ rng_tweak);
+    InsecureRandomContext rng(provider.ConsumeIntegral<uint64_t>() ^ rng_tweak);
 
     // Real circular buffers.
     std::vector<VecDeque<T>> real;
@@ -175,7 +175,7 @@ void TestType(Span<const uint8_t> buffer, uint64_t rng_tweak)
             }
             if (existing_buffer_non_full && command-- == 0) {
                 /* push_back() (copying) */
-                tmp = T(rng());
+                tmp = T(rng.rand64());
                 size_t old_size = real[idx].size();
                 size_t old_cap = real[idx].capacity();
                 real[idx].push_back(*tmp);
@@ -191,7 +191,7 @@ void TestType(Span<const uint8_t> buffer, uint64_t rng_tweak)
             }
             if (existing_buffer_non_full && command-- == 0) {
                 /* push_back() (moving) */
-                tmp = T(rng());
+                tmp = T(rng.rand64());
                 size_t old_size = real[idx].size();
                 size_t old_cap = real[idx].capacity();
                 sim[idx].push_back(*tmp);
@@ -207,7 +207,7 @@ void TestType(Span<const uint8_t> buffer, uint64_t rng_tweak)
             }
             if (existing_buffer_non_full && command-- == 0) {
                 /* emplace_back() */
-                uint64_t seed{rng()};
+                uint64_t seed{rng.rand64()};
                 size_t old_size = real[idx].size();
                 size_t old_cap = real[idx].capacity();
                 sim[idx].emplace_back(seed);
@@ -223,7 +223,7 @@ void TestType(Span<const uint8_t> buffer, uint64_t rng_tweak)
             }
             if (existing_buffer_non_full && command-- == 0) {
                 /* push_front() (copying) */
-                tmp = T(rng());
+                tmp = T(rng.rand64());
                 size_t old_size = real[idx].size();
                 size_t old_cap = real[idx].capacity();
                 real[idx].push_front(*tmp);
@@ -239,7 +239,7 @@ void TestType(Span<const uint8_t> buffer, uint64_t rng_tweak)
             }
             if (existing_buffer_non_full && command-- == 0) {
                 /* push_front() (moving) */
-                tmp = T(rng());
+                tmp = T(rng.rand64());
                 size_t old_size = real[idx].size();
                 size_t old_cap = real[idx].capacity();
                 sim[idx].push_front(*tmp);
@@ -255,7 +255,7 @@ void TestType(Span<const uint8_t> buffer, uint64_t rng_tweak)
             }
             if (existing_buffer_non_full && command-- == 0) {
                 /* emplace_front() */
-                uint64_t seed{rng()};
+                uint64_t seed{rng.rand64()};
                 size_t old_size = real[idx].size();
                 size_t old_cap = real[idx].capacity();
                 sim[idx].emplace_front(seed);
@@ -271,7 +271,7 @@ void TestType(Span<const uint8_t> buffer, uint64_t rng_tweak)
             }
             if (existing_buffer_non_empty && command-- == 0) {
                 /* front() [modifying] */
-                tmp = T(rng());
+                tmp = T(rng.rand64());
                 size_t old_size = real[idx].size();
                 assert(sim[idx].front() == real[idx].front());
                 sim[idx].front() = *tmp;
@@ -281,7 +281,7 @@ void TestType(Span<const uint8_t> buffer, uint64_t rng_tweak)
             }
             if (existing_buffer_non_empty && command-- == 0) {
                 /* back() [modifying] */
-                tmp = T(rng());
+                tmp = T(rng.rand64());
                 size_t old_size = real[idx].size();
                 assert(sim[idx].back() == real[idx].back());
                 sim[idx].back() = *tmp;
@@ -291,7 +291,7 @@ void TestType(Span<const uint8_t> buffer, uint64_t rng_tweak)
             }
             if (existing_buffer_non_empty && command-- == 0) {
                 /* operator[] [modifying] */
-                tmp = T(rng());
+                tmp = T(rng.rand64());
                 size_t pos = provider.ConsumeIntegralInRange<size_t>(0, sim[idx].size() - 1);
                 size_t old_size = real[idx].size();
                 assert(sim[idx][pos] == real[idx][pos]);

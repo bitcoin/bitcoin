@@ -57,8 +57,8 @@ unsigned-integer-overflow:CBlockPolicyEstimator::processBlockTx
 unsigned-integer-overflow:TxConfirmStats::EstimateMedianVal
 unsigned-integer-overflow:prevector.h
 unsigned-integer-overflow:EvalScript
-unsigned-integer-overflow:XoRoShiRo128PlusPlus::operator()
-unsigned-integer-overflow:XoRoShiRo128PlusPlus::SplitMix64
+unsigned-integer-overflow:InsecureRandomContext::rand64
+unsigned-integer-overflow:InsecureRandomContext::SplitMix64
 unsigned-integer-overflow:bitset_detail::PopCount
 implicit-integer-sign-change:CBlockPolicyEstimator::processBlockTx
 implicit-integer-sign-change:SetStdinEcho
@@ -76,6 +76,6 @@ shift-base:arith_uint256.cpp
 shift-base:crypto/
 shift-base:streams.h
 shift-base:FormatHDKeypath
-shift-base:XoRoShiRo128PlusPlus::operator()
+shift-base:InsecureRandomContext::rand64
 shift-base:RandomMixin<*>::randbits
 shift-base:RandomMixin<*>::randbits<*>
