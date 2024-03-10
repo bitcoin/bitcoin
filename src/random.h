@@ -14,8 +14,10 @@
 #include <bit>
 #include <cassert>
 #include <chrono>
+#include <concepts>
 #include <cstdint>
 #include <limits>
+#include <type_traits>
 #include <vector>
 
 /**
@@ -135,28 +137,160 @@ void RandAddPeriodic() noexcept;
  */
 void RandAddEvent(const uint32_t event_info) noexcept;
 
+// Forward declaration of RandomMixin, used in RandomNumberGenerator concept.
+template<typename T>
+class RandomMixin;
+
+/** A concept for RandomMixin-based random number generators. */
+template<typename T>
+concept RandomNumberGenerator = requires(T& rng, Span<std::byte> s) {
+    // A random number generator must provide rand64().
+    { rng.rand64() } noexcept -> std::same_as<uint64_t>;
+    // A random number generator must provide randfill(Span<std::byte>).
+    { rng.fillrand(s) } noexcept;
+    // A random number generator must derive from RandomMixin, which adds other rand* functions.
+    requires std::derived_from<std::remove_reference_t<T>, RandomMixin<std::remove_reference_t<T>>>;
+};
+
+/** Mixin class that provides helper randomness functions.
+ *
+ * Intended to be used through CRTP: https://en.cppreference.com/w/cpp/language/crtp.
+ * An RNG class FunkyRNG would derive publicly from RandomMixin<FunkyRNG>. This permits
+ * RandomMixin from accessing the derived class's rand64() function, while also allowing
+ * the derived class to provide more.
+ *
+ * The derived class must satisfy the RandomNumberGenerator concept.
+ */
+template<typename T>
+class RandomMixin
+{
+private:
+    uint64_t bitbuf;
+    int bitbuf_size{0};
+
+    /** Access the underlying generator.
+     *
+     * This also enforces the RandomNumberGenerator concept. We cannot declare that in the template
+     * (no template<RandomNumberGenerator T>) because the type isn't fully instantiated yet there.
+     */
+    RandomNumberGenerator auto& Impl() noexcept { return static_cast<T&>(*this); }
+
+    void FillBitBuffer() noexcept
+    {
+        bitbuf = Impl().rand64();
+        bitbuf_size = 64;
+    }
+
+public:
+    RandomMixin() noexcept = default;
+
+    // Do not permit copying an RNG.
+    RandomMixin(const RandomMixin&) = delete;
+    RandomMixin& operator=(const RandomMixin&) = delete;
+
+    RandomMixin(RandomMixin&& other) noexcept : bitbuf(other.bitbuf), bitbuf_size(other.bitbuf_size)
+    {
+        other.bitbuf_size = 0;
+    }
+
+    RandomMixin& operator=(RandomMixin&& other) noexcept
+    {
+        bitbuf = other.bitbuf;
+        bitbuf_size = other.bitbuf_size;
+        other.bitbuf_size = 0;
+        return *this;
+    }
+
+    /** Generate a random (bits)-bit integer. */
+    uint64_t randbits(int bits) noexcept
+    {
+        if (bits == 0) {
+            return 0;
+        } else if (bits > 32) {
+            return Impl().rand64() >> (64 - bits);
+        } else {
+            if (bitbuf_size < bits) FillBitBuffer();
+            uint64_t ret = bitbuf & (~uint64_t{0} >> (64 - bits));
+            bitbuf >>= bits;
+            bitbuf_size -= bits;
+            return ret;
+        }
+    }
+
+    /** Generate a random integer in the range [0..range).
+     * Precondition: range > 0.
+     */
+    uint64_t randrange(uint64_t range) noexcept
+    {
+        assert(range);
+        --range;
+        int bits = std::bit_width(range);
+        while (true) {
+            uint64_t ret = Impl().randbits(bits);
+            if (ret <= range) return ret;
+        }
+    }
+
+    /** Generate random bytes. */
+    template <BasicByte B = unsigned char>
+    std::vector<B> randbytes(size_t len) noexcept
+    {
+        std::vector<B> ret(len);
+        Impl().fillrand(MakeWritableByteSpan(ret));
+        return ret;
+    }
+
+    /** Generate a random 32-bit integer. */
+    uint32_t rand32() noexcept { return Impl().randbits(32); }
+
+    /** generate a random uint256. */
+    uint256 rand256() noexcept
+    {
+        uint256 ret;
+        Impl().fillrand(MakeWritableByteSpan(ret));
+        return ret;
+    }
+
+    /** Generate a random boolean. */
+    bool randbool() noexcept { return Impl().randbits(1); }
+
+    /** Return the time point advanced by a uniform random duration. */
+    template <typename Tp>
+    Tp rand_uniform_delay(const Tp& time, typename Tp::duration range) noexcept
+    {
+        return time + Impl().template rand_uniform_duration<Tp>(range);
+    }
+
+    /** Generate a uniform random duration in the range from 0 (inclusive) to range (exclusive). */
+    template <typename Chrono>
+    typename Chrono::duration rand_uniform_duration(typename Chrono::duration range) noexcept
+    {
+        using Dur = typename Chrono::duration;
+        return range.count() > 0 ? /* interval [0..range) */ Dur{Impl().randrange(range.count())} :
+               range.count() < 0 ? /* interval (range..0] */ -Dur{Impl().randrange(-range.count())} :
+                                   /* interval [0..0] */ Dur{0};
+    };
+
+    // Compatibility with the UniformRandomBitGenerator concept
+    typedef uint64_t result_type;
+    static constexpr uint64_t min() noexcept { return 0; }
+    static constexpr uint64_t max() noexcept { return std::numeric_limits<uint64_t>::max(); }
+    inline uint64_t operator()() noexcept { return Impl().rand64(); }
+};
+
 /**
  * Fast randomness source. This is seeded once with secure random data, but
  * is completely deterministic and does not gather more entropy after that.
  *
  * This class is not thread-safe.
  */
-class FastRandomContext
+class FastRandomContext : public RandomMixin<FastRandomContext>
 {
 private:
     bool requires_seed;
     ChaCha20 rng;
 
-    uint64_t bitbuf;
-    int bitbuf_size;
-
     void RandomSeed() noexcept;
-
-    void FillBitBuffer() noexcept
-    {
-        bitbuf = rand64();
-        bitbuf_size = 64;
-    }
 
 public:
     explicit FastRandomContext(bool fDeterministic = false) noexcept;
@@ -181,84 +315,8 @@ public:
         return ReadLE64(UCharCast(buf.data()));
     }
 
-    /** Generate a random (bits)-bit integer. */
-    uint64_t randbits(int bits) noexcept
-    {
-        if (bits == 0) {
-            return 0;
-        } else if (bits > 32) {
-            return rand64() >> (64 - bits);
-        } else {
-            if (bitbuf_size < bits) FillBitBuffer();
-            uint64_t ret = bitbuf & (~uint64_t{0} >> (64 - bits));
-            bitbuf >>= bits;
-            bitbuf_size -= bits;
-            return ret;
-        }
-    }
-
-    /** Generate a random integer in the range [0..range).
-     * Precondition: range > 0.
-     */
-    uint64_t randrange(uint64_t range) noexcept
-    {
-        assert(range);
-        --range;
-        int bits = std::bit_width(range);
-        while (true) {
-            uint64_t ret = randbits(bits);
-            if (ret <= range) return ret;
-        }
-    }
-
-    /** Generate random bytes. */
-    template <BasicByte B = unsigned char>
-    std::vector<B> randbytes(size_t len) noexcept
-    {
-        std::vector<B> ret(len);
-        fillrand(MakeWritableByteSpan(ret));
-        return ret;
-    }
-
     /** Fill a byte Span with random bytes. */
     void fillrand(Span<std::byte> output) noexcept;
-
-    /** Generate a random 32-bit integer. */
-    uint32_t rand32() noexcept { return randbits(32); }
-
-    /** generate a random uint256. */
-    uint256 rand256() noexcept
-    {
-        uint256 ret;
-        fillrand(MakeWritableByteSpan(ret));
-        return ret;
-    }
-
-    /** Generate a random boolean. */
-    bool randbool() noexcept { return randbits(1); }
-
-    /** Return the time point advanced by a uniform random duration. */
-    template <typename Tp>
-    Tp rand_uniform_delay(const Tp& time, typename Tp::duration range) noexcept
-    {
-        return time + rand_uniform_duration<Tp>(range);
-    }
-
-    /** Generate a uniform random duration in the range from 0 (inclusive) to range (exclusive). */
-    template <typename Chrono>
-    typename Chrono::duration rand_uniform_duration(typename Chrono::duration range) noexcept
-    {
-        using Dur = typename Chrono::duration;
-        return range.count() > 0 ? /* interval [0..range) */ Dur{randrange(range.count())} :
-               range.count() < 0 ? /* interval (range..0] */ -Dur{randrange(-range.count())} :
-                                   /* interval [0..0] */ Dur{0};
-    };
-
-    // Compatibility with the UniformRandomBitGenerator concept
-    typedef uint64_t result_type;
-    static constexpr uint64_t min() noexcept { return 0; }
-    static constexpr uint64_t max() noexcept { return std::numeric_limits<uint64_t>::max(); }
-    inline uint64_t operator()() noexcept { return rand64(); }
 };
 
 /** More efficient than using std::shuffle on a FastRandomContext.
@@ -271,7 +329,7 @@ public:
  * debug mode detects and panics on. This is a known issue, see
  * https://stackoverflow.com/questions/22915325/avoiding-self-assignment-in-stdshuffle
  */
-template <typename I, typename R>
+template <typename I, RandomNumberGenerator R>
 void Shuffle(I first, I last, R&& rng)
 {
     while (first != last) {
