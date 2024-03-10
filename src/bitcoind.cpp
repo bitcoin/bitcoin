@@ -130,6 +130,7 @@ static bool ParseArgs(NodeContext& node, int argc, char* argv[])
         }
     }
 
+    g_software_expiry = args.GetIntArg("-softwareexpiry", DEFAULT_SOFTWARE_EXPIRY);
     if (IsThisSoftwareExpired(GetTime())) {
         tfm::format(std::cerr, "This software is expired, and may be out of consensus. You must choose to upgrade or override this expiration.\n");
         exit(EXIT_FAILURE);

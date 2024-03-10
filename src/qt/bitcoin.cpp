@@ -630,6 +630,7 @@ int GuiMain(int argc, char* argv[])
     // Re-initialize translations after changing application name (language in network-specific settings can be different)
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
 
+    g_software_expiry = gArgs.GetIntArg("-softwareexpiry", DEFAULT_SOFTWARE_EXPIRY);
     if (IsThisSoftwareExpired(GetTime())) {
         QMessageBox::critical(nullptr, QObject::tr("Software expired"), QObject::tr("This software is expired, and may be out of consensus. You must choose to upgrade or override this expiration."));
         return EXIT_FAILURE;
