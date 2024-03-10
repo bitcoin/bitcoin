@@ -200,10 +200,13 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
 
     LOCK(wallet->cs_wallet);
 
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.dmnman);
+
     {
         LOCK(cs_main);
         std::string strError = "";
-        if (!govobj.IsValidLocally(strError, false))
+        if (!govobj.IsValidLocally(node.dmnman->GetListAtChainTip(), strError, false))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
     }
 
@@ -365,8 +368,10 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
         }
 
         LOCK2(cs_main, mempool.cs);
+        CHECK_NONFATAL(node.dmnman);
+
         std::string strError;
-        if (!govobj.IsValidLocally(strError, fMissingConfirmations, true) && !fMissingConfirmations) {
+        if (!govobj.IsValidLocally(node.dmnman->GetListAtChainTip(), strError, fMissingConfirmations, true) && !fMissingConfirmations) {
             LogPrintf("gobject(submit) -- Object submission rejected because object is not valid - hash = %s, strError = %s\n", strHash, strError);
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + strHash + " - " + strError);
         }
@@ -582,7 +587,7 @@ static UniValue gobject_vote_alias(const JSONRPCRequest& request)
 }
 #endif
 
-static UniValue ListObjects(CGovernanceManager& govman, const std::string& strCachedSignal,
+static UniValue ListObjects(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, const std::string& strCachedSignal,
                             const std::string& strType, int nStartTime)
 {
     UniValue objResult(UniValue::VOBJ);
@@ -623,14 +628,14 @@ static UniValue ListObjects(CGovernanceManager& govman, const std::string& strCa
         }
 
         // REPORT STATUS FOR FUNDING VOTES SPECIFICALLY
-        bObj.pushKV("AbsoluteYesCount",  govObj.GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING));
-        bObj.pushKV("YesCount",  govObj.GetYesCount(VOTE_SIGNAL_FUNDING));
-        bObj.pushKV("NoCount",  govObj.GetNoCount(VOTE_SIGNAL_FUNDING));
-        bObj.pushKV("AbstainCount",  govObj.GetAbstainCount(VOTE_SIGNAL_FUNDING));
+        bObj.pushKV("AbsoluteYesCount",  govObj.GetAbsoluteYesCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
+        bObj.pushKV("YesCount",  govObj.GetYesCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
+        bObj.pushKV("NoCount",  govObj.GetNoCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
+        bObj.pushKV("AbstainCount",  govObj.GetAbstainCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
 
         // REPORT VALIDITY AND CACHING FLAGS FOR VARIOUS SETTINGS
         std::string strError = "";
-        bObj.pushKV("fBlockchainValidity",  govObj.IsValidLocally(strError, false));
+        bObj.pushKV("fBlockchainValidity",  govObj.IsValidLocally(tip_mn_list, strError, false));
         bObj.pushKV("IsValidReason",  strError.c_str());
         bObj.pushKV("fCachedValid",  govObj.IsSetCachedValid());
         bObj.pushKV("fCachedFunding",  govObj.IsSetCachedFunding());
@@ -675,7 +680,9 @@ static UniValue gobject_list(const JSONRPCRequest& request)
         return "Invalid type, should be 'proposals', 'triggers' or 'all'";
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    return ListObjects(*node.govman, strCachedSignal, strType, 0);
+    CHECK_NONFATAL(node.dmnman);
+
+    return ListObjects(*node.govman, node.dmnman->GetListAtChainTip(), strCachedSignal, strType, 0);
 }
 
 static void gobject_diff_help(const JSONRPCRequest& request)
@@ -710,7 +717,9 @@ static UniValue gobject_diff(const JSONRPCRequest& request)
         return "Invalid type, should be 'proposals', 'triggers' or 'all'";
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    return ListObjects(*node.govman, strCachedSignal, strType, node.govman->GetLastDiffTime());
+    CHECK_NONFATAL(node.dmnman && node.govman);
+
+    return ListObjects(*node.govman, node.dmnman->GetListAtChainTip(), strCachedSignal, strType, node.govman->GetLastDiffTime());
 }
 
 static void gobject_get_help(const JSONRPCRequest& request)
@@ -738,6 +747,7 @@ static UniValue gobject_get(const JSONRPCRequest& request)
 
     // FIND THE GOVERNANCE OBJECT THE USER IS LOOKING FOR
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.dmnman && node.govman);
 
     LOCK2(cs_main, node.govman->cs);
     const CGovernanceObject* pGovObj = node.govman->FindConstGovernanceObject(hash);
@@ -763,40 +773,42 @@ static UniValue gobject_get(const JSONRPCRequest& request)
     // SHOW (MUCH MORE) INFORMATION ABOUT VOTES FOR GOVERNANCE OBJECT (THAN LIST/DIFF ABOVE)
     // -- FUNDING VOTING RESULTS
 
+    auto tip_mn_list = node.dmnman->GetListAtChainTip();
+
     UniValue objFundingResult(UniValue::VOBJ);
-    objFundingResult.pushKV("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING));
-    objFundingResult.pushKV("YesCount",  pGovObj->GetYesCount(VOTE_SIGNAL_FUNDING));
-    objFundingResult.pushKV("NoCount",  pGovObj->GetNoCount(VOTE_SIGNAL_FUNDING));
-    objFundingResult.pushKV("AbstainCount",  pGovObj->GetAbstainCount(VOTE_SIGNAL_FUNDING));
+    objFundingResult.pushKV("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
+    objFundingResult.pushKV("YesCount",  pGovObj->GetYesCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
+    objFundingResult.pushKV("NoCount",  pGovObj->GetNoCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
+    objFundingResult.pushKV("AbstainCount",  pGovObj->GetAbstainCount(tip_mn_list, VOTE_SIGNAL_FUNDING));
     objResult.pushKV("FundingResult", objFundingResult);
 
     // -- VALIDITY VOTING RESULTS
     UniValue objValid(UniValue::VOBJ);
-    objValid.pushKV("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(VOTE_SIGNAL_VALID));
-    objValid.pushKV("YesCount",  pGovObj->GetYesCount(VOTE_SIGNAL_VALID));
-    objValid.pushKV("NoCount",  pGovObj->GetNoCount(VOTE_SIGNAL_VALID));
-    objValid.pushKV("AbstainCount",  pGovObj->GetAbstainCount(VOTE_SIGNAL_VALID));
+    objValid.pushKV("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(tip_mn_list, VOTE_SIGNAL_VALID));
+    objValid.pushKV("YesCount",  pGovObj->GetYesCount(tip_mn_list, VOTE_SIGNAL_VALID));
+    objValid.pushKV("NoCount",  pGovObj->GetNoCount(tip_mn_list, VOTE_SIGNAL_VALID));
+    objValid.pushKV("AbstainCount",  pGovObj->GetAbstainCount(tip_mn_list, VOTE_SIGNAL_VALID));
     objResult.pushKV("ValidResult", objValid);
 
     // -- DELETION CRITERION VOTING RESULTS
     UniValue objDelete(UniValue::VOBJ);
-    objDelete.pushKV("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(VOTE_SIGNAL_DELETE));
-    objDelete.pushKV("YesCount",  pGovObj->GetYesCount(VOTE_SIGNAL_DELETE));
-    objDelete.pushKV("NoCount",  pGovObj->GetNoCount(VOTE_SIGNAL_DELETE));
-    objDelete.pushKV("AbstainCount",  pGovObj->GetAbstainCount(VOTE_SIGNAL_DELETE));
+    objDelete.pushKV("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(tip_mn_list, VOTE_SIGNAL_DELETE));
+    objDelete.pushKV("YesCount",  pGovObj->GetYesCount(tip_mn_list, VOTE_SIGNAL_DELETE));
+    objDelete.pushKV("NoCount",  pGovObj->GetNoCount(tip_mn_list, VOTE_SIGNAL_DELETE));
+    objDelete.pushKV("AbstainCount",  pGovObj->GetAbstainCount(tip_mn_list, VOTE_SIGNAL_DELETE));
     objResult.pushKV("DeleteResult", objDelete);
 
     // -- ENDORSED VIA MASTERNODE-ELECTED BOARD
     UniValue objEndorsed(UniValue::VOBJ);
-    objEndorsed.pushKV("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED));
-    objEndorsed.pushKV("YesCount",  pGovObj->GetYesCount(VOTE_SIGNAL_ENDORSED));
-    objEndorsed.pushKV("NoCount",  pGovObj->GetNoCount(VOTE_SIGNAL_ENDORSED));
-    objEndorsed.pushKV("AbstainCount",  pGovObj->GetAbstainCount(VOTE_SIGNAL_ENDORSED));
+    objEndorsed.pushKV("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(tip_mn_list, VOTE_SIGNAL_ENDORSED));
+    objEndorsed.pushKV("YesCount",  pGovObj->GetYesCount(tip_mn_list, VOTE_SIGNAL_ENDORSED));
+    objEndorsed.pushKV("NoCount",  pGovObj->GetNoCount(tip_mn_list, VOTE_SIGNAL_ENDORSED));
+    objEndorsed.pushKV("AbstainCount",  pGovObj->GetAbstainCount(tip_mn_list, VOTE_SIGNAL_ENDORSED));
     objResult.pushKV("EndorsedResult", objEndorsed);
 
     // --
     std::string strError = "";
-    objResult.pushKV("fLocalValidity",  pGovObj->IsValidLocally(strError, false));
+    objResult.pushKV("fLocalValidity",  pGovObj->IsValidLocally(tip_mn_list, strError, false));
     objResult.pushKV("IsValidReason",  strError.c_str());
     objResult.pushKV("fCachedValid",  pGovObj->IsSetCachedValid());
     objResult.pushKV("fCachedFunding",  pGovObj->IsSetCachedFunding());

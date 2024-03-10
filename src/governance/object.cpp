@@ -79,7 +79,7 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other) :
 {
 }
 
-bool CGovernanceObject::ProcessVote(CGovernanceManager& govman, const CGovernanceVote& vote, CGovernanceException& exception)
+bool CGovernanceObject::ProcessVote(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, const CGovernanceVote& vote, CGovernanceException& exception)
 {
     LOCK(cs);
 
@@ -93,9 +93,7 @@ bool CGovernanceObject::ProcessVote(CGovernanceManager& govman, const CGovernanc
         return false;
     }
 
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-    auto dmn = mnList.GetMNByCollateral(vote.GetMasternodeOutpoint());
-
+    auto dmn = tip_mn_list.GetMNByCollateral(vote.GetMasternodeOutpoint());
     if (!dmn) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Masternode " << vote.GetMasternodeOutpoint().ToStringShort() << " not found";
@@ -197,15 +195,13 @@ bool CGovernanceObject::ProcessVote(CGovernanceManager& govman, const CGovernanc
     return true;
 }
 
-void CGovernanceObject::ClearMasternodeVotes()
+void CGovernanceObject::ClearMasternodeVotes(const CDeterministicMNList& tip_mn_list)
 {
     LOCK(cs);
 
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-
     auto it = mapCurrentMNVotes.begin();
     while (it != mapCurrentMNVotes.end()) {
-        if (!mnList.HasMNByCollateral(it->first)) {
+        if (!tip_mn_list.HasMNByCollateral(it->first)) {
             fileVotes.RemoveVotesFromMasternode(it->first);
             mapCurrentMNVotes.erase(it++);
             fDirtyCache = true;
@@ -397,22 +393,22 @@ UniValue CGovernanceObject::ToJson() const
     return m_obj.ToJson();
 }
 
-void CGovernanceObject::UpdateLocalValidity()
+void CGovernanceObject::UpdateLocalValidity(const CDeterministicMNList& tip_mn_list)
 {
     AssertLockHeld(cs_main);
     // THIS DOES NOT CHECK COLLATERAL, THIS IS CHECKED UPON ORIGINAL ARRIVAL
-    fCachedLocalValidity = IsValidLocally(strLocalValidityError, false);
+    fCachedLocalValidity = IsValidLocally(tip_mn_list, strLocalValidityError, false);
 }
 
 
-bool CGovernanceObject::IsValidLocally(std::string& strError, bool fCheckCollateral) const
+bool CGovernanceObject::IsValidLocally(const CDeterministicMNList& tip_mn_list, std::string& strError, bool fCheckCollateral) const
 {
     bool fMissingConfirmations = false;
 
-    return IsValidLocally(strError, fMissingConfirmations, fCheckCollateral);
+    return IsValidLocally(tip_mn_list, strError, fMissingConfirmations, fCheckCollateral);
 }
 
-bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const
+bool CGovernanceObject::IsValidLocally(const CDeterministicMNList& tip_mn_list, std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const
 {
     AssertLockHeld(cs_main);
 
@@ -445,10 +441,8 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
             return true;
         }
 
-        auto mnList = deterministicMNManager->GetListAtChainTip();
-
         std::string strOutpoint = m_obj.masternodeOutpoint.ToStringShort();
-        auto dmn = mnList.GetMNByCollateral(m_obj.masternodeOutpoint);
+        auto dmn = tip_mn_list.GetMNByCollateral(m_obj.masternodeOutpoint);
         if (!dmn) {
             strError = "Failed to find Masternode by UTXO, missing masternode=" + strOutpoint;
             return false;
@@ -572,10 +566,8 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     return true;
 }
 
-int CGovernanceObject::CountMatchingVotes(vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn) const
+int CGovernanceObject::CountMatchingVotes(const CDeterministicMNList& tip_mn_list, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn) const
 {
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-
     LOCK(cs);
 
     int nCount = 0;
@@ -585,7 +577,7 @@ int CGovernanceObject::CountMatchingVotes(vote_signal_enum_t eVoteSignalIn, vote
         if (it2 != recVote.mapInstances.end() && it2->second.eOutcome == eVoteOutcomeIn) {
             // 4x times weight vote for EvoNode owners.
             // No need to check if v19 is active since no EvoNode are allowed to register before v19s
-            auto dmn = mnList.GetMNByCollateral(votepair.first);
+            auto dmn = tip_mn_list.GetMNByCollateral(votepair.first);
             if (dmn != nullptr) nCount += GetMnType(dmn->nType).voting_weight;
         }
     }
@@ -596,29 +588,29 @@ int CGovernanceObject::CountMatchingVotes(vote_signal_enum_t eVoteSignalIn, vote
 *   Get specific vote counts for each outcome (funding, validity, etc)
 */
 
-int CGovernanceObject::GetAbsoluteYesCount(vote_signal_enum_t eVoteSignalIn) const
+int CGovernanceObject::GetAbsoluteYesCount(const CDeterministicMNList& tip_mn_list, vote_signal_enum_t eVoteSignalIn) const
 {
-    return GetYesCount(eVoteSignalIn) - GetNoCount(eVoteSignalIn);
+    return GetYesCount(tip_mn_list, eVoteSignalIn) - GetNoCount(tip_mn_list, eVoteSignalIn);
 }
 
-int CGovernanceObject::GetAbsoluteNoCount(vote_signal_enum_t eVoteSignalIn) const
+int CGovernanceObject::GetAbsoluteNoCount(const CDeterministicMNList& tip_mn_list, vote_signal_enum_t eVoteSignalIn) const
 {
-    return GetNoCount(eVoteSignalIn) - GetYesCount(eVoteSignalIn);
+    return GetNoCount(tip_mn_list, eVoteSignalIn) - GetYesCount(tip_mn_list, eVoteSignalIn);
 }
 
-int CGovernanceObject::GetYesCount(vote_signal_enum_t eVoteSignalIn) const
+int CGovernanceObject::GetYesCount(const CDeterministicMNList& tip_mn_list, vote_signal_enum_t eVoteSignalIn) const
 {
-    return CountMatchingVotes(eVoteSignalIn, VOTE_OUTCOME_YES);
+    return CountMatchingVotes(tip_mn_list, eVoteSignalIn, VOTE_OUTCOME_YES);
 }
 
-int CGovernanceObject::GetNoCount(vote_signal_enum_t eVoteSignalIn) const
+int CGovernanceObject::GetNoCount(const CDeterministicMNList& tip_mn_list, vote_signal_enum_t eVoteSignalIn) const
 {
-    return CountMatchingVotes(eVoteSignalIn, VOTE_OUTCOME_NO);
+    return CountMatchingVotes(tip_mn_list, eVoteSignalIn, VOTE_OUTCOME_NO);
 }
 
-int CGovernanceObject::GetAbstainCount(vote_signal_enum_t eVoteSignalIn) const
+int CGovernanceObject::GetAbstainCount(const CDeterministicMNList& tip_mn_list, vote_signal_enum_t eVoteSignalIn) const
 {
-    return CountMatchingVotes(eVoteSignalIn, VOTE_OUTCOME_ABSTAIN);
+    return CountMatchingVotes(tip_mn_list, eVoteSignalIn, VOTE_OUTCOME_ABSTAIN);
 }
 
 bool CGovernanceObject::GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint, vote_rec_t& voteRecord) const
@@ -658,11 +650,11 @@ void CGovernanceObject::Relay(CConnman& connman) const
     connman.RelayInv(inv, minProtoVersion);
 }
 
-void CGovernanceObject::UpdateSentinelVariables()
+void CGovernanceObject::UpdateSentinelVariables(const CDeterministicMNList& tip_mn_list)
 {
     // CALCULATE MINIMUM SUPPORT LEVELS REQUIRED
 
-    int nWeightedMnCount = (int)deterministicMNManager->GetListAtChainTip().GetValidWeightedMNsCount();
+    int nWeightedMnCount = (int)tip_mn_list.GetValidWeightedMNsCount();
     if (nWeightedMnCount == 0) return;
 
     // CALCULATE THE MINIMUM VOTE COUNT REQUIRED FOR FULL SIGNAL
@@ -680,14 +672,14 @@ void CGovernanceObject::UpdateSentinelVariables()
     // SET SENTINEL FLAGS TO TRUE IF MINIMUM SUPPORT LEVELS ARE REACHED
     // ARE ANY OF THESE FLAGS CURRENTLY ACTIVATED?
 
-    if (GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING) >= nAbsVoteReq) fCachedFunding = true;
-    if ((GetAbsoluteYesCount(VOTE_SIGNAL_DELETE) >= nAbsDeleteReq) && !fCachedDelete) {
+    if (GetAbsoluteYesCount(tip_mn_list, VOTE_SIGNAL_FUNDING) >= nAbsVoteReq) fCachedFunding = true;
+    if ((GetAbsoluteYesCount(tip_mn_list, VOTE_SIGNAL_DELETE) >= nAbsDeleteReq) && !fCachedDelete) {
         fCachedDelete = true;
         if (nDeletionTime == 0) {
             nDeletionTime = GetTime<std::chrono::seconds>().count();
         }
     }
-    if (GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED) >= nAbsVoteReq) fCachedEndorsed = true;
+    if (GetAbsoluteYesCount(tip_mn_list, VOTE_SIGNAL_ENDORSED) >= nAbsVoteReq) fCachedEndorsed = true;
 
-    if (GetAbsoluteNoCount(VOTE_SIGNAL_VALID) >= nAbsVoteReq) fCachedValid = false;
+    if (GetAbsoluteNoCount(tip_mn_list, VOTE_SIGNAL_VALID) >= nAbsVoteReq) fCachedValid = false;
 }
