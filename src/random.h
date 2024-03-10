@@ -10,6 +10,7 @@
 #include <crypto/common.h>
 #include <span.h>
 #include <uint256.h>
+#include <util/check.h>
 
 #include <bit>
 #include <cassert>
@@ -165,7 +166,7 @@ template<typename T>
 class RandomMixin
 {
 private:
-    uint64_t bitbuf;
+    uint64_t bitbuf{0};
     int bitbuf_size{0};
 
     /** Access the underlying generator.
@@ -174,12 +175,6 @@ private:
      * (no template<RandomNumberGenerator T>) because the type isn't fully instantiated yet there.
      */
     RandomNumberGenerator auto& Impl() noexcept { return static_cast<T&>(*this); }
-
-    void FillBitBuffer() noexcept
-    {
-        bitbuf = Impl().rand64();
-        bitbuf_size = 64;
-    }
 
 public:
     RandomMixin() noexcept = default;
@@ -190,6 +185,7 @@ public:
 
     RandomMixin(RandomMixin&& other) noexcept : bitbuf(other.bitbuf), bitbuf_size(other.bitbuf_size)
     {
+        other.bitbuf = 0;
         other.bitbuf_size = 0;
     }
 
@@ -197,6 +193,7 @@ public:
     {
         bitbuf = other.bitbuf;
         bitbuf_size = other.bitbuf_size;
+        other.bitbuf = 0;
         other.bitbuf_size = 0;
         return *this;
     }
@@ -204,17 +201,26 @@ public:
     /** Generate a random (bits)-bit integer. */
     uint64_t randbits(int bits) noexcept
     {
-        if (bits == 0) {
-            return 0;
-        } else if (bits > 32) {
-            return Impl().rand64() >> (64 - bits);
-        } else {
-            if (bitbuf_size < bits) FillBitBuffer();
-            uint64_t ret = bitbuf & (~uint64_t{0} >> (64 - bits));
+        Assume(bits <= 64);
+        // Requests for the full 64 bits are passed through.
+        if (bits == 64) return Impl().rand64();
+        uint64_t ret;
+        if (bits <= bitbuf_size) {
+            // If there is enough entropy left in bitbuf, return its bottom bits bits.
+            ret = bitbuf;
             bitbuf >>= bits;
             bitbuf_size -= bits;
-            return ret;
+        } else {
+            // If not, return all of bitbuf, supplemented with the (bits - bitbuf_size) bottom
+            // bits of a newly generated 64-bit number on top. The remainder of that generated
+            // number becomes the new bitbuf.
+            uint64_t gen = Impl().rand64();
+            ret = (gen << bitbuf_size) | bitbuf;
+            bitbuf = gen >> (bits - bitbuf_size);
+            bitbuf_size = 64 + bitbuf_size - bits;
         }
+        // Return the bottom bits bits of ret.
+        return ret & ((uint64_t{1} << bits) - 1);
     }
 
     /** Generate a random integer in the range [0..range).
