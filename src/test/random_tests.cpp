@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(fastrandom_randbits)
 BOOST_AUTO_TEST_CASE(randbits_test)
 {
     FastRandomContext ctx_lens; //!< RNG for producing the lengths requested from ctx_test.
-    FastRandomContext ctx_test; //!< The RNG being tested.
+    FastRandomContext ctx_test1(true), ctx_test2(true); //!< The RNGs being tested.
     int ctx_test_bitsleft{0}; //!< (Assumed value of) ctx_test::bitbuf_len
 
     // Run the entire test 5 times.
@@ -122,7 +122,25 @@ BOOST_AUTO_TEST_CASE(randbits_test)
                 // Decide on a number of bits to request (0 through 64, inclusive; don't use randbits/randrange).
                 int bits = ctx_lens.rand64() % 65;
                 // Generate that many bits.
-                uint64_t gen = ctx_test.randbits(bits);
+                uint64_t gen = ctx_test1.randbits(bits);
+                // For certain bits counts, also test randbits<Bits> and compare.
+                uint64_t gen2;
+                if (bits == 0) {
+                    gen2 = ctx_test2.randbits<0>();
+                } else if (bits == 1) {
+                    gen2 = ctx_test2.randbits<1>();
+                } else if (bits == 7) {
+                    gen2 = ctx_test2.randbits<7>();
+                } else if (bits == 32) {
+                    gen2 = ctx_test2.randbits<32>();
+                } else if (bits == 51) {
+                    gen2 = ctx_test2.randbits<51>();
+                } else if (bits == 64) {
+                    gen2 = ctx_test2.randbits<64>();
+                } else {
+                    gen2 = ctx_test2.randbits(bits);
+                }
+                BOOST_CHECK_EQUAL(gen, gen2);
                 // Make sure the result is in range.
                 if (bits < 64) BOOST_CHECK_EQUAL(gen >> bits, 0);
                 // Mark all the seen bits in the output.

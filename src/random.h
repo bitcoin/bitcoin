@@ -223,6 +223,30 @@ public:
         return ret & ((uint64_t{1} << bits) - 1);
     }
 
+    /** Same as above, but with compile-time fixed bits count. */
+    template<int Bits>
+    uint64_t randbits() noexcept
+    {
+        static_assert(Bits >= 0 && Bits <= 64);
+        if constexpr (Bits == 64) {
+            return Impl().rand64();
+        } else {
+            uint64_t ret;
+            if (Bits <= bitbuf_size) {
+                ret = bitbuf;
+                bitbuf >>= Bits;
+                bitbuf_size -= Bits;
+            } else {
+                uint64_t gen = Impl().rand64();
+                ret = (gen << bitbuf_size) | bitbuf;
+                bitbuf = gen >> (Bits - bitbuf_size);
+                bitbuf_size = 64 + bitbuf_size - Bits;
+            }
+            constexpr uint64_t MASK = (uint64_t{1} << Bits) - 1;
+            return ret & MASK;
+        }
+    }
+
     /** Generate a random integer in the range [0..range).
      * Precondition: range > 0.
      */
@@ -247,7 +271,7 @@ public:
     }
 
     /** Generate a random 32-bit integer. */
-    uint32_t rand32() noexcept { return Impl().randbits(32); }
+    uint32_t rand32() noexcept { return Impl().template randbits<32>(); }
 
     /** generate a random uint256. */
     uint256 rand256() noexcept
@@ -258,7 +282,7 @@ public:
     }
 
     /** Generate a random boolean. */
-    bool randbool() noexcept { return Impl().randbits(1); }
+    bool randbool() noexcept { return Impl().template randbits<1>(); }
 
     /** Return the time point advanced by a uniform random duration. */
     template <typename Tp>
