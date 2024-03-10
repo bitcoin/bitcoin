@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_UTIL_XOROSHIRO128PLUSPLUS_H
 #define BITCOIN_TEST_UTIL_XOROSHIRO128PLUSPLUS_H
 
+#include <bit>
 #include <cstdint>
 #include <limits>
 
@@ -21,26 +22,19 @@ class XoRoShiRo128PlusPlus
     uint64_t m_s0;
     uint64_t m_s1;
 
-    [[nodiscard]] constexpr static uint64_t rotl(uint64_t x, int n)
-    {
-        return (x << n) | (x >> (64 - n));
-    }
-
     [[nodiscard]] constexpr static uint64_t SplitMix64(uint64_t& seedval) noexcept
     {
-        uint64_t z = (seedval += UINT64_C(0x9e3779b97f4a7c15));
-        z = (z ^ (z >> 30U)) * UINT64_C(0xbf58476d1ce4e5b9);
-        z = (z ^ (z >> 27U)) * UINT64_C(0x94d049bb133111eb);
-        return z ^ (z >> 31U);
+        uint64_t z = (seedval += 0x9e3779b97f4a7c15);
+        z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9;
+        z = (z ^ (z >> 27)) * 0x94d049bb133111eb;
+        return z ^ (z >> 31);
     }
 
 public:
     using result_type = uint64_t;
 
     constexpr explicit XoRoShiRo128PlusPlus(uint64_t seedval) noexcept
-        : m_s0(SplitMix64(seedval)), m_s1(SplitMix64(seedval))
-    {
-    }
+        : m_s0(SplitMix64(seedval)), m_s1(SplitMix64(seedval)) {}
 
     // no copy - that is dangerous, we don't want accidentally copy the RNG and then have two streams
     // with exactly the same results. If you need a copy, call copy().
@@ -51,15 +45,13 @@ public:
     XoRoShiRo128PlusPlus(XoRoShiRo128PlusPlus&&) = default;
     XoRoShiRo128PlusPlus& operator=(XoRoShiRo128PlusPlus&&) = default;
 
-    ~XoRoShiRo128PlusPlus() = default;
-
     constexpr result_type operator()() noexcept
     {
         uint64_t s0 = m_s0, s1 = m_s1;
-        const uint64_t result = rotl(s0 + s1, 17) + s0;
+        const uint64_t result = std::rotl(s0 + s1, 17) + s0;
         s1 ^= s0;
-        m_s0 = rotl(s0, 49) ^ s1 ^ (s1 << 21);
-        m_s1 = rotl(s1, 28);
+        m_s0 = std::rotl(s0, 49) ^ s1 ^ (s1 << 21);
+        m_s1 = std::rotl(s1, 28);
         return result;
     }
 
