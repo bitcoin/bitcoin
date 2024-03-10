@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <random.h>
 #include <span.h>
 #include <test/fuzz/util.h>
-#include <test/util/xoroshiro128plusplus.h>
 #include <util/vecdeque.h>
 
 #include <deque>
