@@ -5,6 +5,7 @@
 #include <node/caches.h>
 
 #include <common/args.h>
+#include <index/silentpaymentindex.h>
 #include <index/txindex.h>
 #include <txdb.h>
 
@@ -19,6 +20,8 @@ CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
     nTotalCache -= sizes.block_tree_db;
     sizes.tx_index = std::min(nTotalCache / 8, args.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? nMaxTxIndexCache << 20 : 0);
     nTotalCache -= sizes.tx_index;
+    sizes.silentpayment_index = std::min(nTotalCache / 8, args.GetBoolArg("-silentpaymentindex", DEFAULT_SILENT_PAYMENT_INDEX) ? nMaxSilentPaymentIndexCache << 20 : 0);
+    nTotalCache -= sizes.silentpayment_index;
     sizes.filter_index = 0;
     if (n_indexes > 0) {
         int64_t max_cache = std::min(nTotalCache / 8, max_filter_index_cache << 20);

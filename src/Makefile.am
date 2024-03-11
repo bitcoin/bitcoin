@@ -168,6 +168,7 @@ BITCOIN_CORE_H = \
   index/blockfilterindex.h \
   index/coinstatsindex.h \
   index/disktxpos.h \
+  index/silentpaymentindex.h \
   index/txindex.h \
   indirectmap.h \
   init.h \
@@ -354,6 +355,7 @@ BITCOIN_CORE_H = \
   wallet/rpc/wallet.h \
   wallet/salvage.h \
   wallet/scriptpubkeyman.h \
+  wallet/silentpayments.h \
   wallet/spend.h \
   wallet/sqlite.h \
   wallet/transaction.h \
@@ -400,6 +402,7 @@ libbitcoin_node_a_SOURCES = \
   index/blockfilterindex.cpp \
   index/coinstatsindex.cpp \
   index/txindex.cpp \
+  index/silentpaymentindex.cpp \
   init.cpp \
   kernel/chain.cpp \
   kernel/checks.cpp \
@@ -520,6 +523,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/rpc/util.cpp \
   wallet/rpc/wallet.cpp \
   wallet/scriptpubkeyman.cpp \
+  wallet/silentpayments.cpp \
   wallet/spend.cpp \
   wallet/transaction.cpp \
   wallet/wallet.cpp \

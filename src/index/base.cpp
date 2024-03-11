@@ -67,8 +67,8 @@ void BaseIndex::DB::WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator
     batch.Write(DB_BEST_BLOCK, locator);
 }
 
-BaseIndex::BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name)
-    : m_chain{std::move(chain)}, m_name{std::move(name)} {}
+BaseIndex::BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name, int start_height)
+    : m_chain{std::move(chain)}, m_name{std::move(name)}, m_start_height{std::move(start_height)} {}
 
 BaseIndex::~BaseIndex()
 {
@@ -125,11 +125,16 @@ bool BaseIndex::Init()
     return true;
 }
 
-static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& chain) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& chain, int start_height) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
 
     if (!pindex_prev) {
+        // pindex_prev is null, we are starting our sync. Return the genesis block
+        // or start from the specified start_height.
+        if (start_height > 0) {
+            return chain[start_height];
+        }
         return chain.Genesis();
     }
 
@@ -161,13 +166,19 @@ void BaseIndex::ThreadSync()
 
             {
                 LOCK(cs_main);
-                const CBlockIndex* pindex_next = NextSyncBlock(pindex, m_chainstate->m_chain);
+                const CBlockIndex* pindex_next = NextSyncBlock(pindex, m_chainstate->m_chain, m_start_height);
                 if (!pindex_next) {
                     SetBestBlockIndex(pindex);
                     m_synced = true;
                     // No need to handle errors in Commit. See rationale above.
                     Commit();
                     break;
+                }
+                // If pindex_next is our first block and we are starting from a custom height,
+                // set pindex to be the previous block. This ensures we test that we can still rewind
+                // from our custom start height in the event of a reorg.
+                if (pindex_next->nHeight == m_start_height && m_start_height > 0) {
+                    pindex = pindex_next->pprev;
                 }
                 if (pindex_next->pprev != pindex && !Rewind(pindex, pindex_next->pprev)) {
                     FatalErrorf("%s: Failed to rewind index %s to a previous chain tip",
