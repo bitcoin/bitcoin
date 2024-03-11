@@ -55,7 +55,7 @@ void CCoinJoinServer::ProcessDSACCEPT(CNode& peer, CDataStream& vRecv)
 
     LogPrint(BCLog::COINJOIN, "DSACCEPT -- nDenom %d (%s)  txCollateral %s", dsa.nDenom, CoinJoin::DenominationToString(dsa.nDenom), dsa.txCollateral.ToString()); /* Continued */
 
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto mnList = m_dmnman.GetListAtChainTip();
     auto dmn = WITH_LOCK(activeMasternodeInfoCs, return mnList.GetValidMNByCollateral(activeMasternodeInfo.outpoint));
     if (!dmn) {
         PushStatus(peer, STATUS_REJECTED, ERR_MN_LIST);
@@ -115,7 +115,7 @@ PeerMsgRet CCoinJoinServer::ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv
         return tl::unexpected{100};
     }
 
-    const auto tip_mn_list = deterministicMNManager->GetListAtChainTip();
+    const auto tip_mn_list = m_dmnman.GetListAtChainTip();
     if (dsq.masternodeOutpoint.IsNull()) {
         if (auto dmn = tip_mn_list.GetValidMN(dsq.m_protxHash)) {
             dsq.masternodeOutpoint = dmn->collateralOutpoint;
