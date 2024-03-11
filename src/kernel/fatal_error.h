@@ -19,6 +19,7 @@ enum class FatalError {
     CorruptBlock,
     DiskSpaceTooLow,
     DisconnectBlockFailed,
+    FlushBlockFileFailed,
     FlushStateToDiskFailed,
     NoChainstatePaths,
     ReadBlockFailed,

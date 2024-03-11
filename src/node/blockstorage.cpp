@@ -748,9 +748,9 @@ bool BlockManager::FlushUndoFile(int block_file, bool finalize)
     return true;
 }
 
-bool BlockManager::FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo)
+util::Result<bool, kernel::FatalError> BlockManager::FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo)
 {
-    bool success = true;
+    util::Result<bool, kernel::FatalError> result{true};
     LOCK(cs_LastBlockFile);
 
     if (m_blockfile_info.size() < 1) {
@@ -758,23 +758,23 @@ bool BlockManager::FlushBlockFile(int blockfile_num, bool fFinalize, bool finali
         // chainstate init, when we call ChainstateManager::MaybeRebalanceCaches() (which
         // then calls FlushStateToDisk()), resulting in a call to this function before we
         // have populated `m_blockfile_info` via LoadBlockIndexDB().
-        return true;
+        return result;
     }
     assert(static_cast<int>(m_blockfile_info.size()) > blockfile_num);
 
     FlatFilePos block_pos_old(blockfile_num, m_blockfile_info[blockfile_num].nSize);
     if (!BlockFileSeq().Flush(block_pos_old, fFinalize)) {
-        m_opts.notifications.flushError(_("Flushing block file to disk failed. This is likely the result of an I/O error."));
-        success = false;
+        LogError("%s: Failed to flush block file\n", __func__);
+        result.Set({util::Error{_("Flushing block file to disk failed. This is likely the result of an I/O error.")}, kernel::FatalError::FlushBlockFileFailed});
     }
     // we do not always flush the undo file, as the chain tip may be lagging behind the incoming blocks,
     // e.g. during IBD or a sync after a node going offline
     if (!fFinalize || finalize_undo) {
         if (!FlushUndoFile(blockfile_num, finalize_undo)) {
-            success = false;
+            result.Set(false);
         }
     }
-    return success;
+    return result;
 }
 
 BlockfileType BlockManager::BlockfileTypeForHeight(int height)
@@ -785,7 +785,7 @@ BlockfileType BlockManager::BlockfileTypeForHeight(int height)
     return (height >= *m_snapshot_height) ? BlockfileType::ASSUMED : BlockfileType::NORMAL;
 }
 
-bool BlockManager::FlushChainstateBlockFile(int tip_height)
+util::Result<bool, kernel::FatalError> BlockManager::FlushChainstateBlockFile(int tip_height)
 {
     LOCK(cs_LastBlockFile);
     auto& cursor = m_blockfile_cursors[BlockfileTypeForHeight(tip_height)];
@@ -917,14 +917,14 @@ util::Result<bool, kernel::FatalError> BlockManager::FindBlockPos(FlatFilePos& p
             // data may be inconsistent after a crash if the flush is called during
             // a reindex. A flush error might also leave some of the data files
             // untrimmed.
-            if (!FlushBlockFile(last_blockfile, !fKnown, finalize_undo)) {
-                LogPrintLevel(BCLog::BLOCKSTORAGE, BCLog::Level::Warning,
+            auto res{FlushBlockFile(last_blockfile, !fKnown, finalize_undo)};
+            result.MoveMessages(res);
+            if (!res || !res.value()) {
+                LogPrintLevel(BCLog::BLOCKSTORAGE, BCLog::Level::Error,
                               "Failed to flush previous block file %05i (finalize=%i, finalize_undo=%i) before opening new block file %05i\n",
                               last_blockfile, !fKnown, finalize_undo, nFile);
             }
         }
-        // No undo data yet in the new file, so reset our undo-height tracking.
-        m_blockfile_cursors[chain_type] = BlockfileCursor{nFile};
     }
 
     m_blockfile_info[nFile].AddBlock(nHeight, nTime);
@@ -1150,9 +1150,7 @@ util::Result<FlatFilePos, kernel::FatalError> BlockManager::SaveBlockToDisk(cons
     auto res{FindBlockPos(blockPos, nBlockSize, nHeight, block.GetBlockTime(), position_known)};
     result.MoveMessages(res);
     if (!res || !res.value()) {
-        LogError("%s: FindBlockPos failed\n", __func__);
-        if (!res) return {util::Error{}, util::MoveMessages(result), res.GetFailure()};
-        return result;
+        return {util::Error{}, util::MoveMessages(result), res.GetFailure()};
     }
     if (!position_known) {
         if (!WriteBlockToDisk(block, blockPos)) {
