@@ -191,6 +191,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         parser.add_argument("--timeout-factor", dest="timeout_factor", type=float, help="adjust test timeouts by a factor. Setting it to 0 disables all timeouts")
         parser.add_argument("--v2transport", dest="v2transport", default=False, action="store_true",
                             help="use BIP324 v2 connections between all nodes by default")
+        parser.add_argument("--v1transport", dest="v1transport", default=False, action="store_true",
+                            help="Explicitly use v1 transport (can be used to overwrite global --v2transport option)")
 
         self.add_options(parser)
         # Running TestShell in a Jupyter notebook causes an additional -f argument
@@ -206,6 +208,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         config = configparser.ConfigParser()
         config.read_file(open(self.options.configfile))
         self.config = config
+        if self.options.v1transport:
+            self.options.v2transport=False
 
         if "descriptors" not in self.options:
             # Wallet is not required by the test at all and the value of self.options.descriptors won't matter.
