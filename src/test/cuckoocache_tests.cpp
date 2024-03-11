@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_SUITE(cuckoocache_tests);
 
 /* Test that no values not inserted into the cache are read out of it.
  *
- * There are no repeats in the first 200000 insecure_GetRandHash calls
+ * There are no repeats in the first 200000 InsecureRand256() calls
  */
 BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
 {
