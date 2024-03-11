@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 
         {
             LOCK(mpool.cs);
-            mpool.removeForBlock(block, ++blocknum);
+            mpool.removeForBlock(block, uint256::ZERO, ++blocknum);
         }
 
         block.clear();
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     // We haven't decayed the moving average enough so we still have enough data points in every bucket
     while (blocknum < 250) {
         LOCK(mpool.cs);
-        mpool.removeForBlock(block, ++blocknum);
+        mpool.removeForBlock(block, uint256::ZERO, ++blocknum);
     }
 
     // Wait for fee estimator to catch up
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
         }
         {
             LOCK(mpool.cs);
-            mpool.removeForBlock(block, ++blocknum);
+            mpool.removeForBlock(block, uint256::ZERO, ++blocknum);
         }
     }
 
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 
     {
         LOCK(mpool.cs);
-        mpool.removeForBlock(block, 266);
+        mpool.removeForBlock(block, uint256::ZERO, 266);
     }
     block.clear();
 
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 
         {
             LOCK(mpool.cs);
-            mpool.removeForBlock(block, ++blocknum);
+            mpool.removeForBlock(block, uint256::ZERO, ++blocknum);
         }
 
         block.clear();
