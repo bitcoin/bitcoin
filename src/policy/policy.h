@@ -66,10 +66,8 @@ static constexpr unsigned int DEFAULT_DESCENDANT_LIMIT{25};
 static constexpr unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT_KVB{101};
 /** Default for -datacarrier */
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
-/** Default for -relayinscription */
-static const bool DEFAULT_RELAY_INSCRIPTION = true;
-/** Default setting for -relayinscriptionsize */
-static const unsigned int MAX_INSCRIPTION_RELAY = MAX_BLOCK_SERIALIZED_SIZE;
+/** Default setting for -limitdummyscriptdatasize */
+static const unsigned int MAX_DUMMY_SCRIPT_RELAY = MAX_BLOCK_SERIALIZED_SIZE;
 /**
  * Default setting for -datacarriersize. 80 bytes of data, +1 for OP_RETURN,
  * +2 for the pushdata opcodes.
@@ -175,6 +173,6 @@ static inline int64_t GetVirtualTransactionInputSize(const CTxIn& tx)
 
 std::pair<CScript, unsigned int> GetScriptForTransactionInput(CScript prev_script, const CTxIn&);
 
-size_t InscriptionBytes(const CTransaction& tx, const CCoinsViewCache& view);
+size_t DummyScriptBytes(const CTransaction& tx, const CCoinsViewCache& view);
 
 #endif // BITCOIN_POLICY_POLICY_H

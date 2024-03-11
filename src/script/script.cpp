@@ -286,7 +286,7 @@ bool CScript::HasValidOps() const
     return true;
 }
 
-size_t CScript::InscriptionBytes() const
+size_t CScript::DummyScriptBytes() const
 {
     size_t counted{0};
     opcodetype opcode, last_opcode{OP_INVALIDOPCODE};

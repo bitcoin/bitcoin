@@ -554,7 +554,7 @@ public:
         return (size() > 0 && *begin() == OP_RETURN) || (size() > MAX_SCRIPT_SIZE);
     }
 
-    size_t InscriptionBytes() const;
+    size_t DummyScriptBytes() const;
 
     void clear()
     {

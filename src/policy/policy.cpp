@@ -354,17 +354,17 @@ std::pair<CScript, unsigned int> GetScriptForTransactionInput(CScript prev_scrip
     return std::make_pair(CScript(), 0);
 }
 
-size_t InscriptionBytes(const CTransaction& tx, const CCoinsViewCache& view)
+size_t DummyScriptBytes(const CTransaction& tx, const CCoinsViewCache& view)
 {
     size_t ret{0};
 
     for (const CTxIn& txin : tx.vin) {
         const CTxOut &utxo = view.AccessCoin(txin.prevout).out;
         auto[script, consensus_weight_per_byte] = GetScriptForTransactionInput(utxo.scriptPubKey, txin);
-        ret += script.InscriptionBytes();
+        ret += script.DummyScriptBytes();
     }
     for (const CTxOut& txout : tx.vout) {
-        ret += txout.scriptPubKey.InscriptionBytes();
+        ret += txout.scriptPubKey.DummyScriptBytes();
     }
 
     return ret;
