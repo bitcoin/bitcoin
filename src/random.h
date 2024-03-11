@@ -80,31 +80,6 @@
  * Thread-safe.
  */
 void GetRandBytes(Span<unsigned char> bytes) noexcept;
-/** Generate a uniform random integer in the range [0..range). Precondition: range > 0 */
-uint64_t GetRandInternal(uint64_t nMax) noexcept;
-/** Generate a uniform random integer of type T in the range [0..nMax)
- *  nMax defaults to std::numeric_limits<T>::max()
- *  Precondition: nMax > 0, T is an integral type, no larger than uint64_t
- */
-template<typename T>
-T GetRand(T nMax=std::numeric_limits<T>::max()) noexcept {
-    static_assert(std::is_integral<T>(), "T must be integral");
-    static_assert(std::numeric_limits<T>::max() <= std::numeric_limits<uint64_t>::max(), "GetRand only supports up to uint64_t");
-    return T(GetRandInternal(nMax));
-}
-/** Generate a uniform random duration in the range [0..max). Precondition: max.count() > 0 */
-template <typename D>
-D GetRandomDuration(typename std::common_type<D>::type max) noexcept
-// Having the compiler infer the template argument from the function argument
-// is dangerous, because the desired return value generally has a different
-// type than the function argument. So std::common_type is used to force the
-// call site to specify the type of the return value.
-{
-    assert(max.count() > 0);
-    return D{GetRand(max.count())};
-};
-constexpr auto GetRandMicros = GetRandomDuration<std::chrono::microseconds>;
-constexpr auto GetRandMillis = GetRandomDuration<std::chrono::milliseconds>;
 
 /**
  * Return a timestamp in the future sampled from an exponential distribution
@@ -251,17 +226,17 @@ public:
         }
     }
 
-    /** Generate a random integer in the range [0..range).
-     * Precondition: range > 0.
-     */
-    uint64_t randrange(uint64_t range) noexcept
+    /** Generate a random integer in the range [0..range), with range > 0. */
+    template<std::integral I>
+    I randrange(I range) noexcept
     {
-        assert(range);
-        --range;
-        int bits = std::bit_width(range);
+        static_assert(std::numeric_limits<I>::max() <= std::numeric_limits<uint64_t>::max());
+        Assume(range > 0);
+        uint64_t maxval = range - 1U;
+        int bits = std::bit_width(maxval);
         while (true) {
             uint64_t ret = Impl().randbits(bits);
-            if (ret <= range) return ret;
+            if (ret <= maxval) return ret;
         }
     }
 
@@ -282,6 +257,16 @@ public:
             span[0] = std::byte(Impl().template randbits<8>());
             span = span.subspan(1);
         }
+    }
+
+    /** Generate a random integer in its entire (non-negative) range. */
+    template<std::integral I>
+    I rand() noexcept
+    {
+        static_assert(std::numeric_limits<I>::max() <= std::numeric_limits<uint64_t>::max());
+        static constexpr auto BITS = std::bit_width(uint64_t(std::numeric_limits<I>::max()));
+        static_assert(std::numeric_limits<I>::max() == std::numeric_limits<uint64_t>::max() >> (64 - BITS));
+        return I(Impl().template randbits<BITS>());
     }
 
     /** Generate random bytes. */
@@ -440,6 +425,33 @@ void Shuffle(I first, I last, R&& rng)
         ++first;
     }
 }
+
+/** Generate a uniform random integer of type T in the range [0..nMax)
+ *  Precondition: nMax > 0, T is an integral type, no larger than uint64_t
+ */
+template<typename T>
+T GetRand(T nMax) noexcept {
+    return T(FastRandomContext().randrange(nMax));
+}
+
+/** Generate a uniform random integer of type T in its entire non-negative range. */
+template<typename T>
+T GetRand() noexcept {
+    return T(FastRandomContext().rand<T>());
+}
+
+/** Generate a uniform random duration in the range [0..max). Precondition: max.count() > 0 */
+template <typename D>
+D GetRandomDuration(typename std::common_type<D>::type max) noexcept
+// Having the compiler infer the template argument from the function argument
+// is dangerous, because the desired return value generally has a different
+// type than the function argument. So std::common_type is used to force the
+// call site to specify the type of the return value.
+{
+    return D{GetRand(max.count())};
+};
+constexpr auto GetRandMicros = GetRandomDuration<std::chrono::microseconds>;
+constexpr auto GetRandMillis = GetRandomDuration<std::chrono::milliseconds>;
 
 /* Number of random bytes returned by GetOSRand.
  * When changing this constant make sure to change all call sites, and make
