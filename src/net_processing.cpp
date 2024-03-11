@@ -1451,6 +1451,7 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
 {
     std::vector<const CBlockIndex*> vToFetch;
     int nMaxHeight = std::min<int>(state->pindexBestKnownBlock->nHeight, nWindowEnd + 1);
+    bool is_limited_peer = IsLimitedPeer(peer);
     NodeId waitingfor = -1;
     while (pindexWalk->nHeight < nMaxHeight) {
         // Read up to 128 (or more, if more blocks than that are needed) successors of pindexWalk (towards
@@ -1473,30 +1474,46 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
                 // We consider the chain that this peer is on invalid.
                 return;
             }
+
             if (!CanServeWitnesses(peer) && DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_SEGWIT)) {
                 // We wouldn't download this block or its descendants from this peer.
                 return;
             }
+
             if (pindex->nStatus & BLOCK_HAVE_DATA || (activeChain && activeChain->Contains(pindex))) {
-                if (activeChain && pindex->HaveNumChainTxs())
+                if (activeChain && pindex->HaveNumChainTxs()) {
                     state->pindexLastCommonBlock = pindex;
-            } else if (!IsBlockRequested(pindex->GetBlockHash())) {
-                // The block is not already downloaded, and not yet in flight.
-                if (pindex->nHeight > nWindowEnd) {
-                    // We reached the end of the window.
-                    if (vBlocks.size() == 0 && waitingfor != peer.m_id) {
-                        // We aren't able to fetch anything, but we would be if the download window was one larger.
-                        if (nodeStaller) *nodeStaller = waitingfor;
-                    }
-                    return;
                 }
-                vBlocks.push_back(pindex);
-                if (vBlocks.size() == count) {
-                    return;
+                continue;
+            }
+
+            // Is block in-flight?
+            if (IsBlockRequested(pindex->GetBlockHash())) {
+                if (waitingfor == -1) {
+                    // This is the first already-in-flight block.
+                    waitingfor = mapBlocksInFlight.lower_bound(pindex->GetBlockHash())->second.first;
                 }
-            } else if (waitingfor == -1) {
-                // This is the first already-in-flight block.
-                waitingfor = mapBlocksInFlight.lower_bound(pindex->GetBlockHash())->second.first;
+                continue;
+            }
+
+            // The block is not already downloaded, and not yet in flight.
+            if (pindex->nHeight > nWindowEnd) {
+                // We reached the end of the window.
+                if (vBlocks.size() == 0 && waitingfor != peer.m_id) {
+                    // We aren't able to fetch anything, but we would be if the download window was one larger.
+                    if (nodeStaller) *nodeStaller = waitingfor;
+                }
+                return;
+            }
+
+            // Don't request blocks that go further than what limited peers can provide
+            if (is_limited_peer && (state->pindexBestKnownBlock->nHeight - pindex->nHeight >= static_cast<int>(NODE_NETWORK_LIMITED_MIN_BLOCKS) - 2 /* two blocks buffer for possible races */)) {
+                continue;
+            }
+
+            vBlocks.push_back(pindex);
+            if (vBlocks.size() == count) {
+                return;
             }
         }
     }
