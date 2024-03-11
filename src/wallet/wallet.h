@@ -425,6 +425,11 @@ private:
     std::unordered_map<CScript, std::vector<ScriptPubKeyMan*>, SaltedSipHasher> m_cached_spks;
 
     /**
+     * Tracks txids of unrelated double-spending txs  to wallet transactions
+     */
+    std::unordered_map<Txid, CTransactionRef, SaltedTxidHasher> m_unrelated_conflict_tx_watchlist GUARDED_BY(cs_wallet);
+
+    /**
      * Catch wallet up to current chain, scanning new blocks, updating the best
      * block locator and m_last_block_processed, and registering for
      * notifications about new blocks and transactions.
