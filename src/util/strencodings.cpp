@@ -81,6 +81,8 @@ template <typename Byte>
 std::optional<std::vector<Byte>> TryParseHex(std::string_view str)
 {
     std::vector<Byte> vch;
+    vch.reserve(str.size() / 2); // two hex characters form a single byte
+
     auto it = str.begin();
     while (it != str.end()) {
         if (IsSpace(*it)) {
