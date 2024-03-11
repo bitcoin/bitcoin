@@ -156,12 +156,7 @@ class AddrmanTest(BitcoinTestFramework):
         )
 
         self.log.info("Check that missing addrman is recreated")
-        self.stop_node(0)
-        os.remove(peers_dat)
-        with self.nodes[0].assert_debug_log([
-                f'Creating peers.dat because the file was not found ("{peers_dat}")',
-        ]):
-            self.start_node(0)
+        self.restart_node(0, clear_addrman=True)
         assert_equal(self.nodes[0].getnodeaddresses(), [])
 
 
