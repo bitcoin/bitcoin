@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
         BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 1);
 
         size_t poolSize = pool.size();
-        pool.removeRecursive(*block.vtx[2], MemPoolRemovalReason::REPLACED);
+        pool.removeRecursive(*block.vtx[2], ReplacedReason(nullptr));
         BOOST_CHECK_EQUAL(pool.size(), poolSize - 1);
 
         CBlock block2;

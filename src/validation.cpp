@@ -318,7 +318,7 @@ void Chainstate::MaybeUpdateMempoolForReorg(
                         MempoolAcceptResult::ResultType::VALID) {
                 // If the transaction doesn't make it in to the mempool, remove any
                 // transactions that depend on it (which would now be orphans).
-                m_mempool->removeRecursive(**it, MemPoolRemovalReason::REORG);
+                m_mempool->removeRecursive(**it, ReorgReason{});
             } else if (m_mempool->exists(GenTxid::Txid((*it)->GetHash()))) {
                 vHashUpdate.push_back((*it)->GetHash());
             }
@@ -1180,7 +1180,7 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
         );
         ws.m_replaced_transactions.push_back(it->GetSharedTx());
     }
-    m_pool.RemoveStaged(ws.m_all_conflicting, false, MemPoolRemovalReason::REPLACED);
+    m_pool.RemoveStaged(ws.m_all_conflicting, false, ReplacedReason(entry->GetSharedTx()));
     // Store transaction in memory
     m_pool.addUnchecked(*entry, ws.m_ancestors);
 
@@ -2920,7 +2920,7 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
         // Save transactions to re-add to mempool at end of reorg. If any entries are evicted for
         // exceeding memory limits, remove them and their descendants from the mempool.
         for (auto&& evicted_tx : disconnectpool->AddTransactionsFromBlock(block.vtx)) {
-            m_mempool->removeRecursive(*evicted_tx, MemPoolRemovalReason::REORG);
+            m_mempool->removeRecursive(*evicted_tx, ReorgReason{});
         }
     }
 

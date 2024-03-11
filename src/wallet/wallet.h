@@ -56,7 +56,6 @@ class CKeyID;
 class CPubKey;
 class Coin;
 class SigningProvider;
-enum class MemPoolRemovalReason;
 enum class SigningResult;
 enum class TransactionError;
 namespace interfaces {
@@ -633,7 +632,7 @@ public:
         uint256 last_failed_block;
     };
     ScanResult ScanForWalletTransactions(const uint256& start_block, int start_height, std::optional<int> max_height, const WalletRescanReserver& reserver, bool fUpdate, const bool save_progress);
-    void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) override;
+    void transactionRemovedFromMempool(const CTransactionRef& tx, const MemPoolRemovalReason& reason) override;
     /** Set the next time this wallet should resend transactions to 12-36 hours from now, ~1 day on average. */
     void SetNextResend() { m_next_resend = GetDefaultNextResend(); }
     /** Return true if all conditions for periodically resending transactions are met. */
