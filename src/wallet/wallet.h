@@ -429,6 +429,15 @@ private:
     std::unordered_map<CScript, std::vector<ScriptPubKeyMan*>, SaltedSipHasher> m_cached_spks;
 
     /**
+     * Tracks txids of txs that replace parents of wallet transactions.
+     * The key is the txid of the replacing transaction which may be unrelated to this wallet and
+     * the value is the replaced transaction which is related to this wallet.
+     * On blockConnected, the wallet checks the block for replacement txids stored in this map,
+     * if found, the wallet marks the child wallet tx as 'CONFLICTED'
+     */
+    std::unordered_map<Txid, CTransactionRef, SaltedTxidHasher> m_unrelated_conflict_tx_watchlist GUARDED_BY(cs_wallet);
+
+    /**
      * Catch wallet up to current chain, scanning new blocks, updating the best
      * block locator and m_last_block_processed, and registering for
      * notifications about new blocks and transactions.
