@@ -849,9 +849,11 @@ fs::path BlockManager::GetBlockPosFilename(const FlatFilePos& pos) const
     return BlockFileSeq().FileName(pos);
 }
 
-bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown)
+util::Result<bool, kernel::FatalError> BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown)
 {
     LOCK(cs_LastBlockFile);
+
+    util::Result<bool, kernel::FatalError> result{true};
 
     const BlockfileType chain_type = BlockfileTypeForHeight(nHeight);
 
@@ -936,8 +938,8 @@ bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigne
         bool out_of_space;
         size_t bytes_allocated = BlockFileSeq().Allocate(pos, nAddSize, out_of_space);
         if (out_of_space) {
-            m_opts.notifications.fatalError(_("Disk space is too low!"));
-            return false;
+            result.Set({util::Error{_("Disk space is too low!")}, kernel::FatalError::DiskSpaceTooLow});
+            return result;
         }
         if (bytes_allocated != 0 && IsPruneMode()) {
             m_check_for_pruning = true;
@@ -945,7 +947,7 @@ bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigne
     }
 
     m_dirty_fileinfo.insert(nFile);
-    return true;
+    return result;
 }
 
 bool BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize)
@@ -1145,8 +1147,11 @@ util::Result<FlatFilePos, kernel::FatalError> BlockManager::SaveBlockToDisk(cons
         // we add BLOCK_SERIALIZATION_HEADER_SIZE only for new blocks since they will have the serialization header added when written to disk.
         nBlockSize += static_cast<unsigned int>(BLOCK_SERIALIZATION_HEADER_SIZE);
     }
-    if (!FindBlockPos(blockPos, nBlockSize, nHeight, block.GetBlockTime(), position_known)) {
+    auto res{FindBlockPos(blockPos, nBlockSize, nHeight, block.GetBlockTime(), position_known)};
+    result.MoveMessages(res);
+    if (!res || !res.value()) {
         LogError("%s: FindBlockPos failed\n", __func__);
+        if (!res) return {util::Error{}, util::MoveMessages(result), res.GetFailure()};
         return result;
     }
     if (!position_known) {
