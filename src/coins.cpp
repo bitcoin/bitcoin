@@ -250,14 +250,16 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
     return true;
 }
 
-bool CCoinsViewCache::Flush() {
+bool CCoinsViewCache::Flush(bool reallocate_cache) {
     bool fOk = base->BatchWrite(cacheCoins, hashBlock, /*erase=*/true);
     if (fOk) {
         if (!cacheCoins.empty()) {
             /* BatchWrite must erase all cacheCoins elements when erase=true. */
             throw std::logic_error("Not all cached coins were erased");
         }
-        ReallocateCache();
+        if (reallocate_cache) {
+            ReallocateCache();
+        }
     }
     cachedCoinsUsage = 0;
     return fOk;
@@ -315,10 +317,15 @@ void CCoinsViewCache::ReallocateCache()
 {
     // Cache should be empty when we're calling this.
     assert(cacheCoins.size() == 0);
+    auto current_bucket_count = cacheCoins.bucket_count();
     cacheCoins.~CCoinsMap();
     m_cache_coins_memory_resource.~CCoinsMapMemoryResource();
     ::new (&m_cache_coins_memory_resource) CCoinsMapMemoryResource{};
     ::new (&cacheCoins) CCoinsMap{0, SaltedOutpointHasher{/*deterministic=*/m_deterministic}, CCoinsMap::key_equal{}, &m_cache_coins_memory_resource};
+
+    // After a flush all the cacheCoins's memory has now been freed. It is likely that the map gets full again so flush is necessary, and it will
+    // happen around the same memory usage. So we can already reserve the bucket array to the previous size, reducing the number of rehashes needed.
+    cacheCoins.reserve(current_bucket_count);
 }
 
 void CCoinsViewCache::SanityCheck() const
