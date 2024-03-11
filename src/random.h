@@ -81,17 +81,6 @@
  */
 void GetRandBytes(Span<unsigned char> bytes) noexcept;
 
-/**
- * Return a timestamp in the future sampled from an exponential distribution
- * (https://en.wikipedia.org/wiki/Exponential_distribution). This distribution
- * is memoryless and should be used for repeated network events (e.g. sending a
- * certain type of message) to minimize leaking information to observers.
- *
- * The probability of an event occurring before time x is 1 - e^-(x/a) where a
- * is the average interval between events.
- * */
-std::chrono::microseconds GetExponentialRand(std::chrono::microseconds now, std::chrono::seconds average_interval);
-
 uint256 GetRandHash() noexcept;
 
 /**
@@ -138,6 +127,9 @@ concept StdChronoDuration = requires {
     []<class Rep, class Period>(std::type_identity<std::chrono::duration<Rep, Period>>){}(
         std::type_identity<T>());
 };
+
+/** Given a uniformly random uint64_t, return an exponentially distributed double with mean 1. */
+double MakeExponentiallyDistributed(uint64_t uniform) noexcept;
 
 /** Mixin class that provides helper randomness functions.
  *
@@ -325,6 +317,23 @@ public:
     // call site to specify the type of the return value.
     {
         return Dur{Impl().randrange(range.count())};
+    }
+
+    /**
+     * Return a duration sampled from an exponential distribution
+     * (https://en.wikipedia.org/wiki/Exponential_distribution). Successive events
+     * whose intervals are distributed according to this form a memoryless Poisson
+     * process. This should be used for repeated network events (e.g. sending a
+     * certain type of message) to minimize leaking information to observers.
+     *
+     * The probability of an event occurring before time x is 1 - e^-(x/a) where a
+     * is the average interval between events.
+     * */
+    std::chrono::microseconds rand_exp_duration(std::chrono::microseconds mean) noexcept
+    {
+        using namespace std::chrono_literals;
+        auto unscaled = MakeExponentiallyDistributed(Impl().rand64());
+        return std::chrono::duration_cast<std::chrono::microseconds>(unscaled * mean + 0.5us);
     }
 
     // Compatibility with the UniformRandomBitGenerator concept
