@@ -614,14 +614,12 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
     max_len_name = len(max(test_list, key=len))
     test_count = len(test_list)
     all_passed = True
-    i = 0
-    while i < test_count:
+    while not job_queue.done():
         if failfast and not all_passed:
             break
         for test_result, testdir, stdout, stderr, skip_reason in job_queue.get_next():
             test_results.append(test_result)
-            i += 1
-            done_str = "{}/{} - {}{}{}".format(i, test_count, BOLD[1], test_result.name, BOLD[0])
+            done_str = f"{len(test_results)}/{test_count} - {BOLD[1]}{test_result.name}{BOLD[0]}"
             if test_result.status == "Passed":
                 logging.debug("%s passed, Duration: %s s" % (done_str, test_result.time))
             elif test_result.status == "Skipped":
@@ -706,14 +704,15 @@ class TestHandler:
         self.tmpdir = tmpdir
         self.test_list = test_list
         self.flags = flags
-        self.num_running = 0
         self.jobs = []
         self.use_term_control = use_term_control
 
+    def done(self):
+        return not (self.jobs or self.test_list)
+
     def get_next(self):
-        while self.num_running < self.num_jobs and self.test_list:
+        while len(self.jobs) < self.num_jobs and self.test_list:
             # Add tests
-            self.num_running += 1
             test = self.test_list.pop(0)
             portseed = len(self.test_list)
             portseed_arg = ["--portseed={}".format(portseed)]
@@ -757,7 +756,6 @@ class TestHandler:
                         skip_reason = re.search(r"Test Skipped: (.*)", stdout).group(1)
                     else:
                         status = "Failed"
-                    self.num_running -= 1
                     self.jobs.remove(job)
                     if self.use_term_control:
                         clearline = '\r' + (' ' * dot_count) + '\r'
