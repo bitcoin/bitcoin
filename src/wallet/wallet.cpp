@@ -1248,6 +1248,18 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
             }
         }
 
+        if (auto* conf = std::get_if<TxStateBlockConflicted>(&state)) {
+            WalletLogPrintf("A transaction in block %s conflicts with wallet transaction %s\n", conf->conflicting_block_hash.ToString(), ptx->GetHash().ToString());
+            auto try_updating_state = [&](CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
+                if (std::get_if<TxStateBlockConflicted>(&wtx.m_state)) return TxUpdate::UNCHANGED;
+
+                wtx.m_state = TxStateBlockConflicted(conf->conflicting_block_hash, conf->conflicting_block_height);
+                return TxUpdate::CHANGED;
+            };
+            // Iterate over all its outputs, and mark transactions in the wallet that spend them conflicted too.
+            RecursiveUpdateTxState(ptx->GetHash(), try_updating_state);
+        }
+
         bool fExisted = mapWallet.count(tx.GetHash()) != 0;
         if (fExisted && !fUpdate) return false;
         if (fExisted || IsMine(tx) || IsFromMe(tx))
@@ -1464,6 +1476,22 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, const Mem
     if (it != mapWallet.end()) {
         RefreshMempoolStatus(it->second, chain());
     }
+
+    auto* replaced_reason = std::get_if<ReplacedReason>(&reason);
+
+    // Check if wallet transaction is being replaced by a parent transaction which is not from this wallet
+    if (IsFromMe(*tx) && replaced_reason != nullptr && replaced_reason->replacement_tx.has_value() && !IsFromMe(*replaced_reason->replacement_tx.value())) {
+        m_unrelated_conflict_tx_watchlist.insert(std::make_pair(replaced_reason->replacement_tx.value()->GetHash(), tx));
+    }
+
+    auto iter = m_unrelated_conflict_tx_watchlist.find(tx->GetHash());
+    if (iter != m_unrelated_conflict_tx_watchlist.end()) {
+        // The replacement tx was removed from the mempool, remove it from map
+        // This new replacement tx may not conflict with the original tx
+        // so leave wallet tx to remain as TxStateInactive
+        m_unrelated_conflict_tx_watchlist.erase(iter);
+    }
+
     // Handle transactions that were removed from the mempool because they
     // conflict with transactions in a newly connected block.
     if (IsReason<ConflictReason>(reason)) {
@@ -1527,6 +1555,13 @@ void CWallet::blockConnected(ChainstateRole role, const interfaces::BlockInfo& b
 
     // Scan block
     for (size_t index = 0; index < block.data->vtx.size(); index++) {
+        auto it = m_unrelated_conflict_tx_watchlist.find(block.data->vtx[index]->GetHash());
+        if (it != m_unrelated_conflict_tx_watchlist.end()) {
+            // A conflicting unrelated parent transaction was confirmed in a block
+            // Mark child wallet tx as conflicted
+            SyncTransaction(it->second, TxStateBlockConflicted(block.hash, block.height));
+        }
+
         SyncTransaction(block.data->vtx[index], TxStateConfirmed{block.hash, block.height, static_cast<int>(index)});
         transactionRemovedFromMempool(block.data->vtx[index], BlockReason{});
     }
