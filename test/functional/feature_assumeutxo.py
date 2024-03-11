@@ -16,8 +16,6 @@ The assumeutxo value generated and used here is committed to in
 
 Interesting test cases could be loading an assumeutxo snapshot file with:
 
-- TODO: Valid hash but invalid snapshot file (bad coin height or
-      bad other serialization)
 - TODO: Valid snapshot file, but referencing a snapshot block that turns out to be
       invalid, or has an invalid parent
 - TODO: Valid snapshot file and snapshot block, but the block is not on the
@@ -100,18 +98,27 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info("  - snapshot file with alternated UTXO data")
         cases = [
-            [b"\xff" * 32, 0, "7d52155c9a9fdc4525b637ef6170568e5dad6fabd0b1fdbb9432010b8453095b"],  # wrong outpoint hash
-            [(1).to_bytes(4, "little"), 32, "9f4d897031ab8547665b4153317ae2fdbf0130c7840b66427ebc48b881cb80ad"],  # wrong outpoint index
-            [b"\x81", 36, "3da966ba9826fb6d2604260e01607b55ba44e1a5de298606b08704bc62570ea8"],  # wrong coin code VARINT((coinbase ? 1 : 0) | (height << 1))
-            [b"\x80", 36, "091e893b3ccb4334378709578025356c8bcb0a623f37c7c4e493133c988648e5"],  # another wrong coin code
+            # (content, offset, wrong_hash or message, is_custom_message)
+            [b"\xff" * 32, 0, "7d52155c9a9fdc4525b637ef6170568e5dad6fabd0b1fdbb9432010b8453095b", False],  # wrong outpoint hash
+            [(1).to_bytes(4, "little"), 32, "9f4d897031ab8547665b4153317ae2fdbf0130c7840b66427ebc48b881cb80ad", False],  # wrong outpoint index
+            [b"\x81", 36, "3da966ba9826fb6d2604260e01607b55ba44e1a5de298606b08704bc62570ea8", False],  # wrong coin code VARINT
+            [b"\x80", 36, "091e893b3ccb4334378709578025356c8bcb0a623f37c7c4e493133c988648e5", False],  # another wrong coin code
+            [b"\x84\x58", 36, "[snapshot] bad snapshot data after deserializing 0 coins", True],  # wrong coin case with height 364 and coinbase 0
+            [b"\xCA\xD2\x8F\x5A", 41, "[snapshot] bad snapshot data after deserializing 0 coins - bad tx out value", True],  # Amount exceed MAX_MONEY
         ]
 
-        for content, offset, wrong_hash in cases:
+        for content, offset, error_message_or_hash, is_custom_message in cases:
             with open(bad_snapshot_path, "wb") as f:
-                f.write(valid_snapshot_contents[:(32 + 8 + offset)])
+                f.write(valid_snapshot_contents[: (32 + 8 + offset)])
                 f.write(content)
-                f.write(valid_snapshot_contents[(32 + 8 + offset + len(content)):])
-            expected_error(log_msg=f"[snapshot] bad snapshot content hash: expected a4bf3407ccb2cc0145c49ebba8fa91199f8a3903daf0883875941497d2493c27, got {wrong_hash}")
+                f.write(valid_snapshot_contents[(32 + 8 + offset + len(content)) :])
+
+            if is_custom_message:
+                expected_error(log_msg=error_message_or_hash)
+            else:
+                expected_error(
+                    log_msg=f"[snapshot] bad snapshot content hash: expected a4bf3407ccb2cc0145c49ebba8fa91199f8a3903daf0883875941497d2493c27, got {error_message_or_hash}"
+                )
 
     def test_invalid_chainstate_scenarios(self):
         self.log.info("Test different scenarios of invalid snapshot chainstate in datadir")
@@ -282,7 +289,6 @@ class AssumeutxoTest(BitcoinTestFramework):
         }
         self.wait_until(lambda: n1.getindexinfo() == completed_idx_state)
 
-
         for i in (0, 1):
             n = self.nodes[i]
             self.log.info(f"Restarting node {i} to ensure (Check|Load)BlockIndex passes")
@@ -296,7 +302,6 @@ class AssumeutxoTest(BitcoinTestFramework):
             if i != 0:
                 # Ensure indexes have synced for the assumeutxo node
                 self.wait_until(lambda: n.getindexinfo() == completed_idx_state)
-
 
         # Node 2: all indexes + reindex
         # -----------------------------
