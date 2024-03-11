@@ -12,7 +12,7 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <scheduler.h>
-
+#include <evo/deterministicmns.h>
 #include <governance/vote.h>
 #include <llmq/clsig.h>
 #include <llmq/signing.h>
@@ -288,9 +288,9 @@ void CMainSignals::NotifyChainLock(const CBlockIndex* pindex, const std::shared_
             clsig->ToString());
 }
 
-void CMainSignals::NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) {
-    auto event = [vote, this] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceVote(vote); });
+void CMainSignals::NotifyGovernanceVote(const CDeterministicMNList& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote) {
+    auto event = [vote, tip_mn_list, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceVote(tip_mn_list, vote); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: notify governance vote: %s", __func__, vote->GetHash().ToString());
 }

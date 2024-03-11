@@ -12,6 +12,7 @@ class CGovernanceVote;
 class CBLSPublicKey;
 class CBLSSecretKey;
 class CConnman;
+class CDeterministicMNList;
 class CKey;
 class CKeyID;
 
@@ -102,8 +103,8 @@ public:
     bool CheckSignature(const CKeyID& keyID) const;
     bool Sign(const CBLSSecretKey& key);
     bool CheckSignature(const CBLSPublicKey& pubKey) const;
-    bool IsValid(bool useVotingKey) const;
-    void Relay(CConnman& connman) const;
+    bool IsValid(const CDeterministicMNList& tip_mn_list, bool useVotingKey) const;
+    void Relay(CConnman& connman, const CDeterministicMNList& tip_mn_list) const;
 
     const COutPoint& GetMasternodeOutpoint() const { return masternodeOutpoint; }
 
@@ -116,7 +117,7 @@ public:
     uint256 GetHash() const;
     uint256 GetSignatureHash() const;
 
-    std::string ToString() const;
+    std::string ToString(const CDeterministicMNList& tip_mn_list) const;
 
     SERIALIZE_METHODS(CGovernanceVote, obj)
     {

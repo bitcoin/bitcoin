@@ -5,6 +5,7 @@
 #ifndef BITCOIN_GOVERNANCE_GOVERNANCE_H
 #define BITCOIN_GOVERNANCE_GOVERNANCE_H
 
+#include <evo/deterministicmns.h>
 #include <governance/classes.h>
 #include <governance/object.h>
 
@@ -339,7 +340,7 @@ public:
     {
         bool fOK = ProcessVote(nullptr, vote, exception, connman);
         if (fOK) {
-            vote.Relay(connman);
+            vote.Relay(connman, deterministicMNManager->GetListAtChainTip());
         }
         return fOK;
     }

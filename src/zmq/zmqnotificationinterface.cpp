@@ -191,10 +191,10 @@ void CZMQNotificationInterface::NotifyTransactionLock(const CTransactionRef& tx,
     });
 }
 
-void CZMQNotificationInterface::NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote> &vote)
+void CZMQNotificationInterface::NotifyGovernanceVote(const CDeterministicMNList& tip_mn_list, const std::shared_ptr<const CGovernanceVote> &vote)
 {
-    TryForEachAndRemoveFailed(notifiers, [&vote](CZMQAbstractNotifier* notifier) {
-        return notifier->NotifyGovernanceVote(vote);
+    TryForEachAndRemoveFailed(notifiers, [&tip_mn_list, &vote](CZMQAbstractNotifier* notifier) {
+        return notifier->NotifyGovernanceVote(tip_mn_list, vote);
     });
 }
 

@@ -108,10 +108,9 @@ CGovernanceVote::CGovernanceVote(const COutPoint& outpointMasternodeIn, const ui
     UpdateHash();
 }
 
-std::string CGovernanceVote::ToString() const
+std::string CGovernanceVote::ToString(const CDeterministicMNList& tip_mn_list) const
 {
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-    auto dmn = mnList.GetMNByCollateral(masternodeOutpoint);
+    auto dmn = tip_mn_list.GetMNByCollateral(masternodeOutpoint);
     int voteWeight = dmn != nullptr ? GetMnType(dmn->nType).voting_weight : 0;
     std::ostringstream ostr;
     ostr << masternodeOutpoint.ToStringShort() << ":"
@@ -122,7 +121,7 @@ std::string CGovernanceVote::ToString() const
     return ostr.str();
 }
 
-void CGovernanceVote::Relay(CConnman& connman) const
+void CGovernanceVote::Relay(CConnman& connman, const CDeterministicMNList& tip_mn_list) const
 {
     // Do not relay until fully synced
     if (!::masternodeSync->IsSynced()) {
@@ -130,8 +129,7 @@ void CGovernanceVote::Relay(CConnman& connman) const
         return;
     }
 
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-    auto dmn = mnList.GetMNByCollateral(masternodeOutpoint);
+    auto dmn = tip_mn_list.GetMNByCollateral(masternodeOutpoint);
     if (!dmn) {
         return;
     }
@@ -244,7 +242,7 @@ bool CGovernanceVote::CheckSignature(const CBLSPublicKey& pubKey) const
     return true;
 }
 
-bool CGovernanceVote::IsValid(bool useVotingKey) const
+bool CGovernanceVote::IsValid(const CDeterministicMNList& tip_mn_list, bool useVotingKey) const
 {
     if (nTime > GetAdjustedTime() + (60 * 60)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetAdjustedTime() + (60 * 60));
@@ -263,7 +261,7 @@ bool CGovernanceVote::IsValid(bool useVotingKey) const
         return false;
     }
 
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMNByCollateral(masternodeOutpoint);
+    auto dmn = tip_mn_list.GetMNByCollateral(masternodeOutpoint);
     if (!dmn) {
         LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- Unknown Masternode - %s\n", masternodeOutpoint.ToStringShort());
         return false;

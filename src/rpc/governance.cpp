@@ -861,10 +861,10 @@ static UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
     UniValue bResult(UniValue::VOBJ);
 
     // GET MATCHING VOTES BY HASH, THEN SHOW USERS VOTE INFORMATION
-
+    CHECK_NONFATAL(node.dmnman);
     std::vector<CGovernanceVote> vecVotes = node.govman->GetCurrentVotes(hash, mnCollateralOutpoint);
     for (const auto& vote : vecVotes) {
-        bResult.pushKV(vote.GetHash().ToString(), vote.ToString());
+        bResult.pushKV(vote.GetHash().ToString(), vote.ToString(node.dmnman->GetListAtChainTip()));
     }
 
     return bResult;
@@ -1005,7 +1005,9 @@ static UniValue voteraw(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
     }
 
-    auto dmn = node.dmnman->GetListAtChainTip().GetValidMNByCollateral(outpoint);
+    CHECK_NONFATAL(node.dmnman);
+    const auto tip_mn_list = node.dmnman->GetListAtChainTip();
+    auto dmn = tip_mn_list.GetValidMNByCollateral(outpoint);
 
     if (!dmn) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + outpoint.ToStringShort());
@@ -1017,7 +1019,7 @@ static UniValue voteraw(const JSONRPCRequest& request)
 
     bool onlyVotingKeyAllowed = govObjType == GovernanceObject::PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
 
-    if (!vote.IsValid(onlyVotingKeyAllowed)) {
+    if (!vote.IsValid(tip_mn_list, onlyVotingKeyAllowed)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to verify vote.");
     }
 

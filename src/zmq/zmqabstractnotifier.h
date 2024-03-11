@@ -10,6 +10,7 @@
 #include <string>
 
 class CBlockIndex;
+class CDeterministicMNList;
 class CGovernanceVote;
 class CTransaction;
 class CZMQAbstractNotifier;
@@ -61,7 +62,7 @@ public:
     virtual bool NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig);
     virtual bool NotifyTransaction(const CTransaction &transaction);
     virtual bool NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const llmq::CInstantSendLock>& islock);
-    virtual bool NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
+    virtual bool NotifyGovernanceVote(const CDeterministicMNList& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote);
     virtual bool NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& object);
     virtual bool NotifyInstantSendDoubleSpendAttempt(const CTransactionRef& currentTx, const CTransactionRef& previousTx);
     virtual bool NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig);
