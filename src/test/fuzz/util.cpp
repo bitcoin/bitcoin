@@ -255,7 +255,7 @@ FILE* FuzzedFileProvider::open()
         [&] {
             mode = "a+";
         });
-#if defined _GNU_SOURCE && !defined __ANDROID__
+#if defined _GNU_SOURCE && (defined(__linux__) || defined(__FreeBSD__))
     const cookie_io_functions_t io_hooks = {
         FuzzedFileProvider::read,
         FuzzedFileProvider::write,
