@@ -476,7 +476,7 @@ enum class CoinsCacheSizeState
  * current best chain.
  *
  * Eventually, the API here is targeted at being exposed externally as a
- * consumable libconsensus library, so any functions added must only call
+ * consumable library, so any functions added must only call
  * other class member functions, pure functions in other parts of the consensus
  * library, callbacks via the validation interface, or read/write-to-disk
  * functions (eventually this will also be via callbacks).
