@@ -4393,12 +4393,15 @@ util::Result<bool, kernel::FatalError> ChainstateManager::AcceptBlock(const std:
     // Write block to history file
     if (fNewBlock) *fNewBlock = true;
     try {
-        FlatFilePos blockPos{m_blockman.SaveBlockToDisk(block, pindex->nHeight, dbp)};
-        if (blockPos.IsNull()) {
-            result.Set(state.Error(strprintf("%s: Failed to find position to write new block to disk", __func__)));
+        const auto blockPos{m_blockman.SaveBlockToDisk(block, pindex->nHeight, dbp)};
+        result.MoveMessages(blockPos);
+        if (!blockPos || blockPos.value().IsNull()) {
+            state.Error(strprintf("%s: Failed to find position to write new block to disk", __func__));
+            if (!blockPos) return {util::Error{}, util::MoveMessages(result), blockPos.GetFailure()};
+            result.Set(false);
             return result;
         }
-        ReceivedBlockTransactions(block, pindex, blockPos);
+        ReceivedBlockTransactions(block, pindex, blockPos.value());
     } catch (const std::runtime_error& e) {
         result.Set(ValidationFatalError(state, strprintf(_("System error while saving block to disk: %s"), e.what()), kernel::FatalError::AcceptBlockFailed));
         return result;
@@ -4914,9 +4917,10 @@ bool ChainstateManager::LoadBlockIndex()
     return true;
 }
 
-bool Chainstate::LoadGenesisBlock()
+util::Result<bool, kernel::FatalError> Chainstate::LoadGenesisBlock()
 {
     LOCK(cs_main);
+    util::Result<bool, kernel::FatalError> result{true};
 
     const CChainParams& params{m_chainman.GetParams()};
 
@@ -4929,19 +4933,23 @@ bool Chainstate::LoadGenesisBlock()
 
     try {
         const CBlock& block = params.GenesisBlock();
-        FlatFilePos blockPos{m_blockman.SaveBlockToDisk(block, 0, nullptr)};
-        if (blockPos.IsNull()) {
+        const auto blockPos{m_blockman.SaveBlockToDisk(block, 0, nullptr)};
+        result.MoveMessages(blockPos);
+        if (!blockPos || blockPos.value().IsNull()) {
+            if (!blockPos) return {util::Error{}, util::MoveMessages(result), blockPos.GetFailure()};
             LogError("%s: writing genesis block to disk failed\n", __func__);
-            return false;
+            result.Set(false);
+            return result;
         }
         CBlockIndex* pindex = m_blockman.AddToBlockIndex(block, m_chainman.m_best_header);
-        m_chainman.ReceivedBlockTransactions(block, pindex, blockPos);
+        m_chainman.ReceivedBlockTransactions(block, pindex, blockPos.value());
     } catch (const std::runtime_error& e) {
         LogError("%s: failed to write genesis block: %s\n", __func__, e.what());
-        return false;
+        result.Set(false);
+        return result;
     }
 
-    return true;
+    return result;
 }
 
 util::Result<void, kernel::FatalError> ChainstateManager::LoadExternalBlockFile(

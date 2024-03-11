@@ -1131,9 +1131,10 @@ bool BlockManager::ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatF
     return true;
 }
 
-FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, const FlatFilePos* dbp)
+util::Result<FlatFilePos, kernel::FatalError> BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, const FlatFilePos* dbp)
 {
     unsigned int nBlockSize = ::GetSerializeSize(TX_WITH_WITNESS(block));
+    util::Result<FlatFilePos, kernel::FatalError> result{FlatFilePos{}};
     FlatFilePos blockPos;
     const auto position_known {dbp != nullptr};
     if (position_known) {
@@ -1146,15 +1147,16 @@ FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, cons
     }
     if (!FindBlockPos(blockPos, nBlockSize, nHeight, block.GetBlockTime(), position_known)) {
         LogError("%s: FindBlockPos failed\n", __func__);
-        return FlatFilePos();
+        return result;
     }
     if (!position_known) {
         if (!WriteBlockToDisk(block, blockPos)) {
-            m_opts.notifications.fatalError(_("Failed to write block."));
-            return FlatFilePos();
+            result.Set({util::Error{_("Failed to write block")}, kernel::FatalError::BlockWriteFailed});
+            return result;
         }
     }
-    return blockPos;
+    result.Set(blockPos);
+    return result;
 }
 
 class ImportingNow
@@ -1209,7 +1211,10 @@ util::Result<void, kernel::FatalError> ImportBlocks(ChainstateManager& chainman,
             fReindex = false;
             LogPrintf("Reindexing finished\n");
             // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-            chainman.ActiveChainstate().LoadGenesisBlock();
+            result.MoveMessages(chainman.ActiveChainstate().LoadGenesisBlock());
+            // There is little gained by continuing with loading block files and then terminating latest after processing one
+            // file if the result is fatal, so return early.
+            if (IsFatal(result)) return result;
         }
 
         // -loadblock=

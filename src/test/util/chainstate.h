@@ -77,7 +77,7 @@ CreateAndActivateUTXOSnapshot(
             node.chainman->ResetChainstates();
             node.chainman->InitializeChainstate(node.mempool.get());
             Chainstate& chain = node.chainman->ActiveChainstate();
-            Assert(chain.LoadGenesisBlock());
+            Assert(UnwrapFatalError(chain.LoadGenesisBlock()));
             // These cache values will be corrected shortly in `MaybeRebalanceCaches`.
             chain.InitCoinsDB(1 << 20, true, false, "");
             chain.InitCoinsCache(1 << 20);

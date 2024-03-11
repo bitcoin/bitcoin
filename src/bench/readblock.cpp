@@ -6,6 +6,7 @@
 #include <bench/data.h>
 
 #include <consensus/validation.h>
+#include <kernel/fatal_error.h>
 #include <node/blockstorage.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
@@ -18,7 +19,7 @@ static FlatFilePos WriteBlockToDisk(ChainstateManager& chainman)
     CBlock block;
     stream >> TX_WITH_WITNESS(block);
 
-    return chainman.m_blockman.SaveBlockToDisk(block, 0, nullptr);
+    return UnwrapFatalError(chainman.m_blockman.SaveBlockToDisk(block, 0, nullptr));
 }
 
 static void ReadBlockFromDiskTest(benchmark::Bench& bench)

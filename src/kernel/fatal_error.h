@@ -13,6 +13,7 @@ enum class FatalError {
     AcceptBlockFailed,
     BlockFileImportFailed,
     BlockIndexWriteFailed,
+    BlockWriteFailed,
     ChainstateRenameFailed,
     CoinDatabaseWriteFailed,
     CorruptBlock,
