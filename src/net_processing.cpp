@@ -1698,7 +1698,7 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
 
     // Schedule next run for 10-15 minutes in the future.
     // We add randomness on every cycle to avoid the possibility of P2P fingerprinting.
-    const std::chrono::milliseconds delta = 10min + GetRandMillis(5min);
+    const auto delta = 10min + FastRandomContext().randrange<std::chrono::milliseconds>(5min);
     scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
 }
 
@@ -2050,7 +2050,7 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
     scheduler.scheduleEvery([this] { this->CheckForStaleTipAndEvictPeers(); }, std::chrono::seconds{EXTRA_PEER_CHECK_INTERVAL});
 
     // schedule next run for 10-15 minutes in the future
-    const std::chrono::milliseconds delta = 10min + GetRandMillis(5min);
+    const auto delta = 10min + FastRandomContext().randrange<std::chrono::milliseconds>(5min);
     scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
 }
 
@@ -5753,7 +5753,7 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, Peer& peer, std::chrono::mi
     // until scheduled broadcast, then move the broadcast to within MAX_FEEFILTER_CHANGE_DELAY.
     else if (current_time + MAX_FEEFILTER_CHANGE_DELAY < peer.m_next_send_feefilter &&
                 (currentFilter < 3 * peer.m_fee_filter_sent / 4 || currentFilter > 4 * peer.m_fee_filter_sent / 3)) {
-        peer.m_next_send_feefilter = current_time + GetRandomDuration<std::chrono::microseconds>(MAX_FEEFILTER_CHANGE_DELAY);
+        peer.m_next_send_feefilter = current_time + FastRandomContext().randrange<std::chrono::microseconds>(MAX_FEEFILTER_CHANGE_DELAY);
     }
 }
 

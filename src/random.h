@@ -132,6 +132,13 @@ concept RandomNumberGenerator = requires(T& rng, Span<std::byte> s) {
     requires std::derived_from<std::remove_reference_t<T>, RandomMixin<std::remove_reference_t<T>>>;
 };
 
+/** A concept for C++ std::chrono durations. */
+template<typename T>
+concept StdChronoDuration = requires {
+    []<class Rep, class Period>(std::type_identity<std::chrono::duration<Rep, Period>>){}(
+        std::type_identity<T>());
+};
+
 /** Mixin class that provides helper randomness functions.
  *
  * Intended to be used through CRTP: https://en.cppreference.com/w/cpp/language/crtp.
@@ -300,7 +307,7 @@ public:
     }
 
     /** Generate a uniform random duration in the range from 0 (inclusive) to range (exclusive). */
-    template <typename Chrono>
+    template <typename Chrono> requires StdChronoDuration<typename Chrono::duration>
     typename Chrono::duration rand_uniform_duration(typename Chrono::duration range) noexcept
     {
         using Dur = typename Chrono::duration;
@@ -308,6 +315,17 @@ public:
                range.count() < 0 ? /* interval (range..0] */ -Dur{Impl().randrange(-range.count())} :
                                    /* interval [0..0] */ Dur{0};
     };
+
+    /** Generate a uniform random duration in the range [0..max). Precondition: max.count() > 0 */
+    template <StdChronoDuration Dur>
+    Dur randrange(typename std::common_type_t<Dur> range) noexcept
+    // Having the compiler infer the template argument from the function argument
+    // is dangerous, because the desired return value generally has a different
+    // type than the function argument. So std::common_type is used to force the
+    // call site to specify the type of the return value.
+    {
+        return Dur{Impl().randrange(range.count())};
+    }
 
     // Compatibility with the UniformRandomBitGenerator concept
     typedef uint64_t result_type;
@@ -425,19 +443,6 @@ void Shuffle(I first, I last, R&& rng)
         ++first;
     }
 }
-
-/** Generate a uniform random duration in the range [0..max). Precondition: max.count() > 0 */
-template <typename D>
-D GetRandomDuration(typename std::common_type<D>::type max) noexcept
-// Having the compiler infer the template argument from the function argument
-// is dangerous, because the desired return value generally has a different
-// type than the function argument. So std::common_type is used to force the
-// call site to specify the type of the return value.
-{
-    return D{FastRandomContext().randrange(max.count())};
-};
-constexpr auto GetRandMicros = GetRandomDuration<std::chrono::microseconds>;
-constexpr auto GetRandMillis = GetRandomDuration<std::chrono::milliseconds>;
 
 /* Number of random bytes returned by GetOSRand.
  * When changing this constant make sure to change all call sites, and make
