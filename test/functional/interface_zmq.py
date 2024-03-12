@@ -5,6 +5,7 @@
 """Test the ZMQ notification interface."""
 import struct
 from time import sleep
+from io import BytesIO
 
 from test_framework.address import (
     ADDRESS_BCRT1_P2WSH_OP_TRUE,
@@ -17,6 +18,7 @@ from test_framework.blocktools import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
+    CBlock,
     hash256,
     tx_from_hex,
 )
@@ -201,8 +203,13 @@ class ZMQTest (BitcoinTestFramework):
             assert_equal(tx.hash, txid.hex())
 
             # Should receive the generated raw block.
-            block = rawblock.receive()
-            assert_equal(genhashes[x], hash256_reversed(block[:80]).hex())
+            hex = rawblock.receive()
+            block = CBlock()
+            block.deserialize(BytesIO(hex))
+            assert block.is_valid()
+            assert_equal(block.vtx[0].hash, tx.hash)
+            assert_equal(len(block.vtx), 1)
+            assert_equal(genhashes[x], hash256_reversed(hex[:80]).hex())
 
             # Should receive the generated block hash.
             hash = hashblock.receive().hex()
