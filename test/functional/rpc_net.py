@@ -355,8 +355,6 @@ class NetTest(BitcoinTestFramework):
         assert_equal(len(node.getnodeaddresses(count=0)), 1)
 
         self.log.debug("Test that adding a valid address to the tried table succeeds")
-        self.addr_time = int(time.time())
-        node.setmocktime(self.addr_time)
         assert_equal(node.addpeeraddress(address="1.2.3.4", tried=True, port=8333), {"success": True})
         addrman = node.getrawaddrman()
         assert_equal(len(addrman["new"]), 1)
