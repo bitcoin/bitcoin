@@ -94,9 +94,10 @@ class P2PBloomFilter(P2PInterface):
 class FilterTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
         self.extra_args = [[
             '-peerbloomfilters',
-            '-whitelist=noban@127.0.0.1',  # immediate tx relay
         ]]
 
     def generatetoscriptpubkey(self, scriptpubkey):
