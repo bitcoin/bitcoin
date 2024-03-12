@@ -369,9 +369,6 @@ inline void LogPrintFormatInternal(std::source_location&& source_loc, BCLog::Log
 #define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Warning, /*should_ratelimit=*/true, __VA_ARGS__)
 #define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, /*should_ratelimit=*/true, __VA_ARGS__)
 
-// Deprecated unconditional logging.
-#define LogPrintf(...) LogInfo(__VA_ARGS__)
-
 // Use a macro instead of a function for conditional logging to prevent
 // evaluating arguments when logging for the category is not enabled.
 
