@@ -29,9 +29,9 @@ std::vector<std::pair<fs::path, std::string>> ListDatabases(const fs::path& wall
         if (ec) {
             if (fs::is_directory(*it)) {
                 it.disable_recursion_pending();
-                LogPrintf("%s: %s %s -- skipping.\n", __func__, ec.message(), fs::PathToString(it->path()));
+                LogInfo("%s: %s %s -- skipping.\n", __func__, ec.message(), fs::PathToString(it->path()));
             } else {
-                LogPrintf("%s: %s %s\n", __func__, ec.message(), fs::PathToString(it->path()));
+                LogInfo("%s: %s %s\n", __func__, ec.message(), fs::PathToString(it->path()));
             }
             continue;
         }
@@ -65,7 +65,7 @@ std::vector<std::pair<fs::path, std::string>> ListDatabases(const fs::path& wall
                 }
             }
         } catch (const std::exception& e) {
-            LogPrintf("%s: Error scanning %s: %s\n", __func__, fs::PathToString(it->path()), e.what());
+            LogInfo("%s: Error scanning %s: %s\n", __func__, fs::PathToString(it->path()), e.what());
             it.disable_recursion_pending();
         }
     }
@@ -100,7 +100,7 @@ bool IsBDBFile(const fs::path& path)
     // This check also prevents opening lock files.
     std::error_code ec;
     auto size = fs::file_size(path, ec);
-    if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), fs::PathToString(path));
+    if (ec) LogInfo("%s: %s %s\n", __func__, ec.message(), fs::PathToString(path));
     if (size < 4096) return false;
 
     std::ifstream file{path, std::ios::binary};
@@ -124,7 +124,7 @@ bool IsSQLiteFile(const fs::path& path)
     // A SQLite Database file is at least 512 bytes.
     std::error_code ec;
     auto size = fs::file_size(path, ec);
-    if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), fs::PathToString(path));
+    if (ec) LogInfo("%s: %s %s\n", __func__, ec.message(), fs::PathToString(path));
     if (size < 512) return false;
 
     std::ifstream file{path, std::ios::binary};
