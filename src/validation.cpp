@@ -2564,9 +2564,10 @@ util::Result<bool, kernel::FatalError> Chainstate::ConnectBlock(const CBlock& bl
     if (fJustCheck)
         return true;
 
-    if (!m_blockman.WriteUndoDataForBlock(blockundo, state, *pindex)) {
-        return false;
-    }
+    util::Result<bool, kernel::FatalError> result{true};
+
+    result.Set(m_blockman.WriteUndoDataForBlock(blockundo, state, *pindex));
+    if (!result || !result.value()) return result;
 
     const auto time_5{SteadyClock::now()};
     time_undo += time_5 - time_4;
@@ -2599,7 +2600,7 @@ util::Result<bool, kernel::FatalError> Chainstate::ConnectBlock(const CBlock& bl
         time_5 - time_start // in microseconds (µs)
     );
 
-    return true;
+    return result;
 }
 
 CoinsCacheSizeState Chainstate::GetCoinsCacheSizeState()

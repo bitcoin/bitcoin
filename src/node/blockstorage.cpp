@@ -997,7 +997,7 @@ bool BlockManager::WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const
     return true;
 }
 
-bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
+util::Result<bool, kernel::FatalError> BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
 {
     AssertLockHeld(::cs_main);
     const BlockfileType type = BlockfileTypeForHeight(block.nHeight);
@@ -1011,7 +1011,7 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
             return false;
         }
         if (!UndoWriteToDisk(blockundo, _pos, block.pprev->GetBlockHash())) {
-            return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
+            return ValidationFatalError(state, _("Failed to write undo data"), kernel::FatalError::WriteUndoDataFailed);
         }
         // rev files are written in block height order, whereas blk files are written as blocks come in (often out of order)
         // we want to flush the rev (undo) file once we've written the last block, which is indicated by the last height

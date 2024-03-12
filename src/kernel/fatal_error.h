@@ -29,6 +29,7 @@ enum class FatalError {
     SnapshotHashMismatch,
     SnapshotMissingChainparams,
     SnapshotStatsFailed,
+    WriteUndoDataFailed,
 };
 
 template <typename T>
