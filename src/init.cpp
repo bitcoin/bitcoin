@@ -1031,7 +1031,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     if (args.IsArgSet("-test")) {
         if (chainparams.GetChainType() != ChainType::REGTEST) {
-            return InitError(Untranslated("-test=<option> should only be used in functional tests"));
+            return InitError(Untranslated("-test=<option> can only be used with regtest"));
         }
         const std::vector<std::string> options = args.GetArgs("-test");
         for (const std::string& option : options) {
