@@ -1606,8 +1606,11 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         StartScriptCheckWorkerThreads(script_threads);
     }
 
-    assert(activeMasternodeInfo.blsKeyOperator == nullptr);
-    assert(activeMasternodeInfo.blsPubKeyOperator == nullptr);
+    {
+        LOCK(activeMasternodeInfoCs);
+        assert(activeMasternodeInfo.blsKeyOperator == nullptr);
+        assert(activeMasternodeInfo.blsPubKeyOperator == nullptr);
+    }
     fMasternodeMode = false;
     std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
     if (!strMasterNodeBLSPrivKey.empty()) {
@@ -1620,11 +1623,11 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
             LOCK(activeMasternodeInfoCs);
             activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
             activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(keyOperator.GetPublicKey());
+            // We don't know the actual scheme at this point, print both
+            LogPrintf("MASTERNODE:\n  blsPubKeyOperator legacy: %s\n  blsPubKeyOperator basic: %s\n",
+                    activeMasternodeInfo.blsPubKeyOperator->ToString(true),
+                    activeMasternodeInfo.blsPubKeyOperator->ToString(false));
         }
-        // We don't know the actual scheme at this point, print both
-        LogPrintf("MASTERNODE:\n  blsPubKeyOperator legacy: %s\n  blsPubKeyOperator basic: %s\n",
-                activeMasternodeInfo.blsPubKeyOperator->ToString(true),
-                activeMasternodeInfo.blsPubKeyOperator->ToString(false));
     } else {
         LOCK(activeMasternodeInfoCs);
         activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
