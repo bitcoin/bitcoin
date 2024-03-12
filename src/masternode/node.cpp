@@ -4,10 +4,10 @@
 
 #include <masternode/node.h>
 
-#include <evo/deterministicmns.h>
-
+#include <bls/bls_ies.h>
 #include <chainparams.h>
 #include <deploymentstatus.h>
+#include <evo/deterministicmns.h>
 #include <net.h>
 #include <netbase.h>
 #include <protocol.h>
@@ -251,6 +251,18 @@ bool CActiveMasternodeManager::IsValidNetAddr(const CService& addrIn)
     return !Params().RequireRoutableExternalIP() ||
            (addrIn.IsIPv4() && IsReachable(addrIn) && addrIn.IsRoutable());
 }
+
+template <template <typename> class EncryptedObj, typename Obj>
+[[nodiscard]] bool CActiveMasternodeManager::Decrypt(const EncryptedObj<Obj>& obj, size_t idx, Obj& ret_obj,
+                                                     int version) const
+{
+    AssertLockNotHeld(cs);
+    return WITH_LOCK(cs, return obj.Decrypt(idx, *Assert(m_info.blsKeyOperator), ret_obj, version));
+}
+template bool CActiveMasternodeManager::Decrypt(const CBLSIESEncryptedObject<CBLSSecretKey>& obj, size_t idx,
+                                                CBLSSecretKey& ret_obj, int version) const;
+template bool CActiveMasternodeManager::Decrypt(const CBLSIESMultiRecipientObjects<CBLSSecretKey>& obj, size_t idx,
+                                                CBLSSecretKey& ret_obj, int version) const;
 
 [[nodiscard]] CBLSSignature CActiveMasternodeManager::Sign(const uint256& hash) const
 {

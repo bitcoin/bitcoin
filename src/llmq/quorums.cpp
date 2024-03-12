@@ -834,9 +834,8 @@ PeerMsgRet CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_t
 
             std::vector<CBLSSecretKey> vecSecretKeys;
             vecSecretKeys.resize(vecEncrypted.size());
-            auto secret = WITH_LOCK(::activeMasternodeManager->cs, return *::activeMasternodeManager->m_info.blsKeyOperator);
             for (const auto i : irange::range(vecEncrypted.size())) {
-                if (!vecEncrypted[i].Decrypt(memberIdx, secret, vecSecretKeys[i], PROTOCOL_VERSION)) {
+                if (!::activeMasternodeManager->Decrypt(vecEncrypted[i], memberIdx, vecSecretKeys[i], PROTOCOL_VERSION)) {
                     return errorHandler("Failed to decrypt");
                 }
             }

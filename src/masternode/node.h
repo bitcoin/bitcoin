@@ -64,6 +64,9 @@ public:
 
     static bool IsValidNetAddr(const CService& addrIn);
 
+    template <template <typename> class EncryptedObj, typename Obj>
+    [[nodiscard]] bool Decrypt(const EncryptedObj<Obj>& obj, size_t idx, Obj& ret_obj, int version) const
+        LOCKS_EXCLUDED(cs);
     [[nodiscard]] CBLSSignature Sign(const uint256& hash) const LOCKS_EXCLUDED(cs);
     [[nodiscard]] CBLSSignature Sign(const uint256& hash, const bool is_legacy) const LOCKS_EXCLUDED(cs);
 
