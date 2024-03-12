@@ -589,12 +589,14 @@ private:
     // of checking a given transaction.
     struct Workspace {
         explicit Workspace(const CTransactionRef& ptx) : m_ptx(ptx), m_hash(ptx->GetHash()) {}
-        /** Txids of mempool transactions that this transaction directly conflicts with. */
+        /** Txids of mempool transactions that this transaction directly conflicts with or may
+         * replace via sibling eviction. */
         std::set<Txid> m_conflicts;
-        /** Iterators to mempool entries that this transaction directly conflicts with. */
+        /** Iterators to mempool entries that this transaction directly conflicts with or may
+         * replace via sibling eviction. */
         CTxMemPool::setEntries m_iters_conflicting;
         /** Iterators to all mempool entries that would be replaced by this transaction, including
-         * those it directly conflicts with and their descendants. */
+         * m_conflicts and their descendants. */
         CTxMemPool::setEntries m_all_conflicting;
         /** All mempool ancestors of this transaction. */
         CTxMemPool::setEntries m_ancestors;
@@ -602,9 +604,12 @@ private:
          * inserted into the mempool until Finalize(). */
         std::unique_ptr<CTxMemPoolEntry> m_entry;
         /** Pointers to the transactions that have been removed from the mempool and replaced by
-         * this transaction, used to return to the MemPoolAccept caller. Only populated if
+         * this transaction (everything in m_all_conflicting), used to return to the MemPoolAccept caller. Only populated if
          * validation is successful and the original transactions are removed. */
         std::list<CTransactionRef> m_replaced_transactions;
+        /** Whether RBF-related data structures (m_conflicts, m_iters_conflicting, m_all_conflicting,
+         * m_replaced_transactions) include a sibling in addition to txns with conflicting inputs. */
+        bool m_sibling_eviction{false};
 
         /** Virtual size of the transaction as used by the mempool, calculated using serialized size
          * of the transaction and sigops. */
@@ -694,7 +699,8 @@ private:
 
     Chainstate& m_active_chainstate;
 
-    /** Whether the transaction(s) would replace any mempool transactions. If so, RBF rules apply. */
+    /** Whether the transaction(s) would replace any mempool transactions and/or evict any siblings.
+     * If so, RBF rules apply. */
     bool m_rbf{false};
 };
 
@@ -958,8 +964,27 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
 
     ws.m_ancestors = *ancestors;
-    if (const auto err_string{SingleV3Checks(ws.m_ptx, ws.m_ancestors, ws.m_conflicts, ws.m_vsize)}) {
-        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "v3-rule-violation", *err_string);
+    // Even though just checking direct mempool parents for inheritance would be sufficient, we
+    // check using the full ancestor set here because it's more convenient to use what we have
+    // already calculated.
+    if (const auto err{SingleV3Checks(ws.m_ptx, ws.m_ancestors, ws.m_conflicts, ws.m_vsize)}) {
+        // Disabled within package validation.
+        if (err->second != nullptr && args.m_allow_replacement) {
+            // Potential sibling eviction. Add the sibling to our list of mempool conflicts to be
+            // included in RBF checks.
+            ws.m_conflicts.insert(err->second->GetHash());
+            // Adding the sibling to m_iters_conflicting here means that it doesn't count towards
+            // RBF Carve Out above. This is correct, since removing to-be-replaced transactions from
+            // the descendant count is done separately in SingleV3Checks for v3 transactions.
+            ws.m_iters_conflicting.insert(m_pool.GetIter(err->second->GetHash()).value());
+            ws.m_sibling_eviction = true;
+            // The sibling will be treated as part of the to-be-replaced set in ReplacementChecks.
+            // Note that we are not checking whether it opts in to replaceability via BIP125 or v3
+            // (which is normally done in PreChecks). However, the only way a v3 transaction can
+            // have a non-v3 and non-BIP125 descendant is due to a reorg.
+        } else {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "v3-rule-violation", err->first);
+        }
     }
 
     // A transaction that spends outputs that would be replaced by it is invalid. Now
@@ -999,18 +1024,21 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
         // Even though this is a fee-related failure, this result is TX_MEMPOOL_POLICY, not
         // TX_RECONSIDERABLE, because it cannot be bypassed using package validation.
         // This must be changed if package RBF is enabled.
-        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
+        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
+                             strprintf("insufficient fee%s", ws.m_sibling_eviction ? " (including sibling eviction)" : ""), *err_string);
     }
 
     // Calculate all conflicting entries and enforce Rule #5.
     if (const auto err_string{GetEntriesForConflicts(tx, m_pool, ws.m_iters_conflicting, ws.m_all_conflicting)}) {
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
-                             "too many potential replacements", *err_string);
+                             strprintf("too many potential replacements%s", ws.m_sibling_eviction ? " (including sibling eviction)" : ""), *err_string);
     }
     // Enforce Rule #2.
     if (const auto err_string{HasNoNewUnconfirmed(tx, m_pool, ws.m_iters_conflicting)}) {
+        // Sibling eviction is only done for v3 transactions, which cannot have multiple ancestors.
+        Assume(!ws.m_sibling_eviction);
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
-                             "replacement-adds-unconfirmed", *err_string);
+                             strprintf("replacement-adds-unconfirmed%s", ws.m_sibling_eviction ? " (including sibling eviction)" : ""), *err_string);
     }
     // Check if it's economically rational to mine this transaction rather than the ones it
     // replaces and pays for its own relay fees. Enforce Rules #3 and #4.
@@ -1023,7 +1051,8 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
         // Even though this is a fee-related failure, this result is TX_MEMPOOL_POLICY, not
         // TX_RECONSIDERABLE, because it cannot be bypassed using package validation.
         // This must be changed if package RBF is enabled.
-        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee", *err_string);
+        return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY,
+                             strprintf("insufficient fee%s", ws.m_sibling_eviction ? " (including sibling eviction)" : ""), *err_string);
     }
     return true;
 }
