@@ -559,7 +559,13 @@ class SendHeadersTest(BitcoinTestFramework):
             height += 1
 
         for i in range(1, MAX_NUM_UNCONNECTING_HEADERS_MSGS):
-            # Send a header that doesn't connect, check that we get a getheaders.
+            with p2p_lock:
+                test_node.last_message.pop("getheaders", None)
+            # Send an empty header as a failed response to the received getheaders
+            # (from the previous iteration). Otherwise, the new headers will be
+            # treated as a response instead of as an announcement.
+            test_node.send_header_for_blocks([])
+            # Send the actual unconnecting header, which should trigger a new getheaders.
             test_node.send_header_for_blocks([blocks[i]])
             test_node.wait_for_getheaders(block_hash=expected_hash)
 
@@ -574,6 +580,7 @@ class SendHeadersTest(BitcoinTestFramework):
         # before we get disconnected.  Should be 5*MAX_NUM_UNCONNECTING_HEADERS_MSGS
         for i in range(5 * MAX_NUM_UNCONNECTING_HEADERS_MSGS - 1):
             # Send a header that doesn't connect, check that we get a getheaders.
+            test_node.send_header_for_blocks([])
             test_node.send_header_for_blocks([blocks[i % len(blocks)]])
             test_node.wait_for_getheaders(block_hash=expected_hash)
 

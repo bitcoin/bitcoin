@@ -2768,25 +2768,21 @@ bool PeerManagerImpl::IsContinuationOfLowWorkHeadersSync(Peer& peer, CNode& pfro
 {
     if (peer.m_headers_sync) {
         auto result = peer.m_headers_sync->ProcessNextHeaders(headers, headers.size() == MAX_HEADERS_RESULTS);
+        // If it is a valid continuation, we should treat the existing getheaders request as responded to.
+        if (result.success) peer.m_last_getheaders_timestamp = {};
         if (result.request_more) {
             auto locator = peer.m_headers_sync->NextHeadersRequestLocator();
             // If we were instructed to ask for a locator, it should not be empty.
             Assume(!locator.vHave.empty());
+            // We can only be instructed to request more if processing was successful.
+            Assume(result.success);
             if (!locator.vHave.empty()) {
                 // It should be impossible for the getheaders request to fail,
-                // because we should have cleared the last getheaders timestamp
-                // when processing the headers that triggered this call. But
-                // it may be possible to bypass this via compactblock
-                // processing, so check the result before logging just to be
-                // safe.
+                // because we just cleared the last getheaders timestamp.
                 bool sent_getheaders = MaybeSendGetHeaders(pfrom, locator, peer);
-                if (sent_getheaders) {
-                    LogPrint(BCLog::NET, "more getheaders (from %s) to peer=%d\n",
-                            locator.vHave.front().ToString(), pfrom.GetId());
-                } else {
-                    LogPrint(BCLog::NET, "error sending next getheaders (from %s) to continue sync with peer=%d\n",
-                            locator.vHave.front().ToString(), pfrom.GetId());
-                }
+                Assume(sent_getheaders);
+                LogPrint(BCLog::NET, "more getheaders (from %s) to peer=%d\n",
+                    locator.vHave.front().ToString(), pfrom.GetId());
             }
         }
 
@@ -3065,6 +3061,9 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
             LOCK(m_headers_presync_mutex);
             m_headers_presync_stats.erase(pfrom.GetId());
         }
+        // A headers message with no headers cannot be an announcement, so assume
+        // it is a response to our last getheaders request, if there is one.
+        peer.m_last_getheaders_timestamp = {};
         return;
     }
 
@@ -3128,6 +3127,11 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
         }
         return;
     }
+
+    // If headers connect, assume that this is in response to any outstanding getheaders
+    // request we may have sent, and clear out the time of our last request. Non-connecting
+    // headers cannot be a response to a getheaders request.
+    peer.m_last_getheaders_timestamp = {};
 
     // If the headers we received are already in memory and an ancestor of
     // m_best_header or our tip, skip anti-DoS checks. These headers will not
@@ -4983,10 +4987,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             LogPrint(BCLog::NET, "Unexpected headers message received from peer %d\n", pfrom.GetId());
             return;
         }
-
-        // Assume that this is in response to any outstanding getheaders
-        // request we may have sent, and clear out the time of our last request
-        peer->m_last_getheaders_timestamp = {};
 
         std::vector<CBlockHeader> headers;
 
