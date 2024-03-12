@@ -161,7 +161,7 @@ bool CBlockIndexWorkComparator::operator()(const CBlockIndex* pa, const CBlockIn
     if (pa->nChainWork > pb->nChainWork) return false;
     if (pa->nChainWork < pb->nChainWork) return true;
 
-    // ... then by earliest time received, ...
+    // ... then by earliest activatable time, ...
     if (pa->nSequenceId < pb->nSequenceId) return false;
     if (pa->nSequenceId > pb->nSequenceId) return true;
 
