@@ -45,14 +45,18 @@ def seed_addrman(node):
     """ Populate the addrman with addresses from different networks.
     Here 2 ipv4, 2 ipv6, 1 cjdns, 2 onion and 1 i2p addresses are added.
     """
-    node.addpeeraddress(address="1.2.3.4", tried=True, port=8333)
-    node.addpeeraddress(address="2.0.0.0", port=8333)
-    node.addpeeraddress(address="1233:3432:2434:2343:3234:2345:6546:4534", tried=True, port=8333)
-    node.addpeeraddress(address="2803:0:1234:abcd::1", port=45324)
-    node.addpeeraddress(address="fc00:1:2:3:4:5:6:7", port=8333)
-    node.addpeeraddress(address="pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion", tried=True, port=8333)
-    node.addpeeraddress(address="nrfj6inpyf73gpkyool35hcmne5zwfmse3jl3aw23vk7chdemalyaqad.onion", port=45324, tried=True)
-    node.addpeeraddress(address="c4gfnttsuwqomiygupdqqqyy5y5emnk5c73hrfvatri67prd7vyq.b32.i2p", port=8333)
+    # These addresses currently don't collide with a deterministic addrman.
+    # If the addrman positioning/bucketing is changed, these might collide
+    # and adding them fails.
+    success = { "success": True }
+    assert_equal(node.addpeeraddress(address="1.2.3.4", tried=True, port=8333), success)
+    assert_equal(node.addpeeraddress(address="2.0.0.0", port=8333), success)
+    assert_equal(node.addpeeraddress(address="1233:3432:2434:2343:3234:2345:6546:4534", tried=True, port=8333), success)
+    assert_equal(node.addpeeraddress(address="2803:0:1234:abcd::1", port=45324), success)
+    assert_equal(node.addpeeraddress(address="fc00:1:2:3:4:5:6:7", port=8333), success)
+    assert_equal(node.addpeeraddress(address="pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion", tried=True, port=8333), success)
+    assert_equal(node.addpeeraddress(address="nrfj6inpyf73gpkyool35hcmne5zwfmse3jl3aw23vk7chdemalyaqad.onion", port=45324, tried=True), success)
+    assert_equal(node.addpeeraddress(address="c4gfnttsuwqomiygupdqqqyy5y5emnk5c73hrfvatri67prd7vyq.b32.i2p", port=8333), success)
 
 
 class NetTest(BitcoinTestFramework):
