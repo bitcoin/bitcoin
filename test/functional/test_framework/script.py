@@ -72,7 +72,7 @@ class CScriptOp(int):
 
         if n == 0:
             return OP_0
-        if n == -1:
+        elif n == -1:
             return OP_1NEGATE
         else:
             return CScriptOp(OP_1 + n - 1)
