@@ -271,7 +271,6 @@ static inline void LogPrintf_(std::string_view logging_function, std::string_vie
 #define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, __VA_ARGS__)
 
 // Deprecated unconditional logging.
-#define LogPrintf(...) LogInfo(__VA_ARGS__)
 #define LogPrintfCategory(category, ...) LogPrintLevel_(category, BCLog::Level::Info, __VA_ARGS__)
 
 // Use a macro instead of a function for conditional logging to prevent
