@@ -5,26 +5,27 @@
 #ifndef BITCOIN_MASTERNODE_NODE_H
 #define BITCOIN_MASTERNODE_NODE_H
 
+#include <bls/bls.h>
 #include <netaddress.h>
 #include <primitives/transaction.h>
 #include <threadsafety.h>
 #include <validationinterface.h>
 
-class CBLSPublicKey;
-class CBLSSecretKey;
-class CBLSSignature;
 class CDeterministicMNManager;
 
 struct CActiveMasternodeInfo {
     // Keys for the active Masternode
-    std::unique_ptr<CBLSPublicKey> blsPubKeyOperator;
-    std::unique_ptr<CBLSSecretKey> blsKeyOperator;
+    const CBLSSecretKey blsKeyOperator;
+    const CBLSPublicKey blsPubKeyOperator;
 
     // Initialized while registering Masternode
     uint256 proTxHash;
     COutPoint outpoint;
     CService service;
     bool legacy{true};
+
+    CActiveMasternodeInfo(const CBLSSecretKey& blsKeyOperator, const CBLSPublicKey& blsPubKeyOperator) :
+        blsKeyOperator(blsKeyOperator), blsPubKeyOperator(blsPubKeyOperator) {};
 };
 
 class CActiveMasternodeManager final : public CValidationInterface
@@ -51,14 +52,11 @@ private:
     const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
 
 public:
-    explicit CActiveMasternodeManager(CConnman& _connman, const std::unique_ptr<CDeterministicMNManager>& dmnman) :
-        connman(_connman), m_dmnman(dmnman) {};
-    ~CActiveMasternodeManager();
+    explicit CActiveMasternodeManager(const CBLSSecretKey& sk, CConnman& _connman, const std::unique_ptr<CDeterministicMNManager>& dmnman);
 
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;
 
     void Init(const CBlockIndex* pindex);
-    void InitKeys(const CBLSSecretKey& sk) LOCKS_EXCLUDED(cs);
 
     std::string GetStateString() const;
     std::string GetStatus() const;

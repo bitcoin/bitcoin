@@ -18,15 +18,15 @@
 // Keep track of the active Masternode
 std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
 
-CActiveMasternodeManager::~CActiveMasternodeManager()
+CActiveMasternodeManager::CActiveMasternodeManager(const CBLSSecretKey& sk, CConnman& _connman, const std::unique_ptr<CDeterministicMNManager>& dmnman) :
+    m_info(sk, sk.GetPublicKey()),
+    connman(_connman),
+    m_dmnman(dmnman)
 {
-    // Make sure to clean up BLS keys before global destructors are called
-    // (they have been allocated from the secure memory pool)
-    {
-        LOCK(cs);
-        m_info.blsKeyOperator.reset();
-        m_info.blsPubKeyOperator.reset();
-    }
+    assert(sk.IsValid()); /* We can assume pk is valid if sk is valid */
+    LogPrintf("MASTERNODE:\n  blsPubKeyOperator legacy: %s\n  blsPubKeyOperator basic: %s\n",
+            m_info.blsPubKeyOperator.ToString(/*specificLegacyScheme=*/ true),
+            m_info.blsPubKeyOperator.ToString(/*specificLegacyScheme=*/ false));
 }
 
 std::string CActiveMasternodeManager::GetStateString() const
@@ -97,7 +97,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 
     CDeterministicMNList mnList = Assert(m_dmnman)->GetListForBlock(pindex);
 
-    CDeterministicMNCPtr dmn = mnList.GetMNByOperatorKey(*m_info.blsPubKeyOperator);
+    CDeterministicMNCPtr dmn = mnList.GetMNByOperatorKey(m_info.blsPubKeyOperator);
     if (!dmn) {
         // MN not appeared on the chain yet
         return;
@@ -144,21 +144,6 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     m_info.outpoint = dmn->collateralOutpoint;
     m_info.legacy = dmn->pdmnState->nVersion == CProRegTx::LEGACY_BLS_VERSION;
     state = MASTERNODE_READY;
-}
-
-void CActiveMasternodeManager::InitKeys(const CBLSSecretKey& sk)
-{
-    AssertLockNotHeld(cs);
-
-    LOCK(cs);
-    assert(m_info.blsKeyOperator == nullptr);
-    assert(m_info.blsPubKeyOperator == nullptr);
-    m_info.blsKeyOperator = std::make_unique<CBLSSecretKey>(sk);
-    m_info.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(sk.GetPublicKey());
-    // We don't know the actual scheme at this point, print both
-    LogPrintf("MASTERNODE:\n  blsPubKeyOperator legacy: %s\n  blsPubKeyOperator basic: %s\n",
-            m_info.blsPubKeyOperator->ToString(/*specificLegacyScheme=*/ true),
-            m_info.blsPubKeyOperator->ToString(/*specificLegacyScheme=*/ false));
 }
 
 void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
@@ -258,7 +243,7 @@ template <template <typename> class EncryptedObj, typename Obj>
                                                      int version) const
 {
     AssertLockNotHeld(cs);
-    return WITH_LOCK(cs, return obj.Decrypt(idx, *Assert(m_info.blsKeyOperator), ret_obj, version));
+    return WITH_LOCK(cs, return obj.Decrypt(idx, m_info.blsKeyOperator, ret_obj, version));
 }
 template bool CActiveMasternodeManager::Decrypt(const CBLSIESEncryptedObject<CBLSSecretKey>& obj, size_t idx,
                                                 CBLSSecretKey& ret_obj, int version) const;
@@ -268,18 +253,18 @@ template bool CActiveMasternodeManager::Decrypt(const CBLSIESMultiRecipientObjec
 [[nodiscard]] CBLSSignature CActiveMasternodeManager::Sign(const uint256& hash) const
 {
     AssertLockNotHeld(cs);
-    return WITH_LOCK(cs, return Assert(m_info.blsKeyOperator)->Sign(hash));
+    return WITH_LOCK(cs, return m_info.blsKeyOperator.Sign(hash));
 }
 
 [[nodiscard]] CBLSSignature CActiveMasternodeManager::Sign(const uint256& hash, const bool is_legacy) const
 {
     AssertLockNotHeld(cs);
-    return WITH_LOCK(cs, return Assert(m_info.blsKeyOperator)->Sign(hash, is_legacy));
+    return WITH_LOCK(cs, return m_info.blsKeyOperator.Sign(hash, is_legacy));
 }
 
 // We need to pass a copy as opposed to a const ref because CBLSPublicKeyVersionWrapper
 // does not accept a const ref in its construction args
 [[nodiscard]] CBLSPublicKey CActiveMasternodeManager::GetPubKey() const
 {
-    return *Assert(m_info.blsPubKeyOperator);
+    return m_info.blsPubKeyOperator;
 }

@@ -1853,9 +1853,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         fMasternodeMode = true;
         {
             // Create and register activeMasternodeManager, will init later in ThreadImport
-            ::activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman, ::deterministicMNManager);
-            ::activeMasternodeManager->InitKeys(keyOperator);
-
+            ::activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(keyOperator, *node.connman, ::deterministicMNManager);
             RegisterValidationInterface(::activeMasternodeManager.get());
         }
     }
