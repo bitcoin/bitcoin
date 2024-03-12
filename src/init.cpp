@@ -198,7 +198,7 @@ static void RemovePidFile(const ArgsManager& args)
     const auto pid_path{GetPidFile(args)};
     if (std::error_code error; !fs::remove(pid_path, error)) {
         std::string msg{error ? error.message() : "File does not exist"};
-        LogPrintf("Unable to remove PID file (%s): %s\n", fs::PathToString(pid_path), msg);
+        LogInfo("Unable to remove PID file (%s): %s\n", fs::PathToString(pid_path), msg);
     }
 }
 
@@ -284,7 +284,7 @@ void Shutdown(NodeContext& node)
     static Mutex g_shutdown_mutex;
     TRY_LOCK(g_shutdown_mutex, lock_shutdown);
     if (!lock_shutdown) return;
-    LogPrintf("%s: In progress...\n", __func__);
+    LogInfo("%s: In progress...\n", __func__);
     Assert(node.args);
 
     /// Note: Shutdown() must be able to handle cases in which initialization failed part of the way,
@@ -395,7 +395,7 @@ void Shutdown(NodeContext& node)
 
     RemovePidFile(*node.args);
 
-    LogPrintf("%s: done\n", __func__);
+    LogInfo("%s: done\n", __func__);
 }
 
 /**
@@ -899,7 +899,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // on the command line or in this chain's section of the config file.
     ChainType chain = args.GetChainType();
     if (chain == ChainType::SIGNET) {
-        LogPrintf("Signet derived magic (message start): %s\n", HexStr(chainparams.MessageStart()));
+        LogInfo("Signet derived magic (message start): %s\n", HexStr(chainparams.MessageStart()));
     }
     bilingual_str errors;
     for (const auto& arg : args.GetUnsuitableSectionOnlyArgs()) {
@@ -1235,7 +1235,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
     if (!mempool_error.empty()) {
         return {ChainstateLoadStatus::FAILURE_FATAL, mempool_error};
     }
-    LogPrintf("* Using %.1f MiB for in-memory UTXO set (plus up to %.1f MiB of unused mempool space)\n", cache_sizes.coins * (1.0 / 1024 / 1024), mempool_opts.max_size_bytes * (1.0 / 1024 / 1024));
+    LogInfo("* Using %.1f MiB for in-memory UTXO set (plus up to %.1f MiB of unused mempool space)\n", cache_sizes.coins * (1.0 / 1024 / 1024), mempool_opts.max_size_bytes * (1.0 / 1024 / 1024));
     ChainstateManager::Options chainman_opts{
         .chainparams = chainparams,
         .datadir = args.GetDataDirNet(),
@@ -1275,10 +1275,10 @@ static ChainstateLoadResult InitAndLoadChainstate(
     // libbitcoinkernel.
     chainman.snapshot_download_completed = [&node]() {
         if (!node.chainman->m_blockman.IsPruneMode()) {
-            LogPrintf("[snapshot] re-enabling NODE_NETWORK services\n");
+            LogInfo("[snapshot] re-enabling NODE_NETWORK services\n");
             node.connman->AddLocalServices(NODE_NETWORK);
         }
-        LogPrintf("[snapshot] restarting indexes\n");
+        LogInfo("[snapshot] restarting indexes\n");
         // Drain the validation interface queue to ensure that the old indexes
         // don't have any pending work.
         Assert(node.validation_signals)->SyncWithValidationInterfaceQueue();
@@ -1286,7 +1286,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
             index->Interrupt();
             index->Stop();
             if (!(index->Init() && index->StartBackgroundSync())) {
-                LogPrintf("[snapshot] WARNING failed to restart index %s on snapshot chain\n", index->GetName());
+                LogInfo("[snapshot] WARNING failed to restart index %s on snapshot chain\n", index->GetName());
             }
         }
     };
@@ -1346,11 +1346,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         return false;
     }
 
-    LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, available_fds);
+    LogInfo("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, available_fds);
 
     // Warn about relative -datadir path.
     if (args.IsArgSet("-datadir") && !args.GetPathArg("-datadir").is_absolute()) {
-        LogPrintf("Warning: relative datadir option '%s' specified, which will be interpreted relative to the "
+        LogInfo("Warning: relative datadir option '%s' specified, which will be interpreted relative to the "
                   "current working directory '%s'. This is fragile, because if bitcoin is started in the future "
                   "from a different location, it will be unable to locate the current data files. There could "
                   "also be data loss if bitcoin is started while in a temporary directory.\n",
@@ -1403,7 +1403,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             } catch (const std::exception& e) {
                 return InitError(Untranslated(strprintf("Unable to bind to IPC address '%s'. %s", address, e.what())));
             }
-            LogPrintf("Listening for IPC requests on address %s\n", address);
+            LogInfo("Listening for IPC requests on address %s\n", address);
         }
     }
 
@@ -1496,9 +1496,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 return false;
             }
             const uint256 asmap_version = (HashWriter{} << asmap).GetHash();
-            LogPrintf("Using asmap version %s for IP bucketing\n", asmap_version.ToString());
+            LogInfo("Using asmap version %s for IP bucketing\n", asmap_version.ToString());
         } else {
-            LogPrintf("Using /16 prefix for IP bucketing\n");
+            LogInfo("Using /16 prefix for IP bucketing\n");
         }
 
         // Initialize netgroup manager
@@ -1754,7 +1754,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // As LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill the GUI during the last operation. If so, exit.
     if (ShutdownRequested(node)) {
-        LogPrintf("Shutdown requested. Exiting.\n");
+        LogInfo("Shutdown requested. Exiting.\n");
         return false;
     }
 
@@ -1809,10 +1809,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     } else {
         // Prior to setting NODE_NETWORK, check if we can provide historical blocks.
         if (!WITH_LOCK(chainman.GetMutex(), return chainman.BackgroundSyncInProgress())) {
-            LogPrintf("Setting NODE_NETWORK on non-prune mode\n");
+            LogInfo("Setting NODE_NETWORK on non-prune mode\n");
             g_local_services = ServiceFlags(g_local_services | NODE_NETWORK);
         } else {
-            LogPrintf("Running node in NODE_NETWORK_LIMITED mode until snapshot background sync completes\n");
+            LogInfo("Running node in NODE_NETWORK_LIMITED mode until snapshot background sync completes\n");
         }
     }
 
@@ -1871,7 +1871,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         // Import blocks and ActivateBestChain()
         ImportBlocks(chainman, vImportFiles);
         if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
-            LogPrintf("Stopping after block import\n");
+            LogInfo("Stopping after block import\n");
             if (!(Assert(node.shutdown_request))()) {
                 LogError("Failed to send shutdown signal after finishing block import\n");
             }
@@ -1919,7 +1919,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     {
         LOCK(chainman.GetMutex());
         const auto& tip{*Assert(chainman.ActiveTip())};
-        LogPrintf("block tree size = %u\n", chainman.BlockIndex().size());
+        LogInfo("block tree size = %u\n", chainman.BlockIndex().size());
         chain_active_height = tip.nHeight;
         best_block_time = tip.GetBlockTime();
         if (tip_info) {
@@ -1932,7 +1932,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             tip_info->header_time = chainman.m_best_header->GetBlockTime();
         }
     }
-    LogPrintf("nBestHeight = %d\n", chain_active_height);
+    LogInfo("nBestHeight = %d\n", chain_active_height);
     if (node.peerman) node.peerman->SetBestBlock(chain_active_height, std::chrono::seconds{best_block_time});
 
     // Map ports with NAT-PMP
@@ -2062,11 +2062,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             connOptions.m_specified_outgoing = connect;
         }
         if (!connOptions.m_specified_outgoing.empty() && !connOptions.vSeedNodes.empty()) {
-            LogPrintf("-seednode is ignored when -connect is used\n");
+            LogInfo("-seednode is ignored when -connect is used\n");
         }
 
         if (args.IsArgSet("-dnsseed") && args.GetBoolArg("-dnsseed", DEFAULT_DNSSEED) && args.IsArgSet("-proxy")) {
-            LogPrintf("-dnsseed is ignored when -connect is used and -proxy is specified\n");
+            LogInfo("-dnsseed is ignored when -connect is used and -proxy is specified\n");
         }
     }
 
