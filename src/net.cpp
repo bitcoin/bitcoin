@@ -4199,40 +4199,36 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
 void CConnman::RegisterEvents(CNode *pnode)
 {
 #ifdef USE_KQUEUE
-    if (socketEventsMode != SOCKETEVENTS_KQUEUE) {
-        return;
-    }
+    if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
+        LOCK(pnode->cs_hSocket);
+        assert(pnode->hSocket != INVALID_SOCKET);
 
-    LOCK(pnode->cs_hSocket);
-    assert(pnode->hSocket != INVALID_SOCKET);
+        struct kevent events[2];
+        EV_SET(&events[0], pnode->hSocket, EVFILT_READ, EV_ADD, 0, 0, nullptr);
+        EV_SET(&events[1], pnode->hSocket, EVFILT_WRITE, EV_ADD | EV_CLEAR, 0, 0, nullptr);
 
-    struct kevent events[2];
-    EV_SET(&events[0], pnode->hSocket, EVFILT_READ, EV_ADD, 0, 0, nullptr);
-    EV_SET(&events[1], pnode->hSocket, EVFILT_WRITE, EV_ADD | EV_CLEAR, 0, 0, nullptr);
-
-    int r = kevent(kqueuefd, events, 2, nullptr, 0, nullptr);
-    if (r != 0) {
-        LogPrint(BCLog::NET, "%s -- kevent(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                kqueuefd, EV_ADD, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
+        int r = kevent(kqueuefd, events, 2, nullptr, 0, nullptr);
+        if (r != 0) {
+            LogPrint(BCLog::NET, "%s -- kevent(%d, %d, %d, ...) failed. error: %s\n", __func__,
+                    kqueuefd, EV_ADD, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
+        }
     }
 #endif
 #ifdef USE_EPOLL
-    if (socketEventsMode != SOCKETEVENTS_EPOLL) {
-        return;
-    }
+    if (socketEventsMode == SOCKETEVENTS_EPOLL) {
+        LOCK(pnode->cs_hSocket);
+        assert(pnode->hSocket != INVALID_SOCKET);
 
-    LOCK(pnode->cs_hSocket);
-    assert(pnode->hSocket != INVALID_SOCKET);
+        epoll_event e;
+        // We're using edge-triggered mode, so it's important that we drain sockets even if no signals come in
+        e.events = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLERR | EPOLLHUP;
+        e.data.fd = pnode->hSocket;
 
-    epoll_event e;
-    // We're using edge-triggered mode, so it's important that we drain sockets even if no signals come in
-    e.events = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLERR | EPOLLHUP;
-    e.data.fd = pnode->hSocket;
-
-    int r = epoll_ctl(epollfd, EPOLL_CTL_ADD, pnode->hSocket, &e);
-    if (r != 0) {
-        LogPrint(BCLog::NET, "%s -- epoll_ctl(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                epollfd, EPOLL_CTL_ADD, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
+        int r = epoll_ctl(epollfd, EPOLL_CTL_ADD, pnode->hSocket, &e);
+        if (r != 0) {
+            LogPrint(BCLog::NET, "%s -- epoll_ctl(%d, %d, %d, ...) failed. error: %s\n", __func__,
+                    epollfd, EPOLL_CTL_ADD, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
+        }
     }
 #endif
 }
@@ -4240,39 +4236,35 @@ void CConnman::RegisterEvents(CNode *pnode)
 void CConnman::UnregisterEvents(CNode *pnode)
 {
 #ifdef USE_KQUEUE
-    if (socketEventsMode != SOCKETEVENTS_KQUEUE) {
-        return;
-    }
+    if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
+        LOCK(pnode->cs_hSocket);
+        if (pnode->hSocket == INVALID_SOCKET) {
+            return;
+        }
 
-    LOCK(pnode->cs_hSocket);
-    if (pnode->hSocket == INVALID_SOCKET) {
-        return;
-    }
+        struct kevent events[2];
+        EV_SET(&events[0], pnode->hSocket, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
+        EV_SET(&events[1], pnode->hSocket, EVFILT_WRITE, EV_DELETE, 0, 0, nullptr);
 
-    struct kevent events[2];
-    EV_SET(&events[0], pnode->hSocket, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
-    EV_SET(&events[1], pnode->hSocket, EVFILT_WRITE, EV_DELETE, 0, 0, nullptr);
-
-    int r = kevent(kqueuefd, events, 2, nullptr, 0, nullptr);
-    if (r != 0) {
-        LogPrint(BCLog::NET, "%s -- kevent(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                kqueuefd, EV_DELETE, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
+        int r = kevent(kqueuefd, events, 2, nullptr, 0, nullptr);
+        if (r != 0) {
+            LogPrint(BCLog::NET, "%s -- kevent(%d, %d, %d, ...) failed. error: %s\n", __func__,
+                    kqueuefd, EV_DELETE, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
+        }
     }
 #endif
 #ifdef USE_EPOLL
-    if (socketEventsMode != SOCKETEVENTS_EPOLL) {
-        return;
-    }
+    if (socketEventsMode == SOCKETEVENTS_EPOLL) {
+        LOCK(pnode->cs_hSocket);
+        if (pnode->hSocket == INVALID_SOCKET) {
+            return;
+        }
 
-    LOCK(pnode->cs_hSocket);
-    if (pnode->hSocket == INVALID_SOCKET) {
-        return;
-    }
-
-    int r = epoll_ctl(epollfd, EPOLL_CTL_DEL, pnode->hSocket, nullptr);
-    if (r != 0) {
-        LogPrint(BCLog::NET, "%s -- epoll_ctl(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                epollfd, EPOLL_CTL_DEL, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
+        int r = epoll_ctl(epollfd, EPOLL_CTL_DEL, pnode->hSocket, nullptr);
+        if (r != 0) {
+            LogPrint(BCLog::NET, "%s -- epoll_ctl(%d, %d, %d, ...) failed. error: %s\n", __func__,
+                    epollfd, EPOLL_CTL_DEL, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
+        }
     }
 #endif
 }
