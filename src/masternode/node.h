@@ -44,15 +44,15 @@ public:
     mutable RecursiveMutex cs;
 
 private:
-    masternode_state_t state{MASTERNODE_WAITING_FOR_PROTX};
+    masternode_state_t m_state{MASTERNODE_WAITING_FOR_PROTX};
     CActiveMasternodeInfo m_info GUARDED_BY(cs);
-    std::string strError;
+    std::string m_error;
 
-    CConnman& connman;
+    CConnman& m_connman;
     const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
 
 public:
-    explicit CActiveMasternodeManager(const CBLSSecretKey& sk, CConnman& _connman, const std::unique_ptr<CDeterministicMNManager>& dmnman);
+    explicit CActiveMasternodeManager(const CBLSSecretKey& sk, CConnman& connman, const std::unique_ptr<CDeterministicMNManager>& dmnman);
 
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;
 

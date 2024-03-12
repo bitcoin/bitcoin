@@ -18,10 +18,10 @@
 // Keep track of the active Masternode
 std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
 
-CActiveMasternodeManager::CActiveMasternodeManager(const CBLSSecretKey& sk, CConnman& _connman, const std::unique_ptr<CDeterministicMNManager>& dmnman) :
+CActiveMasternodeManager::CActiveMasternodeManager(const CBLSSecretKey& sk, CConnman& connman, const std::unique_ptr<CDeterministicMNManager>& dmnman) :
     m_info(sk, sk.GetPublicKey()),
-    connman(_connman),
-    m_dmnman(dmnman)
+    m_connman{connman},
+    m_dmnman{dmnman}
 {
     assert(sk.IsValid()); /* We can assume pk is valid if sk is valid */
     LogPrintf("MASTERNODE:\n  blsPubKeyOperator legacy: %s\n  blsPubKeyOperator basic: %s\n",
@@ -31,7 +31,7 @@ CActiveMasternodeManager::CActiveMasternodeManager(const CBLSSecretKey& sk, CCon
 
 std::string CActiveMasternodeManager::GetStateString() const
 {
-    switch (state) {
+    switch (m_state) {
     case MASTERNODE_WAITING_FOR_PROTX:
         return "WAITING_FOR_PROTX";
     case MASTERNODE_POSE_BANNED:
@@ -53,7 +53,7 @@ std::string CActiveMasternodeManager::GetStateString() const
 
 std::string CActiveMasternodeManager::GetStatus() const
 {
-    switch (state) {
+    switch (m_state) {
     case MASTERNODE_WAITING_FOR_PROTX:
         return "Waiting for ProTx to appear on-chain";
     case MASTERNODE_POSE_BANNED:
@@ -67,7 +67,7 @@ std::string CActiveMasternodeManager::GetStatus() const
     case MASTERNODE_READY:
         return "Ready";
     case MASTERNODE_ERROR:
-        return "Error. " + strError;
+        return "Error. " + m_error;
     default:
         return "Unknown";
     }
@@ -84,14 +84,14 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     // Check that our local network configuration is correct
     if (!fListen && Params().RequireRoutableExternalIP()) {
         // listen option is probably overwritten by something else, no good
-        state = MASTERNODE_ERROR;
-        strError = "Masternode must accept connections from outside. Make sure listen configuration option is not overwritten by some another parameter.";
-        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
+        m_state = MASTERNODE_ERROR;
+        m_error = "Masternode must accept connections from outside. Make sure listen configuration option is not overwritten by some another parameter.";
+        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", m_error);
         return;
     }
 
     if (!GetLocalAddress(m_info.service)) {
-        state = MASTERNODE_ERROR;
+        m_state = MASTERNODE_ERROR;
         return;
     }
 
@@ -105,9 +105,9 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 
     if (!mnList.IsMNValid(dmn->proTxHash)) {
         if (mnList.IsMNPoSeBanned(dmn->proTxHash)) {
-            state = MASTERNODE_POSE_BANNED;
+            m_state = MASTERNODE_POSE_BANNED;
         } else {
-            state = MASTERNODE_REMOVED;
+            m_state = MASTERNODE_REMOVED;
         }
         return;
     }
@@ -115,9 +115,9 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     LogPrintf("CActiveMasternodeManager::Init -- proTxHash=%s, proTx=%s\n", dmn->proTxHash.ToString(), dmn->ToString());
 
     if (m_info.service != dmn->pdmnState->addr) {
-        state = MASTERNODE_ERROR;
-        strError = "Local address does not match the address from ProTx";
-        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
+        m_state = MASTERNODE_ERROR;
+        m_error = "Local address does not match the address from ProTx";
+        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", m_error);
         return;
     }
 
@@ -125,25 +125,25 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     LogPrintf("CActiveMasternodeManager::Init -- Checking inbound connection to '%s'\n", m_info.service.ToString());
     std::unique_ptr<Sock> sock = CreateSock(m_info.service);
     if (!sock) {
-        state = MASTERNODE_ERROR;
-        strError = "Could not create socket to connect to " + m_info.service.ToString();
-        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
+        m_state = MASTERNODE_ERROR;
+        m_error = "Could not create socket to connect to " + m_info.service.ToString();
+        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", m_error);
         return;
     }
     bool fConnected = ConnectSocketDirectly(m_info.service, *sock, nConnectTimeout, true) && IsSelectableSocket(sock->Get());
     sock->Reset();
 
     if (!fConnected && Params().RequireRoutableExternalIP()) {
-        state = MASTERNODE_ERROR;
-        strError = "Could not connect to " + m_info.service.ToString();
-        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
+        m_state = MASTERNODE_ERROR;
+        m_error = "Could not connect to " + m_info.service.ToString();
+        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", m_error);
         return;
     }
 
     m_info.proTxHash = dmn->proTxHash;
     m_info.outpoint = dmn->collateralOutpoint;
     m_info.legacy = dmn->pdmnState->nVersion == CProRegTx::LEGACY_BLS_VERSION;
-    state = MASTERNODE_READY;
+    m_state = MASTERNODE_READY;
 }
 
 void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
@@ -154,12 +154,12 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
 
     if (!DeploymentDIP0003Enforced(pindexNew->nHeight, Params().GetConsensus())) return;
 
-    if (state == MASTERNODE_READY) {
+    if (m_state == MASTERNODE_READY) {
         auto oldMNList = Assert(m_dmnman)->GetListForBlock(pindexNew->pprev);
         auto newMNList = m_dmnman->GetListForBlock(pindexNew);
         if (!newMNList.IsMNValid(m_info.proTxHash)) {
             // MN disappeared from MN list
-            state = MASTERNODE_REMOVED;
+            m_state = MASTERNODE_REMOVED;
             m_info.proTxHash = uint256();
             m_info.outpoint.SetNull();
             // MN might have reappeared in same block with a new ProTx
@@ -171,7 +171,7 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
         auto newDmn = newMNList.GetMN(m_info.proTxHash);
         if (newDmn->pdmnState->pubKeyOperator != oldDmn->pdmnState->pubKeyOperator) {
             // MN operator key changed or revoked
-            state = MASTERNODE_OPERATOR_KEY_CHANGED;
+            m_state = MASTERNODE_OPERATOR_KEY_CHANGED;
             m_info.proTxHash = uint256();
             m_info.outpoint.SetNull();
             // MN might have reappeared in same block with a new ProTx
@@ -181,7 +181,7 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
 
         if (newDmn->pdmnState->addr != oldDmn->pdmnState->addr) {
             // MN IP changed
-            state = MASTERNODE_PROTX_IP_CHANGED;
+            m_state = MASTERNODE_PROTX_IP_CHANGED;
             m_info.proTxHash = uint256();
             m_info.outpoint.SetNull();
             Init(pindexNew);
@@ -214,7 +214,7 @@ bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
         bool empty = true;
         // If we have some peers, let's try to find our local address from one of them
         auto service = WITH_LOCK(cs, return m_info.service);
-        connman.ForEachNodeContinueIf(CConnman::AllNodes, [&](CNode* pnode) {
+        m_connman.ForEachNodeContinueIf(CConnman::AllNodes, [&](CNode* pnode) {
             empty = false;
             if (pnode->addr.IsIPv4())
                 fFoundLocal = GetLocal(service, &pnode->addr) && IsValidNetAddr(service);
@@ -222,8 +222,8 @@ bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
         });
         // nothing and no live connections, can't do anything for now
         if (empty) {
-            strError = "Can't detect valid external address. Please consider using the externalip configuration option if problem persists. Make sure to use IPv4 address only.";
-            LogPrintf("CActiveMasternodeManager::GetLocalAddress -- ERROR: %s\n", strError);
+            m_error = "Can't detect valid external address. Please consider using the externalip configuration option if problem persists. Make sure to use IPv4 address only.";
+            LogPrintf("CActiveMasternodeManager::GetLocalAddress -- ERROR: %s\n", m_error);
             return false;
         }
     }
