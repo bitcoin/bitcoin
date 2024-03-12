@@ -52,7 +52,7 @@ void runCommand(const std::string& strCommand)
     int nErr = ::_wsystem(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t>().from_bytes(strCommand).c_str());
 #endif
     if (nErr)
-        LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
+        LogInfo("runCommand error: system(%s) returned %d\n", strCommand, nErr);
 }
 #endif
 

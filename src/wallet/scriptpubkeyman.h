@@ -256,7 +256,7 @@ public:
     template <typename... Params>
     void WalletLogPrintf(const char* fmt, Params... parameters) const
     {
-        LogPrintf(("%s " + std::string{fmt}).c_str(), m_storage.GetDisplayName(), parameters...);
+        LogInfo(("%s " + std::string{fmt}).c_str(), m_storage.GetDisplayName(), parameters...);
     };
 
     /** Watch-only address added */

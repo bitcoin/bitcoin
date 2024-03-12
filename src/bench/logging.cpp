@@ -64,19 +64,19 @@ static void LogPrintfCategoryWithoutThreadNames(benchmark::Bench& bench)
 
 static void LogPrintfWithThreadNames(benchmark::Bench& bench)
 {
-    Logging(bench, {"-logthreadnames=1"}, [] { LogPrintf("%s\n", "test"); });
+    Logging(bench, {"-logthreadnames=1"}, [] { LogInfo("%s\n", "test"); });
 }
 
 static void LogPrintfWithoutThreadNames(benchmark::Bench& bench)
 {
-    Logging(bench, {"-logthreadnames=0"}, [] { LogPrintf("%s\n", "test"); });
+    Logging(bench, {"-logthreadnames=0"}, [] { LogInfo("%s\n", "test"); });
 }
 
 static void LogWithoutWriteToFile(benchmark::Bench& bench)
 {
     // Disable writing the log to a file, as used for unit tests and fuzzing in `MakeNoLogFileContext`.
     Logging(bench, {"-nodebuglogfile", "-debug=1"}, [] {
-        LogPrintf("%s\n", "test");
+        LogInfo("%s\n", "test");
         LogDebug(BCLog::NET, "%s\n", "test");
     });
 }

@@ -29,7 +29,7 @@ void IpcTest()
     std::promise<std::unique_ptr<mp::ProxyClient<gen::FooInterface>>> foo_promise;
     std::function<void()> disconnect_client;
     std::thread thread([&]() {
-        mp::EventLoop loop("IpcTest", [](bool raise, const std::string& log) { LogPrintf("LOG%i: %s\n", raise, log); });
+        mp::EventLoop loop("IpcTest", [](bool raise, const std::string& log) { LogInfo("LOG%i: %s\n", raise, log); });
         auto pipe = loop.m_io_context.provider->newTwoWayPipe();
 
         auto connection_client = std::make_unique<mp::Connection>(loop, kj::mv(pipe.ends[0]));

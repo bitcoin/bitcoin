@@ -21,9 +21,9 @@ FALSE_POSITIVES = [
     ("src/test/translation_tests.cpp", "strprintf(format, arg)"),
     ("src/validationinterface.cpp", "LogDebug(BCLog::VALIDATION, fmt \"\\n\", __VA_ARGS__)"),
     ("src/wallet/wallet.h", "WalletLogPrintf(const char* fmt, Params... parameters)"),
-    ("src/wallet/wallet.h", "LogPrintf((\"%s \" + std::string{fmt}).c_str(), GetDisplayName(), parameters...)"),
+    ("src/wallet/wallet.h", "LogInfo((\"%s \" + std::string{fmt}).c_str(), GetDisplayName(), parameters...)"),
     ("src/wallet/scriptpubkeyman.h", "WalletLogPrintf(const char* fmt, Params... parameters)"),
-    ("src/wallet/scriptpubkeyman.h", "LogPrintf((\"%s \" + std::string{fmt}).c_str(), m_storage.GetDisplayName(), parameters...)"),
+    ("src/wallet/scriptpubkeyman.h", "LogInfo((\"%s \" + std::string{fmt}).c_str(), m_storage.GetDisplayName(), parameters...)"),
 ]
 
 
