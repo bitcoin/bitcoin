@@ -447,10 +447,8 @@ class CScript(bytes):
             else:
                 other = CScriptNum.encode(other)
         elif isinstance(other, int):
-            if 0 <= other <= 16:
+            if -1 <= other <= 16:
                 other = bytes([CScriptOp.encode_op_n(other)])
-            elif other == -1:
-                other = bytes([OP_1NEGATE])
             else:
                 other = CScriptOp.encode_op_pushdata(bn2vch(other))
         elif isinstance(other, (bytes, bytearray)):
