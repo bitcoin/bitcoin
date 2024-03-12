@@ -17,6 +17,7 @@
 #include <core_io.h>
 #include <deploymentinfo.h>
 #include <deploymentstatus.h>
+#include <flatfile.h>
 #include <hash.h>
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
@@ -595,6 +596,28 @@ static CBlock GetBlockChecked(BlockManager& blockman, const CBlockIndex& blockin
     return block;
 }
 
+static std::vector<uint8_t> GetRawBlockChecked(BlockManager& blockman, const CBlockIndex& blockindex)
+{
+    std::vector<uint8_t> data{};
+    FlatFilePos pos{};
+    {
+        LOCK(cs_main);
+        if (blockman.IsBlockPruned(blockindex)) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
+        }
+        pos = blockindex.GetBlockPos();
+    }
+
+    if (!blockman.ReadRawBlockFromDisk(data, pos)) {
+        // Block not found on disk. This could be because we have the block
+        // header in our index but not yet have the block or did not accept the
+        // block. Or if the block was pruned right after we released the lock above.
+        throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
+    }
+
+    return data;
+}
+
 static CBlockUndo GetUndoChecked(BlockManager& blockman, const CBlockIndex& blockindex)
 {
     CBlockUndo blockUndo;
@@ -735,14 +758,15 @@ static RPCHelpMan getblock()
         }
     }
 
-    const CBlock block{GetBlockChecked(chainman.m_blockman, *pblockindex)};
+    const std::vector<uint8_t> block_data{GetRawBlockChecked(chainman.m_blockman, *pblockindex)};
 
     if (verbosity <= 0) {
-        DataStream ssBlock;
-        ssBlock << TX_WITH_WITNESS(block);
-        std::string strHex = HexStr(ssBlock);
-        return strHex;
+        return HexStr(block_data);
     }
+
+    DataStream block_stream{block_data};
+    CBlock block{};
+    block_stream >> TX_WITH_WITNESS(block);
 
     TxVerbosity tx_verbosity;
     if (verbosity == 1) {
