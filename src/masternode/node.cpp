@@ -251,3 +251,15 @@ bool CActiveMasternodeManager::IsValidNetAddr(const CService& addrIn)
     return !Params().RequireRoutableExternalIP() ||
            (addrIn.IsIPv4() && IsReachable(addrIn) && addrIn.IsRoutable());
 }
+
+[[nodiscard]] CBLSSignature CActiveMasternodeManager::Sign(const uint256& hash) const
+{
+    AssertLockNotHeld(cs);
+    return WITH_LOCK(cs, return Assert(m_info.blsKeyOperator)->Sign(hash));
+}
+
+[[nodiscard]] CBLSSignature CActiveMasternodeManager::Sign(const uint256& hash, const bool is_legacy) const
+{
+    AssertLockNotHeld(cs);
+    return WITH_LOCK(cs, return Assert(m_info.blsKeyOperator)->Sign(hash, is_legacy));
+}

@@ -52,7 +52,7 @@ bool CCoinJoinQueue::Sign()
     if (!fMasternodeMode) return false;
 
     uint256 hash = GetSignatureHash();
-    CBLSSignature sig = WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.blsKeyOperator->Sign(hash, false));
+    CBLSSignature sig = ::activeMasternodeManager->Sign(hash, /*is_legacy=*/ false);
     if (!sig.IsValid()) {
         return false;
     }
@@ -104,7 +104,7 @@ bool CCoinJoinBroadcastTx::Sign()
     if (!fMasternodeMode) return false;
 
     uint256 hash = GetSignatureHash();
-    CBLSSignature sig = WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.blsKeyOperator->Sign(hash, false));
+    CBLSSignature sig = ::activeMasternodeManager->Sign(hash, /*is_legacy=*/ false);
     if (!sig.IsValid()) {
         return false;
     }

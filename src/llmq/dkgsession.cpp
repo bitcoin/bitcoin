@@ -199,7 +199,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
 
     logger.Batch("encrypted contributions. time=%d", t1.count());
 
-    qc.sig = WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.blsKeyOperator->Sign(qc.GetSignHash()));
+    qc.sig = ::activeMasternodeManager->Sign(qc.GetSignHash());
 
     logger.Flush();
 
@@ -517,7 +517,7 @@ void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
 
     logger.Batch("sending complaint. badCount=%d, complaintCount=%d", badCount, complaintCount);
 
-    qc.sig = WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.blsKeyOperator->Sign(qc.GetSignHash()));
+    qc.sig = ::activeMasternodeManager->Sign(qc.GetSignHash());
 
     logger.Flush();
 
@@ -711,7 +711,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
         return;
     }
 
-    qj.sig = WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.blsKeyOperator->Sign(qj.GetSignHash()));
+    qj.sig = ::activeMasternodeManager->Sign(qj.GetSignHash());
 
     logger.Flush();
 
@@ -1003,7 +1003,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
         (*commitmentHash.begin())++;
     }
 
-    qc.sig = WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.blsKeyOperator->Sign(commitmentHash));
+    qc.sig = ::activeMasternodeManager->Sign(commitmentHash);
     qc.quorumSig = skShare.Sign(commitmentHash);
 
     if (lieType == 3) {
