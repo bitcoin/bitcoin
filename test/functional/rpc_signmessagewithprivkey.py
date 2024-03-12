@@ -44,7 +44,7 @@ class SignMessagesWithPrivTest(BitcoinTestFramework):
         self.log.info('test that verifying with non-P2PKH addresses succeeds')
         bin_sig = bytearray(base64.b64decode(signature))
         for non_p2pkh_address in addresses[1:3]:
-            assert not self.nodes[0].verifymessage(non_p2pkh_address, signature, message)
+            assert self.nodes[0].verifymessage(non_p2pkh_address, signature, message)
             bin_sig[0] += 4
             bip137_signature = base64.b64encode(bin_sig).decode('ascii')
             assert self.nodes[0].verifymessage(non_p2pkh_address, bip137_signature, message)
@@ -54,6 +54,14 @@ class SignMessagesWithPrivTest(BitcoinTestFramework):
 
         self.log.info('test that verifying with p2tr address throws error')
         assert_raises_rpc_error(-3, "Address does not refer to key", self.nodes[0].verifymessage, addresses[4], signature, message)
+
+        self.log.info('test that verifying Electrum p2sh-segwit succeeds')
+        signature = 'IFBRc4WU3K2c75KG7kcn/x9Ov6y75xrk05t9Zi7kwEIJNU0dMFMgRdeeKYo8JC4L83ckPavuaI+GUuvYZdwkGsM='
+        assert self.nodes[0].verifymessage('2MzoTgQ7YuReUaXaW2iciHoewDGdmagMVuy', signature, message)
+
+        self.log.info('test that verifying Electrum p2wpkh succeeds')
+        signature = 'IBR+8bubsBxBFFE3CO6pggzNSRyg/23HRMNXyWUIIEXmTe3P0apzd5izyR/d80nVRE883I58gijFKIevBLtcPRI='
+        assert self.nodes[0].verifymessage('bcrt1qa0mscp9epevt07rscyjsre5fdlxjp3tlcchs4x', signature, message)
 
         self.log.info('test parameter validity and error codes')
         # signmessagewithprivkey has two required parameters
