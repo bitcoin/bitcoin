@@ -25,8 +25,6 @@ FUNCTION_NAMES_AND_NUMBER_OF_LEADING_ARGUMENTS = [
     'LogInfo,0',
     'LogDebug,1',
     'LogTrace,1',
-    'LogDebug,1',
-    'LogInfo,0',
     'LogPrintfCategory,1',
     'LogPrintLevel,2',
     'printf,0',
