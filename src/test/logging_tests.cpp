@@ -142,7 +142,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacrosDeprecated, LogSetup)
 {
     LogInstance().EnableCategory(BCLog::NET);
-    LogPrintf("foo5: %s\n", "bar5");
+    LogInfo("foo5: %s\n", "bar5");
     LogPrintLevel(BCLog::NET, BCLog::Level::Trace, "foo4: %s\n", "bar4"); // not logged
     LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "foo7: %s\n", "bar7");
     LogPrintLevel(BCLog::NET, BCLog::Level::Info, "foo8: %s\n", "bar8");
