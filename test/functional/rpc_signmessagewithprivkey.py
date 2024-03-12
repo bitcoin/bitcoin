@@ -63,6 +63,22 @@ class SignMessagesWithPrivTest(BitcoinTestFramework):
         signature = 'IBR+8bubsBxBFFE3CO6pggzNSRyg/23HRMNXyWUIIEXmTe3P0apzd5izyR/d80nVRE883I58gijFKIevBLtcPRI='
         assert self.nodes[0].verifymessage('bcrt1qa0mscp9epevt07rscyjsre5fdlxjp3tlcchs4x', signature, message)
 
+        self.log.info('test that verifying Sparrow p2wpkh ("Electrum") succeeds')
+        signature = 'H036ky29d5FwS0K46di8ssfP+UbVEghDoexR2GGv+WX+WQHVnTWiUTOSjazS3+aIx92qsnE0m/WK2uflxI47BhQ='
+        assert self.nodes[0].verifymessage('bcrt1q00cc7f4m04f5mjdcm9g6c5y2a3wnvfvflljety', signature, message)
+
+        self.log.info('test that verifying Sparrow p2wpkh ("BIP137/Trezor") succeeds')
+        signature = 'J036ky29d5FwS0K46di8ssfP+UbVEghDoexR2GGv+WX+WQHVnTWiUTOSjazS3+aIx92qsnE0m/WK2uflxI47BhQ='
+        assert self.nodes[0].verifymessage('bcrt1q00cc7f4m04f5mjdcm9g6c5y2a3wnvfvflljety', signature, message)
+
+        self.log.info('test that verifying Sparrow p2wpkh ("BIP322 Simple") succeeds')
+        signature = 'AkcwRAIgCu7IrN3jCvBdp5myPZHCKiOW5o3EToYG2xgPbjiw6JsCIFwaZMcYQj9FmWcNtZk3qTp2UDBm77cbFmxQ3WVnVxrCASEDonFDI6fuQ05yUfeQIsOs599XHZnpaTxaqD13g4sXYRY='
+        assert self.nodes[0].verifymessage('bcrt1q00cc7f4m04f5mjdcm9g6c5y2a3wnvfvflljety', signature, message)
+
+        self.log.info('test that verifying Sparrow p2tr ("BIP322 Simple") succeeds')
+        signature = 'AUFdYU3dZCSmTxWnl5ja/Jo096VAaKtdaYs8b4ikF2iuQ2fiy7YSFHBWcD40a1oBKTVWUrXqOC0pXoDjTFKqM/ObAQ=='
+        assert self.nodes[0].verifymessage('bcrt1p5t6gmtfkd4q8jfgz40auxqgtll895n85amlgvgsz0jwxvfw9qltss6wfve', signature, message)
+
         self.log.info('test parameter validity and error codes')
         # signmessagewithprivkey has two required parameters
         for num_params in [0, 1, 3, 4, 5]:
