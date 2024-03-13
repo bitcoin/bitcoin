@@ -90,13 +90,16 @@ static RPCHelpMan coinjoin()
 
 static RPCHelpMan getpoolinfo()
 {
-    throw std::runtime_error(
-            RPCHelpMan{"getpoolinfo",
+    return RPCHelpMan{"getpoolinfo",
                 "DEPRECATED. Please use getcoinjoininfo instead.\n",
                 {},
                 RPCResults{},
-                RPCExamples{""}}
-            .ToString());
+                RPCExamples{""},
+                [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "Please use getcoinjoininfo instead");
+},
+    };
 }
 
 static RPCHelpMan getcoinjoininfo()
@@ -188,7 +191,7 @@ static const CRPCCommand commands[] =
         { "dash",               "getpoolinfo",            &getpoolinfo,            {} },
         { "dash",               "getcoinjoininfo",        &getcoinjoininfo,        {} },
 #ifdef ENABLE_WALLET
-        { "dash",               "coinjoin",               &coinjoin,               {} },
+        { "dash",               "coinjoin",               &coinjoin,               {"command"} },
 #endif // ENABLE_WALLET
 };
 // clang-format on
