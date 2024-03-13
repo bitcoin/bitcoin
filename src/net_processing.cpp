@@ -3107,6 +3107,8 @@ void PeerManagerImpl::ProcessInvalidTx(NodeId nodeid, const CTransactionRef& ptx
         // processing of this transaction in the event that child
         // transactions are later received (resulting in
         // parent-fetching by txid via the orphan-handling logic).
+        // We only add the txid if it differs from the wtxid, to avoid wasting entries in the
+        // rolling bloom filter.
         if (state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD && ptx->HasWitness()) {
             m_recent_rejects.insert(ptx->GetHash().ToUint256());
             m_txrequest.ForgetTxHash(ptx->GetHash());
