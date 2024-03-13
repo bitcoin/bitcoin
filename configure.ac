@@ -1198,8 +1198,21 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
   ]], [[
     getauxval(AT_HWCAP);
   ]])],
- [ AC_MSG_RESULT([yes]); HAVE_STRONG_GETAUXVAL=1; AC_DEFINE([HAVE_STRONG_GETAUXVAL], [1], [Define this symbol to build code that uses getauxval)]) ],
+ [ AC_MSG_RESULT([yes]); HAVE_STRONG_GETAUXVAL=1; AC_DEFINE([HAVE_STRONG_GETAUXVAL], [1], [Define this symbol to build code that uses getauxval]) ],
  [ AC_MSG_RESULT([no]); HAVE_STRONG_GETAUXVAL=0 ]
+)
+
+# Check for UNIX sockets
+AC_MSG_CHECKING(for sockaddr_un)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <sys/socket.h>
+    #include <sys/un.h>
+  ]], [[
+    struct sockaddr_un addr;
+    addr.sun_family = AF_UNIX;
+  ]])],
+ [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_SOCKADDR_UN], [1], [Define this symbol if platform supports unix domain sockets]) ],
+ [ AC_MSG_RESULT([no]); ]
 )
 
 have_any_system=no
