@@ -179,7 +179,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "logging", 0, "include" },
     { "logging", 1, "exclude" },
     { "sporkupdate", 1, "value" },
-    { "voteraw", 1, "tx_index" },
+    { "voteraw", 1, "mn-collateral-tx-index" },
     { "voteraw", 5, "time" },
     { "getblockhashes", 0, "high"},
     { "getblockhashes", 1, "low" },
