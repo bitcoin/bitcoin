@@ -62,8 +62,6 @@ class AssumeutxoTest(BitcoinTestFramework):
         for n in self.nodes:
             n.setmocktime(n.getblockheader(n.getbestblockhash())['time'])
 
-        self.sync_blocks()
-
         n0.createwallet('w')
         w = n0.get_wallet_rpc("w")
 
