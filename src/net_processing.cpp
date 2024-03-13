@@ -4354,7 +4354,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const TxValidationState& state = result.m_state;
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-            ProcessValidTx(pfrom.GetId(), ptx, result.m_replaced_transactions.value());
+            Assume(result.m_replaced_transactions.has_value());
+            std::list<CTransactionRef> empty_replacement_list;
+            ProcessValidTx(pfrom.GetId(), ptx, result.m_replaced_transactions.value_or(empty_replacement_list));
             pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
         }
         else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
