@@ -136,9 +136,7 @@ class TestNode():
                 self.args.append("-v2transport=1")
             else:
                 self.args.append("-v2transport=0")
-        else:
-            # v2transport requested but not supported for node
-            assert not v2transport
+        # if v2transport is requested via global flag but not supported for node version, ignore it
 
         self.cli = TestNodeCLI(bitcoin_cli, self.datadir_path)
         self.use_cli = use_cli

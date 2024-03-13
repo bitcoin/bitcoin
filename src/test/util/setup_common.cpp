@@ -52,6 +52,7 @@
 #include <txmempool.h>
 #include <util/chaintype.h>
 #include <util/check.h>
+#include <util/fs_helpers.h>
 #include <util/rbf.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -100,9 +101,22 @@ struct NetworkSetup
 };
 static NetworkSetup g_networksetup_instance;
 
+/** Register test-only arguments */
+static void SetupUnitTestArgs(ArgsManager& argsman)
+{
+    argsman.AddArg("-testdatadir", strprintf("Custom data directory (default: %s<random_string>)", fs::PathToString(fs::temp_directory_path() / "test_common_" PACKAGE_NAME / "")),
+                   ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+}
+
+/** Test setup failure */
+static void ExitFailure(std::string_view str_err)
+{
+    std::cerr << str_err << std::endl;
+    exit(EXIT_FAILURE);
+}
+
 BasicTestingSetup::BasicTestingSetup(const ChainType chainType, const std::vector<const char*>& extra_args)
-    : m_path_root{fs::temp_directory_path() / "test_common_" PACKAGE_NAME / g_insecure_rand_ctx_temp_path.rand256().ToString()},
-      m_args{}
+    : m_args{}
 {
     m_node.shutdown = &m_interrupt;
     m_node.args = &gArgs;
@@ -123,18 +137,49 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, const std::vecto
         arguments = Cat(arguments, G_TEST_COMMAND_LINE_ARGUMENTS());
     }
     util::ThreadRename("test");
-    fs::create_directories(m_path_root);
-    m_args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
-    gArgs.ForceSetArg("-datadir", fs::PathToString(m_path_root));
     gArgs.ClearPathCache();
     {
         SetupServerArgs(*m_node.args);
+        SetupUnitTestArgs(*m_node.args);
         std::string error;
         if (!m_node.args->ParseParameters(arguments.size(), arguments.data(), error)) {
             m_node.args->ClearArgs();
             throw std::runtime_error{error};
         }
     }
+
+    if (!m_node.args->IsArgSet("-testdatadir")) {
+        // By default, the data directory has a random name
+        const auto rand_str{g_insecure_rand_ctx_temp_path.rand256().ToString()};
+        m_path_root = fs::temp_directory_path() / "test_common_" PACKAGE_NAME / rand_str;
+        TryCreateDirectories(m_path_root);
+    } else {
+        // Custom data directory
+        m_has_custom_datadir = true;
+        fs::path root_dir{m_node.args->GetPathArg("-testdatadir")};
+        if (root_dir.empty()) ExitFailure("-testdatadir argument is empty, please specify a path");
+
+        root_dir = fs::absolute(root_dir);
+        const std::string test_path{G_TEST_GET_FULL_NAME ? G_TEST_GET_FULL_NAME() : ""};
+        m_path_lock = root_dir / "test_common_" PACKAGE_NAME / fs::PathFromString(test_path);
+        m_path_root = m_path_lock / "datadir";
+
+        // Try to obtain the lock; if unsuccessful don't disturb the existing test.
+        TryCreateDirectories(m_path_lock);
+        if (util::LockDirectory(m_path_lock, ".lock", /*probe_only=*/false) != util::LockResult::Success) {
+            ExitFailure("Cannot obtain a lock on test data lock directory " + fs::PathToString(m_path_lock) + '\n' + "The test executable is probably already running.");
+        }
+
+        // Always start with a fresh data directory; this doesn't delete the .lock file located one level above.
+        fs::remove_all(m_path_root);
+        if (!TryCreateDirectories(m_path_root)) ExitFailure("Cannot create test data directory");
+
+        // Print the test directory name if custom.
+        std::cout << "Test directory (will not be deleted): " << m_path_root << std::endl;
+    }
+    m_args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
+    gArgs.ForceSetArg("-datadir", fs::PathToString(m_path_root));
+
     SelectParams(chainType);
     SeedInsecureRand();
     if (G_TEST_LOG_FUN) LogInstance().PushBackCallback(G_TEST_LOG_FUN);
@@ -162,7 +207,13 @@ BasicTestingSetup::~BasicTestingSetup()
     m_node.kernel.reset();
     SetMockTime(0s); // Reset mocktime for following tests
     LogInstance().DisconnectTestLogger();
-    fs::remove_all(m_path_root);
+    if (m_has_custom_datadir) {
+        // Only remove the lock file, preserve the data directory.
+        UnlockDirectory(m_path_lock, ".lock");
+        fs::remove(m_path_lock / ".lock");
+    } else {
+        fs::remove_all(m_path_root);
+    }
     gArgs.ClearArgs();
 }
 
