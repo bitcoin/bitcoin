@@ -846,7 +846,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             cache_node.wait_for_rpc_connection()
 
             # Set a time in the past, so that blocks don't end up in the future
-            cache_node.setmocktime(cache_node.getblockheader(cache_node.getbestblockhash())['time'])
+            cache_node.setmocktime(cache_node.getblock(cache_node.getbestblockhash(), 1)['time'])
 
             # Create a 199-block-long chain; each of the 3 first nodes
             # gets 25 mature blocks and 25 immature.

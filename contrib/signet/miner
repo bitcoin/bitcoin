@@ -323,7 +323,7 @@ def do_generate(args):
         bci = json.loads(args.bcli("getblockchaininfo"))
 
         if bestheader["hash"] != bci["bestblockhash"]:
-            bestheader = json.loads(args.bcli("getblockheader", bci["bestblockhash"]))
+            bestheader = json.loads(args.bcli("getblock", bci["bestblockhash"], "1"))
 
         if lastheader is None:
             lastheader = bestheader["hash"]

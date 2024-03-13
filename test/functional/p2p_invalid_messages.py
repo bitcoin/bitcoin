@@ -279,7 +279,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_invalid_pow_headers_msg(self):
         self.log.info("Test headers message with invalid proof-of-work is logged as misbehaving and disconnects peer")
         blockheader_tip_hash = self.nodes[0].getbestblockhash()
-        blockheader_tip = from_hex(CBlockHeader(), self.nodes[0].getblockheader(blockheader_tip_hash, False))
+        blockheader_tip = from_hex(CBlockHeader(), self.nodes[0].getblock(blockheader_tip_hash, 0))
 
         # send valid headers message first
         assert_equal(self.nodes[0].getblockchaininfo()['headers'], 0)
@@ -311,7 +311,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         block_hashes = self.generate(self.nodes[0], 10)
         block_headers = []
         for block_hash in block_hashes:
-            block_headers.append(from_hex(CBlockHeader(), self.nodes[0].getblockheader(block_hash, False)))
+            block_headers.append(from_hex(CBlockHeader(), self.nodes[0].getblock(block_hash, 0)))
 
         # continuous headers sequence should be fine
         MISBEHAVING_NONCONTINUOUS_HEADERS_MSGS = ['Misbehaving', 'non-continuous headers sequence']

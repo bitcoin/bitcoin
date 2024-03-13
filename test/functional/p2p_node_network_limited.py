@@ -148,7 +148,7 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         except Exception:
             pass
         # node2 must remain at height 0
-        assert_equal(self.nodes[2].getblockheader(self.nodes[2].getbestblockhash())['height'], 0)
+        assert_equal(self.nodes[2].getblock(self.nodes[2].getbestblockhash(), 1)['height'], 0)
 
         # now connect also to node 1 (non pruned)
         self.connect_nodes(1, 2)

@@ -172,7 +172,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         # Now send the block at height 5 and check that it wasn't accepted (missing header)
         test_node.send_and_ping(msg_block(all_blocks[1]))
         assert_raises_rpc_error(-5, "Block not found", self.nodes[0].getblock, all_blocks[1].hash)
-        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].getblockheader, all_blocks[1].hash)
+        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].getblock, all_blocks[1].hash, 1)
 
         # The block at height 5 should be accepted if we provide the missing header, though
         headers_message = msg_headers()

@@ -506,76 +506,6 @@ static RPCHelpMan getblockhash()
     };
 }
 
-static RPCHelpMan getblockheader()
-{
-    return RPCHelpMan{"getblockheader",
-                "\nIf verbose is false, returns a string that is serialized, hex-encoded data for blockheader 'hash'.\n"
-                "If verbose is true, returns an Object with information about blockheader <hash>.\n",
-                {
-                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
-                    {"verbose", RPCArg::Type::BOOL, RPCArg::Default{true}, "true for a json object, false for the hex-encoded data"},
-                },
-                {
-                    RPCResult{"for verbose = true",
-                        RPCResult::Type::OBJ, "", "",
-                        {
-                            {RPCResult::Type::STR_HEX, "hash", "the block hash (same as provided)"},
-                            {RPCResult::Type::NUM, "confirmations", "The number of confirmations, or -1 if the block is not on the main chain"},
-                            {RPCResult::Type::NUM, "height", "The block height or index"},
-                            {RPCResult::Type::NUM, "version", "The block version"},
-                            {RPCResult::Type::STR_HEX, "versionHex", "The block version formatted in hexadecimal"},
-                            {RPCResult::Type::STR_HEX, "merkleroot", "The merkle root"},
-                            {RPCResult::Type::NUM_TIME, "time", "The block time expressed in " + UNIX_EPOCH_TIME},
-                            {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
-                            {RPCResult::Type::NUM, "nonce", "The nonce"},
-                            {RPCResult::Type::STR_HEX, "bits", "The bits"},
-                            {RPCResult::Type::NUM, "difficulty", "The difficulty"},
-                            {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the current chain"},
-                            {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
-                            {RPCResult::Type::STR_HEX, "previousblockhash", /*optional=*/true, "The hash of the previous block (if available)"},
-                            {RPCResult::Type::STR_HEX, "nextblockhash", /*optional=*/true, "The hash of the next block (if available)"},
-                        }},
-                    RPCResult{"for verbose=false",
-                        RPCResult::Type::STR_HEX, "", "A string that is serialized, hex-encoded data for block 'hash'"},
-                },
-                RPCExamples{
-                    HelpExampleCli("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
-            + HelpExampleRpc("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
-                },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    uint256 hash(ParseHashV(request.params[0], "hash"));
-
-    bool fVerbose = true;
-    if (!request.params[1].isNull())
-        fVerbose = request.params[1].get_bool();
-
-    const CBlockIndex* pblockindex;
-    const CBlockIndex* tip;
-    {
-        ChainstateManager& chainman = EnsureAnyChainman(request.context);
-        LOCK(cs_main);
-        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
-        tip = chainman.ActiveChain().Tip();
-    }
-
-    if (!pblockindex) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-    }
-
-    if (!fVerbose)
-    {
-        DataStream ssBlock{};
-        ssBlock << pblockindex->GetBlockHeader();
-        std::string strHex = HexStr(ssBlock);
-        return strHex;
-    }
-
-    return blockheaderToJSON(*tip, *pblockindex);
-},
-    };
-}
-
 static CBlock GetBlockChecked(BlockManager& blockman, const CBlockIndex& blockindex)
 {
     CBlock block;
@@ -2882,7 +2812,6 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getblock},
         {"blockchain", &getblockfrompeer},
         {"blockchain", &getblockhash},
-        {"blockchain", &getblockheader},
         {"blockchain", &getchaintips},
         {"blockchain", &getdifficulty},
         {"blockchain", &getdeploymentinfo},

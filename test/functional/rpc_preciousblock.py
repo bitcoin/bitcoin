@@ -18,7 +18,7 @@ def unidirectional_node_sync_via_rpc(node_src, node_dest):
             break
         except Exception:
             blocks_to_copy.append(blockhash)
-            blockhash = node_src.getblockheader(blockhash, True)['previousblockhash']
+            blockhash = node_src.getblock(blockhash, 1)['previousblockhash']
     blocks_to_copy.reverse()
     for blockhash in blocks_to_copy:
         blockdata = node_src.getblock(blockhash, False)

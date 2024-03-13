@@ -62,7 +62,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         })
 
         blockhash, = self.generate(self.nodes[2], 1)
-        blockheight = self.nodes[2].getblockheader(blockhash)['height']
+        blockheight = self.nodes[2].getblock(blockhash, 1)['height']
 
         txs = self.nodes[0].listtransactions()
         assert_array_result(txs, {"txid": txid}, {
@@ -106,7 +106,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         '''
         self.log.info("Test target_confirmations")
         blockhash, = self.generate(self.nodes[2], 1)
-        blockheight = self.nodes[2].getblockheader(blockhash)['height']
+        blockheight = self.nodes[2].getblock(blockhash, 1)['height']
 
         assert_equal(
             self.nodes[0].getblockhash(0),
@@ -165,7 +165,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         # and return the block height which listsinceblock now exposes since a5e7795.
         transactions = self.nodes[0].listsinceblock(nodes1_last_blockhash)['transactions']
         found = next(tx for tx in transactions if tx['txid'] == senttx)
-        assert_equal(found['blockheight'], self.nodes[0].getblockheader(nodes2_first_blockhash)['height'])
+        assert_equal(found['blockheight'], self.nodes[0].getblock(nodes2_first_blockhash, 1)['height'])
 
     def test_double_spend(self):
         '''
@@ -326,7 +326,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
 
         # gettransaction should work for txid1
         tx1 = self.nodes[0].gettransaction(txid1)
-        assert_equal(tx1['blockheight'], self.nodes[0].getblockheader(tx1['blockhash'])['height'])
+        assert_equal(tx1['blockheight'], self.nodes[0].getblock(tx1['blockhash'], 1)['height'])
 
         # listsinceblock(lastblockhash) should now include txid1 in transactions
         # as well as in removed

@@ -9,7 +9,6 @@ Test the following RPCs:
     - getdeploymentinfo
     - getchaintxstats
     - gettxoutsetinfo
-    - getblockheader
     - getdifficulty
     - getnetworkhashps
     - waitforblockheight
@@ -84,7 +83,6 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_getblockchaininfo()
         self._test_getchaintxstats()
         self._test_gettxoutsetinfo()
-        self._test_getblockheader()
         self._test_getdifficulty()
         self._test_getnetworkhashps()
         self._test_stopatheight()
@@ -271,7 +269,7 @@ class BlockchainTest(BitcoinTestFramework):
         time_2106 = 2**32 - 1
         self.nodes[0].setmocktime(time_2106)
         last = self.generate(self.nodes[0], 6)[-1]
-        assert_equal(self.nodes[0].getblockheader(last)["mediantime"], time_2106)
+        assert_equal(self.nodes[0].getblock(last, 1)["mediantime"], time_2106)
 
     def _test_getchaintxstats(self):
         self.log.info("Test getchaintxstats")
@@ -387,46 +385,6 @@ class BlockchainTest(BitcoinTestFramework):
 
         # Unknown hash_type raises an error
         assert_raises_rpc_error(-8, "'foo hash' is not a valid hash_type", node.gettxoutsetinfo, "foo hash")
-
-    def _test_getblockheader(self):
-        self.log.info("Test getblockheader")
-        node = self.nodes[0]
-
-        assert_raises_rpc_error(-8, "hash must be of length 64 (not 8, for 'nonsense')", node.getblockheader, "nonsense")
-        assert_raises_rpc_error(-8, "hash must be hexadecimal string (not 'ZZZ7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844')", node.getblockheader, "ZZZ7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844")
-        assert_raises_rpc_error(-5, "Block not found", node.getblockheader, "0cf7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844")
-
-        besthash = node.getbestblockhash()
-        secondbesthash = node.getblockhash(HEIGHT - 1)
-        header = node.getblockheader(blockhash=besthash)
-
-        assert_equal(header['hash'], besthash)
-        assert_equal(header['height'], HEIGHT)
-        assert_equal(header['confirmations'], 1)
-        assert_equal(header['previousblockhash'], secondbesthash)
-        assert_is_hex_string(header['chainwork'])
-        assert_equal(header['nTx'], 1)
-        assert_is_hash_string(header['hash'])
-        assert_is_hash_string(header['previousblockhash'])
-        assert_is_hash_string(header['merkleroot'])
-        assert_is_hash_string(header['bits'], length=None)
-        assert isinstance(header['time'], int)
-        assert_equal(header['mediantime'], TIME_RANGE_MTP)
-        assert isinstance(header['nonce'], int)
-        assert isinstance(header['version'], int)
-        assert isinstance(int(header['versionHex'], 16), int)
-        assert isinstance(header['difficulty'], Decimal)
-
-        # Test with verbose=False, which should return the header as hex.
-        header_hex = node.getblockheader(blockhash=besthash, verbose=False)
-        assert_is_hex_string(header_hex)
-
-        header = from_hex(CBlockHeader(), header_hex)
-        header.calc_sha256()
-        assert_equal(header.hash, besthash)
-
-        assert 'previousblockhash' not in node.getblockheader(node.getblockhash(0))
-        assert 'nextblockhash' not in node.getblockheader(node.getbestblockhash())
 
     def _test_getdifficulty(self):
         self.log.info("Test getdifficulty")

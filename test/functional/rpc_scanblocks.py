@@ -42,7 +42,7 @@ class ScanblocksTest(BitcoinTestFramework):
 
         # mine a block and assure that the mined blockhash is in the filterresult
         blockhash = self.generate(node, 1)[0]
-        height = node.getblockheader(blockhash)['height']
+        height = node.getblock(blockhash, 1)['height']
         self.wait_until(lambda: all(i["synced"] for i in node.getindexinfo().values()))
 
         out = node.scanblocks("start", [f"addr({addr_1})"])
@@ -53,7 +53,7 @@ class ScanblocksTest(BitcoinTestFramework):
 
         # mine another block
         blockhash_new = self.generate(node, 1)[0]
-        height_new = node.getblockheader(blockhash_new)['height']
+        height_new = node.getblock(blockhash_new, 1)['height']
 
         # make sure the blockhash is not in the filter result if we set the start_height
         # to the just mined block (unlikely to hit a false positive)

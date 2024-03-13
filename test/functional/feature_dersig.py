@@ -85,7 +85,7 @@ class BIP66Test(BitcoinTestFramework):
         spendtx.rehash()
 
         tip = self.nodes[0].getbestblockhash()
-        block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
+        block_time = self.nodes[0].getblock(tip, 1)['mediantime'] + 1
         block = create_block(int(tip, 16), create_coinbase(DERSIG_HEIGHT - 1), block_time, txlist=[spendtx])
         block.solve()
 

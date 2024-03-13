@@ -38,7 +38,7 @@ class WalletPruningTest(BitcoinTestFramework):
 
     def mine_large_blocks(self, node, n):
         # Get the block parameters for the first block
-        best_block = node.getblockheader(node.getbestblockhash())
+        best_block = node.getblock(node.getbestblockhash(), 1)
         height = int(best_block["height"]) + 1
         self.nTime = max(self.nTime, int(best_block["time"])) + 1
         previousblockhash = int(best_block["hash"], 16)

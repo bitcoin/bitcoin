@@ -164,7 +164,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         # Mock time for a deterministic chain
         for n in self.nodes:
-            n.setmocktime(n.getblockheader(n.getbestblockhash())['time'])
+            n.setmocktime(n.getblock(n.getbestblockhash(), 1)['time'])
 
         self.sync_blocks()
 

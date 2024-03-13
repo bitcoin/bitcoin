@@ -72,7 +72,7 @@ _bitcoin_cli() {
                 COMPREPLY=( $( compgen -W "add remove" -- "$cur" ) )
                 return 0
                 ;;
-            fundrawtransaction|getblock|getblockheader|getmempoolancestors|getmempooldescendants|getrawtransaction|gettransaction|listreceivedbyaddress|sendrawtransaction)
+            fundrawtransaction|getblock|getmempoolancestors|getmempooldescendants|getrawtransaction|gettransaction|listreceivedbyaddress|sendrawtransaction)
                 COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
                 return 0
                 ;;

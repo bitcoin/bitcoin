@@ -22,7 +22,7 @@ class DumptxoutsetTest(BitcoinTestFramework):
     def run_test(self):
         """Test a trivial usage of the dumptxoutset RPC command."""
         node = self.nodes[0]
-        mocktime = node.getblockheader(node.getblockhash(0))['time'] + 1
+        mocktime = node.getblock(node.getblockhash(0), 1)['time'] + 1
         node.setmocktime(mocktime)
         self.generate(node, COINBASE_MATURITY)
 

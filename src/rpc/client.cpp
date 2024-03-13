@@ -109,7 +109,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listunspent", 4, "include_immature_coinbase" },
     { "getblock", 1, "verbosity" },
     { "getblock", 1, "verbose" },
-    { "getblockheader", 1, "verbose" },
     { "getchaintxstats", 0, "nblocks" },
     { "gettransaction", 1, "include_watchonly" },
     { "gettransaction", 2, "verbose" },

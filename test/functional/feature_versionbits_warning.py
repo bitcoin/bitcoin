@@ -41,7 +41,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         """Send numblocks blocks to peer with version set"""
         tip = self.nodes[0].getbestblockhash()
         height = self.nodes[0].getblockcount()
-        block_time = self.nodes[0].getblockheader(tip)["time"] + 1
+        block_time = self.nodes[0].getblock(tip, 1)["time"] + 1
         tip = int(tip, 16)
 
         for _ in range(numblocks):

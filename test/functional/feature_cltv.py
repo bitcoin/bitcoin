@@ -122,7 +122,7 @@ class BIP65Test(BitcoinTestFramework):
             invalid_cltv_txs.append(spendtx)
 
         tip = self.nodes[0].getbestblockhash()
-        block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
+        block_time = self.nodes[0].getblock(tip, 1)['mediantime'] + 1
         block = create_block(int(tip, 16), create_coinbase(CLTV_HEIGHT - 1), block_time, version=3, txlist=invalid_cltv_txs)
         block.solve()
 

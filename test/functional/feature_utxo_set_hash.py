@@ -24,7 +24,7 @@ class UTXOSetHashTest(BitcoinTestFramework):
 
         node = self.nodes[0]
         wallet = MiniWallet(node)
-        mocktime = node.getblockheader(node.getblockhash(0))['time'] + 1
+        mocktime = node.getblock(node.getblockhash(0), 1)['time'] + 1
         node.setmocktime(mocktime)
 
         # Generate 100 blocks and remove the first since we plan to spend its

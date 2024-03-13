@@ -127,7 +127,7 @@ class BIP68Test(BitcoinTestFramework):
     # the current tip).
     def get_median_time_past(self, confirmations):
         block_hash = self.nodes[0].getblockhash(self.nodes[0].getblockcount()-confirmations)
-        return self.nodes[0].getblockheader(block_hash)["mediantime"]
+        return self.nodes[0].getblock(block_hash, 1)["mediantime"]
 
     # Test that sequence locks are respected for transactions spending confirmed inputs.
     def test_sequence_lock_confirmed_inputs(self):

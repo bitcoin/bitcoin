@@ -192,7 +192,7 @@ class ImportRescanTest(BitcoinTestFramework):
             if i % 10 == 0:
                 blockhash = self.generate(self.nodes[0], 1)[0]
                 conf_height = self.nodes[0].getblockcount()
-                timestamp = self.nodes[0].getblockheader(blockhash)["time"]
+                timestamp = self.nodes[0].getblock(blockhash, 1)["time"]
                 for var in last_variants:
                     var.confirmation_height = conf_height
                     var.timestamp = timestamp
@@ -209,7 +209,7 @@ class ImportRescanTest(BitcoinTestFramework):
 
         blockhash = self.generate(self.nodes[0], 1)[0]
         conf_height = self.nodes[0].getblockcount()
-        timestamp = self.nodes[0].getblockheader(blockhash)["time"]
+        timestamp = self.nodes[0].getblock(blockhash, 1)["time"]
         for var in last_variants:
             var.confirmation_height = conf_height
             var.timestamp = timestamp
@@ -219,7 +219,7 @@ class ImportRescanTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getrawmempool(), [])
         set_node_times(
             self.nodes,
-            self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + TIMESTAMP_WINDOW + 1,
+            self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 1)["time"] + TIMESTAMP_WINDOW + 1,
         )
         self.generate(self.nodes[0], 1)
 
@@ -264,7 +264,7 @@ class ImportRescanTest(BitcoinTestFramework):
         # The late timestamp and pruned variants are not necessary when testing mempool rescan
         mempool_variants = [variant for variant in IMPORT_VARIANTS if variant.rescan != Rescan.late_timestamp and not variant.prune]
         # No further blocks are mined so the timestamp will stay the same
-        timestamp = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"]
+        timestamp = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 1)["time"]
 
         # Create one transaction on node 0 with a unique amount for
         # each possible type of wallet import RPC.

@@ -281,7 +281,7 @@ class PruneTest(BitcoinTestFramework):
 
         def height(index):
             if use_timestamp:
-                return node.getblockheader(node.getblockhash(index))["time"] + TIMESTAMP_WINDOW
+                return node.getblock(node.getblockhash(index), 1)["time"] + TIMESTAMP_WINDOW
             else:
                 return index
 
@@ -311,7 +311,7 @@ class PruneTest(BitcoinTestFramework):
             assert_raises_rpc_error(-8, "Blockchain is shorter than the attempted prune height", node.pruneblockchain, future_parameter)
 
         # Pruned block should still know the number of transactions
-        assert_equal(node.getblockheader(node.getblockhash(1))["nTx"], block1_details["nTx"])
+        assert_equal(node.getblock(node.getblockhash(1), 1)["nTx"], block1_details["nTx"])
 
         # negative heights should raise an exception
         assert_raises_rpc_error(-8, "Negative block height", node.pruneblockchain, -10)

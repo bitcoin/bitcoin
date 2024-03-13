@@ -20,7 +20,7 @@ class WalletLocktimeTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
 
-        mtp_tip = node.getblockheader(node.getbestblockhash())["mediantime"]
+        mtp_tip = node.getblock(node.getbestblockhash(), 1)["mediantime"]
 
         self.log.info("Get new address with label")
         label = "timelock⌛🔓"
