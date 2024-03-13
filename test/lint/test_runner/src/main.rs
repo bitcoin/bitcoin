@@ -14,7 +14,9 @@ type LintFn = fn() -> LintResult;
 
 /// Return the git command
 fn git() -> Command {
-    Command::new("git")
+    let mut git = Command::new("git");
+    git.arg("--no-pager");
+    git
 }
 
 /// Return stdout
