@@ -27,8 +27,9 @@ static const int DEFAULT_CONNECT_TIMEOUT = 5000;
 //! -dns default
 static const int DEFAULT_NAME_LOOKUP = true;
 
-/** Prefix for unix domain socket addresses (which are local filesystem paths) */
-const std::string ADDR_PREFIX_UNIX = "unix:";
+/** Prefixes for unix domain socket addresses (which are local filesystem paths) */
+const std::string ADDR_PREFIX_UNIX = "unix:"; // used by bitcoind, example "unix:/root/path/to/file"
+const std::string ADDR_PREFIX_IPC = "ipc://"; // used by libzmq, example "ipc:///root/path/to/file"
 
 enum class ConnectionDirection {
     None = 0,
