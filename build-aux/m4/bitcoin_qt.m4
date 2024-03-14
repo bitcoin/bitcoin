@@ -37,6 +37,9 @@ AC_DEFUN([BITCOIN_QT_PATH_PROGS],[
   BITCOIN_QT_CHECK([
     if test "$3" != ""; then
       AC_PATH_PROGS([$1], [$2], [], [$3])
+      if test "$$1" = ""; then
+        AC_PATH_PROGS([$1], [$2])
+      fi
     else
       AC_PATH_PROGS([$1], [$2])
     fi
