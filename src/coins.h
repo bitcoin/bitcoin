@@ -86,6 +86,9 @@ public:
     }
 };
 
+struct CCoinsCacheEntry;
+using CoinsCachePair = std::pair<const COutPoint, CCoinsCacheEntry>;
+
 /**
  * A Coin in one level of the coins database caching hierarchy.
  *
@@ -103,6 +106,30 @@ public:
  */
 struct CCoinsCacheEntry
 {
+private:
+    /**
+     * These are used to create a doubly linked list of flagged entries.
+     * They are set in AddFlags and unset in ClearFlags.
+     * A flagged entry is any entry that is either DIRTY, FRESH, or both.
+     *
+     * DIRTY entries are tracked so that only modified entries can be passed to
+     * the parent cache to do a batch write. This is a performance optimization
+     * compared to giving all entries in the cache to the parent and having the
+     * parent scan for only modified entries.
+     *
+     * FRESH entries are tracked because a FRESH-but-not-DIRTY entry can only be
+     * a spent coin that exists in the parent cache. When performing a batch
+     * write but not clearing the cache (CCoinsViewCache::Sync), we must also
+     * erase all spent entries. Since only DIRTY or FRESH entries can be spent,
+     * we can track them in the linked list to erase them. This is a performance
+     * optimization compared to scanning all cache entries to find any that are
+     * spent-but-not-DIRTY.
+     */
+    CoinsCachePair* m_prev{nullptr};
+    CoinsCachePair* m_next{nullptr};
+    uint8_t m_flags{0};
+
+public:
     Coin coin; // The actual cached data.
     unsigned char flags;
 
@@ -130,6 +157,56 @@ struct CCoinsCacheEntry
     CCoinsCacheEntry() : flags(0) {}
     explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), flags(0) {}
     CCoinsCacheEntry(Coin&& coin_, unsigned char flag) : coin(std::move(coin_)), flags(flag) {}
+    ~CCoinsCacheEntry()
+    {
+        // We must always clear the flags when destroying this to remove it from
+        // the flagged linked list
+        ClearFlags();
+    }
+
+    //! Adding a flag also requires a self reference to the pair that contains
+    //! this entry in the CCoinsCache map and a reference to the head of the
+    //! flagged pair linked list.
+    inline void AddFlags(uint8_t flags, CoinsCachePair& self, CoinsCachePair& head)
+    {
+        if (flags == 0) return;
+        if (m_flags != 0) {
+            m_flags |= flags;
+            return;
+        }
+        m_prev = &head;
+        m_next = head.second.m_next;
+        head.second.m_next = &self;
+        if (m_next != nullptr) {
+            m_next->second.m_prev = &self;
+        }
+        m_flags = flags;
+    }
+
+    inline void ClearFlags()
+    {
+        if (m_flags == 0) return;
+        m_prev->second.m_next = m_next;
+        if (m_next != nullptr) {
+            m_next->second.m_prev = m_prev;
+        }
+        m_prev = nullptr;
+        m_next = nullptr;
+        m_flags = 0;
+    }
+
+    inline uint8_t GetFlags() const { return m_flags; }
+
+    //! Get the next entry in the flagged linked list, optionally removing the
+    //! current entry and clearing the flags.
+    inline CoinsCachePair* Next(bool clear_flags = false)
+    {
+        const auto ret{m_next};
+        if (clear_flags) {
+            ClearFlags();
+        }
+        return ret;
+    }
 };
 
 /**
@@ -144,8 +221,8 @@ using CCoinsMap = std::unordered_map<COutPoint,
                                      CCoinsCacheEntry,
                                      SaltedOutpointHasher,
                                      std::equal_to<COutPoint>,
-                                     PoolAllocator<std::pair<const COutPoint, CCoinsCacheEntry>,
-                                                   sizeof(std::pair<const COutPoint, CCoinsCacheEntry>) + sizeof(void*) * 4>>;
+                                     PoolAllocator<CoinsCachePair,
+                                                   sizeof(CoinsCachePair) + sizeof(void*) * 4>>;
 
 using CCoinsMapMemoryResource = CCoinsMap::allocator_type::ResourceType;
 
