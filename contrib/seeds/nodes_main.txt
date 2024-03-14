@@ -56,3 +56,6 @@
 [2a02:842a:1df:8a01:1e1b:dff:fe0b:236d]:9333
 [2a03:6f00:5:1::23f1]:9333
 [2a07:e00::348a:1aff:fe80:aeae]:9333
+loshanri3c7zlkk2r2eobuhwrsvklxvjhry5l3b7elhuczwm2zu3t3yd.onion:9333
+yqnzm3izcldork54p63k3brezoh5rnixewgqiowyv5vvog2smn3sbnyd.onion:9333
+mjx5vzletczsow6yvyge4femnukrod4sm36s2ywyj3nwyamgjeoyaead.onion:9333

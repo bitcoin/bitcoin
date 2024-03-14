@@ -51,3 +51,4 @@
 [2a04:52c0:102:49af::1]:19333
 [2a01:4f8:1c0c:7d83::1]:19335
 [2a01:4f8:262:139f::2]:19335
+loshansk5uhibqfxzl6q3s5pyy7l24o5eifdhcqorkmhevmff3w5moqd.onion:19335
