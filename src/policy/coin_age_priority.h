@@ -10,17 +10,20 @@
 class CCoinsViewCache;
 class CTransaction;
 
-// Compute modified tx size for priority calculation (optionally given tx size)
-unsigned int CalculateModifiedSize(const CTransaction& tx, unsigned int nTxSize=0);
+// Compute modified tx vsize for priority calculation
+unsigned int CalculateModifiedSize(const CTransaction& tx, unsigned int nTxSize);
 
-// Compute priority, given sum coin-age of inputs and (optionally) tx size
-double ComputePriority(const CTransaction& tx, double dPriorityInputs, unsigned int nTxSize=0);
+// Compute priority, given sum coin-age of inputs and modified tx vsize
+// CAUTION: Original ComputePriority accepted UNMODIFIED tx vsize and did the modification internally
+double ComputePriority2(double inputs_coin_age, unsigned int mod_vsize);
+double ReversePriority2(double coin_age_priority, unsigned int mod_vsize);
 
 /**
- * Return priority of tx at height nHeight. Also calculate the sum of the values of the inputs
+ * Return sum coin-age of tx inputs at height nHeight. Also calculate the sum of the values of the inputs
  * that are already in the chain.  These are the inputs that will age and increase priority as
  * new blocks are added to the chain.
+ * CAUTION: Original GetPriority also called ComputePriority and returned the final coin-age priority
  */
-double GetPriority(const CTransaction &tx, const CCoinsViewCache& view, int nHeight, CAmount &inChainInputValue);
+double GetCoinAge(const CTransaction &tx, const CCoinsViewCache& view, int nHeight, CAmount &inChainInputValue);
 
 #endif // BITCOIN_POLICY_COIN_AGE_PRIORITY_H

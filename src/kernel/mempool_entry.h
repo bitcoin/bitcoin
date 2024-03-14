@@ -86,14 +86,14 @@ private:
     const size_t nUsageSize;        //!< ... and total memory usage
     const int64_t nTime;            //!< Local time when entering the mempool
     const uint64_t entry_sequence;  //!< Sequence number used to determine whether this transaction is too recent for relay
+    const int64_t sigOpCost;        //!< Total sigop cost
+    const size_t nModSize;          //!< Cached modified size for priority
     const double entryPriority;     //!< Priority when entering the mempool
     const unsigned int entryHeight; //!< Chain height when entering the mempool
     double cachedPriority;          //!< Last calculated priority
     unsigned int cachedHeight;      //!< Height at which priority was last calculated
     CAmount inChainInputValue;      //!< Sum of all txin values that are already in blockchain
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
-    const int64_t sigOpCost;        //!< Total sigop cost
-    const size_t nModSize;          //!< Cached modified size for priority
     CAmount m_modified_fee;         //!< Used for determining the priority of the transaction for mining in a block
     mutable LockPoints lockPoints;  //!< Track the height and time at which tx was final
 
@@ -114,7 +114,8 @@ private:
 
 public:
     CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
-                    int64_t time, double entry_priority, unsigned int entry_height, uint64_t entry_sequence,
+                    int64_t time, unsigned int entry_height, uint64_t entry_sequence,
+                    double entry_tx_inputs_coin_age,
                     CAmount in_chain_input_value,
                     bool spends_coinbase,
                     int64_t sigops_cost, LockPoints lp)
@@ -124,15 +125,15 @@ public:
           nUsageSize{RecursiveDynamicUsage(tx)},
           nTime{time},
           entry_sequence{entry_sequence},
-          entryPriority{entry_priority},
+          sigOpCost{sigops_cost},
+          nModSize{CalculateModifiedSize(*tx, GetTxSize())},
+          entryPriority{ComputePriority2(entry_tx_inputs_coin_age, nModSize)},
           entryHeight{entry_height},
-          cachedPriority{entry_priority},
+          cachedPriority{entryPriority},
           // Since entries arrive *after* the tip's height, their entry priority is for the height+1
           cachedHeight{entry_height + 1},
           inChainInputValue{in_chain_input_value},
           spendsCoinbase{spends_coinbase},
-          sigOpCost{sigops_cost},
-          nModSize{CalculateModifiedSize(*tx, GetTxSize())},
           m_modified_fee{nFee},
           lockPoints{lp},
           nSizeWithDescendants{GetTxSize()},
@@ -154,7 +155,7 @@ public:
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
     double GetStartingPriority() const {return entryPriority; }
-    std::pair<double, CAmount> GetInternalCoinAgePriorityCache() const { return {cachedPriority, inChainInputValue}; }
+    std::pair<double, CAmount> GetInternalCoinAgePriorityCache2() const { return {ReversePriority2(cachedPriority, nModSize), inChainInputValue}; }
     /**
      * Fast calculation of priority as update from cached value, but only valid if
      * currentHeight is greater than last height it was recalculated.

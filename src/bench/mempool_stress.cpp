@@ -24,13 +24,13 @@ class CCoinsViewCache;
 static void AddTx(const CTransactionRef& tx, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
 {
     int64_t nTime = 0;
-    const double coinage_priority = 10.0;
+    constexpr double coin_age{10.0};
     unsigned int nHeight = 1;
     uint64_t sequence = 0;
     bool spendsCoinbase = false;
     unsigned int sigOpCost = 4;
     LockPoints lp;
-    AddToMempool(pool, CTxMemPoolEntry(tx, 1000, nTime, coinage_priority, nHeight, sequence, tx->GetValueOut(), spendsCoinbase, sigOpCost, lp));
+    AddToMempool(pool, CTxMemPoolEntry(tx, 1000, nTime, nHeight, sequence, /*entry_tx_inputs_coin_age=*/coin_age, tx->GetValueOut(), spendsCoinbase, sigOpCost, lp));
 }
 
 struct Available {

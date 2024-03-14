@@ -11,6 +11,7 @@
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <txmempool.h>
+#include <util/check.h>
 #include <validation.h>
 
 using node::BlockAssembler;
@@ -22,8 +23,7 @@ unsigned int CalculateModifiedSize(const CTransaction& tx, unsigned int nTxSize)
     // is enough to cover a compressed pubkey p2sh redemption) for priority.
     // Providing any more cleanup incentive than making additional inputs free would
     // risk encouraging people to create junk outputs to redeem later.
-    if (nTxSize == 0)
-        nTxSize = (GetTransactionWeight(tx) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR;
+    Assert(nTxSize > 0);
     for (std::vector<CTxIn>::const_iterator it(tx.vin.begin()); it != tx.vin.end(); ++it)
     {
         unsigned int offset = 41U + std::min(110U, (unsigned int)it->scriptSig.size());
@@ -33,15 +33,19 @@ unsigned int CalculateModifiedSize(const CTransaction& tx, unsigned int nTxSize)
     return nTxSize;
 }
 
-double ComputePriority(const CTransaction& tx, double dPriorityInputs, unsigned int nTxSize)
+double ComputePriority2(double inputs_coin_age, unsigned int mod_vsize)
 {
-    nTxSize = CalculateModifiedSize(tx, nTxSize);
-    if (nTxSize == 0) return 0.0;
+    if (mod_vsize == 0) return 0.0;
 
-    return dPriorityInputs / nTxSize;
+    return inputs_coin_age / mod_vsize;
 }
 
-double GetPriority(const CTransaction &tx, const CCoinsViewCache& view, int nHeight, CAmount &inChainInputValue)
+double ReversePriority2(const double coin_age_priority, const unsigned int mod_vsize)
+{
+    return coin_age_priority * mod_vsize;
+}
+
+double GetCoinAge(const CTransaction &tx, const CCoinsViewCache& view, int nHeight, CAmount &inChainInputValue)
 {
     inChainInputValue = 0;
     if (tx.IsCoinBase())
@@ -58,7 +62,7 @@ double GetPriority(const CTransaction &tx, const CCoinsViewCache& view, int nHei
             inChainInputValue += coin.out.nValue;
         }
     }
-    return ComputePriority(tx, dResult);
+    return dResult;
 }
 
 void CTxMemPoolEntry::UpdateCachedPriority(unsigned int currentHeight, CAmount valueInCurrentBlock)
