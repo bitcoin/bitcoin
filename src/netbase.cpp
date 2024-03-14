@@ -624,7 +624,6 @@ std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connecti
     }
 
     if (!ConnectToSocket(*sock, (struct sockaddr*)&sockaddr, len, dest.ToStringAddrPort(), manual_connection)) {
-        LogPrintf("Cannot connect to socket for %s\n", dest.ToStringAddrPort());
         return {};
     }
 
