@@ -17,7 +17,6 @@
 #include <index/txindex.h>
 #include <init.h>
 #include <interfaces/chain.h>
-#include <masternode/meta.h>
 #include <netfulfilledman.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
@@ -28,6 +27,7 @@
 #include <llmq/signing.h>
 #include <llmq/signing_shares.h>
 #include <llmq/snapshot.h>
+#include <masternode/meta.h>
 #include <masternode/sync.h>
 #include <miner.h>
 #include <net.h>
@@ -64,6 +64,7 @@
 #include <coinjoin/context.h>
 #include <coinjoin/server.h>
 #include <evo/cbtx.h>
+#include <evo/chainhelper.h>
 #include <evo/creditpool.h>
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
@@ -115,10 +116,12 @@ void DashTestSetup(NodeContext& node)
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
 #endif // ENABLE_WALLET
     node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.evodb, *node.sporkman, *node.mempool, node.peerman, true, false);
+    node.chain_helper = std::make_unique<CChainstateHelper>(*node.govman, Params().GetConsensus(), *node.mn_sync, *node.sporkman);
 }
 
 void DashTestSetupClose(NodeContext& node)
 {
+    node.chain_helper.reset();
     node.llmq_ctx->Interrupt();
     node.llmq_ctx->Stop();
     node.llmq_ctx.reset();
@@ -275,7 +278,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    m_node.chainman->InitializeChainstate(m_node.mempool.get(), *m_node.mnhf_manager, *m_node.evodb, llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor);
+    m_node.chainman->InitializeChainstate(m_node.mempool.get(), *m_node.mnhf_manager, *m_node.evodb, m_node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor);
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!::ChainstateActive().CanFlushToDisk());
@@ -389,8 +392,8 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
     const CChainParams& chainparams = Params();
     CTxMemPool empty_pool;
     CBlock block = BlockAssembler(
-            *m_node.sporkman, *m_node.govman, *m_node.llmq_ctx, *m_node.evodb,
-            ::ChainstateActive(), empty_pool, chainparams
+            ::ChainstateActive(), *m_node.evodb, *m_node.chain_helper, *m_node.llmq_ctx,
+            empty_pool, chainparams
         ).CreateNewBlock(scriptPubKey)->block;
 
     std::vector<CTransactionRef> llmqCommitments;

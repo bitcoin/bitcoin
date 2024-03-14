@@ -10,36 +10,50 @@
 #include <string>
 #include <vector>
 
-class CGovernanceManager;
 class CBlock;
 class CBlockIndex;
+class CGovernanceManager;
+class CMasternodeSync;
 class CTransaction;
-struct CMutableTransaction;
 class CSporkManager;
 class CTxOut;
-class CMasternodeSync;
+
+struct CMutableTransaction;
+
+namespace Consensus { struct Params; }
 
 /**
- * Masternode Payments Namespace
- * Helpers to kees track of who should get paid for which blocks
- */
-
-namespace MasternodePayments
-{
-bool IsBlockValueValid(const CSporkManager& sporkManager, CGovernanceManager& governanceManager, const CMasternodeSync& mn_sync,
-                       const CBlock& block, const int nBlockHeight, const CAmount blockReward, std::string& strErrorRet);
-bool IsBlockPayeeValid(const CSporkManager& sporkManager, CGovernanceManager& governanceManager, const CMasternodeSync& mn_sync,
-                       const CTransaction& txNew, const CBlockIndex* const pindexPrev, const CAmount blockSubsidy, const CAmount feeReward);
-void FillBlockPayments(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
-                       CMutableTransaction& txNew, const CBlockIndex* const pindexPrev, const CAmount blockSubsidy, const CAmount feeReward,
-                       std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet);
-
-/**
- * this helper returns amount that should be reallocated to platform
- * it is calculated based on total amount of Masternode rewards (not block reward)
+ * This helper returns amount that should be reallocated to platform
+ * It is calculated based on total amount of masternode rewards (not block reward)
  */
 CAmount PlatformShare(const CAmount masternodeReward);
 
-} // namespace MasternodePayments
+class CMNPaymentsProcessor
+{
+private:
+    CGovernanceManager& m_govman;
+    const Consensus::Params& m_consensus_params;
+    const CMasternodeSync& m_mn_sync;
+    const CSporkManager& m_sporkman;
+
+private:
+    [[nodiscard]] bool GetBlockTxOuts(const CBlockIndex* pindexPrev, const CAmount blockSubsidy, const CAmount feeReward,
+                                      std::vector<CTxOut>& voutMasternodePaymentsRet);
+    [[nodiscard]] bool GetMasternodeTxOuts(const CBlockIndex* pindexPrev, const CAmount blockSubsidy, const CAmount feeReward,
+                                      std::vector<CTxOut>& voutMasternodePaymentsRet);
+    [[nodiscard]] bool IsTransactionValid(const CTransaction& txNew, const CBlockIndex* pindexPrev, const CAmount blockSubsidy,
+                                          const CAmount feeReward);
+    [[nodiscard]] bool IsOldBudgetBlockValueValid(const CBlock& block, const int nBlockHeight, const CAmount blockReward, std::string& strErrorRet);
+
+public:
+    explicit CMNPaymentsProcessor(CGovernanceManager& govman, const Consensus::Params& consensus_params, const CMasternodeSync& mn_sync,
+                                  const CSporkManager& sporkman) :
+        m_govman{govman}, m_consensus_params{consensus_params}, m_mn_sync{mn_sync}, m_sporkman{sporkman} {}
+
+    bool IsBlockValueValid(const CBlock& block, const int nBlockHeight, const CAmount blockReward, std::string& strErrorRet);
+    bool IsBlockPayeeValid(const CTransaction& txNew, const CBlockIndex* pindexPrev, const CAmount blockSubsidy, const CAmount feeReward);
+    void FillBlockPayments(CMutableTransaction& txNew, const CBlockIndex* pindexPrev, const CAmount blockSubsidy, const CAmount feeReward,
+                           std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet);
+};
 
 #endif // BITCOIN_MASTERNODE_PAYMENTS_H

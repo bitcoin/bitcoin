@@ -8,6 +8,7 @@
 #include <banman.h>
 #include <coinjoin/context.h>
 #include <evo/creditpool.h>
+#include <evo/chainhelper.h>
 #include <interfaces/chain.h>
 #include <interfaces/coinjoin.h>
 #include <llmq/context.h>
