@@ -4183,6 +4183,7 @@ UniValue importprunedfunds(const JSONRPCRequest& request);
 UniValue removeprunedfunds(const JSONRPCRequest& request);
 UniValue importmulti(const JSONRPCRequest& request);
 UniValue importdescriptors(const JSONRPCRequest& request);
+RPCHelpMan listdescriptors();
 UniValue dumphdinfo(const JSONRPCRequest& request);
 UniValue importelectrumwallet(const JSONRPCRequest& request);
 
@@ -4443,6 +4444,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "keypoolrefill",                    &keypoolrefill,                 {"newsize"} },
     { "wallet",             "listaddressbalances",              &listaddressbalances,           {"minamount"} },
     { "wallet",             "listaddressgroupings",             &listaddressgroupings,          {} },
+    { "wallet",             "listdescriptors",                  &listdescriptors,               {} },
     { "wallet",             "listlabels",                       &listlabels,                    {"purpose"} },
     { "wallet",             "listlockunspent",                  &listlockunspent,               {} },
     { "wallet",             "listreceivedbyaddress",            &listreceivedbyaddress,         {"minconf","addlocked","include_empty","include_watchonly","address_filter"} },

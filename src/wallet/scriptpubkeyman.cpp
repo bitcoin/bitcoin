@@ -77,8 +77,8 @@ bool HaveKeys(const std::vector<valtype>& pubkeys, const LegacyScriptPubKeyMan& 
 //!
 //! @param keystore            legacy key and script store
 //! @param script              script to solve
-//! @param sigversion          script type (top-level / redeemscript / witnessscript)
-//! @param recurse_scripthash  whether to recurse into nested p2sh and p2wsh
+//! @param sigversion          script type (top-level / redeemscript)
+//! @param recurse_scripthash  whether to recurse into nested p2sh
 //!                            scripts or simply treat any script that has been
 //!                            stored in the keystore as spendable
 IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& scriptPubKey, IsMineSigVersion sigversion, bool recurse_scripthash=true)
@@ -299,6 +299,7 @@ bool LegacyScriptPubKeyMan::GetReservedDestination(bool internal, CTxDestination
     if (!ReserveKeyFromKeyPool(index, keypool, internal)) {
         return false;
     }
+    // TODO: unify with bitcoin and use here GetDestinationForKey even if we have no type
     address = PKHash(keypool.vchPubKey);
     return true;
 }
@@ -610,7 +611,7 @@ bool LegacyScriptPubKeyMan::CanGetAddresses(bool internal) const
     LOCK(cs_KeyStore);
     // Check if the keypool has keys
     bool keypool_has_keys;
-    if (internal && m_storage.CanSupportFeature(FEATURE_HD)) {
+    if (internal) {
         keypool_has_keys = setInternalKeyPool.size() > 0;
     } else {
         keypool_has_keys = KeypoolCountExternalKeys() > 0;
@@ -1214,13 +1215,13 @@ bool LegacyScriptPubKeyMan::GetKeyOrigin(const CKeyID& keyID, KeyOriginInfo& inf
     return true;
 }
 
-bool LegacyScriptPubKeyMan::AddKeyOrigin(const CPubKey& pubkey, const KeyOriginInfo& info)
+bool LegacyScriptPubKeyMan::AddKeyOriginWithDB(WalletBatch& batch, const CPubKey& pubkey, const KeyOriginInfo& info)
 {
     LOCK(cs_KeyStore);
     std::copy(info.fingerprint, info.fingerprint + 4, mapKeyMetadata[pubkey.GetID()].key_origin.fingerprint);
     mapKeyMetadata[pubkey.GetID()].key_origin.path = info.path;
     mapKeyMetadata[pubkey.GetID()].has_key_origin = true;
-    return WriteKeyMetadata(mapKeyMetadata[pubkey.GetID()], pubkey, true);
+    return batch.WriteKeyMetadata(mapKeyMetadata[pubkey.GetID()], pubkey, true);
 }
 
 bool LegacyScriptPubKeyMan::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
@@ -1367,6 +1368,9 @@ void LegacyScriptPubKeyMan::LoadKeyPool(int64_t nIndex, const CKeyPool &keypool)
 bool LegacyScriptPubKeyMan::CanGenerateKeys() const
 {
     LOCK(cs_KeyStore);
+    // TODO : unify with bitcoin after backporting SetupGeneration
+    // return IsHDEnabled() || !m_storage.CanSupportFeature(FEATURE_HD);
+
     if (m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) || m_storage.IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET)) {
         return false;
     }
@@ -1713,6 +1717,9 @@ bool LegacyScriptPubKeyMan::ImportPrivKeys(const std::map<CKeyID, CKey>& privkey
 bool LegacyScriptPubKeyMan::ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp)
 {
     WalletBatch batch(m_storage.GetDatabase());
+    for (const auto& entry : key_origins) {
+        AddKeyOriginWithDB(batch, entry.second.first, entry.second.second);
+    }
     for (const CKeyID& id : ordered_pubkeys) {
         auto entry = pubkey_map.find(id);
         if (entry == pubkey_map.end()) {
@@ -1734,9 +1741,6 @@ bool LegacyScriptPubKeyMan::ImportPubKeys(const std::vector<CKeyID>& ordered_pub
             AddKeypoolPubkeyWithDB(pubkey, internal, batch);
             NotifyCanGetAddressesChanged();
         }
-    }
-    for (const auto& entry : key_origins) {
-        AddKeyOrigin(entry.second.first, entry.second.second);
     }
     return true;
 }

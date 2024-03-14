@@ -8,16 +8,19 @@
 #
 # This file encodes and decodes BASE58 P2PKH and P2SH addresses
 #
+
 import unittest
 
-from .script import hash256, hash160, CScript
+from .script import hash160, hash256, CScript
 from .util import hex_str_to_bytes
+
 from test_framework.util import assert_equal
 
 # Note unlike in bitcoin, this address isn't bech32 since we don't (at this time) support bech32.
 ADDRESS_BCRT1_UNSPENDABLE = 'yVg3NBUHNEhgDceqwVUjsZHreC5PBHnUo9'
 ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR = 'addr(yVg3NBUHNEhgDceqwVUjsZHreC5PBHnUo9)#e5kt0jtk'
 ADDRESS_BCRT1_P2SH_OP_TRUE = '8zJctvfrzGZ5s1zQ3kagwyW1DsPYSQ4V2P'
+
 
 chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
