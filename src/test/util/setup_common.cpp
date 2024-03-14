@@ -561,9 +561,10 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
             LOCK2(cs_main, m_node.mempool->cs);
             LockPoints lp;
             CAmount in_chain_input_value;
-            double dPriority = GetPriority(*ptx, active_chainstate.CoinsTip(), height + 1, in_chain_input_value);
+            const double coin_age = GetCoinAge(*ptx, active_chainstate.CoinsTip(), height + 1, in_chain_input_value);
             m_node.mempool->addUnchecked(CTxMemPoolEntry(ptx, /*fee=*/(total_in - num_outputs * amount_per_output),
-                                                         /*time=*/0, /*entry_priority=*/ dPriority, /*entry_height=*/ height, /*entry_sequence=*/0,
+                                                         /*time=*/0, /*entry_height=*/ height, /*entry_sequence=*/0,
+                                                         /*entry_tx_inputs_coin_age=*/coin_age,
                                                          in_chain_input_value,
                                                          /*spends_coinbase=*/false, /*sigops_cost=*/4, lp));
         }
@@ -594,7 +595,8 @@ void TestChain100Setup::MockMempoolMinFee(const CFeeRate& target_feerate)
     const auto tx_fee = target_feerate.GetFee(GetVirtualTransactionSize(*tx)) -
         m_node.mempool->m_opts.incremental_relay_feerate.GetFee(GetVirtualTransactionSize(*tx));
     m_node.mempool->addUnchecked(CTxMemPoolEntry(tx, /*fee=*/tx_fee,
-                                                 /*time=*/0, /*entry_priority=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
+                                                 /*time=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
+                                                 /*entry_tx_inputs_coin_age=*/0.0,
                                                  /*in_chain_input_value=*/0,
                                                  /*spends_coinbase=*/true, /*sigops_cost=*/1, lp));
     m_node.mempool->TrimToSize(0);

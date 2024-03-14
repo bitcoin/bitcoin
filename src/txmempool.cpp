@@ -677,7 +677,9 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
     for (const auto& it : GetSortedDepthAndScore()) {
         checkTotal += it->GetTxSize();
         CAmount dummyValue;
-        double freshPriority = GetPriority(it->GetTx(), active_coins_tip, spendheight, dummyValue);
+        const double fresh_coin_age = GetCoinAge(it->GetTx(), active_coins_tip, spendheight, dummyValue);
+        const auto fresh_mod_vsize = CalculateModifiedSize(it->GetTx(), it->GetTxSize());
+        const double freshPriority = ComputePriority2(fresh_coin_age, fresh_mod_vsize);
         double cachePriority = it->GetPriority(spendheight);
         double priDiff = cachePriority > freshPriority ? cachePriority - freshPriority : freshPriority - cachePriority;
         // Verify that the difference between the on the fly calculation and a fresh calculation
