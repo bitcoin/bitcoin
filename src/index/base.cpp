@@ -31,7 +31,7 @@ template <typename... Args>
 void BaseIndex::FatalErrorf(const char* fmt, const Args&... args)
 {
     auto message = tfm::format(fmt, args...);
-    node::AbortNode(m_chain->context()->shutdown, m_chain->context()->exit_status, message);
+    node::AbortNode(m_chain->context()->shutdown, m_chain->context()->exit_status, Untranslated(message));
 }
 
 CBlockLocator GetLocator(interfaces::Chain& chain, const uint256& block_hash)

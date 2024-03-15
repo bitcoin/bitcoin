@@ -9,7 +9,6 @@
 
 #include <atomic>
 #include <cstdint>
-#include <string>
 
 class ArgsManager;
 class CBlockIndex;
@@ -37,9 +36,9 @@ public:
 
     void warning(const bilingual_str& warning) override;
 
-    void flushError(const std::string& debug_message) override;
+    void flushError(const bilingual_str& message) override;
 
-    void fatalError(const std::string& debug_message, const bilingual_str& user_message = {}) override;
+    void fatalError(const bilingual_str& message) override;
 
     //! Block height after which blockTip notification will return Interrupted{}, if >0.
     int m_stop_at_height{DEFAULT_STOPATHEIGHT};

@@ -1757,7 +1757,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         // Start indexes initial sync
         if (!StartIndexBackgroundSync(node)) {
             bilingual_str err_str = _("Failed to start indexes, shutting down..");
-            chainman.GetNotifications().fatalError(err_str.original, err_str);
+            chainman.GetNotifications().fatalError(err_str);
             return;
         }
         // Load mempool from disk
