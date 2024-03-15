@@ -89,7 +89,7 @@ bool BaseIndex::Init()
         return &m_chain->context()->chainman->GetChainstateForIndexing());
     // Register to validation interface before setting the 'm_synced' flag, so that
     // callbacks are not missed once m_synced is true.
-    RegisterValidationInterface(this);
+    m_chain->context()->validation_signals->RegisterValidationInterface(this);
 
     CBlockLocator locator;
     if (!GetDB().ReadBestBlock(locator)) {
@@ -229,7 +229,8 @@ bool BaseIndex::Commit()
         }
     }
     if (!ok) {
-        return error("%s: Failed to commit latest %s state", __func__, GetName());
+        LogError("%s: Failed to commit latest %s state\n", __func__, GetName());
+        return false;
     }
     return true;
 }
@@ -380,7 +381,7 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain() const
     }
 
     LogPrintf("%s: %s is catching up on block notifications\n", __func__, GetName());
-    SyncWithValidationInterfaceQueue();
+    m_chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
     return true;
 }
 
@@ -399,7 +400,9 @@ bool BaseIndex::StartBackgroundSync()
 
 void BaseIndex::Stop()
 {
-    UnregisterValidationInterface(this);
+    if (m_chain->context()->validation_signals) {
+        m_chain->context()->validation_signals->UnregisterValidationInterface(this);
+    }
 
     if (m_thread_sync.joinable()) {
         m_thread_sync.join();

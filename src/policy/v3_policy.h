@@ -48,9 +48,15 @@ static_assert(V3_CHILD_MAX_VSIZE + MAX_STANDARD_TX_WEIGHT / WITNESS_SCALE_FACTOR
  *                                      count of in-mempool ancestors.
  * @param[in]   vsize                   The sigop-adjusted virtual size of ptx.
  *
- * @returns debug string if an error occurs, std::nullopt otherwise.
+ * @returns 3 possibilities:
+ * - std::nullopt if all v3 checks were applied successfully
+ * - debug string + pointer to a mempool sibling if this transaction would be the second child in a
+ *   1-parent-1-child cluster; the caller may consider evicting the specified sibling or return an
+ *   error with the debug string.
+ * - debug string + nullptr if this transaction violates some v3 rule and sibling eviction is not
+ *   applicable.
  */
-std::optional<std::string> SingleV3Checks(const CTransactionRef& ptx,
+std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTransactionRef& ptx,
                                           const CTxMemPool::setEntries& mempool_ancestors,
                                           const std::set<Txid>& direct_conflicts,
                                           int64_t vsize);

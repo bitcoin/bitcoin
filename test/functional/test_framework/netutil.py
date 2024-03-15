@@ -158,3 +158,12 @@ def test_ipv6_local():
     except socket.error:
         have_ipv6 = False
     return have_ipv6
+
+def test_unix_socket():
+    '''Return True if UNIX sockets are available on this platform.'''
+    try:
+        socket.AF_UNIX
+    except AttributeError:
+        return False
+    else:
+        return True

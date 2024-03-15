@@ -13,6 +13,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <core_io.h>
+#include <flatfile.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
 #include <index/txindex.h>
@@ -34,7 +35,7 @@
 #include <validation.h>
 
 #include <any>
-#include <string>
+#include <vector>
 
 #include <univalue.h>
 
@@ -295,7 +296,7 @@ static bool rest_block(const std::any& context,
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
-    CBlock block;
+    FlatFilePos pos{};
     const CBlockIndex* pblockindex = nullptr;
     const CBlockIndex* tip = nullptr;
     ChainstateManager* maybe_chainman = GetChainman(context, req);
@@ -311,32 +312,33 @@ static bool rest_block(const std::any& context,
         if (chainman.m_blockman.IsBlockPruned(*pblockindex)) {
             return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not available (pruned data)");
         }
+        pos = pblockindex->GetBlockPos();
     }
 
-    if (!chainman.m_blockman.ReadBlockFromDisk(block, *pblockindex)) {
+    std::vector<uint8_t> block_data{};
+    if (!chainman.m_blockman.ReadRawBlockFromDisk(block_data, pos)) {
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
 
     switch (rf) {
     case RESTResponseFormat::BINARY: {
-        DataStream ssBlock;
-        ssBlock << TX_WITH_WITNESS(block);
-        std::string binaryBlock = ssBlock.str();
+        const std::string binaryBlock{block_data.begin(), block_data.end()};
         req->WriteHeader("Content-Type", "application/octet-stream");
         req->WriteReply(HTTP_OK, binaryBlock);
         return true;
     }
 
     case RESTResponseFormat::HEX: {
-        DataStream ssBlock;
-        ssBlock << TX_WITH_WITNESS(block);
-        std::string strHex = HexStr(ssBlock) + "\n";
+        const std::string strHex{HexStr(block_data) + "\n"};
         req->WriteHeader("Content-Type", "text/plain");
         req->WriteReply(HTTP_OK, strHex);
         return true;
     }
 
     case RESTResponseFormat::JSON: {
+        CBlock block{};
+        DataStream block_stream{block_data};
+        block_stream >> TX_WITH_WITNESS(block);
         UniValue objBlock = blockToJSON(chainman.m_blockman, block, *tip, *pblockindex, tx_verbosity);
         std::string strJSON = objBlock.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");

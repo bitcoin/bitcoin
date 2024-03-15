@@ -460,19 +460,20 @@ public:
 class NotificationsHandlerImpl : public Handler
 {
 public:
-    explicit NotificationsHandlerImpl(std::shared_ptr<Chain::Notifications> notifications)
-        : m_proxy(std::make_shared<NotificationsProxy>(std::move(notifications)))
+    explicit NotificationsHandlerImpl(ValidationSignals& signals, std::shared_ptr<Chain::Notifications> notifications)
+        : m_signals{signals}, m_proxy{std::make_shared<NotificationsProxy>(std::move(notifications))}
     {
-        RegisterSharedValidationInterface(m_proxy);
+        m_signals.RegisterSharedValidationInterface(m_proxy);
     }
     ~NotificationsHandlerImpl() override { disconnect(); }
     void disconnect() override
     {
         if (m_proxy) {
-            UnregisterSharedValidationInterface(m_proxy);
+            m_signals.UnregisterSharedValidationInterface(m_proxy);
             m_proxy.reset();
         }
     }
+    ValidationSignals& m_signals;
     std::shared_ptr<NotificationsProxy> m_proxy;
 };
 
@@ -761,12 +762,12 @@ public:
     }
     std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) override
     {
-        return std::make_unique<NotificationsHandlerImpl>(std::move(notifications));
+        return std::make_unique<NotificationsHandlerImpl>(validation_signals(), std::move(notifications));
     }
     void waitForNotificationsIfTipChanged(const uint256& old_tip) override
     {
         if (!old_tip.IsNull() && old_tip == WITH_LOCK(::cs_main, return chainman().ActiveChain().Tip()->GetBlockHash())) return;
-        SyncWithValidationInterfaceQueue();
+        validation_signals().SyncWithValidationInterfaceQueue();
     }
     std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) override
     {
@@ -822,6 +823,7 @@ public:
     NodeContext* context() override { return &m_node; }
     ArgsManager& args() { return *Assert(m_node.args); }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
+    ValidationSignals& validation_signals() { return *Assert(m_node.validation_signals); }
     NodeContext& m_node;
 };
 } // namespace

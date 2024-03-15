@@ -5,6 +5,7 @@
 """Test the ZMQ notification interface."""
 import struct
 from time import sleep
+from io import BytesIO
 
 from test_framework.address import (
     ADDRESS_BCRT1_P2WSH_OP_TRUE,
@@ -17,6 +18,7 @@ from test_framework.blocktools import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
+    CBlock,
     hash256,
     tx_from_hex,
 )
@@ -104,9 +106,8 @@ class ZMQTestSetupBlock:
 class ZMQTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        # This test isn't testing txn relay/timing, so set whitelist on the
-        # peers for instant txn relay. This speeds up the test run time 2-3x.
-        self.extra_args = [["-whitelist=noban@127.0.0.1"]] * self.num_nodes
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
         self.zmq_port_base = p2p_port(self.num_nodes + 1)
 
     def skip_test_if_missing_module(self):
@@ -138,8 +139,7 @@ class ZMQTest (BitcoinTestFramework):
                 socket.setsockopt(zmq.IPV6, 1)
             subscribers.append(ZMQSubscriber(socket, topic.encode()))
 
-        self.restart_node(0, [f"-zmqpub{topic}={address}" for topic, address in services] +
-                             self.extra_args[0])
+        self.restart_node(0, [f"-zmqpub{topic}={address}" for topic, address in services])
 
         for i, sub in enumerate(subscribers):
             sub.socket.connect(services[i][1])
@@ -203,8 +203,13 @@ class ZMQTest (BitcoinTestFramework):
             assert_equal(tx.hash, txid.hex())
 
             # Should receive the generated raw block.
-            block = rawblock.receive()
-            assert_equal(genhashes[x], hash256_reversed(block[:80]).hex())
+            hex = rawblock.receive()
+            block = CBlock()
+            block.deserialize(BytesIO(hex))
+            assert block.is_valid()
+            assert_equal(block.vtx[0].hash, tx.hash)
+            assert_equal(len(block.vtx), 1)
+            assert_equal(genhashes[x], hash256_reversed(hex[:80]).hex())
 
             # Should receive the generated block hash.
             hash = hashblock.receive().hex()

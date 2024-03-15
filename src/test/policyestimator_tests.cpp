@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 {
     CBlockPolicyEstimator& feeEst = *Assert(m_node.fee_estimator);
     CTxMemPool& mpool = *Assert(m_node.mempool);
-    RegisterValidationInterface(&feeEst);
+    m_node.validation_signals->RegisterValidationInterface(&feeEst);
     TestMemPoolEntryHelper entry;
     CAmount basefee(2000);
     CAmount deltaFee(100);
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       /*submitted_in_package=*/false,
                                                                                       /*chainstate_is_current=*/true,
                                                                                       /*has_no_mempool_parents=*/true)};
-                    GetMainSignals().TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
+                    m_node.validation_signals->TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
                 }
                 uint256 hash = tx.GetHash();
                 txHashes[j].push_back(hash);
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
         // Check after just a few txs that combining buckets works as expected
         if (blocknum == 3) {
             // Wait for fee estimator to catch up
-            SyncWithValidationInterfaceQueue();
+            m_node.validation_signals->SyncWithValidationInterfaceQueue();
             // At this point we should need to combine 3 buckets to get enough data points
             // So estimateFee(1) should fail and estimateFee(2) should return somewhere around
             // 9*baserate.  estimateFee(2) %'s are 100,100,90 = average 97%
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     }
 
     // Wait for fee estimator to catch up
-    SyncWithValidationInterfaceQueue();
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
     std::vector<CAmount> origFeeEst;
     // Highest feerate is 10*baseRate and gets in all blocks,
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     }
 
     // Wait for fee estimator to catch up
-    SyncWithValidationInterfaceQueue();
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
     BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
     for (int i = 2; i < 10;i++) {
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       /*submitted_in_package=*/false,
                                                                                       /*chainstate_is_current=*/true,
                                                                                       /*has_no_mempool_parents=*/true)};
-                    GetMainSignals().TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
+                    m_node.validation_signals->TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
                 }
                 uint256 hash = tx.GetHash();
                 txHashes[j].push_back(hash);
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     }
 
     // Wait for fee estimator to catch up
-    SyncWithValidationInterfaceQueue();
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
     for (int i = 1; i < 10;i++) {
         BOOST_CHECK(feeEst.estimateFee(i) == CFeeRate(0) || feeEst.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     block.clear();
 
     // Wait for fee estimator to catch up
-    SyncWithValidationInterfaceQueue();
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
     BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
     for (int i = 2; i < 10;i++) {
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       /*submitted_in_package=*/false,
                                                                                       /*chainstate_is_current=*/true,
                                                                                       /*has_no_mempool_parents=*/true)};
-                    GetMainSignals().TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
+                    m_node.validation_signals->TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
                 }
                 uint256 hash = tx.GetHash();
                 CTransactionRef ptx = mpool.get(hash);
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
         block.clear();
     }
     // Wait for fee estimator to catch up
-    SyncWithValidationInterfaceQueue();
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
     BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
     for (int i = 2; i < 9; i++) { // At 9, the original estimate was already at the bottom (b/c scale = 2)
         BOOST_CHECK(feeEst.estimateFee(i).GetFeePerK() < origFeeEst[i-1] - deltaFee);

@@ -35,6 +35,8 @@ __AFL_FUZZ_INIT();
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
+const std::function<std::string()> G_TEST_GET_FULL_NAME{};
+
 /**
  * A copy of the command line arguments that start with `--`.
  * First `LLVMFuzzerInitialize()` is called, which saves the arguments to `g_args`.
@@ -81,7 +83,7 @@ static const TypeTestOneInput* g_test_one_input{nullptr};
 void initialize()
 {
     // Terminate immediately if a fuzzing harness ever tries to create a TCP socket.
-    CreateSock = [](const CService&) -> std::unique_ptr<Sock> { std::terminate(); };
+    CreateSock = [](const sa_family_t&) -> std::unique_ptr<Sock> { std::terminate(); };
 
     // Terminate immediately if a fuzzing harness ever tries to perform a DNS lookup.
     g_dns_lookup = [](const std::string& name, bool allow_lookup) {

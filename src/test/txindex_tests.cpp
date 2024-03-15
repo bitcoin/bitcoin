@@ -71,7 +71,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     // SyncWithValidationInterfaceQueue() call below is also needed to ensure
     // TSAN always sees the test thread waiting for the notification thread, and
     // avoid potential false positive reports.
-    SyncWithValidationInterfaceQueue();
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
     // shutdown sequence (c.f. Shutdown() in init.cpp)
     txindex.Stop();
