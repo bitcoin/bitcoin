@@ -25,7 +25,6 @@
 #include <uint256.h>
 #include <util/fs.h>
 #include <util/log.h>
-#include <validation.h>
 
 #include <algorithm>
 #include <array>
@@ -134,8 +133,8 @@ void TxIndex::DB::WriteTxs(const interfaces::BlockInfo& block)
     WriteBatch(batch);
 }
 
-TxIndex::TxIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe)
-    : BaseIndex(std::move(chain), "txindex", "txidx"), m_db(std::make_unique<TxIndex::DB>(n_cache_size, f_memory, f_wipe))
+TxIndex::TxIndex(std::unique_ptr<interfaces::Chain> chain, node::BlockManager& blockman, size_t n_cache_size, bool f_memory, bool f_wipe)
+    : BaseIndex(std::move(chain), "txindex", "txidx"), m_db(std::make_unique<TxIndex::DB>(n_cache_size, f_memory, f_wipe)), m_blockman(blockman)
 {
     if (m_db->m_has_legacy) {
         LogInfo("txindex contains entries in the legacy format, which uses excessive disk space. "
@@ -181,14 +180,16 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
                 continue;
             }
             LOCK(cs_main);
-            const CBlockIndex* block_index{m_chainstate->m_blockman.LookupBlockIndex(candidate_block_hash)};
+            const CBlockIndex* block_index{m_blockman.LookupBlockIndex(candidate_block_hash)};
             if (!block_index) {
                 LogWarning("Block index entry %s not found for txid %s", candidate_block_hash.ToString(), tx_hash.ToString());
                 continue;
             }
             if (!(block_index->nStatus & BLOCK_HAVE_DATA)) continue;
             const FlatFilePos tx_position{block_index->nFile, block_index->nDataPos + key.pos.tx_offset_in_block};
-            candidates.emplace_back(tx_position, candidate_block_hash, key.pos.block_seq, m_chainstate->m_chain.Contains(*block_index));
+            bool in_active_chain{false};
+            m_chain->findBlock(candidate_block_hash, interfaces::FoundBlock().inActiveChain(in_active_chain));
+            candidates.emplace_back(tx_position, candidate_block_hash, key.pos.block_seq, in_active_chain);
         }
     }
 
@@ -198,7 +199,7 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
     });
 
     for (const auto& candidate : candidates) {
-        AutoFile file{m_chainstate->m_blockman.OpenBlockFile(candidate.tx_position, /*fReadOnly=*/true)};
+        AutoFile file{m_blockman.OpenBlockFile(candidate.tx_position, /*fReadOnly=*/true)};
         if (file.IsNull()) {
             LogWarning("OpenBlockFile failed for txid %s", tx_hash.ToString());
             continue;
@@ -226,7 +227,7 @@ std::optional<TxIndexResult> TxIndex::FindLegacyTx(const Txid& tx_hash) const
         return std::nullopt;
     }
 
-    AutoFile file{m_chainstate->m_blockman.OpenBlockFile(postx, /*fReadOnly=*/true)};
+    AutoFile file{m_blockman.OpenBlockFile(postx, /*fReadOnly=*/true)};
     if (file.IsNull()) {
         LogError("OpenBlockFile failed");
         return std::nullopt;
