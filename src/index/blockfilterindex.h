@@ -22,8 +22,10 @@
 #include <vector>
 
 class BlockFilter;
-class CBlockIndex;
 enum class BlockFilterType : uint8_t;
+namespace interfaces {
+struct BlockRef;
+}  // namespace interfaces
 
 static const char* const DEFAULT_BLOCKFILTERINDEX = "0";
 

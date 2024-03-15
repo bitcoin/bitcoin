@@ -10,8 +10,6 @@
 #include <validation.h>
 #include <validationinterface.h>
 
-using kernel::ChainstateRole;
-
 void TestBlockManager::CleanupForFuzzing()
 {
     m_dirty_blockindex.clear();

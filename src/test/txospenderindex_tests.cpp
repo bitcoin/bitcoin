@@ -50,7 +50,7 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_initial_sync, TestChain100Setup)
     BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return m_node.chainman->ActiveTip()->GetBlockHash()), tip_hash);
 
     // Now we concluded the setup phase, run index
-    TxoSpenderIndex txospenderindex(interfaces::MakeChain(m_node), 1 << 20, true);
+    TxoSpenderIndex txospenderindex(interfaces::MakeChain(m_node), m_node.chainman->m_blockman, 1 << 20, true);
     BOOST_REQUIRE(txospenderindex.Init());
     BOOST_CHECK(!txospenderindex.BlockUntilSyncedToCurrentChain()); // false when not synced
     BOOST_CHECK_NE(txospenderindex.GetSummary().best_block_hash, tip_hash);

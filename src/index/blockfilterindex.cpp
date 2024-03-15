@@ -5,7 +5,6 @@
 #include <index/blockfilterindex.h>
 
 #include <blockfilter.h>
-#include <chain.h>
 #include <common/args.h>
 #include <dbwrapper.h>
 #include <flatfile.h>
