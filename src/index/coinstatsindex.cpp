@@ -5,7 +5,6 @@
 #include <index/coinstatsindex.h>
 
 #include <arith_uint256.h>
-#include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
 #include <common/args.h>

@@ -51,9 +51,9 @@ static const std::vector<std::pair<std::string, IndexFactory>> INDEX_FACTORIES{
     {"coinstatsindex", [](node::NodeContext& node) -> std::unique_ptr<BaseIndex> {
         return std::make_unique<CoinStatsIndex>(interfaces::MakeChain(node), /*n_cache_size=*/1_MiB); }},
     {"txindex", [](node::NodeContext& node) -> std::unique_ptr<BaseIndex> {
-        return std::make_unique<TxIndex>(interfaces::MakeChain(node), /*n_cache_size=*/1_MiB); }},
+        return std::make_unique<TxIndex>(interfaces::MakeChain(node), Assert(node.chainman)->m_blockman, /*n_cache_size=*/1_MiB); }},
     {"txospenderindex", [](node::NodeContext& node) -> std::unique_ptr<BaseIndex> {
-        return std::make_unique<TxoSpenderIndex>(interfaces::MakeChain(node), /*n_cache_size=*/1_MiB); }},
+        return std::make_unique<TxoSpenderIndex>(interfaces::MakeChain(node), Assert(node.chainman)->m_blockman, /*n_cache_size=*/1_MiB); }},
     {"blockfilterindex", [](node::NodeContext& node) -> std::unique_ptr<BaseIndex> {
         return std::make_unique<BlockFilterIndex>(interfaces::MakeChain(node), BlockFilterType::BASIC, /*n_cache_size=*/1_MiB); }},
 };
