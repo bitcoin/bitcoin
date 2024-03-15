@@ -145,6 +145,10 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, const std::vecto
         }
     }
 
+    // Use randomly chosen seed for deterministic PRNG, so that (by default) test
+    // data directories use a random name that doesn't overlap with other tests.
+    SeedRandomForTest(SeedRand::SEED);
+
     if (!m_node.args->IsArgSet("-testdatadir")) {
         // By default, the data directory has a random name
         const auto rand_str{g_insecure_rand_ctx_temp_path.rand256().ToString()};
@@ -178,7 +182,6 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, const std::vecto
     gArgs.ForceSetArg("-datadir", fs::PathToString(m_path_root));
 
     SelectParams(chainType);
-    SeedRandomForTest();
     if (G_TEST_LOG_FUN) LogInstance().PushBackCallback(G_TEST_LOG_FUN);
     InitLogging(*m_node.args);
     AppInitParameterInteraction(*m_node.args);
