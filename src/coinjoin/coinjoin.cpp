@@ -47,12 +47,10 @@ uint256 CCoinJoinQueue::GetSignatureHash() const
     return SerializeHash(*this, SER_GETHASH, PROTOCOL_VERSION);
 }
 
-bool CCoinJoinQueue::Sign()
+bool CCoinJoinQueue::Sign(const CActiveMasternodeManager& mn_activeman)
 {
-    if (!fMasternodeMode) return false;
-
     uint256 hash = GetSignatureHash();
-    CBLSSignature sig = ::activeMasternodeManager->Sign(hash, /*is_legacy=*/ false);
+    CBLSSignature sig = mn_activeman.Sign(hash, /*is_legacy=*/ false);
     if (!sig.IsValid()) {
         return false;
     }
@@ -99,12 +97,10 @@ uint256 CCoinJoinBroadcastTx::GetSignatureHash() const
     return SerializeHash(*this, SER_GETHASH, PROTOCOL_VERSION);
 }
 
-bool CCoinJoinBroadcastTx::Sign()
+bool CCoinJoinBroadcastTx::Sign(const CActiveMasternodeManager& mn_activeman)
 {
-    if (!fMasternodeMode) return false;
-
     uint256 hash = GetSignatureHash();
-    CBLSSignature sig = ::activeMasternodeManager->Sign(hash, /*is_legacy=*/ false);
+    CBLSSignature sig = mn_activeman.Sign(hash, /*is_legacy=*/ false);
     if (!sig.IsValid()) {
         return false;
     }
