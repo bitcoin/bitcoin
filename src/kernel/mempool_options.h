@@ -14,6 +14,7 @@
 #include <optional>
 
 class CBlockPolicyEstimator;
+class CScheduler;
 class ValidationSignals;
 
 enum class RBFPolicy { Never, OptIn, Always };
@@ -47,6 +48,7 @@ namespace kernel {
 struct MemPoolOptions {
     /* Used to estimate appropriate transaction fees. */
     CBlockPolicyEstimator* estimator{nullptr};
+    CScheduler* scheduler{nullptr};
     /* The ratio used to determine how often sanity checks will run.  */
     int check_ratio{0};
     int64_t max_size_bytes{DEFAULT_MAX_MEMPOOL_SIZE_MB * 1'000'000};
