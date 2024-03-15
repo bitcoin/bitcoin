@@ -7,12 +7,16 @@
 
 #include <util/result.h>
 
+#include <string>
+
 class ArgsManager;
 class CChainParams;
 struct bilingual_str;
 namespace kernel {
 struct MemPoolOptions;
 };
+
+[[nodiscard]] util::Result<int32_t> ParseDustDynamicOpt(const std::string& optstr, unsigned int max_fee_estimate_blocks);
 
 /**
  * Overlay the options set in \p argsman on top of corresponding members in \p mempool_opts.
