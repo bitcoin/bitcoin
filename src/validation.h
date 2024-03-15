@@ -62,6 +62,7 @@ class CMNHFManager;
 class CScriptCheck;
 class CTxMemPool;
 class TxValidationState;
+class CChainstateHelper;
 class ChainstateManager;
 struct PrecomputedTransactionData;
 struct ChainTxData;
@@ -662,6 +663,7 @@ protected:
     std::unique_ptr<CoinsViews> m_coins_views;
 
     //! Dash
+    const std::unique_ptr<CChainstateHelper>& m_chain_helper;
     const std::unique_ptr<llmq::CChainLocksHandler>& m_clhandler;
     const std::unique_ptr<llmq::CInstantSendManager>& m_isman;
     const std::unique_ptr<llmq::CQuorumBlockProcessor>& m_quorum_block_processor;
@@ -677,6 +679,7 @@ public:
                          BlockManager& blockman,
                          CMNHFManager& mnhfManager,
                          CEvoDB& evoDb,
+                         const std::unique_ptr<CChainstateHelper>& chain_helper,
                          const std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
                          const std::unique_ptr<llmq::CInstantSendManager>& isman,
                          const std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
@@ -1027,6 +1030,7 @@ public:
     CChainState& InitializeChainstate(CTxMemPool* mempool,
                                       CMNHFManager& mnhfManager,
                                       CEvoDB& evoDb,
+                                      const std::unique_ptr<CChainstateHelper>& chain_helper,
                                       const std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
                                       const std::unique_ptr<llmq::CInstantSendManager>& isman,
                                       const std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,

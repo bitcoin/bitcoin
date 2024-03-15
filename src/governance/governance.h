@@ -25,8 +25,6 @@ class CGovernanceObject;
 class CGovernanceVote;
 class CSporkManager;
 
-extern std::unique_ptr<CGovernanceManager> governance;
-
 static constexpr int RATE_BUFFER_SIZE = 5;
 
 class CDeterministicMNList;
@@ -403,6 +401,6 @@ private:
 
 };
 
-bool AreSuperblocksEnabled(const CSporkManager& sporkManager);
+bool AreSuperblocksEnabled(const CSporkManager& sporkman);
 
 #endif // BITCOIN_GOVERNANCE_GOVERNANCE_H

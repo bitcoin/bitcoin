@@ -400,8 +400,9 @@ private:
     FastRandomContext rnd GUARDED_BY(cs);
 
     CConnman& connman;
-    const CQuorumManager& qman;
     CSigningManager& sigman;
+    const CQuorumManager& qman;
+    const CSporkManager& m_sporkman;
 
     const std::unique_ptr<PeerManager>& m_peerman;
 
@@ -409,8 +410,8 @@ private:
     std::atomic<uint32_t> recoveredSigsCounter{0};
 
 public:
-    explicit CSigSharesManager(CConnman& _connman, CQuorumManager& _qman, CSigningManager& _sigman, const std::unique_ptr<PeerManager>& peerman) :
-        connman(_connman), qman(_qman), sigman(_sigman), m_peerman(peerman)
+    explicit CSigSharesManager(CConnman& _connman, CSigningManager& _sigman, const CQuorumManager& _qman, const CSporkManager& sporkman, const std::unique_ptr<PeerManager>& peerman) :
+        connman(_connman), sigman(_sigman), qman(_qman), m_sporkman(sporkman), m_peerman(peerman)
     {
         workInterrupt.reset();
     };
@@ -423,7 +424,7 @@ public:
     void UnregisterAsRecoveredSigsListener();
     void InterruptWorkerThread();
 
-    void ProcessMessage(const CNode& pnode, const CSporkManager& sporkManager, const std::string& msg_type, CDataStream& vRecv);
+    void ProcessMessage(const CNode& pnode, const CSporkManager& sporkman, const std::string& msg_type, CDataStream& vRecv);
 
     void AsyncSign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
     std::optional<CSigShare> CreateSigShare(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash) const;

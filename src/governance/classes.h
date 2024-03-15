@@ -30,15 +30,15 @@ CAmount ParsePaymentAmount(const std::string& strAmount);
 class CSuperblockManager
 {
 private:
-    static bool GetBestSuperblock(CGovernanceManager& governanceManager, CSuperblock_sptr& pSuperblockRet, int nBlockHeight);
+    static bool GetBestSuperblock(CGovernanceManager& govman, CSuperblock_sptr& pSuperblockRet, int nBlockHeight);
 
 public:
-    static bool IsSuperblockTriggered(CGovernanceManager& governanceManager, int nBlockHeight);
+    static bool IsSuperblockTriggered(CGovernanceManager& govman, int nBlockHeight);
 
-    static bool GetSuperblockPayments(CGovernanceManager& governanceManager, int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet);
-    static void ExecuteBestSuperblock(CGovernanceManager& governanceManager, int nBlockHeight);
+    static bool GetSuperblockPayments(CGovernanceManager& govman, int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet);
+    static void ExecuteBestSuperblock(CGovernanceManager& govman, int nBlockHeight);
 
-    static bool IsValid(CGovernanceManager& governanceManager, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
+    static bool IsValid(CGovernanceManager& govman, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
 };
 
 /**
@@ -101,7 +101,7 @@ private:
 public:
     CSuperblock();
     CSuperblock(int nBlockHeight, std::vector<CGovernancePayment> vecPayments);
-    explicit CSuperblock(uint256& nHash);
+    explicit CSuperblock(CGovernanceManager& govman, uint256& nHash);
 
     static bool IsValidBlockHeight(int nBlockHeight);
     static void GetNearestSuperblocksHeights(int nBlockHeight, int& nLastSuperblockRet, int& nNextSuperblockRet);
@@ -115,7 +115,7 @@ public:
     // TELL THE ENGINE WE EXECUTED THIS EVENT
     void SetExecuted() { nStatus = SeenObjectStatus::Executed; }
 
-    CGovernanceObject* GetGovernanceObject(CGovernanceManager& governanceManager);
+    CGovernanceObject* GetGovernanceObject(CGovernanceManager& govman);
 
     int GetBlockHeight() const
     {
@@ -126,8 +126,8 @@ public:
     bool GetPayment(int nPaymentIndex, CGovernancePayment& paymentRet);
     CAmount GetPaymentsTotalAmount();
 
-    bool IsValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
-    bool IsExpired(const CGovernanceManager& governanceManager) const;
+    bool IsValid(CGovernanceManager& govman, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
+    bool IsExpired(const CGovernanceManager& govman) const;
 
     std::vector<uint256> GetProposalHashes() const;
 };

@@ -17,6 +17,7 @@
 class CBlockIndex;
 class CBLSWorker;
 class CChainState;
+class CSporkManager;
 class PeerManager;
 
 namespace llmq
@@ -122,6 +123,7 @@ private:
     CDKGDebugManager& dkgDebugManager;
     CDKGSessionManager& dkgManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
+    const CSporkManager& m_sporkman;
     const Consensus::LLMQParams params;
     const int quorumIndex;
 
@@ -141,7 +143,7 @@ private:
 
 public:
     CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGDebugManager& _dkgDebugManager,
-                       CDKGSessionManager& _dkgManager, CQuorumBlockProcessor& _quorumBlockProcessor,
+                       CDKGSessionManager& _dkgManager, CQuorumBlockProcessor& _quorumBlockProcessor, const CSporkManager& sporkman,
                        const Consensus::LLMQParams& _params, int _quorumIndex);
     ~CDKGSessionHandler() = default;
 

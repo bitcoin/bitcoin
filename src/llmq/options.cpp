@@ -20,7 +20,7 @@ static constexpr int TESTNET_LLMQ_25_67_ACTIVATION_HEIGHT = 847000;
 namespace llmq
 {
 
-static bool EvalSpork(Consensus::LLMQType llmqType, int64_t spork_value)
+static bool EvalSpork(const Consensus::LLMQType llmqType, const int64_t spork_value)
 {
     if (spork_value == 0) {
         return true;
@@ -31,14 +31,14 @@ static bool EvalSpork(Consensus::LLMQType llmqType, int64_t spork_value)
     return false;
 }
 
-bool IsAllMembersConnectedEnabled(Consensus::LLMQType llmqType)
+bool IsAllMembersConnectedEnabled(const Consensus::LLMQType llmqType, const CSporkManager& sporkman)
 {
-    return EvalSpork(llmqType, sporkManager->GetSporkValue(SPORK_21_QUORUM_ALL_CONNECTED));
+    return EvalSpork(llmqType, sporkman.GetSporkValue(SPORK_21_QUORUM_ALL_CONNECTED));
 }
 
-bool IsQuorumPoseEnabled(Consensus::LLMQType llmqType)
+bool IsQuorumPoseEnabled(const Consensus::LLMQType llmqType, const CSporkManager& sporkman)
 {
-    return EvalSpork(llmqType, sporkManager->GetSporkValue(SPORK_23_QUORUM_POSE));
+    return EvalSpork(llmqType, sporkman.GetSporkValue(SPORK_23_QUORUM_POSE));
 }
 
 

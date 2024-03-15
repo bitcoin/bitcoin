@@ -86,7 +86,7 @@ private:
 
 public:
     explicit CChainLocksHandler(CChainState& chainstate, CConnman& _connman, CMasternodeSync& mn_sync, CQuorumManager& _qman,
-                                CSigningManager& _sigman, CSigSharesManager& _shareman, CSporkManager& sporkManager,
+                                CSigningManager& _sigman, CSigSharesManager& _shareman, CSporkManager& sporkman,
                                 CTxMemPool& _mempool);
     ~CChainLocksHandler();
 
@@ -128,8 +128,8 @@ private:
 
 extern std::unique_ptr<CChainLocksHandler> chainLocksHandler;
 
-bool AreChainLocksEnabled(const CSporkManager& sporkManager);
-bool ChainLocksSigningEnabled(const CSporkManager& sporkManager);
+bool AreChainLocksEnabled(const CSporkManager& sporkman);
+bool ChainLocksSigningEnabled(const CSporkManager& sporkman);
 
 } // namespace llmq
 

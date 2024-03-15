@@ -275,7 +275,7 @@ static void quorum_dkgstatus_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue quorum_dkgstatus(const JSONRPCRequest& request, const ChainstateManager& chainman, const LLMQContext& llmq_ctx)
+static UniValue quorum_dkgstatus(const JSONRPCRequest& request, const ChainstateManager& chainman, const CSporkManager& sporkman, const LLMQContext& llmq_ctx)
 {
     quorum_dkgstatus_help(request);
 
@@ -319,11 +319,8 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request, const Chainstate
                     obj.pushKV("quorumHash", pQuorumBaseBlockIndex->GetBlockHash().ToString());
                     obj.pushKV("pindexTip", pindexTip->nHeight);
 
-                    auto allConnections = llmq::utils::GetQuorumConnections(llmq_params, pQuorumBaseBlockIndex,
-                                                                                 proTxHash, false);
-                    auto outboundConnections = llmq::utils::GetQuorumConnections(llmq_params,
-                                                                                      pQuorumBaseBlockIndex, proTxHash,
-                                                                                      true);
+                    auto allConnections = llmq::utils::GetQuorumConnections(llmq_params, sporkman, pQuorumBaseBlockIndex, proTxHash, false);
+                    auto outboundConnections = llmq::utils::GetQuorumConnections(llmq_params, sporkman, pQuorumBaseBlockIndex, proTxHash, true);
                     std::map<uint256, CAddress> foundConnections;
                     const NodeContext& node = EnsureAnyNodeContext(request.context);
                     node.connman->ForEachNode([&](const CNode* pnode) {
@@ -882,7 +879,7 @@ static UniValue _quorum(const JSONRPCRequest& request)
     } else if (command == "quorumdkginfo") {
         return quorum_dkginfo(new_request, llmq_ctx, chainman);
     } else if (command == "quorumdkgstatus") {
-        return quorum_dkgstatus(new_request, chainman, llmq_ctx);
+        return quorum_dkgstatus(new_request, chainman, *node.sporkman, llmq_ctx);
     } else if (command == "quorummemberof") {
         return quorum_memberof(new_request, chainman, node, llmq_ctx);
     } else if (command == "quorumsign" || command == "quorumverify" || command == "quorumhasrecsig" || command == "quorumgetrecsig" || command == "quorumisconflicting") {

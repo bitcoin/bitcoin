@@ -38,7 +38,7 @@ private:
     CConnman& connman;
     CDKGDebugManager& dkgDebugManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
-    CSporkManager& spork_manager;
+    const CSporkManager& spork_manager;
 
     //TODO name struct instead of std::pair
     std::map<std::pair<Consensus::LLMQType, int>, CDKGSessionHandler> dkgSessionHandlers;
@@ -64,7 +64,7 @@ private:
 
 public:
     CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGDebugManager& _dkgDebugManager,
-                       CQuorumBlockProcessor& _quorumBlockProcessor, CSporkManager& sporkManager,
+                       CQuorumBlockProcessor& _quorumBlockProcessor, const CSporkManager& sporkman,
                        bool unitTests, bool fWipe);
     ~CDKGSessionManager() = default;
 
@@ -96,7 +96,7 @@ private:
     void CleanupCache() const;
 };
 
-bool IsQuorumDKGEnabled(const CSporkManager& sporkManager);
+bool IsQuorumDKGEnabled(const CSporkManager& sporkman);
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_DKGSESSIONMGR_H

@@ -256,11 +256,11 @@ private:
 public:
     explicit CInstantSendManager(CChainLocksHandler& _clhandler, CChainState& chainstate, CConnman& _connman,
                                  CQuorumManager& _qman, CSigningManager& _sigman, CSigSharesManager& _shareman,
-                                 CSporkManager& sporkManager, CTxMemPool& _mempool, const CMasternodeSync& mn_sync,
+                                 CSporkManager& sporkman, CTxMemPool& _mempool, const CMasternodeSync& mn_sync,
                                  bool unitTests, bool fWipe) :
         db(unitTests, fWipe),
         clhandler(_clhandler), m_chainstate(chainstate), connman(_connman), qman(_qman), sigman(_sigman),
-        shareman(_shareman), spork_manager(sporkManager), mempool(_mempool), m_mn_sync(mn_sync)
+        shareman(_shareman), spork_manager(sporkman), mempool(_mempool), m_mn_sync(mn_sync)
     {
         workInterrupt.reset();
     }

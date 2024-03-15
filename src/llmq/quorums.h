@@ -27,6 +27,7 @@ class CConnman;
 class CDeterministicMN;
 class CMasternodeSync;
 class CNode;
+class CSporkManager;
 
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
@@ -220,6 +221,7 @@ private:
     CDKGSessionManager& dkgManager;
     CEvoDB& m_evoDb;
     CQuorumBlockProcessor& quorumBlockProcessor;
+    const CSporkManager& m_sporkman;
     const std::unique_ptr<CMasternodeSync>& m_mn_sync;
 
     mutable RecursiveMutex cs_map_quorums;
@@ -234,7 +236,7 @@ private:
 
 public:
     CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGSessionManager& _dkgManager,
-                   CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor, const std::unique_ptr<CMasternodeSync>& mn_sync);
+                   CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor, const CSporkManager& sporkman, const std::unique_ptr<CMasternodeSync>& mn_sync);
     ~CQuorumManager() { Stop(); };
 
     void Start();

@@ -180,6 +180,7 @@ BITCOIN_CORE_H = \
   evo/assetlocktx.h \
   evo/dmn_types.h \
   evo/cbtx.h \
+  evo/chainhelper.h \
   evo/creditpool.h \
   evo/deterministicmns.h \
   evo/dmnstate.h \
@@ -423,6 +424,7 @@ libbitcoin_server_a_SOURCES = \
   evo/assetlocktx.cpp \
   evo/cbtx.cpp \
   evo/creditpool.cpp \
+  evo/chainhelper.cpp \
   evo/deterministicmns.cpp \
   evo/dmnstate.cpp \
   evo/evodb.cpp \

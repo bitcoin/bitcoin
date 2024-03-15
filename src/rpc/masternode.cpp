@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
 #include <governance/classes.h>
 #include <index/txindex.h>
@@ -465,10 +466,12 @@ static UniValue masternode_payments(const JSONRPCRequest& request, const Chainst
             nBlockFees += nValueIn - tx->GetValueOut();
         }
 
+        CHECK_NONFATAL(node.chain_helper);
+
         std::vector<CTxOut> voutMasternodePayments, voutDummy;
         CMutableTransaction dummyTx;
         CAmount blockSubsidy = GetBlockSubsidy(pindex, Params().GetConsensus());
-        MasternodePayments::FillBlockPayments(*node.sporkman, *node.govman, dummyTx, pindex->pprev, blockSubsidy, nBlockFees, voutMasternodePayments, voutDummy);
+        node.chain_helper->mn_payments->FillBlockPayments(dummyTx, pindex->pprev, blockSubsidy, nBlockFees, voutMasternodePayments, voutDummy);
 
         UniValue blockObj(UniValue::VOBJ);
         CAmount payedPerBlock{0};

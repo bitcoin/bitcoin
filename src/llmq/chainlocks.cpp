@@ -26,7 +26,7 @@ namespace llmq
 std::unique_ptr<CChainLocksHandler> chainLocksHandler;
 
 CChainLocksHandler::CChainLocksHandler(CChainState& chainstate, CConnman& _connman, CMasternodeSync& mn_sync, CQuorumManager& _qman,
-                                       CSigningManager& _sigman, CSigSharesManager& _shareman, CSporkManager& sporkManager,
+                                       CSigningManager& _sigman, CSigSharesManager& _shareman, CSporkManager& sporkman,
                                        CTxMemPool& _mempool) :
     m_chainstate(chainstate),
     connman(_connman),
@@ -34,7 +34,7 @@ CChainLocksHandler::CChainLocksHandler(CChainState& chainstate, CConnman& _connm
     qman(_qman),
     sigman(_sigman),
     shareman(_shareman),
-    spork_manager(sporkManager),
+    spork_manager(sporkman),
     mempool(_mempool),
     scheduler(std::make_unique<CScheduler>()),
     scheduler_thread(std::make_unique<std::thread>(std::thread(util::TraceThread, "cl-schdlr", [&] { scheduler->serviceQueue(); })))
@@ -668,14 +668,14 @@ void CChainLocksHandler::Cleanup()
     lastCleanupTime = GetTimeMillis();
 }
 
-bool AreChainLocksEnabled(const CSporkManager& sporkManager)
+bool AreChainLocksEnabled(const CSporkManager& sporkman)
 {
-    return sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
+    return sporkman.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
 }
 
-bool ChainLocksSigningEnabled(const CSporkManager& sporkManager)
+bool ChainLocksSigningEnabled(const CSporkManager& sporkman)
 {
-    return sporkManager.GetSporkValue(SPORK_19_CHAINLOCKS_ENABLED) == 0;
+    return sporkman.GetSporkValue(SPORK_19_CHAINLOCKS_ENABLED) == 0;
 }
 
 } // namespace llmq

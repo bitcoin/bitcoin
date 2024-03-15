@@ -88,6 +88,7 @@
 #include <spork.h>
 #include <walletinitinterface.h>
 
+#include <evo/chainhelper.h>
 #include <evo/creditpool.h>
 #include <evo/deterministicmns.h>
 #include <evo/mnhftx.h>
@@ -312,10 +313,8 @@ void PrepareShutdown(NodeContext& node)
     ::dstxManager.reset();
     node.mn_sync = nullptr;
     ::masternodeSync.reset();
-    node.sporkman = nullptr;
-    ::sporkManager.reset();
-    node.govman = nullptr;
-    ::governance.reset();
+    node.sporkman.reset();
+    node.govman.reset();
 
     // Stop and delete all indexes only after flushing background callbacks.
     if (g_txindex) {
@@ -344,6 +343,7 @@ void PrepareShutdown(NodeContext& node)
             }
         }
         pblocktree.reset();
+        node.chain_helper.reset();
         if (node.llmq_ctx) {
             node.llmq_ctx.reset();
         }
@@ -1711,19 +1711,11 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.chainman = &g_chainman;
     ChainstateManager& chainman = *Assert(node.chainman);
 
-    assert(!::governance);
-    ::governance = std::make_unique<CGovernanceManager>();
-    node.govman = ::governance.get();
+    assert(!node.govman);
+    node.govman = std::make_unique<CGovernanceManager>();
 
-    assert(!node.peerman);
-    node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
-                                     *node.scheduler, chainman, *node.mempool, *node.govman,
-                                     node.cj_ctx, node.llmq_ctx, ignores_incoming_txs);
-    RegisterValidationInterface(node.peerman.get());
-
-    assert(!::sporkManager);
-    ::sporkManager = std::make_unique<CSporkManager>();
-    node.sporkman = ::sporkManager.get();
+    assert(!node.sporkman);
+    node.sporkman = std::make_unique<CSporkManager>();
 
     std::vector<std::string> vSporkAddresses;
     if (args.IsArgSet("-sporkaddr")) {
@@ -1752,6 +1744,12 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     assert(!::masternodeSync);
     ::masternodeSync = std::make_unique<CMasternodeSync>(*node.connman, *node.govman);
     node.mn_sync = ::masternodeSync.get();
+
+    assert(!node.peerman);
+    node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
+                                     *node.scheduler, chainman, *node.mempool, *node.govman, *node.sporkman,
+                                     node.cj_ctx, node.llmq_ctx, ignores_incoming_txs);
+    RegisterValidationInterface(node.peerman.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<std::string> uacomments;
@@ -1953,7 +1951,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
 
                 chainman.Reset();
-                chainman.InitializeChainstate(Assert(node.mempool.get()), *node.mnhf_manager, *node.evodb, llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor);
+                chainman.InitializeChainstate(Assert(node.mempool.get()), *node.mnhf_manager, *node.evodb, node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor);
                 chainman.m_total_coinstip_cache = nCoinCacheUsage;
                 chainman.m_total_coinsdb_cache = nCoinDBCache;
 
@@ -1982,6 +1980,9 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 node.llmq_ctx.reset(new LLMQContext(chainman.ActiveChainstate(), *node.connman, *node.evodb, *node.sporkman, *node.mempool, node.peerman, false, fReset || fReindexChainState));
                 // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
                 node.llmq_ctx->Start();
+
+                node.chain_helper.reset();
+                node.chain_helper = std::make_unique<CChainstateHelper>(*node.govman, Params().GetConsensus(), *node.mn_sync, *node.sporkman);
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);

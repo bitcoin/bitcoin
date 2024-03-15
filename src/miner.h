@@ -20,9 +20,8 @@ class CBlockIndex;
 class CChainParams;
 class CConnman;
 class CEvoDB;
-class CGovernanceManager;
+class CChainstateHelper;
 class CScript;
-class CSporkManager;
 struct LLMQContext;
 
 namespace Consensus { struct Params; };
@@ -158,8 +157,7 @@ private:
     const CChainParams& chainparams;
     const CTxMemPool& m_mempool;
     CChainState& m_chainstate;
-    const CSporkManager& spork_manager;
-    CGovernanceManager& governance_manager;
+    CChainstateHelper& m_chain_helper;
     const llmq::CQuorumBlockProcessor& quorum_block_processor;
     llmq::CChainLocksHandler& m_clhandler;
     llmq::CInstantSendManager& m_isman;
@@ -172,10 +170,10 @@ public:
         CFeeRate blockMinFeeRate;
     };
 
-    explicit BlockAssembler(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
-                            LLMQContext& llmq_ctx, CEvoDB& evoDb, CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params);
-    explicit BlockAssembler(const CSporkManager& sporkManager, CGovernanceManager& governanceManager,
-                            LLMQContext& llmq_ctx, CEvoDB& evoDb, CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params, const Options& options);
+    explicit BlockAssembler(CChainState& chainstate, CEvoDB& evoDb, CChainstateHelper& chain_helper, LLMQContext& llmq_ctx,
+                            const CTxMemPool& mempool, const CChainParams& params);
+    explicit BlockAssembler(CChainState& chainstate, CEvoDB& evoDb, CChainstateHelper& chain_helper, LLMQContext& llmq_ctx,
+                            const CTxMemPool& mempool, const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
     std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);

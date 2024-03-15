@@ -15,10 +15,10 @@
 
 class CBLSSecretKey;
 class CBLSPublicKey;
-class CNode;
-
+class CGovernanceManager;
 class CGovernanceObject;
 class CGovernanceVote;
+class CNode;
 
 extern RecursiveMutex cs_main;
 
@@ -288,7 +288,7 @@ public:
     void LoadData();
     void GetData(UniValue& objResult) const;
 
-    bool ProcessVote(const CGovernanceVote& vote, CGovernanceException& exception);
+    bool ProcessVote(CGovernanceManager& govman, const CGovernanceVote& vote, CGovernanceException& exception);
 
     /// Called when MN's which have voted on this object have been removed
     void ClearMasternodeVotes();

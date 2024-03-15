@@ -8,6 +8,8 @@
 #include <banman.h>
 #include <coinjoin/context.h>
 #include <evo/creditpool.h>
+#include <evo/chainhelper.h>
+#include <governance/governance.h>
 #include <interfaces/chain.h>
 #include <interfaces/coinjoin.h>
 #include <llmq/context.h>
@@ -17,6 +19,7 @@
 #include <net_processing.h>
 #include <policy/fees.h>
 #include <scheduler.h>
+#include <spork.h>
 #include <txmempool.h>
 
 NodeContext::NodeContext() {}

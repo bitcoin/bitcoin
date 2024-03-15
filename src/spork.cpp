@@ -23,8 +23,6 @@
 
 #include <string>
 
-std::unique_ptr<CSporkManager> sporkManager;
-
 const std::string SporkStore::SERIALIZATION_VERSION_STRING = "CSporkManager-Version-2";
 
 std::optional<SporkValue> CSporkManager::SporkValueIfActive(SporkId nSporkID) const
