@@ -73,15 +73,6 @@ UnsignedOutput CreateOutput(const blsct::DoublePublicKey& destKeys, const CAmoun
 
     if (type == NORMAL) {
         ret.out.scriptPubKey = CScript(OP_TRUE);
-    } else if (type == STAKED_COMMITMENT && tokenId.IsNull()) {
-        auto stakeRp = rp.Prove(vs, nonce, {}, tokenId, minStake);
-
-        stakeRp.Vs.Clear();
-
-        DataStream ss{};
-        ss << stakeRp;
-
-        ret.out.scriptPubKey << OP_TRUE << OP_STAKED_COMMITMENT << blsct::Common::DataStreamToVector(ss) << OP_DROP;
     }
 
     auto p = rp.Prove(vs, nonce, memo, tokenId);

@@ -514,7 +514,7 @@ bulletproofs::AmountRecoveryResult<Arith> KeyMan::RecoverOutputs(const std::vect
     for (size_t i = 0; i < outs.size(); i++) {
         CTxOut out = outs[i];
         auto nonce = CalculateNonce(out.blsctData.blindingKey, viewKey.GetScalar());
-        bulletproofs::RangeProofWithSeed<Arith> proof = {out.blsctData.rangeProof, out.tokenId};
+        bulletproofs::RangeProof<Arith> proof = out.blsctData.rangeProof;
         reqs.push_back(bulletproofs::AmountRecoveryRequest<Arith>::of(proof, nonce));
     }
 
