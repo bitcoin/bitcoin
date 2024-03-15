@@ -9,6 +9,7 @@
 #include <node/chain.h>
 #include <sync.h>
 #include <uint256.h>
+#include <undo.h>
 #include <util/threadinterrupt.h>
 #include <validation.h>
 
@@ -16,13 +17,21 @@ using interfaces::BlockInfo;
 using kernel::MakeBlockInfo;
 
 namespace node {
-bool ReadBlockData(node::BlockManager& blockman, const CBlockIndex& block, CBlock* data, interfaces::BlockInfo& info)
+bool ReadBlockData(node::BlockManager& blockman, const CBlockIndex& block, CBlock* data, CBlockUndo* undo_data, interfaces::BlockInfo& info)
 {
     if (data) {
         if (blockman.ReadBlock(*data, block)) {
             info.data = data;
         } else {
             info.error = strprintf("%s: Failed to read block %s from disk", __func__, block.GetBlockHash().ToString());
+            return false;
+        }
+    }
+    if (undo_data && block.nHeight > 0) {
+        if (blockman.ReadBlockUndo(*undo_data, block)) {
+            info.undo_data = undo_data;
+        } else {
+            info.error = strprintf("%s: Failed to read block %s undo data from disk", __func__, block.GetBlockHash().ToString());
             return false;
         }
     }
@@ -63,7 +72,11 @@ bool SyncChain(const Chainstate& chainstate, const CBlockIndex* block, const int
             block_info.chain_tip = false;
             block_info.status = flushed_status();
             CBlock data;
-            if (!rewind || options.disconnect_data) ReadBlockData(chainstate.m_blockman, *block, &data, block_info);
+            CBlockUndo undo_data;
+            ReadBlockData(chainstate.m_blockman, *block,
+                          !rewind || options.disconnect_data ? &data : nullptr,
+                          (!rewind && options.connect_undo_data) || (rewind && options.disconnect_undo_data) ? &undo_data : nullptr,
+                          block_info);
             if (rewind) {
                 notifications->blockDisconnected(block_info);
                 block = Assert(block->pprev);

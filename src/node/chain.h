@@ -14,6 +14,11 @@ class Chainstate;
 class CThreadInterrupt;
 
 namespace node {
+class BlockManager;
+
+//! Read block data and/or undo data from disk and update BlockInfo with pointers and errors.
+bool ReadBlockData(BlockManager& blockman, const CBlockIndex& block, CBlock* data, CBlockUndo* undo_data, interfaces::BlockInfo& info);
+
 //! Send blockConnected and blockDisconnected notifications needed to sync from
 //! a specified block to the chain tip. This sync function locks the ::cs_main
 //! mutex intermittently, releasing it while sending notifications and reading
