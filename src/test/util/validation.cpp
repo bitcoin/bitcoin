@@ -24,7 +24,6 @@
 #include <utility>
 #include <vector>
 
-using kernel::ChainstateRole;
 
 void TestBlockManager::CleanupForFuzzing()
 {
