@@ -22,7 +22,6 @@
 #include <interfaces/wallet.h>
 #include <kernel/chain.h>
 #include <kernel/context.h>
-#include <kernel/types.h>
 #include <kernel/mempool_entry.h>
 #include <kernel/types.h>
 #include <logging.h>
@@ -548,7 +547,7 @@ using SyncFn = std::function<void(std::shared_ptr<NotificationsProxy>, const CTh
 class NotificationsHandlerImpl : public Handler
 {
 public:
-    explicit NotificationsHandlerImpl(ValidationSignals& signals, Chainstate& chainstate, std::shared_ptr<Chain::Notifications> notifications, const Chain::NotifyOptions& options = {}, BlockInfo::State state = BlockInfo::UPDATING, const CBlockIndex* start_block = nullptr)
+    explicit NotificationsHandlerImpl(ValidationSignals& signals, Chainstate& chainstate, std::shared_ptr<Chain::Notifications> notifications, Chain::NotifyOptions options = {}, BlockInfo::State state = BlockInfo::UPDATING, const CBlockIndex* start_block = nullptr)
         : m_signals{signals}, m_chainstate{chainstate}, m_proxy{std::make_shared<NotificationsProxy>(chainstate, std::move(notifications), std::move(options))}, m_start_block{start_block}
     {
         // If syncing is not needed, set connecting or connecting state and register for
@@ -875,6 +874,15 @@ public:
     {
         if (!m_node.mempool) return CFeeRate{DUST_RELAY_TX_FEE};
         return m_node.mempool->m_opts.dust_relay_feerate;
+    }
+    void updatePruneLock(const std::string& name, const PruneLockInfo& lock_info) override
+    {
+        LOCK(cs_main);
+        m_node.chainman->m_blockman.UpdatePruneLock(name, lock_info);
+    }
+    bool pruningEnabled() override
+    {
+        return chainman().m_blockman.IsPruneMode();
     }
     bool havePruned() override
     {

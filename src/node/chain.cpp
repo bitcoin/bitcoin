@@ -21,7 +21,6 @@
 class CBlock;
 
 using interfaces::BlockInfo;
-using kernel::ChainstateRole;
 
 namespace node {
 BlockInfo MakeBlockInfo(const CBlockIndex* index, const CBlock* data, const Chainstate* chainstate)

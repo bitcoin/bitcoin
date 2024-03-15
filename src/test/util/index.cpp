@@ -8,6 +8,8 @@
 #include <index/base.h>
 #include <kernel/types.h>
 #include <node/chain.h>
+#include <node/context.h>
+#include <util/threadinterrupt.h>
 #include <validation.h>
 
 using interfaces::BlockInfo;
@@ -17,13 +19,14 @@ using node::SyncChain;
 
 void IndexTester::Sync()
 {
+    Chainstate& chainstate{WITH_LOCK(::cs_main, return m_index.m_chain->context()->chainman->ValidatedChainstate())};
     CThreadInterrupt interrupt;
     CBlockIndex* best_block{nullptr};
     if (std::optional<interfaces::BlockRef> block{m_index.GetBestBlock()}) {
-        best_block = WITH_LOCK(::cs_main, return m_index.m_chainstate->m_blockman.LookupBlockIndex(block->hash));
+        best_block = WITH_LOCK(::cs_main, return chainstate.m_blockman.LookupBlockIndex(block->hash));
     }
-    SyncChain(*Assert(m_index.m_chainstate), best_block, m_index.CustomOptions(), m_index.Notifications(), interrupt, nullptr);
-    BlockInfo block = MakeBlockInfo(best_block, nullptr, m_index.m_chainstate);
+    SyncChain(chainstate, best_block, m_index.CustomOptions(), m_index.Notifications(), interrupt, nullptr);
+    BlockInfo block = MakeBlockInfo(best_block, nullptr, &chainstate);
     block.state = BlockInfo::SYNCED;
     m_index.Notifications()->blockConnected(ChainstateRole{}, block);
 }

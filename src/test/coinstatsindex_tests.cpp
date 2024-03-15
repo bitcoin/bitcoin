@@ -10,6 +10,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
 #include <validation.h>
+#include <validationinterface.h>
 
 #include <boost/test/unit_test.hpp>
 

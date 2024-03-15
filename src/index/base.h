@@ -8,27 +8,28 @@
 #include <attributes.h>
 #include <dbwrapper.h>
 #include <interfaces/chain.h>
-#include <interfaces/handler.h>
 #include <interfaces/types.h>
 #include <kernel/cs_main.h>
-#include <threadsafety.h>
+#include <sync.h>
 #include <uint256.h>
 #include <util/fs.h>
-#include <util/threadinterrupt.h>
-#include <validationinterface.h>
 
 #include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
-#include <thread>
 
 class BaseIndexNotifications;
-class CBlock;
-class Chainstate;
-
 struct CBlockLocator;
+namespace interfaces {
+class Handler;
+}  // namespace interfaces
+namespace kernel {
+struct ChainstateRole;
+}  // namespace kernel
+
 struct IndexSummary {
     std::string name;
     bool synced{false};
@@ -142,7 +143,6 @@ private:
 
 protected:
     std::unique_ptr<interfaces::Chain> m_chain;
-    Chainstate* m_chainstate{nullptr};
     const std::string m_name;
 
     /// Return whether to ignore stale, out-of-sync block connected event

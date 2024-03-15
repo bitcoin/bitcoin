@@ -4,7 +4,6 @@
 
 #include <index/base.h>
 
-#include <chain.h>
 #include <common/args.h>
 #include <dbwrapper.h>
 #include <interfaces/chain.h>
@@ -14,7 +13,6 @@
 #include <logging.h>
 #include <node/abort.h>
 #include <node/blockstorage.h>
-#include <node/chain.h>
 #include <node/context.h>
 #include <node/database_args.h>
 #include <node/interface_ui.h>
@@ -22,25 +20,19 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <uint256.h>
-#include <undo.h>
 #include <util/fs.h>
 #include <util/string.h>
-#include <util/thread.h>
-#include <util/threadinterrupt.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
-#include <validationinterface.h>
 
 #include <cassert>
 #include <compare>
-#include <cstdint>
 #include <memory>
 #include <optional>
 #include <span>
 #include <stdexcept>
 #include <string>
-#include <thread>
 #include <utility>
 #include <vector>
 
@@ -48,7 +40,6 @@ using interfaces::BlockInfo;
 using interfaces::BlockRef;
 using interfaces::FoundBlock;
 using kernel::ChainstateRole;
-using node::MakeBlockInfo;
 
 constexpr uint8_t DB_BEST_BLOCK{'B'};
 
@@ -303,11 +294,6 @@ bool BaseIndex::Init()
         assert(!m_notifications);
     }
 
-    // m_chainstate member gives indexing code access to node internals. It is
-    // removed in followup https://github.com/bitcoin/bitcoin/pull/24230
-    m_chainstate = WITH_LOCK(::cs_main,
-                             return &m_chain->context()->chainman->ValidatedChainstate());
-
     const auto locator{GetDB().ReadBestBlock()};
     std::optional<BlockRef> block;
     if (!locator.IsNull()) {
@@ -508,12 +494,12 @@ std::optional<interfaces::BlockRef> BaseIndex::GetBestBlock() const
 
 void BaseIndex::SetBestBlock(const std::optional<interfaces::BlockRef>& block)
 {
-    assert(!m_chainstate->m_blockman.IsPruneMode() || AllowPrune());
+    assert(!m_chain->pruningEnabled() || AllowPrune());
 
     if (AllowPrune() && block) {
         node::PruneLockInfo prune_lock;
         prune_lock.height_first = block->height;
-        WITH_LOCK(::cs_main, m_chainstate->m_blockman.UpdatePruneLock(GetName(), prune_lock));
+        m_chain->updatePruneLock(GetName(), prune_lock);
     }
 
     // Intentionally set m_best_block as the last step in this function,
