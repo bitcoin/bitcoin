@@ -31,6 +31,7 @@ from test_framework.util import (
 class P2PStaller(P2PDataStore):
     def __init__(self, stall_block):
         self.stall_block = stall_block
+        self.stall_block_requested = False
         super().__init__()
 
     def on_getdata(self, message):
@@ -39,6 +40,8 @@ class P2PStaller(P2PDataStore):
             if (inv.type & MSG_TYPE_MASK) == MSG_BLOCK:
                 if (inv.hash != self.stall_block):
                     self.send_message(msg_block(self.block_store[inv.hash]))
+                else:
+                    self.stall_block_requested = True
 
     def on_getheaders(self, message):
         pass
@@ -47,7 +50,11 @@ class P2PStaller(P2PDataStore):
 class P2PIBDStallingTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 1
+        self.num_nodes = 2
+
+    def setup_network(self):
+        self.setup_nodes()
+        # Don't connect the nodes
 
     def prepare_blocks(self):
         self.log.info("Prepare blocks without sending them to any node")
@@ -76,6 +83,7 @@ class P2PIBDStallingTest(BitcoinTestFramework):
         headers_message.headers = [CBlockHeader(b) for b in self.blocks[:self.NUM_BLOCKS-1]]
         peers = []
 
+        self.log.info("Part 1: Test stalling during IBD")
         self.log.info("Check that a staller does not get disconnected if the 1024 block lookahead buffer is filled")
         self.mocktime = int(time.time()) + 1
         for id in range(NUM_PEERS):
@@ -144,6 +152,36 @@ class P2PIBDStallingTest(BitcoinTestFramework):
         self.log.info("Check that all outstanding blocks get connected")
         self.wait_until(lambda: node.getblockcount() == self.NUM_BLOCKS)
 
+    def near_tip_stalling(self):
+        node = self.nodes[1]
+        peers = []
+        stall_block = self.blocks[0].sha256
+        self.log.info("Part 2: Test stalling close to the tip")
+        # only send 1024 headers, so that the window can't overshoot and the ibd stalling mechanism isn't triggered
+        headers_message = msg_headers()
+        headers_message.headers = [CBlockHeader(b) for b in self.blocks[:self.NUM_BLOCKS-1]]
+        self.log.info("Add two stalling peers")
+        for id in range(2):
+            peers.append(node.add_outbound_p2p_connection(P2PStaller(stall_block), p2p_idx=id, connection_type="outbound-full-relay"))
+            peers[-1].block_store = self.block_dict
+            peers[-1].send_message(headers_message)
+
+        self.wait_until(lambda: sum(len(peer['inflight']) for peer in node.getpeerinfo()) == 1)
+        self.all_sync_send_with_ping(peers)
+        assert peers[0].stall_block_requested
+        assert not peers[1].stall_block_requested
+
+        self.log.info("Check that after 9 minutes, nothing is done against the stalling")
+        self.mocktime = int(time.time()) + 9 * 60
+        node.setmocktime(self.mocktime)
+        self.all_sync_send_with_ping(peers)
+
+        self.log.info("Check that after more than 10 minutes, the stalling peer is disconnected")
+        self.mocktime += 2 * 60
+        node.setmocktime(self.mocktime)
+        peers[0].wait_for_disconnect()
+        self.wait_until(lambda: peers[1].stall_block_requested)
+
     def all_sync_send_with_ping(self, peers):
         for p in peers:
             if p.is_connected:
@@ -158,6 +196,7 @@ class P2PIBDStallingTest(BitcoinTestFramework):
     def run_test(self):
         self.prepare_blocks()
         self.ibd_stalling()
+        self.near_tip_stalling()
 
 
 if __name__ == '__main__':
