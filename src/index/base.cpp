@@ -178,12 +178,8 @@ void BaseIndexNotifications::blockConnected(const ChainstateRole& role, const in
     m_index.SetBestBlockIndex(pindex);
 }
 
-void BaseIndexNotifications::blockDisconnected(const interfaces::BlockInfo& block_info)
+void BaseIndexNotifications::blockDisconnected(const interfaces::BlockInfo& block)
 {
-    // Make a mutable copy of the BlockInfo argument so block data can be
-    // attached below. This is temporary and removed in upcoming commits.
-    interfaces::BlockInfo block{block_info};
-
     if (!block.error.empty()) {
         m_index.FatalErrorf("%s", block.error);
         return;
@@ -194,17 +190,7 @@ void BaseIndexNotifications::blockDisconnected(const interfaces::BlockInfo& bloc
     if (m_rewind_error) return;
 
     assert(!m_options.disconnect_data || block.data);
-    CBlockUndo block_undo;
-    if (m_options.disconnect_undo_data && !block.undo_data && block.height > 0) {
-        if (!m_index.m_chainstate->m_blockman.ReadBlockUndo(block_undo, *pindex)) {
-            // If undo data can't be read, subsequent CustomRemove calls will be
-            // skipped, and will be a fatal error if there an attempt to connect
-            // a another block to the index.
-            m_rewind_error = true;
-            return;
-        }
-        block.undo_data = &block_undo;
-    }
+    assert(!m_options.disconnect_undo_data || block.undo_data || block.height <= 0);
 
     // If one CustomRemove call fails, subsequent calls will be skipped,
     // and there will be a fatal error if there an attempt to connect
