@@ -14,7 +14,9 @@ type LintFn = fn() -> LintResult;
 
 /// Return the git command
 fn git() -> Command {
-    Command::new("git")
+    let mut git = Command::new("git");
+    git.arg("--no-pager");
+    git
 }
 
 /// Return stdout
@@ -88,6 +90,85 @@ fn lint_std_filesystem() -> LintResult {
 ^^^
 Direct use of std::filesystem may be dangerous and buggy. Please include <util/fs.h> and use the
 fs:: namespace, which has unsafe filesystem functions marked as deleted.
+            "#
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
+/// Return the pathspecs for whitespace related excludes
+fn get_pathspecs_exclude_whitespace() -> Vec<String> {
+    let mut list = get_pathspecs_exclude_subtrees();
+    list.extend(
+        [
+            // Permanent excludes
+            "*.patch",
+            "src/qt/locale",
+            "contrib/windeploy/win-codesign.cert",
+            "doc/README_windows.txt",
+            // Temporary excludes, or existing violations
+            "doc/release-notes/release-notes-0.*",
+            "contrib/init/bitcoind.openrc",
+            "contrib/macdeploy/macdeployqtplus",
+            "src/crypto/sha256_sse4.cpp",
+            "src/qt/res/src/*.svg",
+            "test/functional/test_framework/crypto/ellswift_decode_test_vectors.csv",
+            "test/functional/test_framework/crypto/xswiftec_inv_test_vectors.csv",
+            "contrib/qos/tc.sh",
+            "contrib/verify-commits/gpg.sh",
+            "src/univalue/include/univalue_escapes.h",
+            "src/univalue/test/object.cpp",
+            "test/lint/git-subtree-check.sh",
+        ]
+        .iter()
+        .map(|s| format!(":(exclude){}", s)),
+    );
+    list
+}
+
+fn lint_trailing_whitespace() -> LintResult {
+    let trailing_space = git()
+        .args(["grep", "-I", "--line-number", "\\s$", "--"])
+        .args(get_pathspecs_exclude_whitespace())
+        .status()
+        .expect("command error")
+        .success();
+    if trailing_space {
+        Err(r#"
+^^^
+Trailing whitespace is problematic, because git may warn about it, or editors may remove it by
+default, forcing developers in the future to either undo the changes manually or spend time on
+review.
+
+Thus, it is best to remove the trailing space now.
+
+Please add any false positives, such as subtrees, Windows-related files, patch files, or externally
+sourced files to the exclude list.
+            "#
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
+fn lint_tabs_whitespace() -> LintResult {
+    let tabs = git()
+        .args(["grep", "-I", "--line-number", "--perl-regexp", "^\\t", "--"])
+        .args(["*.cpp", "*.h", "*.md", "*.py", "*.sh"])
+        .args(get_pathspecs_exclude_whitespace())
+        .status()
+        .expect("command error")
+        .success();
+    if tabs {
+        Err(r#"
+^^^
+Use of tabs in this codebase is problematic, because existing code uses spaces and tabs will cause
+display issues and conflict with editor settings.
+
+Please remove the tabs.
+
+Please add any false positives, such as subtrees, or externally sourced files to the exclude list.
             "#
         .to_string())
     } else {
@@ -232,6 +313,8 @@ fn main() -> ExitCode {
     let test_list: Vec<(&str, LintFn)> = vec![
         ("subtree check", lint_subtree),
         ("std::filesystem check", lint_std_filesystem),
+        ("trailing whitespace check", lint_trailing_whitespace),
+        ("no-tabs check", lint_tabs_whitespace),
         ("build config includes check", lint_includes_build_config),
         ("-help=1 documentation check", lint_doc),
         ("lint-*.py scripts", lint_all),
