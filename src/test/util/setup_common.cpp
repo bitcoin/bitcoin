@@ -283,7 +283,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman, m_node.banman.get(),
                                        *m_node.scheduler, *m_node.chainman, *m_node.mempool, *m_node.govman,
-                                       *m_node.sporkman, m_node.cj_ctx, m_node.llmq_ctx, false);
+                                       *m_node.sporkman, ::deterministicMNManager, m_node.cj_ctx, m_node.llmq_ctx, false);
     {
         CConnman::Options options;
         options.m_msgproc = m_node.peerman.get();
@@ -408,7 +408,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
         auto cbTx = GetTxPayload<CCbTx>(*block.vtx[0]);
         BOOST_ASSERT(cbTx.has_value());
         BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx->merkleRootMNList, state, ::ChainstateActive().CoinsTip())) {
+        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx->merkleRootMNList, *m_node.dmnman, state, ::ChainstateActive().CoinsTip())) {
             BOOST_ASSERT(false);
         }
         if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), *m_node.llmq_ctx->quorum_block_processor, cbTx->merkleRootQuorums, state)) {

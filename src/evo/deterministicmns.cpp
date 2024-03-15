@@ -1525,7 +1525,7 @@ static std::optional<ProTx> GetValidatedPayload(const CTransaction& tx, gsl::not
     return opt_ptx;
 }
 
-bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs)
+bool CheckProRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs)
 {
     const auto opt_ptx = GetValidatedPayload<CProRegTx>(tx, pindexPrev, state);
     if (!opt_ptx) {
@@ -1592,7 +1592,7 @@ bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pin
     }
 
     if (pindexPrev) {
-        auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
+        auto mnList = dmnman.GetListForBlock(pindexPrev);
 
         // only allow reusing of addresses when it's for the same collateral (which replaces the old MN)
         if (mnList.HasUniqueProperty(opt_ptx->addr) && mnList.GetUniquePropertyMN(opt_ptx->addr)->collateralOutpoint != collateralOutpoint) {
@@ -1639,7 +1639,7 @@ bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pin
     return true;
 }
 
-bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, bool check_sigs)
+bool CheckProUpServTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, bool check_sigs)
 {
     const auto opt_ptx = GetValidatedPayload<CProUpServTx>(tx, pindexPrev, state);
     if (!opt_ptx) {
@@ -1658,7 +1658,7 @@ bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> 
         }
     }
 
-    auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
+    auto mnList = dmnman.GetListForBlock(pindexPrev);
     auto mn = mnList.GetMN(opt_ptx->proTxHash);
     if (!mn) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-hash");
@@ -1699,7 +1699,7 @@ bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> 
     return true;
 }
 
-bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs)
+bool CheckProUpRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs)
 {
     const auto opt_ptx = GetValidatedPayload<CProUpRegTx>(tx, pindexPrev, state);
     if (!opt_ptx) {
@@ -1713,7 +1713,7 @@ bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> p
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee-dest");
     }
 
-    auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
+    auto mnList = dmnman.GetListForBlock(pindexPrev);
     auto dmn = mnList.GetMN(opt_ptx->proTxHash);
     if (!dmn) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-hash");
@@ -1764,7 +1764,7 @@ bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> p
     return true;
 }
 
-bool CheckProUpRevTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, bool check_sigs)
+bool CheckProUpRevTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, bool check_sigs)
 {
     const auto opt_ptx = GetValidatedPayload<CProUpRevTx>(tx, pindexPrev, state);
     if (!opt_ptx) {
@@ -1772,7 +1772,7 @@ bool CheckProUpRevTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> p
         return false;
     }
 
-    auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
+    auto mnList = dmnman.GetListForBlock(pindexPrev);
     auto dmn = mnList.GetMN(opt_ptx->proTxHash);
     if (!dmn)
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-hash");

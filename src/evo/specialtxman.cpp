@@ -18,7 +18,7 @@
 #include <llmq/commitment.h>
 #include <primitives/block.h>
 
-static bool CheckSpecialTxInner(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, const std::optional<CRangesSet>& indexes, bool check_sigs, TxValidationState& state)
+static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, const std::optional<CRangesSet>& indexes, bool check_sigs, TxValidationState& state)
 {
     AssertLockHeld(cs_main);
 
@@ -33,17 +33,17 @@ static bool CheckSpecialTxInner(const CTransaction& tx, const CBlockIndex* pinde
     try {
         switch (tx.nType) {
         case TRANSACTION_PROVIDER_REGISTER:
-            return CheckProRegTx(tx, pindexPrev, state, view, check_sigs);
+            return CheckProRegTx(dmnman, tx, pindexPrev, state, view, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_SERVICE:
-            return CheckProUpServTx(tx, pindexPrev, state, check_sigs);
+            return CheckProUpServTx(dmnman, tx, pindexPrev, state, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
-            return CheckProUpRegTx(tx, pindexPrev, state, view, check_sigs);
+            return CheckProUpRegTx(dmnman, tx, pindexPrev, state, view, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_REVOKE:
-            return CheckProUpRevTx(tx, pindexPrev, state, check_sigs);
+            return CheckProUpRevTx(dmnman, tx, pindexPrev, state, check_sigs);
         case TRANSACTION_COINBASE:
             return CheckCbTx(tx, pindexPrev, state);
         case TRANSACTION_QUORUM_COMMITMENT:
-            return llmq::CheckLLMQCommitment(*::deterministicMNManager, tx, pindexPrev, state);
+            return llmq::CheckLLMQCommitment(dmnman, tx, pindexPrev, state);
         case TRANSACTION_MNHF_SIGNAL:
             if (!DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "mnhf-before-v20");
@@ -72,10 +72,10 @@ static bool CheckSpecialTxInner(const CTransaction& tx, const CBlockIndex* pinde
     return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-tx-type-check");
 }
 
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, bool check_sigs, TxValidationState& state)
+bool CheckSpecialTx(CDeterministicMNManager& dmnman, const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, bool check_sigs, TxValidationState& state)
 {
     AssertLockHeld(cs_main);
-    return CheckSpecialTxInner(tx, pindexPrev, view, std::nullopt, check_sigs, state);
+    return CheckSpecialTxInner(dmnman, tx, pindexPrev, view, std::nullopt, check_sigs, state);
 }
 
 [[nodiscard]] bool CSpecialTxProcessor::ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, TxValidationState& state)
@@ -154,7 +154,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
             TxValidationState tx_state;
             // At this moment CheckSpecialTx() and ProcessSpecialTx() may fail by 2 possible ways:
             // consensus failures and "TX_BAD_SPECIAL"
-            if (!CheckSpecialTxInner(*ptr_tx, pindex->pprev, view, creditPool.indexes, fCheckCbTxMerkleRoots, tx_state)) {
+            if (!CheckSpecialTxInner(m_dmnman, *ptr_tx, pindex->pprev, view, creditPool.indexes, fCheckCbTxMerkleRoots, tx_state)) {
                 assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS || tx_state.GetResult() == TxValidationResult::TX_BAD_SPECIAL);
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
                                  strprintf("Special Transaction check failed (tx hash %s) %s", ptr_tx->GetHash().ToString(), tx_state.GetDebugMessage()));
@@ -188,7 +188,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
         nTimeDMN += nTime4 - nTime3;
         LogPrint(BCLog::BENCHMARK, "        - m_dmnman: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeDMN * 0.000001);
 
-        if (fCheckCbTxMerkleRoots && !CheckCbTxMerkleRoots(block, pindex, m_qblockman, state, view)) {
+        if (fCheckCbTxMerkleRoots && !CheckCbTxMerkleRoots(block, pindex, m_dmnman, m_qblockman, state, view)) {
             // pass the state returned by the function above
             return false;
         }

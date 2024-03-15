@@ -15,6 +15,7 @@ class CDataStream;
 class CDeterministicMN;
 class CDeterministicMNList;
 class CDeterministicMNListDiff;
+class CDeterministicMNManager;
 class CNode;
 
 class UniValue;
@@ -48,7 +49,7 @@ public:
     }
 
     static void PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip);
-    static PeerMsgRet ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
+    static PeerMsgRet ProcessMessage(CNode& peer, CConnman& connman, const CDeterministicMNList& tip_mn_list, std::string_view msg_type, CDataStream& vRecv);
     static void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman);
 };
 

@@ -66,6 +66,7 @@ BlockAssembler::BlockAssembler(CChainState& chainstate, const NodeContext& node,
       chainparams(params),
       m_mempool(mempool),
       m_chainstate(chainstate),
+      m_dmnman(*Assert(node.dmnman)),
       m_cpoolman(*Assert(node.cpoolman)),
       m_chain_helper(*Assert(node.chain_helper)),
       m_mnhfman(*Assert(node.mnhf_manager)),
@@ -219,7 +220,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         cbTx.nHeight = nHeight;
 
         BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state, ::ChainstateActive().CoinsTip())) {
+        if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, m_dmnman, state, ::ChainstateActive().CoinsTip())) {
             throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, state.ToString()));
         }
         if (fDIP0008Active_context) {
