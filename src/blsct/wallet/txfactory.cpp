@@ -13,10 +13,10 @@ using Scalars = Elements<Scalar>;
 
 namespace blsct {
 
-void TxFactory::AddOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId)
+void TxFactoryBase::AddOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId, const CreateOutputType& type, const CAmount& minStake)
 {
     UnsignedOutput out;
-    out = CreateOutput(destination.GetKeys(), nAmount, sMemo, tokenId);
+    out = CreateOutput(destination.GetKeys(), nAmount, sMemo, tokenId, Scalar::Rand(), type, minStake);
 
     if (nAmounts.count(tokenId) <= 0)
         nAmounts[tokenId] = {0, 0};
@@ -29,57 +29,23 @@ void TxFactory::AddOutput(const SubAddress& destination, const CAmount& nAmount,
     vOutputs[tokenId].push_back(out);
 }
 
-bool TxFactory::AddInput(const CCoinsViewCache& cache, const COutPoint& outpoint, const bool& rbf)
+bool TxFactoryBase::AddInput(const CAmount& amount, const MclScalar& gamma, const PrivateKey& spendingKey, const TokenId& tokenId, const COutPoint& outpoint, const bool& rbf)
 {
-    Coin coin;
+    if (vInputs.count(tokenId) <= 0)
+        vInputs[tokenId] = std::vector<UnsignedInput>();
 
-    if (!cache.GetCoin(outpoint, coin))
-        return false;
+    vInputs[tokenId].push_back({CTxIn(outpoint, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL), amount, gamma, spendingKey});
 
-    auto recoveredInfo = km->RecoverOutputs(std::vector<CTxOut>{coin.out});
+    if (nAmounts.count(tokenId) <= 0)
+        nAmounts[tokenId] = {0, 0};
 
-    if (!recoveredInfo.is_completed)
-        return false;
-
-    if (vInputs.count(coin.out.tokenId) <= 0)
-        vInputs[coin.out.tokenId] = std::vector<UnsignedInput>();
-
-    vInputs[coin.out.tokenId].push_back({CTxIn(outpoint, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL), recoveredInfo.amounts[0].amount, recoveredInfo.amounts[0].gamma, km->GetSpendingKeyForOutput(coin.out)});
-
-    if (nAmounts.count(coin.out.tokenId) <= 0)
-        nAmounts[coin.out.tokenId] = {0, 0};
-
-    nAmounts[coin.out.tokenId].nFromInputs += recoveredInfo.amounts[0].amount;
-
-    return true;
-}
-bool TxFactory::AddInput(wallet::CWallet* wallet, const COutPoint& outpoint, const bool& rbf)
-{
-    AssertLockHeld(wallet->cs_wallet);
-
-    auto tx = wallet->GetWalletTx(outpoint.hash);
-
-    if (tx == nullptr)
-        return false;
-
-    auto out = tx->tx->vout[outpoint.n];
-
-    if (vInputs.count(out.tokenId) <= 0)
-        vInputs[out.tokenId] = std::vector<UnsignedInput>();
-
-    auto recoveredInfo = tx->GetBLSCTRecoveryData(outpoint.n);
-
-    vInputs[out.tokenId].push_back({CTxIn(outpoint, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL), recoveredInfo.amount, recoveredInfo.gamma, km->GetSpendingKeyForOutput(out)});
-
-    if (nAmounts.count(out.tokenId) <= 0)
-        nAmounts[out.tokenId] = {0, 0};
-
-    nAmounts[out.tokenId].nFromInputs += recoveredInfo.amount;
+    nAmounts[tokenId].nFromInputs += amount;
 
     return true;
 }
 
-std::optional<CMutableTransaction> TxFactory::BuildTx()
+std::optional<CMutableTransaction>
+TxFactoryBase::BuildTx(const blsct::DoublePublicKey& changeDestination)
 {
     CAmount nFee = BLSCT_DEFAULT_FEE * (vInputs.size() + vOutputs.size() + 1);
 
@@ -114,7 +80,7 @@ std::optional<CMutableTransaction> TxFactory::BuildTx()
         }
 
         for (auto& change : mapChange) {
-            auto changeOutput = CreateOutput(std::get<blsct::DoublePublicKey>(km->GetNewDestination(-1).value()), change.second, "Change", change.first);
+            auto changeOutput = CreateOutput(changeDestination, change.second, "Change", change.first);
             tx.vout.push_back(changeOutput.out);
             gammaAcc = gammaAcc - changeOutput.gamma;
             txSigs.push_back(PrivateKey(changeOutput.blindingKey).Sign(changeOutput.out.GetHash()));
@@ -134,26 +100,103 @@ std::optional<CMutableTransaction> TxFactory::BuildTx()
     return std::nullopt;
 }
 
-std::optional<CMutableTransaction> TxFactory::CreateTransaction(wallet::CWallet* wallet, blsct::KeyMan* blsct_km, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId)
+std::optional<CMutableTransaction> TxFactoryBase::CreateTransaction(const std::vector<InputCandidates>& inputCandidates, const blsct::DoublePublicKey& changeDestination, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId, const CreateOutputType& type, const CAmount& minStake)
+{
+    auto tx = blsct::TxFactoryBase();
+
+    for (const auto& output : inputCandidates) {
+        tx.AddInput(output.amount, output.gamma, output.spendingKey, output.tokenId, COutPoint(output.outpoint.hash, output.outpoint.n));
+
+        if (tx.nAmounts[tokenId].nFromInputs > nAmount + (long long)(BLSCT_DEFAULT_FEE * (tx.vInputs.size() + 3))) break;
+    }
+
+    tx.AddOutput(destination, nAmount, sMemo, tokenId, type, minStake);
+
+    return tx.BuildTx(changeDestination);
+}
+
+bool TxFactory::AddInput(const CCoinsViewCache& cache, const COutPoint& outpoint, const bool& rbf)
+{
+    Coin coin;
+
+    if (!cache.GetCoin(outpoint, coin))
+        return false;
+
+    auto recoveredInfo = km->RecoverOutputs(std::vector<CTxOut>{coin.out});
+
+    if (!recoveredInfo.is_completed)
+        return false;
+
+    if (vInputs.count(coin.out.tokenId) <= 0)
+        vInputs[coin.out.tokenId] = std::vector<UnsignedInput>();
+
+    vInputs[coin.out.tokenId].push_back({CTxIn(outpoint, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL), recoveredInfo.amounts[0].amount, recoveredInfo.amounts[0].gamma, km->GetSpendingKeyForOutput(coin.out)});
+
+    if (nAmounts.count(coin.out.tokenId) <= 0)
+        nAmounts[coin.out.tokenId] = {0, 0};
+
+    nAmounts[coin.out.tokenId].nFromInputs += recoveredInfo.amounts[0].amount;
+
+    return true;
+}
+
+bool TxFactory::AddInput(wallet::CWallet* wallet, const COutPoint& outpoint, const bool& rbf)
+{
+    AssertLockHeld(wallet->cs_wallet);
+
+    auto tx = wallet->GetWalletTx(outpoint.hash);
+
+    if (tx == nullptr)
+        return false;
+
+    auto out = tx->tx->vout[outpoint.n];
+
+    if (vInputs.count(out.tokenId) <= 0)
+        vInputs[out.tokenId] = std::vector<UnsignedInput>();
+
+    auto recoveredInfo = tx->GetBLSCTRecoveryData(outpoint.n);
+
+    vInputs[out.tokenId].push_back({CTxIn(outpoint, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL), recoveredInfo.amount, recoveredInfo.gamma, km->GetSpendingKeyForOutput(out)});
+
+    if (nAmounts.count(out.tokenId) <= 0)
+        nAmounts[out.tokenId] = {0, 0};
+
+    nAmounts[out.tokenId].nFromInputs += recoveredInfo.amount;
+
+    return true;
+}
+
+std::optional<CMutableTransaction>
+TxFactory::BuildTx()
+{
+    return TxFactoryBase::BuildTx(std::get<blsct::DoublePublicKey>(km->GetNewDestination(-1).value()));
+}
+
+std::optional<CMutableTransaction> TxFactory::CreateTransaction(wallet::CWallet* wallet, blsct::KeyMan* blsct_km, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId, const CreateOutputType& type, const CAmount& minStake)
 {
     LOCK(wallet->cs_wallet);
 
     wallet::CoinFilterParams coins_params;
     coins_params.min_amount = 0;
     coins_params.only_blsct = true;
+    // coins_params.include_staked_commitment = type == STAKED_COMMITMENT;
     coins_params.token_id = tokenId;
 
-    auto tx = blsct::TxFactory(blsct_km);
+    std::vector<InputCandidates> inputCandidates;
 
     for (const wallet::COutput& output : AvailableCoins(*wallet, nullptr, std::nullopt, coins_params).All()) {
-        tx.AddInput(wallet, COutPoint(output.outpoint.hash, output.outpoint.n));
+        auto tx = wallet->GetWalletTx(output.outpoint.hash);
 
-        if (tx.nAmounts[tokenId].nFromInputs > nAmount + (long long)(BLSCT_DEFAULT_FEE * (tx.vInputs.size() + 3))) break;
+        if (tx == nullptr)
+            continue;
+
+        auto out = tx->tx->vout[output.outpoint.n];
+
+        auto recoveredInfo = tx->GetBLSCTRecoveryData(output.outpoint.n);
+        inputCandidates.push_back({recoveredInfo.amount, recoveredInfo.gamma, blsct_km->GetSpendingKeyForOutput(out), out.tokenId, COutPoint(output.outpoint.hash, output.outpoint.n)});
     }
 
-    tx.AddOutput(destination, nAmount, sMemo, tokenId);
-
-    return tx.BuildTx();
+    return TxFactoryBase::CreateTransaction(inputCandidates, std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(-1).value()), destination, nAmount, sMemo, tokenId, type, minStake);
 }
 
 } // namespace blsct
