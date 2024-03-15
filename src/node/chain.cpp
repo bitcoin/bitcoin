@@ -66,6 +66,14 @@ bool ReadBlockData(node::BlockManager& blockman, const CBlockIndex& block, CBloc
             return false;
         }
     }
+    if (undo_data && block.nHeight > 0) {
+        if (blockman.ReadBlockUndo(*undo_data, block)) {
+            info.undo_data = undo_data;
+        } else {
+            info.error = strprintf("%s: Failed to read block %s undo data from disk", __func__, block.GetBlockHash().ToString());
+            return false;
+        }
+    }
     return true;
 }
 
