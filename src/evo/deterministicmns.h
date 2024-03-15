@@ -611,7 +611,7 @@ public:
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
     bool BuildNewListFromBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindexPrev, BlockValidationState& state, const CCoinsViewCache& view,
                                CDeterministicMNList& mnListRet, bool debugLogs) LOCKS_EXCLUDED(cs);
-    static void HandleQuorumCommitment(const llmq::CFinalCommitment& qc, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, CDeterministicMNList& mnList, bool debugLogs);
+    void HandleQuorumCommitment(const llmq::CFinalCommitment& qc, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, CDeterministicMNList& mnList, bool debugLogs);
 
     CDeterministicMNList GetListForBlock(gsl::not_null<const CBlockIndex*> pindex) LOCKS_EXCLUDED(cs) {
         LOCK(cs);

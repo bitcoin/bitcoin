@@ -275,7 +275,7 @@ static void quorum_dkgstatus_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue quorum_dkgstatus(const JSONRPCRequest& request, const ChainstateManager& chainman, const CSporkManager& sporkman, const LLMQContext& llmq_ctx)
+static UniValue quorum_dkgstatus(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const CSporkManager& sporkman, const LLMQContext& llmq_ctx)
 {
     quorum_dkgstatus_help(request);
 
@@ -290,7 +290,7 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request, const Chainstate
     llmq::CDKGDebugStatus status;
     llmq_ctx.dkg_debugman->GetLocalDebugStatus(status);
 
-    auto ret = status.ToJson(detailLevel);
+    auto ret = status.ToJson(dmnman, chainman, detailLevel);
 
     CBlockIndex* pindexTip = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
     int tipHeight = pindexTip->nHeight;
@@ -319,8 +319,8 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request, const Chainstate
                     obj.pushKV("quorumHash", pQuorumBaseBlockIndex->GetBlockHash().ToString());
                     obj.pushKV("pindexTip", pindexTip->nHeight);
 
-                    auto allConnections = llmq::utils::GetQuorumConnections(llmq_params, sporkman, pQuorumBaseBlockIndex, proTxHash, false);
-                    auto outboundConnections = llmq::utils::GetQuorumConnections(llmq_params, sporkman, pQuorumBaseBlockIndex, proTxHash, true);
+                    auto allConnections = llmq::utils::GetQuorumConnections(llmq_params, dmnman, sporkman, pQuorumBaseBlockIndex, proTxHash, false);
+                    auto outboundConnections = llmq::utils::GetQuorumConnections(llmq_params, dmnman, sporkman, pQuorumBaseBlockIndex, proTxHash, true);
                     std::map<uint256, CAddress> foundConnections;
                     const NodeContext& node = EnsureAnyNodeContext(request.context);
                     node.connman->ForEachNode([&](const CNode* pnode) {
@@ -879,7 +879,7 @@ static UniValue _quorum(const JSONRPCRequest& request)
     } else if (command == "quorumdkginfo") {
         return quorum_dkginfo(new_request, llmq_ctx, chainman);
     } else if (command == "quorumdkgstatus") {
-        return quorum_dkgstatus(new_request, chainman, *node.sporkman, llmq_ctx);
+        return quorum_dkgstatus(new_request, *node.dmnman, chainman, *node.sporkman, llmq_ctx);
     } else if (command == "quorummemberof") {
         return quorum_memberof(new_request, chainman, node, llmq_ctx);
     } else if (command == "quorumsign" || command == "quorumverify" || command == "quorumhasrecsig" || command == "quorumgetrecsig" || command == "quorumisconflicting") {

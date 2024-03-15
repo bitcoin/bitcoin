@@ -43,7 +43,7 @@ static bool CheckSpecialTxInner(const CTransaction& tx, const CBlockIndex* pinde
         case TRANSACTION_COINBASE:
             return CheckCbTx(tx, pindexPrev, state);
         case TRANSACTION_QUORUM_COMMITMENT:
-            return llmq::CheckLLMQCommitment(tx, pindexPrev, state);
+            return llmq::CheckLLMQCommitment(*::deterministicMNManager, tx, pindexPrev, state);
         case TRANSACTION_MNHF_SIGNAL:
             if (!DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "mnhf-before-v20");

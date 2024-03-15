@@ -25,6 +25,7 @@ class CBlockIndex;
 class CChainState;
 class CConnman;
 class CDeterministicMN;
+class CDeterministicMNManager;
 class CMasternodeSync;
 class CNode;
 class CSporkManager;
@@ -218,6 +219,7 @@ private:
     CBLSWorker& blsWorker;
     CChainState& m_chainstate;
     CConnman& connman;
+    CDeterministicMNManager& m_dmnman;
     CDKGSessionManager& dkgManager;
     CEvoDB& m_evoDb;
     CQuorumBlockProcessor& quorumBlockProcessor;
@@ -235,7 +237,7 @@ private:
     mutable CThreadInterrupt quorumThreadInterrupt;
 
 public:
-    CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGSessionManager& _dkgManager,
+    CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager,
                    CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor, const CSporkManager& sporkman, const std::unique_ptr<CMasternodeSync>& mn_sync);
     ~CQuorumManager() { Stop(); };
 
