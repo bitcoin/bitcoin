@@ -18,7 +18,6 @@
 #include <memory>
 #include <optional>
 
-class CBlockIndex;
 namespace kernel {
 struct CCoinsStats;
 }
