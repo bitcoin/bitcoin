@@ -73,36 +73,38 @@ def small_txpuzzle_randfee(
 
 def check_raw_estimates(node, fees_seen):
     """Call estimaterawfee and verify that the estimates meet certain invariants."""
-
-    delta = 1.0e-6  # account for rounding error
+    delta = Decimal('0.000001')  # account for rounding error
     for i in range(1, 26):
         for _, e in node.estimaterawfee(i).items():
-            feerate = float(e["feerate"])
+            feerate = Decimal(e["feerate"])
             assert_greater_than(feerate, 0)
 
-            if feerate + delta < min(fees_seen) or feerate - delta > max(fees_seen):
+            min_fees_seen = Decimal(min(fees_seen)).quantize(Decimal('0.00000001'))
+            max_fees_seen = Decimal(max(fees_seen)).quantize(Decimal('0.00000001'))
+            if feerate + delta < min_fees_seen or feerate - delta > max_fees_seen:
                 raise AssertionError(
-                    f"Estimated fee ({feerate}) out of range ({min(fees_seen)},{max(fees_seen)})"
+                    f"Estimated fee ({feerate}) out of range ({min_fees_seen},{max_fees_seen})"
                 )
 
 
 def check_smart_estimates(node, fees_seen):
     """Call estimatesmartfee and verify that the estimates meet certain invariants."""
-
-    delta = 1.0e-6  # account for rounding error
-    last_feerate = float(max(fees_seen))
+    delta = Decimal('0.000001')  # account for rounding error
+    last_feerate = Decimal(max(fees_seen))
     all_smart_estimates = [node.estimatesmartfee(i) for i in range(1, 26)]
     mempoolMinFee = node.getmempoolinfo()["mempoolminfee"]
     minRelaytxFee = node.getmempoolinfo()["minrelaytxfee"]
     for i, e in enumerate(all_smart_estimates):  # estimate is for i+1
-        feerate = float(e["feerate"])
+        feerate = Decimal(e["feerate"])
         assert_greater_than(feerate, 0)
-        assert_greater_than_or_equal(feerate, float(mempoolMinFee))
-        assert_greater_than_or_equal(feerate, float(minRelaytxFee))
+        assert_greater_than_or_equal(feerate, mempoolMinFee)
+        assert_greater_than_or_equal(feerate, minRelaytxFee)
 
-        if feerate + delta < min(fees_seen) or feerate - delta > max(fees_seen):
+        min_fees_seen = Decimal(min(fees_seen)).quantize(Decimal('0.00000001'))
+        max_fees_seen = Decimal(max(fees_seen)).quantize(Decimal('0.00000001'))
+        if feerate + delta < min_fees_seen or feerate - delta > max_fees_seen:
             raise AssertionError(
-                f"Estimated fee ({feerate}) out of range ({min(fees_seen)},{max(fees_seen)})"
+                f"Estimated fee ({feerate}) out of range ({min_fees_seen},{max_fees_seen})"
             )
         if feerate - delta > last_feerate:
             raise AssertionError(
