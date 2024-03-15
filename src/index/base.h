@@ -126,7 +126,6 @@ private:
 
 protected:
     std::unique_ptr<interfaces::Chain> m_chain;
-    Chainstate* m_chainstate{nullptr};
     const std::string m_name;
 
     /// Return whether to ignore stale, out-of-sync block connected event

@@ -6,6 +6,7 @@
 #include <chainparams.h>
 #include <index/txindex.h>
 #include <interfaces/chain.h>
+#include <node/context.h>
 #include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
@@ -16,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(txindex_tests)
 
 BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 {
-    TxIndex txindex(interfaces::MakeChain(m_node), 1 << 20, true);
+    TxIndex txindex(interfaces::MakeChain(m_node), m_node.chainman->m_blockman, 1 << 20, true);
     BOOST_REQUIRE(txindex.Init());
 
     CTransactionRef tx_disk;
