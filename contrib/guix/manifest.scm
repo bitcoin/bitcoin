@@ -91,15 +91,19 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define base-gcc gcc-12)
+(define base-gcc gcc-13)
 (define base-linux-kernel-headers linux-libre-headers-6.1)
+
+(define (gcc-cross-head gcc)
+  (package-with-extra-patches gcc
+    (search-our-patches "gcc-revert-cross.patch")))
 
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
                                        (base-gcc-for-libc linux-base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
                                        (base-libc glibc-2.39)
-                                       (base-gcc linux-base-gcc))
+                                       (base-gcc (gcc-cross-head linux-base-gcc)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
   (make-cross-toolchain target
@@ -424,6 +428,7 @@ inspecting signatures in Mach-O binaries.")
                   "--enable-default-ssp=yes",
                   "--enable-default-pie=yes",
                   "--enable-standard-branch-protection=yes",
+                  "--disable-libsanitizer",
                   building-on)))
         ((#:phases phases)
           `(modify-phases ,phases
@@ -552,9 +557,9 @@ inspecting signatures in Mach-O binaries.")
                  nss-certs
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list ;; Native GCC 12 toolchain
-                 gcc-toolchain-12
-                 (list gcc-toolchain-12 "static")
+           (list ;; Native GCC 13 toolchain
+                 gcc-toolchain-13
+                 (list gcc-toolchain-13 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
            (list ;; Native GCC 10 toolchain
