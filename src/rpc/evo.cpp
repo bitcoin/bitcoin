@@ -1518,7 +1518,8 @@ static uint256 ParseBlock(const UniValue& v, const ChainstateManager& chainman, 
     }
 }
 
-static UniValue protx_diff(const JSONRPCRequest& request, const ChainstateManager& chainman, const LLMQContext& llmq_ctx)
+static UniValue protx_diff(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman,
+                           const LLMQContext& llmq_ctx)
 {
     protx_diff_help(request);
 
@@ -1533,7 +1534,7 @@ static UniValue protx_diff(const JSONRPCRequest& request, const ChainstateManage
     CSimplifiedMNListDiff mnListDiff;
     std::string strError;
 
-    if (!BuildSimplifiedMNListDiff(baseBlockHash, blockHash, mnListDiff, *llmq_ctx.quorum_block_processor, strError, extended)) {
+    if (!BuildSimplifiedMNListDiff(baseBlockHash, blockHash, mnListDiff, dmnman, *llmq_ctx.quorum_block_processor, strError, extended)) {
         throw std::runtime_error(strError);
     }
 
@@ -1700,7 +1701,7 @@ static UniValue protx(const JSONRPCRequest& request)
     } else if (command == "protxinfo") {
         return protx_info(new_request, dmnman, mn_metaman, chainman);
     } else if (command == "protxdiff") {
-        return protx_diff(new_request, chainman, *node.llmq_ctx);
+        return protx_diff(new_request, dmnman, chainman, *node.llmq_ctx);
     } else if (command == "protxlistdiff") {
         return protx_listdiff(new_request, dmnman, chainman);
     }

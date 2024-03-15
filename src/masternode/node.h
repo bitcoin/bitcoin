@@ -9,11 +9,12 @@
 #include <primitives/transaction.h>
 #include <validationinterface.h>
 
+class CActiveMasternodeManager;
 class CBLSPublicKey;
 class CBLSSecretKey;
+class CDeterministicMNManager;
 
 struct CActiveMasternodeInfo;
-class CActiveMasternodeManager;
 
 extern CActiveMasternodeInfo activeMasternodeInfo;
 extern RecursiveMutex activeMasternodeInfoCs;
@@ -49,9 +50,11 @@ private:
     masternode_state_t state{MASTERNODE_WAITING_FOR_PROTX};
     std::string strError;
     CConnman& connman;
+    const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
 
 public:
-    explicit CActiveMasternodeManager(CConnman& _connman) : connman(_connman) {};
+    explicit CActiveMasternodeManager(CConnman& _connman, const std::unique_ptr<CDeterministicMNManager>& dmnman) :
+        connman(_connman), m_dmnman(dmnman) {};
     ~CActiveMasternodeManager() = default;
 
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;

@@ -759,7 +759,7 @@ static void quorum_rotationinfo_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue quorum_rotationinfo(const JSONRPCRequest& request, const LLMQContext& llmq_ctx)
+static UniValue quorum_rotationinfo(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const LLMQContext& llmq_ctx)
 {
     quorum_rotationinfo_help(request);
 
@@ -778,7 +778,7 @@ static UniValue quorum_rotationinfo(const JSONRPCRequest& request, const LLMQCon
 
     LOCK(cs_main);
 
-    if (!BuildQuorumRotationInfo(cmd, quorumRotationInfoRet, *llmq_ctx.qman, *llmq_ctx.quorum_block_processor, strError)) {
+    if (!BuildQuorumRotationInfo(cmd, quorumRotationInfoRet, dmnman, *llmq_ctx.qman, *llmq_ctx.quorum_block_processor, strError)) {
         throw JSONRPCError(RPC_INVALID_REQUEST, strError);
     }
 
@@ -891,7 +891,7 @@ static UniValue _quorum(const JSONRPCRequest& request)
     } else if (command == "quorumgetdata") {
         return quorum_getdata(new_request, llmq_ctx, chainman);
     } else if (command == "quorumrotationinfo") {
-        return quorum_rotationinfo(new_request, llmq_ctx);
+        return quorum_rotationinfo(new_request, *node.dmnman, llmq_ctx);
     } else {
         quorum_help();
     }

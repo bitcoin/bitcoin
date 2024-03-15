@@ -17,6 +17,7 @@ class CBlockIndex;
 class CBlockUndo;
 class CChain;
 class CChainParams;
+class CDeterministicMNManager;
 class CDSNotificationInterface;
 class ChainstateManager;
 struct FlatFilePos;
@@ -34,6 +35,7 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
 
 FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp);
 
-void ThreadImport(ChainstateManager& chainman, CDSNotificationInterface& dsnfi, std::vector<fs::path> vImportFiles, const ArgsManager& args);
+void ThreadImport(ChainstateManager& chainman, CDeterministicMNManager& dmnman, CDSNotificationInterface& dsnfi,
+                  std::vector<fs::path> vImportFiles, const ArgsManager& args);
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H

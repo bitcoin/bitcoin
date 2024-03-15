@@ -1877,7 +1877,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     if (fMasternodeMode) {
         // Create and register activeMasternodeManager, will init later in ThreadImport
-        activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman);
+        activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman, ::deterministicMNManager);
         RegisterValidationInterface(activeMasternodeManager.get());
     }
 
@@ -2394,8 +2394,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         vImportFiles.push_back(strFile);
     }
 
-    chainman.m_load_block = std::thread(&util::TraceThread, "loadblk", [=, &chainman, &args] {
-        ThreadImport(chainman, *pdsNotificationInterface ,vImportFiles, args);
+    chainman.m_load_block = std::thread(&util::TraceThread, "loadblk", [=, &args, &chainman, &node] {
+        ThreadImport(chainman, *node.dmnman, *pdsNotificationInterface, vImportFiles, args);
     });
 
     // Wait for genesis block to be processed
