@@ -9,6 +9,6 @@
 #include <coins.h>
 
 namespace blsct {
-bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount& blockReward = 0, const CAmount& minStake = 0, CBlockIndex* pindexPrev = nullptr);
+bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount& blockReward = 0);
 }
 #endif // BLSCT_VERIFICATION_H

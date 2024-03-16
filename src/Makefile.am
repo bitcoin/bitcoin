@@ -510,6 +510,7 @@ libbitcoin_node_a_SOURCES = \
   bip324.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
+  blsct/wallet/verification.cpp \
   chain.cpp \
   chainparams.cpp \
   consensus/tx_verify.cpp \
