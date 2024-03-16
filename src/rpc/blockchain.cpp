@@ -2676,7 +2676,10 @@ static RPCHelpMan dumptxoutset()
 {
     return RPCHelpMan{
         "dumptxoutset",
-        "Write the serialized UTXO set to a file.",
+        "Write the serialized UTXO set to a file. This can be used in loadtxoutset afterwards if this snapshot height is supported in the chainparams as well.\n\n"
+        "Unless the the \"latest\" type is requested, the node will roll back to the requested height and network activity will be suspended during this process. "
+        "Because of this it is discouraged to interact with the node in any other way during the execution of this call to avoid inconsistent results and race conditions, particularly RPCs that interact with blockstorage.\n\n"
+        "This call may take several minutes. Make sure to use no RPC timeout (bitcoin-cli -rpcclienttimeout=0)",
         {
             {"path", RPCArg::Type::STR, RPCArg::Optional::NO, "Path to the output file. If relative, will be prefixed by datadir."},
             {"type", RPCArg::Type::STR, RPCArg::Default(""), "The type of snapshot to create. Can be \"latest\" to create a snapshot of the current UTXO set or \"rollback\" to temporarily roll back the state of the node to a historical block before creating the snapshot of a historical UTXO set. This parameter can be omitted if a separate \"rollback\" named parameter is specified indicating the height or hash of a specific historical block. If \"rollback\" is specified and separate \"rollback\" named parameter is not specified, this will roll back to the latest valid snapshot block that currently be loaded with loadtxoutset."},
@@ -2773,6 +2776,8 @@ static RPCHelpMan dumptxoutset()
         // would be classified as a block connecting an invalid block.
         disable_network = std::make_unique<NetworkDisable>(connman);
 
+        // Note: Unlocking cs_main before CreateUTXOSnapshot might be racy
+        // if the user interacts with any other *block RPCs.
         invalidate_index = WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Next(target_index));
         InvalidateBlock(*node.chainman, invalidate_index->GetBlockHash());
         const CBlockIndex* new_tip_index{WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Tip())};
