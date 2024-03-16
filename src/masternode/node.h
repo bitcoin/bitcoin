@@ -7,18 +7,12 @@
 
 #include <netaddress.h>
 #include <primitives/transaction.h>
+#include <threadsafety.h>
 #include <validationinterface.h>
 
-class CActiveMasternodeManager;
 class CBLSPublicKey;
 class CBLSSecretKey;
 class CDeterministicMNManager;
-
-struct CActiveMasternodeInfo;
-
-extern CActiveMasternodeInfo activeMasternodeInfo;
-extern RecursiveMutex activeMasternodeInfoCs;
-extern std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
 
 struct CActiveMasternodeInfo {
     // Keys for the active Masternode
@@ -32,7 +26,6 @@ struct CActiveMasternodeInfo {
     bool legacy{true};
 };
 
-
 class CActiveMasternodeManager final : public CValidationInterface
 {
 public:
@@ -45,6 +38,9 @@ public:
         MASTERNODE_READY,
         MASTERNODE_ERROR,
     };
+
+    mutable RecursiveMutex cs;
+    CActiveMasternodeInfo m_info GUARDED_BY(cs);
 
 private:
     masternode_state_t state{MASTERNODE_WAITING_FOR_PROTX};
@@ -69,5 +65,7 @@ public:
 private:
     bool GetLocalAddress(CService& addrRet);
 };
+
+extern std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
 
 #endif // BITCOIN_MASTERNODE_NODE_H

@@ -56,7 +56,7 @@ void CCoinJoinServer::ProcessDSACCEPT(CNode& peer, CDataStream& vRecv)
     LogPrint(BCLog::COINJOIN, "DSACCEPT -- nDenom %d (%s)  txCollateral %s", dsa.nDenom, CoinJoin::DenominationToString(dsa.nDenom), dsa.txCollateral.ToString()); /* Continued */
 
     auto mnList = m_dmnman.GetListAtChainTip();
-    auto dmn = WITH_LOCK(activeMasternodeInfoCs, return mnList.GetValidMNByCollateral(activeMasternodeInfo.outpoint));
+    auto dmn = WITH_LOCK(::activeMasternodeManager->cs, return mnList.GetValidMNByCollateral(::activeMasternodeManager->m_info.outpoint));
     if (!dmn) {
         PushStatus(peer, STATUS_REJECTED, ERR_MN_LIST);
         return;
@@ -67,7 +67,7 @@ void CCoinJoinServer::ProcessDSACCEPT(CNode& peer, CDataStream& vRecv)
             TRY_LOCK(cs_vecqueue, lockRecv);
             if (!lockRecv) return;
 
-            auto mnOutpoint = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.outpoint);
+            auto mnOutpoint = WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.outpoint);
 
             if (ranges::any_of(vecCoinJoinQueue,
                                [&mnOutpoint](const auto& q){return q.masternodeOutpoint == mnOutpoint;})) {
@@ -331,8 +331,8 @@ void CCoinJoinServer::CommitFinalTransaction()
     // create and sign masternode dstx transaction
     if (!m_dstxman.GetDSTX(hashTx)) {
         CCoinJoinBroadcastTx dstxNew(finalTransaction,
-                                    WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.outpoint),
-                                    WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash),
+                                    WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.outpoint),
+                                    WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.proTxHash),
                                     GetAdjustedTime());
         dstxNew.Sign();
         m_dstxman.AddDSTX(dstxNew);
@@ -499,8 +499,8 @@ void CCoinJoinServer::CheckForCompleteQueue()
         SetState(POOL_STATE_ACCEPTING_ENTRIES);
 
         CCoinJoinQueue dsq(nSessionDenom,
-                            WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.outpoint),
-                            WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash),
+                            WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.outpoint),
+                            WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.proTxHash),
                             GetAdjustedTime(), true);
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CheckForCompleteQueue -- queue is ready, signing and relaying (%s) " /* Continued */
                                      "with %d participants\n", dsq.ToString(), vecSessionCollaterals.size());
@@ -713,8 +713,8 @@ bool CCoinJoinServer::CreateNewSession(const CCoinJoinAccept& dsa, PoolMessage& 
     if (!fUnitTest) {
         //broadcast that I'm accepting entries, only if it's the first entry through
         CCoinJoinQueue dsq(nSessionDenom,
-                            WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.outpoint),
-                            WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash),
+                            WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.outpoint),
+                            WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.proTxHash),
                             GetAdjustedTime(), false);
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CreateNewSession -- signing and relaying new queue: %s\n", dsq.ToString());
         dsq.Sign();

@@ -369,14 +369,14 @@ void PrepareShutdown(NodeContext& node)
         pdsNotificationInterface = nullptr;
     }
     if (fMasternodeMode) {
-        UnregisterValidationInterface(activeMasternodeManager.get());
+        UnregisterValidationInterface(::activeMasternodeManager.get());
 
-        LOCK(activeMasternodeInfoCs);
+        LOCK(::activeMasternodeManager->cs);
         // make sure to clean up BLS keys before global destructors are called (they have allocated from the secure memory pool)
-        activeMasternodeInfo.blsKeyOperator.reset();
-        activeMasternodeInfo.blsPubKeyOperator.reset();
+        ::activeMasternodeManager->m_info.blsKeyOperator.reset();
+        ::activeMasternodeManager->m_info.blsPubKeyOperator.reset();
 
-        activeMasternodeManager.reset();
+        ::activeMasternodeManager.reset();
     }
 
     node.chain_clients.clear();
@@ -1859,19 +1859,19 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         fMasternodeMode = true;
         {
             // Create and register activeMasternodeManager, will init later in ThreadImport
-            activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman, ::deterministicMNManager);
+            ::activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman, ::deterministicMNManager);
 
-            LOCK(activeMasternodeInfoCs);
-            assert(activeMasternodeInfo.blsKeyOperator == nullptr);
-            assert(activeMasternodeInfo.blsPubKeyOperator == nullptr);
-            activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
-            activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(keyOperator.GetPublicKey());
+            LOCK(::activeMasternodeManager->cs);
+            assert(::activeMasternodeManager->m_info.blsKeyOperator == nullptr);
+            assert(::activeMasternodeManager->m_info.blsPubKeyOperator == nullptr);
+            ::activeMasternodeManager->m_info.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
+            ::activeMasternodeManager->m_info.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(keyOperator.GetPublicKey());
             // We don't know the actual scheme at this point, print both
             LogPrintf("MASTERNODE:\n  blsPubKeyOperator legacy: %s\n  blsPubKeyOperator basic: %s\n",
-                    activeMasternodeInfo.blsPubKeyOperator->ToString(true),
-                    activeMasternodeInfo.blsPubKeyOperator->ToString(false));
+                    ::activeMasternodeManager->m_info.blsPubKeyOperator->ToString(true),
+                    ::activeMasternodeManager->m_info.blsPubKeyOperator->ToString(false));
 
-            RegisterValidationInterface(activeMasternodeManager.get());
+            RegisterValidationInterface(::activeMasternodeManager.get());
         }
     }
 

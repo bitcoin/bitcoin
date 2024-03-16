@@ -15,8 +15,6 @@
 #include <warnings.h>
 
 // Keep track of the active Masternode
-RecursiveMutex activeMasternodeInfoCs;
-CActiveMasternodeInfo activeMasternodeInfo GUARDED_BY(activeMasternodeInfoCs);
 std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
 
 std::string CActiveMasternodeManager::GetStateString() const
@@ -65,7 +63,7 @@ std::string CActiveMasternodeManager::GetStatus() const
 
 void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 {
-    LOCK2(cs_main, activeMasternodeInfoCs);
+    LOCK2(::cs_main, cs);
 
     if (!fMasternodeMode) return;
 
@@ -80,14 +78,14 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
         return;
     }
 
-    if (!GetLocalAddress(activeMasternodeInfo.service)) {
+    if (!GetLocalAddress(m_info.service)) {
         state = MASTERNODE_ERROR;
         return;
     }
 
     CDeterministicMNList mnList = Assert(m_dmnman)->GetListForBlock(pindex);
 
-    CDeterministicMNCPtr dmn = mnList.GetMNByOperatorKey(*activeMasternodeInfo.blsPubKeyOperator);
+    CDeterministicMNCPtr dmn = mnList.GetMNByOperatorKey(*m_info.blsPubKeyOperator);
     if (!dmn) {
         // MN not appeared on the chain yet
         return;
@@ -104,7 +102,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 
     LogPrintf("CActiveMasternodeManager::Init -- proTxHash=%s, proTx=%s\n", dmn->proTxHash.ToString(), dmn->ToString());
 
-    if (activeMasternodeInfo.service != dmn->pdmnState->addr) {
+    if (m_info.service != dmn->pdmnState->addr) {
         state = MASTERNODE_ERROR;
         strError = "Local address does not match the address from ProTx";
         LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
@@ -112,33 +110,33 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     }
 
     // Check socket connectivity
-    LogPrintf("CActiveMasternodeManager::Init -- Checking inbound connection to '%s'\n", activeMasternodeInfo.service.ToString());
-    std::unique_ptr<Sock> sock = CreateSock(activeMasternodeInfo.service);
+    LogPrintf("CActiveMasternodeManager::Init -- Checking inbound connection to '%s'\n", m_info.service.ToString());
+    std::unique_ptr<Sock> sock = CreateSock(m_info.service);
     if (!sock) {
         state = MASTERNODE_ERROR;
-        strError = "Could not create socket to connect to " + activeMasternodeInfo.service.ToString();
+        strError = "Could not create socket to connect to " + m_info.service.ToString();
         LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
-    bool fConnected = ConnectSocketDirectly(activeMasternodeInfo.service, *sock, nConnectTimeout, true) && IsSelectableSocket(sock->Get());
+    bool fConnected = ConnectSocketDirectly(m_info.service, *sock, nConnectTimeout, true) && IsSelectableSocket(sock->Get());
     sock->Reset();
 
     if (!fConnected && Params().RequireRoutableExternalIP()) {
         state = MASTERNODE_ERROR;
-        strError = "Could not connect to " + activeMasternodeInfo.service.ToString();
+        strError = "Could not connect to " + m_info.service.ToString();
         LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
 
-    activeMasternodeInfo.proTxHash = dmn->proTxHash;
-    activeMasternodeInfo.outpoint = dmn->collateralOutpoint;
-    activeMasternodeInfo.legacy = dmn->pdmnState->nVersion == CProRegTx::LEGACY_BLS_VERSION;
+    m_info.proTxHash = dmn->proTxHash;
+    m_info.outpoint = dmn->collateralOutpoint;
+    m_info.legacy = dmn->pdmnState->nVersion == CProRegTx::LEGACY_BLS_VERSION;
     state = MASTERNODE_READY;
 }
 
 void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
 {
-    LOCK2(cs_main, activeMasternodeInfoCs);
+    LOCK2(::cs_main, cs);
 
     if (!fMasternodeMode) return;
 
@@ -147,23 +145,23 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
     if (state == MASTERNODE_READY) {
         auto oldMNList = Assert(m_dmnman)->GetListForBlock(pindexNew->pprev);
         auto newMNList = m_dmnman->GetListForBlock(pindexNew);
-        if (!newMNList.IsMNValid(activeMasternodeInfo.proTxHash)) {
+        if (!newMNList.IsMNValid(m_info.proTxHash)) {
             // MN disappeared from MN list
             state = MASTERNODE_REMOVED;
-            activeMasternodeInfo.proTxHash = uint256();
-            activeMasternodeInfo.outpoint.SetNull();
+            m_info.proTxHash = uint256();
+            m_info.outpoint.SetNull();
             // MN might have reappeared in same block with a new ProTx
             Init(pindexNew);
             return;
         }
 
-        auto oldDmn = oldMNList.GetMN(activeMasternodeInfo.proTxHash);
-        auto newDmn = newMNList.GetMN(activeMasternodeInfo.proTxHash);
+        auto oldDmn = oldMNList.GetMN(m_info.proTxHash);
+        auto newDmn = newMNList.GetMN(m_info.proTxHash);
         if (newDmn->pdmnState->pubKeyOperator != oldDmn->pdmnState->pubKeyOperator) {
             // MN operator key changed or revoked
             state = MASTERNODE_OPERATOR_KEY_CHANGED;
-            activeMasternodeInfo.proTxHash = uint256();
-            activeMasternodeInfo.outpoint.SetNull();
+            m_info.proTxHash = uint256();
+            m_info.outpoint.SetNull();
             // MN might have reappeared in same block with a new ProTx
             Init(pindexNew);
             return;
@@ -172,8 +170,8 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
         if (newDmn->pdmnState->addr != oldDmn->pdmnState->addr) {
             // MN IP changed
             state = MASTERNODE_PROTX_IP_CHANGED;
-            activeMasternodeInfo.proTxHash = uint256();
-            activeMasternodeInfo.outpoint.SetNull();
+            m_info.proTxHash = uint256();
+            m_info.outpoint.SetNull();
             Init(pindexNew);
             return;
         }
@@ -203,7 +201,7 @@ bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
     if (!fFoundLocal) {
         bool empty = true;
         // If we have some peers, let's try to find our local address from one of them
-        auto service = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.service);
+        auto service = WITH_LOCK(cs, return m_info.service);
         connman.ForEachNodeContinueIf(CConnman::AllNodes, [&](CNode* pnode) {
             empty = false;
             if (pnode->addr.IsIPv4())

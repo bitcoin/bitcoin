@@ -23,8 +23,8 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
 {
     if (!fMasternodeMode) return;
 
-    LOCK(activeMasternodeInfoCs);
-    if (activeMasternodeInfo.proTxHash.IsNull()) return;
+    LOCK(::activeMasternodeManager->cs);
+    if (::activeMasternodeManager->m_info.proTxHash.IsNull()) return;
 
     uint256 signHash;
     const auto receivedMNAuthChallenge = peer.GetReceivedMNAuthChallenge();
@@ -42,7 +42,7 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
         nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
     }
     const bool is_basic_scheme_active{DeploymentActiveAfter(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    const CBLSPublicKeyVersionWrapper pubKey(*activeMasternodeInfo.blsPubKeyOperator, !is_basic_scheme_active);
+    const CBLSPublicKeyVersionWrapper pubKey(*::activeMasternodeManager->m_info.blsPubKeyOperator, !is_basic_scheme_active);
     if (peer.nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
         signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.IsInboundConn()));
     } else {
@@ -50,8 +50,8 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
     }
 
     CMNAuth mnauth;
-    mnauth.proRegTxHash = activeMasternodeInfo.proTxHash;
-    mnauth.sig = activeMasternodeInfo.blsKeyOperator->Sign(signHash);
+    mnauth.proRegTxHash = ::activeMasternodeManager->m_info.proTxHash;
+    mnauth.sig = ::activeMasternodeManager->m_info.blsKeyOperator->Sign(signHash);
 
     LogPrint(BCLog::NET_NETCONN, "CMNAuth::%s -- Sending MNAUTH, peer=%d\n", __func__, peer.GetId());
 
@@ -128,7 +128,7 @@ PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, const CDeterm
     }
 
     const uint256 myProTxHash = fMasternodeMode ?
-                                WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash) :
+                                WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.proTxHash) :
                                 uint256();
 
     connman.ForEachNode([&](CNode* pnode2) {
