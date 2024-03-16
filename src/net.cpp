@@ -4237,7 +4237,7 @@ void CConnman::UnregisterEvents(CNode *pnode)
 {
 #ifdef USE_KQUEUE
     if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
-        LOCK(pnode->cs_hSocket);
+        AssertLockHeld(pnode->cs_hSocket);
         if (pnode->hSocket == INVALID_SOCKET) {
             return;
         }
@@ -4255,7 +4255,7 @@ void CConnman::UnregisterEvents(CNode *pnode)
 #endif
 #ifdef USE_EPOLL
     if (socketEventsMode == SOCKETEVENTS_EPOLL) {
-        LOCK(pnode->cs_hSocket);
+        AssertLockHeld(pnode->cs_hSocket);
         if (pnode->hSocket == INVALID_SOCKET) {
             return;
         }
