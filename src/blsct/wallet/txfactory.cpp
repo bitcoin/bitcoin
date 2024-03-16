@@ -18,12 +18,12 @@ void TxFactoryBase::AddOutput(const SubAddress& destination, const CAmount& nAmo
     UnsignedOutput out;
     out = CreateOutput(destination.GetKeys(), nAmount, sMemo, tokenId, Scalar::Rand(), type, minStake);
 
-    if (nAmounts.count(tokenId) <= 0)
+    if (nAmounts.count(tokenId) == 0)
         nAmounts[tokenId] = {0, 0};
 
     nAmounts[tokenId].nFromOutputs += nAmount;
 
-    if (vOutputs.count(tokenId) <= 0)
+    if (vOutputs.count(tokenId) == 0)
         vOutputs[tokenId] = std::vector<UnsignedOutput>();
 
     vOutputs[tokenId].push_back(out);
@@ -31,12 +31,12 @@ void TxFactoryBase::AddOutput(const SubAddress& destination, const CAmount& nAmo
 
 bool TxFactoryBase::AddInput(const CAmount& amount, const MclScalar& gamma, const PrivateKey& spendingKey, const TokenId& tokenId, const COutPoint& outpoint, const bool& rbf)
 {
-    if (vInputs.count(tokenId) <= 0)
+    if (vInputs.count(tokenId) == 0)
         vInputs[tokenId] = std::vector<UnsignedInput>();
 
     vInputs[tokenId].push_back({CTxIn(outpoint, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL), amount, gamma, spendingKey});
 
-    if (nAmounts.count(tokenId) <= 0)
+    if (nAmounts.count(tokenId) == 0)
         nAmounts[tokenId] = {0, 0};
 
     nAmounts[tokenId].nFromInputs += amount;
@@ -127,12 +127,12 @@ bool TxFactory::AddInput(const CCoinsViewCache& cache, const COutPoint& outpoint
     if (!recoveredInfo.is_completed)
         return false;
 
-    if (vInputs.count(coin.out.tokenId) <= 0)
+    if (vInputs.count(coin.out.tokenId) == 0)
         vInputs[coin.out.tokenId] = std::vector<UnsignedInput>();
 
     vInputs[coin.out.tokenId].push_back({CTxIn(outpoint, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL), recoveredInfo.amounts[0].amount, recoveredInfo.amounts[0].gamma, km->GetSpendingKeyForOutput(coin.out)});
 
-    if (nAmounts.count(coin.out.tokenId) <= 0)
+    if (nAmounts.count(coin.out.tokenId) == 0)
         nAmounts[coin.out.tokenId] = {0, 0};
 
     nAmounts[coin.out.tokenId].nFromInputs += recoveredInfo.amounts[0].amount;
@@ -151,14 +151,14 @@ bool TxFactory::AddInput(wallet::CWallet* wallet, const COutPoint& outpoint, con
 
     auto out = tx->tx->vout[outpoint.n];
 
-    if (vInputs.count(out.tokenId) <= 0)
+    if (vInputs.count(out.tokenId) == 0)
         vInputs[out.tokenId] = std::vector<UnsignedInput>();
 
     auto recoveredInfo = tx->GetBLSCTRecoveryData(outpoint.n);
 
     vInputs[out.tokenId].push_back({CTxIn(outpoint, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL), recoveredInfo.amount, recoveredInfo.gamma, km->GetSpendingKeyForOutput(out)});
 
-    if (nAmounts.count(out.tokenId) <= 0)
+    if (nAmounts.count(out.tokenId) == 0)
         nAmounts[out.tokenId] = {0, 0};
 
     nAmounts[out.tokenId].nFromInputs += recoveredInfo.amount;
@@ -179,7 +179,6 @@ std::optional<CMutableTransaction> TxFactory::CreateTransaction(wallet::CWallet*
     wallet::CoinFilterParams coins_params;
     coins_params.min_amount = 0;
     coins_params.only_blsct = true;
-    // coins_params.include_staked_commitment = type == STAKED_COMMITMENT;
     coins_params.token_id = tokenId;
 
     std::vector<InputCandidates> inputCandidates;
