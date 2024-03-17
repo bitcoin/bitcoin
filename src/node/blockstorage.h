@@ -335,10 +335,33 @@ public:
     //! (part of the same chain).
     bool CheckBlockDataAvailability(const CBlockIndex& upper_block LIFETIMEBOUND, const CBlockIndex& lower_block LIFETIMEBOUND) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    //! Find the first stored ancestor of start_block immediately after the last
-    //! pruned ancestor. Return value will never be null. Caller is responsible
-    //! for ensuring that start_block has data is not pruned.
-    const CBlockIndex* GetFirstStoredBlock(const CBlockIndex& start_block LIFETIMEBOUND, const CBlockIndex* lower_block=nullptr) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    /**
+     * @brief Returns the earliest block with specified `status_mask` flags set after
+     * the latest block _not_ having those flags.
+     *
+     * This function starts from `upper_block`, which must have all
+     * `status_mask` flags set, and iterates backwards through its ancestors. It
+     * continues as long as each block has all `status_mask` flags set, until
+     * reaching the oldest ancestor or `lower_block`.
+     *
+     * @pre `upper_block` must have all `status_mask` flags set.
+     * @pre `lower_block` must be null or an ancestor of `upper_block`
+     *
+     * @param upper_block The starting block for the search, which must have all
+     *                    `status_mask` flags set.
+     * @param status_mask Bitmask specifying required status flags.
+     * @param lower_block The earliest possible block to return. If null, the
+     *                    search can extend to the genesis block.
+     *
+     * @return A non-null pointer to the earliest block between `upper_block`
+     *         and `lower_block`, inclusive, such that every block between the
+     *         returned block and `upper_block` has `status_mask` flags set.
+     */
+    const CBlockIndex* GetFirstBlock(
+        const CBlockIndex& upper_block LIFETIMEBOUND,
+        uint32_t status_mask,
+        const CBlockIndex* lower_block = nullptr
+    ) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** True if any block files have ever been pruned. */
     bool m_have_pruned = false;

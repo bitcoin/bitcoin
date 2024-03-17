@@ -595,12 +595,12 @@ bool BlockManager::IsBlockPruned(const CBlockIndex& block)
     return m_have_pruned && !(block.nStatus & BLOCK_HAVE_DATA) && (block.nTx > 0);
 }
 
-const CBlockIndex* BlockManager::GetFirstStoredBlock(const CBlockIndex& upper_block, const CBlockIndex* lower_block)
+const CBlockIndex* BlockManager::GetFirstBlock(const CBlockIndex& upper_block, uint32_t status_mask, const CBlockIndex* lower_block) const
 {
     AssertLockHeld(::cs_main);
     const CBlockIndex* last_block = &upper_block;
-    assert(last_block->nStatus & BLOCK_HAVE_DATA); // 'upper_block' must have data
-    while (last_block->pprev && (last_block->pprev->nStatus & BLOCK_HAVE_DATA)) {
+    assert((last_block->nStatus & status_mask) == status_mask); // 'upper_block' must satisfy the status mask
+    while (last_block->pprev && ((last_block->pprev->nStatus & status_mask) == status_mask)) {
         if (lower_block) {
             // Return if we reached the lower_block
             if (last_block == lower_block) return lower_block;
@@ -617,7 +617,7 @@ const CBlockIndex* BlockManager::GetFirstStoredBlock(const CBlockIndex& upper_bl
 bool BlockManager::CheckBlockDataAvailability(const CBlockIndex& upper_block, const CBlockIndex& lower_block)
 {
     if (!(upper_block.nStatus & BLOCK_HAVE_DATA)) return false;
-    return GetFirstStoredBlock(upper_block, &lower_block) == &lower_block;
+    return GetFirstBlock(upper_block, BLOCK_HAVE_DATA, &lower_block) == &lower_block;
 }
 
 // If we're using -prune with -reindex, then delete block files that will be ignored by the

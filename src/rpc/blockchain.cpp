@@ -782,6 +782,24 @@ static RPCHelpMan getblock()
     };
 }
 
+//! Return height of highest block that has been pruned, or std::nullopt if no blocks have been pruned
+std::optional<int> GetPruneHeight(const BlockManager& blockman, const CChain& chain) {
+    AssertLockHeld(::cs_main);
+
+    const CBlockIndex* chain_tip{chain.Tip()};
+    if (!(chain_tip->nStatus & BLOCK_HAVE_DATA)) return chain_tip->nHeight;
+
+    // Get first block with data, after the last block without data.
+    // This is the start of the unpruned range of blocks.
+    const auto& first_unpruned{*Assert(blockman.GetFirstBlock(*chain_tip, /*status_mask=*/BLOCK_HAVE_DATA))};
+    if (!first_unpruned.pprev) {
+       // No block before the first unpruned block means nothing is pruned.
+       return std::nullopt;
+    }
+    // Block before the first unpruned block is the last pruned block.
+    return Assert(first_unpruned.pprev)->nHeight;
+}
+
 static RPCHelpMan pruneblockchain()
 {
     return RPCHelpMan{"pruneblockchain", "",
@@ -834,8 +852,7 @@ static RPCHelpMan pruneblockchain()
     }
 
     PruneBlockFilesManual(active_chainstate, height);
-    const CBlockIndex& block{*CHECK_NONFATAL(active_chain.Tip())};
-    return block.nStatus & BLOCK_HAVE_DATA ? active_chainstate.m_blockman.GetFirstStoredBlock(block)->nHeight - 1 : block.nHeight;
+    return GetPruneHeight(chainman.m_blockman, active_chain).value_or(-1);
 },
     };
 }
@@ -1288,8 +1305,8 @@ RPCHelpMan getblockchaininfo()
     obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
     obj.pushKV("pruned", chainman.m_blockman.IsPruneMode());
     if (chainman.m_blockman.IsPruneMode()) {
-        bool has_tip_data = tip.nStatus & BLOCK_HAVE_DATA;
-        obj.pushKV("pruneheight", has_tip_data ? chainman.m_blockman.GetFirstStoredBlock(tip)->nHeight : tip.nHeight + 1);
+        const auto prune_height{GetPruneHeight(chainman.m_blockman, active_chainstate.m_chain)};
+        obj.pushKV("pruneheight", prune_height ? prune_height.value() + 1 : 0);
 
         const bool automatic_pruning{chainman.m_blockman.GetPruneTarget() != BlockManager::PRUNE_TARGET_MANUAL};
         obj.pushKV("automatic_pruning",  automatic_pruning);
