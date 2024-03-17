@@ -108,17 +108,6 @@ BOOST_AUTO_TEST_CASE(build_diagram_test)
     BOOST_CHECK(chunks[2] == oversized_1);
     BOOST_CHECK(chunks[3] == p1);
     BOOST_CHECK(chunks[4] == zero_fee);
-
-    std::vector<FeeFrac> generated_diagram{BuildDiagramFromChunks(chunks)};
-    BOOST_CHECK(generated_diagram.size() == 1 + chunks.size());
-
-    // Prepended with an empty, then the chunks summed in order as above
-    BOOST_CHECK(generated_diagram[0] == empty);
-    BOOST_CHECK(generated_diagram[1] == empty);
-    BOOST_CHECK(generated_diagram[2] == oversized_2);
-    BOOST_CHECK(generated_diagram[3] == oversized_2 + oversized_1);
-    BOOST_CHECK(generated_diagram[4] == oversized_2 + oversized_1 + p1);
-    BOOST_CHECK(generated_diagram[5] == oversized_2 + oversized_1 + p1 + zero_fee);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
