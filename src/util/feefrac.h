@@ -146,15 +146,14 @@ struct FeeFrac
     }
 };
 
-/** Takes the pre-computed and topologically-valid chunks and generates a fee diagram which starts at FeeFrac of (0, 0) */
-std::vector<FeeFrac> BuildDiagramFromChunks(Span<const FeeFrac> chunks);
-
-/** Compares two feerate diagrams. The shorter one is implicitly
- * extended with a horizontal straight line.
+/** Compare the feerate diagrams implied by the provided sorted chunks data.
  *
- * A feerate diagram consists of a list of (fee, size) points with the property that size
- * is strictly increasing and that the first entry is (0, 0).
+ * The implied diagram for each starts at (0, 0), then contains for each chunk the cumulative fee
+ * and size up to that chunk, and then extends infinitely to the right with a horizontal line.
+ *
+ * The caller must guarantee that the sum of the FeeFracs in either of the chunks' data set do not
+ * overflow (so sum fees < 2^63, and sum sizes < 2^31).
  */
-std::partial_ordering CompareFeerateDiagram(Span<const FeeFrac> dia0, Span<const FeeFrac> dia1);
+std::partial_ordering CompareChunks(Span<const FeeFrac> chunks0, Span<const FeeFrac> chunks1);
 
 #endif // BITCOIN_UTIL_FEEFRAC_H

@@ -1280,7 +1280,7 @@ std::optional<std::string> CTxMemPool::CheckConflictTopology(const setEntries& d
     return std::nullopt;
 }
 
-util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::CalculateFeerateDiagramsForRBF(CAmount replacement_fees, int64_t replacement_vsize, const setEntries& direct_conflicts, const setEntries& all_conflicts)
+util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::CalculateChunksForRBF(CAmount replacement_fees, int64_t replacement_vsize, const setEntries& direct_conflicts, const setEntries& all_conflicts)
 {
     Assume(replacement_vsize > 0);
 
@@ -1335,7 +1335,6 @@ util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::
 
     // No topology restrictions post-chunking; sort
     std::sort(old_chunks.begin(), old_chunks.end(), std::greater());
-    std::vector<FeeFrac> old_diagram = BuildDiagramFromChunks(old_chunks);
 
     std::vector<FeeFrac> new_chunks;
 
@@ -1365,6 +1364,5 @@ util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::
 
     // No topology restrictions post-chunking; sort
     std::sort(new_chunks.begin(), new_chunks.end(), std::greater());
-    std::vector<FeeFrac> new_diagram = BuildDiagramFromChunks(new_chunks);
-    return std::make_pair(old_diagram, new_diagram);
+    return std::make_pair(old_chunks, new_chunks);
 }

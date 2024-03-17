@@ -7,39 +7,26 @@
 #include <array>
 #include <vector>
 
-std::vector<FeeFrac> BuildDiagramFromChunks(const Span<const FeeFrac> chunks)
-{
-    std::vector<FeeFrac> diagram;
-    diagram.reserve(chunks.size() + 1);
-
-    diagram.emplace_back(0, 0);
-    for (auto& chunk : chunks) {
-        diagram.emplace_back(diagram.back() + chunk);
-    }
-    return diagram;
-}
-
-std::partial_ordering CompareFeerateDiagram(Span<const FeeFrac> dia0, Span<const FeeFrac> dia1)
+std::partial_ordering CompareChunks(Span<const FeeFrac> chunks0, Span<const FeeFrac> chunks1)
 {
     /** Array to allow indexed access to input diagrams. */
-    const std::array<Span<const FeeFrac>, 2> dias = {dia0, dia1};
+    const std::array<Span<const FeeFrac>, 2> chunk = {chunks0, chunks1};
     /** How many elements we have processed in each input. */
-    size_t next_index[2] = {1, 1};
+    size_t next_index[2] = {0, 0};
+    /** Accumulated fee/sizes in diagrams, up to next_index[i] - 1. */
+    FeeFrac accum[2];
     /** Whether the corresponding input is strictly better than the other at least in one place. */
     bool better_somewhere[2] = {false, false};
     /** Get the first unprocessed point in diagram number dia. */
-    const auto next_point = [&](int dia) { return dias[dia][next_index[dia]]; };
+    const auto next_point = [&](int dia) { return chunk[dia][next_index[dia]] + accum[dia]; };
     /** Get the last processed point in diagram number dia. */
-    const auto prev_point = [&](int dia) { return dias[dia][next_index[dia] - 1]; };
-
-    // Diagrams should be non-empty, and first elements zero in size and fee
-    Assert(!dia0.empty() && !dia1.empty());
-    Assert(prev_point(0).IsEmpty());
-    Assert(prev_point(1).IsEmpty());
+    const auto prev_point = [&](int dia) { return accum[dia]; };
+    /** Move to the next point in diagram number dia. */
+    const auto advance = [&](int dia) { accum[dia] += chunk[dia][next_index[dia]++]; };
 
     do {
-        bool done_0 = next_index[0] == dias[0].size();
-        bool done_1 = next_index[1] == dias[1].size();
+        bool done_0 = next_index[0] == chunk[0].size();
+        bool done_1 = next_index[1] == chunk[1].size();
         if (done_0 && done_1) break;
 
         // Determine which diagram has the first unprocessed point. If a single side is finished, use the
@@ -69,17 +56,16 @@ std::partial_ordering CompareFeerateDiagram(Span<const FeeFrac> dia0, Span<const
 
             // If B and P have the same size, B can be marked as processed (in addition to P, see
             // below), as we've already performed a comparison at this size.
-            if (point_b.size == point_p.size) ++next_index[!unproc_side];
+            if (point_b.size == point_p.size) advance(!unproc_side);
         }
         // If P lies above AB, unproc_side is better in P. If P lies below AB, then !unproc_side is
         // better in P.
         if (std::is_gt(cmp)) better_somewhere[unproc_side] = true;
         if (std::is_lt(cmp)) better_somewhere[!unproc_side] = true;
-        ++next_index[unproc_side];
+        advance(unproc_side);
 
         // If both diagrams are better somewhere, they are incomparable.
         if (better_somewhere[0] && better_somewhere[1]) return std::partial_ordering::unordered;
-
     } while(true);
 
     // Otherwise compare the better_somewhere values.
