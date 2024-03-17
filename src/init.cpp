@@ -370,12 +370,6 @@ void PrepareShutdown(NodeContext& node)
     }
     if (fMasternodeMode) {
         UnregisterValidationInterface(::activeMasternodeManager.get());
-
-        LOCK(::activeMasternodeManager->cs);
-        // make sure to clean up BLS keys before global destructors are called (they have allocated from the secure memory pool)
-        ::activeMasternodeManager->m_info.blsKeyOperator.reset();
-        ::activeMasternodeManager->m_info.blsPubKeyOperator.reset();
-
         ::activeMasternodeManager.reset();
     }
 
@@ -1860,16 +1854,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         {
             // Create and register activeMasternodeManager, will init later in ThreadImport
             ::activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman, ::deterministicMNManager);
-
-            LOCK(::activeMasternodeManager->cs);
-            assert(::activeMasternodeManager->m_info.blsKeyOperator == nullptr);
-            assert(::activeMasternodeManager->m_info.blsPubKeyOperator == nullptr);
-            ::activeMasternodeManager->m_info.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
-            ::activeMasternodeManager->m_info.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(keyOperator.GetPublicKey());
-            // We don't know the actual scheme at this point, print both
-            LogPrintf("MASTERNODE:\n  blsPubKeyOperator legacy: %s\n  blsPubKeyOperator basic: %s\n",
-                    ::activeMasternodeManager->m_info.blsPubKeyOperator->ToString(true),
-                    ::activeMasternodeManager->m_info.blsPubKeyOperator->ToString(false));
+            ::activeMasternodeManager->InitKeys(keyOperator);
 
             RegisterValidationInterface(::activeMasternodeManager.get());
         }

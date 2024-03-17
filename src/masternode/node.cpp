@@ -17,6 +17,17 @@
 // Keep track of the active Masternode
 std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
 
+CActiveMasternodeManager::~CActiveMasternodeManager()
+{
+    // Make sure to clean up BLS keys before global destructors are called
+    // (they have been allocated from the secure memory pool)
+    {
+        LOCK(cs);
+        m_info.blsKeyOperator.reset();
+        m_info.blsPubKeyOperator.reset();
+    }
+}
+
 std::string CActiveMasternodeManager::GetStateString() const
 {
     switch (state) {
@@ -132,6 +143,21 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     m_info.outpoint = dmn->collateralOutpoint;
     m_info.legacy = dmn->pdmnState->nVersion == CProRegTx::LEGACY_BLS_VERSION;
     state = MASTERNODE_READY;
+}
+
+void CActiveMasternodeManager::InitKeys(const CBLSSecretKey& sk)
+{
+    AssertLockNotHeld(cs);
+
+    LOCK(cs);
+    assert(m_info.blsKeyOperator == nullptr);
+    assert(m_info.blsPubKeyOperator == nullptr);
+    m_info.blsKeyOperator = std::make_unique<CBLSSecretKey>(sk);
+    m_info.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(sk.GetPublicKey());
+    // We don't know the actual scheme at this point, print both
+    LogPrintf("MASTERNODE:\n  blsPubKeyOperator legacy: %s\n  blsPubKeyOperator basic: %s\n",
+            m_info.blsPubKeyOperator->ToString(/*specificLegacyScheme=*/ true),
+            m_info.blsPubKeyOperator->ToString(/*specificLegacyScheme=*/ false));
 }
 
 void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
