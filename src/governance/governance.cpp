@@ -698,8 +698,8 @@ std::optional<const CGovernanceObject> CGovernanceManager::CreateGovernanceTrigg
             return std::nullopt;
         }
         gov_sb.SetMasternodeOutpoint(::activeMasternodeManager->m_info.outpoint);
-        gov_sb.Sign( *::activeMasternodeManager->m_info.blsKeyOperator);
     } // ::activeMasternodeManager->cs
+    gov_sb.Sign(*::activeMasternodeManager);
 
     if (std::string strError; !gov_sb.IsValidLocally(m_dmnman->GetListAtChainTip(), strError, true)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Created trigger is invalid:%s\n", __func__, strError);
@@ -765,7 +765,7 @@ bool CGovernanceManager::VoteFundingTrigger(const uint256& nHash, const vote_out
 {
     CGovernanceVote vote(WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.outpoint), nHash, VOTE_SIGNAL_FUNDING, outcome);
     vote.SetTime(GetAdjustedTime());
-    vote.Sign(WITH_LOCK(::activeMasternodeManager->cs, return *::activeMasternodeManager->m_info.blsKeyOperator));
+    vote.Sign(*::activeMasternodeManager);
 
     CGovernanceException exception;
     if (!ProcessVoteAndRelay(vote, exception, connman)) {

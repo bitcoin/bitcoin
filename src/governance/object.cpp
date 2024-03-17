@@ -11,6 +11,7 @@
 #include <governance/governance.h>
 #include <governance/validators.h>
 #include <masternode/meta.h>
+#include <masternode/node.h>
 #include <masternode/sync.h>
 #include <messagesigner.h>
 #include <net.h>
@@ -273,9 +274,9 @@ void CGovernanceObject::SetMasternodeOutpoint(const COutPoint& outpoint)
     m_obj.masternodeOutpoint = outpoint;
 }
 
-bool CGovernanceObject::Sign(const CBLSSecretKey& key)
+bool CGovernanceObject::Sign(const CActiveMasternodeManager& mn_activeman)
 {
-    CBLSSignature sig = key.Sign(GetSignatureHash(), false);
+    CBLSSignature sig = mn_activeman.Sign(GetSignatureHash(), false);
     if (!sig.IsValid()) {
         return false;
     }

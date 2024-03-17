@@ -8,6 +8,7 @@
 #include <bls/bls.h>
 #include <chainparams.h>
 #include <key.h>
+#include <masternode/node.h>
 #include <masternode/sync.h>
 #include <messagesigner.h>
 #include <net.h>
@@ -221,9 +222,9 @@ bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
     return true;
 }
 
-bool CGovernanceVote::Sign(const CBLSSecretKey& key)
+bool CGovernanceVote::Sign(const CActiveMasternodeManager& mn_activeman)
 {
-    CBLSSignature sig = key.Sign(GetSignatureHash(), false);
+    CBLSSignature sig = mn_activeman.Sign(GetSignatureHash(), false);
     if (!sig.IsValid()) {
         return false;
     }
