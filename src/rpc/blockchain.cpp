@@ -786,16 +786,24 @@ static RPCHelpMan getblock()
 std::optional<int> GetPruneHeight(const BlockManager& blockman, const CChain& chain) {
     AssertLockHeld(::cs_main);
 
+    // Search for the last block missing block data or undo data. Don't let the
+    // search consider the genesis block, because the genesis block does not
+    // have undo data, but should not be considered pruned.
+    const CBlockIndex* first_block{chain[1]};
     const CBlockIndex* chain_tip{chain.Tip()};
-    if (!(chain_tip->nStatus & BLOCK_HAVE_DATA)) return chain_tip->nHeight;
 
-    // Get first block with data, after the last block without data.
-    // This is the start of the unpruned range of blocks.
-    const auto& first_unpruned{*Assert(blockman.GetFirstBlock(*chain_tip, /*status_mask=*/BLOCK_HAVE_DATA))};
-    if (!first_unpruned.pprev) {
-       // No block before the first unpruned block means nothing is pruned.
-       return std::nullopt;
+    // If there are no blocks after the genesis block, or no blocks at all, nothing is pruned.
+    if (!first_block || !chain_tip) return std::nullopt;
+
+    // If the chain tip is pruned, everything is pruned.
+    if (!((chain_tip->nStatus & BLOCK_HAVE_MASK) == BLOCK_HAVE_MASK)) return chain_tip->nHeight;
+
+    const auto& first_unpruned{*Assert(blockman.GetFirstBlock(*chain_tip, /*status_mask=*/BLOCK_HAVE_MASK, first_block))};
+    if (&first_unpruned == first_block) {
+        // All blocks between first_block and chain_tip have data, so nothing is pruned.
+        return std::nullopt;
     }
+
     // Block before the first unpruned block is the last pruned block.
     return Assert(first_unpruned.pprev)->nHeight;
 }
