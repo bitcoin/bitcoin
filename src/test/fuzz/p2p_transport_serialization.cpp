@@ -354,6 +354,7 @@ std::unique_ptr<Transport> MakeV2Transport(NodeId nodeid, bool initiator, RNG& r
     } else {
         // If it's longer, generate it from the RNG. This avoids having large amounts of
         // (hopefully) irrelevant data needing to be stored in the fuzzer data.
+        garb.resize(garb_len);
         for (auto& v : garb) v = uint8_t(rng());
     }
     // Retrieve entropy
