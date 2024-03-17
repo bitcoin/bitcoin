@@ -126,6 +126,9 @@ void DashTestSetupClose(NodeContext& node)
     node.llmq_ctx->Interrupt();
     node.llmq_ctx->Stop();
     node.llmq_ctx.reset();
+#ifdef ENABLE_WALLET
+    node.coinjoin_loader.reset();
+#endif // ENABLE_WALLET
     node.dmnman = nullptr;
     ::deterministicMNManager.reset();
     node.cj_ctx.reset();
