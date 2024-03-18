@@ -2956,7 +2956,7 @@ static void UpdateTipLog(
     LogPrintf("%s%s: new best=%s height=%d version=0x%08x log2_work=%f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n",
         prefix, func_name,
         tip->GetBlockHash().ToString(), tip->nHeight, tip->nVersion,
-        log(tip->nChainWork.getdouble()) / log(2.0), tip->nChainTx,
+        log(tip->nChainWork.getdouble()) / log(2.0), tip->m_chain_tx_count,
         FormatISO8601DateTime(tip->GetBlockTime()),
         GuessVerificationProgress(params.TxData(), tip),
         coins_tip.DynamicMemoryUsage() * (1.0 / (1 << 20)),
@@ -3846,17 +3846,17 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
 {
     AssertLockHeld(cs_main);
     pindexNew->nTx = block.vtx.size();
-    // Typically nChainTx will be 0 at this point, but it can be nonzero if this
+    // Typically m_chain_tx_count will be 0 at this point, but it can be nonzero if this
     // is a pruned block which is being downloaded again, or if this is an
-    // assumeutxo snapshot block which has a hardcoded nChainTx value from the
+    // assumeutxo snapshot block which has a hardcoded m_chain_tx_count value from the
     // snapshot metadata. If the pindex is not the snapshot block and the
-    // nChainTx value is not zero, assert that value is actually correct.
-    auto prev_tx_sum = [](CBlockIndex& block) { return block.nTx + (block.pprev ? block.pprev->nChainTx : 0); };
-    if (!Assume(pindexNew->nChainTx == 0 || pindexNew->nChainTx == prev_tx_sum(*pindexNew) ||
+    // m_chain_tx_count value is not zero, assert that value is actually correct.
+    auto prev_tx_sum = [](CBlockIndex& block) { return block.nTx + (block.pprev ? block.pprev->m_chain_tx_count : 0); };
+    if (!Assume(pindexNew->m_chain_tx_count == 0 || pindexNew->m_chain_tx_count == prev_tx_sum(*pindexNew) ||
                 pindexNew == GetSnapshotBaseBlock())) {
-        LogWarning("Internal bug detected: block %d has unexpected nChainTx %i that should be %i (%s %s). Please report this issue here: %s\n",
-            pindexNew->nHeight, pindexNew->nChainTx, prev_tx_sum(*pindexNew), PACKAGE_NAME, FormatFullVersion(), PACKAGE_BUGREPORT);
-        pindexNew->nChainTx = 0;
+        LogWarning("Internal bug detected: block %d has unexpected m_chain_tx_count %i that should be %i (%s %s). Please report this issue here: %s\n",
+            pindexNew->nHeight, pindexNew->m_chain_tx_count, prev_tx_sum(*pindexNew), PACKAGE_NAME, FormatFullVersion(), PACKAGE_BUGREPORT);
+        pindexNew->m_chain_tx_count = 0;
     }
     pindexNew->nFile = pos.nFile;
     pindexNew->nDataPos = pos.nPos;
@@ -3877,15 +3877,15 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
         while (!queue.empty()) {
             CBlockIndex *pindex = queue.front();
             queue.pop_front();
-            // Before setting nChainTx, assert that it is 0 or already set to
+            // Before setting m_chain_tx_count, assert that it is 0 or already set to
             // the correct value. This assert will fail after receiving the
             // assumeutxo snapshot block if assumeutxo snapshot metadata has an
-            // incorrect hardcoded AssumeutxoData::nChainTx value.
-            if (!Assume(pindex->nChainTx == 0 || pindex->nChainTx == prev_tx_sum(*pindex))) {
-                LogWarning("Internal bug detected: block %d has unexpected nChainTx %i that should be %i (%s %s). Please report this issue here: %s\n",
-                   pindex->nHeight, pindex->nChainTx, prev_tx_sum(*pindex), PACKAGE_NAME, FormatFullVersion(), PACKAGE_BUGREPORT);
+            // incorrect hardcoded AssumeutxoData::m_chain_tx_count value.
+            if (!Assume(pindex->m_chain_tx_count == 0 || pindex->m_chain_tx_count == prev_tx_sum(*pindex))) {
+                LogWarning("Internal bug detected: block %d has unexpected m_chain_tx_count %i that should be %i (%s %s). Please report this issue here: %s\n",
+                   pindex->nHeight, pindex->m_chain_tx_count, prev_tx_sum(*pindex), PACKAGE_NAME, FormatFullVersion(), PACKAGE_BUGREPORT);
             }
-            pindex->nChainTx = prev_tx_sum(*pindex);
+            pindex->m_chain_tx_count = prev_tx_sum(*pindex);
             pindex->nSequenceId = nBlockSequenceId++;
             for (Chainstate *c : GetAll()) {
                 c->TryAddBlockIndexCandidate(pindex);
@@ -5333,17 +5333,17 @@ void ChainstateManager::CheckBlockIndex()
             // Checks for not-invalid blocks.
             assert((pindex->nStatus & BLOCK_FAILED_MASK) == 0); // The failed mask cannot be set for blocks without invalid parents.
         }
-        // Make sure nChainTx sum is correctly computed.
+        // Make sure m_chain_tx_count sum is correctly computed.
         if (!pindex->pprev) {
-            // If no previous block, nTx and nChainTx must be the same.
-            assert(pindex->nChainTx == pindex->nTx);
-        } else if (pindex->pprev->nChainTx > 0 && pindex->nTx > 0) {
-            // If previous nChainTx is set and number of transactions in block is known, sum must be set.
-            assert(pindex->nChainTx == pindex->nTx + pindex->pprev->nChainTx);
+            // If no previous block, nTx and m_chain_tx_count must be the same.
+            assert(pindex->m_chain_tx_count == pindex->nTx);
+        } else if (pindex->pprev->m_chain_tx_count > 0 && pindex->nTx > 0) {
+            // If previous m_chain_tx_count is set and number of transactions in block is known, sum must be set.
+            assert(pindex->m_chain_tx_count == pindex->nTx + pindex->pprev->m_chain_tx_count);
         } else {
-            // Otherwise nChainTx should only be set if this is a snapshot
+            // Otherwise m_chain_tx_count should only be set if this is a snapshot
             // block, and must be set if it is.
-            assert((pindex->nChainTx != 0) == (pindex == snap_base));
+            assert((pindex->m_chain_tx_count != 0) == (pindex == snap_base));
         }
 
         // Chainstate-specific checks on setBlockIndexCandidates
@@ -5548,13 +5548,13 @@ bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
 }
 
 //! Guess how far we are in the verification process at the given block index
-//! require cs_main if pindex has not been validated yet (because nChainTx might be unset)
+//! require cs_main if pindex has not been validated yet (because m_chain_tx_count might be unset)
 double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pindex) {
     if (pindex == nullptr)
         return 0.0;
 
-    if (!Assume(pindex->nChainTx > 0)) {
-        LogWarning("Internal bug detected: block %d has unset nChainTx (%s %s). Please report this issue here: %s\n",
+    if (!Assume(pindex->m_chain_tx_count > 0)) {
+        LogWarning("Internal bug detected: block %d has unset m_chain_tx_count (%s %s). Please report this issue here: %s\n",
                    pindex->nHeight, PACKAGE_NAME, FormatFullVersion(), PACKAGE_BUGREPORT);
         return 0.0;
     }
@@ -5563,13 +5563,13 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pin
 
     double fTxTotal;
 
-    if (pindex->nChainTx <= data.nTxCount) {
-        fTxTotal = data.nTxCount + (nNow - data.nTime) * data.dTxRate;
+    if (pindex->m_chain_tx_count <= data.tx_count) {
+        fTxTotal = data.tx_count + (nNow - data.nTime) * data.dTxRate;
     } else {
-        fTxTotal = pindex->nChainTx + (nNow - pindex->GetBlockTime()) * data.dTxRate;
+        fTxTotal = pindex->m_chain_tx_count + (nNow - pindex->GetBlockTime()) * data.dTxRate;
     }
 
-    return std::min<double>(pindex->nChainTx / fTxTotal, 1.0);
+    return std::min<double>(pindex->m_chain_tx_count / fTxTotal, 1.0);
 }
 
 std::optional<uint256> ChainstateManager::SnapshotBlockhash() const
@@ -6026,7 +6026,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
     assert(index);
     assert(index == snapshot_start_block);
-    index->nChainTx = au_data.nChainTx;
+    index->m_chain_tx_count = au_data.m_chain_tx_count;
     snapshot_chainstate.setBlockIndexCandidates.insert(snapshot_start_block);
 
     LogPrintf("[snapshot] validated snapshot (%.2f MB)\n",

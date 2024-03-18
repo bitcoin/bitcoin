@@ -113,8 +113,8 @@ BOOST_FIXTURE_TEST_CASE(get_prune_height, TestChain100Setup)
 BOOST_AUTO_TEST_CASE(num_chain_tx_max)
 {
     CBlockIndex block_index{};
-    block_index.nChainTx = std::numeric_limits<uint64_t>::max();
-    BOOST_CHECK_EQUAL(block_index.nChainTx, std::numeric_limits<uint64_t>::max());
+    block_index.m_chain_tx_count = std::numeric_limits<uint64_t>::max();
+    BOOST_CHECK_EQUAL(block_index.m_chain_tx_count, std::numeric_limits<uint64_t>::max());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
