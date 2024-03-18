@@ -44,7 +44,6 @@ builder-image:
     SDK_URL: https://bitcoincore.org/depends-sources/sdks
     XCODE_VERSION: "12.2"
     XCODE_BUILD_ID: 12B45b
-    MAKEJOBS: -j4
   before_script:
     - echo HOST=$HOST
     - |
@@ -63,7 +62,7 @@ builder-image:
         fi
       fi
   script:
-    - make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
+    - make -j$(nproc) -C depends HOST=$HOST $DEP_OPTS
   cache:
     # Let all branches share the same cache, which is ok because the depends subsystem is able to handle this properly (it works with hashes of all scripts)
     key:
