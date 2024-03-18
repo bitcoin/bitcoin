@@ -17,7 +17,6 @@
 #include <llmq/blockprocessor.h>
 #include <llmq/commitment.h>
 #include <primitives/block.h>
-#include <validation.h>
 
 static bool CheckSpecialTxInner(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, const std::optional<CRangesSet>& indexes, bool check_sigs, TxValidationState& state)
 {
