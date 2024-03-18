@@ -334,7 +334,7 @@ static bool rest_block_notxdetails(const CoreContext& context, HTTPRequest* req,
 }
 
 // A bit of a hack - dependency on a function defined in rpc/blockchain.cpp
-UniValue getblockchaininfo(const JSONRPCRequest& request);
+RPCHelpMan getblockchaininfo();
 
 static bool rest_chaininfo(const CoreContext& context, HTTPRequest* req, const std::string& strURIPart)
 {
@@ -347,7 +347,7 @@ static bool rest_chaininfo(const CoreContext& context, HTTPRequest* req, const s
     case RetFormat::JSON: {
         JSONRPCRequest jsonRequest(context);
         jsonRequest.params = UniValue(UniValue::VARR);
-        UniValue chainInfoObject = getblockchaininfo(jsonRequest);
+        UniValue chainInfoObject = getblockchaininfo().HandleRequest(jsonRequest);
         std::string strJSON = chainInfoObject.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strJSON);

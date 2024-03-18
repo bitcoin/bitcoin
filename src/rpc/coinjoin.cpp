@@ -21,9 +21,9 @@
 #include <univalue.h>
 
 #ifdef ENABLE_WALLET
-static UniValue coinjoin(const JSONRPCRequest& request)
+static RPCHelpMan coinjoin()
 {
-            RPCHelpMan{"coinjoin",
+            return RPCHelpMan{"coinjoin",
                 "\nAvailable commands:\n"
                 "  start       - Start mixing\n"
                 "  stop        - Stop mixing\n"
@@ -33,8 +33,8 @@ static UniValue coinjoin(const JSONRPCRequest& request)
                 },
                 RPCResults{},
                 RPCExamples{""},
-            }.Check(request);
-
+                [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
@@ -83,23 +83,28 @@ static UniValue coinjoin(const JSONRPCRequest& request)
     }
 
     return "Unknown command, please see \"help coinjoin\"";
+},
+    };
 }
 #endif // ENABLE_WALLET
 
-static UniValue getpoolinfo(const JSONRPCRequest& request)
+static RPCHelpMan getpoolinfo()
 {
-    throw std::runtime_error(
-            RPCHelpMan{"getpoolinfo",
+    return RPCHelpMan{"getpoolinfo",
                 "DEPRECATED. Please use getcoinjoininfo instead.\n",
                 {},
                 RPCResults{},
-                RPCExamples{""}}
-            .ToString());
+                RPCExamples{""},
+                [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "Please use getcoinjoininfo instead");
+},
+    };
 }
 
-static UniValue getcoinjoininfo(const JSONRPCRequest& request)
+static RPCHelpMan getcoinjoininfo()
 {
-            RPCHelpMan{"getcoinjoininfo",
+            return RPCHelpMan{"getcoinjoininfo",
                 "Returns an object containing an information about CoinJoin settings and state.\n",
                 {},
                 {
@@ -143,8 +148,8 @@ static UniValue getcoinjoininfo(const JSONRPCRequest& request)
                     HelpExampleCli("getcoinjoininfo", "")
             + HelpExampleRpc("getcoinjoininfo", "")
                 },
-            }.Check(request);
-
+                [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     UniValue obj(UniValue::VOBJ);
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
@@ -173,7 +178,10 @@ static UniValue getcoinjoininfo(const JSONRPCRequest& request)
 #endif // ENABLE_WALLET
 
     return obj;
+},
+    };
 }
+
 void RegisterCoinJoinRPCCommands(CRPCTable &t)
 {
 // clang-format off
@@ -183,7 +191,7 @@ static const CRPCCommand commands[] =
         { "dash",               "getpoolinfo",            &getpoolinfo,            {} },
         { "dash",               "getcoinjoininfo",        &getcoinjoininfo,        {} },
 #ifdef ENABLE_WALLET
-        { "dash",               "coinjoin",               &coinjoin,               {} },
+        { "dash",               "coinjoin",               &coinjoin,               {"command"} },
 #endif // ENABLE_WALLET
 };
 // clang-format on

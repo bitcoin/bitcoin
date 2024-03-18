@@ -354,6 +354,7 @@ public:
         }
     }
 
+    // TODO: drop it, that's dash specific workaround
     [[ noreturn ]] inline void Throw() const {
         throw std::runtime_error(ToString());
     }
