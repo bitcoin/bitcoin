@@ -5,11 +5,14 @@
 #include <evo/chainhelper.h>
 
 #include <consensus/params.h>
+#include <evo/specialtxman.h>
 #include <masternode/payments.h>
 
-CChainstateHelper::CChainstateHelper(CGovernanceManager& govman, const Consensus::Params& consensus_params, const CMasternodeSync& mn_sync,
-                                     const CSporkManager& sporkman)
-    : mn_payments{std::make_unique<CMNPaymentsProcessor>(govman, consensus_params, mn_sync, sporkman)}
+CChainstateHelper::CChainstateHelper(CDeterministicMNManager& dmnman, CMNHFManager& mnhfman, CGovernanceManager& govman,
+                                     llmq::CQuorumBlockProcessor& qblockman, const Consensus::Params& consensus_params,
+                                     const CMasternodeSync& mn_sync, const CSporkManager& sporkman, const llmq::CChainLocksHandler& clhandler)
+    : mn_payments{std::make_unique<CMNPaymentsProcessor>(govman, consensus_params, mn_sync, sporkman)},
+      special_tx{std::make_unique<CSpecialTxProcessor>(dmnman, mnhfman, qblockman, consensus_params, clhandler)}
 {}
 
 CChainstateHelper::~CChainstateHelper() = default;

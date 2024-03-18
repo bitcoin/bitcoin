@@ -1951,7 +1951,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
 
                 chainman.Reset();
-                chainman.InitializeChainstate(Assert(node.mempool.get()), *node.mnhf_manager, *node.evodb, node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor);
+                chainman.InitializeChainstate(Assert(node.mempool.get()), *node.mnhf_manager, *node.evodb, node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager);
                 chainman.m_total_coinstip_cache = nCoinCacheUsage;
                 chainman.m_total_coinsdb_cache = nCoinDBCache;
 
@@ -1982,7 +1982,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 node.llmq_ctx->Start();
 
                 node.chain_helper.reset();
-                node.chain_helper = std::make_unique<CChainstateHelper>(*node.govman, Params().GetConsensus(), *node.mn_sync, *node.sporkman);
+                node.chain_helper = std::make_unique<CChainstateHelper>(*node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor),
+                                                                        chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler));
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);

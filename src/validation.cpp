@@ -1330,14 +1330,12 @@ CChainState::CChainState(CTxMemPool* mempool,
                          const std::unique_ptr<CChainstateHelper>& chain_helper,
                          const std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
                          const std::unique_ptr<llmq::CInstantSendManager>& isman,
-                         const std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
                          std::optional<uint256> from_snapshot_blockhash)
     : m_mempool(mempool),
       m_params(::Params()),
       m_chain_helper(chain_helper),
       m_clhandler(clhandler),
       m_isman(isman),
-      m_quorum_block_processor(quorum_block_processor),
       m_mnhfManager(mnhfManager),
       m_evoDb(evoDb),
       m_blockman(blockman),
@@ -1748,7 +1746,6 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
 {
     AssertLockHeld(cs_main);
     assert(m_chain_helper);
-    assert(m_quorum_block_processor);
 
     bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
     if (fDIP0003Active && !m_evoDb.VerifyBestBlock(pindex->GetBlockHash())) {
@@ -1777,7 +1774,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
 
     std::optional<MNListUpdates> mnlist_updates_opt{std::nullopt};
-    if (!UndoSpecialTxsInBlock(block, pindex, m_mnhfManager, *m_quorum_block_processor, mnlist_updates_opt)) {
+    if (!m_chain_helper->special_tx->UndoSpecialTxsInBlock(block, pindex, mnlist_updates_opt)) {
         error("DisconnectBlock(): UndoSpecialTxsInBlock failed");
         return DISCONNECT_FAILED;
     }
@@ -2078,7 +2075,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     assert(m_chain_helper);
     assert(m_clhandler);
     assert(m_isman);
-    assert(m_quorum_block_processor);
 
     // Check it again in case a previous version let a bad block in
     // NOTE: We don't currently (re-)invoke ContextualCheckBlock() or
@@ -2246,7 +2242,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
     std::optional<MNListUpdates> mnlist_updates_opt{std::nullopt};
-    if (!ProcessSpecialTxsInBlock(block, pindex, m_mnhfManager, *m_quorum_block_processor, *m_clhandler, m_params.GetConsensus(), view, fJustCheck, fScriptChecks, state, mnlist_updates_opt)) {
+    if (!m_chain_helper->special_tx->ProcessSpecialTxsInBlock(block, pindex, view, fJustCheck, fScriptChecks, state, mnlist_updates_opt)) {
         return error("ConnectBlock(DASH): ProcessSpecialTxsInBlock for block %s failed with %s",
                      pindex->GetBlockHash().ToString(), state.ToString());
     }
@@ -2435,7 +2431,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     int64_t nTime5_2 = GetTimeMicros(); nTimeSubsidy += nTime5_2 - nTime5_1;
     LogPrint(BCLog::BENCHMARK, "      - GetBlockSubsidy: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5_2 - nTime5_1), nTimeSubsidy * MICRO, nTimeSubsidy * MILLI / nBlocksTotal);
 
-    if (!CheckCreditPoolDiffForBlock(block, pindex, m_params.GetConsensus(), blockSubsidy, state)) {
+    if (!m_chain_helper->special_tx->CheckCreditPoolDiffForBlock(block, pindex, blockSubsidy, state)) {
         return error("ConnectBlock(DASH): CheckCreditPoolDiffForBlock for block %s failed with %s",
                      pindex->GetBlockHash().ToString(), state.ToString());
     }
@@ -4879,7 +4875,6 @@ bool CVerifyDB::VerifyDB(
 bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs)
 {
     assert(m_chain_helper);
-    assert(m_quorum_block_processor);
 
     // TODO: merge with ConnectBlock
     CBlock block;
@@ -4890,7 +4885,7 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
     // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
     BlockValidationState state;
     std::optional<MNListUpdates> mnlist_updates_opt{std::nullopt};
-    if (!ProcessSpecialTxsInBlock(block, pindex, m_mnhfManager, *m_quorum_block_processor, *m_clhandler, m_params.GetConsensus(), inputs, false /*fJustCheck*/, false /*fScriptChecks*/, state, mnlist_updates_opt)) {
+    if (!m_chain_helper->special_tx->ProcessSpecialTxsInBlock(block, pindex, inputs, false /*fJustCheck*/, false /*fScriptChecks*/, state, mnlist_updates_opt)) {
         return error("RollforwardBlock(DASH): ProcessSpecialTxsInBlock for block %s failed with %s",
             pindex->GetBlockHash().ToString(), state.ToString());
     }
@@ -5730,7 +5725,6 @@ CChainState& ChainstateManager::InitializeChainstate(CTxMemPool* mempool,
                                                      const std::unique_ptr<CChainstateHelper>& chain_helper,
                                                      const std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
                                                      const std::unique_ptr<llmq::CInstantSendManager>& isman,
-                                                     const std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
                                                      const std::optional<uint256>& snapshot_blockhash)
 {
     bool is_snapshot = snapshot_blockhash.has_value();
@@ -5741,7 +5735,7 @@ CChainState& ChainstateManager::InitializeChainstate(CTxMemPool* mempool,
         throw std::logic_error("should not be overwriting a chainstate");
     }
 
-    to_modify.reset(new CChainState(mempool, m_blockman, mnhfManager, evoDb, chain_helper, clhandler, isman, quorum_block_processor, snapshot_blockhash));
+    to_modify.reset(new CChainState(mempool, m_blockman, mnhfManager, evoDb, chain_helper, clhandler, isman, snapshot_blockhash));
 
     // Snapshot chainstates and initial IBD chaintates always become active.
     if (is_snapshot || (!is_snapshot && !m_active_chainstate)) {
@@ -5817,7 +5811,6 @@ bool ChainstateManager::ActivateSnapshot(
             this->ActiveChainstate().m_chain_helper,
             this->ActiveChainstate().m_clhandler,
             this->ActiveChainstate().m_isman,
-            this->ActiveChainstate().m_quorum_block_processor,
             base_blockhash
         )
     );

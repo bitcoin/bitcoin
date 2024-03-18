@@ -22,6 +22,8 @@
 #include <type_traits>
 #include <vector>
 
+class CChainParams;
+
 /** This is connected to the logger. Can be used to redirect logs to any other log */
 extern const std::function<void(const std::string&)> G_TEST_LOG_FUN;
 
@@ -74,7 +76,7 @@ static inline bool InsecureRandBool() { return g_insecure_rand_ctx.randbool(); }
 static constexpr CAmount CENT{1000000};
 
 /* Initialize Dash-specific components after chainstate initialization */
-void DashTestSetup(NodeContext& node);
+void DashTestSetup(NodeContext& node, const CChainParams& chainparams);
 void DashTestSetupClose(NodeContext& node);
 
 /** Basic testing setup.

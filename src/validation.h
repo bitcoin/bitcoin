@@ -44,7 +44,6 @@
 namespace llmq {
 class CChainLocksHandler;
 class CInstantSendManager;
-class CQuorumBlockProcessor;
 } // namespace llmq
 
 class CEvoDB;
@@ -666,7 +665,6 @@ protected:
     const std::unique_ptr<CChainstateHelper>& m_chain_helper;
     const std::unique_ptr<llmq::CChainLocksHandler>& m_clhandler;
     const std::unique_ptr<llmq::CInstantSendManager>& m_isman;
-    const std::unique_ptr<llmq::CQuorumBlockProcessor>& m_quorum_block_processor;
     CMNHFManager& m_mnhfManager;
     CEvoDB& m_evoDb;
 
@@ -682,7 +680,6 @@ public:
                          const std::unique_ptr<CChainstateHelper>& chain_helper,
                          const std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
                          const std::unique_ptr<llmq::CInstantSendManager>& isman,
-                         const std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
                          std::optional<uint256> from_snapshot_blockhash = std::nullopt);
 
     /**
@@ -1033,7 +1030,6 @@ public:
                                       const std::unique_ptr<CChainstateHelper>& chain_helper,
                                       const std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
                                       const std::unique_ptr<llmq::CInstantSendManager>& isman,
-                                      const std::unique_ptr<llmq::CQuorumBlockProcessor>& quorum_block_processor,
                                       const std::optional<uint256>& snapshot_blockhash = std::nullopt)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
