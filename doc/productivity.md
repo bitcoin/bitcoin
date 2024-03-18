@@ -58,8 +58,6 @@ After running `./autogen.sh`, which generates the `./configure` file, use `./con
 --without-gui
 ```
 
-If you do need the wallet enabled, it is common for devs to add `--with-incompatible-bdb`. This uses your system bdb version for the wallet, so you don't have to find a copy of bdb 4.8. Wallets from such a build will be incompatible with any release binary (and vice versa), so use with caution on mainnet.
-
 ### Make use of your threads with `make -j`
 
 If you have multiple threads on your machine, you can tell `make` to utilize all of them with:

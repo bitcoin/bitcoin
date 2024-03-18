@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the avoid_reuse and setwalletflag features."""
 
-from test_framework.address import address_to_scriptpubkey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
@@ -64,9 +63,6 @@ def assert_balances(node, mine, margin=0.001):
         assert_approx(got[k], v, margin)
 
 class AvoidReuseTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 2
         # whitelist peers to speed up tx relay / mempool sync
@@ -253,44 +249,6 @@ class AvoidReuseTest(BitcoinTestFramework):
         assert_unspent(self.nodes[1], total_count=1, total_sum=5, reused_supported=True, reused_count=0)
         # getbalances should show no used, 5 btc trusted
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 5})
-
-        if not self.options.descriptors:
-            # For the second send, we transmute it to a related single-key address
-            # to make sure it's also detected as reuse
-            fund_spk = address_to_scriptpubkey(fundaddr).hex()
-            fund_decoded = self.nodes[0].decodescript(fund_spk)
-            if second_addr_type == "p2sh-segwit":
-                new_fundaddr = fund_decoded["segwit"]["p2sh-segwit"]
-            elif second_addr_type == "bech32":
-                new_fundaddr = fund_decoded["segwit"]["address"]
-            else:
-                new_fundaddr = fundaddr
-                assert_equal(second_addr_type, "legacy")
-
-            self.nodes[0].sendtoaddress(new_fundaddr, 10)
-            self.generate(self.nodes[0], 1)
-
-            # listunspent should show 2 total outputs (5, 10 btc), one unused (5), one reused (10)
-            assert_unspent(self.nodes[1], total_count=2, total_sum=15, reused_count=1, reused_sum=10)
-            # getbalances should show 10 used, 5 btc trusted
-            assert_balances(self.nodes[1], mine={"used": 10, "trusted": 5})
-
-            # node 1 should now have a balance of 5 (no dirty) or 15 (including dirty)
-            assert_approx(self.nodes[1].getbalance(), 5, 0.001)
-            assert_approx(self.nodes[1].getbalance(avoid_reuse=False), 15, 0.001)
-
-            assert_raises_rpc_error(-6, "Insufficient funds", self.nodes[1].sendtoaddress, retaddr, 10)
-
-            self.nodes[1].sendtoaddress(retaddr, 4)
-
-            # listunspent should show 2 total outputs (1, 10 btc), one unused (1), one reused (10)
-            assert_unspent(self.nodes[1], total_count=2, total_sum=11, reused_count=1, reused_sum=10)
-            # getbalances should show 10 used, 1 btc trusted
-            assert_balances(self.nodes[1], mine={"used": 10, "trusted": 1})
-
-            # node 1 should now have about 1 btc left (no dirty) and 11 (including dirty)
-            assert_approx(self.nodes[1].getbalance(), 1, 0.001)
-            assert_approx(self.nodes[1].getbalance(avoid_reuse=False), 11, 0.001)
 
     def test_getbalances_used(self):
         '''

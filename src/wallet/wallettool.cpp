@@ -12,7 +12,6 @@
 #include <util/fs.h>
 #include <util/translation.h>
 #include <wallet/dump.h>
-#include <wallet/salvage.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
@@ -37,8 +36,7 @@ static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flag
     wallet_instance->InitWalletFlags(wallet_creation_flags);
 
     if (!wallet_instance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-        auto spk_man = wallet_instance->GetOrCreateLegacyScriptPubKeyMan();
-        spk_man->SetupGeneration(false);
+        assert(false);
     } else {
         wallet_instance->SetupDescriptorScriptPubKeyMans();
     }
@@ -114,10 +112,6 @@ static void WalletShowInfo(CWallet* wallet_instance)
 
 bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
 {
-    if (args.IsArgSet("-format") && command != "createfromdump") {
-        tfm::format(std::cerr, "The -format option can only be used with the \"createfromdump\" command.\n");
-        return false;
-    }
     if (args.IsArgSet("-dumpfile") && command != "dump" && command != "createfromdump") {
         tfm::format(std::cerr, "The -dumpfile option can only be used with the \"dump\" and \"createfromdump\" commands.\n");
         return false;
@@ -171,29 +165,16 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         if (!wallet_instance) return false;
         WalletShowInfo(wallet_instance.get());
         wallet_instance->Close();
-    } else if (command == "salvage") {
-#ifdef USE_BDB
-        bilingual_str error;
-        std::vector<bilingual_str> warnings;
-        bool ret = RecoverDatabaseFile(args, path, error, warnings);
-        if (!ret) {
-            for (const auto& warning : warnings) {
-                tfm::format(std::cerr, "%s\n", warning.original);
-            }
-            if (!error.empty()) {
-                tfm::format(std::cerr, "%s\n", error.original);
-            }
-        }
-        return ret;
-#else
-        tfm::format(std::cerr, "Salvage command is not available as BDB support is not compiled");
-        return false;
-#endif
     } else if (command == "dump") {
         DatabaseOptions options;
         ReadDatabaseArgs(args, options);
         options.require_existing = true;
         DatabaseStatus status;
+
+        if (IsBDBFile(BDBDataFile(path))) {
+            options.require_format = DatabaseFormat::BERKELEY_RO;
+        }
+
         bilingual_str error;
         std::unique_ptr<WalletDatabase> database = MakeDatabase(path, options, status, error);
         if (!database) {

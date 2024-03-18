@@ -21,6 +21,28 @@ std::size_t AutoFile::detail_fread(Span<std::byte> dst)
     }
 }
 
+void AutoFile::seek(int64_t offset, int origin)
+{
+    if (IsNull()) {
+        throw std::ios_base::failure("AutoFile::seek: file handle is nullptr");
+    }
+    if (std::fseek(m_file, offset, origin) != 0) {
+        throw std::ios_base::failure(feof() ? "AutoFile::seek: end of file" : "AutoFile::seek: fseek failed");
+    }
+}
+
+int64_t AutoFile::tell()
+{
+    if (IsNull()) {
+        throw std::ios_base::failure("AutoFile::tell: file handle is nullptr");
+    }
+    int64_t r{std::ftell(m_file)};
+    if (r < 0) {
+        throw std::ios_base::failure("AutoFile::tell: ftell failed");
+    }
+    return r;
+}
+
 void AutoFile::read(Span<std::byte> dst)
 {
     if (detail_fread(dst) != dst.size()) {

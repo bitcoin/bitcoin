@@ -20,9 +20,6 @@ from test_framework.script import (
 )
 
 class WalletPruningTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, descriptors=False)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

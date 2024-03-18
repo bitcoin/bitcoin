@@ -223,7 +223,6 @@ static void ReleaseWallet(CWallet* wallet)
 {
     const std::string name = wallet->GetName();
     wallet->WalletLogPrintf("Releasing wallet\n");
-    wallet->Flush();
     delete wallet;
     // Wallet is now released, notify UnloadWallet, if any.
     {
@@ -303,9 +302,6 @@ class FastWalletRescanFilter
 public:
     FastWalletRescanFilter(const CWallet& wallet) : m_wallet(wallet)
     {
-        // fast rescanning via block filters is only supported by descriptor wallets right now
-        assert(!m_wallet.IsLegacy());
-
         // create initial filter with scripts from all ScriptPubKeyMans
         for (auto spkm : m_wallet.GetAllScriptPubKeyMans()) {
             auto desc_spkm{dynamic_cast<DescriptorScriptPubKeyMan*>(spkm)};
@@ -475,7 +471,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
     return wallet;
 }
 
-std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings, bool load_restored)
 {
     DatabaseOptions options;
     ReadDatabaseArgs(*context.args, options);
@@ -500,13 +496,15 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& b
 
         fs::copy_file(backup_file, wallet_file, fs::copy_options::none);
 
-        wallet = LoadWallet(context, wallet_name, load_on_start, options, status, error, warnings);
+        if (load_restored) {
+            wallet = LoadWallet(context, wallet_name, load_on_start, options, status, error, warnings);
+        }
     } catch (const std::exception& e) {
         assert(!wallet);
         if (!error.empty()) error += Untranslated("\n");
         error += strprintf(Untranslated("Unexpected exception: %s"), e.what());
     }
-    if (!wallet) {
+    if (load_restored && !wallet) {
         fs::remove_all(wallet_path);
     }
 
@@ -525,21 +523,6 @@ const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
     if (it == mapWallet.end())
         return nullptr;
     return &(it->second);
-}
-
-void CWallet::UpgradeKeyMetadata()
-{
-    if (IsLocked() || IsWalletFlagSet(WALLET_FLAG_KEY_ORIGIN_METADATA)) {
-        return;
-    }
-
-    auto spk_man = GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        return;
-    }
-
-    spk_man->UpgradeKeyMetadata();
-    SetWalletFlag(WALLET_FLAG_KEY_ORIGIN_METADATA);
 }
 
 void CWallet::UpgradeDescriptorCache()
@@ -569,8 +552,6 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase)
             if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, _vMasterKey))
                 continue; // try another master key
             if (Unlock(_vMasterKey)) {
-                // Now that we've unlocked, upgrade the key metadata
-                UpgradeKeyMetadata();
                 // Now that we've unlocked, upgrade the descriptor cache
                 UpgradeDescriptorCache();
                 return true;
@@ -688,11 +669,6 @@ bool CWallet::HasWalletSpend(const CTransactionRef& tx) const
         }
     }
     return false;
-}
-
-void CWallet::Flush()
-{
-    GetDatabase().Flush();
 }
 
 void CWallet::Close()
@@ -864,25 +840,12 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         // If we are using descriptors, make new descriptors with a new seed
         if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) && !IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET)) {
             SetupDescriptorScriptPubKeyMans();
-        } else if (auto spk_man = GetLegacyScriptPubKeyMan()) {
-            // if we are using HD, replace the HD seed with a new one
-            if (spk_man->IsHDEnabled()) {
-                if (!spk_man->SetupGeneration(true)) {
-                    return false;
-                }
-            }
         }
         Lock();
 
-        // Need to completely rewrite the wallet file; if we don't, bdb might keep
+        // Need to completely rewrite the wallet file; if we don't, the database might keep
         // bits of the unencrypted private key in slack space in the database file.
         GetDatabase().Rewrite();
-
-        // BDB seems to have a bad habit of writing old data into
-        // slack space in .dat files; that is bad if the old data is
-        // unencrypted private keys. So:
-        GetDatabase().ReloadDbEnv();
-
     }
     NotifyStatusChanged(this);
 
@@ -1028,32 +991,14 @@ bool CWallet::IsSpentKey(const CScript& scriptPubKey) const
     if (IsAddressPreviouslySpent(dest)) {
         return true;
     }
-    if (IsLegacy()) {
-        LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
-        assert(spk_man != nullptr);
-        for (const auto& keyid : GetAffectedKeys(scriptPubKey, *spk_man)) {
-            WitnessV0KeyHash wpkh_dest(keyid);
-            if (IsAddressPreviouslySpent(wpkh_dest)) {
-                return true;
-            }
-            ScriptHash sh_wpkh_dest(GetScriptForDestination(wpkh_dest));
-            if (IsAddressPreviouslySpent(sh_wpkh_dest)) {
-                return true;
-            }
-            PKHash pkh_dest(keyid);
-            if (IsAddressPreviouslySpent(pkh_dest)) {
-                return true;
-            }
-        }
-    }
     return false;
 }
 
-CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx, bool fFlushOnClose, bool rescanning_old_block)
+CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx, bool rescanning_old_block)
 {
     LOCK(cs_wallet);
 
-    WalletBatch batch(GetDatabase(), fFlushOnClose);
+    WalletBatch batch(GetDatabase());
 
     uint256 hash = tx->GetHash();
 
@@ -1263,7 +1208,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
             // Block disconnection override an abandoned tx as unconfirmed
             // which means user may have to call abandontransaction again
             TxState tx_state = std::visit([](auto&& s) -> TxState { return s; }, state);
-            CWalletTx* wtx = AddToWallet(MakeTransactionRef(tx), tx_state, /*update_wtx=*/nullptr, /*fFlushOnClose=*/false, rescanning_old_block);
+            CWalletTx* wtx = AddToWallet(MakeTransactionRef(tx), tx_state, /*update_wtx=*/nullptr, rescanning_old_block);
             if (!wtx) {
                 // Can only be nullptr if there was a db write error (missing db, read-only db or a db engine internal writing error).
                 // As we only store arriving transaction in this process, and we don't want an inconsistent state, let's throw an error.
@@ -1359,7 +1304,7 @@ void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, c
 
 void CWallet::RecursiveUpdateTxState(const uint256& tx_hash, const TryUpdatingStateFn& try_updating_state) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
     // Do not flush the wallet here for performance reasons
-    WalletBatch batch(GetDatabase(), false);
+    WalletBatch batch(GetDatabase());
 
     std::set<uint256> todo;
     std::set<uint256> done;
@@ -1583,9 +1528,6 @@ isminetype CWallet::IsMine(const CScript& script) const
         return res;
     }
 
-    // Legacy wallet
-    if (IsLegacy()) return GetLegacyScriptPubKeyMan()->IsMine(script);
-
     return ISMINE_NO;
 }
 
@@ -1712,59 +1654,6 @@ void CWallet::InitWalletFlags(uint64_t flags)
     if (!LoadWalletFlags(flags)) assert(false);
 }
 
-bool CWallet::ImportScripts(const std::set<CScript> scripts, int64_t timestamp)
-{
-    auto spk_man = GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        return false;
-    }
-    LOCK(spk_man->cs_KeyStore);
-    return spk_man->ImportScripts(scripts, timestamp);
-}
-
-bool CWallet::ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp)
-{
-    auto spk_man = GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        return false;
-    }
-    LOCK(spk_man->cs_KeyStore);
-    return spk_man->ImportPrivKeys(privkey_map, timestamp);
-}
-
-bool CWallet::ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp)
-{
-    auto spk_man = GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        return false;
-    }
-    LOCK(spk_man->cs_KeyStore);
-    return spk_man->ImportPubKeys(ordered_pubkeys, pubkey_map, key_origins, add_keypool, internal, timestamp);
-}
-
-bool CWallet::ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool apply_label, const int64_t timestamp)
-{
-    auto spk_man = GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        return false;
-    }
-    LOCK(spk_man->cs_KeyStore);
-    if (!spk_man->ImportScriptPubKeys(script_pub_keys, have_solving_data, timestamp)) {
-        return false;
-    }
-    if (apply_label) {
-        WalletBatch batch(GetDatabase());
-        for (const CScript& script : script_pub_keys) {
-            CTxDestination dest;
-            ExtractDestination(script, dest);
-            if (IsValidDestination(dest)) {
-                SetAddressBookWithDB(batch, dest, label, AddressPurpose::RECEIVE);
-            }
-        }
-    }
-    return true;
-}
-
 void CWallet::MaybeUpdateBirthTime(int64_t time)
 {
     int64_t birthtime = m_birth_time.load();
@@ -1837,7 +1726,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
     ScanResult result;
 
     std::unique_ptr<FastWalletRescanFilter> fast_rescan_filter;
-    if (!IsLegacy() && chain().hasBlockFilterIndex(BlockFilterType::BASIC)) fast_rescan_filter = std::make_unique<FastWalletRescanFilter>(*this);
+    if (chain().hasBlockFilterIndex(BlockFilterType::BASIC)) fast_rescan_filter = std::make_unique<FastWalletRescanFilter>(*this);
 
     WalletLogPrintf("Rescan started from block %s... (%s)\n", start_block.ToString(),
                     fast_rescan_filter ? "fast variant using block filters" : "slow variant inspecting all blocks");
@@ -2470,11 +2359,6 @@ size_t CWallet::KeypoolCountExternalKeys() const
 {
     AssertLockHeld(cs_wallet);
 
-    auto legacy_spk_man = GetLegacyScriptPubKeyMan();
-    if (legacy_spk_man) {
-        return legacy_spk_man->KeypoolCountExternalKeys();
-    }
-
     unsigned int count = 0;
     for (auto spk_man : m_external_spk_managers) {
         count += spk_man.second->GetKeyPoolSize();
@@ -2697,68 +2581,6 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
     }
 }
 
-/** @} */ // end of Actions
-
-void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t>& mapKeyBirth) const {
-    AssertLockHeld(cs_wallet);
-    mapKeyBirth.clear();
-
-    // map in which we'll infer heights of other keys
-    std::map<CKeyID, const TxStateConfirmed*> mapKeyFirstBlock;
-    TxStateConfirmed max_confirm{uint256{}, /*height=*/-1, /*index=*/-1};
-    max_confirm.confirmed_block_height = GetLastBlockHeight() > 144 ? GetLastBlockHeight() - 144 : 0; // the tip can be reorganized; use a 144-block safety margin
-    CHECK_NONFATAL(chain().findAncestorByHeight(GetLastBlockHash(), max_confirm.confirmed_block_height, FoundBlock().hash(max_confirm.confirmed_block_hash)));
-
-    {
-        LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
-        assert(spk_man != nullptr);
-        LOCK(spk_man->cs_KeyStore);
-
-        // get birth times for keys with metadata
-        for (const auto& entry : spk_man->mapKeyMetadata) {
-            if (entry.second.nCreateTime) {
-                mapKeyBirth[entry.first] = entry.second.nCreateTime;
-            }
-        }
-
-        // Prepare to infer birth heights for keys without metadata
-        for (const CKeyID &keyid : spk_man->GetKeys()) {
-            if (mapKeyBirth.count(keyid) == 0)
-                mapKeyFirstBlock[keyid] = &max_confirm;
-        }
-
-        // if there are no such keys, we're done
-        if (mapKeyFirstBlock.empty())
-            return;
-
-        // find first block that affects those keys, if there are any left
-        for (const auto& entry : mapWallet) {
-            // iterate over all wallet transactions...
-            const CWalletTx &wtx = entry.second;
-            if (auto* conf = wtx.state<TxStateConfirmed>()) {
-                // ... which are already in a block
-                for (const CTxOut &txout : wtx.tx->vout) {
-                    // iterate over all their outputs
-                    for (const auto &keyid : GetAffectedKeys(txout.scriptPubKey, *spk_man)) {
-                        // ... and all their affected keys
-                        auto rit = mapKeyFirstBlock.find(keyid);
-                        if (rit != mapKeyFirstBlock.end() && conf->confirmed_block_height < rit->second->confirmed_block_height) {
-                            rit->second = conf;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Extract block timestamps for those keys
-    for (const auto& entry : mapKeyFirstBlock) {
-        int64_t block_time;
-        CHECK_NONFATAL(chain().findBlock(entry.second->confirmed_block_hash, FoundBlock().time(block_time)));
-        mapKeyBirth[entry.first] = block_time - TIMESTAMP_WINDOW; // block times can be 2h off
-    }
-}
-
 /**
  * Compute smart timestamp for a transaction being added to the wallet.
  *
@@ -2964,7 +2786,11 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
             error = strprintf(_("Unexpected legacy entry in descriptor wallet found. Loading wallet %s\n\n"
                                 "The wallet might have been tampered with or created with malicious intent.\n"), walletFile);
             return nullptr;
-        } else {
+        } else if (nLoadWalletRet == DBErrors::LEGACY_WALLET) {
+            error = strprintf(_("Error loading %s: Wallet is a legacy wallet. Please migrate to a descriptor wallet using the migration tool (migratewallet RPC)."), walletFile);
+            return nullptr;
+        }
+        else {
             error = strprintf(_("Error loading %s"), walletFile);
             return nullptr;
         }
@@ -2981,9 +2807,8 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
 
         walletInstance->InitWalletFlags(wallet_creation_flags);
 
-        // Only create LegacyScriptPubKeyMan when not descriptor wallet
         if (!walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-            walletInstance->SetupLegacyScriptPubKeyMan();
+            assert(false);
         }
 
         if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) || !(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET))) {
@@ -3291,7 +3116,6 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
         }
         walletInstance->m_attaching_chain = false;
         walletInstance->chainStateFlushed(ChainstateRole::NORMAL, chain.getTipLocator());
-        walletInstance->GetDatabase().IncrementUpdateCounter();
     }
     walletInstance->m_attaching_chain = false;
 
@@ -3496,9 +3320,6 @@ std::set<ScriptPubKeyMan*> CWallet::GetScriptPubKeyMans(const CScript& script) c
     SignatureData sigdata;
     Assume(std::all_of(spk_mans.begin(), spk_mans.end(), [&script, &sigdata](ScriptPubKeyMan* spkm) { return spkm->CanProvide(script, sigdata); }));
 
-    // Legacy wallet
-    if (IsLegacy() && GetLegacyScriptPubKeyMan()->CanProvide(script, sigdata)) spk_mans.insert(GetLegacyScriptPubKeyMan());
-
     return spk_mans;
 }
 
@@ -3526,9 +3347,6 @@ std::unique_ptr<SigningProvider> CWallet::GetSolvingProvider(const CScript& scri
         return it->second.at(0)->GetSolvingProvider(script);
     }
 
-    // Legacy wallet
-    if (IsLegacy() && GetLegacyScriptPubKeyMan()->CanProvide(script, sigdata)) return GetLegacyScriptPubKeyMan()->GetSolvingProvider(script);
-
     return nullptr;
 }
 
@@ -3544,22 +3362,14 @@ std::vector<WalletDescriptor> CWallet::GetWalletDescriptors(const CScript& scrip
     return descs;
 }
 
-LegacyScriptPubKeyMan* CWallet::GetLegacyScriptPubKeyMan() const
+LegacyDataSPKM* CWallet::GetLegacyDataSPKM() const
 {
     if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
         return nullptr;
     }
-    // Legacy wallets only have one ScriptPubKeyMan which is a LegacyScriptPubKeyMan.
-    // Everything in m_internal_spk_managers and m_external_spk_managers point to the same legacyScriptPubKeyMan.
     auto it = m_internal_spk_managers.find(OutputType::LEGACY);
     if (it == m_internal_spk_managers.end()) return nullptr;
-    return dynamic_cast<LegacyScriptPubKeyMan*>(it->second);
-}
-
-LegacyScriptPubKeyMan* CWallet::GetOrCreateLegacyScriptPubKeyMan()
-{
-    SetupLegacyScriptPubKeyMan();
-    return GetLegacyScriptPubKeyMan();
+    return dynamic_cast<LegacyDataSPKM*>(it->second);
 }
 
 void CWallet::AddScriptPubKeyMan(const uint256& id, std::unique_ptr<ScriptPubKeyMan> spkm_man)
@@ -3572,13 +3382,26 @@ void CWallet::AddScriptPubKeyMan(const uint256& id, std::unique_ptr<ScriptPubKey
     MaybeUpdateBirthTime(spkm->GetTimeFirstKey());
 }
 
+LegacyDataSPKM* CWallet::GetOrCreateLegacyDataSPKM()
+{
+    SetupLegacyScriptPubKeyMan();
+    return GetLegacyDataSPKM();
+}
+
 void CWallet::SetupLegacyScriptPubKeyMan()
 {
     if (!m_internal_spk_managers.empty() || !m_external_spk_managers.empty() || !m_spk_managers.empty() || IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
         return;
     }
 
-    auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new LegacyScriptPubKeyMan(*this, m_keypool_size));
+    std::unique_ptr<ScriptPubKeyMan> spk_manager;
+
+    // Only create base LegacyDataSPKM if using BERKELEY_RO
+    if (m_database->Format() == "bdb_ro") {
+        spk_manager = std::unique_ptr<ScriptPubKeyMan>(new LegacyDataSPKM(*this));
+    } else {
+        assert(false);
+    }
     for (const auto& type : LEGACY_OUTPUT_TYPES) {
         m_internal_spk_managers[type] = spk_manager.get();
         m_external_spk_managers[type] = spk_manager.get();
@@ -3755,15 +3578,6 @@ void CWallet::DeactivateScriptPubKeyMan(uint256 id, OutputType type, bool intern
     NotifyCanGetAddressesChanged();
 }
 
-bool CWallet::IsLegacy() const
-{
-    if (m_internal_spk_managers.count(OutputType::LEGACY) == 0) {
-        return false;
-    }
-    auto spk_man = dynamic_cast<LegacyScriptPubKeyMan*>(m_internal_spk_managers.at(OutputType::LEGACY));
-    return spk_man != nullptr;
-}
-
 DescriptorScriptPubKeyMan* CWallet::GetDescriptorScriptPubKeyMan(const WalletDescriptor& desc) const
 {
     for (auto& spk_man_pair : m_spk_managers) {
@@ -3779,11 +3593,6 @@ DescriptorScriptPubKeyMan* CWallet::GetDescriptorScriptPubKeyMan(const WalletDes
 
 std::optional<bool> CWallet::IsInternalScriptPubKeyMan(ScriptPubKeyMan* spk_man) const
 {
-    // Legacy script pubkey man can't be either external or internal
-    if (IsLegacy()) {
-        return std::nullopt;
-    }
-
     // only active ScriptPubKeyMan can be internal
     if (!GetActiveScriptPubKeyMans().count(spk_man)) {
         return std::nullopt;
@@ -3938,7 +3747,7 @@ std::optional<MigrationData> CWallet::GetDescriptorsForLegacy(bilingual_str& err
 {
     AssertLockHeld(cs_wallet);
 
-    LegacyScriptPubKeyMan* legacy_spkm = GetLegacyScriptPubKeyMan();
+    LegacyDataSPKM* legacy_spkm = GetLegacyDataSPKM();
     if (!Assume(legacy_spkm)) {
         // This shouldn't happen
         error = Untranslated(STR_INTERNAL_BUG("Error: Legacy wallet data missing"));
@@ -3957,7 +3766,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
 {
     AssertLockHeld(cs_wallet);
 
-    LegacyScriptPubKeyMan* legacy_spkm = GetLegacyScriptPubKeyMan();
+    LegacyDataSPKM* legacy_spkm = GetLegacyDataSPKM();
     if (!Assume(legacy_spkm)) {
         // This shouldn't happen
         error = Untranslated(STR_INTERNAL_BUG("Error: Legacy wallet data missing"));
@@ -4292,11 +4101,40 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     // If the wallet is still loaded, unload it so that nothing else tries to use it while we're changing it
     bool was_loaded = false;
     if (auto wallet = GetWallet(context, wallet_name)) {
+        if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+            return util::Error{_("Error: This wallet is already a descriptor wallet")};
+        }
+
         if (!RemoveWallet(context, wallet, /*load_on_start=*/std::nullopt, warnings)) {
             return util::Error{_("Unable to unload the wallet before migrating")};
         }
         UnloadWallet(std::move(wallet));
         was_loaded = true;
+    } else {
+        // We need to load this wallet to check if there's something to migrate.
+        // But this cannot be reused later since we want to use BERKELEY_RO for the actual migration
+        WalletContext empty_context;
+        empty_context.args = context.args;
+        DatabaseOptions options;
+        options.require_existing = true;
+        DatabaseStatus status;
+        bilingual_str preload_error;
+        std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, preload_error);
+        // Since we no longer load BDB, we expect MakeWalletDatabase to fail
+        if (database) {
+            wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, error, warnings);
+            if (!wallet) {
+                return util::Error{Untranslated("Wallet loading failed.") + Untranslated(" ") + error};
+            }
+
+            if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+                return util::Error{_("Error: This wallet is already a descriptor wallet")};
+            }
+            // We loaded a legacy wallet that is also sqlite.
+            // This is an unsupported configuration so just give an error.
+            // TODO: Migrate legacy-sqlite wallets
+            return util::Error{_("Error: Unable to migrate legacy wallets in a sqlite database")};
+        }
     }
 
     // Load the wallet but only in the context of this function.
@@ -4305,6 +4143,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     empty_context.args = context.args;
     DatabaseOptions options;
     options.require_existing = true;
+    options.require_format = DatabaseFormat::BERKELEY_RO;
     DatabaseStatus status;
     std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, error);
     if (!database) {
@@ -4384,6 +4223,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     // both before and after reloading. This ensures the set is complete even if one of the wallets
     // fails to reload.
     std::set<fs::path> wallet_dirs;
+    options.require_format = std::nullopt;
     if (success) {
         // Migration successful, unload all wallets locally, then reload them.
         // Reload the main wallet
@@ -4443,7 +4283,8 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         // Restore the backup
         DatabaseStatus status;
         std::vector<bilingual_str> warnings;
-        if (!RestoreWallet(context, temp_backup_location, wallet_name, /*load_on_start=*/std::nullopt, status, error, warnings)) {
+        Assume(!RestoreWallet(context, temp_backup_location, wallet_name, /*load_on_start=*/std::nullopt, status, error, warnings, /*load_restored=*/false));
+        if (!error.empty()) {
             error += _("\nUnable to restore backup of wallet.");
             return util::Error{error};
         }
